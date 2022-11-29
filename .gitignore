@@ -1,0 +1,12 @@
+.venv
+.vscode
+build
+dist
+__pycache__
+main.spec
+logs
+saved_data
+.pytest_cache
+.coverage
+coverage.xml
+installer
