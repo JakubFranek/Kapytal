@@ -33,6 +33,8 @@ Transactions support multiple categories (the transaction amount splits between 
 
 Kapytal supports recurrent transactions, which repeat with a specified time period. The user can create these recurrent transactions and have them automatically prepared by Kapytal when the time period has elapsed for convenience.
 
+Kapytal supports refunds of expense or income transactions, both full and partial. These special refund transactions are connected to the transactions they refund and reduce/increase the total amount paid.
+
 ### Categories
 
 The user can create custom categories. These categories can also have sub-categories. For example: category "Food & Drink", sub-categories "Groceries", "Eating out", "Work lunch" etc.
