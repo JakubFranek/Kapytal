@@ -33,8 +33,9 @@ The following extra attributes are added in the **CashTransaction** implementati
 - Currency (Currency)
 - Category (Category or tuple of Categories)
 - Tags (Tag)
+- Refund Transaction (RefundTransaction or None)
 
-The Currency of the CashTransaction is the same as the Currency of the Account.
+The Currency of the **CashTransaction** is the same as the Currency of the Account.
 
 ## Security transaction
 
@@ -72,6 +73,18 @@ There are two types of Transfer transactions - the **CashTransferTransaction** a
 
 ## Refund transaction
 
-The Refund transaction is a special transaction type. It esentially creates a new transaction that reverts a previously made Expense transaction. In that sense it behaves somewhat like an Income transaction, but it has only the following attribute (on top of the default ones from **Transaction** class):
+The Refund transaction is a special transaction type. It esentially creates a new transaction that reverts a previously made **CashTransaction**. It has only the following attribute (on top of the default ones from **Transaction** class):
 
+- Account (CashAccount)
 - Amount (Decimal)
+- Refunded Transaction (CashTransaction)
+
+## Transaction class hierarchy
+
+- Transaction (ABC)
+    - CashTransaction
+    - RefundTransaction
+    - SecurityTransaction
+    - TransferTransaction (ABC)
+        - CashTransferTransaction
+        - SecurityTransferTransaction
