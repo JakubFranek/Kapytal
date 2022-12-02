@@ -5,7 +5,7 @@ from src.models.constants import tzinfo
 from src.models.enums import CashTransactionType
 
 
-class Tag:
+class Payee:
     NAME_MIN_LENGTH = 1
     NAME_MAX_LENGTH = 32
 
@@ -26,13 +26,13 @@ class Tag:
     @name.setter
     def name(self, value: str) -> None:
         if not isinstance(value, str):
-            raise TypeError("Tag name must be a string.")
+            raise TypeError("Payee name must be a string.")
 
         if self._name != value:
-            if len(value) < Tag.NAME_MIN_LENGTH or len(value) > Tag.NAME_MAX_LENGTH:
+            if len(value) < Payee.NAME_MIN_LENGTH or len(value) > Payee.NAME_MAX_LENGTH:
                 raise ValueError(
-                    f"""Tag name length must be between {Tag.NAME_MIN_LENGTH}
-                    and {Tag.NAME_MAX_LENGTH} characters."""
+                    f"""Payee name length must be between {Payee.NAME_MIN_LENGTH}
+                    and {Payee.NAME_MAX_LENGTH} characters."""
                 )
             self._name = value
             self._date_last_edited = datetime.now(tzinfo)
@@ -64,8 +64,8 @@ class Tag:
     def update_totals(
         self, amount: Decimal, transaction_type: CashTransactionType
     ) -> None:
-        """Updates Tag totals (total_expense, total_income, total_volume and total_sum)
-        with the amount of a single transaction.
+        """Updates Payee totals (total_expense, total_income, total_volume
+        and total_sum) with the amount of a single transaction.
 
         Args:
             amount (Decimal): amount of the transaction (positive, finite)
