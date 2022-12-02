@@ -14,16 +14,8 @@ class Account:
         self._date_last_edited = self.date_created
 
     @property
-    def date_created(self) -> datetime:
-        return self._date_created
-
-    @property
     def name(self) -> str:
         return self._name
-
-    @property
-    def date_last_edited(self) -> datetime:
-        return self._date_last_edited
 
     @name.setter
     def name(self, value: str) -> None:
@@ -41,3 +33,11 @@ class Account:
                 )
             self._name = value
             self._date_last_edited = datetime.now(tzinfo)
+
+    @property
+    def date_created(self) -> datetime:
+        return self._date_created
+
+    @property
+    def date_last_edited(self) -> datetime:
+        return self._date_last_edited

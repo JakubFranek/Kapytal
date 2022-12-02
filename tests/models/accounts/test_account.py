@@ -3,7 +3,8 @@ from datetime import datetime, timedelta, timezone
 from typing import Any
 
 import pytest
-from hypothesis import assume, given, strategies
+from hypothesis import assume, given
+from hypothesis import strategies as st
 
 from src.models.accounts.account import Account
 
@@ -11,7 +12,7 @@ timezone_offset = +1.0  # Central European Time (CET = UTC+01:00)
 tzinfo = timezone(timedelta(hours=timezone_offset))
 
 
-@given(name=strategies.text(min_size=1, max_size=32))
+@given(name=st.text(min_size=1, max_size=32))
 def test_creation_pass(name: str) -> None:
     dt_start = datetime.now(tzinfo)
     account = Account(name)
@@ -24,25 +25,25 @@ def test_creation_pass(name: str) -> None:
     assert dt_created_diff == dt_edited_diff
 
 
-@given(name=strategies.just(""))
+@given(name=st.just(""))
 def test_name_too_short(name: str) -> None:
     with pytest.raises(ValueError, match="Account name length must be*"):
         Account(name)
 
 
-@given(name=strategies.text(min_size=33))
+@given(name=st.text(min_size=33))
 def test_name_too_long(name: str) -> None:
     with pytest.raises(ValueError, match="Account name length must be*"):
         Account(name)
 
 
 @given(
-    name=strategies.integers()
-    | strategies.floats()
-    | strategies.none()
-    | strategies.datetimes()
-    | strategies.booleans()
-    | strategies.sampled_from([[], (), {}, set()])
+    name=st.integers()
+    | st.floats()
+    | st.none()
+    | st.datetimes()
+    | st.booleans()
+    | st.sampled_from([[], (), {}, set()])
 )
 def test_name_not_string(name: Any) -> None:
     with pytest.raises(TypeError, match="Account name must be a string."):
@@ -50,8 +51,8 @@ def test_name_not_string(name: Any) -> None:
 
 
 @given(
-    name=strategies.text(min_size=1, max_size=32),
-    new_name=strategies.text(min_size=1, max_size=32),
+    name=st.text(min_size=1, max_size=32),
+    new_name=st.text(min_size=1, max_size=32),
 )
 def test_date_last_edited(name: str, new_name: str) -> None:
     assume(name != new_name)
