@@ -28,11 +28,11 @@ The following extra attributes are added in the **CashTransaction** implementati
 
 - Account (CashAccount)
 - Type (enum: Expense or Income)
-- Payee (Payee)
+- Payee (TransactionAttribute)
 - Amount (Decimal)
 - Currency (Currency)
-- Category (Category or tuple of Categories)
-- Tags (Tag)
+- Category (Category or tuple of Categories) //TODO: what about income vs. expense categories?
+- Tags (list of TransactionAttributes)
 - Refund Transaction (RefundTransaction or None)
 
 The Currency of the **CashTransaction** is the same as the Currency of the Account.
@@ -88,3 +88,5 @@ The Refund transaction is a special transaction type. It esentially creates a ne
     - TransferTransaction (ABC)
         - CashTransferTransaction
         - SecurityTransferTransaction
+
+TODO: how do I store currency exchange rates on various dates?
