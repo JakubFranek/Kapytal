@@ -1,15 +1,11 @@
-from datetime import datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING, Self
 
 if TYPE_CHECKING:  # pragma: no cover
     from src.models.accounts.account import Account
 
-from src.models.constants import tzinfo
 from src.models.mixins.datetime_created_mixin import DatetimeCreatedMixin
 from src.models.mixins.name_mixin import NameMixin
-
-# TODO: test this class!
 
 
 class AccountGroup(NameMixin, DatetimeCreatedMixin):
@@ -30,10 +26,13 @@ class AccountGroup(NameMixin, DatetimeCreatedMixin):
                 "AccountGroup parent can only be an AccountGroup or a None."
             )
 
-        # TODO: force self into parent children and remove from old parent children
+        if self._parent is not None:
+            self._parent._children.remove(self)
+
+        if new_parent is not None:
+            new_parent._children.append(self)
 
         self._parent = new_parent
-        self._date_last_edited = datetime.now(tzinfo)
 
     @property
     def children(self) -> tuple["Account"] | None:

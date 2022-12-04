@@ -2,7 +2,7 @@ from src.models.accounts.account_group import AccountGroup
 from src.models.mixins.datetime_created_mixin import DatetimeCreatedMixin
 from src.models.mixins.name_mixin import NameMixin
 
-# TODO: test parent setting
+# TODO: make un-instantiatable? Test only sub-classes, incl. mixins...
 
 
 class Account(NameMixin, DatetimeCreatedMixin):

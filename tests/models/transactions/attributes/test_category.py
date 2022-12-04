@@ -1,5 +1,5 @@
 from collections.abc import Callable
-from datetime import datetime, timedelta, timezone
+from datetime import datetime
 from random import randint
 from typing import Any
 
@@ -7,10 +7,8 @@ import pytest
 from hypothesis import assume, given
 from hypothesis import strategies as st
 
+from src.models.constants import tzinfo
 from src.models.transactions.attributes.category import Category
-
-timezone_offset = +1.0  # Central European Time (CET = UTC+01:00)
-tzinfo = timezone(timedelta(hours=timezone_offset))
 
 
 @st.composite

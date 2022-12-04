@@ -1,14 +1,20 @@
-from datetime import datetime, timedelta, timezone
+from collections.abc import Callable
+from datetime import datetime
 from typing import Any
 
 import pytest
-from hypothesis import given
+from hypothesis import assume, given, settings
 from hypothesis import strategies as st
 
 from src.models.accounts.account import Account
+from src.models.accounts.account_group import AccountGroup
+from src.models.constants import tzinfo
 
-timezone_offset = +1.0  # Central European Time (CET = UTC+01:00)
-tzinfo = timezone(timedelta(hours=timezone_offset))
+
+@st.composite
+def account_groups(draw: Callable[[st.SearchStrategy[str]], str]) -> AccountGroup:
+    name = draw(st.text(min_size=1, max_size=32))
+    return AccountGroup(name)
 
 
 @given(name=st.text(min_size=1, max_size=32))
@@ -29,6 +35,7 @@ def test_name_too_short(name: str) -> None:
 
 
 @given(name=st.text(min_size=33))
+@settings(max_examples=15)
 def test_name_too_long(name: str) -> None:
     with pytest.raises(ValueError, match="Account name length must be*"):
         Account(name)
@@ -45,3 +52,33 @@ def test_name_too_long(name: str) -> None:
 def test_name_not_string(name: Any) -> None:
     with pytest.raises(TypeError, match="Account name must be a string."):
         Account(name)
+
+
+@given(name=st.text(min_size=1, max_size=32), parent=account_groups())
+def test_add_and_remove_parent(name: str, parent: AccountGroup) -> None:
+    account = Account(name)
+    assert account.parent is None
+    account.parent = parent
+    assert account.parent == parent
+    assert account in parent.children
+    account.parent = None
+    assert account.parent is None
+    assert account not in parent.children
+
+
+@given(
+    name=st.text(min_size=1, max_size=32),
+    parent=st.integers()
+    | st.floats()
+    | st.none()
+    | st.datetimes()
+    | st.booleans()
+    | st.sampled_from([[], (), {}, set()]),
+)
+def test_invalid_parent_type(name: str, parent: Any) -> None:
+    assume(parent is not None)
+    account = Account(name)
+    with pytest.raises(
+        TypeError, match="Account parent can only be an AccountGroup or a None."
+    ):
+        account.parent = parent

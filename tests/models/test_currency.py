@@ -1,15 +1,13 @@
 import string
-from datetime import datetime, timedelta, timezone
+from datetime import datetime
 from typing import Any
 
 import pytest
 from hypothesis import assume, given
 from hypothesis import strategies as st
 
+from src.models.constants import tzinfo
 from src.models.currency import Currency
-
-timezone_offset = +1.0  # Central European Time (CET = UTC+01:00)
-tzinfo = timezone(timedelta(hours=timezone_offset))
 
 
 @given(code=st.text(alphabet=string.ascii_letters, min_size=3, max_size=3))
