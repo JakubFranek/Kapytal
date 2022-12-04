@@ -3,7 +3,7 @@ from datetime import datetime
 from src.models.constants import tzinfo
 
 
-class TransactionAttribute:
+class Attribute:
     NAME_MIN_LENGTH = 1
     NAME_MAX_LENGTH = 32
 
@@ -19,19 +19,19 @@ class TransactionAttribute:
     @name.setter
     def name(self, value: str) -> None:
         if not isinstance(value, str):
-            raise TypeError("TransactionAttribute name must be a string.")
+            raise TypeError("Attribute name must be a string.")
 
         if not hasattr(self, "_name") or (
             hasattr(self, "_name") and self._name != value
         ):
             if (
-                len(value) < TransactionAttribute.NAME_MIN_LENGTH
-                or len(value) > TransactionAttribute.NAME_MAX_LENGTH
+                len(value) < Attribute.NAME_MIN_LENGTH
+                or len(value) > Attribute.NAME_MAX_LENGTH
             ):
                 raise ValueError(
-                    f"""TransactionAttribute name length must be between
-                    {TransactionAttribute.NAME_MIN_LENGTH} and
-                    {TransactionAttribute.NAME_MAX_LENGTH} characters."""
+                    f"""Attribute name length must be between
+                    {Attribute.NAME_MIN_LENGTH} and
+                    {Attribute.NAME_MAX_LENGTH} characters."""
                 )
             self._name = value
             self._date_last_edited = datetime.now(tzinfo)
