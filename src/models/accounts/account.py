@@ -1,45 +1,28 @@
-from datetime import datetime
+from src.models.accounts.account_group import AccountGroup
+from src.models.mixins.datetime_created_mixin import DatetimeCreatedMixin
+from src.models.mixins.name_mixin import NameMixin
 
-from src.models.constants import tzinfo
+# TODO: test parent setting
 
 
-# TODO: make abstract (modify __new__) - this would break tests though!
-class Account:
-    NAME_MIN_LENGTH = 1
-    NAME_MAX_LENGTH = 32
-
+class Account(NameMixin, DatetimeCreatedMixin):
     def __init__(self, name: str) -> None:
-        self.name = name
-        self._date_created = datetime.now(tzinfo)
-        self._date_last_edited = self.date_created
+        super().__init__(name=name)
+        self._parent: AccountGroup | None = None
 
     @property
-    def name(self) -> str:
-        return self._name
+    def parent(self) -> AccountGroup | None:
+        return self._parent
 
-    @name.setter
-    def name(self, value: str) -> None:
-        if not isinstance(value, str):
-            raise TypeError("Account name must be a string.")
+    @parent.setter
+    def parent(self, new_parent: AccountGroup | None) -> None:
+        if new_parent is not None and not isinstance(new_parent, AccountGroup):
+            raise TypeError("Account parent can only be an AccountGroup or a None.")
 
-        if not hasattr(self, "_name") or (
-            hasattr(self, "_name") and self._name != value
-        ):
-            if (
-                len(value) < Account.NAME_MIN_LENGTH
-                or len(value) > Account.NAME_MAX_LENGTH
-            ):
-                raise ValueError(
-                    f"""Account name length must be between {Account.NAME_MIN_LENGTH}
-                    and {Account.NAME_MAX_LENGTH} characters."""
-                )
-            self._name = value
-            self._date_last_edited = datetime.now(tzinfo)
+        if self._parent is not None:
+            self._parent._children.remove(self)
 
-    @property
-    def date_created(self) -> datetime:
-        return self._date_created
+        if new_parent is not None:
+            new_parent._children.append(self)
 
-    @property
-    def date_last_edited(self) -> datetime:
-        return self._date_last_edited
+        self._parent = new_parent

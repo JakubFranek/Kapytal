@@ -36,14 +36,12 @@ def test_creation_pass(name: str) -> None:
     dt_start = datetime.now(tzinfo)
     category = Category(name)
 
-    dt_created_diff = category.date_created - dt_start
-    dt_edited_diff = category.date_last_edited - dt_start
+    dt_created_diff = category.datetime_created - dt_start
 
     assert category.name == name
     assert category.parent is None
     assert category.children == ()
     assert dt_created_diff.seconds < 1
-    assert dt_created_diff == dt_edited_diff
 
 
 @given(category=categories(), parent=categories())

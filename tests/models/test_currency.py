@@ -17,7 +17,7 @@ def test_code_pass(code: str) -> None:
     dt_start = datetime.now(tzinfo)
     currency = Currency(code)
 
-    dt_created_diff = currency.date_created - dt_start
+    dt_created_diff = currency.datetime_created - dt_start
 
     assert currency.code == code.upper()
     assert dt_created_diff.seconds < 1

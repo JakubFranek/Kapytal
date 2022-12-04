@@ -1,7 +1,5 @@
-from datetime import datetime
 from typing import Self
 
-from src.models.constants import tzinfo
 from src.models.transactions.attributes.attribute import Attribute
 
 
@@ -27,7 +25,6 @@ class Category(Attribute):
             new_parent._children.append(self)
 
         self._parent = new_parent
-        self._date_last_edited = datetime.now(tzinfo)
 
     @property
     def children(self) -> tuple[Self] | None:
