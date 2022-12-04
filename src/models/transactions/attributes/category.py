@@ -1,7 +1,7 @@
 from typing import Self
 
 from src.models.transactions.attributes.attribute import Attribute
-from src.models.transactions.enums import CategoryType
+from src.models.transactions.attributes.enums import CategoryType
 
 
 class Category(Attribute):
@@ -39,6 +39,6 @@ class Category(Attribute):
     @type_.setter
     def type_(self, value: CategoryType) -> None:
         if not isinstance(value, CategoryType):
-            raise TypeError("Category type must be a CategoryType.")
+            raise TypeError("Category type_ must be a CategoryType.")
 
         self._type = value

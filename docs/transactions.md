@@ -20,7 +20,7 @@ The following attributes are shared by all **Transaction** implementations:
   - Description (string)
 - Automatically generated attributes
   - Date created (datetime)
-  - Date last edited (datetime) // TODO: think about this property... mixin?
+  - Date last edited (datetime)
 
 ## Cash transaction
 
@@ -91,4 +91,5 @@ The Refund transaction is a special transaction type. It esentially creates a ne
     - CashTransferTransaction
     - SecurityTransferTransaction
 
-TODO: how do I store currency exchange rates on various dates?
+TODO: how to store currency exchange rates on various dates?
+TODO: how to model split-category transactions?

@@ -1,6 +1,5 @@
 from collections.abc import Callable
 from datetime import datetime
-from random import randint
 from typing import Any
 
 import pytest
@@ -9,7 +8,7 @@ from hypothesis import strategies as st
 
 from src.models.constants import tzinfo
 from src.models.transactions.attributes.category import Category
-from src.models.transactions.enums import CategoryType
+from src.models.transactions.attributes.enums import CategoryType
 
 
 @st.composite
@@ -19,18 +18,6 @@ def categories(
     name = draw(st.text(min_size=1, max_size=32))
     category_type = draw(st.sampled_from(CategoryType))
     return Category(name, category_type)
-
-
-@st.composite
-def list_of_categories(
-    draw: Callable[[st.SearchStrategy[Category]], Category]
-) -> list[Category]:
-    list_of_categories = []
-    size = randint(1, 10)
-    for _ in range(size):
-        category = draw(categories())
-        list_of_categories.append(category)
-    return list_of_categories
 
 
 @given(
@@ -85,5 +72,5 @@ def test_parent_invalid_type(category: Category, parent: Any) -> None:
     | st.sampled_from([[], (), {}, set()]),
 )
 def test_type_invalid_type(name: str, category_type: Any) -> None:
-    with pytest.raises(TypeError, match="Category type must be a CategoryType."):
+    with pytest.raises(TypeError, match="Category type_ must be a CategoryType."):
         Category(name, category_type)

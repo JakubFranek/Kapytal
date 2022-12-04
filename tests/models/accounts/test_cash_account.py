@@ -96,6 +96,7 @@ def test_balance_set(
     assert cash_account.balance == initial_balance
     cash_account.balance = balance
     assert cash_account.balance == balance
+    assert cash_account.initial_balance == initial_balance
 
 
 @given(

@@ -1,6 +1,7 @@
 # Development plan
 
 ## Option 1 - Iterative approach
+
 1. Create minimum viable back-end and test it thoroughly
     - for example only basic Transaction and Account support
 2. Create PyQt GUI for this back-end and test it thoroughly
@@ -11,6 +12,7 @@
 7. Use the tool
 
 ## Option 2 - Top-down approach
+
 1. Create feature-complete back-end and test it thoroughly
 2. Create PyQt GUI for this back-end and test it thoroughly
 3. Make and distribute the installer

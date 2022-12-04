@@ -7,3 +7,4 @@ All durations in hours.
 01-12-2022: 3  
 02-12-2022: 3
 03-12-2022: 3
+04-12-2022: 5 (started using WakaTime after cca 20 hrs)
