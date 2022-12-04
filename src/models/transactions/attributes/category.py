@@ -1,13 +1,15 @@
 from typing import Self
 
 from src.models.transactions.attributes.attribute import Attribute
+from src.models.transactions.enums import CategoryType
 
 
 class Category(Attribute):
-    def __init__(self, name: str) -> None:
+    def __init__(self, name: str, category_type: CategoryType) -> None:
         super().__init__(name)
         self._parent: Self | None = None
         self._children: list[Self] = []
+        self.type_ = category_type
 
     @property
     def parent(self) -> Self | None:
@@ -29,3 +31,14 @@ class Category(Attribute):
     @property
     def children(self) -> tuple[Self] | None:
         return tuple(self._children)
+
+    @property
+    def type_(self) -> CategoryType:
+        return self._type
+
+    @type_.setter
+    def type_(self, value: CategoryType) -> None:
+        if not isinstance(value, CategoryType):
+            raise TypeError("Category type must be a CategoryType.")
+
+        self._type = value

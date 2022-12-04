@@ -16,11 +16,11 @@ All of these transactions are sub-classes of the abstract base class (ABC) **Tra
 The following attributes are shared by all **Transaction** implementations:
 
 - User-input attributes
-    - Date (datetime)
-    - Description (string)
+  - Date (datetime)
+  - Description (string)
 - Automatically generated attributes
-    - Date created (datetime)
-    - Date last edited (datetime)
+  - Date created (datetime)
+  - Date last edited (datetime) // TODO: think about this property... mixin?
 
 ## Cash transaction
 
@@ -28,11 +28,11 @@ The following extra attributes are added in the **CashTransaction** implementati
 
 - Account (CashAccount)
 - Type (enum: Expense or Income)
-- Payee (TransactionAttribute)
+- Payee (Attribute)
 - Amount (Decimal)
 - Currency (Currency)
-- Category (Category or tuple of Categories) //TODO: what about income vs. expense categories?
-- Tags (list of TransactionAttributes)
+- Category (Category or tuple of Categories)
+- Tags (list of Attributes)
 - Refund Transaction (RefundTransaction or None)
 
 The Currency of the **CashTransaction** is the same as the Currency of the Account.
@@ -54,9 +54,10 @@ The following extra attributes are added in the **SecurityTransaction** implemen
 
 ## Transfer transactions
 
-There are two types of Transfer transactions - the **CashTransferTransaction** and the **SecurityTransferTransaction**. 
+There are two types of Transfer transactions - the **CashTransferTransaction** and the **SecurityTransferTransaction**
 
 ### **CashTransferTransaction** attributes
+
 - From Account (CashAccount)
 - To Account (CashAccount)
 - From Amount (Decimal)
@@ -66,6 +67,7 @@ There are two types of Transfer transactions - the **CashTransferTransaction** a
 - Exchange Rate (Decimal)
 
 ### **SecurityTransferTransaction** attributes
+
 - From Account (SecurityAccount)
 - To Account (SecurityAccount)
 - Security (Security)
@@ -82,11 +84,11 @@ The Refund transaction is a special transaction type. It esentially creates a ne
 ## Transaction class hierarchy
 
 - Transaction (ABC)
-    - CashTransaction
-    - RefundTransaction
-    - SecurityTransaction
-    - TransferTransaction (ABC)
-        - CashTransferTransaction
-        - SecurityTransferTransaction
+  - CashTransaction
+  - RefundTransaction
+  - SecurityTransaction
+  - TransferTransaction (ABC)
+    - CashTransferTransaction
+    - SecurityTransferTransaction
 
 TODO: how do I store currency exchange rates on various dates?

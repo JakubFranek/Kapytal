@@ -3,23 +3,24 @@
 Below are the required capabilities of Kapytal from the user's point of view.
 
 ## Accounts
+
 The user can create accounts, which represent various places where the user keeps money (bank accounts, physical wallets etc.). These accounts can be grouped into account groups (folders), which can again be grouped into another, higher-level group. Typical usage of these groups for a household can look like this:
 
 > - Adam
 >   - Cash
->       - Wallet
->       - Cash at home
+>     - Wallet
+>     - Cash at home
 >   - Current Accounts
->       - Bank A
->       - Bank B
+>     - Bank A
+>     - Bank B
 >   - Savings Accounts
->       - ...
+>     - ...
 >   - Pension Funds
->       - ..
+>     - ..
 > - Eve
 >   - ...
 > - Shared Finances
->   - ...    
+>   - ...
 
 These accounts will be shown in a tree view, where the balance of these accounts will be visible. Each account supports a single currency, set by the user.
 
@@ -38,6 +39,8 @@ Kapytal supports refunds of expense or income transactions, both full and partia
 ### Categories
 
 The user can create custom categories. These categories can also have sub-categories. For example: category "Food & Drink", sub-categories "Groceries", "Eating out", "Work lunch" etc.
+
+Categories have a type_ property, which can be any of "INCOME", "EXPENSE" or "INCOME_AND_EXPENSE".
 
 ### Tags
 
@@ -59,7 +62,7 @@ The user can generate reports, which visually represent the transaction data eit
 
 ## Currencies
 
-Kapytal will support multiple currencies. The user can enable or create currencies and use them with transactions or as account currencies. 
+Kapytal will support multiple currencies. The user can enable or create currencies and use them with transactions or as account currencies.
 
 The user can also designate a single currency as a base currency. This will be the currency used for account group balances and reports.
 
