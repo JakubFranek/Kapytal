@@ -11,6 +11,7 @@ from src.models.transactions.attributes.attribute import Attribute
 from src.models.transactions.attributes.category import Category
 from src.models.transactions.attributes.enums import CategoryType
 from src.models.transactions.cash_transaction import CashTransaction
+from src.models.transactions.cash_transfer import CashTransfer
 from src.models.transactions.enums import CashTransactionType
 from src.models.transactions.transaction import Transaction
 
@@ -49,6 +50,28 @@ def cash_transactions(draw: Callable[[st.SearchStrategy[Any]], Any]) -> CashTran
     tags = draw(st.lists(attributes()))
     return CashTransaction(
         description, datetime_, type_, account, amount, payee, category, tags
+    )
+
+
+@st.composite
+def cash_transfers(draw: Callable[[st.SearchStrategy[Any]], Any]) -> CashTransfer:
+    description = draw(st.text(min_size=0, max_size=256))
+    datetime_ = draw(st.datetimes())
+    account_sender = draw(cash_accounts())
+    account_recipient = draw(cash_accounts())
+    amount_sent = draw(
+        st.decimals(min_value=0.01, allow_infinity=False, allow_nan=False)
+    )
+    amount_received = draw(
+        st.decimals(min_value=0.01, allow_infinity=False, allow_nan=False)
+    )
+    return CashTransfer(
+        description,
+        datetime_,
+        account_sender,
+        account_recipient,
+        amount_sent,
+        amount_received,
     )
 
 

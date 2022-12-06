@@ -53,7 +53,6 @@ class CashTransaction(Transaction):
     def account(self, value: CashAccount) -> None:
         if not isinstance(value, CashAccount):
             raise TypeError("CashTransaction account must be a CashAccount.")
-
         self._account = value
         self._currency = value.currency
         self._datetime_edited = datetime.now(tzinfo)
