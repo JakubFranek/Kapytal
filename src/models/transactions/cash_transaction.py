@@ -10,9 +10,6 @@ from src.models.transactions.attributes.category import Category
 from src.models.transactions.enums import CashTransactionType
 from src.models.transactions.transaction import Transaction
 
-# TODO: implement DatetimeEditedMixin
-# TODO: test this class
-
 # TODO: figure out split transactions (later)
 # TODO: figure out refunds (later)
 
