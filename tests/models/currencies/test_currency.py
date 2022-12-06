@@ -7,7 +7,7 @@ from hypothesis import assume, given
 from hypothesis import strategies as st
 
 from src.models.constants import tzinfo
-from src.models.currency import Currency
+from src.models.currencies.currency import Currency
 
 
 @given(code=st.text(alphabet=string.ascii_letters, min_size=3, max_size=3))

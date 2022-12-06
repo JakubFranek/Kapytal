@@ -1,4 +1,3 @@
-from collections.abc import Callable
 from datetime import datetime
 from typing import Any
 
@@ -9,15 +8,7 @@ from hypothesis import strategies as st
 from src.models.constants import tzinfo
 from src.models.transactions.attributes.category import Category
 from src.models.transactions.attributes.enums import CategoryType
-
-
-@st.composite
-def categories(
-    draw: Callable[[st.SearchStrategy[str | CategoryType]], str | CategoryType]
-) -> Category:
-    name = draw(st.text(min_size=1, max_size=32))
-    category_type = draw(st.sampled_from(CategoryType))
-    return Category(name, category_type)
+from tests.models.composites import categories
 
 
 @given(

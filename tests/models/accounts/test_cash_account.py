@@ -1,5 +1,3 @@
-import string
-from collections.abc import Callable
 from decimal import Decimal
 from typing import Any
 
@@ -8,13 +6,8 @@ from hypothesis import given
 from hypothesis import strategies as st
 
 from src.models.accounts.cash_account import CashAccount
-from src.models.currency import Currency
-
-
-@st.composite
-def currencies(draw: Callable[[st.SearchStrategy[str]], str]) -> Currency:
-    name = draw(st.text(alphabet=string.ascii_letters, min_size=3, max_size=3))
-    return Currency(name)
+from src.models.currencies.currency import Currency
+from tests.models.composites import currencies
 
 
 @given(

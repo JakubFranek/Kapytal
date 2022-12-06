@@ -3,7 +3,8 @@ from datetime import datetime
 from decimal import Decimal
 
 from src.models.accounts.cash_account import CashAccount
-from src.models.currency import Currency
+from src.models.constants import tzinfo
+from src.models.currencies.currency import Currency
 from src.models.transactions.attributes.attribute import Attribute
 from src.models.transactions.attributes.category import Category
 from src.models.transactions.enums import CashTransactionType
@@ -24,7 +25,6 @@ class CashTransaction(Transaction):
         type_: CashTransactionType,
         account: CashAccount,
         amount: Decimal,
-        currency: Currency,
         payee: Attribute,
         category: Category,
         tags: Collection[Attribute],
@@ -33,7 +33,6 @@ class CashTransaction(Transaction):
         self.type_ = type_
         self.account = account
         self.amount = amount
-        self.currency = currency
         self.payee = payee
         self.category = category
         self.tags = tags
@@ -47,6 +46,7 @@ class CashTransaction(Transaction):
         if not isinstance(value, CashTransactionType):
             raise TypeError("CashTransaction type_ must be a CashTransactionType.")
         self._type = value
+        self._datetime_edited = datetime.now(tzinfo)
 
     @property
     def account(self) -> CashAccount:
@@ -56,7 +56,10 @@ class CashTransaction(Transaction):
     def account(self, value: CashAccount) -> None:
         if not isinstance(value, CashAccount):
             raise TypeError("CashTransaction account must be a CashAccount.")
+
         self._account = value
+        self._currency = value.currency
+        self._datetime_edited = datetime.now(tzinfo)
 
     @property
     def amount(self) -> Decimal:
@@ -71,20 +74,11 @@ class CashTransaction(Transaction):
                 "CashTransaction amount must be a finite and positive Decimal."
             )
         self._amount = value
+        self._datetime_edited = datetime.now(tzinfo)
 
     @property
     def currency(self) -> Currency:
         return self._currency
-
-    @currency.setter
-    def currency(self, value: Currency) -> None:
-        if not isinstance(value, Currency):
-            raise TypeError("CashTransaction currency must be a Currency.")
-        if self.account.currency != value:
-            raise ValueError(
-                "CashTransaction currency must match its Account's currency."
-            )
-        self._currency = value
 
     @property
     def payee(self) -> Attribute:
@@ -95,6 +89,7 @@ class CashTransaction(Transaction):
         if not isinstance(value, Attribute):
             raise TypeError("CashTransaction payee must be an Attribute.")
         self._payee = value
+        self._datetime_edited = datetime.now(tzinfo)
 
     @property
     def category(self) -> Category:
@@ -105,6 +100,7 @@ class CashTransaction(Transaction):
         if not isinstance(value, Category):
             raise TypeError("CashTransaction category must be a Category.")
         self._category = value
+        self._datetime_edited = datetime.now(tzinfo)
 
     @property
     def tags(self) -> tuple[Attribute]:
@@ -118,3 +114,4 @@ class CashTransaction(Transaction):
             raise TypeError("CashTransaction tags must be a collection of Attributes.")
 
         self._tags = tuple(values)
+        self._datetime_edited = datetime.now(tzinfo)

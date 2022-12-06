@@ -3,7 +3,7 @@ from decimal import Decimal
 
 from src.models.accounts.account import Account
 from src.models.constants import tzinfo
-from src.models.currency import Currency
+from src.models.currencies.currency import Currency
 
 
 class CashAccount(Account):

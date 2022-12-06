@@ -1,9 +1,10 @@
 from datetime import datetime
 
+from src.models.constants import tzinfo
 from src.models.mixins.datetime_created_mixin import DatetimeCreatedMixin
 from src.models.mixins.datetime_edited_mixin import DatetimeEditedMixin
 
-# TODO: implement DatetimeEditedMixin
+# TODO: maybe make un-instantiable?
 
 
 class Transaction(DatetimeCreatedMixin, DatetimeEditedMixin):
@@ -29,12 +30,13 @@ class Transaction(DatetimeCreatedMixin, DatetimeEditedMixin):
             or len(value) > Transaction.DESCRIPTION_MAX_LENGTH
         ):
             raise ValueError(
-                f"{self.__class__.__name__} name length must be between "
+                f"{self.__class__.__name__} description length must be between "
                 f"{Transaction.DESCRIPTION_MIN_LENGTH} and "
                 f"{Transaction.DESCRIPTION_MAX_LENGTH} characters."
             )
 
         self._description = value
+        self._datetime_edited = datetime.now(tzinfo)
 
     @property
     def datetime_(self) -> datetime:
@@ -46,3 +48,4 @@ class Transaction(DatetimeCreatedMixin, DatetimeEditedMixin):
             raise TypeError(f"{self.__class__.__name__} datetime_ must be a datetime.")
 
         self._datetime = value
+        self._datetime_edited = datetime.now(tzinfo)

@@ -1,4 +1,3 @@
-from collections.abc import Callable
 from datetime import datetime
 from typing import Any
 
@@ -9,12 +8,7 @@ from hypothesis import strategies as st
 from src.models.accounts.account import Account
 from src.models.accounts.account_group import AccountGroup
 from src.models.constants import tzinfo
-
-
-@st.composite
-def account_groups(draw: Callable[[st.SearchStrategy[str]], str]) -> AccountGroup:
-    name = draw(st.text(min_size=1, max_size=32))
-    return AccountGroup(name)
+from tests.models.composites import account_groups
 
 
 @given(name=st.text(min_size=1, max_size=32))
