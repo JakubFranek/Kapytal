@@ -17,7 +17,7 @@ class Account(NameMixin, DatetimeCreatedMixin):
     @parent.setter
     def parent(self, new_parent: AccountGroup | None) -> None:
         if new_parent is not None and not isinstance(new_parent, AccountGroup):
-            raise TypeError("Account parent can only be an AccountGroup or a None.")
+            raise TypeError("Account.parent must be an AccountGroup or a None.")
 
         if self._parent is not None:
             self._parent._children.remove(self)

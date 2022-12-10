@@ -29,7 +29,7 @@ class CashTransfer(Transaction):
     @account_sender.setter
     def account_sender(self, value: CashAccount) -> None:
         if not isinstance(value, CashAccount):
-            raise TypeError("CashTransfer account_sender must be a CashAccount.")
+            raise TypeError("CashTransfer.account_sender must be a CashAccount.")
         self._account_sender = value
         self._datetime_edited = datetime.now(tzinfo)
 
@@ -40,7 +40,7 @@ class CashTransfer(Transaction):
     @account_recipient.setter
     def account_recipient(self, value: CashAccount) -> None:
         if not isinstance(value, CashAccount):
-            raise TypeError("CashTransfer account_recipient must be a CashAccount.")
+            raise TypeError("CashTransfer.account_recipient must be a CashAccount.")
         self._account_recipient = value
         self._datetime_edited = datetime.now(tzinfo)
 
@@ -51,10 +51,10 @@ class CashTransfer(Transaction):
     @amount_sent.setter
     def amount_sent(self, value: Decimal) -> None:
         if not isinstance(value, Decimal):
-            raise TypeError("CashTransfer amount_sent must be a Decimal.")
+            raise TypeError("CashTransfer.amount_sent must be a Decimal.")
         if not value.is_finite() or value <= 0:
             raise ValueError(
-                "CashTransfer amount_sent must be a finite and positive Decimal."
+                "CashTransfer.amount_sent must be a finite and positive Decimal."
             )
         self._amount_sent = value
         self._datetime_edited = datetime.now(tzinfo)
@@ -66,10 +66,10 @@ class CashTransfer(Transaction):
     @amount_received.setter
     def amount_received(self, value: Decimal) -> None:
         if not isinstance(value, Decimal):
-            raise TypeError("CashTransfer amount_received must be a Decimal.")
+            raise TypeError("CashTransfer.amount_received must be a Decimal.")
         if not value.is_finite() or value <= 0:
             raise ValueError(
-                "CashTransfer amount_received must be a finite and positive Decimal."
+                "CashTransfer.amount_received must be a finite and positive Decimal."
             )
         self._amount_received = value
         self._datetime_edited = datetime.now(tzinfo)

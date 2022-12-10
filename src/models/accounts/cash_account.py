@@ -5,13 +5,15 @@ from src.models.accounts.account import Account
 from src.models.constants import tzinfo
 from src.models.currencies.currency import Currency
 
+# TODO: initial balance might also require a datetime
+
 
 class CashAccount(Account):
     def __init__(self, name: str, currency: Currency, initial_balance: Decimal) -> None:
         super().__init__(name)
 
         if not isinstance(currency, Currency):
-            raise TypeError("CashAccount currency must be of type Currency.")
+            raise TypeError("CashAccount.currency must a Currency.")
 
         self._currency = currency
         self.initial_balance = initial_balance
@@ -28,10 +30,10 @@ class CashAccount(Account):
     @initial_balance.setter
     def initial_balance(self, value: Decimal) -> None:
         if not isinstance(value, Decimal):
-            raise TypeError("CashAccount initial balance must be a Decimal.")
+            raise TypeError("CashAccount.initial_balance must be a Decimal.")
 
         if value.is_signed() or not value.is_finite():
-            raise ValueError("CashAccount initial balance must be positive and finite.")
+            raise ValueError("CashAccount.initial_balance must be positive and finite.")
 
         self._initial_balance = value
         self._date_last_edited = datetime.now(tzinfo)
@@ -43,7 +45,7 @@ class CashAccount(Account):
     @balance.setter
     def balance(self, value: Decimal) -> None:
         if not isinstance(value, Decimal):
-            raise TypeError("CashAccount balance must be a Decimal.")
+            raise TypeError("CashAccount.balance must be a Decimal.")
         if not value.is_finite():
-            raise ValueError("CashAccount balance must be finite.")
+            raise ValueError("CashAccount.balance must be finite.")
         self._balance = value

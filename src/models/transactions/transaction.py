@@ -23,14 +23,14 @@ class Transaction(DatetimeCreatedMixin, DatetimeEditedMixin):
     @description.setter
     def description(self, value: str) -> None:
         if not isinstance(value, str):
-            raise TypeError(f"{self.__class__.__name__} description must be a string.")
+            raise TypeError(f"{self.__class__.__name__}.description must be a string.")
 
         if (
             len(value) < Transaction.DESCRIPTION_MIN_LENGTH
             or len(value) > Transaction.DESCRIPTION_MAX_LENGTH
         ):
             raise ValueError(
-                f"{self.__class__.__name__} description length must be between "
+                f"{self.__class__.__name__}.description length must be between "
                 f"{Transaction.DESCRIPTION_MIN_LENGTH} and "
                 f"{Transaction.DESCRIPTION_MAX_LENGTH} characters."
             )
@@ -45,7 +45,7 @@ class Transaction(DatetimeCreatedMixin, DatetimeEditedMixin):
     @datetime_.setter
     def datetime_(self, value: datetime) -> None:
         if not isinstance(value, datetime):
-            raise TypeError(f"{self.__class__.__name__} datetime_ must be a datetime.")
+            raise TypeError(f"{self.__class__.__name__}.datetime_ must be a datetime.")
 
         self._datetime = value
         self._datetime_edited = datetime.now(tzinfo)
