@@ -139,8 +139,6 @@ class CashAccount(Account):
                         " CashAccount.initial_datetime."
                     )
                 )
-            """CashTransfer.account_sender needs to be tested first as it is
-            initialized first in CashTransfer constructor"""
             if transaction.account_sender == self:
                 return
             if transaction.account_recipient == self:
@@ -159,8 +157,6 @@ class CashAccount(Account):
                 return self._income_list
             return self._expense_list
 
-        """CashTransfer.account_sender needs to be tested first as it is
-        initialized first in CashTransfer constructor"""
         if transaction.account_sender == self:
             return self._transfers_sent_list
         return self._transfers_received_list
