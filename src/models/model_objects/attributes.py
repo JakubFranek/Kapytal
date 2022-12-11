@@ -1,7 +1,19 @@
+from enum import Enum, auto
 from typing import Self
 
-from src.models.transactions.attributes.attribute import Attribute
-from src.models.transactions.attributes.enums import CategoryType
+from src.models.mixins.datetime_created_mixin import DatetimeCreatedMixin
+from src.models.mixins.name_mixin import NameMixin
+
+
+class Attribute(NameMixin, DatetimeCreatedMixin):
+    def __init__(self, name: str) -> None:
+        super().__init__(name=name)
+
+
+class CategoryType(Enum):
+    INCOME = auto()
+    EXPENSE = auto()
+    INCOME_AND_EXPENSE = auto()
 
 
 class Category(Attribute):
@@ -18,7 +30,7 @@ class Category(Attribute):
     @parent.setter
     def parent(self, new_parent: Self | None) -> None:
         if new_parent is not None and not isinstance(new_parent, Category):
-            raise TypeError("Category parent can only be a Category or a None.")
+            raise TypeError("Category.parent can only be a Category or a None.")
 
         if self._parent is not None:
             self._parent._children.remove(self)
@@ -39,6 +51,6 @@ class Category(Attribute):
     @type_.setter
     def type_(self, value: CategoryType) -> None:
         if not isinstance(value, CategoryType):
-            raise TypeError("Category type_ must be a CategoryType.")
+            raise TypeError("Category.type_ must be a CategoryType.")
 
         self._type = value

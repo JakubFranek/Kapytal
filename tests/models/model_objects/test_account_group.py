@@ -5,13 +5,13 @@ import pytest
 from hypothesis import assume, given
 from hypothesis import strategies as st
 
-from src.models.accounts.account_group import AccountGroup
 from src.models.constants import tzinfo
+from src.models.model_objects.account_group import AccountGroup
 from tests.models.composites import account_groups
 
 
 @given(name=st.text(min_size=1, max_size=32))
-def test_creation_pass(name: str) -> None:
+def test_creation(name: str) -> None:
     dt_start = datetime.now(tzinfo)
     account_group = AccountGroup(name)
 
@@ -48,6 +48,6 @@ def test_invalid_parent_type(name: str, parent: Any) -> None:
     assume(parent is not None)
     account = AccountGroup(name)
     with pytest.raises(
-        TypeError, match="AccountGroup parent can only be an AccountGroup or a None."
+        TypeError, match="AccountGroup.parent must be an AccountGroup or a None."
     ):
         account.parent = parent

@@ -6,15 +6,14 @@ from hypothesis import assume, given
 from hypothesis import strategies as st
 
 from src.models.constants import tzinfo
-from src.models.transactions.attributes.category import Category
-from src.models.transactions.attributes.enums import CategoryType
+from src.models.model_objects.attributes import Category, CategoryType
 from tests.models.composites import categories
 
 
 @given(
     name=st.text(min_size=1, max_size=32), category_type=st.sampled_from(CategoryType)
 )
-def test_creation_pass(name: str, category_type: CategoryType) -> None:
+def test_creation(name: str, category_type: CategoryType) -> None:
     dt_start = datetime.now(tzinfo)
     category = Category(name, category_type)
 
@@ -48,7 +47,7 @@ def test_add_and_remove_parent(category: Category, parent: Category) -> None:
 def test_parent_invalid_type(category: Category, parent: Any) -> None:
     assume(parent is not None)
     with pytest.raises(
-        TypeError, match="Category parent can only be a Category or a None."
+        TypeError, match="Category.parent can only be a Category or a None."
     ):
         category.parent = parent
 
@@ -63,5 +62,5 @@ def test_parent_invalid_type(category: Category, parent: Any) -> None:
     | st.sampled_from([[], (), {}, set()]),
 )
 def test_type_invalid_type(name: str, category_type: Any) -> None:
-    with pytest.raises(TypeError, match="Category type_ must be a CategoryType."):
+    with pytest.raises(TypeError, match="Category.type_ must be a CategoryType."):
         Category(name, category_type)

@@ -5,13 +5,13 @@ import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
+from src.models.base_classes.transaction import Transaction
 from src.models.constants import tzinfo
-from src.models.transactions.transaction import Transaction
 from tests.models.composites import transactions
 
 
 @given(description=st.text(min_size=0, max_size=256), datetime_=st.datetimes())
-def test_creation_pass(description: str, datetime_: datetime) -> None:
+def test_creation(description: str, datetime_: datetime) -> None:
     dt_start = datetime.now(tzinfo)
     transaction = Transaction(description, datetime_)
 
@@ -34,7 +34,7 @@ def test_creation_pass(description: str, datetime_: datetime) -> None:
     datetime_=st.datetimes(),
 )
 def test_invalid_description_type(description: str, datetime_: datetime) -> None:
-    with pytest.raises(TypeError, match="Transaction description must be a string."):
+    with pytest.raises(TypeError, match="Transaction.description must be a string."):
         Transaction(description, datetime_)
 
 
@@ -58,7 +58,7 @@ def test_invalid_description_value(description: str, datetime_: datetime) -> Non
     | st.sampled_from([[], (), {}, set()]),
 )
 def test_invalid_datetime_type(description: str, datetime_: datetime) -> None:
-    with pytest.raises(TypeError, match="Transaction datetime_ must be a datetime."):
+    with pytest.raises(TypeError, match="Transaction.datetime_ must be a datetime."):
         Transaction(description, datetime_)
 
 
@@ -71,7 +71,7 @@ def test_description_setter(transaction: Transaction, new_description: str) -> N
 
     dt_edited_diff = dt_edited_new - dt_edited_previous
 
-    assert dt_edited_diff.microseconds < 10_000
+    assert dt_edited_diff.microseconds < 100_000
 
 
 @given(transaction=transactions(), new_datetime=st.datetimes())
@@ -83,4 +83,4 @@ def test_datetime_setter(transaction: Transaction, new_datetime: datetime) -> No
 
     dt_edited_diff = dt_edited_new - dt_edited_previous
 
-    assert dt_edited_diff.microseconds < 10_000
+    assert dt_edited_diff.microseconds < 100_000

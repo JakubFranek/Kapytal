@@ -5,14 +5,14 @@ import pytest
 from hypothesis import assume, given, settings
 from hypothesis import strategies as st
 
-from src.models.accounts.account import Account
-from src.models.accounts.account_group import AccountGroup
+from src.models.base_classes.account import Account
 from src.models.constants import tzinfo
+from src.models.model_objects.account_group import AccountGroup
 from tests.models.composites import account_groups
 
 
 @given(name=st.text(min_size=1, max_size=32))
-def test_creation_pass(name: str) -> None:
+def test_creation(name: str) -> None:
     dt_start = datetime.now(tzinfo)
     account = Account(name)
 
@@ -24,14 +24,14 @@ def test_creation_pass(name: str) -> None:
 
 @given(name=st.just(""))
 def test_name_too_short(name: str) -> None:
-    with pytest.raises(ValueError, match="Account name length must be*"):
+    with pytest.raises(ValueError, match="Account.name length must be*"):
         Account(name)
 
 
 @given(name=st.text(min_size=33))
 @settings(max_examples=15)
 def test_name_too_long(name: str) -> None:
-    with pytest.raises(ValueError, match="Account name length must be*"):
+    with pytest.raises(ValueError, match="Account.name length must be*"):
         Account(name)
 
 
@@ -44,7 +44,7 @@ def test_name_too_long(name: str) -> None:
     | st.sampled_from([[], (), {}, set()])
 )
 def test_name_not_string(name: Any) -> None:
-    with pytest.raises(TypeError, match="Account name must be a string."):
+    with pytest.raises(TypeError, match="Account.name must be a string."):
         Account(name)
 
 
@@ -73,6 +73,6 @@ def test_invalid_parent_type(name: str, parent: Any) -> None:
     assume(parent is not None)
     account = Account(name)
     with pytest.raises(
-        TypeError, match="Account parent can only be an AccountGroup or a None."
+        TypeError, match="Account.parent must be an AccountGroup or a None."
     ):
         account.parent = parent

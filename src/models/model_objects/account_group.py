@@ -2,7 +2,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, Self
 
 if TYPE_CHECKING:  # pragma: no cover
-    from src.models.accounts.account import Account
+    from models.base_classes.account import Account
 
 from src.models.mixins.datetime_created_mixin import DatetimeCreatedMixin
 from src.models.mixins.name_mixin import NameMixin
