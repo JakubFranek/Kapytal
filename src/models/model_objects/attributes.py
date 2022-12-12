@@ -29,8 +29,13 @@ class Category(Attribute):
 
     @parent.setter
     def parent(self, new_parent: Self | None) -> None:
-        if new_parent is not None and not isinstance(new_parent, Category):
-            raise TypeError("Category.parent can only be a Category or a None.")
+        if new_parent is not None:
+            if not isinstance(new_parent, Category):
+                raise TypeError("Category.parent must be a Category or a None.")
+            if new_parent.type_ != self.type_:
+                raise ValueError(
+                    "The type_ of new_parent must match the type_ of this Category."
+                )
 
         if self._parent is not None:
             self._parent._children.remove(self)
@@ -41,7 +46,7 @@ class Category(Attribute):
         self._parent = new_parent
 
     @property
-    def children(self) -> tuple[Self] | None:
+    def children(self) -> tuple[Self]:
         return tuple(self._children)
 
     @property

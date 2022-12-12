@@ -28,26 +28,28 @@ def test_creation(name: str, category_type: CategoryType) -> None:
 
 @given(category=categories(), parent=categories())
 def test_add_and_remove_parent(category: Category, parent: Category) -> None:
+    assume(category.type_ == parent.type_)
     assert category.parent is None
+    assert category not in parent.children
     category.parent = parent
     assert category.parent == parent
+    assert category in parent.children
     category.parent = None
     assert category.parent is None
+    assert category not in parent.children
 
 
 @given(
     category=categories(),
     parent=st.integers()
     | st.floats()
-    | st.none()
     | st.datetimes()
     | st.booleans()
     | st.sampled_from([[], (), {}, set()]),
 )
 def test_parent_invalid_type(category: Category, parent: Any) -> None:
-    assume(parent is not None)
     with pytest.raises(
-        TypeError, match="Category.parent can only be a Category or a None."
+        TypeError, match="Category.parent must be a Category or a None."
     ):
         category.parent = parent
 
@@ -64,3 +66,13 @@ def test_parent_invalid_type(category: Category, parent: Any) -> None:
 def test_type_invalid_type(name: str, category_type: Any) -> None:
     with pytest.raises(TypeError, match="Category.type_ must be a CategoryType."):
         Category(name, category_type)
+
+
+@given(category=categories(), parent=categories())
+def test_parent_invalid_type_(category: Category, parent: Category) -> None:
+    assume(category.type_ != parent.type_)
+    with pytest.raises(
+        ValueError,
+        match="The type_ of new_parent must match the type_ of this Category.",
+    ):
+        category.parent = parent
