@@ -76,3 +76,20 @@ def test_parent_invalid_type_(category: Category, parent: Category) -> None:
         match="The type_ of new_parent must match the type_ of this Category.",
     ):
         category.parent = parent
+
+
+@given(first_category=categories(), length=st.integers(1, 5), data=st.data())
+def test_str(first_category: Category, length: int, data: st.DrawFn) -> None:
+    type_ = first_category.type_
+    categories = [first_category]
+    for i in range(0, length):
+        category = Category(data.draw(st.text(min_size=1, max_size=32)), type_)
+        category.parent = categories[i]
+        categories.append(category)
+
+    expected_string = ""
+    for category in categories:
+        expected_string += category.name + "/"
+    expected_string = expected_string[:-1]
+
+    assert str(categories[-1]) == expected_string

@@ -17,11 +17,14 @@ class CategoryType(Enum):
 
 
 class Category(Attribute):
-    def __init__(self, name: str, category_type: CategoryType) -> None:
+    def __init__(self, name: str, type_: CategoryType) -> None:
         super().__init__(name)
         self._parent: Self | None = None
         self._children: list[Self] = []
-        self.type_ = category_type
+
+        if not isinstance(type_, CategoryType):
+            raise TypeError("Category.type_ must be a CategoryType.")
+        self._type = type_
 
     @property
     def parent(self) -> Self | None:
@@ -53,9 +56,7 @@ class Category(Attribute):
     def type_(self) -> CategoryType:
         return self._type
 
-    @type_.setter
-    def type_(self, value: CategoryType) -> None:
-        if not isinstance(value, CategoryType):
-            raise TypeError("Category.type_ must be a CategoryType.")
-
-        self._type = value
+    def __str__(self) -> str:
+        if self.parent is None:
+            return self.name
+        return str(self.parent) + "/" + self.name
