@@ -11,6 +11,8 @@ from src.models.model_objects.cash_objects import (
     CashTransaction,
     CashTransactionType,
     CashTransfer,
+    TransactionPrecedesAccountError,
+    UnrelatedAccountError,
 )
 from src.models.model_objects.currency import Currency
 from tests.models.test_assets.composites import (
@@ -153,15 +155,9 @@ def test_validate_transaction_invalid_account(
     assume(transaction.account != account)
     assume(transfer.account_recipient != account and transfer.account_sender != account)
 
-    with pytest.raises(
-        ValueError,
-        match="This CashAccount is not related to the provided Transaction.",
-    ):
+    with pytest.raises(UnrelatedAccountError):
         account._validate_transaction(transaction)
-    with pytest.raises(
-        ValueError,
-        match="This CashAccount is not related to the provided Transaction.",
-    ):
+    with pytest.raises(UnrelatedAccountError):
         account._validate_transaction(transfer)
 
 
@@ -190,15 +186,9 @@ def test_validate_transaction_invalid_datetime(
     transaction._datetime = invalid_datetime
     transfer._datetime = invalid_datetime
 
-    with pytest.raises(
-        ValueError,
-        match="The provided Transaction precedes this CashAccount.initial_datetime",
-    ):
+    with pytest.raises(TransactionPrecedesAccountError):
         account._validate_transaction(transaction)
-    with pytest.raises(
-        ValueError,
-        match="The provided Transaction precedes this CashAccount.initial_datetime.",
-    ):
+    with pytest.raises(TransactionPrecedesAccountError):
         account._validate_transaction(transfer)
 
 

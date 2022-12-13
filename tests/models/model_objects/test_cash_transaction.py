@@ -12,6 +12,7 @@ from src.models.model_objects.cash_objects import (
     CashAccount,
     CashTransaction,
     CashTransactionType,
+    UnrelatedAccountError,
 )
 from tests.models.test_assets.composites import (
     attributes,
@@ -208,8 +209,5 @@ def test_get_amount_for_account_invalid_account_value(
     transaction: CashTransaction, account: CashAccount
 ) -> None:
     assume(transaction.account != account)
-    with pytest.raises(
-        ValueError,
-        match='The argument "account" is not related to this CashTransaction.',
-    ):
+    with pytest.raises(UnrelatedAccountError):
         transaction.get_amount_for_account(account)

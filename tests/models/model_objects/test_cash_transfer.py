@@ -7,7 +7,11 @@ from hypothesis import assume, given
 from hypothesis import strategies as st
 
 from src.models.constants import tzinfo
-from src.models.model_objects.cash_objects import CashAccount, CashTransfer
+from src.models.model_objects.cash_objects import (
+    CashAccount,
+    CashTransfer,
+    UnrelatedAccountError,
+)
 from tests.models.test_assets.composites import cash_accounts, cash_transfers
 from tests.models.test_assets.constants import min_datetime
 
@@ -192,8 +196,5 @@ def test_get_amount_for_account_invalid_account_value(
 ) -> None:
     assume(account != transfer.account_recipient)
     assume(account != transfer.account_sender)
-    with pytest.raises(
-        ValueError,
-        match='The argument "account" is not related to this CashTransfer.',
-    ):
+    with pytest.raises(UnrelatedAccountError):
         transfer.get_amount_for_account(account)

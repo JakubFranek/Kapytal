@@ -9,7 +9,15 @@ from src.models.constants import tzinfo
 from src.models.model_objects.attributes import Attribute, Category
 from src.models.model_objects.currency import Currency
 
-# TODO: custom exceptions for unrelated account, transaction too early etc.
+
+class TransactionPrecedesAccountError(Exception):
+    """Raised when a Transaction.datetime_ precedes the given
+    CashAccount.initial_datetime."""
+
+
+class UnrelatedAccountError(Exception):
+    """Raised when an Account tries to access a Transaction which does
+    not relate to it."""
 
 
 class CashTransactionType(Enum):
@@ -107,11 +115,11 @@ class CashAccount(Account):
                 "Argument transaction must be a CashTransaction or a CashTransfer."
             )
         if not transaction.is_account_related(self):
-            raise ValueError(
+            raise UnrelatedAccountError(
                 "This CashAccount is not related to the provided Transaction."
             )
         if transaction.datetime_ < self.initial_datetime:
-            raise ValueError(
+            raise TransactionPrecedesAccountError(
                 (
                     "The provided Transaction precedes this"
                     " CashAccount.initial_datetime."
@@ -227,7 +235,7 @@ class CashTransaction(Transaction):
 
     def get_amount_for_account(self, account: Account) -> Decimal:
         if not self.is_account_related(account):
-            raise ValueError(
+            raise UnrelatedAccountError(
                 'The argument "account" is not related to this CashTransaction.'
             )
         if self.type_ == CashTransactionType.INCOME:
@@ -241,6 +249,7 @@ class CashTransaction(Transaction):
 
 
 # TODO: disallow account_sender and account_recipient to be the same
+# problem with above: if we need to switch, we can't do this step by step via setters...
 class CashTransfer(Transaction):
     def __init__(  # noqa: TMN001, CFQ002
         self,
@@ -332,7 +341,9 @@ class CashTransfer(Transaction):
             return self.amount_received
         if self.account_sender == account:
             return -self.amount_sent
-        raise ValueError('The argument "account" is not related to this CashTransfer.')
+        raise UnrelatedAccountError(
+            'The argument "account" is not related to this CashTransfer.'
+        )
 
     def is_account_related(self, account: Account) -> None:
         if self.account_sender == account or self.account_recipient == account:
