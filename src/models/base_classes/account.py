@@ -1,14 +1,12 @@
+from abc import ABC, abstractmethod
 from decimal import Decimal
 
 from src.models.mixins.datetime_created_mixin import DatetimeCreatedMixin
 from src.models.mixins.name_mixin import NameMixin
 from src.models.model_objects.account_group import AccountGroup
 
-# TODO: make un-instantiatable? Test only sub-classes, incl. mixins...
-# TODO: add balance property (will be used for all types of accounts!)
 
-
-class Account(NameMixin, DatetimeCreatedMixin):
+class Account(NameMixin, DatetimeCreatedMixin, ABC):
     def __init__(self, name: str) -> None:
         super().__init__(name=name)
         self._parent: AccountGroup | None = None
@@ -31,5 +29,6 @@ class Account(NameMixin, DatetimeCreatedMixin):
         self._parent = new_parent
 
     @property
+    @abstractmethod
     def balance(self) -> Decimal:
-        return Decimal("NaN")
+        raise NotImplementedError("Not implemented")

@@ -5,16 +5,16 @@ import pytest
 from hypothesis import assume, given, settings
 from hypothesis import strategies as st
 
-from src.models.base_classes.account import Account
 from src.models.constants import tzinfo
 from src.models.model_objects.account_group import AccountGroup
-from tests.models.composites import account_groups
+from tests.models.test_assets.composites import account_groups
+from tests.models.test_assets.concrete_abcs import ConcreteAccount
 
 
 @given(name=st.text(min_size=1, max_size=32))
 def test_creation(name: str) -> None:
     dt_start = datetime.now(tzinfo)
-    account = Account(name)
+    account = ConcreteAccount(name)
 
     dt_created_diff = account.datetime_created - dt_start
 
@@ -25,14 +25,14 @@ def test_creation(name: str) -> None:
 @given(name=st.just(""))
 def test_name_too_short(name: str) -> None:
     with pytest.raises(ValueError, match="Account.name length must be*"):
-        Account(name)
+        ConcreteAccount(name)
 
 
 @given(name=st.text(min_size=33))
 @settings(max_examples=15)
 def test_name_too_long(name: str) -> None:
     with pytest.raises(ValueError, match="Account.name length must be*"):
-        Account(name)
+        ConcreteAccount(name)
 
 
 @given(
@@ -45,12 +45,12 @@ def test_name_too_long(name: str) -> None:
 )
 def test_name_not_string(name: Any) -> None:
     with pytest.raises(TypeError, match="Account.name must be a string."):
-        Account(name)
+        ConcreteAccount(name)
 
 
 @given(name=st.text(min_size=1, max_size=32), parent=account_groups())
 def test_add_and_remove_parent(name: str, parent: AccountGroup) -> None:
-    account = Account(name)
+    account = ConcreteAccount(name)
     assert account.parent is None
     account.parent = parent
     assert account.parent == parent
@@ -71,8 +71,15 @@ def test_add_and_remove_parent(name: str, parent: AccountGroup) -> None:
 )
 def test_invalid_parent_type(name: str, parent: Any) -> None:
     assume(parent is not None)
-    account = Account(name)
+    account = ConcreteAccount(name)
     with pytest.raises(
         TypeError, match="Account.parent must be an AccountGroup or a None."
     ):
         account.parent = parent
+
+
+@given(name=st.text(min_size=1, max_size=32))
+def test_abstract_get_amount_for_account(name: str) -> None:
+    account = ConcreteAccount(name)
+    with pytest.raises(NotImplementedError):
+        account.balance

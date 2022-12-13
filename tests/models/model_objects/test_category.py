@@ -7,7 +7,7 @@ from hypothesis import strategies as st
 
 from src.models.constants import tzinfo
 from src.models.model_objects.attributes import Category, CategoryType
-from tests.models.composites import categories
+from tests.models.test_assets.composites import categories
 
 
 @given(

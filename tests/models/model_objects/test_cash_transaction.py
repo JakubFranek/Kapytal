@@ -13,13 +13,13 @@ from src.models.model_objects.cash_objects import (
     CashTransaction,
     CashTransactionType,
 )
-from tests.models.composites import (
+from tests.models.test_assets.composites import (
     attributes,
     cash_accounts,
     cash_transactions,
     categories,
 )
-from tests.models.testing_constants import min_datetime
+from tests.models.test_assets.constants import min_datetime
 
 
 @given(

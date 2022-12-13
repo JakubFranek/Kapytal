@@ -13,7 +13,7 @@ from src.models.model_objects.cash_objects import (
     CashTransfer,
 )
 from src.models.model_objects.currency import Currency
-from tests.models.composites import (
+from tests.models.test_assets.composites import (
     cash_accounts,
     cash_transactions,
     cash_transfers,

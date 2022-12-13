@@ -3,7 +3,6 @@ from datetime import datetime
 
 from hypothesis import strategies as st
 
-from src.models.base_classes.transaction import Transaction
 from src.models.model_objects.account_group import AccountGroup
 from src.models.model_objects.attributes import Attribute, Category, CategoryType
 from src.models.model_objects.cash_objects import (
@@ -13,7 +12,8 @@ from src.models.model_objects.cash_objects import (
     CashTransfer,
 )
 from src.models.model_objects.currency import Currency
-from tests.models.testing_constants import max_datetime, min_datetime
+from tests.models.test_assets.concrete_abcs import ConcreteTransaction
+from tests.models.test_assets.constants import max_datetime, min_datetime
 
 
 @st.composite
@@ -126,7 +126,7 @@ def currencies(draw: st.DrawFn) -> Currency:
 
 
 @st.composite
-def transactions(draw: st.DrawFn) -> Transaction:
+def transactions(draw: st.DrawFn) -> ConcreteTransaction:
     description = draw(st.text(min_size=0, max_size=256))
     datetime_ = draw(st.datetimes())
-    return Transaction(description, datetime_)
+    return ConcreteTransaction(description, datetime_)

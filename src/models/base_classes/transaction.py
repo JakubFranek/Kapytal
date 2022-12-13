@@ -1,13 +1,17 @@
+from abc import ABC, abstractmethod
 from datetime import datetime
+from decimal import Decimal
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:  # pragma: no cover
+    from src.models.base_classes.account import Account
 
 from src.models.constants import tzinfo
 from src.models.mixins.datetime_created_mixin import DatetimeCreatedMixin
 from src.models.mixins.datetime_edited_mixin import DatetimeEditedMixin
 
-# TODO: maybe make un-instantiable?
 
-
-class Transaction(DatetimeCreatedMixin, DatetimeEditedMixin):
+class Transaction(DatetimeCreatedMixin, DatetimeEditedMixin, ABC):
     DESCRIPTION_MIN_LENGTH = 0
     DESCRIPTION_MAX_LENGTH = 256
 
@@ -49,3 +53,11 @@ class Transaction(DatetimeCreatedMixin, DatetimeEditedMixin):
 
         self._datetime = value
         self._datetime_edited = datetime.now(tzinfo)
+
+    @abstractmethod
+    def is_account_related(self, account: "Account") -> bool:
+        raise NotImplementedError("Not implemented")
+
+    @abstractmethod
+    def get_amount_for_account(self, account: "Account") -> Decimal:
+        raise NotImplementedError("Not implemented")

@@ -9,7 +9,7 @@ from hypothesis import strategies as st
 from src.models.constants import tzinfo
 from src.models.model_objects.account_group import AccountGroup
 from src.models.model_objects.cash_objects import CashAccount
-from tests.models.composites import account_groups, cash_accounts
+from tests.models.test_assets.composites import account_groups, cash_accounts
 
 
 @given(name=st.text(min_size=1, max_size=32))

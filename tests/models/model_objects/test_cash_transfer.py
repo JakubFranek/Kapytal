@@ -8,8 +8,8 @@ from hypothesis import strategies as st
 
 from src.models.constants import tzinfo
 from src.models.model_objects.cash_objects import CashAccount, CashTransfer
-from tests.models.composites import cash_accounts, cash_transfers
-from tests.models.testing_constants import min_datetime
+from tests.models.test_assets.composites import cash_accounts, cash_transfers
+from tests.models.test_assets.constants import min_datetime
 
 
 @given(
