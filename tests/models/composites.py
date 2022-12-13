@@ -13,7 +13,7 @@ from src.models.model_objects.cash_objects import (
     CashTransfer,
 )
 from src.models.model_objects.currency import Currency
-from tests.models.testing_constants import max_datetime
+from tests.models.testing_constants import max_datetime, min_datetime
 
 
 @st.composite
@@ -29,7 +29,11 @@ def attributes(draw: st.DrawFn) -> Attribute:
 
 
 @st.composite
-def cash_accounts(draw: st.DrawFn, max_datetime: datetime) -> CashAccount:
+def cash_accounts(
+    draw: st.DrawFn,
+    min_datetime: datetime = datetime.min,
+    max_datetime: datetime = max_datetime,
+) -> CashAccount:
     name = draw(st.text(min_size=1, max_size=32))
     currency = draw(currencies())
     initial_balance = draw(
@@ -37,16 +41,22 @@ def cash_accounts(draw: st.DrawFn, max_datetime: datetime) -> CashAccount:
             min_value=0, max_value=1e10, allow_infinity=False, allow_nan=False, places=3
         )
     )
-    initial_datetime = draw(st.datetimes(max_value=max_datetime))
+    initial_datetime = draw(
+        st.datetimes(min_value=min_datetime, max_value=max_datetime)
+    )
     return CashAccount(name, currency, initial_balance, initial_datetime)
 
 
 @st.composite
-def cash_transactions(draw: st.DrawFn, min_datetime: datetime) -> CashTransaction:
+def cash_transactions(
+    draw: st.DrawFn,
+    min_datetime: datetime = min_datetime,
+    max_datetime: datetime = datetime.max,
+) -> CashTransaction:
     description = draw(st.text(min_size=0, max_size=256))
     type_ = draw(st.sampled_from(CashTransactionType))
-    account: CashAccount = draw(cash_accounts(max_datetime=max_datetime))
-    datetime_ = draw(st.datetimes(min_value=min_datetime))
+    account: CashAccount = draw(cash_accounts())
+    datetime_ = draw(st.datetimes(min_value=min_datetime, max_value=max_datetime))
     amount = draw(
         st.decimals(
             min_value=0.01,
@@ -65,11 +75,15 @@ def cash_transactions(draw: st.DrawFn, min_datetime: datetime) -> CashTransactio
 
 
 @st.composite
-def cash_transfers(draw: st.DrawFn, min_datetime: datetime) -> CashTransfer:
+def cash_transfers(
+    draw: st.DrawFn,
+    min_datetime: datetime = min_datetime,
+    max_datetime: datetime = datetime.max,
+) -> CashTransfer:
     description = draw(st.text(min_size=0, max_size=256))
-    account_sender: CashAccount = draw(cash_accounts(max_datetime=max_datetime))
-    account_recipient: CashAccount = draw(cash_accounts(max_datetime=max_datetime))
-    datetime_ = draw(st.datetimes(min_value=min_datetime))
+    account_sender: CashAccount = draw(cash_accounts())
+    account_recipient: CashAccount = draw(cash_accounts())
+    datetime_ = draw(st.datetimes(min_value=min_datetime, max_value=max_datetime))
     amount_sent = draw(
         st.decimals(
             min_value=0.01,

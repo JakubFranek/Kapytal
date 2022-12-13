@@ -9,13 +9,13 @@ from hypothesis import strategies as st
 from src.models.constants import tzinfo
 from src.models.model_objects.cash_objects import CashAccount, CashTransfer
 from tests.models.composites import cash_accounts, cash_transfers
-from tests.models.testing_constants import max_datetime, min_datetime
+from tests.models.testing_constants import min_datetime
 
 
 @given(
     description=st.text(min_size=0, max_size=256),
-    account_sender=cash_accounts(max_datetime=max_datetime),
-    account_recipient=cash_accounts(max_datetime=max_datetime),
+    account_sender=cash_accounts(),
+    account_recipient=cash_accounts(),
     datetime_=st.datetimes(min_value=min_datetime),
     amount_sent=st.decimals(min_value=0.01, allow_infinity=False, allow_nan=False),
     amount_received=st.decimals(min_value=0.01, allow_infinity=False, allow_nan=False),
@@ -50,7 +50,7 @@ def test_creation(
 
 
 @given(
-    transfer=cash_transfers(min_datetime=min_datetime),
+    transfer=cash_transfers(),
     new_account=st.integers()
     | st.floats()
     | st.text()
@@ -67,7 +67,7 @@ def test_account_sender_invalid_type(transfer: CashTransfer, new_account: Any) -
 
 
 @given(
-    transfer=cash_transfers(min_datetime=min_datetime),
+    transfer=cash_transfers(),
     new_account=st.integers()
     | st.floats()
     | st.text()
@@ -86,7 +86,7 @@ def test_account_recipient_invalid_type(
 
 
 @given(
-    transfer=cash_transfers(min_datetime=min_datetime),
+    transfer=cash_transfers(),
     new_amount=st.integers()
     | st.floats()
     | st.text()
@@ -101,7 +101,7 @@ def test_amount_sent_invalid_type(transfer: CashTransfer, new_amount: Any) -> No
 
 
 @given(
-    transfer=cash_transfers(min_datetime=min_datetime),
+    transfer=cash_transfers(),
     new_amount=st.decimals(max_value=-0.01),
 )
 def test_amount_sent_invalid_value(transfer: CashTransfer, new_amount: Decimal) -> None:
@@ -113,7 +113,7 @@ def test_amount_sent_invalid_value(transfer: CashTransfer, new_amount: Decimal) 
 
 
 @given(
-    transfer=cash_transfers(min_datetime=min_datetime),
+    transfer=cash_transfers(),
     new_amount=st.integers()
     | st.floats()
     | st.text()
@@ -130,7 +130,7 @@ def test_amount_received_invalid_type(transfer: CashTransfer, new_amount: Any) -
 
 
 @given(
-    transfer=cash_transfers(min_datetime=min_datetime),
+    transfer=cash_transfers(),
     new_amount=st.decimals(max_value=-0.01),
 )
 def test_amount_received_invalid_value(
@@ -144,8 +144,8 @@ def test_amount_received_invalid_value(
 
 
 @given(
-    transfer=cash_transfers(min_datetime=min_datetime),
-    new_sender=cash_accounts(max_datetime=max_datetime),
+    transfer=cash_transfers(),
+    new_sender=cash_accounts(),
 )
 def test_change_sender(transfer: CashTransfer, new_sender: CashAccount) -> None:
 
@@ -158,8 +158,8 @@ def test_change_sender(transfer: CashTransfer, new_sender: CashAccount) -> None:
 
 
 @given(
-    transfer=cash_transfers(min_datetime=min_datetime),
-    new_recipient=cash_accounts(max_datetime=max_datetime),
+    transfer=cash_transfers(),
+    new_recipient=cash_accounts(),
 )
 def test_change_recipient(transfer: CashTransfer, new_recipient: CashAccount) -> None:
 
@@ -171,7 +171,7 @@ def test_change_recipient(transfer: CashTransfer, new_recipient: CashAccount) ->
     assert transfer not in previous_recipient.transactions
 
 
-@given(transfer=cash_transfers(min_datetime=min_datetime))
+@given(transfer=cash_transfers())
 def test_get_amount_for_account(transfer: CashTransfer) -> None:
     expected_sender_amount = -transfer.amount_sent
     expected_recipient_amount = transfer.amount_received
@@ -184,25 +184,8 @@ def test_get_amount_for_account(transfer: CashTransfer) -> None:
 
 
 @given(
-    transfer=cash_transfers(min_datetime=min_datetime),
-    account=st.integers()
-    | st.floats()
-    | st.text()
-    | st.none()
-    | st.datetimes()
-    | st.booleans()
-    | st.sampled_from([[], (), {}, set()]),
-)
-def test_get_amount_for_account_invalid_account_type(
-    transfer: CashTransfer, account: Any
-) -> None:
-    with pytest.raises(TypeError, match="Argument account must be a CashAccount."):
-        transfer.get_amount_for_account(account)
-
-
-@given(
-    transfer=cash_transfers(min_datetime=min_datetime),
-    account=cash_accounts(max_datetime=max_datetime),
+    transfer=cash_transfers(),
+    account=cash_accounts(),
 )
 def test_get_amount_for_account_invalid_account_value(
     transfer: CashTransfer, account: CashAccount
@@ -211,6 +194,6 @@ def test_get_amount_for_account_invalid_account_value(
     assume(account != transfer.account_sender)
     with pytest.raises(
         ValueError,
-        match="The provided CashAccount is not related to this CashTransfer.",
+        match='The argument "account" is not related to this CashTransfer.',
     ):
         transfer.get_amount_for_account(account)

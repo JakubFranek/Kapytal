@@ -1,8 +1,11 @@
+from decimal import Decimal
+
 from src.models.mixins.datetime_created_mixin import DatetimeCreatedMixin
 from src.models.mixins.name_mixin import NameMixin
 from src.models.model_objects.account_group import AccountGroup
 
 # TODO: make un-instantiatable? Test only sub-classes, incl. mixins...
+# TODO: add balance property (will be used for all types of accounts!)
 
 
 class Account(NameMixin, DatetimeCreatedMixin):
@@ -26,3 +29,7 @@ class Account(NameMixin, DatetimeCreatedMixin):
             new_parent._children.append(self)
 
         self._parent = new_parent
+
+    @property
+    def balance(self) -> Decimal:
+        return Decimal("NaN")

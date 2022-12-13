@@ -90,6 +90,5 @@ def test_str(first_category: Category, length: int, data: st.DrawFn) -> None:
     expected_string = ""
     for category in categories:
         expected_string += category.name + "/"
-    expected_string = expected_string[:-1]
 
-    assert str(categories[-1]) == expected_string
+    assert str(categories[-1]) == expected_string[:-1]

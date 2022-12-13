@@ -19,7 +19,6 @@ from tests.models.composites import (
     cash_transfers,
     currencies,
 )
-from tests.models.testing_constants import max_datetime, min_datetime
 
 
 @given(
@@ -125,44 +124,7 @@ def test_initial_datetime_invalid_type(
 
 
 @given(
-    account=cash_accounts(max_datetime=max_datetime),
-    transaction=cash_transactions(min_datetime=min_datetime),
-    transfer=cash_transfers(min_datetime=min_datetime),
-    sender_bool=st.booleans(),
-)
-def test_get_proper_list(
-    account: CashAccount,
-    transaction: CashTransaction,
-    transfer: CashTransfer,
-    sender_bool: bool,
-) -> None:
-    transaction.account = account
-    if sender_bool:
-        transfer.account_sender = account
-    else:
-        transfer.account_recipient = account
-
-    expected_list_transaction = (
-        account._income_list
-        if transaction.type_ == CashTransactionType.INCOME
-        else account._expense_list
-    )
-    expected_list_transfer = (
-        account._transfers_received_list
-        if not sender_bool
-        else account._transfers_sent_list
-    )
-    account._validate_transaction(transaction)
-    account._validate_transaction(transfer)
-    result_transaction = account._get_proper_list(transaction)
-    result_transfer = account._get_proper_list(transfer)
-
-    assert result_transaction == expected_list_transaction
-    assert result_transfer == expected_list_transfer
-
-
-@given(
-    account=cash_accounts(max_datetime=max_datetime),
+    account=cash_accounts(),
     transaction=st.integers()
     | st.floats()
     | st.none()
@@ -181,9 +143,9 @@ def test_validate_transaction_invalid_type(
 
 
 @given(
-    account=cash_accounts(max_datetime=max_datetime),
-    transaction=cash_transactions(min_datetime=min_datetime),
-    transfer=cash_transfers(min_datetime=min_datetime),
+    account=cash_accounts(),
+    transaction=cash_transactions(),
+    transfer=cash_transfers(),
 )
 def test_validate_transaction_invalid_account(
     account: CashAccount, transaction: CashTransaction, transfer: CashTransfer
@@ -193,29 +155,35 @@ def test_validate_transaction_invalid_account(
 
     with pytest.raises(
         ValueError,
-        match="This CashAccount is not related to the provided CashTransaction.",
+        match="This CashAccount is not related to the provided Transaction.",
     ):
         account._validate_transaction(transaction)
     with pytest.raises(
         ValueError,
-        match="This CashAccount is not related to the provided CashTransfer.",
+        match="This CashAccount is not related to the provided Transaction.",
     ):
         account._validate_transaction(transfer)
 
 
 @given(
-    account=cash_accounts(max_datetime=max_datetime),
-    transaction=cash_transactions(min_datetime=min_datetime),
-    transfer=cash_transfers(min_datetime=min_datetime),
+    account=cash_accounts(),
+    transaction=cash_transactions(),
+    transfer=cash_transfers(),
     data=st.data(),
+    switch=st.booleans(),
 )
 def test_validate_transaction_invalid_datetime(
     account: CashAccount,
     transaction: CashTransaction,
     transfer: CashTransfer,
     data: st.DrawFn,
+    switch: bool,
 ) -> None:
     transaction._account = account
+    if switch:
+        transfer._account_recipient = account
+    else:
+        transfer._account_sender = account
     invalid_datetime = data.draw(
         st.datetimes(max_value=account.initial_datetime - timedelta(seconds=1))
     )
@@ -224,21 +192,19 @@ def test_validate_transaction_invalid_datetime(
 
     with pytest.raises(
         ValueError,
-        match="The provided CashTransaction precedes this CashAccount.initial_datetime",
+        match="The provided Transaction precedes this CashAccount.initial_datetime",
     ):
         account._validate_transaction(transaction)
     with pytest.raises(
         ValueError,
-        match="The provided CashTransfer precedes this CashAccount.initial_datetime.",
+        match="The provided Transaction precedes this CashAccount.initial_datetime.",
     ):
         account._validate_transaction(transfer)
 
 
 @given(
-    account=cash_accounts(max_datetime=max_datetime),
-    transactions=st.lists(
-        cash_transactions(min_datetime=min_datetime), min_size=1, max_size=10
-    ),
+    account=cash_accounts(),
+    transactions=st.lists(cash_transactions(), min_size=1, max_size=10),
 )
 def test_balance(account: CashAccount, transactions: list[CashTransaction]) -> None:
     datetime_balance_list = [(account.initial_datetime, account.initial_balance)]

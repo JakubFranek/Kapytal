@@ -7,7 +7,7 @@ if TYPE_CHECKING:  # pragma: no cover
 from src.models.mixins.datetime_created_mixin import DatetimeCreatedMixin
 from src.models.mixins.name_mixin import NameMixin
 
-# TODO: handle AccountGroup balances
+# TODO: handle and test AccountGroup balances
 
 
 class AccountGroup(NameMixin, DatetimeCreatedMixin):
@@ -15,7 +15,6 @@ class AccountGroup(NameMixin, DatetimeCreatedMixin):
         super().__init__(name)
         self._parent: Self | None = None
         self._children: list[Self | "Account"] = []
-        self._balance = Decimal(0)
 
     @property
     def parent(self) -> Self | None:
@@ -37,3 +36,7 @@ class AccountGroup(NameMixin, DatetimeCreatedMixin):
     @property
     def children(self) -> tuple["Account" | Self]:
         return tuple(self._children)
+
+    @property
+    def balance(self) -> Decimal:
+        return sum(child.balance for child in self._children)

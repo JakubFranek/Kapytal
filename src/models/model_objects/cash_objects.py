@@ -2,7 +2,6 @@ from collections.abc import Collection
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum, auto
-from itertools import chain
 
 from src.models.base_classes.account import Account
 from src.models.base_classes.transaction import Transaction
@@ -10,7 +9,7 @@ from src.models.constants import tzinfo
 from src.models.model_objects.attributes import Attribute, Category
 from src.models.model_objects.currency import Currency
 
-# TODO: UUID for Accounts, AccountGroups(?) and Transactions?
+# TODO: custom exceptions for unrelated account, transaction too early etc.
 
 
 class CashTransactionType(Enum):
@@ -36,10 +35,7 @@ class CashAccount(Account):
         self.initial_datetime = initial_datetime
         self._balance_history = [(initial_datetime, initial_balance)]
 
-        self._income_list: list["CashTransaction"] = []
-        self._expense_list: list["CashTransaction"] = []
-        self._transfers_received_list: list["CashTransfer"] = []
-        self._transfers_sent_list: list["CashTransfer"] = []
+        self._transactions: list["CashTransaction|CashTransfer"] = []
 
     @property
     def currency(self) -> Currency:
@@ -81,85 +77,47 @@ class CashAccount(Account):
         return tuple(self._balance_history)
 
     @property
-    def transactions(self) -> tuple["CashTransaction|CashTransfer"]:
-        transaction_list = list(
-            chain(
-                self._income_list,
-                self._expense_list,
-                self._transfers_sent_list,
-                self._transfers_received_list,
-            )
-        )
-        transaction_list.sort(key=lambda transaction: transaction.datetime_)
-        return tuple(transaction_list)
+    def transactions(self) -> tuple["CashTransaction | CashTransfer"]:
+        self._transactions.sort(key=lambda transaction: transaction.datetime_)
+        return tuple(self._transactions)
 
     def add_transaction(self, transaction: "CashTransaction | CashTransfer") -> None:
         self._validate_transaction(transaction)
-        proper_list = self._get_proper_list(transaction)
-        proper_list.append(transaction)
+        self._transactions.append(transaction)
         self._update_balance()
 
     def remove_transaction(self, transaction: "CashTransaction | CashTransfer") -> None:
         self._validate_transaction(transaction)
-        proper_list = self._get_proper_list(transaction)
-        proper_list.remove(transaction)
+        self._transactions.remove(transaction)
         self._update_balance()
 
     def _update_balance(self) -> None:
-        transactions_tuple = self.transactions
-        datetime_balance_list = [(self.initial_datetime, self.initial_balance)]
-        for transaction in transactions_tuple:
-            datetime_ = transaction.datetime_
-            last_balance = datetime_balance_list[-1][1]
+        datetime_balance_history = [(self.initial_datetime, self.initial_balance)]
+        for transaction in self.transactions:
+            last_balance = datetime_balance_history[-1][1]
             next_balance = last_balance + transaction.get_amount_for_account(self)
-            datetime_balance_list.append((datetime_, next_balance))
-        self._balance_history = datetime_balance_list
+            datetime_balance_history.append((transaction.datetime_, next_balance))
+        self._balance_history = datetime_balance_history
 
     def _validate_transaction(
         self, transaction: "CashTransaction | CashTransfer"
     ) -> None:
-        if isinstance(transaction, CashTransaction):
-            if transaction.account != self:
-                raise ValueError(
-                    "This CashAccount is not related to the provided CashTransaction."
-                )
-            if transaction.datetime_ < self.initial_datetime:
-                raise ValueError(
-                    (
-                        "The provided CashTransaction precedes this"
-                        " CashAccount.initial_datetime."
-                    )
-                )
-            return
-        if isinstance(transaction, CashTransfer):
-            if transaction.datetime_ < self.initial_datetime:
-                raise ValueError(
-                    (
-                        "The provided CashTransfer precedes this"
-                        " CashAccount.initial_datetime."
-                    )
-                )
-            if transaction.account_sender == self:
-                return
-            if transaction.account_recipient == self:
-                return
-
-            raise ValueError(
-                "This CashAccount is not related to the provided CashTransfer."
+        if not isinstance(transaction, (CashTransaction, CashTransfer)):
+            raise TypeError(
+                "Argument transaction must be a CashTransaction or a CashTransfer."
             )
-        raise TypeError(
-            "Argument transaction must be a CashTransaction or a CashTransfer."
-        )
-
-    def _get_proper_list(self, transaction: "CashTransaction | CashTransfer") -> list:
-        if isinstance(transaction, CashTransaction):
-            if transaction.type_ == CashTransactionType.INCOME:
-                return self._income_list
-            return self._expense_list
-
-        if transaction.account_sender == self:
-            return self._transfers_sent_list
-        return self._transfers_received_list
+        if not transaction.is_account_related(self):
+            raise ValueError(
+                "This CashAccount is not related to the provided Transaction."
+            )
+        if transaction.datetime_ < self.initial_datetime:
+            raise ValueError(
+                (
+                    "The provided Transaction precedes this"
+                    " CashAccount.initial_datetime."
+                )
+            )
+        return
 
 
 class CashTransaction(Transaction):
@@ -198,15 +156,15 @@ class CashTransaction(Transaction):
         return self._account
 
     @account.setter
-    def account(self, value: CashAccount) -> None:
-        if not isinstance(value, CashAccount):
+    def account(self, new_account: CashAccount) -> None:
+        if not isinstance(new_account, CashAccount):
             raise TypeError("CashTransaction.account must be a CashAccount.")
 
         if hasattr(self, "_account"):
             self._account.remove_transaction(self)
 
-        self._account = value
-        self._currency = value.currency
+        self._account = new_account
+        self._currency = new_account.currency
 
         self._account.add_transaction(self)
 
@@ -267,18 +225,22 @@ class CashTransaction(Transaction):
         self._tags = tuple(values)
         self._datetime_edited = datetime.now(tzinfo)
 
-    def get_amount_for_account(self, account: CashAccount) -> Decimal:
-        if not isinstance(account, CashAccount):
-            raise TypeError("Argument account must be a CashAccount.")
-        if self.account != account:
+    def get_amount_for_account(self, account: Account) -> Decimal:
+        if not self.is_account_related(account):
             raise ValueError(
-                "The provided CashAccount is not related to this CashTransaction."
+                'The argument "account" is not related to this CashTransaction.'
             )
         if self.type_ == CashTransactionType.INCOME:
             return self.amount
         return -self.amount
 
+    def is_account_related(self, account: Account) -> None:
+        if self.account == account:
+            return True
+        return False
 
+
+# TODO: disallow account_sender and account_recipient to be the same
 class CashTransfer(Transaction):
     def __init__(  # noqa: TMN001, CFQ002
         self,
@@ -304,14 +266,14 @@ class CashTransfer(Transaction):
         return self._account_sender
 
     @account_sender.setter
-    def account_sender(self, value: CashAccount) -> None:
-        if not isinstance(value, CashAccount):
+    def account_sender(self, new_sender: CashAccount) -> None:
+        if not isinstance(new_sender, CashAccount):
             raise TypeError("CashTransfer.account_sender must be a CashAccount.")
 
         if hasattr(self, "_account_sender"):
             self._account_sender.remove_transaction(self)
 
-        self._account_sender = value
+        self._account_sender = new_sender
         if self._is_initialized:
             self._account_sender.add_transaction(self)
 
@@ -322,14 +284,14 @@ class CashTransfer(Transaction):
         return self._account_recipient
 
     @account_recipient.setter
-    def account_recipient(self, value: CashAccount) -> None:
-        if not isinstance(value, CashAccount):
+    def account_recipient(self, new_recipient: CashAccount) -> None:
+        if not isinstance(new_recipient, CashAccount):
             raise TypeError("CashTransfer.account_recipient must be a CashAccount.")
 
         if hasattr(self, "_account_recipient"):
             self._account_recipient.remove_transaction(self)
 
-        self._account_recipient = value
+        self._account_recipient = new_recipient
         if self._is_initialized:
             self._account_recipient.add_transaction(self)
 
@@ -365,13 +327,14 @@ class CashTransfer(Transaction):
         self._amount_received = value
         self._datetime_edited = datetime.now(tzinfo)
 
-    def get_amount_for_account(self, account: CashAccount) -> Decimal:
-        if not isinstance(account, CashAccount):
-            raise TypeError("Argument account must be a CashAccount.")
+    def get_amount_for_account(self, account: Account) -> Decimal:
         if self.account_recipient == account:
             return self.amount_received
         if self.account_sender == account:
             return -self.amount_sent
-        raise ValueError(
-            "The provided CashAccount is not related to this CashTransfer."
-        )
+        raise ValueError('The argument "account" is not related to this CashTransfer.')
+
+    def is_account_related(self, account: Account) -> None:
+        if self.account_sender == account or self.account_recipient == account:
+            return True
+        return False
