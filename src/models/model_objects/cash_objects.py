@@ -6,7 +6,12 @@ from enum import Enum, auto
 from src.models.base_classes.account import Account
 from src.models.base_classes.transaction import Transaction
 from src.models.constants import tzinfo
-from src.models.model_objects.attributes import Attribute, Category, CategoryType
+from src.models.model_objects.attributes import (
+    Attribute,
+    AttributeType,
+    Category,
+    CategoryType,
+)
 from src.models.model_objects.currency import Currency
 
 
@@ -198,10 +203,12 @@ class CashTransaction(Transaction):
         return self._payee
 
     @payee.setter
-    def payee(self, value: Attribute) -> None:
-        if not isinstance(value, Attribute):
+    def payee(self, attribute: Attribute) -> None:
+        if not isinstance(attribute, Attribute):
             raise TypeError("CashTransaction.payee must be an Attribute.")
-        self._payee = value
+        if not attribute.type_ == AttributeType.PAYEE:
+            raise ValueError("CashTransaction.payee Attribute must be type_ PAYEE.")
+        self._payee = attribute
         self._datetime_edited = datetime.now(tzinfo)
 
     @property
@@ -251,13 +258,15 @@ class CashTransaction(Transaction):
         return self._tags
 
     @tags.setter
-    def tags(self, values: Collection[Attribute]) -> None:
-        if not isinstance(values, Collection) or not all(
-            isinstance(value, Attribute) for value in values
+    def tags(self, attributes: Collection[Attribute]) -> None:
+        if not isinstance(attributes, Collection) or not all(
+            isinstance(attribute, Attribute) for attribute in attributes
         ):
             raise TypeError("CashTransaction.tags must be a collection of Attributes.")
+        if not all(attribute.type_ == AttributeType.TAG for attribute in attributes):
+            raise ValueError("CashTransaction.tags Attributes must be type_ TAG.")
 
-        self._tags = tuple(values)
+        self._tags = tuple(attributes)
         self._datetime_edited = datetime.now(tzinfo)
 
     @property

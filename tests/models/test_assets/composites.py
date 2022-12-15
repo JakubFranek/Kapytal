@@ -5,7 +5,12 @@ from decimal import Decimal
 from hypothesis import strategies as st
 
 from src.models.model_objects.account_group import AccountGroup
-from src.models.model_objects.attributes import Attribute, Category, CategoryType
+from src.models.model_objects.attributes import (
+    Attribute,
+    AttributeType,
+    Category,
+    CategoryType,
+)
 from src.models.model_objects.cash_objects import (
     CashAccount,
     CashTransaction,
@@ -24,9 +29,13 @@ def account_groups(draw: st.DrawFn) -> AccountGroup:
 
 
 @st.composite
-def attributes(draw: st.DrawFn) -> Attribute:
+def attributes(draw: st.DrawFn, type_: AttributeType | None = None) -> Attribute:
     name = draw(st.text(min_size=1, max_size=32))
-    return Attribute(name)
+    if type_ is None:
+        attr_type = draw(st.sampled_from(AttributeType))
+    else:
+        attr_type = type_
+    return Attribute(name, attr_type)
 
 
 @st.composite
@@ -61,8 +70,8 @@ def cash_transactions(
     category_amount_pairs_list = draw(
         st.lists(category_amount_pairs(type_), min_size=1, max_size=5)
     )
-    payee = draw(attributes())
-    tags = draw(st.lists(attributes()))
+    payee = draw(attributes(AttributeType.PAYEE))
+    tags = draw(st.lists(attributes(AttributeType.TAG)))
     return CashTransaction(
         description, datetime_, type_, account, category_amount_pairs_list, payee, tags
     )

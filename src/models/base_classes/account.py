@@ -1,9 +1,13 @@
 from abc import ABC, abstractmethod
 from decimal import Decimal
+from typing import TYPE_CHECKING
 
 from src.models.mixins.datetime_created_mixin import DatetimeCreatedMixin
 from src.models.mixins.name_mixin import NameMixin
 from src.models.model_objects.account_group import AccountGroup
+
+if TYPE_CHECKING:  # pragma: no cover
+    from src.models.base_classes.transaction import Transaction
 
 
 class Account(NameMixin, DatetimeCreatedMixin, ABC):
@@ -32,3 +36,8 @@ class Account(NameMixin, DatetimeCreatedMixin, ABC):
     @abstractmethod
     def balance(self) -> Decimal:
         raise NotImplementedError("Not implemented")
+
+    @property
+    @abstractmethod
+    def transactions(self) -> tuple["Transaction"]:
+        raise NotImplementedError("Not implemented.")

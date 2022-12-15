@@ -7,7 +7,12 @@ from hypothesis import assume, given
 from hypothesis import strategies as st
 
 from src.models.constants import tzinfo
-from src.models.model_objects.attributes import Attribute, Category
+from src.models.model_objects.attributes import (
+    Attribute,
+    AttributeType,
+    Category,
+    CategoryType,
+)
 from src.models.model_objects.cash_objects import (
     CashAccount,
     CashTransaction,
@@ -30,8 +35,8 @@ from tests.models.test_assets.constants import min_datetime
     datetime_=st.datetimes(min_value=min_datetime),
     type_=st.sampled_from(CashTransactionType),
     account=cash_accounts(),
-    payee=attributes(),
-    tags=st.lists(attributes()),
+    payee=attributes(AttributeType.PAYEE),
+    tags=st.lists(attributes(AttributeType.TAG)),
     data=st.data(),
 )
 def test_creation(  # noqa: CFQ002,TMN001
@@ -117,6 +122,16 @@ def test_payee_invalid_type(transaction: CashTransaction, new_payee: Any) -> Non
         transaction.payee = new_payee
 
 
+@given(transaction=cash_transactions(), new_payee=attributes(AttributeType.TAG))
+def test_payee_invalid_attribute_type(
+    transaction: CashTransaction, new_payee: Any
+) -> None:
+    with pytest.raises(
+        ValueError, match="CashTransaction.payee Attribute must be type_ PAYEE."
+    ):
+        transaction.payee = new_payee
+
+
 @given(
     transaction=cash_transactions(),
     new_tags=st.integers()
@@ -129,6 +144,19 @@ def test_payee_invalid_type(transaction: CashTransaction, new_payee: Any) -> Non
 def test_tags_invalid_type(transaction: CashTransaction, new_tags: Any) -> None:
     with pytest.raises(
         TypeError, match="CashTransaction.tags must be a collection of Attributes."
+    ):
+        transaction.tags = new_tags
+
+
+@given(
+    transaction=cash_transactions(),
+    new_tags=st.lists(attributes(AttributeType.PAYEE), min_size=1, max_size=5),
+)
+def test_tags_invalid_attribute_type(
+    transaction: CashTransaction, new_tags: Any
+) -> None:
+    with pytest.raises(
+        ValueError, match="CashTransaction.tags Attributes must be type_ TAG."
     ):
         transaction.tags = new_tags
 
@@ -245,18 +273,19 @@ def test_category_amount_pairs_invalid_second_member_type(
 
 @given(
     transaction=cash_transactions(),
-    first_member=categories(),
-    second_member=st.integers()
-    | st.floats()
-    | st.none()
-    | st.datetimes()
-    | st.booleans(),
+    amount=st.decimals(min_value=0.01, allow_infinity=False, allow_nan=False),
+    name=st.text(min_size=1, max_size=32),
 )
 def test_category_amount_pairs_invalid_category_type(
-    transaction: CashTransaction, first_member: Category, second_member: Any
+    transaction: CashTransaction, amount: Decimal, name: str
 ) -> None:
-    assume(first_member.type_ not in transaction._valid_category_types)
-    tup = ((first_member, second_member),)
+    type_ = (
+        CategoryType.INCOME
+        if transaction.type_ == CashTransactionType.EXPENSE
+        else CategoryType.EXPENSE
+    )
+    category = Category(name, type_)
+    tup = ((category, amount),)
     with pytest.raises(
         InvalidCategoryTypeError,
         match="Invalid Category.type_.",

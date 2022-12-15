@@ -16,3 +16,7 @@ class ConcreteAccount(Account):
     @property
     def balance(self) -> Decimal:
         return super().balance
+
+    @property
+    def transactions(self) -> tuple["Transaction"]:
+        return super().transactions

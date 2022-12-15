@@ -79,7 +79,14 @@ def test_invalid_parent_type(name: str, parent: Any) -> None:
 
 
 @given(name=st.text(min_size=1, max_size=32))
-def test_abstract_get_amount_for_account(name: str) -> None:
+def test_abstract_balance(name: str) -> None:
     account = ConcreteAccount(name)
     with pytest.raises(NotImplementedError):
         account.balance
+
+
+@given(name=st.text(min_size=1, max_size=32))
+def test_abstract_transactions(name: str) -> None:
+    account = ConcreteAccount(name)
+    with pytest.raises(NotImplementedError):
+        account.transactions

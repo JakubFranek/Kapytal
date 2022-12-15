@@ -1,13 +1,16 @@
+from datetime import datetime
 from enum import Enum, auto
 from typing import Self
 
+from src.models.constants import tzinfo
 from src.models.mixins.datetime_created_mixin import DatetimeCreatedMixin
+from src.models.mixins.datetime_edited_mixin import DatetimeEditedMixin
 from src.models.mixins.name_mixin import NameMixin
 
 
-class Attribute(NameMixin, DatetimeCreatedMixin):
-    def __init__(self, name: str) -> None:
-        super().__init__(name=name)
+class AttributeType(Enum):
+    TAG = auto()
+    PAYEE = auto()
 
 
 class CategoryType(Enum):
@@ -16,7 +19,21 @@ class CategoryType(Enum):
     INCOME_AND_EXPENSE = auto()
 
 
-class Category(Attribute):
+class Attribute(NameMixin, DatetimeCreatedMixin):
+    def __init__(self, name: str, type_: AttributeType) -> None:
+        super().__init__(name=name)
+
+        if not isinstance(type_, AttributeType):
+            raise TypeError("Attribute.type_ must be an AttributeType.")
+
+        self._type = type_
+
+    @property
+    def type_(self) -> AttributeType:
+        return self._type
+
+
+class Category(NameMixin, DatetimeCreatedMixin, DatetimeEditedMixin):
     def __init__(self, name: str, type_: CategoryType) -> None:
         super().__init__(name)
         self._parent: Self | None = None
@@ -47,6 +64,7 @@ class Category(Attribute):
             new_parent._children.append(self)
 
         self._parent = new_parent
+        self._datetime_edited = datetime.now(tzinfo)
 
     @property
     def children(self) -> tuple[Self]:
