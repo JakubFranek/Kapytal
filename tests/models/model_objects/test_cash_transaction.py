@@ -12,6 +12,7 @@ from src.models.model_objects.cash_objects import (
     CashAccount,
     CashTransaction,
     CashTransactionType,
+    InvalidCategoryTypeError,
     UnrelatedAccountError,
 )
 from tests.models.test_assets.composites import (
@@ -19,6 +20,7 @@ from tests.models.test_assets.composites import (
     cash_accounts,
     cash_transactions,
     categories,
+    category_amount_pairs,
 )
 from tests.models.test_assets.constants import min_datetime
 
@@ -28,25 +30,26 @@ from tests.models.test_assets.constants import min_datetime
     datetime_=st.datetimes(min_value=min_datetime),
     type_=st.sampled_from(CashTransactionType),
     account=cash_accounts(),
-    amount=st.decimals(min_value=0.01, allow_infinity=False, allow_nan=False),
     payee=attributes(),
-    category=categories(),
     tags=st.lists(attributes()),
+    data=st.data(),
 )
 def test_creation(  # noqa: CFQ002,TMN001
     description: str,
     datetime_: datetime,
     type_: CashTransactionType,
     account: CashAccount,
-    amount: Decimal,
     payee: Attribute,
-    category: Category,
     tags: list[Attribute],
+    data: st.DrawFn,
 ) -> None:
+    category_amount_collection = data.draw(
+        st.lists(category_amount_pairs(type_), min_size=1, max_size=5)
+    )
     account_currency = account.currency
     dt_start = datetime.now(tzinfo)
     cash_transaction = CashTransaction(
-        description, datetime_, type_, account, amount, payee, category, tags
+        description, datetime_, type_, account, category_amount_collection, payee, tags
     )
 
     dt_created_diff = cash_transaction.datetime_created - dt_start
@@ -56,9 +59,8 @@ def test_creation(  # noqa: CFQ002,TMN001
     assert cash_transaction.datetime_ == datetime_
     assert cash_transaction.type_ == type_
     assert cash_transaction.account == account
-    assert cash_transaction.amount == amount
     assert cash_transaction.currency == account_currency
-    assert cash_transaction.category == category
+    assert cash_transaction.category_amount_pairs == tuple(category_amount_collection)
     assert cash_transaction.payee == payee
     assert cash_transaction.tags == tuple(tags)
     assert cash_transaction in account.transactions
@@ -102,35 +104,6 @@ def test_account_invalid_type(transaction: CashTransaction, new_account: Any) ->
 
 @given(
     transaction=cash_transactions(),
-    new_amount=st.integers()
-    | st.floats()
-    | st.text()
-    | st.none()
-    | st.datetimes()
-    | st.booleans()
-    | st.sampled_from([[], (), {}, set()]),
-)
-def test_amount_invalid_type(transaction: CashTransaction, new_amount: Any) -> None:
-    with pytest.raises(TypeError, match="CashTransaction.amount must be a Decimal."):
-        transaction.amount = new_amount
-
-
-@given(
-    transaction=cash_transactions(),
-    new_amount=st.decimals(max_value=-0.01),
-)
-def test_amount_invalid_value(
-    transaction: CashTransaction, new_amount: Decimal
-) -> None:
-    with pytest.raises(
-        ValueError,
-        match="CashTransaction.amount must be a finite and positive Decimal.",
-    ):
-        transaction.amount = new_amount
-
-
-@given(
-    transaction=cash_transactions(),
     new_payee=st.integers()
     | st.floats()
     | st.text()
@@ -142,21 +115,6 @@ def test_amount_invalid_value(
 def test_payee_invalid_type(transaction: CashTransaction, new_payee: Any) -> None:
     with pytest.raises(TypeError, match="CashTransaction.payee must be an Attribute."):
         transaction.payee = new_payee
-
-
-@given(
-    transaction=cash_transactions(),
-    new_category=st.integers()
-    | st.floats()
-    | st.text()
-    | st.none()
-    | st.datetimes()
-    | st.booleans()
-    | st.sampled_from([[], (), {}, set()]),
-)
-def test_category_invalid_type(transaction: CashTransaction, new_category: Any) -> None:
-    with pytest.raises(TypeError, match="CashTransaction.category must be a Category."):
-        transaction.category = new_category
 
 
 @given(
@@ -211,3 +169,122 @@ def test_get_amount_for_account_invalid_account_value(
     assume(transaction.account != account)
     with pytest.raises(UnrelatedAccountError):
         transaction.get_amount_for_account(account)
+
+
+@given(
+    transaction=cash_transactions(),
+    category_amount_pairs=st.integers()
+    | st.floats()
+    | st.none()
+    | st.datetimes()
+    | st.booleans(),
+)
+def test_category_amount_pairs_invalid_type(
+    transaction: CashTransaction, category_amount_pairs: Any
+) -> None:
+    with pytest.raises(
+        TypeError, match="CashTransaction.category_amount_pairs must be a Collection."
+    ):
+        transaction.category_amount_pairs = category_amount_pairs
+
+
+@given(
+    transaction=cash_transactions(),
+    category_amount_pairs=st.sampled_from(["", [], {}, ()]),
+)
+def test_category_amount_pairs_invalid_length(
+    transaction: CashTransaction, category_amount_pairs: Any
+) -> None:
+    with pytest.raises(
+        ValueError,
+        match="Length of CashTransaction.category_amount_pairs must be at least 1.",
+    ):
+        transaction.category_amount_pairs = category_amount_pairs
+
+
+@given(
+    transaction=cash_transactions(),
+    first_member=st.integers()
+    | st.floats()
+    | st.none()
+    | st.datetimes()
+    | st.booleans(),
+    second_member=st.decimals(),
+)
+def test_category_amount_pairs_invalid_first_member_type(
+    transaction: CashTransaction, first_member: Any, second_member: Decimal
+) -> None:
+    tup = ((first_member, second_member),)
+    with pytest.raises(
+        TypeError,
+        match="tuples must be a Category.",
+    ):
+        transaction.category_amount_pairs = tup
+
+
+@given(
+    transaction=cash_transactions(),
+    first_member=categories(),
+    second_member=st.integers()
+    | st.floats()
+    | st.none()
+    | st.datetimes()
+    | st.booleans(),
+)
+def test_category_amount_pairs_invalid_second_member_type(
+    transaction: CashTransaction, first_member: Category, second_member: Any
+) -> None:
+    assume(first_member.type_ in transaction._valid_category_types)
+    tup = ((first_member, second_member),)
+    with pytest.raises(
+        TypeError,
+        match="tuples must be a Decimal.",
+    ):
+        transaction.category_amount_pairs = tup
+
+
+@given(
+    transaction=cash_transactions(),
+    first_member=categories(),
+    second_member=st.integers()
+    | st.floats()
+    | st.none()
+    | st.datetimes()
+    | st.booleans(),
+)
+def test_category_amount_pairs_invalid_category_type(
+    transaction: CashTransaction, first_member: Category, second_member: Any
+) -> None:
+    assume(first_member.type_ not in transaction._valid_category_types)
+    tup = ((first_member, second_member),)
+    with pytest.raises(
+        InvalidCategoryTypeError,
+        match="Invalid Category.type_.",
+    ):
+        transaction.category_amount_pairs = tup
+
+
+@given(
+    transaction=cash_transactions(),
+    category=categories(),
+    amount=st.decimals(max_value=0, allow_infinity=True, allow_nan=True),
+)
+def test_category_amount_pairs_invalid_amount_value(
+    transaction: CashTransaction, category: Category, amount: Decimal
+) -> None:
+    assume(category.type_ in transaction._valid_category_types)
+    tup = ((category, amount),)
+    with pytest.raises(
+        ValueError,
+        match="must be a positive and finite Decimal.",
+    ):
+        transaction.category_amount_pairs = tup
+
+
+@given(transaction=cash_transactions())
+def test_category_names(transaction: CashTransaction) -> None:
+    names = []
+    for category, _amount in transaction.category_amount_pairs:
+        names.append(str(category))
+
+    assert ", ".join(names) == transaction.category_names

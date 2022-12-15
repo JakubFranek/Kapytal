@@ -6,23 +6,27 @@ from enum import Enum, auto
 from src.models.base_classes.account import Account
 from src.models.base_classes.transaction import Transaction
 from src.models.constants import tzinfo
-from src.models.model_objects.attributes import Attribute, Category
+from src.models.model_objects.attributes import Attribute, Category, CategoryType
 from src.models.model_objects.currency import Currency
 
 
-class TransactionPrecedesAccountError(Exception):
+class TransactionPrecedesAccountError(ValueError):
     """Raised when a Transaction.datetime_ precedes the given
     CashAccount.initial_datetime."""
 
 
-class UnrelatedAccountError(Exception):
+class UnrelatedAccountError(ValueError):
     """Raised when an Account tries to access a Transaction which does
     not relate to it."""
 
 
-class TransferSameAccountError(Exception):
-    """Raised when user attempts to set the recipient and the sender of a
-    Transfer to the same account."""
+class TransferSameAccountError(ValueError):
+    """Raised when an attempt is made to set the recipient and the sender of a
+    Transfer to the same Account."""
+
+
+class InvalidCategoryTypeError(ValueError):
+    """Raised when Category.type_ is incompatible with given CashTransaction.type_."""
 
 
 class CashTransactionType(Enum):
@@ -133,8 +137,6 @@ class CashAccount(Account):
         return
 
 
-# TODO: multi-category transactions: amount property stays, but category is replaced by
-# a list of NamedTuples property, which contains Category and Decimal pairs
 class CashTransaction(Transaction):
     def __init__(  # noqa: CFQ002, TMN001
         self,
@@ -142,16 +144,14 @@ class CashTransaction(Transaction):
         datetime_: datetime,
         type_: CashTransactionType,
         account: CashAccount,
-        amount: Decimal,
+        category_amount_pairs: Collection[tuple[Category, Decimal]],
         payee: Attribute,
-        category: Category,
         tags: Collection[Attribute],
     ) -> None:
         super().__init__(description, datetime_)
         self.type_ = type_
-        self.amount = amount
+        self.category_amount_pairs = category_amount_pairs
         self.payee = payee
-        self.category = category
         self.tags = tags
         self.account = account
 
@@ -187,18 +187,7 @@ class CashTransaction(Transaction):
 
     @property
     def amount(self) -> Decimal:
-        return self._amount
-
-    @amount.setter
-    def amount(self, value: Decimal) -> None:
-        if not isinstance(value, Decimal):
-            raise TypeError("CashTransaction.amount must be a Decimal.")
-        if not value.is_finite() or value <= 0:
-            raise ValueError(
-                "CashTransaction.amount must be a finite and positive Decimal."
-            )
-        self._amount = value
-        self._datetime_edited = datetime.now(tzinfo)
+        return sum(pair[1] for pair in self.category_amount_pairs)
 
     @property
     def currency(self) -> Currency:
@@ -216,15 +205,46 @@ class CashTransaction(Transaction):
         self._datetime_edited = datetime.now(tzinfo)
 
     @property
-    def category(self) -> Category:
-        return self._category
+    def category_amount_pairs(self) -> tuple[tuple[Category, Decimal]]:
+        return tuple(self._category_amount_pairs)
 
-    @category.setter
-    def category(self, value: Category) -> None:
-        if not isinstance(value, Category):
-            raise TypeError("CashTransaction.category must be a Category.")
-        self._category = value
+    @category_amount_pairs.setter
+    def category_amount_pairs(
+        self, pairs: Collection[tuple[Category, Decimal]]
+    ) -> None:
+        if not isinstance(pairs, Collection):
+            raise TypeError(
+                "CashTransaction.category_amount_pairs must be a Collection."
+            )
+        if len(pairs) == 0:
+            raise ValueError(
+                "Length of CashTransaction.category_amount_pairs must be at least 1."
+            )
+        if not all(isinstance(tup[0], Category) for tup in pairs):
+            raise TypeError(
+                "First member of CashTransaction.category_amount_pairs"
+                " tuples must be a Category."
+            )
+        if not all(tup[0].type_ in self._valid_category_types for tup in pairs):
+            raise InvalidCategoryTypeError("Invalid Category.type_.")
+        if not all(isinstance(tup[1], Decimal) for tup in pairs):
+            raise TypeError(
+                "Second member of CashTransaction.category_amount_pairs"
+                " tuples must be a Decimal."
+            )
+        if not all(tup[1].is_finite() and tup[1] > 0 for tup in pairs):
+            raise ValueError(
+                "Second member of CashTransaction.category_amount_pairs"
+                " tuples must be a positive and finite Decimal."
+            )
+
+        self._category_amount_pairs = tuple(pairs)
         self._datetime_edited = datetime.now(tzinfo)
+
+    @property
+    def category_names(self) -> str:
+        categories = [str(tup[0]) for tup in self._category_amount_pairs]
+        return ", ".join(categories)
 
     @property
     def tags(self) -> tuple[Attribute]:
@@ -240,6 +260,12 @@ class CashTransaction(Transaction):
         self._tags = tuple(values)
         self._datetime_edited = datetime.now(tzinfo)
 
+    @property
+    def _valid_category_types(self) -> tuple[CategoryType]:
+        if self.type_ == CashTransactionType.INCOME:
+            return (CategoryType.INCOME, CategoryType.INCOME_AND_EXPENSE)
+        return (CategoryType.EXPENSE, CategoryType.INCOME_AND_EXPENSE)
+
     def get_amount_for_account(self, account: Account) -> Decimal:
         if not self.is_account_related(account):
             raise UnrelatedAccountError(
@@ -253,9 +279,6 @@ class CashTransaction(Transaction):
         return self.account == account
 
 
-# TODO: disallow account_sender and account_recipient to be the same
-# problem with above: if we need to switch, we can't do this step by step via setters...
-# idea: have a special function which sets both
 class CashTransfer(Transaction):
     def __init__(  # noqa: TMN001, CFQ002
         self,

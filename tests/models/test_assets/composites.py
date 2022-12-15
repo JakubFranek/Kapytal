@@ -1,5 +1,6 @@
 import string
 from datetime import datetime
+from decimal import Decimal
 
 from hypothesis import strategies as st
 
@@ -57,20 +58,13 @@ def cash_transactions(
     type_ = draw(st.sampled_from(CashTransactionType))
     account: CashAccount = draw(cash_accounts())
     datetime_ = draw(st.datetimes(min_value=min_datetime, max_value=max_datetime))
-    amount = draw(
-        st.decimals(
-            min_value=0.01,
-            max_value=1e10,
-            allow_infinity=False,
-            allow_nan=False,
-            places=3,
-        )
+    category_amount_pairs_list = draw(
+        st.lists(category_amount_pairs(type_), min_size=1, max_size=5)
     )
     payee = draw(attributes())
-    category = draw(categories())
     tags = draw(st.lists(attributes()))
     return CashTransaction(
-        description, datetime_, type_, account, amount, payee, category, tags
+        description, datetime_, type_, account, category_amount_pairs_list, payee, tags
     )
 
 
@@ -113,10 +107,40 @@ def cash_transfers(
 
 
 @st.composite
-def categories(draw: st.DrawFn) -> Category:
+def categories(
+    draw: st.DrawFn, transaction_type: CashTransactionType = None
+) -> Category:
     name = draw(st.text(min_size=1, max_size=32))
-    category_type = draw(st.sampled_from(CategoryType))
+
+    if transaction_type is None:
+        category_type = draw(st.sampled_from(CategoryType))
+    elif transaction_type == CashTransactionType.INCOME:
+        category_type = draw(
+            st.sampled_from((CategoryType.INCOME, CategoryType.INCOME_AND_EXPENSE))
+        )
+    else:
+        category_type = draw(
+            st.sampled_from((CategoryType.EXPENSE, CategoryType.INCOME_AND_EXPENSE))
+        )
+
     return Category(name, category_type)
+
+
+@st.composite
+def category_amount_pairs(
+    draw: st.DrawFn, transaction_type: CashTransactionType
+) -> list[Category, Decimal]:
+    category = draw(categories(transaction_type))
+    amount = draw(
+        st.decimals(
+            min_value=0.01,
+            max_value=1e10,
+            allow_infinity=False,
+            allow_nan=False,
+            places=3,
+        )
+    )
+    return [category, amount]
 
 
 @st.composite
