@@ -10,6 +10,7 @@ from src.models.constants import tzinfo
 from src.models.model_objects.cash_objects import (
     CashAccount,
     CashTransfer,
+    TransferSameAccountError,
     UnrelatedAccountError,
 )
 from tests.models.test_assets.composites import cash_accounts, cash_transfers
@@ -51,42 +52,6 @@ def test_creation(
     assert cash_transfer.amount_sent == amount_sent
     assert cash_transfer.amount_received == amount_received
     assert dt_created_diff.seconds < 1
-
-
-@given(
-    transfer=cash_transfers(),
-    new_account=st.integers()
-    | st.floats()
-    | st.text()
-    | st.none()
-    | st.datetimes()
-    | st.booleans()
-    | st.sampled_from([[], (), {}, set()]),
-)
-def test_account_sender_invalid_type(transfer: CashTransfer, new_account: Any) -> None:
-    with pytest.raises(
-        TypeError, match="CashTransfer.account_sender must be a CashAccount."
-    ):
-        transfer.account_sender = new_account
-
-
-@given(
-    transfer=cash_transfers(),
-    new_account=st.integers()
-    | st.floats()
-    | st.text()
-    | st.none()
-    | st.datetimes()
-    | st.booleans()
-    | st.sampled_from([[], (), {}, set()]),
-)
-def test_account_recipient_invalid_type(
-    transfer: CashTransfer, new_account: Any
-) -> None:
-    with pytest.raises(
-        TypeError, match="CashTransfer.account_recipient must be a CashAccount."
-    ):
-        transfer.account_recipient = new_account
 
 
 @given(
@@ -147,34 +112,6 @@ def test_amount_received_invalid_value(
         transfer.amount_received = new_amount
 
 
-@given(
-    transfer=cash_transfers(),
-    new_sender=cash_accounts(),
-)
-def test_change_sender(transfer: CashTransfer, new_sender: CashAccount) -> None:
-
-    previous_sender = transfer.account_sender
-    assert transfer in previous_sender.transactions
-    assert transfer not in new_sender.transactions
-    transfer.account_sender = new_sender
-    assert transfer in new_sender.transactions
-    assert transfer not in previous_sender.transactions
-
-
-@given(
-    transfer=cash_transfers(),
-    new_recipient=cash_accounts(),
-)
-def test_change_recipient(transfer: CashTransfer, new_recipient: CashAccount) -> None:
-
-    previous_recipient = transfer.account_recipient
-    assert transfer in previous_recipient.transactions
-    assert transfer not in new_recipient.transactions
-    transfer.account_recipient = new_recipient
-    assert transfer in new_recipient.transactions
-    assert transfer not in previous_recipient.transactions
-
-
 @given(transfer=cash_transfers())
 def test_get_amount_for_account(transfer: CashTransfer) -> None:
     expected_sender_amount = -transfer.amount_sent
@@ -198,3 +135,77 @@ def test_get_amount_for_account_invalid_account_value(
     assume(account != transfer.account_sender)
     with pytest.raises(UnrelatedAccountError):
         transfer.get_amount_for_account(account)
+
+
+@given(
+    transfer=cash_transfers(), new_sender=cash_accounts(), new_recipient=cash_accounts()
+)
+def test_set_accounts(
+    transfer: CashTransfer, new_sender: CashAccount, new_recipient: CashAccount
+) -> None:
+    current_sender = transfer.account_sender
+    current_recipient = transfer.account_recipient
+
+    assert transfer.account_sender != new_sender
+    assert transfer.account_recipient != new_recipient
+    assert transfer in current_sender.transactions
+    assert transfer in current_recipient.transactions
+    assert transfer not in new_sender.transactions
+    assert transfer not in new_recipient.transactions
+
+    transfer.set_accounts(new_sender, new_recipient)
+
+    assert transfer.account_sender == new_sender
+    assert transfer.account_recipient == new_recipient
+    assert transfer not in current_sender.transactions
+    assert transfer not in current_recipient.transactions
+    assert transfer in new_sender.transactions
+    assert transfer in new_recipient.transactions
+
+
+@given(
+    transfer=cash_transfers(),
+    new_sender=st.integers()
+    | st.floats()
+    | st.text()
+    | st.none()
+    | st.datetimes()
+    | st.booleans()
+    | st.sampled_from([[], (), {}, set()]),
+)
+def test_set_accounts_invalid_sender_type(
+    transfer: CashTransfer, new_sender: Any
+) -> None:
+    current_recipient = transfer.account_recipient
+    with pytest.raises(
+        TypeError, match="Argument 'account_sender' must be a CashAccount."
+    ):
+        transfer.set_accounts(new_sender, current_recipient)
+
+
+@given(
+    transfer=cash_transfers(),
+    new_recipient=st.integers()
+    | st.floats()
+    | st.text()
+    | st.none()
+    | st.datetimes()
+    | st.booleans()
+    | st.sampled_from([[], (), {}, set()]),
+)
+def test_set_accounts_invalid_recipient_type(
+    transfer: CashTransfer, new_recipient: Any
+) -> None:
+    current_sender = transfer.account_sender
+    with pytest.raises(
+        TypeError, match="Argument 'account_recipient' must be a CashAccount."
+    ):
+        transfer.set_accounts(current_sender, new_recipient)
+
+
+@given(transfer=cash_transfers(), new_account=cash_accounts())
+def test_set_accounts_same_account(
+    transfer: CashTransfer, new_account: CashAccount
+) -> None:
+    with pytest.raises(TransferSameAccountError):
+        transfer.set_accounts(new_account, new_account)

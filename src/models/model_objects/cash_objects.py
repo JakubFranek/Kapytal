@@ -20,6 +20,11 @@ class UnrelatedAccountError(Exception):
     not relate to it."""
 
 
+class TransferSameAccountError(Exception):
+    """Raised when user attempts to set the recipient and the sender of a
+    Transfer to the same account."""
+
+
 class CashTransactionType(Enum):
     INCOME = auto()
     EXPENSE = auto()
@@ -112,7 +117,7 @@ class CashAccount(Account):
     ) -> None:
         if not isinstance(transaction, (CashTransaction, CashTransfer)):
             raise TypeError(
-                "Argument transaction must be a CashTransaction or a CashTransfer."
+                "Argument 'transaction' must be a CashTransaction or a CashTransfer."
             )
         if not transaction.is_account_related(self):
             raise UnrelatedAccountError(
@@ -128,6 +133,8 @@ class CashAccount(Account):
         return
 
 
+# TODO: multi-category transactions: amount property stays, but category is replaced by
+# a list of NamedTuples property, which contains Category and Decimal pairs
 class CashTransaction(Transaction):
     def __init__(  # noqa: CFQ002, TMN001
         self,
@@ -236,20 +243,19 @@ class CashTransaction(Transaction):
     def get_amount_for_account(self, account: Account) -> Decimal:
         if not self.is_account_related(account):
             raise UnrelatedAccountError(
-                'The argument "account" is not related to this CashTransaction.'
+                'Argument "account" is not related to this CashTransaction.'
             )
         if self.type_ == CashTransactionType.INCOME:
             return self.amount
         return -self.amount
 
     def is_account_related(self, account: Account) -> None:
-        if self.account == account:
-            return True
-        return False
+        return self.account == account
 
 
 # TODO: disallow account_sender and account_recipient to be the same
 # problem with above: if we need to switch, we can't do this step by step via setters...
+# idea: have a special function which sets both
 class CashTransfer(Transaction):
     def __init__(  # noqa: TMN001, CFQ002
         self,
@@ -261,50 +267,17 @@ class CashTransfer(Transaction):
         amount_received: Decimal,
     ) -> None:
         super().__init__(description, datetime_)
-        self._is_initialized = False
         self.amount_sent = amount_sent
         self.amount_received = amount_received
-        self.account_sender = account_sender
-        self.account_recipient = account_recipient
-        self.account_sender.add_transaction(self)
-        self.account_recipient.add_transaction(self)
-        self._is_initialized = True
+        self.set_accounts(account_sender, account_recipient)
 
     @property
     def account_sender(self) -> CashAccount:
         return self._account_sender
 
-    @account_sender.setter
-    def account_sender(self, new_sender: CashAccount) -> None:
-        if not isinstance(new_sender, CashAccount):
-            raise TypeError("CashTransfer.account_sender must be a CashAccount.")
-
-        if hasattr(self, "_account_sender"):
-            self._account_sender.remove_transaction(self)
-
-        self._account_sender = new_sender
-        if self._is_initialized:
-            self._account_sender.add_transaction(self)
-
-        self._datetime_edited = datetime.now(tzinfo)
-
     @property
     def account_recipient(self) -> CashAccount:
         return self._account_recipient
-
-    @account_recipient.setter
-    def account_recipient(self, new_recipient: CashAccount) -> None:
-        if not isinstance(new_recipient, CashAccount):
-            raise TypeError("CashTransfer.account_recipient must be a CashAccount.")
-
-        if hasattr(self, "_account_recipient"):
-            self._account_recipient.remove_transaction(self)
-
-        self._account_recipient = new_recipient
-        if self._is_initialized:
-            self._account_recipient.add_transaction(self)
-
-        self._datetime_edited = datetime.now(tzinfo)
 
     @property
     def amount_sent(self) -> Decimal:
@@ -336,16 +309,42 @@ class CashTransfer(Transaction):
         self._amount_received = value
         self._datetime_edited = datetime.now(tzinfo)
 
-    def get_amount_for_account(self, account: Account) -> Decimal:
+    def set_accounts(
+        self, account_sender: CashAccount, account_recipient: CashAccount
+    ) -> None:
+        if not isinstance(account_sender, CashAccount):
+            raise TypeError("Argument 'account_sender' must be a CashAccount.")
+        if not isinstance(account_recipient, CashAccount):
+            raise TypeError("Argument 'account_recipient' must be a CashAccount.")
+        if account_recipient == account_sender:
+            raise TransferSameAccountError(
+                "Arguments 'account_sender' and 'account_recipient' must be"
+                " different CashAccounts."
+            )
+
+        # Remove self from "old" accounts
+        if hasattr(self, "_account_recipient"):
+            self._account_recipient.remove_transaction(self)
+        if hasattr(self, "_account_sender"):
+            self._account_sender.remove_transaction(self)
+
+        self._account_recipient = account_recipient
+        self._account_sender = account_sender
+
+        # Add self to "new" accounts
+        self._account_recipient.add_transaction(self)
+        self._account_sender.add_transaction(self)
+
+        self._datetime_edited = datetime.now(tzinfo)
+
+    def get_amount_for_account(self, account: CashAccount) -> Decimal:
         if self.account_recipient == account:
             return self.amount_received
         if self.account_sender == account:
             return -self.amount_sent
         raise UnrelatedAccountError(
-            'The argument "account" is not related to this CashTransfer.'
+            'Argument "account" is not related to this CashTransfer.'
         )
 
-    def is_account_related(self, account: Account) -> None:
-        if self.account_sender == account or self.account_recipient == account:
-            return True
-        return False
+    def is_account_related(self, account: CashAccount) -> bool:
+        return self.account_sender == account or self.account_recipient == account

@@ -139,7 +139,7 @@ def test_validate_transaction_invalid_type(
 ) -> None:
     with pytest.raises(
         TypeError,
-        match="Argument transaction must be a CashTransaction or a CashTransfer.",
+        match="Argument 'transaction' must be a CashTransaction or a CashTransfer.",
     ):
         account._validate_transaction(transaction)
 
