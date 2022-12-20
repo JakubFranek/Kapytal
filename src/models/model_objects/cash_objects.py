@@ -142,6 +142,9 @@ class CashAccount(Account):
         return
 
 
+# TODO: make tags also accept tuples of tag and amount
+
+
 class CashTransaction(Transaction):
     def __init__(  # noqa: CFQ002, TMN001
         self,

@@ -13,7 +13,11 @@ from src.models.model_objects.cash_objects import (
     TransferSameAccountError,
     UnrelatedAccountError,
 )
-from tests.models.test_assets.composites import cash_accounts, cash_transfers
+from tests.models.test_assets.composites import (
+    cash_accounts,
+    cash_transfers,
+    everything_except,
+)
 from tests.models.test_assets.constants import min_datetime
 
 
@@ -54,16 +58,7 @@ def test_creation(
     assert dt_created_diff.seconds < 1
 
 
-@given(
-    transfer=cash_transfers(),
-    new_amount=st.integers()
-    | st.floats()
-    | st.text()
-    | st.none()
-    | st.datetimes()
-    | st.booleans()
-    | st.sampled_from([[], (), {}, set()]),
-)
+@given(transfer=cash_transfers(), new_amount=everything_except(Decimal))
 def test_amount_sent_invalid_type(transfer: CashTransfer, new_amount: Any) -> None:
     with pytest.raises(TypeError, match="CashTransfer.amount_sent must be a Decimal."):
         transfer.amount_sent = new_amount
@@ -81,16 +76,7 @@ def test_amount_sent_invalid_value(transfer: CashTransfer, new_amount: Decimal) 
         transfer.amount_sent = new_amount
 
 
-@given(
-    transfer=cash_transfers(),
-    new_amount=st.integers()
-    | st.floats()
-    | st.text()
-    | st.none()
-    | st.datetimes()
-    | st.booleans()
-    | st.sampled_from([[], (), {}, set()]),
-)
+@given(transfer=cash_transfers(), new_amount=everything_except(Decimal))
 def test_amount_received_invalid_type(transfer: CashTransfer, new_amount: Any) -> None:
     with pytest.raises(
         TypeError, match="CashTransfer.amount_received must be a Decimal."
@@ -163,16 +149,7 @@ def test_set_accounts(
     assert transfer in new_recipient.transactions
 
 
-@given(
-    transfer=cash_transfers(),
-    new_sender=st.integers()
-    | st.floats()
-    | st.text()
-    | st.none()
-    | st.datetimes()
-    | st.booleans()
-    | st.sampled_from([[], (), {}, set()]),
-)
+@given(transfer=cash_transfers(), new_sender=everything_except(CashAccount))
 def test_set_accounts_invalid_sender_type(
     transfer: CashTransfer, new_sender: Any
 ) -> None:
@@ -183,16 +160,7 @@ def test_set_accounts_invalid_sender_type(
         transfer.set_accounts(new_sender, current_recipient)
 
 
-@given(
-    transfer=cash_transfers(),
-    new_recipient=st.integers()
-    | st.floats()
-    | st.text()
-    | st.none()
-    | st.datetimes()
-    | st.booleans()
-    | st.sampled_from([[], (), {}, set()]),
-)
+@given(transfer=cash_transfers(), new_recipient=everything_except(CashAccount))
 def test_set_accounts_invalid_recipient_type(
     transfer: CashTransfer, new_recipient: Any
 ) -> None:

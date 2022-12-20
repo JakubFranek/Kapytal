@@ -7,7 +7,7 @@ from hypothesis import strategies as st
 
 from src.models.constants import tzinfo
 from src.models.model_objects.attributes import Category, CategoryType
-from tests.models.test_assets.composites import categories
+from tests.models.test_assets.composites import categories, everything_except
 
 
 @given(
@@ -39,14 +39,7 @@ def test_add_and_remove_parent(category: Category, parent: Category) -> None:
     assert category not in parent.children
 
 
-@given(
-    category=categories(),
-    parent=st.integers()
-    | st.floats()
-    | st.datetimes()
-    | st.booleans()
-    | st.sampled_from([[], (), {}, set()]),
-)
+@given(category=categories(), parent=everything_except((Category, type(None))))
 def test_parent_invalid_type(category: Category, parent: Any) -> None:
     with pytest.raises(
         TypeError, match="Category.parent must be a Category or a None."
@@ -56,12 +49,7 @@ def test_parent_invalid_type(category: Category, parent: Any) -> None:
 
 @given(
     name=st.text(min_size=1, max_size=32),
-    category_type=st.integers()
-    | st.floats()
-    | st.none()
-    | st.datetimes()
-    | st.booleans()
-    | st.sampled_from([[], (), {}, set()]),
+    category_type=everything_except(CategoryType),
 )
 def test_type_invalid_type(name: str, category_type: Any) -> None:
     with pytest.raises(TypeError, match="Category.type_ must be a CategoryType."):
@@ -73,13 +61,13 @@ def test_parent_invalid_type_(category: Category, parent: Category) -> None:
     assume(category.type_ != parent.type_)
     with pytest.raises(
         ValueError,
-        match="The type_ of new_parent must match the type_ of this Category.",
+        match="The type_ of parent Category must match the type_ of this Category.",
     ):
         category.parent = parent
 
 
 @given(first_category=categories(), length=st.integers(1, 5), data=st.data())
-def test_str(first_category: Category, length: int, data: st.DrawFn) -> None:
+def test_str(first_category: Category, length: int, data: st.DataObject) -> None:
     type_ = first_category.type_
     categories = [first_category]
     for i in range(0, length):

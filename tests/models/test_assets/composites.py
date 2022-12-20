@@ -1,6 +1,7 @@
 import string
 from datetime import datetime
 from decimal import Decimal
+from typing import Any
 
 from hypothesis import strategies as st
 
@@ -20,6 +21,14 @@ from src.models.model_objects.cash_objects import (
 from src.models.model_objects.currency import Currency
 from tests.models.test_assets.concrete_abcs import ConcreteTransaction
 from tests.models.test_assets.constants import max_datetime, min_datetime
+
+
+def everything_except(excluded_types: tuple[type]) -> Any:
+    return (
+        st.from_type(type)
+        .flatmap(st.from_type)
+        .filter(lambda x: not isinstance(x, excluded_types))
+    )
 
 
 @st.composite

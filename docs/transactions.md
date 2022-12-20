@@ -92,4 +92,5 @@ The Refund transaction is a special transaction type. It esentially creates a ne
     - SecurityTransferTransaction
 
 TODO: how to store currency exchange rates on various dates?
-TODO: how to model split-category transactions?
+TODO: securities
+TODO: refunds

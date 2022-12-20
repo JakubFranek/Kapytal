@@ -8,6 +8,7 @@ from hypothesis import strategies as st
 
 from src.models.constants import tzinfo
 from src.models.model_objects.currency import Currency
+from tests.models.test_assets.composites import everything_except
 
 
 @given(code=st.text(alphabet=string.ascii_letters, min_size=3, max_size=3))
@@ -46,14 +47,7 @@ def test_code_not_alpha(code: str) -> None:
         Currency(code)
 
 
-@given(
-    code=st.integers()
-    | st.floats()
-    | st.none()
-    | st.datetimes()
-    | st.booleans()
-    | st.sampled_from([[], (), {}, set()])
-)
+@given(code=everything_except(str))
 def test_code_not_string(code: Any) -> None:
     with pytest.raises(TypeError, match="Currency.code must be a string."):
         Currency(code)

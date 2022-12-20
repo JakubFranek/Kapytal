@@ -9,6 +9,8 @@ from src.models.model_objects.account_group import AccountGroup
 if TYPE_CHECKING:  # pragma: no cover
     from src.models.base_classes.transaction import Transaction
 
+# TODO: maybe add parent to init?
+
 
 class Account(NameMixin, DatetimeCreatedMixin, ABC):
     def __init__(self, name: str) -> None:

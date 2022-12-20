@@ -6,7 +6,7 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 
 from src.models.constants import tzinfo
-from tests.models.test_assets.composites import transactions
+from tests.models.test_assets.composites import everything_except, transactions
 from tests.models.test_assets.concrete_abcs import ConcreteTransaction
 
 
@@ -25,12 +25,7 @@ def test_creation(description: str, datetime_: datetime) -> None:
 
 
 @given(
-    description=st.integers()
-    | st.floats()
-    | st.none()
-    | st.datetimes()
-    | st.booleans()
-    | st.sampled_from([[], (), {}, set()]),
+    description=everything_except(str),
     datetime_=st.datetimes(),
 )
 def test_invalid_description_type(description: str, datetime_: datetime) -> None:
@@ -49,13 +44,7 @@ def test_invalid_description_value(description: str, datetime_: datetime) -> Non
 
 
 @given(
-    description=st.text(min_size=0, max_size=256),
-    datetime_=st.integers()
-    | st.floats()
-    | st.none()
-    | st.text()
-    | st.booleans()
-    | st.sampled_from([[], (), {}, set()]),
+    description=st.text(min_size=0, max_size=256), datetime_=everything_except(datetime)
 )
 def test_invalid_datetime_type(description: str, datetime_: datetime) -> None:
     with pytest.raises(TypeError, match="Transaction.datetime_ must be a datetime."):

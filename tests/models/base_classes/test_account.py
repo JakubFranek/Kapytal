@@ -7,7 +7,7 @@ from hypothesis import strategies as st
 
 from src.models.constants import tzinfo
 from src.models.model_objects.account_group import AccountGroup
-from tests.models.test_assets.composites import account_groups
+from tests.models.test_assets.composites import account_groups, everything_except
 from tests.models.test_assets.concrete_abcs import ConcreteAccount
 
 
@@ -35,14 +35,7 @@ def test_name_too_long(name: str) -> None:
         ConcreteAccount(name)
 
 
-@given(
-    name=st.integers()
-    | st.floats()
-    | st.none()
-    | st.datetimes()
-    | st.booleans()
-    | st.sampled_from([[], (), {}, set()])
-)
+@given(name=everything_except(str))
 def test_name_not_string(name: Any) -> None:
     with pytest.raises(TypeError, match="Account.name must be a string."):
         ConcreteAccount(name)
@@ -62,12 +55,7 @@ def test_add_and_remove_parent(name: str, parent: AccountGroup) -> None:
 
 @given(
     name=st.text(min_size=1, max_size=32),
-    parent=st.integers()
-    | st.floats()
-    | st.none()
-    | st.datetimes()
-    | st.booleans()
-    | st.sampled_from([[], (), {}, set()]),
+    parent=everything_except((AccountGroup, type(None))),
 )
 def test_invalid_parent_type(name: str, parent: Any) -> None:
     assume(parent is not None)

@@ -7,6 +7,7 @@ from hypothesis import strategies as st
 
 from src.models.constants import tzinfo
 from src.models.model_objects.attributes import Attribute, AttributeType
+from tests.models.test_assets.composites import everything_except
 
 
 @given(name=st.text(min_size=1, max_size=32), type_=st.sampled_from(AttributeType))
@@ -21,12 +22,7 @@ def test_creation(name: str, type_: AttributeType) -> None:
 
 
 @given(
-    name=st.integers()
-    | st.floats()
-    | st.none()
-    | st.datetimes()
-    | st.booleans()
-    | st.sampled_from([[], (), {}, set()]),
+    name=everything_except(str),
     type_=st.sampled_from(AttributeType),
 )
 def test_name_not_string(name: Any, type_: AttributeType) -> None:
@@ -55,12 +51,7 @@ def test_name_too_long(name: str, type_: AttributeType) -> None:
 
 @given(
     name=st.text(min_size=1, max_size=32),
-    type_=st.integers()
-    | st.floats()
-    | st.none()
-    | st.datetimes()
-    | st.booleans()
-    | st.sampled_from([[], (), {}, set()]),
+    type_=everything_except(AttributeType),
 )
 def test_type_invalid_type(name: str, type_: Any) -> None:
     with pytest.raises(TypeError, match="Attribute.type_ must be an AttributeType."):

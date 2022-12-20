@@ -34,14 +34,17 @@ class Attribute(NameMixin, DatetimeCreatedMixin):
 
 
 class Category(NameMixin, DatetimeCreatedMixin, DatetimeEditedMixin):
-    def __init__(self, name: str, type_: CategoryType) -> None:
+    def __init__(
+        self, name: str, type_: CategoryType, parent: Self | None = None
+    ) -> None:
         super().__init__(name)
-        self._parent: Self | None = None
-        self._children: list[Self] = []
 
         if not isinstance(type_, CategoryType):
             raise TypeError("Category.type_ must be a CategoryType.")
         self._type = type_
+
+        self.parent: Self | None = parent
+        self._children: list[Self] = []
 
     @property
     def parent(self) -> Self | None:
@@ -54,10 +57,11 @@ class Category(NameMixin, DatetimeCreatedMixin, DatetimeEditedMixin):
                 raise TypeError("Category.parent must be a Category or a None.")
             if new_parent.type_ != self.type_:
                 raise ValueError(
-                    "The type_ of new_parent must match the type_ of this Category."
+                    "The type_ of parent Category must match the type_"
+                    " of this Category."
                 )
 
-        if self._parent is not None:
+        if hasattr(self, "_parent") and self._parent is not None:
             self._parent._children.remove(self)
 
         if new_parent is not None:

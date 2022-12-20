@@ -20,6 +20,7 @@ from tests.models.test_assets.composites import (
     cash_transactions,
     cash_transfers,
     currencies,
+    everything_except,
 )
 
 
@@ -45,12 +46,7 @@ def test_creation(
 
 @given(
     name=st.text(min_size=1, max_size=32),
-    currency=st.integers()
-    | st.floats()
-    | st.none()
-    | st.datetimes()
-    | st.booleans()
-    | st.sampled_from([[], (), {}, set()]),
+    currency=everything_except(Currency),
     initial_balance=st.decimals(min_value=0, allow_nan=False, allow_infinity=False),
     initial_datetime=st.datetimes(),
 )
@@ -67,12 +63,7 @@ def test_currency_incorrect_type(
 @given(
     name=st.text(min_size=1, max_size=32),
     currency=currencies(),
-    initial_balance=st.integers()
-    | st.floats()
-    | st.none()
-    | st.datetimes()
-    | st.booleans()
-    | st.sampled_from([[], (), {}, set()]),
+    initial_balance=everything_except(Decimal),
     initial_datetime=st.datetimes(),
 )
 def test_initial_balance_invalid_type(
@@ -109,12 +100,7 @@ def test_initial_balance_invalid_values(
     name=st.text(min_size=1, max_size=32),
     currency=currencies(),
     initial_balance=st.decimals(min_value=0, allow_nan=False, allow_infinity=False),
-    initial_datetime=st.integers()
-    | st.floats()
-    | st.none()
-    | st.text()
-    | st.booleans()
-    | st.sampled_from([[], (), {}, set()]),
+    initial_datetime=everything_except(datetime),
 )
 def test_initial_datetime_invalid_type(
     name: str, currency: Currency, initial_balance: Decimal, initial_datetime: Any
@@ -127,12 +113,7 @@ def test_initial_datetime_invalid_type(
 
 @given(
     account=cash_accounts(),
-    transaction=st.integers()
-    | st.floats()
-    | st.none()
-    | st.text()
-    | st.booleans()
-    | st.sampled_from([[], (), {}, set()]),
+    transaction=everything_except((CashTransaction, CashTransfer)),
 )
 def test_validate_transaction_invalid_type(
     account: CashAccount, transaction: Any
@@ -172,7 +153,7 @@ def test_validate_transaction_invalid_datetime(
     account: CashAccount,
     transaction: CashTransaction,
     transfer: CashTransfer,
-    data: st.DrawFn,
+    data: st.DataObject,
     switch: bool,
 ) -> None:
     transaction._account = account

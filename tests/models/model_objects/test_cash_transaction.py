@@ -1,3 +1,4 @@
+from collections.abc import Collection
 from datetime import datetime
 from decimal import Decimal
 from typing import Any
@@ -26,6 +27,7 @@ from tests.models.test_assets.composites import (
     cash_transactions,
     categories,
     category_amount_pairs,
+    everything_except,
 )
 from tests.models.test_assets.constants import min_datetime
 
@@ -46,7 +48,7 @@ def test_creation(  # noqa: CFQ002,TMN001
     account: CashAccount,
     payee: Attribute,
     tags: list[Attribute],
-    data: st.DrawFn,
+    data: st.DataObject,
 ) -> None:
     category_amount_collection = data.draw(
         st.lists(category_amount_pairs(type_), min_size=1, max_size=5)
@@ -73,16 +75,7 @@ def test_creation(  # noqa: CFQ002,TMN001
     assert dt_edited_diff.seconds < 1
 
 
-@given(
-    transaction=cash_transactions(),
-    new_type=st.integers()
-    | st.floats()
-    | st.text()
-    | st.none()
-    | st.datetimes()
-    | st.booleans()
-    | st.sampled_from([[], (), {}, set()]),
-)
+@given(transaction=cash_transactions(), new_type=everything_except(CashTransactionType))
 def test_type_invalid_type(transaction: CashTransaction, new_type: Any) -> None:
     with pytest.raises(
         TypeError, match="CashTransaction.type_ must be a CashTransactionType."
@@ -90,16 +83,7 @@ def test_type_invalid_type(transaction: CashTransaction, new_type: Any) -> None:
         transaction.type_ = new_type
 
 
-@given(
-    transaction=cash_transactions(),
-    new_account=st.integers()
-    | st.floats()
-    | st.text()
-    | st.none()
-    | st.datetimes()
-    | st.booleans()
-    | st.sampled_from([[], (), {}, set()]),
-)
+@given(transaction=cash_transactions(), new_account=everything_except(CashAccount))
 def test_account_invalid_type(transaction: CashTransaction, new_account: Any) -> None:
     with pytest.raises(
         TypeError, match="CashTransaction.account must be a CashAccount."
@@ -107,16 +91,7 @@ def test_account_invalid_type(transaction: CashTransaction, new_account: Any) ->
         transaction.account = new_account
 
 
-@given(
-    transaction=cash_transactions(),
-    new_payee=st.integers()
-    | st.floats()
-    | st.text()
-    | st.none()
-    | st.datetimes()
-    | st.booleans()
-    | st.sampled_from([[], (), {}, set()]),
-)
+@given(transaction=cash_transactions(), new_payee=everything_except(Attribute))
 def test_payee_invalid_type(transaction: CashTransaction, new_payee: Any) -> None:
     with pytest.raises(TypeError, match="CashTransaction.payee must be an Attribute."):
         transaction.payee = new_payee
@@ -132,15 +107,7 @@ def test_payee_invalid_attribute_type(
         transaction.payee = new_payee
 
 
-@given(
-    transaction=cash_transactions(),
-    new_tags=st.integers()
-    | st.floats()
-    | st.text(min_size=1)
-    | st.none()
-    | st.datetimes()
-    | st.booleans(),
-)
+@given(transaction=cash_transactions(), new_tags=everything_except(Collection))
 def test_tags_invalid_type(transaction: CashTransaction, new_tags: Any) -> None:
     with pytest.raises(
         TypeError, match="CashTransaction.tags must be a collection of Attributes."
@@ -200,12 +167,7 @@ def test_get_amount_for_account_invalid_account_value(
 
 
 @given(
-    transaction=cash_transactions(),
-    category_amount_pairs=st.integers()
-    | st.floats()
-    | st.none()
-    | st.datetimes()
-    | st.booleans(),
+    transaction=cash_transactions(), category_amount_pairs=everything_except(Collection)
 )
 def test_category_amount_pairs_invalid_type(
     transaction: CashTransaction, category_amount_pairs: Any
@@ -232,11 +194,7 @@ def test_category_amount_pairs_invalid_length(
 
 @given(
     transaction=cash_transactions(),
-    first_member=st.integers()
-    | st.floats()
-    | st.none()
-    | st.datetimes()
-    | st.booleans(),
+    first_member=everything_except(Category),
     second_member=st.decimals(),
 )
 def test_category_amount_pairs_invalid_first_member_type(
@@ -253,11 +211,7 @@ def test_category_amount_pairs_invalid_first_member_type(
 @given(
     transaction=cash_transactions(),
     first_member=categories(),
-    second_member=st.integers()
-    | st.floats()
-    | st.none()
-    | st.datetimes()
-    | st.booleans(),
+    second_member=everything_except(Decimal),
 )
 def test_category_amount_pairs_invalid_second_member_type(
     transaction: CashTransaction, first_member: Category, second_member: Any

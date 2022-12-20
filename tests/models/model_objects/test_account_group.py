@@ -9,7 +9,11 @@ from hypothesis import strategies as st
 from src.models.constants import tzinfo
 from src.models.model_objects.account_group import AccountGroup
 from src.models.model_objects.cash_objects import CashAccount
-from tests.models.test_assets.composites import account_groups, cash_accounts
+from tests.models.test_assets.composites import (
+    account_groups,
+    cash_accounts,
+    everything_except,
+)
 
 
 @given(name=st.text(min_size=1, max_size=32))
@@ -40,13 +44,7 @@ def test_add_and_remove_parent(
 
 
 @given(
-    account_group=account_groups(),
-    parent=st.integers()
-    | st.floats()
-    | st.none()
-    | st.datetimes()
-    | st.booleans()
-    | st.sampled_from([[], (), {}, set()]),
+    account_group=account_groups(), parent=everything_except((AccountGroup, type(None)))
 )
 def test_invalid_parent_type(account_group: AccountGroup, parent: Any) -> None:
     assume(parent is not None)
