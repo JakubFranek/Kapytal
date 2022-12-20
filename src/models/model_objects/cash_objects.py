@@ -156,7 +156,11 @@ class CashTransaction(Transaction):
         tag_amount_pairs: Collection[tuple[Attribute, Decimal]],
     ) -> None:
         super().__init__(description, datetime_)
-        self.type_ = type_
+
+        if not isinstance(type_, CashTransactionType):
+            raise TypeError("CashTransaction.type_ must be a CashTransactionType.")
+        self._type = type_
+
         self.category_amount_pairs = category_amount_pairs
         self.payee = payee
         self.tag_amount_pairs = tag_amount_pairs
@@ -165,13 +169,6 @@ class CashTransaction(Transaction):
     @property
     def type_(self) -> CashTransactionType:
         return self._type
-
-    @type_.setter
-    def type_(self, value: CashTransactionType) -> None:
-        if not isinstance(value, CashTransactionType):
-            raise TypeError("CashTransaction.type_ must be a CashTransactionType.")
-        self._type = value
-        self._datetime_edited = datetime.now(tzinfo)
 
     @property
     def account(self) -> CashAccount:
@@ -265,6 +262,7 @@ class CashTransaction(Transaction):
     def tag_amount_pairs(self) -> tuple[tuple[Attribute, Decimal]]:
         return self._tags
 
+    # TODO: what happens when self.amount changes and some tag-amounts are now invalid?
     @tag_amount_pairs.setter
     def tag_amount_pairs(self, pairs: Collection[tuple[Attribute, Decimal]]) -> None:
         if not isinstance(pairs, Collection) or not all(

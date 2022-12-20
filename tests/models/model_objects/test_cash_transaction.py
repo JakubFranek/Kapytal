@@ -84,12 +84,34 @@ def test_creation(  # noqa: CFQ002,TMN001
     assert dt_edited_diff.seconds < 1
 
 
-@given(transaction=cash_transactions(), new_type=everything_except(CashTransactionType))
-def test_type_invalid_type(transaction: CashTransaction, new_type: Any) -> None:
+@given(
+    account=cash_accounts(),
+    payee=attributes(AttributeType.PAYEE),
+    type_=everything_except(CashTransactionType),
+    data=st.data(),
+)
+def test_type_invalid_type(  # noqa: CFQ002,TMN001
+    account: CashAccount, payee: Attribute, type_: Any, data: st.DataObject
+) -> None:
+    category_amount_collection = data.draw(
+        st.lists(category_amount_pairs(type_), min_size=1, max_size=5)
+    )
+    max_tag_amount = sum(amount for _, amount in category_amount_collection)
+    tag_amount_collection = data.draw(
+        st.lists(tag_amount_pairs(max_tag_amount), min_size=0, max_size=5)
+    )
     with pytest.raises(
         TypeError, match="CashTransaction.type_ must be a CashTransactionType."
     ):
-        transaction.type_ = new_type
+        CashTransaction(
+            "description",
+            datetime.now(tzinfo),
+            type_,
+            account,
+            category_amount_collection,
+            payee,
+            tag_amount_collection,
+        )
 
 
 @given(transaction=cash_transactions(), new_account=everything_except(CashAccount))

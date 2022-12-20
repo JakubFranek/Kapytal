@@ -3,7 +3,7 @@ from decimal import Decimal
 from typing import Any
 
 import pytest
-from hypothesis import assume, given
+from hypothesis import assume, given, settings
 from hypothesis import strategies as st
 
 from src.models.model_objects.cash_objects import (
@@ -130,6 +130,7 @@ def test_validate_transaction_invalid_type(
     transaction=cash_transactions(),
     transfer=cash_transfers(),
 )
+@settings(max_examples=10)
 def test_validate_transaction_invalid_account(
     account: CashAccount, transaction: CashTransaction, transfer: CashTransfer
 ) -> None:
@@ -149,6 +150,7 @@ def test_validate_transaction_invalid_account(
     data=st.data(),
     switch=st.booleans(),
 )
+@settings(max_examples=10)
 def test_validate_transaction_invalid_datetime(
     account: CashAccount,
     transaction: CashTransaction,

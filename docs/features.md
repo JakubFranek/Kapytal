@@ -50,15 +50,25 @@ The user can assign multiple tags to a transaction. Here are some examples of ty
 
 Each income or expense transaction will have a payee (for example employer name for income, shop name for expenses). Transfers, buys or sells do not support the payee input field (it makes no sense).
 
+## Budgets
+
+TBD
+
+TODO: budgets
+
 ## Envelopes
 
 Kapytal supports envelope system, where the user can virtually allocate money across multiple accounts to various envelopes. These envelopes can represent financial goals of the user, for example an emergency fund, budget for Christmas gifts, saving for a vacation etc.
 
 Envelopes can have set priorities: for example, if the user creates an expense, the amount will be subtracted from the envelope with the lowest priority.
 
+TODO: envelopes
+
 ## Reports
 
 The user can generate reports, which visually represent the transaction data either in a table or a chart. Example of a report could be a cashflow report (a time-chart showing total income and expense in each month, along with their difference) or an expense category report for a selected time-period (a pie chart showing the composition of users expenses with regards to transaction categories).
+
+TODO: reports
 
 ## Currencies
 
@@ -73,7 +83,5 @@ The user can create Buy or Sell transactions to record the buy or sale of financ
 ## Data persistence
 
 The user can save the list of entered transactions to a JSON file. This file can be later loaded by Kapytal.
-
-## Quality of Life features
 
 Kapytal will back itself up (create a special JSON file) every N minutes of work without saving in user-specified location different from the location of the primary JSON file.
