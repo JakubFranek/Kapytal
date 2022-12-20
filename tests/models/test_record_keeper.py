@@ -97,7 +97,6 @@ def test_add_cash_account(
     ),
     transaction_type=st.sampled_from(["income", "expense"]),
     payee_name=st.text(min_size=1, max_size=32),
-    tag_names=st.lists(st.text(min_size=1, max_size=32), min_size=1, max_size=5),
     data=st.data(),
 )
 def test_add_cash_transaction(
@@ -105,7 +104,6 @@ def test_add_cash_transaction(
     datetime_: datetime,
     transaction_type: str,
     payee_name: str,
-    tag_names: list[str],
     data: st.DataObject,
 ) -> None:
     record_keeper = get_preloaded_record_keeper()  # noqa: NEW100
@@ -124,9 +122,20 @@ def test_add_cash_transaction(
         st.lists(
             st.tuples(
                 st.sampled_from([str(cat) for cat in valid_categories]),
-                st.decimals(min_value=0.01, allow_infinity=False, allow_nan=False),
+                st.decimals(min_value="0.01", allow_infinity=False, allow_nan=False),
             ),
             min_size=1,
+            max_size=5,
+        )
+    )
+    max_tag_amount = sum(amount for _, amount in category_name_amount_pairs)
+    tag_name_amount_pairs = data.draw(
+        st.lists(
+            st.tuples(
+                st.text(min_size=1, max_size=32),
+                st.decimals(min_value="0.01", max_value=max_tag_amount),
+            ),
+            min_size=0,
             max_size=5,
         )
     )
@@ -137,7 +146,7 @@ def test_add_cash_transaction(
         account_name,
         category_name_amount_pairs,
         payee_name,
-        tag_names,
+        tag_name_amount_pairs,
     )
     transaction = record_keeper.transactions[0]
     assert transaction.datetime_ == datetime_
@@ -149,8 +158,10 @@ def test_add_cash_transaction(
     datetime_=st.datetimes(
         min_value=datetime.now() + timedelta(days=1), timezones=st.just(tzinfo)
     ),
-    amount_sent=st.decimals(min_value=0.01, allow_infinity=False, allow_nan=False),
-    amount_received=st.decimals(min_value=0.01, allow_infinity=False, allow_nan=False),
+    amount_sent=st.decimals(min_value="0.01", allow_infinity=False, allow_nan=False),
+    amount_received=st.decimals(
+        min_value="0.01", allow_infinity=False, allow_nan=False
+    ),
     data=st.data(),
 )
 def test_add_cash_transfer(

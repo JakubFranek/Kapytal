@@ -137,15 +137,15 @@ class RecordKeeper:
         account_name: str,
         category_path_amount_pairs: Collection[tuple[str, Decimal]],
         payee_name: str,
-        tag_names: Collection[str],
+        tag_name_amount_pairs: Collection[tuple[str, Decimal]],
     ) -> None:
         account = self.get_account(account_name)
         type_ = RecordKeeper.get_cash_transaction_type(transaction_type)
         payee = self.get_attribute(payee_name, AttributeType.PAYEE)
 
-        tags: list[Attribute] = []
-        for tag_name in tag_names:
-            tags.append(self.get_attribute(tag_name, AttributeType.TAG))
+        tags: list[tuple[Attribute, Decimal]] = []
+        for tag_name, amount in tag_name_amount_pairs:
+            tags.append((self.get_attribute(tag_name, AttributeType.TAG), amount))
 
         category_amount_pairs: list[tuple[Category, Decimal]] = []
         category_type = (

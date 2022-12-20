@@ -28,6 +28,7 @@ from tests.models.test_assets.composites import (
     categories,
     category_amount_pairs,
     everything_except,
+    tag_amount_pairs,
 )
 from tests.models.test_assets.constants import min_datetime
 
@@ -38,7 +39,6 @@ from tests.models.test_assets.constants import min_datetime
     type_=st.sampled_from(CashTransactionType),
     account=cash_accounts(),
     payee=attributes(AttributeType.PAYEE),
-    tags=st.lists(attributes(AttributeType.TAG)),
     data=st.data(),
 )
 def test_creation(  # noqa: CFQ002,TMN001
@@ -47,16 +47,25 @@ def test_creation(  # noqa: CFQ002,TMN001
     type_: CashTransactionType,
     account: CashAccount,
     payee: Attribute,
-    tags: list[Attribute],
     data: st.DataObject,
 ) -> None:
     category_amount_collection = data.draw(
         st.lists(category_amount_pairs(type_), min_size=1, max_size=5)
     )
+    max_tag_amount = sum(amount for _, amount in category_amount_collection)
+    tag_amount_collection = data.draw(
+        st.lists(tag_amount_pairs(max_tag_amount), min_size=0, max_size=5)
+    )
     account_currency = account.currency
     dt_start = datetime.now(tzinfo)
     cash_transaction = CashTransaction(
-        description, datetime_, type_, account, category_amount_collection, payee, tags
+        description,
+        datetime_,
+        type_,
+        account,
+        category_amount_collection,
+        payee,
+        tag_amount_collection,
     )
 
     dt_created_diff = cash_transaction.datetime_created - dt_start
@@ -69,7 +78,7 @@ def test_creation(  # noqa: CFQ002,TMN001
     assert cash_transaction.currency == account_currency
     assert cash_transaction.category_amount_pairs == tuple(category_amount_collection)
     assert cash_transaction.payee == payee
-    assert cash_transaction.tags == tuple(tags)
+    assert cash_transaction.tag_amount_pairs == tuple(tag_amount_collection)
     assert cash_transaction in account.transactions
     assert dt_created_diff.seconds < 1
     assert dt_edited_diff.seconds < 1
@@ -102,7 +111,7 @@ def test_payee_invalid_attribute_type(
     transaction: CashTransaction, new_payee: Any
 ) -> None:
     with pytest.raises(
-        ValueError, match="CashTransaction.payee Attribute must be type_ PAYEE."
+        ValueError, match="The type_ of CashTransaction.payee Attribute must be PAYEE."
     ):
         transaction.payee = new_payee
 
@@ -110,22 +119,93 @@ def test_payee_invalid_attribute_type(
 @given(transaction=cash_transactions(), new_tags=everything_except(Collection))
 def test_tags_invalid_type(transaction: CashTransaction, new_tags: Any) -> None:
     with pytest.raises(
-        TypeError, match="CashTransaction.tags must be a collection of Attributes."
+        TypeError, match="CashTransaction.tags must be a collection of tuples."
     ):
-        transaction.tags = new_tags
+        transaction.tag_amount_pairs = new_tags
 
 
-@given(
-    transaction=cash_transactions(),
-    new_tags=st.lists(attributes(AttributeType.PAYEE), min_size=1, max_size=5),
-)
-def test_tags_invalid_attribute_type(
-    transaction: CashTransaction, new_tags: Any
+@given(transaction=cash_transactions(), data=st.data())
+def test_tags_invalid_first_member_type(
+    transaction: CashTransaction, data: st.DataObject
 ) -> None:
+    max_tag_amount = transaction.amount
+    new_tags = data.draw(
+        st.lists(
+            st.tuples(
+                everything_except(Attribute),
+                st.decimals(min_value="0.01", max_value=max_tag_amount),
+            ),
+            min_size=1,
+            max_size=5,
+        )
+    )
     with pytest.raises(
-        ValueError, match="CashTransaction.tags Attributes must be type_ TAG."
+        TypeError,
+        match="First member of CashTransaction.tag_amount_pairs",
     ):
-        transaction.tags = new_tags
+        transaction.tag_amount_pairs = new_tags
+
+
+@given(transaction=cash_transactions(), data=st.data())
+def test_tags_invalid_attribute_type(
+    transaction: CashTransaction, data: st.DataObject
+) -> None:
+    max_tag_amount = transaction.amount
+    new_tags = data.draw(
+        st.lists(
+            st.tuples(
+                attributes(AttributeType.PAYEE),
+                st.decimals(min_value="0.01", max_value=max_tag_amount),
+            ),
+            min_size=1,
+            max_size=5,
+        )
+    )
+    with pytest.raises(
+        ValueError,
+        match="The type_ of CashTransaction.tag_amount_pairs Attributes must be TAG.",
+    ):
+        transaction.tag_amount_pairs = new_tags
+
+
+@given(transaction=cash_transactions(), data=st.data())
+def test_tags_invalid_second_member_type(
+    transaction: CashTransaction, data: st.DataObject
+) -> None:
+    new_tags = data.draw(
+        st.lists(
+            st.tuples(attributes(AttributeType.TAG), everything_except(Decimal)),
+            min_size=1,
+            max_size=5,
+        )
+    )
+    with pytest.raises(
+        TypeError,
+        match="Second member of CashTransaction.tag_amount_pairs",
+    ):
+        transaction.tag_amount_pairs = new_tags
+
+
+@given(transaction=cash_transactions(), data=st.data())
+def test_tags_invalid_second_member_value(
+    transaction: CashTransaction, data: st.DataObject
+) -> None:
+    max_tag_amount = transaction.amount
+    new_tags = data.draw(
+        st.lists(
+            st.tuples(
+                attributes(AttributeType.TAG),
+                st.decimals(min_value=max_tag_amount + Decimal("0.01")),
+            ),
+            min_size=1,
+            max_size=5,
+        )
+    )
+    with pytest.raises(
+        ValueError,
+        match="Second member of CashTransaction.tag_amount_pairs",
+    ):
+        transaction.tag_amount_pairs = new_tags
 
 
 @given(
@@ -227,7 +307,7 @@ def test_category_amount_pairs_invalid_second_member_type(
 
 @given(
     transaction=cash_transactions(),
-    amount=st.decimals(min_value=0.01, allow_infinity=False, allow_nan=False),
+    amount=st.decimals(min_value="0.01", allow_infinity=False, allow_nan=False),
     name=st.text(min_size=1, max_size=32),
 )
 def test_category_amount_pairs_invalid_category_type(

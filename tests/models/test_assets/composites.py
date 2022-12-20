@@ -79,10 +79,19 @@ def cash_transactions(
     category_amount_pairs_list = draw(
         st.lists(category_amount_pairs(type_), min_size=1, max_size=5)
     )
+    max_tag_amount = sum(amount for _, amount in category_amount_pairs_list)
     payee = draw(attributes(AttributeType.PAYEE))
-    tags = draw(st.lists(attributes(AttributeType.TAG)))
+    tag_amount_pairs_list = draw(
+        st.lists(tag_amount_pairs(max_tag_amount), min_size=0, max_size=5)
+    )
     return CashTransaction(
-        description, datetime_, type_, account, category_amount_pairs_list, payee, tags
+        description,
+        datetime_,
+        type_,
+        account,
+        category_amount_pairs_list,
+        payee,
+        tag_amount_pairs_list,
     )
 
 
@@ -98,7 +107,7 @@ def cash_transfers(
     datetime_ = draw(st.datetimes(min_value=min_datetime, max_value=max_datetime))
     amount_sent = draw(
         st.decimals(
-            min_value=0.01,
+            min_value="0.01",
             max_value=1e10,
             allow_infinity=False,
             allow_nan=False,
@@ -107,7 +116,7 @@ def cash_transfers(
     )
     amount_received = draw(
         st.decimals(
-            min_value=0.01,
+            min_value="0.01",
             max_value=1e10,
             allow_infinity=False,
             allow_nan=False,
@@ -147,24 +156,41 @@ def categories(
 @st.composite
 def category_amount_pairs(
     draw: st.DrawFn, transaction_type: CashTransactionType
-) -> list[Category, Decimal]:
+) -> tuple[Category, Decimal]:
     category = draw(categories(transaction_type))
     amount = draw(
         st.decimals(
-            min_value=0.01,
+            min_value="0.01",
             max_value=1e10,
             allow_infinity=False,
             allow_nan=False,
             places=3,
         )
     )
-    return [category, amount]
+    return (category, amount)
 
 
 @st.composite
 def currencies(draw: st.DrawFn) -> Currency:
     name = draw(st.text(alphabet=string.ascii_letters, min_size=3, max_size=3))
     return Currency(name)
+
+
+@st.composite
+def tag_amount_pairs(
+    draw: st.DrawFn, max_value: Decimal = 1e10
+) -> tuple[Category, Decimal]:
+    attribute = draw(attributes(type_=AttributeType.TAG))
+    amount = draw(
+        st.decimals(
+            min_value="0.01",
+            max_value=max_value,
+            allow_infinity=False,
+            allow_nan=False,
+            places=3,
+        )
+    )
+    return (attribute, amount)
 
 
 @st.composite

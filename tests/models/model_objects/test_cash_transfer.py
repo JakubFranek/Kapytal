@@ -26,8 +26,10 @@ from tests.models.test_assets.constants import min_datetime
     account_sender=cash_accounts(),
     account_recipient=cash_accounts(),
     datetime_=st.datetimes(min_value=min_datetime),
-    amount_sent=st.decimals(min_value=0.01, allow_infinity=False, allow_nan=False),
-    amount_received=st.decimals(min_value=0.01, allow_infinity=False, allow_nan=False),
+    amount_sent=st.decimals(min_value="0.01", allow_infinity=False, allow_nan=False),
+    amount_received=st.decimals(
+        min_value="0.01", allow_infinity=False, allow_nan=False
+    ),
 )
 def test_creation(
     description: str,
@@ -66,7 +68,7 @@ def test_amount_sent_invalid_type(transfer: CashTransfer, new_amount: Any) -> No
 
 @given(
     transfer=cash_transfers(),
-    new_amount=st.decimals(max_value=-0.01),
+    new_amount=st.decimals(max_value="-0.01"),
 )
 def test_amount_sent_invalid_value(transfer: CashTransfer, new_amount: Decimal) -> None:
     with pytest.raises(
@@ -86,7 +88,7 @@ def test_amount_received_invalid_type(transfer: CashTransfer, new_amount: Any) -
 
 @given(
     transfer=cash_transfers(),
-    new_amount=st.decimals(max_value=-0.01),
+    new_amount=st.decimals(max_value="-0.01"),
 )
 def test_amount_received_invalid_value(
     transfer: CashTransfer, new_amount: Decimal

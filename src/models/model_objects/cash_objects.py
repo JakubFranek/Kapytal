@@ -144,9 +144,6 @@ class CashAccount(Account):
         return
 
 
-# TODO: make tags also accept tuples of tag and amount
-
-
 class CashTransaction(Transaction):
     def __init__(  # noqa: CFQ002, TMN001
         self,
@@ -156,13 +153,13 @@ class CashTransaction(Transaction):
         account: CashAccount,
         category_amount_pairs: Collection[tuple[Category, Decimal]],
         payee: Attribute,
-        tags: Collection[Attribute],
+        tag_amount_pairs: Collection[tuple[Attribute, Decimal]],
     ) -> None:
         super().__init__(description, datetime_)
         self.type_ = type_
         self.category_amount_pairs = category_amount_pairs
         self.payee = payee
-        self.tags = tags
+        self.tag_amount_pairs = tag_amount_pairs
         self.account = account
 
     @property
@@ -197,7 +194,7 @@ class CashTransaction(Transaction):
 
     @property
     def amount(self) -> Decimal:
-        return sum(pair[1] for pair in self.category_amount_pairs)
+        return sum(amount for _, amount in self.category_amount_pairs)
 
     @property
     def currency(self) -> Currency:
@@ -212,7 +209,9 @@ class CashTransaction(Transaction):
         if not isinstance(attribute, Attribute):
             raise TypeError("CashTransaction.payee must be an Attribute.")
         if not attribute.type_ == AttributeType.PAYEE:
-            raise ValueError("CashTransaction.payee Attribute must be type_ PAYEE.")
+            raise ValueError(
+                "The type_ of CashTransaction.payee Attribute must be PAYEE."
+            )
         self._payee = attribute
         self._datetime_edited = datetime.now(tzinfo)
 
@@ -224,27 +223,31 @@ class CashTransaction(Transaction):
     def category_amount_pairs(
         self, pairs: Collection[tuple[Category, Decimal]]
     ) -> None:
-        if not isinstance(pairs, Collection):
+        if not isinstance(pairs, Collection) or not all(
+            isinstance(tup, tuple) for tup in pairs
+        ):
             raise TypeError(
-                "CashTransaction.category_amount_pairs must be a Collection."
+                "CashTransaction.category_amount_pairs must be a Collection of tuples."
             )
         if len(pairs) == 0:
             raise ValueError(
                 "Length of CashTransaction.category_amount_pairs must be at least 1."
             )
-        if not all(isinstance(tup[0], Category) for tup in pairs):
+        if not all(isinstance(category, Category) for category, _ in pairs):
             raise TypeError(
                 "First member of CashTransaction.category_amount_pairs"
                 " tuples must be a Category."
             )
-        if not all(tup[0].type_ in self._valid_category_types for tup in pairs):
+        if not all(
+            category.type_ in self._valid_category_types for category, _ in pairs
+        ):
             raise InvalidCategoryTypeError("Invalid Category.type_.")
-        if not all(isinstance(tup[1], Decimal) for tup in pairs):
+        if not all(isinstance(amount, Decimal) for _, amount in pairs):
             raise TypeError(
                 "Second member of CashTransaction.category_amount_pairs"
                 " tuples must be a Decimal."
             )
-        if not all(tup[1].is_finite() and tup[1] > 0 for tup in pairs):
+        if not all(amount.is_finite() and amount > 0 for _, amount in pairs):
             raise ValueError(
                 "Second member of CashTransaction.category_amount_pairs"
                 " tuples must be a positive and finite Decimal."
@@ -259,19 +262,40 @@ class CashTransaction(Transaction):
         return ", ".join(categories)
 
     @property
-    def tags(self) -> tuple[Attribute]:
+    def tag_amount_pairs(self) -> tuple[tuple[Attribute, Decimal]]:
         return self._tags
 
-    @tags.setter
-    def tags(self, attributes: Collection[Attribute]) -> None:
-        if not isinstance(attributes, Collection) or not all(
-            isinstance(attribute, Attribute) for attribute in attributes
+    @tag_amount_pairs.setter
+    def tag_amount_pairs(self, pairs: Collection[tuple[Attribute, Decimal]]) -> None:
+        if not isinstance(pairs, Collection) or not all(
+            isinstance(tup, tuple) for tup in pairs
         ):
-            raise TypeError("CashTransaction.tags must be a collection of Attributes.")
-        if not all(attribute.type_ == AttributeType.TAG for attribute in attributes):
-            raise ValueError("CashTransaction.tags Attributes must be type_ TAG.")
+            raise TypeError("CashTransaction.tags must be a collection of tuples.")
+        if not all(isinstance(attribute, Attribute) for attribute, _ in pairs):
+            raise TypeError(
+                "First member of CashTransaction.tag_amount_pairs"
+                " tuples must be an Attribute."
+            )
+        if not all(attribute.type_ == AttributeType.TAG for attribute, _ in pairs):
+            raise ValueError(
+                "The type_ of CashTransaction.tag_amount_pairs Attributes must be TAG."
+            )
+        if not all(isinstance(amount, Decimal) for _, amount in pairs):
+            raise TypeError(
+                "Second member of CashTransaction.tag_amount_pairs"
+                " tuples must be a Decimal."
+            )
+        if not all(
+            amount.is_finite() and amount > 0 and amount <= self.amount
+            for _, amount in pairs
+        ):
+            raise ValueError(
+                "Second member of CashTransaction.tag_amount_pairs"
+                " tuples must be a positive and finite Decimal which"
+                " does not exceed CashTransaction.amount."
+            )
 
-        self._tags = tuple(attributes)
+        self._tags = tuple(pairs)
         self._datetime_edited = datetime.now(tzinfo)
 
     @property

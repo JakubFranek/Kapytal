@@ -81,7 +81,7 @@ def test_initial_balance_invalid_type(
 @given(
     name=st.text(min_size=1, max_size=32),
     currency=currencies(),
-    initial_balance=st.decimals(max_value=-0.01, allow_nan=True, allow_infinity=True),
+    initial_balance=st.decimals(max_value="-0.01", allow_nan=True, allow_infinity=True),
     initial_datetime=st.datetimes(),
 )
 def test_initial_balance_invalid_values(
