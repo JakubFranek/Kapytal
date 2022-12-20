@@ -6,6 +6,7 @@ from enum import Enum, auto
 from src.models.base_classes.account import Account
 from src.models.base_classes.transaction import Transaction
 from src.models.constants import tzinfo
+from src.models.model_objects.account_group import AccountGroup
 from src.models.model_objects.attributes import (
     Attribute,
     AttributeType,
@@ -46,8 +47,9 @@ class CashAccount(Account):
         currency: Currency,
         initial_balance: Decimal,
         initial_datetime: datetime,
+        parent: AccountGroup | None = None,
     ) -> None:
-        super().__init__(name)
+        super().__init__(name=name, parent=parent)
 
         if not isinstance(currency, Currency):
             raise TypeError("CashAccount.currency must be a Currency.")

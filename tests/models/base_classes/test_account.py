@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Any
 
 import pytest
-from hypothesis import assume, given, settings
+from hypothesis import given, settings
 from hypothesis import strategies as st
 
 from src.models.constants import tzinfo
@@ -58,7 +58,6 @@ def test_add_and_remove_parent(name: str, parent: AccountGroup) -> None:
     parent=everything_except((AccountGroup, type(None))),
 )
 def test_invalid_parent_type(name: str, parent: Any) -> None:
-    assume(parent is not None)
     account = ConcreteAccount(name)
     with pytest.raises(
         TypeError, match="Account.parent must be an AccountGroup or a None."

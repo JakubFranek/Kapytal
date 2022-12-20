@@ -13,9 +13,9 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 class Account(NameMixin, DatetimeCreatedMixin, ABC):
-    def __init__(self, name: str) -> None:
+    def __init__(self, name: str, parent: AccountGroup | None = None) -> None:
         super().__init__(name=name)
-        self._parent: AccountGroup | None = None
+        self.parent: AccountGroup | None = parent
 
     @property
     def parent(self) -> AccountGroup | None:
@@ -26,7 +26,7 @@ class Account(NameMixin, DatetimeCreatedMixin, ABC):
         if new_parent is not None and not isinstance(new_parent, AccountGroup):
             raise TypeError("Account.parent must be an AccountGroup or a None.")
 
-        if self._parent is not None:
+        if hasattr(self, "_parent") and self._parent is not None:
             self._parent._children.remove(self)
 
         if new_parent is not None:

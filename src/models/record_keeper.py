@@ -126,8 +126,7 @@ class RecordKeeper:
             raise AlreadyExistsError(f"An Account named {name} already exists.")
         currency = self.get_currency(currency_code)
         parent = self.get_account_parent(parent_name)
-        account = CashAccount(name, currency, initial_balance, initial_datetime)
-        account.parent = parent
+        account = CashAccount(name, currency, initial_balance, initial_datetime, parent)
         self._accounts.append(account)
 
     def add_cash_transaction(  # noqa: CFQ002, TMN001
