@@ -97,11 +97,11 @@ class CashAccount(Account):
         return self._balance_history[-1][1]
 
     @property
-    def balance_history(self) -> tuple[tuple[datetime, Decimal]]:
+    def balance_history(self) -> tuple[tuple[datetime, Decimal], ...]:
         return tuple(self._balance_history)
 
     @property
-    def transactions(self) -> tuple["CashTransaction | CashTransfer"]:
+    def transactions(self) -> tuple["CashTransaction | CashTransfer", ...]:
         self._transactions.sort(key=lambda transaction: transaction.datetime_)
         return tuple(self._transactions)
 
@@ -191,7 +191,7 @@ class CashTransaction(Transaction):
 
     @property
     def amount(self) -> Decimal:
-        return sum(amount for _, amount in self.category_amount_pairs)
+        return Decimal(sum(amount for _, amount in self.category_amount_pairs))
 
     @property
     def currency(self) -> Currency:
@@ -213,7 +213,7 @@ class CashTransaction(Transaction):
         self._datetime_edited = datetime.now(tzinfo)
 
     @property
-    def category_amount_pairs(self) -> tuple[tuple[Category, Decimal]]:
+    def category_amount_pairs(self) -> tuple[tuple[Category, Decimal], ...]:
         return tuple(self._category_amount_pairs)
 
     @category_amount_pairs.setter
@@ -259,7 +259,7 @@ class CashTransaction(Transaction):
         return ", ".join(categories)
 
     @property
-    def tag_amount_pairs(self) -> tuple[tuple[Attribute, Decimal]]:
+    def tag_amount_pairs(self) -> tuple[tuple[Attribute, Decimal], ...]:
         return self._tags
 
     # TODO: what happens when self.amount changes and some tag-amounts are now invalid?
@@ -297,7 +297,7 @@ class CashTransaction(Transaction):
         self._datetime_edited = datetime.now(tzinfo)
 
     @property
-    def _valid_category_types(self) -> tuple[CategoryType]:
+    def _valid_category_types(self) -> tuple[CategoryType, ...]:
         if self.type_ == CashTransactionType.INCOME:
             return (CategoryType.INCOME, CategoryType.INCOME_AND_EXPENSE)
         return (CategoryType.EXPENSE, CategoryType.INCOME_AND_EXPENSE)
@@ -311,7 +311,7 @@ class CashTransaction(Transaction):
             return self.amount
         return -self.amount
 
-    def is_account_related(self, account: Account) -> None:
+    def is_account_related(self, account: Account) -> bool:
         return self.account == account
 
 
@@ -396,7 +396,7 @@ class CashTransfer(Transaction):
 
         self._datetime_edited = datetime.now(tzinfo)
 
-    def get_amount_for_account(self, account: CashAccount) -> Decimal:
+    def get_amount_for_account(self, account: Account) -> Decimal:
         if self.account_recipient == account:
             return self.amount_received
         if self.account_sender == account:
@@ -405,5 +405,5 @@ class CashTransfer(Transaction):
             'Argument "account" is not related to this CashTransfer.'
         )
 
-    def is_account_related(self, account: CashAccount) -> bool:
+    def is_account_related(self, account: Account) -> bool:
         return self.account_sender == account or self.account_recipient == account

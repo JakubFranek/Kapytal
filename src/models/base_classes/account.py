@@ -39,5 +39,5 @@ class Account(NameMixin, DatetimeCreatedMixin, ABC):
 
     @property
     @abstractmethod
-    def transactions(self) -> tuple["Transaction"]:
+    def transactions(self) -> tuple["Transaction", ...]:
         raise NotImplementedError("Not implemented.")

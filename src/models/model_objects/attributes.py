@@ -71,7 +71,7 @@ class Category(NameMixin, DatetimeCreatedMixin, DatetimeEditedMixin):
         self._datetime_edited = datetime.now(tzinfo)
 
     @property
-    def children(self) -> tuple[Self]:
+    def children(self) -> tuple[Self, ...]:
         return tuple(self._children)
 
     @property

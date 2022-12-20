@@ -9,6 +9,7 @@ from hypothesis import strategies as st
 
 from src.models.constants import tzinfo
 from src.models.model_objects.attributes import AttributeType, CategoryType
+from src.models.model_objects.cash_objects import CashAccount
 from src.models.record_keeper import AlreadyExistsError, DoesNotExistError, RecordKeeper
 from tests.models.test_assets.composites import everything_except
 
@@ -82,7 +83,7 @@ def test_add_cash_account(
         name, currency_code, initial_balance, initial_datetime, parent_name
     )
     parent_group = record_keeper.account_groups[0] if parent_name else None
-    cash_account = record_keeper.accounts[0]
+    cash_account: CashAccount = record_keeper.accounts[0]
     assert cash_account.name == name
     assert cash_account.currency.code == currency_code.upper()
     assert cash_account.initial_balance == initial_balance

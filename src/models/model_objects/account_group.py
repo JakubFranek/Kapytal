@@ -32,9 +32,9 @@ class AccountGroup(NameMixin, DatetimeCreatedMixin):
         self._parent = new_parent
 
     @property
-    def children(self) -> tuple["Account" | Self]:
+    def children(self) -> tuple["Account" | Self, ...]:
         return tuple(self._children)
 
     @property
     def balance(self) -> Decimal:
-        return sum(child.balance for child in self._children)
+        return Decimal(sum(child.balance for child in self._children))

@@ -39,31 +39,31 @@ class RecordKeeper:
         self._transactions: list[Transaction] = []
 
     @property
-    def accounts(self) -> tuple[CashAccount]:
+    def accounts(self) -> tuple[Account, ...]:
         return tuple(self._accounts)
 
     @property
-    def account_groups(self) -> tuple[AccountGroup]:
+    def account_groups(self) -> tuple[AccountGroup, ...]:
         return tuple(self._account_groups)
 
     @property
-    def currencies(self) -> tuple[Currency]:
+    def currencies(self) -> tuple[Currency, ...]:
         return tuple(self._currencies)
 
     @property
-    def payees(self) -> tuple[Attribute]:
+    def payees(self) -> tuple[Attribute, ...]:
         return tuple(self._payees)
 
     @property
-    def categories(self) -> tuple[Category]:
+    def categories(self) -> tuple[Category, ...]:
         return tuple(self._categories)
 
     @property
-    def tags(self) -> tuple[Attribute]:
+    def tags(self) -> tuple[Attribute, ...]:
         return tuple(self._tags)
 
     @property
-    def transactions(self) -> tuple[Transaction]:
+    def transactions(self) -> tuple[Transaction, ...]:
         return tuple(self._transactions)
 
     def add_currency(self, currency_code: str) -> None:
@@ -172,8 +172,8 @@ class RecordKeeper:
         self,
         description: str,
         datetime_: datetime,
-        account_sender_name: CashAccount,
-        account_recipient_name: CashAccount,
+        account_sender_name: str,
+        account_recipient_name: str,
         amount_sent: Decimal,
         amount_received: Decimal,
     ) -> None:

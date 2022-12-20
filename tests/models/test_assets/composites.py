@@ -1,7 +1,7 @@
 import string
 from datetime import datetime
 from decimal import Decimal
-from typing import Any
+from typing import Any, Literal
 
 from hypothesis import strategies as st
 
@@ -23,7 +23,7 @@ from tests.models.test_assets.concrete_abcs import ConcreteTransaction
 from tests.models.test_assets.constants import max_datetime, min_datetime
 
 
-def everything_except(excluded_types: tuple[type]) -> Any:
+def everything_except(excluded_types: type | tuple[type, ...]) -> Any:
     return (
         st.from_type(type)
         .flatmap(st.from_type)
@@ -79,7 +79,7 @@ def cash_transactions(
     category_amount_pairs_list = draw(
         st.lists(category_amount_pairs(type_), min_size=1, max_size=5)
     )
-    max_tag_amount = sum(amount for _, amount in category_amount_pairs_list)
+    max_tag_amount = Decimal(sum(amount for _, amount in category_amount_pairs_list))
     payee = draw(attributes(AttributeType.PAYEE))
     tag_amount_pairs_list = draw(
         st.lists(tag_amount_pairs(max_tag_amount), min_size=0, max_size=5)
@@ -135,7 +135,7 @@ def cash_transfers(
 
 @st.composite
 def categories(
-    draw: st.DrawFn, transaction_type: CashTransactionType = None
+    draw: st.DrawFn, transaction_type: CashTransactionType | None = None
 ) -> Category:
     name = draw(st.text(min_size=1, max_size=32))
 
@@ -178,9 +178,11 @@ def currencies(draw: st.DrawFn) -> Currency:
 
 @st.composite
 def tag_amount_pairs(
-    draw: st.DrawFn, max_value: Decimal = 1e10
-) -> tuple[Category, Decimal]:
+    draw: st.DrawFn, max_value: Decimal | Literal[0] | None = None
+) -> tuple[Attribute, Decimal]:
     attribute = draw(attributes(type_=AttributeType.TAG))
+    if max_value is None:
+        max_value = Decimal("1e10")
     amount = draw(
         st.decimals(
             min_value="0.01",
