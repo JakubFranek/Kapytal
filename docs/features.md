@@ -85,3 +85,5 @@ The user can create Buy or Sell transactions to record the buy or sale of financ
 The user can save the list of entered transactions to a JSON file. This file can be later loaded by Kapytal.
 
 Kapytal will back itself up (create a special JSON file) every N minutes of work without saving in user-specified location different from the location of the primary JSON file.
+
+TODO: figure out JSON saving w/ circular references (maybe UUIDs for transactions?)
