@@ -10,3 +10,5 @@ saved_data
 .coverage
 coverage.xml
 installer
+.hypothesis
+coverage
