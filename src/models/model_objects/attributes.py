@@ -8,12 +8,16 @@ from src.models.mixins.datetime_edited_mixin import DatetimeEditedMixin
 from src.models.mixins.name_mixin import NameMixin
 
 
+class InvalidAttributeError(ValueError):
+    """Raised when invalid Attribute is supplied."""
+
+
 class InvalidCategoryError(ValueError):
     """Raised when invalid Category is supplied."""
 
 
-class InvalidAttributeError(ValueError):
-    """Raised when invalid Attribute is supplied."""
+class InvalidCategoryTypeError(ValueError):
+    """Raised when Category.type_ is incompatible with given CashTransaction.type_."""
 
 
 class AttributeType(Enum):

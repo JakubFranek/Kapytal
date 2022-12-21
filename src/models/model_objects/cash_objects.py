@@ -14,6 +14,7 @@ from src.models.model_objects.attributes import (
     CategoryType,
     InvalidAttributeError,
     InvalidCategoryError,
+    InvalidCategoryTypeError,
 )
 from src.models.model_objects.currency import Currency, CurrencyError
 
@@ -36,10 +37,6 @@ class UnrelatedAccountError(ValueError):
 class TransferSameAccountError(ValueError):
     """Raised when an attempt is made to set the recipient and the sender of a
     Transfer to the same Account."""
-
-
-class InvalidCategoryTypeError(ValueError):
-    """Raised when Category.type_ is incompatible with given CashTransaction.type_."""
 
 
 class InvalidCashTransactionTypeError(ValueError):

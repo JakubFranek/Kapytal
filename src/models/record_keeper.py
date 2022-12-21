@@ -16,6 +16,7 @@ from src.models.model_objects.cash_objects import (
     CashTransaction,
     CashTransactionType,
     CashTransfer,
+    RefundTransaction,
 )
 from src.models.model_objects.currency import Currency
 
@@ -26,6 +27,9 @@ class AlreadyExistsError(ValueError):
 
 class DoesNotExistError(ValueError):
     """Raised when a search for an object finds nothing."""
+
+
+# TODO: add editing and deleting of objects
 
 
 class RecordKeeper:
@@ -114,6 +118,7 @@ class RecordKeeper:
         account_group.parent = parent
         self._account_groups.append(account_group)
 
+    # TODO: same name allowed if parent is different
     def add_cash_account(
         self,
         name: str,
@@ -143,9 +148,11 @@ class RecordKeeper:
         type_ = RecordKeeper.get_cash_transaction_type(transaction_type)
         payee = self.get_attribute(payee_name, AttributeType.PAYEE)
 
-        tags: list[tuple[Attribute, Decimal]] = []
+        tag_amount_pairs: list[tuple[Attribute, Decimal]] = []
         for tag_name, amount in tag_name_amount_pairs:
-            tags.append((self.get_attribute(tag_name, AttributeType.TAG), amount))
+            tag_amount_pairs.append(
+                (self.get_attribute(tag_name, AttributeType.TAG), amount)
+            )
 
         category_amount_pairs: list[tuple[Category, Decimal]] = []
         category_type = (
@@ -164,7 +171,7 @@ class RecordKeeper:
             account,
             category_amount_pairs,
             payee,
-            tags,
+            tag_amount_pairs,
         )
         self._transactions.append(transaction)
 
@@ -189,6 +196,40 @@ class RecordKeeper:
             amount_received,
         )
         self._transactions.append(transfer)
+
+    def add_refund(
+        self,
+        description: str,
+        datetime_: datetime,
+        refunded_transaction_index: int,
+        refunded_account_name: str,
+        category_path_amount_pairs: Collection[tuple[str, Decimal]],
+        tag_name_amount_pairs: Collection[tuple[str, Decimal]],
+    ) -> None:
+        refunded_transaction = self.transactions[refunded_transaction_index]
+        refunded_account = self.get_account(refunded_account_name)
+
+        tag_amount_pairs: list[tuple[Attribute, Decimal]] = []
+        for tag_name, amount in tag_name_amount_pairs:
+            tag_amount_pairs.append(
+                (self.get_attribute(tag_name, AttributeType.TAG), amount)
+            )
+
+        category_amount_pairs: list[tuple[Category, Decimal]] = []
+        category_type = CategoryType.EXPENSE
+        for category_path, amount in category_path_amount_pairs:
+            pair = (self.get_category(category_path, category_type), amount)
+            category_amount_pairs.append(pair)
+
+        refund = RefundTransaction(
+            description,
+            datetime_,
+            refunded_account,
+            refunded_transaction,
+            category_amount_pairs,
+            tag_amount_pairs,
+        )
+        self._transactions.append(refund)
 
     def get_account_parent(self, parent_name: str | None) -> AccountGroup | None:
         if parent_name:

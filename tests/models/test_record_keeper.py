@@ -327,6 +327,35 @@ def test_get_transaction_type_invalid_value(type_: str) -> None:
         record_keeper.get_cash_transaction_type(type_)
 
 
+def test_add_refund() -> RecordKeeper:
+    record_keeper = get_preloaded_record_keeper_with_expense()
+    record_keeper.add_refund(
+        "Refund!",
+        datetime.now(tzinfo),
+        0,
+        "Raiffeisen CZK",
+        (("Food and Drink/Groceries", Decimal(1000)),),
+        (("Test Tag", Decimal(1000)),),
+    )
+    refunded_transaction = record_keeper.transactions[0]
+    refund = record_keeper.transactions[1]
+    assert refund in refunded_transaction.refunds
+
+
+def get_preloaded_record_keeper_with_expense() -> RecordKeeper:
+    record_keeper = get_preloaded_record_keeper()
+    record_keeper.add_cash_transaction(
+        "An expense transaction",
+        datetime.now(tzinfo),
+        "expense",
+        "Raiffeisen CZK",
+        (("Food and Drink/Groceries", Decimal(1000)),),
+        "Albert",
+        (("Test Tag", Decimal(1000)),),
+    )
+    return record_keeper
+
+
 def get_preloaded_record_keeper() -> RecordKeeper:
     record_keeper = RecordKeeper()
     record_keeper.add_currency("CZK")

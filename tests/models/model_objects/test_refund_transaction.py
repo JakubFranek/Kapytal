@@ -31,6 +31,8 @@ from tests.models.test_assets.composites import (
     everything_except,
 )
 
+currency = Currency("CZK")
+
 cat_1 = Category("Groceries", CategoryType.EXPENSE)
 cat_2 = Category("Electronics", CategoryType.EXPENSE)
 cat_3 = Category("Hygiene", CategoryType.EXPENSE)
@@ -43,32 +45,14 @@ tag_4 = Attribute("Personal Hygiene", AttributeType.TAG)
 
 def test_creation() -> None:
     refunded_transaction = get_preloaded_expense()
-
-    initial_datetime = datetime.strptime(
-        "01-01-2021 00:00:00", "%m-%d-%Y %H:%M:%S"
-    ).replace(tzinfo=tzinfo)
-    refunded_account = CashAccount(
-        "Refunded Account",
-        refunded_transaction.currency,
-        Decimal("0"),
-        initial_datetime,
-    )
+    refunded_account = get_refunded_account()
 
     description = "The Refund"
     datetime_ = datetime.strptime("07-01-2022 00:00:00", "%m-%d-%Y %H:%M:%S").replace(
         tzinfo=tzinfo
     )
-    category_amount_pairs = (
-        (cat_1, Decimal(0)),
-        (cat_2, Decimal(50)),
-        (cat_3, Decimal(0)),
-    )
-    tag_amount_pairs = (
-        (tag_1, Decimal(50)),
-        (tag_2, Decimal(50)),
-        (tag_3, Decimal(50)),
-        (tag_4, Decimal(0)),
-    )
+    category_amount_pairs = get_valid_category_amount_pairs()
+    tag_amount_pairs = get_valid_tag_amount_pairs()
 
     refund = RefundTransaction(
         description,
@@ -136,17 +120,8 @@ def test_invalid_datetime_value() -> None:
 def test_invalid_account_type(account: Any) -> None:
     refunded_transaction = get_preloaded_expense()
     datetime_ = refunded_transaction.datetime_ + timedelta(days=1)
-    category_amount_pairs = (
-        (cat_1, Decimal(0)),
-        (cat_2, Decimal(50)),
-        (cat_3, Decimal(0)),
-    )
-    tag_amount_pairs = (
-        (tag_1, Decimal(50)),
-        (tag_2, Decimal(50)),
-        (tag_3, Decimal(50)),
-        (tag_4, Decimal(0)),
-    )
+    category_amount_pairs = get_valid_category_amount_pairs()
+    tag_amount_pairs = get_valid_tag_amount_pairs()
     with pytest.raises(
         TypeError, match="RefundTransaction.account must be a CashAccount."
     ):
@@ -165,17 +140,8 @@ def test_invalid_account_currency(account: CashAccount) -> None:
     refunded_transaction = get_preloaded_expense()
     assume(account.currency != refunded_transaction.currency)
     datetime_ = refunded_transaction.datetime_ + timedelta(days=1)
-    category_amount_pairs = (
-        (cat_1, Decimal(0)),
-        (cat_2, Decimal(50)),
-        (cat_3, Decimal(0)),
-    )
-    tag_amount_pairs = (
-        (tag_1, Decimal(50)),
-        (tag_2, Decimal(50)),
-        (tag_3, Decimal(50)),
-        (tag_4, Decimal(0)),
-    )
+    category_amount_pairs = get_valid_category_amount_pairs()
+    tag_amount_pairs = get_valid_tag_amount_pairs()
     with pytest.raises(CurrencyError):
         RefundTransaction(
             "",
@@ -189,14 +155,7 @@ def test_invalid_account_currency(account: CashAccount) -> None:
 
 def test_invalid_category_pair_categories() -> None:
     refunded_transaction = get_preloaded_expense()
-
-    initial_datetime = refunded_transaction.datetime_ - timedelta(days=1)
-    refunded_account = CashAccount(
-        "Refunded Account",
-        refunded_transaction.currency,
-        Decimal(0),
-        initial_datetime,
-    )
+    refunded_account = get_refunded_account()
 
     datetime_ = refunded_transaction.datetime_ + timedelta(days=1)
     c1 = Category("Wrong Category 1", CategoryType.EXPENSE)
@@ -207,12 +166,7 @@ def test_invalid_category_pair_categories() -> None:
         (c2, Decimal(50)),
         (c3, Decimal(0)),
     )
-    tag_amount_pairs = (
-        (tag_1, Decimal(50)),
-        (tag_2, Decimal(50)),
-        (tag_3, Decimal(50)),
-        (tag_4, Decimal(0)),
-    )
+    tag_amount_pairs = get_valid_tag_amount_pairs()
     with pytest.raises(InvalidCategoryError):
         RefundTransaction(
             "",
@@ -226,14 +180,7 @@ def test_invalid_category_pair_categories() -> None:
 
 def test_invalid_category_pair_decimal_values() -> None:
     refunded_transaction = get_preloaded_expense()
-
-    initial_datetime = refunded_transaction.datetime_ - timedelta(days=1)
-    refunded_account = CashAccount(
-        "Refunded Account",
-        refunded_transaction.currency,
-        Decimal(0),
-        initial_datetime,
-    )
+    refunded_account = get_refunded_account()
 
     datetime_ = refunded_transaction.datetime_ + timedelta(days=1)
     category_amount_pairs = (
@@ -241,12 +188,7 @@ def test_invalid_category_pair_decimal_values() -> None:
         (cat_2, Decimal(-1)),
         (cat_3, Decimal("inf")),
     )
-    tag_amount_pairs = (
-        (tag_1, Decimal(50)),
-        (tag_2, Decimal(50)),
-        (tag_3, Decimal(50)),
-        (tag_4, Decimal(0)),
-    )
+    tag_amount_pairs = get_valid_tag_amount_pairs()
     with pytest.raises(
         ValueError, match="Second member of RefundTransaction.category_amount_pairs"
     ):
@@ -262,14 +204,7 @@ def test_invalid_category_pair_decimal_values() -> None:
 
 def test_invalid_refund_amount() -> None:
     refunded_transaction = get_preloaded_expense()
-
-    initial_datetime = refunded_transaction.datetime_ - timedelta(days=1)
-    refunded_account = CashAccount(
-        "Refunded Account",
-        refunded_transaction.currency,
-        Decimal(0),
-        initial_datetime,
-    )
+    refunded_account = get_refunded_account()
 
     datetime_ = refunded_transaction.datetime_ + timedelta(days=1)
     category_amount_pairs = (
@@ -277,12 +212,7 @@ def test_invalid_refund_amount() -> None:
         (cat_2, Decimal(0)),
         (cat_3, Decimal(0)),
     )
-    tag_amount_pairs = (
-        (tag_1, Decimal(50)),
-        (tag_2, Decimal(50)),
-        (tag_3, Decimal(50)),
-        (tag_4, Decimal(0)),
-    )
+    tag_amount_pairs = get_valid_tag_amount_pairs()
     with pytest.raises(ValueError, match="Total refunded amount must be positive."):
         RefundTransaction(
             "",
@@ -296,14 +226,7 @@ def test_invalid_refund_amount() -> None:
 
 def test_invalid_category_refund_amount() -> None:
     refunded_transaction = get_preloaded_expense()
-
-    initial_datetime = refunded_transaction.datetime_ - timedelta(days=1)
-    refunded_account = CashAccount(
-        "Refunded Account",
-        refunded_transaction.currency,
-        Decimal(0),
-        initial_datetime,
-    )
+    refunded_account = get_refunded_account()
 
     datetime_ = refunded_transaction.datetime_ + timedelta(days=1)
     category_amount_pairs = (
@@ -311,12 +234,7 @@ def test_invalid_category_refund_amount() -> None:
         (cat_2, Decimal(0)),
         (cat_3, Decimal(0)),
     )
-    tag_amount_pairs = (
-        (tag_1, Decimal(50)),
-        (tag_2, Decimal(50)),
-        (tag_3, Decimal(50)),
-        (tag_4, Decimal(0)),
-    )
+    tag_amount_pairs = get_valid_tag_amount_pairs()
     with pytest.raises(ValueError, match="Refunded amount for category "):
         RefundTransaction(
             "",
@@ -330,21 +248,10 @@ def test_invalid_category_refund_amount() -> None:
 
 def test_invalid_tag_type() -> None:
     refunded_transaction = get_preloaded_expense()
-
-    initial_datetime = refunded_transaction.datetime_ - timedelta(days=1)
-    refunded_account = CashAccount(
-        "Refunded Account",
-        refunded_transaction.currency,
-        Decimal(0),
-        initial_datetime,
-    )
+    refunded_account = get_refunded_account()
 
     datetime_ = refunded_transaction.datetime_ + timedelta(days=1)
-    category_amount_pairs = (
-        (cat_1, Decimal(0)),
-        (cat_2, Decimal(50)),
-        (cat_3, Decimal(0)),
-    )
+    category_amount_pairs = get_valid_category_amount_pairs()
     t1 = Attribute("Wrong Attribute", AttributeType.PAYEE)
     tag_amount_pairs = (
         (t1, Decimal(50)),
@@ -365,21 +272,10 @@ def test_invalid_tag_type() -> None:
 
 def test_invalid_tag() -> None:
     refunded_transaction = get_preloaded_expense()
-
-    initial_datetime = refunded_transaction.datetime_ - timedelta(days=1)
-    refunded_account = CashAccount(
-        "Refunded Account",
-        refunded_transaction.currency,
-        Decimal(0),
-        initial_datetime,
-    )
+    refunded_account = get_refunded_account()
 
     datetime_ = refunded_transaction.datetime_ + timedelta(days=1)
-    category_amount_pairs = (
-        (cat_1, Decimal(0)),
-        (cat_2, Decimal(50)),
-        (cat_3, Decimal(0)),
-    )
+    category_amount_pairs = get_valid_category_amount_pairs()
     t1 = Attribute("Wrong Attribute", AttributeType.TAG)
     tag_amount_pairs = (
         (t1, Decimal(50)),
@@ -400,21 +296,10 @@ def test_invalid_tag() -> None:
 
 def test_invalid_tag_decimal() -> None:
     refunded_transaction = get_preloaded_expense()
-
-    initial_datetime = refunded_transaction.datetime_ - timedelta(days=1)
-    refunded_account = CashAccount(
-        "Refunded Account",
-        refunded_transaction.currency,
-        Decimal(0),
-        initial_datetime,
-    )
+    refunded_account = get_refunded_account()
 
     datetime_ = refunded_transaction.datetime_ + timedelta(days=1)
-    category_amount_pairs = (
-        (cat_1, Decimal(0)),
-        (cat_2, Decimal(50)),
-        (cat_3, Decimal(0)),
-    )
+    category_amount_pairs = get_valid_category_amount_pairs()
     tag_amount_pairs = (
         (tag_1, Decimal(-1)),
         (tag_2, Decimal("NaN")),
@@ -434,21 +319,10 @@ def test_invalid_tag_decimal() -> None:
 
 def test_invalid_tag_amount() -> None:
     refunded_transaction = get_preloaded_expense()
-
-    initial_datetime = refunded_transaction.datetime_ - timedelta(days=1)
-    refunded_account = CashAccount(
-        "Refunded Account",
-        refunded_transaction.currency,
-        Decimal(0),
-        initial_datetime,
-    )
+    refunded_account = get_refunded_account()
 
     datetime_ = refunded_transaction.datetime_ + timedelta(days=1)
-    category_amount_pairs = (
-        (cat_1, Decimal(0)),
-        (cat_2, Decimal(50)),
-        (cat_3, Decimal(0)),
-    )
+    category_amount_pairs = get_valid_category_amount_pairs()
     tag_amount_pairs = (
         (tag_1, Decimal(500)),
         (tag_2, Decimal(50)),
@@ -468,14 +342,7 @@ def test_invalid_tag_amount() -> None:
 
 def test_invalid_pair_type() -> None:
     refunded_transaction = get_preloaded_expense()
-
-    initial_datetime = refunded_transaction.datetime_ - timedelta(days=1)
-    refunded_account = CashAccount(
-        "Refunded Account",
-        refunded_transaction.currency,
-        Decimal(0),
-        initial_datetime,
-    )
+    refunded_account = get_refunded_account()
 
     datetime_ = refunded_transaction.datetime_ + timedelta(days=1)
     category_amount_pairs = (
@@ -483,12 +350,7 @@ def test_invalid_pair_type() -> None:
         (cat_2, Decimal(50)),
         (cat_3, Decimal(0)),
     )
-    tag_amount_pairs = (
-        (tag_1, Decimal(50)),
-        (tag_2, Decimal(50)),
-        (tag_3, Decimal(50)),
-        (tag_4, Decimal(0)),
-    )
+    tag_amount_pairs = get_valid_tag_amount_pairs()
     with pytest.raises(TypeError, match="Elements of 'collection' must be tuples."):
         RefundTransaction(
             "",
@@ -502,32 +364,14 @@ def test_invalid_pair_type() -> None:
 
 def test_multi_refund() -> None:
     refunded_transaction = get_preloaded_expense()
-
-    initial_datetime = datetime.strptime(
-        "01-01-2021 00:00:00", "%m-%d-%Y %H:%M:%S"
-    ).replace(tzinfo=tzinfo)
-    refunded_account = CashAccount(
-        "Refunded Account",
-        refunded_transaction.currency,
-        Decimal("0"),
-        initial_datetime,
-    )
+    refunded_account = get_refunded_account()
 
     description = "The Refund"
     datetime_ = datetime.strptime("07-01-2022 00:00:00", "%m-%d-%Y %H:%M:%S").replace(
         tzinfo=tzinfo
     )
-    category_amount_pairs = (
-        (cat_1, Decimal(0)),
-        (cat_2, Decimal(50)),
-        (cat_3, Decimal(0)),
-    )
-    tag_amount_pairs = (
-        (tag_1, Decimal(50)),
-        (tag_2, Decimal(50)),
-        (tag_3, Decimal(50)),
-        (tag_4, Decimal(0)),
-    )
+    category_amount_pairs = get_valid_category_amount_pairs()
+    tag_amount_pairs = get_valid_tag_amount_pairs()
 
     refund_1 = RefundTransaction(
         description,
@@ -582,32 +426,14 @@ def test_get_amount_unrelated_account(account: CashAccount) -> None:
 
 def test_remove_refund() -> None:
     refunded_transaction = get_preloaded_expense()
-
-    initial_datetime = datetime.strptime(
-        "01-01-2021 00:00:00", "%m-%d-%Y %H:%M:%S"
-    ).replace(tzinfo=tzinfo)
-    refunded_account = CashAccount(
-        "Refunded Account",
-        refunded_transaction.currency,
-        Decimal("0"),
-        initial_datetime,
-    )
+    refunded_account = get_refunded_account()
 
     description = "The Refund"
     datetime_ = datetime.strptime("07-01-2022 00:00:00", "%m-%d-%Y %H:%M:%S").replace(
         tzinfo=tzinfo
     )
-    category_amount_pairs = (
-        (cat_1, Decimal(0)),
-        (cat_2, Decimal(50)),
-        (cat_3, Decimal(0)),
-    )
-    tag_amount_pairs = (
-        (tag_1, Decimal(50)),
-        (tag_2, Decimal(50)),
-        (tag_3, Decimal(50)),
-        (tag_4, Decimal(0)),
-    )
+    category_amount_pairs = get_valid_category_amount_pairs()
+    tag_amount_pairs = get_valid_tag_amount_pairs()
 
     refund = RefundTransaction(
         description,
@@ -627,26 +453,13 @@ def test_remove_refund() -> None:
 
 def get_preloaded_refund() -> RefundTransaction:
     refunded_transaction = get_preloaded_expense()
-
-    initial_datetime = datetime.strptime(
-        "01-01-2021 00:00:00", "%m-%d-%Y %H:%M:%S"
-    ).replace(tzinfo=tzinfo)
-    refunded_account = CashAccount(
-        "Refunded Account",
-        refunded_transaction.currency,
-        Decimal("0"),
-        initial_datetime,
-    )
+    refunded_account = get_refunded_account()
 
     description = "The Refund"
     datetime_ = datetime.strptime("07-01-2022 00:00:00", "%m-%d-%Y %H:%M:%S").replace(
         tzinfo=tzinfo
     )
-    category_amount_pairs = (
-        (cat_1, Decimal(0)),
-        (cat_2, Decimal(50)),
-        (cat_3, Decimal(0)),
-    )
+    category_amount_pairs = get_valid_category_amount_pairs()
     tag_amount_pairs = (
         (tag_1, Decimal(50)),
         (tag_2, Decimal(50)),
@@ -665,7 +478,6 @@ def get_preloaded_refund() -> RefundTransaction:
 
 
 def get_preloaded_expense() -> CashTransaction:
-    currency = Currency("CZK")
     initial_datetime = datetime.strptime(
         "01-01-2021 00:00:00", "%m-%d-%Y %H:%M:%S"
     ).replace(tzinfo=tzinfo)
@@ -696,4 +508,33 @@ def get_preloaded_expense() -> CashTransaction:
         category_amount_pairs,
         payee,
         tag_amount_pairs,
+    )
+
+
+def get_refunded_account() -> CashAccount:
+    initial_datetime = datetime.strptime(
+        "01-01-2021 00:00:00", "%m-%d-%Y %H:%M:%S"
+    ).replace(tzinfo=tzinfo)
+    return CashAccount(
+        "Refunded Account",
+        currency,
+        Decimal("0"),
+        initial_datetime,
+    )
+
+
+def get_valid_category_amount_pairs() -> tuple[tuple[Category, Decimal], ...]:
+    return (
+        (cat_1, Decimal(0)),
+        (cat_2, Decimal(50)),
+        (cat_3, Decimal(0)),
+    )
+
+
+def get_valid_tag_amount_pairs() -> tuple[tuple[Attribute, Decimal], ...]:
+    return (
+        (tag_1, Decimal(50)),
+        (tag_2, Decimal(50)),
+        (tag_3, Decimal(50)),
+        (tag_4, Decimal(0)),
     )
