@@ -140,9 +140,7 @@ def test_payee_invalid_attribute_type(
 
 @given(transaction=cash_transactions(), new_tags=everything_except(Collection))
 def test_tags_invalid_type(transaction: CashTransaction, new_tags: Any) -> None:
-    with pytest.raises(
-        TypeError, match="CashTransaction.tags must be a collection of tuples."
-    ):
+    with pytest.raises(TypeError, match="Argument 'collection' must be a Collection."):
         transaction.tag_amount_pairs = new_tags
 
 
@@ -163,7 +161,7 @@ def test_tags_invalid_first_member_type(
     )
     with pytest.raises(
         TypeError,
-        match="First member of CashTransaction.tag_amount_pairs",
+        match="First element of 'collection' tuples",
     ):
         transaction.tag_amount_pairs = new_tags
 
@@ -203,7 +201,7 @@ def test_tags_invalid_second_member_type(
     )
     with pytest.raises(
         TypeError,
-        match="Second member of CashTransaction.tag_amount_pairs",
+        match="Second element of 'collection' tuples",
     ):
         transaction.tag_amount_pairs = new_tags
 
@@ -274,9 +272,7 @@ def test_get_amount_for_account_invalid_account_value(
 def test_category_amount_pairs_invalid_type(
     transaction: CashTransaction, category_amount_pairs: Any
 ) -> None:
-    with pytest.raises(
-        TypeError, match="CashTransaction.category_amount_pairs must be a Collection."
-    ):
+    with pytest.raises(TypeError, match="Argument 'collection' must be a Collection."):
         transaction.category_amount_pairs = category_amount_pairs
 
 
@@ -289,7 +285,7 @@ def test_category_amount_pairs_invalid_length(
 ) -> None:
     with pytest.raises(
         ValueError,
-        match="Length of CashTransaction.category_amount_pairs must be at least 1.",
+        match="Length of 'collection' must be",
     ):
         transaction.category_amount_pairs = category_amount_pairs
 
@@ -305,7 +301,7 @@ def test_category_amount_pairs_invalid_first_member_type(
     tup = ((first_member, second_member),)
     with pytest.raises(
         TypeError,
-        match="tuples must be a Category.",
+        match="First element of 'collection' tuples",
     ):
         transaction.category_amount_pairs = tup
 
@@ -322,7 +318,7 @@ def test_category_amount_pairs_invalid_second_member_type(
     tup = ((first_member, second_member),)
     with pytest.raises(
         TypeError,
-        match="tuples must be a Decimal.",
+        match="Second element of 'collection' tuples",
     ):
         transaction.category_amount_pairs = tup
 

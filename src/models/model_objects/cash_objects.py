@@ -21,6 +21,15 @@ class TransactionPrecedesAccountError(ValueError):
     CashAccount.initial_datetime."""
 
 
+class RefundPrecedesTransactionError(ValueError):
+    """Raised when a RefundTransaction.datetime_ precedes the
+    refunded transaction datetime_."""
+
+
+class CurrencyError(ValueError):
+    """Raised when invalid Currency is supplied."""
+
+
 class UnrelatedAccountError(ValueError):
     """Raised when an Account tries to access a Transaction which does
     not relate to it."""
@@ -245,16 +254,7 @@ class CashTransaction(Transaction):
     def category_amount_pairs(
         self, pairs: Collection[tuple[Category, Decimal]]
     ) -> None:
-        if not isinstance(pairs, Collection) or not all(
-            isinstance(tup, tuple) for tup in pairs
-        ):
-            raise TypeError(
-                "CashTransaction.category_amount_pairs must be a Collection of tuples."
-            )
-        if len(pairs) == 0:
-            raise ValueError(
-                "Length of CashTransaction.category_amount_pairs must be at least 1."
-            )
+        validate_collection_of_tuple_pairs(pairs, Category, Decimal, 1)
         if not all(isinstance(category, Category) for category, _ in pairs):
             raise TypeError(
                 "First member of CashTransaction.category_amount_pairs"
@@ -264,11 +264,7 @@ class CashTransaction(Transaction):
             category.type_ in self._valid_category_types for category, _ in pairs
         ):
             raise InvalidCategoryTypeError("Invalid Category.type_.")
-        if not all(isinstance(amount, Decimal) for _, amount in pairs):
-            raise TypeError(
-                "Second member of CashTransaction.category_amount_pairs"
-                " tuples must be a Decimal."
-            )
+
         if not all(amount.is_finite() and amount > 0 for _, amount in pairs):
             raise ValueError(
                 "Second member of CashTransaction.category_amount_pairs"
@@ -280,8 +276,8 @@ class CashTransaction(Transaction):
 
     @property
     def category_names(self) -> str:
-        categories = [str(tup[0]) for tup in self._category_amount_pairs]
-        return ", ".join(categories)
+        category_paths = [str(category) for category, _ in self._category_amount_pairs]
+        return ", ".join(category_paths)
 
     @property
     def tag_amount_pairs(self) -> tuple[tuple[Attribute, Decimal], ...]:
@@ -290,23 +286,10 @@ class CashTransaction(Transaction):
     # TODO: what happens when self.amount changes and some tag-amounts are now invalid?
     @tag_amount_pairs.setter
     def tag_amount_pairs(self, pairs: Collection[tuple[Attribute, Decimal]]) -> None:
-        if not isinstance(pairs, Collection) or not all(
-            isinstance(tup, tuple) for tup in pairs
-        ):
-            raise TypeError("CashTransaction.tags must be a collection of tuples.")
-        if not all(isinstance(attribute, Attribute) for attribute, _ in pairs):
-            raise TypeError(
-                "First member of CashTransaction.tag_amount_pairs"
-                " tuples must be an Attribute."
-            )
+        validate_collection_of_tuple_pairs(pairs, Attribute, Decimal, 0)
         if not all(attribute.type_ == AttributeType.TAG for attribute, _ in pairs):
             raise ValueError(
                 "The type_ of CashTransaction.tag_amount_pairs Attributes must be TAG."
-            )
-        if not all(isinstance(amount, Decimal) for _, amount in pairs):
-            raise TypeError(
-                "Second member of CashTransaction.tag_amount_pairs"
-                " tuples must be a Decimal."
             )
         if not all(
             amount.is_finite() and amount > 0 and amount <= self.amount
@@ -320,6 +303,11 @@ class CashTransaction(Transaction):
 
         self._tag_amount_pairs = tuple(pairs)
         self._datetime_edited = datetime.now(tzinfo)
+
+    @property
+    def tag_names(self) -> str:
+        tag_names = [tag.name for tag, _ in self._tag_amount_pairs]
+        return ", ".join(tag_names)
 
     @property
     def _valid_category_types(self) -> tuple[CategoryType, ...]:
@@ -468,6 +456,12 @@ class RefundTransaction(Transaction):
         category_amount_pairs: Collection[tuple[Category, Decimal]],
         tag_amount_pairs: Collection[tuple[Attribute, Decimal]],
     ) -> None:
+        if datetime_ < refunded_transaction.datetime_:
+            raise RefundPrecedesTransactionError(
+                "RefundTransaction.datetime_ must not precede the datetime_ of"
+                " the refunded CashTransaction."
+            )
+
         super().__init__(description, datetime_)
 
         if not isinstance(refunded_transaction, CashTransaction):
@@ -479,10 +473,10 @@ class RefundTransaction(Transaction):
         self._refunded_transaction = refunded_transaction
         self._refunded_transaction.add_refund(self)
 
-        self.account = account
-
         self.category_amount_pairs = category_amount_pairs
         self.tag_amount_pairs = tag_amount_pairs
+
+        self.account = account
 
     @property
     def account(self) -> CashAccount:
@@ -492,6 +486,11 @@ class RefundTransaction(Transaction):
     def account(self, new_account: CashAccount) -> None:
         if not isinstance(new_account, CashAccount):
             raise TypeError("RefundTransaction.account must be a CashAccount.")
+        if new_account.currency != self.refunded_transaction.currency:
+            raise CurrencyError(
+                "Currencies of the refunded CashTransaction and the refunded"
+                " CashAccount must match."
+            )
 
         if hasattr(self, "_account"):
             self._account.remove_transaction(self)
@@ -519,33 +518,13 @@ class RefundTransaction(Transaction):
     def category_amount_pairs(
         self, pairs: Collection[tuple[Category, Decimal]]
     ) -> None:
-        if not isinstance(pairs, Collection) or not all(
-            isinstance(tup, tuple) for tup in pairs
-        ):
-            raise TypeError(
-                "RefundTransaction.category_amount_pairs must be a Collection of"
-                " tuples."
-            )
-        if len(pairs) == 0:
-            raise ValueError(
-                "Length of RefundTransaction.category_amount_pairs must be at least 1."
-            )
-        if not all(isinstance(category, Category) for category, _ in pairs):
-            raise TypeError(
-                "First member of RefundTransaction.category_amount_pairs"
-                " tuples must be a Category."
-            )
+        validate_collection_of_tuple_pairs(pairs, Category, Decimal, 1)
         valid_categories = [
             category for category, _ in self.refunded_transaction.category_amount_pairs
         ]
         if not all(category in valid_categories for category, _ in pairs):
             raise InvalidCategoryError(
-                "Only categories present in the refunded transaction are accepted."
-            )
-        if not all(isinstance(amount, Decimal) for _, amount in pairs):
-            raise TypeError(
-                "Second member of RefundTransaction.category_amount_pairs"
-                " tuples must be a Decimal."
+                "Only categories present in the refunded CashTransaction are accepted."
             )
         if not all(amount.is_finite() and amount > 0 for _, amount in pairs):
             raise ValueError(
@@ -573,21 +552,19 @@ class RefundTransaction(Transaction):
         self._datetime_edited = datetime.now(tzinfo)
 
     @property
+    def category_names(self) -> str:
+        category_paths = [str(category) for category, _ in self._category_amount_pairs]
+        return ", ".join(category_paths)
+
+    @property
     def tag_amount_pairs(self) -> tuple[tuple[Attribute, Decimal], ...]:
         return self._tag_amount_pairs
 
     # TODO: what happens when self.amount changes and some tag-amounts are now invalid?
+    # TODO: is it allowed to not refund a tag at all? maybe only for below-max tags?
     @tag_amount_pairs.setter
     def tag_amount_pairs(self, pairs: Collection[tuple[Attribute, Decimal]]) -> None:
-        if not isinstance(pairs, Collection) or not all(
-            isinstance(tup, tuple) for tup in pairs
-        ):
-            raise TypeError("RefundTransaction.tags must be a collection of tuples.")
-        if not all(isinstance(attribute, Attribute) for attribute, _ in pairs):
-            raise TypeError(
-                "First member of RefundTransaction.tag_amount_pairs"
-                " tuples must be an Attribute."
-            )
+        validate_collection_of_tuple_pairs(pairs, Attribute, Decimal, 0)
         if not all(attribute.type_ == AttributeType.TAG for attribute, _ in pairs):
             raise ValueError(
                 "The type_ of RefundTransaction.tag_amount_pairs Attributes must"
@@ -596,12 +573,7 @@ class RefundTransaction(Transaction):
         valid_tags = [tag for tag, _ in self.refunded_transaction.tag_amount_pairs]
         if not all(tag in valid_tags for tag, _ in pairs):
             raise InvalidAttributeError(
-                "Only tags present in the refunded transaction are accepted."
-            )
-        if not all(isinstance(amount, Decimal) for _, amount in pairs):
-            raise TypeError(
-                "Second member of RefundTransaction.tag_amount_pairs"
-                " tuples must be a Decimal."
+                "Only tags present in the refunded CashTransaction are accepted."
             )
         if not all(amount.is_finite() and amount > 0 for _, amount in pairs):
             raise ValueError(
@@ -637,3 +609,24 @@ class RefundTransaction(Transaction):
 
     def is_account_related(self, account: "Account") -> bool:
         return self.account == account
+
+
+def validate_collection_of_tuple_pairs(
+    collection: Collection, first_type: type, second_type: type, min_length: int
+) -> None:
+    if not isinstance(collection, Collection):
+        raise TypeError("Argument 'collection' must be a Collection.")
+    if len(collection) < min_length:
+        raise ValueError(f"Length of 'collection' must be at least {min_length}.")
+    if not all(isinstance(element, tuple) for element in collection):
+        raise TypeError("Elements of 'collection' must be tuples.")
+    if not all(isinstance(first_member, first_type) for first_member, _ in collection):
+        raise TypeError(
+            f"First element of 'collection' tuples must be of type {first_type}."
+        )
+    if not all(
+        isinstance(second_member, second_type) for _, second_member in collection
+    ):
+        raise TypeError(
+            f"Second element of 'collection' tuples must be of type {first_type}."
+        )
