@@ -12,8 +12,10 @@ from src.models.model_objects.attributes import (
     AttributeType,
     Category,
     CategoryType,
+    InvalidAttributeError,
+    InvalidCategoryError,
 )
-from src.models.model_objects.currency import Currency
+from src.models.model_objects.currency import Currency, CurrencyError
 
 
 class TransactionPrecedesAccountError(ValueError):
@@ -26,10 +28,6 @@ class RefundPrecedesTransactionError(ValueError):
     refunded transaction datetime_."""
 
 
-class CurrencyError(ValueError):
-    """Raised when invalid Currency is supplied."""
-
-
 class UnrelatedAccountError(ValueError):
     """Raised when an Account tries to access a Transaction which does
     not relate to it."""
@@ -38,14 +36,6 @@ class UnrelatedAccountError(ValueError):
 class TransferSameAccountError(ValueError):
     """Raised when an attempt is made to set the recipient and the sender of a
     Transfer to the same Account."""
-
-
-class InvalidAttributeError(ValueError):
-    """Raised when invalid Attribute is supplied."""
-
-
-class InvalidCategoryError(ValueError):
-    """Raised when invalid Category is supplied."""
 
 
 class InvalidCategoryTypeError(ValueError):
@@ -134,6 +124,9 @@ class CashAccount(Account):
         self._transactions.sort(key=lambda transaction: transaction.datetime_)
         return tuple(self._transactions)
 
+    def __repr__(self) -> str:
+        return f"CashAccount(name={self.name}, currency={self.currency})"
+
     def add_transaction(self, transaction: "CashTransaction | CashTransfer") -> None:
         self._validate_transaction(transaction)
         self._transactions.append(transaction)
@@ -176,6 +169,7 @@ class CashAccount(Account):
         return
 
 
+# TODO: add __repr__ with UUID, categories and amount?
 class CashTransaction(Transaction):
     def __init__(  # noqa: CFQ002, TMN001
         self,
@@ -225,7 +219,7 @@ class CashTransaction(Transaction):
 
     @property
     def amount(self) -> Decimal:
-        return Decimal(sum(amount for _, amount in self.category_amount_pairs))
+        return Decimal(sum(amount for _, amount in self._category_amount_pairs))
 
     @property
     def currency(self) -> Currency:
@@ -255,11 +249,6 @@ class CashTransaction(Transaction):
         self, pairs: Collection[tuple[Category, Decimal]]
     ) -> None:
         validate_collection_of_tuple_pairs(pairs, Category, Decimal, 1)
-        if not all(isinstance(category, Category) for category, _ in pairs):
-            raise TypeError(
-                "First member of CashTransaction.category_amount_pairs"
-                " tuples must be a Category."
-            )
         if not all(
             category.type_ in self._valid_category_types for category, _ in pairs
         ):
@@ -348,10 +337,11 @@ class CashTransaction(Transaction):
             raise TypeError("Argument 'refund' must be a RefundTransaction.")
         if refund.refunded_transaction != self:
             raise UnrelatedTransactionError(
-                "Argument 'refund' is not related to this CashTransaction."
+                "Supplied RefundTransaction is not related to this CashTransaction."
             )
 
 
+# TODO: add __repr__
 class CashTransfer(Transaction):
     def __init__(  # noqa: TMN001, CFQ002
         self,
@@ -446,7 +436,11 @@ class CashTransfer(Transaction):
         return self.account_sender == account or self.account_recipient == account
 
 
+# TODO: add __repr__
 class RefundTransaction(Transaction):
+    """A refund which attaches itself to an expense CashTransaction.
+    Instances of this class are immutable."""
+
     def __init__(
         self,
         description: str,
@@ -456,55 +450,42 @@ class RefundTransaction(Transaction):
         category_amount_pairs: Collection[tuple[Category, Decimal]],
         tag_amount_pairs: Collection[tuple[Attribute, Decimal]],
     ) -> None:
-        if datetime_ < refunded_transaction.datetime_:
-            raise RefundPrecedesTransactionError(
-                "RefundTransaction.datetime_ must not precede the datetime_ of"
-                " the refunded CashTransaction."
-            )
-
-        super().__init__(description, datetime_)
-
         if not isinstance(refunded_transaction, CashTransaction):
             raise TypeError("Refunded transaction must be a CashTransaction.")
         if refunded_transaction.type_ != CashTransactionType.EXPENSE:
             raise InvalidCashTransactionTypeError(
-                "The type_ of refunded transaction must be expense."
+                "Only expense CashTransactions can be refunded."
             )
         self._refunded_transaction = refunded_transaction
         self._refunded_transaction.add_refund(self)
 
-        self.category_amount_pairs = category_amount_pairs
-        self.tag_amount_pairs = tag_amount_pairs
+        super().__init__(description, datetime_)
 
-        self.account = account
+        self._set_category_amount_pairs(category_amount_pairs)
+        self._set_tag_amount_pairs(tag_amount_pairs)
+
+        self._set_account(account)
+
+    @Transaction.datetime_.setter
+    def datetime_(self, value: datetime) -> None:
+        Transaction.datetime_.fset(self, value)
+        if self.datetime_ < self._refunded_transaction.datetime_:
+            raise RefundPrecedesTransactionError(
+                "Supplied RefundTransaction.datetime_ precedes this"
+                " CashTransaction.datetime_."
+            )
 
     @property
     def account(self) -> CashAccount:
         return self._account
 
-    @account.setter
-    def account(self, new_account: CashAccount) -> None:
-        if not isinstance(new_account, CashAccount):
-            raise TypeError("RefundTransaction.account must be a CashAccount.")
-        if new_account.currency != self.refunded_transaction.currency:
-            raise CurrencyError(
-                "Currencies of the refunded CashTransaction and the refunded"
-                " CashAccount must match."
-            )
-
-        if hasattr(self, "_account"):
-            self._account.remove_transaction(self)
-
-        self._account = new_account
-        self._currency = new_account.currency
-
-        self._account.add_transaction(self)
-
-        self._datetime_edited = datetime.now(tzinfo)
-
     @property
     def amount(self) -> Decimal:
         return Decimal(sum(amount for _, amount in self.category_amount_pairs))
+
+    @property
+    def currency(self) -> Currency:
+        return self._currency
 
     @property
     def refunded_transaction(self) -> CashTransaction:
@@ -514,11 +495,36 @@ class RefundTransaction(Transaction):
     def category_amount_pairs(self) -> tuple[tuple[Category, Decimal], ...]:
         return tuple(self._category_amount_pairs)
 
-    @category_amount_pairs.setter
-    def category_amount_pairs(
+    @property
+    def category_names(self) -> str:
+        category_paths = [str(category) for category, _ in self._category_amount_pairs]
+        return ", ".join(category_paths)
+
+    @property
+    def tag_amount_pairs(self) -> tuple[tuple[Attribute, Decimal], ...]:
+        return self._tag_amount_pairs
+
+    def _set_account(self, account: CashAccount) -> None:
+        if not isinstance(account, CashAccount):
+            raise TypeError("RefundTransaction.account must be a CashAccount.")
+        if account.currency != self.refunded_transaction.currency:
+            raise CurrencyError(
+                "Currencies of the refunded CashTransaction and the refunded"
+                " CashAccount must match."
+            )
+
+        self._account = account
+        self._currency = account.currency
+
+        self._account.add_transaction(self)
+
+        self._datetime_edited = datetime.now(tzinfo)
+
+    def _set_category_amount_pairs(
         self, pairs: Collection[tuple[Category, Decimal]]
     ) -> None:
-        validate_collection_of_tuple_pairs(pairs, Category, Decimal, 1)
+        no_of_categories = len(self.refunded_transaction.category_amount_pairs)
+        validate_collection_of_tuple_pairs(pairs, Category, Decimal, no_of_categories)
         valid_categories = [
             category for category, _ in self.refunded_transaction.category_amount_pairs
         ]
@@ -526,11 +532,14 @@ class RefundTransaction(Transaction):
             raise InvalidCategoryError(
                 "Only categories present in the refunded CashTransaction are accepted."
             )
-        if not all(amount.is_finite() and amount > 0 for _, amount in pairs):
+        if not all(amount.is_finite() and amount >= 0 for _, amount in pairs):
             raise ValueError(
                 "Second member of RefundTransaction.category_amount_pairs"
-                " tuples must be a positive and finite Decimal."
+                " tuples must be a finite non-negative Decimal."
             )
+        refund_amount = sum(amount for _, amount in pairs)
+        if not refund_amount > 0:
+            raise ValueError("Total refunded amount must be positive.")
 
         max_values = {}
         for category, amount in self.refunded_transaction.category_amount_pairs:
@@ -544,57 +553,57 @@ class RefundTransaction(Transaction):
         for category, amount in pairs:
             if amount > max_values[category]:
                 raise ValueError(
-                    f"Refunded amount for category '{category}' must not exceed"
+                    f"Refunded amount for category '{str(category)}' must not exceed"
                     f" {max_values[category]}."
                 )
 
         self._category_amount_pairs = tuple(pairs)
         self._datetime_edited = datetime.now(tzinfo)
 
-    @property
-    def category_names(self) -> str:
-        category_paths = [str(category) for category, _ in self._category_amount_pairs]
-        return ", ".join(category_paths)
+    def _set_tag_amount_pairs(
+        self, pairs: Collection[tuple[Attribute, Decimal]]
+    ) -> None:
+        expected_tags = {tag for tag, _ in self.refunded_transaction.tag_amount_pairs}
+        no_of_tags = len(expected_tags)
+        validate_collection_of_tuple_pairs(pairs, Attribute, Decimal, no_of_tags)
 
-    @property
-    def tag_amount_pairs(self) -> tuple[tuple[Attribute, Decimal], ...]:
-        return self._tag_amount_pairs
-
-    # TODO: what happens when self.amount changes and some tag-amounts are now invalid?
-    # TODO: is it allowed to not refund a tag at all? maybe only for below-max tags?
-    @tag_amount_pairs.setter
-    def tag_amount_pairs(self, pairs: Collection[tuple[Attribute, Decimal]]) -> None:
-        validate_collection_of_tuple_pairs(pairs, Attribute, Decimal, 0)
         if not all(attribute.type_ == AttributeType.TAG for attribute, _ in pairs):
-            raise ValueError(
+            raise InvalidAttributeError(
                 "The type_ of RefundTransaction.tag_amount_pairs Attributes must"
                 " be TAG."
             )
-        valid_tags = [tag for tag, _ in self.refunded_transaction.tag_amount_pairs]
-        if not all(tag in valid_tags for tag, _ in pairs):
-            raise InvalidAttributeError(
-                "Only tags present in the refunded CashTransaction are accepted."
-            )
-        if not all(amount.is_finite() and amount > 0 for _, amount in pairs):
+        delivered_tags = {tag for tag, _ in pairs}
+        if delivered_tags != expected_tags:
+            raise InvalidAttributeError("Delivered tags do not match expected tags.")
+        if not all(amount.is_finite() and amount >= 0 for _, amount in pairs):
             raise ValueError(
                 "Second member of RefundTransaction.tag_amount_pairs"
-                " tuples must be a positive and finite Decimal."
+                " tuples must be a finite non-negative Decimal."
             )
 
-        max_values = {}
-        for tag, _ in self.refunded_transaction.tag_amount_pairs:
+        max_values: dict[Attribute, Decimal] = {}
+        min_values: dict[Attribute, Decimal] = {}
+        for tag, amount in self.refunded_transaction.tag_amount_pairs:
             max_values[tag] = self.refunded_transaction.amount
+            min_values[tag] = amount
         other_refunds = [
             refund for refund in self.refunded_transaction.refunds if refund != self
         ]
+        remaining_amount = self.refunded_transaction.amount - sum(
+            refund.amount for refund in other_refunds
+        )
         for other_refund in other_refunds:
             for tag, amount in other_refund.tag_amount_pairs:
                 max_values[tag] -= amount
+                min_values[tag] -= amount
+
         for tag, amount in pairs:
-            if amount > max_values[tag]:
+            min_expected = min_values[tag] - (remaining_amount - self.amount)
+            min_values[tag] = max(min_expected, 0)
+            if amount > max_values[tag] or amount < min_values[tag]:
                 raise ValueError(
-                    f"Refunded amount for category '{tag}' must not exceed"
-                    f" {max_values[tag]}."
+                    f"Refunded amount for tag '{tag.name}' must be within"
+                    f" {min_values[tag]} and {max_values[tag]}."
                 )
 
         self._tag_amount_pairs = tuple(pairs)
@@ -603,7 +612,7 @@ class RefundTransaction(Transaction):
     def get_amount_for_account(self, account: Account) -> Decimal:
         if not self.is_account_related(account):
             raise UnrelatedAccountError(
-                'Argument "account" is not related to this CashTransaction.'
+                'Argument "account" is not related to this RefundTransaction.'
             )
         return self.amount
 

@@ -272,3 +272,6 @@ class RecordKeeper:
             "A CashTransactionType can be only 'income' or 'expense',"
             f" not {type_lower}."
         )
+
+    def __repr__(self) -> str:
+        return "RecordKeeper"

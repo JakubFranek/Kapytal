@@ -8,6 +8,14 @@ from src.models.mixins.datetime_edited_mixin import DatetimeEditedMixin
 from src.models.mixins.name_mixin import NameMixin
 
 
+class InvalidCategoryError(ValueError):
+    """Raised when invalid Category is supplied."""
+
+
+class InvalidAttributeError(ValueError):
+    """Raised when invalid Attribute is supplied."""
+
+
 class AttributeType(Enum):
     TAG = auto()
     PAYEE = auto()
@@ -31,6 +39,9 @@ class Attribute(NameMixin, DatetimeCreatedMixin):
     @property
     def type_(self) -> AttributeType:
         return self._type
+
+    def __repr__(self) -> str:
+        return f"Attribute('{self.name}', {self.type_.name})"
 
 
 class Category(NameMixin, DatetimeCreatedMixin, DatetimeEditedMixin):
@@ -82,3 +93,6 @@ class Category(NameMixin, DatetimeCreatedMixin, DatetimeEditedMixin):
         if self.parent is None:
             return self.name
         return str(self.parent) + "/" + self.name
+
+    def __repr__(self) -> str:
+        return f"Category('{self.name}', {self.type_.name}, parent={self.parent})"

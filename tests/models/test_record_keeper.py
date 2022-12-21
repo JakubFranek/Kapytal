@@ -23,6 +23,7 @@ def test_creation() -> None:
     assert record_keeper.categories == ()
     assert record_keeper.payees == ()
     assert record_keeper.currencies == ()
+    assert record_keeper.__repr__() == "RecordKeeper"
 
 
 @given(code=st.text(string.ascii_letters, min_size=3, max_size=3))
