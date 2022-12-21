@@ -1,6 +1,10 @@
 from src.models.mixins.datetime_created_mixin import DatetimeCreatedMixin
 
 
+class CurrencyError(ValueError):
+    """Raised when invalid Currency is supplied."""
+
+
 # TODO: add CurrencyExchangeRate objects or something? (w/ history)
 class Currency(DatetimeCreatedMixin):
     def __init__(self, code: str) -> None:
@@ -16,3 +20,6 @@ class Currency(DatetimeCreatedMixin):
     @property
     def code(self) -> str:
         return self._code
+
+    def __repr__(self) -> str:
+        return f"Currency(code={self.code})"

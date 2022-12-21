@@ -120,7 +120,7 @@ def test_validate_transaction_invalid_type(
 ) -> None:
     with pytest.raises(
         TypeError,
-        match="Argument 'transaction' must be a CashTransaction or a CashTransfer.",
+        match="Argument 'transaction' must be a",
     ):
         account._validate_transaction(transaction)
 
@@ -179,6 +179,7 @@ def test_validate_transaction_invalid_datetime(
     account=cash_accounts(),
     transactions=st.lists(cash_transactions(), min_size=1, max_size=10),
 )
+@settings(max_examples=10)
 def test_balance(account: CashAccount, transactions: list[CashTransaction]) -> None:
     datetime_balance_list = [(account.initial_datetime, account.initial_balance)]
     transactions.sort(key=lambda transaction: transaction.datetime_)

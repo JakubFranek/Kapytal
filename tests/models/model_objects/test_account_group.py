@@ -27,6 +27,7 @@ def test_creation(name: str) -> None:
     assert account_group.parent is None
     assert dt_created_diff.seconds < 1
     assert account_group.balance == Decimal(0)
+    assert account_group.__repr__() == f"AccountGroup({name}, parent=None)"
 
 
 @given(account_group=account_groups(), parent=account_groups())
@@ -35,9 +36,17 @@ def test_add_and_remove_parent(
 ) -> None:
     assert account_group.parent is None
     assert account_group.children == ()
+    assert (
+        account_group.__repr__()
+        == f"AccountGroup({account_group.name}, parent={account_group.parent})"
+    )
     account_group.parent = parent
     assert account_group.parent == parent
     assert account_group in parent.children
+    assert (
+        account_group.__repr__()
+        == f"AccountGroup({account_group.name}, parent={account_group.parent})"
+    )
     account_group.parent = None
     assert account_group.parent is None
     assert account_group not in parent.children

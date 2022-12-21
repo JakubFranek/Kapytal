@@ -12,3 +12,4 @@ coverage.xml
 installer
 .hypothesis
 coverage
+.mypy_cache
