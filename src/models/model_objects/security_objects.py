@@ -6,6 +6,7 @@ from decimal import Decimal
 from enum import Enum, auto
 
 from src.models.base_classes.account import Account, UnrelatedAccountError
+from src.models.base_classes.transaction import Transaction
 from src.models.mixins.datetime_created_mixin import DatetimeCreatedMixin
 from src.models.mixins.name_mixin import NameMixin
 from src.models.mixins.uuid_mixin import UUIDMixin
@@ -251,3 +252,17 @@ class SecurityTransaction(CashRelatedTransaction):
 
     def is_account_related(self, account: Account) -> bool:
         return account == self.cash_account or account == self.security_account
+
+
+class SecurityTransfer(Transaction):
+    def __init__(
+        self,
+        description: str,
+        datetime_: datetime,
+        account_sender: SecurityAccount,
+        account_recipient: SecurityAccount,
+        security: Security,
+        shares: int,
+    ) -> None:
+        super().__init__(description, datetime_)
+        # TODO: implement this class
