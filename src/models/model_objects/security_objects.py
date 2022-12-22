@@ -236,6 +236,14 @@ class SecurityTransaction(CashRelatedTransaction):
         self._cash_account = new_account
         self._cash_account.add_transaction(self)
 
+    def __repr__(self) -> str:
+        return (
+            f"SecurityTransaction({self.type_.name}, "
+            f"security='{self.security.symbol}', "
+            f"shares={self.shares}, "
+            f"{self.datetime_.strftime('%Y-%m-%d')})"
+        )
+
     def _get_amount(self, account: CashAccount) -> Decimal:  # noqa: U100
         if self.type_ == SecurityTransactionType.BUY:
             return -self._shares * self.price_per_share - self.fees

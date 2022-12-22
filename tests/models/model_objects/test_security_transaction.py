@@ -73,6 +73,12 @@ def test_buy(
         == cash_account.initial_balance - shares * price_per_share - fees
     )
     assert security_account.securities[security] == shares
+    assert transaction.__repr__() == (
+        f"SecurityTransaction({transaction.type_.name}, "
+        f"security='{transaction.security}', "
+        f"shares={transaction.shares}, "
+        f"{transaction.datetime_.strftime('%Y-%m-%d')})"
+    )
 
 
 @given(
