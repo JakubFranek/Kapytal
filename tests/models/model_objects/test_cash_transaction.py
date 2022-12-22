@@ -218,7 +218,7 @@ def test_change_account(transaction: CashTransaction, new_account: CashAccount) 
 
 
 @given(transaction=cash_transactions())
-def test_get_amount_for_account(transaction: CashTransaction) -> None:
+def test_get_amount(transaction: CashTransaction) -> None:
     account = transaction.account
     amount = transaction.amount
     if transaction.type_ == CashTransactionType.INCOME:
@@ -234,7 +234,7 @@ def test_get_amount_for_account(transaction: CashTransaction) -> None:
     transaction=cash_transactions(),
     account=everything_except(CashAccount),
 )
-def test_get_amount_for_account_invalid_account_type(
+def test_get_amount_invalid_account_type(
     transaction: CashTransaction, account: Any
 ) -> None:
     with pytest.raises(TypeError, match="Argument 'account' must be a CashAccount."):
@@ -245,7 +245,7 @@ def test_get_amount_for_account_invalid_account_type(
     transaction=cash_transactions(),
     account=cash_accounts(),
 )
-def test_get_amount_for_account_invalid_account_value(
+def test_get_amount_invalid_account_value(
     transaction: CashTransaction, account: CashAccount
 ) -> None:
     assume(transaction.account != account)

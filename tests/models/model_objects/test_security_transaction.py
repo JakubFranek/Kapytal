@@ -75,7 +75,7 @@ def test_buy(
     assert security_account.securities[security] == shares
     assert transaction.__repr__() == (
         f"SecurityTransaction({transaction.type_.name}, "
-        f"security='{transaction.security}', "
+        f"security='{transaction.security.symbol}', "
         f"shares={transaction.shares}, "
         f"{transaction.datetime_.strftime('%Y-%m-%d')})"
     )

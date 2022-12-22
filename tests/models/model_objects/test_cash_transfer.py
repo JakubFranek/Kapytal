@@ -123,7 +123,7 @@ def test_get_amount_for_account(transfer: CashTransfer) -> None:
     transaction=cash_transfers(),
     account=everything_except(CashAccount),
 )
-def test_get_amount_for_account_invalid_account_type(
+def test_get_amount_invalid_account_type(
     transaction: CashTransfer, account: Any
 ) -> None:
     with pytest.raises(TypeError, match="Argument 'account' must be a CashAccount."):
@@ -134,7 +134,7 @@ def test_get_amount_for_account_invalid_account_type(
     transfer=cash_transfers(),
     account=cash_accounts(),
 )
-def test_get_amount_for_account_invalid_account_value(
+def test_get_amount_invalid_account_value(
     transfer: CashTransfer, account: CashAccount
 ) -> None:
     with pytest.raises(UnrelatedAccountError):
