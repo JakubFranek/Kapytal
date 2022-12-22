@@ -360,7 +360,7 @@ def test_tag_names(transaction: CashTransaction) -> None:
 
 
 @given(transaction=cash_transactions(), refund=everything_except(RefundTransaction))
-def test_invalid_refund_transaction(transaction: CashTransaction, refund: Any) -> None:
+def test_invalid_refund_type(transaction: CashTransaction, refund: Any) -> None:
     with pytest.raises(
         TypeError, match="Argument 'refund' must be a RefundTransaction."
     ):

@@ -2,10 +2,11 @@ from datetime import datetime
 from typing import Any
 
 import pytest
-from hypothesis import given, settings
+from hypothesis import given
 from hypothesis import strategies as st
 
 from src.models.constants import tzinfo
+from src.models.mixins.name_mixin import NameLengthError
 from src.models.model_objects.account_group import AccountGroup
 from tests.models.test_assets.composites import account_groups, everything_except
 from tests.models.test_assets.concrete_abcs import ConcreteAccount
@@ -26,19 +27,18 @@ def test_creation(name: str) -> None:
 
 @given(name=st.just(""))
 def test_name_too_short(name: str) -> None:
-    with pytest.raises(ValueError, match="Account.name length must be*"):
+    with pytest.raises(NameLengthError):
         ConcreteAccount(name)
 
 
 @given(name=st.text(min_size=33))
-@settings(max_examples=15)
 def test_name_too_long(name: str) -> None:
-    with pytest.raises(ValueError, match="Account.name length must be*"):
+    with pytest.raises(NameLengthError):
         ConcreteAccount(name)
 
 
 @given(name=everything_except(str))
-def test_name_not_string(name: Any) -> None:
+def test_name_invalid_type(name: Any) -> None:
     with pytest.raises(TypeError, match="Account.name must be a string."):
         ConcreteAccount(name)
 

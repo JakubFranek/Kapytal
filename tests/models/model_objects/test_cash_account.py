@@ -3,7 +3,7 @@ from decimal import Decimal
 from typing import Any
 
 import pytest
-from hypothesis import assume, given, settings
+from hypothesis import assume, given
 from hypothesis import strategies as st
 
 from src.models.constants import tzinfo
@@ -136,7 +136,6 @@ def test_validate_transaction_invalid_type(
     transaction=cash_transactions(),
     transfer=cash_transfers(),
 )
-@settings(max_examples=10)
 def test_validate_transaction_invalid_account(
     account: CashAccount, transaction: CashTransaction, transfer: CashTransfer
 ) -> None:
@@ -156,7 +155,6 @@ def test_validate_transaction_invalid_account(
     data=st.data(),
     switch=st.booleans(),
 )
-@settings(max_examples=10)
 def test_validate_transaction_invalid_datetime(
     account: CashAccount,
     transaction: CashTransaction,
@@ -185,7 +183,6 @@ def test_validate_transaction_invalid_datetime(
     account=cash_accounts(),
     transactions=st.lists(cash_transactions(), min_size=1, max_size=10),
 )
-@settings(max_examples=10)
 def test_balance(account: CashAccount, transactions: list[CashTransaction]) -> None:
     datetime_balance_list = [(account.initial_datetime, account.initial_balance)]
     transactions.sort(key=lambda transaction: transaction.datetime_)

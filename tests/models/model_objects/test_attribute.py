@@ -2,10 +2,11 @@ from datetime import datetime
 from typing import Any
 
 import pytest
-from hypothesis import given, settings
+from hypothesis import given
 from hypothesis import strategies as st
 
 from src.models.constants import tzinfo
+from src.models.mixins.name_mixin import NameLengthError
 from src.models.model_objects.attributes import Attribute, AttributeType
 from tests.models.test_assets.composites import everything_except
 
@@ -25,7 +26,7 @@ def test_creation(name: str, type_: AttributeType) -> None:
     name=everything_except(str),
     type_=st.sampled_from(AttributeType),
 )
-def test_name_not_string(name: Any, type_: AttributeType) -> None:
+def test_name_invalid_type(name: Any, type_: AttributeType) -> None:
     with pytest.raises(TypeError, match="Attribute.name must be a string."):
         Attribute(name, type_)
 
@@ -35,7 +36,7 @@ def test_name_not_string(name: Any, type_: AttributeType) -> None:
     type_=st.sampled_from(AttributeType),
 )
 def test_name_too_short(name: str, type_: AttributeType) -> None:
-    with pytest.raises(ValueError, match="Attribute.name length must be*"):
+    with pytest.raises(NameLengthError):
         Attribute(name, type_)
 
 
@@ -43,9 +44,8 @@ def test_name_too_short(name: str, type_: AttributeType) -> None:
     name=st.text(min_size=33),
     type_=st.sampled_from(AttributeType),
 )
-@settings(max_examples=15)
 def test_name_too_long(name: str, type_: AttributeType) -> None:
-    with pytest.raises(ValueError, match="Attribute.name length must be*"):
+    with pytest.raises(NameLengthError):
         Attribute(name, type_)
 
 

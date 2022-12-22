@@ -1,3 +1,7 @@
+class NameLengthError(ValueError):
+    """Raised when the length of 'name' string is incorrect."""
+
+
 class NameMixin:
     NAME_MIN_LENGTH = 1
     NAME_MAX_LENGTH = 32
@@ -15,16 +19,10 @@ class NameMixin:
         if not isinstance(value, str):
             raise TypeError(f"{self.__class__.__name__}.name must be a string.")
 
-        if not hasattr(self, "_name") or (
-            hasattr(self, "_name") and self._name != value
-        ):
-            if (
-                len(value) < NameMixin.NAME_MIN_LENGTH
-                or len(value) > NameMixin.NAME_MAX_LENGTH
-            ):
-                raise ValueError(
-                    f"{self.__class__.__name__}.name length must be between "
-                    f"{NameMixin.NAME_MIN_LENGTH} and "
-                    f"{NameMixin.NAME_MAX_LENGTH} characters."
-                )
-            self._name = value
+        if len(value) < self.NAME_MIN_LENGTH or len(value) > self.NAME_MAX_LENGTH:
+            raise NameLengthError(
+                f"{self.__class__.__name__}.name length must be between "
+                f"{self.NAME_MIN_LENGTH} and "
+                f"{self.NAME_MAX_LENGTH} characters."
+            )
+        self._name = value

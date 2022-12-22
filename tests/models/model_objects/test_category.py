@@ -6,6 +6,7 @@ from hypothesis import assume, given
 from hypothesis import strategies as st
 
 from src.models.constants import tzinfo
+from src.models.mixins.name_mixin import NameLengthError
 from src.models.model_objects.attributes import Category, CategoryType
 from tests.models.test_assets.composites import categories, everything_except
 
@@ -24,6 +25,24 @@ def test_creation(name: str, category_type: CategoryType) -> None:
     assert category.parent is None
     assert category.children == ()
     assert dt_created_diff.seconds < 1
+
+
+@given(
+    name=st.just(""),
+    type_=st.sampled_from(CategoryType),
+)
+def test_name_too_short(name: str, type_: CategoryType) -> None:
+    with pytest.raises(NameLengthError):
+        Category(name, type_)
+
+
+@given(
+    name=st.text(min_size=33),
+    type_=st.sampled_from(CategoryType),
+)
+def test_name_too_long(name: str, type_: CategoryType) -> None:
+    with pytest.raises(NameLengthError):
+        Category(name, type_)
 
 
 @given(category=categories(), parent=categories())
@@ -57,7 +76,7 @@ def test_type_invalid_type(name: str, category_type: Any) -> None:
 
 
 @given(category=categories(), parent=categories())
-def test_parent_invalid_type_(category: Category, parent: Category) -> None:
+def test_invalid_parent_type(category: Category, parent: Category) -> None:
     assume(category.type_ != parent.type_)
     with pytest.raises(
         ValueError,
