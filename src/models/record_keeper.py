@@ -114,8 +114,7 @@ class RecordKeeper:
         if any(acc_group.name == name for acc_group in self._account_groups):
             raise AlreadyExistsError(f"An AccountGroup named {name} already exists.")
         parent = self.get_account_parent(parent_name)
-        account_group = AccountGroup(name)
-        account_group.parent = parent
+        account_group = AccountGroup(name, parent)
         self._account_groups.append(account_group)
 
     # TODO: same name allowed if parent is different

@@ -10,9 +10,9 @@ from src.models.mixins.name_mixin import NameMixin
 
 # TODO: add parent to __init__
 class AccountGroup(NameMixin, DatetimeCreatedMixin):
-    def __init__(self, name: str) -> None:
+    def __init__(self, name: str, parent: Self | None = None) -> None:
         super().__init__(name)
-        self._parent: Self | None = None
+        self._parent: Self | None = parent
         self._children: list[Self | "Account"] = []
 
     @property
