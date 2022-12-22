@@ -166,7 +166,6 @@ class CashAccount(Account):
         return
 
 
-# TODO: add __repr__ with UUID, categories and amount?
 class CashTransaction(Transaction):
     def __init__(  # noqa: CFQ002, TMN001
         self,
@@ -305,6 +304,15 @@ class CashTransaction(Transaction):
     def refunds(self) -> tuple["RefundTransaction", ...]:
         return tuple(self._refunds)
 
+    def __repr__(self) -> str:
+        return (
+            f"CashTransaction({self.type_.name}, "
+            f"account='{self.account.name}', "
+            f"amount={self.amount} {self.account.currency.code}, "
+            f"category={{{self.category_names}}}, "
+            f"{self.datetime_.strftime('%Y-%m-%d')})"
+        )
+
     def add_refund(self, refund: "RefundTransaction") -> None:
         self._validate_refund(refund)
 
@@ -338,7 +346,6 @@ class CashTransaction(Transaction):
             )
 
 
-# TODO: add __repr__
 class CashTransfer(Transaction):
     def __init__(  # noqa: TMN001, CFQ002
         self,
@@ -392,6 +399,15 @@ class CashTransfer(Transaction):
         self._amount_received = value
         self._datetime_edited = datetime.now(tzinfo)
 
+    def __repr__(self) -> str:
+        return (
+            f"CashTransfer({self.amount_sent} {self.account_sender.currency.code}"
+            f" from '{self.account_sender.name}', "
+            f"{self.amount_received} {self.account_recipient.currency.code} "
+            f"to '{self.account_recipient.name}', "
+            f"{self.datetime_.strftime('%Y-%m-%d')})"
+        )
+
     def set_accounts(
         self, account_sender: CashAccount, account_recipient: CashAccount
     ) -> None:
@@ -433,7 +449,6 @@ class CashTransfer(Transaction):
         return self.account_sender == account or self.account_recipient == account
 
 
-# TODO: add __repr__
 class RefundTransaction(Transaction):
     """A refund which attaches itself to an expense CashTransaction.
     Instances of this class are immutable."""
@@ -500,6 +515,14 @@ class RefundTransaction(Transaction):
     @property
     def tag_amount_pairs(self) -> tuple[tuple[Attribute, Decimal], ...]:
         return self._tag_amount_pairs
+
+    def __repr__(self) -> str:
+        return (
+            f"RefundTransaction(account='{self.account.name}', "
+            f"amount={self.amount} {self.account.currency.code}, "
+            f"category={{{self.category_names}}}, "
+            f"{self.datetime_.strftime('%Y-%m-%d')})"
+        )
 
     def _set_account(self, account: CashAccount) -> None:
         if not isinstance(account, CashAccount):

@@ -1,3 +1,4 @@
+import uuid
 from abc import ABC, abstractmethod
 from datetime import datetime
 from decimal import Decimal
@@ -19,6 +20,11 @@ class Transaction(DatetimeCreatedMixin, DatetimeEditedMixin, ABC):
         super().__init__()
         self.description = description
         self.datetime_ = datetime_
+        self._uuid = uuid.uuid4()
+
+    @property
+    def uuid(self) -> uuid.UUID:
+        return self._uuid
 
     @property
     def description(self) -> str:

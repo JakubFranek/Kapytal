@@ -40,7 +40,7 @@ def test_creation(
     amount_received: Decimal,
 ) -> None:
     dt_start = datetime.now(tzinfo)
-    cash_transfer = CashTransfer(
+    transfer = CashTransfer(
         description,
         datetime_,
         account_sender,
@@ -49,14 +49,21 @@ def test_creation(
         amount_received,
     )
 
-    dt_created_diff = cash_transfer.datetime_created - dt_start
+    dt_created_diff = transfer.datetime_created - dt_start
 
-    assert cash_transfer.description == description
-    assert cash_transfer.datetime_ == datetime_
-    assert cash_transfer.account_sender == account_sender
-    assert cash_transfer.account_recipient == account_recipient
-    assert cash_transfer.amount_sent == amount_sent
-    assert cash_transfer.amount_received == amount_received
+    assert transfer.description == description
+    assert transfer.datetime_ == datetime_
+    assert transfer.account_sender == account_sender
+    assert transfer.account_recipient == account_recipient
+    assert transfer.amount_sent == amount_sent
+    assert transfer.amount_received == amount_received
+    assert transfer.__repr__() == (
+        f"CashTransfer({transfer.amount_sent} {transfer.account_sender.currency.code}"
+        f" from '{transfer.account_sender.name}', "
+        f"{transfer.amount_received} {transfer.account_recipient.currency.code} "
+        f"to '{transfer.account_recipient.name}', "
+        f"{transfer.datetime_.strftime('%Y-%m-%d')})"
+    )
     assert dt_created_diff.seconds < 1
 
 

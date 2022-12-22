@@ -1,4 +1,5 @@
 import time
+import uuid
 from datetime import datetime
 
 import pytest
@@ -21,6 +22,7 @@ def test_creation(description: str, datetime_: datetime) -> None:
 
     assert transaction.description == description
     assert transaction.datetime_ == datetime_
+    assert isinstance(transaction.uuid, uuid.UUID)
     assert dt_created_diff.seconds < 1
     assert dt_edited_diff.seconds < 1
 

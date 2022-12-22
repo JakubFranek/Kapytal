@@ -74,6 +74,12 @@ def test_creation() -> None:
     assert refund.category_amount_pairs == category_amount_pairs
     assert refund.tag_amount_pairs == tag_amount_pairs
     assert refund in refunded_transaction.refunds
+    assert refund.__repr__() == (
+        f"RefundTransaction(account='{refund.account.name}', "
+        f"amount={refund.amount} {refund.account.currency.code}, "
+        f"category={{{refund.category_names}}}, "
+        f"{refund.datetime_.strftime('%Y-%m-%d')})"
+    )
 
 
 def test_unrelated_refund_transaction() -> None:
