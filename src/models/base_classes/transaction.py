@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 from datetime import datetime
-from decimal import Decimal
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -57,8 +56,4 @@ class Transaction(DatetimeCreatedMixin, DatetimeEditedMixin, UUIDMixin, ABC):
 
     @abstractmethod
     def is_account_related(self, account: "Account") -> bool:
-        raise NotImplementedError("Not implemented")
-
-    @abstractmethod
-    def get_amount_for_account(self, account: "Account") -> Decimal:
         raise NotImplementedError("Not implemented")

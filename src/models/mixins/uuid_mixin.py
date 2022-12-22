@@ -1,6 +1,7 @@
 import uuid
 
 
+# TODO: maybe put all mixins into one module?
 class UUIDMixin:
     def __init__(self) -> None:
         super().__init__()

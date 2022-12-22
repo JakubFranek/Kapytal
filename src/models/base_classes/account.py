@@ -10,6 +10,11 @@ if TYPE_CHECKING:  # pragma: no cover
     from src.models.base_classes.transaction import Transaction
 
 
+class UnrelatedAccountError(ValueError):
+    """Raised when an Account tries to access a Transaction which does
+    not relate to it."""
+
+
 class Account(NameMixin, DatetimeCreatedMixin, ABC):
     def __init__(self, name: str, parent: AccountGroup | None = None) -> None:
         super().__init__(name=name)

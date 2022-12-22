@@ -30,6 +30,7 @@ from tests.models.test_assets.composites import (
     everything_except,
     tag_amount_pairs,
 )
+from tests.models.test_assets.concrete_abcs import ConcreteCashRelatedTransactionMixin
 from tests.models.test_assets.constants import min_datetime
 
 
@@ -233,6 +234,17 @@ def test_get_amount_for_account(transaction: CashTransaction) -> None:
 
 @given(
     transaction=cash_transactions(),
+    account=everything_except(CashAccount),
+)
+def test_get_amount_for_account_invalid_account_type(
+    transaction: CashTransaction, account: Any
+) -> None:
+    with pytest.raises(TypeError, match="Argument 'account' must be a CashAccount."):
+        transaction.get_amount_for_account(account)
+
+
+@given(
+    transaction=cash_transactions(),
     account=cash_accounts(),
 )
 def test_get_amount_for_account_invalid_account_value(
@@ -365,3 +377,9 @@ def test_invalid_refund_type(transaction: CashTransaction, refund: Any) -> None:
         TypeError, match="Argument 'refund' must be a RefundTransaction."
     ):
         transaction.add_refund(refund)
+
+
+def test_concrete_cash_related_transaction_mixin() -> None:
+    mixin = ConcreteCashRelatedTransactionMixin()
+    with pytest.raises(NotImplementedError):
+        mixin.get_amount_for_account(None)

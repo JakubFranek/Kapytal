@@ -120,6 +120,17 @@ def test_get_amount_for_account(transfer: CashTransfer) -> None:
 
 
 @given(
+    transaction=cash_transfers(),
+    account=everything_except(CashAccount),
+)
+def test_get_amount_for_account_invalid_account_type(
+    transaction: CashTransfer, account: Any
+) -> None:
+    with pytest.raises(TypeError, match="Argument 'account' must be a CashAccount."):
+        transaction.get_amount_for_account(account)
+
+
+@given(
     transfer=cash_transfers(),
     account=cash_accounts(),
 )

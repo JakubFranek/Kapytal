@@ -79,12 +79,6 @@ def test_datetime_setter(new_datetime: datetime) -> None:
     assert dt_edited_diff.microseconds < 100_000
 
 
-def test_abstract_get_amount_for_account() -> None:
-    transaction = get_concrete_transaction()
-    with pytest.raises(NotImplementedError):
-        transaction.get_amount_for_account(None)
-
-
 def test_abstract_is_account_related() -> None:
     transaction = get_concrete_transaction()
     with pytest.raises(NotImplementedError):

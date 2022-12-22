@@ -19,6 +19,11 @@ from src.models.model_objects.cash_objects import (
     CashTransfer,
 )
 from src.models.model_objects.currency import Currency
+from src.models.model_objects.security_objects import (
+    Security,
+    SecurityAccount,
+    SecurityType,
+)
 from tests.models.test_assets.concrete_abcs import ConcreteTransaction
 from tests.models.test_assets.constants import max_datetime, min_datetime
 
@@ -174,6 +179,23 @@ def category_amount_pairs(
 def currencies(draw: st.DrawFn) -> Currency:
     name = draw(st.text(alphabet=string.ascii_letters, min_size=3, max_size=3))
     return Currency(name)
+
+
+@st.composite
+def securities(draw: st.DrawFn) -> Security:
+    name = draw(st.text(min_size=1, max_size=32))
+    symbol = draw(
+        st.text(alphabet=Security.SYMBOL_ALLOWED_CHARS, min_size=1, max_size=8)
+    )
+    type_ = draw(st.sampled_from(SecurityType))
+    return Security(name, symbol, type_)
+
+
+@st.composite
+def security_accounts(draw: st.DrawFn) -> SecurityAccount:
+    name = draw(st.text(min_size=1, max_size=32))
+    parent = draw(st.none() | account_groups())
+    return SecurityAccount(name, parent)
 
 
 @st.composite

@@ -1,9 +1,10 @@
+from abc import abstractmethod
 from collections.abc import Collection
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum, auto
 
-from src.models.base_classes.account import Account
+from src.models.base_classes.account import Account, UnrelatedAccountError
 from src.models.base_classes.transaction import Transaction
 from src.models.constants import tzinfo
 from src.models.model_objects.account_group import AccountGroup
@@ -19,6 +20,10 @@ from src.models.model_objects.attributes import (
 from src.models.model_objects.currency import Currency, CurrencyError
 
 
+class UnrelatedTransactionError(ValueError):
+    """Raised when an unrelated Transaction is supplied."""
+
+
 class TransactionPrecedesAccountError(ValueError):
     """Raised when a Transaction.datetime_ precedes the given
     CashAccount.initial_datetime."""
@@ -27,11 +32,6 @@ class TransactionPrecedesAccountError(ValueError):
 class RefundPrecedesTransactionError(ValueError):
     """Raised when a RefundTransaction.datetime_ precedes the
     refunded transaction datetime_."""
-
-
-class UnrelatedAccountError(ValueError):
-    """Raised when an Account tries to access a Transaction which does
-    not relate to it."""
 
 
 class TransferSameAccountError(ValueError):
@@ -43,8 +43,10 @@ class InvalidCashTransactionTypeError(ValueError):
     """Raised when the CashTransactionType is incorrect."""
 
 
-class UnrelatedTransactionError(ValueError):
-    """Raised when an unrelated Transaction is supplied."""
+class CashRelatedTransactionMixin:
+    @abstractmethod
+    def get_amount_for_account(self, account: "CashAccount") -> Decimal:
+        raise NotImplementedError("Not implemented")
 
 
 class CashTransactionType(Enum):
@@ -143,14 +145,13 @@ class CashAccount(Account):
         self._balance_history = datetime_balance_history
 
     def _validate_transaction(
-        self, transaction: "CashTransaction | CashTransfer | RefundTransaction"
+        self,
+        transaction: CashRelatedTransactionMixin,
     ) -> None:
-        if not isinstance(
-            transaction, (CashTransaction, CashTransfer, RefundTransaction)
-        ):
+        if not isinstance(transaction, CashRelatedTransactionMixin):
             raise TypeError(
-                "Argument 'transaction' must be a CashTransaction, CashTransfer or"
-                " a RefundTransactiono."
+                "Argument 'transaction' must be a subclass of "
+                "CashRelatedTransactionMixin."
             )
         if not transaction.is_account_related(self):
             raise UnrelatedAccountError(
@@ -166,7 +167,7 @@ class CashAccount(Account):
         return
 
 
-class CashTransaction(Transaction):
+class CashTransaction(Transaction, CashRelatedTransactionMixin):
     def __init__(  # noqa: CFQ002, TMN001
         self,
         description: str,
@@ -325,7 +326,10 @@ class CashTransaction(Transaction):
         self._refunds.remove(refund)
         self._datetime_edited = datetime.now(tzinfo)
 
-    def get_amount_for_account(self, account: Account) -> Decimal:
+    # TODO: maybe some abstract CashRelatedTransactionMixin?
+    def get_amount_for_account(self, account: CashAccount) -> Decimal:
+        if not isinstance(account, CashAccount):
+            raise TypeError("Argument 'account' must be a CashAccount.")
         if not self.is_account_related(account):
             raise UnrelatedAccountError(
                 'Argument "account" is not related to this CashTransaction.'
@@ -346,7 +350,7 @@ class CashTransaction(Transaction):
             )
 
 
-class CashTransfer(Transaction):
+class CashTransfer(Transaction, CashRelatedTransactionMixin):
     def __init__(  # noqa: TMN001, CFQ002
         self,
         description: str,
@@ -436,7 +440,9 @@ class CashTransfer(Transaction):
 
         self._datetime_edited = datetime.now(tzinfo)
 
-    def get_amount_for_account(self, account: Account) -> Decimal:
+    def get_amount_for_account(self, account: CashAccount) -> Decimal:
+        if not isinstance(account, CashAccount):
+            raise TypeError("Argument 'account' must be a CashAccount.")
         if self.account_recipient == account:
             return self.amount_received
         if self.account_sender == account:
@@ -449,7 +455,7 @@ class CashTransfer(Transaction):
         return self.account_sender == account or self.account_recipient == account
 
 
-class RefundTransaction(Transaction):
+class RefundTransaction(Transaction, CashRelatedTransactionMixin):
     """A refund which attaches itself to an expense CashTransaction.
     Instances of this class are immutable."""
 
@@ -629,7 +635,9 @@ class RefundTransaction(Transaction):
         self._tag_amount_pairs = tuple(pairs)
         self._datetime_edited = datetime.now(tzinfo)
 
-    def get_amount_for_account(self, account: Account) -> Decimal:
+    def get_amount_for_account(self, account: CashAccount) -> Decimal:
+        if not isinstance(account, CashAccount):
+            raise TypeError("Argument 'account' must be a CashAccount.")
         if not self.is_account_related(account):
             raise UnrelatedAccountError(
                 'Argument "account" is not related to this RefundTransaction.'
