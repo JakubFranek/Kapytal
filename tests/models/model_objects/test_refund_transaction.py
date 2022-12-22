@@ -70,7 +70,7 @@ def test_creation() -> None:
         == refunded_transaction.account.initial_balance - refunded_transaction.amount
     )
     assert refund.currency == refunded_transaction.currency
-    assert refund.category_names == ", ".join((str(cat_1), str(cat_2), str(cat_3)))
+    assert refund.category_names == ", ".join((cat_1.path, cat_2.path, cat_3.path))
     assert refund.category_amount_pairs == category_amount_pairs
     assert refund.tag_amount_pairs == tag_amount_pairs
     assert refund in refunded_transaction.refunds

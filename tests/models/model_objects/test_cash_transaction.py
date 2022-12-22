@@ -367,7 +367,7 @@ def test_category_amount_pairs_invalid_amount_value(
 def test_category_names(transaction: CashTransaction) -> None:
     names = []
     for category, _ in transaction.category_amount_pairs:
-        names.append(str(category))
+        names.append(category.path)
 
     assert ", ".join(names) == transaction.category_names
 

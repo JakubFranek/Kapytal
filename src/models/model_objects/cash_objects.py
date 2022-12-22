@@ -262,7 +262,7 @@ class CashTransaction(Transaction):
 
     @property
     def category_names(self) -> str:
-        category_paths = [str(category) for category, _ in self._category_amount_pairs]
+        category_paths = [category.path for category, _ in self._category_amount_pairs]
         return ", ".join(category_paths)
 
     @property
@@ -494,7 +494,7 @@ class RefundTransaction(Transaction):
 
     @property
     def category_names(self) -> str:
-        category_paths = [str(category) for category, _ in self._category_amount_pairs]
+        category_paths = [category.path for category, _ in self._category_amount_pairs]
         return ", ".join(category_paths)
 
     @property
@@ -550,7 +550,7 @@ class RefundTransaction(Transaction):
         for category, amount in pairs:
             if amount > max_values[category]:
                 raise ValueError(
-                    f"Refunded amount for category '{str(category)}' must not exceed"
+                    f"Refunded amount for category '{category.path}' must not exceed"
                     f" {max_values[category]}."
                 )
 

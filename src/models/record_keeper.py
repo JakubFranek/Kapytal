@@ -84,7 +84,7 @@ class RecordKeeper:
     ) -> Category:
         if parent_path:
             for category in self._categories:
-                if str(category) == parent_path:
+                if category.path == parent_path:
                     parent = category
                     category_type = category.type_
                     break
@@ -101,9 +101,9 @@ class RecordKeeper:
                 )
             category_type = type_
 
-        path = str(parent) + "/" + name if parent else name
+        path = parent.path + "/" + name if parent else name
         for category in self._categories:
-            if str(category) == path:
+            if category.path == path:
                 raise AlreadyExistsError(f"A Category at path '{path}' already exists.")
 
         category = Category(name, category_type, parent)
@@ -255,15 +255,15 @@ class RecordKeeper:
 
     def get_category(self, path: str, type_: CategoryType) -> Category:
         for category in self._categories:
-            if str(category) == path:
+            if category.path == path:
                 return category
-        # Category with full_name not found... searching for parents.
+        # Category with path not found... searching for parents.
         current_path = path
         parent = None
         while "/" in current_path:
             current_path = current_path[: current_path.rfind("/")]
             for category in self._categories:
-                if str(category) == current_path:
+                if category.path == current_path:
                     parent = category
                     break
             if parent:
@@ -274,7 +274,7 @@ class RecordKeeper:
                 root_name = path.split("/")[0]
                 parent = Category(root_name, type_)
                 self._categories.append(parent)
-        remainder_name = path.removeprefix(str(parent))[1:]
+        remainder_name = path.removeprefix(parent.path)[1:]
         while "/" in remainder_name:
             # As long as multiple categories remain...
             new_name = remainder_name.split("/")[0]

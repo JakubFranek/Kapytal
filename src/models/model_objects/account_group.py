@@ -8,7 +8,6 @@ from src.models.mixins.datetime_created_mixin import DatetimeCreatedMixin
 from src.models.mixins.name_mixin import NameMixin
 
 
-# TODO: add parent to __init__
 class AccountGroup(NameMixin, DatetimeCreatedMixin):
     def __init__(self, name: str, parent: Self | None = None) -> None:
         super().__init__(name)
@@ -43,7 +42,8 @@ class AccountGroup(NameMixin, DatetimeCreatedMixin):
     def __repr__(self) -> str:
         return f"AccountGroup('{self.name}', parent='{self.parent}')"
 
-    def __str__(self) -> str:
+    @property
+    def path(self) -> str:
         if self.parent is None:
             return self.name
-        return str(self.parent) + "/" + self.name
+        return self.parent.path + "/" + self.name

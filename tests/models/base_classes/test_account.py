@@ -19,7 +19,7 @@ def test_creation(name: str) -> None:
     dt_created_diff = account.datetime_created - dt_start
 
     assert account.name == name
-    assert str(account) == name
+    assert account.path == name
     assert dt_created_diff.seconds < 1
 
 
@@ -46,15 +46,15 @@ def test_name_not_string(name: Any) -> None:
 def test_add_and_remove_parent(name: str, parent: AccountGroup) -> None:
     account = ConcreteAccount(name)
     assert account.parent is None
-    assert str(account) == name
+    assert account.path == name
     account.parent = parent
     assert account.parent == parent
     assert account in parent.children
-    assert str(account) == f"{parent.name}/{name}"
+    assert account.path == f"{parent.name}/{name}"
     account.parent = None
     assert account.parent is None
     assert account not in parent.children
-    assert str(account) == name
+    assert account.path == name
 
 
 @given(
