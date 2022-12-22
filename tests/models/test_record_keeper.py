@@ -50,7 +50,6 @@ def test_add_account_group_no_parent(name: str) -> None:
     parent_name=st.text(min_size=1, max_size=32),
 )
 def test_add_account_group_with_parent(name: str, parent_name: str) -> None:
-    assume(name != parent_name)
     record_keeper = RecordKeeper()
     record_keeper.add_account_group(parent_name, None)
     record_keeper.add_account_group(name, parent_name)
@@ -58,6 +57,27 @@ def test_add_account_group_with_parent(name: str, parent_name: str) -> None:
     parent_group = record_keeper.account_groups[0]
     assert account_group.name == name
     assert account_group.parent == parent_group
+
+
+@given(
+    name=st.text(min_size=1, max_size=32),
+    grandparent_name=st.text(min_size=1, max_size=32),
+    parent_name=st.text(min_size=1, max_size=32),
+)
+def test_add_account_group_with_multiple_parents(
+    name: str, grandparent_name: str, parent_name: str
+) -> None:
+    grandparent_path = grandparent_name
+    parent_path = grandparent_name + "/" + parent_name
+    record_keeper = RecordKeeper()
+    record_keeper.add_account_group(grandparent_name, None)
+    record_keeper.add_account_group(parent_name, grandparent_path)
+    record_keeper.add_account_group(name, parent_path)
+    account_group = record_keeper.account_groups[2]
+    parent = record_keeper.account_groups[1]
+    assert account_group.name == name
+    assert account_group.path == f"{parent_path}/{name}"
+    assert account_group.parent == parent
 
 
 @given(

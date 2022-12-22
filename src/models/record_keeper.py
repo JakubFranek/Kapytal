@@ -30,8 +30,6 @@ class DoesNotExistError(ValueError):
 
 
 # TODO: add editing and deleting of objects
-
-
 class RecordKeeper:
     def __init__(self) -> None:
         self._accounts: list[Account] = []
@@ -110,10 +108,16 @@ class RecordKeeper:
         self._categories.append(category)
         return category
 
-    def add_account_group(self, name: str, parent_name: str | None) -> None:
-        if any(acc_group.name == name for acc_group in self._account_groups):
-            raise AlreadyExistsError(f"An AccountGroup named {name} already exists.")
-        parent = self.get_account_parent(parent_name)
+    def add_account_group(self, name: str, parent_path: str | None) -> None:
+        parent = self.get_account_parent(parent_path)
+        if parent is not None:
+            target_path = parent.path + "/" + name
+        else:
+            target_path = name
+        if any(acc_group.path == target_path for acc_group in self._account_groups):
+            raise AlreadyExistsError(
+                f"An AccountGroup with path '{target_path}' already exists."
+            )
         account_group = AccountGroup(name, parent)
         self._account_groups.append(account_group)
 
@@ -230,13 +234,13 @@ class RecordKeeper:
         )
         self._transactions.append(refund)
 
-    def get_account_parent(self, parent_name: str | None) -> AccountGroup | None:
-        if parent_name:
+    def get_account_parent(self, parent_path: str | None) -> AccountGroup | None:
+        if parent_path:
             for account_group in self._account_groups:
-                if account_group.name == parent_name:
+                if account_group.path == parent_path:
                     return account_group
             raise DoesNotExistError(
-                f"An AccountGroup named {parent_name} does not exist."
+                f"An AccountGroup with path='{parent_path}' does not exist."
             )
         return None
 
