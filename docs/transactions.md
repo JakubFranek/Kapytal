@@ -92,4 +92,3 @@ The Refund transaction is a special transaction type. It esentially creates a ne
     - SecurityTransferTransaction
 
 TODO: securities
-TODO: refunds

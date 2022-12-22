@@ -3,7 +3,7 @@ from decimal import Decimal
 from typing import Any
 
 import pytest
-from hypothesis import assume, given
+from hypothesis import given
 from hypothesis import strategies as st
 
 from src.models.constants import tzinfo
@@ -119,8 +119,6 @@ def test_get_amount_for_account(transfer: CashTransfer) -> None:
 def test_get_amount_for_account_invalid_account_value(
     transfer: CashTransfer, account: CashAccount
 ) -> None:
-    assume(account != transfer.account_recipient)
-    assume(account != transfer.account_sender)
     with pytest.raises(UnrelatedAccountError):
         transfer.get_amount_for_account(account)
 

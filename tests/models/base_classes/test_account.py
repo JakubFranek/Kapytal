@@ -9,6 +9,7 @@ from src.models.constants import tzinfo
 from src.models.model_objects.account_group import AccountGroup
 from tests.models.test_assets.composites import account_groups, everything_except
 from tests.models.test_assets.concrete_abcs import ConcreteAccount
+from tests.models.test_assets.get_valid_objects import get_concrete_account
 
 
 @given(name=st.text(min_size=1, max_size=32))
@@ -42,42 +43,39 @@ def test_name_not_string(name: Any) -> None:
         ConcreteAccount(name)
 
 
-@given(name=st.text(min_size=1, max_size=32), parent=account_groups())
-def test_add_and_remove_parent(name: str, parent: AccountGroup) -> None:
-    account = ConcreteAccount(name)
+@given(parent=account_groups())
+def test_add_and_remove_parent(parent: AccountGroup) -> None:
+    account = get_concrete_account()
     assert account.parent is None
-    assert account.path == name
+    assert account.path == account.name
     account.parent = parent
     assert account.parent == parent
     assert account in parent.children
-    assert account.path == f"{parent.name}/{name}"
+    assert account.path == f"{parent.name}/{account.name}"
     account.parent = None
     assert account.parent is None
     assert account not in parent.children
-    assert account.path == name
+    assert account.path == account.name
 
 
 @given(
-    name=st.text(min_size=1, max_size=32),
     parent=everything_except((AccountGroup, type(None))),
 )
-def test_invalid_parent_type(name: str, parent: Any) -> None:
-    account = ConcreteAccount(name)
+def test_invalid_parent_type(parent: Any) -> None:
+    account = get_concrete_account()
     with pytest.raises(
         TypeError, match="Account.parent must be an AccountGroup or a None."
     ):
         account.parent = parent
 
 
-@given(name=st.text(min_size=1, max_size=32))
-def test_abstract_balance(name: str) -> None:
-    account = ConcreteAccount(name)
+def test_abstract_balance() -> None:
+    account = get_concrete_account()
     with pytest.raises(NotImplementedError):
         account.balance
 
 
-@given(name=st.text(min_size=1, max_size=32))
-def test_abstract_transactions(name: str) -> None:
-    account = ConcreteAccount(name)
+def test_abstract_transactions() -> None:
+    account = get_concrete_account()
     with pytest.raises(NotImplementedError):
         account.transactions

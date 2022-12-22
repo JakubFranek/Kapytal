@@ -3,7 +3,7 @@ from decimal import Decimal
 from typing import Any
 
 import pytest
-from hypothesis import assume, given
+from hypothesis import given
 from hypothesis import strategies as st
 
 from src.models.constants import tzinfo
@@ -31,10 +31,9 @@ def test_creation(name: str) -> None:
     assert account_group.path == name
 
 
-@given(account_group=account_groups(), parent=account_groups())
-def test_add_and_remove_parent(
-    account_group: AccountGroup, parent: AccountGroup
-) -> None:
+@given(parent=account_groups())
+def test_add_and_remove_parent(parent: AccountGroup) -> None:
+    account_group = get_account_group()
     expected_repr = f"AccountGroup('{account_group.name}', parent='None')"
     assert account_group.parent is None
     assert account_group.children == ()
@@ -58,11 +57,9 @@ def test_add_and_remove_parent(
     assert account_group.path == account_group.name
 
 
-@given(
-    account_group=account_groups(), parent=everything_except((AccountGroup, type(None)))
-)
-def test_invalid_parent_type(account_group: AccountGroup, parent: Any) -> None:
-    assume(parent is not None)
+@given(parent=everything_except((AccountGroup, type(None))))
+def test_invalid_parent_type(parent: Any) -> None:
+    account_group = get_account_group()
     with pytest.raises(
         TypeError, match="AccountGroup.parent must be an AccountGroup or a None."
     ):
@@ -70,12 +67,16 @@ def test_invalid_parent_type(account_group: AccountGroup, parent: Any) -> None:
 
 
 @given(
-    account_group=account_groups(),
     accounts=st.lists(cash_accounts(), min_size=1, max_size=5),
 )
-def test_balance(account_group: AccountGroup, accounts: list[CashAccount]) -> None:
+def test_balance(accounts: list[CashAccount]) -> None:
+    account_group = get_account_group()
     for account in accounts:
         account.parent = account_group
 
     expected_sum = sum(account.balance for account in accounts)
     assert account_group.balance == expected_sum
+
+
+def get_account_group() -> AccountGroup:
+    return AccountGroup("Valid Name", None)
