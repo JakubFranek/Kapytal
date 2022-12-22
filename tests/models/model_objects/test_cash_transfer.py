@@ -25,7 +25,7 @@ from tests.models.test_assets.constants import min_datetime
     description=st.text(min_size=0, max_size=256),
     account_sender=cash_accounts(),
     account_recipient=cash_accounts(),
-    datetime_=st.datetimes(min_value=min_datetime),
+    datetime_=st.datetimes(min_value=min_datetime, timezones=st.just(tzinfo)),
     amount_sent=st.decimals(min_value="0.01", allow_infinity=False, allow_nan=False),
     amount_received=st.decimals(
         min_value="0.01", allow_infinity=False, allow_nan=False

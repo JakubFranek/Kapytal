@@ -50,7 +50,11 @@ def test_buy(
     data: st.DataObject,
 ) -> None:
     datetime_ = data.draw(
-        st.datetimes(min_value=cash_account.initial_datetime + timedelta(days=1))
+        st.datetimes(
+            min_value=cash_account.initial_datetime.replace(tzinfo=None)
+            + timedelta(days=1),
+            timezones=st.just(tzinfo),
+        )
     )
     transaction = SecurityTransaction(
         description,
@@ -127,7 +131,10 @@ def test_invalid_type_type(
     data: st.DataObject,
 ) -> None:
     datetime_ = data.draw(
-        st.datetimes(min_value=cash_account.initial_datetime + timedelta(days=1))
+        st.datetimes(
+            min_value=cash_account.initial_datetime.replace(tzinfo=None)
+            + timedelta(days=1)
+        )
     )
     with pytest.raises(
         TypeError, match="SecurityTransaction.type_ must be a SecurityTransactionType."
@@ -160,7 +167,10 @@ def test_invalid_security_type(
     data: st.DataObject,
 ) -> None:
     datetime_ = data.draw(
-        st.datetimes(min_value=cash_account.initial_datetime + timedelta(days=1))
+        st.datetimes(
+            min_value=cash_account.initial_datetime.replace(tzinfo=None)
+            + timedelta(days=1)
+        )
     )
     with pytest.raises(
         TypeError, match="SecurityTransaction.security must be a Security."
@@ -195,7 +205,10 @@ def test_invalid_shares_type(
     data: st.DataObject,
 ) -> None:
     datetime_ = data.draw(
-        st.datetimes(min_value=cash_account.initial_datetime + timedelta(days=1))
+        st.datetimes(
+            min_value=cash_account.initial_datetime.replace(tzinfo=None)
+            + timedelta(days=1)
+        )
     )
     with pytest.raises(TypeError, match="SecurityTransaction.shares must be an int."):
         SecurityTransaction(
@@ -228,7 +241,10 @@ def test_invalid_shares_value(
     data: st.DataObject,
 ) -> None:
     datetime_ = data.draw(
-        st.datetimes(min_value=cash_account.initial_datetime + timedelta(days=1))
+        st.datetimes(
+            min_value=cash_account.initial_datetime.replace(tzinfo=None)
+            + timedelta(days=1)
+        )
     )
     with pytest.raises(
         ValueError, match="SecurityTransaction.shares must be at least 1."
@@ -261,7 +277,11 @@ def test_invalid_security_account_type(
     data: st.DataObject,
 ) -> None:
     datetime_ = data.draw(
-        st.datetimes(min_value=cash_account.initial_datetime + timedelta(days=1))
+        st.datetimes(
+            min_value=cash_account.initial_datetime.replace(tzinfo=None)
+            + timedelta(days=1),
+            timezones=st.just(tzinfo),
+        )
     )
     with pytest.raises(
         TypeError,
@@ -309,6 +329,28 @@ def test_invalid_cash_account_type(
             security_account,
             cash_account,
         )
+
+
+@given(security_account=security_accounts())
+def test_change_security_account(security_account: SecurityAccount) -> None:
+    buy = get_buy()
+    old_security_account = buy.security_account
+    assert buy in old_security_account.transactions
+
+    buy.security_account = security_account
+    assert buy in security_account.transactions
+    assert buy not in old_security_account.transactions
+
+
+@given(cash_account=cash_accounts())
+def test_change_cash_account(cash_account: CashAccount) -> None:
+    buy = get_buy()
+    old_cash_account = buy.cash_account
+    assert buy in old_cash_account.transactions
+
+    buy.cash_account = cash_account
+    assert buy in cash_account.transactions
+    assert buy not in old_cash_account.transactions
 
 
 def get_buy() -> SecurityTransaction:

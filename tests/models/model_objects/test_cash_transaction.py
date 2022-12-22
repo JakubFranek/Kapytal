@@ -36,7 +36,7 @@ from tests.models.test_assets.constants import min_datetime
 
 @given(
     description=st.text(min_size=0, max_size=256),
-    datetime_=st.datetimes(min_value=min_datetime),
+    datetime_=st.datetimes(min_value=min_datetime, timezones=st.just(tzinfo)),
     type_=st.sampled_from(CashTransactionType),
     account=cash_accounts(),
     payee=attributes(AttributeType.PAYEE),

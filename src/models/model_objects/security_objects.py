@@ -152,7 +152,6 @@ class SecurityAccount(Account):
         return
 
 
-# TODO: add __repr__
 class SecurityTransaction(CashRelatedTransaction):
     def __init__(
         self,
@@ -250,7 +249,7 @@ class SecurityTransaction(CashRelatedTransaction):
         return self._shares * self.price_per_share - self.fees
 
     def is_account_related(self, account: Account) -> bool:
-        return account == self.cash_account or account == self.security_account
+        return account == self._cash_account or account == self._security_account
 
 
 class SecurityTransfer(Transaction):

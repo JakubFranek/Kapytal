@@ -5,6 +5,7 @@ from typing import Any, Literal
 
 from hypothesis import strategies as st
 
+from src.models.constants import tzinfo
 from src.models.model_objects.account_group import AccountGroup
 from src.models.model_objects.attributes import (
     Attribute,
@@ -66,7 +67,11 @@ def cash_accounts(
         )
     )
     initial_datetime = draw(
-        st.datetimes(min_value=min_datetime, max_value=max_datetime)
+        st.datetimes(
+            min_value=min_datetime,
+            max_value=max_datetime,
+            timezones=st.just(tzinfo),
+        )
     )
     return CashAccount(name, currency, initial_balance, initial_datetime)
 
@@ -80,7 +85,11 @@ def cash_transactions(
     description = draw(st.text(min_size=0, max_size=256))
     type_ = draw(st.sampled_from(CashTransactionType))
     account: CashAccount = draw(cash_accounts())
-    datetime_ = draw(st.datetimes(min_value=min_datetime, max_value=max_datetime))
+    datetime_ = draw(
+        st.datetimes(
+            min_value=min_datetime, max_value=max_datetime, timezones=st.just(tzinfo)
+        )
+    )
     category_amount_pairs_list = draw(
         st.lists(category_amount_pairs(type_), min_size=1, max_size=5)
     )
@@ -109,7 +118,11 @@ def cash_transfers(
     description = draw(st.text(min_size=0, max_size=256))
     account_sender: CashAccount = draw(cash_accounts())
     account_recipient: CashAccount = draw(cash_accounts())
-    datetime_ = draw(st.datetimes(min_value=min_datetime, max_value=max_datetime))
+    datetime_ = draw(
+        st.datetimes(
+            min_value=min_datetime, max_value=max_datetime, timezones=st.just(tzinfo)
+        )
+    )
     amount_sent = draw(
         st.decimals(
             min_value="0.01",
@@ -220,5 +233,5 @@ def tag_amount_pairs(
 @st.composite
 def transactions(draw: st.DrawFn) -> ConcreteTransaction:
     description = draw(st.text(min_size=0, max_size=256))
-    datetime_ = draw(st.datetimes())
+    datetime_ = draw(st.datetimes(timezones=st.just(tzinfo)))
     return ConcreteTransaction(description, datetime_)

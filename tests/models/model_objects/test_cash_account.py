@@ -168,7 +168,11 @@ def test_validate_transaction_invalid_datetime(
     else:
         transfer._account_sender = account
     invalid_datetime = data.draw(
-        st.datetimes(max_value=account.initial_datetime - timedelta(seconds=1))
+        st.datetimes(
+            max_value=account.initial_datetime.replace(tzinfo=None)
+            - timedelta(seconds=1),
+            timezones=st.just(tzinfo),
+        )
     )
     transaction._datetime = invalid_datetime
     transfer._datetime = invalid_datetime
