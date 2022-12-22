@@ -152,6 +152,7 @@ class SecurityAccount(Account):
         return
 
 
+# TODO: add __repr__
 class SecurityTransaction(CashRelatedTransaction):
     def __init__(
         self,
@@ -180,11 +181,7 @@ class SecurityTransaction(CashRelatedTransaction):
         self.shares = shares
         self.price_per_share = price_per_share
         self.fees = fees
-
-        if not isinstance(cash_account, CashAccount):
-            raise TypeError("SecurityTransaction.cash_account must be a CashAccount.")
         self.cash_account = cash_account
-
         self.security_account = security_account
 
     @property
@@ -219,7 +216,7 @@ class SecurityTransaction(CashRelatedTransaction):
             )
 
         if hasattr(self, "_security_account"):
-            self._security_account
+            self._security_account.remove_transaction(self)
 
         self._security_account = new_account
         self._security_account.add_transaction(self)
@@ -234,18 +231,12 @@ class SecurityTransaction(CashRelatedTransaction):
             raise TypeError("SecurityTransaction.cash_account must be a CashAccount.")
 
         if hasattr(self, "_cash_account"):
-            self._cash_account
+            self._cash_account.remove_transaction(self)
 
         self._cash_account = new_account
         self._cash_account.add_transaction(self)
 
-    def get_amount_for_account(self, account: CashAccount) -> Decimal:
-        if not isinstance(account, CashAccount):
-            raise TypeError("Argument 'account' must be a CashAccount.")
-        if not self.is_account_related(account):
-            raise UnrelatedAccountError(
-                "Provided CashAccount is unrelated to this SecurityTransaction."
-            )
+    def _get_amount(self, account: CashAccount) -> Decimal:  # noqa: U100
         if self.type_ == SecurityTransactionType.BUY:
             return -self._shares * self.price_per_share - self.fees
         return self._shares * self.price_per_share - self.fees

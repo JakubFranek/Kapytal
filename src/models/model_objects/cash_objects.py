@@ -44,8 +44,18 @@ class InvalidCashTransactionTypeError(ValueError):
 
 
 class CashRelatedTransaction(Transaction, ABC):
+    def get_amount(self, account: "CashAccount") -> Decimal:
+        if not isinstance(account, CashAccount):
+            raise TypeError("Argument 'account' must be a CashAccount.")
+        if not self.is_account_related(account):
+            raise UnrelatedAccountError(
+                f"CashAccount '{account.name}' is not related to this "
+                f"{self.__class__.__name__}."
+            )
+        return self._get_amount(account)
+
     @abstractmethod
-    def get_amount_for_account(self, account: "CashAccount") -> Decimal:
+    def _get_amount(self, account: "CashAccount") -> Decimal:
         raise NotImplementedError("Not implemented")
 
 
@@ -138,7 +148,7 @@ class CashAccount(Account):
         datetime_balance_history = [(self.initial_datetime, self.initial_balance)]
         for transaction in self.transactions:
             last_balance = datetime_balance_history[-1][1]
-            next_balance = last_balance + transaction.get_amount_for_account(self)
+            next_balance = last_balance + transaction.get_amount(self)
             datetime_balance_history.append((transaction.datetime_, next_balance))
         self._balance_history = datetime_balance_history
 
@@ -316,13 +326,7 @@ class CashTransaction(CashRelatedTransaction):
         self._validate_refund(refund)
         self._refunds.remove(refund)
 
-    def get_amount_for_account(self, account: CashAccount) -> Decimal:
-        if not isinstance(account, CashAccount):
-            raise TypeError("Argument 'account' must be a CashAccount.")
-        if not self.is_account_related(account):
-            raise UnrelatedAccountError(
-                'Argument "account" is not related to this CashTransaction.'
-            )
+    def _get_amount(self, account: CashAccount) -> Decimal:  # noqa: U100
         if self.type_ == CashTransactionType.INCOME:
             return self.amount
         return -self.amount
@@ -425,16 +429,10 @@ class CashTransfer(CashRelatedTransaction):
         self._account_recipient.add_transaction(self)
         self._account_sender.add_transaction(self)
 
-    def get_amount_for_account(self, account: CashAccount) -> Decimal:
-        if not isinstance(account, CashAccount):
-            raise TypeError("Argument 'account' must be a CashAccount.")
+    def _get_amount(self, account: CashAccount) -> Decimal:
         if self.account_recipient == account:
             return self.amount_received
-        if self.account_sender == account:
-            return -self.amount_sent
-        raise UnrelatedAccountError(
-            'Argument "account" is not related to this CashTransfer.'
-        )
+        return -self.amount_sent
 
     def is_account_related(self, account: Account) -> bool:
         return self.account_sender == account or self.account_recipient == account
@@ -616,13 +614,7 @@ class RefundTransaction(CashRelatedTransaction):
 
         self._tag_amount_pairs = tuple(pairs)
 
-    def get_amount_for_account(self, account: CashAccount) -> Decimal:
-        if not isinstance(account, CashAccount):
-            raise TypeError("Argument 'account' must be a CashAccount.")
-        if not self.is_account_related(account):
-            raise UnrelatedAccountError(
-                'Argument "account" is not related to this RefundTransaction.'
-            )
+    def _get_amount(self, account: CashAccount) -> Decimal:  # noqa: U100
         return self.amount
 
     def is_account_related(self, account: "Account") -> bool:

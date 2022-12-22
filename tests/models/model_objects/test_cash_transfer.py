@@ -112,8 +112,8 @@ def test_get_amount_for_account(transfer: CashTransfer) -> None:
     expected_sender_amount = -transfer.amount_sent
     expected_recipient_amount = transfer.amount_received
 
-    result_sender = transfer.get_amount_for_account(transfer.account_sender)
-    result_recipient = transfer.get_amount_for_account(transfer.account_recipient)
+    result_sender = transfer.get_amount(transfer.account_sender)
+    result_recipient = transfer.get_amount(transfer.account_recipient)
 
     assert result_sender == expected_sender_amount
     assert result_recipient == expected_recipient_amount
@@ -127,7 +127,7 @@ def test_get_amount_for_account_invalid_account_type(
     transaction: CashTransfer, account: Any
 ) -> None:
     with pytest.raises(TypeError, match="Argument 'account' must be a CashAccount."):
-        transaction.get_amount_for_account(account)
+        transaction.get_amount(account)
 
 
 @given(
@@ -138,7 +138,7 @@ def test_get_amount_for_account_invalid_account_value(
     transfer: CashTransfer, account: CashAccount
 ) -> None:
     with pytest.raises(UnrelatedAccountError):
-        transfer.get_amount_for_account(account)
+        transfer.get_amount(account)
 
 
 @given(

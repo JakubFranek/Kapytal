@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from decimal import Decimal
 
+import pytest
 from hypothesis import given
 from hypothesis import strategies as st
 
@@ -15,6 +16,7 @@ from src.models.model_objects.security_objects import (
 )
 from tests.models.test_assets.composites import (
     cash_accounts,
+    everything_except,
     securities,
     security_accounts,
 )
@@ -99,12 +101,208 @@ def test_sell(shares: int, price_per_share: Decimal, fees: Decimal) -> None:
         cash_account,
     )
     assert security_account.securities[security] == buy.shares - sell.shares
-    assert (
-        cash_account.balance
-        == cash_account.initial_balance
-        + buy.get_amount_for_account(cash_account)
-        + sell.get_amount_for_account(cash_account)
+    assert cash_account.balance == cash_account.initial_balance + buy.get_amount(
+        cash_account
+    ) + sell.get_amount(cash_account)
+
+
+@given(
+    type_=everything_except(SecurityTransactionType),
+    security=securities(),
+    security_account=security_accounts(),
+    cash_account=cash_accounts(),
+    data=st.data(),
+)
+def test_invalid_type_type(
+    type_: SecurityTransactionType,
+    security: Security,
+    security_account: SecurityAccount,
+    cash_account: CashAccount,
+    data: st.DataObject,
+) -> None:
+    datetime_ = data.draw(
+        st.datetimes(min_value=cash_account.initial_datetime + timedelta(days=1))
     )
+    with pytest.raises(
+        TypeError, match="SecurityTransaction.type_ must be a SecurityTransactionType."
+    ):
+        SecurityTransaction(
+            "Test description",
+            datetime_,
+            type_,
+            security,
+            1,
+            Decimal("100"),
+            Decimal("1"),
+            security_account,
+            cash_account,
+        )
+
+
+@given(
+    type_=st.sampled_from(SecurityTransactionType),
+    security=everything_except(Security),
+    security_account=security_accounts(),
+    cash_account=cash_accounts(),
+    data=st.data(),
+)
+def test_invalid_security_type(
+    type_: SecurityTransactionType,
+    security: Security,
+    security_account: SecurityAccount,
+    cash_account: CashAccount,
+    data: st.DataObject,
+) -> None:
+    datetime_ = data.draw(
+        st.datetimes(min_value=cash_account.initial_datetime + timedelta(days=1))
+    )
+    with pytest.raises(
+        TypeError, match="SecurityTransaction.security must be a Security."
+    ):
+        SecurityTransaction(
+            "Test description",
+            datetime_,
+            type_,
+            security,
+            1,
+            Decimal("100"),
+            Decimal("1"),
+            security_account,
+            cash_account,
+        )
+
+
+@given(
+    type_=st.sampled_from(SecurityTransactionType),
+    security=securities(),
+    shares=everything_except(int),
+    security_account=security_accounts(),
+    cash_account=cash_accounts(),
+    data=st.data(),
+)
+def test_invalid_shares_type(
+    type_: SecurityTransactionType,
+    security: Security,
+    shares: int,
+    security_account: SecurityAccount,
+    cash_account: CashAccount,
+    data: st.DataObject,
+) -> None:
+    datetime_ = data.draw(
+        st.datetimes(min_value=cash_account.initial_datetime + timedelta(days=1))
+    )
+    with pytest.raises(TypeError, match="SecurityTransaction.shares must be an int."):
+        SecurityTransaction(
+            "Test description",
+            datetime_,
+            type_,
+            security,
+            shares,
+            Decimal("100"),
+            Decimal("1"),
+            security_account,
+            cash_account,
+        )
+
+
+@given(
+    type_=st.sampled_from(SecurityTransactionType),
+    security=securities(),
+    shares=st.integers(max_value=0),
+    security_account=security_accounts(),
+    cash_account=cash_accounts(),
+    data=st.data(),
+)
+def test_invalid_shares_value(
+    type_: SecurityTransactionType,
+    security: Security,
+    shares: int,
+    security_account: SecurityAccount,
+    cash_account: CashAccount,
+    data: st.DataObject,
+) -> None:
+    datetime_ = data.draw(
+        st.datetimes(min_value=cash_account.initial_datetime + timedelta(days=1))
+    )
+    with pytest.raises(
+        ValueError, match="SecurityTransaction.shares must be at least 1."
+    ):
+        SecurityTransaction(
+            "Test description",
+            datetime_,
+            type_,
+            security,
+            shares,
+            Decimal("100"),
+            Decimal("1"),
+            security_account,
+            cash_account,
+        )
+
+
+@given(
+    type_=st.sampled_from(SecurityTransactionType),
+    security=securities(),
+    security_account=everything_except(SecurityAccount),
+    cash_account=cash_accounts(),
+    data=st.data(),
+)
+def test_invalid_security_account_type(
+    type_: SecurityTransactionType,
+    security: Security,
+    security_account: SecurityAccount,
+    cash_account: CashAccount,
+    data: st.DataObject,
+) -> None:
+    datetime_ = data.draw(
+        st.datetimes(min_value=cash_account.initial_datetime + timedelta(days=1))
+    )
+    with pytest.raises(
+        TypeError,
+        match="SecurityTransaction.security_account must be a SecurityAccount.",
+    ):
+        SecurityTransaction(
+            "Test description",
+            datetime_,
+            type_,
+            security,
+            1,
+            Decimal("100"),
+            Decimal("1"),
+            security_account,
+            cash_account,
+        )
+
+
+@given(
+    datetime_=st.datetimes(),
+    type_=st.sampled_from(SecurityTransactionType),
+    security=securities(),
+    security_account=security_accounts(),
+    cash_account=everything_except(CashAccount),
+)
+def test_invalid_cash_account_type(
+    datetime_: datetime,
+    type_: SecurityTransactionType,
+    security: Security,
+    security_account: SecurityAccount,
+    cash_account: CashAccount,
+) -> None:
+    with pytest.raises(
+        TypeError,
+        match="SecurityTransaction.cash_account must be a CashAccount.",
+    ):
+        SecurityTransaction(
+            "Test description",
+            datetime_,
+            type_,
+            security,
+            1,
+            Decimal("100"),
+            Decimal("1"),
+            security_account,
+            cash_account,
+        )
 
 
 def get_buy() -> SecurityTransaction:

@@ -226,7 +226,7 @@ def test_get_amount_for_account(transaction: CashTransaction) -> None:
     else:
         expected_amount = -amount
 
-    result = transaction.get_amount_for_account(account)
+    result = transaction.get_amount(account)
     assert result == expected_amount
 
 
@@ -238,7 +238,7 @@ def test_get_amount_for_account_invalid_account_type(
     transaction: CashTransaction, account: Any
 ) -> None:
     with pytest.raises(TypeError, match="Argument 'account' must be a CashAccount."):
-        transaction.get_amount_for_account(account)
+        transaction.get_amount(account)
 
 
 @given(
@@ -250,7 +250,7 @@ def test_get_amount_for_account_invalid_account_value(
 ) -> None:
     assume(transaction.account != account)
     with pytest.raises(UnrelatedAccountError):
-        transaction.get_amount_for_account(account)
+        transaction.get_amount(account)
 
 
 @given(
@@ -377,9 +377,8 @@ def test_invalid_refund_type(transaction: CashTransaction, refund: Any) -> None:
         transaction.add_refund(refund)
 
 
-def test_concrete_cash_related_transaction() -> None:
-    mixin = ConcreteCashRelatedTransaction(
-        "description", datetime_=datetime.now(tzinfo)
-    )
+@given(account=cash_accounts())
+def test_concrete_cash_related_transaction(account: CashAccount) -> None:
+    obj = ConcreteCashRelatedTransaction("description", datetime_=datetime.now(tzinfo))
     with pytest.raises(NotImplementedError):
-        mixin.get_amount_for_account(None)
+        obj.get_amount(account)

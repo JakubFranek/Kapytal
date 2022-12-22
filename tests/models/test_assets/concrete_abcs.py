@@ -21,8 +21,8 @@ class ConcreteAccount(Account):
 
 
 class ConcreteCashRelatedTransaction(CashRelatedTransaction):
-    def get_amount_for_account(self, account: CashAccount) -> Decimal:
-        return super().get_amount_for_account(account)
+    def _get_amount(self, account: CashAccount) -> Decimal:
+        return super().get_amount(account)
 
     def is_account_related(self, account: "Account") -> bool:
         return super().is_account_related(account)
