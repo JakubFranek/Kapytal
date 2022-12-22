@@ -1,10 +1,7 @@
-from datetime import datetime
 from enum import Enum, auto
 from typing import Self
 
-from src.models.constants import tzinfo
 from src.models.mixins.datetime_created_mixin import DatetimeCreatedMixin
-from src.models.mixins.datetime_edited_mixin import DatetimeEditedMixin
 from src.models.mixins.name_mixin import NameMixin
 
 
@@ -48,7 +45,7 @@ class Attribute(NameMixin, DatetimeCreatedMixin):
         return f"Attribute('{self.name}', {self.type_.name})"
 
 
-class Category(NameMixin, DatetimeCreatedMixin, DatetimeEditedMixin):
+class Category(NameMixin, DatetimeCreatedMixin):
     def __init__(
         self, name: str, type_: CategoryType, parent: Self | None = None
     ) -> None:
@@ -83,7 +80,6 @@ class Category(NameMixin, DatetimeCreatedMixin, DatetimeEditedMixin):
             new_parent._children.append(self)
 
         self._parent = new_parent
-        self._datetime_edited = datetime.now(tzinfo)
 
     @property
     def children(self) -> tuple[Self, ...]:

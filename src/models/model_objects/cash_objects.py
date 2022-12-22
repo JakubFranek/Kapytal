@@ -210,8 +210,6 @@ class CashTransaction(CashRelatedTransaction):
 
         self._account.add_transaction(self)
 
-        self._datetime_edited = datetime.now(tzinfo)
-
     @property
     def amount(self) -> Decimal:
         return Decimal(sum(amount for _, amount in self._category_amount_pairs))
@@ -233,7 +231,6 @@ class CashTransaction(CashRelatedTransaction):
                 "The type_ of CashTransaction.payee Attribute must be PAYEE."
             )
         self._payee = attribute
-        self._datetime_edited = datetime.now(tzinfo)
 
     @property
     def category_amount_pairs(self) -> tuple[tuple[Category, Decimal], ...]:
@@ -256,7 +253,6 @@ class CashTransaction(CashRelatedTransaction):
             )
 
         self._category_amount_pairs = tuple(pairs)
-        self._datetime_edited = datetime.now(tzinfo)
 
     @property
     def category_names(self) -> str:
@@ -286,7 +282,6 @@ class CashTransaction(CashRelatedTransaction):
             )
 
         self._tag_amount_pairs = tuple(pairs)
-        self._datetime_edited = datetime.now(tzinfo)
 
     @property
     def tag_names(self) -> str:
@@ -316,13 +311,10 @@ class CashTransaction(CashRelatedTransaction):
         self._validate_refund(refund)
 
         self._refunds.append(refund)
-        self._datetime_edited = datetime.now(tzinfo)
 
     def remove_refund(self, refund: "RefundTransaction") -> None:
         self._validate_refund(refund)
-
         self._refunds.remove(refund)
-        self._datetime_edited = datetime.now(tzinfo)
 
     def get_amount_for_account(self, account: CashAccount) -> Decimal:
         if not isinstance(account, CashAccount):
@@ -383,7 +375,6 @@ class CashTransfer(CashRelatedTransaction):
                 "CashTransfer.amount_sent must be a finite and positive Decimal."
             )
         self._amount_sent = value
-        self._datetime_edited = datetime.now(tzinfo)
 
     @property
     def amount_received(self) -> Decimal:
@@ -398,7 +389,6 @@ class CashTransfer(CashRelatedTransaction):
                 "CashTransfer.amount_received must be a finite and positive Decimal."
             )
         self._amount_received = value
-        self._datetime_edited = datetime.now(tzinfo)
 
     def __repr__(self) -> str:
         return (
@@ -434,8 +424,6 @@ class CashTransfer(CashRelatedTransaction):
         # Add self to "new" accounts
         self._account_recipient.add_transaction(self)
         self._account_sender.add_transaction(self)
-
-        self._datetime_edited = datetime.now(tzinfo)
 
     def get_amount_for_account(self, account: CashAccount) -> Decimal:
         if not isinstance(account, CashAccount):
@@ -541,8 +529,6 @@ class RefundTransaction(CashRelatedTransaction):
 
         self._account.add_transaction(self)
 
-        self._datetime_edited = datetime.now(tzinfo)
-
     def _set_category_amount_pairs(
         self, pairs: Collection[tuple[Category, Decimal]]
     ) -> None:
@@ -581,7 +567,6 @@ class RefundTransaction(CashRelatedTransaction):
                 )
 
         self._category_amount_pairs = tuple(pairs)
-        self._datetime_edited = datetime.now(tzinfo)
 
     def _set_tag_amount_pairs(
         self, pairs: Collection[tuple[Attribute, Decimal]]
@@ -630,7 +615,6 @@ class RefundTransaction(CashRelatedTransaction):
                 )
 
         self._tag_amount_pairs = tuple(pairs)
-        self._datetime_edited = datetime.now(tzinfo)
 
     def get_amount_for_account(self, account: CashAccount) -> Decimal:
         if not isinstance(account, CashAccount):

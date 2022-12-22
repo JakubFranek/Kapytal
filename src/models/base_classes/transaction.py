@@ -5,13 +5,11 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:  # pragma: no cover
     from src.models.base_classes.account import Account
 
-from src.models.constants import tzinfo
 from src.models.mixins.datetime_created_mixin import DatetimeCreatedMixin
-from src.models.mixins.datetime_edited_mixin import DatetimeEditedMixin
 from src.models.mixins.uuid_mixin import UUIDMixin
 
 
-class Transaction(DatetimeCreatedMixin, DatetimeEditedMixin, UUIDMixin, ABC):
+class Transaction(DatetimeCreatedMixin, UUIDMixin, ABC):
     DESCRIPTION_MIN_LENGTH = 0
     DESCRIPTION_MAX_LENGTH = 256
 
@@ -40,7 +38,6 @@ class Transaction(DatetimeCreatedMixin, DatetimeEditedMixin, UUIDMixin, ABC):
             )
 
         self._description = value
-        self._datetime_edited = datetime.now(tzinfo)
 
     @property
     def datetime_(self) -> datetime:
@@ -52,7 +49,6 @@ class Transaction(DatetimeCreatedMixin, DatetimeEditedMixin, UUIDMixin, ABC):
             raise TypeError(f"{self.__class__.__name__}.datetime_ must be a datetime.")
 
         self._datetime = value
-        self._datetime_edited = datetime.now(tzinfo)
 
     @abstractmethod
     def is_account_related(self, account: "Account") -> bool:

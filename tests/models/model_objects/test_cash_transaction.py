@@ -70,7 +70,6 @@ def test_creation(  # noqa: CFQ002,TMN001
     )
 
     dt_created_diff = cash_transaction.datetime_created - dt_start
-    dt_edited_diff = cash_transaction.datetime_edited - dt_start
 
     assert cash_transaction.description == description
     assert cash_transaction.datetime_ == datetime_
@@ -90,7 +89,6 @@ def test_creation(  # noqa: CFQ002,TMN001
         f"{cash_transaction.datetime_.strftime('%Y-%m-%d')})"
     )
     assert dt_created_diff.seconds < 1
-    assert dt_edited_diff.seconds < 1
 
 
 @given(

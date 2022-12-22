@@ -1,4 +1,3 @@
-import time
 import uuid
 from datetime import datetime
 
@@ -18,13 +17,11 @@ def test_creation(description: str, datetime_: datetime) -> None:
     transaction = ConcreteTransaction(description, datetime_)
 
     dt_created_diff = transaction.datetime_created - dt_start
-    dt_edited_diff = transaction.datetime_edited - dt_start
 
     assert transaction.description == description
     assert transaction.datetime_ == datetime_
     assert isinstance(transaction.uuid, uuid.UUID)
     assert dt_created_diff.seconds < 1
-    assert dt_edited_diff.seconds < 1
 
 
 @given(
@@ -51,32 +48,6 @@ def test_invalid_description_value(description: str, datetime_: datetime) -> Non
 def test_invalid_datetime_type(description: str, datetime_: datetime) -> None:
     with pytest.raises(TypeError, match="Transaction.datetime_ must be a datetime."):
         ConcreteTransaction(description, datetime_)
-
-
-@given(new_description=st.text(min_size=0, max_size=256))
-def test_description_setter(new_description: str) -> None:
-    transaction = get_concrete_transaction()
-    dt_edited_previous = transaction.datetime_edited
-    time.sleep(1 / 1_000_000)
-    transaction.description = new_description
-    dt_edited_new = transaction.datetime_edited
-
-    dt_edited_diff = dt_edited_new - dt_edited_previous
-
-    assert dt_edited_diff.microseconds < 100_000
-
-
-@given(new_datetime=st.datetimes())
-def test_datetime_setter(new_datetime: datetime) -> None:
-    transaction = get_concrete_transaction()
-    dt_edited_previous = transaction.datetime_edited
-    time.sleep(1 / 1_000_000)
-    transaction.datetime_ = new_datetime
-    dt_edited_new = transaction.datetime_edited
-
-    dt_edited_diff = dt_edited_new - dt_edited_previous
-
-    assert dt_edited_diff.microseconds < 100_000
 
 
 def test_abstract_is_account_related() -> None:
