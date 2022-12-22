@@ -12,7 +12,8 @@ from src.models.model_objects.security_objects import (
     Security,
     SecurityType,
 )
-from tests.models.test_assets.composites import everything_except
+from tests.models.test_assets.composites import everything_except, securities
+from tests.models.test_assets.get_valid_objects import get_security
 
 
 @given(
@@ -146,7 +147,6 @@ def test_set_price_invalid_price_value(date_: date, price: Any) -> None:
         security.set_price(date_, price)
 
 
-def get_security() -> Security:
-    return Security(
-        "Vanguard FTSE All-World UCITS ETF USD Acc", "VWCE.DE", SecurityType.ETF
-    )
+@given(security=securities(), other=everything_except(Security))
+def test_eq_different_types(security: Security, other: Any) -> None:
+    assert (security == other) is False

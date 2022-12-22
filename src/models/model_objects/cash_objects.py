@@ -158,8 +158,8 @@ class CashAccount(Account):
         if transaction.datetime_ < self.initial_datetime:
             raise TransactionPrecedesAccountError(
                 (
-                    "The provided Transaction precedes this"
-                    " CashAccount.initial_datetime."
+                    "The provided Transaction precedes this "
+                    "CashAccount.initial_datetime."
                 )
             )
         return
@@ -248,8 +248,8 @@ class CashTransaction(CashRelatedTransaction):
 
         if not all(amount.is_finite() and amount > 0 for _, amount in pairs):
             raise ValueError(
-                "Second member of CashTransaction.category_amount_pairs"
-                " tuples must be a positive and finite Decimal."
+                "Second member of CashTransaction.category_amount_pairs "
+                "tuples must be a positive and finite Decimal."
             )
 
         self._category_amount_pairs = tuple(pairs)
@@ -276,9 +276,9 @@ class CashTransaction(CashRelatedTransaction):
             for _, amount in pairs
         ):
             raise ValueError(
-                "Second member of CashTransaction.tag_amount_pairs"
-                " tuples must be a positive and finite Decimal which"
-                " does not exceed CashTransaction.amount."
+                "Second member of CashTransaction.tag_amount_pairs "
+                "tuples must be a positive and finite Decimal which "
+                "does not exceed CashTransaction.amount."
             )
 
         self._tag_amount_pairs = tuple(pairs)
@@ -392,8 +392,8 @@ class CashTransfer(CashRelatedTransaction):
 
     def __repr__(self) -> str:
         return (
-            f"CashTransfer({self.amount_sent} {self.account_sender.currency.code}"
-            f" from '{self.account_sender.name}', "
+            f"CashTransfer({self.amount_sent} {self.account_sender.currency.code} "
+            f"from '{self.account_sender.name}', "
             f"{self.amount_received} {self.account_recipient.currency.code} "
             f"to '{self.account_recipient.name}', "
             f"{self.datetime_.strftime('%Y-%m-%d')})"
@@ -408,8 +408,8 @@ class CashTransfer(CashRelatedTransaction):
             raise TypeError("Argument 'account_recipient' must be a CashAccount.")
         if account_recipient == account_sender:
             raise TransferSameAccountError(
-                "Arguments 'account_sender' and 'account_recipient' must be"
-                " different CashAccounts."
+                "Arguments 'account_sender' and 'account_recipient' must be "
+                "different CashAccounts."
             )
 
         # Remove self from "old" accounts
@@ -474,8 +474,8 @@ class RefundTransaction(CashRelatedTransaction):
         Transaction.datetime_.fset(self, value)
         if self.datetime_ < self._refunded_transaction.datetime_:
             raise RefundPrecedesTransactionError(
-                "Supplied RefundTransaction.datetime_ precedes this"
-                " CashTransaction.datetime_."
+                "Supplied RefundTransaction.datetime_ precedes this "
+                "CashTransaction.datetime_."
             )
 
     @property
@@ -520,8 +520,8 @@ class RefundTransaction(CashRelatedTransaction):
             raise TypeError("RefundTransaction.account must be a CashAccount.")
         if account.currency != self.refunded_transaction.currency:
             raise CurrencyError(
-                "Currencies of the refunded CashTransaction and the refunded"
-                " CashAccount must match."
+                "Currencies of the refunded CashTransaction and the refunded "
+                "CashAccount must match."
             )
 
         self._account = account
@@ -543,8 +543,8 @@ class RefundTransaction(CashRelatedTransaction):
             )
         if not all(amount.is_finite() and amount >= 0 for _, amount in pairs):
             raise ValueError(
-                "Second member of RefundTransaction.category_amount_pairs"
-                " tuples must be a finite non-negative Decimal."
+                "Second member of RefundTransaction.category_amount_pairs "
+                "tuples must be a finite non-negative Decimal."
             )
         refund_amount = sum(amount for _, amount in pairs)
         if not refund_amount > 0:
@@ -562,8 +562,8 @@ class RefundTransaction(CashRelatedTransaction):
         for category, amount in pairs:
             if amount > max_values[category]:
                 raise ValueError(
-                    f"Refunded amount for category '{category.path}' must not exceed"
-                    f" {max_values[category]}."
+                    f"Refunded amount for category '{category.path}' must not exceed "
+                    f"{max_values[category]}."
                 )
 
         self._category_amount_pairs = tuple(pairs)
@@ -577,16 +577,16 @@ class RefundTransaction(CashRelatedTransaction):
 
         if not all(attribute.type_ == AttributeType.TAG for attribute, _ in pairs):
             raise InvalidAttributeError(
-                "The type_ of RefundTransaction.tag_amount_pairs Attributes must"
-                " be TAG."
+                "The type_ of RefundTransaction.tag_amount_pairs Attributes must "
+                "be TAG."
             )
         delivered_tags = {tag for tag, _ in pairs}
         if delivered_tags != expected_tags:
             raise InvalidAttributeError("Delivered tags do not match expected tags.")
         if not all(amount.is_finite() and amount >= 0 for _, amount in pairs):
             raise ValueError(
-                "Second member of RefundTransaction.tag_amount_pairs"
-                " tuples must be a finite non-negative Decimal."
+                "Second member of RefundTransaction.tag_amount_pairs "
+                "tuples must be a finite non-negative Decimal."
             )
 
         max_values: dict[Attribute, Decimal] = {}
@@ -610,8 +610,8 @@ class RefundTransaction(CashRelatedTransaction):
             min_values[tag] = max(min_expected, 0)
             if amount > max_values[tag] or amount < min_values[tag]:
                 raise ValueError(
-                    f"Refunded amount for tag '{tag.name}' must be within"
-                    f" {min_values[tag]} and {max_values[tag]}."
+                    f"Refunded amount for tag '{tag.name}' must be within "
+                    f"{min_values[tag]} and {max_values[tag]}."
                 )
 
         self._tag_amount_pairs = tuple(pairs)

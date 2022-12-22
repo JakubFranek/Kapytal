@@ -69,8 +69,8 @@ class Category(NameMixin, DatetimeCreatedMixin):
                 raise TypeError("Category.parent must be a Category or a None.")
             if new_parent.type_ != self.type_:
                 raise ValueError(
-                    "The type_ of parent Category must match the type_"
-                    " of this Category."
+                    "The type_ of parent Category must match the type_ "
+                    "of this Category."
                 )
 
         if hasattr(self, "_parent") and self._parent is not None:

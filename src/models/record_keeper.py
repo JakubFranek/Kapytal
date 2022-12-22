@@ -94,8 +94,8 @@ class RecordKeeper:
             parent = None
             if not isinstance(type_, CategoryType):
                 raise TypeError(
-                    "If argument 'parent_path' is not provided, 'type_' must be"
-                    " a CategoryType."
+                    "If argument 'parent_path' is not provided, 'type_' must be "
+                    "a CategoryType."
                 )
             category_type = type_
 
@@ -316,8 +316,8 @@ class RecordKeeper:
         if type_lower == "expense":
             return CashTransactionType.EXPENSE
         raise ValueError(
-            "A CashTransactionType can be only 'income' or 'expense',"
-            f" not {type_lower}."
+            "A CashTransactionType can be only 'income' or 'expense', "
+            f"not {type_lower}."
         )
 
     def __repr__(self) -> str:

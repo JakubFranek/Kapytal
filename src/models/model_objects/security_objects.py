@@ -18,10 +18,6 @@ class InvalidCharacterError(ValueError):
     """Raised when invalid character is passed."""
 
 
-class InvalidSharesAmountError(ValueError):
-    """Raised when an amount of shares of a Security is invalid."""
-
-
 class SecurityType(Enum):
     ETF = auto()
     MUTUAL_FUND = auto()
@@ -131,25 +127,26 @@ class SecurityAccount(Account):
     def add_transaction(self, transaction: "SecurityTransaction") -> None:
         self._validate_transaction(transaction)
         if transaction.type_ == SecurityTransactionType.SELL:
-            current_shares = self._securities[transaction.security]
-            sell_shares = transaction.shares
-            if sell_shares > current_shares:
-                raise InvalidSharesAmountError(
-                    f"Cannot sell {sell_shares} shares of "
-                    f"'{transaction.security.symbol}', as this SecurityAccount "
-                    f"contains only {current_shares} shares."
-                )
             self._securities[transaction.security] -= transaction.shares
         else:
             self._securities[transaction.security] += transaction.shares
         self._transactions.append(transaction)
+
+    def remove_transaction(self, transaction: "SecurityTransaction") -> None:
+        self._validate_transaction(transaction)
+        if transaction.type_ == SecurityTransactionType.SELL:
+            self._securities[transaction.security] += transaction.shares
+        else:
+            self._securities[transaction.security] -= transaction.shares
+        self._transactions.remove(transaction)
 
     def _validate_transaction(self, transaction: "SecurityTransaction") -> None:
         if not isinstance(transaction, SecurityTransaction):
             raise TypeError("Argument 'transaction' must be a SecurityTransaction.")
         if not transaction.is_account_related(self):
             raise UnrelatedAccountError(
-                "This SecurityAccount is not related to the provided Transaction."
+                "This SecurityAccount is not related to the provided "
+                "SecurityTransaction."
             )
         return
 

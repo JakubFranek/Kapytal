@@ -14,3 +14,4 @@ def test_creation(name: str, parent: AccountGroup | None) -> None:
     assert security_account.balance == 0
     assert security_account.securities == {}
     assert security_account.transactions == ()
+    assert security_account.__repr__() == f"SecurityAccount('{name}')"
