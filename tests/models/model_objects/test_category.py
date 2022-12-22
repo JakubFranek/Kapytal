@@ -79,4 +79,4 @@ def test_str(first_category: Category, length: int, data: st.DataObject) -> None
     for category in categories:
         expected_string += category.name + "/"
 
-    assert str(categories[-1]) == expected_string[:-1]
+    assert categories[-1].path == expected_string[:-1]

@@ -123,7 +123,7 @@ def test_add_cash_transaction(
     category_name_amount_pairs = data.draw(
         st.lists(
             st.tuples(
-                st.sampled_from([str(cat) for cat in valid_categories]),
+                st.sampled_from([cat.path for cat in valid_categories]),
                 st.decimals(min_value="0.01", allow_infinity=False, allow_nan=False),
             ),
             min_size=1,
@@ -277,7 +277,7 @@ def test_get_category_does_not_exist() -> None:
     record_keeper = get_preloaded_record_keeper()
     category_path = "One/Two/Three"
     category = record_keeper.get_category(category_path, CategoryType.INCOME)
-    assert str(category) == category_path
+    assert category.path == category_path
 
 
 def test_get_category_parent_exists() -> None:
@@ -286,8 +286,8 @@ def test_get_category_parent_exists() -> None:
     child_path = "One/Two/Three"
     parent = record_keeper.get_category(parent_path, CategoryType.INCOME)
     child = record_keeper.get_category(child_path, CategoryType.INCOME)
-    assert str(child) == child_path
-    assert str(parent) == parent_path
+    assert child.path == child_path
+    assert parent.path == parent_path
 
 
 def test_get_attribute() -> None:

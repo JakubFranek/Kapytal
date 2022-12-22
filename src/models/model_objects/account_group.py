@@ -8,11 +8,10 @@ from src.models.mixins.datetime_created_mixin import DatetimeCreatedMixin
 from src.models.mixins.name_mixin import NameMixin
 
 
-# TODO: add parent to __init__
 class AccountGroup(NameMixin, DatetimeCreatedMixin):
-    def __init__(self, name: str) -> None:
+    def __init__(self, name: str, parent: Self | None = None) -> None:
         super().__init__(name)
-        self._parent: Self | None = None
+        self._parent: Self | None = parent
         self._children: list[Self | "Account"] = []
 
     @property
@@ -41,4 +40,10 @@ class AccountGroup(NameMixin, DatetimeCreatedMixin):
         return Decimal(sum(child.balance for child in self._children))
 
     def __repr__(self) -> str:
-        return f"AccountGroup({self.name}, parent={self.parent})"
+        return f"AccountGroup('{self.name}', parent='{self.parent}')"
+
+    @property
+    def path(self) -> str:
+        if self.parent is None:
+            return self.name
+        return self.parent.path + "/" + self.name

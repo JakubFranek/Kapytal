@@ -22,4 +22,4 @@ class Currency(DatetimeCreatedMixin):
         return self._code
 
     def __repr__(self) -> str:
-        return f"Currency(code={self.code})"
+        return f"Currency('{self.code}')"

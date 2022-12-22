@@ -93,10 +93,11 @@ class Category(NameMixin, DatetimeCreatedMixin, DatetimeEditedMixin):
     def type_(self) -> CategoryType:
         return self._type
 
-    def __str__(self) -> str:
+    @property
+    def path(self) -> str:
         if self.parent is None:
             return self.name
-        return str(self.parent) + "/" + self.name
+        return self.parent.path + "/" + self.name
 
     def __repr__(self) -> str:
-        return f"Category('{self.name}', {self.type_.name}, parent={self.parent})"
+        return f"Category('{self.name}', {self.type_.name}, parent='{self.parent}')"
