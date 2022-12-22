@@ -114,6 +114,7 @@ class RecordKeeper:
             target_path = parent.path + "/" + name
         else:
             target_path = name
+            parent = None
         if any(acc_group.path == target_path for acc_group in self._account_groups):
             raise AlreadyExistsError(
                 f"An AccountGroup with path '{target_path}' already exists."
@@ -121,19 +122,21 @@ class RecordKeeper:
         account_group = AccountGroup(name, parent)
         self._account_groups.append(account_group)
 
-    # TODO: same name allowed if parent is different
     def add_cash_account(
         self,
         name: str,
         currency_code: str,
         initial_balance: Decimal,
         initial_datetime: datetime,
-        parent_name: str | None,
+        parent_path: str | None,
     ) -> None:
-        if any(name == account.name for account in self._accounts):
-            raise AlreadyExistsError(f"An Account named {name} already exists.")
+        target_path = parent_path + "/" + name if parent_path is not None else name
+        if any(account.path == target_path for account in self._accounts):
+            raise AlreadyExistsError(
+                f"An Account with path={target_path} already exists."
+            )
         currency = self.get_currency(currency_code)
-        parent = self.get_account_parent(parent_name)
+        parent = self.get_account_parent(parent_path)
         account = CashAccount(name, currency, initial_balance, initial_datetime, parent)
         self._accounts.append(account)
 
@@ -142,12 +145,12 @@ class RecordKeeper:
         description: str,
         datetime_: datetime,
         transaction_type: str,
-        account_name: str,
+        account_path: str,
         category_path_amount_pairs: Collection[tuple[str, Decimal]],
         payee_name: str,
         tag_name_amount_pairs: Collection[tuple[str, Decimal]],
     ) -> None:
-        account = self.get_account(account_name)
+        account = self.get_account(account_path)
         type_ = RecordKeeper.get_cash_transaction_type(transaction_type)
         payee = self.get_attribute(payee_name, AttributeType.PAYEE)
 
@@ -182,13 +185,13 @@ class RecordKeeper:
         self,
         description: str,
         datetime_: datetime,
-        account_sender_name: str,
-        account_recipient_name: str,
+        account_sender_path: str,
+        account_recipient_path: str,
         amount_sent: Decimal,
         amount_received: Decimal,
     ) -> None:
-        account_sender = self.get_account(account_sender_name)
-        account_recipient = self.get_account(account_recipient_name)
+        account_sender = self.get_account(account_sender_path)
+        account_recipient = self.get_account(account_recipient_path)
 
         transfer = CashTransfer(
             description,
@@ -205,12 +208,12 @@ class RecordKeeper:
         description: str,
         datetime_: datetime,
         refunded_transaction_index: int,
-        refunded_account_name: str,
+        refunded_account_path: str,
         category_path_amount_pairs: Collection[tuple[str, Decimal]],
         tag_name_amount_pairs: Collection[tuple[str, Decimal]],
     ) -> None:
         refunded_transaction = self.transactions[refunded_transaction_index]
-        refunded_account = self.get_account(refunded_account_name)
+        refunded_account = self.get_account(refunded_account_path)
 
         tag_amount_pairs: list[tuple[Attribute, Decimal]] = []
         for tag_name, amount in tag_name_amount_pairs:
@@ -234,28 +237,28 @@ class RecordKeeper:
         )
         self._transactions.append(refund)
 
-    def get_account_parent(self, parent_path: str | None) -> AccountGroup | None:
-        if parent_path:
+    def get_account_parent(self, path: str | None) -> AccountGroup | None:
+        if path:
             for account_group in self._account_groups:
-                if account_group.path == parent_path:
+                if account_group.path == path:
                     return account_group
             raise DoesNotExistError(
-                f"An AccountGroup with path='{parent_path}' does not exist."
+                f"An AccountGroup with path='{path}' does not exist."
             )
         return None
 
-    def get_account(self, name: str) -> Account:
+    def get_account(self, path: str) -> Account:
         for account in self._accounts:
-            if account.name == name:
+            if account.path == path:
                 return account
-        raise DoesNotExistError(f"An Account named {name} does not exist.")
+        raise DoesNotExistError(f"An Account with path='{path}' does not exist.")
 
     def get_currency(self, code: str) -> Currency:
         code_upper = code.upper()
         for currency in self._currencies:
             if currency.code == code_upper:
                 return currency
-        raise DoesNotExistError(f"A Currency with code {code_upper} does not exist.")
+        raise DoesNotExistError(f"A Currency with code='{code_upper}' does not exist.")
 
     def get_category(self, path: str, type_: CategoryType) -> Category:
         for category in self._categories:
