@@ -26,7 +26,6 @@ from tests.models.test_assets.composites import (
     attributes,
     cash_accounts,
     cash_transactions,
-    categories,
     category_amount_pairs,
     everything_except,
     tag_amount_pairs,
@@ -81,26 +80,31 @@ def test_creation(  # noqa: CFQ002,TMN001
     assert cash_transaction.payee == payee
     assert cash_transaction.tag_amount_pairs == tuple(tag_amount_collection)
     assert cash_transaction in account.transactions
+    assert cash_transaction.__repr__() == (
+        f"CashTransaction({cash_transaction.type_.name}, "
+        f"account='{cash_transaction.account.name}', "
+        f"amount={cash_transaction.amount} "
+        f"{cash_transaction.account.currency.code}, "
+        f"category={{{cash_transaction.category_names}}}, "
+        f"{cash_transaction.datetime_.strftime('%Y-%m-%d')})"
+    )
     assert dt_created_diff.seconds < 1
     assert dt_edited_diff.seconds < 1
 
 
 @given(
     account=cash_accounts(),
-    payee=attributes(AttributeType.PAYEE),
     type_=everything_except(CashTransactionType),
-    data=st.data(),
 )
 def test_type_invalid_type(  # noqa: CFQ002,TMN001
-    account: CashAccount, payee: Attribute, type_: Any, data: st.DataObject
+    account: CashAccount,
+    type_: Any,
 ) -> None:
-    category_amount_collection = data.draw(
-        st.lists(category_amount_pairs(type_), min_size=1, max_size=5)
-    )
-    max_tag_amount = sum(amount for _, amount in category_amount_collection)
-    tag_amount_collection = data.draw(
-        st.lists(tag_amount_pairs(max_tag_amount), min_size=0, max_size=5)
-    )
+    payee = Attribute("Test", AttributeType.PAYEE)
+    category_amount_collection = [
+        (Category("Test", CategoryType.INCOME_AND_EXPENSE), Decimal(1))
+    ]
+    tag_amount_collection = [(Attribute("Test", AttributeType.TAG), Decimal(1))]
     with pytest.raises(
         TypeError, match="CashTransaction.type_ must be a CashTransactionType."
     ):
@@ -150,16 +154,7 @@ def test_tags_invalid_first_member_type(
     transaction: CashTransaction, data: st.DataObject
 ) -> None:
     max_tag_amount = transaction.amount
-    new_tags = data.draw(
-        st.lists(
-            st.tuples(
-                everything_except(Attribute),
-                st.decimals(min_value="0.01", max_value=max_tag_amount),
-            ),
-            min_size=1,
-            max_size=5,
-        )
-    )
+    new_tags = [(data.draw(everything_except(Attribute)), Decimal(max_tag_amount))]
     with pytest.raises(
         TypeError,
         match="First element of 'collection' tuples",
@@ -167,21 +162,10 @@ def test_tags_invalid_first_member_type(
         transaction.tag_amount_pairs = new_tags
 
 
-@given(transaction=cash_transactions(), data=st.data())
-def test_tags_invalid_attribute_type(
-    transaction: CashTransaction, data: st.DataObject
-) -> None:
+@given(transaction=cash_transactions())
+def test_tags_invalid_attribute_type(transaction: CashTransaction) -> None:
     max_tag_amount = transaction.amount
-    new_tags = data.draw(
-        st.lists(
-            st.tuples(
-                attributes(AttributeType.PAYEE),
-                st.decimals(min_value="0.01", max_value=max_tag_amount),
-            ),
-            min_size=1,
-            max_size=5,
-        )
-    )
+    new_tags = [(Attribute("Test", AttributeType.PAYEE), Decimal(max_tag_amount))]
     with pytest.raises(
         ValueError,
         match="The type_ of CashTransaction.tag_amount_pairs Attributes must be TAG.",
@@ -193,13 +177,9 @@ def test_tags_invalid_attribute_type(
 def test_tags_invalid_second_member_type(
     transaction: CashTransaction, data: st.DataObject
 ) -> None:
-    new_tags = data.draw(
-        st.lists(
-            st.tuples(attributes(AttributeType.TAG), everything_except(Decimal)),
-            min_size=1,
-            max_size=5,
-        )
-    )
+    new_tags = [
+        (Attribute("Test", AttributeType.TAG), data.draw(everything_except(Decimal)))
+    ]
     with pytest.raises(
         TypeError,
         match="Second element of 'collection' tuples",
@@ -212,16 +192,12 @@ def test_tags_invalid_second_member_value(
     transaction: CashTransaction, data: st.DataObject
 ) -> None:
     max_tag_amount = transaction.amount
-    new_tags = data.draw(
-        st.lists(
-            st.tuples(
-                attributes(AttributeType.TAG),
-                st.decimals(min_value=max_tag_amount + Decimal("0.01")),
-            ),
-            min_size=1,
-            max_size=5,
+    new_tags = [
+        (
+            Attribute("Test", AttributeType.TAG),
+            data.draw(st.decimals(min_value=max_tag_amount + Decimal("0.01"))),
         )
-    )
+    ]
     with pytest.raises(
         ValueError,
         match="Second member of CashTransaction.tag_amount_pairs",
@@ -294,12 +270,12 @@ def test_category_amount_pairs_invalid_length(
 @given(
     transaction=cash_transactions(),
     first_member=everything_except(Category),
-    second_member=st.decimals(),
 )
 def test_category_amount_pairs_invalid_first_member_type(
-    transaction: CashTransaction, first_member: Any, second_member: Decimal
+    transaction: CashTransaction,
+    first_member: Any,
 ) -> None:
-    tup = ((first_member, second_member),)
+    tup = ((first_member, Decimal(transaction.amount)),)
     with pytest.raises(
         TypeError,
         match="First element of 'collection' tuples",
@@ -309,13 +285,15 @@ def test_category_amount_pairs_invalid_first_member_type(
 
 @given(
     transaction=cash_transactions(),
-    first_member=categories(),
     second_member=everything_except(Decimal),
+    data=st.data(),
 )
 def test_category_amount_pairs_invalid_second_member_type(
-    transaction: CashTransaction, first_member: Category, second_member: Any
+    transaction: CashTransaction, second_member: Any, data: st.DataObject
 ) -> None:
-    assume(first_member.type_ in transaction._valid_category_types)
+    first_member = Category(
+        "Test", data.draw(st.sampled_from(transaction._valid_category_types))
+    )
     tup = ((first_member, second_member),)
     with pytest.raises(
         TypeError,
@@ -326,19 +304,17 @@ def test_category_amount_pairs_invalid_second_member_type(
 
 @given(
     transaction=cash_transactions(),
-    amount=st.decimals(min_value="0.01", allow_infinity=False, allow_nan=False),
-    name=st.text(min_size=1, max_size=32),
 )
 def test_category_amount_pairs_invalid_category_type(
-    transaction: CashTransaction, amount: Decimal, name: str
+    transaction: CashTransaction,
 ) -> None:
     type_ = (
         CategoryType.INCOME
         if transaction.type_ == CashTransactionType.EXPENSE
         else CategoryType.EXPENSE
     )
-    category = Category(name, type_)
-    tup = ((category, amount),)
+    category = Category("Test", type_)
+    tup = ((category, Decimal(transaction.amount)),)
     with pytest.raises(
         InvalidCategoryTypeError,
         match="Invalid Category.type_.",
@@ -348,13 +324,15 @@ def test_category_amount_pairs_invalid_category_type(
 
 @given(
     transaction=cash_transactions(),
-    category=categories(),
     amount=st.decimals(max_value=0, allow_infinity=True, allow_nan=True),
+    data=st.data(),
 )
 def test_category_amount_pairs_invalid_amount_value(
-    transaction: CashTransaction, category: Category, amount: Decimal
+    transaction: CashTransaction, amount: Decimal, data: st.DataObject
 ) -> None:
-    assume(category.type_ in transaction._valid_category_types)
+    category = Category(
+        "Test", data.draw(st.sampled_from(transaction._valid_category_types))
+    )
     tup = ((category, amount),)
     with pytest.raises(
         ValueError,
