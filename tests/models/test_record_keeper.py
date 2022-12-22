@@ -50,7 +50,6 @@ def test_add_account_group_no_parent(name: str) -> None:
     parent_name=st.text(min_size=1, max_size=32),
 )
 def test_add_account_group_with_parent(name: str, parent_name: str) -> None:
-    assume(name != parent_name)
     record_keeper = RecordKeeper()
     record_keeper.add_account_group(parent_name, None)
     record_keeper.add_account_group(name, parent_name)
@@ -58,6 +57,27 @@ def test_add_account_group_with_parent(name: str, parent_name: str) -> None:
     parent_group = record_keeper.account_groups[0]
     assert account_group.name == name
     assert account_group.parent == parent_group
+
+
+@given(
+    name=st.text(min_size=1, max_size=32),
+    grandparent_name=st.text(min_size=1, max_size=32),
+    parent_name=st.text(min_size=1, max_size=32),
+)
+def test_add_account_group_with_multiple_parents(
+    name: str, grandparent_name: str, parent_name: str
+) -> None:
+    grandparent_path = grandparent_name
+    parent_path = grandparent_name + "/" + parent_name
+    record_keeper = RecordKeeper()
+    record_keeper.add_account_group(grandparent_name, None)
+    record_keeper.add_account_group(parent_name, grandparent_path)
+    record_keeper.add_account_group(name, parent_path)
+    account_group = record_keeper.account_groups[2]
+    parent = record_keeper.account_groups[1]
+    assert account_group.name == name
+    assert account_group.path == f"{parent_path}/{name}"
+    assert account_group.parent == parent
 
 
 @given(
@@ -109,8 +129,8 @@ def test_add_cash_transaction(
     data: st.DataObject,
 ) -> None:
     record_keeper = get_preloaded_record_keeper()  # noqa: NEW100
-    account_name = data.draw(
-        st.sampled_from([account.name for account in record_keeper.accounts])
+    account_path = data.draw(
+        st.sampled_from([account.path for account in record_keeper.accounts])
     )
     valid_cat_types = (
         [CategoryType.INCOME, CategoryType.INCOME_AND_EXPENSE]
@@ -145,7 +165,7 @@ def test_add_cash_transaction(
         description,
         datetime_,
         transaction_type,
-        account_name,
+        account_path,
         category_name_amount_pairs,
         payee_name,
         tag_name_amount_pairs,
@@ -174,23 +194,23 @@ def test_add_cash_transfer(
     data: st.DataObject,
 ) -> None:
     record_keeper = get_preloaded_record_keeper()  # noqa: NEW100
-    account_sender_name = data.draw(
-        st.sampled_from([account.name for account in record_keeper.accounts])
+    account_sender_path = data.draw(
+        st.sampled_from([account.path for account in record_keeper.accounts])
     )
-    account_recipient_name = data.draw(
+    account_recipient_path = data.draw(
         st.sampled_from(
             [
-                account.name
+                account.path
                 for account in record_keeper.accounts
-                if account.name != account_sender_name
+                if account.path != account_sender_path
             ]
         )
     )
     record_keeper.add_cash_transfer(
         description,
         datetime_,
-        account_sender_name,
-        account_recipient_name,
+        account_sender_path,
+        account_recipient_path,
         amount_sent,
         amount_received,
     )
@@ -248,10 +268,11 @@ def test_add_account_group_already_exists(name: str) -> None:
 def test_add_cash_account_already_exists(data: st.DataObject) -> None:
     record_keeper = get_preloaded_record_keeper()
     account = data.draw(st.sampled_from(record_keeper.accounts))
+    parent_path = account.parent.path if account.parent is not None else None
     currency = data.draw(st.sampled_from(record_keeper.currencies))
     with pytest.raises(AlreadyExistsError):
         record_keeper.add_cash_account(
-            account.name, currency.code, Decimal(0), datetime.now(), None
+            account.name, currency.code, Decimal(0), datetime.now(), parent_path
         )
 
 
@@ -333,7 +354,7 @@ def test_add_refund() -> RecordKeeper:
         "Refund!",
         datetime.now(tzinfo),
         0,
-        "Raiffeisen CZK",
+        "Bank Accounts/Raiffeisen CZK",
         (("Food and Drink/Groceries", Decimal(1000)),),
         (("Test Tag", Decimal(1000)),),
     )
@@ -348,7 +369,7 @@ def get_preloaded_record_keeper_with_expense() -> RecordKeeper:
         "An expense transaction",
         datetime.now(tzinfo),
         "expense",
-        "Raiffeisen CZK",
+        "Bank Accounts/Raiffeisen CZK",
         (("Food and Drink/Groceries", Decimal(1000)),),
         "Albert",
         (("Test Tag", Decimal(1000)),),
@@ -366,14 +387,14 @@ def get_preloaded_record_keeper() -> RecordKeeper:
         currency_code="CZK",
         initial_balance=Decimal(1500),
         initial_datetime=datetime.now(tzinfo),
-        parent_name="Bank Accounts",
+        parent_path="Bank Accounts",
     )
     record_keeper.add_cash_account(
         name="Moneta EUR",
         currency_code="EUR",
         initial_balance=Decimal(1600),
         initial_datetime=datetime.now(tzinfo),
-        parent_name="Bank Accounts",
+        parent_path="Bank Accounts",
     )
     record_keeper.add_category("Food and Drink", None, CategoryType.EXPENSE)
     record_keeper.add_category("Groceries", "Food and Drink")
