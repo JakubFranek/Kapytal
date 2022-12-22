@@ -23,6 +23,8 @@ from src.models.model_objects.currency import Currency
 from src.models.model_objects.security_objects import (
     Security,
     SecurityAccount,
+    SecurityTransaction,
+    SecurityTransactionType,
     SecurityType,
 )
 from tests.models.test_assets.concrete_abcs import ConcreteTransaction
@@ -209,6 +211,46 @@ def security_accounts(draw: st.DrawFn) -> SecurityAccount:
     name = draw(st.text(min_size=1, max_size=32))
     parent = draw(st.none() | account_groups())
     return SecurityAccount(name, parent)
+
+
+@st.composite
+def security_transactions(
+    draw: st.DrawFn,
+    min_datetime: datetime = min_datetime,
+    max_datetime: datetime = datetime.max,
+) -> SecurityTransaction:
+    description = draw(st.text(min_size=1, max_size=256))
+    datetime_ = draw(
+        st.datetimes(
+            min_value=min_datetime, max_value=max_datetime, timezones=st.just(tzinfo)
+        )
+    )
+    type_ = draw(st.sampled_from(SecurityTransactionType))
+    security = draw(securities())
+    shares = draw(st.integers(min_value=1))
+    price_per_share = draw(
+        st.decimals(
+            min_value=0, max_value=1e10, allow_infinity=False, allow_nan=False, places=3
+        )
+    )
+    fees = draw(
+        st.decimals(
+            min_value=0, max_value=1e10, allow_infinity=False, allow_nan=False, places=3
+        )
+    )
+    security_account = draw(security_accounts())
+    cash_account = draw(cash_accounts())
+    return SecurityTransaction(
+        description,
+        datetime_,
+        type_,
+        security,
+        shares,
+        price_per_share,
+        fees,
+        security_account,
+        cash_account,
+    )
 
 
 @st.composite

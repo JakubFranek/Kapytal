@@ -332,14 +332,33 @@ def test_invalid_cash_account_type(
 
 
 @given(security_account=security_accounts())
-def test_change_security_account(security_account: SecurityAccount) -> None:
+def test_buy_change_security_account(security_account: SecurityAccount) -> None:
     buy = get_buy()
+    security = buy.security
     old_security_account = buy.security_account
     assert buy in old_security_account.transactions
+    assert old_security_account.securities[security] == buy.shares
 
     buy.security_account = security_account
     assert buy in security_account.transactions
     assert buy not in old_security_account.transactions
+    assert old_security_account.securities[security] == 0
+    assert security_account.securities[security] == buy.shares
+
+
+@given(security_account=security_accounts())
+def test_sell_change_security_account(security_account: SecurityAccount) -> None:
+    sell = get_sell()
+    security = sell.security
+    old_security_account = sell.security_account
+    assert sell in old_security_account.transactions
+    assert old_security_account.securities[security] == -sell.shares
+
+    sell.security_account = security_account
+    assert sell in security_account.transactions
+    assert sell not in old_security_account.transactions
+    assert old_security_account.securities[security] == 0
+    assert security_account.securities[security] == -sell.shares
 
 
 @given(cash_account=cash_accounts())
@@ -378,4 +397,26 @@ def get_buy() -> SecurityTransaction:
         fees,
         security_account,
         cash_account,
+    )
+
+
+def get_sell() -> SecurityTransaction:
+    buy = get_buy()
+    description = "A Sell transaction"
+    datetime_ = datetime.now(tzinfo)
+    type_ = SecurityTransactionType.SELL
+    security = get_security()
+    shares = 10
+    price_per_share = Decimal("105.49")
+    fees = Decimal("1.25")
+    return SecurityTransaction(
+        description,
+        datetime_,
+        type_,
+        security,
+        shares,
+        price_per_share,
+        fees,
+        buy.security_account,
+        buy.cash_account,
     )
