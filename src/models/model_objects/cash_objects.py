@@ -1,4 +1,4 @@
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from collections.abc import Collection
 from datetime import datetime
 from decimal import Decimal
@@ -43,7 +43,7 @@ class InvalidCashTransactionTypeError(ValueError):
     """Raised when the CashTransactionType is incorrect."""
 
 
-class CashRelatedTransactionMixin:
+class CashRelatedTransaction(Transaction, ABC):
     @abstractmethod
     def get_amount_for_account(self, account: "CashAccount") -> Decimal:
         raise NotImplementedError("Not implemented")
@@ -73,9 +73,7 @@ class CashAccount(Account):
         self.initial_datetime = initial_datetime
         self._balance_history = [(initial_datetime, initial_balance)]
 
-        self._transactions: list[
-            "CashTransaction | CashTransfer | RefundTransaction"
-        ] = []
+        self._transactions: list[CashRelatedTransaction] = []
 
     @property
     def currency(self) -> Currency:
@@ -119,19 +117,19 @@ class CashAccount(Account):
     @property
     def transactions(
         self,
-    ) -> tuple["CashTransaction | CashTransfer | RefundTransaction", ...]:
+    ) -> tuple[CashRelatedTransaction, ...]:
         self._transactions.sort(key=lambda transaction: transaction.datetime_)
         return tuple(self._transactions)
 
     def __repr__(self) -> str:
         return f"CashAccount('{self.name}', currency='{self.currency.code}')"
 
-    def add_transaction(self, transaction: "CashTransaction | CashTransfer") -> None:
+    def add_transaction(self, transaction: CashRelatedTransaction) -> None:
         self._validate_transaction(transaction)
         self._transactions.append(transaction)
         self._update_balance()
 
-    def remove_transaction(self, transaction: "CashTransaction | CashTransfer") -> None:
+    def remove_transaction(self, transaction: CashRelatedTransaction) -> None:
         self._validate_transaction(transaction)
         self._transactions.remove(transaction)
         self._update_balance()
@@ -146,12 +144,12 @@ class CashAccount(Account):
 
     def _validate_transaction(
         self,
-        transaction: CashRelatedTransactionMixin,
+        transaction: CashRelatedTransaction,
     ) -> None:
-        if not isinstance(transaction, CashRelatedTransactionMixin):
+        if not isinstance(transaction, CashRelatedTransaction):
             raise TypeError(
                 "Argument 'transaction' must be a subclass of "
-                "CashRelatedTransactionMixin."
+                "CashRelatedTransaction."
             )
         if not transaction.is_account_related(self):
             raise UnrelatedAccountError(
@@ -167,7 +165,7 @@ class CashAccount(Account):
         return
 
 
-class CashTransaction(Transaction, CashRelatedTransactionMixin):
+class CashTransaction(CashRelatedTransaction):
     def __init__(  # noqa: CFQ002, TMN001
         self,
         description: str,
@@ -350,7 +348,7 @@ class CashTransaction(Transaction, CashRelatedTransactionMixin):
             )
 
 
-class CashTransfer(Transaction, CashRelatedTransactionMixin):
+class CashTransfer(CashRelatedTransaction):
     def __init__(  # noqa: TMN001, CFQ002
         self,
         description: str,
@@ -455,7 +453,7 @@ class CashTransfer(Transaction, CashRelatedTransactionMixin):
         return self.account_sender == account or self.account_recipient == account
 
 
-class RefundTransaction(Transaction, CashRelatedTransactionMixin):
+class RefundTransaction(CashRelatedTransaction):
     """A refund which attaches itself to an expense CashTransaction.
     Instances of this class are immutable."""
 

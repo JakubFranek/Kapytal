@@ -6,15 +6,11 @@ from decimal import Decimal
 from enum import Enum, auto
 
 from src.models.base_classes.account import Account, UnrelatedAccountError
-from src.models.base_classes.transaction import Transaction
 from src.models.mixins.datetime_created_mixin import DatetimeCreatedMixin
 from src.models.mixins.name_mixin import NameMixin
 from src.models.mixins.uuid_mixin import UUIDMixin
 from src.models.model_objects.account_group import AccountGroup
-from src.models.model_objects.cash_objects import (
-    CashAccount,
-    CashRelatedTransactionMixin,
-)
+from src.models.model_objects.cash_objects import CashAccount, CashRelatedTransaction
 
 
 # TODO: maybe put all generic Errors into one module?
@@ -119,8 +115,10 @@ class SecurityAccount(Account):
 
     @property
     def balance(self) -> Decimal:
-        return sum(
-            security.price * shares for security, shares in self._securities.items()
+        return Decimal(
+            sum(
+                security.price * shares for security, shares in self._securities.items()
+            )
         )
 
     @property
@@ -156,7 +154,7 @@ class SecurityAccount(Account):
         return
 
 
-class SecurityTransaction(Transaction, CashRelatedTransactionMixin):
+class SecurityTransaction(CashRelatedTransaction):
     def __init__(
         self,
         description: str,

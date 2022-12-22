@@ -30,7 +30,7 @@ from tests.models.test_assets.composites import (
     everything_except,
     tag_amount_pairs,
 )
-from tests.models.test_assets.concrete_abcs import ConcreteCashRelatedTransactionMixin
+from tests.models.test_assets.concrete_abcs import ConcreteCashRelatedTransaction
 from tests.models.test_assets.constants import min_datetime
 
 
@@ -379,7 +379,9 @@ def test_invalid_refund_type(transaction: CashTransaction, refund: Any) -> None:
         transaction.add_refund(refund)
 
 
-def test_concrete_cash_related_transaction_mixin() -> None:
-    mixin = ConcreteCashRelatedTransactionMixin()
+def test_concrete_cash_related_transaction() -> None:
+    mixin = ConcreteCashRelatedTransaction(
+        "description", datetime_=datetime.now(tzinfo)
+    )
     with pytest.raises(NotImplementedError):
         mixin.get_amount_for_account(None)
