@@ -6,6 +6,7 @@ import pytest
 from hypothesis import assume, given, settings
 from hypothesis import strategies as st
 
+from src.models.constants import tzinfo
 from src.models.model_objects.cash_objects import (
     CashAccount,
     CashTransaction,
@@ -45,10 +46,10 @@ def test_creation(
 
 
 @given(
-    name=st.text(min_size=1, max_size=32),
+    name=st.just("Valid Name"),
     currency=everything_except(Currency),
-    initial_balance=st.decimals(min_value=0, allow_nan=False, allow_infinity=False),
-    initial_datetime=st.datetimes(),
+    initial_balance=st.just(Decimal(0)),
+    initial_datetime=st.just(datetime.now(tzinfo)),
 )
 def test_currency_incorrect_type(
     name: str,
@@ -61,10 +62,10 @@ def test_currency_incorrect_type(
 
 
 @given(
-    name=st.text(min_size=1, max_size=32),
+    name=st.just("Valid Name"),
     currency=currencies(),
     initial_balance=everything_except(Decimal),
-    initial_datetime=st.datetimes(),
+    initial_datetime=st.just(datetime.now(tzinfo)),
 )
 def test_initial_balance_invalid_type(
     name: str,
@@ -79,7 +80,7 @@ def test_initial_balance_invalid_type(
 
 
 @given(
-    name=st.text(min_size=1, max_size=32),
+    name=st.just("Valid Name"),
     currency=currencies(),
     initial_balance=st.decimals(max_value="-0.01", allow_nan=True, allow_infinity=True),
     initial_datetime=st.datetimes(),

@@ -6,8 +6,9 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 
 from src.models.constants import tzinfo
-from tests.models.test_assets.composites import everything_except, transactions
+from tests.models.test_assets.composites import everything_except
 from tests.models.test_assets.concrete_abcs import ConcreteTransaction
+from tests.models.test_assets.get_valid_objects import get_concrete_transaction
 
 
 @given(description=st.text(min_size=0, max_size=256), datetime_=st.datetimes())
@@ -51,10 +52,9 @@ def test_invalid_datetime_type(description: str, datetime_: datetime) -> None:
         ConcreteTransaction(description, datetime_)
 
 
-@given(transaction=transactions(), new_description=st.text(min_size=0, max_size=256))
-def test_description_setter(
-    transaction: ConcreteTransaction, new_description: str
-) -> None:
+@given(new_description=st.text(min_size=0, max_size=256))
+def test_description_setter(new_description: str) -> None:
+    transaction = get_concrete_transaction()
     dt_edited_previous = transaction.datetime_edited
     time.sleep(1 / 1_000_000)
     transaction.description = new_description
@@ -65,10 +65,9 @@ def test_description_setter(
     assert dt_edited_diff.microseconds < 100_000
 
 
-@given(transaction=transactions(), new_datetime=st.datetimes())
-def test_datetime_setter(
-    transaction: ConcreteTransaction, new_datetime: datetime
-) -> None:
+@given(new_datetime=st.datetimes())
+def test_datetime_setter(new_datetime: datetime) -> None:
+    transaction = get_concrete_transaction()
     dt_edited_previous = transaction.datetime_edited
     time.sleep(1 / 1_000_000)
     transaction.datetime_ = new_datetime
@@ -79,13 +78,13 @@ def test_datetime_setter(
     assert dt_edited_diff.microseconds < 100_000
 
 
-@given(transaction=transactions())
-def test_abstract_get_amount_for_account(transaction: ConcreteTransaction) -> None:
+def test_abstract_get_amount_for_account() -> None:
+    transaction = get_concrete_transaction()
     with pytest.raises(NotImplementedError):
         transaction.get_amount_for_account(None)
 
 
-@given(transaction=transactions())
-def test_abstract_is_account_related(transaction: ConcreteTransaction) -> None:
+def test_abstract_is_account_related() -> None:
+    transaction = get_concrete_transaction()
     with pytest.raises(NotImplementedError):
         transaction.is_account_related(None)

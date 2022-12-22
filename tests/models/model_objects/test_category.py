@@ -67,7 +67,7 @@ def test_parent_invalid_type_(category: Category, parent: Category) -> None:
 
 
 @given(first_category=categories(), length=st.integers(1, 5), data=st.data())
-def test_str(first_category: Category, length: int, data: st.DataObject) -> None:
+def test_path(first_category: Category, length: int, data: st.DataObject) -> None:
     type_ = first_category.type_
     categories = [first_category]
     for i in range(0, length):

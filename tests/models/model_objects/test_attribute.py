@@ -50,7 +50,7 @@ def test_name_too_long(name: str, type_: AttributeType) -> None:
 
 
 @given(
-    name=st.text(min_size=1, max_size=32),
+    name=st.just("Valid Name"),
     type_=everything_except(AttributeType),
 )
 def test_type_invalid_type(name: str, type_: Any) -> None:
