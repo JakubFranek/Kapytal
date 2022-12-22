@@ -324,7 +324,6 @@ class CashTransaction(CashRelatedTransaction):
         self._refunds.remove(refund)
         self._datetime_edited = datetime.now(tzinfo)
 
-    # TODO: maybe some abstract CashRelatedTransactionMixin?
     def get_amount_for_account(self, account: CashAccount) -> Decimal:
         if not isinstance(account, CashAccount):
             raise TypeError("Argument 'account' must be a CashAccount.")
