@@ -181,7 +181,7 @@ def test_validate_transaction_invalid_datetime(
 
 @given(
     account=cash_accounts(),
-    transactions=st.lists(cash_transactions(), min_size=1, max_size=10),
+    transactions=st.lists(cash_transactions(), min_size=1, max_size=5),
 )
 def test_balance(account: CashAccount, transactions: list[CashTransaction]) -> None:
     datetime_balance_list = [(account.initial_datetime, account.initial_balance)]

@@ -4,12 +4,15 @@ from datetime import date
 from decimal import Decimal
 from enum import Enum, auto
 
+from src.models.base_classes.account import Account
 from src.models.mixins.datetime_created_mixin import DatetimeCreatedMixin
 from src.models.mixins.name_mixin import NameMixin
+from src.models.mixins.uuid_mixin import UUIDMixin
+from src.models.model_objects.account_group import AccountGroup
 
 
 class InvalidCharacterError(ValueError):
-    """Raised when disallowed character is passed."""
+    """Raised when invalid character is passed."""
 
 
 class SecurityType(Enum):
@@ -17,7 +20,7 @@ class SecurityType(Enum):
     MUTUAL_FUND = auto()
 
 
-class Security(NameMixin, DatetimeCreatedMixin):
+class Security(NameMixin, DatetimeCreatedMixin, UUIDMixin):
     NAME_MIN_LENGTH = 1
     NAME_MAX_LENGTH = 64
     SYMBOL_MIN_LENGTH = 1
@@ -68,6 +71,9 @@ class Security(NameMixin, DatetimeCreatedMixin):
     def __repr__(self) -> str:
         return f"Security(symbol='{self.symbol}', type={self.type_.name})"
 
+    def __hash__(self) -> int:
+        return hash(self.uuid)
+
     def set_price(self, date_: date, price: Decimal) -> None:
         if not isinstance(date_, date):
             raise TypeError("Argument 'date_' must be a date.")
@@ -76,3 +82,9 @@ class Security(NameMixin, DatetimeCreatedMixin):
         if not price.is_finite() or price < 0:
             raise ValueError("Argument 'price' must be a finite, non-negative Decimal.")
         self._price_history[date_] = price
+
+
+class SecurityAccount(Account):
+    def __init__(self, name: str, parent: AccountGroup | None = None) -> None:
+        super().__init__(name, parent)
+        self._securities: dict[Security, int] = {}

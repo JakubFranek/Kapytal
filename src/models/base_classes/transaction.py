@@ -1,4 +1,3 @@
-import uuid
 from abc import ABC, abstractmethod
 from datetime import datetime
 from decimal import Decimal
@@ -10,9 +9,10 @@ if TYPE_CHECKING:  # pragma: no cover
 from src.models.constants import tzinfo
 from src.models.mixins.datetime_created_mixin import DatetimeCreatedMixin
 from src.models.mixins.datetime_edited_mixin import DatetimeEditedMixin
+from src.models.mixins.uuid_mixin import UUIDMixin
 
 
-class Transaction(DatetimeCreatedMixin, DatetimeEditedMixin, ABC):
+class Transaction(DatetimeCreatedMixin, DatetimeEditedMixin, UUIDMixin, ABC):
     DESCRIPTION_MIN_LENGTH = 0
     DESCRIPTION_MAX_LENGTH = 256
 
@@ -20,11 +20,6 @@ class Transaction(DatetimeCreatedMixin, DatetimeEditedMixin, ABC):
         super().__init__()
         self.description = description
         self.datetime_ = datetime_
-        self._uuid = uuid.uuid4()
-
-    @property
-    def uuid(self) -> uuid.UUID:
-        return self._uuid
 
     @property
     def description(self) -> str:

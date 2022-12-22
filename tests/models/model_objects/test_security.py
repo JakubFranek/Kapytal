@@ -3,7 +3,7 @@ from hypothesis import given
 from hypothesis import strategies as st
 
 from src.models.mixins.name_mixin import NameLengthError
-from src.models.model_objects.security import Security, SecurityType
+from src.models.model_objects.security_objects import Security, SecurityType
 
 
 @given(
