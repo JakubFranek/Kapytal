@@ -99,4 +99,4 @@ class Category(NameMixin, DatetimeCreatedMixin, DatetimeEditedMixin):
         return str(self.parent) + "/" + self.name
 
     def __repr__(self) -> str:
-        return f"Category('{self.name}', {self.type_.name}, parent={self.parent})"
+        return f"Category('{self.name}', {self.type_.name}, parent='{self.parent}')"

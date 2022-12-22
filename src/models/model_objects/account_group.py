@@ -41,4 +41,9 @@ class AccountGroup(NameMixin, DatetimeCreatedMixin):
         return Decimal(sum(child.balance for child in self._children))
 
     def __repr__(self) -> str:
-        return f"AccountGroup({self.name}, parent={self.parent})"
+        return f"AccountGroup('{self.name}', parent='{self.parent}')"
+
+    def __str__(self) -> str:
+        if self.parent is None:
+            return self.name
+        return str(self.parent) + "/" + self.name

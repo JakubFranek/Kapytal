@@ -41,3 +41,8 @@ class Account(NameMixin, DatetimeCreatedMixin, ABC):
     @abstractmethod
     def transactions(self) -> tuple["Transaction", ...]:
         raise NotImplementedError("Not implemented.")
+
+    def __str__(self) -> str:
+        if self.parent is None:
+            return self.name
+        return str(self.parent) + "/" + self.name

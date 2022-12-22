@@ -122,7 +122,7 @@ class CashAccount(Account):
         return tuple(self._transactions)
 
     def __repr__(self) -> str:
-        return f"CashAccount(name={self.name}, currency={self.currency})"
+        return f"CashAccount('{self.name}', currency='{self.currency.code}')"
 
     def add_transaction(self, transaction: "CashTransaction | CashTransfer") -> None:
         self._validate_transaction(transaction)
