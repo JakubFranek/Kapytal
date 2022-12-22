@@ -372,6 +372,28 @@ def test_change_cash_account(cash_account: CashAccount) -> None:
     assert buy not in old_cash_account.transactions
 
 
+def get_sell() -> SecurityTransaction:
+    buy = get_buy()
+    description = "A Sell transaction"
+    datetime_ = datetime.now(tzinfo)
+    type_ = SecurityTransactionType.SELL
+    security = get_security()
+    shares = 10
+    price_per_share = Decimal("105.49")
+    fees = Decimal("1.25")
+    return SecurityTransaction(
+        description,
+        datetime_,
+        type_,
+        security,
+        shares,
+        price_per_share,
+        fees,
+        buy.security_account,
+        buy.cash_account,
+    )
+
+
 def get_buy() -> SecurityTransaction:
     description = "A Buy transaction"
     datetime_ = datetime.now(tzinfo)
@@ -397,26 +419,4 @@ def get_buy() -> SecurityTransaction:
         fees,
         security_account,
         cash_account,
-    )
-
-
-def get_sell() -> SecurityTransaction:
-    buy = get_buy()
-    description = "A Sell transaction"
-    datetime_ = datetime.now(tzinfo)
-    type_ = SecurityTransactionType.SELL
-    security = get_security()
-    shares = 10
-    price_per_share = Decimal("105.49")
-    fees = Decimal("1.25")
-    return SecurityTransaction(
-        description,
-        datetime_,
-        type_,
-        security,
-        shares,
-        price_per_share,
-        fees,
-        buy.security_account,
-        buy.cash_account,
     )
