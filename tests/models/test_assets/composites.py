@@ -19,7 +19,7 @@ from src.models.model_objects.cash_objects import (
     CashTransactionType,
     CashTransfer,
 )
-from src.models.model_objects.currency import Currency
+from src.models.model_objects.currency import CashAmount, Currency
 from src.models.model_objects.security_objects import (
     Security,
     SecurityAccount,
@@ -54,6 +54,15 @@ def attributes(draw: st.DrawFn, type_: AttributeType | None = None) -> Attribute
     else:
         attr_type = type_
     return Attribute(name, attr_type)
+
+
+@st.composite
+def cash_amounts(draw: st.DrawFn) -> CashAmount:
+    value = draw(
+        st.decimals(min_value=0, max_value=1e10, allow_infinity=False, allow_nan=False)
+    )
+    currency = draw(currencies())
+    return CashAmount(value, currency)
 
 
 @st.composite

@@ -1,4 +1,5 @@
 import copy
+import numbers
 import operator
 from datetime import date
 from decimal import Decimal
@@ -46,6 +47,10 @@ class Currency(DatetimeCreatedMixin):
     @property
     def convertible_to(self) -> set[Self]:
         return set(self._exchange_rates)
+
+    @property
+    def exchange_rates(self) -> dict[Self, "ExchangeRate"]:
+        return copy.deepcopy(self._exchange_rates)
 
     def __repr__(self) -> str:
         return f"Currency('{self.code}')"
@@ -205,8 +210,8 @@ class CashAmount:
     def __init__(self, value: Decimal, currency: Currency) -> None:
         if not isinstance(value, Decimal):
             raise TypeError("CashAmount.value must be a Decimal.")
-        if not value.is_finite() or value < 0:
-            raise ValueError("CashAmount.value must be finite and non-negative.")
+        if not value.is_finite():
+            raise ValueError("CashAmount.value must be finite.")
         self._value = value
 
         if not isinstance(currency, Currency):
@@ -232,8 +237,7 @@ class CashAmount:
             return NotImplemented
         if self.currency != __o.currency:
             if self.value == 0 and __o.value == 0:
-                # If values are zero, amounts are equal regardless of currency
-                return True
+                return True  # If values are zero, amounts are always equal
             return NotImplemented
         return self.value == __o.value
 
@@ -244,13 +248,45 @@ class CashAmount:
             return NotImplemented
         return self.value < __o.value
 
-    def __radd__(self, __o: object) -> Self:
+    def __add__(self, __o: object) -> Self:
         if not isinstance(__o, CashAmount):
-            return NotImplemented
+            if not isinstance(__o, numbers.Real):
+                return NotImplemented
+            return CashAmount(self.value + __o, self.currency)
         if self.currency != __o.currency:
             return NotImplemented
         return CashAmount(self.value + __o.value, self.currency)
 
+    def __radd__(self, __o: object) -> Self:
+        # This method is needed for sum()
+        if not isinstance(__o, CashAmount):
+            if not isinstance(__o, numbers.Real):
+                return NotImplemented
+            return CashAmount(__o + self.value, self.currency)
+        if self.currency != __o.currency:
+            return NotImplemented
+        return CashAmount(__o.value + self.value, self.currency)
+
+    def __sub__(self, __o: object) -> Self:
+        if not isinstance(__o, CashAmount):
+            if not isinstance(__o, numbers.Real):
+                return NotImplemented
+            return CashAmount(self.value - __o, self.currency)
+        if self.currency != __o.currency:
+            return NotImplemented
+        return CashAmount(self.value - __o.value, self.currency)
+
+    def __rsub__(self, __o: object) -> Self:
+        if not isinstance(__o, CashAmount):
+            if not isinstance(__o, numbers.Real):
+                return NotImplemented
+            return CashAmount(__o - self.value, self.currency)
+        if self.currency != __o.currency:
+            return NotImplemented
+        return CashAmount(__o.value - self.value, self.currency)
+
     def convert(self, target_currency: Currency, date_: date | None = None) -> Self:
+        if target_currency == self.currency:
+            return self
         factor = self.currency.get_conversion_factor(target_currency, date_)
         return CashAmount(self.value * factor, target_currency)
