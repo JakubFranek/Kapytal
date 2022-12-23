@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 from src.models.mixins.datetime_created_mixin import DatetimeCreatedMixin
 from src.models.mixins.name_mixin import NameMixin
+from src.models.mixins.uuid_mixin import UUIDMixin
 from src.models.model_objects.account_group import AccountGroup
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -15,7 +16,7 @@ class UnrelatedAccountError(ValueError):
     not relate to it."""
 
 
-class Account(NameMixin, DatetimeCreatedMixin, ABC):
+class Account(NameMixin, DatetimeCreatedMixin, UUIDMixin, ABC):
     def __init__(self, name: str, parent: AccountGroup | None = None) -> None:
         super().__init__(name=name)
         self.parent: AccountGroup | None = parent

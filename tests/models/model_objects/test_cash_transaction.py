@@ -381,4 +381,4 @@ def test_invalid_refund_type(transaction: CashTransaction, refund: Any) -> None:
 def test_concrete_cash_related_transaction(account: CashAccount) -> None:
     obj = ConcreteCashRelatedTransaction("description", datetime_=datetime.now(tzinfo))
     with pytest.raises(NotImplementedError):
-        obj.get_amount(account)
+        obj._get_amount(account)

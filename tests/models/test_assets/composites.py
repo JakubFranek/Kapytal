@@ -25,6 +25,7 @@ from src.models.model_objects.security_objects import (
     SecurityAccount,
     SecurityTransaction,
     SecurityTransactionType,
+    SecurityTransfer,
     SecurityType,
 )
 from tests.models.test_assets.concrete_abcs import ConcreteTransaction
@@ -250,6 +251,19 @@ def security_transactions(
         fees,
         security_account,
         cash_account,
+    )
+
+
+@st.composite
+def security_transfers(draw: st.DrawFn) -> SecurityTransfer:
+    description = draw(st.text(min_size=1, max_size=256))
+    datetime_ = draw(st.datetimes(timezones=st.just(tzinfo)))
+    security = draw(securities())
+    shares = draw(st.integers(min_value=1))
+    account_sender = draw(security_accounts())
+    account_recipient = draw(security_accounts())
+    return SecurityTransfer(
+        description, datetime_, security, shares, account_sender, account_recipient
     )
 
 

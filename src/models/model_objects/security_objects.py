@@ -83,14 +83,6 @@ class Security(NameMixin, DatetimeCreatedMixin, UUIDMixin):
     def __repr__(self) -> str:
         return f"Security(symbol='{self.symbol}', type={self.type_.name})"
 
-    def __hash__(self) -> int:
-        return hash(self.uuid)
-
-    def __eq__(self, __o: object) -> bool:
-        if not isinstance(__o, Security):
-            return False
-        return self.uuid == __o.uuid
-
     def set_price(self, date_: date, price: Decimal) -> None:
         if not isinstance(date_, date):
             raise TypeError("Argument 'date_' must be a date.")
@@ -136,13 +128,15 @@ class SecurityAccount(Account):
         self._securities[transaction.security] -= transaction.get_shares(self)
         self._transactions.remove(transaction)
 
-    def _validate_transaction(self, transaction: "SecurityTransaction") -> None:
-        if not isinstance(transaction, SecurityTransaction):
-            raise TypeError("Argument 'transaction' must be a SecurityTransaction.")
+    def _validate_transaction(self, transaction: "SecurityRelatedTransaction") -> None:
+        if not isinstance(transaction, SecurityRelatedTransaction):
+            raise TypeError(
+                "Argument 'transaction' must be a SecurityRelatedTransaction."
+            )
         if not transaction.is_account_related(self):
             raise UnrelatedAccountError(
                 "This SecurityAccount is not related to the provided "
-                "SecurityTransaction."
+                "SecurityRelatedTransaction."
             )
         return
 
@@ -301,12 +295,9 @@ class SecurityTransfer(SecurityRelatedTransaction):
             f"SecurityTransfer(security='{self.security.symbol}', "
             f"shares={self.shares}, "
             f"from='{self.account_sender.name}', "
-            f"t='{self.account_recipient}', "
+            f"to='{self.account_recipient.name}', "
             f"{self.datetime_.strftime('%Y-%m-%d')})"
         )
-
-    def is_account_related(self, account: Account) -> bool:
-        return account == self.account_sender or account == self.account_recipient
 
     @property
     def account_sender(self) -> SecurityAccount:
@@ -316,10 +307,10 @@ class SecurityTransfer(SecurityRelatedTransaction):
     def account_sender(self, new_account: SecurityAccount) -> None:
         if not isinstance(new_account, SecurityAccount):
             raise TypeError(
-                "SecurityTransaction.security_account must be a SecurityAccount."
+                "SecurityTransaction.account_sender must be a SecurityAccount."
             )
 
-        if hasattr(self, "_security_account"):
+        if hasattr(self, "_account_sender"):
             self._account_sender.remove_transaction(self)
 
         self._account_sender = new_account
@@ -327,16 +318,16 @@ class SecurityTransfer(SecurityRelatedTransaction):
 
     @property
     def account_recipient(self) -> SecurityAccount:
-        return self._account_sender
+        return self._account_recipient
 
     @account_recipient.setter
     def account_recipient(self, new_account: SecurityAccount) -> None:
         if not isinstance(new_account, SecurityAccount):
             raise TypeError(
-                "SecurityTransaction.security_account must be a SecurityAccount."
+                "SecurityTransaction.account_recipient must be a SecurityAccount."
             )
 
-        if hasattr(self, "_security_account"):
+        if hasattr(self, "_account_recipient"):
             self._account_recipient.remove_transaction(self)
 
         self._account_recipient = new_account
@@ -346,3 +337,6 @@ class SecurityTransfer(SecurityRelatedTransaction):
         if account == self._account_sender:
             return -self.shares
         return self.shares
+
+    def is_account_related(self, account: Account) -> bool:
+        return account == self.account_sender or account == self.account_recipient

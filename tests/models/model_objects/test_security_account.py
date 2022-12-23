@@ -8,7 +8,7 @@ from src.models.base_classes.account import UnrelatedAccountError
 from src.models.model_objects.account_group import AccountGroup
 from src.models.model_objects.security_objects import (
     SecurityAccount,
-    SecurityTransaction,
+    SecurityRelatedTransaction,
 )
 from tests.models.test_assets.composites import (
     account_groups,
@@ -31,23 +31,24 @@ def test_creation(name: str, parent: AccountGroup | None) -> None:
 
 @given(
     security_account=security_accounts(),
-    transaction=everything_except(SecurityTransaction),
+    transaction=everything_except(SecurityRelatedTransaction),
 )
 def test_validate_transaction_invalid_type(
     security_account: SecurityAccount, transaction: Any
 ) -> None:
     with pytest.raises(
-        TypeError, match="Argument 'transaction' must be a SecurityTransaction."
+        TypeError, match="Argument 'transaction' must be a SecurityRelatedTransaction."
     ):
         security_account._validate_transaction(transaction)
 
 
+# TODO: add security_transfers()
 @given(
     security_account=security_accounts(),
     transaction=security_transactions(),
 )
 def test_validate_transaction_unrelated(
-    security_account: SecurityAccount, transaction: SecurityTransaction
+    security_account: SecurityAccount, transaction: SecurityRelatedTransaction
 ) -> None:
     assume(transaction.security_account != security_account)
     with pytest.raises(UnrelatedAccountError):
