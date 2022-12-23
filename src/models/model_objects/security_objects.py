@@ -13,6 +13,7 @@ from src.models.mixins.name_mixin import NameMixin
 from src.models.mixins.uuid_mixin import UUIDMixin
 from src.models.model_objects.account_group import AccountGroup
 from src.models.model_objects.cash_objects import CashAccount, CashRelatedTransaction
+from src.models.model_objects.currency import Currency, CurrencyError
 
 
 # TODO: maybe put all generic Errors into one module?
@@ -37,18 +38,29 @@ class Security(NameMixin, DatetimeCreatedMixin, UUIDMixin):
     SYMBOL_MAX_LENGTH = 8
     SYMBOL_ALLOWED_CHARS = string.ascii_letters + string.digits + "."
 
-    def __init__(self, name: str, symbol: str, type_: SecurityType) -> None:
+    def __init__(
+        self, name: str, symbol: str, type_: SecurityType, currency: Currency
+    ) -> None:
         super().__init__(name=name)
         self.symbol = symbol
 
         if not isinstance(type_, SecurityType):
             raise TypeError("Security.type_ must be a SecurityType.")
         self._type = type_
+
+        if not isinstance(currency, Currency):
+            raise TypeError("Security.currency must be a Currency.")
+        self._currency = currency
+
         self._price_history: dict[date, Decimal] = {}
 
     @property
     def type_(self) -> SecurityType:
         return self._type
+
+    @property
+    def currency(self) -> Currency:
+        return self._currency
 
     @property
     def symbol(self) -> str:
@@ -103,6 +115,7 @@ class SecurityAccount(Account):
     def securities(self) -> dict[Security, int]:
         return copy.deepcopy(self._securities)
 
+    # TODO: this does not take into account the currency of the traded securities
     @property
     def balance(self) -> Decimal:
         return Decimal(
@@ -242,6 +255,11 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
     def cash_account(self, new_account: CashAccount) -> None:
         if not isinstance(new_account, CashAccount):
             raise TypeError("SecurityTransaction.cash_account must be a CashAccount.")
+        if new_account.currency != self._security.currency:
+            raise CurrencyError(
+                "The currencies of SecurityTransaction.security and "
+                "SecurityTransaction.cash_account must match."
+            )
 
         if hasattr(self, "_cash_account"):
             self._cash_account.remove_transaction(self)

@@ -3,13 +3,13 @@ from decimal import Decimal
 from typing import Any
 
 import pytest
-from hypothesis import given
+from hypothesis import assume, given
 from hypothesis import strategies as st
 
 from src.models.base_classes.account import UnrelatedAccountError
 from src.models.constants import tzinfo
 from src.models.model_objects.cash_objects import CashAccount
-from src.models.model_objects.currency import Currency
+from src.models.model_objects.currency import CurrencyError
 from src.models.model_objects.security_objects import (
     Security,
     SecurityAccount,
@@ -31,7 +31,6 @@ from tests.models.test_assets.get_valid_objects import (
 @given(
     description=st.text(min_size=1, max_size=256),
     type_=st.just(SecurityTransactionType.BUY),
-    security=securities(),
     shares=st.integers(min_value=1),
     price_per_share=st.decimals(
         min_value=0, max_value=1e10, allow_infinity=False, allow_nan=False, places=3
@@ -46,7 +45,6 @@ from tests.models.test_assets.get_valid_objects import (
 def test_buy(
     description: str,
     type_: SecurityTransactionType,
-    security: Security,
     shares: int,
     price_per_share: Decimal,
     fees: Decimal,
@@ -54,6 +52,7 @@ def test_buy(
     cash_account: CashAccount,
     data: st.DataObject,
 ) -> None:
+    security = data.draw(securities(cash_account.currency))
     datetime_ = data.draw(
         st.datetimes(
             min_value=cash_account.initial_datetime.replace(tzinfo=None)
@@ -269,18 +268,17 @@ def test_invalid_shares_value(
 
 @given(
     type_=st.sampled_from(SecurityTransactionType),
-    security=securities(),
     security_account=everything_except(SecurityAccount),
     cash_account=cash_accounts(),
     data=st.data(),
 )
 def test_invalid_security_account_type(
     type_: SecurityTransactionType,
-    security: Security,
     security_account: SecurityAccount,
     cash_account: CashAccount,
     data: st.DataObject,
 ) -> None:
+    security = data.draw(securities(cash_account.currency))
     datetime_ = data.draw(
         st.datetimes(
             min_value=cash_account.initial_datetime.replace(tzinfo=None)
@@ -336,6 +334,35 @@ def test_invalid_cash_account_type(
         )
 
 
+@given(
+    datetime_=st.datetimes(),
+    type_=st.sampled_from(SecurityTransactionType),
+    security=securities(),
+    security_account=security_accounts(),
+    cash_account=cash_accounts(),
+)
+def test_invalid_cash_account_currency(
+    datetime_: datetime,
+    type_: SecurityTransactionType,
+    security: Security,
+    security_account: SecurityAccount,
+    cash_account: CashAccount,
+) -> None:
+    assume(cash_account.currency != security.currency)
+    with pytest.raises(CurrencyError):
+        SecurityTransaction(
+            "Test description",
+            datetime_,
+            type_,
+            security,
+            1,
+            Decimal("100"),
+            Decimal("1"),
+            security_account,
+            cash_account,
+        )
+
+
 @given(security_account=security_accounts())
 def test_buy_change_security_account(security_account: SecurityAccount) -> None:
     buy = get_buy()
@@ -353,22 +380,24 @@ def test_buy_change_security_account(security_account: SecurityAccount) -> None:
 
 @given(security_account=security_accounts())
 def test_sell_change_security_account(security_account: SecurityAccount) -> None:
+    buy = get_buy()
     sell = get_sell()
     security = sell.security
     old_security_account = sell.security_account
     assert sell in old_security_account.transactions
-    assert old_security_account.securities[security] == -sell.shares
+    assert old_security_account.securities[security] == buy.shares - sell.shares
 
     sell.security_account = security_account
     assert sell in security_account.transactions
     assert sell not in old_security_account.transactions
-    assert old_security_account.securities[security] == 0
+    assert old_security_account.securities[security] == buy.shares
     assert security_account.securities[security] == -sell.shares
 
 
-@given(cash_account=cash_accounts())
-def test_change_cash_account(cash_account: CashAccount) -> None:
+@given(data=st.data())
+def test_change_cash_account(data: st.DataObject) -> None:
     buy = get_buy()
+    cash_account = data.draw(cash_accounts(currency=buy.security.currency))
     old_cash_account = buy.cash_account
     assert buy in old_cash_account.transactions
 
@@ -407,7 +436,7 @@ def get_sell() -> SecurityTransaction:
     description = "A Sell transaction"
     datetime_ = datetime.now(tzinfo)
     type_ = SecurityTransactionType.SELL
-    security = get_security()
+    security = buy.security
     shares = 10
     price_per_share = Decimal("105.49")
     fees = Decimal("1.25")
@@ -435,7 +464,7 @@ def get_buy() -> SecurityTransaction:
     security_account = SecurityAccount("Interactive Brokers")
     cash_account = CashAccount(
         "Interactive Brokers EUR",
-        Currency("EUR"),
+        security.currency,
         Decimal("1000"),
         datetime.now(tzinfo) - timedelta(days=7),
     )

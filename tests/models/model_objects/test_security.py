@@ -7,12 +7,17 @@ from hypothesis import assume, given
 from hypothesis import strategies as st
 
 from src.models.mixins.name_mixin import NameLengthError
+from src.models.model_objects.currency import Currency
 from src.models.model_objects.security_objects import (
     InvalidCharacterError,
     Security,
     SecurityType,
 )
-from tests.models.test_assets.composites import everything_except, securities
+from tests.models.test_assets.composites import (
+    currencies,
+    everything_except,
+    securities,
+)
 from tests.models.test_assets.get_valid_objects import get_security
 
 
@@ -20,12 +25,16 @@ from tests.models.test_assets.get_valid_objects import get_security
     name=st.text(min_size=1, max_size=64),
     symbol=st.text(alphabet=Security.SYMBOL_ALLOWED_CHARS, min_size=1, max_size=8),
     type_=st.sampled_from(SecurityType),
+    currency=currencies(),
 )
-def test_creation(name: str, symbol: str, type_: SecurityType) -> None:
-    security = Security(name, symbol, type_)
+def test_creation(
+    name: str, symbol: str, type_: SecurityType, currency: Currency
+) -> None:
+    security = Security(name, symbol, type_, currency)
     assert security.name == name
     assert security.symbol == symbol.upper()
     assert security.type_ == type_
+    assert security.currency == currency
     assert security.price == 0
     assert security.price_history == {}
     assert (
@@ -39,71 +48,105 @@ def test_creation(name: str, symbol: str, type_: SecurityType) -> None:
     name=st.just(""),
     symbol=st.text(alphabet=Security.SYMBOL_ALLOWED_CHARS, min_size=1, max_size=8),
     type_=st.sampled_from(SecurityType),
+    currency=currencies(),
 )
-def test_name_too_short(name: str, symbol: str, type_: SecurityType) -> None:
+def test_name_too_short(
+    name: str, symbol: str, type_: SecurityType, currency: Currency
+) -> None:
     with pytest.raises(NameLengthError):
-        Security(name, symbol, type_)
+        Security(name, symbol, type_, currency)
 
 
 @given(
     name=st.text(min_size=65),
     symbol=st.text(alphabet=Security.SYMBOL_ALLOWED_CHARS, min_size=1, max_size=8),
     type_=st.sampled_from(SecurityType),
+    currency=currencies(),
 )
-def test_name_too_long(name: str, symbol: str, type_: SecurityType) -> None:
+def test_name_too_long(
+    name: str, symbol: str, type_: SecurityType, currency: Currency
+) -> None:
     with pytest.raises(NameLengthError):
-        Security(name, symbol, type_)
+        Security(name, symbol, type_, currency)
 
 
 @given(
     name=st.text(min_size=1, max_size=64),
     symbol=st.text(alphabet=Security.SYMBOL_ALLOWED_CHARS, min_size=1, max_size=8),
     type_=everything_except(SecurityType),
+    currency=currencies(),
 )
-def test_type_invalid_type(name: str, symbol: str, type_: Any) -> None:
+def test_type_invalid_type(
+    name: str, symbol: str, type_: Any, currency: Currency
+) -> None:
     with pytest.raises(TypeError, match="Security.type_ must be a SecurityType."):
-        Security(name, symbol, type_)
+        Security(name, symbol, type_, currency)
 
 
 @given(
     name=st.text(min_size=1, max_size=64),
     symbol=everything_except(str),
     type_=st.sampled_from(SecurityType),
+    currency=currencies(),
 )
-def test_symbol_invalid_type(name: str, symbol: str, type_: Any) -> None:
+def test_symbol_invalid_type(
+    name: str, symbol: str, type_: Any, currency: Currency
+) -> None:
     with pytest.raises(TypeError, match="Security.symbol must be a string."):
-        Security(name, symbol, type_)
+        Security(name, symbol, type_, currency)
 
 
 @given(
     name=st.text(min_size=1, max_size=64),
     symbol=st.just(""),
     type_=st.sampled_from(SecurityType),
+    currency=currencies(),
 )
-def test_symbol_too_short(name: str, symbol: str, type_: Any) -> None:
+def test_symbol_too_short(
+    name: str, symbol: str, type_: Any, currency: Currency
+) -> None:
     with pytest.raises(ValueError, match="Security.symbol length must be within"):
-        Security(name, symbol, type_)
+        Security(name, symbol, type_, currency)
 
 
 @given(
     name=st.text(min_size=1, max_size=64),
     symbol=st.text(min_size=9),
     type_=st.sampled_from(SecurityType),
+    currency=currencies(),
 )
-def test_symbol_too_long(name: str, symbol: str, type_: Any) -> None:
+def test_symbol_too_long(
+    name: str, symbol: str, type_: Any, currency: Currency
+) -> None:
     with pytest.raises(ValueError, match="Security.symbol length must be within"):
-        Security(name, symbol, type_)
+        Security(name, symbol, type_, currency)
 
 
 @given(
     name=st.text(min_size=1, max_size=64),
     symbol=st.text(min_size=1, max_size=8),
     type_=st.sampled_from(SecurityType),
+    currency=currencies(),
 )
-def test_symbol_invalid_chars(name: str, symbol: str, type_: Any) -> None:
+def test_symbol_invalid_chars(
+    name: str, symbol: str, type_: Any, currency: Currency
+) -> None:
     assume(any(char not in Security.SYMBOL_ALLOWED_CHARS for char in symbol))
     with pytest.raises(InvalidCharacterError):
-        Security(name, symbol, type_)
+        Security(name, symbol, type_, currency)
+
+
+@given(
+    name=st.text(min_size=1, max_size=64),
+    symbol=st.text(alphabet=Security.SYMBOL_ALLOWED_CHARS, min_size=1, max_size=8),
+    type_=st.sampled_from(SecurityType),
+    currency=everything_except(Currency),
+)
+def test_currency_invalid_type(
+    name: str, symbol: str, type_: Any, currency: Currency
+) -> None:
+    with pytest.raises(TypeError, match="Security.currency must be a Currency."):
+        Security(name, symbol, type_, currency)
 
 
 @given(

@@ -61,9 +61,11 @@ def cash_accounts(
     draw: st.DrawFn,
     min_datetime: datetime = datetime.min,
     max_datetime: datetime = max_datetime,
+    currency: Currency | None = None,
 ) -> CashAccount:
     name = draw(st.text(min_size=1, max_size=32))
-    currency = draw(currencies())
+    if currency is None:
+        currency = draw(currencies())
     initial_balance = draw(
         st.decimals(
             min_value=0, max_value=1e10, allow_infinity=False, allow_nan=False, places=3
@@ -198,13 +200,15 @@ def currencies(draw: st.DrawFn) -> Currency:
 
 
 @st.composite
-def securities(draw: st.DrawFn) -> Security:
+def securities(draw: st.DrawFn, currency: Currency | None = None) -> Security:
     name = draw(st.text(min_size=1, max_size=32))
     symbol = draw(
         st.text(alphabet=Security.SYMBOL_ALLOWED_CHARS, min_size=1, max_size=8)
     )
     type_ = draw(st.sampled_from(SecurityType))
-    return Security(name, symbol, type_)
+    if currency is None:
+        currency = draw(currencies())
+    return Security(name, symbol, type_, currency)
 
 
 @st.composite
@@ -227,7 +231,7 @@ def security_transactions(
         )
     )
     type_ = draw(st.sampled_from(SecurityTransactionType))
-    security = draw(securities())
+
     shares = draw(st.integers(min_value=1))
     price_per_share = draw(
         st.decimals(
@@ -241,6 +245,7 @@ def security_transactions(
     )
     security_account = draw(security_accounts())
     cash_account = draw(cash_accounts())
+    security = draw(securities(cash_account.currency))
     return SecurityTransaction(
         description,
         datetime_,

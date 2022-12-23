@@ -364,11 +364,14 @@ def test_add_security() -> None:
     name = "Security Name"
     symbol = "ABCD.EF"
     type_ = SecurityType.ETF
-    record_keeper.add_security(name, symbol, type_)
+    currency_code = "EUR"
+    record_keeper.add_currency(currency_code)
+    record_keeper.add_security(name, symbol, type_, currency_code)
     security = record_keeper.get_security(symbol)
     assert security.name == name
     assert security.symbol == symbol
     assert security.type_ == type_
+    assert security.currency.code == currency_code.upper()
     assert security in record_keeper.securities
 
 
@@ -379,9 +382,11 @@ def test_add_security_already_exists() -> None:
     symbol = "ABCD.EF"
     type_ = SecurityType.ETF
     type_2 = SecurityType.MUTUAL_FUND
-    record_keeper.add_security(name_1, symbol, type_)
+    currency_code = "EUR"
+    record_keeper.add_currency(currency_code)
+    record_keeper.add_security(name_1, symbol, type_, currency_code)
     with pytest.raises(AlreadyExistsError):
-        record_keeper.add_security(name_2, symbol, type_2)
+        record_keeper.add_security(name_2, symbol, type_2, currency_code)
 
 
 @given(symbol=st.text(min_size=1, max_size=8))
@@ -429,6 +434,7 @@ def test_add_security_transaction(
                 account
                 for account in record_keeper.accounts
                 if isinstance(account, CashAccount)
+                and security.currency == account.currency
             ]
         )
     )
@@ -530,7 +536,9 @@ def get_preloaded_record_keeper() -> RecordKeeper:
     record_keeper.add_security_account(
         name="Interactive Brokers", parent_path="Security Accounts"
     )
-    record_keeper.add_security("Vanguard FTSE All-World", "VWCE.DE", SecurityType.ETF)
+    record_keeper.add_security(
+        "Vanguard FTSE All-World", "VWCE.DE", SecurityType.ETF, "EUR"
+    )
     record_keeper.add_category("Food and Drink", None, CategoryType.EXPENSE)
     record_keeper.add_category("Groceries", "Food and Drink")
     record_keeper.add_category("Eating out", "Food and Drink")
