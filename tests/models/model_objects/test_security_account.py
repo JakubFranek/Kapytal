@@ -15,6 +15,7 @@ from tests.models.test_assets.composites import (
     everything_except,
     security_accounts,
     security_transactions,
+    security_transfers,
 )
 
 
@@ -42,14 +43,13 @@ def test_validate_transaction_invalid_type(
         security_account._validate_transaction(transaction)
 
 
-# TODO: add security_transfers()
 @given(
     security_account=security_accounts(),
-    transaction=security_transactions(),
+    transaction=security_transactions() | security_transfers(),
 )
 def test_validate_transaction_unrelated(
     security_account: SecurityAccount, transaction: SecurityRelatedTransaction
 ) -> None:
-    assume(transaction.security_account != security_account)
+    assume(not transaction.is_account_related(security_account))
     with pytest.raises(UnrelatedAccountError):
         security_account._validate_transaction(transaction)
