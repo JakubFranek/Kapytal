@@ -433,13 +433,7 @@ def test_add_security_transaction(
         )
     )
     cash_account_path = cash_account.path
-    datetime_ = data.draw(
-        st.datetimes(
-            min_value=cash_account.initial_datetime.replace(tzinfo=None)
-            + timedelta(days=1),
-            timezones=st.just(tzinfo),
-        )
-    )
+    datetime_ = cash_account.initial_datetime + timedelta(days=1)
     record_keeper.add_security_transaction(
         description,
         datetime_,

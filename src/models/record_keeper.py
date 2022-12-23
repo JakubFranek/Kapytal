@@ -40,7 +40,6 @@ class DoesNotExistError(ValueError):
 
 
 # TODO: add editing and deleting of objects
-# TODO: add support for security objects
 class RecordKeeper:
     def __init__(self) -> None:
         self._accounts: list[Account] = []
