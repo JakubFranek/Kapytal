@@ -19,6 +19,7 @@ def test_creation(name: str, type_: AttributeType) -> None:
     dt_created_diff = attribute.datetime_created - dt_start
 
     assert attribute.name == name
+    assert attribute.__repr__() == f"Attribute('{name}', {type_.name})"
     assert dt_created_diff.seconds < 1
 
 

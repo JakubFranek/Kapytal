@@ -61,9 +61,11 @@ class Security(NameMixin, DatetimeCreatedMixin, UUIDMixin):
             self._places = self._currency.places
         else:
             if not isinstance(places, int):
-                raise TypeError("Security.places must be an integer.")
-            if places < 0:
-                raise ValueError("Security.places must not be negative.")
+                raise TypeError("Security.places must be an integer or None.")
+            if places < self._currency.places:
+                raise ValueError(
+                    "Security.places must not be smaller than Security.currency.places."
+                )
             self._places = places
 
         self._price_history: dict[date, Decimal] = {}

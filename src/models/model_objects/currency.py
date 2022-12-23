@@ -244,6 +244,13 @@ class CashAmount:
             return NotImplemented
         return self.value < __o.value
 
+    def __radd__(self, __o: object) -> Self:
+        if not isinstance(__o, CashAmount):
+            return NotImplemented
+        if self.currency != __o.currency:
+            return NotImplemented
+        return CashAmount(self.value + __o.value, self.currency)
+
     def convert(self, target_currency: Currency, date_: date | None = None) -> Self:
         factor = self.currency.get_conversion_factor(target_currency, date_)
         return CashAmount(self.value * factor, target_currency)

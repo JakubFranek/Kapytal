@@ -26,11 +26,13 @@ from tests.models.test_assets.get_valid_objects import get_security
     symbol=st.text(alphabet=Security.SYMBOL_ALLOWED_CHARS, min_size=1, max_size=8),
     type_=st.sampled_from(SecurityType),
     currency=currencies(),
+    data=st.data(),
 )
 def test_creation(
-    name: str, symbol: str, type_: SecurityType, currency: Currency
+    name: str, symbol: str, type_: SecurityType, currency: Currency, data: st.DataObject
 ) -> None:
-    security = Security(name, symbol, type_, currency)
+    places = data.draw(st.integers(min_value=currency.places, max_value=8) | st.none())
+    security = Security(name, symbol, type_, currency, places)
     assert security.name == name
     assert security.symbol == symbol.upper()
     assert security.type_ == type_
@@ -42,6 +44,10 @@ def test_creation(
         == f"Security(symbol='{security.symbol}', type={security.type_.name})"
     )
     assert isinstance(security.__hash__(), int)
+    if places is None:
+        assert security.places == currency.places
+    else:
+        assert security.places == places
 
 
 @given(
@@ -150,6 +156,38 @@ def test_currency_invalid_type(
 
 
 @given(
+    name=st.text(min_size=1, max_size=64),
+    symbol=st.text(alphabet=Security.SYMBOL_ALLOWED_CHARS, min_size=1, max_size=8),
+    type_=st.sampled_from(SecurityType),
+    currency=currencies(),
+    places=everything_except((int, type(None))),
+)
+def test_places_invalid_type(
+    name: str, symbol: str, type_: Any, currency: Currency, places: Any
+) -> None:
+    with pytest.raises(TypeError, match="Security.places must be an integer or None."):
+        Security(name, symbol, type_, currency, places)
+
+
+@given(
+    name=st.text(min_size=1, max_size=64),
+    symbol=st.text(alphabet=Security.SYMBOL_ALLOWED_CHARS, min_size=1, max_size=8),
+    type_=st.sampled_from(SecurityType),
+    currency=currencies(),
+    data=st.data(),
+)
+def test_places_invalid_value(
+    name: str, symbol: str, type_: Any, currency: Currency, data: st.DataObject
+) -> None:
+    places = data.draw(st.integers(max_value=currency.places - 1))
+    with pytest.raises(
+        ValueError,
+        match="Security.places must not be smaller than Security.currency.places.",
+    ):
+        Security(name, symbol, type_, currency, places)
+
+
+@given(
     date_=st.dates(),
     price=st.decimals(
         min_value=0, max_value=1e10, allow_infinity=False, allow_nan=False
@@ -158,8 +196,8 @@ def test_currency_invalid_type(
 def test_set_price(date_: date, price: Decimal) -> None:
     security = get_security()
     security.set_price(date_, price)
-    assert security.price == price
-    assert security.price_history[date_] == price
+    assert security.price == round(price, security.places)
+    assert security.price_history[date_] == round(price, security.places)
 
 
 @given(
