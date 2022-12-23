@@ -1,10 +1,12 @@
 from datetime import datetime, timedelta
 from decimal import Decimal
+from typing import Any
 
 import pytest
 from hypothesis import given
 from hypothesis import strategies as st
 
+from src.models.base_classes.account import UnrelatedAccountError
 from src.models.constants import tzinfo
 from src.models.model_objects.cash_objects import CashAccount
 from src.models.model_objects.currency import Currency
@@ -20,7 +22,10 @@ from tests.models.test_assets.composites import (
     securities,
     security_accounts,
 )
-from tests.models.test_assets.get_valid_objects import get_security
+from tests.models.test_assets.get_valid_objects import (
+    get_concrete_security_related_transaction,
+    get_security,
+)
 
 
 @given(
@@ -370,6 +375,31 @@ def test_change_cash_account(cash_account: CashAccount) -> None:
     buy.cash_account = cash_account
     assert buy in cash_account.transactions
     assert buy not in old_cash_account.transactions
+
+
+@given(security_account=security_accounts())
+def test_concrete_security_related_transaction(
+    security_account: SecurityAccount,
+) -> None:
+    transaction = get_concrete_security_related_transaction()
+    with pytest.raises(NotImplementedError):
+        transaction._get_shares(security_account)
+
+
+@given(account=everything_except(SecurityAccount))
+def test_get_shares_invalid_account_type(account: Any) -> None:
+    transaction = get_buy()
+    with pytest.raises(
+        TypeError, match="Argument 'account' must be a SecurityAccount."
+    ):
+        transaction.get_shares(account)
+
+
+@given(account=security_accounts())
+def test_get_shares_unrelated_account(account: Any) -> None:
+    transaction = get_buy()
+    with pytest.raises(UnrelatedAccountError):
+        transaction.get_shares(account)
 
 
 def get_sell() -> SecurityTransaction:
