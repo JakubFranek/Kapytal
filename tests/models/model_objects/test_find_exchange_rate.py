@@ -4,13 +4,6 @@ from decimal import Decimal
 from src.models.model_objects.currency import CashAmount, Currency, ExchangeRate
 
 
-def test_find_exchange_rate() -> None:
-    currencies = get_currencies()
-    cash_amount = CashAmount(Decimal(1_000_000), currencies["CZK"])
-    res = cash_amount._get_exchange_rates(currencies["CZK"], currencies["BTC"], set())
-    print(res)
-
-
 def test_convert() -> None:
     currencies = get_currencies()
     cash_amount = CashAmount(Decimal(1_000_000), currencies["CZK"])
@@ -28,13 +21,13 @@ def get_currencies() -> dict[str, Currency]:
     rub = Currency("RUB")
 
     exchange_eur_czk = ExchangeRate(eur, czk)
-    exchange_eur_czk.set_rate(date.today(), Decimal("24.18"))
+    exchange_eur_czk.set_rate(date.today(), Decimal("25"))
     exchange_eur_pln = ExchangeRate(eur, pln)
     exchange_pln_rub = ExchangeRate(pln, rub)
     exchange_eur_dkk = ExchangeRate(eur, dkk)
     exchange_eur_rub = ExchangeRate(eur, rub)
     exchange_usd_eur = ExchangeRate(usd, eur)
-    exchange_usd_eur.set_rate(date.today(), Decimal("0.9"))
+    exchange_usd_eur.set_rate(date.today(), Decimal("0.8"))
     exchange_btc_usd = ExchangeRate(btc, usd)
     exchange_btc_usd.set_rate(date.today(), Decimal("40000"))
 

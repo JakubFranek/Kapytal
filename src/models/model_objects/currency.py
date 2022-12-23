@@ -12,18 +12,23 @@ class CurrencyError(ValueError):
     """Raised when invalid Currency is supplied."""
 
 
+class ConversionFactorNotFound(ValueError):
+    """Raised when a conversion factor cannot be calculated
+    for the given Currency pair."""
+
+
 # TODO: add CurrencyExchangeRate objects or something? (w/ history)
 # TODO: add no. of decimal places per Currency?
 class Currency(DatetimeCreatedMixin):
     def __init__(self, code: str) -> None:
+        super().__init__()
+
         if not isinstance(code, str):
             raise TypeError("Currency.code must be a string.")
-
         if len(code) != 3 or not code.isalpha():
             raise ValueError("Currency.code must be a three letter ISO-4217 code.")
-
-        super().__init__()
         self._code = code.upper()
+
         self._exchange_rates: dict[Currency, "ExchangeRate"] = {}
 
     @property
@@ -32,7 +37,7 @@ class Currency(DatetimeCreatedMixin):
 
     @property
     def convertible_currencies(self) -> set[Self]:
-        return set([currency for currency in self._exchange_rates])
+        return set(self._exchange_rates)
 
     def __repr__(self) -> str:
         return f"Currency('{self.code}')"
@@ -65,10 +70,66 @@ class Currency(DatetimeCreatedMixin):
         other_currency = exchange_rate.currencies - {self}
         del self._exchange_rates[other_currency.pop()]
 
-    def get_exchange_rate(self, currency: Self) -> "ExchangeRate":
+    def get_conversion_factor(
+        self, target_currency: Self, date_: date | None = None
+    ) -> Decimal:
+        exchange_rates = Currency._get_exchange_rates(self, target_currency)
+        if not exchange_rates:
+            raise ConversionFactorNotFound(
+                f"No path from {self.code} to {target_currency.code} found."
+            )
+
+        factor = Decimal("1")
+        for exchange_rate in exchange_rates:
+            if self == exchange_rate.primary_currency:
+                operation = operator.mul
+            else:
+                operation = operator.truediv
+            if date_ is None:
+                rate = exchange_rate.latest_rate
+            else:
+                rate = exchange_rate.rate_history[date_]
+            factor = operation(factor, rate)
+        return factor
+
+    def _get_exchange_rate(self, currency: Self) -> "ExchangeRate":
         if not isinstance(currency, Currency):
             raise TypeError("Currency.get_exchange_rate() argument must be a Currency.")
         return self._exchange_rates[currency]
+
+    @staticmethod
+    def _get_exchange_rates(
+        current_currency: "Currency",
+        target_currency: "Currency",
+        ignore_currencies: set["Currency"] = None,
+    ) -> list["ExchangeRate"]:
+        if ignore_currencies is None:
+            ignore_currencies = {current_currency}
+
+        if target_currency in current_currency.convertible_currencies:
+            # Direct ExchangeRate found!
+            return [current_currency._get_exchange_rate(target_currency)]
+
+        # Direct ExchangeRate not found...
+        # Get unexplored currencies to iterate over.
+        iterable_currencies = [
+            currency
+            for currency in current_currency.convertible_currencies
+            if currency not in ignore_currencies
+        ]
+        # Ignore these currencies in future deeper searches (no need to go back).
+        ignore_currencies = ignore_currencies | current_currency.convertible_currencies
+        for loop_currency in iterable_currencies:
+            exchange_rates = Currency._get_exchange_rates(  # noqa: NEW100
+                loop_currency, target_currency, ignore_currencies
+            )
+            if exchange_rates is None:
+                continue  # Reached a dead end.
+            # ExchangeRate to target_currency found!
+            # Append ExchangeRate needed get there from the current_currency.
+            exchange_rates.insert(0, current_currency._get_exchange_rate(loop_currency))
+            return exchange_rates
+        return None  # Reached a dead-end.
 
 
 class ExchangeRate:
@@ -176,61 +237,5 @@ class CashAmount:
         return self.value < __o.value
 
     def convert(self, target_currency: Currency, date_: date | None = None) -> Self:
-        exchange_rates = self._get_exchange_rates(self.currency, target_currency, set())
-        if len(exchange_rates) == 0:
-            raise ValueError("No way to convert CashAmount to target_currency found.")
-        amount = self
-        for exchange_rate in exchange_rates:
-            amount = amount._convert(exchange_rate, date_)
-        return amount
-
-    # TODO: this should probably be in Currency
-    # and return a number of some sorts?
-    def _get_exchange_rates(
-        self,
-        current_currency: Currency,
-        target_currency: Currency,
-        ignore_currencies: set[Currency],
-    ) -> list[ExchangeRate]:
-        if len(ignore_currencies) == 0:
-            ignore_currencies = {current_currency}
-
-        if target_currency in current_currency.convertible_currencies:
-            # Direct ExchangeRate found!
-            return [current_currency.get_exchange_rate(target_currency)]
-
-        # Direct ExchangeRate not found...
-        # Get unexplored currencies to iterate over.
-        iterable_currencies = [
-            currency
-            for currency in current_currency.convertible_currencies
-            if currency not in ignore_currencies
-        ]
-        # Ignore these currencies in future deeper searches (no need to go back).
-        ignore_currencies = ignore_currencies | current_currency.convertible_currencies
-        for currency in iterable_currencies:
-            exchange_rates = self._get_exchange_rates(
-                currency, target_currency, ignore_currencies
-            )
-            if exchange_rates is None:
-                continue  # Reached a dead end.
-            # ExchangeRate to target_currency found!
-            # Append ExchangeRate to get there from current_currency.
-            exchange_rates.insert(0, current_currency.get_exchange_rate(currency))
-            return exchange_rates
-        return None  # Reached a dead-end.
-
-    def _convert(self, exchange_rate: ExchangeRate, date_: date | None = None) -> Self:
-        if self.currency == exchange_rate.primary_currency:
-            operation = operator.mul
-            new_currency = exchange_rate.secondary_currency
-        else:
-            operation = operator.truediv
-            new_currency = exchange_rate.primary_currency
-
-        if date_ is None:
-            rate = exchange_rate.latest_rate
-        else:
-            rate = exchange_rate.rate_history[date_]
-
-        return CashAmount(operation(self.value, rate), new_currency)
+        factor = self.currency.get_conversion_factor(target_currency, date_)
+        return CashAmount(self.value * factor, target_currency)
