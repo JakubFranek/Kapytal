@@ -39,7 +39,12 @@ class Security(NameMixin, DatetimeCreatedMixin, UUIDMixin):
     SYMBOL_ALLOWED_CHARS = string.ascii_letters + string.digits + "."
 
     def __init__(
-        self, name: str, symbol: str, type_: SecurityType, currency: Currency
+        self,
+        name: str,
+        symbol: str,
+        type_: SecurityType,
+        currency: Currency,
+        places: int = None,
     ) -> None:
         super().__init__(name=name)
         self.symbol = symbol
@@ -51,6 +56,15 @@ class Security(NameMixin, DatetimeCreatedMixin, UUIDMixin):
         if not isinstance(currency, Currency):
             raise TypeError("Security.currency must be a Currency.")
         self._currency = currency
+
+        if places is None:
+            self._places = self._currency.places
+        else:
+            if not isinstance(places, int):
+                raise TypeError("Security.places must be an integer.")
+            if places < 0:
+                raise ValueError("Security.places must not be negative.")
+            self._places = places
 
         self._price_history: dict[date, Decimal] = {}
 
@@ -92,6 +106,10 @@ class Security(NameMixin, DatetimeCreatedMixin, UUIDMixin):
     def price_history(self) -> dict[date, Decimal]:
         return copy.deepcopy(self._price_history)
 
+    @property
+    def places(self) -> int:
+        return self._places
+
     def __repr__(self) -> str:
         return f"Security(symbol='{self.symbol}', type={self.type_.name})"
 
@@ -102,7 +120,7 @@ class Security(NameMixin, DatetimeCreatedMixin, UUIDMixin):
             raise TypeError("Argument 'price' must be a Decimal.")
         if not price.is_finite() or price < 0:
             raise ValueError("Argument 'price' must be a finite, non-negative Decimal.")
-        self._price_history[date_] = price
+        self._price_history[date_] = round(price, self._places)
 
 
 class SecurityAccount(Account):
