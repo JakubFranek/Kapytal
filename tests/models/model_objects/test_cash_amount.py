@@ -1,6 +1,4 @@
 import numbers
-import string
-from datetime import datetime
 from decimal import Decimal
 from typing import Any
 
@@ -8,7 +6,6 @@ import pytest
 from hypothesis import assume, given
 from hypothesis import strategies as st
 
-from src.models.constants import tzinfo
 from src.models.model_objects.currency import CashAmount, Currency
 from tests.models.test_assets.composites import (
     cash_amounts,
@@ -74,6 +71,12 @@ def test_eq(value_1: Decimal, value_2: Decimal, currency: Currency) -> None:
     amount_2 = CashAmount(value_2, currency)
     expected = amount_1.value == amount_2.value
     assert (amount_1 == amount_2) == expected
+
+
+@given(cash_amount=cash_amounts(), other=everything_except(CashAmount))
+def test_eq_not_cashamount(cash_amount: CashAmount, other: Any) -> None:
+    result = cash_amount.__eq__(other)
+    assert result == NotImplemented
 
 
 @given(currency_1=currencies(), currency_2=currencies())
@@ -221,7 +224,7 @@ def test_sub_rsub(value_1: Decimal, value_2: Decimal, currency: Currency) -> Non
         min_value=0, max_value=1e10, allow_infinity=False, allow_nan=False
     ),
     currency=currencies(),
-    integer=st.integers(min_value=0),
+    integer=st.integers(min_value=0, max_value=1e10),
 )
 def test_sub_rsub_int(value: Decimal, currency: Currency, integer: int) -> None:
     amount_1 = CashAmount(value, currency)

@@ -13,6 +13,10 @@ class CurrencyError(ValueError):
     """Raised when invalid Currency is supplied."""
 
 
+class NoExchangeRateError(ValueError):
+    """Raised when exchange rate is requested but none is available."""
+
+
 class ConversionFactorNotFound(ValueError):
     """Raised when a conversion factor cannot be calculated
     for the given Currency pair."""
@@ -153,6 +157,8 @@ class ExchangeRate:
             raise TypeError("ExchangeRate.primary_currency must be a Currency.")
         if not isinstance(secondary_currency, Currency):
             raise TypeError("ExchangeRate.secondary_currency must be a Currency.")
+        if primary_currency == secondary_currency:
+            raise CurrencyError("ExchangeRate currencies must not be the same.")
         self._primary_currency = primary_currency
         self._secondary_currency = secondary_currency
 
@@ -180,7 +186,7 @@ class ExchangeRate:
     @property
     def latest_rate(self) -> Decimal:
         if len(self._rate_history) == 0:
-            return Decimal(0)
+            raise NoExchangeRateError("No exchange rate data.")
         latest_date = max(date_ for date_ in self._rate_history)
         return self._rate_history[latest_date]
 

@@ -15,5 +15,5 @@ class UUIDMixin:
 
     def __eq__(self, __o: object) -> bool:
         if not isinstance(__o, type(self)):
-            return False
+            return NotImplemented
         return self.uuid == __o.uuid
