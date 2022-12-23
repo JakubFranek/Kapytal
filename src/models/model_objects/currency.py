@@ -17,8 +17,6 @@ class ConversionFactorNotFound(ValueError):
     for the given Currency pair."""
 
 
-# TODO: add CurrencyExchangeRate objects or something? (w/ history)
-# TODO: add no. of decimal places per Currency?
 class Currency(DatetimeCreatedMixin):
     def __init__(self, code: str, places: int) -> None:
         super().__init__()
