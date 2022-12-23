@@ -1,7 +1,6 @@
 import string
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Any
 
 import pytest
 from hypothesis import assume, given
@@ -9,9 +8,13 @@ from hypothesis import strategies as st
 
 from src.models.constants import tzinfo
 from src.models.model_objects.attributes import AttributeType, CategoryType
-from src.models.model_objects.cash_objects import CashAccount
+from src.models.model_objects.cash_objects import CashAccount, CashTransactionType
+from src.models.model_objects.security_objects import (
+    SecurityAccount,
+    SecurityTransactionType,
+    SecurityType,
+)
 from src.models.record_keeper import AlreadyExistsError, DoesNotExistError, RecordKeeper
-from tests.models.test_assets.composites import everything_except
 
 
 def test_creation() -> None:
@@ -23,6 +26,7 @@ def test_creation() -> None:
     assert record_keeper.categories == ()
     assert record_keeper.payees == ()
     assert record_keeper.currencies == ()
+    assert record_keeper.securities == ()
     assert record_keeper.__repr__() == "RecordKeeper"
 
 
@@ -117,7 +121,7 @@ def test_add_cash_account(
     datetime_=st.datetimes(
         min_value=datetime.now() + timedelta(days=1), timezones=st.just(tzinfo)
     ),
-    transaction_type=st.sampled_from(["income", "expense"]),
+    transaction_type=st.sampled_from(CashTransactionType),
     payee_name=st.text(min_size=1, max_size=32),
     data=st.data(),
 )
@@ -130,11 +134,17 @@ def test_add_cash_transaction(
 ) -> None:
     record_keeper = get_preloaded_record_keeper()  # noqa: NEW100
     account_path = data.draw(
-        st.sampled_from([account.path for account in record_keeper.accounts])
+        st.sampled_from(
+            [
+                account.path
+                for account in record_keeper.accounts
+                if isinstance(account, CashAccount)
+            ]
+        )
     )
     valid_cat_types = (
         [CategoryType.INCOME, CategoryType.INCOME_AND_EXPENSE]
-        if transaction_type == "income"
+        if transaction_type == CashTransactionType.INCOME
         else [CategoryType.EXPENSE, CategoryType.INCOME_AND_EXPENSE]
     )
     valid_categories = [
@@ -195,7 +205,13 @@ def test_add_cash_transfer(
 ) -> None:
     record_keeper = get_preloaded_record_keeper()  # noqa: NEW100
     account_sender_path = data.draw(
-        st.sampled_from([account.path for account in record_keeper.accounts])
+        st.sampled_from(
+            [
+                account.path
+                for account in record_keeper.accounts
+                if isinstance(account, CashAccount)
+            ]
+        )
     )
     account_recipient_path = data.draw(
         st.sampled_from(
@@ -203,6 +219,7 @@ def test_add_cash_transfer(
                 account.path
                 for account in record_keeper.accounts
                 if account.path != account_sender_path
+                and isinstance(account, CashAccount)
             ]
         )
     )
@@ -242,7 +259,7 @@ def test_add_category_parent_does_not_exist(name: str, parent: str) -> None:
 )
 def test_add_category_invalid_type(name: str) -> None:
     record_keeper = RecordKeeper()
-    with pytest.raises(TypeError, match="If argument 'parent_path' is not provided"):
+    with pytest.raises(TypeError, match="If argument 'parent_path' is None"):
         record_keeper.add_category(name, None, None)
 
 
@@ -327,27 +344,6 @@ def test_get_attribute() -> None:
     assert len(record_keeper.payees) == no_of_payees
 
 
-@given(type_=everything_except(str))
-def test_get_transaction_type_invalid_type(type_: Any) -> None:
-    record_keeper = RecordKeeper()
-    with pytest.raises(
-        TypeError,
-        match="Argument 'type_' must be a string",
-    ):
-        record_keeper.get_cash_transaction_type(type_)
-
-
-@given(type_=st.text())
-def test_get_transaction_type_invalid_value(type_: str) -> None:
-    assume(type_ != "income" and type_ != "expense")
-    record_keeper = RecordKeeper()
-    with pytest.raises(
-        ValueError,
-        match="A CashTransactionType can be only 'income' or 'expense'",
-    ):
-        record_keeper.get_cash_transaction_type(type_)
-
-
 def test_add_refund() -> RecordKeeper:
     record_keeper = get_preloaded_record_keeper_with_expense()
     record_keeper.add_refund(
@@ -363,12 +359,145 @@ def test_add_refund() -> RecordKeeper:
     assert refund in refunded_transaction.refunds
 
 
+def test_add_security() -> None:
+    record_keeper = RecordKeeper()
+    name = "Security Name"
+    symbol = "ABCD.EF"
+    type_ = SecurityType.ETF
+    record_keeper.add_security(name, symbol, type_)
+    security = record_keeper.get_security(symbol)
+    assert security.name == name
+    assert security.symbol == symbol
+    assert security.type_ == type_
+    assert security in record_keeper.securities
+
+
+def test_add_security_already_exists() -> None:
+    record_keeper = RecordKeeper()
+    name_1 = "Security Name"
+    name_2 = "Another Name"
+    symbol = "ABCD.EF"
+    type_ = SecurityType.ETF
+    type_2 = SecurityType.MUTUAL_FUND
+    record_keeper.add_security(name_1, symbol, type_)
+    with pytest.raises(AlreadyExistsError):
+        record_keeper.add_security(name_2, symbol, type_2)
+
+
+@given(symbol=st.text(min_size=1, max_size=8))
+def test_get_security_does_not_exists(symbol: str) -> None:
+    assume(symbol != "VWCE.DE")
+    record_keeper = RecordKeeper()
+    with pytest.raises(DoesNotExistError):
+        record_keeper.get_security(symbol)
+
+
+@given(
+    description=st.text(min_size=1, max_size=256),
+    type_=st.sampled_from(SecurityTransactionType),
+    shares=st.integers(min_value=1),
+    price_per_share=st.decimals(
+        min_value=0, max_value=1e10, allow_infinity=False, allow_nan=False, places=3
+    ),
+    fees=st.decimals(
+        min_value=0, max_value=1e10, allow_infinity=False, allow_nan=False, places=3
+    ),
+    data=st.data(),
+)
+def test_add_security_transaction(
+    description: str,
+    type_: SecurityTransactionType,
+    shares: int,
+    price_per_share: Decimal,
+    fees: Decimal,
+    data: st.DataObject,
+) -> None:
+    record_keeper = get_preloaded_record_keeper()
+    security = data.draw(st.sampled_from(record_keeper.securities))
+    security_account_path = data.draw(
+        st.sampled_from(
+            [
+                account.path
+                for account in record_keeper.accounts
+                if isinstance(account, SecurityAccount)
+            ]
+        )
+    )
+    cash_account = data.draw(
+        st.sampled_from(
+            [
+                account
+                for account in record_keeper.accounts
+                if isinstance(account, CashAccount)
+            ]
+        )
+    )
+    cash_account_path = cash_account.path
+    datetime_ = cash_account.initial_datetime + timedelta(days=1)
+    record_keeper.add_security_transaction(
+        description,
+        datetime_,
+        type_,
+        security.symbol,
+        shares,
+        price_per_share,
+        fees,
+        security_account_path,
+        cash_account_path,
+    )
+    assert len(record_keeper.transactions) == 1
+
+
+@given(
+    description=st.text(min_size=1, max_size=256),
+    datetime_=st.datetimes(timezones=st.just(tzinfo)),
+    shares=st.integers(min_value=1),
+    data=st.data(),
+)
+def test_add_security_transfer(
+    description: str,
+    datetime_: datetime,
+    shares: int,
+    data: st.DataObject,
+) -> None:
+    record_keeper = get_preloaded_record_keeper()
+    security = data.draw(st.sampled_from(record_keeper.securities))
+    account_sender_path = data.draw(
+        st.sampled_from(
+            [
+                account.path
+                for account in record_keeper.accounts
+                if isinstance(account, SecurityAccount)
+            ]
+        )
+    )
+    account_recipient_path = data.draw(
+        st.sampled_from(
+            [
+                account.path
+                for account in record_keeper.accounts
+                if isinstance(account, SecurityAccount)
+                and account.path != account_sender_path
+            ]
+        )
+    )
+    record_keeper.add_security_transfer(
+        description,
+        datetime_,
+        security.symbol,
+        shares,
+        account_sender_path,
+        account_recipient_path,
+    )
+    assert len(record_keeper.transactions) == 1
+
+
 def get_preloaded_record_keeper_with_expense() -> RecordKeeper:
     record_keeper = get_preloaded_record_keeper()
     record_keeper.add_cash_transaction(
         "An expense transaction",
         datetime.now(tzinfo),
-        "expense",
+        CashTransactionType.EXPENSE,
         "Bank Accounts/Raiffeisen CZK",
         (("Food and Drink/Groceries", Decimal(1000)),),
         "Albert",
@@ -382,6 +511,7 @@ def get_preloaded_record_keeper() -> RecordKeeper:
     record_keeper.add_currency("CZK")
     record_keeper.add_currency("EUR")
     record_keeper.add_account_group("Bank Accounts", None)
+    record_keeper.add_account_group("Security Accounts", None)
     record_keeper.add_cash_account(
         name="Raiffeisen CZK",
         currency_code="CZK",
@@ -396,6 +526,11 @@ def get_preloaded_record_keeper() -> RecordKeeper:
         initial_datetime=datetime.now(tzinfo),
         parent_path="Bank Accounts",
     )
+    record_keeper.add_security_account(name="Degiro", parent_path="Security Accounts")
+    record_keeper.add_security_account(
+        name="Interactive Brokers", parent_path="Security Accounts"
+    )
+    record_keeper.add_security("Vanguard FTSE All-World", "VWCE.DE", SecurityType.ETF)
     record_keeper.add_category("Food and Drink", None, CategoryType.EXPENSE)
     record_keeper.add_category("Groceries", "Food and Drink")
     record_keeper.add_category("Eating out", "Food and Drink")

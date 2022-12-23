@@ -3,7 +3,7 @@ from decimal import Decimal
 from typing import Any
 
 import pytest
-from hypothesis import assume, given, settings
+from hypothesis import assume, given
 from hypothesis import strategies as st
 
 from src.models.constants import tzinfo
@@ -136,7 +136,6 @@ def test_validate_transaction_invalid_type(
     transaction=cash_transactions(),
     transfer=cash_transfers(),
 )
-@settings(max_examples=10)
 def test_validate_transaction_invalid_account(
     account: CashAccount, transaction: CashTransaction, transfer: CashTransfer
 ) -> None:
@@ -156,7 +155,6 @@ def test_validate_transaction_invalid_account(
     data=st.data(),
     switch=st.booleans(),
 )
-@settings(max_examples=10)
 def test_validate_transaction_invalid_datetime(
     account: CashAccount,
     transaction: CashTransaction,
@@ -170,7 +168,11 @@ def test_validate_transaction_invalid_datetime(
     else:
         transfer._account_sender = account
     invalid_datetime = data.draw(
-        st.datetimes(max_value=account.initial_datetime - timedelta(seconds=1))
+        st.datetimes(
+            max_value=account.initial_datetime.replace(tzinfo=None)
+            - timedelta(seconds=1),
+            timezones=st.just(tzinfo),
+        )
     )
     transaction._datetime = invalid_datetime
     transfer._datetime = invalid_datetime
@@ -183,9 +185,8 @@ def test_validate_transaction_invalid_datetime(
 
 @given(
     account=cash_accounts(),
-    transactions=st.lists(cash_transactions(), min_size=1, max_size=10),
+    transactions=st.lists(cash_transactions(), min_size=1, max_size=5),
 )
-@settings(max_examples=10)
 def test_balance(account: CashAccount, transactions: list[CashTransaction]) -> None:
     datetime_balance_list = [(account.initial_datetime, account.initial_balance)]
     transactions.sort(key=lambda transaction: transaction.datetime_)

@@ -90,5 +90,3 @@ The Refund transaction is a special transaction type. It esentially creates a ne
   - TransferTransaction (ABC)
     - CashTransferTransaction
     - SecurityTransferTransaction
-
-TODO: securities

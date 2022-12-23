@@ -5,6 +5,7 @@ from typing import Any, Literal
 
 from hypothesis import strategies as st
 
+from src.models.constants import tzinfo
 from src.models.model_objects.account_group import AccountGroup
 from src.models.model_objects.attributes import (
     Attribute,
@@ -19,6 +20,14 @@ from src.models.model_objects.cash_objects import (
     CashTransfer,
 )
 from src.models.model_objects.currency import Currency
+from src.models.model_objects.security_objects import (
+    Security,
+    SecurityAccount,
+    SecurityTransaction,
+    SecurityTransactionType,
+    SecurityTransfer,
+    SecurityType,
+)
 from tests.models.test_assets.concrete_abcs import ConcreteTransaction
 from tests.models.test_assets.constants import max_datetime, min_datetime
 
@@ -61,7 +70,11 @@ def cash_accounts(
         )
     )
     initial_datetime = draw(
-        st.datetimes(min_value=min_datetime, max_value=max_datetime)
+        st.datetimes(
+            min_value=min_datetime,
+            max_value=max_datetime,
+            timezones=st.just(tzinfo),
+        )
     )
     return CashAccount(name, currency, initial_balance, initial_datetime)
 
@@ -75,7 +88,11 @@ def cash_transactions(
     description = draw(st.text(min_size=0, max_size=256))
     type_ = draw(st.sampled_from(CashTransactionType))
     account: CashAccount = draw(cash_accounts())
-    datetime_ = draw(st.datetimes(min_value=min_datetime, max_value=max_datetime))
+    datetime_ = draw(
+        st.datetimes(
+            min_value=min_datetime, max_value=max_datetime, timezones=st.just(tzinfo)
+        )
+    )
     category_amount_pairs_list = draw(
         st.lists(category_amount_pairs(type_), min_size=1, max_size=5)
     )
@@ -104,7 +121,11 @@ def cash_transfers(
     description = draw(st.text(min_size=0, max_size=256))
     account_sender: CashAccount = draw(cash_accounts())
     account_recipient: CashAccount = draw(cash_accounts())
-    datetime_ = draw(st.datetimes(min_value=min_datetime, max_value=max_datetime))
+    datetime_ = draw(
+        st.datetimes(
+            min_value=min_datetime, max_value=max_datetime, timezones=st.just(tzinfo)
+        )
+    )
     amount_sent = draw(
         st.decimals(
             min_value="0.01",
@@ -177,6 +198,76 @@ def currencies(draw: st.DrawFn) -> Currency:
 
 
 @st.composite
+def securities(draw: st.DrawFn) -> Security:
+    name = draw(st.text(min_size=1, max_size=32))
+    symbol = draw(
+        st.text(alphabet=Security.SYMBOL_ALLOWED_CHARS, min_size=1, max_size=8)
+    )
+    type_ = draw(st.sampled_from(SecurityType))
+    return Security(name, symbol, type_)
+
+
+@st.composite
+def security_accounts(draw: st.DrawFn) -> SecurityAccount:
+    name = draw(st.text(min_size=1, max_size=32))
+    parent = draw(st.none() | account_groups())
+    return SecurityAccount(name, parent)
+
+
+@st.composite
+def security_transactions(
+    draw: st.DrawFn,
+    min_datetime: datetime = min_datetime,
+    max_datetime: datetime = datetime.max,
+) -> SecurityTransaction:
+    description = draw(st.text(min_size=1, max_size=256))
+    datetime_ = draw(
+        st.datetimes(
+            min_value=min_datetime, max_value=max_datetime, timezones=st.just(tzinfo)
+        )
+    )
+    type_ = draw(st.sampled_from(SecurityTransactionType))
+    security = draw(securities())
+    shares = draw(st.integers(min_value=1))
+    price_per_share = draw(
+        st.decimals(
+            min_value=0, max_value=1e10, allow_infinity=False, allow_nan=False, places=3
+        )
+    )
+    fees = draw(
+        st.decimals(
+            min_value=0, max_value=1e10, allow_infinity=False, allow_nan=False, places=3
+        )
+    )
+    security_account = draw(security_accounts())
+    cash_account = draw(cash_accounts())
+    return SecurityTransaction(
+        description,
+        datetime_,
+        type_,
+        security,
+        shares,
+        price_per_share,
+        fees,
+        security_account,
+        cash_account,
+    )
+
+
+@st.composite
+def security_transfers(draw: st.DrawFn) -> SecurityTransfer:
+    description = draw(st.text(min_size=1, max_size=256))
+    datetime_ = draw(st.datetimes(timezones=st.just(tzinfo)))
+    security = draw(securities())
+    shares = draw(st.integers(min_value=1))
+    account_sender = draw(security_accounts())
+    account_recipient = draw(security_accounts())
+    return SecurityTransfer(
+        description, datetime_, security, shares, account_sender, account_recipient
+    )
+
+
+@st.composite
 def tag_amount_pairs(
     draw: st.DrawFn, max_value: Decimal | Literal[0] | None = None
 ) -> tuple[Attribute, Decimal]:
@@ -198,5 +289,5 @@ def tag_amount_pairs(
 @st.composite
 def transactions(draw: st.DrawFn) -> ConcreteTransaction:
     description = draw(st.text(min_size=0, max_size=256))
-    datetime_ = draw(st.datetimes())
+    datetime_ = draw(st.datetimes(timezones=st.just(tzinfo)))
     return ConcreteTransaction(description, datetime_)

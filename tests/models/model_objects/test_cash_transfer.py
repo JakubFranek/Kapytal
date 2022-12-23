@@ -25,7 +25,7 @@ from tests.models.test_assets.constants import min_datetime
     description=st.text(min_size=0, max_size=256),
     account_sender=cash_accounts(),
     account_recipient=cash_accounts(),
-    datetime_=st.datetimes(min_value=min_datetime),
+    datetime_=st.datetimes(min_value=min_datetime, timezones=st.just(tzinfo)),
     amount_sent=st.decimals(min_value="0.01", allow_infinity=False, allow_nan=False),
     amount_received=st.decimals(
         min_value="0.01", allow_infinity=False, allow_nan=False
@@ -58,8 +58,8 @@ def test_creation(
     assert transfer.amount_sent == amount_sent
     assert transfer.amount_received == amount_received
     assert transfer.__repr__() == (
-        f"CashTransfer({transfer.amount_sent} {transfer.account_sender.currency.code}"
-        f" from '{transfer.account_sender.name}', "
+        f"CashTransfer({transfer.amount_sent} {transfer.account_sender.currency.code} "
+        f"from '{transfer.account_sender.name}', "
         f"{transfer.amount_received} {transfer.account_recipient.currency.code} "
         f"to '{transfer.account_recipient.name}', "
         f"{transfer.datetime_.strftime('%Y-%m-%d')})"
@@ -112,22 +112,33 @@ def test_get_amount_for_account(transfer: CashTransfer) -> None:
     expected_sender_amount = -transfer.amount_sent
     expected_recipient_amount = transfer.amount_received
 
-    result_sender = transfer.get_amount_for_account(transfer.account_sender)
-    result_recipient = transfer.get_amount_for_account(transfer.account_recipient)
+    result_sender = transfer.get_amount(transfer.account_sender)
+    result_recipient = transfer.get_amount(transfer.account_recipient)
 
     assert result_sender == expected_sender_amount
     assert result_recipient == expected_recipient_amount
 
 
 @given(
+    transaction=cash_transfers(),
+    account=everything_except(CashAccount),
+)
+def test_get_amount_invalid_account_type(
+    transaction: CashTransfer, account: Any
+) -> None:
+    with pytest.raises(TypeError, match="Argument 'account' must be a CashAccount."):
+        transaction.get_amount(account)
+
+
+@given(
     transfer=cash_transfers(),
     account=cash_accounts(),
 )
-def test_get_amount_for_account_invalid_account_value(
+def test_get_amount_invalid_account_value(
     transfer: CashTransfer, account: CashAccount
 ) -> None:
     with pytest.raises(UnrelatedAccountError):
-        transfer.get_amount_for_account(account)
+        transfer.get_amount(account)
 
 
 @given(

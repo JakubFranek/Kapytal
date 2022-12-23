@@ -4,13 +4,19 @@ from typing import TYPE_CHECKING
 
 from src.models.mixins.datetime_created_mixin import DatetimeCreatedMixin
 from src.models.mixins.name_mixin import NameMixin
+from src.models.mixins.uuid_mixin import UUIDMixin
 from src.models.model_objects.account_group import AccountGroup
 
 if TYPE_CHECKING:  # pragma: no cover
     from src.models.base_classes.transaction import Transaction
 
 
-class Account(NameMixin, DatetimeCreatedMixin, ABC):
+class UnrelatedAccountError(ValueError):
+    """Raised when an Account tries to access a Transaction which does
+    not relate to it."""
+
+
+class Account(NameMixin, DatetimeCreatedMixin, UUIDMixin, ABC):
     def __init__(self, name: str, parent: AccountGroup | None = None) -> None:
         super().__init__(name=name)
         self.parent: AccountGroup | None = parent
@@ -22,7 +28,9 @@ class Account(NameMixin, DatetimeCreatedMixin, ABC):
     @parent.setter
     def parent(self, new_parent: AccountGroup | None) -> None:
         if new_parent is not None and not isinstance(new_parent, AccountGroup):
-            raise TypeError("Account.parent must be an AccountGroup or a None.")
+            raise TypeError(
+                f"{self.__class__.__name__}.parent must be an AccountGroup or a None."
+            )
 
         if hasattr(self, "_parent") and self._parent is not None:
             self._parent._children.remove(self)

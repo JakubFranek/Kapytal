@@ -1,18 +1,15 @@
-import uuid
 from abc import ABC, abstractmethod
 from datetime import datetime
-from decimal import Decimal
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:  # pragma: no cover
     from src.models.base_classes.account import Account
 
-from src.models.constants import tzinfo
 from src.models.mixins.datetime_created_mixin import DatetimeCreatedMixin
-from src.models.mixins.datetime_edited_mixin import DatetimeEditedMixin
+from src.models.mixins.uuid_mixin import UUIDMixin
 
 
-class Transaction(DatetimeCreatedMixin, DatetimeEditedMixin, ABC):
+class Transaction(DatetimeCreatedMixin, UUIDMixin, ABC):
     DESCRIPTION_MIN_LENGTH = 0
     DESCRIPTION_MAX_LENGTH = 256
 
@@ -20,11 +17,6 @@ class Transaction(DatetimeCreatedMixin, DatetimeEditedMixin, ABC):
         super().__init__()
         self.description = description
         self.datetime_ = datetime_
-        self._uuid = uuid.uuid4()
-
-    @property
-    def uuid(self) -> uuid.UUID:
-        return self._uuid
 
     @property
     def description(self) -> str:
@@ -46,7 +38,6 @@ class Transaction(DatetimeCreatedMixin, DatetimeEditedMixin, ABC):
             )
 
         self._description = value
-        self._datetime_edited = datetime.now(tzinfo)
 
     @property
     def datetime_(self) -> datetime:
@@ -58,12 +49,7 @@ class Transaction(DatetimeCreatedMixin, DatetimeEditedMixin, ABC):
             raise TypeError(f"{self.__class__.__name__}.datetime_ must be a datetime.")
 
         self._datetime = value
-        self._datetime_edited = datetime.now(tzinfo)
 
     @abstractmethod
     def is_account_related(self, account: "Account") -> bool:
-        raise NotImplementedError("Not implemented")
-
-    @abstractmethod
-    def get_amount_for_account(self, account: "Account") -> Decimal:
         raise NotImplementedError("Not implemented")

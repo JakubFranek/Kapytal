@@ -30,12 +30,13 @@ from tests.models.test_assets.composites import (
     everything_except,
     tag_amount_pairs,
 )
+from tests.models.test_assets.concrete_abcs import ConcreteCashRelatedTransaction
 from tests.models.test_assets.constants import min_datetime
 
 
 @given(
     description=st.text(min_size=0, max_size=256),
-    datetime_=st.datetimes(min_value=min_datetime),
+    datetime_=st.datetimes(min_value=min_datetime, timezones=st.just(tzinfo)),
     type_=st.sampled_from(CashTransactionType),
     account=cash_accounts(),
     payee=attributes(AttributeType.PAYEE),
@@ -69,7 +70,6 @@ def test_creation(  # noqa: CFQ002,TMN001
     )
 
     dt_created_diff = cash_transaction.datetime_created - dt_start
-    dt_edited_diff = cash_transaction.datetime_edited - dt_start
 
     assert cash_transaction.description == description
     assert cash_transaction.datetime_ == datetime_
@@ -89,7 +89,6 @@ def test_creation(  # noqa: CFQ002,TMN001
         f"{cash_transaction.datetime_.strftime('%Y-%m-%d')})"
     )
     assert dt_created_diff.seconds < 1
-    assert dt_edited_diff.seconds < 1
 
 
 @given(
@@ -219,7 +218,7 @@ def test_change_account(transaction: CashTransaction, new_account: CashAccount) 
 
 
 @given(transaction=cash_transactions())
-def test_get_amount_for_account(transaction: CashTransaction) -> None:
+def test_get_amount(transaction: CashTransaction) -> None:
     account = transaction.account
     amount = transaction.amount
     if transaction.type_ == CashTransactionType.INCOME:
@@ -227,20 +226,31 @@ def test_get_amount_for_account(transaction: CashTransaction) -> None:
     else:
         expected_amount = -amount
 
-    result = transaction.get_amount_for_account(account)
+    result = transaction.get_amount(account)
     assert result == expected_amount
+
+
+@given(
+    transaction=cash_transactions(),
+    account=everything_except(CashAccount),
+)
+def test_get_amount_invalid_account_type(
+    transaction: CashTransaction, account: Any
+) -> None:
+    with pytest.raises(TypeError, match="Argument 'account' must be a CashAccount."):
+        transaction.get_amount(account)
 
 
 @given(
     transaction=cash_transactions(),
     account=cash_accounts(),
 )
-def test_get_amount_for_account_invalid_account_value(
+def test_get_amount_invalid_account_value(
     transaction: CashTransaction, account: CashAccount
 ) -> None:
     assume(transaction.account != account)
     with pytest.raises(UnrelatedAccountError):
-        transaction.get_amount_for_account(account)
+        transaction.get_amount(account)
 
 
 @given(
@@ -360,8 +370,15 @@ def test_tag_names(transaction: CashTransaction) -> None:
 
 
 @given(transaction=cash_transactions(), refund=everything_except(RefundTransaction))
-def test_invalid_refund_transaction(transaction: CashTransaction, refund: Any) -> None:
+def test_invalid_refund_type(transaction: CashTransaction, refund: Any) -> None:
     with pytest.raises(
         TypeError, match="Argument 'refund' must be a RefundTransaction."
     ):
         transaction.add_refund(refund)
+
+
+@given(account=cash_accounts())
+def test_concrete_cash_related_transaction(account: CashAccount) -> None:
+    obj = ConcreteCashRelatedTransaction("description", datetime_=datetime.now(tzinfo))
+    with pytest.raises(NotImplementedError):
+        obj._get_amount(account)

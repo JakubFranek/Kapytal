@@ -1,3 +1,5 @@
+# TODO: this file belongs somewhere else...
+
 from collections.abc import Collection
 from datetime import datetime
 from decimal import Decimal
@@ -19,6 +21,14 @@ from src.models.model_objects.cash_objects import (
     RefundTransaction,
 )
 from src.models.model_objects.currency import Currency
+from src.models.model_objects.security_objects import (
+    Security,
+    SecurityAccount,
+    SecurityTransaction,
+    SecurityTransactionType,
+    SecurityTransfer,
+    SecurityType,
+)
 
 
 class AlreadyExistsError(ValueError):
@@ -35,6 +45,7 @@ class RecordKeeper:
         self._accounts: list[Account] = []
         self._account_groups: list[AccountGroup] = []
         self._currencies: list[Currency] = []
+        self._securities: list[Security] = []
         self._payees: list[Attribute] = []
         self._categories: list[Category] = []
         self._tags: list[Attribute] = []
@@ -53,6 +64,10 @@ class RecordKeeper:
         return tuple(self._currencies)
 
     @property
+    def securities(self) -> tuple[Security, ...]:
+        return tuple(self._securities)
+
+    @property
     def payees(self) -> tuple[Attribute, ...]:
         return tuple(self._payees)
 
@@ -68,19 +83,31 @@ class RecordKeeper:
     def transactions(self) -> tuple[Transaction, ...]:
         return tuple(self._transactions)
 
+    def __repr__(self) -> str:
+        return "RecordKeeper"
+
     def add_currency(self, currency_code: str) -> None:
         code_upper = currency_code.upper()
         if any(currency.code == code_upper for currency in self._currencies):
             raise AlreadyExistsError(
-                f"A Currency with code {code_upper} already exists."
+                f"A Currency with code '{code_upper}' already exists."
             )
         currency = Currency(code_upper)
         self._currencies.append(currency)
 
+    def add_security(self, name: str, symbol: str, type_: SecurityType) -> None:
+        symbol_upper = symbol.upper()
+        if any(security.symbol == symbol_upper for security in self._securities):
+            raise AlreadyExistsError(
+                f"A Security with symbol '{symbol_upper}' already exists."
+            )
+        security = Security(name, symbol, type_)
+        self._securities.append(security)
+
     def add_category(
         self, name: str, parent_path: str | None, type_: CategoryType | None = None
     ) -> Category:
-        if parent_path:
+        if parent_path is not None:
             for category in self._categories:
                 if category.path == parent_path:
                     parent = category
@@ -94,8 +121,7 @@ class RecordKeeper:
             parent = None
             if not isinstance(type_, CategoryType):
                 raise TypeError(
-                    "If argument 'parent_path' is not provided, 'type_' must be"
-                    " a CategoryType."
+                    "If argument 'parent_path' is None, 'type_' must be a CategoryType."
                 )
             category_type = type_
 
@@ -130,28 +156,29 @@ class RecordKeeper:
         initial_datetime: datetime,
         parent_path: str | None,
     ) -> None:
-        target_path = parent_path + "/" + name if parent_path is not None else name
-        if any(account.path == target_path for account in self._accounts):
-            raise AlreadyExistsError(
-                f"An Account with path={target_path} already exists."
-            )
+        self._check_account_exists(name, parent_path)
         currency = self.get_currency(currency_code)
         parent = self.get_account_parent(parent_path)
         account = CashAccount(name, currency, initial_balance, initial_datetime, parent)
+        self._accounts.append(account)
+
+    def add_security_account(self, name: str, parent_path: str | None) -> None:
+        self._check_account_exists(name, parent_path)
+        parent = self.get_account_parent(parent_path)
+        account = SecurityAccount(name, parent)
         self._accounts.append(account)
 
     def add_cash_transaction(  # noqa: CFQ002, TMN001
         self,
         description: str,
         datetime_: datetime,
-        transaction_type: str,
+        transaction_type: CashTransactionType,
         account_path: str,
         category_path_amount_pairs: Collection[tuple[str, Decimal]],
         payee_name: str,
         tag_name_amount_pairs: Collection[tuple[str, Decimal]],
     ) -> None:
         account = self.get_account(account_path)
-        type_ = RecordKeeper.get_cash_transaction_type(transaction_type)
         payee = self.get_attribute(payee_name, AttributeType.PAYEE)
 
         tag_amount_pairs: list[tuple[Attribute, Decimal]] = []
@@ -163,7 +190,7 @@ class RecordKeeper:
         category_amount_pairs: list[tuple[Category, Decimal]] = []
         category_type = (
             CategoryType.INCOME
-            if type_ == CashTransactionType.INCOME
+            if transaction_type == CashTransactionType.INCOME
             else CategoryType.EXPENSE
         )
         for category_path, amount in category_path_amount_pairs:
@@ -173,7 +200,7 @@ class RecordKeeper:
         transaction = CashTransaction(
             description,
             datetime_,
-            type_,
+            transaction_type,
             account,
             category_amount_pairs,
             payee,
@@ -237,6 +264,51 @@ class RecordKeeper:
         )
         self._transactions.append(refund)
 
+    def add_security_transaction(
+        self,
+        description: str,
+        datetime_: datetime,
+        type_: SecurityTransactionType,
+        security_symbol: str,
+        shares: int,
+        price_per_share: Decimal,
+        fees: Decimal,
+        security_account_path: str,
+        cash_account_path: str,
+    ) -> None:
+        security = self.get_security(security_symbol)
+        cash_account = self.get_account(cash_account_path)
+        security_account = self.get_account(security_account_path)
+        transaction = SecurityTransaction(
+            description,
+            datetime_,
+            type_,
+            security,
+            shares,
+            price_per_share,
+            fees,
+            security_account,
+            cash_account,
+        )
+        self._transactions.append(transaction)
+
+    def add_security_transfer(
+        self,
+        description: str,
+        datetime_: datetime,
+        security_symbol: str,
+        shares: int,
+        account_sender_path: str,
+        account_recipient_path: str,
+    ) -> None:
+        security = self.get_security(security_symbol)
+        account_sender = self.get_account(account_sender_path)
+        account_recipient = self.get_account(account_recipient_path)
+        transaction = SecurityTransfer(
+            description, datetime_, security, shares, account_sender, account_recipient
+        )
+        self._transactions.append(transaction)
+
     def get_account_parent(self, path: str | None) -> AccountGroup | None:
         if path:
             for account_group in self._account_groups:
@@ -252,6 +324,15 @@ class RecordKeeper:
             if account.path == path:
                 return account
         raise DoesNotExistError(f"An Account with path='{path}' does not exist.")
+
+    def get_security(self, symbol: str) -> Security:
+        symbol_upper = symbol.upper()
+        for security in self._securities:
+            if security.symbol == symbol_upper:
+                return security
+        raise DoesNotExistError(
+            f"A Security with symbol='{symbol_upper}' does not exist."
+        )
 
     def get_currency(self, code: str) -> Currency:
         code_upper = code.upper()
@@ -304,21 +385,9 @@ class RecordKeeper:
         attributes.append(attribute)
         return attribute
 
-    @staticmethod
-    def get_cash_transaction_type(type_: str) -> CashTransactionType:
-        if not isinstance(type_, str):
-            raise TypeError(
-                "Argument 'type_' must be a string (either 'income' or 'expense')."
+    def _check_account_exists(self, name: str, parent_path: str) -> None:
+        target_path = parent_path + "/" + name if parent_path is not None else name
+        if any(account.path == target_path for account in self._accounts):
+            raise AlreadyExistsError(
+                f"An Account with path={target_path} already exists."
             )
-        type_lower = type_.lower()
-        if type_lower == "income":
-            return CashTransactionType.INCOME
-        if type_lower == "expense":
-            return CashTransactionType.EXPENSE
-        raise ValueError(
-            "A CashTransactionType can be only 'income' or 'expense',"
-            f" not {type_lower}."
-        )
-
-    def __repr__(self) -> str:
-        return "RecordKeeper"
