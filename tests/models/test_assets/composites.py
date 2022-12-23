@@ -196,7 +196,8 @@ def category_amount_pairs(
 @st.composite
 def currencies(draw: st.DrawFn) -> Currency:
     name = draw(st.text(alphabet=string.ascii_letters, min_size=3, max_size=3))
-    return Currency(name)
+    places = draw(st.integers(min_value=0, max_value=8))
+    return Currency(name, places)
 
 
 @st.composite

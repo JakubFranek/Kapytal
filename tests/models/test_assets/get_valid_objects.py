@@ -30,5 +30,5 @@ def get_security() -> Security:
         "Vanguard FTSE All-World UCITS ETF USD Acc",
         "VWCE.DE",
         SecurityType.ETF,
-        Currency("EUR"),
+        Currency("EUR", 2),
     )

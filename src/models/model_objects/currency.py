@@ -20,7 +20,7 @@ class ConversionFactorNotFound(ValueError):
 # TODO: add CurrencyExchangeRate objects or something? (w/ history)
 # TODO: add no. of decimal places per Currency?
 class Currency(DatetimeCreatedMixin):
-    def __init__(self, code: str) -> None:
+    def __init__(self, code: str, places: int) -> None:
         super().__init__()
 
         if not isinstance(code, str):
@@ -29,6 +29,12 @@ class Currency(DatetimeCreatedMixin):
             raise ValueError("Currency.code must be a three letter ISO-4217 code.")
         self._code = code.upper()
 
+        if not isinstance(places, int):
+            raise TypeError("Currency.places must be an integer.")
+        if places < 0:
+            raise ValueError("Currency.places must not be negative.")
+        self._places = places
+
         self._exchange_rates: dict[Currency, "ExchangeRate"] = {}
 
     @property
@@ -36,7 +42,11 @@ class Currency(DatetimeCreatedMixin):
         return self._code
 
     @property
-    def convertible_currencies(self) -> set[Self]:
+    def places(self) -> int:
+        return self._places
+
+    @property
+    def convertible_to(self) -> set[Self]:
         return set(self._exchange_rates)
 
     def __repr__(self) -> str:
@@ -79,7 +89,7 @@ class Currency(DatetimeCreatedMixin):
                 f"No path from {self.code} to {target_currency.code} found."
             )
 
-        factor = Decimal("1")
+        factor = Decimal(1)
         for exchange_rate in exchange_rates:
             if self == exchange_rate.primary_currency:
                 operation = operator.mul
@@ -106,7 +116,7 @@ class Currency(DatetimeCreatedMixin):
         if ignore_currencies is None:
             ignore_currencies = {current_currency}
 
-        if target_currency in current_currency.convertible_currencies:
+        if target_currency in current_currency.convertible_to:
             # Direct ExchangeRate found!
             return [current_currency._get_exchange_rate(target_currency)]
 
@@ -114,11 +124,11 @@ class Currency(DatetimeCreatedMixin):
         # Get unexplored currencies to iterate over.
         iterable_currencies = [
             currency
-            for currency in current_currency.convertible_currencies
+            for currency in current_currency.convertible_to
             if currency not in ignore_currencies
         ]
         # Ignore these currencies in future deeper searches (no need to go back).
-        ignore_currencies = ignore_currencies | current_currency.convertible_currencies
+        ignore_currencies = ignore_currencies | current_currency.convertible_to
         for loop_currency in iterable_currencies:
             exchange_rates = Currency._get_exchange_rates(  # noqa: NEW100
                 loop_currency, target_currency, ignore_currencies
@@ -207,17 +217,17 @@ class CashAmount:
 
     @property
     def value(self) -> Decimal:
-        return self._value
+        return round(self._value, self.currency.places)
 
     @property
     def currency(self) -> Currency:
         return self._currency
 
     def __repr__(self) -> str:
-        return f"CashAmount({self._value} {self._currency.code})"
+        return f"CashAmount({self.value} {self._currency.code})"
 
     def __str__(self) -> str:
-        return f"{self._value} {self._currency.code}"
+        return f"{self.value} {self._currency.code}"
 
     def __eq__(self, __o: object) -> bool:
         if not isinstance(__o, CashAmount):

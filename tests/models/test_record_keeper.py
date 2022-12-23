@@ -30,10 +30,13 @@ def test_creation() -> None:
     assert record_keeper.__repr__() == "RecordKeeper"
 
 
-@given(code=st.text(string.ascii_letters, min_size=3, max_size=3))
-def test_add_currency(code: str) -> None:
+@given(
+    code=st.text(string.ascii_letters, min_size=3, max_size=3),
+    places=st.integers(min_value=0, max_value=8),
+)
+def test_add_currency(code: str, places: int) -> None:
     record_keeper = RecordKeeper()
-    record_keeper.add_currency(code)
+    record_keeper.add_currency(code, places)
     currency = record_keeper.currencies[0]
     assert currency.code == code.upper()
 
@@ -87,6 +90,7 @@ def test_add_account_group_with_multiple_parents(
 @given(
     name=st.text(min_size=1, max_size=32),
     currency_code=st.text(string.ascii_letters, min_size=3, max_size=3),
+    places=st.integers(min_value=0, max_value=8),
     initial_balance=st.decimals(
         min_value=0, max_value=1e10, allow_infinity=False, allow_nan=False
     ),
@@ -96,12 +100,13 @@ def test_add_account_group_with_multiple_parents(
 def test_add_cash_account(
     name: str,
     currency_code: str,
+    places: int,
     initial_balance: Decimal,
     initial_datetime: datetime,
     parent_name: str | None,
 ) -> None:
     record_keeper = RecordKeeper()
-    record_keeper.add_currency(currency_code)
+    record_keeper.add_currency(currency_code, places)
     if parent_name:
         record_keeper.add_account_group(parent_name, None)
     record_keeper.add_cash_account(
@@ -236,12 +241,15 @@ def test_add_cash_transfer(
     assert transfer.description == description
 
 
-@given(code=st.text(string.ascii_letters, min_size=3, max_size=3))
-def test_add_currency_already_exists(code: str) -> None:
+@given(
+    code=st.text(string.ascii_letters, min_size=3, max_size=3),
+    places=st.integers(min_value=0, max_value=8),
+)
+def test_add_currency_already_exists(code: str, places: int) -> None:
     record_keeper = RecordKeeper()
-    record_keeper.add_currency(code)
+    record_keeper.add_currency(code, places)
     with pytest.raises(AlreadyExistsError):
-        record_keeper.add_currency(code)
+        record_keeper.add_currency(code, places)
 
 
 @given(
@@ -365,7 +373,8 @@ def test_add_security() -> None:
     symbol = "ABCD.EF"
     type_ = SecurityType.ETF
     currency_code = "EUR"
-    record_keeper.add_currency(currency_code)
+    places = 2
+    record_keeper.add_currency(currency_code, places)
     record_keeper.add_security(name, symbol, type_, currency_code)
     security = record_keeper.get_security(symbol)
     assert security.name == name
@@ -383,7 +392,8 @@ def test_add_security_already_exists() -> None:
     type_ = SecurityType.ETF
     type_2 = SecurityType.MUTUAL_FUND
     currency_code = "EUR"
-    record_keeper.add_currency(currency_code)
+    places = 2
+    record_keeper.add_currency(currency_code, places)
     record_keeper.add_security(name_1, symbol, type_, currency_code)
     with pytest.raises(AlreadyExistsError):
         record_keeper.add_security(name_2, symbol, type_2, currency_code)
@@ -514,8 +524,8 @@ def get_preloaded_record_keeper_with_expense() -> RecordKeeper:
 
 def get_preloaded_record_keeper() -> RecordKeeper:
     record_keeper = RecordKeeper()
-    record_keeper.add_currency("CZK")
-    record_keeper.add_currency("EUR")
+    record_keeper.add_currency("CZK", 2)
+    record_keeper.add_currency("EUR", 2)
     record_keeper.add_account_group("Bank Accounts", None)
     record_keeper.add_account_group("Security Accounts", None)
     record_keeper.add_cash_account(

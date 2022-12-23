@@ -31,7 +31,7 @@ from tests.models.test_assets.composites import (
     everything_except,
 )
 
-currency = Currency("CZK")
+currency = Currency("CZK", 2)
 
 cat_1 = Category("Groceries", CategoryType.EXPENSE)
 cat_2 = Category("Electronics", CategoryType.EXPENSE)
