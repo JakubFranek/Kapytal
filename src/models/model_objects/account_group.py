@@ -11,7 +11,7 @@ from src.models.mixins.name_mixin import NameMixin
 class AccountGroup(NameMixin, DatetimeCreatedMixin):
     def __init__(self, name: str, parent: Self | None = None) -> None:
         super().__init__(name)
-        self._parent: Self | None = parent
+        self.parent = parent
         self._children: list[Self | "Account"] = []
 
     @property

@@ -605,7 +605,7 @@ class RefundTransaction(CashRelatedTransaction):
 
         for tag, amount in pairs:
             min_expected = min_values[tag] - (remaining_amount - self.amount)
-            min_values[tag] = max(min_expected, 0)
+            min_values[tag] = max(min_expected, Decimal(0))
             if amount > max_values[tag] or amount < min_values[tag]:
                 raise ValueError(
                     f"Refunded amount for tag '{tag.name}' must be within "

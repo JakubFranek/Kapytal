@@ -129,7 +129,7 @@ class SecurityAccount(Account):
     def __init__(self, name: str, parent: AccountGroup | None = None) -> None:
         super().__init__(name, parent)
         self._securities: defaultdict[Security, int] = defaultdict(int)
-        self._transactions: list[SecurityTransaction] = []
+        self._transactions: list[SecurityRelatedTransaction] = []
 
     @property
     def securities(self) -> dict[Security, int]:
@@ -145,18 +145,18 @@ class SecurityAccount(Account):
         )
 
     @property
-    def transactions(self) -> tuple["SecurityTransaction", ...]:
+    def transactions(self) -> tuple["SecurityRelatedTransaction", ...]:
         return tuple(self._transactions)
 
     def __repr__(self) -> str:
         return f"SecurityAccount('{self.name}')"
 
-    def add_transaction(self, transaction: "SecurityTransaction") -> None:
+    def add_transaction(self, transaction: "SecurityRelatedTransaction") -> None:
         self._validate_transaction(transaction)
         self._securities[transaction.security] += transaction.get_shares(self)
         self._transactions.append(transaction)
 
-    def remove_transaction(self, transaction: "SecurityTransaction") -> None:
+    def remove_transaction(self, transaction: "SecurityRelatedTransaction") -> None:
         self._validate_transaction(transaction)
         self._securities[transaction.security] -= transaction.get_shares(self)
         self._transactions.remove(transaction)

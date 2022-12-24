@@ -19,7 +19,7 @@ class UnrelatedAccountError(ValueError):
 class Account(NameMixin, DatetimeCreatedMixin, UUIDMixin, ABC):
     def __init__(self, name: str, parent: AccountGroup | None = None) -> None:
         super().__init__(name=name)
-        self.parent: AccountGroup | None = parent
+        self.parent = parent
 
     @property
     def parent(self) -> AccountGroup | None:
