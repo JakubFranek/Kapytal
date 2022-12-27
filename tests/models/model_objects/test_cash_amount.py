@@ -173,7 +173,7 @@ def test_add_radd(value_1: Decimal, value_2: Decimal, currency: Currency) -> Non
         min_value=0, max_value=1e10, allow_infinity=False, allow_nan=False
     ),
     currency=currencies(),
-    integer=st.integers(min_value=0),
+    integer=st.integers(min_value=0, max_value=int(1e10)),
 )
 def test_add_radd_int(value: Decimal, currency: Currency, integer: int) -> None:
     amount_1 = CashAmount(value, currency)
@@ -224,7 +224,7 @@ def test_sub_rsub(value_1: Decimal, value_2: Decimal, currency: Currency) -> Non
         min_value=0, max_value=1e10, allow_infinity=False, allow_nan=False
     ),
     currency=currencies(),
-    integer=st.integers(min_value=0, max_value=1e10),
+    integer=st.integers(min_value=0, max_value=int(1e10)),
 )
 def test_sub_rsub_int(value: Decimal, currency: Currency, integer: int) -> None:
     amount_1 = CashAmount(value, currency)

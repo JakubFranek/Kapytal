@@ -96,7 +96,7 @@ def test_invalid_refunded_transaction_type(
     with pytest.raises(
         TypeError, match="Refunded transaction must be a CashTransaction."
     ):
-        RefundTransaction("", datetime.now(tzinfo), account, transaction, None, None)
+        RefundTransaction("", datetime.now(tzinfo), account, transaction, [], [])
 
 
 @given(transaction=cash_transactions(), account=cash_accounts())
@@ -105,7 +105,7 @@ def test_invalid_refunded_transaction_type_enum(
 ) -> None:
     assume(transaction.type_ != CashTransactionType.EXPENSE)
     with pytest.raises(InvalidCashTransactionTypeError):
-        RefundTransaction("", datetime.now(tzinfo), account, transaction, None, None)
+        RefundTransaction("", datetime.now(tzinfo), account, transaction, [], [])
 
 
 def test_invalid_datetime_value() -> None:
@@ -113,12 +113,7 @@ def test_invalid_datetime_value() -> None:
     datetime_ = refunded_transaction.datetime_ - timedelta(days=1)
     with pytest.raises(RefundPrecedesTransactionError):
         RefundTransaction(
-            "",
-            datetime_,
-            refunded_transaction.account,
-            refunded_transaction,
-            None,
-            None,
+            "", datetime_, refunded_transaction.account, refunded_transaction, [], []
         )
 
 
@@ -363,7 +358,7 @@ def test_invalid_pair_type() -> None:
             datetime_,
             refunded_account,
             refunded_transaction,
-            category_amount_pairs,
+            category_amount_pairs,  # type: ignore
             tag_amount_pairs,
         )
 

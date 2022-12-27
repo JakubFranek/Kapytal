@@ -44,7 +44,7 @@ class Security(NameMixin, DatetimeCreatedMixin, UUIDMixin):
         symbol: str,
         type_: SecurityType,
         currency: Currency,
-        places: int = None,
+        places: int | None = None,
     ) -> None:
         super().__init__(name=name)
         self.symbol = symbol
@@ -128,7 +128,7 @@ class Security(NameMixin, DatetimeCreatedMixin, UUIDMixin):
 class SecurityAccount(Account):
     def __init__(self, name: str, parent: AccountGroup | None = None) -> None:
         super().__init__(name, parent)
-        self._securities: defaultdict[Security, int] = defaultdict(int)
+        self._securities: defaultdict[Security, int] = defaultdict(lambda: 0)
         self._transactions: list[SecurityRelatedTransaction] = []
 
     @property

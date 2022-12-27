@@ -91,7 +91,7 @@ class Currency(DatetimeCreatedMixin):
         self, target_currency: Self, date_: date | None = None
     ) -> Decimal:
         exchange_rates = Currency._get_exchange_rates(self, target_currency)
-        if not exchange_rates:
+        if exchange_rates is None:
             raise ConversionFactorNotFound(
                 f"No path from {self.code} to {target_currency.code} found."
             )
@@ -118,8 +118,8 @@ class Currency(DatetimeCreatedMixin):
     def _get_exchange_rates(
         current_currency: "Currency",
         target_currency: "Currency",
-        ignore_currencies: set["Currency"] = None,
-    ) -> list["ExchangeRate"]:
+        ignore_currencies: set["Currency"] | None = None,
+    ) -> list["ExchangeRate"] | None:
         if ignore_currencies is None:
             ignore_currencies = {current_currency}
 

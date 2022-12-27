@@ -23,7 +23,7 @@ class AccountGroup(NameMixin, DatetimeCreatedMixin):
         if new_parent is not None and not isinstance(new_parent, AccountGroup):
             raise TypeError("AccountGroup.parent must be an AccountGroup or a None.")
 
-        if self._parent is not None:
+        if hasattr(self, "_parent") and self._parent is not None:
             self._parent._children.remove(self)
 
         if new_parent is not None:

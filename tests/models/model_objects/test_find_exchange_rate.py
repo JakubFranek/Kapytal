@@ -3,6 +3,8 @@ from decimal import Decimal
 
 from src.models.model_objects.currency import CashAmount, Currency, ExchangeRate
 
+# TODO: move this to different test file? probably CashAmount
+
 
 def test_convert() -> None:
     currencies = get_currencies()
