@@ -17,7 +17,7 @@ class NoExchangeRateError(ValueError):
     """Raised when exchange rate is requested but none is available."""
 
 
-class ConversionFactorNotFound(ValueError):
+class ConversionFactorNotFoundError(ValueError):
     """Raised when a conversion factor cannot be calculated
     for the given Currency pair."""
 
@@ -92,27 +92,25 @@ class Currency(DatetimeCreatedMixin):
     ) -> Decimal:
         exchange_rates = Currency._get_exchange_rates(self, target_currency)
         if exchange_rates is None:
-            raise ConversionFactorNotFound(
+            raise ConversionFactorNotFoundError(
                 f"No path from {self.code} to {target_currency.code} found."
             )
 
         factor = Decimal(1)
+        current_currency = self
         for exchange_rate in exchange_rates:
-            if self == exchange_rate.primary_currency:
+            if current_currency == exchange_rate.primary_currency:
                 operation = operator.mul
+                current_currency = exchange_rate.secondary_currency
             else:
                 operation = operator.truediv
+                current_currency = exchange_rate.primary_currency
             if date_ is None:
                 rate = exchange_rate.latest_rate
             else:
                 rate = exchange_rate.rate_history[date_]
             factor = operation(factor, rate)
         return factor
-
-    def _get_exchange_rate(self, currency: Self) -> "ExchangeRate":
-        if not isinstance(currency, Currency):
-            raise TypeError("Currency.get_exchange_rate() argument must be a Currency.")
-        return self._exchange_rates[currency]
 
     @staticmethod
     def _get_exchange_rates(
@@ -125,7 +123,7 @@ class Currency(DatetimeCreatedMixin):
 
         if target_currency in current_currency.convertible_to:
             # Direct ExchangeRate found!
-            return [current_currency._get_exchange_rate(target_currency)]
+            return [current_currency._exchange_rates[target_currency]]
 
         # Direct ExchangeRate not found...
         # Get unexplored currencies to iterate over.
@@ -144,7 +142,7 @@ class Currency(DatetimeCreatedMixin):
                 continue  # Reached a dead end.
             # ExchangeRate to target_currency found!
             # Append ExchangeRate needed get there from the current_currency.
-            exchange_rates.insert(0, current_currency._get_exchange_rate(loop_currency))
+            exchange_rates.insert(0, current_currency._exchange_rates[loop_currency])
             return exchange_rates
         return None  # Reached a dead-end.
 

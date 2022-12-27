@@ -2,3 +2,5 @@
 pythonpath = [
   "."
 ]
+[tool.pyright]
+reportGeneralTypeIssues = "none"

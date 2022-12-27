@@ -1,4 +1,5 @@
 import numbers
+from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import Any
 
@@ -6,7 +7,13 @@ import pytest
 from hypothesis import assume, given
 from hypothesis import strategies as st
 
-from src.models.model_objects.currency import CashAmount, Currency
+from src.models.constants import tzinfo
+from src.models.model_objects.currency import (
+    CashAmount,
+    ConversionFactorNotFoundError,
+    Currency,
+    ExchangeRate,
+)
 from tests.models.test_assets.composites import (
     cash_amounts,
     currencies,
@@ -256,3 +263,72 @@ def test_sub_rsub_not_real(cash_amount: CashAmount, number: Any) -> None:
 @given(cash_amount=cash_amounts())
 def test_convert_to_self(cash_amount: CashAmount) -> None:
     assert cash_amount.convert(cash_amount.currency) == cash_amount
+
+
+def test_convert_czk_to_btc() -> None:
+    currencies = get_currencies()
+    cash_amount = CashAmount(Decimal(1_000_000), currencies["CZK"])
+    result = cash_amount.convert(currencies["BTC"])
+    assert result == CashAmount(Decimal(0.9), currencies["BTC"])
+
+
+def test_convert_czk_to_btc_date() -> None:
+    currencies = get_currencies()
+    cash_amount = CashAmount(Decimal(1_000_000), currencies["CZK"])
+    date_ = datetime.now(tzinfo).date() - timedelta(days=1)
+    result = cash_amount.convert(currencies["BTC"], date_)
+    assert result == CashAmount(Decimal(1), currencies["BTC"])
+
+
+def test_convert_no_path() -> None:
+    currencies = get_currencies()
+    cash_amount = CashAmount(Decimal(1), currencies["CZK"])
+    with pytest.raises(ConversionFactorNotFoundError):
+        cash_amount.convert(currencies["XXX"])
+
+
+def get_currencies() -> dict[str, Currency]:
+    btc = Currency("BTC", 8)
+    usd = Currency("USD", 2)
+    eur = Currency("EUR", 2)
+    czk = Currency("CZK", 2)
+    pln = Currency("PLN", 2)
+    dkk = Currency("DKK", 2)
+    nok = Currency("NOK", 2)
+    rub = Currency("RUB", 2)
+    byn = Currency("BYN", 2)
+    xxx = Currency("xxx", 2)
+
+    today = datetime.now(tzinfo).date()
+    yesterday = datetime.now(tzinfo).date() - timedelta(days=1)
+
+    exchange_eur_czk = ExchangeRate(eur, czk)
+    exchange_eur_czk.set_rate(today, Decimal("25"))
+    exchange_eur_czk.set_rate(yesterday, Decimal("20"))
+    exchange_eur_pln = ExchangeRate(eur, pln)  # noqa: F841
+    exchange_pln_rub = ExchangeRate(pln, rub)  # noqa: F841
+    exchange_eur_dkk = ExchangeRate(eur, dkk)  # noqa: F841
+    exchange_eur_rub = ExchangeRate(eur, rub)  # noqa: F841
+    exchange_eur_usd = ExchangeRate(eur, usd)
+    exchange_eur_usd.set_rate(today, Decimal("0.9"))
+    exchange_eur_usd.set_rate(yesterday, Decimal("1"))
+    exchange_btc_usd = ExchangeRate(btc, usd)
+    exchange_btc_usd.set_rate(today, Decimal("40000"))
+    exchange_btc_usd.set_rate(yesterday, Decimal("50000"))
+
+    exchange_usd_rub = ExchangeRate(usd, rub)  # noqa: F841
+    exchange_rub_byn = ExchangeRate(rub, byn)  # noqa: F841
+    exchange_dkk_nok = ExchangeRate(dkk, nok)  # noqa: F841
+
+    return {
+        "BTC": btc,
+        "USD": usd,
+        "EUR": eur,
+        "CZK": czk,
+        "PLN": pln,
+        "DKK": dkk,
+        "RUB": rub,
+        "BYN": byn,
+        "NOK": nok,
+        "XXX": xxx,
+    }

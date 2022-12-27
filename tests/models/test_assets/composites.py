@@ -255,7 +255,7 @@ def security_transactions(
     )
     security_account = draw(security_accounts())
     cash_account = draw(cash_accounts())
-    security = draw(securities(cash_account.currency))
+    security = draw(securities(currency=cash_account.currency))
     return SecurityTransaction(
         description,
         datetime_,

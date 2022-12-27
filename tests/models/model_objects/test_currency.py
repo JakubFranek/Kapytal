@@ -7,8 +7,8 @@ from hypothesis import assume, given
 from hypothesis import strategies as st
 
 from src.models.constants import tzinfo
-from src.models.model_objects.currency import Currency
-from tests.models.test_assets.composites import everything_except
+from src.models.model_objects.currency import Currency, CurrencyError, ExchangeRate
+from tests.models.test_assets.composites import currencies, everything_except
 
 
 @given(
@@ -84,8 +84,51 @@ def test_places_invalid_value(code: Any, places: int) -> None:
     places_1=st.integers(min_value=0, max_value=8),
     places_2=st.integers(min_value=0, max_value=8),
 )
-def test_hash(code: str, places_1: int, places_2: int) -> None:
+def test_eq_hash(code: str, places_1: int, places_2: int) -> None:
     currency_1 = Currency(code, places_1)
     currency_2 = Currency(code, places_2)
     assert currency_1 == currency_2
     assert currency_1.__hash__() == currency_2.__hash__()
+
+
+@given(currency=currencies(), other=everything_except(Currency))
+def test_eq_different_type(currency: Currency, other: Any) -> None:
+    result = currency.__eq__(other)
+    assert result == NotImplemented
+
+
+@given(currency=currencies(), exchange_rate=everything_except(ExchangeRate))
+def test_add_exchange_rate_invalid_type(currency: Currency, exchange_rate: Any) -> None:
+    with pytest.raises(
+        TypeError, match="Argument 'exchange_rate' must be an ExchangeRate."
+    ):
+        currency.add_exchange_rate(exchange_rate)
+
+
+@given(currency=currencies(), other_1=currencies(), other_2=currencies())
+def test_add_exchange_rate_unrelated_currency(
+    currency: Currency, other_1: Currency, other_2: Currency
+) -> None:
+    assume(currency != other_1 != other_2)
+    exchange_rate = ExchangeRate(other_1, other_2)
+    with pytest.raises(CurrencyError):
+        currency.add_exchange_rate(exchange_rate)
+
+
+@given(currency=currencies(), exchange_rate=everything_except(ExchangeRate))
+def test_remove_exchange_rate_invalid_type(
+    currency: Currency, exchange_rate: Any
+) -> None:
+    with pytest.raises(
+        TypeError, match="Argument 'exchange_rate' must be an ExchangeRate."
+    ):
+        currency.remove_exchange_rate(exchange_rate)
+
+
+@given(currency=currencies(), other=currencies())
+def test_remove_exchange_rate(currency: Currency, other: Currency) -> None:
+    assume(currency != other)
+    exchange_rate = ExchangeRate(currency, other)
+    assert other in currency.convertible_to
+    currency.remove_exchange_rate(exchange_rate)
+    assert other not in currency.convertible_to
