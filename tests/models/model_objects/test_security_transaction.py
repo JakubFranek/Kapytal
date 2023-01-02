@@ -31,7 +31,7 @@ from tests.models.test_assets.get_valid_objects import (
 @given(
     description=st.text(min_size=1, max_size=256),
     type_=st.just(SecurityTransactionType.BUY),
-    shares=st.integers(min_value=1),
+    shares=st.decimals(min_value=0.01, allow_infinity=False, allow_nan=False, places=3),
     price_per_share=st.decimals(
         min_value=0, max_value=1e10, allow_infinity=False, allow_nan=False, places=3
     ),
@@ -90,7 +90,7 @@ def test_buy(
 
 
 @given(
-    shares=st.integers(min_value=1, max_value=10),
+    shares=st.decimals(min_value=0.01, allow_infinity=False, allow_nan=False, places=3),
     price_per_share=st.decimals(
         min_value=0, max_value=1e10, allow_infinity=False, allow_nan=False, places=3
     ),
@@ -148,7 +148,7 @@ def test_invalid_type_type(
             datetime_,
             type_,
             security,
-            1,
+            Decimal("1"),
             Decimal("100"),
             Decimal("1"),
             security_account,
@@ -184,7 +184,7 @@ def test_invalid_security_type(
             datetime_,
             type_,
             security,
-            1,
+            Decimal("1"),
             Decimal("100"),
             Decimal("1"),
             security_account,
@@ -214,7 +214,9 @@ def test_invalid_shares_type(
             + timedelta(days=1)
         )
     )
-    with pytest.raises(TypeError, match="SecurityTransaction.shares must be an int."):
+    with pytest.raises(
+        TypeError, match="SecurityTransaction.shares must be a Decimal."
+    ):
         SecurityTransaction(
             "Test description",
             datetime_,
@@ -231,7 +233,9 @@ def test_invalid_shares_type(
 @given(
     type_=st.sampled_from(SecurityTransactionType),
     security=securities(),
-    shares=st.integers(max_value=0),
+    shares=st.decimals(
+        max_value=-0.01, allow_infinity=False, allow_nan=False, places=3
+    ),
     security_account=security_accounts(),
     cash_account=cash_accounts(),
     data=st.data(),
@@ -251,7 +255,8 @@ def test_invalid_shares_value(
         )
     )
     with pytest.raises(
-        ValueError, match="SecurityTransaction.shares must be at least 1."
+        ValueError,
+        match="must be a finite positive number.",
     ):
         SecurityTransaction(
             "Test description",
@@ -295,7 +300,7 @@ def test_invalid_security_account_type(
             datetime_,
             type_,
             security,
-            1,
+            Decimal("1"),
             Decimal("100"),
             Decimal("1"),
             security_account,
@@ -326,7 +331,7 @@ def test_invalid_cash_account_type(
             datetime_,
             type_,
             security,
-            1,
+            Decimal("1"),
             Decimal("100"),
             Decimal("1"),
             security_account,
@@ -355,7 +360,7 @@ def test_invalid_cash_account_currency(
             datetime_,
             type_,
             security,
-            1,
+            Decimal("1"),
             Decimal("100"),
             Decimal("1"),
             security_account,
@@ -437,7 +442,7 @@ def get_sell() -> SecurityTransaction:
     datetime_ = datetime.now(tzinfo)
     type_ = SecurityTransactionType.SELL
     security = buy.security
-    shares = 10
+    shares = Decimal("10")
     price_per_share = Decimal("105.49")
     fees = Decimal("1.25")
     return SecurityTransaction(
@@ -458,7 +463,7 @@ def get_buy() -> SecurityTransaction:
     datetime_ = datetime.now(tzinfo)
     type_ = SecurityTransactionType.BUY
     security = get_security()
-    shares = 10
+    shares = Decimal("10")
     price_per_share = Decimal("99.77")
     fees = Decimal("1.25")
     security_account = SecurityAccount("Interactive Brokers")

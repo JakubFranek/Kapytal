@@ -242,7 +242,9 @@ def security_transactions(
     )
     type_ = draw(st.sampled_from(SecurityTransactionType))
 
-    shares = draw(st.integers(min_value=1))
+    shares = draw(
+        st.decimals(min_value=0.01, allow_infinity=False, allow_nan=False, places=3)
+    )
     price_per_share = draw(
         st.decimals(
             min_value=0, max_value=1e10, allow_infinity=False, allow_nan=False, places=3
@@ -274,7 +276,9 @@ def security_transfers(draw: st.DrawFn) -> SecurityTransfer:
     description = draw(st.text(min_size=1, max_size=256))
     datetime_ = draw(st.datetimes(timezones=st.just(tzinfo)))
     security = draw(securities())
-    shares = draw(st.integers(min_value=1))
+    shares = draw(
+        st.decimals(min_value=0.01, allow_infinity=False, allow_nan=False, places=3)
+    )
     account_sender = draw(security_accounts())
     account_recipient = draw(security_accounts())
     return SecurityTransfer(

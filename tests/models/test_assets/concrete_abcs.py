@@ -33,7 +33,7 @@ class ConcreteCashRelatedTransaction(CashRelatedTransaction):
 
 
 class ConcreteSecurityRelatedTransaction(SecurityRelatedTransaction):
-    def _get_shares(self, account: SecurityAccount) -> int:
+    def _get_shares(self, account: SecurityAccount) -> Decimal:
         return super()._get_shares(account)
 
     def is_account_related(self, account: Account) -> bool:

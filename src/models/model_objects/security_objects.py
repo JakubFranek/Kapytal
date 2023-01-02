@@ -176,7 +176,7 @@ class SecurityAccount(Account):
 
 class SecurityRelatedTransaction(Transaction, ABC):
     def __init__(
-        self, description: str, datetime_: datetime, shares: int, security: Security
+        self, description: str, datetime_: datetime, shares: Decimal, security: Security
     ) -> None:
         super().__init__(description, datetime_)
         if not isinstance(security, Security):
@@ -193,14 +193,16 @@ class SecurityRelatedTransaction(Transaction, ABC):
         return self._shares
 
     @shares.setter
-    def shares(self, value: int) -> None:
-        if not isinstance(value, int):
-            raise TypeError("SecurityTransaction.shares must be an int.")
-        if value < 1:
-            raise ValueError("SecurityTransaction.shares must be at least 1.")
+    def shares(self, value: Decimal) -> None:
+        if not isinstance(value, Decimal):
+            raise TypeError("SecurityTransaction.shares must be a Decimal.")
+        if value.is_infinite() or value <= 0:
+            raise ValueError(
+                "SecurityTransaction.shares must be a finite positive number."
+            )
         self._shares = value
 
-    def get_shares(self, account: SecurityAccount) -> int:
+    def get_shares(self, account: SecurityAccount) -> Decimal:
         if not isinstance(account, SecurityAccount):
             raise TypeError("Argument 'account' must be a SecurityAccount.")
         if not self.is_account_related(account):
@@ -211,7 +213,7 @@ class SecurityRelatedTransaction(Transaction, ABC):
         return self._get_shares(account)
 
     @abstractmethod
-    def _get_shares(self, account: SecurityAccount) -> int:
+    def _get_shares(self, account: SecurityAccount) -> Decimal:
         raise NotImplementedError("Not implemented")
 
 
@@ -222,7 +224,7 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
         datetime_: datetime,
         type_: SecurityTransactionType,
         security: Security,
-        shares: int,
+        shares: Decimal,
         price_per_share: Decimal,
         fees: Decimal,
         security_account: SecurityAccount,
@@ -300,7 +302,7 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
             return -self._shares * self.price_per_share - self.fees
         return self._shares * self.price_per_share - self.fees
 
-    def _get_shares(self, account: SecurityAccount) -> int:  # noqa: U100
+    def _get_shares(self, account: SecurityAccount) -> Decimal:  # noqa: U100
         if self.type_ == SecurityTransactionType.BUY:
             return self.shares
         return -self.shares
@@ -315,7 +317,7 @@ class SecurityTransfer(SecurityRelatedTransaction):
         description: str,
         datetime_: datetime,
         security: Security,
-        shares: int,
+        shares: Decimal,
         account_sender: SecurityAccount,
         account_recipient: SecurityAccount,
     ) -> None:
@@ -371,7 +373,7 @@ class SecurityTransfer(SecurityRelatedTransaction):
         self._account_recipient = new_account
         self._account_recipient.add_transaction(self)
 
-    def _get_shares(self, account: SecurityAccount) -> int:
+    def _get_shares(self, account: SecurityAccount) -> Decimal:
         if account == self._account_sender:
             return -self.shares
         return self.shares
