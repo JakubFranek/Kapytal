@@ -1,4 +1,5 @@
 from datetime import datetime
+from decimal import Decimal
 
 from src.models.constants import tzinfo
 from src.models.model_objects.currency import Currency
@@ -21,7 +22,7 @@ def get_concrete_transaction() -> ConcreteTransaction:
 def get_concrete_security_related_transaction() -> ConcreteSecurityRelatedTransaction:
     security = get_security()
     return ConcreteSecurityRelatedTransaction(
-        "A description", datetime.now(tzinfo), 1, security
+        "A description", datetime.now(tzinfo), Decimal("1"), security
     )
 
 

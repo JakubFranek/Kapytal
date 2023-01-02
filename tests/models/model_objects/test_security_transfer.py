@@ -23,7 +23,7 @@ from tests.models.test_assets.composites import (
     description=st.text(min_size=1, max_size=256),
     datetime_=st.datetimes(timezones=st.just(tzinfo)),
     security=securities(),
-    shares=st.integers(min_value=1),
+    shares=st.decimals(min_value=0.01, allow_infinity=False, allow_nan=False, places=3),
     account_sender=security_accounts(),
     account_recipient=security_accounts(),
 )
@@ -57,7 +57,7 @@ def test_creation(
     description=st.text(min_size=1, max_size=256),
     datetime_=st.datetimes(timezones=st.just(tzinfo)),
     security=securities(),
-    shares=st.integers(min_value=1),
+    shares=st.decimals(min_value=0.01, allow_infinity=False, allow_nan=False, places=3),
     account_sender=everything_except(SecurityAccount),
     account_recipient=security_accounts(),
 )
@@ -81,7 +81,7 @@ def test_invalid_account_sender_type(
     description=st.text(min_size=1, max_size=256),
     datetime_=st.datetimes(timezones=st.just(tzinfo)),
     security=securities(),
-    shares=st.integers(min_value=1),
+    shares=st.decimals(min_value=0.01, allow_infinity=False, allow_nan=False, places=3),
     account_recipient=everything_except(SecurityAccount),
     account_sender=security_accounts(),
 )
