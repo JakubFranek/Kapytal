@@ -211,12 +211,13 @@ class ExchangeRate:
 class CashAmount:
     """An immutable object comprising of Decimal value and a Currency."""
 
-    def __init__(self, value: Decimal, currency: Currency) -> None:
-        if not isinstance(value, Decimal):
-            raise TypeError("CashAmount.value must be a Decimal.")
-        if not value.is_finite():
+    def __init__(self, value: Decimal | int | str, currency: Currency) -> None:
+        if not isinstance(value, (Decimal, int, str)):
+            raise TypeError("CashAmount.value must be a Decimal, integer or a string.")
+        _value = Decimal(value)
+        if not _value.is_finite():
             raise ValueError("CashAmount.value must be finite.")
-        self._value = value
+        self._value = _value
 
         if not isinstance(currency, Currency):
             raise TypeError("CashAmount.currency must be a Currency.")
@@ -236,21 +237,27 @@ class CashAmount:
     def __str__(self) -> str:
         return f"{self.value} {self._currency.code}"
 
+    def __hash__(self) -> int:
+        return hash((self.value, self.currency))
+
     def __eq__(self, __o: object) -> bool:
         if not isinstance(__o, CashAmount):
             return NotImplemented
         if self.currency != __o.currency:
             if self.value == 0 and __o.value == 0:
                 return True  # If values are zero, amounts are always equal
-            return NotImplemented
+            raise CurrencyError("CashAmount.currency of operands must match.")
         return self.value == __o.value
 
     def __lt__(self, __o: object) -> bool:
         if not isinstance(__o, CashAmount):
             return NotImplemented
         if self.currency != __o.currency:
-            return NotImplemented
+            raise CurrencyError("CashAmount.currency of operands must match.")
         return self.value < __o.value
+
+    def __neg__(self) -> Self:
+        return CashAmount(-self.value, self.currency)
 
     def __add__(self, __o: object) -> Self:
         if not isinstance(__o, CashAmount):
@@ -258,36 +265,33 @@ class CashAmount:
                 return NotImplemented
             return CashAmount(self.value + __o, self.currency)
         if self.currency != __o.currency:
-            return NotImplemented
+            raise CurrencyError("CashAmount.currency of operands must match.")
         return CashAmount(self.value + __o.value, self.currency)
 
     def __radd__(self, __o: object) -> Self:
-        # This method is needed for sum()
-        if not isinstance(__o, CashAmount):
-            if not isinstance(__o, numbers.Real):
-                return NotImplemented
-            return CashAmount(__o + self.value, self.currency)
-        if self.currency != __o.currency:
-            return NotImplemented
-        return CashAmount(__o.value + self.value, self.currency)
+        return self.__add__(__o)
 
     def __sub__(self, __o: object) -> Self:
         if not isinstance(__o, CashAmount):
-            if not isinstance(__o, numbers.Real):
-                return NotImplemented
-            return CashAmount(self.value - __o, self.currency)
-        if self.currency != __o.currency:
             return NotImplemented
+        if self.currency != __o.currency:
+            raise CurrencyError("CashAmount.currency of operands must match.")
         return CashAmount(self.value - __o.value, self.currency)
 
     def __rsub__(self, __o: object) -> Self:
         if not isinstance(__o, CashAmount):
-            if not isinstance(__o, numbers.Real):
-                return NotImplemented
-            return CashAmount(__o - self.value, self.currency)
-        if self.currency != __o.currency:
             return NotImplemented
+        if self.currency != __o.currency:
+            raise CurrencyError("CashAmount.currency of operands must match.")
         return CashAmount(__o.value - self.value, self.currency)
+
+    def __mul__(self, __o: object) -> Self:
+        if not isinstance(__o, (numbers.Real, Decimal)):
+            return NotImplemented
+        return CashAmount(Decimal(self.value * __o), self.currency)
+
+    def __rmul__(self, __o: object) -> Self:
+        return self.__mul__(__o)
 
     def convert(self, target_currency: Currency, date_: date | None = None) -> Self:
         if target_currency == self.currency:

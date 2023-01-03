@@ -12,6 +12,7 @@ from src.models.model_objects.currency import (
     CashAmount,
     ConversionFactorNotFoundError,
     Currency,
+    CurrencyError,
     ExchangeRate,
 )
 from tests.models.test_assets.composites import (
@@ -35,8 +36,9 @@ def test_creation(value: Decimal, currency: Currency) -> None:
     assert str(cash_amount) == f"{round(value,currency.places)} {currency.code}"
 
 
+# TODO: fix test w.r.t. string value
 @given(
-    value=everything_except(Decimal),
+    value=everything_except((Decimal, int)),
     currency=currencies(),
 )
 def test_value_invalid_type(value: Decimal, currency: Currency) -> None:
@@ -106,8 +108,8 @@ def test_eq_different_currency_nonzero_value(
     assume(currency_1 != currency_2)
     amount_1 = CashAmount(Decimal("123"), currency_1)
     amount_2 = CashAmount(Decimal("456"), currency_2)
-    res = amount_1.__eq__(amount_2)
-    assert res == NotImplemented
+    with pytest.raises(CurrencyError):
+        amount_1.__eq__(amount_2)
 
 
 @given(
@@ -137,8 +139,8 @@ def test_lt_different_currencies(
     cash_amount_1: CashAmount, cash_amount_2: CashAmount
 ) -> None:
     assume(cash_amount_1.currency != cash_amount_2.currency)
-    result = cash_amount_1.__lt__(cash_amount_2)
-    assert result == NotImplemented
+    with pytest.raises(CurrencyError):
+        cash_amount_1.__lt__(cash_amount_2)
 
 
 @given(
@@ -194,10 +196,10 @@ def test_add_radd_different_currencies(
     cash_amount_1: CashAmount, cash_amount_2: CashAmount
 ) -> None:
     assume(cash_amount_1.currency != cash_amount_2.currency)
-    result = cash_amount_1.__add__(cash_amount_2)
-    assert result == NotImplemented
-    result = cash_amount_1.__radd__(cash_amount_2)
-    assert result == NotImplemented
+    with pytest.raises(CurrencyError):
+        cash_amount_1.__add__(cash_amount_2)
+    with pytest.raises(CurrencyError):
+        cash_amount_1.__radd__(cash_amount_2)
 
 
 @given(cash_amount=cash_amounts(), number=everything_except(numbers.Real))
@@ -226,30 +228,15 @@ def test_sub_rsub(value_1: Decimal, value_2: Decimal, currency: Currency) -> Non
     assert amount_1.__rsub__(amount_2) == expected_rsub
 
 
-@given(
-    value=st.decimals(
-        min_value=0, max_value=1e10, allow_infinity=False, allow_nan=False
-    ),
-    currency=currencies(),
-    integer=st.integers(min_value=0, max_value=int(1e10)),
-)
-def test_sub_rsub_int(value: Decimal, currency: Currency, integer: int) -> None:
-    amount_1 = CashAmount(value, currency)
-    expected_sub = CashAmount(amount_1.value - integer, currency)
-    expected_rsub = CashAmount(integer - amount_1.value, currency)
-    assert amount_1.__sub__(integer) == expected_sub
-    assert amount_1.__rsub__(integer) == expected_rsub
-
-
 @given(cash_amount_1=cash_amounts(), cash_amount_2=cash_amounts())
 def test_sub_rsub_different_currencies(
     cash_amount_1: CashAmount, cash_amount_2: CashAmount
 ) -> None:
     assume(cash_amount_1.currency != cash_amount_2.currency)
-    result = cash_amount_1.__sub__(cash_amount_2)
-    assert result == NotImplemented
-    result = cash_amount_1.__rsub__(cash_amount_2)
-    assert result == NotImplemented
+    with pytest.raises(CurrencyError):
+        cash_amount_1.__sub__(cash_amount_2)
+    with pytest.raises(CurrencyError):
+        cash_amount_1.__rsub__(cash_amount_2)
 
 
 @given(cash_amount=cash_amounts(), number=everything_except(numbers.Real))

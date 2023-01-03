@@ -13,12 +13,16 @@ from src.models.mixins.name_mixin import NameMixin
 from src.models.mixins.uuid_mixin import UUIDMixin
 from src.models.model_objects.account_group import AccountGroup
 from src.models.model_objects.cash_objects import CashAccount, CashRelatedTransaction
-from src.models.model_objects.currency import Currency, CurrencyError
+from src.models.model_objects.currency import CashAmount, Currency, CurrencyError
 
 
 # TODO: maybe put all generic Errors into one module?
 class InvalidCharacterError(ValueError):
     """Raised when invalid character is passed."""
+
+
+class PriceNotFoundError(ValueError):
+    """Raised when Security price does not exist."""
 
 
 class SecurityType(Enum):
@@ -68,7 +72,7 @@ class Security(NameMixin, DatetimeCreatedMixin, UUIDMixin):
                 )
             self._places = places
 
-        self._price_history: dict[date, Decimal] = {}
+        self._price_history: dict[date, CashAmount] = {}
 
     @property
     def type_(self) -> SecurityType:
@@ -98,14 +102,14 @@ class Security(NameMixin, DatetimeCreatedMixin, UUIDMixin):
         self._symbol = value.upper()
 
     @property
-    def price(self) -> Decimal:
+    def price(self) -> CashAmount:
         if len(self._price_history) == 0:
-            return Decimal(0)
+            return CashAmount(Decimal(0), self.currency)
         latest_date = max(date_ for date_ in self._price_history)
         return self._price_history[latest_date]
 
     @property
-    def price_history(self) -> dict[date, Decimal]:
+    def price_history(self) -> dict[date, CashAmount]:
         return copy.deepcopy(self._price_history)
 
     @property
@@ -115,14 +119,16 @@ class Security(NameMixin, DatetimeCreatedMixin, UUIDMixin):
     def __repr__(self) -> str:
         return f"Security(symbol='{self.symbol}', type={self.type_.name})"
 
-    def set_price(self, date_: date, price: Decimal) -> None:
+    def set_price(self, date_: date, price: CashAmount) -> None:
         if not isinstance(date_, date):
             raise TypeError("Argument 'date_' must be a date.")
-        if not isinstance(price, Decimal):
-            raise TypeError("Argument 'price' must be a Decimal.")
-        if not price.is_finite() or price < 0:
-            raise ValueError("Argument 'price' must be a finite, non-negative Decimal.")
-        self._price_history[date_] = round(price, self._places)
+        if not isinstance(price, CashAmount):
+            raise TypeError("Argument 'price' must be a CashAmount.")
+        if price.currency != self.currency:
+            raise CurrencyError("Security.currency and price.currency must match.")
+        self._price_history[date_] = CashAmount(
+            round(price.value, self._places), self.currency
+        )
 
 
 class SecurityAccount(Account):
@@ -135,21 +141,22 @@ class SecurityAccount(Account):
     def securities(self) -> dict[Security, int]:
         return copy.deepcopy(self._securities)
 
-    # TODO: this does not take into account the currency of the traded securities
-    @property
-    def balance(self) -> Decimal:
-        return Decimal(
-            sum(
-                security.price * shares for security, shares in self._securities.items()
-            )
-        )
-
     @property
     def transactions(self) -> tuple["SecurityRelatedTransaction", ...]:
         return tuple(self._transactions)
 
     def __repr__(self) -> str:
         return f"SecurityAccount('{self.name}')"
+
+    # TODO: CashAmount might not work with number multiplication yet
+    def get_balance(self, currency: Currency) -> CashAmount:
+        return sum(
+            (
+                security.price.convert(currency) * shares
+                for security, shares in self._securities.items()
+            ),
+            start=CashAmount(0, currency),
+        )
 
     def add_transaction(self, transaction: "SecurityRelatedTransaction") -> None:
         self._validate_transaction(transaction)
@@ -189,14 +196,14 @@ class SecurityRelatedTransaction(Transaction, ABC):
         return self._security
 
     @property
-    def shares(self) -> int:
+    def shares(self) -> Decimal:
         return self._shares
 
     @shares.setter
     def shares(self, value: Decimal) -> None:
         if not isinstance(value, Decimal):
             raise TypeError("SecurityTransaction.shares must be a Decimal.")
-        if value.is_infinite() or value <= 0:
+        if not value.is_finite() or value <= 0:
             raise ValueError(
                 "SecurityTransaction.shares must be a finite positive number."
             )
@@ -225,8 +232,8 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
         type_: SecurityTransactionType,
         security: Security,
         shares: Decimal,
-        price_per_share: Decimal,
-        fees: Decimal,
+        price_per_share: CashAmount,
+        fees: CashAmount,
         security_account: SecurityAccount,
         cash_account: CashAccount,
     ) -> None:
@@ -245,6 +252,7 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
 
         self.price_per_share = price_per_share
         self.fees = fees
+
         self.cash_account = cash_account
         self.security_account = security_account
 
@@ -289,6 +297,26 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
         self._cash_account = new_account
         self._cash_account.add_transaction(self)
 
+    @property
+    def price_per_share(self) -> CashAmount:
+        return self._price_per_share
+
+    @price_per_share.setter
+    def price_per_share(self, value: CashAmount) -> None:
+        if not isinstance(value, CashAmount):
+            raise TypeError("SecurityTransaction.price_per_share must be a CashAmount.")
+        self._price_per_share = value
+
+    @property
+    def fees(self) -> CashAmount:
+        return self._fees
+
+    @fees.setter
+    def fees(self, value: CashAmount) -> None:
+        if not isinstance(value, CashAmount):
+            raise TypeError("SecurityTransaction.fees must be a CashAmount.")
+        self._fees = value
+
     def __repr__(self) -> str:
         return (
             f"SecurityTransaction({self.type_.name}, "
@@ -297,7 +325,7 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
             f"{self.datetime_.strftime('%Y-%m-%d')})"
         )
 
-    def _get_amount(self, account: CashAccount) -> Decimal:  # noqa: U100
+    def _get_amount(self, account: CashAccount) -> CashAmount:  # noqa: U100
         if self.type_ == SecurityTransactionType.BUY:
             return -self._shares * self.price_per_share - self.fees
         return self._shares * self.price_per_share - self.fees

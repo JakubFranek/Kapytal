@@ -8,16 +8,17 @@ from hypothesis import strategies as st
 
 from src.models.constants import tzinfo
 from src.models.model_objects.account_group import AccountGroup
-from src.models.model_objects.cash_objects import CashAccount
+from src.models.model_objects.currency import CashAmount, Currency
 from tests.models.test_assets.composites import (
     account_groups,
     cash_accounts,
+    currencies,
     everything_except,
 )
 
 
-@given(name=st.text(min_size=1, max_size=32))
-def test_creation(name: str) -> None:
+@given(name=st.text(min_size=1, max_size=32), currency=currencies())
+def test_creation(name: str, currency: Currency) -> None:
     dt_start = datetime.now(tzinfo)
     account_group = AccountGroup(name)
 
@@ -25,8 +26,8 @@ def test_creation(name: str) -> None:
 
     assert account_group.name == name
     assert account_group.parent is None
+    assert account_group.get_balance(currency) == CashAmount(Decimal(0), currency)
     assert dt_created_diff.seconds < 1
-    assert account_group.balance == Decimal(0)
     assert account_group.__repr__() == f"AccountGroup('{name}', parent='None')"
     assert account_group.path == name
 
@@ -66,16 +67,24 @@ def test_invalid_parent_type(parent: Any) -> None:
         account_group.parent = parent
 
 
-@given(
-    accounts=st.lists(cash_accounts(), min_size=1, max_size=5),
-)
-def test_balance(accounts: list[CashAccount]) -> None:
+@given(currency=currencies(), data=st.data())
+def test_get_balance_single_currency(currency: Currency, data: st.DataObject) -> None:
+    accounts = data.draw(
+        st.lists(cash_accounts(currency=currency), min_size=0, max_size=5)
+    )
+
     account_group = get_account_group()
     for account in accounts:
         account.parent = account_group
 
-    expected_sum = sum(account.balance for account in accounts)
-    assert account_group.balance == expected_sum
+    expected_sum = sum(
+        (account.get_balance(currency) for account in accounts),
+        start=CashAmount(0, currency),
+    )
+    assert account_group.get_balance(currency) == expected_sum
+
+
+# TODO: add multiple currency test
 
 
 def get_account_group() -> AccountGroup:

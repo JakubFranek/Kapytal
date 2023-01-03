@@ -1,7 +1,7 @@
+import numbers
 import string
 from datetime import datetime
-from decimal import Decimal
-from typing import Any, Literal
+from typing import Any
 
 from hypothesis import strategies as st
 
@@ -57,11 +57,23 @@ def attributes(draw: st.DrawFn, type_: AttributeType | None = None) -> Attribute
 
 
 @st.composite
-def cash_amounts(draw: st.DrawFn) -> CashAmount:
+def cash_amounts(
+    draw: st.DrawFn,
+    currency: Currency | None = None,
+    min_value: numbers.Real | str | None = -1e10,
+    max_value: numbers.Real | str | None = 1e10,
+) -> CashAmount:
     value = draw(
-        st.decimals(min_value=0, max_value=1e10, allow_infinity=False, allow_nan=False)
+        st.decimals(
+            min_value=min_value,
+            max_value=max_value,
+            allow_infinity=False,
+            allow_nan=False,
+            places=3,
+        )
     )
-    currency = draw(currencies())
+    if currency is None:
+        currency = draw(currencies())
     return CashAmount(value, currency)
 
 
@@ -75,11 +87,7 @@ def cash_accounts(
     name = draw(st.text(min_size=1, max_size=32))
     if currency is None:
         currency = draw(currencies())
-    initial_balance = draw(
-        st.decimals(
-            min_value=0, max_value=1e10, allow_infinity=False, allow_nan=False, places=3
-        )
-    )
+    initial_amount = draw(cash_amounts(currency=currency))
     initial_datetime = draw(
         st.datetimes(
             min_value=min_datetime,
@@ -87,30 +95,46 @@ def cash_accounts(
             timezones=st.just(tzinfo),
         )
     )
-    return CashAccount(name, currency, initial_balance, initial_datetime)
+    return CashAccount(name, currency, initial_amount, initial_datetime)
 
 
 @st.composite
 def cash_transactions(
     draw: st.DrawFn,
+    currency: Currency | None = None,
     min_datetime: datetime = min_datetime,
     max_datetime: datetime = datetime.max,
 ) -> CashTransaction:
     description = draw(st.text(min_size=0, max_size=256))
     type_ = draw(st.sampled_from(CashTransactionType))
-    account: CashAccount = draw(cash_accounts())
+    account: CashAccount = draw(cash_accounts(currency=currency))
+    currency = account.currency
     datetime_ = draw(
         st.datetimes(
             min_value=min_datetime, max_value=max_datetime, timezones=st.just(tzinfo)
         )
     )
-    category_amount_pairs_list = draw(
-        st.lists(category_amount_pairs(type_), min_size=1, max_size=5)
+    category_amount_pairs_list: list[tuple[Category, CashAmount]] = draw(
+        st.lists(
+            category_amount_pairs(
+                transaction_type=type_,
+                currency=currency,
+            ),
+            min_size=1,
+            max_size=5,
+        )
     )
-    max_tag_amount = Decimal(sum(amount for _, amount in category_amount_pairs_list))
+    max_tag_amount = sum(amount for _, amount in category_amount_pairs_list)
     payee = draw(attributes(AttributeType.PAYEE))
     tag_amount_pairs_list = draw(
-        st.lists(tag_amount_pairs(max_tag_amount), min_size=0, max_size=5)
+        st.lists(
+            tag_amount_pairs(
+                currency=currency,
+                max_value=max_tag_amount.value,
+            ),
+            min_size=0,
+            max_size=5,
+        )
     )
     return CashTransaction(
         description,
@@ -137,24 +161,8 @@ def cash_transfers(
             min_value=min_datetime, max_value=max_datetime, timezones=st.just(tzinfo)
         )
     )
-    amount_sent = draw(
-        st.decimals(
-            min_value="0.01",
-            max_value=1e10,
-            allow_infinity=False,
-            allow_nan=False,
-            places=3,
-        )
-    )
-    amount_received = draw(
-        st.decimals(
-            min_value="0.01",
-            max_value=1e10,
-            allow_infinity=False,
-            allow_nan=False,
-            places=3,
-        )
-    )
+    amount_sent = draw(cash_amounts(account_sender.currency, min_value="0.01"))
+    amount_received = draw(cash_amounts(account_recipient.currency, min_value="0.01"))
     return CashTransfer(
         description,
         datetime_,
@@ -187,25 +195,23 @@ def categories(
 
 @st.composite
 def category_amount_pairs(
-    draw: st.DrawFn, transaction_type: CashTransactionType
-) -> tuple[Category, Decimal]:
+    draw: st.DrawFn,
+    transaction_type: CashTransactionType,
+    currency: Currency,
+    min_value: numbers.Real | str | None = "0.01",
+    max_value: numbers.Real | str | None = 1e10,
+) -> tuple[Category, CashAmount]:
     category = draw(categories(transaction_type))
     amount = draw(
-        st.decimals(
-            min_value="0.01",
-            max_value=1e10,
-            allow_infinity=False,
-            allow_nan=False,
-            places=3,
-        )
+        cash_amounts(currency=currency, min_value=min_value, max_value=max_value)
     )
     return (category, amount)
 
 
 @st.composite
-def currencies(draw: st.DrawFn) -> Currency:
+def currencies(draw: st.DrawFn, min_places: int = 2, max_places: int = 8) -> Currency:
     name = draw(st.text(alphabet=string.ascii_letters, min_size=3, max_size=3))
-    places = draw(st.integers(min_value=0, max_value=8))
+    places = draw(st.integers(min_value=min_places, max_value=max_places))
     return Currency(name, places)
 
 
@@ -243,21 +249,20 @@ def security_transactions(
     type_ = draw(st.sampled_from(SecurityTransactionType))
 
     shares = draw(
-        st.decimals(min_value=0.01, allow_infinity=False, allow_nan=False, places=3)
-    )
-    price_per_share = draw(
         st.decimals(
-            min_value=0, max_value=1e10, allow_infinity=False, allow_nan=False, places=3
+            min_value=0.01,
+            max_value=1e10,
+            allow_infinity=False,
+            allow_nan=False,
+            places=3,
         )
     )
-    fees = draw(
-        st.decimals(
-            min_value=0, max_value=1e10, allow_infinity=False, allow_nan=False, places=3
-        )
-    )
-    security_account = draw(security_accounts())
+
     cash_account = draw(cash_accounts())
+    price_per_share = draw(cash_amounts(currency=cash_account.currency))
+    fees = draw(cash_amounts(currency=cash_account.currency))
     security = draw(securities(currency=cash_account.currency))
+    security_account = draw(security_accounts())
     return SecurityTransaction(
         description,
         datetime_,
@@ -277,7 +282,13 @@ def security_transfers(draw: st.DrawFn) -> SecurityTransfer:
     datetime_ = draw(st.datetimes(timezones=st.just(tzinfo)))
     security = draw(securities())
     shares = draw(
-        st.decimals(min_value=0.01, allow_infinity=False, allow_nan=False, places=3)
+        st.decimals(
+            min_value=0.01,
+            max_value=1e10,
+            allow_infinity=False,
+            allow_nan=False,
+            places=3,
+        )
     )
     account_sender = draw(security_accounts())
     account_recipient = draw(security_accounts())
@@ -288,19 +299,16 @@ def security_transfers(draw: st.DrawFn) -> SecurityTransfer:
 
 @st.composite
 def tag_amount_pairs(
-    draw: st.DrawFn, max_value: Decimal | Literal[0] | None = None
-) -> tuple[Attribute, Decimal]:
+    draw: st.DrawFn,
+    currency: Currency,
+    min_value: numbers.Real | str | None = "0.01",
+    max_value: numbers.Real | str | None = None,
+) -> tuple[Attribute, CashAmount]:
     attribute = draw(attributes(type_=AttributeType.TAG))
     if max_value is None:
-        max_value = Decimal("1e10")
+        max_value = "1e10"
     amount = draw(
-        st.decimals(
-            min_value="0.01",
-            max_value=max_value,
-            allow_infinity=False,
-            allow_nan=False,
-            places=3,
-        )
+        cash_amounts(currency=currency, min_value=min_value, max_value=max_value)
     )
     return (attribute, amount)
 

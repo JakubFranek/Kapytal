@@ -7,7 +7,7 @@ from hypothesis import assume, given
 from hypothesis import strategies as st
 
 from src.models.mixins.name_mixin import NameLengthError
-from src.models.model_objects.currency import Currency
+from src.models.model_objects.currency import CashAmount, Currency
 from src.models.model_objects.security_objects import (
     InvalidCharacterError,
     Security,
@@ -37,7 +37,7 @@ def test_creation(
     assert security.symbol == symbol.upper()
     assert security.type_ == type_
     assert security.currency == currency
-    assert security.price == 0
+    assert security.price == CashAmount(Decimal(0), currency)
     assert security.price_history == {}
     assert (
         security.__repr__()
@@ -189,15 +189,17 @@ def test_places_invalid_value(
 
 @given(
     date_=st.dates(),
-    price=st.decimals(
-        min_value=0, max_value=1e10, allow_infinity=False, allow_nan=False
+    value=st.decimals(
+        min_value=-1e10, max_value=1e10, allow_infinity=False, allow_nan=False
     ),
 )
-def test_set_price(date_: date, price: Decimal) -> None:
+def test_set_price(date_: date, value: Decimal) -> None:
     security = get_security()
+    currency = security.currency
+    price = CashAmount(value, currency)
     security.set_price(date_, price)
-    assert security.price == round(price, security.places)
-    assert security.price_history[date_] == round(price, security.places)
+    assert security.price.value == round(price.value, security.places)
+    assert security.price_history[date_].value == round(price.value, security.places)
 
 
 @given(
@@ -212,19 +214,10 @@ def test_set_price_invalid_date_type(date_: Any, price: Decimal) -> None:
         security.set_price(date_, price)
 
 
-@given(date_=st.dates(), price=everything_except(Decimal))
+@given(date_=st.dates(), price=everything_except(CashAmount))
 def test_set_price_invalid_price_type(date_: date, price: Any) -> None:
     security = get_security()
-    with pytest.raises(TypeError, match="Argument 'price' must be a Decimal."):
-        security.set_price(date_, price)
-
-
-@given(date_=st.dates(), price=st.decimals(max_value=-0.01))
-def test_set_price_invalid_price_value(date_: date, price: Any) -> None:
-    security = get_security()
-    with pytest.raises(
-        ValueError, match="Argument 'price' must be a finite, non-negative Decimal."
-    ):
+    with pytest.raises(TypeError, match="Argument 'price' must be a CashAmount."):
         security.set_price(date_, price)
 
 

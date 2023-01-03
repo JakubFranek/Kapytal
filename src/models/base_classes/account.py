@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from src.models.mixins.datetime_created_mixin import DatetimeCreatedMixin
@@ -9,6 +8,8 @@ from src.models.model_objects.account_group import AccountGroup
 
 if TYPE_CHECKING:  # pragma: no cover
     from src.models.base_classes.transaction import Transaction
+
+from src.models.model_objects.currency import CashAmount, Currency
 
 
 class UnrelatedAccountError(ValueError):
@@ -42,11 +43,6 @@ class Account(NameMixin, DatetimeCreatedMixin, UUIDMixin, ABC):
 
     @property
     @abstractmethod
-    def balance(self) -> Decimal:
-        raise NotImplementedError("Not implemented")
-
-    @property
-    @abstractmethod
     def transactions(self) -> tuple["Transaction", ...]:
         raise NotImplementedError("Not implemented.")
 
@@ -55,3 +51,7 @@ class Account(NameMixin, DatetimeCreatedMixin, UUIDMixin, ABC):
         if self.parent is None:
             return self.name
         return self.parent.path + "/" + self.name
+
+    @abstractmethod
+    def get_balance(self, currency: Currency) -> CashAmount:
+        raise NotImplementedError("Not implemented.")

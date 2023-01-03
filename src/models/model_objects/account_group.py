@@ -1,4 +1,3 @@
-from decimal import Decimal
 from typing import TYPE_CHECKING, Self
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -6,13 +5,14 @@ if TYPE_CHECKING:  # pragma: no cover
 
 from src.models.mixins.datetime_created_mixin import DatetimeCreatedMixin
 from src.models.mixins.name_mixin import NameMixin
+from src.models.model_objects.currency import CashAmount, Currency
 
 
 class AccountGroup(NameMixin, DatetimeCreatedMixin):
     def __init__(self, name: str, parent: Self | None = None) -> None:
         super().__init__(name)
         self.parent = parent
-        self._children: list[Self | "Account"] = []
+        self._children: list[Self | Account] = []
 
     @property
     def parent(self) -> Self | None:
@@ -35,10 +35,6 @@ class AccountGroup(NameMixin, DatetimeCreatedMixin):
     def children(self) -> tuple["Account" | Self, ...]:
         return tuple(self._children)
 
-    @property
-    def balance(self) -> Decimal:
-        return Decimal(sum(child.balance for child in self._children))
-
     def __repr__(self) -> str:
         return f"AccountGroup('{self.name}', parent='{self.parent}')"
 
@@ -47,3 +43,10 @@ class AccountGroup(NameMixin, DatetimeCreatedMixin):
         if self.parent is None:
             return self.name
         return self.parent.path + "/" + self.name
+
+    # TODO: since this method is also in Account, maybe ABC mixin?
+    def get_balance(self, currency: Currency) -> CashAmount:
+        return sum(
+            (child.get_balance(currency) for child in self._children),
+            start=CashAmount(0, currency),
+        )

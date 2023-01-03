@@ -3,6 +3,7 @@ from decimal import Decimal
 from src.models.base_classes.account import Account
 from src.models.base_classes.transaction import Transaction
 from src.models.model_objects.cash_objects import CashAccount, CashRelatedTransaction
+from src.models.model_objects.currency import CashAmount, Currency
 from src.models.model_objects.security_objects import (
     SecurityAccount,
     SecurityRelatedTransaction,
@@ -16,12 +17,11 @@ class ConcreteTransaction(Transaction):
 
 class ConcreteAccount(Account):
     @property
-    def balance(self) -> Decimal:
-        return super().balance
-
-    @property
     def transactions(self) -> tuple[Transaction, ...]:
         return super().transactions
+
+    def get_balance(self, currency: Currency) -> CashAmount:
+        return super().get_balance(currency)
 
 
 class ConcreteCashRelatedTransaction(CashRelatedTransaction):

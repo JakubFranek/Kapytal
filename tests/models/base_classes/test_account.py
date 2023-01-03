@@ -69,10 +69,10 @@ def test_invalid_parent_type(parent: Any) -> None:
         account.parent = parent
 
 
-def test_abstract_balance() -> None:
+def test_abstract_get_balance() -> None:
     account = get_concrete_account()
     with pytest.raises(NotImplementedError):
-        account.balance
+        account.get_balance(None)
 
 
 def test_abstract_transactions() -> None:

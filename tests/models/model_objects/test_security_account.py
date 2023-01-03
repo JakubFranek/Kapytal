@@ -24,7 +24,6 @@ def test_creation(name: str, parent: AccountGroup | None) -> None:
     security_account = SecurityAccount(name, parent)
     assert security_account.name == name
     assert security_account.parent == parent
-    assert security_account.balance == 0
     assert security_account.securities == {}
     assert security_account.transactions == ()
     assert security_account.__repr__() == f"SecurityAccount('{name}')"
@@ -53,3 +52,8 @@ def test_validate_transaction_unrelated(
     assume(not transaction.is_account_related(security_account))
     with pytest.raises(UnrelatedAccountError):
         security_account._validate_transaction(transaction)
+
+
+# TODO: test this
+def test_get_balance() -> None:
+    pass
