@@ -35,6 +35,7 @@ class SecurityTransactionType(Enum):
     SELL = auto()
 
 
+# TODO: add smallest unit to Security
 class Security(NameMixin, DatetimeCreatedMixin, UUIDMixin):
     NAME_MIN_LENGTH = 1
     NAME_MAX_LENGTH = 64
@@ -148,7 +149,6 @@ class SecurityAccount(Account):
     def __repr__(self) -> str:
         return f"SecurityAccount('{self.name}')"
 
-    # TODO: CashAmount might not work with number multiplication yet
     def get_balance(self, currency: Currency) -> CashAmount:
         return sum(
             (

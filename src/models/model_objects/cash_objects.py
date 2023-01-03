@@ -463,7 +463,7 @@ class RefundTransaction(CashRelatedTransaction):
 
         self._account.add_transaction(self)
 
-    # TODO: what can't the check be done in CashTransaction?
+    # TODO: why can't the check be done in CashTransaction?
     @Transaction.datetime_.setter
     def datetime_(self, value: datetime) -> None:
         Transaction.datetime_.fset(self, value)
