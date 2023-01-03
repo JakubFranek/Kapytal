@@ -22,6 +22,7 @@ def test_creation(code: str, places: int) -> None:
     dt_created_diff = currency.datetime_created - dt_start
 
     assert currency.code == code.upper()
+    assert currency.__repr__() == f"Currency({code.upper()})"
     assert currency.places == places
     assert currency.convertible_to == set()
     assert currency.exchange_rates == {}

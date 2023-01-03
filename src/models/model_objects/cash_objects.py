@@ -96,7 +96,7 @@ class CashAccount(Account):
     def initial_balance(self, amount: CashAmount) -> None:
         if not isinstance(amount, CashAmount):
             raise TypeError("CashAccount.initial_balance must be a CashAmount.")
-        if not self.currency == amount.currency:
+        if self.currency != amount.currency:
             raise CurrencyError(
                 "CashAccount.initial_balance.currency must match CashAccount.currency."
             )
@@ -191,6 +191,9 @@ class CashTransaction(CashRelatedTransaction):
             raise TypeError("CashTransaction.type_ must be a CashTransactionType.")
         self._type = type_
 
+        # TODO: figure out a cleaner way to set this...
+        self._currency = account.currency
+
         self.category_amount_pairs = category_amount_pairs
         self.payee = payee
         self.tag_amount_pairs = tag_amount_pairs
@@ -221,7 +224,10 @@ class CashTransaction(CashRelatedTransaction):
 
     @property
     def amount(self) -> CashAmount:
-        return sum(amount for _, amount in self._category_amount_pairs)
+        return sum(
+            (amount for _, amount in self._category_amount_pairs),
+            start=CashAmount(0, self._currency),
+        )
 
     @property
     def currency(self) -> Currency:
@@ -479,7 +485,10 @@ class RefundTransaction(CashRelatedTransaction):
 
     @property
     def amount(self) -> CashAmount:
-        return sum(amount for _, amount in self.category_amount_pairs)
+        return sum(
+            (amount for _, amount in self._category_amount_pairs),
+            start=CashAmount(0, self._currency),
+        )
 
     @property
     def currency(self) -> Currency:
@@ -541,7 +550,9 @@ class RefundTransaction(CashRelatedTransaction):
                 "Second member of RefundTransaction.category_amount_pairs "
                 "tuples must be a non-negative CashAmount."
             )
-        refund_amount = sum(amount for _, amount in pairs)
+        refund_amount = sum(
+            (amount for _, amount in pairs), start=CashAmount(0, self.currency)
+        )
         if not refund_amount.value > 0:
             raise ValueError("Total refunded amount must be positive.")
 

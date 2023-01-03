@@ -1,4 +1,3 @@
-import numbers
 from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import Any
@@ -155,7 +154,7 @@ def test_lt_different_currencies(
 def test_sum(value_1: Decimal, value_2: Decimal, currency: Currency) -> None:
     amount_1 = CashAmount(value_1, currency)
     amount_2 = CashAmount(value_2, currency)
-    result = sum([amount_1, amount_2])
+    result = sum([amount_1, amount_2], start=CashAmount(0, currency))
     expected = CashAmount(amount_1.value + amount_2.value, currency)
     assert result == expected
 
@@ -177,20 +176,6 @@ def test_add_radd(value_1: Decimal, value_2: Decimal, currency: Currency) -> Non
     assert amount_1.__radd__(amount_2) == expected
 
 
-@given(
-    value=st.decimals(
-        min_value=0, max_value=1e10, allow_infinity=False, allow_nan=False
-    ),
-    currency=currencies(),
-    integer=st.integers(min_value=0, max_value=int(1e10)),
-)
-def test_add_radd_int(value: Decimal, currency: Currency, integer: int) -> None:
-    amount_1 = CashAmount(value, currency)
-    expected = CashAmount(amount_1.value + integer, currency)
-    assert amount_1.__add__(integer) == expected
-    assert amount_1.__radd__(integer) == expected
-
-
 @given(cash_amount_1=cash_amounts(), cash_amount_2=cash_amounts())
 def test_add_radd_different_currencies(
     cash_amount_1: CashAmount, cash_amount_2: CashAmount
@@ -202,8 +187,8 @@ def test_add_radd_different_currencies(
         cash_amount_1.__radd__(cash_amount_2)
 
 
-@given(cash_amount=cash_amounts(), number=everything_except(numbers.Real))
-def test_add_radd_not_real(cash_amount: CashAmount, number: Any) -> None:
+@given(cash_amount=cash_amounts(), number=everything_except(CashAmount))
+def test_add_radd_invalid_type(cash_amount: CashAmount, number: Any) -> None:
     result = cash_amount.__add__(number)
     assert result == NotImplemented
     result = cash_amount.__radd__(number)
@@ -239,11 +224,32 @@ def test_sub_rsub_different_currencies(
         cash_amount_1.__rsub__(cash_amount_2)
 
 
-@given(cash_amount=cash_amounts(), number=everything_except(numbers.Real))
-def test_sub_rsub_not_real(cash_amount: CashAmount, number: Any) -> None:
+@given(cash_amount=cash_amounts(), number=everything_except(CashAmount))
+def test_sub_rsub_invalid_type(cash_amount: CashAmount, number: Any) -> None:
     result = cash_amount.__sub__(number)
     assert result == NotImplemented
     result = cash_amount.__rsub__(number)
+    assert result == NotImplemented
+
+
+@given(
+    cash_amount=cash_amounts(),
+    number=st.integers(min_value=-1e10, max_value=1e10)
+    | st.decimals(
+        min_value=-1e10, max_value=1e10, allow_infinity=False, allow_nan=False
+    ),
+)
+def test_mul_rmul(cash_amount: CashAmount, number: int | Decimal) -> None:
+    expected_mul = CashAmount(cash_amount.value * number, cash_amount.currency)
+    assert cash_amount.__mul__(number) == expected_mul
+    assert cash_amount.__rmul__(number) == expected_mul
+
+
+@given(cash_amount=cash_amounts(), number=everything_except((int, Decimal)))
+def test_mul_rmul_invalid_type(cash_amount: CashAmount, number: Any) -> None:
+    result = cash_amount.__mul__(number)
+    assert result == NotImplemented
+    result = cash_amount.__rmul__(number)
     assert result == NotImplemented
 
 

@@ -88,7 +88,9 @@ def test_buy(
 
 
 @given(
-    shares=st.decimals(min_value=0.01, allow_infinity=False, allow_nan=False, places=3),
+    shares=st.decimals(
+        min_value=0.01, max_value=1e10, allow_infinity=False, allow_nan=False, places=3
+    ),
     data=st.data(),
 )
 def test_sell(shares: Decimal, data: st.DataObject) -> None:

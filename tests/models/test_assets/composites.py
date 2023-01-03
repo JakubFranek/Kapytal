@@ -124,7 +124,10 @@ def cash_transactions(
             max_size=5,
         )
     )
-    max_tag_amount = sum(amount for _, amount in category_amount_pairs_list)
+    max_tag_amount = sum(
+        (amount for _, amount in category_amount_pairs_list),
+        start=CashAmount(0, currency),
+    )
     payee = draw(attributes(AttributeType.PAYEE))
     tag_amount_pairs_list = draw(
         st.lists(

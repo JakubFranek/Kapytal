@@ -15,7 +15,7 @@ from src.models.model_objects.cash_objects import (
     TransactionPrecedesAccountError,
     UnrelatedAccountError,
 )
-from src.models.model_objects.currency import CashAmount, Currency
+from src.models.model_objects.currency import CashAmount, Currency, CurrencyError
 from tests.models.test_assets.composites import (
     cash_accounts,
     cash_amounts,
@@ -83,6 +83,26 @@ def test_initial_balance_invalid_type(
     with pytest.raises(
         TypeError, match="CashAccount.initial_balance must be a CashAmount."
     ):
+        CashAccount(name, currency, initial_balance, initial_datetime)
+
+
+@given(
+    name=st.just("Valid Name"),
+    currency=currencies(),
+    invalid_currency=currencies(),
+    initial_datetime=st.just(datetime.now(tzinfo)),
+    data=st.data(),
+)
+def test_initial_balance_invalid_currency(
+    name: str,
+    currency: Currency,
+    invalid_currency: Currency,
+    initial_datetime: datetime,
+    data: st.DataObject,
+) -> None:
+    assume(currency != invalid_currency)
+    initial_balance = data.draw(cash_amounts(invalid_currency))
+    with pytest.raises(CurrencyError):
         CashAccount(name, currency, initial_balance, initial_datetime)
 
 

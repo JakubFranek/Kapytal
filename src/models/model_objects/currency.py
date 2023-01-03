@@ -1,5 +1,4 @@
 import copy
-import numbers
 import operator
 from datetime import date
 from decimal import Decimal
@@ -57,7 +56,7 @@ class Currency(DatetimeCreatedMixin):
         return copy.deepcopy(self._exchange_rates)
 
     def __repr__(self) -> str:
-        return f"Currency('{self.code}')"
+        return f"Currency({self.code})"
 
     def __hash__(self) -> int:
         return hash(self._code)
@@ -261,9 +260,7 @@ class CashAmount:
 
     def __add__(self, __o: object) -> Self:
         if not isinstance(__o, CashAmount):
-            if not isinstance(__o, numbers.Real):
-                return NotImplemented
-            return CashAmount(self.value + __o, self.currency)
+            return NotImplemented
         if self.currency != __o.currency:
             raise CurrencyError("CashAmount.currency of operands must match.")
         return CashAmount(self.value + __o.value, self.currency)
@@ -286,9 +283,9 @@ class CashAmount:
         return CashAmount(__o.value - self.value, self.currency)
 
     def __mul__(self, __o: object) -> Self:
-        if not isinstance(__o, (numbers.Real, Decimal)):
+        if not isinstance(__o, (int, Decimal)):
             return NotImplemented
-        return CashAmount(Decimal(self.value * __o), self.currency)
+        return CashAmount(self.value * __o, self.currency)
 
     def __rmul__(self, __o: object) -> Self:
         return self.__mul__(__o)

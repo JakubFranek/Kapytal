@@ -22,6 +22,7 @@ from src.models.model_objects.cash_objects import (
     RefundTransaction,
     UnrelatedAccountError,
 )
+from src.models.model_objects.currency import CashAmount
 from tests.models.test_assets.composites import (
     attributes,
     cash_accounts,
@@ -59,7 +60,10 @@ def test_creation(  # noqa: CFQ002,TMN001
             max_size=5,
         )
     )
-    max_tag_amount = sum(amount for _, amount in category_amount_collection)
+    max_tag_amount = sum(
+        (amount for _, amount in category_amount_collection),
+        start=CashAmount(0, currency),
+    )
     tag_amount_collection = data.draw(
         st.lists(
             tag_amount_pairs(currency=currency, max_value=max_tag_amount.value),
@@ -206,7 +210,9 @@ def test_tags_invalid_second_member_value(
             Attribute("Test", AttributeType.TAG),
             data.draw(
                 cash_amounts(
-                    currency=currency, min_value=max_tag_amount.value + Decimal("0.01")
+                    currency=currency,
+                    min_value=max_tag_amount.value + Decimal("0.01"),
+                    max_value=max_tag_amount.value + Decimal("1e3"),
                 )
             ),
         )
