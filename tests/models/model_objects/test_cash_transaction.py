@@ -93,8 +93,7 @@ def test_creation(  # noqa: CFQ002,TMN001
     assert cash_transaction.__repr__() == (
         f"CashTransaction({cash_transaction.type_.name}, "
         f"account='{cash_transaction.account.name}', "
-        f"amount={cash_transaction.amount} "
-        f"{cash_transaction.account.currency.code}, "
+        f"amount={cash_transaction.amount}, "
         f"category={{{cash_transaction.category_names}}}, "
         f"{cash_transaction.datetime_.strftime('%Y-%m-%d')})"
     )

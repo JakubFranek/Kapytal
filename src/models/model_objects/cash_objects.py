@@ -308,7 +308,7 @@ class CashTransaction(CashRelatedTransaction):
         return (
             f"CashTransaction({self.type_.name}, "
             f"account='{self.account.name}', "
-            f"amount={self.amount} {self.account.currency.code}, "
+            f"amount={self.amount}, "
             f"category={{{self.category_names}}}, "
             f"{self.datetime_.strftime('%Y-%m-%d')})"
         )
@@ -390,10 +390,10 @@ class CashTransfer(CashRelatedTransaction):
 
     def __repr__(self) -> str:
         return (
-            f"CashTransfer({self.amount_sent} {self.account_sender.currency.code} "
-            f"from '{self.account_sender.name}', "
-            f"{self.amount_received} {self.account_recipient.currency.code} "
-            f"to '{self.account_recipient.name}', "
+            f"CashTransfer(sent={self.amount_sent}, "
+            f"sender='{self.account_sender.name}', "
+            f"received={self.amount_received}, "
+            f"recipient='{self.account_recipient.name}', "
             f"{self.datetime_.strftime('%Y-%m-%d')})"
         )
 
@@ -505,7 +505,7 @@ class RefundTransaction(CashRelatedTransaction):
     def __repr__(self) -> str:
         return (
             f"RefundTransaction(account='{self.account.name}', "
-            f"amount={self.amount} {self.account.currency.code}, "
+            f"amount={self.amount}, "
             f"category={{{self.category_names}}}, "
             f"{self.datetime_.strftime('%Y-%m-%d')})"
         )

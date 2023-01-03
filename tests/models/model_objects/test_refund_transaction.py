@@ -79,7 +79,7 @@ def test_creation() -> None:
     assert refund in refunded_transaction.refunds
     assert refund.__repr__() == (
         f"RefundTransaction(account='{refund.account.name}', "
-        f"amount={refund.amount} {refund.account.currency.code}, "
+        f"amount={refund.amount}, "
         f"category={{{refund.category_names}}}, "
         f"{refund.datetime_.strftime('%Y-%m-%d')})"
     )

@@ -1,5 +1,4 @@
 from datetime import datetime
-from decimal import Decimal
 from typing import Any
 
 import pytest
@@ -63,10 +62,10 @@ def test_creation(
     assert transfer.amount_sent == amount_sent
     assert transfer.amount_received == amount_received
     assert transfer.__repr__() == (
-        f"CashTransfer({transfer.amount_sent} {transfer.account_sender.currency.code} "
-        f"from '{transfer.account_sender.name}', "
-        f"{transfer.amount_received} {transfer.account_recipient.currency.code} "
-        f"to '{transfer.account_recipient.name}', "
+        f"CashTransfer(sent={transfer.amount_sent}, "
+        f"sender='{transfer.account_sender.name}', "
+        f"received={transfer.amount_received}, "
+        f"recipient='{transfer.account_recipient.name}', "
         f"{transfer.datetime_.strftime('%Y-%m-%d')})"
     )
     assert dt_created_diff.seconds < 1
