@@ -9,6 +9,7 @@ from hypothesis import strategies as st
 from src.models.constants import tzinfo
 from src.models.model_objects.attributes import AttributeType, CategoryType
 from src.models.model_objects.cash_objects import CashAccount, CashTransactionType
+from src.models.model_objects.currency import CashAmount
 from src.models.model_objects.security_objects import (
     SecurityAccount,
     SecurityTransactionType,
@@ -116,7 +117,9 @@ def test_add_cash_account(
     cash_account: CashAccount = record_keeper.accounts[0]
     assert cash_account.name == name
     assert cash_account.currency.code == currency_code.upper()
-    assert cash_account.initial_balance == initial_balance
+    assert cash_account.initial_balance == CashAmount(
+        initial_balance, cash_account.currency
+    )
     assert cash_account.initial_datetime == initial_datetime
     assert cash_account.parent == parent_group
 
@@ -531,14 +534,14 @@ def get_preloaded_record_keeper() -> RecordKeeper:
     record_keeper.add_cash_account(
         name="Raiffeisen CZK",
         currency_code="CZK",
-        initial_balance=Decimal(1500),
+        initial_balance_value=Decimal(1500),
         initial_datetime=datetime.now(tzinfo),
         parent_path="Bank Accounts",
     )
     record_keeper.add_cash_account(
         name="Moneta EUR",
         currency_code="EUR",
-        initial_balance=Decimal(1600),
+        initial_balance_value=Decimal(1600),
         initial_datetime=datetime.now(tzinfo),
         parent_path="Bank Accounts",
     )

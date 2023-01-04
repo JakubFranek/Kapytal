@@ -20,7 +20,7 @@ from src.models.model_objects.cash_objects import (
     CashTransfer,
     RefundTransaction,
 )
-from src.models.model_objects.currency import Currency
+from src.models.model_objects.currency import CashAmount, Currency
 from src.models.model_objects.security_objects import (
     Security,
     SecurityAccount,
@@ -155,13 +155,14 @@ class RecordKeeper:
         self,
         name: str,
         currency_code: str,
-        initial_balance: Decimal,
+        initial_balance_value: Decimal,
         initial_datetime: datetime,
         parent_path: str | None,
     ) -> None:
         self._check_account_exists(name, parent_path)
         currency = self.get_currency(currency_code)
         parent = self.get_account_parent(parent_path)
+        initial_balance = CashAmount(initial_balance_value, currency)
         account = CashAccount(name, currency, initial_balance, initial_datetime, parent)
         self._accounts.append(account)
 
@@ -182,22 +183,30 @@ class RecordKeeper:
         tag_name_amount_pairs: Collection[tuple[str, Decimal]],
     ) -> None:
         account = self.get_account(account_path)
+        if not isinstance(account, CashAccount):
+            raise TypeError(f"Account at path {account_path} is not a CashAccount.")
         payee = self.get_attribute(payee_name, AttributeType.PAYEE)
 
-        tag_amount_pairs: list[tuple[Attribute, Decimal]] = []
+        tag_amount_pairs: list[tuple[Attribute, CashAmount]] = []
         for tag_name, amount in tag_name_amount_pairs:
             tag_amount_pairs.append(
-                (self.get_attribute(tag_name, AttributeType.TAG), amount)
+                (
+                    self.get_attribute(tag_name, AttributeType.TAG),
+                    CashAmount(amount, account.currency),
+                )
             )
 
-        category_amount_pairs: list[tuple[Category, Decimal]] = []
+        category_amount_pairs: list[tuple[Category, CashAmount]] = []
         category_type = (
             CategoryType.INCOME
             if transaction_type == CashTransactionType.INCOME
             else CategoryType.EXPENSE
         )
         for category_path, amount in category_path_amount_pairs:
-            pair = (self.get_category(category_path, category_type), amount)
+            pair = (
+                self.get_category(category_path, category_type),
+                CashAmount(amount, account.currency),
+            )
             category_amount_pairs.append(pair)
 
         transaction = CashTransaction(
@@ -222,14 +231,22 @@ class RecordKeeper:
     ) -> None:
         account_sender = self.get_account(account_sender_path)
         account_recipient = self.get_account(account_recipient_path)
+        if not isinstance(account_sender, CashAccount):
+            raise TypeError(
+                f"Account at path {account_sender_path} is not a CashAccount."
+            )
+        if not isinstance(account_recipient, CashAccount):
+            raise TypeError(
+                f"Account at path {account_recipient_path} is not a CashAccount."
+            )
 
         transfer = CashTransfer(
             description,
             datetime_,
             account_sender,
             account_recipient,
-            amount_sent,
-            amount_received,
+            CashAmount(amount_sent, account_sender.currency),
+            CashAmount(amount_received, account_recipient.currency),
         )
         self._transactions.append(transfer)
 
@@ -242,19 +259,30 @@ class RecordKeeper:
         category_path_amount_pairs: Collection[tuple[str, Decimal]],
         tag_name_amount_pairs: Collection[tuple[str, Decimal]],
     ) -> None:
+        # TODO: transactions probably won't be search by index but by UUID
         refunded_transaction = self.transactions[refunded_transaction_index]
         refunded_account = self.get_account(refunded_account_path)
-
-        tag_amount_pairs: list[tuple[Attribute, Decimal]] = []
-        for tag_name, amount in tag_name_amount_pairs:
-            tag_amount_pairs.append(
-                (self.get_attribute(tag_name, AttributeType.TAG), amount)
+        if not isinstance(refunded_account, CashAccount):
+            raise TypeError(
+                f"Account at path {refunded_account_path} is not a CashAccount."
             )
 
-        category_amount_pairs: list[tuple[Category, Decimal]] = []
+        tag_amount_pairs: list[tuple[Attribute, CashAmount]] = []
+        for tag_name, amount in tag_name_amount_pairs:
+            tag_amount_pairs.append(
+                (
+                    self.get_attribute(tag_name, AttributeType.TAG),
+                    CashAmount(amount, refunded_account.currency),
+                )
+            )
+
+        category_amount_pairs: list[tuple[Category, CashAmount]] = []
         category_type = CategoryType.EXPENSE
         for category_path, amount in category_path_amount_pairs:
-            pair = (self.get_category(category_path, category_type), amount)
+            pair = (
+                self.get_category(category_path, category_type),
+                CashAmount(amount, refunded_account.currency),
+            )
             category_amount_pairs.append(pair)
 
         refund = RefundTransaction(
@@ -273,7 +301,7 @@ class RecordKeeper:
         datetime_: datetime,
         type_: SecurityTransactionType,
         security_symbol: str,
-        shares: int,
+        shares: Decimal,
         price_per_share: Decimal,
         fees: Decimal,
         security_account_path: str,
@@ -281,15 +309,24 @@ class RecordKeeper:
     ) -> None:
         security = self.get_security(security_symbol)
         cash_account = self.get_account(cash_account_path)
+        if not isinstance(cash_account, CashAccount):
+            raise TypeError(
+                f"Account at path {cash_account_path} is not a CashAccount."
+            )
         security_account = self.get_account(security_account_path)
+        if not isinstance(security_account, SecurityAccount):
+            raise TypeError(
+                f"Account at path {security_account_path} is not a SecurityAccount."
+            )
+
         transaction = SecurityTransaction(
             description,
             datetime_,
             type_,
             security,
             shares,
-            price_per_share,
-            fees,
+            CashAmount(price_per_share, cash_account.currency),
+            CashAmount(fees, cash_account.currency),
             security_account,
             cash_account,
         )
