@@ -6,7 +6,7 @@ from src.models.mixins.name_mixin import NameMixin
 from src.models.mixins.uuid_mixin import UUIDMixin
 from src.models.model_objects.account_group import AccountGroup
 
-if TYPE_CHECKING:  # pragma: no cover
+if TYPE_CHECKING:
     from src.models.base_classes.transaction import Transaction
 
 from src.models.model_objects.currency import CashAmount, Currency
@@ -42,15 +42,15 @@ class Account(NameMixin, DatetimeCreatedMixin, UUIDMixin, ABC):
         self._parent = new_parent
 
     @property
-    @abstractmethod
-    def transactions(self) -> tuple["Transaction", ...]:
-        raise NotImplementedError("Not implemented.")
-
-    @property
     def path(self) -> str:
         if self.parent is None:
             return self.name
         return self.parent.path + "/" + self.name
+
+    @property
+    @abstractmethod
+    def transactions(self) -> tuple["Transaction", ...]:
+        raise NotImplementedError("Not implemented.")
 
     @abstractmethod
     def get_balance(self, currency: Currency) -> CashAmount:

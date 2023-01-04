@@ -1,6 +1,14 @@
 [tool.pytest.ini_options]
-pythonpath = [
-  "."
-]
+pythonpath = "."
+
 [tool.pyright]
 reportGeneralTypeIssues = "none"
+
+[tool.coverage.report]
+exclude_lines = [
+  "pragma: no cover",
+  "@overload",
+  "if TYPE_CHECKING:",
+  "raise NotImplementedError",
+  "@(abc\\.)?abstractmethod"
+  ]

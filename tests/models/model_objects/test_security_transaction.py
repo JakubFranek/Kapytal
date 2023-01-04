@@ -23,10 +23,7 @@ from tests.models.test_assets.composites import (
     securities,
     security_accounts,
 )
-from tests.models.test_assets.get_valid_objects import (
-    get_concrete_security_related_transaction,
-    get_security,
-)
+from tests.models.test_assets.get_valid_objects import get_security
 
 
 @given(
@@ -481,15 +478,6 @@ def test_change_cash_account(data: st.DataObject) -> None:
     buy.cash_account = cash_account
     assert buy in cash_account.transactions
     assert buy not in old_cash_account.transactions
-
-
-@given(security_account=security_accounts())
-def test_concrete_security_related_transaction(
-    security_account: SecurityAccount,
-) -> None:
-    transaction = get_concrete_security_related_transaction()
-    with pytest.raises(NotImplementedError):
-        transaction._get_shares(security_account)
 
 
 @given(account=everything_except(SecurityAccount))

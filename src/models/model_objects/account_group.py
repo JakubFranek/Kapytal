@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, Self
 
-if TYPE_CHECKING:  # pragma: no cover
+if TYPE_CHECKING:
     from src.models.base_classes.account import Account
 
 from src.models.mixins.datetime_created_mixin import DatetimeCreatedMixin

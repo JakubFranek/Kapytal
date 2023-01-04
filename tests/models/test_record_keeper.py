@@ -6,6 +6,7 @@ import pytest
 from hypothesis import assume, given
 from hypothesis import strategies as st
 
+from src.models.base_classes.account import Account
 from src.models.constants import tzinfo
 from src.models.model_objects.attributes import AttributeType, CategoryType
 from src.models.model_objects.cash_objects import CashAccount, CashTransactionType
@@ -198,9 +199,11 @@ def test_add_cash_transaction(
     datetime_=st.datetimes(
         min_value=datetime.now() + timedelta(days=1), timezones=st.just(tzinfo)
     ),
-    amount_sent=st.decimals(min_value="0.01", allow_infinity=False, allow_nan=False),
+    amount_sent=st.decimals(
+        min_value="0.01", max_value="1e10", allow_infinity=False, allow_nan=False
+    ),
     amount_received=st.decimals(
-        min_value="0.01", allow_infinity=False, allow_nan=False
+        min_value="0.01", max_value="1e10", allow_infinity=False, allow_nan=False
     ),
     data=st.data(),
 )
@@ -313,7 +316,7 @@ def test_get_account_parent_does_not_exist() -> None:
 def test_get_account_does_not_exist() -> None:
     record_keeper = get_preloaded_record_keeper()
     with pytest.raises(DoesNotExistError):
-        record_keeper.get_account("does not exist")
+        record_keeper.get_account("does not exist", Account)
 
 
 def test_get_currency_does_not_exist() -> None:

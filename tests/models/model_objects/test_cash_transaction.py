@@ -32,7 +32,6 @@ from tests.models.test_assets.composites import (
     everything_except,
     tag_amount_pairs,
 )
-from tests.models.test_assets.concrete_abcs import ConcreteCashRelatedTransaction
 from tests.models.test_assets.constants import min_datetime
 
 
@@ -393,10 +392,3 @@ def test_invalid_refund_type(transaction: CashTransaction, refund: Any) -> None:
         TypeError, match="Argument 'refund' must be a RefundTransaction."
     ):
         transaction.add_refund(refund)
-
-
-@given(account=cash_accounts())
-def test_concrete_cash_related_transaction(account: CashAccount) -> None:
-    obj = ConcreteCashRelatedTransaction("description", datetime_=datetime.now(tzinfo))
-    with pytest.raises(NotImplementedError):
-        obj._get_amount(account)

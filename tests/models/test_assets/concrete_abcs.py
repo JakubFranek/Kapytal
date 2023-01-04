@@ -1,13 +1,6 @@
-from decimal import Decimal
-
 from src.models.base_classes.account import Account
 from src.models.base_classes.transaction import Transaction
-from src.models.model_objects.cash_objects import CashAccount, CashRelatedTransaction
 from src.models.model_objects.currency import CashAmount, Currency
-from src.models.model_objects.security_objects import (
-    SecurityAccount,
-    SecurityRelatedTransaction,
-)
 
 
 class ConcreteTransaction(Transaction):
@@ -22,19 +15,3 @@ class ConcreteAccount(Account):
 
     def get_balance(self, currency: Currency) -> CashAmount:
         return super().get_balance(currency)
-
-
-class ConcreteCashRelatedTransaction(CashRelatedTransaction):
-    def _get_amount(self, account: CashAccount) -> Decimal:
-        return super()._get_amount(account)
-
-    def is_account_related(self, account: Account) -> bool:
-        return super().is_account_related(account)
-
-
-class ConcreteSecurityRelatedTransaction(SecurityRelatedTransaction):
-    def _get_shares(self, account: SecurityAccount) -> Decimal:
-        return super()._get_shares(account)
-
-    def is_account_related(self, account: Account) -> bool:
-        return super().is_account_related(account)

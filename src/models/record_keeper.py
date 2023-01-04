@@ -3,6 +3,7 @@
 from collections.abc import Collection
 from datetime import datetime
 from decimal import Decimal
+from typing import overload
 
 from src.models.base_classes.account import Account
 from src.models.base_classes.transaction import Transaction
@@ -182,9 +183,7 @@ class RecordKeeper:
         payee_name: str,
         tag_name_amount_pairs: Collection[tuple[str, Decimal]],
     ) -> None:
-        account = self.get_account(account_path)
-        if not isinstance(account, CashAccount):
-            raise TypeError(f"Account at path {account_path} is not a CashAccount.")
+        account = self.get_account(account_path, CashAccount)
         payee = self.get_attribute(payee_name, AttributeType.PAYEE)
 
         tag_amount_pairs: list[tuple[Attribute, CashAmount]] = []
@@ -229,16 +228,8 @@ class RecordKeeper:
         amount_sent: Decimal,
         amount_received: Decimal,
     ) -> None:
-        account_sender = self.get_account(account_sender_path)
-        account_recipient = self.get_account(account_recipient_path)
-        if not isinstance(account_sender, CashAccount):
-            raise TypeError(
-                f"Account at path {account_sender_path} is not a CashAccount."
-            )
-        if not isinstance(account_recipient, CashAccount):
-            raise TypeError(
-                f"Account at path {account_recipient_path} is not a CashAccount."
-            )
+        account_sender = self.get_account(account_sender_path, CashAccount)
+        account_recipient = self.get_account(account_recipient_path, CashAccount)
 
         transfer = CashTransfer(
             description,
@@ -261,11 +252,7 @@ class RecordKeeper:
     ) -> None:
         # TODO: transactions probably won't be search by index but by UUID
         refunded_transaction = self.transactions[refunded_transaction_index]
-        refunded_account = self.get_account(refunded_account_path)
-        if not isinstance(refunded_account, CashAccount):
-            raise TypeError(
-                f"Account at path {refunded_account_path} is not a CashAccount."
-            )
+        refunded_account = self.get_account(refunded_account_path, CashAccount)
 
         tag_amount_pairs: list[tuple[Attribute, CashAmount]] = []
         for tag_name, amount in tag_name_amount_pairs:
@@ -308,16 +295,8 @@ class RecordKeeper:
         cash_account_path: str,
     ) -> None:
         security = self.get_security(security_symbol)
-        cash_account = self.get_account(cash_account_path)
-        if not isinstance(cash_account, CashAccount):
-            raise TypeError(
-                f"Account at path {cash_account_path} is not a CashAccount."
-            )
-        security_account = self.get_account(security_account_path)
-        if not isinstance(security_account, SecurityAccount):
-            raise TypeError(
-                f"Account at path {security_account_path} is not a SecurityAccount."
-            )
+        cash_account = self.get_account(cash_account_path, CashAccount)
+        security_account = self.get_account(security_account_path, SecurityAccount)
 
         transaction = SecurityTransaction(
             description,
@@ -342,8 +321,8 @@ class RecordKeeper:
         account_recipient_path: str,
     ) -> None:
         security = self.get_security(security_symbol)
-        account_sender = self.get_account(account_sender_path)
-        account_recipient = self.get_account(account_recipient_path)
+        account_sender = self.get_account(account_sender_path, SecurityAccount)
+        account_recipient = self.get_account(account_recipient_path, SecurityAccount)
         transaction = SecurityTransfer(
             description, datetime_, security, shares, account_sender, account_recipient
         )
@@ -359,9 +338,33 @@ class RecordKeeper:
             )
         return None
 
-    def get_account(self, path: str) -> Account:
+    @overload
+    def get_account(self, path: str, type_: type[Account]) -> Account:  # noqa: U100
+        ...
+
+    @overload
+    def get_account(
+        self, path: str, type_: type[CashAccount]  # noqa: U100
+    ) -> CashAccount:
+        ...
+
+    @overload
+    def get_account(
+        self, path: str, type_: type[SecurityAccount]  # noqa: U100
+    ) -> SecurityAccount:
+        ...
+
+    def get_account(
+        self,
+        path: str,
+        type_: type[Account] | type[CashAccount] | type[SecurityAccount],
+    ) -> Account | CashAccount | SecurityAccount:
         for account in self._accounts:
             if account.path == path:
+                if not isinstance(account, type_):
+                    raise TypeError(
+                        f"Account at path {path} is not a {type_.__name__}."
+                    )
                 return account
         raise DoesNotExistError(f"An Account with path='{path}' does not exist.")
 

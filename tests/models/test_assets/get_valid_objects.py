@@ -1,14 +1,11 @@
 from datetime import datetime
-from decimal import Decimal
 
 from src.models.constants import tzinfo
 from src.models.model_objects.currency import Currency
 from src.models.model_objects.security_objects import Security, SecurityType
-from tests.models.test_assets.concrete_abcs import (
-    ConcreteAccount,
-    ConcreteSecurityRelatedTransaction,
-    ConcreteTransaction,
-)
+from tests.models.test_assets.concrete_abcs import ConcreteAccount, ConcreteTransaction
+
+# TODO: is this file a good idea?
 
 
 def get_concrete_account() -> ConcreteAccount:
@@ -17,13 +14,6 @@ def get_concrete_account() -> ConcreteAccount:
 
 def get_concrete_transaction() -> ConcreteTransaction:
     return ConcreteTransaction("A description", datetime.now(tzinfo))
-
-
-def get_concrete_security_related_transaction() -> ConcreteSecurityRelatedTransaction:
-    security = get_security()
-    return ConcreteSecurityRelatedTransaction(
-        "A description", datetime.now(tzinfo), Decimal("1"), security
-    )
 
 
 def get_security() -> Security:
