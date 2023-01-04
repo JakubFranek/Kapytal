@@ -212,7 +212,10 @@ class CashAmount:
 
     def __init__(self, value: Decimal | int | str, currency: Currency) -> None:
         if not isinstance(value, (Decimal, int, str)):
-            raise TypeError("CashAmount.value must be a Decimal, integer or a string.")
+            raise TypeError(
+                "CashAmount.value must be a Decimal, integer or a string "
+                "containing a number."
+            )
         _value = Decimal(value)
         if not _value.is_finite():
             raise ValueError("CashAmount.value must be finite.")

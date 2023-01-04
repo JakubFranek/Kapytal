@@ -31,6 +31,8 @@ from src.models.model_objects.security_objects import (
 from tests.models.test_assets.concrete_abcs import ConcreteTransaction
 from tests.models.test_assets.constants import max_datetime, min_datetime
 
+# TODO: add valid_decimal wrapper for st.decimals here
+
 
 def everything_except(excluded_types: type | tuple[type, ...]) -> Any:
     return (
@@ -63,17 +65,18 @@ def cash_amounts(
     min_value: numbers.Real | str | None = -1e10,
     max_value: numbers.Real | str | None = 1e10,
 ) -> CashAmount:
+
+    if currency is None:
+        currency = draw(currencies())
     value = draw(
         st.decimals(
             min_value=min_value,
             max_value=max_value,
             allow_infinity=False,
             allow_nan=False,
-            places=3,
+            places=currency.places,
         )
     )
-    if currency is None:
-        currency = draw(currencies())
     return CashAmount(value, currency)
 
 

@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from typing import Any
 
 import pytest
@@ -22,7 +22,9 @@ from tests.models.test_assets.composites import (
 
 
 @given(
-    value=st.decimals(min_value=0, allow_infinity=False, allow_nan=False),
+    value=st.decimals(
+        min_value=-1e10, max_value=1e10, allow_infinity=False, allow_nan=False
+    ),
     currency=currencies(),
 )
 def test_creation(value: Decimal, currency: Currency) -> None:
@@ -35,14 +37,45 @@ def test_creation(value: Decimal, currency: Currency) -> None:
     assert str(cash_amount) == f"{round(value,currency.places)} {currency.code}"
 
 
-# TODO: fix test w.r.t. string value
 @given(
-    value=everything_except((Decimal, int)),
+    value=everything_except((Decimal, int, str)),
     currency=currencies(),
 )
 def test_value_invalid_type(value: Decimal, currency: Currency) -> None:
-    with pytest.raises(TypeError, match="CashAmount.value must be a Decimal."):
+    with pytest.raises(
+        TypeError,
+        match="CashAmount.value must be a Decimal, integer or a string",
+    ):
         CashAmount(value, currency)
+
+
+@given(
+    value=st.text(),
+    currency=currencies(),
+)
+def test_value_invalid_str(value: str, currency: Currency) -> None:
+    try:
+        Decimal(value)
+    except InvalidOperation:
+        with pytest.raises(InvalidOperation):
+            CashAmount(value, currency)
+
+
+@given(
+    value=st.integers(
+        min_value=-1e10,
+        max_value=1e10,
+    )
+    | st.floats(min_value=-1e10, max_value=1e10, allow_infinity=False, allow_nan=False)
+    | st.decimals(
+        min_value=-1e10, max_value=1e10, allow_infinity=False, allow_nan=False
+    ),
+    currency=currencies(),
+)
+def test_value_valid_str(value: str, currency: Currency) -> None:
+    value = str(value)
+    amount = CashAmount(value, currency)
+    assert amount.value == round(Decimal(value), currency.places)
 
 
 @given(
@@ -57,7 +90,9 @@ def test_value_invalid_value(value: Decimal, currency: Currency) -> None:
 
 
 @given(
-    value=st.decimals(min_value=0, allow_infinity=False, allow_nan=False),
+    value=st.decimals(
+        min_value=-1e10, max_value=1e10, allow_infinity=False, allow_nan=False
+    ),
     currency=everything_except(Currency),
 )
 def test_currency_invalid_type(value: Decimal, currency: Currency) -> None:
@@ -67,10 +102,10 @@ def test_currency_invalid_type(value: Decimal, currency: Currency) -> None:
 
 @given(
     value_1=st.decimals(
-        min_value=0, max_value=1e10, allow_infinity=False, allow_nan=False
+        min_value=-1e10, max_value=1e10, allow_infinity=False, allow_nan=False
     ),
     value_2=st.decimals(
-        min_value=0, max_value=1e10, allow_infinity=False, allow_nan=False
+        min_value=-1e10, max_value=1e10, allow_infinity=False, allow_nan=False
     ),
     currency=currencies(),
 )
@@ -113,10 +148,10 @@ def test_eq_different_currency_nonzero_value(
 
 @given(
     value_1=st.decimals(
-        min_value=0, max_value=1e10, allow_infinity=False, allow_nan=False
+        min_value=-1e10, max_value=1e10, allow_infinity=False, allow_nan=False
     ),
     value_2=st.decimals(
-        min_value=0, max_value=1e10, allow_infinity=False, allow_nan=False
+        min_value=-1e10, max_value=1e10, allow_infinity=False, allow_nan=False
     ),
     currency=currencies(),
 )
@@ -144,10 +179,10 @@ def test_lt_different_currencies(
 
 @given(
     value_1=st.decimals(
-        min_value=0, max_value=1e10, allow_infinity=False, allow_nan=False
+        min_value=-1e10, max_value=1e10, allow_infinity=False, allow_nan=False
     ),
     value_2=st.decimals(
-        min_value=0, max_value=1e10, allow_infinity=False, allow_nan=False
+        min_value=-1e10, max_value=1e10, allow_infinity=False, allow_nan=False
     ),
     currency=currencies(),
 )
@@ -161,10 +196,10 @@ def test_sum(value_1: Decimal, value_2: Decimal, currency: Currency) -> None:
 
 @given(
     value_1=st.decimals(
-        min_value=0, max_value=1e10, allow_infinity=False, allow_nan=False
+        min_value=-1e10, max_value=1e10, allow_infinity=False, allow_nan=False
     ),
     value_2=st.decimals(
-        min_value=0, max_value=1e10, allow_infinity=False, allow_nan=False
+        min_value=-1e10, max_value=1e10, allow_infinity=False, allow_nan=False
     ),
     currency=currencies(),
 )
@@ -197,10 +232,10 @@ def test_add_radd_invalid_type(cash_amount: CashAmount, number: Any) -> None:
 
 @given(
     value_1=st.decimals(
-        min_value=0, max_value=1e10, allow_infinity=False, allow_nan=False
+        min_value=-1e10, max_value=1e10, allow_infinity=False, allow_nan=False
     ),
     value_2=st.decimals(
-        min_value=0, max_value=1e10, allow_infinity=False, allow_nan=False
+        min_value=-1e10, max_value=1e10, allow_infinity=False, allow_nan=False
     ),
     currency=currencies(),
 )

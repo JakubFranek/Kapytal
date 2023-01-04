@@ -7,7 +7,7 @@ from hypothesis import assume, given
 from hypothesis import strategies as st
 
 from src.models.mixins.name_mixin import NameLengthError
-from src.models.model_objects.currency import CashAmount, Currency
+from src.models.model_objects.currency import CashAmount, Currency, CurrencyError
 from src.models.model_objects.security_objects import (
     InvalidCharacterError,
     Security,
@@ -218,6 +218,23 @@ def test_set_price_invalid_date_type(date_: Any, price: Decimal) -> None:
 def test_set_price_invalid_price_type(date_: date, price: Any) -> None:
     security = get_security()
     with pytest.raises(TypeError, match="Argument 'price' must be a CashAmount."):
+        security.set_price(date_, price)
+
+
+@given(
+    date_=st.dates(),
+    value=st.decimals(
+        min_value=-1e10, max_value=1e10, allow_infinity=False, allow_nan=False
+    ),
+    currency=currencies(),
+)
+def test_set_price_invalid_currency(
+    date_: date, value: Decimal, currency: Currency
+) -> None:
+    security = get_security()
+    assume(currency != security.currency)
+    price = CashAmount(value, currency)
+    with pytest.raises(CurrencyError):
         security.set_price(date_, price)
 
 

@@ -348,6 +348,74 @@ def test_invalid_cash_account_type(
     security=securities(),
     security_account=security_accounts(),
     cash_account=cash_accounts(),
+    price_per_share=everything_except(CashAmount),
+)
+def test_invalid_price_per_share_type(
+    datetime_: datetime,
+    type_: SecurityTransactionType,
+    security: Security,
+    security_account: SecurityAccount,
+    cash_account: CashAccount,
+    price_per_share: Any,
+) -> None:
+    currency = security.currency
+    with pytest.raises(
+        TypeError,
+        match="SecurityTransaction.price_per_share must be a CashAmount.",
+    ):
+        SecurityTransaction(
+            "Test description",
+            datetime_,
+            type_,
+            security,
+            Decimal("1"),
+            price_per_share,
+            CashAmount("1", currency),
+            security_account,
+            cash_account,
+        )
+
+
+@given(
+    datetime_=st.datetimes(),
+    type_=st.sampled_from(SecurityTransactionType),
+    security=securities(),
+    security_account=security_accounts(),
+    cash_account=cash_accounts(),
+    fees=everything_except(CashAmount),
+)
+def test_invalid_fees_type(
+    datetime_: datetime,
+    type_: SecurityTransactionType,
+    security: Security,
+    security_account: SecurityAccount,
+    cash_account: CashAccount,
+    fees: Any,
+) -> None:
+    currency = security.currency
+    with pytest.raises(
+        TypeError,
+        match="SecurityTransaction.fees must be a CashAmount.",
+    ):
+        SecurityTransaction(
+            "Test description",
+            datetime_,
+            type_,
+            security,
+            Decimal("1"),
+            CashAmount("1", currency),
+            fees,
+            security_account,
+            cash_account,
+        )
+
+
+@given(
+    datetime_=st.datetimes(),
+    type_=st.sampled_from(SecurityTransactionType),
+    security=securities(),
+    security_account=security_accounts(),
+    cash_account=cash_accounts(),
 )
 def test_invalid_cash_account_currency(
     datetime_: datetime,
