@@ -17,6 +17,7 @@ from tests.models.test_assets.composites import (
     currencies,
     everything_except,
     securities,
+    valid_decimals,
 )
 from tests.models.test_assets.get_valid_objects import get_security
 
@@ -189,9 +190,7 @@ def test_places_invalid_value(
 
 @given(
     date_=st.dates(),
-    value=st.decimals(
-        min_value=-1e10, max_value=1e10, allow_infinity=False, allow_nan=False
-    ),
+    value=valid_decimals(),
 )
 def test_set_price(date_: date, value: Decimal) -> None:
     security = get_security()
@@ -204,9 +203,7 @@ def test_set_price(date_: date, value: Decimal) -> None:
 
 @given(
     date_=everything_except(date),
-    price=st.decimals(
-        min_value=0, max_value=1e10, allow_infinity=False, allow_nan=False
-    ),
+    price=valid_decimals(min_value=0),
 )
 def test_set_price_invalid_date_type(date_: Any, price: Decimal) -> None:
     security = get_security()
@@ -223,9 +220,7 @@ def test_set_price_invalid_price_type(date_: date, price: Any) -> None:
 
 @given(
     date_=st.dates(),
-    value=st.decimals(
-        min_value=-1e10, max_value=1e10, allow_infinity=False, allow_nan=False
-    ),
+    value=valid_decimals(),
     currency=currencies(),
 )
 def test_set_price_invalid_currency(

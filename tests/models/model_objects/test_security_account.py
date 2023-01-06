@@ -23,6 +23,7 @@ from tests.models.test_assets.composites import (
     security_accounts,
     security_transactions,
     security_transfers,
+    valid_decimals,
 )
 
 
@@ -64,17 +65,11 @@ def test_validate_transaction_unrelated(
 @given(
     currency_A=currencies(),
     currency_B=currencies(),
-    price_A=st.decimals(
-        min_value=0, max_value=1e6, allow_infinity=False, allow_nan=False, places=3
-    ),
-    price_B=st.decimals(
-        min_value=0, max_value=1e6, allow_infinity=False, allow_nan=False, places=3
-    ),
+    price_A=valid_decimals(min_value=0, max_value=1e6),
+    price_B=valid_decimals(min_value=0, max_value=1e6),
     shares_A=st.integers(min_value=1, max_value=1e6),
     shares_B=st.integers(min_value=1, max_value=1e6),
-    exchange_rate=st.decimals(
-        min_value=0.01, max_value=1e6, allow_infinity=False, allow_nan=False, places=3
-    ),
+    exchange_rate=valid_decimals(min_value=0.01, max_value=1e6),
 )
 def test_get_balance(
     currency_A: Currency,

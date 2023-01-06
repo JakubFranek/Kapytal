@@ -12,7 +12,11 @@ from src.models.model_objects.currency import (
     ExchangeRate,
     NoExchangeRateError,
 )
-from tests.models.test_assets.composites import currencies, everything_except
+from tests.models.test_assets.composites import (
+    currencies,
+    everything_except,
+    valid_decimals,
+)
 
 
 @given(primary=currencies(), secondary=currencies())
@@ -36,7 +40,7 @@ def test_creation(primary: Currency, secondary: Currency) -> None:
 @given(
     primary=currencies(),
     secondary=currencies(),
-    rate=st.decimals(min_value=0, allow_infinity=False, allow_nan=False),
+    rate=valid_decimals(min_value=0),
     date_=st.dates(),
 )
 def test_set_rate(
@@ -82,7 +86,7 @@ def test_same_currencies(currency: Currency) -> None:
 @given(
     primary=currencies(),
     secondary=currencies(),
-    rate=st.decimals(min_value=0, allow_infinity=False, allow_nan=False),
+    rate=valid_decimals(min_value=0),
     date_=everything_except(date),
 )
 def test_set_rate_invalid_date_type(

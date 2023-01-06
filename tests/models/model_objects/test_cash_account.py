@@ -23,15 +23,14 @@ from tests.models.test_assets.composites import (
     cash_transfers,
     currencies,
     everything_except,
+    valid_decimals,
 )
 
 
 @given(
     name=st.text(min_size=1, max_size=32),
     currency=currencies(),
-    initial_balance=st.decimals(
-        min_value=0, max_value=1e10, allow_nan=False, allow_infinity=False
-    ),
+    initial_balance=valid_decimals(min_value=0),
     initial_datetime=st.datetimes(),
 )
 def test_creation(
@@ -57,7 +56,7 @@ def test_creation(
 @given(
     name=st.just("Valid Name"),
     currency=everything_except(Currency),
-    initial_balance=st.just(Decimal(0)),
+    initial_balance=st.just(None),
     initial_datetime=st.just(datetime.now(tzinfo)),
 )
 def test_currency_incorrect_type(

@@ -427,7 +427,6 @@ class RecordKeeper:
         self._categories.append(final_category)
         return final_category
 
-    # TODO: parameters are within func, args are passed
     def get_attribute(self, name: str, type_: AttributeType) -> Attribute:
         if not isinstance(name, str):
             raise TypeError("Parameter 'name' must be a string.")

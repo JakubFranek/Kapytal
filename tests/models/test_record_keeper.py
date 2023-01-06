@@ -19,7 +19,7 @@ from src.models.model_objects.security_objects import (
     SecurityType,
 )
 from src.models.record_keeper import AlreadyExistsError, DoesNotExistError, RecordKeeper
-from tests.models.test_assets.composites import everything_except
+from tests.models.test_assets.composites import everything_except, valid_decimals
 
 
 def test_creation() -> None:
@@ -96,9 +96,7 @@ def test_add_account_group_with_multiple_parents(
     name=st.text(min_size=1, max_size=32),
     currency_code=st.text(string.ascii_letters, min_size=3, max_size=3),
     places=st.integers(min_value=0, max_value=8),
-    initial_balance=st.decimals(
-        min_value=0, max_value=1e10, allow_infinity=False, allow_nan=False
-    ),
+    initial_balance=valid_decimals(min_value=0),
     initial_datetime=st.datetimes(),
     parent_name=st.none() | st.text(min_size=1, max_size=32),
 )
@@ -166,7 +164,7 @@ def test_add_cash_transaction(
         st.lists(
             st.tuples(
                 st.sampled_from([cat.path for cat in valid_categories]),
-                st.decimals(min_value="0.01", allow_infinity=False, allow_nan=False),
+                valid_decimals(min_value=0.01),
             ),
             min_size=1,
             max_size=5,
@@ -177,7 +175,7 @@ def test_add_cash_transaction(
         st.lists(
             st.tuples(
                 st.text(min_size=1, max_size=32),
-                st.decimals(min_value="0.01", max_value=max_tag_amount),
+                valid_decimals(min_value=0.01, max_value=max_tag_amount),
             ),
             min_size=0,
             max_size=5,
@@ -202,12 +200,8 @@ def test_add_cash_transaction(
     datetime_=st.datetimes(
         min_value=datetime.now() + timedelta(days=1), timezones=st.just(tzinfo)
     ),
-    amount_sent=st.decimals(
-        min_value="0.01", max_value="1e10", allow_infinity=False, allow_nan=False
-    ),
-    amount_received=st.decimals(
-        min_value="0.01", max_value="1e10", allow_infinity=False, allow_nan=False
-    ),
+    amount_sent=valid_decimals(min_value=0.01),
+    amount_received=valid_decimals(min_value=0.01),
     data=st.data(),
 )
 def test_add_cash_transfer(
@@ -481,13 +475,9 @@ def test_get_security_does_not_exists(symbol: str) -> None:
 @given(
     description=st.text(min_size=1, max_size=256),
     type_=st.sampled_from(SecurityTransactionType),
-    shares=st.decimals(min_value=0.01, allow_infinity=False, allow_nan=False, places=3),
-    price_per_share=st.decimals(
-        min_value=0, max_value=1e10, allow_infinity=False, allow_nan=False, places=3
-    ),
-    fees=st.decimals(
-        min_value=0, max_value=1e10, allow_infinity=False, allow_nan=False, places=3
-    ),
+    shares=valid_decimals(min_value=0.01),
+    price_per_share=valid_decimals(min_value=0.0),
+    fees=valid_decimals(min_value=0),
     data=st.data(),
 )
 def test_add_security_transaction(
@@ -538,7 +528,7 @@ def test_add_security_transaction(
 @given(
     description=st.text(min_size=1, max_size=256),
     datetime_=st.datetimes(timezones=st.just(tzinfo)),
-    shares=st.decimals(min_value=0.01, allow_infinity=False, allow_nan=False, places=3),
+    shares=valid_decimals(min_value=0.01),
     data=st.data(),
 )
 def test_add_security_transfer(
