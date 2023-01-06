@@ -21,7 +21,7 @@ from src.models.model_objects.cash_objects import (
     CashTransfer,
     RefundTransaction,
 )
-from src.models.model_objects.currency import CashAmount, Currency
+from src.models.model_objects.currency import CashAmount, Currency, ExchangeRate
 from src.models.model_objects.security_objects import (
     Security,
     SecurityAccount,
@@ -47,6 +47,7 @@ class RecordKeeper:
         self._accounts: list[Account] = []
         self._account_groups: list[AccountGroup] = []
         self._currencies: list[Currency] = []
+        self._exchange_rates: list[ExchangeRate] = []
         self._securities: list[Security] = []
         self._payees: list[Attribute] = []
         self._categories: list[Category] = []
@@ -64,6 +65,10 @@ class RecordKeeper:
     @property
     def currencies(self) -> tuple[Currency, ...]:
         return tuple(self._currencies)
+
+    @property
+    def exchange_rates(self) -> tuple[ExchangeRate, ...]:
+        return tuple(self._exchange_rates)
 
     @property
     def securities(self) -> tuple[Security, ...]:
@@ -96,6 +101,14 @@ class RecordKeeper:
             )
         currency = Currency(code_upper, places)
         self._currencies.append(currency)
+
+    def add_exchange_rate(
+        self, primary_currency_code: str, secondary_currency_code: str
+    ) -> None:
+        primary_currency = self.get_currency(primary_currency_code)
+        secondary_currency = self.get_currency(secondary_currency_code)
+        exchange_rate = ExchangeRate(primary_currency, secondary_currency)
+        self._exchange_rates.append(exchange_rate)
 
     def add_security(
         self,
