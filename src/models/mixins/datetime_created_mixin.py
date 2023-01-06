@@ -3,6 +3,8 @@ from datetime import datetime
 from src.models.constants import tzinfo
 
 
+# TODO: mixin ABC?
+# TODO: mixin supers?
 class DatetimeCreatedMixin:
     def __init__(self) -> None:
         super().__init__()
