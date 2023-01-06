@@ -116,9 +116,6 @@ class CashAccount(Account):
         self._initial_datetime = value
         self._date_last_edited = datetime.now(tzinfo)
 
-    def get_balance(self, currency: Currency) -> CashAmount:
-        return self._balance_history[-1][1].convert(currency)
-
     @property
     def balance_history(self) -> tuple[tuple[datetime, CashAmount], ...]:
         return tuple(self._balance_history)
@@ -132,6 +129,9 @@ class CashAccount(Account):
 
     def __repr__(self) -> str:
         return f"CashAccount('{self.name}', currency='{self.currency.code}')"
+
+    def get_balance(self, currency: Currency) -> CashAmount:
+        return self._balance_history[-1][1].convert(currency)
 
     def add_transaction(self, transaction: CashRelatedTransaction) -> None:
         self._validate_transaction(transaction)
