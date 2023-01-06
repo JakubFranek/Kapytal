@@ -163,7 +163,7 @@ class RecordKeeper:
         self,
         name: str,
         currency_code: str,
-        initial_balance_value: Decimal,
+        initial_balance_value: Decimal | int | str,
         initial_datetime: datetime,
         parent_path: str | None,
     ) -> None:
@@ -232,8 +232,8 @@ class RecordKeeper:
         datetime_: datetime,
         account_sender_path: str,
         account_recipient_path: str,
-        amount_sent: Decimal,
-        amount_received: Decimal,
+        amount_sent: Decimal | int | str,
+        amount_received: Decimal | int | str,
     ) -> None:
         account_sender = self.get_account(account_sender_path, CashAccount)
         account_recipient = self.get_account(account_recipient_path, CashAccount)
@@ -295,9 +295,9 @@ class RecordKeeper:
         datetime_: datetime,
         type_: SecurityTransactionType,
         security_symbol: str,
-        shares: Decimal,
-        price_per_share: Decimal,
-        fees: Decimal,
+        shares: Decimal | int | str,
+        price_per_share: Decimal | int | str,
+        fees: Decimal | int | str,
         security_account_path: str,
         cash_account_path: str,
     ) -> None:
