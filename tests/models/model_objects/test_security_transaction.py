@@ -22,6 +22,7 @@ from tests.models.test_assets.composites import (
     everything_except,
     securities,
     security_accounts,
+    valid_decimals,
 )
 from tests.models.test_assets.get_valid_objects import get_security
 
@@ -29,9 +30,7 @@ from tests.models.test_assets.get_valid_objects import get_security
 @given(
     description=st.text(min_size=1, max_size=256),
     type_=st.just(SecurityTransactionType.BUY),
-    shares=st.decimals(
-        min_value=0.01, max_value=1e10, allow_infinity=False, allow_nan=False, places=3
-    ),
+    shares=valid_decimals(min_value=0.01),
     security_account=security_accounts(),
     cash_account=cash_accounts(),
     data=st.data(),
@@ -85,9 +84,7 @@ def test_buy(
 
 
 @given(
-    shares=st.decimals(
-        min_value=0.01, max_value=1e10, allow_infinity=False, allow_nan=False, places=3
-    ),
+    shares=valid_decimals(min_value=0.01),
     data=st.data(),
 )
 def test_sell(shares: Decimal, data: st.DataObject) -> None:
@@ -231,9 +228,7 @@ def test_invalid_shares_type(
 @given(
     type_=st.sampled_from(SecurityTransactionType),
     security=securities(),
-    shares=st.decimals(
-        max_value=-0.01, allow_infinity=False, allow_nan=False, places=3
-    ),
+    shares=st.decimals(max_value=0),
     security_account=security_accounts(),
     cash_account=cash_accounts(),
     data=st.data(),
@@ -262,8 +257,8 @@ def test_invalid_shares_value(
             type_,
             security,
             shares,
-            Decimal("100"),
-            Decimal("1"),
+            CashAmount("1000", security.currency),
+            CashAmount("1", security.currency),
             security_account,
             cash_account,
         )

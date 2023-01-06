@@ -18,13 +18,12 @@ from tests.models.test_assets.composites import (
     cash_amounts,
     currencies,
     everything_except,
+    valid_decimals,
 )
 
 
 @given(
-    value=st.decimals(
-        min_value=-1e10, max_value=1e10, allow_infinity=False, allow_nan=False
-    ),
+    value=valid_decimals(),
     currency=currencies(),
 )
 def test_creation(value: Decimal, currency: Currency) -> None:
@@ -67,9 +66,7 @@ def test_value_invalid_str(value: str, currency: Currency) -> None:
         max_value=1e10,
     )
     | st.floats(min_value=-1e10, max_value=1e10, allow_infinity=False, allow_nan=False)
-    | st.decimals(
-        min_value=-1e10, max_value=1e10, allow_infinity=False, allow_nan=False
-    ),
+    | valid_decimals(),
     currency=currencies(),
 )
 def test_value_valid_str(value: str, currency: Currency) -> None:
@@ -90,9 +87,7 @@ def test_value_invalid_value(value: Decimal, currency: Currency) -> None:
 
 
 @given(
-    value=st.decimals(
-        min_value=-1e10, max_value=1e10, allow_infinity=False, allow_nan=False
-    ),
+    value=valid_decimals(),
     currency=everything_except(Currency),
 )
 def test_currency_invalid_type(value: Decimal, currency: Currency) -> None:
@@ -101,12 +96,8 @@ def test_currency_invalid_type(value: Decimal, currency: Currency) -> None:
 
 
 @given(
-    value_1=st.decimals(
-        min_value=-1e10, max_value=1e10, allow_infinity=False, allow_nan=False
-    ),
-    value_2=st.decimals(
-        min_value=-1e10, max_value=1e10, allow_infinity=False, allow_nan=False
-    ),
+    value_1=valid_decimals(),
+    value_2=valid_decimals(),
     currency=currencies(),
 )
 def test_eq(value_1: Decimal, value_2: Decimal, currency: Currency) -> None:
@@ -147,12 +138,8 @@ def test_eq_different_currency_nonzero_value(
 
 
 @given(
-    value_1=st.decimals(
-        min_value=-1e10, max_value=1e10, allow_infinity=False, allow_nan=False
-    ),
-    value_2=st.decimals(
-        min_value=-1e10, max_value=1e10, allow_infinity=False, allow_nan=False
-    ),
+    value_1=valid_decimals(),
+    value_2=valid_decimals(),
     currency=currencies(),
 )
 def test_lt(value_1: Decimal, value_2: Decimal, currency: Currency) -> None:
@@ -178,12 +165,8 @@ def test_lt_different_currencies(
 
 
 @given(
-    value_1=st.decimals(
-        min_value=-1e10, max_value=1e10, allow_infinity=False, allow_nan=False
-    ),
-    value_2=st.decimals(
-        min_value=-1e10, max_value=1e10, allow_infinity=False, allow_nan=False
-    ),
+    value_1=valid_decimals(),
+    value_2=valid_decimals(),
     currency=currencies(),
 )
 def test_sum(value_1: Decimal, value_2: Decimal, currency: Currency) -> None:
@@ -195,12 +178,8 @@ def test_sum(value_1: Decimal, value_2: Decimal, currency: Currency) -> None:
 
 
 @given(
-    value_1=st.decimals(
-        min_value=-1e10, max_value=1e10, allow_infinity=False, allow_nan=False
-    ),
-    value_2=st.decimals(
-        min_value=-1e10, max_value=1e10, allow_infinity=False, allow_nan=False
-    ),
+    value_1=valid_decimals(),
+    value_2=valid_decimals(),
     currency=currencies(),
 )
 def test_add_radd(value_1: Decimal, value_2: Decimal, currency: Currency) -> None:
@@ -231,12 +210,8 @@ def test_add_radd_invalid_type(cash_amount: CashAmount, number: Any) -> None:
 
 
 @given(
-    value_1=st.decimals(
-        min_value=-1e10, max_value=1e10, allow_infinity=False, allow_nan=False
-    ),
-    value_2=st.decimals(
-        min_value=-1e10, max_value=1e10, allow_infinity=False, allow_nan=False
-    ),
+    value_1=valid_decimals(),
+    value_2=valid_decimals(),
     currency=currencies(),
 )
 def test_sub_rsub(value_1: Decimal, value_2: Decimal, currency: Currency) -> None:
@@ -270,9 +245,7 @@ def test_sub_rsub_invalid_type(cash_amount: CashAmount, number: Any) -> None:
 @given(
     cash_amount=cash_amounts(),
     number=st.integers(min_value=-1e10, max_value=1e10)
-    | st.decimals(
-        min_value=-1e10, max_value=1e10, allow_infinity=False, allow_nan=False
-    ),
+    | valid_decimals(),
 )
 def test_mul_rmul(cash_amount: CashAmount, number: int | Decimal) -> None:
     expected_mul = CashAmount(cash_amount.value * number, cash_amount.currency)
