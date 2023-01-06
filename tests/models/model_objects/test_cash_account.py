@@ -15,9 +15,10 @@ from src.models.model_objects.cash_objects import (
     TransactionPrecedesAccountError,
     UnrelatedAccountError,
 )
-from src.models.model_objects.currency import Currency
+from src.models.model_objects.currency import CashAmount, Currency, CurrencyError
 from tests.models.test_assets.composites import (
     cash_accounts,
+    cash_amounts,
     cash_transactions,
     cash_transfers,
     currencies,
@@ -28,7 +29,9 @@ from tests.models.test_assets.composites import (
 @given(
     name=st.text(min_size=1, max_size=32),
     currency=currencies(),
-    initial_balance=st.decimals(min_value=0, allow_nan=False, allow_infinity=False),
+    initial_balance=st.decimals(
+        min_value=0, max_value=1e10, allow_nan=False, allow_infinity=False
+    ),
     initial_datetime=st.datetimes(),
 )
 def test_creation(
@@ -37,7 +40,8 @@ def test_creation(
     initial_balance: Decimal,
     initial_datetime: datetime,
 ) -> None:
-    cash_account = CashAccount(name, currency, initial_balance, initial_datetime)
+    initial_amount = CashAmount(initial_balance, currency)
+    cash_account = CashAccount(name, currency, initial_amount, initial_datetime)
     assert cash_account.name == name
     assert cash_account.path == name
     assert (
@@ -45,8 +49,8 @@ def test_creation(
         == f"CashAccount('{name}', currency='{cash_account.currency.code}')"
     )
     assert cash_account.currency == currency
-    assert cash_account.balance == initial_balance
-    assert cash_account.initial_balance == initial_balance
+    assert cash_account.get_balance(currency) == initial_amount
+    assert cash_account.initial_balance == initial_amount
     assert cash_account.initial_datetime == initial_datetime
 
 
@@ -69,7 +73,7 @@ def test_currency_incorrect_type(
 @given(
     name=st.just("Valid Name"),
     currency=currencies(),
-    initial_balance=everything_except(Decimal),
+    initial_balance=everything_except(CashAmount),
     initial_datetime=st.just(datetime.now(tzinfo)),
 )
 def test_initial_balance_invalid_type(
@@ -79,7 +83,7 @@ def test_initial_balance_invalid_type(
     initial_datetime: datetime,
 ) -> None:
     with pytest.raises(
-        TypeError, match="CashAccount.initial_balance must be a Decimal."
+        TypeError, match="CashAccount.initial_balance must be a CashAmount."
     ):
         CashAccount(name, currency, initial_balance, initial_datetime)
 
@@ -87,30 +91,36 @@ def test_initial_balance_invalid_type(
 @given(
     name=st.just("Valid Name"),
     currency=currencies(),
-    initial_balance=st.decimals(max_value="-0.01", allow_nan=True, allow_infinity=True),
-    initial_datetime=st.datetimes(),
+    invalid_currency=currencies(),
+    initial_datetime=st.just(datetime.now(tzinfo)),
+    data=st.data(),
 )
-def test_initial_balance_invalid_values(
+def test_initial_balance_invalid_currency(
     name: str,
     currency: Currency,
-    initial_balance: Decimal,
+    invalid_currency: Currency,
     initial_datetime: datetime,
+    data: st.DataObject,
 ) -> None:
-    with pytest.raises(
-        ValueError, match="CashAccount.initial_balance must be positive and finite."
-    ):
+    assume(currency != invalid_currency)
+    initial_balance = data.draw(cash_amounts(invalid_currency))
+    with pytest.raises(CurrencyError):
         CashAccount(name, currency, initial_balance, initial_datetime)
 
 
 @given(
     name=st.text(min_size=1, max_size=32),
     currency=currencies(),
-    initial_balance=st.decimals(min_value=0, allow_nan=False, allow_infinity=False),
     initial_datetime=everything_except(datetime),
+    data=st.data(),
 )
 def test_initial_datetime_invalid_type(
-    name: str, currency: Currency, initial_balance: Decimal, initial_datetime: Any
+    name: str,
+    currency: Currency,
+    initial_datetime: Any,
+    data: st.DataObject,
 ) -> None:
+    initial_balance = data.draw(cash_amounts(currency))
     with pytest.raises(
         TypeError, match="CashAccount.initial_datetime must be a datetime."
     ):
@@ -126,7 +136,7 @@ def test_validate_transaction_invalid_type(
 ) -> None:
     with pytest.raises(
         TypeError,
-        match="Argument 'transaction' must be a",
+        match="Parameter 'transaction' must be a",
     ):
         account._validate_transaction(transaction)
 
@@ -183,11 +193,12 @@ def test_validate_transaction_invalid_datetime(
         account._validate_transaction(transfer)
 
 
-@given(
-    account=cash_accounts(),
-    transactions=st.lists(cash_transactions(), min_size=1, max_size=5),
-)
-def test_balance(account: CashAccount, transactions: list[CashTransaction]) -> None:
+@given(currency=currencies(), data=st.data())
+def test_get_balance(currency: Currency, data: st.DataObject) -> None:
+    account = data.draw(cash_accounts(currency=currency))
+    transactions = data.draw(
+        st.lists(cash_transactions(currency=currency), min_size=1, max_size=5)
+    )
     datetime_balance_list = [(account.initial_datetime, account.initial_balance)]
     transactions.sort(key=lambda transaction: transaction.datetime_)
     for transaction in transactions:
@@ -198,5 +209,5 @@ def test_balance(account: CashAccount, transactions: list[CashTransaction]) -> N
             next_balance = datetime_balance_list[-1][1] - transaction.amount
         datetime_balance_list.append((transaction.datetime_, next_balance))
 
-    assert datetime_balance_list[-1][1] == account.balance
+    assert datetime_balance_list[-1][1] == account.get_balance(currency)
     assert set(datetime_balance_list) == set(account.balance_history)

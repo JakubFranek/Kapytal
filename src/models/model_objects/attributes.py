@@ -55,7 +55,7 @@ class Category(NameMixin, DatetimeCreatedMixin):
             raise TypeError("Category.type_ must be a CategoryType.")
         self._type = type_
 
-        self.parent: Self | None = parent
+        self.parent = parent
         self._children: list[Self] = []
 
     @property

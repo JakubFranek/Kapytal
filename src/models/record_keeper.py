@@ -3,6 +3,7 @@
 from collections.abc import Collection
 from datetime import datetime
 from decimal import Decimal
+from typing import overload
 
 from src.models.base_classes.account import Account
 from src.models.base_classes.transaction import Transaction
@@ -20,7 +21,7 @@ from src.models.model_objects.cash_objects import (
     CashTransfer,
     RefundTransaction,
 )
-from src.models.model_objects.currency import Currency
+from src.models.model_objects.currency import CashAmount, Currency
 from src.models.model_objects.security_objects import (
     Security,
     SecurityAccount,
@@ -86,13 +87,13 @@ class RecordKeeper:
     def __repr__(self) -> str:
         return "RecordKeeper"
 
-    def add_currency(self, currency_code: str) -> None:
+    def add_currency(self, currency_code: str, places: int) -> None:
         code_upper = currency_code.upper()
         if any(currency.code == code_upper for currency in self._currencies):
             raise AlreadyExistsError(
                 f"A Currency with code '{code_upper}' already exists."
             )
-        currency = Currency(code_upper)
+        currency = Currency(code_upper, places)
         self._currencies.append(currency)
 
     def add_security(
@@ -124,7 +125,8 @@ class RecordKeeper:
             parent = None
             if not isinstance(type_, CategoryType):
                 raise TypeError(
-                    "If argument 'parent_path' is None, 'type_' must be a CategoryType."
+                    "If parameter 'parent_path' is None, "
+                    "'type_' must be a CategoryType."
                 )
             category_type = type_
 
@@ -155,13 +157,14 @@ class RecordKeeper:
         self,
         name: str,
         currency_code: str,
-        initial_balance: Decimal,
+        initial_balance_value: Decimal,
         initial_datetime: datetime,
         parent_path: str | None,
     ) -> None:
         self._check_account_exists(name, parent_path)
         currency = self.get_currency(currency_code)
         parent = self.get_account_parent(parent_path)
+        initial_balance = CashAmount(initial_balance_value, currency)
         account = CashAccount(name, currency, initial_balance, initial_datetime, parent)
         self._accounts.append(account)
 
@@ -181,23 +184,29 @@ class RecordKeeper:
         payee_name: str,
         tag_name_amount_pairs: Collection[tuple[str, Decimal]],
     ) -> None:
-        account = self.get_account(account_path)
+        account = self.get_account(account_path, CashAccount)
         payee = self.get_attribute(payee_name, AttributeType.PAYEE)
 
-        tag_amount_pairs: list[tuple[Attribute, Decimal]] = []
+        tag_amount_pairs: list[tuple[Attribute, CashAmount]] = []
         for tag_name, amount in tag_name_amount_pairs:
             tag_amount_pairs.append(
-                (self.get_attribute(tag_name, AttributeType.TAG), amount)
+                (
+                    self.get_attribute(tag_name, AttributeType.TAG),
+                    CashAmount(amount, account.currency),
+                )
             )
 
-        category_amount_pairs: list[tuple[Category, Decimal]] = []
+        category_amount_pairs: list[tuple[Category, CashAmount]] = []
         category_type = (
             CategoryType.INCOME
             if transaction_type == CashTransactionType.INCOME
             else CategoryType.EXPENSE
         )
         for category_path, amount in category_path_amount_pairs:
-            pair = (self.get_category(category_path, category_type), amount)
+            pair = (
+                self.get_category(category_path, category_type),
+                CashAmount(amount, account.currency),
+            )
             category_amount_pairs.append(pair)
 
         transaction = CashTransaction(
@@ -220,16 +229,16 @@ class RecordKeeper:
         amount_sent: Decimal,
         amount_received: Decimal,
     ) -> None:
-        account_sender = self.get_account(account_sender_path)
-        account_recipient = self.get_account(account_recipient_path)
+        account_sender = self.get_account(account_sender_path, CashAccount)
+        account_recipient = self.get_account(account_recipient_path, CashAccount)
 
         transfer = CashTransfer(
             description,
             datetime_,
             account_sender,
             account_recipient,
-            amount_sent,
-            amount_received,
+            CashAmount(amount_sent, account_sender.currency),
+            CashAmount(amount_received, account_recipient.currency),
         )
         self._transactions.append(transfer)
 
@@ -242,19 +251,26 @@ class RecordKeeper:
         category_path_amount_pairs: Collection[tuple[str, Decimal]],
         tag_name_amount_pairs: Collection[tuple[str, Decimal]],
     ) -> None:
+        # TODO: transactions probably won't be search by index but by UUID
         refunded_transaction = self.transactions[refunded_transaction_index]
-        refunded_account = self.get_account(refunded_account_path)
+        refunded_account = self.get_account(refunded_account_path, CashAccount)
 
-        tag_amount_pairs: list[tuple[Attribute, Decimal]] = []
+        tag_amount_pairs: list[tuple[Attribute, CashAmount]] = []
         for tag_name, amount in tag_name_amount_pairs:
             tag_amount_pairs.append(
-                (self.get_attribute(tag_name, AttributeType.TAG), amount)
+                (
+                    self.get_attribute(tag_name, AttributeType.TAG),
+                    CashAmount(amount, refunded_account.currency),
+                )
             )
 
-        category_amount_pairs: list[tuple[Category, Decimal]] = []
+        category_amount_pairs: list[tuple[Category, CashAmount]] = []
         category_type = CategoryType.EXPENSE
         for category_path, amount in category_path_amount_pairs:
-            pair = (self.get_category(category_path, category_type), amount)
+            pair = (
+                self.get_category(category_path, category_type),
+                CashAmount(amount, refunded_account.currency),
+            )
             category_amount_pairs.append(pair)
 
         refund = RefundTransaction(
@@ -273,23 +289,24 @@ class RecordKeeper:
         datetime_: datetime,
         type_: SecurityTransactionType,
         security_symbol: str,
-        shares: int,
+        shares: Decimal,
         price_per_share: Decimal,
         fees: Decimal,
         security_account_path: str,
         cash_account_path: str,
     ) -> None:
         security = self.get_security(security_symbol)
-        cash_account = self.get_account(cash_account_path)
-        security_account = self.get_account(security_account_path)
+        cash_account = self.get_account(cash_account_path, CashAccount)
+        security_account = self.get_account(security_account_path, SecurityAccount)
+
         transaction = SecurityTransaction(
             description,
             datetime_,
             type_,
             security,
             shares,
-            price_per_share,
-            fees,
+            CashAmount(price_per_share, cash_account.currency),
+            CashAmount(fees, cash_account.currency),
             security_account,
             cash_account,
         )
@@ -305,8 +322,8 @@ class RecordKeeper:
         account_recipient_path: str,
     ) -> None:
         security = self.get_security(security_symbol)
-        account_sender = self.get_account(account_sender_path)
-        account_recipient = self.get_account(account_recipient_path)
+        account_sender = self.get_account(account_sender_path, SecurityAccount)
+        account_recipient = self.get_account(account_recipient_path, SecurityAccount)
         transaction = SecurityTransfer(
             description, datetime_, security, shares, account_sender, account_recipient
         )
@@ -322,13 +339,39 @@ class RecordKeeper:
             )
         return None
 
-    def get_account(self, path: str) -> Account:
+    @overload
+    def get_account(
+        self, path: str, type_: type[CashAccount]  # noqa: U100
+    ) -> CashAccount:
+        ...
+
+    @overload
+    def get_account(
+        self, path: str, type_: type[SecurityAccount]  # noqa: U100
+    ) -> SecurityAccount:
+        ...
+
+    def get_account(
+        self,
+        path: str,
+        type_: type[Account],
+    ) -> Account:
+        if not isinstance(path, str):
+            raise TypeError("Parameter 'path' must be a string.")
+        if not isinstance(type_, type(Account)):
+            raise TypeError("Parameter type_ must be type(Account).")
         for account in self._accounts:
             if account.path == path:
+                if not isinstance(account, type_):
+                    raise TypeError(
+                        f"Type of Account at path='{path}' is not {type_.__name__}."
+                    )
                 return account
         raise DoesNotExistError(f"An Account with path='{path}' does not exist.")
 
     def get_security(self, symbol: str) -> Security:
+        if not isinstance(symbol, str):
+            raise TypeError("Parameter 'symbol' must be a string.")
         symbol_upper = symbol.upper()
         for security in self._securities:
             if security.symbol == symbol_upper:
@@ -338,6 +381,8 @@ class RecordKeeper:
         )
 
     def get_currency(self, code: str) -> Currency:
+        if not isinstance(code, str):
+            raise TypeError("Parameter 'code' must be a string.")
         code_upper = code.upper()
         for currency in self._currencies:
             if currency.code == code_upper:
@@ -345,6 +390,10 @@ class RecordKeeper:
         raise DoesNotExistError(f"A Currency with code='{code_upper}' does not exist.")
 
     def get_category(self, path: str, type_: CategoryType) -> Category:
+        if not isinstance(path, str):
+            raise TypeError("Parameter 'path' must be a string.")
+        if not isinstance(type_, CategoryType):
+            raise TypeError("Parameter 'type_' must be a CategoryType.")
         for category in self._categories:
             if category.path == path:
                 return category
@@ -378,7 +427,12 @@ class RecordKeeper:
         self._categories.append(final_category)
         return final_category
 
+    # TODO: parameters are within func, args are passed
     def get_attribute(self, name: str, type_: AttributeType) -> Attribute:
+        if not isinstance(name, str):
+            raise TypeError("Parameter 'name' must be a string.")
+        if not isinstance(type_, AttributeType):
+            raise TypeError("Parameter 'type_' must be an AttributeType.")
         attributes = self._payees if type_ == AttributeType.PAYEE else self._tags
         for attribute in attributes:
             if attribute.name == name:
@@ -388,7 +442,11 @@ class RecordKeeper:
         attributes.append(attribute)
         return attribute
 
-    def _check_account_exists(self, name: str, parent_path: str) -> None:
+    def _check_account_exists(self, name: str, parent_path: str | None) -> None:
+        if not isinstance(name, str):
+            raise TypeError("Parameter 'name' must be a string.")
+        if not isinstance(parent_path, str) and parent_path is not None:
+            raise TypeError("Parameter 'parent_path' must be a string or a None.")
         target_path = parent_path + "/" + name if parent_path is not None else name
         if any(account.path == target_path for account in self._accounts):
             raise AlreadyExistsError(

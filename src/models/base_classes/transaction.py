@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:  # pragma: no cover
+if TYPE_CHECKING:
     from src.models.base_classes.account import Account
 
 from src.models.mixins.datetime_created_mixin import DatetimeCreatedMixin

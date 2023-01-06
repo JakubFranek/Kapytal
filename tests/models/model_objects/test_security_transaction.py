@@ -9,7 +9,7 @@ from hypothesis import strategies as st
 from src.models.base_classes.account import UnrelatedAccountError
 from src.models.constants import tzinfo
 from src.models.model_objects.cash_objects import CashAccount
-from src.models.model_objects.currency import CurrencyError
+from src.models.model_objects.currency import CashAmount, CurrencyError
 from src.models.model_objects.security_objects import (
     Security,
     SecurityAccount,
@@ -18,25 +18,19 @@ from src.models.model_objects.security_objects import (
 )
 from tests.models.test_assets.composites import (
     cash_accounts,
+    cash_amounts,
     everything_except,
     securities,
     security_accounts,
 )
-from tests.models.test_assets.get_valid_objects import (
-    get_concrete_security_related_transaction,
-    get_security,
-)
+from tests.models.test_assets.get_valid_objects import get_security
 
 
 @given(
     description=st.text(min_size=1, max_size=256),
     type_=st.just(SecurityTransactionType.BUY),
-    shares=st.integers(min_value=1),
-    price_per_share=st.decimals(
-        min_value=0, max_value=1e10, allow_infinity=False, allow_nan=False, places=3
-    ),
-    fees=st.decimals(
-        min_value=0, max_value=1e10, allow_infinity=False, allow_nan=False, places=3
+    shares=st.decimals(
+        min_value=0.01, max_value=1e10, allow_infinity=False, allow_nan=False, places=3
     ),
     security_account=security_accounts(),
     cash_account=cash_accounts(),
@@ -45,13 +39,14 @@ from tests.models.test_assets.get_valid_objects import (
 def test_buy(
     description: str,
     type_: SecurityTransactionType,
-    shares: int,
-    price_per_share: Decimal,
-    fees: Decimal,
+    shares: Decimal,
     security_account: SecurityAccount,
     cash_account: CashAccount,
     data: st.DataObject,
 ) -> None:
+    currency = cash_account.currency
+    price_per_share = data.draw(cash_amounts(currency=currency))
+    fees = data.draw(cash_amounts(currency=currency))
     security = data.draw(securities(cash_account.currency))
     datetime_ = data.draw(
         st.datetimes(
@@ -77,7 +72,7 @@ def test_buy(
     assert transaction.security_account == security_account
     assert transaction.cash_account == cash_account
     assert (
-        cash_account.balance
+        cash_account.get_balance(currency)
         == cash_account.initial_balance - shares * price_per_share - fees
     )
     assert security_account.securities[security] == shares
@@ -90,19 +85,20 @@ def test_buy(
 
 
 @given(
-    shares=st.integers(min_value=1, max_value=10),
-    price_per_share=st.decimals(
-        min_value=0, max_value=1e10, allow_infinity=False, allow_nan=False, places=3
+    shares=st.decimals(
+        min_value=0.01, max_value=1e10, allow_infinity=False, allow_nan=False, places=3
     ),
-    fees=st.decimals(
-        min_value=0, max_value=1e10, allow_infinity=False, allow_nan=False, places=3
-    ),
+    data=st.data(),
 )
-def test_sell(shares: int, price_per_share: Decimal, fees: Decimal) -> None:
+def test_sell(shares: Decimal, data: st.DataObject) -> None:
     buy = get_buy()
+    security = buy.security
+    currency = security.currency
+    price_per_share = data.draw(cash_amounts(currency=currency))
+    fees = data.draw(cash_amounts(currency=currency))
     security_account = buy.security_account
     cash_account = buy.cash_account
-    security = buy.security
+
     sell = SecurityTransaction(
         "A Sell transaction",
         datetime.now(tzinfo),
@@ -115,9 +111,11 @@ def test_sell(shares: int, price_per_share: Decimal, fees: Decimal) -> None:
         cash_account,
     )
     assert security_account.securities[security] == buy.shares - sell.shares
-    assert cash_account.balance == cash_account.initial_balance + buy.get_amount(
+    assert cash_account.get_balance(
+        currency
+    ) == cash_account.initial_balance + buy.get_amount(cash_account) + sell.get_amount(
         cash_account
-    ) + sell.get_amount(cash_account)
+    )
 
 
 @given(
@@ -148,7 +146,7 @@ def test_invalid_type_type(
             datetime_,
             type_,
             security,
-            1,
+            Decimal("1"),
             Decimal("100"),
             Decimal("1"),
             security_account,
@@ -184,7 +182,7 @@ def test_invalid_security_type(
             datetime_,
             type_,
             security,
-            1,
+            Decimal("1"),
             Decimal("100"),
             Decimal("1"),
             security_account,
@@ -195,7 +193,7 @@ def test_invalid_security_type(
 @given(
     type_=st.sampled_from(SecurityTransactionType),
     security=securities(),
-    shares=everything_except(int),
+    shares=everything_except(Decimal),
     security_account=security_accounts(),
     cash_account=cash_accounts(),
     data=st.data(),
@@ -203,7 +201,7 @@ def test_invalid_security_type(
 def test_invalid_shares_type(
     type_: SecurityTransactionType,
     security: Security,
-    shares: int,
+    shares: Decimal,
     security_account: SecurityAccount,
     cash_account: CashAccount,
     data: st.DataObject,
@@ -214,7 +212,9 @@ def test_invalid_shares_type(
             + timedelta(days=1)
         )
     )
-    with pytest.raises(TypeError, match="SecurityTransaction.shares must be an int."):
+    with pytest.raises(
+        TypeError, match="SecurityTransaction.shares must be a Decimal."
+    ):
         SecurityTransaction(
             "Test description",
             datetime_,
@@ -231,7 +231,9 @@ def test_invalid_shares_type(
 @given(
     type_=st.sampled_from(SecurityTransactionType),
     security=securities(),
-    shares=st.integers(max_value=0),
+    shares=st.decimals(
+        max_value=-0.01, allow_infinity=False, allow_nan=False, places=3
+    ),
     security_account=security_accounts(),
     cash_account=cash_accounts(),
     data=st.data(),
@@ -251,7 +253,8 @@ def test_invalid_shares_value(
         )
     )
     with pytest.raises(
-        ValueError, match="SecurityTransaction.shares must be at least 1."
+        ValueError,
+        match="must be a finite positive number.",
     ):
         SecurityTransaction(
             "Test description",
@@ -278,7 +281,8 @@ def test_invalid_security_account_type(
     cash_account: CashAccount,
     data: st.DataObject,
 ) -> None:
-    security = data.draw(securities(cash_account.currency))
+    currency = cash_account.currency
+    security = data.draw(securities(currency=currency))
     datetime_ = data.draw(
         st.datetimes(
             min_value=cash_account.initial_datetime.replace(tzinfo=None)
@@ -295,9 +299,9 @@ def test_invalid_security_account_type(
             datetime_,
             type_,
             security,
-            1,
-            Decimal("100"),
             Decimal("1"),
+            CashAmount("100", currency),
+            CashAmount("1", currency),
             security_account,
             cash_account,
         )
@@ -317,6 +321,7 @@ def test_invalid_cash_account_type(
     security_account: SecurityAccount,
     cash_account: CashAccount,
 ) -> None:
+    currency = security.currency
     with pytest.raises(
         TypeError,
         match="SecurityTransaction.cash_account must be a CashAccount.",
@@ -326,9 +331,77 @@ def test_invalid_cash_account_type(
             datetime_,
             type_,
             security,
-            1,
-            Decimal("100"),
             Decimal("1"),
+            CashAmount("100", currency),
+            CashAmount("1", currency),
+            security_account,
+            cash_account,
+        )
+
+
+@given(
+    datetime_=st.datetimes(),
+    type_=st.sampled_from(SecurityTransactionType),
+    security=securities(),
+    security_account=security_accounts(),
+    cash_account=cash_accounts(),
+    price_per_share=everything_except(CashAmount),
+)
+def test_invalid_price_per_share_type(
+    datetime_: datetime,
+    type_: SecurityTransactionType,
+    security: Security,
+    security_account: SecurityAccount,
+    cash_account: CashAccount,
+    price_per_share: Any,
+) -> None:
+    currency = security.currency
+    with pytest.raises(
+        TypeError,
+        match="SecurityTransaction.price_per_share must be a CashAmount.",
+    ):
+        SecurityTransaction(
+            "Test description",
+            datetime_,
+            type_,
+            security,
+            Decimal("1"),
+            price_per_share,
+            CashAmount("1", currency),
+            security_account,
+            cash_account,
+        )
+
+
+@given(
+    datetime_=st.datetimes(),
+    type_=st.sampled_from(SecurityTransactionType),
+    security=securities(),
+    security_account=security_accounts(),
+    cash_account=cash_accounts(),
+    fees=everything_except(CashAmount),
+)
+def test_invalid_fees_type(
+    datetime_: datetime,
+    type_: SecurityTransactionType,
+    security: Security,
+    security_account: SecurityAccount,
+    cash_account: CashAccount,
+    fees: Any,
+) -> None:
+    currency = security.currency
+    with pytest.raises(
+        TypeError,
+        match="SecurityTransaction.fees must be a CashAmount.",
+    ):
+        SecurityTransaction(
+            "Test description",
+            datetime_,
+            type_,
+            security,
+            Decimal("1"),
+            CashAmount("1", currency),
+            fees,
             security_account,
             cash_account,
         )
@@ -349,15 +422,16 @@ def test_invalid_cash_account_currency(
     cash_account: CashAccount,
 ) -> None:
     assume(cash_account.currency != security.currency)
+    currency = security.currency
     with pytest.raises(CurrencyError):
         SecurityTransaction(
             "Test description",
             datetime_,
             type_,
             security,
-            1,
-            Decimal("100"),
             Decimal("1"),
+            CashAmount("100", currency),
+            CashAmount("1", currency),
             security_account,
             cash_account,
         )
@@ -406,20 +480,11 @@ def test_change_cash_account(data: st.DataObject) -> None:
     assert buy not in old_cash_account.transactions
 
 
-@given(security_account=security_accounts())
-def test_concrete_security_related_transaction(
-    security_account: SecurityAccount,
-) -> None:
-    transaction = get_concrete_security_related_transaction()
-    with pytest.raises(NotImplementedError):
-        transaction._get_shares(security_account)
-
-
 @given(account=everything_except(SecurityAccount))
 def test_get_shares_invalid_account_type(account: Any) -> None:
     transaction = get_buy()
     with pytest.raises(
-        TypeError, match="Argument 'account' must be a SecurityAccount."
+        TypeError, match="Parameter 'account' must be a SecurityAccount."
     ):
         transaction.get_shares(account)
 
@@ -437,9 +502,9 @@ def get_sell() -> SecurityTransaction:
     datetime_ = datetime.now(tzinfo)
     type_ = SecurityTransactionType.SELL
     security = buy.security
-    shares = 10
-    price_per_share = Decimal("105.49")
-    fees = Decimal("1.25")
+    shares = Decimal("10")
+    price_per_share = CashAmount("105.49", security.currency)
+    fees = CashAmount("1.25", security.currency)
     return SecurityTransaction(
         description,
         datetime_,
@@ -458,14 +523,14 @@ def get_buy() -> SecurityTransaction:
     datetime_ = datetime.now(tzinfo)
     type_ = SecurityTransactionType.BUY
     security = get_security()
-    shares = 10
-    price_per_share = Decimal("99.77")
-    fees = Decimal("1.25")
+    shares = Decimal("10")
+    price_per_share = CashAmount("99.77", security.currency)
+    fees = CashAmount("1.25", security.currency)
     security_account = SecurityAccount("Interactive Brokers")
     cash_account = CashAccount(
         "Interactive Brokers EUR",
         security.currency,
-        Decimal("1000"),
+        CashAmount("1000", security.currency),
         datetime.now(tzinfo) - timedelta(days=7),
     )
     return SecurityTransaction(

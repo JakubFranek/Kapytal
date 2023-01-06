@@ -67,15 +67,3 @@ def test_invalid_parent_type(parent: Any) -> None:
         TypeError, match="Account.parent must be an AccountGroup or a None."
     ):
         account.parent = parent
-
-
-def test_abstract_balance() -> None:
-    account = get_concrete_account()
-    with pytest.raises(NotImplementedError):
-        account.balance
-
-
-def test_abstract_transactions() -> None:
-    account = get_concrete_account()
-    with pytest.raises(NotImplementedError):
-        account.transactions

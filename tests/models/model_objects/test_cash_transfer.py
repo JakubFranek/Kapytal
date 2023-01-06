@@ -1,5 +1,4 @@
 from datetime import datetime
-from decimal import Decimal
 from typing import Any
 
 import pytest
@@ -13,8 +12,10 @@ from src.models.model_objects.cash_objects import (
     TransferSameAccountError,
     UnrelatedAccountError,
 )
+from src.models.model_objects.currency import CashAmount
 from tests.models.test_assets.composites import (
     cash_accounts,
+    cash_amounts,
     cash_transfers,
     everything_except,
 )
@@ -26,19 +27,22 @@ from tests.models.test_assets.constants import min_datetime
     account_sender=cash_accounts(),
     account_recipient=cash_accounts(),
     datetime_=st.datetimes(min_value=min_datetime, timezones=st.just(tzinfo)),
-    amount_sent=st.decimals(min_value="0.01", allow_infinity=False, allow_nan=False),
-    amount_received=st.decimals(
-        min_value="0.01", allow_infinity=False, allow_nan=False
-    ),
+    data=st.data(),
 )
 def test_creation(
     description: str,
     datetime_: datetime,
     account_sender: CashAccount,
     account_recipient: CashAccount,
-    amount_sent: Decimal,
-    amount_received: Decimal,
+    data: st.DataObject,
 ) -> None:
+    amount_sent = data.draw(
+        cash_amounts(currency=account_sender.currency, min_value="0.01"),
+    )
+    amount_received = data.draw(
+        cash_amounts(currency=account_recipient.currency, min_value="0.01"),
+    )
+
     dt_start = datetime.now(tzinfo)
     transfer = CashTransfer(
         description,
@@ -58,51 +62,49 @@ def test_creation(
     assert transfer.amount_sent == amount_sent
     assert transfer.amount_received == amount_received
     assert transfer.__repr__() == (
-        f"CashTransfer({transfer.amount_sent} {transfer.account_sender.currency.code} "
-        f"from '{transfer.account_sender.name}', "
-        f"{transfer.amount_received} {transfer.account_recipient.currency.code} "
-        f"to '{transfer.account_recipient.name}', "
+        f"CashTransfer(sent={transfer.amount_sent}, "
+        f"sender='{transfer.account_sender.name}', "
+        f"received={transfer.amount_received}, "
+        f"recipient='{transfer.account_recipient.name}', "
         f"{transfer.datetime_.strftime('%Y-%m-%d')})"
     )
     assert dt_created_diff.seconds < 1
 
 
-@given(transfer=cash_transfers(), new_amount=everything_except(Decimal))
+@given(transfer=cash_transfers(), new_amount=everything_except(CashAmount))
 def test_amount_sent_invalid_type(transfer: CashTransfer, new_amount: Any) -> None:
-    with pytest.raises(TypeError, match="CashTransfer.amount_sent must be a Decimal."):
-        transfer.amount_sent = new_amount
-
-
-@given(
-    transfer=cash_transfers(),
-    new_amount=st.decimals(max_value="-0.01"),
-)
-def test_amount_sent_invalid_value(transfer: CashTransfer, new_amount: Decimal) -> None:
     with pytest.raises(
-        ValueError,
-        match="CashTransfer.amount_sent must be a finite and positive Decimal.",
+        TypeError, match="CashTransfer.amount_sent must be a CashAmount."
     ):
         transfer.amount_sent = new_amount
 
 
-@given(transfer=cash_transfers(), new_amount=everything_except(Decimal))
+@given(transfer=cash_transfers(), data=st.data())
+def test_amount_sent_invalid_value(transfer: CashTransfer, data: st.DataObject) -> None:
+    new_amount = data.draw(cash_amounts(max_value="-0.01"))
+    with pytest.raises(
+        ValueError,
+        match="CashTransfer.amount_sent must be a positive CashAmount.",
+    ):
+        transfer.amount_sent = new_amount
+
+
+@given(transfer=cash_transfers(), new_amount=everything_except(CashAmount))
 def test_amount_received_invalid_type(transfer: CashTransfer, new_amount: Any) -> None:
     with pytest.raises(
-        TypeError, match="CashTransfer.amount_received must be a Decimal."
+        TypeError, match="CashTransfer.amount_received must be a CashAmount."
     ):
         transfer.amount_received = new_amount
 
 
-@given(
-    transfer=cash_transfers(),
-    new_amount=st.decimals(max_value="-0.01"),
-)
+@given(transfer=cash_transfers(), data=st.data())
 def test_amount_received_invalid_value(
-    transfer: CashTransfer, new_amount: Decimal
+    transfer: CashTransfer, data: st.DataObject
 ) -> None:
+    new_amount = data.draw(cash_amounts(max_value="-0.01"))
     with pytest.raises(
         ValueError,
-        match="CashTransfer.amount_received must be a finite and positive Decimal.",
+        match="CashTransfer.amount_received must be a positive CashAmount.",
     ):
         transfer.amount_received = new_amount
 
@@ -126,7 +128,7 @@ def test_get_amount_for_account(transfer: CashTransfer) -> None:
 def test_get_amount_invalid_account_type(
     transaction: CashTransfer, account: Any
 ) -> None:
-    with pytest.raises(TypeError, match="Argument 'account' must be a CashAccount."):
+    with pytest.raises(TypeError, match="Parameter 'account' must be a CashAccount."):
         transaction.get_amount(account)
 
 
@@ -142,11 +144,15 @@ def test_get_amount_invalid_account_value(
 
 
 @given(
-    transfer=cash_transfers(), new_sender=cash_accounts(), new_recipient=cash_accounts()
+    transfer=cash_transfers(),
+    data=st.data(),
 )
-def test_set_accounts(
-    transfer: CashTransfer, new_sender: CashAccount, new_recipient: CashAccount
-) -> None:
+def test_set_accounts(transfer: CashTransfer, data: st.DataObject) -> None:
+    new_sender = data.draw(cash_accounts(currency=transfer.account_sender.currency))
+    new_recipient = data.draw(
+        cash_accounts(currency=transfer.account_recipient.currency)
+    )
+
     current_sender = transfer.account_sender
     current_recipient = transfer.account_recipient
 
@@ -173,7 +179,7 @@ def test_set_accounts_invalid_sender_type(
 ) -> None:
     current_recipient = transfer.account_recipient
     with pytest.raises(
-        TypeError, match="Argument 'account_sender' must be a CashAccount."
+        TypeError, match="Parameter 'account_sender' must be a CashAccount."
     ):
         transfer.set_accounts(new_sender, current_recipient)
 
@@ -184,7 +190,7 @@ def test_set_accounts_invalid_recipient_type(
 ) -> None:
     current_sender = transfer.account_sender
     with pytest.raises(
-        TypeError, match="Argument 'account_recipient' must be a CashAccount."
+        TypeError, match="Parameter 'account_recipient' must be a CashAccount."
     ):
         transfer.set_accounts(current_sender, new_recipient)
 

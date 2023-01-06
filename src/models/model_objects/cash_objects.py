@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 from collections.abc import Collection
 from datetime import datetime
-from decimal import Decimal
 from enum import Enum, auto
 
 from src.models.base_classes.account import Account, UnrelatedAccountError
@@ -17,7 +16,7 @@ from src.models.model_objects.attributes import (
     InvalidCategoryError,
     InvalidCategoryTypeError,
 )
-from src.models.model_objects.currency import Currency, CurrencyError
+from src.models.model_objects.currency import CashAmount, Currency, CurrencyError
 
 
 class UnrelatedTransactionError(ValueError):
@@ -44,9 +43,9 @@ class InvalidCashTransactionTypeError(ValueError):
 
 
 class CashRelatedTransaction(Transaction, ABC):
-    def get_amount(self, account: "CashAccount") -> Decimal:
+    def get_amount(self, account: "CashAccount") -> CashAmount:
         if not isinstance(account, CashAccount):
-            raise TypeError("Argument 'account' must be a CashAccount.")
+            raise TypeError("Parameter 'account' must be a CashAccount.")
         if not self.is_account_related(account):
             raise UnrelatedAccountError(
                 f"CashAccount '{account.name}' is not related to this "
@@ -55,7 +54,7 @@ class CashRelatedTransaction(Transaction, ABC):
         return self._get_amount(account)
 
     @abstractmethod
-    def _get_amount(self, account: "CashAccount") -> Decimal:
+    def _get_amount(self, account: "CashAccount") -> CashAmount:
         raise NotImplementedError("Not implemented")
 
 
@@ -69,7 +68,7 @@ class CashAccount(Account):
         self,
         name: str,
         currency: Currency,
-        initial_balance: Decimal,
+        initial_balance: CashAmount,
         initial_datetime: datetime,
         parent: AccountGroup | None = None,
     ) -> None:
@@ -90,18 +89,19 @@ class CashAccount(Account):
         return self._currency
 
     @property
-    def initial_balance(self) -> Decimal:
+    def initial_balance(self) -> CashAmount:
         return self._initial_balance
 
     @initial_balance.setter
-    def initial_balance(self, value: Decimal) -> None:
-        if not isinstance(value, Decimal):
-            raise TypeError("CashAccount.initial_balance must be a Decimal.")
+    def initial_balance(self, amount: CashAmount) -> None:
+        if not isinstance(amount, CashAmount):
+            raise TypeError("CashAccount.initial_balance must be a CashAmount.")
+        if self.currency != amount.currency:
+            raise CurrencyError(
+                "CashAccount.initial_balance.currency must match CashAccount.currency."
+            )
 
-        if value.is_signed() or not value.is_finite():
-            raise ValueError("CashAccount.initial_balance must be positive and finite.")
-
-        self._initial_balance = value
+        self._initial_balance = amount
         self._date_last_edited = datetime.now(tzinfo)
 
     @property
@@ -116,12 +116,11 @@ class CashAccount(Account):
         self._initial_datetime = value
         self._date_last_edited = datetime.now(tzinfo)
 
-    @property
-    def balance(self) -> Decimal:
-        return self._balance_history[-1][1]
+    def get_balance(self, currency: Currency) -> CashAmount:
+        return self._balance_history[-1][1].convert(currency)
 
     @property
-    def balance_history(self) -> tuple[tuple[datetime, Decimal], ...]:
+    def balance_history(self) -> tuple[tuple[datetime, CashAmount], ...]:
         return tuple(self._balance_history)
 
     @property
@@ -158,7 +157,7 @@ class CashAccount(Account):
     ) -> None:
         if not isinstance(transaction, CashRelatedTransaction):
             raise TypeError(
-                "Argument 'transaction' must be a subclass of "
+                "Parameter 'transaction' must be a subclass of "
                 "CashRelatedTransaction."
             )
         if not transaction.is_account_related(self):
@@ -182,15 +181,18 @@ class CashTransaction(CashRelatedTransaction):
         datetime_: datetime,
         type_: CashTransactionType,
         account: CashAccount,
-        category_amount_pairs: Collection[tuple[Category, Decimal]],
+        category_amount_pairs: Collection[tuple[Category, CashAmount]],
         payee: Attribute,
-        tag_amount_pairs: Collection[tuple[Attribute, Decimal]],
+        tag_amount_pairs: Collection[tuple[Attribute, CashAmount]],
     ) -> None:
         super().__init__(description, datetime_)
 
         if not isinstance(type_, CashTransactionType):
             raise TypeError("CashTransaction.type_ must be a CashTransactionType.")
         self._type = type_
+
+        # TODO: figure out a cleaner way to set this...
+        self._currency = account.currency
 
         self.category_amount_pairs = category_amount_pairs
         self.payee = payee
@@ -221,8 +223,11 @@ class CashTransaction(CashRelatedTransaction):
         self._account.add_transaction(self)
 
     @property
-    def amount(self) -> Decimal:
-        return Decimal(sum(amount for _, amount in self._category_amount_pairs))
+    def amount(self) -> CashAmount:
+        return sum(
+            (amount for _, amount in self._category_amount_pairs),
+            start=CashAmount(0, self._currency),
+        )
 
     @property
     def currency(self) -> Currency:
@@ -243,23 +248,23 @@ class CashTransaction(CashRelatedTransaction):
         self._payee = attribute
 
     @property
-    def category_amount_pairs(self) -> tuple[tuple[Category, Decimal], ...]:
+    def category_amount_pairs(self) -> tuple[tuple[Category, CashAmount], ...]:
         return tuple(self._category_amount_pairs)
 
     @category_amount_pairs.setter
     def category_amount_pairs(
-        self, pairs: Collection[tuple[Category, Decimal]]
+        self, pairs: Collection[tuple[Category, CashAmount]]
     ) -> None:
-        validate_collection_of_tuple_pairs(pairs, Category, Decimal, 1)
+        validate_collection_of_tuple_pairs(pairs, Category, CashAmount, 1)
         if not all(
             category.type_ in self._valid_category_types for category, _ in pairs
         ):
             raise InvalidCategoryTypeError("Invalid Category.type_.")
 
-        if not all(amount.is_finite() and amount > 0 for _, amount in pairs):
+        if not all(amount.value > 0 for _, amount in pairs):
             raise ValueError(
                 "Second member of CashTransaction.category_amount_pairs "
-                "tuples must be a positive and finite Decimal."
+                "tuples must be a positive CashAmount."
             )
 
         self._category_amount_pairs = tuple(pairs)
@@ -270,24 +275,21 @@ class CashTransaction(CashRelatedTransaction):
         return ", ".join(category_paths)
 
     @property
-    def tag_amount_pairs(self) -> tuple[tuple[Attribute, Decimal], ...]:
+    def tag_amount_pairs(self) -> tuple[tuple[Attribute, CashAmount], ...]:
         return self._tag_amount_pairs
 
     # TODO: what happens when self.amount changes and some tag-amounts are now invalid?
     @tag_amount_pairs.setter
-    def tag_amount_pairs(self, pairs: Collection[tuple[Attribute, Decimal]]) -> None:
-        validate_collection_of_tuple_pairs(pairs, Attribute, Decimal, 0)
+    def tag_amount_pairs(self, pairs: Collection[tuple[Attribute, CashAmount]]) -> None:
+        validate_collection_of_tuple_pairs(pairs, Attribute, CashAmount, 0)
         if not all(attribute.type_ == AttributeType.TAG for attribute, _ in pairs):
             raise ValueError(
                 "The type_ of CashTransaction.tag_amount_pairs Attributes must be TAG."
             )
-        if not all(
-            amount.is_finite() and amount > 0 and amount <= self.amount
-            for _, amount in pairs
-        ):
+        if not all(amount.value > 0 and amount <= self.amount for _, amount in pairs):
             raise ValueError(
                 "Second member of CashTransaction.tag_amount_pairs "
-                "tuples must be a positive and finite Decimal which "
+                "tuples must be a positive CashAmount which "
                 "does not exceed CashTransaction.amount."
             )
 
@@ -312,7 +314,7 @@ class CashTransaction(CashRelatedTransaction):
         return (
             f"CashTransaction({self.type_.name}, "
             f"account='{self.account.name}', "
-            f"amount={self.amount} {self.account.currency.code}, "
+            f"amount={self.amount}, "
             f"category={{{self.category_names}}}, "
             f"{self.datetime_.strftime('%Y-%m-%d')})"
         )
@@ -326,7 +328,7 @@ class CashTransaction(CashRelatedTransaction):
         self._validate_refund(refund)
         self._refunds.remove(refund)
 
-    def _get_amount(self, account: CashAccount) -> Decimal:  # noqa: U100
+    def _get_amount(self, account: CashAccount) -> CashAmount:  # noqa: U100
         if self.type_ == CashTransactionType.INCOME:
             return self.amount
         return -self.amount
@@ -336,7 +338,7 @@ class CashTransaction(CashRelatedTransaction):
 
     def _validate_refund(self, refund: "RefundTransaction") -> None:
         if not isinstance(refund, RefundTransaction):
-            raise TypeError("Argument 'refund' must be a RefundTransaction.")
+            raise TypeError("Parameter 'refund' must be a RefundTransaction.")
         if refund.refunded_transaction != self:
             raise UnrelatedTransactionError(
                 "Supplied RefundTransaction is not related to this CashTransaction."
@@ -350,8 +352,8 @@ class CashTransfer(CashRelatedTransaction):
         datetime_: datetime,
         account_sender: CashAccount,
         account_recipient: CashAccount,
-        amount_sent: Decimal,
-        amount_received: Decimal,
+        amount_sent: CashAmount,
+        amount_received: CashAmount,
     ) -> None:
         super().__init__(description, datetime_)
         self.amount_sent = amount_sent
@@ -367,39 +369,37 @@ class CashTransfer(CashRelatedTransaction):
         return self._account_recipient
 
     @property
-    def amount_sent(self) -> Decimal:
+    def amount_sent(self) -> CashAmount:
         return self._amount_sent
 
     @amount_sent.setter
-    def amount_sent(self, value: Decimal) -> None:
-        if not isinstance(value, Decimal):
-            raise TypeError("CashTransfer.amount_sent must be a Decimal.")
-        if not value.is_finite() or value <= 0:
-            raise ValueError(
-                "CashTransfer.amount_sent must be a finite and positive Decimal."
-            )
-        self._amount_sent = value
+    def amount_sent(self, amount: CashAmount) -> None:
+        if not isinstance(amount, CashAmount):
+            raise TypeError("CashTransfer.amount_sent must be a CashAmount.")
+        if amount.value <= 0:
+            raise ValueError("CashTransfer.amount_sent must be a positive CashAmount.")
+        self._amount_sent = amount
 
     @property
-    def amount_received(self) -> Decimal:
+    def amount_received(self) -> CashAmount:
         return self._amount_received
 
     @amount_received.setter
-    def amount_received(self, value: Decimal) -> None:
-        if not isinstance(value, Decimal):
-            raise TypeError("CashTransfer.amount_received must be a Decimal.")
-        if not value.is_finite() or value <= 0:
+    def amount_received(self, amount: CashAmount) -> None:
+        if not isinstance(amount, CashAmount):
+            raise TypeError("CashTransfer.amount_received must be a CashAmount.")
+        if amount.value <= 0:
             raise ValueError(
-                "CashTransfer.amount_received must be a finite and positive Decimal."
+                "CashTransfer.amount_received must be a positive CashAmount."
             )
-        self._amount_received = value
+        self._amount_received = amount
 
     def __repr__(self) -> str:
         return (
-            f"CashTransfer({self.amount_sent} {self.account_sender.currency.code} "
-            f"from '{self.account_sender.name}', "
-            f"{self.amount_received} {self.account_recipient.currency.code} "
-            f"to '{self.account_recipient.name}', "
+            f"CashTransfer(sent={self.amount_sent}, "
+            f"sender='{self.account_sender.name}', "
+            f"received={self.amount_received}, "
+            f"recipient='{self.account_recipient.name}', "
             f"{self.datetime_.strftime('%Y-%m-%d')})"
         )
 
@@ -407,12 +407,12 @@ class CashTransfer(CashRelatedTransaction):
         self, account_sender: CashAccount, account_recipient: CashAccount
     ) -> None:
         if not isinstance(account_sender, CashAccount):
-            raise TypeError("Argument 'account_sender' must be a CashAccount.")
+            raise TypeError("Parameter 'account_sender' must be a CashAccount.")
         if not isinstance(account_recipient, CashAccount):
-            raise TypeError("Argument 'account_recipient' must be a CashAccount.")
+            raise TypeError("Parameter 'account_recipient' must be a CashAccount.")
         if account_recipient == account_sender:
             raise TransferSameAccountError(
-                "Arguments 'account_sender' and 'account_recipient' must be "
+                "Parameters 'account_sender' and 'account_recipient' must be "
                 "different CashAccounts."
             )
 
@@ -429,7 +429,7 @@ class CashTransfer(CashRelatedTransaction):
         self._account_recipient.add_transaction(self)
         self._account_sender.add_transaction(self)
 
-    def _get_amount(self, account: CashAccount) -> Decimal:
+    def _get_amount(self, account: CashAccount) -> CashAmount:
         if self.account_recipient == account:
             return self.amount_received
         return -self.amount_sent
@@ -448,8 +448,8 @@ class RefundTransaction(CashRelatedTransaction):
         datetime_: datetime,
         account: CashAccount,
         refunded_transaction: CashTransaction,
-        category_amount_pairs: Collection[tuple[Category, Decimal]],
-        tag_amount_pairs: Collection[tuple[Attribute, Decimal]],
+        category_amount_pairs: Collection[tuple[Category, CashAmount]],
+        tag_amount_pairs: Collection[tuple[Attribute, CashAmount]],
     ) -> None:
         if not isinstance(refunded_transaction, CashTransaction):
             raise TypeError("Refunded transaction must be a CashTransaction.")
@@ -462,11 +462,14 @@ class RefundTransaction(CashRelatedTransaction):
 
         super().__init__(description, datetime_)
 
+        self._set_account(account)
+
         self._set_category_amount_pairs(category_amount_pairs)
         self._set_tag_amount_pairs(tag_amount_pairs)
 
-        self._set_account(account)
+        self._account.add_transaction(self)
 
+    # TODO: why can't the check be done in CashTransaction?
     @Transaction.datetime_.setter
     def datetime_(self, value: datetime) -> None:
         Transaction.datetime_.fset(self, value)
@@ -481,8 +484,11 @@ class RefundTransaction(CashRelatedTransaction):
         return self._account
 
     @property
-    def amount(self) -> Decimal:
-        return Decimal(sum(amount for _, amount in self.category_amount_pairs))
+    def amount(self) -> CashAmount:
+        return sum(
+            (amount for _, amount in self._category_amount_pairs),
+            start=CashAmount(0, self._currency),
+        )
 
     @property
     def currency(self) -> Currency:
@@ -493,7 +499,7 @@ class RefundTransaction(CashRelatedTransaction):
         return self._refunded_transaction
 
     @property
-    def category_amount_pairs(self) -> tuple[tuple[Category, Decimal], ...]:
+    def category_amount_pairs(self) -> tuple[tuple[Category, CashAmount], ...]:
         return tuple(self._category_amount_pairs)
 
     @property
@@ -502,13 +508,13 @@ class RefundTransaction(CashRelatedTransaction):
         return ", ".join(category_paths)
 
     @property
-    def tag_amount_pairs(self) -> tuple[tuple[Attribute, Decimal], ...]:
+    def tag_amount_pairs(self) -> tuple[tuple[Attribute, CashAmount], ...]:
         return self._tag_amount_pairs
 
     def __repr__(self) -> str:
         return (
             f"RefundTransaction(account='{self.account.name}', "
-            f"amount={self.amount} {self.account.currency.code}, "
+            f"amount={self.amount}, "
             f"category={{{self.category_names}}}, "
             f"{self.datetime_.strftime('%Y-%m-%d')})"
         )
@@ -525,13 +531,13 @@ class RefundTransaction(CashRelatedTransaction):
         self._account = account
         self._currency = account.currency
 
-        self._account.add_transaction(self)
-
     def _set_category_amount_pairs(
-        self, pairs: Collection[tuple[Category, Decimal]]
+        self, pairs: Collection[tuple[Category, CashAmount]]
     ) -> None:
         no_of_categories = len(self.refunded_transaction.category_amount_pairs)
-        validate_collection_of_tuple_pairs(pairs, Category, Decimal, no_of_categories)
+        validate_collection_of_tuple_pairs(
+            pairs, Category, CashAmount, no_of_categories
+        )
         valid_categories = [
             category for category, _ in self.refunded_transaction.category_amount_pairs
         ]
@@ -539,13 +545,15 @@ class RefundTransaction(CashRelatedTransaction):
             raise InvalidCategoryError(
                 "Only categories present in the refunded CashTransaction are accepted."
             )
-        if not all(amount.is_finite() and amount >= 0 for _, amount in pairs):
+        if not all(amount.value >= 0 for _, amount in pairs):
             raise ValueError(
                 "Second member of RefundTransaction.category_amount_pairs "
-                "tuples must be a finite non-negative Decimal."
+                "tuples must be a non-negative CashAmount."
             )
-        refund_amount = sum(amount for _, amount in pairs)
-        if not refund_amount > 0:
+        refund_amount = sum(
+            (amount for _, amount in pairs), start=CashAmount(0, self.currency)
+        )
+        if not refund_amount.value > 0:
             raise ValueError("Total refunded amount must be positive.")
 
         max_values = {}
@@ -567,11 +575,11 @@ class RefundTransaction(CashRelatedTransaction):
         self._category_amount_pairs = tuple(pairs)
 
     def _set_tag_amount_pairs(
-        self, pairs: Collection[tuple[Attribute, Decimal]]
+        self, pairs: Collection[tuple[Attribute, CashAmount]]
     ) -> None:
         expected_tags = {tag for tag, _ in self.refunded_transaction.tag_amount_pairs}
         no_of_tags = len(expected_tags)
-        validate_collection_of_tuple_pairs(pairs, Attribute, Decimal, no_of_tags)
+        validate_collection_of_tuple_pairs(pairs, Attribute, CashAmount, no_of_tags)
 
         if not all(attribute.type_ == AttributeType.TAG for attribute, _ in pairs):
             raise InvalidAttributeError(
@@ -581,14 +589,14 @@ class RefundTransaction(CashRelatedTransaction):
         delivered_tags = {tag for tag, _ in pairs}
         if delivered_tags != expected_tags:
             raise InvalidAttributeError("Delivered tags do not match expected tags.")
-        if not all(amount.is_finite() and amount >= 0 for _, amount in pairs):
+        if not all(amount.value >= 0 for _, amount in pairs):
             raise ValueError(
                 "Second member of RefundTransaction.tag_amount_pairs "
-                "tuples must be a finite non-negative Decimal."
+                "tuples must be a non-negative CashAmount."
             )
 
-        max_values: dict[Attribute, Decimal] = {}
-        min_values: dict[Attribute, Decimal] = {}
+        max_values: dict[Attribute, CashAmount] = {}
+        min_values: dict[Attribute, CashAmount] = {}
         for tag, amount in self.refunded_transaction.tag_amount_pairs:
             max_values[tag] = self.refunded_transaction.amount
             min_values[tag] = amount
@@ -596,7 +604,8 @@ class RefundTransaction(CashRelatedTransaction):
             refund for refund in self.refunded_transaction.refunds if refund != self
         ]
         remaining_amount = self.refunded_transaction.amount - sum(
-            refund.amount for refund in other_refunds
+            (refund.amount for refund in other_refunds),
+            start=CashAmount(0, currency=self.currency),
         )
         for other_refund in other_refunds:
             for tag, amount in other_refund.tag_amount_pairs:
@@ -605,7 +614,7 @@ class RefundTransaction(CashRelatedTransaction):
 
         for tag, amount in pairs:
             min_expected = min_values[tag] - (remaining_amount - self.amount)
-            min_values[tag] = max(min_expected, 0)
+            min_values[tag] = max(min_expected, CashAmount(0, self.currency))
             if amount > max_values[tag] or amount < min_values[tag]:
                 raise ValueError(
                     f"Refunded amount for tag '{tag.name}' must be within "
@@ -614,7 +623,7 @@ class RefundTransaction(CashRelatedTransaction):
 
         self._tag_amount_pairs = tuple(pairs)
 
-    def _get_amount(self, account: CashAccount) -> Decimal:  # noqa: U100
+    def _get_amount(self, account: CashAccount) -> CashAmount:  # noqa: U100
         return self.amount
 
     def is_account_related(self, account: "Account") -> bool:
@@ -625,18 +634,20 @@ def validate_collection_of_tuple_pairs(
     collection: Collection, first_type: type, second_type: type, min_length: int
 ) -> None:
     if not isinstance(collection, Collection):
-        raise TypeError("Argument 'collection' must be a Collection.")
+        raise TypeError("Parameter 'collection' must be a Collection.")
     if len(collection) < min_length:
         raise ValueError(f"Length of 'collection' must be at least {min_length}.")
     if not all(isinstance(element, tuple) for element in collection):
         raise TypeError("Elements of 'collection' must be tuples.")
     if not all(isinstance(first_member, first_type) for first_member, _ in collection):
         raise TypeError(
-            f"First element of 'collection' tuples must be of type {first_type}."
+            "First element of 'collection' tuples must be of type "
+            f"{first_type.__name__}."
         )
     if not all(
         isinstance(second_member, second_type) for _, second_member in collection
     ):
         raise TypeError(
-            f"Second element of 'collection' tuples must be of type {first_type}."
+            "Second element of 'collection' tuples must be of type "
+            f"{second_type.__name__}."
         )

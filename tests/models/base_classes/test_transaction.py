@@ -8,7 +8,6 @@ from hypothesis import strategies as st
 from src.models.constants import tzinfo
 from tests.models.test_assets.composites import everything_except
 from tests.models.test_assets.concrete_abcs import ConcreteTransaction
-from tests.models.test_assets.get_valid_objects import get_concrete_transaction
 
 
 @given(description=st.text(min_size=0, max_size=256), datetime_=st.datetimes())
@@ -49,9 +48,3 @@ def test_invalid_description_value(description: str, datetime_: datetime) -> Non
 def test_invalid_datetime_type(description: str, datetime_: datetime) -> None:
     with pytest.raises(TypeError, match="Transaction.datetime_ must be a datetime."):
         ConcreteTransaction(description, datetime_)
-
-
-def test_abstract_is_account_related() -> None:
-    transaction = get_concrete_transaction()
-    with pytest.raises(NotImplementedError):
-        transaction.is_account_related(None)

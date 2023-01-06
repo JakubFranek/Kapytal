@@ -1,20 +1,25 @@
 import string
 from datetime import datetime, timedelta
 from decimal import Decimal
+from types import NoneType
+from typing import Any
 
 import pytest
 from hypothesis import assume, given
 from hypothesis import strategies as st
 
+from src.models.base_classes.account import Account
 from src.models.constants import tzinfo
 from src.models.model_objects.attributes import AttributeType, CategoryType
 from src.models.model_objects.cash_objects import CashAccount, CashTransactionType
+from src.models.model_objects.currency import CashAmount
 from src.models.model_objects.security_objects import (
     SecurityAccount,
     SecurityTransactionType,
     SecurityType,
 )
 from src.models.record_keeper import AlreadyExistsError, DoesNotExistError, RecordKeeper
+from tests.models.test_assets.composites import everything_except
 
 
 def test_creation() -> None:
@@ -30,10 +35,13 @@ def test_creation() -> None:
     assert record_keeper.__repr__() == "RecordKeeper"
 
 
-@given(code=st.text(string.ascii_letters, min_size=3, max_size=3))
-def test_add_currency(code: str) -> None:
+@given(
+    code=st.text(string.ascii_letters, min_size=3, max_size=3),
+    places=st.integers(min_value=0, max_value=8),
+)
+def test_add_currency(code: str, places: int) -> None:
     record_keeper = RecordKeeper()
-    record_keeper.add_currency(code)
+    record_keeper.add_currency(code, places)
     currency = record_keeper.currencies[0]
     assert currency.code == code.upper()
 
@@ -87,6 +95,7 @@ def test_add_account_group_with_multiple_parents(
 @given(
     name=st.text(min_size=1, max_size=32),
     currency_code=st.text(string.ascii_letters, min_size=3, max_size=3),
+    places=st.integers(min_value=0, max_value=8),
     initial_balance=st.decimals(
         min_value=0, max_value=1e10, allow_infinity=False, allow_nan=False
     ),
@@ -96,12 +105,13 @@ def test_add_account_group_with_multiple_parents(
 def test_add_cash_account(
     name: str,
     currency_code: str,
+    places: int,
     initial_balance: Decimal,
     initial_datetime: datetime,
     parent_name: str | None,
 ) -> None:
     record_keeper = RecordKeeper()
-    record_keeper.add_currency(currency_code)
+    record_keeper.add_currency(currency_code, places)
     if parent_name:
         record_keeper.add_account_group(parent_name, None)
     record_keeper.add_cash_account(
@@ -111,7 +121,9 @@ def test_add_cash_account(
     cash_account: CashAccount = record_keeper.accounts[0]
     assert cash_account.name == name
     assert cash_account.currency.code == currency_code.upper()
-    assert cash_account.initial_balance == initial_balance
+    assert cash_account.initial_balance == CashAmount(
+        initial_balance, cash_account.currency
+    )
     assert cash_account.initial_datetime == initial_datetime
     assert cash_account.parent == parent_group
 
@@ -190,9 +202,11 @@ def test_add_cash_transaction(
     datetime_=st.datetimes(
         min_value=datetime.now() + timedelta(days=1), timezones=st.just(tzinfo)
     ),
-    amount_sent=st.decimals(min_value="0.01", allow_infinity=False, allow_nan=False),
+    amount_sent=st.decimals(
+        min_value="0.01", max_value="1e10", allow_infinity=False, allow_nan=False
+    ),
     amount_received=st.decimals(
-        min_value="0.01", allow_infinity=False, allow_nan=False
+        min_value="0.01", max_value="1e10", allow_infinity=False, allow_nan=False
     ),
     data=st.data(),
 )
@@ -236,12 +250,15 @@ def test_add_cash_transfer(
     assert transfer.description == description
 
 
-@given(code=st.text(string.ascii_letters, min_size=3, max_size=3))
-def test_add_currency_already_exists(code: str) -> None:
+@given(
+    code=st.text(string.ascii_letters, min_size=3, max_size=3),
+    places=st.integers(min_value=0, max_value=8),
+)
+def test_add_currency_already_exists(code: str, places: int) -> None:
     record_keeper = RecordKeeper()
-    record_keeper.add_currency(code)
+    record_keeper.add_currency(code, places)
     with pytest.raises(AlreadyExistsError):
-        record_keeper.add_currency(code)
+        record_keeper.add_currency(code, places)
 
 
 @given(
@@ -259,7 +276,7 @@ def test_add_category_parent_does_not_exist(name: str, parent: str) -> None:
 )
 def test_add_category_invalid_type(name: str) -> None:
     record_keeper = RecordKeeper()
-    with pytest.raises(TypeError, match="If argument 'parent_path' is None"):
+    with pytest.raises(TypeError, match="If parameter 'parent_path' is None"):
         record_keeper.add_category(name, None, None)
 
 
@@ -299,16 +316,57 @@ def test_get_account_parent_does_not_exist() -> None:
         record_keeper.get_account_parent("does not exist")
 
 
+@given(path=everything_except(str))
+def test_get_account_invalid_path_type(path: Any) -> None:
+    record_keeper = RecordKeeper()
+    with pytest.raises(TypeError, match="Parameter 'path' must be a string."):
+        record_keeper.get_account(path, Account)
+
+
+@given(type_=everything_except((Account, CashAccount, SecurityAccount)))
+def test_get_account_invalid_type_type(type_: Any) -> None:
+    record_keeper = RecordKeeper()
+    with pytest.raises(TypeError, match="Parameter type_ must be type"):
+        record_keeper.get_account("", type_)
+
+
+def test_get_account_invalid_account_type() -> None:
+    record_keeper = get_preloaded_record_keeper()
+    with pytest.raises(TypeError, match="Type of Account at path='"):
+        record_keeper.get_account("Bank Accounts/Moneta EUR", SecurityAccount)
+
+
 def test_get_account_does_not_exist() -> None:
     record_keeper = get_preloaded_record_keeper()
     with pytest.raises(DoesNotExistError):
-        record_keeper.get_account("does not exist")
+        record_keeper.get_account("does not exist", Account)
+
+
+@given(code=everything_except(str))
+def test_get_currency_invalid_code_type(code: Any) -> None:
+    record_keeper = get_preloaded_record_keeper()
+    with pytest.raises(TypeError, match="Parameter 'code' must be a string."):
+        record_keeper.get_currency(code)
 
 
 def test_get_currency_does_not_exist() -> None:
     record_keeper = get_preloaded_record_keeper()
     with pytest.raises(DoesNotExistError):
         record_keeper.get_currency("does not exist")
+
+
+@given(path=everything_except(str), type_=st.sampled_from(CategoryType))
+def test_get_category_invalid_path_type(path: Any, type_: CategoryType) -> None:
+    record_keeper = RecordKeeper()
+    with pytest.raises(TypeError, match="Parameter 'path' must be a string."):
+        record_keeper.get_category(path, type_)
+
+
+@given(type_=everything_except(CategoryType))
+def test_get_category_invalid_type_type(type_: Any) -> None:
+    record_keeper = RecordKeeper()
+    with pytest.raises(TypeError, match="Parameter 'type_' must be a CategoryType."):
+        record_keeper.get_category("test", type_)
 
 
 def test_get_category_does_not_exist() -> None:
@@ -344,6 +402,20 @@ def test_get_attribute() -> None:
     assert len(record_keeper.payees) == no_of_payees
 
 
+@given(name=everything_except(str), type_=st.sampled_from(AttributeType))
+def test_get_attribute_invalid_path_type(name: Any, type_: AttributeType) -> None:
+    record_keeper = RecordKeeper()
+    with pytest.raises(TypeError, match="Parameter 'name' must be a string."):
+        record_keeper.get_attribute(name, type_)
+
+
+@given(type_=everything_except(AttributeType))
+def test_get_attribute_invalid_type_type(type_: Any) -> None:
+    record_keeper = RecordKeeper()
+    with pytest.raises(TypeError, match="Parameter 'type_' must be an AttributeType."):
+        record_keeper.get_attribute("test", type_)
+
+
 def test_add_refund() -> RecordKeeper:
     record_keeper = get_preloaded_record_keeper_with_expense()
     record_keeper.add_refund(
@@ -365,7 +437,8 @@ def test_add_security() -> None:
     symbol = "ABCD.EF"
     type_ = SecurityType.ETF
     currency_code = "EUR"
-    record_keeper.add_currency(currency_code)
+    places = 2
+    record_keeper.add_currency(currency_code, places)
     record_keeper.add_security(name, symbol, type_, currency_code)
     security = record_keeper.get_security(symbol)
     assert security.name == name
@@ -383,10 +456,18 @@ def test_add_security_already_exists() -> None:
     type_ = SecurityType.ETF
     type_2 = SecurityType.MUTUAL_FUND
     currency_code = "EUR"
-    record_keeper.add_currency(currency_code)
+    places = 2
+    record_keeper.add_currency(currency_code, places)
     record_keeper.add_security(name_1, symbol, type_, currency_code)
     with pytest.raises(AlreadyExistsError):
         record_keeper.add_security(name_2, symbol, type_2, currency_code)
+
+
+@given(symbol=everything_except(str))
+def test_get_security_invalid_symbol_type(symbol: Any) -> None:
+    record_keeper = RecordKeeper()
+    with pytest.raises(TypeError, match="Parameter 'symbol' must be a string."):
+        record_keeper.get_security(symbol)
 
 
 @given(symbol=st.text(min_size=1, max_size=8))
@@ -400,7 +481,7 @@ def test_get_security_does_not_exists(symbol: str) -> None:
 @given(
     description=st.text(min_size=1, max_size=256),
     type_=st.sampled_from(SecurityTransactionType),
-    shares=st.integers(min_value=1),
+    shares=st.decimals(min_value=0.01, allow_infinity=False, allow_nan=False, places=3),
     price_per_share=st.decimals(
         min_value=0, max_value=1e10, allow_infinity=False, allow_nan=False, places=3
     ),
@@ -457,7 +538,7 @@ def test_add_security_transaction(
 @given(
     description=st.text(min_size=1, max_size=256),
     datetime_=st.datetimes(timezones=st.just(tzinfo)),
-    shares=st.integers(min_value=1),
+    shares=st.decimals(min_value=0.01, allow_infinity=False, allow_nan=False, places=3),
     data=st.data(),
 )
 def test_add_security_transfer(
@@ -498,6 +579,20 @@ def test_add_security_transfer(
     assert len(record_keeper.transactions) == 1
 
 
+@given(name=everything_except(str))
+def test_check_account_exists_invalid_name_type(name: Any) -> None:
+    record_keeper = RecordKeeper()
+    with pytest.raises(TypeError, match="Parameter 'name' must be a string."):
+        record_keeper._check_account_exists(name, None)
+
+
+@given(parent_path=everything_except((str, NoneType)))
+def test_check_account_exists_invalid_parent_path_type(parent_path: Any) -> None:
+    record_keeper = RecordKeeper()
+    with pytest.raises(TypeError, match="Parameter 'parent_path' must be a string or"):
+        record_keeper._check_account_exists("test", parent_path)
+
+
 def get_preloaded_record_keeper_with_expense() -> RecordKeeper:
     record_keeper = get_preloaded_record_keeper()
     record_keeper.add_cash_transaction(
@@ -514,21 +609,21 @@ def get_preloaded_record_keeper_with_expense() -> RecordKeeper:
 
 def get_preloaded_record_keeper() -> RecordKeeper:
     record_keeper = RecordKeeper()
-    record_keeper.add_currency("CZK")
-    record_keeper.add_currency("EUR")
+    record_keeper.add_currency("CZK", 2)
+    record_keeper.add_currency("EUR", 2)
     record_keeper.add_account_group("Bank Accounts", None)
     record_keeper.add_account_group("Security Accounts", None)
     record_keeper.add_cash_account(
         name="Raiffeisen CZK",
         currency_code="CZK",
-        initial_balance=Decimal(1500),
+        initial_balance_value=Decimal(1500),
         initial_datetime=datetime.now(tzinfo),
         parent_path="Bank Accounts",
     )
     record_keeper.add_cash_account(
         name="Moneta EUR",
         currency_code="EUR",
-        initial_balance=Decimal(1600),
+        initial_balance_value=Decimal(1600),
         initial_datetime=datetime.now(tzinfo),
         parent_path="Bank Accounts",
     )

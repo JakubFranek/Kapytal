@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from src.models.mixins.datetime_created_mixin import DatetimeCreatedMixin
@@ -7,8 +6,10 @@ from src.models.mixins.name_mixin import NameMixin
 from src.models.mixins.uuid_mixin import UUIDMixin
 from src.models.model_objects.account_group import AccountGroup
 
-if TYPE_CHECKING:  # pragma: no cover
+if TYPE_CHECKING:
     from src.models.base_classes.transaction import Transaction
+
+from src.models.model_objects.currency import CashAmount, Currency
 
 
 class UnrelatedAccountError(ValueError):
@@ -19,7 +20,7 @@ class UnrelatedAccountError(ValueError):
 class Account(NameMixin, DatetimeCreatedMixin, UUIDMixin, ABC):
     def __init__(self, name: str, parent: AccountGroup | None = None) -> None:
         super().__init__(name=name)
-        self.parent: AccountGroup | None = parent
+        self.parent = parent
 
     @property
     def parent(self) -> AccountGroup | None:
@@ -41,17 +42,16 @@ class Account(NameMixin, DatetimeCreatedMixin, UUIDMixin, ABC):
         self._parent = new_parent
 
     @property
-    @abstractmethod
-    def balance(self) -> Decimal:
-        raise NotImplementedError("Not implemented")
+    def path(self) -> str:
+        if self.parent is None:
+            return self.name
+        return self.parent.path + "/" + self.name
 
     @property
     @abstractmethod
     def transactions(self) -> tuple["Transaction", ...]:
         raise NotImplementedError("Not implemented.")
 
-    @property
-    def path(self) -> str:
-        if self.parent is None:
-            return self.name
-        return self.parent.path + "/" + self.name
+    @abstractmethod
+    def get_balance(self, currency: Currency) -> CashAmount:
+        raise NotImplementedError("Not implemented.")
