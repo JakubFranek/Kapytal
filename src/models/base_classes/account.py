@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
 from src.models.mixins.datetime_created_mixin import DatetimeCreatedMixin
+from src.models.mixins.get_balance_mixin import GetBalanceMixin
 from src.models.mixins.name_mixin import NameMixin
 from src.models.mixins.uuid_mixin import UUIDMixin
 from src.models.model_objects.account_group import AccountGroup
@@ -9,15 +10,13 @@ from src.models.model_objects.account_group import AccountGroup
 if TYPE_CHECKING:
     from src.models.base_classes.transaction import Transaction
 
-from src.models.model_objects.currency import CashAmount, Currency
-
 
 class UnrelatedAccountError(ValueError):
     """Raised when an Account tries to access a Transaction which does
     not relate to it."""
 
 
-class Account(NameMixin, DatetimeCreatedMixin, UUIDMixin, ABC):
+class Account(NameMixin, DatetimeCreatedMixin, UUIDMixin, GetBalanceMixin, ABC):
     def __init__(self, name: str, parent: AccountGroup | None = None) -> None:
         super().__init__(name=name)
         self.parent = parent
@@ -50,8 +49,4 @@ class Account(NameMixin, DatetimeCreatedMixin, UUIDMixin, ABC):
     @property
     @abstractmethod
     def transactions(self) -> tuple["Transaction", ...]:
-        raise NotImplementedError("Not implemented.")
-
-    @abstractmethod
-    def get_balance(self, currency: Currency) -> CashAmount:
         raise NotImplementedError("Not implemented.")

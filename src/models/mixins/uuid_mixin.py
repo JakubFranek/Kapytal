@@ -1,9 +1,10 @@
 import uuid
+from typing import Any
 
 
 class UUIDMixin:
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
         self._uuid = uuid.uuid4()
 
     @property
