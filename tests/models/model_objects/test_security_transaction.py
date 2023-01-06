@@ -271,6 +271,46 @@ def test_invalid_shares_value(
 
 @given(
     type_=st.sampled_from(SecurityTransactionType),
+    security=securities(),
+    security_account=security_accounts(),
+    cash_account=cash_accounts(),
+    data=st.data(),
+)
+def test_invalid_shares_unit(
+    type_: SecurityTransactionType,
+    security: Security,
+    security_account: SecurityAccount,
+    cash_account: CashAccount,
+    data: st.DataObject,
+) -> None:
+    datetime_ = data.draw(
+        st.datetimes(
+            min_value=cash_account.initial_datetime.replace(tzinfo=None)
+            + timedelta(days=1)
+        )
+    )
+    shares = data.draw(
+        valid_decimals(min_value=1e-10).filter(lambda x: x % security.shares_unit != 0)
+    )
+    with pytest.raises(
+        ValueError,
+        match="shares must be a multiple of",
+    ):
+        SecurityTransaction(
+            "Test description",
+            datetime_,
+            type_,
+            security,
+            shares,
+            CashAmount("1000", security.currency),
+            CashAmount("1", security.currency),
+            security_account,
+            cash_account,
+        )
+
+
+@given(
+    type_=st.sampled_from(SecurityTransactionType),
     security_account=everything_except(SecurityAccount),
     cash_account=cash_accounts(),
     data=st.data(),

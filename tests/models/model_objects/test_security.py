@@ -172,9 +172,48 @@ def test_symbol_invalid_chars(
     shares_unit=valid_decimals(min_value=1e-10, max_value=1),
 )
 def test_currency_invalid_type(
-    name: str, symbol: str, type_: Any, currency: Currency, shares_unit: Decimal
+    name: str, symbol: str, type_: SecurityType, currency: Any, shares_unit: Decimal
 ) -> None:
     with pytest.raises(TypeError, match="Security.currency must be a Currency."):
+        Security(name, symbol, type_, currency, shares_unit)
+
+
+@given(
+    name=st.text(min_size=1, max_size=64),
+    symbol=st.text(alphabet=Security.SYMBOL_ALLOWED_CHARS, min_size=1, max_size=8),
+    type_=st.sampled_from(SecurityType),
+    currency=currencies(),
+    shares_unit=everything_except((Decimal, str, int)),
+)
+def test_shares_unit_invalid_type(
+    name: str, symbol: str, type_: SecurityType, currency: Currency, shares_unit: Any
+) -> None:
+    with pytest.raises(TypeError, match="Security.shares_unit must be"):
+        Security(name, symbol, type_, currency, shares_unit)
+
+
+@given(
+    name=st.text(min_size=1, max_size=64),
+    symbol=st.text(alphabet=Security.SYMBOL_ALLOWED_CHARS, min_size=1, max_size=8),
+    type_=st.sampled_from(SecurityType),
+    currency=currencies(),
+    shares_unit=st.sampled_from(
+        [
+            Decimal("NaN"),
+            Decimal("sNan"),
+            Decimal("-Infinity"),
+            Decimal("Infinity"),
+            0,
+            -1,
+        ]
+    ),
+)
+def test_shares_unit_invalid_value(
+    name: str, symbol: str, type_: SecurityType, currency: Currency, shares_unit: Any
+) -> None:
+    with pytest.raises(
+        ValueError, match="Security.shares_unit must be finite and positive."
+    ):
         Security(name, symbol, type_, currency, shares_unit)
 
 

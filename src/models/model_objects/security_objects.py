@@ -35,7 +35,6 @@ class SecurityTransactionType(Enum):
     SELL = auto()
 
 
-# TODO: add smallest unit to Security
 class Security(NameMixin, DatetimeCreatedMixin, UUIDMixin):
     NAME_MIN_LENGTH = 1
     NAME_MAX_LENGTH = 64
