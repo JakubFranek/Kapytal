@@ -3,17 +3,18 @@ from decimal import Decimal
 from typing import Any
 
 import pytest
-from hypothesis import given
+from hypothesis import assume, given
 from hypothesis import strategies as st
 
 from src.models.constants import tzinfo
 from src.models.model_objects.account_group import AccountGroup
-from src.models.model_objects.currency import CashAmount, Currency
+from src.models.model_objects.currency import CashAmount, Currency, ExchangeRate
 from tests.models.test_assets.composites import (
     account_groups,
     cash_accounts,
     currencies,
     everything_except,
+    valid_decimals,
 )
 
 
@@ -84,7 +85,34 @@ def test_get_balance_single_currency(currency: Currency, data: st.DataObject) ->
     assert account_group.get_balance(currency) == expected_sum
 
 
-# TODO: add multiple currency test
+@given(
+    currency_A=currencies(),
+    currency_B=currencies(),
+    rate=valid_decimals(min_value=0.01),
+    data=st.data(),
+)
+def test_get_balance_multiple_currency(
+    currency_A: Currency, currency_B: Currency, rate: Decimal, data: st.DataObject
+) -> None:
+    assume(currency_A != currency_B)
+    exchange_rate = ExchangeRate(currency_A, currency_B)
+    exchange_rate.set_rate(datetime.now(tzinfo).date(), rate)
+
+    account_A = data.draw(cash_accounts(currency=currency_A))
+    account_B = data.draw(cash_accounts(currency=currency_B))
+
+    account_group = get_account_group()
+    account_A.parent = account_group
+    account_B.parent = account_group
+
+    expected_sum_A = account_A.get_balance(currency_A) + account_B.get_balance(
+        currency_A
+    )
+    expected_sum_B = account_A.get_balance(currency_B) + account_B.get_balance(
+        currency_B
+    )
+    assert account_group.get_balance(currency_A) == expected_sum_A
+    assert account_group.get_balance(currency_B) == expected_sum_B
 
 
 def get_account_group() -> AccountGroup:
