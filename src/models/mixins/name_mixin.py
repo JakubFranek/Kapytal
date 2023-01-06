@@ -1,3 +1,6 @@
+from typing import Any
+
+
 class NameLengthError(ValueError):
     """Raised when the length of 'name' string is incorrect."""
 
@@ -6,8 +9,8 @@ class NameMixin:
     NAME_MIN_LENGTH = 1
     NAME_MAX_LENGTH = 32
 
-    def __init__(self, name: str) -> None:
-        super().__init__()
+    def __init__(self, name: str, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
         self.name = name
 
     @property
