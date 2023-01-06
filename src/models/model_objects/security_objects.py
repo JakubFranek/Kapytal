@@ -132,14 +132,15 @@ class Security(NameMixin, DatetimeCreatedMixin, UUIDMixin):
         )
 
 
+# TODO: maybe add shares / balance history
 class SecurityAccount(Account):
     def __init__(self, name: str, parent: AccountGroup | None = None) -> None:
         super().__init__(name, parent)
-        self._securities: defaultdict[Security, int] = defaultdict(lambda: 0)
+        self._securities: defaultdict[Security, Decimal] = defaultdict(lambda: Decimal)
         self._transactions: list[SecurityRelatedTransaction] = []
 
     @property
-    def securities(self) -> dict[Security, int]:
+    def securities(self) -> dict[Security, Decimal]:
         return copy.deepcopy(self._securities)
 
     @property
