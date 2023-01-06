@@ -490,7 +490,7 @@ def test_add_security_transaction(
 ) -> None:
     record_keeper = get_preloaded_record_keeper()
     security = data.draw(st.sampled_from(record_keeper.securities))
-    shares = Decimal(data.draw(st.integers(min_value=1, max_value=1e10)))
+    shares = data.draw(st.integers(min_value=1, max_value=1e10))
     security_account_path = data.draw(
         st.sampled_from(
             [
@@ -538,7 +538,7 @@ def test_add_security_transfer(
 ) -> None:
     record_keeper = get_preloaded_record_keeper()
     security = data.draw(st.sampled_from(record_keeper.securities))
-    shares = Decimal(data.draw(st.integers(min_value=1)))
+    shares = data.draw(st.integers(min_value=1, max_value=1e10))
     account_sender_path = data.draw(
         st.sampled_from(
             [

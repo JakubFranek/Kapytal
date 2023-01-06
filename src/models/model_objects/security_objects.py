@@ -200,7 +200,11 @@ class SecurityAccount(Account):
 
 class SecurityRelatedTransaction(Transaction, ABC):
     def __init__(
-        self, description: str, datetime_: datetime, shares: Decimal, security: Security
+        self,
+        description: str,
+        datetime_: datetime,
+        shares: Decimal | int | str,
+        security: Security,
     ) -> None:
         super().__init__(description, datetime_)
         if not isinstance(security, Security):
@@ -217,19 +221,23 @@ class SecurityRelatedTransaction(Transaction, ABC):
         return self._shares
 
     @shares.setter
-    def shares(self, value: Decimal) -> None:
-        if not isinstance(value, Decimal):
-            raise TypeError(f"{self.__class__.__name__}.shares must be a Decimal.")
-        if not value.is_finite() or value <= 0:
+    def shares(self, value: Decimal | int | str) -> None:
+        if not isinstance(value, (Decimal, int, str)):
+            raise TypeError(
+                f"{self.__class__.__name__}.shares must be a Decimal, integer "
+                "or a string containing a number."
+            )
+        _value = Decimal(value)
+        if not _value.is_finite() or _value <= 0:
             raise ValueError(
                 f"{self.__class__.__name__}.shares must be a finite positive number."
             )
-        if value % self._security.shares_unit != 0:
+        if _value % self._security.shares_unit != 0:
             raise ValueError(
                 f"{self.__class__.__name__}.shares must be a multiple of "
                 f"{self._security.shares_unit}."
             )
-        self._shares = value
+        self._shares = _value
 
     def get_shares(self, account: SecurityAccount) -> Decimal:
         if not isinstance(account, SecurityAccount):
@@ -253,7 +261,7 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
         datetime_: datetime,
         type_: SecurityTransactionType,
         security: Security,
-        shares: Decimal,
+        shares: Decimal | int | str,
         price_per_share: CashAmount,
         fees: CashAmount,
         security_account: SecurityAccount,
@@ -367,7 +375,7 @@ class SecurityTransfer(SecurityRelatedTransaction):
         description: str,
         datetime_: datetime,
         security: Security,
-        shares: Decimal,
+        shares: Decimal | int | str,
         account_sender: SecurityAccount,
         account_recipient: SecurityAccount,
     ) -> None:
