@@ -31,6 +31,7 @@ def test_creation() -> None:
     assert record_keeper.categories == ()
     assert record_keeper.payees == ()
     assert record_keeper.currencies == ()
+    assert record_keeper.exchange_rates == ()
     assert record_keeper.securities == ()
     assert record_keeper.__repr__() == "RecordKeeper"
 
@@ -581,6 +582,31 @@ def test_check_account_exists_invalid_parent_path_type(parent_path: Any) -> None
     record_keeper = RecordKeeper()
     with pytest.raises(TypeError, match="Parameter 'parent_path' must be a string or"):
         record_keeper._check_account_exists("test", parent_path)
+
+
+def test_set_exchange() -> None:
+    record_keeper = get_preloaded_record_keeper()
+    yesterday = datetime.now(tzinfo).date() - timedelta(days=1)
+    assert record_keeper.exchange_rates[0].latest_rate == Decimal(25)
+    record_keeper.set_exchange_rate("EUR/CZK", Decimal(1), yesterday)
+    assert record_keeper.exchange_rates[0].rate_history[yesterday] == Decimal(1)
+
+
+@given(exchange_rate_str=everything_except(str))
+def test_set_exchange_rate_invalid_type(exchange_rate_str: Any) -> None:
+    record_keeper = RecordKeeper()
+    with pytest.raises(
+        TypeError, match="Parameter 'exchange_rate_str' must be a string."
+    ):
+        record_keeper.set_exchange_rate(
+            exchange_rate_str, Decimal(1), datetime.now(tzinfo).date()
+        )
+
+
+def test_set_exchange_rate_does_not_exist() -> None:
+    record_keeper = RecordKeeper()
+    with pytest.raises(DoesNotExistError):
+        record_keeper.set_exchange_rate("N/A", Decimal(1), datetime.now(tzinfo).date())
 
 
 def get_preloaded_record_keeper_with_expense() -> RecordKeeper:

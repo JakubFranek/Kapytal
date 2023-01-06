@@ -465,10 +465,6 @@ class RecordKeeper:
     ) -> None:
         if not isinstance(exchange_rate_str, str):
             raise TypeError("Parameter 'exchange_rate_str' must be a string.")
-        if not isinstance(rate, (Decimal, int, str)):
-            raise TypeError("Parameter 'rate' must be a Decimal, integer or a string.")
-        if not isinstance(date_, date):
-            raise TypeError("Parameter 'date_' must be a date.")
 
         for exchange_rate in self._exchange_rates:
             if str(exchange_rate) == exchange_rate_str:
