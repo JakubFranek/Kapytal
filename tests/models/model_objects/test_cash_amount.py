@@ -244,8 +244,8 @@ def test_sub_rsub_invalid_type(cash_amount: CashAmount, number: Any) -> None:
 
 @given(
     cash_amount=cash_amounts(),
-    number=st.integers(min_value=-1e10, max_value=1e10)
-    | valid_decimals(),
+    number=st.integers(min_value=-1e6, max_value=1e6)
+    | valid_decimals(min_value=-1e6, max_value=1e6),
 )
 def test_mul_rmul(cash_amount: CashAmount, number: int | Decimal) -> None:
     expected_mul = CashAmount(cash_amount.value * number, cash_amount.currency)

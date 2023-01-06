@@ -432,8 +432,9 @@ def test_add_security() -> None:
     type_ = SecurityType.ETF
     currency_code = "EUR"
     places = 2
+    unit = 1
     record_keeper.add_currency(currency_code, places)
-    record_keeper.add_security(name, symbol, type_, currency_code)
+    record_keeper.add_security(name, symbol, type_, currency_code, unit)
     security = record_keeper.get_security(symbol)
     assert security.name == name
     assert security.symbol == symbol
@@ -451,10 +452,11 @@ def test_add_security_already_exists() -> None:
     type_2 = SecurityType.MUTUAL_FUND
     currency_code = "EUR"
     places = 2
+    unit = 1
     record_keeper.add_currency(currency_code, places)
-    record_keeper.add_security(name_1, symbol, type_, currency_code)
+    record_keeper.add_security(name_1, symbol, type_, currency_code, unit)
     with pytest.raises(AlreadyExistsError):
-        record_keeper.add_security(name_2, symbol, type_2, currency_code)
+        record_keeper.add_security(name_2, symbol, type_2, currency_code, unit)
 
 
 @given(symbol=everything_except(str))
@@ -475,7 +477,6 @@ def test_get_security_does_not_exists(symbol: str) -> None:
 @given(
     description=st.text(min_size=1, max_size=256),
     type_=st.sampled_from(SecurityTransactionType),
-    shares=valid_decimals(min_value=0.01),
     price_per_share=valid_decimals(min_value=0.0),
     fees=valid_decimals(min_value=0),
     data=st.data(),
@@ -483,13 +484,13 @@ def test_get_security_does_not_exists(symbol: str) -> None:
 def test_add_security_transaction(
     description: str,
     type_: SecurityTransactionType,
-    shares: int,
     price_per_share: Decimal,
     fees: Decimal,
     data: st.DataObject,
 ) -> None:
     record_keeper = get_preloaded_record_keeper()
     security = data.draw(st.sampled_from(record_keeper.securities))
+    shares = Decimal(data.draw(st.integers(min_value=1, max_value=1e10)))
     security_account_path = data.draw(
         st.sampled_from(
             [
@@ -528,17 +529,16 @@ def test_add_security_transaction(
 @given(
     description=st.text(min_size=1, max_size=256),
     datetime_=st.datetimes(timezones=st.just(tzinfo)),
-    shares=valid_decimals(min_value=0.01),
     data=st.data(),
 )
 def test_add_security_transfer(
     description: str,
     datetime_: datetime,
-    shares: int,
     data: st.DataObject,
 ) -> None:
     record_keeper = get_preloaded_record_keeper()
     security = data.draw(st.sampled_from(record_keeper.securities))
+    shares = Decimal(data.draw(st.integers(min_value=1)))
     account_sender_path = data.draw(
         st.sampled_from(
             [
@@ -622,7 +622,7 @@ def get_preloaded_record_keeper() -> RecordKeeper:
         name="Interactive Brokers", parent_path="Security Accounts"
     )
     record_keeper.add_security(
-        "Vanguard FTSE All-World", "VWCE.DE", SecurityType.ETF, "EUR"
+        "Vanguard FTSE All-World", "VWCE.DE", SecurityType.ETF, "EUR", 1
     )
     record_keeper.add_category("Food and Drink", None, CategoryType.EXPENSE)
     record_keeper.add_category("Groceries", "Food and Drink")

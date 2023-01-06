@@ -88,13 +88,7 @@ def cash_amounts(
     if currency is None:
         currency = draw(currencies())
     value = draw(
-        st.decimals(
-            min_value=min_value,
-            max_value=max_value,
-            allow_infinity=False,
-            allow_nan=False,
-            places=currency.places,
-        )
+        valid_decimals(min_value=min_value, max_value=max_value, places=currency.places)
     )
     return CashAmount(value, currency)
 
@@ -249,7 +243,14 @@ def securities(draw: st.DrawFn, currency: Currency | None = None) -> Security:
     type_ = draw(st.sampled_from(SecurityType))
     if currency is None:
         currency = draw(currencies())
-    return Security(name, symbol, type_, currency)
+    shares_unit = draw(valid_decimals(min_value=1e-10, max_value=1))
+    return Security(
+        name,
+        symbol,
+        type_,
+        currency,
+        shares_unit,
+    )
 
 
 @st.composite
@@ -273,21 +274,16 @@ def security_transactions(
     )
     type_ = draw(st.sampled_from(SecurityTransactionType))
 
-    shares = draw(
-        st.decimals(
-            min_value=0.01,
-            max_value=1e10,
-            allow_infinity=False,
-            allow_nan=False,
-            places=3,
-        )
-    )
-
     cash_account = draw(cash_accounts())
     price_per_share = draw(cash_amounts(currency=cash_account.currency))
     fees = draw(cash_amounts(currency=cash_account.currency))
     security = draw(securities(currency=cash_account.currency))
     security_account = draw(security_accounts())
+
+    shares = draw(
+        valid_decimals(min_value=1e-10).filter(lambda x: x % security.shares_unit == 0)
+    )
+
     return SecurityTransaction(
         description,
         datetime_,
@@ -307,13 +303,7 @@ def security_transfers(draw: st.DrawFn) -> SecurityTransfer:
     datetime_ = draw(st.datetimes(timezones=st.just(tzinfo)))
     security = draw(securities())
     shares = draw(
-        st.decimals(
-            min_value=0.01,
-            max_value=1e10,
-            allow_infinity=False,
-            allow_nan=False,
-            places=3,
-        )
+        valid_decimals(min_value=1e-10).filter(lambda x: x % security.shares_unit == 0)
     )
     account_sender = draw(security_accounts())
     account_recipient = draw(security_accounts())

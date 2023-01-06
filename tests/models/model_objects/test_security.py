@@ -26,13 +26,19 @@ from tests.models.test_assets.composites import (
     symbol=st.text(alphabet=Security.SYMBOL_ALLOWED_CHARS, min_size=1, max_size=8),
     type_=st.sampled_from(SecurityType),
     currency=currencies(),
+    shares_unit=valid_decimals(min_value=1e-10, max_value=1),
     data=st.data(),
 )
 def test_creation(
-    name: str, symbol: str, type_: SecurityType, currency: Currency, data: st.DataObject
+    name: str,
+    symbol: str,
+    type_: SecurityType,
+    currency: Currency,
+    shares_unit: Decimal,
+    data: st.DataObject,
 ) -> None:
     places = data.draw(st.integers(min_value=currency.places, max_value=8) | st.none())
-    security = Security(name, symbol, type_, currency, places)
+    security = Security(name, symbol, type_, currency, shares_unit, places)
     assert security.name == name
     assert security.symbol == symbol.upper()
     assert security.type_ == type_
@@ -45,22 +51,28 @@ def test_creation(
     )
     assert isinstance(security.__hash__(), int)
     if places is None:
-        assert security.places == currency.places
+        assert security.price_places == currency.places
     else:
-        assert security.places == places
+        assert security.price_places == places
+    assert security.shares_unit == shares_unit
 
 
 @given(
     name=st.just(""),
     symbol=st.text(alphabet=Security.SYMBOL_ALLOWED_CHARS, min_size=1, max_size=8),
     type_=st.sampled_from(SecurityType),
+    shares_unit=valid_decimals(min_value=1e-10, max_value=1),
     currency=currencies(),
 )
 def test_name_too_short(
-    name: str, symbol: str, type_: SecurityType, currency: Currency
+    name: str,
+    symbol: str,
+    type_: SecurityType,
+    shares_unit: Decimal,
+    currency: Currency,
 ) -> None:
     with pytest.raises(NameLengthError):
-        Security(name, symbol, type_, currency)
+        Security(name, symbol, type_, currency, shares_unit)
 
 
 @given(
@@ -68,12 +80,17 @@ def test_name_too_short(
     symbol=st.text(alphabet=Security.SYMBOL_ALLOWED_CHARS, min_size=1, max_size=8),
     type_=st.sampled_from(SecurityType),
     currency=currencies(),
+    shares_unit=valid_decimals(min_value=1e-10, max_value=1),
 )
 def test_name_too_long(
-    name: str, symbol: str, type_: SecurityType, currency: Currency
+    name: str,
+    symbol: str,
+    type_: SecurityType,
+    currency: Currency,
+    shares_unit: Decimal,
 ) -> None:
     with pytest.raises(NameLengthError):
-        Security(name, symbol, type_, currency)
+        Security(name, symbol, type_, currency, shares_unit)
 
 
 @given(
@@ -81,12 +98,13 @@ def test_name_too_long(
     symbol=st.text(alphabet=Security.SYMBOL_ALLOWED_CHARS, min_size=1, max_size=8),
     type_=everything_except(SecurityType),
     currency=currencies(),
+    shares_unit=valid_decimals(min_value=1e-10, max_value=1),
 )
 def test_type_invalid_type(
-    name: str, symbol: str, type_: Any, currency: Currency
+    name: str, symbol: str, type_: Any, currency: Currency, shares_unit: Decimal
 ) -> None:
     with pytest.raises(TypeError, match="Security.type_ must be a SecurityType."):
-        Security(name, symbol, type_, currency)
+        Security(name, symbol, type_, currency, shares_unit)
 
 
 @given(
@@ -94,12 +112,13 @@ def test_type_invalid_type(
     symbol=everything_except(str),
     type_=st.sampled_from(SecurityType),
     currency=currencies(),
+    shares_unit=valid_decimals(min_value=1e-10, max_value=1),
 )
 def test_symbol_invalid_type(
-    name: str, symbol: str, type_: Any, currency: Currency
+    name: str, symbol: str, type_: Any, currency: Currency, shares_unit: Decimal
 ) -> None:
     with pytest.raises(TypeError, match="Security.symbol must be a string."):
-        Security(name, symbol, type_, currency)
+        Security(name, symbol, type_, currency, shares_unit)
 
 
 @given(
@@ -107,12 +126,13 @@ def test_symbol_invalid_type(
     symbol=st.just(""),
     type_=st.sampled_from(SecurityType),
     currency=currencies(),
+    shares_unit=valid_decimals(min_value=1e-10, max_value=1),
 )
 def test_symbol_too_short(
-    name: str, symbol: str, type_: Any, currency: Currency
+    name: str, symbol: str, type_: Any, currency: Currency, shares_unit: Decimal
 ) -> None:
     with pytest.raises(ValueError, match="Security.symbol length must be within"):
-        Security(name, symbol, type_, currency)
+        Security(name, symbol, type_, currency, shares_unit)
 
 
 @given(
@@ -120,12 +140,13 @@ def test_symbol_too_short(
     symbol=st.text(min_size=9),
     type_=st.sampled_from(SecurityType),
     currency=currencies(),
+    shares_unit=valid_decimals(min_value=1e-10, max_value=1),
 )
 def test_symbol_too_long(
-    name: str, symbol: str, type_: Any, currency: Currency
+    name: str, symbol: str, type_: Any, currency: Currency, shares_unit: Decimal
 ) -> None:
     with pytest.raises(ValueError, match="Security.symbol length must be within"):
-        Security(name, symbol, type_, currency)
+        Security(name, symbol, type_, currency, shares_unit)
 
 
 @given(
@@ -133,13 +154,14 @@ def test_symbol_too_long(
     symbol=st.text(min_size=1, max_size=8),
     type_=st.sampled_from(SecurityType),
     currency=currencies(),
+    shares_unit=valid_decimals(min_value=1e-10, max_value=1),
 )
 def test_symbol_invalid_chars(
-    name: str, symbol: str, type_: Any, currency: Currency
+    name: str, symbol: str, type_: Any, currency: Currency, shares_unit: Decimal
 ) -> None:
     assume(any(char not in Security.SYMBOL_ALLOWED_CHARS for char in symbol))
     with pytest.raises(InvalidCharacterError):
-        Security(name, symbol, type_, currency)
+        Security(name, symbol, type_, currency, shares_unit)
 
 
 @given(
@@ -147,12 +169,13 @@ def test_symbol_invalid_chars(
     symbol=st.text(alphabet=Security.SYMBOL_ALLOWED_CHARS, min_size=1, max_size=8),
     type_=st.sampled_from(SecurityType),
     currency=everything_except(Currency),
+    shares_unit=valid_decimals(min_value=1e-10, max_value=1),
 )
 def test_currency_invalid_type(
-    name: str, symbol: str, type_: Any, currency: Currency
+    name: str, symbol: str, type_: Any, currency: Currency, shares_unit: Decimal
 ) -> None:
     with pytest.raises(TypeError, match="Security.currency must be a Currency."):
-        Security(name, symbol, type_, currency)
+        Security(name, symbol, type_, currency, shares_unit)
 
 
 @given(
@@ -161,12 +184,18 @@ def test_currency_invalid_type(
     type_=st.sampled_from(SecurityType),
     currency=currencies(),
     places=everything_except((int, type(None))),
+    shares_unit=valid_decimals(min_value=1e-10, max_value=1),
 )
 def test_places_invalid_type(
-    name: str, symbol: str, type_: Any, currency: Currency, places: Any
+    name: str,
+    symbol: str,
+    type_: Any,
+    currency: Currency,
+    places: Any,
+    shares_unit: Decimal,
 ) -> None:
     with pytest.raises(TypeError, match="Security.places must be an integer or None."):
-        Security(name, symbol, type_, currency, places)
+        Security(name, symbol, type_, currency, shares_unit, places)
 
 
 @given(
@@ -174,17 +203,23 @@ def test_places_invalid_type(
     symbol=st.text(alphabet=Security.SYMBOL_ALLOWED_CHARS, min_size=1, max_size=8),
     type_=st.sampled_from(SecurityType),
     currency=currencies(),
+    shares_unit=valid_decimals(min_value=1e-10, max_value=1),
     data=st.data(),
 )
 def test_places_invalid_value(
-    name: str, symbol: str, type_: Any, currency: Currency, data: st.DataObject
+    name: str,
+    symbol: str,
+    type_: Any,
+    currency: Currency,
+    shares_unit: Decimal,
+    data: st.DataObject,
 ) -> None:
     places = data.draw(st.integers(max_value=currency.places - 1))
     with pytest.raises(
         ValueError,
         match="Security.places must not be smaller than Security.currency.places.",
     ):
-        Security(name, symbol, type_, currency, places)
+        Security(name, symbol, type_, currency, shares_unit, places)
 
 
 @given(
@@ -196,8 +231,10 @@ def test_set_price(date_: date, value: Decimal) -> None:
     currency = security.currency
     price = CashAmount(value, currency)
     security.set_price(date_, price)
-    assert security.price.value == round(price.value, security.places)
-    assert security.price_history[date_].value == round(price.value, security.places)
+    assert security.price.value == round(price.value, security.price_places)
+    assert security.price_history[date_].value == round(
+        price.value, security.price_places
+    )
 
 
 @given(
@@ -243,4 +280,5 @@ def get_security() -> Security:
         "VWCE.DE",
         SecurityType.ETF,
         Currency("EUR", 2),
+        shares_unit=1,
     )

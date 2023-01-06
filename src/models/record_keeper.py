@@ -40,6 +40,7 @@ class DoesNotExistError(ValueError):
     """Raised when a search for an object finds nothing."""
 
 
+# TODO: add exchange rates
 # TODO: add editing and deleting of objects
 class RecordKeeper:
     def __init__(self) -> None:
@@ -97,7 +98,12 @@ class RecordKeeper:
         self._currencies.append(currency)
 
     def add_security(
-        self, name: str, symbol: str, type_: SecurityType, currency_code: str
+        self,
+        name: str,
+        symbol: str,
+        type_: SecurityType,
+        currency_code: str,
+        unit: Decimal | int | str,
     ) -> None:
         symbol_upper = symbol.upper()
         if any(security.symbol == symbol_upper for security in self._securities):
@@ -105,7 +111,7 @@ class RecordKeeper:
                 f"A Security with symbol '{symbol_upper}' already exists."
             )
         currency = self.get_currency(currency_code)
-        security = Security(name, symbol, type_, currency)
+        security = Security(name, symbol, type_, currency, unit)
         self._securities.append(security)
 
     def add_category(
