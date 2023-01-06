@@ -122,9 +122,9 @@ class Security(NameMixin, DatetimeCreatedMixin, UUIDMixin):
 
     def set_price(self, date_: date, price: CashAmount) -> None:
         if not isinstance(date_, date):
-            raise TypeError("Argument 'date_' must be a date.")
+            raise TypeError("Parameter 'date_' must be a date.")
         if not isinstance(price, CashAmount):
-            raise TypeError("Argument 'price' must be a CashAmount.")
+            raise TypeError("Parameter 'price' must be a CashAmount.")
         if price.currency != self.currency:
             raise CurrencyError("Security.currency and price.currency must match.")
         self._price_history[date_] = CashAmount(
@@ -171,7 +171,7 @@ class SecurityAccount(Account):
     def _validate_transaction(self, transaction: "SecurityRelatedTransaction") -> None:
         if not isinstance(transaction, SecurityRelatedTransaction):
             raise TypeError(
-                "Argument 'transaction' must be a SecurityRelatedTransaction."
+                "Parameter 'transaction' must be a SecurityRelatedTransaction."
             )
         if not transaction.is_account_related(self):
             raise UnrelatedAccountError(
@@ -211,7 +211,7 @@ class SecurityRelatedTransaction(Transaction, ABC):
 
     def get_shares(self, account: SecurityAccount) -> Decimal:
         if not isinstance(account, SecurityAccount):
-            raise TypeError("Argument 'account' must be a SecurityAccount.")
+            raise TypeError("Parameter 'account' must be a SecurityAccount.")
         if not self.is_account_related(account):
             raise UnrelatedAccountError(
                 f"SecurityAccount '{account.name}' is not related to this "

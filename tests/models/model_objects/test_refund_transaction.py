@@ -426,7 +426,7 @@ def test_multi_refund() -> None:
 )
 def test_get_amount_invalid_account_type(account: Any) -> None:
     refund = get_preloaded_refund()
-    with pytest.raises(TypeError, match="Argument 'account' must be a CashAccount."):
+    with pytest.raises(TypeError, match="Parameter 'account' must be a CashAccount."):
         refund.get_amount(account)
 
 

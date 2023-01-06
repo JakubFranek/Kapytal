@@ -128,7 +128,7 @@ def test_get_amount_for_account(transfer: CashTransfer) -> None:
 def test_get_amount_invalid_account_type(
     transaction: CashTransfer, account: Any
 ) -> None:
-    with pytest.raises(TypeError, match="Argument 'account' must be a CashAccount."):
+    with pytest.raises(TypeError, match="Parameter 'account' must be a CashAccount."):
         transaction.get_amount(account)
 
 
@@ -179,7 +179,7 @@ def test_set_accounts_invalid_sender_type(
 ) -> None:
     current_recipient = transfer.account_recipient
     with pytest.raises(
-        TypeError, match="Argument 'account_sender' must be a CashAccount."
+        TypeError, match="Parameter 'account_sender' must be a CashAccount."
     ):
         transfer.set_accounts(new_sender, current_recipient)
 
@@ -190,7 +190,7 @@ def test_set_accounts_invalid_recipient_type(
 ) -> None:
     current_sender = transfer.account_sender
     with pytest.raises(
-        TypeError, match="Argument 'account_recipient' must be a CashAccount."
+        TypeError, match="Parameter 'account_recipient' must be a CashAccount."
     ):
         transfer.set_accounts(current_sender, new_recipient)
 

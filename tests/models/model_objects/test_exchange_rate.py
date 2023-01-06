@@ -90,7 +90,7 @@ def test_set_rate_invalid_date_type(
 ) -> None:
     assume(primary != secondary)
     exchange_rate = ExchangeRate(primary, secondary)
-    with pytest.raises(TypeError, match="Argument 'date_' must be a date."):
+    with pytest.raises(TypeError, match="Parameter 'date_' must be a date."):
         exchange_rate.set_rate(date_, rate)
 
 
@@ -105,7 +105,7 @@ def test_set_rate_invalid_rate_type(
 ) -> None:
     assume(primary != secondary)
     exchange_rate = ExchangeRate(primary, secondary)
-    with pytest.raises(TypeError, match="Argument 'rate' must be a Decimal."):
+    with pytest.raises(TypeError, match="Parameter 'rate' must be a Decimal."):
         exchange_rate.set_rate(date_, rate)
 
 
@@ -121,6 +121,6 @@ def test_set_rate_invalid_rate_value(
     assume(primary != secondary)
     exchange_rate = ExchangeRate(primary, secondary)
     with pytest.raises(
-        ValueError, match="Argument 'rate' must be finite and non-negative."
+        ValueError, match="Parameter 'rate' must be finite and non-negative."
     ):
         exchange_rate.set_rate(date_, rate)

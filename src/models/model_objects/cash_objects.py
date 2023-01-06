@@ -45,7 +45,7 @@ class InvalidCashTransactionTypeError(ValueError):
 class CashRelatedTransaction(Transaction, ABC):
     def get_amount(self, account: "CashAccount") -> CashAmount:
         if not isinstance(account, CashAccount):
-            raise TypeError("Argument 'account' must be a CashAccount.")
+            raise TypeError("Parameter 'account' must be a CashAccount.")
         if not self.is_account_related(account):
             raise UnrelatedAccountError(
                 f"CashAccount '{account.name}' is not related to this "
@@ -157,7 +157,7 @@ class CashAccount(Account):
     ) -> None:
         if not isinstance(transaction, CashRelatedTransaction):
             raise TypeError(
-                "Argument 'transaction' must be a subclass of "
+                "Parameter 'transaction' must be a subclass of "
                 "CashRelatedTransaction."
             )
         if not transaction.is_account_related(self):
@@ -338,7 +338,7 @@ class CashTransaction(CashRelatedTransaction):
 
     def _validate_refund(self, refund: "RefundTransaction") -> None:
         if not isinstance(refund, RefundTransaction):
-            raise TypeError("Argument 'refund' must be a RefundTransaction.")
+            raise TypeError("Parameter 'refund' must be a RefundTransaction.")
         if refund.refunded_transaction != self:
             raise UnrelatedTransactionError(
                 "Supplied RefundTransaction is not related to this CashTransaction."
@@ -407,12 +407,12 @@ class CashTransfer(CashRelatedTransaction):
         self, account_sender: CashAccount, account_recipient: CashAccount
     ) -> None:
         if not isinstance(account_sender, CashAccount):
-            raise TypeError("Argument 'account_sender' must be a CashAccount.")
+            raise TypeError("Parameter 'account_sender' must be a CashAccount.")
         if not isinstance(account_recipient, CashAccount):
-            raise TypeError("Argument 'account_recipient' must be a CashAccount.")
+            raise TypeError("Parameter 'account_recipient' must be a CashAccount.")
         if account_recipient == account_sender:
             raise TransferSameAccountError(
-                "Arguments 'account_sender' and 'account_recipient' must be "
+                "Parameters 'account_sender' and 'account_recipient' must be "
                 "different CashAccounts."
             )
 
@@ -634,7 +634,7 @@ def validate_collection_of_tuple_pairs(
     collection: Collection, first_type: type, second_type: type, min_length: int
 ) -> None:
     if not isinstance(collection, Collection):
-        raise TypeError("Argument 'collection' must be a Collection.")
+        raise TypeError("Parameter 'collection' must be a Collection.")
     if len(collection) < min_length:
         raise ValueError(f"Length of 'collection' must be at least {min_length}.")
     if not all(isinstance(element, tuple) for element in collection):

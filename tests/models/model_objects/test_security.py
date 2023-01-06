@@ -210,14 +210,14 @@ def test_set_price(date_: date, value: Decimal) -> None:
 )
 def test_set_price_invalid_date_type(date_: Any, price: Decimal) -> None:
     security = get_security()
-    with pytest.raises(TypeError, match="Argument 'date_' must be a date."):
+    with pytest.raises(TypeError, match="Parameter 'date_' must be a date."):
         security.set_price(date_, price)
 
 
 @given(date_=st.dates(), price=everything_except(CashAmount))
 def test_set_price_invalid_price_type(date_: date, price: Any) -> None:
     security = get_security()
-    with pytest.raises(TypeError, match="Argument 'price' must be a CashAmount."):
+    with pytest.raises(TypeError, match="Parameter 'price' must be a CashAmount."):
         security.set_price(date_, price)
 
 

@@ -484,7 +484,7 @@ def test_change_cash_account(data: st.DataObject) -> None:
 def test_get_shares_invalid_account_type(account: Any) -> None:
     transaction = get_buy()
     with pytest.raises(
-        TypeError, match="Argument 'account' must be a SecurityAccount."
+        TypeError, match="Parameter 'account' must be a SecurityAccount."
     ):
         transaction.get_shares(account)
 

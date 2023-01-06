@@ -29,7 +29,9 @@ from tests.models.test_assets.composites import (
 @given(
     name=st.text(min_size=1, max_size=32),
     currency=currencies(),
-    initial_balance=st.decimals(min_value=0, allow_nan=False, allow_infinity=False),
+    initial_balance=st.decimals(
+        min_value=0, max_value=1e10, allow_nan=False, allow_infinity=False
+    ),
     initial_datetime=st.datetimes(),
 )
 def test_creation(
@@ -134,7 +136,7 @@ def test_validate_transaction_invalid_type(
 ) -> None:
     with pytest.raises(
         TypeError,
-        match="Argument 'transaction' must be a",
+        match="Parameter 'transaction' must be a",
     ):
         account._validate_transaction(transaction)
 

@@ -1,6 +1,8 @@
 import string
 from datetime import datetime, timedelta
 from decimal import Decimal
+from types import NoneType
+from typing import Any
 
 import pytest
 from hypothesis import assume, given
@@ -17,6 +19,7 @@ from src.models.model_objects.security_objects import (
     SecurityType,
 )
 from src.models.record_keeper import AlreadyExistsError, DoesNotExistError, RecordKeeper
+from tests.models.test_assets.composites import everything_except
 
 
 def test_creation() -> None:
@@ -273,7 +276,7 @@ def test_add_category_parent_does_not_exist(name: str, parent: str) -> None:
 )
 def test_add_category_invalid_type(name: str) -> None:
     record_keeper = RecordKeeper()
-    with pytest.raises(TypeError, match="If argument 'parent_path' is None"):
+    with pytest.raises(TypeError, match="If parameter 'parent_path' is None"):
         record_keeper.add_category(name, None, None)
 
 
@@ -313,16 +316,57 @@ def test_get_account_parent_does_not_exist() -> None:
         record_keeper.get_account_parent("does not exist")
 
 
+@given(path=everything_except(str))
+def test_get_account_invalid_path_type(path: Any) -> None:
+    record_keeper = RecordKeeper()
+    with pytest.raises(TypeError, match="Parameter 'path' must be a string."):
+        record_keeper.get_account(path, Account)
+
+
+@given(type_=everything_except((Account, CashAccount, SecurityAccount)))
+def test_get_account_invalid_type_type(type_: Any) -> None:
+    record_keeper = RecordKeeper()
+    with pytest.raises(TypeError, match="Parameter type_ must be type"):
+        record_keeper.get_account("", type_)
+
+
+def test_get_account_invalid_account_type() -> None:
+    record_keeper = get_preloaded_record_keeper()
+    with pytest.raises(TypeError, match="Type of Account at path='"):
+        record_keeper.get_account("Bank Accounts/Moneta EUR", SecurityAccount)
+
+
 def test_get_account_does_not_exist() -> None:
     record_keeper = get_preloaded_record_keeper()
     with pytest.raises(DoesNotExistError):
         record_keeper.get_account("does not exist", Account)
 
 
+@given(code=everything_except(str))
+def test_get_currency_invalid_code_type(code: Any) -> None:
+    record_keeper = get_preloaded_record_keeper()
+    with pytest.raises(TypeError, match="Parameter 'code' must be a string."):
+        record_keeper.get_currency(code)
+
+
 def test_get_currency_does_not_exist() -> None:
     record_keeper = get_preloaded_record_keeper()
     with pytest.raises(DoesNotExistError):
         record_keeper.get_currency("does not exist")
+
+
+@given(path=everything_except(str), type_=st.sampled_from(CategoryType))
+def test_get_category_invalid_path_type(path: Any, type_: CategoryType) -> None:
+    record_keeper = RecordKeeper()
+    with pytest.raises(TypeError, match="Parameter 'path' must be a string."):
+        record_keeper.get_category(path, type_)
+
+
+@given(type_=everything_except(CategoryType))
+def test_get_category_invalid_type_type(type_: Any) -> None:
+    record_keeper = RecordKeeper()
+    with pytest.raises(TypeError, match="Parameter 'type_' must be a CategoryType."):
+        record_keeper.get_category("test", type_)
 
 
 def test_get_category_does_not_exist() -> None:
@@ -356,6 +400,20 @@ def test_get_attribute() -> None:
     assert payee == payee2
     assert len(record_keeper.tags) == no_of_tags
     assert len(record_keeper.payees) == no_of_payees
+
+
+@given(name=everything_except(str), type_=st.sampled_from(AttributeType))
+def test_get_attribute_invalid_path_type(name: Any, type_: AttributeType) -> None:
+    record_keeper = RecordKeeper()
+    with pytest.raises(TypeError, match="Parameter 'name' must be a string."):
+        record_keeper.get_attribute(name, type_)
+
+
+@given(type_=everything_except(AttributeType))
+def test_get_attribute_invalid_type_type(type_: Any) -> None:
+    record_keeper = RecordKeeper()
+    with pytest.raises(TypeError, match="Parameter 'type_' must be an AttributeType."):
+        record_keeper.get_attribute("test", type_)
 
 
 def test_add_refund() -> RecordKeeper:
@@ -403,6 +461,13 @@ def test_add_security_already_exists() -> None:
     record_keeper.add_security(name_1, symbol, type_, currency_code)
     with pytest.raises(AlreadyExistsError):
         record_keeper.add_security(name_2, symbol, type_2, currency_code)
+
+
+@given(symbol=everything_except(str))
+def test_get_security_invalid_symbol_type(symbol: Any) -> None:
+    record_keeper = RecordKeeper()
+    with pytest.raises(TypeError, match="Parameter 'symbol' must be a string."):
+        record_keeper.get_security(symbol)
 
 
 @given(symbol=st.text(min_size=1, max_size=8))
@@ -512,6 +577,20 @@ def test_add_security_transfer(
         account_recipient_path,
     )
     assert len(record_keeper.transactions) == 1
+
+
+@given(name=everything_except(str))
+def test_check_account_exists_invalid_name_type(name: Any) -> None:
+    record_keeper = RecordKeeper()
+    with pytest.raises(TypeError, match="Parameter 'name' must be a string."):
+        record_keeper._check_account_exists(name, None)
+
+
+@given(parent_path=everything_except((str, NoneType)))
+def test_check_account_exists_invalid_parent_path_type(parent_path: Any) -> None:
+    record_keeper = RecordKeeper()
+    with pytest.raises(TypeError, match="Parameter 'parent_path' must be a string or"):
+        record_keeper._check_account_exists("test", parent_path)
 
 
 def get_preloaded_record_keeper_with_expense() -> RecordKeeper:

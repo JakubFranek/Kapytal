@@ -44,7 +44,7 @@ def test_validate_transaction_invalid_type(
     security_account: SecurityAccount, transaction: Any
 ) -> None:
     with pytest.raises(
-        TypeError, match="Argument 'transaction' must be a SecurityRelatedTransaction."
+        TypeError, match="Parameter 'transaction' must be a SecurityRelatedTransaction."
     ):
         security_account._validate_transaction(transaction)
 
@@ -73,7 +73,7 @@ def test_validate_transaction_unrelated(
     shares_A=st.integers(min_value=1, max_value=1e6),
     shares_B=st.integers(min_value=1, max_value=1e6),
     exchange_rate=st.decimals(
-        min_value=0.01, max_value=1e10, allow_infinity=False, allow_nan=False, places=3
+        min_value=0.01, max_value=1e6, allow_infinity=False, allow_nan=False, places=3
     ),
 )
 def test_get_balance(

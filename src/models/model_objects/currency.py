@@ -68,7 +68,7 @@ class Currency(DatetimeCreatedMixin):
 
     def add_exchange_rate(self, exchange_rate: "ExchangeRate") -> None:
         if not isinstance(exchange_rate, ExchangeRate):
-            raise TypeError("Argument 'exchange_rate' must be an ExchangeRate.")
+            raise TypeError("Parameter 'exchange_rate' must be an ExchangeRate.")
         if (
             exchange_rate.primary_currency != self
             and exchange_rate.secondary_currency != self
@@ -82,7 +82,7 @@ class Currency(DatetimeCreatedMixin):
 
     def remove_exchange_rate(self, exchange_rate: "ExchangeRate") -> None:
         if not isinstance(exchange_rate, ExchangeRate):
-            raise TypeError("Argument 'exchange_rate' must be an ExchangeRate.")
+            raise TypeError("Parameter 'exchange_rate' must be an ExchangeRate.")
         other_currency = exchange_rate.currencies - {self}
         del self._exchange_rates[other_currency.pop()]
 
@@ -198,11 +198,11 @@ class ExchangeRate:
 
     def set_rate(self, date_: date, rate: Decimal) -> None:
         if not isinstance(date_, date):
-            raise TypeError("Argument 'date_' must be a date.")
+            raise TypeError("Parameter 'date_' must be a date.")
         if not isinstance(rate, Decimal):
-            raise TypeError("Argument 'rate' must be a Decimal.")
+            raise TypeError("Parameter 'rate' must be a Decimal.")
         if not rate.is_finite() or rate < 0:
-            raise ValueError("Argument 'rate' must be finite and non-negative.")
+            raise ValueError("Parameter 'rate' must be finite and non-negative.")
         self._rate_history[date_] = rate
 
 

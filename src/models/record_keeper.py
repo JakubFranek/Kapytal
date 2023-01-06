@@ -125,7 +125,8 @@ class RecordKeeper:
             parent = None
             if not isinstance(type_, CategoryType):
                 raise TypeError(
-                    "If argument 'parent_path' is None, 'type_' must be a CategoryType."
+                    "If parameter 'parent_path' is None, "
+                    "'type_' must be a CategoryType."
                 )
             category_type = type_
 
@@ -339,10 +340,6 @@ class RecordKeeper:
         return None
 
     @overload
-    def get_account(self, path: str, type_: type[Account]) -> Account:  # noqa: U100
-        ...
-
-    @overload
     def get_account(
         self, path: str, type_: type[CashAccount]  # noqa: U100
     ) -> CashAccount:
@@ -357,18 +354,24 @@ class RecordKeeper:
     def get_account(
         self,
         path: str,
-        type_: type[Account] | type[CashAccount] | type[SecurityAccount],
-    ) -> Account | CashAccount | SecurityAccount:
+        type_: type[Account],
+    ) -> Account:
+        if not isinstance(path, str):
+            raise TypeError("Parameter 'path' must be a string.")
+        if not isinstance(type_, type(Account)):
+            raise TypeError("Parameter type_ must be type(Account).")
         for account in self._accounts:
             if account.path == path:
                 if not isinstance(account, type_):
                     raise TypeError(
-                        f"Account at path {path} is not a {type_.__name__}."
+                        f"Type of Account at path='{path}' is not {type_.__name__}."
                     )
                 return account
         raise DoesNotExistError(f"An Account with path='{path}' does not exist.")
 
     def get_security(self, symbol: str) -> Security:
+        if not isinstance(symbol, str):
+            raise TypeError("Parameter 'symbol' must be a string.")
         symbol_upper = symbol.upper()
         for security in self._securities:
             if security.symbol == symbol_upper:
@@ -378,6 +381,8 @@ class RecordKeeper:
         )
 
     def get_currency(self, code: str) -> Currency:
+        if not isinstance(code, str):
+            raise TypeError("Parameter 'code' must be a string.")
         code_upper = code.upper()
         for currency in self._currencies:
             if currency.code == code_upper:
@@ -385,6 +390,10 @@ class RecordKeeper:
         raise DoesNotExistError(f"A Currency with code='{code_upper}' does not exist.")
 
     def get_category(self, path: str, type_: CategoryType) -> Category:
+        if not isinstance(path, str):
+            raise TypeError("Parameter 'path' must be a string.")
+        if not isinstance(type_, CategoryType):
+            raise TypeError("Parameter 'type_' must be a CategoryType.")
         for category in self._categories:
             if category.path == path:
                 return category
@@ -418,7 +427,12 @@ class RecordKeeper:
         self._categories.append(final_category)
         return final_category
 
+    # TODO: parameters are within func, args are passed
     def get_attribute(self, name: str, type_: AttributeType) -> Attribute:
+        if not isinstance(name, str):
+            raise TypeError("Parameter 'name' must be a string.")
+        if not isinstance(type_, AttributeType):
+            raise TypeError("Parameter 'type_' must be an AttributeType.")
         attributes = self._payees if type_ == AttributeType.PAYEE else self._tags
         for attribute in attributes:
             if attribute.name == name:
@@ -428,7 +442,11 @@ class RecordKeeper:
         attributes.append(attribute)
         return attribute
 
-    def _check_account_exists(self, name: str, parent_path: str) -> None:
+    def _check_account_exists(self, name: str, parent_path: str | None) -> None:
+        if not isinstance(name, str):
+            raise TypeError("Parameter 'name' must be a string.")
+        if not isinstance(parent_path, str) and parent_path is not None:
+            raise TypeError("Parameter 'parent_path' must be a string or a None.")
         target_path = parent_path + "/" + name if parent_path is not None else name
         if any(account.path == target_path for account in self._accounts):
             raise AlreadyExistsError(

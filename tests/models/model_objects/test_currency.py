@@ -101,7 +101,7 @@ def test_eq_different_type(currency: Currency, other: Any) -> None:
 @given(currency=currencies(), exchange_rate=everything_except(ExchangeRate))
 def test_add_exchange_rate_invalid_type(currency: Currency, exchange_rate: Any) -> None:
     with pytest.raises(
-        TypeError, match="Argument 'exchange_rate' must be an ExchangeRate."
+        TypeError, match="Parameter 'exchange_rate' must be an ExchangeRate."
     ):
         currency.add_exchange_rate(exchange_rate)
 
@@ -121,7 +121,7 @@ def test_remove_exchange_rate_invalid_type(
     currency: Currency, exchange_rate: Any
 ) -> None:
     with pytest.raises(
-        TypeError, match="Argument 'exchange_rate' must be an ExchangeRate."
+        TypeError, match="Parameter 'exchange_rate' must be an ExchangeRate."
     ):
         currency.remove_exchange_rate(exchange_rate)
 

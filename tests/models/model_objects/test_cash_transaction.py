@@ -156,7 +156,7 @@ def test_payee_invalid_attribute_type(
 
 @given(transaction=cash_transactions(), new_tags=everything_except(Collection))
 def test_tags_invalid_type(transaction: CashTransaction, new_tags: Any) -> None:
-    with pytest.raises(TypeError, match="Argument 'collection' must be a Collection."):
+    with pytest.raises(TypeError, match="Parameter 'collection' must be a Collection."):
         transaction.tag_amount_pairs = new_tags
 
 
@@ -254,7 +254,7 @@ def test_get_amount(transaction: CashTransaction) -> None:
 def test_get_amount_invalid_account_type(
     transaction: CashTransaction, account: Any
 ) -> None:
-    with pytest.raises(TypeError, match="Argument 'account' must be a CashAccount."):
+    with pytest.raises(TypeError, match="Parameter 'account' must be a CashAccount."):
         transaction.get_amount(account)
 
 
@@ -276,7 +276,7 @@ def test_get_amount_invalid_account_value(
 def test_category_amount_pairs_invalid_type(
     transaction: CashTransaction, category_amount_pairs: Any
 ) -> None:
-    with pytest.raises(TypeError, match="Argument 'collection' must be a Collection."):
+    with pytest.raises(TypeError, match="Parameter 'collection' must be a Collection."):
         transaction.tag_amount_pairs = category_amount_pairs
 
 
@@ -389,6 +389,6 @@ def test_tag_names(transaction: CashTransaction) -> None:
 @given(transaction=cash_transactions(), refund=everything_except(RefundTransaction))
 def test_invalid_refund_type(transaction: CashTransaction, refund: Any) -> None:
     with pytest.raises(
-        TypeError, match="Argument 'refund' must be a RefundTransaction."
+        TypeError, match="Parameter 'refund' must be a RefundTransaction."
     ):
         transaction.add_refund(refund)
