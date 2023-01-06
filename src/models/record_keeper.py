@@ -1,7 +1,7 @@
 # TODO: this file belongs somewhere else...
 
 from collections.abc import Collection
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from typing import overload
 
@@ -459,6 +459,22 @@ class RecordKeeper:
         attribute = Attribute(name, type_)
         attributes.append(attribute)
         return attribute
+
+    def set_exchange_rate(
+        self, exchange_rate_str: str, rate: Decimal, date_: date
+    ) -> None:
+        if not isinstance(exchange_rate_str, str):
+            raise TypeError("Parameter 'exchange_rate_str' must be a string.")
+        if not isinstance(rate, (Decimal, int, str)):
+            raise TypeError("Parameter 'rate' must be a Decimal, integer or a string.")
+        if not isinstance(date_, date):
+            raise TypeError("Parameter 'date_' must be a date.")
+
+        for exchange_rate in self._exchange_rates:
+            if str(exchange_rate) == exchange_rate_str:
+                exchange_rate.set_rate(date_, rate)
+                return
+        raise DoesNotExistError(f"Exchange rate '{exchange_rate_str} not found.'")
 
     def _check_account_exists(self, name: str, parent_path: str | None) -> None:
         if not isinstance(name, str):

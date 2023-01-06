@@ -601,6 +601,8 @@ def get_preloaded_record_keeper() -> RecordKeeper:
     record_keeper = RecordKeeper()
     record_keeper.add_currency("CZK", 2)
     record_keeper.add_currency("EUR", 2)
+    record_keeper.add_exchange_rate("EUR", "CZK")
+    record_keeper.set_exchange_rate("EUR/CZK", Decimal(25), datetime.now(tzinfo).date())
     record_keeper.add_account_group("Bank Accounts", None)
     record_keeper.add_account_group("Security Accounts", None)
     record_keeper.add_cash_account(
