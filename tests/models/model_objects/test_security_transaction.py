@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from typing import Any
 
 import pytest
@@ -91,7 +91,7 @@ def test_buy(
 def test_sell(data: st.DataObject) -> None:
     buy = get_buy()
     security = buy.security
-    shares = Decimal(data.draw(st.integers(min_value=1, max_value=1e10)))
+    shares = data.draw(st.integers(min_value=1, max_value=1e10))
     currency = security.currency
     price_per_share = data.draw(cash_amounts(currency=currency))
     fees = data.draw(cash_amounts(currency=currency))
@@ -195,7 +195,7 @@ def test_invalid_security_type(
 @given(
     type_=st.sampled_from(SecurityTransactionType),
     security=securities(),
-    shares=everything_except(Decimal),
+    shares=everything_except((Decimal, int)),
     security_account=security_accounts(),
     cash_account=cash_accounts(),
     data=st.data(),
@@ -228,6 +228,45 @@ def test_invalid_shares_type(
             security_account,
             cash_account,
         )
+
+
+@given(
+    type_=st.sampled_from(SecurityTransactionType),
+    security=securities(),
+    shares=st.text(),
+    security_account=security_accounts(),
+    cash_account=cash_accounts(),
+    data=st.data(),
+)
+def test_invalid_shares_str_value(
+    type_: SecurityTransactionType,
+    security: Security,
+    shares: str,
+    security_account: SecurityAccount,
+    cash_account: CashAccount,
+    data: st.DataObject,
+) -> None:
+    datetime_ = data.draw(
+        st.datetimes(
+            min_value=cash_account.initial_datetime.replace(tzinfo=None)
+            + timedelta(days=1)
+        )
+    )
+    try:
+        Decimal(shares)
+    except InvalidOperation:
+        with pytest.raises(InvalidOperation):
+            SecurityTransaction(
+                "Test description",
+                datetime_,
+                type_,
+                security,
+                shares,
+                Decimal("100"),
+                Decimal("1"),
+                security_account,
+                cash_account,
+            )
 
 
 @given(
@@ -307,6 +346,47 @@ def test_invalid_shares_unit(
             security_account,
             cash_account,
         )
+
+
+@given(
+    type_=st.sampled_from(SecurityTransactionType),
+    security=securities(),
+    security_account=security_accounts(),
+    cash_account=cash_accounts(),
+    data=st.data(),
+)
+def test_valid_shares_unit_str(
+    type_: SecurityTransactionType,
+    security: Security,
+    security_account: SecurityAccount,
+    cash_account: CashAccount,
+    data: st.DataObject,
+) -> None:
+    datetime_ = data.draw(
+        st.datetimes(
+            min_value=cash_account.initial_datetime.replace(tzinfo=None)
+            + timedelta(days=1),
+            timezones=st.just(tzinfo),
+        )
+    )
+    shares = str(
+        data.draw(
+            valid_decimals(min_value=1e-10).filter(
+                lambda x: x % security.shares_unit == 0
+            )
+        )
+    )
+    SecurityTransaction(
+        "Test description",
+        datetime_,
+        type_,
+        security,
+        shares,
+        CashAmount("1000", security.currency),
+        CashAmount("1", security.currency),
+        security_account,
+        cash_account,
+    )
 
 
 @given(
@@ -482,7 +562,7 @@ def test_invalid_cash_account_currency(
     security = get_security()
     assume(cash_account.currency != security.currency)
     currency = security.currency
-    shares = Decimal(data.draw(st.integers(min_value=1, max_value=1e10)))
+    shares = data.draw(st.integers(min_value=1, max_value=1e10))
 
     with pytest.raises(CurrencyError):
         SecurityTransaction(
