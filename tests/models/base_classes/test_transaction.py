@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 
 import pytest
-from hypothesis import given, settings
+from hypothesis import given
 from hypothesis import strategies as st
 
 from src.models.constants import tzinfo
@@ -33,10 +33,9 @@ def test_invalid_description_type(description: str, datetime_: datetime) -> None
 
 
 @given(
-    description=st.text(min_size=257),
+    description=st.text(min_size=257, max_size=1000),
     datetime_=st.datetimes(),
 )
-@settings(max_examples=10)
 def test_invalid_description_value(description: str, datetime_: datetime) -> None:
     with pytest.raises(ValueError, match="description length must be between"):
         ConcreteTransaction(description, datetime_)

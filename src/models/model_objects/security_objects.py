@@ -35,7 +35,6 @@ class SecurityTransactionType(Enum):
     SELL = auto()
 
 
-# TODO: add smallest unit to Security
 class Security(NameMixin, DatetimeCreatedMixin, UUIDMixin):
     NAME_MIN_LENGTH = 1
     NAME_MAX_LENGTH = 64
@@ -49,7 +48,8 @@ class Security(NameMixin, DatetimeCreatedMixin, UUIDMixin):
         symbol: str,
         type_: SecurityType,
         currency: Currency,
-        places: int | None = None,
+        shares_unit: Decimal | int | str,
+        price_places: int | None = None,
     ) -> None:
         super().__init__(name=name)
         self.symbol = symbol
@@ -62,16 +62,26 @@ class Security(NameMixin, DatetimeCreatedMixin, UUIDMixin):
             raise TypeError("Security.currency must be a Currency.")
         self._currency = currency
 
-        if places is None:
+        if not isinstance(shares_unit, (Decimal, int, str)):
+            raise TypeError(
+                "Security.shares_unit must be a Decimal, integer or a string "
+                "containing a number."
+            )
+        _shares_unit = Decimal(shares_unit)
+        if not _shares_unit.is_finite() or _shares_unit <= 0:
+            raise ValueError("Security.shares_unit must be finite and positive.")
+        self._shares_unit = _shares_unit
+
+        if price_places is None:
             self._places = self._currency.places
         else:
-            if not isinstance(places, int):
+            if not isinstance(price_places, int):
                 raise TypeError("Security.places must be an integer or None.")
-            if places < self._currency.places:
+            if price_places < self._currency.places:
                 raise ValueError(
                     "Security.places must not be smaller than Security.currency.places."
                 )
-            self._places = places
+            self._places = price_places
 
         self._price_history: dict[date, CashAmount] = {}
 
@@ -114,8 +124,12 @@ class Security(NameMixin, DatetimeCreatedMixin, UUIDMixin):
         return copy.deepcopy(self._price_history)
 
     @property
-    def places(self) -> int:
+    def price_places(self) -> int:
         return self._places
+
+    @property
+    def shares_unit(self) -> Decimal:
+        return self._shares_unit
 
     def __repr__(self) -> str:
         return f"Security(symbol='{self.symbol}', type={self.type_.name})"
@@ -136,7 +150,9 @@ class Security(NameMixin, DatetimeCreatedMixin, UUIDMixin):
 class SecurityAccount(Account):
     def __init__(self, name: str, parent: AccountGroup | None = None) -> None:
         super().__init__(name, parent)
-        self._securities: defaultdict[Security, Decimal] = defaultdict(lambda: Decimal)
+        self._securities: defaultdict[Security, Decimal] = defaultdict(
+            lambda: Decimal(0)
+        )
         self._transactions: list[SecurityRelatedTransaction] = []
 
     @property
@@ -188,7 +204,7 @@ class SecurityRelatedTransaction(Transaction, ABC):
     ) -> None:
         super().__init__(description, datetime_)
         if not isinstance(security, Security):
-            raise TypeError("SecurityTransaction.security must be a Security.")
+            raise TypeError(f"{self.__class__.__name__}.security must be a Security.")
         self._security = security
         self.shares = shares
 
@@ -203,10 +219,15 @@ class SecurityRelatedTransaction(Transaction, ABC):
     @shares.setter
     def shares(self, value: Decimal) -> None:
         if not isinstance(value, Decimal):
-            raise TypeError("SecurityTransaction.shares must be a Decimal.")
+            raise TypeError(f"{self.__class__.__name__}.shares must be a Decimal.")
         if not value.is_finite() or value <= 0:
             raise ValueError(
-                "SecurityTransaction.shares must be a finite positive number."
+                f"{self.__class__.__name__}.shares must be a finite positive number."
+            )
+        if value % self._security.shares_unit != 0:
+            raise ValueError(
+                f"{self.__class__.__name__}.shares must be a multiple of "
+                f"{self._security.shares_unit}."
             )
         self._shares = value
 

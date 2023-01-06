@@ -85,8 +85,8 @@ def test_get_balance(
     exchange_rate_obj = ExchangeRate(currency_A, currency_B)
     exchange_rate_obj.set_rate(date_, exchange_rate)
     account = SecurityAccount("Test")
-    security_A = Security("A", "A", SecurityType.ETF, currency_A)
-    security_B = Security("B", "B", SecurityType.ETF, currency_B)
+    security_A = Security("A", "A", SecurityType.ETF, currency_A, 1)
+    security_B = Security("B", "B", SecurityType.ETF, currency_B, 1)
     security_A.set_price(date_, CashAmount(price_A, currency_A))
     security_B.set_price(date_, CashAmount(price_B, currency_B))
     account._securities[security_A] += shares_A
