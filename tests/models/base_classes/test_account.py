@@ -10,7 +10,6 @@ from src.models.mixins.name_mixin import NameLengthError
 from src.models.model_objects.account_group import AccountGroup
 from tests.models.test_assets.composites import account_groups, everything_except
 from tests.models.test_assets.concrete_abcs import ConcreteAccount
-from tests.models.test_assets.get_valid_objects import get_concrete_account
 
 
 @given(name=st.text(min_size=1, max_size=32))
@@ -67,3 +66,7 @@ def test_invalid_parent_type(parent: Any) -> None:
         TypeError, match="Account.parent must be an AccountGroup or a None."
     ):
         account.parent = parent
+
+
+def get_concrete_account() -> ConcreteAccount:
+    return ConcreteAccount("Valid Name")

@@ -9,12 +9,13 @@ from hypothesis import strategies as st
 from src.models.base_classes.account import UnrelatedAccountError
 from src.models.constants import tzinfo
 from src.models.model_objects.cash_objects import CashAccount
-from src.models.model_objects.currency import CashAmount, CurrencyError
+from src.models.model_objects.currency import CashAmount, Currency, CurrencyError
 from src.models.model_objects.security_objects import (
     Security,
     SecurityAccount,
     SecurityTransaction,
     SecurityTransactionType,
+    SecurityType,
 )
 from tests.models.test_assets.composites import (
     cash_accounts,
@@ -24,7 +25,6 @@ from tests.models.test_assets.composites import (
     security_accounts,
     valid_decimals,
 )
-from tests.models.test_assets.get_valid_objects import get_security
 
 
 @given(
@@ -538,4 +538,13 @@ def get_buy() -> SecurityTransaction:
         fees,
         security_account,
         cash_account,
+    )
+
+
+def get_security() -> Security:
+    return Security(
+        "Vanguard FTSE All-World UCITS ETF USD Acc",
+        "VWCE.DE",
+        SecurityType.ETF,
+        Currency("EUR", 2),
     )

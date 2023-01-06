@@ -19,7 +19,6 @@ from tests.models.test_assets.composites import (
     securities,
     valid_decimals,
 )
-from tests.models.test_assets.get_valid_objects import get_security
 
 
 @given(
@@ -236,3 +235,12 @@ def test_set_price_invalid_currency(
 @given(security=securities(), other=everything_except(Security))
 def test_eq_different_types(security: Security, other: Any) -> None:
     assert (security == other) is False
+
+
+def get_security() -> Security:
+    return Security(
+        "Vanguard FTSE All-World UCITS ETF USD Acc",
+        "VWCE.DE",
+        SecurityType.ETF,
+        Currency("EUR", 2),
+    )
