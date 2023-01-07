@@ -12,14 +12,18 @@ from src.models.base_classes.account import Account
 from src.models.constants import tzinfo
 from src.models.model_objects.attributes import AttributeType, CategoryType
 from src.models.model_objects.cash_objects import CashAccount, CashTransactionType
-from src.models.model_objects.currency import CashAmount
+from src.models.model_objects.currency import CashAmount, Currency
 from src.models.model_objects.security_objects import (
     SecurityAccount,
     SecurityTransactionType,
     SecurityType,
 )
 from src.models.record_keeper import AlreadyExistsError, DoesNotExistError, RecordKeeper
-from tests.models.test_assets.composites import everything_except, valid_decimals
+from tests.models.test_assets.composites import (
+    currencies,
+    everything_except,
+    valid_decimals,
+)
 
 
 def test_creation() -> None:
@@ -45,6 +49,41 @@ def test_add_currency(code: str, places: int) -> None:
     record_keeper.add_currency(code, places)
     currency = record_keeper.currencies[0]
     assert currency.code == code.upper()
+
+
+@given(
+    currency_A=currencies(),
+    currency_B=currencies(),
+    places=st.integers(min_value=0, max_value=8),
+)
+def test_add_exchange_rate(
+    currency_A: Currency, currency_B: Currency, places: int
+) -> None:
+    assume(currency_A != currency_B)
+    record_keeper = RecordKeeper()
+    record_keeper.add_currency(currency_A.code, places)
+    record_keeper.add_currency(currency_B.code, places)
+    record_keeper.add_exchange_rate(currency_A.code, currency_B.code)
+    assert (
+        str(record_keeper.exchange_rates[0]) == f"{currency_A.code}/{currency_B.code}"
+    )
+
+
+@given(
+    currency_A=currencies(),
+    currency_B=currencies(),
+    places=st.integers(min_value=0, max_value=8),
+)
+def test_add_exchange_rate_already_exists(
+    currency_A: Currency, currency_B: Currency, places: int
+) -> None:
+    assume(currency_A != currency_B)
+    record_keeper = RecordKeeper()
+    record_keeper.add_currency(currency_A.code, places)
+    record_keeper.add_currency(currency_B.code, places)
+    record_keeper.add_exchange_rate(currency_A.code, currency_B.code)
+    with pytest.raises(AlreadyExistsError):
+        record_keeper.add_exchange_rate(currency_A.code, currency_B.code)
 
 
 @given(
