@@ -40,7 +40,7 @@ def test_creation(primary: Currency, secondary: Currency) -> None:
 @given(
     primary=currencies(),
     secondary=currencies(),
-    rate=valid_decimals(min_value=0),
+    rate=valid_decimals(min_value=0.01) | st.integers(min_value=1, max_value=1e6),
     date_=st.dates(),
 )
 def test_set_rate(
@@ -51,6 +51,31 @@ def test_set_rate(
     exchange_rate.set_rate(date_, rate)
     assert exchange_rate.latest_rate == rate
     assert exchange_rate.rate_history[date_] == rate
+
+
+@given(
+    primary=currencies(),
+    secondary=currencies(),
+    rate=valid_decimals(min_value=0.01)
+    | st.integers(min_value=1, max_value=1e6)
+    | st.floats(
+        min_value=1,
+        max_value=1e6,
+        allow_infinity=False,
+        allow_nan=False,
+        allow_subnormal=False,
+    ),
+    date_=st.dates(),
+)
+def test_set_rate_from_str(
+    primary: Currency, secondary: Currency, rate: Decimal, date_: date
+) -> None:
+    assume(primary != secondary)
+    exchange_rate = ExchangeRate(primary, secondary)
+    rate = str(rate)
+    exchange_rate.set_rate(date_, rate)
+    assert exchange_rate.latest_rate == Decimal(rate)
+    assert exchange_rate.rate_history[date_] == Decimal(rate)
 
 
 @given(
@@ -101,7 +126,7 @@ def test_set_rate_invalid_date_type(
 @given(
     primary=currencies(),
     secondary=currencies(),
-    rate=everything_except(Decimal),
+    rate=everything_except((Decimal, int, str)),
     date_=st.dates(),
 )
 def test_set_rate_invalid_rate_type(
@@ -116,7 +141,7 @@ def test_set_rate_invalid_rate_type(
 @given(
     primary=currencies(),
     secondary=currencies(),
-    rate=st.decimals(max_value=-0.01),
+    rate=st.decimals(max_value=0),
     date_=st.dates(),
 )
 def test_set_rate_invalid_rate_value(
@@ -125,6 +150,6 @@ def test_set_rate_invalid_rate_value(
     assume(primary != secondary)
     exchange_rate = ExchangeRate(primary, secondary)
     with pytest.raises(
-        ValueError, match="Parameter 'rate' must be finite and non-negative."
+        ValueError, match="Parameter 'rate' must be finite and positive."
     ):
         exchange_rate.set_rate(date_, rate)
