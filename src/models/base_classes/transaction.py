@@ -39,6 +39,7 @@ class Transaction(DatetimeCreatedMixin, UUIDMixin, ABC):
 
         self._description = value
 
+    # TODO: this property has to be checked differently for refunds
     @property
     def datetime_(self) -> datetime:
         return self._datetime
