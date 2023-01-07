@@ -198,14 +198,19 @@ class ExchangeRate:
     def __str__(self) -> str:
         return f"{self._primary_currency.code}/{self._secondary_currency.code}"
 
-    def set_rate(self, date_: date, rate: Decimal) -> None:
+    # TODO: support int or str rate
+    def set_rate(self, date_: date, rate: Decimal | int | str) -> None:
         if not isinstance(date_, date):
             raise TypeError("Parameter 'date_' must be a date.")
-        if not isinstance(rate, Decimal):
-            raise TypeError("Parameter 'rate' must be a Decimal.")
-        if not rate.is_finite() or rate < 0:
-            raise ValueError("Parameter 'rate' must be finite and non-negative.")
-        self._rate_history[date_] = rate
+        if not isinstance(rate, (Decimal, int, str)):
+            raise TypeError(
+                "Parameter 'rate' must be a Decimal, integer or a string "
+                "containing a number."
+            )
+        _rate = Decimal(rate)
+        if not _rate.is_finite() or _rate <= 0:
+            raise ValueError("Parameter 'rate' must be finite and positive.")
+        self._rate_history[date_] = _rate
 
 
 @total_ordering
