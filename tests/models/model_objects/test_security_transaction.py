@@ -352,16 +352,15 @@ def test_invalid_shares_unit(
     type_=st.sampled_from(SecurityTransactionType),
     security=securities(),
     security_account=security_accounts(),
-    cash_account=cash_accounts(),
     data=st.data(),
 )
 def test_valid_shares_unit_str(
     type_: SecurityTransactionType,
     security: Security,
     security_account: SecurityAccount,
-    cash_account: CashAccount,
     data: st.DataObject,
 ) -> None:
+    cash_account = data.draw(cash_accounts(currency=security.currency))
     datetime_ = data.draw(
         st.datetimes(
             min_value=cash_account.initial_datetime.replace(tzinfo=None)

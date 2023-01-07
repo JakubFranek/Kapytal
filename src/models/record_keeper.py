@@ -40,7 +40,6 @@ class DoesNotExistError(ValueError):
     """Raised when a search for an object finds nothing."""
 
 
-# TODO: add exchange rates
 # TODO: add editing and deleting of objects
 class RecordKeeper:
     def __init__(self) -> None:
