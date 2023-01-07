@@ -77,8 +77,8 @@ def test_creation(  # noqa: CFQ002,TMN001
         datetime_,
         type_,
         account,
-        category_amount_collection,
         payee,
+        category_amount_collection,
         tag_amount_collection,
     )
 
@@ -124,8 +124,8 @@ def test_type_invalid_type(  # noqa: CFQ002,TMN001
             datetime.now(tzinfo),
             type_,
             account,
-            category_amount_collection,
             payee,
+            category_amount_collection,
             tag_amount_collection,
         )
 

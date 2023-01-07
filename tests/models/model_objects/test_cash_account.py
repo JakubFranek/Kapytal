@@ -196,12 +196,15 @@ def test_validate_transaction_invalid_datetime(
 def test_get_balance(currency: Currency, data: st.DataObject) -> None:
     account = data.draw(cash_accounts(currency=currency))
     transactions = data.draw(
-        st.lists(cash_transactions(currency=currency), min_size=1, max_size=5)
+        st.lists(
+            cash_transactions(currency=currency, account=account),
+            min_size=1,
+            max_size=5,
+        )
     )
     datetime_balance_list = [(account.initial_datetime, account.initial_balance)]
     transactions.sort(key=lambda transaction: transaction.datetime_)
     for transaction in transactions:
-        transaction.account = account
         if transaction.type_ == CashTransactionType.INCOME:
             next_balance = datetime_balance_list[-1][1] + transaction.amount
         else:

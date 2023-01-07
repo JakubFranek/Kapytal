@@ -120,10 +120,12 @@ def cash_transactions(
     currency: Currency | None = None,
     min_datetime: datetime = min_datetime,
     max_datetime: datetime = datetime.max,
+    account: CashAccount = None,
 ) -> CashTransaction:
     description = draw(st.text(min_size=0, max_size=256))
     type_ = draw(st.sampled_from(CashTransactionType))
-    account: CashAccount = draw(cash_accounts(currency=currency))
+    if account is None:
+        account = draw(cash_accounts(currency=currency))
     currency = account.currency
     datetime_ = draw(
         st.datetimes(
@@ -160,8 +162,8 @@ def cash_transactions(
         datetime_,
         type_,
         account,
-        category_amount_pairs_list,
         payee,
+        category_amount_pairs_list,
         tag_amount_pairs_list,
     )
 
