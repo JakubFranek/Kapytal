@@ -8,17 +8,13 @@ from enum import Enum, auto
 
 from src.models.base_classes.account import Account, UnrelatedAccountError
 from src.models.base_classes.transaction import Transaction
+from src.models.custom_exceptions import InvalidCharacterError
 from src.models.mixins.datetime_created_mixin import DatetimeCreatedMixin
 from src.models.mixins.name_mixin import NameMixin
 from src.models.mixins.uuid_mixin import UUIDMixin
 from src.models.model_objects.account_group import AccountGroup
 from src.models.model_objects.cash_objects import CashAccount, CashRelatedTransaction
 from src.models.model_objects.currency import CashAmount, Currency, CurrencyError
-
-
-# TODO: maybe put all generic Errors into one module?
-class InvalidCharacterError(ValueError):
-    """Raised when invalid character is passed."""
 
 
 class PriceNotFoundError(ValueError):

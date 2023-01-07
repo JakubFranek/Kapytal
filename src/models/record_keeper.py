@@ -7,6 +7,7 @@ from typing import overload
 
 from src.models.base_classes.account import Account
 from src.models.base_classes.transaction import Transaction
+from src.models.custom_exceptions import AlreadyExistsError
 from src.models.model_objects.account_group import AccountGroup
 from src.models.model_objects.attributes import (
     Attribute,
@@ -30,10 +31,6 @@ from src.models.model_objects.security_objects import (
     SecurityTransfer,
     SecurityType,
 )
-
-
-class AlreadyExistsError(ValueError):
-    """Raised when an attempt is made to create an object which already exists."""
 
 
 class DoesNotExistError(ValueError):
