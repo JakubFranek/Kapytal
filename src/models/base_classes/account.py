@@ -49,4 +49,4 @@ class Account(NameMixin, DatetimeCreatedMixin, UUIDMixin, GetBalanceMixin, ABC):
     @property
     @abstractmethod
     def transactions(self) -> tuple["Transaction", ...]:
-        raise NotImplementedError("Not implemented.")
+        raise NotImplementedError

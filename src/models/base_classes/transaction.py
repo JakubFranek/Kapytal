@@ -52,4 +52,4 @@ class Transaction(DatetimeCreatedMixin, UUIDMixin, ABC):
 
     @abstractmethod
     def is_account_related(self, account: "Account") -> bool:
-        raise NotImplementedError("Not implemented")
+        raise NotImplementedError

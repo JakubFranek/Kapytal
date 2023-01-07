@@ -55,7 +55,7 @@ class CashRelatedTransaction(Transaction, ABC):
 
     @abstractmethod
     def _get_amount(self, account: "CashAccount") -> CashAmount:
-        raise NotImplementedError("Not implemented")
+        raise NotImplementedError
 
 
 class CashTransactionType(Enum):

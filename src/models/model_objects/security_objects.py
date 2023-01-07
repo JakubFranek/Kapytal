@@ -251,7 +251,7 @@ class SecurityRelatedTransaction(Transaction, ABC):
 
     @abstractmethod
     def _get_shares(self, account: SecurityAccount) -> Decimal:
-        raise NotImplementedError("Not implemented")
+        raise NotImplementedError
 
 
 class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
