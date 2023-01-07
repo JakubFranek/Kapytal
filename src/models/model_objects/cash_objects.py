@@ -345,14 +345,15 @@ class CashTransaction(CashRelatedTransaction):
             for category, _ in category_amount_pairs
         ):
             raise InvalidCategoryTypeError("Invalid Category.type_.")
+        if not all(amount.currency == currency for _, amount in category_amount_pairs):
+            raise CurrencyError(
+                "Currency of CashAmounts in category_amount_pairs must match the "
+                "currency of the CashAccount."
+            )
         if not all(amount.is_positive() for _, amount in category_amount_pairs):
             raise ValueError(
                 "Second member of CashTransaction.category_amount_pairs "
                 "tuples must be a positive CashAmount."
-            )
-        if not all(amount.currency == currency for _, amount in category_amount_pairs):
-            raise CurrencyError(
-                "Currency of CashAmounts must match the currency of the CashAccount."
             )
 
     def _validate_tag_amount_pairs(
@@ -373,6 +374,11 @@ class CashTransaction(CashRelatedTransaction):
             raise ValueError(
                 "The type_ of CashTransaction.tag_amount_pairs Attributes must be TAG."
             )
+        if not all(amount.currency == currency for _, amount in tag_amount_pairs):
+            raise CurrencyError(
+                "Currency of CashAmounts in tag_amount_pairs must match the "
+                "currency of the CashAccount."
+            )
         if not all(
             amount.is_positive() and amount <= max_tag_amount
             for _, amount in tag_amount_pairs
@@ -381,10 +387,6 @@ class CashTransaction(CashRelatedTransaction):
                 "Second member of CashTransaction.tag_amount_pairs "
                 "tuples must be a positive CashAmount which "
                 "does not exceed CashTransaction.amount."
-            )
-        if not all(amount.currency == currency for _, amount in tag_amount_pairs):
-            raise CurrencyError(
-                "Currency of CashAmounts must match the currency of the CashAccount."
             )
 
     def _validate_refund(self, refund: "RefundTransaction") -> None:

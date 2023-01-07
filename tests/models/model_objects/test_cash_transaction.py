@@ -22,13 +22,14 @@ from src.models.model_objects.cash_objects import (
     RefundTransaction,
     UnrelatedAccountError,
 )
-from src.models.model_objects.currency import CashAmount
+from src.models.model_objects.currency import CashAmount, Currency, CurrencyError
 from tests.models.test_assets.composites import (
     attributes,
     cash_accounts,
     cash_amounts,
     cash_transactions,
     category_amount_pairs,
+    currencies,
     everything_except,
     tag_amount_pairs,
 )
@@ -113,9 +114,14 @@ def test_type_invalid_type(  # noqa: CFQ002,TMN001
 ) -> None:
     payee = Attribute("Test", AttributeType.PAYEE)
     category_amount_collection = [
-        (Category("Test", CategoryType.INCOME_AND_EXPENSE), Decimal(1))
+        (
+            Category("Test", CategoryType.INCOME_AND_EXPENSE),
+            CashAmount(1, account.currency),
+        )
     ]
-    tag_amount_collection = [(Attribute("Test", AttributeType.TAG), Decimal(1))]
+    tag_amount_collection = [
+        (Attribute("Test", AttributeType.TAG), CashAmount(1, account.currency))
+    ]
     with pytest.raises(
         TypeError, match="CashTransaction.type_ must be a CashTransactionType."
     ):
@@ -136,10 +142,10 @@ def test_account_invalid_type(transaction: CashTransaction, new_account: Any) ->
         TypeError, match="CashTransaction.account must be a CashAccount."
     ):
         transaction.set_data(
-            transaction.type_,
-            new_account,
-            transaction.category_amount_pairs,
-            transaction.tag_amount_pairs,
+            type_=transaction.type_,
+            account=new_account,
+            category_amount_pairs=transaction.category_amount_pairs,
+            tag_amount_pairs=transaction.tag_amount_pairs,
         )
 
 
@@ -163,10 +169,10 @@ def test_payee_invalid_attribute_type(
 def test_tags_invalid_type(transaction: CashTransaction, new_tags: Any) -> None:
     with pytest.raises(TypeError, match="Parameter 'collection' must be a Collection."):
         transaction.set_data(
-            transaction.type_,
-            transaction.account,
-            transaction.category_amount_pairs,
-            new_tags,
+            type_=transaction.type_,
+            account=transaction.account,
+            category_amount_pairs=transaction.category_amount_pairs,
+            tag_amount_pairs=new_tags,
         )
 
 
@@ -181,10 +187,10 @@ def test_tags_invalid_first_member_type(
         match="First element of 'collection' tuples",
     ):
         transaction.set_data(
-            transaction.type_,
-            transaction.account,
-            transaction.category_amount_pairs,
-            new_tags,
+            type_=transaction.type_,
+            account=transaction.account,
+            category_amount_pairs=transaction.category_amount_pairs,
+            tag_amount_pairs=new_tags,
         )
 
 
@@ -197,10 +203,10 @@ def test_tags_invalid_attribute_type(transaction: CashTransaction) -> None:
         match="The type_ of CashTransaction.tag_amount_pairs Attributes must be TAG.",
     ):
         transaction.set_data(
-            transaction.type_,
-            transaction.account,
-            transaction.category_amount_pairs,
-            new_tags,
+            type_=transaction.type_,
+            account=transaction.account,
+            category_amount_pairs=transaction.category_amount_pairs,
+            tag_amount_pairs=new_tags,
         )
 
 
@@ -209,17 +215,17 @@ def test_tags_invalid_second_member_type(
     transaction: CashTransaction, data: st.DataObject
 ) -> None:
     new_tags = [
-        (Attribute("Test", AttributeType.TAG), data.draw(everything_except(Decimal)))
+        (Attribute("Test", AttributeType.TAG), data.draw(everything_except(CashAmount)))
     ]
     with pytest.raises(
         TypeError,
         match="Second element of 'collection' tuples",
     ):
         transaction.set_data(
-            transaction.type_,
-            transaction.account,
-            transaction.category_amount_pairs,
-            new_tags,
+            type_=transaction.type_,
+            account=transaction.account,
+            category_amount_pairs=transaction.category_amount_pairs,
+            tag_amount_pairs=new_tags,
         )
 
 
@@ -246,10 +252,38 @@ def test_tags_invalid_second_member_value(
         match="Second member of CashTransaction.tag_amount_pairs",
     ):
         transaction.set_data(
-            transaction.type_,
-            transaction.account,
-            transaction.category_amount_pairs,
-            new_tags,
+            type_=transaction.type_,
+            account=transaction.account,
+            category_amount_pairs=transaction.category_amount_pairs,
+            tag_amount_pairs=new_tags,
+        )
+
+
+@given(
+    transaction=cash_transactions(),
+    invalid_currency=currencies(),
+    data=st.data(),
+)
+def test_tag_amount_pairs_invalid_amount_currency(
+    transaction: CashTransaction, invalid_currency: Currency, data: st.DataObject
+) -> None:
+    assume(invalid_currency != transaction.currency)
+    max_amount = transaction.amount
+    amount = data.draw(
+        cash_amounts(
+            min_value="0.01", max_value=max_amount.value, currency=invalid_currency
+        ),
+    )
+    tag = data.draw(attributes(type_=AttributeType.TAG))
+    tup = ((tag, amount),)
+    with pytest.raises(
+        CurrencyError, match="Currency of CashAmounts in tag_amount_pairs"
+    ):
+        transaction.set_data(
+            type_=transaction.type_,
+            account=transaction.account,
+            category_amount_pairs=transaction.category_amount_pairs,
+            tag_amount_pairs=tup,
         )
 
 
@@ -362,7 +396,7 @@ def test_category_amount_pairs_invalid_first_member_type(
 
 @given(
     transaction=cash_transactions(),
-    second_member=everything_except(Decimal),
+    second_member=everything_except(CashAmount),
     data=st.data(),
 )
 def test_category_amount_pairs_invalid_second_member_type(
@@ -411,12 +445,14 @@ def test_category_amount_pairs_invalid_category_type(
 
 @given(
     transaction=cash_transactions(),
-    amount=cash_amounts(max_value=0),
     data=st.data(),
 )
 def test_category_amount_pairs_invalid_amount_value(
-    transaction: CashTransaction, amount: Decimal, data: st.DataObject
+    transaction: CashTransaction, data: st.DataObject
 ) -> None:
+    amount = data.draw(
+        cash_amounts(max_value=0, currency=transaction.currency),
+    )
     category = Category(
         "Test", data.draw(st.sampled_from(transaction._valid_category_types))
     )
@@ -425,6 +461,31 @@ def test_category_amount_pairs_invalid_amount_value(
         ValueError,
         match="must be a positive CashAmount.",
     ):
+        transaction.set_data(
+            type_=transaction.type_,
+            account=transaction.account,
+            category_amount_pairs=tup,
+            tag_amount_pairs=transaction.tag_amount_pairs,
+        )
+
+
+@given(
+    transaction=cash_transactions(),
+    invalid_currency=currencies(),
+    data=st.data(),
+)
+def test_category_amount_pairs_invalid_amount_currency(
+    transaction: CashTransaction, invalid_currency: Currency, data: st.DataObject
+) -> None:
+    assume(invalid_currency != transaction.currency)
+    amount = data.draw(
+        cash_amounts(min_value=0.01, currency=invalid_currency),
+    )
+    category = Category(
+        "Test", data.draw(st.sampled_from(transaction._valid_category_types))
+    )
+    tup = ((category, amount),)
+    with pytest.raises(CurrencyError):
         transaction.set_data(
             type_=transaction.type_,
             account=transaction.account,
@@ -457,3 +518,25 @@ def test_invalid_refund_type(transaction: CashTransaction, refund: Any) -> None:
         TypeError, match="Parameter 'refund' must be a RefundTransaction."
     ):
         transaction.add_refund(refund)
+
+
+@given(
+    transaction=cash_transactions(),
+)
+def test_set_data_same_values(
+    transaction: CashTransaction,
+) -> None:
+    prev_type = transaction.type_
+    prev_account = transaction.account
+    prev_category_amount_pairs = transaction.category_amount_pairs
+    prev_tag_amount_pairs = transaction.tag_amount_pairs
+    transaction.set_data(
+        type_=transaction.type_,
+        account=transaction.account,
+        category_amount_pairs=transaction.category_amount_pairs,
+        tag_amount_pairs=transaction.tag_amount_pairs,
+    )
+    assert prev_type == transaction.type_
+    assert prev_account == transaction.account
+    assert prev_category_amount_pairs == transaction.category_amount_pairs
+    assert prev_tag_amount_pairs == transaction.tag_amount_pairs

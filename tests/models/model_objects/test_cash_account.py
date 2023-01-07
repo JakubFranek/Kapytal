@@ -7,6 +7,7 @@ from hypothesis import assume, given
 from hypothesis import strategies as st
 
 from src.models.constants import tzinfo
+from src.models.custom_exceptions import AlreadyExistsError
 from src.models.model_objects.cash_objects import (
     CashAccount,
     CashTransaction,
@@ -213,3 +214,10 @@ def test_get_balance(currency: Currency, data: st.DataObject) -> None:
 
     assert datetime_balance_list[-1][1] == account.get_balance(currency)
     assert set(datetime_balance_list) == set(account.balance_history)
+
+
+@given(transaction=cash_transactions())
+def test_add_transaction_already_exists(transaction: CashTransaction) -> None:
+    account = transaction.account
+    with pytest.raises(AlreadyExistsError):
+        account.add_transaction(transaction)
