@@ -32,6 +32,8 @@ from src.models.model_objects.security_objects import (
 from tests.models.test_assets.concrete_abcs import ConcreteTransaction
 from tests.models.test_assets.constants import max_datetime, min_datetime
 
+# TODO: check if optional params for some composites can help optimize tests
+
 
 def everything_except(excluded_types: type | tuple[type, ...]) -> Any:
     return (

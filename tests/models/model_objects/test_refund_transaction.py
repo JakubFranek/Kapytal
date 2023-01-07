@@ -520,8 +520,8 @@ def get_preloaded_expense() -> CashTransaction:
         datetime_,
         CashTransactionType.EXPENSE,
         account,
-        category_amount_pairs,
         payee,
+        category_amount_pairs,
         tag_amount_pairs,
     )
 

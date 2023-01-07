@@ -231,13 +231,13 @@ class RecordKeeper:
             category_amount_pairs.append(pair)
 
         transaction = CashTransaction(
-            description,
-            datetime_,
-            transaction_type,
-            account,
-            category_amount_pairs,
-            payee,
-            tag_amount_pairs,
+            description=description,
+            datetime_=datetime_,
+            type_=transaction_type,
+            account=account,
+            payee=payee,
+            category_amount_pairs=category_amount_pairs,
+            tag_amount_pairs=tag_amount_pairs,
         )
         self._transactions.append(transaction)
 
@@ -254,12 +254,12 @@ class RecordKeeper:
         account_recipient = self.get_account(account_recipient_path, CashAccount)
 
         transfer = CashTransfer(
-            description,
-            datetime_,
-            account_sender,
-            account_recipient,
-            CashAmount(amount_sent, account_sender.currency),
-            CashAmount(amount_received, account_recipient.currency),
+            description=description,
+            datetime_=datetime_,
+            account_sender=account_sender,
+            account_recipient=account_recipient,
+            amount_sent=CashAmount(amount_sent, account_sender.currency),
+            amount_received=CashAmount(amount_received, account_recipient.currency),
         )
         self._transactions.append(transfer)
 
@@ -295,12 +295,12 @@ class RecordKeeper:
             category_amount_pairs.append(pair)
 
         refund = RefundTransaction(
-            description,
-            datetime_,
-            refunded_account,
-            refunded_transaction,
-            category_amount_pairs,
-            tag_amount_pairs,
+            description=description,
+            datetime_=datetime_,
+            account=refunded_account,
+            refunded_transaction=refunded_transaction,
+            category_amount_pairs=category_amount_pairs,
+            tag_amount_pairs=tag_amount_pairs,
         )
         self._transactions.append(refund)
 
@@ -321,15 +321,15 @@ class RecordKeeper:
         security_account = self.get_account(security_account_path, SecurityAccount)
 
         transaction = SecurityTransaction(
-            description,
-            datetime_,
-            type_,
-            security,
-            shares,
-            CashAmount(price_per_share, cash_account.currency),
-            CashAmount(fees, cash_account.currency),
-            security_account,
-            cash_account,
+            description=description,
+            datetime_=datetime_,
+            type_=type_,
+            security=security,
+            shares=shares,
+            price_per_share=CashAmount(price_per_share, cash_account.currency),
+            fees=CashAmount(fees, cash_account.currency),
+            security_account=security_account,
+            cash_account=cash_account,
         )
         self._transactions.append(transaction)
 
@@ -346,7 +346,12 @@ class RecordKeeper:
         account_sender = self.get_account(account_sender_path, SecurityAccount)
         account_recipient = self.get_account(account_recipient_path, SecurityAccount)
         transaction = SecurityTransfer(
-            description, datetime_, security, shares, account_sender, account_recipient
+            description=description,
+            datetime_=datetime_,
+            security=security,
+            shares=shares,
+            account_sender=account_sender,
+            account_recipient=account_recipient,
         )
         self._transactions.append(transaction)
 

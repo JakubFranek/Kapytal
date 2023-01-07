@@ -135,7 +135,12 @@ def test_account_invalid_type(transaction: CashTransaction, new_account: Any) ->
     with pytest.raises(
         TypeError, match="CashTransaction.account must be a CashAccount."
     ):
-        transaction.account = new_account
+        transaction.set_data(
+            transaction.type_,
+            new_account,
+            transaction.category_amount_pairs,
+            transaction.tag_amount_pairs,
+        )
 
 
 @given(transaction=cash_transactions(), new_payee=everything_except(Attribute))
@@ -157,7 +162,12 @@ def test_payee_invalid_attribute_type(
 @given(transaction=cash_transactions(), new_tags=everything_except(Collection))
 def test_tags_invalid_type(transaction: CashTransaction, new_tags: Any) -> None:
     with pytest.raises(TypeError, match="Parameter 'collection' must be a Collection."):
-        transaction.tag_amount_pairs = new_tags
+        transaction.set_data(
+            transaction.type_,
+            transaction.account,
+            transaction.category_amount_pairs,
+            new_tags,
+        )
 
 
 @given(transaction=cash_transactions(), data=st.data())
@@ -170,7 +180,12 @@ def test_tags_invalid_first_member_type(
         TypeError,
         match="First element of 'collection' tuples",
     ):
-        transaction.tag_amount_pairs = new_tags
+        transaction.set_data(
+            transaction.type_,
+            transaction.account,
+            transaction.category_amount_pairs,
+            new_tags,
+        )
 
 
 @given(transaction=cash_transactions())
@@ -181,7 +196,12 @@ def test_tags_invalid_attribute_type(transaction: CashTransaction) -> None:
         ValueError,
         match="The type_ of CashTransaction.tag_amount_pairs Attributes must be TAG.",
     ):
-        transaction.tag_amount_pairs = new_tags
+        transaction.set_data(
+            transaction.type_,
+            transaction.account,
+            transaction.category_amount_pairs,
+            new_tags,
+        )
 
 
 @given(transaction=cash_transactions(), data=st.data())
@@ -195,7 +215,12 @@ def test_tags_invalid_second_member_type(
         TypeError,
         match="Second element of 'collection' tuples",
     ):
-        transaction.tag_amount_pairs = new_tags
+        transaction.set_data(
+            transaction.type_,
+            transaction.account,
+            transaction.category_amount_pairs,
+            new_tags,
+        )
 
 
 @given(transaction=cash_transactions(), data=st.data())
@@ -220,7 +245,12 @@ def test_tags_invalid_second_member_value(
         ValueError,
         match="Second member of CashTransaction.tag_amount_pairs",
     ):
-        transaction.tag_amount_pairs = new_tags
+        transaction.set_data(
+            transaction.type_,
+            transaction.account,
+            transaction.category_amount_pairs,
+            new_tags,
+        )
 
 
 @given(transaction=cash_transactions(), data=st.data())
@@ -229,7 +259,12 @@ def test_change_account(transaction: CashTransaction, data: st.DataObject) -> No
     previous_account = transaction.account
     assert transaction in previous_account.transactions
     assert transaction not in new_account.transactions
-    transaction.account = new_account
+    transaction.set_data(
+        type_=transaction.type_,
+        account=new_account,
+        category_amount_pairs=transaction.category_amount_pairs,
+        tag_amount_pairs=transaction.tag_amount_pairs,
+    )
     assert transaction in new_account.transactions
     assert transaction not in previous_account.transactions
 
@@ -277,7 +312,12 @@ def test_category_amount_pairs_invalid_type(
     transaction: CashTransaction, category_amount_pairs: Any
 ) -> None:
     with pytest.raises(TypeError, match="Parameter 'collection' must be a Collection."):
-        transaction.tag_amount_pairs = category_amount_pairs
+        transaction.set_data(
+            type_=transaction.type_,
+            account=transaction.account,
+            category_amount_pairs=category_amount_pairs,
+            tag_amount_pairs=transaction.tag_amount_pairs,
+        )
 
 
 @given(
@@ -291,7 +331,12 @@ def test_category_amount_pairs_invalid_length(
         ValueError,
         match="Length of 'collection' must be",
     ):
-        transaction.category_amount_pairs = category_amount_pairs
+        transaction.set_data(
+            type_=transaction.type_,
+            account=transaction.account,
+            category_amount_pairs=category_amount_pairs,
+            tag_amount_pairs=transaction.tag_amount_pairs,
+        )
 
 
 @given(
@@ -307,7 +352,12 @@ def test_category_amount_pairs_invalid_first_member_type(
         TypeError,
         match="First element of 'collection' tuples",
     ):
-        transaction.tag_amount_pairs = tup
+        transaction.set_data(
+            type_=transaction.type_,
+            account=transaction.account,
+            category_amount_pairs=tup,
+            tag_amount_pairs=transaction.tag_amount_pairs,
+        )
 
 
 @given(
@@ -326,7 +376,12 @@ def test_category_amount_pairs_invalid_second_member_type(
         TypeError,
         match="Second element of 'collection' tuples",
     ):
-        transaction.category_amount_pairs = tup
+        transaction.set_data(
+            type_=transaction.type_,
+            account=transaction.account,
+            category_amount_pairs=tup,
+            tag_amount_pairs=transaction.tag_amount_pairs,
+        )
 
 
 @given(
@@ -346,7 +401,12 @@ def test_category_amount_pairs_invalid_category_type(
         InvalidCategoryTypeError,
         match="Invalid Category.type_.",
     ):
-        transaction.category_amount_pairs = tup
+        transaction.set_data(
+            type_=transaction.type_,
+            account=transaction.account,
+            category_amount_pairs=tup,
+            tag_amount_pairs=transaction.tag_amount_pairs,
+        )
 
 
 @given(
@@ -365,7 +425,12 @@ def test_category_amount_pairs_invalid_amount_value(
         ValueError,
         match="must be a positive CashAmount.",
     ):
-        transaction.category_amount_pairs = tup
+        transaction.set_data(
+            type_=transaction.type_,
+            account=transaction.account,
+            category_amount_pairs=tup,
+            tag_amount_pairs=transaction.tag_amount_pairs,
+        )
 
 
 @given(transaction=cash_transactions())
