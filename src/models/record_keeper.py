@@ -104,6 +104,7 @@ class RecordKeeper:
     def add_exchange_rate(
         self, primary_currency_code: str, secondary_currency_code: str
     ) -> None:
+        # TODO: check if already exists
         primary_currency = self.get_currency(primary_currency_code)
         secondary_currency = self.get_currency(secondary_currency_code)
         exchange_rate = ExchangeRate(primary_currency, secondary_currency)

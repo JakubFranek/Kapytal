@@ -198,7 +198,6 @@ class ExchangeRate:
     def __str__(self) -> str:
         return f"{self._primary_currency.code}/{self._secondary_currency.code}"
 
-    # TODO: support int or str rate
     def set_rate(self, date_: date, rate: Decimal | int | str) -> None:
         if not isinstance(date_, date):
             raise TypeError("Parameter 'date_' must be a date.")

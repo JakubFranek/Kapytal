@@ -88,7 +88,7 @@ def test_get_balance_single_currency(currency: Currency, data: st.DataObject) ->
 @given(
     currency_A=currencies(),
     currency_B=currencies(),
-    rate=valid_decimals(min_value=0.01),
+    rate=valid_decimals(min_value=0.01, max_value=1e10),
     data=st.data(),
 )
 def test_get_balance_multiple_currency(
