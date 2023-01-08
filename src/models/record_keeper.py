@@ -256,8 +256,8 @@ class RecordKeeper:
         transfer = CashTransfer(
             description=description,
             datetime_=datetime_,
-            account_sender=account_sender,
-            account_recipient=account_recipient,
+            sender=account_sender,
+            recipient=account_recipient,
             amount_sent=CashAmount(amount_sent, account_sender.currency),
             amount_received=CashAmount(amount_received, account_recipient.currency),
         )

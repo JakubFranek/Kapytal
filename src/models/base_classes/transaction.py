@@ -35,7 +35,6 @@ class Transaction(DatetimeCreatedMixin, UUIDMixin, ABC):
             )
 
     def _set_description(self, value: str) -> None:
-        self._validate_description(value)
         self._description = value
 
     @property
@@ -47,10 +46,20 @@ class Transaction(DatetimeCreatedMixin, UUIDMixin, ABC):
             raise TypeError(f"{self.__class__.__name__}.datetime_ must be a datetime.")
 
     def _set_datetime(self, value: datetime) -> None:
-        self._validate_datetime(value)
         self._datetime = value
 
-    def set_attributes(self, description: str, datetime_: datetime) -> None:
+    def set_attributes(
+        self, description: str | None = None, datetime_: datetime | None = None
+    ) -> None:
+        """Validates and sets provided attributes if they are all valid.
+        Parameters set to None keep their value."""
+
+        if description is None:
+            description = self._description
+        if datetime_ is None:
+            datetime_ = self._datetime
+        self._validate_description(description)
+        self._validate_datetime(datetime_)
         self._set_description(description)
         self._set_datetime(datetime_)
 

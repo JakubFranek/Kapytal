@@ -1,5 +1,6 @@
 import uuid
 from datetime import datetime
+from types import NoneType
 
 import pytest
 from hypothesis import given
@@ -24,7 +25,7 @@ def test_creation(description: str, datetime_: datetime) -> None:
 
 
 @given(
-    description=everything_except(str),
+    description=everything_except((str, NoneType)),
     datetime_=st.datetimes(),
 )
 def test_invalid_description_type(description: str, datetime_: datetime) -> None:
@@ -42,8 +43,20 @@ def test_invalid_description_value(description: str, datetime_: datetime) -> Non
 
 
 @given(
-    description=st.text(min_size=0, max_size=256), datetime_=everything_except(datetime)
+    description=st.text(min_size=0, max_size=256),
+    datetime_=everything_except((datetime, NoneType)),
 )
 def test_invalid_datetime_type(description: str, datetime_: datetime) -> None:
     with pytest.raises(TypeError, match="Transaction.datetime_ must be a datetime."):
         ConcreteTransaction(description, datetime_)
+
+
+@given(
+    description=st.text(min_size=0, max_size=256),
+    datetime_=st.datetimes(),
+)
+def test_set_attributes_same_values(description: str, datetime_: datetime) -> None:
+    transaction = ConcreteTransaction(description, datetime_)
+    transaction.set_attributes()
+    assert transaction.description == description
+    assert transaction.datetime_ == datetime_

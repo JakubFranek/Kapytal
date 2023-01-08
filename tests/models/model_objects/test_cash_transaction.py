@@ -357,7 +357,8 @@ def test_category_amount_pairs_invalid_second_member_type(
     transaction: CashTransaction, second_member: Any, data: st.DataObject
 ) -> None:
     first_member = Category(
-        "Test", data.draw(st.sampled_from(transaction._valid_category_types))
+        "Test",
+        data.draw(st.sampled_from(transaction._get_valid_category_types())),
     )
     tup = ((first_member, second_member),)
     with pytest.raises(
@@ -398,7 +399,8 @@ def test_category_amount_pairs_invalid_amount_value(
         cash_amounts(max_value=0, currency=transaction.currency),
     )
     category = Category(
-        "Test", data.draw(st.sampled_from(transaction._valid_category_types))
+        "Test",
+        data.draw(st.sampled_from(transaction._get_valid_category_types())),
     )
     tup = ((category, amount),)
     with pytest.raises(
@@ -421,7 +423,8 @@ def test_category_amount_pairs_invalid_amount_currency(
         cash_amounts(min_value=0.01, currency=invalid_currency),
     )
     category = Category(
-        "Test", data.draw(st.sampled_from(transaction._valid_category_types))
+        "Test",
+        data.draw(st.sampled_from(transaction._get_valid_category_types())),
     )
     tup = ((category, amount),)
     with pytest.raises(CurrencyError):
@@ -460,11 +463,17 @@ def test_invalid_refund_type(transaction: CashTransaction, refund: Any) -> None:
 def test_set_data_same_values(
     transaction: CashTransaction,
 ) -> None:
+    prev_description = transaction.description
+    prev_datetime = transaction.datetime_
+    prev_payee = transaction.payee
     prev_type = transaction.type_
     prev_account = transaction.account
     prev_category_amount_pairs = transaction.category_amount_pairs
     prev_tag_amount_pairs = transaction.tag_amount_pairs
     transaction.set_attributes()
+    assert prev_description == transaction.description
+    assert prev_datetime == transaction.datetime_
+    assert prev_payee == transaction.payee
     assert prev_type == transaction.type_
     assert prev_account == transaction.account
     assert prev_category_amount_pairs == transaction.category_amount_pairs

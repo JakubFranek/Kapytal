@@ -150,7 +150,7 @@ def test_validate_transaction_invalid_account(
     account: CashAccount, transaction: CashTransaction, transfer: CashTransfer
 ) -> None:
     assume(transaction.account != account)
-    assume(transfer.account_recipient != account and transfer.account_sender != account)
+    assume(transfer.recipient != account and transfer.sender != account)
 
     with pytest.raises(UnrelatedAccountError):
         account._validate_transaction(transaction)
@@ -174,9 +174,9 @@ def test_validate_transaction_invalid_datetime(
 ) -> None:
     transaction._account = account
     if switch:
-        transfer._account_recipient = account
+        transfer._recipient = account
     else:
-        transfer._account_sender = account
+        transfer._sender = account
     invalid_datetime = data.draw(
         st.datetimes(
             max_value=account.initial_datetime.replace(tzinfo=None)

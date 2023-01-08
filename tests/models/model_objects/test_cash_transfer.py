@@ -1,4 +1,5 @@
 from datetime import datetime
+from types import NoneType
 from typing import Any
 
 import pytest
@@ -57,44 +58,37 @@ def test_creation(
 
     assert transfer.description == description
     assert transfer.datetime_ == datetime_
-    assert transfer.account_sender == account_sender
-    assert transfer.account_recipient == account_recipient
+    assert transfer.sender == account_sender
+    assert transfer.recipient == account_recipient
     assert transfer.amount_sent == amount_sent
     assert transfer.amount_received == amount_received
     assert transfer.__repr__() == (
         f"CashTransfer(sent={transfer.amount_sent}, "
-        f"sender='{transfer.account_sender.name}', "
+        f"sender='{transfer.sender.name}', "
         f"received={transfer.amount_received}, "
-        f"recipient='{transfer.account_recipient.name}', "
+        f"recipient='{transfer.recipient.name}', "
         f"{transfer.datetime_.strftime('%Y-%m-%d')})"
     )
     assert dt_created_diff.seconds < 1
 
 
-@given(transfer=cash_transfers(), new_amount=everything_except(CashAmount))
+@given(transfer=cash_transfers(), new_amount=everything_except((CashAmount, NoneType)))
 def test_amount_sent_invalid_type(transfer: CashTransfer, new_amount: Any) -> None:
-    with pytest.raises(
-        TypeError, match="CashTransfer.amount_sent must be a CashAmount."
-    ):
-        transfer.amount_sent = new_amount
+    with pytest.raises(TypeError, match="CashTransfer amounts must be CashAmounts."):
+        transfer.set_attributes(amount_sent=new_amount)
 
 
 @given(transfer=cash_transfers(), data=st.data())
 def test_amount_sent_invalid_value(transfer: CashTransfer, data: st.DataObject) -> None:
     new_amount = data.draw(cash_amounts(max_value="-0.01"))
-    with pytest.raises(
-        ValueError,
-        match="CashTransfer.amount_sent must be a positive CashAmount.",
-    ):
-        transfer.amount_sent = new_amount
+    with pytest.raises(ValueError, match="CashTransfer amounts must be positive."):
+        transfer.set_attributes(amount_sent=new_amount)
 
 
-@given(transfer=cash_transfers(), new_amount=everything_except(CashAmount))
+@given(transfer=cash_transfers(), new_amount=everything_except((CashAmount, NoneType)))
 def test_amount_received_invalid_type(transfer: CashTransfer, new_amount: Any) -> None:
-    with pytest.raises(
-        TypeError, match="CashTransfer.amount_received must be a CashAmount."
-    ):
-        transfer.amount_received = new_amount
+    with pytest.raises(TypeError, match="CashTransfer amounts must be CashAmounts."):
+        transfer.set_attributes(amount_received=new_amount)
 
 
 @given(transfer=cash_transfers(), data=st.data())
@@ -102,11 +96,8 @@ def test_amount_received_invalid_value(
     transfer: CashTransfer, data: st.DataObject
 ) -> None:
     new_amount = data.draw(cash_amounts(max_value="-0.01"))
-    with pytest.raises(
-        ValueError,
-        match="CashTransfer.amount_received must be a positive CashAmount.",
-    ):
-        transfer.amount_received = new_amount
+    with pytest.raises(ValueError, match="CashTransfer amounts must be positive."):
+        transfer.set_attributes(amount_received=new_amount)
 
 
 @given(transfer=cash_transfers())
@@ -114,8 +105,8 @@ def test_get_amount_for_account(transfer: CashTransfer) -> None:
     expected_sender_amount = -transfer.amount_sent
     expected_recipient_amount = transfer.amount_received
 
-    result_sender = transfer.get_amount(transfer.account_sender)
-    result_recipient = transfer.get_amount(transfer.account_recipient)
+    result_sender = transfer.get_amount(transfer.sender)
+    result_recipient = transfer.get_amount(transfer.recipient)
 
     assert result_sender == expected_sender_amount
     assert result_recipient == expected_recipient_amount
@@ -148,51 +139,47 @@ def test_get_amount_invalid_account_value(
     data=st.data(),
 )
 def test_set_accounts(transfer: CashTransfer, data: st.DataObject) -> None:
-    new_sender = data.draw(cash_accounts(currency=transfer.account_sender.currency))
-    new_recipient = data.draw(
-        cash_accounts(currency=transfer.account_recipient.currency)
-    )
+    new_sender = data.draw(cash_accounts(currency=transfer.sender.currency))
+    new_recipient = data.draw(cash_accounts(currency=transfer.recipient.currency))
 
-    current_sender = transfer.account_sender
-    current_recipient = transfer.account_recipient
+    current_sender = transfer.sender
+    current_recipient = transfer.recipient
 
-    assert transfer.account_sender != new_sender
-    assert transfer.account_recipient != new_recipient
+    assert transfer.sender != new_sender
+    assert transfer.recipient != new_recipient
     assert transfer in current_sender.transactions
     assert transfer in current_recipient.transactions
     assert transfer not in new_sender.transactions
     assert transfer not in new_recipient.transactions
 
-    transfer.set_accounts(new_sender, new_recipient)
+    transfer.set_attributes(sender=new_sender, recipient=new_recipient)
 
-    assert transfer.account_sender == new_sender
-    assert transfer.account_recipient == new_recipient
+    assert transfer.sender == new_sender
+    assert transfer.recipient == new_recipient
     assert transfer not in current_sender.transactions
     assert transfer not in current_recipient.transactions
     assert transfer in new_sender.transactions
     assert transfer in new_recipient.transactions
 
 
-@given(transfer=cash_transfers(), new_sender=everything_except(CashAccount))
+@given(transfer=cash_transfers(), new_sender=everything_except((CashAccount, NoneType)))
 def test_set_accounts_invalid_sender_type(
     transfer: CashTransfer, new_sender: Any
 ) -> None:
-    current_recipient = transfer.account_recipient
-    with pytest.raises(
-        TypeError, match="Parameter 'account_sender' must be a CashAccount."
-    ):
-        transfer.set_accounts(new_sender, current_recipient)
+    current_recipient = transfer.recipient
+    with pytest.raises(TypeError, match="Parameter 'sender' must be a CashAccount."):
+        transfer.set_attributes(sender=new_sender, recipient=current_recipient)
 
 
-@given(transfer=cash_transfers(), new_recipient=everything_except(CashAccount))
+@given(
+    transfer=cash_transfers(), new_recipient=everything_except((CashAccount, NoneType))
+)
 def test_set_accounts_invalid_recipient_type(
     transfer: CashTransfer, new_recipient: Any
 ) -> None:
-    current_sender = transfer.account_sender
-    with pytest.raises(
-        TypeError, match="Parameter 'account_recipient' must be a CashAccount."
-    ):
-        transfer.set_accounts(current_sender, new_recipient)
+    current_sender = transfer.sender
+    with pytest.raises(TypeError, match="Parameter 'recipient' must be a CashAccount."):
+        transfer.set_attributes(sender=current_sender, recipient=new_recipient)
 
 
 @given(transfer=cash_transfers(), new_account=cash_accounts())
@@ -200,4 +187,21 @@ def test_set_accounts_same_account(
     transfer: CashTransfer, new_account: CashAccount
 ) -> None:
     with pytest.raises(TransferSameAccountError):
-        transfer.set_accounts(new_account, new_account)
+        transfer.set_attributes(sender=new_account, recipient=new_account)
+
+
+@given(transfer=cash_transfers())
+def test_set_attributes_same_values(transfer: CashTransfer) -> None:
+    prev_description = transfer.description
+    prev_datetime = transfer.datetime_
+    prev_sender = transfer.sender
+    prev_recipient = transfer.recipient
+    prev_amount_sent = transfer.amount_sent
+    prev_amount_received = transfer.amount_received
+    transfer.set_attributes()
+    assert prev_description == transfer.description
+    assert prev_datetime == transfer.datetime_
+    assert prev_sender == transfer.sender
+    assert prev_recipient == transfer.recipient
+    assert prev_amount_sent == transfer.amount_sent
+    assert prev_amount_received == transfer.amount_received

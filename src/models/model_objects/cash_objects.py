@@ -246,12 +246,6 @@ class CashTransaction(CashRelatedTransaction):
         return ", ".join(tag_names)
 
     @property
-    def _valid_category_types(self) -> tuple[CategoryType, ...]:
-        if self.type_ == CashTransactionType.INCOME:
-            return (CategoryType.INCOME, CategoryType.INCOME_AND_EXPENSE)
-        return (CategoryType.EXPENSE, CategoryType.INCOME_AND_EXPENSE)
-
-    @property
     def refunds(self) -> tuple["RefundTransaction", ...]:
         return tuple(self._refunds)
 
@@ -287,8 +281,6 @@ class CashTransaction(CashRelatedTransaction):
         description: str | None = None,
         datetime_: datetime | None = None,
     ) -> None:
-        """Validates and subsequently sets provided attributes if they are all valid.
-        Parameters set to None keep their value."""
         if type_ is None:
             type_ = self._type
         if account is None:
@@ -318,11 +310,7 @@ class CashTransaction(CashRelatedTransaction):
             raise TypeError("CashTransaction.account must be a CashAccount.")
         currency = account.currency
 
-        valid_category_types = (
-            (CategoryType.INCOME, CategoryType.INCOME_AND_EXPENSE)
-            if type_ == CashTransactionType.INCOME
-            else (CategoryType.EXPENSE, CategoryType.INCOME_AND_EXPENSE)
-        )
+        valid_category_types = self._get_valid_category_types(type_)
 
         self._validate_category_amount_pairs(
             category_amount_pairs=category_amount_pairs,
@@ -425,6 +413,16 @@ class CashTransaction(CashRelatedTransaction):
                 "Supplied RefundTransaction is not related to this CashTransaction."
             )
 
+    def _get_valid_category_types(
+        self, type_: CashTransactionType | None = None
+    ) -> tuple[CategoryType, ...]:
+        if type_ is None:
+            type_ = self._type
+
+        if type_ == CashTransactionType.INCOME:
+            return (CategoryType.INCOME, CategoryType.INCOME_AND_EXPENSE)
+        return (CategoryType.EXPENSE, CategoryType.INCOME_AND_EXPENSE)
+
     def _get_amount(self, account: CashAccount) -> CashAmount:  # noqa: U100
         if self.type_ == CashTransactionType.INCOME:
             return self.amount
@@ -436,94 +434,127 @@ class CashTransfer(CashRelatedTransaction):
         self,
         description: str,
         datetime_: datetime,
-        account_sender: CashAccount,
-        account_recipient: CashAccount,
+        sender: CashAccount,
+        recipient: CashAccount,
         amount_sent: CashAmount,
         amount_received: CashAmount,
     ) -> None:
         super().__init__()
-        self._set_description(description)
-        self._set_datetime(datetime_)
-        self.amount_sent = amount_sent
-        self.amount_received = amount_received
-        self.set_accounts(account_sender, account_recipient)
+        self.set_attributes(
+            description=description,
+            datetime_=datetime_,
+            amount_sent=amount_sent,
+            amount_received=amount_received,
+            sender=sender,
+            recipient=recipient,
+        )
 
     @property
-    def account_sender(self) -> CashAccount:
-        return self._account_sender
+    def sender(self) -> CashAccount:
+        return self._sender
 
     @property
-    def account_recipient(self) -> CashAccount:
-        return self._account_recipient
+    def recipient(self) -> CashAccount:
+        return self._recipient
 
     @property
     def amount_sent(self) -> CashAmount:
         return self._amount_sent
 
-    @amount_sent.setter
-    def amount_sent(self, amount: CashAmount) -> None:
-        if not isinstance(amount, CashAmount):
-            raise TypeError("CashTransfer.amount_sent must be a CashAmount.")
-        if amount.value <= 0:
-            raise ValueError("CashTransfer.amount_sent must be a positive CashAmount.")
-        self._amount_sent = amount
-
     @property
     def amount_received(self) -> CashAmount:
         return self._amount_received
 
-    @amount_received.setter
-    def amount_received(self, amount: CashAmount) -> None:
-        if not isinstance(amount, CashAmount):
-            raise TypeError("CashTransfer.amount_received must be a CashAmount.")
-        if amount.value <= 0:
-            raise ValueError(
-                "CashTransfer.amount_received must be a positive CashAmount."
-            )
-        self._amount_received = amount
-
     def __repr__(self) -> str:
         return (
             f"CashTransfer(sent={self.amount_sent}, "
-            f"sender='{self.account_sender.name}', "
+            f"sender='{self.sender.name}', "
             f"received={self.amount_received}, "
-            f"recipient='{self.account_recipient.name}', "
+            f"recipient='{self.recipient.name}', "
             f"{self.datetime_.strftime('%Y-%m-%d')})"
         )
 
-    def set_accounts(
-        self, account_sender: CashAccount, account_recipient: CashAccount
+    def is_account_related(self, account: Account) -> bool:
+        return self.sender == account or self.recipient == account
+
+    def set_attributes(
+        self,
+        *,
+        description: str | None = None,
+        datetime_: datetime | None = None,
+        amount_sent: CashAmount | None = None,
+        amount_received: CashAmount | None = None,
+        sender: CashAccount | None = None,
+        recipient: CashAccount | None = None,
     ) -> None:
-        if not isinstance(account_sender, CashAccount):
-            raise TypeError("Parameter 'account_sender' must be a CashAccount.")
-        if not isinstance(account_recipient, CashAccount):
-            raise TypeError("Parameter 'account_recipient' must be a CashAccount.")
-        if account_recipient == account_sender:
+        if description is None:
+            description = self._description
+        if datetime_ is None:
+            datetime_ = self._datetime
+        if amount_sent is None:
+            amount_sent = self._amount_sent
+        if amount_received is None:
+            amount_received = self._amount_received
+        if sender is None:
+            sender = self._sender
+        if recipient is None:
+            recipient = self._recipient
+
+        self._validate_description(description)
+        self._validate_datetime(datetime_)
+        self._validate_amount(amount_sent)
+        self._validate_amount(amount_received)
+        self._validate_accounts(sender, recipient)
+
+        self._set_description(description)
+        self._set_datetime(datetime_)
+        self._amount_sent = amount_sent
+        self._amount_received = amount_received
+        self._set_accounts(sender, recipient)
+
+    def _set_accounts(self, sender: CashAccount, recipient: CashAccount) -> None:
+        add_sender = True
+        add_recipient = True
+
+        if hasattr(self, "_sender"):
+            if self._sender != sender:
+                self._sender.remove_transaction(self)
+            else:
+                add_sender = False
+        if hasattr(self, "_recipient"):
+            if self._recipient != recipient:
+                self._recipient.remove_transaction(self)
+            else:
+                add_recipient = False
+
+        self._sender = sender
+        self._recipient = recipient
+
+        if add_sender:
+            self._sender.add_transaction(self)
+        if add_recipient:
+            self._recipient.add_transaction(self)
+
+    def _validate_accounts(self, sender: CashAccount, recipient: CashAccount) -> None:
+        if not isinstance(sender, CashAccount):
+            raise TypeError("Parameter 'sender' must be a CashAccount.")
+        if not isinstance(recipient, CashAccount):
+            raise TypeError("Parameter 'recipient' must be a CashAccount.")
+        if recipient == sender:
             raise TransferSameAccountError(
-                "Parameters 'account_sender' and 'account_recipient' must be "
-                "different CashAccounts."
+                "Parameters 'sender' and 'recipient' must be different CashAccounts."
             )
 
-        # Remove self from "old" accounts
-        if hasattr(self, "_account_recipient"):
-            self._account_recipient.remove_transaction(self)
-        if hasattr(self, "_account_sender"):
-            self._account_sender.remove_transaction(self)
-
-        self._account_recipient = account_recipient
-        self._account_sender = account_sender
-
-        # Add self to "new" accounts
-        self._account_recipient.add_transaction(self)
-        self._account_sender.add_transaction(self)
+    def _validate_amount(self, amount: CashAmount) -> None:
+        if not isinstance(amount, CashAmount):
+            raise TypeError("CashTransfer amounts must be CashAmounts.")
+        if not amount.is_positive():
+            raise ValueError("CashTransfer amounts must be positive.")
 
     def _get_amount(self, account: CashAccount) -> CashAmount:
-        if self.account_recipient == account:
+        if self.recipient == account:
             return self.amount_received
         return -self.amount_sent
-
-    def is_account_related(self, account: Account) -> bool:
-        return self.account_sender == account or self.account_recipient == account
 
 
 class RefundTransaction(CashRelatedTransaction):
