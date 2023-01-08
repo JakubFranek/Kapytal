@@ -1,9 +1,11 @@
 from datetime import datetime, timedelta
 from decimal import Decimal
+from types import NoneType
 from typing import Any
 
 import pytest
 from hypothesis import assume, given
+from hypothesis import strategies as st
 
 from src.models.constants import tzinfo
 from src.models.model_objects.attributes import (
@@ -92,7 +94,9 @@ def test_unrelated_refund_transaction() -> None:
         transaction.add_refund(refund)
 
 
-@given(transaction=everything_except(CashTransaction), account=cash_accounts())
+@given(
+    transaction=everything_except((CashTransaction, NoneType)), account=cash_accounts()
+)
 def test_invalid_refunded_transaction_type(
     transaction: Any, account: CashAccount
 ) -> None:
@@ -120,7 +124,7 @@ def test_invalid_datetime_value() -> None:
         )
 
 
-@given(account=everything_except(CashAccount))
+@given(account=everything_except((CashAccount, NoneType)))
 def test_invalid_account_type(account: Any) -> None:
     refunded_transaction = get_preloaded_expense()
     datetime_ = refunded_transaction.datetime_ + timedelta(days=1)
@@ -462,6 +466,42 @@ def test_remove_refund() -> None:
     refunded_transaction.remove_refund(refund)
 
     assert refund not in refunded_transaction.refunds
+
+
+def test_set_attributes_same_values() -> None:
+    refund = get_preloaded_refund()
+    prev_description = refund.description
+    prev_datetime = refund.datetime_
+    prev_account = refund.account
+    prev_refunded_transaction = refund.refunded_transaction
+    prev_category_amount_pairs = refund.category_amount_pairs
+    prev_tag_amount_pairs = refund.tag_amount_pairs
+    refund.set_attributes()
+    assert prev_description == refund.description
+    assert prev_datetime == refund.datetime_
+    assert prev_account == refund.account
+    assert prev_refunded_transaction == refund.refunded_transaction
+    assert prev_category_amount_pairs == refund.category_amount_pairs
+    assert prev_tag_amount_pairs == refund.tag_amount_pairs
+
+
+@given(data=st.data())
+def test_change_account(data: st.DataObject) -> None:
+    refund = get_preloaded_refund()
+    old_account = refund.account
+    new_account = data.draw(
+        cash_accounts(
+            max_datetime=refund.datetime_.replace(tzinfo=None), currency=refund.currency
+        )
+    )
+
+    assert refund in old_account.transactions
+    assert refund not in new_account.transactions
+
+    refund.set_attributes(account=new_account)
+
+    assert refund in new_account.transactions
+    assert refund not in old_account.transactions
 
 
 def get_preloaded_refund() -> RefundTransaction:

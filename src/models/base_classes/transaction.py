@@ -34,9 +34,6 @@ class Transaction(DatetimeCreatedMixin, UUIDMixin, ABC):
                 f"{Transaction.DESCRIPTION_MAX_LENGTH} characters."
             )
 
-    def _set_description(self, value: str) -> None:
-        self._description = value
-
     @property
     def datetime_(self) -> datetime:
         return self._datetime
@@ -44,9 +41,6 @@ class Transaction(DatetimeCreatedMixin, UUIDMixin, ABC):
     def _validate_datetime(self, value: datetime) -> None:
         if not isinstance(value, datetime):
             raise TypeError(f"{self.__class__.__name__}.datetime_ must be a datetime.")
-
-    def _set_datetime(self, value: datetime) -> None:
-        self._datetime = value
 
     def set_attributes(
         self, description: str | None = None, datetime_: datetime | None = None
@@ -60,8 +54,8 @@ class Transaction(DatetimeCreatedMixin, UUIDMixin, ABC):
             datetime_ = self._datetime
         self._validate_description(description)
         self._validate_datetime(datetime_)
-        self._set_description(description)
-        self._set_datetime(datetime_)
+        self._description = description
+        self._datetime = datetime_
 
     @abstractmethod
     def is_account_related(self, account: "Account") -> bool:

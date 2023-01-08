@@ -203,8 +203,8 @@ class SecurityRelatedTransaction(Transaction, ABC):
         security: Security,
     ) -> None:
         super().__init__()
-        self._set_description(description)
-        self._set_datetime(datetime_)
+        self._description = description
+        self._datetime = datetime_
         if not isinstance(security, Security):
             raise TypeError(f"{self.__class__.__name__}.security must be a Security.")
         self._security = security
