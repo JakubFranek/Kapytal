@@ -296,27 +296,66 @@ class CashTransaction(CashRelatedTransaction):
         if datetime_ is None:
             datetime_ = self._datetime
 
-        if not isinstance(type_, CashTransactionType):
-            raise TypeError("CashTransaction.type_ must be a CashTransactionType.")
+        self.validate_attributes(
+            description=description,
+            datetime_=datetime_,
+            type_=type_,
+            account=account,
+            category_amount_pairs=category_amount_pairs,
+            tag_amount_pairs=tag_amount_pairs,
+            payee=payee,
+        )
 
-        if not isinstance(payee, Attribute):
-            raise TypeError("CashTransaction.payee must be an Attribute.")
-        if not payee.type_ == AttributeType.PAYEE:
-            raise ValueError(
-                "The type_ of CashTransaction.payee Attribute must be PAYEE."
-            )
+        self._set_attributes(
+            description=description,
+            datetime_=datetime_,
+            type_=type_,
+            account=account,
+            category_amount_pairs=category_amount_pairs,
+            tag_amount_pairs=tag_amount_pairs,
+            payee=payee,
+        )
 
-        if not isinstance(account, CashAccount):
-            raise TypeError("CashTransaction.account must be a CashAccount.")
+    def validate_attributes(
+        self,
+        *,
+        description: str | None = None,
+        datetime_: datetime | None = None,
+        type_: CashTransactionType | None = None,
+        account: CashAccount | None = None,
+        category_amount_pairs: Collection[tuple[Category, CashAmount]] | None = None,
+        tag_amount_pairs: Collection[tuple[Attribute, CashAmount]] | None = None,
+        payee: Attribute | None = None,
+    ) -> None:
+        if type_ is None:
+            type_ = self._type
+        if account is None:
+            account = self._account
+        if category_amount_pairs is None:
+            category_amount_pairs = self._category_amount_pairs
+        if tag_amount_pairs is None:
+            tag_amount_pairs = self._tag_amount_pairs
+        if payee is None:
+            payee = self._payee
+        if description is None:
+            description = self._description
+        if datetime_ is None:
+            datetime_ = self._datetime
+
+        self._validate_description(description)
+        self._validate_datetime(datetime_)
+        self._validate_type(type_)
+        self._validate_payee(payee)
+        self._validate_account(account)
         currency = account.currency
 
         valid_category_types = self._get_valid_category_types(type_)
-
         self._validate_category_amount_pairs(
             category_amount_pairs=category_amount_pairs,
             valid_category_types=valid_category_types,
             currency=currency,
         )
+
         max_tag_amount = sum(
             (amount for _, amount in category_amount_pairs),
             start=CashAmount(0, currency),
@@ -327,6 +366,17 @@ class CashTransaction(CashRelatedTransaction):
             currency=currency,
         )
 
+    def _set_attributes(
+        self,
+        *,
+        description: str,
+        datetime_: datetime,
+        type_: CashTransactionType,
+        account: CashAccount,
+        category_amount_pairs: Collection[tuple[Category, CashAmount]],
+        tag_amount_pairs: Collection[tuple[Attribute, CashAmount]],
+        payee: Attribute,
+    ) -> None:
         self._description = description
         self._datetime = datetime_
         self._type = type_
@@ -343,6 +393,22 @@ class CashTransaction(CashRelatedTransaction):
         self._account = account
         self._currency = account.currency
         self._account.add_transaction(self)
+
+    def _validate_type(self, type_: CashTransactionType) -> None:
+        if not isinstance(type_, CashTransactionType):
+            raise TypeError("CashTransaction.type_ must be a CashTransactionType.")
+
+    def _validate_payee(self, payee: Attribute) -> None:
+        if not isinstance(payee, Attribute):
+            raise TypeError("CashTransaction.payee must be an Attribute.")
+        if not payee.type_ == AttributeType.PAYEE:
+            raise ValueError(
+                "The type_ of CashTransaction.payee Attribute must be PAYEE."
+            )
+
+    def _validate_account(self, account: CashAccount) -> None:
+        if not isinstance(account, CashAccount):
+            raise TypeError("CashTransaction.account must be a CashAccount.")
 
     def _validate_category_amount_pairs(
         self,
@@ -500,12 +566,63 @@ class CashTransfer(CashRelatedTransaction):
         if recipient is None:
             recipient = self._recipient
 
+        self.validate_attributes(
+            description=description,
+            datetime_=datetime_,
+            amount_sent=amount_sent,
+            amount_received=amount_received,
+            sender=sender,
+            recipient=recipient,
+        )
+
+        self._set_attributes(
+            description=description,
+            datetime_=datetime_,
+            amount_sent=amount_sent,
+            amount_received=amount_received,
+            sender=sender,
+            recipient=recipient,
+        )
+
+    def validate_attributes(
+        self,
+        *,
+        description: str | None = None,
+        datetime_: datetime | None = None,
+        amount_sent: CashAmount | None = None,
+        amount_received: CashAmount | None = None,
+        sender: CashAccount | None = None,
+        recipient: CashAccount | None = None,
+    ) -> None:
+        if description is None:
+            description = self._description
+        if datetime_ is None:
+            datetime_ = self._datetime
+        if amount_sent is None:
+            amount_sent = self._amount_sent
+        if amount_received is None:
+            amount_received = self._amount_received
+        if sender is None:
+            sender = self._sender
+        if recipient is None:
+            recipient = self._recipient
+
         self._validate_description(description)
         self._validate_datetime(datetime_)
         self._validate_amount(amount_sent)
         self._validate_amount(amount_received)
         self._validate_accounts(sender, recipient)
 
+    def _set_attributes(
+        self,
+        *,
+        description: str,
+        datetime_: datetime,
+        amount_sent: CashAmount,
+        amount_received: CashAmount,
+        sender: CashAccount,
+        recipient: CashAccount,
+    ) -> None:
         self._description = description
         self._datetime = datetime_
         self._amount_sent = amount_sent
@@ -642,6 +759,42 @@ class RefundTransaction(CashRelatedTransaction):
         if tag_amount_pairs is None:
             tag_amount_pairs = self._tag_amount_pairs
 
+        self.validate_attributes(
+            description=description,
+            datetime_=datetime_,
+            account=account,
+            category_amount_pairs=category_amount_pairs,
+            tag_amount_pairs=tag_amount_pairs,
+        )
+
+        self._set_attributes(
+            description=description,
+            datetime_=datetime_,
+            account=account,
+            category_amount_pairs=category_amount_pairs,
+            tag_amount_pairs=tag_amount_pairs,
+        )
+
+    def validate_attributes(
+        self,
+        *,
+        description: str | None = None,
+        datetime_: datetime | None = None,
+        account: CashAccount | None = None,
+        category_amount_pairs: Collection[tuple[Category, CashAmount]] | None = None,
+        tag_amount_pairs: Collection[tuple[Category, CashAmount]] | None = None,
+    ) -> None:
+        if description is None:
+            description = self._description
+        if datetime_ is None:
+            datetime_ = self._datetime
+        if account is None:
+            account = self._account
+        if category_amount_pairs is None:
+            category_amount_pairs = self._category_amount_pairs
+        if tag_amount_pairs is None:
+            tag_amount_pairs = self._tag_amount_pairs
+
         self._validate_description(description)
         self._validate_account(account, self._refunded_transaction.currency)
         currency = account.currency
@@ -657,6 +810,15 @@ class RefundTransaction(CashRelatedTransaction):
             tag_amount_pairs, self._refunded_transaction, currency, max_tag_amount
         )
 
+    def _set_attributes(
+        self,
+        *,
+        description: str | None = None,
+        datetime_: datetime | None = None,
+        account: CashAccount | None = None,
+        category_amount_pairs: Collection[tuple[Category, CashAmount]] | None = None,
+        tag_amount_pairs: Collection[tuple[Category, CashAmount]] | None = None,
+    ) -> None:
         self._description = description
         self._datetime = datetime_
         self._category_amount_pairs = tuple(category_amount_pairs)
