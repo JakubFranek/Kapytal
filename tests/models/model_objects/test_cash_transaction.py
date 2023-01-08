@@ -460,7 +460,16 @@ def test_invalid_refund_type(transaction: CashTransaction, refund: Any) -> None:
 @given(
     transaction=cash_transactions(),
 )
-def test_set_data_same_values(
+def test_validate_attributes_same_values(
+    transaction: CashTransaction,
+) -> None:
+    transaction.validate_attributes()
+
+
+@given(
+    transaction=cash_transactions(),
+)
+def test_set_attributes_same_values(
     transaction: CashTransaction,
 ) -> None:
     prev_description = transaction.description

@@ -468,6 +468,11 @@ def test_remove_refund() -> None:
     assert refund not in refunded_transaction.refunds
 
 
+def test_validate_attributes_same_values() -> None:
+    refund = get_preloaded_refund()
+    refund.validate_attributes()
+
+
 def test_set_attributes_same_values() -> None:
     refund = get_preloaded_refund()
     prev_description = refund.description

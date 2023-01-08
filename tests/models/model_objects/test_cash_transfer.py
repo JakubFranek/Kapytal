@@ -191,6 +191,11 @@ def test_set_accounts_same_account(
 
 
 @given(transfer=cash_transfers())
+def test_validate_attributes_same_values(transfer: CashTransfer) -> None:
+    transfer.validate_attributes()
+
+
+@given(transfer=cash_transfers())
 def test_set_attributes_same_values(transfer: CashTransfer) -> None:
     prev_description = transfer.description
     prev_datetime = transfer.datetime_
