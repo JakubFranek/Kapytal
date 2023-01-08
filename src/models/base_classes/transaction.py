@@ -13,17 +13,14 @@ class Transaction(DatetimeCreatedMixin, UUIDMixin, ABC):
     DESCRIPTION_MIN_LENGTH = 0
     DESCRIPTION_MAX_LENGTH = 256
 
-    def __init__(self, description: str, datetime_: datetime) -> None:
+    def __init__(self) -> None:
         super().__init__()
-        self.description = description
-        self.datetime_ = datetime_
 
     @property
     def description(self) -> str:
         return self._description
 
-    @description.setter
-    def description(self, value: str) -> None:
+    def _validate_description(self, value: str) -> None:
         if not isinstance(value, str):
             raise TypeError(f"{self.__class__.__name__}.description must be a string.")
 
@@ -37,19 +34,25 @@ class Transaction(DatetimeCreatedMixin, UUIDMixin, ABC):
                 f"{Transaction.DESCRIPTION_MAX_LENGTH} characters."
             )
 
+    def _set_description(self, value: str) -> None:
+        self._validate_description(value)
         self._description = value
 
-    # TODO: this property has to be checked differently for refunds
     @property
     def datetime_(self) -> datetime:
         return self._datetime
 
-    @datetime_.setter
-    def datetime_(self, value: datetime) -> None:
+    def _validate_datetime(self, value: datetime) -> None:
         if not isinstance(value, datetime):
             raise TypeError(f"{self.__class__.__name__}.datetime_ must be a datetime.")
 
+    def _set_datetime(self, value: datetime) -> None:
+        self._validate_datetime(value)
         self._datetime = value
+
+    def set_attributes(self, description: str, datetime_: datetime) -> None:
+        self._set_description(description)
+        self._set_datetime(datetime_)
 
     @abstractmethod
     def is_account_related(self, account: "Account") -> bool:

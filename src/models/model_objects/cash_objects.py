@@ -192,9 +192,16 @@ class CashTransaction(CashRelatedTransaction):
         category_amount_pairs: Collection[tuple[Category, CashAmount]],
         tag_amount_pairs: Collection[tuple[Attribute, CashAmount]],
     ) -> None:
-        super().__init__(description=description, datetime_=datetime_)
-        self.payee = payee
-        self.set_data(type_, account, category_amount_pairs, tag_amount_pairs)
+        super().__init__()
+        self.set_attributes(
+            description=description,
+            datetime_=datetime_,
+            type_=type_,
+            account=account,
+            category_amount_pairs=category_amount_pairs,
+            tag_amount_pairs=tag_amount_pairs,
+            payee=payee,
+        )
         self._refunds: list[RefundTransaction] = []
 
     @property
@@ -219,16 +226,6 @@ class CashTransaction(CashRelatedTransaction):
     @property
     def payee(self) -> Attribute:
         return self._payee
-
-    @payee.setter
-    def payee(self, attribute: Attribute) -> None:
-        if not isinstance(attribute, Attribute):
-            raise TypeError("CashTransaction.payee must be an Attribute.")
-        if not attribute.type_ == AttributeType.PAYEE:
-            raise ValueError(
-                "The type_ of CashTransaction.payee Attribute must be PAYEE."
-            )
-        self._payee = attribute
 
     @property
     def category_amount_pairs(self) -> tuple[tuple[Category, CashAmount], ...]:
@@ -279,15 +276,43 @@ class CashTransaction(CashRelatedTransaction):
     def is_account_related(self, account: Account) -> bool:
         return self.account == account
 
-    def set_data(
+    def set_attributes(
         self,
-        type_: CashTransactionType,
-        account: CashAccount,
-        category_amount_pairs: Collection[tuple[Category, CashAmount]],
-        tag_amount_pairs: Collection[tuple[Attribute, CashAmount]],
+        *,
+        type_: CashTransactionType | None = None,
+        account: CashAccount | None = None,
+        category_amount_pairs: Collection[tuple[Category, CashAmount]] | None = None,
+        tag_amount_pairs: Collection[tuple[Attribute, CashAmount]] | None = None,
+        payee: Attribute | None = None,
+        description: str | None = None,
+        datetime_: datetime | None = None,
     ) -> None:
+        """Validates and subsequently sets provided attributes if they are all valid.
+        Parameters set to None keep their value."""
+        if type_ is None:
+            type_ = self._type
+        if account is None:
+            account = self._account
+        if category_amount_pairs is None:
+            category_amount_pairs = self._category_amount_pairs
+        if tag_amount_pairs is None:
+            tag_amount_pairs = self._tag_amount_pairs
+        if payee is None:
+            payee = self._payee
+        if description is None:
+            description = self._description
+        if datetime_ is None:
+            datetime_ = self._datetime
+
         if not isinstance(type_, CashTransactionType):
             raise TypeError("CashTransaction.type_ must be a CashTransactionType.")
+
+        if not isinstance(payee, Attribute):
+            raise TypeError("CashTransaction.payee must be an Attribute.")
+        if not payee.type_ == AttributeType.PAYEE:
+            raise ValueError(
+                "The type_ of CashTransaction.payee Attribute must be PAYEE."
+            )
 
         if not isinstance(account, CashAccount):
             raise TypeError("CashTransaction.account must be a CashAccount.")
@@ -314,7 +339,10 @@ class CashTransaction(CashRelatedTransaction):
             currency=currency,
         )
 
+        self._set_description(description)
+        self._set_datetime(datetime_)
         self._type = type_
+        self._payee = payee
         self._category_amount_pairs = tuple(category_amount_pairs)
         self._tag_amount_pairs = tuple(tag_amount_pairs)
         self._set_account(account)
@@ -413,7 +441,9 @@ class CashTransfer(CashRelatedTransaction):
         amount_sent: CashAmount,
         amount_received: CashAmount,
     ) -> None:
-        super().__init__(description, datetime_)
+        super().__init__()
+        self._set_description(description)
+        self._set_datetime(datetime_)
         self.amount_sent = amount_sent
         self.amount_received = amount_received
         self.set_accounts(account_sender, account_recipient)
@@ -497,8 +527,7 @@ class CashTransfer(CashRelatedTransaction):
 
 
 class RefundTransaction(CashRelatedTransaction):
-    """A refund which attaches itself to an expense CashTransaction.
-    Instances of this class are immutable."""
+    """A refund which attaches itself to an expense CashTransaction"""
 
     def __init__(
         self,
@@ -509,6 +538,8 @@ class RefundTransaction(CashRelatedTransaction):
         category_amount_pairs: Collection[tuple[Category, CashAmount]],
         tag_amount_pairs: Collection[tuple[Attribute, CashAmount]],
     ) -> None:
+        super().__init__()
+
         if not isinstance(refunded_transaction, CashTransaction):
             raise TypeError("Refunded transaction must be a CashTransaction.")
         if refunded_transaction.type_ != CashTransactionType.EXPENSE:
@@ -518,7 +549,8 @@ class RefundTransaction(CashRelatedTransaction):
         self._refunded_transaction = refunded_transaction
         self._refunded_transaction.add_refund(self)
 
-        super().__init__(description, datetime_)
+        self._set_description(description)
+        self._set_datetime(datetime_, refunded_transaction.datetime_)
 
         self._set_account(account)
 
@@ -527,11 +559,17 @@ class RefundTransaction(CashRelatedTransaction):
 
         self._account.add_transaction(self)
 
-    # TODO: why can't the check be done in CashTransaction?
-    @Transaction.datetime_.setter
-    def datetime_(self, value: datetime) -> None:
-        Transaction.datetime_.fset(self, value)
-        if self.datetime_ < self._refunded_transaction.datetime_:
+    def _set_datetime(
+        self, datetime_: datetime, refunded_transaction_datetime: datetime
+    ) -> None:
+        self._validate_datetime(datetime_, refunded_transaction_datetime)
+        self._datetime = datetime_
+
+    def _validate_datetime(
+        self, datetime_: datetime, refunded_transaction_datetime: datetime
+    ) -> None:
+        super()._validate_datetime(datetime_)
+        if datetime_ < refunded_transaction_datetime:
             raise RefundPrecedesTransactionError(
                 "Supplied RefundTransaction.datetime_ precedes this "
                 "CashTransaction.datetime_."
