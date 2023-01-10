@@ -212,12 +212,15 @@ def test_add_cash_transaction(
         st.lists(
             st.tuples(
                 st.sampled_from([cat.path for cat in valid_categories]),
-                valid_decimals(min_value=0.01),
+                valid_decimals(min_value=0.1),
             ),
             min_size=1,
             max_size=5,
+            unique=True,
         )
     )
+    paths = [path for path, _ in category_name_amount_pairs]
+    assume(len(paths) == len(set(paths)))
     max_tag_amount = sum(amount for _, amount in category_name_amount_pairs)
     tag_name_amount_pairs = data.draw(
         st.lists(

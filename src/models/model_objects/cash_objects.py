@@ -2,11 +2,12 @@ from abc import ABC, abstractmethod
 from collections.abc import Collection
 from datetime import datetime
 from enum import Enum, auto
+from typing import Any
 
 from src.models.base_classes.account import Account, UnrelatedAccountError
 from src.models.base_classes.transaction import Transaction
 from src.models.constants import tzinfo
-from src.models.custom_exceptions import AlreadyExistsError
+from src.models.custom_exceptions import AlreadyExistsError, InvalidOperationError
 from src.models.model_objects.account_group import AccountGroup
 from src.models.model_objects.attributes import (
     Attribute,
@@ -247,7 +248,13 @@ class CashTransaction(CashRelatedTransaction):
 
     @property
     def refunds(self) -> tuple["RefundTransaction", ...]:
-        return tuple(self._refunds)
+        if hasattr(self, "_refunds"):
+            return tuple(self._refunds)
+        return ()
+
+    @property
+    def is_refunded(self) -> bool:
+        return len(self.refunds) > 0
 
     def __repr__(self) -> str:
         return (
@@ -260,7 +267,6 @@ class CashTransaction(CashRelatedTransaction):
 
     def add_refund(self, refund: "RefundTransaction") -> None:
         self._validate_refund(refund)
-
         self._refunds.append(refund)
 
     def remove_refund(self, refund: "RefundTransaction") -> None:
@@ -270,7 +276,6 @@ class CashTransaction(CashRelatedTransaction):
     def is_account_related(self, account: Account) -> bool:
         return self.account == account
 
-    # TODO: disallow editing of refunded transactions
     def set_attributes(
         self,
         *,
@@ -283,6 +288,10 @@ class CashTransaction(CashRelatedTransaction):
         description: str | None = None,
         datetime_: datetime | None = None,
     ) -> None:
+        if self.is_refunded:
+            raise InvalidOperationError(
+                "Refunded CashTransactions cannot be edited. Delete the refunds first."
+            )
         if type_ is None:
             type_ = self._type
         if account is None:
@@ -414,7 +423,6 @@ class CashTransaction(CashRelatedTransaction):
         if not isinstance(account, CashAccount):
             raise TypeError("CashTransaction.account must be a CashAccount.")
 
-    # TODO: check that each Category is different
     def _validate_category_amount_pairs(
         self,
         category_amount_pairs: Collection[tuple[Category, CashAmount | None]],
@@ -424,11 +432,13 @@ class CashTransaction(CashRelatedTransaction):
         validated_pairs = self._validate_category_amount_pairs_types(
             category_amount_pairs,
         )
-        if not all(
-            category.type_ in valid_category_types
-            for category, _ in category_amount_pairs
-        ):
+
+        categories = [category for category, _ in category_amount_pairs]
+        if len(categories) > len(set(categories)):
+            raise ValueError("Categories in category_amount_pairs must be unique.")
+        if not all(category.type_ in valid_category_types for category in categories):
             raise InvalidCategoryTypeError("Invalid Category.type_.")
+
         if not all(amount.currency == currency for _, amount in validated_pairs):
             raise CurrencyError(
                 "Currency of CashAmounts in category_amount_pairs must match the "
@@ -439,6 +449,7 @@ class CashTransaction(CashRelatedTransaction):
                 "Second member of CashTransaction.category_amount_pairs "
                 "tuples must be a positive CashAmount."
             )
+
         return validated_pairs
 
     def _validate_category_amount_pairs_types(
@@ -480,7 +491,6 @@ class CashTransaction(CashRelatedTransaction):
             )
         return collection
 
-    # TODO: check that each Tag is different
     def _validate_tag_amount_pairs(
         self,
         tag_amount_pairs: Collection[tuple[Attribute, CashAmount]],
@@ -493,12 +503,14 @@ class CashTransaction(CashRelatedTransaction):
             second_type=CashAmount,
             min_length=0,
         )
+
         if not all(
             attribute.type_ == AttributeType.TAG for attribute, _ in tag_amount_pairs
         ):
             raise ValueError(
                 "The type_ of CashTransaction.tag_amount_pairs Attributes must be TAG."
             )
+
         if not all(amount.currency == currency for _, amount in tag_amount_pairs):
             raise CurrencyError(
                 "Currency of CashAmounts in tag_amount_pairs must match the "
@@ -1009,7 +1021,7 @@ class RefundTransaction(CashRelatedTransaction):
 
 
 def validate_collection_of_tuple_pairs(
-    collection: Collection,
+    collection: Collection[tuple[Any, Any]],
     first_type: type,
     second_type: type,
     min_length: int,
@@ -1025,6 +1037,9 @@ def validate_collection_of_tuple_pairs(
             "First element of 'collection' tuples must be of type "
             f"{first_type.__name__}."
         )
+    first_members = [first_member for first_member, _ in collection]
+    if len(first_members) > len(set(first_members)):
+        raise ValueError("Categories or Tags in tuple pairs must be unique.")
     if not all(
         isinstance(second_member, second_type) for _, second_member in collection
     ):

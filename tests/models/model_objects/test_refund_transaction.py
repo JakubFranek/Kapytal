@@ -8,6 +8,7 @@ from hypothesis import assume, given
 from hypothesis import strategies as st
 
 from src.models.constants import tzinfo
+from src.models.custom_exceptions import InvalidOperationError
 from src.models.model_objects.attributes import (
     Attribute,
     AttributeType,
@@ -507,6 +508,13 @@ def test_change_account(data: st.DataObject) -> None:
 
     assert refund in new_account.transactions
     assert refund not in old_account.transactions
+
+
+def test_edit_refunded_transaction_fail() -> None:
+    refund = get_preloaded_refund()
+    refunded_transaction = refund.refunded_transaction
+    with pytest.raises(InvalidOperationError):
+        refunded_transaction.set_attributes()
 
 
 def get_preloaded_refund() -> RefundTransaction:

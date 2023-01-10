@@ -260,6 +260,30 @@ def test_tag_amount_pairs_invalid_amount_currency(
         transaction.set_attributes(tag_amount_pairs=tup)
 
 
+@given(
+    transaction=cash_transactions(),
+    data=st.data(),
+)
+def test_tag_amount_pairs_not_unique(
+    transaction: CashTransaction, data: st.DataObject
+) -> None:
+    max_amount = transaction.amount
+    amount = data.draw(
+        cash_amounts(
+            min_value="0.01", max_value=max_amount.value, currency=transaction.currency
+        ),
+    )
+    tag = data.draw(attributes(type_=AttributeType.TAG))
+    tup = (
+        (tag, amount),
+        (tag, amount),
+    )
+    with pytest.raises(
+        ValueError, match="Categories or Tags in tuple pairs must be unique."
+    ):
+        transaction.set_attributes(tag_amount_pairs=tup)
+
+
 @given(transaction=cash_transactions(), data=st.data())
 def test_change_account(transaction: CashTransaction, data: st.DataObject) -> None:
     new_account = data.draw(cash_accounts(currency=transaction.currency))
@@ -441,6 +465,31 @@ def test_category_amount_pairs_invalid_amount_value(
     with pytest.raises(
         ValueError,
         match="must be a positive CashAmount.",
+    ):
+        transaction.set_attributes(category_amount_pairs=tup)
+
+
+@given(
+    transaction=cash_transactions(),
+    data=st.data(),
+)
+def test_category_amount_pairs_not_unique(
+    transaction: CashTransaction, data: st.DataObject
+) -> None:
+    amount = data.draw(
+        cash_amounts(max_value=0, currency=transaction.currency),
+    )
+    category = Category(
+        "Test",
+        data.draw(st.sampled_from(transaction._get_valid_category_types())),
+    )
+    tup = (
+        (category, amount),
+        (category, 2 * amount),
+    )
+    with pytest.raises(
+        ValueError,
+        match="Categories in category_amount_pairs must be unique.",
     ):
         transaction.set_attributes(category_amount_pairs=tup)
 

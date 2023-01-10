@@ -4,3 +4,7 @@ class AlreadyExistsError(ValueError):
 
 class InvalidCharacterError(ValueError):
     """Raised when invalid character is passed."""
+
+
+class InvalidOperationError(Exception):
+    """Raised when an invalid operation is attempted."""
