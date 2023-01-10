@@ -22,7 +22,12 @@ from src.models.model_objects.cash_objects import (
     CashTransfer,
     RefundTransaction,
 )
-from src.models.model_objects.currency import CashAmount, Currency, ExchangeRate
+from src.models.model_objects.currency import (
+    CashAmount,
+    Currency,
+    CurrencyError,
+    ExchangeRate,
+)
 from src.models.model_objects.security_objects import (
     Security,
     SecurityAccount,
@@ -348,13 +353,22 @@ class RecordKeeper:
         payee_name: str | None = None,
         tag_name_amount_pairs: Collection[tuple[str, Decimal]] | None = None,
     ) -> None:
+        if len(transaction_indexes) < 1:
+            raise ValueError("No transaction indexes supplied.")
         transactions: list[CashTransaction] = [
             self._transactions[index] for index in transaction_indexes
         ]
+
         if not all(
             isinstance(transaction, CashTransaction) for transaction in transactions
         ):
             raise TypeError("All edited transactions must be CashTransactions.")
+
+        if not all(
+            transaction.currency == transactions[0].currency
+            for transaction in transactions
+        ):
+            raise CurrencyError("Edited CashTransactions must have the same currency.")
 
         if account_path is not None:
             account = self.get_account(account_path, CashAccount)
@@ -366,28 +380,39 @@ class RecordKeeper:
         else:
             payee = None
 
+        currency = account.currency if account is not None else transactions[0].currency
+
+        if category_path_amount_pairs is not None:
+            category_type = (
+                CategoryType.INCOME
+                if transaction_type == CashTransactionType.INCOME
+                else CategoryType.EXPENSE
+            )
+            category_amount_pairs = self._create_category_amount_pairs(
+                category_path_amount_pairs, category_type, currency
+            )
+        else:
+            category_amount_pairs = None
+
+        if tag_name_amount_pairs is not None:
+            tag_amount_pairs = self._create_tag_amount_pairs(
+                tag_name_amount_pairs, currency
+            )
+        else:
+            tag_amount_pairs = None
+
         for transaction in transactions:
-            currency = account.currency if account is not None else transaction.currency
+            transaction.validate_attributes(
+                description=description,
+                datetime_=datetime_,
+                type_=transaction_type,
+                account=account,
+                category_amount_pairs=category_amount_pairs,
+                tag_amount_pairs=tag_amount_pairs,
+                payee=payee,
+            )
 
-            if category_path_amount_pairs is not None:
-                category_type = (
-                    CategoryType.INCOME
-                    if transaction_type == CashTransactionType.INCOME
-                    else CategoryType.EXPENSE
-                )
-                category_amount_pairs = self._create_category_amount_pairs(
-                    category_path_amount_pairs, category_type, currency
-                )
-            else:
-                category_amount_pairs = None
-
-            if tag_name_amount_pairs is not None:
-                tag_amount_pairs = self._create_tag_amount_pairs(
-                    tag_name_amount_pairs, currency
-                )
-            else:
-                tag_amount_pairs = None
-
+        for transaction in transactions:
             transaction.set_attributes(
                 description=description,
                 datetime_=datetime_,

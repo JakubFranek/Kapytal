@@ -659,30 +659,54 @@ def test_set_exchange_rate_does_not_exist() -> None:
         record_keeper.set_exchange_rate("N/A", Decimal(1), datetime.now(tzinfo).date())
 
 
+def test_edit_cash_transactions_no_indexes() -> None:
+    record_keeper = get_preloaded_record_keeper_with_cash_transactions()
+    with pytest.raises(ValueError, match="No transaction indexes supplied."):
+        record_keeper.edit_cash_transactions([])
+
+
 def test_edit_cash_transactions_descriptions() -> None:
     record_keeper = get_preloaded_record_keeper_with_cash_transactions()
-    indexes = range(0, len(record_keeper.transactions))
+    cash_transactions = [
+        transaction
+        for transaction in record_keeper.transactions
+        if isinstance(transaction, CashTransaction)
+        if transaction.currency.code == "CZK"
+    ]
+    indexes = [index for index, _ in enumerate(cash_transactions)]
     edit_string = "TEST EDIT"
     record_keeper.edit_cash_transactions(indexes, description=edit_string)
-    for transaction in record_keeper.transactions:
+    for transaction in cash_transactions:
         assert transaction.description == edit_string
 
 
 def test_edit_cash_transactions_datetimes() -> None:
     record_keeper = get_preloaded_record_keeper_with_cash_transactions()
-    indexes = range(0, len(record_keeper.transactions))
+    cash_transactions = [
+        transaction
+        for transaction in record_keeper.transactions
+        if isinstance(transaction, CashTransaction)
+        if transaction.currency.code == "CZK"
+    ]
+    indexes = [index for index, _ in enumerate(cash_transactions)]
     edit_datetime = datetime.now(tzinfo)
     record_keeper.edit_cash_transactions(indexes, datetime_=edit_datetime)
-    for transaction in record_keeper.transactions:
+    for transaction in cash_transactions:
         assert transaction.datetime_ == edit_datetime
 
 
 def test_edit_cash_transactions_payees() -> None:
     record_keeper = get_preloaded_record_keeper_with_cash_transactions()
-    indexes = range(0, len(record_keeper.transactions))
+    cash_transactions = [
+        transaction
+        for transaction in record_keeper.transactions
+        if isinstance(transaction, CashTransaction)
+        if transaction.currency.code == "CZK"
+    ]
+    indexes = [index for index, _ in enumerate(cash_transactions)]
     edit_payee = "TEST PAYEE"
     record_keeper.edit_cash_transactions(indexes, payee_name=edit_payee)
-    for transaction in record_keeper.transactions:
+    for transaction in cash_transactions:
         assert transaction.payee.name == edit_payee
 
 
@@ -692,6 +716,7 @@ def test_edit_cash_transactions_categories() -> None:
         transaction
         for transaction in record_keeper.transactions
         if isinstance(transaction, CashTransaction)
+        if transaction.currency.code == "CZK"
     ]
     indexes = [
         index
@@ -708,6 +733,7 @@ def test_edit_cash_transactions_categories() -> None:
         for transaction in record_keeper.transactions
         if isinstance(transaction, CashTransaction)
         and transaction.type_ == CashTransactionType.EXPENSE
+        and transaction.currency.code == "CZK"
     ]
     for transaction in expenses:
         assert transaction.category_amount_pairs[0][0].name == edit_category
@@ -719,19 +745,15 @@ def test_edit_cash_transactions_tags() -> None:
         transaction
         for transaction in record_keeper.transactions
         if isinstance(transaction, CashTransaction)
+        if transaction.currency.code == "CZK"
     ]
-    indexes = [index for index, transaction in enumerate(cash_transactions)]
+    indexes = [index for index, _ in enumerate(cash_transactions)]
     edit_tag = "TEST TAG"
     edit_tag_amount_pair = [(edit_tag, Decimal(1))]
     record_keeper.edit_cash_transactions(
         indexes, tag_name_amount_pairs=edit_tag_amount_pair
     )
-    expenses = [
-        transaction
-        for transaction in record_keeper.transactions
-        if isinstance(transaction, CashTransaction)
-    ]
-    for transaction in expenses:
+    for transaction in cash_transactions:
         assert transaction.tag_amount_pairs[0][0].name == edit_tag
 
 
@@ -744,8 +766,9 @@ def test_edit_cash_transactions_type_wrong_category() -> None:
         transaction
         for transaction in record_keeper.transactions
         if isinstance(transaction, CashTransaction)
+        if transaction.currency.code == "CZK"
     ]
-    indexes = [index for index, transaction in enumerate(cash_transactions)]
+    indexes = [index for index, _ in enumerate(cash_transactions)]
     edit_type = CashTransactionType.EXPENSE
     with pytest.raises(InvalidCategoryTypeError):
         record_keeper.edit_cash_transactions(
@@ -760,8 +783,9 @@ def test_edit_cash_transactions_type() -> None:
         transaction
         for transaction in record_keeper.transactions
         if isinstance(transaction, CashTransaction)
+        if transaction.currency.code == "CZK"
     ]
-    indexes = [index for index, transaction in enumerate(cash_transactions)]
+    indexes = [index for index, _ in enumerate(cash_transactions)]
     edit_type = CashTransactionType.EXPENSE
     edit_category = "TEST EXPENSE CAT"
     edit_category_amount_pair = [(edit_category, None)]
@@ -770,29 +794,20 @@ def test_edit_cash_transactions_type() -> None:
         category_path_amount_pairs=edit_category_amount_pair,
         transaction_type=edit_type,
     )
-    expenses = [
-        transaction
-        for transaction in record_keeper.transactions
-        if isinstance(transaction, CashTransaction)
-    ]
-    for transaction in expenses:
+    for transaction in cash_transactions:
         assert transaction.category_amount_pairs[0][0].name == edit_category
 
 
-def test_edit_cash_transactions_account_fail() -> None:
-    """This test attempts to set all accounts to a particular EUR account
-    while keeping category/amount pairs, but some of them are in CZK."""
-
+def test_edit_cash_transactions_currency_not_same() -> None:
     record_keeper = get_preloaded_record_keeper_with_cash_transactions()
     cash_transactions = [
         transaction
         for transaction in record_keeper.transactions
         if isinstance(transaction, CashTransaction)
     ]
-    indexes = [index for index, transaction in enumerate(cash_transactions)]
-    edit_account = "Bank Accounts/Moneta EUR"
+    indexes = [index for index, _ in enumerate(cash_transactions)]
     with pytest.raises(CurrencyError):
-        record_keeper.edit_cash_transactions(indexes, account_path=edit_account)
+        record_keeper.edit_cash_transactions(indexes)
 
 
 def test_edit_cash_transactions_account_pass() -> None:
@@ -803,7 +818,7 @@ def test_edit_cash_transactions_account_pass() -> None:
         if isinstance(transaction, CashTransaction)
         if transaction.currency.code == "CZK"
     ]
-    indexes = [index for index, transaction in enumerate(cash_transactions)]
+    indexes = [index for index, _ in enumerate(cash_transactions)]
     edit_account = "Test Account CZK"
     record_keeper.add_cash_account(
         name="Test Account CZK",
@@ -813,12 +828,6 @@ def test_edit_cash_transactions_account_pass() -> None:
         parent_path=None,
     )
     record_keeper.edit_cash_transactions(indexes, account_path=edit_account)
-    cash_transactions = [
-        transaction
-        for transaction in record_keeper.transactions
-        if isinstance(transaction, CashTransaction)
-        if transaction.currency.code == "CZK"
-    ]
     for transaction in cash_transactions:
         assert transaction.account.path == edit_account
 
