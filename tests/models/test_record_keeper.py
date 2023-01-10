@@ -464,10 +464,11 @@ def test_get_attribute_invalid_type_type(type_: Any) -> None:
 
 def test_add_refund() -> RecordKeeper:
     record_keeper = get_preloaded_record_keeper_with_expense()
+    refunded_transaction = record_keeper.transactions[0]
     record_keeper.add_refund(
         "Refund!",
         datetime.now(tzinfo),
-        0,
+        str(refunded_transaction.uuid),
         "Bank Accounts/Raiffeisen CZK",
         (("Food and Drink/Groceries", Decimal(1000)),),
         (("Test Tag", Decimal(1000)),),

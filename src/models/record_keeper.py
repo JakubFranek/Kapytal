@@ -267,13 +267,20 @@ class RecordKeeper:
         self,
         description: str,
         datetime_: datetime,
-        refunded_transaction_index: int,
+        refunded_transaction_uuid_string: int,
         refunded_account_path: str,
         category_path_amount_pairs: Collection[tuple[str, Decimal]],
         tag_name_amount_pairs: Collection[tuple[str, Decimal]],
     ) -> None:
-        # TODO: transactions probably won't be search by index but by UUID
-        refunded_transaction = self.transactions[refunded_transaction_index]
+        for transaction in self._transactions:
+            if str(transaction.uuid) == refunded_transaction_uuid_string:
+                refunded_transaction = transaction
+                break
+        else:
+            raise ValueError(
+                f"Transaction with UUID {refunded_transaction_uuid_string} not found."
+            )
+
         refunded_account = self.get_account(refunded_account_path, CashAccount)
 
         category_type = CategoryType.EXPENSE
