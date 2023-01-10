@@ -320,6 +320,17 @@ def test_category_amount_pairs_invalid_type(
 
 @given(
     transaction=cash_transactions(),
+    category_amount_pairs=st.lists(everything_except(tuple), min_size=1, max_size=5),
+)
+def test_category_amount_pairs_invalid_member_type(
+    transaction: CashTransaction, category_amount_pairs: Collection[Any]
+) -> None:
+    with pytest.raises(TypeError, match="Elements of 'collection' must be tuples."):
+        transaction.set_attributes(category_amount_pairs=category_amount_pairs)
+
+
+@given(
+    transaction=cash_transactions(),
     category_amount_pairs=st.sampled_from(["", [], {}, ()]),
 )
 def test_category_amount_pairs_invalid_length(
@@ -350,7 +361,7 @@ def test_category_amount_pairs_invalid_first_member_type(
 
 @given(
     transaction=cash_transactions(),
-    second_member=everything_except(CashAmount),
+    second_member=everything_except((CashAmount, NoneType)),
     data=st.data(),
 )
 def test_category_amount_pairs_invalid_second_member_type(
@@ -361,6 +372,30 @@ def test_category_amount_pairs_invalid_second_member_type(
         data.draw(st.sampled_from(transaction._get_valid_category_types())),
     )
     tup = ((first_member, second_member),)
+    with pytest.raises(
+        TypeError,
+        match="Second element of 'collection' tuples",
+    ):
+        transaction.set_attributes(category_amount_pairs=tup)
+
+
+@given(
+    transaction=cash_transactions(),
+    second_member=everything_except((CashAmount, NoneType)),
+    data=st.data(),
+)
+def test_category_amount_pairs_invalid_second_member_type_multiple(
+    transaction: CashTransaction, second_member: Any, data: st.DataObject
+) -> None:
+    first_member = Category(
+        "Test",
+        data.draw(st.sampled_from(transaction._get_valid_category_types())),
+    )
+    first_member2 = Category(
+        "Test2",
+        data.draw(st.sampled_from(transaction._get_valid_category_types())),
+    )
+    tup = [(first_member, second_member), (first_member2, second_member)]
     with pytest.raises(
         TypeError,
         match="Second element of 'collection' tuples",

@@ -208,27 +208,17 @@ class RecordKeeper:
         account = self.get_account(account_path, CashAccount)
         payee = self.get_attribute(payee_name, AttributeType.PAYEE)
 
-        tag_amount_pairs: list[tuple[Attribute, CashAmount]] = []
-        for tag_name, amount in tag_name_amount_pairs:
-            tag_amount_pairs.append(
-                (
-                    self.get_attribute(tag_name, AttributeType.TAG),
-                    CashAmount(amount, account.currency),
-                )
-            )
-
-        category_amount_pairs: list[tuple[Category, CashAmount]] = []
+        tag_amount_pairs = self._create_tag_amount_pairs(
+            tag_name_amount_pairs, account.currency
+        )
         category_type = (
             CategoryType.INCOME
             if transaction_type == CashTransactionType.INCOME
             else CategoryType.EXPENSE
         )
-        for category_path, amount in category_path_amount_pairs:
-            pair = (
-                self.get_category(category_path, category_type),
-                CashAmount(amount, account.currency),
-            )
-            category_amount_pairs.append(pair)
+        category_amount_pairs = self._create_category_amount_pairs(
+            category_path_amount_pairs, category_type, account.currency
+        )
 
         transaction = CashTransaction(
             description=description,
@@ -276,23 +266,14 @@ class RecordKeeper:
         refunded_transaction = self.transactions[refunded_transaction_index]
         refunded_account = self.get_account(refunded_account_path, CashAccount)
 
-        tag_amount_pairs: list[tuple[Attribute, CashAmount]] = []
-        for tag_name, amount in tag_name_amount_pairs:
-            tag_amount_pairs.append(
-                (
-                    self.get_attribute(tag_name, AttributeType.TAG),
-                    CashAmount(amount, refunded_account.currency),
-                )
-            )
-
-        category_amount_pairs: list[tuple[Category, CashAmount]] = []
         category_type = CategoryType.EXPENSE
-        for category_path, amount in category_path_amount_pairs:
-            pair = (
-                self.get_category(category_path, category_type),
-                CashAmount(amount, refunded_account.currency),
-            )
-            category_amount_pairs.append(pair)
+        category_amount_pairs = self._create_category_amount_pairs(
+            category_path_amount_pairs, category_type, refunded_account.currency
+        )
+
+        tag_amount_pairs = self._create_tag_amount_pairs(
+            tag_name_amount_pairs, refunded_account.currency
+        )
 
         refund = RefundTransaction(
             description=description,
@@ -355,6 +336,68 @@ class RecordKeeper:
         )
         self._transactions.append(transaction)
 
+    def edit_cash_transactions(
+        self,
+        transaction_indexes: Collection[int],
+        description: str | None = None,
+        datetime_: datetime | None = None,
+        transaction_type: CashTransactionType | None = None,
+        account_path: str | None = None,
+        category_path_amount_pairs: Collection[tuple[str, Decimal | None]]
+        | None = None,
+        payee_name: str | None = None,
+        tag_name_amount_pairs: Collection[tuple[str, Decimal]] | None = None,
+    ) -> None:
+        transactions: list[CashTransaction] = [
+            self._transactions[index] for index in transaction_indexes
+        ]
+        if not all(
+            isinstance(transaction, CashTransaction) for transaction in transactions
+        ):
+            raise TypeError("All edited transactions must be CashTransactions.")
+
+        if account_path is not None:
+            account = self.get_account(account_path, CashAccount)
+        else:
+            account = None
+
+        if payee_name is not None:
+            payee = self.get_attribute(payee_name, AttributeType.PAYEE)
+        else:
+            payee = None
+
+        for transaction in transactions:
+            currency = account.currency if account is not None else transaction.currency
+
+            if category_path_amount_pairs is not None:
+                category_type = (
+                    CategoryType.INCOME
+                    if transaction_type == CashTransactionType.INCOME
+                    else CategoryType.EXPENSE
+                )
+                category_amount_pairs = self._create_category_amount_pairs(
+                    category_path_amount_pairs, category_type, currency
+                )
+            else:
+                category_amount_pairs = None
+
+            if tag_name_amount_pairs is not None:
+                tag_amount_pairs = self._create_tag_amount_pairs(
+                    tag_name_amount_pairs, currency
+                )
+            else:
+                tag_amount_pairs = None
+
+            transaction.set_attributes(
+                description=description,
+                datetime_=datetime_,
+                type_=transaction_type,
+                account=account,
+                category_amount_pairs=category_amount_pairs,
+                tag_amount_pairs=tag_amount_pairs,
+                payee=payee,
+            )
+
     def get_account_parent(self, path: str | None) -> AccountGroup | None:
         if path:
             for account_group in self._account_groups:
@@ -416,6 +459,9 @@ class RecordKeeper:
         raise DoesNotExistError(f"A Currency with code='{code_upper}' does not exist.")
 
     def get_category(self, path: str, type_: CategoryType) -> Category:
+        """Returns Category at path. If it does not exist, creates a new Category
+        at path with given type_."""
+
         if not isinstance(path, str):
             raise TypeError("Parameter 'path' must be a string.")
         if not isinstance(type_, CategoryType):
@@ -426,28 +472,31 @@ class RecordKeeper:
         # Category with path not found... searching for parents.
         current_path = path
         parent = None
-        while "/" in current_path:
-            current_path = current_path[: current_path.rfind("/")]
-            for category in self._categories:
-                if category.path == current_path:
-                    parent = category
+        if "/" in current_path:
+            while "/" in current_path:
+                current_path = current_path[: current_path.rfind("/")]
+                for category in self._categories:
+                    if category.path == current_path:
+                        parent = category
+                        break
+                if parent:
                     break
-            if parent:
-                break
+            else:
+                if parent is None:
+                    # No parent Category found - we need to make one.
+                    root_name = path.split("/")[0]
+                    parent = Category(root_name, type_)
+                    self._categories.append(parent)
+            remainder_name = path.removeprefix(parent.path)[1:]
+            while "/" in remainder_name:
+                # As long as multiple categories remain...
+                new_name = remainder_name.split("/")[0]
+                new_category = Category(new_name, type_, parent)
+                self._categories.append(new_category)
+                parent = new_category
+                remainder_name = remainder_name.removeprefix(new_name)[1:]
         else:
-            if parent is None:
-                # No parent Category found - we need to make one.
-                root_name = path.split("/")[0]
-                parent = Category(root_name, type_)
-                self._categories.append(parent)
-        remainder_name = path.removeprefix(parent.path)[1:]
-        while "/" in remainder_name:
-            # As long as multiple categories remain...
-            new_name = remainder_name.split("/")[0]
-            new_category = Category(new_name, type_, parent)
-            self._categories.append(new_category)
-            parent = new_category
-            remainder_name = remainder_name.removeprefix(new_name)[1:]
+            remainder_name = path
         # Reached the end - just one more category left
         final_category = Category(remainder_name, type_, parent)
         self._categories.append(final_category)
@@ -489,3 +538,32 @@ class RecordKeeper:
             raise AlreadyExistsError(
                 f"An Account with path={target_path} already exists."
             )
+
+    def _create_category_amount_pairs(
+        self,
+        category_path_amount_pairs: Collection[tuple[str, Decimal | None]],
+        category_type: CategoryType,
+        currency: Currency,
+    ) -> list[tuple[Category, CashAmount | None]]:
+        category_amount_pairs: list[tuple[Category, CashAmount | None]] = []
+        for category_path, amount in category_path_amount_pairs:
+            valid_amount = CashAmount(amount, currency) if amount is not None else None
+            category = self.get_category(category_path, category_type)  # noqa: NEW100
+            pair = (category, valid_amount)
+            category_amount_pairs.append(pair)
+        return category_amount_pairs
+
+    def _create_tag_amount_pairs(
+        self,
+        tag_name_amount_pairs: Collection[tuple[str, Decimal]],
+        currency: Currency,
+    ) -> list[tuple[Category, CashAmount]]:
+        tag_amount_pairs: list[tuple[Attribute, CashAmount]] = []
+        for tag_name, amount in tag_name_amount_pairs:
+            tag_amount_pairs.append(
+                (
+                    self.get_attribute(tag_name, AttributeType.TAG),
+                    CashAmount(amount, currency),
+                )
+            )
+        return tag_amount_pairs
