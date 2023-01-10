@@ -464,7 +464,7 @@ def test_get_attribute_invalid_type_type(type_: Any) -> None:
 
 def test_add_refund() -> RecordKeeper:
     record_keeper = get_preloaded_record_keeper_with_expense()
-    refunded_transaction = record_keeper.transactions[0]
+    refunded_transaction: CashTransaction = record_keeper.transactions[0]
     record_keeper.add_refund(
         "Refund!",
         datetime.now(tzinfo),
@@ -472,10 +472,26 @@ def test_add_refund() -> RecordKeeper:
         "Bank Accounts/Raiffeisen CZK",
         (("Food and Drink/Groceries", Decimal(1000)),),
         (("Test Tag", Decimal(1000)),),
+        refunded_transaction.payee.name,
     )
     refunded_transaction = record_keeper.transactions[0]
     refund = record_keeper.transactions[1]
     assert refund in refunded_transaction.refunds
+
+
+def test_add_refund_wrong_uuid() -> RecordKeeper:
+    record_keeper = get_preloaded_record_keeper_with_expense()
+    refunded_transaction: CashTransaction = record_keeper.transactions[0]
+    with pytest.raises(ValueError, match="Transaction with UUID 'xxx' not found."):
+        record_keeper.add_refund(
+            description="Refund!",
+            datetime_=datetime.now(tzinfo),
+            refunded_transaction_uuid_string="xxx",
+            refunded_account_path="Bank Accounts/Raiffeisen CZK",
+            category_path_amount_pairs=(("Food and Drink/Groceries", Decimal(1000)),),
+            tag_name_amount_pairs=(("Test Tag", Decimal(1000)),),
+            payee_name=refunded_transaction.payee.name,
+        )
 
 
 def test_add_security() -> None:

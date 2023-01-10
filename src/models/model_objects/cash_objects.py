@@ -357,7 +357,7 @@ class CashTransaction(CashRelatedTransaction):
         self._validate_description(description)
         self._validate_datetime(datetime_)
         self._validate_type(type_)
-        self._validate_payee(payee)
+        _validate_payee(payee)
         self._validate_account(account)
         currency = account.currency
 
@@ -410,14 +410,6 @@ class CashTransaction(CashRelatedTransaction):
     def _validate_type(self, type_: CashTransactionType) -> None:
         if not isinstance(type_, CashTransactionType):
             raise TypeError("CashTransaction.type_ must be a CashTransactionType.")
-
-    def _validate_payee(self, payee: Attribute) -> None:
-        if not isinstance(payee, Attribute):
-            raise TypeError("CashTransaction.payee must be an Attribute.")
-        if not payee.type_ == AttributeType.PAYEE:
-            raise ValueError(
-                "The type_ of CashTransaction.payee Attribute must be PAYEE."
-            )
 
     def _validate_account(self, account: CashAccount) -> None:
         if not isinstance(account, CashAccount):
@@ -742,6 +734,7 @@ class RefundTransaction(CashRelatedTransaction):
         refunded_transaction: CashTransaction,
         category_amount_pairs: Collection[tuple[Category, CashAmount]],
         tag_amount_pairs: Collection[tuple[Attribute, CashAmount]],
+        payee: Attribute,
     ) -> None:
         super().__init__()
         self._set_refunded_transaction(refunded_transaction)
@@ -751,6 +744,7 @@ class RefundTransaction(CashRelatedTransaction):
             account=account,
             category_amount_pairs=category_amount_pairs,
             tag_amount_pairs=tag_amount_pairs,
+            payee=payee,
         )
 
     @property
@@ -785,6 +779,10 @@ class RefundTransaction(CashRelatedTransaction):
     def tag_amount_pairs(self) -> tuple[tuple[Attribute, CashAmount], ...]:
         return self._tag_amount_pairs
 
+    @property
+    def payee(self) -> Attribute:
+        return self._payee
+
     def __repr__(self) -> str:
         return (
             f"RefundTransaction(account='{self.account.name}', "
@@ -804,6 +802,7 @@ class RefundTransaction(CashRelatedTransaction):
         account: CashAccount | None = None,
         category_amount_pairs: Collection[tuple[Category, CashAmount]] | None = None,
         tag_amount_pairs: Collection[tuple[Category, CashAmount]] | None = None,
+        payee: Attribute | None = None,
     ) -> None:
         if description is None:
             description = self._description
@@ -815,6 +814,8 @@ class RefundTransaction(CashRelatedTransaction):
             category_amount_pairs = self._category_amount_pairs
         if tag_amount_pairs is None:
             tag_amount_pairs = self._tag_amount_pairs
+        if payee is None:
+            payee = self._payee
 
         self.validate_attributes(
             description=description,
@@ -822,6 +823,7 @@ class RefundTransaction(CashRelatedTransaction):
             account=account,
             category_amount_pairs=category_amount_pairs,
             tag_amount_pairs=tag_amount_pairs,
+            payee=payee,
         )
 
         self._set_attributes(
@@ -830,6 +832,7 @@ class RefundTransaction(CashRelatedTransaction):
             account=account,
             category_amount_pairs=category_amount_pairs,
             tag_amount_pairs=tag_amount_pairs,
+            payee=payee,
         )
 
     def validate_attributes(
@@ -840,6 +843,7 @@ class RefundTransaction(CashRelatedTransaction):
         account: CashAccount | None = None,
         category_amount_pairs: Collection[tuple[Category, CashAmount]] | None = None,
         tag_amount_pairs: Collection[tuple[Category, CashAmount]] | None = None,
+        payee: Attribute | None = None,
     ) -> None:
         if description is None:
             description = self._description
@@ -851,6 +855,8 @@ class RefundTransaction(CashRelatedTransaction):
             category_amount_pairs = self._category_amount_pairs
         if tag_amount_pairs is None:
             tag_amount_pairs = self._tag_amount_pairs
+        if payee is None:
+            payee = self._payee
 
         self._validate_description(description)
         self._validate_account(account, self._refunded_transaction.currency)
@@ -866,20 +872,23 @@ class RefundTransaction(CashRelatedTransaction):
         self._validate_tag_amount_pairs(
             tag_amount_pairs, self._refunded_transaction, currency, max_tag_amount
         )
+        _validate_payee(payee)
 
     def _set_attributes(
         self,
         *,
-        description: str | None = None,
-        datetime_: datetime | None = None,
-        account: CashAccount | None = None,
-        category_amount_pairs: Collection[tuple[Category, CashAmount]] | None = None,
-        tag_amount_pairs: Collection[tuple[Category, CashAmount]] | None = None,
+        description: str,
+        datetime_: datetime,
+        account: CashAccount,
+        category_amount_pairs: Collection[tuple[Category, CashAmount]],
+        tag_amount_pairs: Collection[tuple[Category, CashAmount]],
+        payee: Attribute,
     ) -> None:
         self._description = description
         self._datetime = datetime_
         self._category_amount_pairs = tuple(category_amount_pairs)
         self._tag_amount_pairs = tuple(tag_amount_pairs)
+        self._payee = payee
         self._set_account(account)
 
     def _validate_datetime(
@@ -1020,6 +1029,13 @@ class RefundTransaction(CashRelatedTransaction):
 
     def _get_amount(self, account: CashAccount) -> CashAmount:  # noqa: U100
         return self.amount
+
+
+def _validate_payee(payee: Attribute) -> None:
+    if not isinstance(payee, Attribute):
+        raise TypeError("Payee must be an Attribute.")
+    if not payee.type_ == AttributeType.PAYEE:
+        raise ValueError("The type_ of payee Attribute must be PAYEE.")
 
 
 def validate_collection_of_tuple_pairs(

@@ -152,7 +152,7 @@ def test_account_invalid_type(transaction: CashTransaction, new_account: Any) ->
     transaction=cash_transactions(), new_payee=everything_except((Attribute, NoneType))
 )
 def test_payee_invalid_type(transaction: CashTransaction, new_payee: Any) -> None:
-    with pytest.raises(TypeError, match="CashTransaction.payee must be an Attribute."):
+    with pytest.raises(TypeError, match="Payee must be an Attribute."):
         transaction.set_attributes(payee=new_payee)
 
 
@@ -160,9 +160,7 @@ def test_payee_invalid_type(transaction: CashTransaction, new_payee: Any) -> Non
 def test_payee_invalid_attribute_type(
     transaction: CashTransaction, new_payee: Any
 ) -> None:
-    with pytest.raises(
-        ValueError, match="The type_ of CashTransaction.payee Attribute must be PAYEE."
-    ):
+    with pytest.raises(ValueError, match="The type_ of payee Attribute must be PAYEE."):
         transaction.set_attributes(payee=new_payee)
 
 

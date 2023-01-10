@@ -271,6 +271,7 @@ class RecordKeeper:
         refunded_account_path: str,
         category_path_amount_pairs: Collection[tuple[str, Decimal]],
         tag_name_amount_pairs: Collection[tuple[str, Decimal]],
+        payee_name: str,
     ) -> None:
         for transaction in self._transactions:
             if str(transaction.uuid) == refunded_transaction_uuid_string:
@@ -278,7 +279,7 @@ class RecordKeeper:
                 break
         else:
             raise ValueError(
-                f"Transaction with UUID {refunded_transaction_uuid_string} not found."
+                f"Transaction with UUID '{refunded_transaction_uuid_string}' not found."
             )
 
         refunded_account = self.get_account(refunded_account_path, CashAccount)
@@ -292,6 +293,8 @@ class RecordKeeper:
             tag_name_amount_pairs, refunded_account.currency
         )
 
+        payee = self.get_attribute(payee_name, AttributeType.PAYEE)
+
         refund = RefundTransaction(
             description=description,
             datetime_=datetime_,
@@ -299,6 +302,7 @@ class RecordKeeper:
             refunded_transaction=refunded_transaction,
             category_amount_pairs=category_amount_pairs,
             tag_amount_pairs=tag_amount_pairs,
+            payee=payee,
         )
         self._transactions.append(refund)
 

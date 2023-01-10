@@ -56,6 +56,7 @@ def test_creation() -> None:
     )
     category_amount_pairs = get_valid_category_amount_pairs()
     tag_amount_pairs = get_valid_tag_amount_pairs()
+    payee = refunded_transaction.payee
 
     refund = RefundTransaction(
         description,
@@ -64,6 +65,7 @@ def test_creation() -> None:
         refunded_transaction,
         category_amount_pairs,
         tag_amount_pairs,
+        payee,
     )
 
     assert refund.amount == CashAmount(50, currency)
@@ -80,6 +82,7 @@ def test_creation() -> None:
     assert refund.category_amount_pairs == category_amount_pairs
     assert refund.tag_amount_pairs == tag_amount_pairs
     assert refund in refunded_transaction.refunds
+    assert refund.payee == payee
     assert refund.__repr__() == (
         f"RefundTransaction(account='{refund.account.name}', "
         f"amount={refund.amount}, "
@@ -104,7 +107,7 @@ def test_invalid_refunded_transaction_type(
     with pytest.raises(
         TypeError, match="Refunded transaction must be a CashTransaction."
     ):
-        RefundTransaction("", datetime.now(tzinfo), account, transaction, [], [])
+        RefundTransaction("", datetime.now(tzinfo), account, transaction, [], [], None)
 
 
 @given(transaction=cash_transactions(), account=cash_accounts())
@@ -113,15 +116,22 @@ def test_invalid_refunded_transaction_type_enum(
 ) -> None:
     assume(transaction.type_ != CashTransactionType.EXPENSE)
     with pytest.raises(InvalidCashTransactionTypeError):
-        RefundTransaction("", datetime.now(tzinfo), account, transaction, [], [])
+        RefundTransaction("", datetime.now(tzinfo), account, transaction, [], [], None)
 
 
 def test_invalid_datetime_value() -> None:
     refunded_transaction = get_preloaded_expense()
     datetime_ = refunded_transaction.datetime_ - timedelta(days=1)
+    payee = refunded_transaction.payee
     with pytest.raises(RefundPrecedesTransactionError):
         RefundTransaction(
-            "", datetime_, refunded_transaction.account, refunded_transaction, [], []
+            "",
+            datetime_,
+            refunded_transaction.account,
+            refunded_transaction,
+            [],
+            [],
+            payee,
         )
 
 
@@ -131,6 +141,7 @@ def test_invalid_account_type(account: Any) -> None:
     datetime_ = refunded_transaction.datetime_ + timedelta(days=1)
     category_amount_pairs = get_valid_category_amount_pairs()
     tag_amount_pairs = get_valid_tag_amount_pairs()
+    payee = refunded_transaction.payee
     with pytest.raises(
         TypeError, match="RefundTransaction.account must be a CashAccount."
     ):
@@ -141,6 +152,7 @@ def test_invalid_account_type(account: Any) -> None:
             refunded_transaction,
             category_amount_pairs,
             tag_amount_pairs,
+            payee,
         )
 
 
@@ -151,6 +163,7 @@ def test_invalid_account_currency(account: CashAccount) -> None:
     datetime_ = refunded_transaction.datetime_ + timedelta(days=1)
     category_amount_pairs = get_valid_category_amount_pairs()
     tag_amount_pairs = get_valid_tag_amount_pairs()
+    payee = refunded_transaction.payee
     with pytest.raises(CurrencyError):
         RefundTransaction(
             "",
@@ -159,6 +172,7 @@ def test_invalid_account_currency(account: CashAccount) -> None:
             refunded_transaction,
             category_amount_pairs,
             tag_amount_pairs,
+            payee,
         )
 
 
@@ -176,6 +190,8 @@ def test_invalid_category_pair_categories() -> None:
         (c3, CashAmount(0, currency)),
     )
     tag_amount_pairs = get_valid_tag_amount_pairs()
+    payee = refunded_transaction.payee
+
     with pytest.raises(InvalidCategoryError):
         RefundTransaction(
             "",
@@ -184,6 +200,7 @@ def test_invalid_category_pair_categories() -> None:
             refunded_transaction,
             category_amount_pairs,
             tag_amount_pairs,
+            payee,
         )
 
 
@@ -198,6 +215,8 @@ def test_invalid_category_pair_decimal_values() -> None:
         (cat_3, CashAmount(-100, currency)),
     )
     tag_amount_pairs = get_valid_tag_amount_pairs()
+    payee = refunded_transaction.payee
+
     with pytest.raises(
         ValueError, match="Second member of RefundTransaction.category_amount_pairs"
     ):
@@ -208,6 +227,7 @@ def test_invalid_category_pair_decimal_values() -> None:
             refunded_transaction,
             category_amount_pairs,
             tag_amount_pairs,
+            payee,
         )
 
 
@@ -222,6 +242,8 @@ def test_invalid_refund_amount() -> None:
         (cat_3, CashAmount(0, currency)),
     )
     tag_amount_pairs = get_valid_tag_amount_pairs()
+    payee = refunded_transaction.payee
+
     with pytest.raises(ValueError, match="Total refunded amount must be positive."):
         RefundTransaction(
             "",
@@ -230,6 +252,7 @@ def test_invalid_refund_amount() -> None:
             refunded_transaction,
             category_amount_pairs,
             tag_amount_pairs,
+            payee,
         )
 
 
@@ -244,6 +267,8 @@ def test_invalid_category_refund_amount() -> None:
         (cat_3, CashAmount(0, currency)),
     )
     tag_amount_pairs = get_valid_tag_amount_pairs()
+    payee = refunded_transaction.payee
+
     with pytest.raises(ValueError, match="Refunded amount for category "):
         RefundTransaction(
             "",
@@ -252,6 +277,7 @@ def test_invalid_category_refund_amount() -> None:
             refunded_transaction,
             category_amount_pairs,
             tag_amount_pairs,
+            payee,
         )
 
 
@@ -268,6 +294,8 @@ def test_invalid_tag_type() -> None:
         (tag_3, CashAmount(50, currency)),
         (tag_4, CashAmount(0, currency)),
     )
+    payee = refunded_transaction.payee
+
     with pytest.raises(InvalidAttributeError):
         RefundTransaction(
             "",
@@ -276,6 +304,7 @@ def test_invalid_tag_type() -> None:
             refunded_transaction,
             category_amount_pairs,
             tag_amount_pairs,
+            payee,
         )
 
 
@@ -292,6 +321,8 @@ def test_invalid_tag() -> None:
         (tag_3, CashAmount(50, currency)),
         (tag_4, CashAmount(0, currency)),
     )
+    payee = refunded_transaction.payee
+
     with pytest.raises(InvalidAttributeError):
         RefundTransaction(
             "",
@@ -300,6 +331,7 @@ def test_invalid_tag() -> None:
             refunded_transaction,
             category_amount_pairs,
             tag_amount_pairs,
+            payee,
         )
 
 
@@ -315,6 +347,8 @@ def test_invalid_tag_decimal() -> None:
         (tag_3, CashAmount("-0.1", currency)),
         (tag_4, CashAmount("-100.0", currency)),
     )
+    payee = refunded_transaction.payee
+
     with pytest.raises(ValueError, match="must be a non-negative CashAmount."):
         RefundTransaction(
             "",
@@ -323,6 +357,7 @@ def test_invalid_tag_decimal() -> None:
             refunded_transaction,
             category_amount_pairs,
             tag_amount_pairs,
+            payee,
         )
 
 
@@ -338,6 +373,8 @@ def test_invalid_tag_amount() -> None:
         (tag_3, CashAmount(50, currency)),
         (tag_4, CashAmount(0, currency)),
     )
+    payee = refunded_transaction.payee
+
     with pytest.raises(ValueError, match="Refunded amount for tag "):
         RefundTransaction(
             "",
@@ -346,6 +383,7 @@ def test_invalid_tag_amount() -> None:
             refunded_transaction,
             category_amount_pairs,
             tag_amount_pairs,
+            payee,
         )
 
 
@@ -360,6 +398,8 @@ def test_invalid_pair_type() -> None:
         (cat_3, CashAmount(0, currency)),
     )
     tag_amount_pairs = get_valid_tag_amount_pairs()
+    payee = refunded_transaction.payee
+
     with pytest.raises(TypeError, match="Elements of 'collection' must be tuples."):
         RefundTransaction(
             "",
@@ -368,6 +408,48 @@ def test_invalid_pair_type() -> None:
             refunded_transaction,
             category_amount_pairs,  # type: ignore
             tag_amount_pairs,
+            payee,
+        )
+
+
+@given(payee=everything_except((Attribute, NoneType)))
+def test_invalid_payee_type(payee: Any) -> None:
+    refunded_transaction = get_preloaded_expense()
+    account = refunded_transaction.account
+    datetime_ = refunded_transaction.datetime_ + timedelta(days=1)
+    category_amount_pairs = get_valid_category_amount_pairs()
+    tag_amount_pairs = get_valid_tag_amount_pairs()
+    with pytest.raises(TypeError, match="Payee must be an Attribute."):
+        RefundTransaction(
+            "",
+            datetime_,
+            account,
+            refunded_transaction,
+            category_amount_pairs,
+            tag_amount_pairs,
+            payee,
+        )
+
+
+def test_invalid_type_of_payee() -> None:
+    payee = Attribute("test", AttributeType.TAG)
+    refunded_transaction = get_preloaded_expense()
+    account = refunded_transaction.account
+    datetime_ = refunded_transaction.datetime_ + timedelta(days=1)
+    category_amount_pairs = get_valid_category_amount_pairs()
+    tag_amount_pairs = get_valid_tag_amount_pairs()
+    with pytest.raises(
+        ValueError,
+        match="The type_ of payee Attribute must be PAYEE.",
+    ):
+        RefundTransaction(
+            "",
+            datetime_,
+            account,
+            refunded_transaction,
+            category_amount_pairs,
+            tag_amount_pairs,
+            payee,
         )
 
 
@@ -381,6 +463,7 @@ def test_multi_refund() -> None:
     )
     category_amount_pairs = get_valid_category_amount_pairs()
     tag_amount_pairs = get_valid_tag_amount_pairs()
+    payee = refunded_transaction.payee
 
     refund_1 = RefundTransaction(
         description,
@@ -389,6 +472,7 @@ def test_multi_refund() -> None:
         refunded_transaction,
         category_amount_pairs,
         tag_amount_pairs,
+        payee,
     )
 
     category_amount_pairs = (
@@ -410,6 +494,7 @@ def test_multi_refund() -> None:
         refunded_transaction,
         category_amount_pairs,
         tag_amount_pairs,
+        payee,
     )
 
     assert refund_1.amount == CashAmount(50, currency)
@@ -452,6 +537,7 @@ def test_remove_refund() -> None:
     )
     category_amount_pairs = get_valid_category_amount_pairs()
     tag_amount_pairs = get_valid_tag_amount_pairs()
+    payee = refunded_transaction.payee
 
     refund = RefundTransaction(
         description,
@@ -460,6 +546,7 @@ def test_remove_refund() -> None:
         refunded_transaction,
         category_amount_pairs,
         tag_amount_pairs,
+        payee,
     )
 
     assert refund in refunded_transaction.refunds
@@ -532,6 +619,7 @@ def get_preloaded_refund() -> RefundTransaction:
         (tag_3, CashAmount(50, currency)),
         (tag_4, CashAmount(0, currency)),
     )
+    payee = refunded_transaction.payee
 
     return RefundTransaction(
         description,
@@ -540,6 +628,7 @@ def get_preloaded_refund() -> RefundTransaction:
         refunded_transaction,
         category_amount_pairs,
         tag_amount_pairs,
+        payee,
     )
 
 
