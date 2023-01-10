@@ -3,7 +3,7 @@ from types import NoneType
 from typing import Any
 
 import pytest
-from hypothesis import given
+from hypothesis import assume, given
 from hypothesis import strategies as st
 
 from src.models.constants import tzinfo
@@ -13,11 +13,12 @@ from src.models.model_objects.cash_objects import (
     TransferSameAccountError,
     UnrelatedAccountError,
 )
-from src.models.model_objects.currency import CashAmount
+from src.models.model_objects.currency import CashAmount, Currency, CurrencyError
 from tests.models.test_assets.composites import (
     cash_accounts,
     cash_amounts,
     cash_transfers,
+    currencies,
     everything_except,
 )
 from tests.models.test_assets.constants import min_datetime
@@ -166,9 +167,8 @@ def test_set_accounts(transfer: CashTransfer, data: st.DataObject) -> None:
 def test_set_accounts_invalid_sender_type(
     transfer: CashTransfer, new_sender: Any
 ) -> None:
-    current_recipient = transfer.recipient
     with pytest.raises(TypeError, match="Parameter 'sender' must be a CashAccount."):
-        transfer.set_attributes(sender=new_sender, recipient=current_recipient)
+        transfer.set_attributes(sender=new_sender)
 
 
 @given(
@@ -177,22 +177,31 @@ def test_set_accounts_invalid_sender_type(
 def test_set_accounts_invalid_recipient_type(
     transfer: CashTransfer, new_recipient: Any
 ) -> None:
-    current_sender = transfer.sender
     with pytest.raises(TypeError, match="Parameter 'recipient' must be a CashAccount."):
-        transfer.set_attributes(sender=current_sender, recipient=new_recipient)
+        transfer.set_attributes(recipient=new_recipient)
 
 
-@given(transfer=cash_transfers(), new_account=cash_accounts())
-def test_set_accounts_same_account(
-    transfer: CashTransfer, new_account: CashAccount
-) -> None:
+@given(currency=currencies(), data=st.data())
+def test_set_accounts_same_account(currency: Currency, data: st.DataObject) -> None:
+    transfer = data.draw(
+        cash_transfers(currency_recipient=currency, currency_sender=currency)
+    )
     with pytest.raises(TransferSameAccountError):
-        transfer.set_attributes(sender=new_account, recipient=new_account)
+        transfer.set_attributes(recipient=transfer.sender)
 
 
 @given(transfer=cash_transfers())
 def test_validate_attributes_same_values(transfer: CashTransfer) -> None:
     transfer.validate_attributes()
+
+
+@given(transfer=cash_transfers(), currency_1=currencies(), currency_2=currencies())
+def test_validate_amount_invalid_currency(
+    transfer: CashTransfer, currency_1: Currency, currency_2: Currency
+) -> None:
+    assume(currency_1 != currency_2)
+    with pytest.raises(CurrencyError):
+        transfer._validate_amount(CashAmount(1, currency_1), currency_2)
 
 
 @given(transfer=cash_transfers())

@@ -664,9 +664,9 @@ class CashTransfer(CashRelatedTransaction):
 
         self._validate_description(description)
         self._validate_datetime(datetime_)
-        self._validate_amount(amount_sent)
-        self._validate_amount(amount_received)
         self._validate_accounts(sender, recipient)
+        self._validate_amount(amount_sent, sender.currency)
+        self._validate_amount(amount_received, recipient.currency)
 
     def _set_attributes(
         self,
@@ -717,11 +717,13 @@ class CashTransfer(CashRelatedTransaction):
                 "Parameters 'sender' and 'recipient' must be different CashAccounts."
             )
 
-    def _validate_amount(self, amount: CashAmount) -> None:
+    def _validate_amount(self, amount: CashAmount, currency: Currency) -> None:
         if not isinstance(amount, CashAmount):
             raise TypeError("CashTransfer amounts must be CashAmounts.")
         if not amount.is_positive():
             raise ValueError("CashTransfer amounts must be positive.")
+        if amount.currency != currency:
+            raise CurrencyError("Invalid CashAmount currency.")
 
     def _get_amount(self, account: CashAccount) -> CashAmount:
         if self.recipient == account:

@@ -42,7 +42,12 @@ class DoesNotExistError(ValueError):
     """Raised when a search for an object finds nothing."""
 
 
-# TODO: add editing and deleting of objects
+# TODO: add account/account group edit
+# TODO: add security edit
+# TODO: add transactions edit
+# TODO: add category edit
+# TODO: add payee and tag edit
+# TODO: add add_tag/remove_tag methods
 class RecordKeeper:
     def __init__(self) -> None:
         self._accounts: list[Account] = []
@@ -343,7 +348,7 @@ class RecordKeeper:
 
     def edit_cash_transactions(
         self,
-        transaction_indexes: Collection[int],
+        transaction_uuid_strings: Collection[str],
         description: str | None = None,
         datetime_: datetime | None = None,
         transaction_type: CashTransactionType | None = None,
@@ -353,10 +358,12 @@ class RecordKeeper:
         payee_name: str | None = None,
         tag_name_amount_pairs: Collection[tuple[str, Decimal]] | None = None,
     ) -> None:
-        if len(transaction_indexes) < 1:
-            raise ValueError("No transaction indexes supplied.")
+        if len(transaction_uuid_strings) < 1:
+            raise ValueError("No transaction UUIDs supplied.")
         transactions: list[CashTransaction] = [
-            self._transactions[index] for index in transaction_indexes
+            transaction
+            for transaction in self._transactions
+            if str(transaction.uuid) in transaction_uuid_strings
         ]
 
         if not all(
@@ -421,6 +428,81 @@ class RecordKeeper:
                 category_amount_pairs=category_amount_pairs,
                 tag_amount_pairs=tag_amount_pairs,
                 payee=payee,
+            )
+
+    def edit_cash_transfers(
+        self,
+        transaction_uuid_strings: Collection[str],
+        description: str | None = None,
+        datetime_: datetime | None = None,
+        sender_path: str | None = None,
+        recipient_path: str | None = None,
+        amount_sent: Decimal | None = None,
+        amount_received: Decimal | None = None,
+    ) -> None:
+        if len(transaction_uuid_strings) < 1:
+            raise ValueError("No transaction UUIDs supplied.")
+        transfers: list[CashTransfer] = [
+            transaction
+            for transaction in self._transactions
+            if str(transaction.uuid) in transaction_uuid_strings
+        ]
+
+        if not all(isinstance(transaction, CashTransfer) for transaction in transfers):
+            raise TypeError("All edited transactions must be CashTransfers.")
+
+        if sender_path is not None:
+            sender = self.get_account(sender_path, CashAccount)
+        else:
+            sender = None
+
+        if recipient_path is not None:
+            recipient = self.get_account(recipient_path, CashAccount)
+        else:
+            recipient = None
+
+        if amount_sent is not None:
+            if not all(
+                transfer.sender.currency == transfers[0].sender.currency
+                for transfer in transfers
+            ):
+                raise CurrencyError(
+                    "If amount_sent is to be changed, all sender CashAccounts "
+                    "must be of same Currency."
+                )
+            amount_sent = CashAmount(amount_sent, transfers[0].sender.currency)
+
+        if amount_received is not None:
+            if not all(
+                transfer.recipient.currency == transfers[0].recipient.currency
+                for transfer in transfers
+            ):
+                raise CurrencyError(
+                    "If amount_received is to be changed, all recipient CashAccounts "
+                    "must be of same Currency."
+                )
+            amount_received = CashAmount(
+                amount_received, transfers[0].recipient.currency
+            )
+
+        for transfer in transfers:
+            transfer.validate_attributes(
+                description=description,
+                datetime_=datetime_,
+                amount_sent=amount_sent,
+                amount_received=amount_received,
+                sender=sender,
+                recipient=recipient,
+            )
+
+        for transfer in transfers:
+            transfer.set_attributes(
+                description=description,
+                datetime_=datetime_,
+                amount_sent=amount_sent,
+                amount_received=amount_received,
+                sender=sender,
+                recipient=recipient,
             )
 
     def get_account_parent(self, path: str | None) -> AccountGroup | None:

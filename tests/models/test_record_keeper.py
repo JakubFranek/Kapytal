@@ -19,6 +19,7 @@ from src.models.model_objects.cash_objects import (
     CashAccount,
     CashTransaction,
     CashTransactionType,
+    CashTransfer,
 )
 from src.models.model_objects.currency import CashAmount, Currency, CurrencyError
 from src.models.model_objects.security_objects import (
@@ -661,7 +662,7 @@ def test_set_exchange_rate_does_not_exist() -> None:
 
 def test_edit_cash_transactions_no_indexes() -> None:
     record_keeper = get_preloaded_record_keeper_with_cash_transactions()
-    with pytest.raises(ValueError, match="No transaction indexes supplied."):
+    with pytest.raises(ValueError, match="No transaction UUIDs supplied."):
         record_keeper.edit_cash_transactions([])
 
 
@@ -673,9 +674,9 @@ def test_edit_cash_transactions_descriptions() -> None:
         if isinstance(transaction, CashTransaction)
         if transaction.currency.code == "CZK"
     ]
-    indexes = [index for index, _ in enumerate(cash_transactions)]
+    uuids = [str(transaction.uuid) for transaction in cash_transactions]
     edit_string = "TEST EDIT"
-    record_keeper.edit_cash_transactions(indexes, description=edit_string)
+    record_keeper.edit_cash_transactions(uuids, description=edit_string)
     for transaction in cash_transactions:
         assert transaction.description == edit_string
 
@@ -688,9 +689,9 @@ def test_edit_cash_transactions_datetimes() -> None:
         if isinstance(transaction, CashTransaction)
         if transaction.currency.code == "CZK"
     ]
-    indexes = [index for index, _ in enumerate(cash_transactions)]
+    uuids = [str(transaction.uuid) for transaction in cash_transactions]
     edit_datetime = datetime.now(tzinfo)
-    record_keeper.edit_cash_transactions(indexes, datetime_=edit_datetime)
+    record_keeper.edit_cash_transactions(uuids, datetime_=edit_datetime)
     for transaction in cash_transactions:
         assert transaction.datetime_ == edit_datetime
 
@@ -703,9 +704,9 @@ def test_edit_cash_transactions_payees() -> None:
         if isinstance(transaction, CashTransaction)
         if transaction.currency.code == "CZK"
     ]
-    indexes = [index for index, _ in enumerate(cash_transactions)]
+    uuids = [str(transaction.uuid) for transaction in cash_transactions]
     edit_payee = "TEST PAYEE"
-    record_keeper.edit_cash_transactions(indexes, payee_name=edit_payee)
+    record_keeper.edit_cash_transactions(uuids, payee_name=edit_payee)
     for transaction in cash_transactions:
         assert transaction.payee.name == edit_payee
 
@@ -717,16 +718,13 @@ def test_edit_cash_transactions_categories() -> None:
         for transaction in record_keeper.transactions
         if isinstance(transaction, CashTransaction)
         if transaction.currency.code == "CZK"
+        and transaction.type_ == CashTransactionType.EXPENSE
     ]
-    indexes = [
-        index
-        for index, transaction in enumerate(cash_transactions)
-        if transaction.type_ == CashTransactionType.EXPENSE
-    ]
+    uuids = [str(transaction.uuid) for transaction in cash_transactions]
     edit_category = "TEST CATEGORY"
     edit_category_amount_pair = [(edit_category, None)]
     record_keeper.edit_cash_transactions(
-        indexes, category_path_amount_pairs=edit_category_amount_pair
+        uuids, category_path_amount_pairs=edit_category_amount_pair
     )
     expenses = [
         transaction
@@ -747,11 +745,11 @@ def test_edit_cash_transactions_tags() -> None:
         if isinstance(transaction, CashTransaction)
         if transaction.currency.code == "CZK"
     ]
-    indexes = [index for index, _ in enumerate(cash_transactions)]
+    uuids = [str(transaction.uuid) for transaction in cash_transactions]
     edit_tag = "TEST TAG"
     edit_tag_amount_pair = [(edit_tag, Decimal(1))]
     record_keeper.edit_cash_transactions(
-        indexes, tag_name_amount_pairs=edit_tag_amount_pair
+        uuids, tag_name_amount_pairs=edit_tag_amount_pair
     )
     for transaction in cash_transactions:
         assert transaction.tag_amount_pairs[0][0].name == edit_tag
@@ -768,11 +766,11 @@ def test_edit_cash_transactions_type_wrong_category() -> None:
         if isinstance(transaction, CashTransaction)
         if transaction.currency.code == "CZK"
     ]
-    indexes = [index for index, _ in enumerate(cash_transactions)]
+    uuids = [str(transaction.uuid) for transaction in cash_transactions]
     edit_type = CashTransactionType.EXPENSE
     with pytest.raises(InvalidCategoryTypeError):
         record_keeper.edit_cash_transactions(
-            indexes,
+            uuids,
             transaction_type=edit_type,
         )
 
@@ -785,12 +783,12 @@ def test_edit_cash_transactions_type() -> None:
         if isinstance(transaction, CashTransaction)
         if transaction.currency.code == "CZK"
     ]
-    indexes = [index for index, _ in enumerate(cash_transactions)]
+    uuids = [str(transaction.uuid) for transaction in cash_transactions]
     edit_type = CashTransactionType.EXPENSE
     edit_category = "TEST EXPENSE CAT"
     edit_category_amount_pair = [(edit_category, None)]
     record_keeper.edit_cash_transactions(
-        indexes,
+        uuids,
         category_path_amount_pairs=edit_category_amount_pair,
         transaction_type=edit_type,
     )
@@ -805,9 +803,9 @@ def test_edit_cash_transactions_currency_not_same() -> None:
         for transaction in record_keeper.transactions
         if isinstance(transaction, CashTransaction)
     ]
-    indexes = [index for index, _ in enumerate(cash_transactions)]
+    uuids = [str(transaction.uuid) for transaction in cash_transactions]
     with pytest.raises(CurrencyError):
-        record_keeper.edit_cash_transactions(indexes)
+        record_keeper.edit_cash_transactions(uuids)
 
 
 def test_edit_cash_transactions_account_pass() -> None:
@@ -818,7 +816,7 @@ def test_edit_cash_transactions_account_pass() -> None:
         if isinstance(transaction, CashTransaction)
         if transaction.currency.code == "CZK"
     ]
-    indexes = [index for index, _ in enumerate(cash_transactions)]
+    uuids = [str(transaction.uuid) for transaction in cash_transactions]
     edit_account = "Test Account CZK"
     record_keeper.add_cash_account(
         name="Test Account CZK",
@@ -827,7 +825,7 @@ def test_edit_cash_transactions_account_pass() -> None:
         initial_datetime=datetime.now(tzinfo) - timedelta(days=700),
         parent_path=None,
     )
-    record_keeper.edit_cash_transactions(indexes, account_path=edit_account)
+    record_keeper.edit_cash_transactions(uuids, account_path=edit_account)
     for transaction in cash_transactions:
         assert transaction.account.path == edit_account
 
@@ -843,11 +841,147 @@ def test_edit_cash_transactions_invalid_indexes() -> None:
         1,
     )
     transactions = list(record_keeper.transactions)
-    indexes = [index for index, transaction in enumerate(transactions)]
+    uuids = [str(transaction.uuid) for transaction in transactions]
     with pytest.raises(
         TypeError, match="All edited transactions must be CashTransactions."
     ):
-        record_keeper.edit_cash_transactions(indexes)
+        record_keeper.edit_cash_transactions(uuids)
+
+
+def test_edit_cash_transfer_no_indexes() -> None:
+    record_keeper = get_preloaded_record_keeper_with_cash_transfers()
+    with pytest.raises(ValueError, match="No transaction UUIDs supplied."):
+        record_keeper.edit_cash_transfers([])
+
+
+def test_edit_cash_transfer_invalid_types() -> None:
+    record_keeper = get_preloaded_record_keeper_with_cash_transactions()
+    transactions = [
+        transaction
+        for transaction in record_keeper.transactions
+        if not isinstance(transaction, CashTransfer)
+    ]
+    uuids = [str(transfer.uuid) for transfer in transactions]
+    with pytest.raises(
+        TypeError, match="All edited transactions must be CashTransfers."
+    ):
+        record_keeper.edit_cash_transfers(uuids)
+
+
+def test_edit_cash_transfer_description() -> None:
+    record_keeper = get_preloaded_record_keeper_with_cash_transfers()
+    transfers = [
+        transaction
+        for transaction in record_keeper.transactions
+        if isinstance(transaction, CashTransfer)
+    ]
+    uuids = [str(transfer.uuid) for transfer in transfers]
+    edit_string = "TEST EDIT"
+    record_keeper.edit_cash_transfers(uuids, description=edit_string)
+    for transfer in transfers:
+        assert transfer.description == edit_string
+
+
+def test_edit_cash_transfer_datetime() -> None:
+    record_keeper = get_preloaded_record_keeper_with_cash_transfers()
+    transfers = [
+        transaction
+        for transaction in record_keeper.transactions
+        if isinstance(transaction, CashTransfer)
+    ]
+    uuids = [str(transfer.uuid) for transfer in transfers]
+    edit_datetime = datetime.now(tzinfo)
+    record_keeper.edit_cash_transfers(uuids, datetime_=edit_datetime)
+    for transfer in transfers:
+        assert transfer.datetime_ == edit_datetime
+
+
+def test_edit_cash_transfer_sender() -> None:
+    record_keeper = get_preloaded_record_keeper_with_cash_transfers()
+    edit_sender = "Bank Accounts/Raiffeisen CZK"
+    transfers = [
+        transaction
+        for transaction in record_keeper.transactions
+        if isinstance(transaction, CashTransfer)
+        and transaction.recipient.path != edit_sender
+        and transaction.sender.currency.code == "CZK"
+    ]
+    uuids = [str(transfer.uuid) for transfer in transfers]
+    record_keeper.edit_cash_transfers(uuids, sender_path=edit_sender)
+    for transfer in transfers:
+        assert transfer.sender.path == edit_sender
+
+
+def test_edit_cash_transfer_recipient() -> None:
+    record_keeper = get_preloaded_record_keeper_with_cash_transfers()
+    edit_recipient = "Bank Accounts/Raiffeisen CZK"
+    transfers = [
+        transaction
+        for transaction in record_keeper.transactions
+        if isinstance(transaction, CashTransfer)
+        and transaction.sender.path != edit_recipient
+        and transaction.recipient.currency.code == "CZK"
+    ]
+    uuids = [str(transfer.uuid) for transfer in transfers]
+    record_keeper.edit_cash_transfers(uuids, recipient_path=edit_recipient)
+    for transfer in transfers:
+        assert transfer.recipient.path == edit_recipient
+
+
+def test_edit_cash_transfer_amount_sent() -> None:
+    record_keeper = get_preloaded_record_keeper_with_cash_transfers()
+    edit_amount_sent = Decimal(1)
+    transfers = [
+        transaction
+        for transaction in record_keeper.transactions
+        if isinstance(transaction, CashTransfer)
+        and transaction.sender.currency.code == "CZK"
+    ]
+    uuids = [str(transfer.uuid) for transfer in transfers]
+    record_keeper.edit_cash_transfers(uuids, amount_sent=edit_amount_sent)
+    for transfer in transfers:
+        assert transfer.amount_sent.value == edit_amount_sent
+
+
+def test_edit_cash_transfer_amount_received() -> None:
+    record_keeper = get_preloaded_record_keeper_with_cash_transfers()
+    edit_amount_received = Decimal(1)
+    transfers = [
+        transaction
+        for transaction in record_keeper.transactions
+        if isinstance(transaction, CashTransfer)
+        and transaction.recipient.currency.code == "CZK"
+    ]
+    uuids = [str(transfer.uuid) for transfer in transfers]
+    record_keeper.edit_cash_transfers(uuids, amount_received=edit_amount_received)
+    for transfer in transfers:
+        assert transfer.amount_received.value == edit_amount_received
+
+
+def test_edit_cash_transfer_amount_sent_currency_not_same() -> None:
+    record_keeper = get_preloaded_record_keeper_with_cash_transfers()
+    edit_amount_sent = Decimal(1)
+    transfers = [
+        transaction
+        for transaction in record_keeper.transactions
+        if isinstance(transaction, CashTransfer)
+    ]
+    uuids = [str(transfer.uuid) for transfer in transfers]
+    with pytest.raises(CurrencyError):
+        record_keeper.edit_cash_transfers(uuids, amount_sent=edit_amount_sent)
+
+
+def test_edit_cash_transfer_amount_received_currency_not_same() -> None:
+    record_keeper = get_preloaded_record_keeper_with_cash_transfers()
+    edit_amount_received = Decimal(1)
+    transfers = [
+        transaction
+        for transaction in record_keeper.transactions
+        if isinstance(transaction, CashTransfer)
+    ]
+    uuids = [str(transfer.uuid) for transfer in transfers]
+    with pytest.raises(CurrencyError):
+        record_keeper.edit_cash_transfers(uuids, amount_received=edit_amount_received)
 
 
 def get_preloaded_record_keeper_with_expense() -> RecordKeeper:
@@ -905,6 +1039,51 @@ def get_preloaded_record_keeper_with_cash_transactions() -> RecordKeeper:
     return record_keeper
 
 
+def get_preloaded_record_keeper_with_cash_transfers() -> RecordKeeper:
+    record_keeper = get_preloaded_record_keeper()
+    record_keeper.add_cash_transfer(
+        "Salary from Fio to RB",
+        datetime.now(tzinfo) - timedelta(days=7),
+        "Bank Accounts/Fio CZK",
+        "Bank Accounts/Raiffeisen CZK",
+        50000,
+        50000,
+    )
+    record_keeper.add_cash_transfer(
+        "Savings from Fio to Creditas",
+        datetime.now(tzinfo) - timedelta(days=37),
+        "Bank Accounts/Fio CZK",
+        "Bank Accounts/Creditas CZK",
+        100000,
+        100000,
+    )
+    record_keeper.add_cash_transfer(
+        "Conversion from RB to Moneta",
+        datetime.now(tzinfo) - timedelta(days=6),
+        "Bank Accounts/Raiffeisen CZK",
+        "Bank Accounts/Moneta EUR",
+        25000,
+        1000,
+    )
+    record_keeper.add_cash_transfer(
+        "Transfer from Moneta to Revolut",
+        datetime.now(tzinfo) - timedelta(days=5),
+        "Bank Accounts/Moneta EUR",
+        "Bank Accounts/Revolut EUR",
+        1000,
+        1000,
+    )
+    record_keeper.add_cash_transfer(
+        "Conversion from Revolut to Fio",
+        datetime.now(tzinfo) - timedelta(days=4),
+        "Bank Accounts/Moneta EUR",
+        "Bank Accounts/Fio CZK",
+        1000,
+        25000,
+    )
+    return record_keeper
+
+
 def get_preloaded_record_keeper() -> RecordKeeper:
     record_keeper = RecordKeeper()
     record_keeper.add_currency("CZK", 2)
@@ -921,9 +1100,30 @@ def get_preloaded_record_keeper() -> RecordKeeper:
         parent_path="Bank Accounts",
     )
     record_keeper.add_cash_account(
+        name="Fio CZK",
+        currency_code="CZK",
+        initial_balance_value=Decimal(0),
+        initial_datetime=datetime.now(tzinfo) - timedelta(days=365),
+        parent_path="Bank Accounts",
+    )
+    record_keeper.add_cash_account(
+        name="Creditas CZK",
+        currency_code="CZK",
+        initial_balance_value=Decimal(100_000),
+        initial_datetime=datetime.now(tzinfo) - timedelta(days=365),
+        parent_path="Bank Accounts",
+    )
+    record_keeper.add_cash_account(
         name="Moneta EUR",
         currency_code="EUR",
         initial_balance_value=Decimal(1600),
+        initial_datetime=datetime.now(tzinfo) - timedelta(days=365),
+        parent_path="Bank Accounts",
+    )
+    record_keeper.add_cash_account(
+        name="Revolut EUR",
+        currency_code="EUR",
+        initial_balance_value=Decimal(0),
         initial_datetime=datetime.now(tzinfo) - timedelta(days=365),
         parent_path="Bank Accounts",
     )

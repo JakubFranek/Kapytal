@@ -175,10 +175,12 @@ def cash_transfers(
     draw: st.DrawFn,
     min_datetime: datetime = min_datetime,
     max_datetime: datetime = datetime.max,
+    currency_sender: Currency | None = None,
+    currency_recipient: Currency | None = None,
 ) -> CashTransfer:
     description = draw(st.text(min_size=0, max_size=256))
-    account_sender: CashAccount = draw(cash_accounts())
-    account_recipient: CashAccount = draw(cash_accounts())
+    account_sender: CashAccount = draw(cash_accounts(currency=currency_sender))
+    account_recipient: CashAccount = draw(cash_accounts(currency=currency_recipient))
     datetime_ = draw(
         st.datetimes(
             min_value=min_datetime, max_value=max_datetime, timezones=st.just(tzinfo)
