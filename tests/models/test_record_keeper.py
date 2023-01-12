@@ -11,6 +11,7 @@ from hypothesis import strategies as st
 from src.models.base_classes.account import Account
 from src.models.constants import tzinfo
 from src.models.model_objects.attributes import (
+    Attribute,
     AttributeType,
     CategoryType,
     InvalidCategoryTypeError,
@@ -32,6 +33,7 @@ from src.models.model_objects.security_objects import (
 )
 from src.models.record_keeper import AlreadyExistsError, DoesNotExistError, RecordKeeper
 from tests.models.test_assets.composites import (
+    attributes,
     currencies,
     everything_except,
     valid_decimals,
@@ -682,12 +684,6 @@ def test_set_exchange_rate_does_not_exist() -> None:
         record_keeper.set_exchange_rate("N/A", Decimal(1), datetime.now(tzinfo).date())
 
 
-def test_edit_cash_transactions_no_indexes() -> None:
-    record_keeper = get_preloaded_record_keeper_with_cash_transactions()
-    with pytest.raises(ValueError, match="No transaction UUIDs supplied."):
-        record_keeper.edit_cash_transactions([])
-
-
 def test_edit_cash_transactions_descriptions() -> None:
     record_keeper = get_preloaded_record_keeper_with_cash_transactions()
     cash_transactions = [
@@ -870,12 +866,6 @@ def test_edit_cash_transactions_invalid_indexes() -> None:
         record_keeper.edit_cash_transactions(uuids)
 
 
-def test_edit_cash_transfer_no_indexes() -> None:
-    record_keeper = get_preloaded_record_keeper_with_cash_transfers()
-    with pytest.raises(ValueError, match="No transaction UUIDs supplied."):
-        record_keeper.edit_cash_transfers([])
-
-
 def test_edit_cash_transfer_invalid_types() -> None:
     record_keeper = get_preloaded_record_keeper_with_cash_transactions()
     transactions = [
@@ -1018,12 +1008,6 @@ def test_edit_refunds_same_values() -> None:
     record_keeper.edit_refunds(uuids)
 
 
-def test_edit_refunds_no_uuids() -> None:
-    record_keeper = get_preloaded_record_keeper_with_refunds()
-    with pytest.raises(ValueError, match="No transaction UUIDs supplied."):
-        record_keeper.edit_refunds(transaction_uuid_strings=[])
-
-
 def test_edit_refunds_wrong_transaction_types() -> None:
     record_keeper = get_preloaded_record_keeper_with_cash_transactions()
     transactions = [transaction for transaction in record_keeper.transactions]
@@ -1137,12 +1121,6 @@ def test_edit_security_transactions_same_values() -> None:
     ]
     uuids = [str(transfer.uuid) for transfer in transactions]
     record_keeper.edit_security_transactions(uuids)
-
-
-def test_edit_security_transactions_no_uuids() -> None:
-    record_keeper = get_preloaded_record_keeper_with_security_transactions()
-    with pytest.raises(ValueError, match="No transaction UUIDs supplied."):
-        record_keeper.edit_security_transactions(transaction_uuid_strings=[])
 
 
 def test_edit_security_transactions_wrong_transaction_types() -> None:
@@ -1270,12 +1248,6 @@ def test_edit_security_transfers_same_values() -> None:
     record_keeper.edit_security_transfers(uuids)
 
 
-def test_edit_security_transfers_no_uuids() -> None:
-    record_keeper = get_preloaded_record_keeper_with_security_transactions()
-    with pytest.raises(ValueError, match="No transaction UUIDs supplied."):
-        record_keeper.edit_security_transfers(transaction_uuid_strings=[])
-
-
 def test_edit_security_transfers_wrong_transaction_types() -> None:
     record_keeper = get_preloaded_record_keeper_with_cash_transactions()
     transactions = [transaction for transaction in record_keeper.transactions]
@@ -1318,6 +1290,38 @@ def test_edit_security_transactions_change_security_accounts() -> None:
     for transaction in transactions:
         assert transaction.sender.path == edit_sender
         assert transaction.recipient.path == edit_recipient
+
+
+@given(tags=st.lists(attributes(AttributeType.TAG), min_size=1, max_size=5))
+def test_add_and_remove_tags_to_transactions(tags: list[Attribute]) -> None:
+    record_keeper = get_preloaded_record_keeper_with_cash_transactions()
+    for tag in tags:
+        record_keeper._tags.append(tag)
+    tag_names = [tag.name for tag in tags]
+    transactions = [
+        transaction
+        for transaction in record_keeper.transactions
+        if not isinstance(transaction, RefundTransaction)
+    ]
+    uuids = [str(transfer.uuid) for transfer in transactions]
+    record_keeper.add_tags_to_transactions(uuids, tag_names)
+    for transaction in transactions:
+        for tag in tags:
+            assert tag in transaction.tags
+    for tag in tags:
+        record_keeper.remove_tags_from_transactions(uuids, [tag.name])
+        for transaction in transactions:
+            for tag in tags:
+                assert tag not in transaction.tags
+
+
+@given(tags=st.lists(attributes(AttributeType.TAG), min_size=1, max_size=5))
+def test_add_and_remove_tags_empty_uuid(tags: list[Attribute]) -> None:
+    record_keeper = get_preloaded_record_keeper_with_cash_transactions()
+    for tag in tags:
+        record_keeper._tags.append(tag)
+    tag_names = [tag.name for tag in tags]
+    record_keeper.add_tags_to_transactions([], tag_names)
 
 
 def get_preloaded_record_keeper_with_security_transactions() -> RecordKeeper:

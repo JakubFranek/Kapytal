@@ -569,3 +569,15 @@ def test_set_attributes_same_values(
     assert prev_account == transaction.account
     assert prev_category_amount_pairs == transaction.category_amount_pairs
     assert prev_tag_amount_pairs == transaction.tag_amount_pairs
+
+
+@given(
+    transaction=cash_transactions(),
+    tags=st.lists(attributes(AttributeType.TAG), min_size=1, max_size=5),
+)
+def test_add_remove_tags(transaction: CashTransaction, tags: list[Attribute]) -> None:
+    transaction.add_tags(tags)
+    for tag in tags:
+        assert tag in transaction.tags
+        transaction.remove_tags([tag])
+        assert tag not in transaction.tags

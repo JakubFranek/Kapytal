@@ -194,7 +194,6 @@ class SecurityAccount(Account):
         return
 
 
-# TODO: add tags
 class SecurityRelatedTransaction(Transaction, ABC):
     def __init__(
         self,
