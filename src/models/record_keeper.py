@@ -44,7 +44,6 @@ class DoesNotExistError(ValueError):
 
 # TODO: add account/account group edit
 # TODO: add security edit
-# TODO: add transactions edit
 # TODO: add category edit
 # TODO: add payee and tag edit
 # TODO: add add_tag/remove_tag methods
