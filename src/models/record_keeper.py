@@ -44,8 +44,6 @@ class DoesNotExistError(ValueError):
 
 # TODO: add account/account group edit
 # TODO: add security edit
-# TODO: add category edit
-# TODO: add payee and tag edit
 # TODO: add add_tag/remove_tag methods
 class RecordKeeper:
     def __init__(self) -> None:
@@ -742,6 +740,44 @@ class RecordKeeper:
                 security=security,
             )
 
+    def edit_category(
+        self,
+        current_path: str,
+        new_name: str | None = None,
+        new_parent_path: str | None = None,
+    ) -> None:
+        for category in self._categories:
+            if category.path == current_path:
+                current_path = category
+                break
+        else:
+            DoesNotExistError(f"Category at path='{current_path}' does not exist.")
+            return
+        if new_name is not None:
+            category.name = new_name
+        if new_parent_path is not None:
+            new_parent = self.get_category(new_parent_path, category.type_)
+            category.parent = new_parent
+
+    def edit_attribute(
+        self, current_name: str, new_name: str, type_: AttributeType
+    ) -> None:
+        if type_ == AttributeType.PAYEE:
+            attributes = self._payees
+        else:
+            attributes = self._tags
+
+        for attribute in attributes:
+            if attribute.name == current_name:
+                edited_attribute = attribute
+                break
+        else:
+            DoesNotExistError(
+                f"Attribute of name='{current_name}' and type_={type_} does not exist."
+            )
+            return
+        edited_attribute.name = new_name
+
     def get_account_parent(self, path: str | None) -> AccountGroup | None:
         if path:
             for account_group in self._account_groups:
@@ -802,6 +838,7 @@ class RecordKeeper:
                 return currency
         raise DoesNotExistError(f"A Currency with code='{code_upper}' does not exist.")
 
+    # TODO: having to specify type for existing Category is annoying
     def get_category(self, path: str, type_: CategoryType) -> Category:
         """Returns Category at path. If it does not exist, creates a new Category
         at path with given type_."""
