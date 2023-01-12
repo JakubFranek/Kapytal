@@ -352,8 +352,8 @@ class RecordKeeper:
             datetime_=datetime_,
             security=security,
             shares=shares,
-            account_sender=account_sender,
-            account_recipient=account_recipient,
+            sender=account_sender,
+            recipient=account_recipient,
         )
         self._transactions.append(transaction)
 

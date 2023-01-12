@@ -7,7 +7,11 @@ from typing import Any
 from src.models.base_classes.account import Account, UnrelatedAccountError
 from src.models.base_classes.transaction import Transaction
 from src.models.constants import tzinfo
-from src.models.custom_exceptions import AlreadyExistsError, InvalidOperationError
+from src.models.custom_exceptions import (
+    AlreadyExistsError,
+    InvalidOperationError,
+    TransferSameAccountError,
+)
 from src.models.model_objects.account_group import AccountGroup
 from src.models.model_objects.attributes import (
     Attribute,
@@ -33,11 +37,6 @@ class TransactionPrecedesAccountError(ValueError):
 class RefundPrecedesTransactionError(ValueError):
     """Raised when a RefundTransaction.datetime_ precedes the
     refunded transaction datetime_."""
-
-
-class TransferSameAccountError(ValueError):
-    """Raised when an attempt is made to set the recipient and the sender of a
-    Transfer to the same Account."""
 
 
 class InvalidCashTransactionTypeError(ValueError):
@@ -398,6 +397,7 @@ class CashTransaction(CashRelatedTransaction):
         self._tag_amount_pairs = tuple(tag_amount_pairs)
         self._set_account(account)
 
+    # TODO: looks very similar to its Security counterpart
     def _set_account(self, account: CashAccount) -> None:
         if hasattr(self, "_account"):
             if self._account == account:
@@ -676,6 +676,7 @@ class CashTransfer(CashRelatedTransaction):
         self._amount_received = amount_received
         self._set_accounts(sender, recipient)
 
+    # TODO: looks very similar to its security counterpart
     def _set_accounts(self, sender: CashAccount, recipient: CashAccount) -> None:
         add_sender = True
         add_recipient = True

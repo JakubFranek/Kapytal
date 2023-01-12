@@ -8,7 +8,7 @@ from enum import Enum, auto
 
 from src.models.base_classes.account import Account, UnrelatedAccountError
 from src.models.base_classes.transaction import Transaction
-from src.models.custom_exceptions import InvalidCharacterError
+from src.models.custom_exceptions import InvalidCharacterError, TransferSameAccountError
 from src.models.mixins.datetime_created_mixin import DatetimeCreatedMixin
 from src.models.mixins.name_mixin import NameMixin
 from src.models.mixins.uuid_mixin import UUIDMixin
@@ -197,18 +197,8 @@ class SecurityAccount(Account):
 class SecurityRelatedTransaction(Transaction, ABC):
     def __init__(
         self,
-        description: str,
-        datetime_: datetime,
-        shares: Decimal | int | str,
-        security: Security,
     ) -> None:
         super().__init__()
-        self._description = description
-        self._datetime = datetime_
-        if not isinstance(security, Security):
-            raise TypeError(f"{self.__class__.__name__}.security must be a Security.")
-        self._security = security
-        self.shares = shares
 
     @property
     def security(self) -> Security:
@@ -217,25 +207,6 @@ class SecurityRelatedTransaction(Transaction, ABC):
     @property
     def shares(self) -> Decimal:
         return self._shares
-
-    @shares.setter
-    def shares(self, value: Decimal | int | str) -> None:
-        if not isinstance(value, (Decimal, int, str)):
-            raise TypeError(
-                f"{self.__class__.__name__}.shares must be a Decimal, integer "
-                "or a string containing a number."
-            )
-        _value = Decimal(value)
-        if not _value.is_finite() or _value <= 0:
-            raise ValueError(
-                f"{self.__class__.__name__}.shares must be a finite positive number."
-            )
-        if _value % self._security.shares_unit != 0:
-            raise ValueError(
-                f"{self.__class__.__name__}.shares must be a multiple of "
-                f"{self._security.shares_unit}."
-            )
-        self._shares = _value
 
     def get_shares(self, account: SecurityAccount) -> Decimal:
         if not isinstance(account, SecurityAccount):
@@ -246,6 +217,29 @@ class SecurityRelatedTransaction(Transaction, ABC):
                 f"{self.__class__.__name__}."
             )
         return self._get_shares(account)
+
+    def _validate_security(self, security: Security) -> None:
+        if not isinstance(security, Security):
+            raise TypeError(f"{self.__class__.__name__}.security must be a Security.")
+
+    def _validate_shares(
+        self, value: Decimal | int | str, shares_unit: Decimal
+    ) -> None:
+        if not isinstance(value, (Decimal, int, str)):
+            raise TypeError(
+                f"{self.__class__.__name__}.shares must be a Decimal, integer "
+                "or a string containing a number."
+            )
+        _value = Decimal(value)
+        if not _value.is_finite() or _value <= 0:
+            raise ValueError(
+                f"{self.__class__.__name__}.shares must be a finite positive number."
+            )
+        if _value % shares_unit != 0:
+            raise ValueError(
+                f"{self.__class__.__name__}.shares must be a multiple of "
+                f"{shares_unit}."
+            )
 
     @abstractmethod
     def _get_shares(self, account: SecurityAccount) -> Decimal:
@@ -265,24 +259,18 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
         security_account: SecurityAccount,
         cash_account: CashAccount,
     ) -> None:
-        super().__init__(
+        super().__init__()
+        self.set_attributes(
             description=description,
             datetime_=datetime_,
-            shares=shares,
+            type_=type_,
             security=security,
+            shares=shares,
+            price_per_share=price_per_share,
+            fees=fees,
+            security_account=security_account,
+            cash_account=cash_account,
         )
-
-        if not isinstance(type_, SecurityTransactionType):
-            raise TypeError(
-                "SecurityTransaction.type_ must be a SecurityTransactionType."
-            )
-        self._type = type_
-
-        self.price_per_share = price_per_share
-        self.fees = fees
-
-        self.cash_account = cash_account
-        self.security_account = security_account
 
     @property
     def type_(self) -> SecurityTransactionType:
@@ -292,58 +280,17 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
     def security_account(self) -> SecurityAccount:
         return self._security_account
 
-    @security_account.setter
-    def security_account(self, new_account: SecurityAccount) -> None:
-        if not isinstance(new_account, SecurityAccount):
-            raise TypeError(
-                "SecurityTransaction.security_account must be a SecurityAccount."
-            )
-
-        if hasattr(self, "_security_account"):
-            self._security_account.remove_transaction(self)
-
-        self._security_account = new_account
-        self._security_account.add_transaction(self)
-
     @property
     def cash_account(self) -> CashAccount:
         return self._cash_account
-
-    @cash_account.setter
-    def cash_account(self, new_account: CashAccount) -> None:
-        if not isinstance(new_account, CashAccount):
-            raise TypeError("SecurityTransaction.cash_account must be a CashAccount.")
-        if new_account.currency != self._security.currency:
-            raise CurrencyError(
-                "The currencies of SecurityTransaction.security and "
-                "SecurityTransaction.cash_account must match."
-            )
-
-        if hasattr(self, "_cash_account"):
-            self._cash_account.remove_transaction(self)
-
-        self._cash_account = new_account
-        self._cash_account.add_transaction(self)
 
     @property
     def price_per_share(self) -> CashAmount:
         return self._price_per_share
 
-    @price_per_share.setter
-    def price_per_share(self, value: CashAmount) -> None:
-        if not isinstance(value, CashAmount):
-            raise TypeError("SecurityTransaction.price_per_share must be a CashAmount.")
-        self._price_per_share = value
-
     @property
     def fees(self) -> CashAmount:
         return self._fees
-
-    @fees.setter
-    def fees(self, value: CashAmount) -> None:
-        if not isinstance(value, CashAmount):
-            raise TypeError("SecurityTransaction.fees must be a CashAmount.")
-        self._fees = value
 
     def __repr__(self) -> str:
         return (
@@ -352,6 +299,185 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
             f"shares={self.shares}, "
             f"{self.datetime_.strftime('%Y-%m-%d')})"
         )
+
+    def is_account_related(self, account: Account) -> bool:
+        return account == self._cash_account or account == self._security_account
+
+    def set_attributes(
+        self,
+        *,
+        description: str | None = None,
+        datetime_: datetime | None = None,
+        type_: SecurityTransactionType | None = None,
+        security: Security | None = None,
+        shares: Decimal | None = None,
+        price_per_share: CashAmount | None = None,
+        fees: CashAmount | None = None,
+        security_account: SecurityAccount | None = None,
+        cash_account: CashAccount | None = None,
+    ) -> None:
+        if description is None:
+            description = self._description
+        if datetime_ is None:
+            datetime_ = self._datetime
+        if type_ is None:
+            type_ = self._type
+        if security is None:
+            security = self._security
+        if shares is None:
+            shares = self._shares
+        if price_per_share is None:
+            price_per_share = self._price_per_share
+        if fees is None:
+            fees = self._fees
+        if security_account is None:
+            security_account = self._security_account
+        if cash_account is None:
+            cash_account = self._cash_account
+
+        self.validate_attributes(
+            description=description,
+            datetime_=datetime_,
+            type_=type_,
+            security=security,
+            shares=shares,
+            price_per_share=price_per_share,
+            fees=fees,
+            security_account=security_account,
+            cash_account=cash_account,
+        )
+
+        self._set_attributes(
+            description=description,
+            datetime_=datetime_,
+            type_=type_,
+            security=security,
+            shares=shares,
+            price_per_share=price_per_share,
+            fees=fees,
+            security_account=security_account,
+            cash_account=cash_account,
+        )
+
+    def validate_attributes(
+        self,
+        *,
+        description: str | None = None,
+        datetime_: datetime | None = None,
+        type_: SecurityTransactionType | None = None,
+        security: Security | None = None,
+        shares: Decimal | None = None,
+        price_per_share: CashAmount | None = None,
+        fees: CashAmount | None = None,
+        security_account: SecurityAccount | None = None,
+        cash_account: CashAccount | None = None,
+    ) -> None:
+        if description is None:
+            description = self._description
+        if datetime_ is None:
+            datetime_ = self._datetime
+        if type_ is None:
+            type_ = self._type
+        if security is None:
+            security = self._security
+        if shares is None:
+            shares = self._shares
+        if price_per_share is None:
+            price_per_share = self._price_per_share
+        if fees is None:
+            fees = self._fees
+        if security_account is None:
+            security_account = self._security_account
+        if cash_account is None:
+            cash_account = self._cash_account
+
+        self._validate_type(type_)
+        self._validate_description(description)
+        self._validate_datetime(datetime_)
+        self._validate_security(security)
+        self._validate_shares(shares, security.shares_unit)
+        self._validate_cash_account(cash_account, security.currency)
+        self._validate_security_account(security_account)
+        self._validate_amount(price_per_share, cash_account.currency)
+        self._validate_amount(fees, cash_account.currency)
+
+    def _set_attributes(
+        self,
+        *,
+        description: str,
+        datetime_: datetime,
+        type_: SecurityTransactionType,
+        security: Security,
+        shares: Decimal,
+        price_per_share: CashAmount,
+        fees: CashAmount,
+        security_account: SecurityAccount,
+        cash_account: CashAccount,
+    ) -> None:
+        self._description = description
+        self._datetime = datetime_
+        self._type = type_
+        self._security = security
+        self._shares = Decimal(shares)
+        self._price_per_share = price_per_share
+        self._fees = fees
+        self._set_accounts(security_account, cash_account)
+
+    def _set_accounts(
+        self, security_account: SecurityAccount, cash_account: CashAccount
+    ) -> None:
+        add_security_account = True
+        add_cash_account = True
+
+        if hasattr(self, "_security_account"):
+            if self._security_account != security_account:
+                self._security_account.remove_transaction(self)
+            else:
+                add_security_account = False
+        if hasattr(self, "_cash_account"):
+            if self._cash_account != cash_account:
+                self._cash_account.remove_transaction(self)
+            else:
+                add_cash_account = False
+
+        self._security_account = security_account
+        self._cash_account = cash_account
+
+        if add_security_account:
+            self._security_account.add_transaction(self)
+        if add_cash_account:
+            self._cash_account.add_transaction(self)
+
+    def _validate_type(self, type_: SecurityTransactionType) -> None:
+        if not isinstance(type_, SecurityTransactionType):
+            raise TypeError(
+                "SecurityTransaction.type_ must be a SecurityTransactionType."
+            )
+
+    def _validate_security_account(self, new_account: SecurityAccount) -> None:
+        if not isinstance(new_account, SecurityAccount):
+            raise TypeError(
+                "SecurityTransaction.security_account must be a SecurityAccount."
+            )
+
+    def _validate_cash_account(
+        self, new_account: CashAccount, currency: Currency
+    ) -> None:
+        if not isinstance(new_account, CashAccount):
+            raise TypeError("SecurityTransaction.cash_account must be a CashAccount.")
+        if new_account.currency != currency:
+            raise CurrencyError(
+                "The currencies of SecurityTransaction.security and "
+                "SecurityTransaction.cash_account must match."
+            )
+
+    def _validate_amount(self, amount: CashAmount, currency: Currency) -> None:
+        if not isinstance(amount, CashAmount):
+            raise TypeError("SecurityTransaction amounts must be CashAmounts.")
+        if amount.is_negative():
+            raise ValueError("SecurityTransaction amounts must not be negative.")
+        if amount.currency != currency:
+            raise CurrencyError("Invalid CashAmount currency.")
 
     def _get_amount(self, account: CashAccount) -> CashAmount:  # noqa: U100
         if self.type_ == SecurityTransactionType.BUY:
@@ -363,9 +489,6 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
             return self.shares
         return -self.shares
 
-    def is_account_related(self, account: Account) -> bool:
-        return account == self._cash_account or account == self._security_account
-
 
 class SecurityTransfer(SecurityRelatedTransaction):
     def __init__(
@@ -374,65 +497,164 @@ class SecurityTransfer(SecurityRelatedTransaction):
         datetime_: datetime,
         security: Security,
         shares: Decimal | int | str,
-        account_sender: SecurityAccount,
-        account_recipient: SecurityAccount,
+        sender: SecurityAccount,
+        recipient: SecurityAccount,
     ) -> None:
-        super().__init__(
+        super().__init__()
+        self.set_attributes(
             description=description,
             datetime_=datetime_,
             security=security,
             shares=shares,
+            sender=sender,
+            recipient=recipient,
         )
-        self.account_sender = account_sender
-        self.account_recipient = account_recipient
 
     def __repr__(self) -> str:
         return (
             f"SecurityTransfer(security='{self.security.symbol}', "
             f"shares={self.shares}, "
-            f"from='{self.account_sender.name}', "
-            f"to='{self.account_recipient.name}', "
+            f"from='{self.sender.name}', "
+            f"to='{self.recipient.name}', "
             f"{self.datetime_.strftime('%Y-%m-%d')})"
         )
 
     @property
-    def account_sender(self) -> SecurityAccount:
-        return self._account_sender
-
-    @account_sender.setter
-    def account_sender(self, new_account: SecurityAccount) -> None:
-        if not isinstance(new_account, SecurityAccount):
-            raise TypeError(
-                "SecurityTransaction.account_sender must be a SecurityAccount."
-            )
-
-        if hasattr(self, "_account_sender"):
-            self._account_sender.remove_transaction(self)
-
-        self._account_sender = new_account
-        self._account_sender.add_transaction(self)
+    def sender(self) -> SecurityAccount:
+        return self._sender
 
     @property
-    def account_recipient(self) -> SecurityAccount:
-        return self._account_recipient
+    def recipient(self) -> SecurityAccount:
+        return self._recipient
 
-    @account_recipient.setter
-    def account_recipient(self, new_account: SecurityAccount) -> None:
-        if not isinstance(new_account, SecurityAccount):
-            raise TypeError(
-                "SecurityTransaction.account_recipient must be a SecurityAccount."
+    def set_attributes(
+        self,
+        *,
+        description: str | None = None,
+        datetime_: datetime | None = None,
+        security: Security | None = None,
+        shares: Decimal | None = None,
+        sender: SecurityAccount | None = None,
+        recipient: SecurityAccount | None = None,
+    ) -> None:
+        if description is None:
+            description = self._description
+        if datetime_ is None:
+            datetime_ = self._datetime
+        if security is None:
+            security = self._security
+        if shares is None:
+            shares = self._shares
+        if sender is None:
+            sender = self._sender
+        if recipient is None:
+            recipient = self._recipient
+
+        self.validate_attributes(
+            description=description,
+            datetime_=datetime_,
+            security=security,
+            shares=shares,
+            sender=sender,
+            recipient=recipient,
+        )
+
+        self._set_attributes(
+            description=description,
+            datetime_=datetime_,
+            security=security,
+            shares=shares,
+            sender=sender,
+            recipient=recipient,
+        )
+
+    def validate_attributes(
+        self,
+        *,
+        description: str | None = None,
+        datetime_: datetime | None = None,
+        security: Security | None = None,
+        shares: Decimal | None = None,
+        sender: SecurityAccount | None = None,
+        recipient: SecurityAccount | None = None,
+    ) -> None:
+        if description is None:
+            description = self._description
+        if datetime_ is None:
+            datetime_ = self._datetime
+        if security is None:
+            security = self._security
+        if shares is None:
+            shares = self._shares
+        if sender is None:
+            sender = self._sender
+        if recipient is None:
+            recipient = self._recipient
+
+        self._validate_description(description)
+        self._validate_datetime(datetime_)
+        self._validate_security(security)
+        self._validate_shares(shares, security.shares_unit)
+        self._validate_accounts(sender, recipient)
+
+    def _set_attributes(
+        self,
+        *,
+        description: str,
+        datetime_: datetime,
+        security: Security,
+        shares: Decimal,
+        sender: SecurityAccount,
+        recipient: SecurityAccount,
+    ) -> None:
+        self._description = description
+        self._datetime = datetime_
+        self._security = security
+        self._shares = shares
+        self._set_accounts(sender, recipient)
+
+    def _validate_accounts(
+        self, sender: SecurityAccount, recipient: SecurityAccount
+    ) -> None:
+        if not isinstance(sender, SecurityAccount):
+            raise TypeError("SecurityTransfer.sender must be a SecurityAccount.")
+        if not isinstance(recipient, SecurityAccount):
+            raise TypeError("SecurityTransfer.recipient must be a SecurityAccount.")
+        if sender == recipient:
+            raise TransferSameAccountError(
+                "SecurityTransaction sender and recipient must be different "
+                "SecurityAccounts."
             )
 
-        if hasattr(self, "_account_recipient"):
-            self._account_recipient.remove_transaction(self)
+    def _set_accounts(
+        self, sender: SecurityAccount, recipient: SecurityAccount
+    ) -> None:
+        add_sender = True
+        add_recipient = True
 
-        self._account_recipient = new_account
-        self._account_recipient.add_transaction(self)
+        if hasattr(self, "_sender"):
+            if self._sender != sender:
+                self._sender.remove_transaction(self)
+            else:
+                add_sender = False
+        if hasattr(self, "_recipient"):
+            if self._recipient != recipient:
+                self._recipient.remove_transaction(self)
+            else:
+                add_recipient = False
+
+        self._sender = sender
+        self._recipient = recipient
+
+        if add_sender:
+            self._sender.add_transaction(self)
+        if add_recipient:
+            self._recipient.add_transaction(self)
 
     def _get_shares(self, account: SecurityAccount) -> Decimal:
-        if account == self._account_sender:
+        if account == self._sender:
             return -self.shares
         return self.shares
 
     def is_account_related(self, account: Account) -> bool:
-        return account == self.account_sender or account == self.account_recipient
+        return account == self.sender or account == self.recipient

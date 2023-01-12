@@ -302,6 +302,9 @@ class CashAmount:
     def is_positive(self) -> bool:
         return self.value > 0
 
+    def is_negative(self) -> bool:
+        return self.value < 0
+
     def convert(self, target_currency: Currency, date_: date | None = None) -> Self:
         if target_currency == self.currency:
             return self

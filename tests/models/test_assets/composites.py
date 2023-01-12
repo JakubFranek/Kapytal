@@ -319,6 +319,12 @@ def security_transfers(draw: st.DrawFn) -> SecurityTransfer:
 
 
 @st.composite
+def share_decimals(draw: st.DrawFn, shares_unit: Decimal) -> Decimal:
+    integer = draw(st.integers(min_value=1, max_value=1e6))
+    return shares_unit * integer
+
+
+@st.composite
 def tag_amount_pairs(
     draw: st.DrawFn,
     currency: Currency,
