@@ -292,6 +292,10 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
     def fees(self) -> CashAmount:
         return self._fees
 
+    @property
+    def currency(self) -> Currency:
+        return self._cash_account.currency
+
     def __repr__(self) -> str:
         return (
             f"SecurityTransaction({self.type_.name}, "

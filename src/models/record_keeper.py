@@ -516,6 +516,218 @@ class RecordKeeper:
                 recipient=recipient,
             )
 
+    def edit_refunds(
+        self,
+        transaction_uuid_strings: Collection[str],
+        description: str | None = None,
+        datetime_: datetime | None = None,
+        transaction_type: CashTransactionType | None = None,
+        account_path: str | None = None,
+        category_path_amount_pairs: Collection[tuple[str, Decimal | None]]
+        | None = None,
+        payee_name: str | None = None,
+        tag_name_amount_pairs: Collection[tuple[str, Decimal]] | None = None,
+    ) -> None:
+        if len(transaction_uuid_strings) < 1:
+            raise ValueError("No transaction UUIDs supplied.")
+        refunds: list[RefundTransaction] = [
+            transaction
+            for transaction in self._transactions
+            if str(transaction.uuid) in transaction_uuid_strings
+        ]
+
+        if not all(isinstance(refund, RefundTransaction) for refund in refunds):
+            raise TypeError("All edited transactions must be RefundTransactions.")
+
+        if not all(refund.currency == refunds[0].currency for refund in refunds):
+            raise CurrencyError(
+                "Edited RefundTransactions must have the same currency."
+            )
+
+        if account_path is not None:
+            account = self.get_account(account_path, CashAccount)
+        else:
+            account = None
+
+        if payee_name is not None:
+            payee = self.get_attribute(payee_name, AttributeType.PAYEE)
+        else:
+            payee = None
+
+        currency = account.currency if account is not None else refunds[0].currency
+
+        if category_path_amount_pairs is not None:
+            category_type = (
+                CategoryType.INCOME
+                if transaction_type == CashTransactionType.INCOME
+                else CategoryType.EXPENSE
+            )
+            category_amount_pairs = self._create_category_amount_pairs(
+                category_path_amount_pairs, category_type, currency
+            )
+        else:
+            category_amount_pairs = None
+
+        if tag_name_amount_pairs is not None:
+            tag_amount_pairs = self._create_tag_amount_pairs(
+                tag_name_amount_pairs, currency
+            )
+        else:
+            tag_amount_pairs = None
+
+        for refund in refunds:
+            refund.validate_attributes(
+                description=description,
+                datetime_=datetime_,
+                account=account,
+                category_amount_pairs=category_amount_pairs,
+                tag_amount_pairs=tag_amount_pairs,
+                payee=payee,
+            )
+
+        for refund in refunds:
+            refund.set_attributes(
+                description=description,
+                datetime_=datetime_,
+                account=account,
+                category_amount_pairs=category_amount_pairs,
+                tag_amount_pairs=tag_amount_pairs,
+                payee=payee,
+            )
+
+    def edit_security_transactions(
+        self,
+        transaction_uuid_strings: Collection[str],
+        description: str | None = None,
+        datetime_: datetime | None = None,
+        transaction_type: SecurityTransactionType | None = None,
+        security_symbol: str | None = None,
+        cash_account_path: str | None = None,
+        security_account_path: str | None = None,
+        price_per_share: Decimal | None = None,
+        fees: Decimal | None = None,
+        shares: Decimal | None = None,
+    ) -> None:
+        if len(transaction_uuid_strings) < 1:
+            raise ValueError("No transaction UUIDs supplied.")
+        transactions: list[SecurityTransaction] = [
+            transaction
+            for transaction in self._transactions
+            if str(transaction.uuid) in transaction_uuid_strings
+        ]
+
+        if not all(
+            isinstance(transaction, SecurityTransaction) for transaction in transactions
+        ):
+            raise TypeError("All edited transactions must be SecurityTransactions.")
+
+        if not all(
+            transaction.currency == transactions[0].currency
+            for transaction in transactions
+        ):
+            raise CurrencyError(
+                "Edited SecurityTransactions must have the same currency."
+            )
+
+        if security_symbol is not None:
+            security = self.get_security(security_symbol)
+        else:
+            security = None
+
+        if cash_account_path is not None:
+            cash_account = self.get_account(cash_account_path, CashAccount)
+        else:
+            cash_account = None
+
+        if security_account_path is not None:
+            security_account = self.get_account(security_account_path, SecurityAccount)
+        else:
+            security_account = None
+
+        for transaction in transactions:
+            transaction.validate_attributes(
+                description=description,
+                datetime_=datetime_,
+                type_=transaction_type,
+                security=security,
+                price_per_share=price_per_share,
+                fees=fees,
+                shares=shares,
+                cash_account=cash_account,
+                security_account=security_account,
+            )
+
+        for transaction in transactions:
+            transaction.set_attributes(
+                description=description,
+                datetime_=datetime_,
+                type_=transaction_type,
+                security=security,
+                price_per_share=price_per_share,
+                fees=fees,
+                shares=shares,
+                cash_account=cash_account,
+                security_account=security_account,
+            )
+
+    def edit_security_transfers(
+        self,
+        transaction_uuid_strings: Collection[str],
+        description: str | None = None,
+        datetime_: datetime | None = None,
+        security_symbol: str | None = None,
+        shares: Decimal | None = None,
+        sender_path: str | None = None,
+        recipient_path: str | None = None,
+    ) -> None:
+        if len(transaction_uuid_strings) < 1:
+            raise ValueError("No transaction UUIDs supplied.")
+        transactions: list[SecurityTransfer] = [
+            transaction
+            for transaction in self._transactions
+            if str(transaction.uuid) in transaction_uuid_strings
+        ]
+
+        if not all(
+            isinstance(transaction, SecurityTransfer) for transaction in transactions
+        ):
+            raise TypeError("All edited transactions must be SecurityTransfer.")
+
+        if security_symbol is not None:
+            security = self.get_security(security_symbol)
+        else:
+            security = None
+
+        if sender_path is not None:
+            sender = self.get_account(sender_path, SecurityAccount)
+        else:
+            sender = None
+
+        if recipient_path is not None:
+            recipient = self.get_account(recipient_path, SecurityAccount)
+        else:
+            recipient = None
+
+        for transaction in transactions:
+            transaction.validate_attributes(
+                description=description,
+                datetime_=datetime_,
+                sender=sender,
+                recipient=recipient,
+                shares=shares,
+                security=security,
+            )
+
+        for transaction in transactions:
+            transaction.set_attributes(
+                description=description,
+                datetime_=datetime_,
+                sender=sender,
+                recipient=recipient,
+                shares=shares,
+                security=security,
+            )
+
     def get_account_parent(self, path: str | None) -> AccountGroup | None:
         if path:
             for account_group in self._account_groups:
