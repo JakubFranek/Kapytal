@@ -92,3 +92,20 @@ def test_edit_security_does_not_exist() -> None:
     record_keeper = RecordKeeper()
     with pytest.raises(DoesNotExistError):
         record_keeper.edit_security("SMBL", "SYMB", "NEW NAME")
+
+
+def test_edit_account() -> None:
+    record_keeper = RecordKeeper()
+    record_keeper.add_account_group("TEST PARENT", None)
+    record_keeper.add_account_group("NEW PARENT", None)
+    record_keeper.add_security_account("TEST NAME", "TEST PARENT")
+    record_keeper.edit_account("TEST PARENT/TEST NAME", "NEW NAME", "NEW PARENT")
+    account = record_keeper.accounts[0]
+    assert account.name == "NEW NAME"
+    assert account.path == "NEW PARENT/NEW NAME"
+
+
+def test_edit_account_does_not_exist() -> None:
+    record_keeper = RecordKeeper()
+    with pytest.raises(DoesNotExistError):
+        record_keeper.edit_account("ABC", "DEF", "GHI")

@@ -43,7 +43,6 @@ class DoesNotExistError(ValueError):
 
 
 # TODO: add account/account group edit
-# TODO: add security edit
 # TODO: add add_tag/remove_tag methods
 class RecordKeeper:
     def __init__(self) -> None:
@@ -796,6 +795,24 @@ class RecordKeeper:
             edited_security.symbol = new_symbol
         if new_name is not None:
             edited_security.name = new_name
+
+    def edit_account(
+        self,
+        current_path: str,
+        new_name: str | None = None,
+        new_parent_path: str | None = None,
+    ) -> None:
+        for account in self._accounts:
+            if account.path == current_path:
+                edited_account = account
+                break
+        else:
+            raise DoesNotExistError(f"Account at path='{current_path}' does not exist.")
+        if new_name is not None:
+            edited_account.name = new_name
+        if new_parent_path is not None:
+            parent = self.get_account_parent(new_parent_path)
+            edited_account.parent = parent
 
     def get_account_parent(self, path: str | None) -> AccountGroup | None:
         if path:
