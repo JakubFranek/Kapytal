@@ -340,7 +340,7 @@ class RecordKeeper:
         description: str,
         datetime_: datetime,
         security_symbol: str,
-        shares: int,
+        shares: Decimal | int | str,
         account_sender_path: str,
         account_recipient_path: str,
     ) -> None:
@@ -604,9 +604,9 @@ class RecordKeeper:
         security_symbol: str | None = None,
         cash_account_path: str | None = None,
         security_account_path: str | None = None,
-        price_per_share: Decimal | None = None,
-        fees: Decimal | None = None,
-        shares: Decimal | None = None,
+        price_per_share: Decimal | int | str | None = None,
+        fees: Decimal | int | str | None = None,
+        shares: Decimal | int | str | None = None,
     ) -> None:
         if len(transaction_uuid_strings) < 1:
             raise ValueError("No transaction UUIDs supplied.")
@@ -643,6 +643,21 @@ class RecordKeeper:
             security_account = self.get_account(security_account_path, SecurityAccount)
         else:
             security_account = None
+
+        currency = (
+            cash_account.currency
+            if cash_account is not None
+            else transactions[0].currency
+        )
+
+        if price_per_share is not None:
+            price_per_share = CashAmount(price_per_share, currency)
+
+        if fees is not None:
+            fees = CashAmount(fees, currency)
+
+        if shares is not None:
+            shares = Decimal(shares)
 
         for transaction in transactions:
             transaction.validate_attributes(

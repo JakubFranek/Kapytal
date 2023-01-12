@@ -281,14 +281,12 @@ def security_transactions(
     type_ = draw(st.sampled_from(SecurityTransactionType))
 
     cash_account = draw(cash_accounts())
-    price_per_share = draw(cash_amounts(currency=cash_account.currency))
-    fees = draw(cash_amounts(currency=cash_account.currency))
+    price_per_share = draw(cash_amounts(currency=cash_account.currency, min_value=0))
+    fees = draw(cash_amounts(currency=cash_account.currency, min_value=0))
     security = draw(securities(currency=cash_account.currency))
     security_account = draw(security_accounts())
 
-    shares = draw(
-        valid_decimals(min_value=1e-10).filter(lambda x: x % security.shares_unit == 0)
-    )
+    shares = draw(share_decimals(shares_unit=security.shares_unit))
 
     return SecurityTransaction(
         description,

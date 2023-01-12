@@ -74,6 +74,7 @@ def test_buy(
     assert transaction.security == security
     assert transaction.security_account == security_account
     assert transaction.cash_account == cash_account
+    assert transaction.currency == cash_account.currency
     assert (
         cash_account.get_balance(currency)
         == cash_account.initial_balance - shares * price_per_share - fees
@@ -197,7 +198,7 @@ def test_invalid_security_type(
 @given(
     type_=st.sampled_from(SecurityTransactionType),
     security=securities(),
-    shares=everything_except((Decimal, int, NoneType)),
+    shares=everything_except((Decimal, str, int, NoneType)),
     security_account=security_accounts(),
     cash_account=cash_accounts(),
     data=st.data(),

@@ -20,11 +20,14 @@ from src.models.model_objects.cash_objects import (
     CashTransaction,
     CashTransactionType,
     CashTransfer,
+    RefundTransaction,
 )
 from src.models.model_objects.currency import CashAmount, Currency, CurrencyError
 from src.models.model_objects.security_objects import (
     SecurityAccount,
+    SecurityTransaction,
     SecurityTransactionType,
+    SecurityTransfer,
     SecurityType,
 )
 from src.models.record_keeper import AlreadyExistsError, DoesNotExistError, RecordKeeper
@@ -1001,6 +1004,274 @@ def test_edit_cash_transfer_amount_received_currency_not_same() -> None:
         record_keeper.edit_cash_transfers(uuids, amount_received=edit_amount_received)
 
 
+def test_edit_refunds_same_values() -> None:
+    record_keeper = get_preloaded_record_keeper_with_refunds()
+    refunds = [
+        transaction
+        for transaction in record_keeper.transactions
+        if isinstance(transaction, RefundTransaction)
+        and transaction.currency.code == "CZK"
+    ]
+    uuids = [str(transfer.uuid) for transfer in refunds]
+    record_keeper.edit_refunds(uuids)
+
+
+def test_edit_refunds_no_uuids() -> None:
+    record_keeper = get_preloaded_record_keeper_with_refunds()
+    with pytest.raises(ValueError, match="No transaction UUIDs supplied."):
+        record_keeper.edit_refunds(transaction_uuid_strings=[])
+
+
+def test_edit_refunds_wrong_transaction_types() -> None:
+    record_keeper = get_preloaded_record_keeper_with_cash_transactions()
+    transactions = [transaction for transaction in record_keeper.transactions]
+    uuids = [str(transfer.uuid) for transfer in transactions]
+    with pytest.raises(
+        TypeError, match="All edited transactions must be RefundTransactions."
+    ):
+        record_keeper.edit_refunds(uuids)
+
+
+def test_edit_refunds_currency_not_same() -> None:
+    record_keeper = get_preloaded_record_keeper_with_refunds()
+    transactions = [
+        transaction
+        for transaction in record_keeper.transactions
+        if isinstance(transaction, RefundTransaction)
+    ]
+    uuids = [str(transfer.uuid) for transfer in transactions]
+    with pytest.raises(CurrencyError):
+        record_keeper.edit_refunds(uuids)
+
+
+def test_edit_refunds_change_account() -> None:
+    record_keeper = get_preloaded_record_keeper_with_refunds()
+    edit_account_path = "Bank Accounts/Fio CZK"
+    transactions = [
+        transaction
+        for transaction in record_keeper.transactions
+        if isinstance(transaction, RefundTransaction)
+        and transaction.currency.code == "CZK"
+    ]
+    uuids = [str(transfer.uuid) for transfer in transactions]
+    record_keeper.edit_refunds(uuids, account_path=edit_account_path)
+    for transaction in transactions:
+        assert transaction.account.path == edit_account_path
+
+
+def test_edit_refunds_change_payee() -> None:
+    record_keeper = get_preloaded_record_keeper_with_refunds()
+    edit_payee = "TEST PAYEE"
+    transactions = [
+        transaction
+        for transaction in record_keeper.transactions
+        if isinstance(transaction, RefundTransaction)
+        and transaction.currency.code == "CZK"
+    ]
+    uuids = [str(transfer.uuid) for transfer in transactions]
+    record_keeper.edit_refunds(uuids, payee_name=edit_payee)
+    for transaction in transactions:
+        assert transaction.payee.name == edit_payee
+
+
+def test_edit_refunds_change_category_amounts() -> None:
+    record_keeper = get_preloaded_record_keeper_with_refunds()
+    edit_category_amount_pairs = [("Food and Drink/Groceries", Decimal(250))]
+    transactions = [
+        transaction
+        for transaction in record_keeper.transactions
+        if isinstance(transaction, RefundTransaction)
+        and transaction.currency.code == "CZK"
+    ]
+    uuids = [str(transfer.uuid) for transfer in transactions]
+    record_keeper.edit_refunds(
+        uuids, category_path_amount_pairs=edit_category_amount_pairs
+    )
+    for transaction in transactions:
+        assert transaction.category_amount_pairs == (
+            (
+                (
+                    transaction.category_amount_pairs[0][0],
+                    CashAmount(250, transaction.currency),
+                )
+            ),
+        )
+
+
+def test_edit_refunds_change_tag_amounts() -> None:
+    record_keeper = get_preloaded_record_keeper_with_refunds()
+    edit_category_amount_pairs = [("Food and Drink/Groceries", Decimal(250))]
+    edit_tag_amount_pairs = [("Test Tag", Decimal(250))]
+    transactions = [
+        transaction
+        for transaction in record_keeper.transactions
+        if isinstance(transaction, RefundTransaction)
+        and transaction.currency.code == "CZK"
+    ]
+    uuids = [str(transfer.uuid) for transfer in transactions]
+    record_keeper.edit_refunds(
+        uuids,
+        category_path_amount_pairs=edit_category_amount_pairs,
+        tag_name_amount_pairs=edit_tag_amount_pairs,
+    )
+    for transaction in transactions:
+        assert transaction.tag_amount_pairs == (
+            (
+                (
+                    transaction.tag_amount_pairs[0][0],
+                    CashAmount(250, transaction.currency),
+                )
+            ),
+        )
+
+
+def test_edit_security_transactions_same_values() -> None:
+    record_keeper = get_preloaded_record_keeper_with_security_transactions()
+    transactions = [
+        transaction
+        for transaction in record_keeper.transactions
+        if isinstance(transaction, SecurityTransaction)
+        and transaction.currency.code == "EUR"
+    ]
+    uuids = [str(transfer.uuid) for transfer in transactions]
+    record_keeper.edit_security_transactions(uuids)
+
+
+def test_edit_security_transactions_no_uuids() -> None:
+    record_keeper = get_preloaded_record_keeper_with_security_transactions()
+    with pytest.raises(ValueError, match="No transaction UUIDs supplied."):
+        record_keeper.edit_security_transactions(transaction_uuid_strings=[])
+
+
+def test_edit_security_transfers_same_values() -> None:
+    record_keeper = get_preloaded_record_keeper_with_security_transactions()
+    tansfers = [
+        transaction
+        for transaction in record_keeper.transactions
+        if isinstance(transaction, SecurityTransfer)
+    ]
+    uuids = [str(transfer.uuid) for transfer in tansfers]
+    record_keeper.edit_security_transfers(uuids)
+
+
+def get_preloaded_record_keeper_with_security_transactions() -> RecordKeeper:
+    record_keeper = get_preloaded_record_keeper()
+    record_keeper.add_security_transaction(
+        description="Monthly buy of VWCE",
+        datetime_=datetime.now(tzinfo) - timedelta(days=1),
+        type_=SecurityTransactionType.BUY,
+        security_symbol="VWCE.DE",
+        shares=Decimal(10),
+        price_per_share=Decimal(90),
+        fees=Decimal(1.25),
+        security_account_path="Security Accounts/Interactive Brokers",
+        cash_account_path="Bank Accounts/Moneta EUR",
+    )
+    record_keeper.add_security_transaction(
+        description="Monthly buy of VWCE",
+        datetime_=datetime.now(tzinfo) - timedelta(days=31),
+        type_=SecurityTransactionType.BUY,
+        security_symbol="VWCE.DE",
+        shares=Decimal(10),
+        price_per_share=Decimal(91),
+        fees=Decimal(1.25),
+        security_account_path="Security Accounts/Interactive Brokers",
+        cash_account_path="Bank Accounts/Moneta EUR",
+    )
+    record_keeper.add_security_transaction(
+        description="Monthly buy of ČSOB DPS",
+        datetime_=datetime.now(tzinfo) - timedelta(days=1),
+        type_=SecurityTransactionType.BUY,
+        security_symbol="CSOB.DYN",
+        shares=Decimal(2750),
+        price_per_share=Decimal(1.75),
+        fees=Decimal(0),
+        security_account_path="Security Accounts/ČSOB Penzijní účet",
+        cash_account_path="Bank Accounts/Fio CZK",
+    )
+    record_keeper.add_security_transaction(
+        description="Monthly buy of ČSOB DPS",
+        datetime_=datetime.now(tzinfo) - timedelta(days=31),
+        type_=SecurityTransactionType.BUY,
+        security_symbol="CSOB.DYN",
+        shares=Decimal(2850),
+        price_per_share=Decimal(1.6),
+        fees=Decimal(0),
+        security_account_path="Security Accounts/ČSOB Penzijní účet",
+        cash_account_path="Bank Accounts/Fio CZK",
+    )
+    record_keeper.add_security_transfer(
+        description="Security transfer to Degiro",
+        datetime_=datetime.now(tzinfo),
+        security_symbol="VWCE.DE",
+        shares=Decimal(10),
+        account_sender_path="Security Accounts/Interactive Brokers",
+        account_recipient_path="Security Accounts/Degiro",
+    )
+    record_keeper.add_security_transfer(
+        description="Security transfer to Degiro",
+        datetime_=datetime.now(tzinfo) - timedelta(days=30),
+        security_symbol="VWCE.DE",
+        shares=Decimal(10),
+        account_sender_path="Security Accounts/Interactive Brokers",
+        account_recipient_path="Security Accounts/Degiro",
+    )
+    return record_keeper
+
+
+def get_preloaded_record_keeper_with_refunds() -> RecordKeeper:
+    record_keeper = get_preloaded_record_keeper()
+    record_keeper.add_cash_transaction(
+        "Shopping for cooking",
+        datetime.now(tzinfo) - timedelta(days=2),
+        CashTransactionType.EXPENSE,
+        "Bank Accounts/Raiffeisen CZK",
+        (("Food and Drink/Groceries", Decimal(1000)),),
+        "Albert",
+        (("Test Tag", Decimal(1000)),),
+    )
+    record_keeper.add_cash_transaction(
+        "Electronic device",
+        datetime.now(tzinfo) - timedelta(days=2),
+        CashTransactionType.EXPENSE,
+        "Bank Accounts/Moneta EUR",
+        (("Electronics", Decimal(400)),),
+        "Alza",
+        (("Test Tag", Decimal(400)),),
+    )
+    transaction_cooking = record_keeper.transactions[0]
+    transaction_electronics = record_keeper.transactions[1]
+
+    record_keeper.add_refund(
+        description="An expense transaction",
+        datetime_=datetime.now(tzinfo),
+        refunded_transaction_uuid_string=str(transaction_cooking.uuid),
+        refunded_account_path="Bank Accounts/Raiffeisen CZK",
+        category_path_amount_pairs=(("Food and Drink/Groceries", Decimal(250)),),
+        payee_name="Albert",
+        tag_name_amount_pairs=(("Test Tag", Decimal(250)),),
+    )
+    record_keeper.add_refund(
+        description="An expense transaction",
+        datetime_=datetime.now(tzinfo),
+        refunded_transaction_uuid_string=str(transaction_cooking.uuid),
+        refunded_account_path="Bank Accounts/Raiffeisen CZK",
+        category_path_amount_pairs=(("Food and Drink/Groceries", Decimal(750)),),
+        payee_name="Albert",
+        tag_name_amount_pairs=(("Test Tag", Decimal(750)),),
+    )
+    record_keeper.add_refund(
+        description="An expense transaction",
+        datetime_=datetime.now(tzinfo),
+        refunded_transaction_uuid_string=str(transaction_electronics.uuid),
+        refunded_account_path="Bank Accounts/Moneta EUR",
+        category_path_amount_pairs=(("Electronics", Decimal(400)),),
+        payee_name="Alza",
+        tag_name_amount_pairs=(("Test Tag", Decimal(400)),),
+    )
+    return record_keeper
+
+
 def get_preloaded_record_keeper_with_expense() -> RecordKeeper:
     record_keeper = get_preloaded_record_keeper()
     record_keeper.add_cash_transaction(
@@ -1148,10 +1419,17 @@ def get_preloaded_record_keeper() -> RecordKeeper:
     record_keeper.add_security_account(
         name="Interactive Brokers", parent_path="Security Accounts"
     )
+    record_keeper.add_security_account(
+        name="ČSOB Penzijní účet", parent_path="Security Accounts"
+    )
     record_keeper.add_security(
         "Vanguard FTSE All-World", "VWCE.DE", SecurityType.ETF, "EUR", 1
     )
+    record_keeper.add_security(
+        "ČSOB Dynamický penzijní fond", "CSOB.DYN", SecurityType.MUTUAL_FUND, "CZK", 1
+    )
     record_keeper.add_category("Food and Drink", None, CategoryType.EXPENSE)
+    record_keeper.add_category("Electronics", None, CategoryType.EXPENSE)
     record_keeper.add_category("Groceries", "Food and Drink")
     record_keeper.add_category("Eating out", "Food and Drink")
     record_keeper.add_category("Salary", None, CategoryType.INCOME)
