@@ -42,7 +42,6 @@ class DoesNotExistError(ValueError):
     """Raised when a search for an object finds nothing."""
 
 
-# TODO: add add_tag/remove_tag methods
 class RecordKeeper:
     def __init__(self) -> None:
         self._accounts: list[Account] = []
@@ -364,8 +363,6 @@ class RecordKeeper:
         payee_name: str | None = None,
         tag_name_amount_pairs: Collection[tuple[str, Decimal]] | None = None,
     ) -> None:
-        if len(transaction_uuid_strings) < 1:
-            raise ValueError("No transaction UUIDs supplied.")
         transactions: list[CashTransaction] = [
             transaction
             for transaction in self._transactions
@@ -446,8 +443,6 @@ class RecordKeeper:
         amount_sent: Decimal | None = None,
         amount_received: Decimal | None = None,
     ) -> None:
-        if len(transaction_uuid_strings) < 1:
-            raise ValueError("No transaction UUIDs supplied.")
         transfers: list[CashTransfer] = [
             transaction
             for transaction in self._transactions
@@ -523,8 +518,6 @@ class RecordKeeper:
         payee_name: str | None = None,
         tag_name_amount_pairs: Collection[tuple[str, Decimal]] | None = None,
     ) -> None:
-        if len(transaction_uuid_strings) < 1:
-            raise ValueError("No transaction UUIDs supplied.")
         refunds: list[RefundTransaction] = [
             transaction
             for transaction in self._transactions
@@ -603,8 +596,6 @@ class RecordKeeper:
         fees: Decimal | int | str | None = None,
         shares: Decimal | int | str | None = None,
     ) -> None:
-        if len(transaction_uuid_strings) < 1:
-            raise ValueError("No transaction UUIDs supplied.")
         transactions: list[SecurityTransaction] = [
             transaction
             for transaction in self._transactions
@@ -690,8 +681,6 @@ class RecordKeeper:
         sender_path: str | None = None,
         recipient_path: str | None = None,
     ) -> None:
-        if len(transaction_uuid_strings) < 1:
-            raise ValueError("No transaction UUIDs supplied.")
         transactions: list[SecurityTransfer] = [
             transaction
             for transaction in self._transactions
@@ -832,6 +821,43 @@ class RecordKeeper:
         if new_parent_path is not None:
             parent = self.get_account_parent(new_parent_path)
             edited_account_group.parent = parent
+
+    def add_tags_to_transactions(
+        self, transaction_uuid_strings: Collection[str], tag_names: Collection[str]
+    ) -> None:
+        self._perform_tag_operation(
+            transaction_uuid_strings=transaction_uuid_strings,
+            tag_names=tag_names,
+            method_name="add_tags",
+        )
+
+    def remove_tags_from_transactions(
+        self, transaction_uuid_strings: Collection[str], tag_names: Collection[str]
+    ) -> None:
+        self._perform_tag_operation(
+            transaction_uuid_strings=transaction_uuid_strings,
+            tag_names=tag_names,
+            method_name="remove_tags",
+        )
+
+    def _perform_tag_operation(
+        self,
+        transaction_uuid_strings: Collection[str],
+        tag_names: Collection[str],
+        method_name: str,
+    ) -> None:
+        transactions: list[Transaction] = [
+            transaction
+            for transaction in self._transactions
+            if str(transaction.uuid) in transaction_uuid_strings
+        ]
+
+        tags = [
+            self.get_attribute(tag_name, AttributeType.TAG) for tag_name in tag_names
+        ]
+        for transaction in transactions:
+            method = getattr(transaction, method_name)
+            method(tags)
 
     def get_account_parent(self, path: str | None) -> AccountGroup | None:
         if path:

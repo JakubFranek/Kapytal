@@ -241,6 +241,10 @@ class CashTransaction(CashRelatedTransaction):
         return self._tag_amount_pairs
 
     @property
+    def tags(self) -> tuple[Attribute]:
+        return tuple(tag for tag, _ in self._tag_amount_pairs)
+
+    @property
     def tag_names(self) -> str:
         tag_names = [tag.name for tag, _ in self._tag_amount_pairs]
         return ", ".join(tag_names)
@@ -274,6 +278,27 @@ class CashTransaction(CashRelatedTransaction):
 
     def is_account_related(self, account: Account) -> bool:
         return self.account == account
+
+    def add_tags(self, tags: Collection[Attribute]) -> None:
+        self._validate_tags(tags)
+        new_tags = tuple(tag for tag in tags if tag not in self.tags)
+        tag_amount_pairs = list(self._tag_amount_pairs)
+        for tag in new_tags:
+            tup = (tag, self.amount)
+            tag_amount_pairs.append(tup)
+        self._validate_tag_amount_pairs(tag_amount_pairs, self.amount, self.currency)
+        self._tag_amount_pairs = tag_amount_pairs
+
+    def remove_tags(self, tags: Collection[Attribute]) -> None:
+        self._validate_tags(tags)
+        tags_to_remove = tuple(tag for tag in tags if tag in self.tags)
+        tag_amount_pairs = [
+            (tag, amount)
+            for tag, amount in self._tag_amount_pairs
+            if tag not in tags_to_remove
+        ]
+        self._validate_tag_amount_pairs(tag_amount_pairs, self.amount, self.currency)
+        self._tag_amount_pairs = tag_amount_pairs
 
     def set_attributes(
         self,
@@ -777,6 +802,10 @@ class RefundTransaction(CashRelatedTransaction):
         return ", ".join(category_paths)
 
     @property
+    def tags(self) -> tuple[Attribute]:
+        return tuple(tag for tag, _ in self._tag_amount_pairs)
+
+    @property
     def tag_amount_pairs(self) -> tuple[tuple[Attribute, CashAmount], ...]:
         return self._tag_amount_pairs
 
@@ -794,6 +823,14 @@ class RefundTransaction(CashRelatedTransaction):
 
     def is_account_related(self, account: "Account") -> bool:
         return self.account == account
+
+    def add_tags(self, tags: Collection[Attribute]) -> None:  # noqa: U100
+        raise InvalidOperationError("Adding tags to RefundTransaction is forbidden.")
+
+    def remove_tags(self, tags: Collection[Attribute]) -> None:  # noqa: U100
+        raise InvalidOperationError(
+            "Removing tags from RefundTransaction is forbidden."
+        )
 
     def set_attributes(
         self,

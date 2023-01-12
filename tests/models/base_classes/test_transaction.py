@@ -1,13 +1,19 @@
 import uuid
 from datetime import datetime
 from types import NoneType
+from typing import Any, Collection
 
 import pytest
 from hypothesis import given
 from hypothesis import strategies as st
 
 from src.models.constants import tzinfo
-from tests.models.test_assets.composites import everything_except
+from src.models.model_objects.attributes import (
+    Attribute,
+    AttributeType,
+    InvalidAttributeError,
+)
+from tests.models.test_assets.composites import attributes, everything_except
 from tests.models.test_assets.concrete_abcs import ConcreteTransaction
 
 
@@ -60,3 +66,36 @@ def test_set_attributes_same_values(description: str, datetime_: datetime) -> No
     transaction.set_attributes()
     assert transaction.description == description
     assert transaction.datetime_ == datetime_
+
+
+@given(tags=st.lists(attributes(AttributeType.TAG), min_size=1, max_size=5))
+def test_add_remove_tags(tags: list[Attribute]) -> None:
+    transaction = ConcreteTransaction("test", datetime.now(tzinfo))
+    transaction.add_tags(tags)
+    for tag in tags:
+        assert tag in transaction.tags
+        transaction.remove_tags([tag])
+        assert tag not in transaction.tags
+
+
+@given(tags=everything_except(Collection))
+def test_validate_tags_invalid_type(tags: Any) -> None:
+    transaction = ConcreteTransaction("test", datetime.now(tzinfo))
+    with pytest.raises(TypeError, match="Parameter 'tags' must be a Collection."):
+        transaction._validate_tags(tags)
+
+
+@given(tags=st.lists(everything_except(Attribute), min_size=1, max_size=5))
+def test_validate_tags_invalid_member_types(tags: Any) -> None:
+    transaction = ConcreteTransaction("test", datetime.now(tzinfo))
+    with pytest.raises(
+        TypeError, match="Parameter 'tags' must be a Collection of Attributes."
+    ):
+        transaction._validate_tags(tags)
+
+
+@given(tags=st.lists(attributes(AttributeType.PAYEE), min_size=1, max_size=5))
+def test_validate_tags_invalid_attribute_type(tags: Any) -> None:
+    transaction = ConcreteTransaction("test", datetime.now(tzinfo))
+    with pytest.raises(InvalidAttributeError):
+        transaction._validate_tags(tags)

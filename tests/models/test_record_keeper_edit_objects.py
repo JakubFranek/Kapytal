@@ -34,6 +34,7 @@ from src.models.model_objects.security_objects import (
 )
 from src.models.record_keeper import AlreadyExistsError, DoesNotExistError, RecordKeeper
 from tests.models.test_assets.composites import (
+    attributes,
     currencies,
     everything_except,
     valid_decimals,

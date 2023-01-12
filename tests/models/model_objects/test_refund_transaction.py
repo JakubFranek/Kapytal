@@ -56,6 +56,7 @@ def test_creation() -> None:
     )
     category_amount_pairs = get_valid_category_amount_pairs()
     tag_amount_pairs = get_valid_tag_amount_pairs()
+    tags = tuple(tag for tag, _ in tag_amount_pairs)
     payee = refunded_transaction.payee
 
     refund = RefundTransaction(
@@ -83,6 +84,7 @@ def test_creation() -> None:
     assert refund.tag_amount_pairs == tag_amount_pairs
     assert refund in refunded_transaction.refunds
     assert refund.payee == payee
+    assert refund.tags == tags
     assert refund.__repr__() == (
         f"RefundTransaction(account='{refund.account.name}', "
         f"amount={refund.amount}, "
@@ -595,6 +597,14 @@ def test_change_account(data: st.DataObject) -> None:
 
     assert refund in new_account.transactions
     assert refund not in old_account.transactions
+
+
+def test_add_remove_tags() -> None:
+    refund = get_preloaded_refund()
+    with pytest.raises(InvalidOperationError):
+        refund.add_tags(None)
+    with pytest.raises(InvalidOperationError):
+        refund.remove_tags(None)
 
 
 def test_edit_refunded_transaction_fail() -> None:
