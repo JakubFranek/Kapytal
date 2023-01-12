@@ -32,6 +32,8 @@ from src.models.model_objects.security_objects import (
 from tests.models.test_assets.concrete_abcs import ConcreteTransaction
 from tests.models.test_assets.constants import max_datetime, min_datetime
 
+# TODO: check if optional params for some composites can help optimize tests
+
 
 def everything_except(excluded_types: type | tuple[type, ...]) -> Any:
     return (
@@ -120,10 +122,12 @@ def cash_transactions(
     currency: Currency | None = None,
     min_datetime: datetime = min_datetime,
     max_datetime: datetime = datetime.max,
+    account: CashAccount = None,
 ) -> CashTransaction:
     description = draw(st.text(min_size=0, max_size=256))
     type_ = draw(st.sampled_from(CashTransactionType))
-    account: CashAccount = draw(cash_accounts(currency=currency))
+    if account is None:
+        account = draw(cash_accounts(currency=currency))
     currency = account.currency
     datetime_ = draw(
         st.datetimes(
@@ -160,8 +164,8 @@ def cash_transactions(
         datetime_,
         type_,
         account,
-        category_amount_pairs_list,
         payee,
+        category_amount_pairs_list,
         tag_amount_pairs_list,
     )
 
@@ -171,10 +175,12 @@ def cash_transfers(
     draw: st.DrawFn,
     min_datetime: datetime = min_datetime,
     max_datetime: datetime = datetime.max,
+    currency_sender: Currency | None = None,
+    currency_recipient: Currency | None = None,
 ) -> CashTransfer:
     description = draw(st.text(min_size=0, max_size=256))
-    account_sender: CashAccount = draw(cash_accounts())
-    account_recipient: CashAccount = draw(cash_accounts())
+    account_sender: CashAccount = draw(cash_accounts(currency=currency_sender))
+    account_recipient: CashAccount = draw(cash_accounts(currency=currency_recipient))
     datetime_ = draw(
         st.datetimes(
             min_value=min_datetime, max_value=max_datetime, timezones=st.just(tzinfo)
@@ -275,14 +281,12 @@ def security_transactions(
     type_ = draw(st.sampled_from(SecurityTransactionType))
 
     cash_account = draw(cash_accounts())
-    price_per_share = draw(cash_amounts(currency=cash_account.currency))
-    fees = draw(cash_amounts(currency=cash_account.currency))
+    price_per_share = draw(cash_amounts(currency=cash_account.currency, min_value=0))
+    fees = draw(cash_amounts(currency=cash_account.currency, min_value=0))
     security = draw(securities(currency=cash_account.currency))
     security_account = draw(security_accounts())
 
-    shares = draw(
-        valid_decimals(min_value=1e-10).filter(lambda x: x % security.shares_unit == 0)
-    )
+    shares = draw(share_decimals(shares_unit=security.shares_unit))
 
     return SecurityTransaction(
         description,
@@ -310,6 +314,12 @@ def security_transfers(draw: st.DrawFn) -> SecurityTransfer:
     return SecurityTransfer(
         description, datetime_, security, shares, account_sender, account_recipient
     )
+
+
+@st.composite
+def share_decimals(draw: st.DrawFn, shares_unit: Decimal) -> Decimal:
+    integer = draw(st.integers(min_value=1, max_value=1e6))
+    return shares_unit * integer
 
 
 @st.composite

@@ -7,6 +7,7 @@ from hypothesis import assume, given
 from hypothesis import strategies as st
 
 from src.models.constants import tzinfo
+from src.models.custom_exceptions import AlreadyExistsError
 from src.models.model_objects.cash_objects import (
     CashAccount,
     CashTransaction,
@@ -149,7 +150,7 @@ def test_validate_transaction_invalid_account(
     account: CashAccount, transaction: CashTransaction, transfer: CashTransfer
 ) -> None:
     assume(transaction.account != account)
-    assume(transfer.account_recipient != account and transfer.account_sender != account)
+    assume(transfer.recipient != account and transfer.sender != account)
 
     with pytest.raises(UnrelatedAccountError):
         account._validate_transaction(transaction)
@@ -173,9 +174,9 @@ def test_validate_transaction_invalid_datetime(
 ) -> None:
     transaction._account = account
     if switch:
-        transfer._account_recipient = account
+        transfer._recipient = account
     else:
-        transfer._account_sender = account
+        transfer._sender = account
     invalid_datetime = data.draw(
         st.datetimes(
             max_value=account.initial_datetime.replace(tzinfo=None)
@@ -196,12 +197,15 @@ def test_validate_transaction_invalid_datetime(
 def test_get_balance(currency: Currency, data: st.DataObject) -> None:
     account = data.draw(cash_accounts(currency=currency))
     transactions = data.draw(
-        st.lists(cash_transactions(currency=currency), min_size=1, max_size=5)
+        st.lists(
+            cash_transactions(currency=currency, account=account),
+            min_size=1,
+            max_size=5,
+        )
     )
     datetime_balance_list = [(account.initial_datetime, account.initial_balance)]
     transactions.sort(key=lambda transaction: transaction.datetime_)
     for transaction in transactions:
-        transaction.account = account
         if transaction.type_ == CashTransactionType.INCOME:
             next_balance = datetime_balance_list[-1][1] + transaction.amount
         else:
@@ -210,3 +214,10 @@ def test_get_balance(currency: Currency, data: st.DataObject) -> None:
 
     assert datetime_balance_list[-1][1] == account.get_balance(currency)
     assert set(datetime_balance_list) == set(account.balance_history)
+
+
+@given(transaction=cash_transactions())
+def test_add_transaction_already_exists(transaction: CashTransaction) -> None:
+    account = transaction.account
+    with pytest.raises(AlreadyExistsError):
+        account.add_transaction(transaction)

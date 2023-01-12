@@ -1,4 +1,5 @@
 from datetime import datetime
+from types import NoneType
 from typing import Any
 
 import pytest
@@ -6,6 +7,7 @@ from hypothesis import given
 from hypothesis import strategies as st
 
 from src.models.constants import tzinfo
+from src.models.custom_exceptions import TransferSameAccountError
 from src.models.model_objects.security_objects import (
     Security,
     SecurityAccount,
@@ -16,6 +18,7 @@ from tests.models.test_assets.composites import (
     securities,
     security_accounts,
     security_transfers,
+    share_decimals,
     valid_decimals,
 )
 
@@ -47,8 +50,8 @@ def test_creation(
     assert transfer.__repr__() == (
         f"SecurityTransfer(security='{transfer.security.symbol}', "
         f"shares={transfer.shares}, "
-        f"from='{transfer.account_sender.name}', "
-        f"to='{transfer.account_recipient.name}', "
+        f"from='{transfer.sender.name}', "
+        f"to='{transfer.recipient.name}', "
         f"{transfer.datetime_.strftime('%Y-%m-%d')})"
     )
     assert transfer in account_sender.transactions
@@ -61,7 +64,7 @@ def test_creation(
     description=st.text(min_size=1, max_size=256),
     datetime_=st.datetimes(timezones=st.just(tzinfo)),
     security=securities(),
-    account_sender=everything_except(SecurityAccount),
+    account_sender=everything_except((SecurityAccount, NoneType)),
     account_recipient=security_accounts(),
     data=st.data(),
 )
@@ -73,11 +76,9 @@ def test_invalid_account_sender_type(
     account_recipient: SecurityAccount,
     data: st.DataObject,
 ) -> None:
-    shares = data.draw(
-        valid_decimals(min_value=1e-10).filter(lambda x: x % security.shares_unit == 0)
-    )
+    shares = data.draw(share_decimals(shares_unit=security.shares_unit))
     with pytest.raises(
-        TypeError, match="SecurityTransaction.account_sender must be a SecurityAccount."
+        TypeError, match="SecurityTransfer.sender must be a SecurityAccount."
     ):
         SecurityTransfer(
             description, datetime_, security, shares, account_sender, account_recipient
@@ -88,7 +89,7 @@ def test_invalid_account_sender_type(
     description=st.text(min_size=1, max_size=256),
     datetime_=st.datetimes(timezones=st.just(tzinfo)),
     security=securities(),
-    account_recipient=everything_except(SecurityAccount),
+    account_recipient=everything_except((SecurityAccount, NoneType)),
     account_sender=security_accounts(),
     data=st.data(),
 )
@@ -100,12 +101,10 @@ def test_invalid_account_recipient_type(
     account_recipient: Any,
     data: st.DataObject,
 ) -> None:
-    shares = data.draw(
-        valid_decimals(min_value=1e-10).filter(lambda x: x % security.shares_unit == 0)
-    )
+    shares = data.draw(share_decimals(shares_unit=security.shares_unit))
     with pytest.raises(
         TypeError,
-        match="SecurityTransaction.account_recipient must be a SecurityAccount.",
+        match="SecurityTransfer.recipient must be a SecurityAccount.",
     ):
         SecurityTransfer(
             description, datetime_, security, shares, account_sender, account_recipient
@@ -124,11 +123,10 @@ def test_change_accounts(
 ) -> None:
     security = transfer.security
     shares = transfer.shares
-    old_sender = transfer.account_sender
-    old_recipient = transfer.account_recipient
+    old_sender = transfer.sender
+    old_recipient = transfer.recipient
 
-    transfer.account_sender = new_sender
-    transfer.account_recipient = new_recipient
+    transfer.set_attributes(sender=new_sender, recipient=new_recipient)
 
     assert transfer not in old_sender.transactions
     assert transfer not in old_recipient.transactions
@@ -138,3 +136,19 @@ def test_change_accounts(
     assert old_recipient.securities[security] == 0
     assert new_sender.securities[security] == -shares
     assert new_recipient.securities[security] == +shares
+
+
+@given(transfer=security_transfers())
+def test_validate_attribues_same_values(transfer: SecurityTransfer) -> None:
+    transfer.validate_attributes()
+
+
+@given(transfer=security_transfers())
+def test_set_attribues_same_values(transfer: SecurityTransfer) -> None:
+    transfer.set_attributes()
+
+
+@given(transfer=security_transfers())
+def test_set_attribues_same_accounts(transfer: SecurityTransfer) -> None:
+    with pytest.raises(TransferSameAccountError):
+        transfer.set_attributes(recipient=transfer.sender)

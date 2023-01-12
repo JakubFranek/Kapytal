@@ -262,6 +262,11 @@ def test_mul_rmul_invalid_type(cash_amount: CashAmount, number: Any) -> None:
 
 
 @given(cash_amount=cash_amounts())
+def test_is_positive(cash_amount: CashAmount) -> None:
+    assert (cash_amount.value > 0) == cash_amount.is_positive()
+
+
+@given(cash_amount=cash_amounts())
 def test_convert_to_self(cash_amount: CashAmount) -> None:
     assert cash_amount.convert(cash_amount.currency) == cash_amount
 
