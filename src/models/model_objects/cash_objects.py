@@ -241,6 +241,10 @@ class CashTransaction(CashRelatedTransaction):
         return self._tag_amount_pairs
 
     @property
+    def tags(self) -> tuple[Attribute]:
+        return (tag for tag, _ in self._tag_amount_pairs)
+
+    @property
     def tag_names(self) -> str:
         tag_names = [tag.name for tag, _ in self._tag_amount_pairs]
         return ", ".join(tag_names)
@@ -274,6 +278,25 @@ class CashTransaction(CashRelatedTransaction):
 
     def is_account_related(self, account: Account) -> bool:
         return self.account == account
+
+    def add_tags(self, tags: Collection[Attribute]) -> None:
+        self._validate_tags(tags)
+        new_tags = (tag for tag in tags if tag not in self.tags)
+        tag_amount_pairs = list(self._tag_amount_pairs)
+        for tag in new_tags:
+            tup = (tag, self.amount)
+            tag_amount_pairs.append(tup)
+        self._tag_amount_pairs = tag_amount_pairs
+
+    def remove_tags(self, tags: Collection[Attribute]) -> None:
+        self._validate_tags(tags)
+        tags_to_remove = (tag for tag in tags if tag in self.tags)
+        tag_amount_pairs = [
+            (tag, amount)
+            for tag, amount in self._tag_amount_pairs
+            if tag not in tags_to_remove
+        ]
+        self._tag_amount_pairs = tag_amount_pairs
 
     def set_attributes(
         self,
@@ -542,6 +565,7 @@ class CashTransaction(CashRelatedTransaction):
         return -self.amount
 
 
+# TODO: add tags
 class CashTransfer(CashRelatedTransaction):
     def __init__(  # noqa: TMN001, CFQ002
         self,
@@ -794,6 +818,25 @@ class RefundTransaction(CashRelatedTransaction):
 
     def is_account_related(self, account: "Account") -> bool:
         return self.account == account
+
+    def add_tags(self, tags: Collection[Attribute]) -> None:
+        self._validate_tags(tags)
+        new_tags = (tag for tag in tags if tag not in self.tags)
+        tag_amount_pairs = list(self._tag_amount_pairs)
+        for tag in new_tags:
+            tup = (tag, self.amount)
+            tag_amount_pairs.append(tup)
+        self._tag_amount_pairs = tag_amount_pairs
+
+    def remove_tags(self, tags: Collection[Attribute]) -> None:
+        self._validate_tags(tags)
+        tags_to_remove = (tag for tag in tags if tag in self.tags)
+        tag_amount_pairs = [
+            (tag, amount)
+            for tag, amount in self._tag_amount_pairs
+            if tag not in tags_to_remove
+        ]
+        self._tag_amount_pairs = tag_amount_pairs
 
     def set_attributes(
         self,

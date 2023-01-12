@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from collections.abc import Collection
 from datetime import datetime
 from typing import TYPE_CHECKING
 
@@ -7,6 +8,11 @@ if TYPE_CHECKING:
 
 from src.models.mixins.datetime_created_mixin import DatetimeCreatedMixin
 from src.models.mixins.uuid_mixin import UUIDMixin
+from src.models.model_objects.attributes import (
+    Attribute,
+    AttributeType,
+    InvalidAttributeError,
+)
 
 
 class Transaction(DatetimeCreatedMixin, UUIDMixin, ABC):
@@ -38,6 +44,12 @@ class Transaction(DatetimeCreatedMixin, UUIDMixin, ABC):
     def datetime_(self) -> datetime:
         return self._datetime
 
+    @property
+    def tags(self) -> tuple(Attribute):
+        if not hasattr(self, "_tags"):
+            self._tags = []
+        return tuple(self._tags)
+
     def _validate_datetime(self, value: datetime) -> None:
         if not isinstance(value, datetime):
             raise TypeError(f"{self.__class__.__name__}.datetime_ must be a datetime.")
@@ -56,6 +68,30 @@ class Transaction(DatetimeCreatedMixin, UUIDMixin, ABC):
         self._validate_datetime(datetime_)
         self._description = description
         self._datetime = datetime_
+
+    def add_tags(self, tags: Collection[Attribute]) -> None:
+        self._validate_tags(tags)
+        if not hasattr(self, "_tags"):
+            self._tags = []
+        for tag in tags:
+            if tag not in self._tags:
+                self._tags.append(tag)
+
+    def remove_tags(self, tags: Collection[Attribute]) -> None:
+        self._validate_tags(tags)
+        if not hasattr(self, "_tags"):
+            self._tags = []
+        for tag in tags:
+            if tag in self._tags:
+                self._tags.remove(tag)
+
+    def _validate_tags(self, tags: Collection[Attribute]) -> None:
+        if not all(isinstance(tag, Attribute) for tag in tags):
+            raise TypeError("Parameter 'tags' must be a collection of Attributes.")
+        if not all(tag.type_ == AttributeType.TAG for tag in tags):
+            raise InvalidAttributeError(
+                "Parameter 'tags' must contain only Attributes with type_=TAG."
+            )
 
     @abstractmethod
     def is_account_related(self, account: "Account") -> bool:

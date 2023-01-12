@@ -3,7 +3,7 @@
 from collections.abc import Collection
 from datetime import date, datetime
 from decimal import Decimal
-from typing import overload
+from typing import Callable, overload
 
 from src.models.base_classes.account import Account
 from src.models.base_classes.transaction import Transaction
@@ -832,6 +832,44 @@ class RecordKeeper:
         if new_parent_path is not None:
             parent = self.get_account_parent(new_parent_path)
             edited_account_group.parent = parent
+
+    def add_tags_to_transactions(
+        self, transaction_uuid_strings: Collection[str], tag_names: Collection[str]
+    ) -> None:
+        self._perform_tag_operation(
+            transaction_uuid_strings=transaction_uuid_strings,
+            tag_names=tag_names,
+            method=Transaction.add_tags,
+        )
+
+    def remove_tags_from_transactions(
+        self, transaction_uuid_strings: Collection[str], tag_names: Collection[str]
+    ) -> None:
+        self._perform_tag_operation(
+            transaction_uuid_strings=transaction_uuid_strings,
+            tag_names=tag_names,
+            method=Transaction.remove_tags,
+        )
+
+    def _perform_tag_operation(
+        self,
+        transaction_uuid_strings: Collection[str],
+        tag_names: Collection[str],
+        method: Callable[[Transaction, Collection[Attribute]], None],
+    ) -> None:
+        if len(transaction_uuid_strings) < 1:
+            raise ValueError("No transaction UUIDs supplied.")
+        transactions: list[Transaction] = [
+            transaction
+            for transaction in self._transactions
+            if str(transaction.uuid) in transaction_uuid_strings
+        ]
+
+        tags = [
+            self.get_attribute(tag_name, AttributeType.TAG) for tag_name in tag_names
+        ]
+        for transaction in transactions:
+            method(transaction, tags)
 
     def get_account_parent(self, path: str | None) -> AccountGroup | None:
         if path:
