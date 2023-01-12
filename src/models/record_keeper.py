@@ -42,7 +42,6 @@ class DoesNotExistError(ValueError):
     """Raised when a search for an object finds nothing."""
 
 
-# TODO: add account/account group edit
 # TODO: add add_tag/remove_tag methods
 class RecordKeeper:
     def __init__(self) -> None:
