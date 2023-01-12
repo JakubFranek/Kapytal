@@ -751,7 +751,9 @@ class RecordKeeper:
                 current_path = category
                 break
         else:
-            DoesNotExistError(f"Category at path='{current_path}' does not exist.")
+            raise DoesNotExistError(
+                f"Category at path='{current_path}' does not exist."
+            )
             return
         if new_name is not None:
             category.name = new_name
@@ -772,7 +774,7 @@ class RecordKeeper:
                 edited_attribute = attribute
                 break
         else:
-            DoesNotExistError(
+            raise DoesNotExistError(
                 f"Attribute of name='{current_name}' and type_={type_} does not exist."
             )
             return

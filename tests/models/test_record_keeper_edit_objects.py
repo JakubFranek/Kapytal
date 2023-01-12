@@ -50,6 +50,12 @@ def test_edit_category() -> None:
     assert cat.path == "TEST PARENT 2/NEW NAME"
 
 
+def test_edit_category_does_not_exist() -> None:
+    record_keeper = RecordKeeper()
+    with pytest.raises(DoesNotExistError):
+        record_keeper.edit_category("abc", "def", "efg")
+
+
 def test_edit_payee() -> None:
     record_keeper = RecordKeeper()
     record_keeper._payees.append(Attribute("TEST NAME", AttributeType.PAYEE))
@@ -64,3 +70,9 @@ def test_edit_tag() -> None:
     record_keeper.edit_attribute("TEST NAME", "NEW NAME", AttributeType.TAG)
     attribute = record_keeper.tags[0]
     assert attribute.name == "NEW NAME"
+
+
+def test_edit_attribute_does_not_exist() -> None:
+    record_keeper = RecordKeeper()
+    with pytest.raises(DoesNotExistError):
+        record_keeper.edit_attribute("abc", "def", AttributeType.PAYEE)
