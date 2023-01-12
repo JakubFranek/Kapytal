@@ -706,7 +706,7 @@ class RecordKeeper:
         if not all(
             isinstance(transaction, SecurityTransfer) for transaction in transactions
         ):
-            raise TypeError("All edited transactions must be SecurityTransfer.")
+            raise TypeError("All edited transactions must be SecurityTransfers.")
 
         if security_symbol is not None:
             security = self.get_security(security_symbol)

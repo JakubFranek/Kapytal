@@ -1143,6 +1143,120 @@ def test_edit_security_transactions_no_uuids() -> None:
         record_keeper.edit_security_transactions(transaction_uuid_strings=[])
 
 
+def test_edit_security_transactions_wrong_transaction_types() -> None:
+    record_keeper = get_preloaded_record_keeper_with_cash_transactions()
+    transactions = [transaction for transaction in record_keeper.transactions]
+    uuids = [str(transfer.uuid) for transfer in transactions]
+    with pytest.raises(
+        TypeError, match="All edited transactions must be SecurityTransactions."
+    ):
+        record_keeper.edit_security_transactions(uuids)
+
+
+def test_edit_security_transactions_currency_not_same() -> None:
+    record_keeper = get_preloaded_record_keeper_with_security_transactions()
+    transactions = [
+        transaction
+        for transaction in record_keeper.transactions
+        if isinstance(transaction, SecurityTransaction)
+    ]
+    uuids = [str(transfer.uuid) for transfer in transactions]
+    with pytest.raises(CurrencyError):
+        record_keeper.edit_security_transactions(uuids)
+
+
+def test_edit_security_transactions_change_symbol() -> None:
+    edit_symbol = "IWDA.AS"
+    record_keeper = get_preloaded_record_keeper_with_security_transactions()
+    transactions = [
+        transaction
+        for transaction in record_keeper.transactions
+        if isinstance(transaction, SecurityTransaction)
+        and transaction.security.symbol == "VWCE.DE"
+    ]
+    uuids = [str(transfer.uuid) for transfer in transactions]
+    record_keeper.edit_security_transactions(uuids, security_symbol=edit_symbol)
+    for transaction in transactions:
+        assert transaction.security.symbol == edit_symbol
+
+
+def test_edit_security_transactions_change_cash_account() -> None:
+    edit_cash_account = "Bank Accounts/Revolut EUR"
+    record_keeper = get_preloaded_record_keeper_with_security_transactions()
+    transactions = [
+        transaction
+        for transaction in record_keeper.transactions
+        if isinstance(transaction, SecurityTransaction)
+        and transaction.security.symbol == "VWCE.DE"
+    ]
+    uuids = [str(transfer.uuid) for transfer in transactions]
+    record_keeper.edit_security_transactions(uuids, cash_account_path=edit_cash_account)
+    for transaction in transactions:
+        assert transaction.cash_account.path == edit_cash_account
+
+
+def test_edit_security_transactions_change_security_account() -> None:
+    edit_security_account = "Security Accounts/Degiro"
+    record_keeper = get_preloaded_record_keeper_with_security_transactions()
+    transactions = [
+        transaction
+        for transaction in record_keeper.transactions
+        if isinstance(transaction, SecurityTransaction)
+        and transaction.security.symbol == "VWCE.DE"
+    ]
+    uuids = [str(transfer.uuid) for transfer in transactions]
+    record_keeper.edit_security_transactions(
+        uuids, security_account_path=edit_security_account
+    )
+    for transaction in transactions:
+        assert transaction.security_account.path == edit_security_account
+
+
+def test_edit_security_transactions_change_price_per_share() -> None:
+    edit_price = Decimal(1)
+    record_keeper = get_preloaded_record_keeper_with_security_transactions()
+    transactions = [
+        transaction
+        for transaction in record_keeper.transactions
+        if isinstance(transaction, SecurityTransaction)
+        and transaction.security.symbol == "VWCE.DE"
+    ]
+    uuids = [str(transfer.uuid) for transfer in transactions]
+    record_keeper.edit_security_transactions(uuids, price_per_share=edit_price)
+    for transaction in transactions:
+        assert transaction.price_per_share.value == edit_price
+
+
+def test_edit_security_transactions_change_fees() -> None:
+    edit_fees = Decimal("0.1")
+    record_keeper = get_preloaded_record_keeper_with_security_transactions()
+    transactions = [
+        transaction
+        for transaction in record_keeper.transactions
+        if isinstance(transaction, SecurityTransaction)
+        and transaction.security.symbol == "VWCE.DE"
+    ]
+    uuids = [str(transfer.uuid) for transfer in transactions]
+    record_keeper.edit_security_transactions(uuids, fees=edit_fees)
+    for transaction in transactions:
+        assert transaction.fees.value == edit_fees
+
+
+def test_edit_security_transactions_change_shares() -> None:
+    edit_shares = Decimal(1)
+    record_keeper = get_preloaded_record_keeper_with_security_transactions()
+    transactions = [
+        transaction
+        for transaction in record_keeper.transactions
+        if isinstance(transaction, SecurityTransaction)
+        and transaction.security.symbol == "VWCE.DE"
+    ]
+    uuids = [str(transfer.uuid) for transfer in transactions]
+    record_keeper.edit_security_transactions(uuids, shares=edit_shares)
+    for transaction in transactions:
+        assert transaction.shares == edit_shares
+
+
 def test_edit_security_transfers_same_values() -> None:
     record_keeper = get_preloaded_record_keeper_with_security_transactions()
     tansfers = [
@@ -1152,6 +1266,56 @@ def test_edit_security_transfers_same_values() -> None:
     ]
     uuids = [str(transfer.uuid) for transfer in tansfers]
     record_keeper.edit_security_transfers(uuids)
+
+
+def test_edit_security_transfers_no_uuids() -> None:
+    record_keeper = get_preloaded_record_keeper_with_security_transactions()
+    with pytest.raises(ValueError, match="No transaction UUIDs supplied."):
+        record_keeper.edit_security_transfers(transaction_uuid_strings=[])
+
+
+def test_edit_security_transfers_wrong_transaction_types() -> None:
+    record_keeper = get_preloaded_record_keeper_with_cash_transactions()
+    transactions = [transaction for transaction in record_keeper.transactions]
+    uuids = [str(transfer.uuid) for transfer in transactions]
+    with pytest.raises(
+        TypeError, match="All edited transactions must be SecurityTransfers."
+    ):
+        record_keeper.edit_security_transfers(uuids)
+
+
+def test_edit_security_transfers_change_symbol() -> None:
+    edit_symbol = "IWDA.AS"
+    record_keeper = get_preloaded_record_keeper_with_security_transactions()
+    transactions = [
+        transaction
+        for transaction in record_keeper.transactions
+        if isinstance(transaction, SecurityTransfer)
+        and transaction.security.symbol == "VWCE.DE"
+    ]
+    uuids = [str(transfer.uuid) for transfer in transactions]
+    record_keeper.edit_security_transfers(uuids, security_symbol=edit_symbol)
+    for transaction in transactions:
+        assert transaction.security.symbol == edit_symbol
+
+
+def test_edit_security_transactions_change_security_accounts() -> None:
+    edit_sender = "Security Accounts/Degiro"
+    edit_recipient = "Security Accounts/Interactive Brokers"
+    record_keeper = get_preloaded_record_keeper_with_security_transactions()
+    transactions = [
+        transaction
+        for transaction in record_keeper.transactions
+        if isinstance(transaction, SecurityTransfer)
+        and transaction.security.symbol == "VWCE.DE"
+    ]
+    uuids = [str(transfer.uuid) for transfer in transactions]
+    record_keeper.edit_security_transfers(
+        uuids, sender_path=edit_sender, recipient_path=edit_recipient
+    )
+    for transaction in transactions:
+        assert transaction.sender.path == edit_sender
+        assert transaction.recipient.path == edit_recipient
 
 
 def get_preloaded_record_keeper_with_security_transactions() -> RecordKeeper:
@@ -1424,6 +1588,9 @@ def get_preloaded_record_keeper() -> RecordKeeper:
     )
     record_keeper.add_security(
         "Vanguard FTSE All-World", "VWCE.DE", SecurityType.ETF, "EUR", 1
+    )
+    record_keeper.add_security(
+        "iShares MSCI World", "IWDA.AS", SecurityType.ETF, "EUR", 1
     )
     record_keeper.add_security(
         "ČSOB Dynamický penzijní fond", "CSOB.DYN", SecurityType.MUTUAL_FUND, "CZK", 1
