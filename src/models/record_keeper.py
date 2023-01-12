@@ -814,6 +814,26 @@ class RecordKeeper:
             parent = self.get_account_parent(new_parent_path)
             edited_account.parent = parent
 
+    def edit_account_group(
+        self,
+        current_path: str,
+        new_name: str | None = None,
+        new_parent_path: str | None = None,
+    ) -> None:
+        for account_group in self._account_groups:
+            if account_group.path == current_path:
+                edited_account_group = account_group
+                break
+        else:
+            raise DoesNotExistError(
+                f"AccountGroup at path='{current_path}' does not exist."
+            )
+        if new_name is not None:
+            edited_account_group.name = new_name
+        if new_parent_path is not None:
+            parent = self.get_account_parent(new_parent_path)
+            edited_account_group.parent = parent
+
     def get_account_parent(self, path: str | None) -> AccountGroup | None:
         if path:
             for account_group in self._account_groups:

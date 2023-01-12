@@ -10,6 +10,7 @@ from hypothesis import strategies as st
 
 from src.models.base_classes.account import Account
 from src.models.constants import tzinfo
+from src.models.model_objects.account_group import AccountGroup
 from src.models.model_objects.attributes import (
     Attribute,
     AttributeType,
@@ -109,3 +110,22 @@ def test_edit_account_does_not_exist() -> None:
     record_keeper = RecordKeeper()
     with pytest.raises(DoesNotExistError):
         record_keeper.edit_account("ABC", "DEF", "GHI")
+
+
+def test_edit_account_group() -> None:
+    record_keeper = RecordKeeper()
+    record_keeper.add_account_group("TEST PARENT", None)
+    record_keeper.add_account_group("TEST CHILD", "TEST PARENT")
+    record_keeper.add_account_group("NEW PARENT", None)
+    record_keeper.edit_account_group("TEST PARENT/TEST CHILD", "NEW NAME", "NEW PARENT")
+    account_group: AccountGroup = record_keeper.get_account_parent(
+        "NEW PARENT/NEW NAME"
+    )
+    assert account_group.name == "NEW NAME"
+    assert account_group.path == "NEW PARENT/NEW NAME"
+
+
+def test_edit_account_group_does_not_exist() -> None:
+    record_keeper = RecordKeeper()
+    with pytest.raises(DoesNotExistError):
+        record_keeper.edit_account_group("ABC", "DEF", "GHI")
