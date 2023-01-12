@@ -754,7 +754,6 @@ class RecordKeeper:
             raise DoesNotExistError(
                 f"Category at path='{current_path}' does not exist."
             )
-            return
         if new_name is not None:
             category.name = new_name
         if new_parent_path is not None:
@@ -777,8 +776,26 @@ class RecordKeeper:
             raise DoesNotExistError(
                 f"Attribute of name='{current_name}' and type_={type_} does not exist."
             )
-            return
         edited_attribute.name = new_name
+
+    def edit_security(
+        self,
+        current_symbol: str,
+        new_symbol: str | None = None,
+        new_name: str | None = None,
+    ) -> None:
+        for security in self._securities:
+            if security.symbol == current_symbol.upper():
+                edited_security = security
+                break
+        else:
+            raise DoesNotExistError(
+                f"Security with symbol='{current_symbol}' does not exist."
+            )
+        if new_symbol is not None:
+            edited_security.symbol = new_symbol
+        if new_name is not None:
+            edited_security.name = new_name
 
     def get_account_parent(self, path: str | None) -> AccountGroup | None:
         if path:

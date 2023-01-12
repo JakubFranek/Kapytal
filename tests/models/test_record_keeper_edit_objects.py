@@ -76,3 +76,19 @@ def test_edit_attribute_does_not_exist() -> None:
     record_keeper = RecordKeeper()
     with pytest.raises(DoesNotExistError):
         record_keeper.edit_attribute("abc", "def", AttributeType.PAYEE)
+
+
+def test_edit_security() -> None:
+    record_keeper = RecordKeeper()
+    record_keeper.add_currency("CZK", 2)
+    record_keeper.add_security("TEST NAME", "SMBL", SecurityType.ETF, "CZK", 1)
+    record_keeper.edit_security("SMBL", "SYMB", "NEW NAME")
+    security = record_keeper.securities[0]
+    assert security.symbol == "SYMB"
+    assert security.name == "NEW NAME"
+
+
+def test_edit_security_does_not_exist() -> None:
+    record_keeper = RecordKeeper()
+    with pytest.raises(DoesNotExistError):
+        record_keeper.edit_security("SMBL", "SYMB", "NEW NAME")
