@@ -7,7 +7,7 @@ from typing import overload
 
 from src.models.base_classes.account import Account
 from src.models.base_classes.transaction import Transaction
-from src.models.custom_exceptions import AlreadyExistsError
+from src.models.custom_exceptions import AlreadyExistsError, InvalidOperationError
 from src.models.model_objects.account_group import AccountGroup
 from src.models.model_objects.attributes import (
     Attribute,
@@ -165,7 +165,7 @@ class RecordKeeper:
         return category
 
     def add_account_group(self, name: str, parent_path: str | None) -> None:
-        parent = self.get_account_parent(parent_path)
+        parent = self.get_account_parent_or_none(parent_path)
         if parent is not None:
             target_path = parent.path + "/" + name
         else:
@@ -188,14 +188,14 @@ class RecordKeeper:
     ) -> None:
         self._check_account_exists(name, parent_path)
         currency = self.get_currency(currency_code)
-        parent = self.get_account_parent(parent_path)
+        parent = self.get_account_parent_or_none(parent_path)
         initial_balance = CashAmount(initial_balance_value, currency)
         account = CashAccount(name, currency, initial_balance, initial_datetime, parent)
         self._accounts.append(account)
 
     def add_security_account(self, name: str, parent_path: str | None) -> None:
         self._check_account_exists(name, parent_path)
-        parent = self.get_account_parent(parent_path)
+        parent = self.get_account_parent_or_none(parent_path)
         account = SecurityAccount(name, parent)
         self._accounts.append(account)
 
@@ -799,7 +799,7 @@ class RecordKeeper:
         if new_name is not None:
             edited_account.name = new_name
         if new_parent_path is not None:
-            parent = self.get_account_parent(new_parent_path)
+            parent = self.get_account_parent_or_none(new_parent_path)
             edited_account.parent = parent
 
     def edit_account_group(
@@ -819,7 +819,7 @@ class RecordKeeper:
         if new_name is not None:
             edited_account_group.name = new_name
         if new_parent_path is not None:
-            parent = self.get_account_parent(new_parent_path)
+            parent = self.get_account_parent_or_none(new_parent_path)
             edited_account_group.parent = parent
 
     def add_tags_to_transactions(
@@ -859,15 +859,39 @@ class RecordKeeper:
             method = getattr(transaction, method_name)
             method(tags)
 
-    def get_account_parent(self, path: str | None) -> AccountGroup | None:
-        if path:
-            for account_group in self._account_groups:
-                if account_group.path == path:
-                    return account_group
-            raise DoesNotExistError(
-                f"An AccountGroup with path='{path}' does not exist."
+    def remove_account(self, account_path: str) -> None:
+        account = self.get_account(account_path, Account)
+        if any(
+            transaction.is_account_related(account)
+            for transaction in self._transactions
+        ):
+            raise InvalidOperationError(
+                "Cannot delete an Account which is still used in some transactions."
             )
-        return None
+        account.parent = None
+        self._accounts.remove(account)
+        del account
+
+    def remove_account_group(self, account_group_path: str) -> None:
+        account_group = self.get_account_parent(account_group_path)
+        if len(account_group.children) != 0:
+            raise InvalidOperationError(
+                "Cannot delete an AccountGroup which has children."
+            )
+        account_group.parent = None
+        self._account_groups.remove(account_group)
+        del account_group
+
+    def get_account_parent_or_none(self, path: str | None) -> AccountGroup | None:
+        if path is None:
+            return None
+        return self.get_account_parent(path)
+
+    def get_account_parent(self, path: str) -> AccountGroup:
+        for account_group in self._account_groups:
+            if account_group.path == path:
+                return account_group
+        raise DoesNotExistError(f"An AccountGroup with path='{path}' does not exist.")
 
     @overload
     def get_account(
@@ -879,6 +903,10 @@ class RecordKeeper:
     def get_account(
         self, path: str, type_: type[SecurityAccount]  # noqa: U100
     ) -> SecurityAccount:
+        ...
+
+    @overload
+    def get_account(self, path: str, type_: type[Account]) -> Account:  # noqa: U100
         ...
 
     def get_account(
@@ -919,7 +947,8 @@ class RecordKeeper:
                 return currency
         raise DoesNotExistError(f"A Currency with code='{code_upper}' does not exist.")
 
-    # TODO: having to specify type for existing Category is annoying
+    # TODO: having to specify type for existing Category is annoying...
+    # get_or_make_category?
     def get_category(self, path: str, type_: CategoryType) -> Category:
         """Returns Category at path. If it does not exist, creates a new Category
         at path with given type_."""
