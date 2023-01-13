@@ -1297,7 +1297,7 @@ def test_add_and_remove_tags_to_transactions(tags: list[Attribute]) -> None:
     record_keeper = get_preloaded_record_keeper_with_cash_transactions()
     for tag in tags:
         record_keeper._tags.append(tag)
-    tag_names = [tag.name for tag in tags]
+    tag_names = {tag.name for tag in tags}
     transactions = [
         transaction
         for transaction in record_keeper.transactions
@@ -1538,6 +1538,70 @@ def get_preloaded_record_keeper_with_cash_transfers() -> RecordKeeper:
         "Bank Accounts/Fio CZK",
         1000,
         25000,
+    )
+    return record_keeper
+
+
+def get_preloaded_record_keeper_with_various_transactions() -> RecordKeeper:
+    record_keeper = get_preloaded_record_keeper()
+    record_keeper.add_cash_transfer(
+        "Salary from Fio to RB",
+        datetime.now(tzinfo) - timedelta(days=7),
+        "Bank Accounts/Fio CZK",
+        "Bank Accounts/Raiffeisen CZK",
+        50000,
+        50000,
+    )
+    record_keeper.add_cash_transaction(
+        "Ingredients for cooking",
+        datetime.now(tzinfo),
+        CashTransactionType.EXPENSE,
+        "Bank Accounts/Raiffeisen CZK",
+        (("Food and Drink/Groceries", Decimal(1000)),),
+        "Albert",
+        (("Split with GF", Decimal(500)),),
+    )
+    record_keeper.add_cash_transaction(
+        "Electronic device",
+        datetime.now(tzinfo) - timedelta(days=2),
+        CashTransactionType.EXPENSE,
+        "Bank Accounts/Moneta EUR",
+        (("Electronics", Decimal(400)),),
+        "Alza",
+        (("Test Tag", Decimal(400)),),
+    )
+    transaction_electronics = next(
+        transaction
+        for transaction in record_keeper.transactions
+        if transaction.description == "Electronic device"
+    )
+    record_keeper.add_refund(
+        description="An expense transaction",
+        datetime_=datetime.now(tzinfo),
+        refunded_transaction_uuid=str(transaction_electronics.uuid),
+        refunded_account_path="Bank Accounts/Moneta EUR",
+        category_path_amount_pairs=(("Electronics", Decimal(400)),),
+        payee_name="Alza",
+        tag_name_amount_pairs=(("Test Tag", Decimal(400)),),
+    )
+    record_keeper.add_security_transaction(
+        description="Monthly buy of ČSOB DPS",
+        datetime_=datetime.now(tzinfo) - timedelta(days=31),
+        type_=SecurityTransactionType.BUY,
+        security_symbol="CSOB.DYN",
+        shares=Decimal(2850),
+        price_per_share=Decimal(1.6),
+        fees=Decimal(0),
+        security_account_path="Security Accounts/ČSOB Penzijní účet",
+        cash_account_path="Bank Accounts/Fio CZK",
+    )
+    record_keeper.add_security_transfer(
+        description="Security transfer to Degiro",
+        datetime_=datetime.now(tzinfo),
+        security_symbol="VWCE.DE",
+        shares=Decimal(10),
+        account_sender_path="Security Accounts/Interactive Brokers",
+        account_recipient_path="Security Accounts/Degiro",
     )
     return record_keeper
 

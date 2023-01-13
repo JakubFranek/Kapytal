@@ -5,8 +5,12 @@ import pytest
 
 from src.models.constants import tzinfo
 from src.models.custom_exceptions import InvalidOperationError
+from src.models.model_objects.cash_objects import CashTransaction, RefundTransaction
 from src.models.model_objects.security_objects import SecurityType
 from src.models.record_keeper import DoesNotExistError, RecordKeeper
+from tests.models.test_record_keeper import (
+    get_preloaded_record_keeper_with_various_transactions,
+)
 
 
 def test_remove_account() -> None:
@@ -84,3 +88,35 @@ def test_remove_account_group_has_children() -> None:
 
     with pytest.raises(InvalidOperationError):
         record_keeper.remove_account_group("PARENT/TEST NAME")
+
+
+def test_remove_transactions() -> None:
+    record_keeper = get_preloaded_record_keeper_with_various_transactions()
+    assert record_keeper.transactions != ()
+    refund_uuids = [
+        str(transaction.uuid)
+        for transaction in record_keeper.transactions
+        if isinstance(transaction, RefundTransaction)
+    ]
+    record_keeper.remove_transactions(refund_uuids)
+    refunds = [
+        transaction
+        for transaction in record_keeper.transactions
+        if isinstance(transaction, RefundTransaction)
+    ]
+    assert refunds == []
+    other_uuids = [str(transaction.uuid) for transaction in record_keeper.transactions]
+    record_keeper.remove_transactions(other_uuids)
+    assert record_keeper.transactions == ()
+
+
+def test_remove_transactions_is_refunded() -> None:
+    record_keeper = get_preloaded_record_keeper_with_various_transactions()
+    assert record_keeper.transactions != ()
+    refunded_transaction_uuids = [
+        str(transaction.uuid)
+        for transaction in record_keeper.transactions
+        if isinstance(transaction, CashTransaction) and transaction.is_refunded
+    ]
+    with pytest.raises(InvalidOperationError):
+        record_keeper.remove_transactions(refunded_transaction_uuids)
