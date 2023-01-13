@@ -94,3 +94,7 @@ class Transaction(DatetimeCreatedMixin, UUIDMixin, ABC):
     @abstractmethod
     def is_account_related(self, account: "Account") -> bool:
         raise NotImplementedError
+
+    @abstractmethod
+    def prepare_for_deletion(self) -> None:
+        raise NotImplementedError

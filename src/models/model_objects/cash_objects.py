@@ -279,6 +279,13 @@ class CashTransaction(CashRelatedTransaction):
     def is_account_related(self, account: Account) -> bool:
         return self.account == account
 
+    def prepare_for_deletion(self) -> None:
+        if self.is_refunded:
+            raise InvalidOperationError(
+                "Refunded CashTransaction cannot be deleted. Delete the refunds first."
+            )
+        self._account.remove_transaction(self)
+
     def add_tags(self, tags: Collection[Attribute]) -> None:
         self._validate_tags(tags)
         new_tags = tuple(tag for tag in tags if tag not in self.tags)
@@ -615,6 +622,10 @@ class CashTransfer(CashRelatedTransaction):
     def is_account_related(self, account: Account) -> bool:
         return self.sender == account or self.recipient == account
 
+    def prepare_for_deletion(self) -> None:
+        self._sender.remove_transaction(self)
+        self._recipient.remove_transaction(self)
+
     def set_attributes(
         self,
         *,
@@ -823,6 +834,10 @@ class RefundTransaction(CashRelatedTransaction):
 
     def is_account_related(self, account: "Account") -> bool:
         return self.account == account
+
+    def prepare_for_deletion(self) -> None:
+        self._refunded_transaction.remove_refund(self)
+        self._account.remove_transaction(self)
 
     def add_tags(self, tags: Collection[Attribute]) -> None:  # noqa: U100
         raise InvalidOperationError("Adding tags to RefundTransaction is forbidden.")

@@ -307,6 +307,10 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
     def is_account_related(self, account: Account) -> bool:
         return account == self._cash_account or account == self._security_account
 
+    def prepare_for_deletion(self) -> None:
+        self._cash_account.remove_transaction(self)
+        self._security_account.remove_transaction(self)
+
     def set_attributes(
         self,
         *,
@@ -514,6 +518,14 @@ class SecurityTransfer(SecurityRelatedTransaction):
             recipient=recipient,
         )
 
+    @property
+    def sender(self) -> SecurityAccount:
+        return self._sender
+
+    @property
+    def recipient(self) -> SecurityAccount:
+        return self._recipient
+
     def __repr__(self) -> str:
         return (
             f"SecurityTransfer(security='{self.security.symbol}', "
@@ -523,13 +535,12 @@ class SecurityTransfer(SecurityRelatedTransaction):
             f"{self.datetime_.strftime('%Y-%m-%d')})"
         )
 
-    @property
-    def sender(self) -> SecurityAccount:
-        return self._sender
+    def is_account_related(self, account: Account) -> bool:
+        return account == self.sender or account == self.recipient
 
-    @property
-    def recipient(self) -> SecurityAccount:
-        return self._recipient
+    def prepare_for_deletion(self) -> None:
+        self._sender.remove_transaction(self)
+        self._recipient.remove_transaction(self)
 
     def set_attributes(
         self,
@@ -659,6 +670,3 @@ class SecurityTransfer(SecurityRelatedTransaction):
         if account == self._sender:
             return -self.shares
         return self.shares
-
-    def is_account_related(self, account: Account) -> bool:
-        return account == self.sender or account == self.recipient
