@@ -846,6 +846,7 @@ class RecordKeeper:
         tag_names: Collection[str],
         method_name: str,
     ) -> None:
+        # TODO: the following list comprehension could be a private method
         transactions: list[Transaction] = [
             transaction
             for transaction in self._transactions
@@ -881,6 +882,16 @@ class RecordKeeper:
         account_group.parent = None
         self._account_groups.remove(account_group)
         del account_group
+
+    def remove_transactions(self, transaction_uuid_strings: Collection[str]) -> None:
+        transactions: list[Transaction] = [
+            transaction
+            for transaction in self._transactions
+            if str(transaction.uuid) in transaction_uuid_strings
+        ]
+        for transaction in transactions:
+            transaction.prepare_for_deletion()
+            self._transactions.remove(transaction)
 
     def get_account_parent_or_none(self, path: str | None) -> AccountGroup | None:
         if path is None:
