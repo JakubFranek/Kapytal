@@ -120,3 +120,19 @@ def test_remove_transactions_is_refunded() -> None:
     ]
     with pytest.raises(InvalidOperationError):
         record_keeper.remove_transactions(refunded_transaction_uuids)
+
+
+def test_remove_security() -> None:
+    record_keeper = RecordKeeper()
+    record_keeper.add_currency("CZK", 2)
+    record_keeper.add_security("NAME", "SYMB", SecurityType.ETF, "CZK", 1)
+    assert len(record_keeper.securities) == 1
+    record_keeper.remove_security("SYMB")
+    assert record_keeper.securities == ()
+
+
+def test_remove_security_referenced_in_transaction() -> None:
+    record_keeper = get_preloaded_record_keeper_with_various_transactions()
+    security = record_keeper.securities[0]
+    with pytest.raises(InvalidOperationError):
+        record_keeper.remove_security(security.symbol)

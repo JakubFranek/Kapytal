@@ -1295,9 +1295,10 @@ def test_edit_security_transactions_change_security_accounts() -> None:
 @given(tags=st.lists(attributes(AttributeType.TAG), min_size=1, max_size=5))
 def test_add_and_remove_tags_to_transactions(tags: list[Attribute]) -> None:
     record_keeper = get_preloaded_record_keeper_with_cash_transactions()
+    tags = set(tags)
     for tag in tags:
         record_keeper._tags.append(tag)
-    tag_names = {tag.name for tag in tags}
+    tag_names = [tag.name for tag in tags]
     transactions = [
         transaction
         for transaction in record_keeper.transactions

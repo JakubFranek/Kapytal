@@ -43,6 +43,7 @@ class InvalidCashTransactionTypeError(ValueError):
     """Raised when the CashTransactionType is incorrect."""
 
 
+# TODO: move currency property to this ABC?
 class CashRelatedTransaction(Transaction, ABC):
     def get_amount(self, account: "CashAccount") -> CashAmount:
         if not isinstance(account, CashAccount):

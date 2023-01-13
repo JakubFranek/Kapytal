@@ -31,6 +31,7 @@ from src.models.model_objects.currency import (
 from src.models.model_objects.security_objects import (
     Security,
     SecurityAccount,
+    SecurityRelatedTransaction,
     SecurityTransaction,
     SecurityTransactionType,
     SecurityTransfer,
@@ -861,6 +862,19 @@ class RecordKeeper:
         for transaction in transactions:
             transaction.prepare_for_deletion()
             self._transactions.remove(transaction)
+
+    def remove_security(self, symbol: str) -> None:
+        security = self.get_security(symbol)
+        if any(
+            transaction.security == security
+            for transaction in self.transactions
+            if isinstance(transaction, SecurityRelatedTransaction)
+        ):
+            raise InvalidOperationError(
+                "Cannot delete a Security referenced in any transaction."
+            )
+        self._securities.remove(security)
+        del security
 
     def get_account_parent_or_none(self, path: str | None) -> AccountGroup | None:
         if path is None:
