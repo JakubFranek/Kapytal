@@ -493,7 +493,7 @@ def test_add_refund_wrong_uuid() -> RecordKeeper:
         record_keeper.add_refund(
             description="Refund!",
             datetime_=datetime.now(tzinfo),
-            refunded_transaction_uuid_string="xxx",
+            refunded_transaction_uuid="xxx",
             refunded_account_path="Bank Accounts/Raiffeisen CZK",
             category_path_amount_pairs=(("Food and Drink/Groceries", Decimal(1000)),),
             tag_name_amount_pairs=(("Test Tag", Decimal(1000)),),
@@ -1415,7 +1415,7 @@ def get_preloaded_record_keeper_with_refunds() -> RecordKeeper:
     record_keeper.add_refund(
         description="An expense transaction",
         datetime_=datetime.now(tzinfo),
-        refunded_transaction_uuid_string=str(transaction_cooking.uuid),
+        refunded_transaction_uuid=str(transaction_cooking.uuid),
         refunded_account_path="Bank Accounts/Raiffeisen CZK",
         category_path_amount_pairs=(("Food and Drink/Groceries", Decimal(250)),),
         payee_name="Albert",
@@ -1424,7 +1424,7 @@ def get_preloaded_record_keeper_with_refunds() -> RecordKeeper:
     record_keeper.add_refund(
         description="An expense transaction",
         datetime_=datetime.now(tzinfo),
-        refunded_transaction_uuid_string=str(transaction_cooking.uuid),
+        refunded_transaction_uuid=str(transaction_cooking.uuid),
         refunded_account_path="Bank Accounts/Raiffeisen CZK",
         category_path_amount_pairs=(("Food and Drink/Groceries", Decimal(750)),),
         payee_name="Albert",
@@ -1433,7 +1433,7 @@ def get_preloaded_record_keeper_with_refunds() -> RecordKeeper:
     record_keeper.add_refund(
         description="An expense transaction",
         datetime_=datetime.now(tzinfo),
-        refunded_transaction_uuid_string=str(transaction_electronics.uuid),
+        refunded_transaction_uuid=str(transaction_electronics.uuid),
         refunded_account_path="Bank Accounts/Moneta EUR",
         category_path_amount_pairs=(("Electronics", Decimal(400)),),
         payee_name="Alza",

@@ -261,20 +261,18 @@ class RecordKeeper:
         self,
         description: str,
         datetime_: datetime,
-        refunded_transaction_uuid_string: int,
+        refunded_transaction_uuid: str,
         refunded_account_path: str,
         category_path_amount_pairs: Collection[tuple[str, Decimal]],
         tag_name_amount_pairs: Collection[tuple[str, Decimal]],
         payee_name: str,
     ) -> None:
-        for transaction in self._transactions:
-            if str(transaction.uuid) == refunded_transaction_uuid_string:
-                refunded_transaction = transaction
-                break
-        else:
+        refunded_transaction = self._get_transactions([refunded_transaction_uuid])
+        if len(refunded_transaction) == 0:
             raise ValueError(
-                f"Transaction with UUID '{refunded_transaction_uuid_string}' not found."
+                f"Transaction with UUID '{refunded_transaction_uuid}' not found."
             )
+        refunded_transaction = refunded_transaction[0]
 
         refunded_account = self.get_account(refunded_account_path, CashAccount)
 
@@ -353,7 +351,7 @@ class RecordKeeper:
 
     def edit_cash_transactions(
         self,
-        transaction_uuid_strings: Collection[str],
+        transaction_uuids: Collection[str],
         description: str | None = None,
         datetime_: datetime | None = None,
         transaction_type: CashTransactionType | None = None,
@@ -363,11 +361,7 @@ class RecordKeeper:
         payee_name: str | None = None,
         tag_name_amount_pairs: Collection[tuple[str, Decimal]] | None = None,
     ) -> None:
-        transactions: list[CashTransaction] = [
-            transaction
-            for transaction in self._transactions
-            if str(transaction.uuid) in transaction_uuid_strings
-        ]
+        transactions = self._get_transactions(transaction_uuids)
 
         if not all(
             isinstance(transaction, CashTransaction) for transaction in transactions
@@ -435,7 +429,7 @@ class RecordKeeper:
 
     def edit_cash_transfers(
         self,
-        transaction_uuid_strings: Collection[str],
+        transaction_uuids: Collection[str],
         description: str | None = None,
         datetime_: datetime | None = None,
         sender_path: str | None = None,
@@ -443,11 +437,7 @@ class RecordKeeper:
         amount_sent: Decimal | None = None,
         amount_received: Decimal | None = None,
     ) -> None:
-        transfers: list[CashTransfer] = [
-            transaction
-            for transaction in self._transactions
-            if str(transaction.uuid) in transaction_uuid_strings
-        ]
+        transfers = self._get_transactions(transaction_uuids)
 
         if not all(isinstance(transaction, CashTransfer) for transaction in transfers):
             raise TypeError("All edited transactions must be CashTransfers.")
@@ -508,7 +498,7 @@ class RecordKeeper:
 
     def edit_refunds(
         self,
-        transaction_uuid_strings: Collection[str],
+        transaction_uuids: Collection[str],
         description: str | None = None,
         datetime_: datetime | None = None,
         transaction_type: CashTransactionType | None = None,
@@ -518,11 +508,7 @@ class RecordKeeper:
         payee_name: str | None = None,
         tag_name_amount_pairs: Collection[tuple[str, Decimal]] | None = None,
     ) -> None:
-        refunds: list[RefundTransaction] = [
-            transaction
-            for transaction in self._transactions
-            if str(transaction.uuid) in transaction_uuid_strings
-        ]
+        refunds = self._get_transactions(transaction_uuids)
 
         if not all(isinstance(refund, RefundTransaction) for refund in refunds):
             raise TypeError("All edited transactions must be RefundTransactions.")
@@ -585,7 +571,7 @@ class RecordKeeper:
 
     def edit_security_transactions(
         self,
-        transaction_uuid_strings: Collection[str],
+        transaction_uuids: Collection[str],
         description: str | None = None,
         datetime_: datetime | None = None,
         transaction_type: SecurityTransactionType | None = None,
@@ -596,11 +582,7 @@ class RecordKeeper:
         fees: Decimal | int | str | None = None,
         shares: Decimal | int | str | None = None,
     ) -> None:
-        transactions: list[SecurityTransaction] = [
-            transaction
-            for transaction in self._transactions
-            if str(transaction.uuid) in transaction_uuid_strings
-        ]
+        transactions = self._get_transactions(transaction_uuids)
 
         if not all(
             isinstance(transaction, SecurityTransaction) for transaction in transactions
@@ -673,7 +655,7 @@ class RecordKeeper:
 
     def edit_security_transfers(
         self,
-        transaction_uuid_strings: Collection[str],
+        transaction_uuids: Collection[str],
         description: str | None = None,
         datetime_: datetime | None = None,
         security_symbol: str | None = None,
@@ -681,11 +663,7 @@ class RecordKeeper:
         sender_path: str | None = None,
         recipient_path: str | None = None,
     ) -> None:
-        transactions: list[SecurityTransfer] = [
-            transaction
-            for transaction in self._transactions
-            if str(transaction.uuid) in transaction_uuid_strings
-        ]
+        transactions = self._get_transactions(transaction_uuids)
 
         if not all(
             isinstance(transaction, SecurityTransfer) for transaction in transactions
@@ -823,35 +801,30 @@ class RecordKeeper:
             edited_account_group.parent = parent
 
     def add_tags_to_transactions(
-        self, transaction_uuid_strings: Collection[str], tag_names: Collection[str]
+        self, transaction_uuids: Collection[str], tag_names: Collection[str]
     ) -> None:
         self._perform_tag_operation(
-            transaction_uuid_strings=transaction_uuid_strings,
+            transaction_uuids=transaction_uuids,
             tag_names=tag_names,
             method_name="add_tags",
         )
 
     def remove_tags_from_transactions(
-        self, transaction_uuid_strings: Collection[str], tag_names: Collection[str]
+        self, transaction_uuids: Collection[str], tag_names: Collection[str]
     ) -> None:
         self._perform_tag_operation(
-            transaction_uuid_strings=transaction_uuid_strings,
+            transaction_uuids=transaction_uuids,
             tag_names=tag_names,
             method_name="remove_tags",
         )
 
     def _perform_tag_operation(
         self,
-        transaction_uuid_strings: Collection[str],
+        transaction_uuids: Collection[str],
         tag_names: Collection[str],
         method_name: str,
     ) -> None:
-        # TODO: the following list comprehension could be a private method
-        transactions: list[Transaction] = [
-            transaction
-            for transaction in self._transactions
-            if str(transaction.uuid) in transaction_uuid_strings
-        ]
+        transactions = self._get_transactions(transaction_uuids)
 
         tags = [
             self.get_attribute(tag_name, AttributeType.TAG) for tag_name in tag_names
@@ -883,12 +856,8 @@ class RecordKeeper:
         self._account_groups.remove(account_group)
         del account_group
 
-    def remove_transactions(self, transaction_uuid_strings: Collection[str]) -> None:
-        transactions: list[Transaction] = [
-            transaction
-            for transaction in self._transactions
-            if str(transaction.uuid) in transaction_uuid_strings
-        ]
+    def remove_transactions(self, transaction_uuids: Collection[str]) -> None:
+        transactions = self._get_transactions(transaction_uuids)
         for transaction in transactions:
             transaction.prepare_for_deletion()
             self._transactions.remove(transaction)
@@ -1069,3 +1038,10 @@ class RecordKeeper:
                 )
             )
         return tag_amount_pairs
+
+    def _get_transactions(self, uuid_strings: Collection[str]) -> list[Transaction]:
+        return [
+            transaction
+            for transaction in self._transactions
+            if str(transaction.uuid) in uuid_strings
+        ]
