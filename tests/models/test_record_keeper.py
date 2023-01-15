@@ -1295,10 +1295,15 @@ def test_edit_security_transactions_change_security_accounts() -> None:
 @given(tags=st.lists(attributes(AttributeType.TAG), min_size=1, max_size=5))
 def test_add_and_remove_tags_to_transactions(tags: list[Attribute]) -> None:
     record_keeper = get_preloaded_record_keeper_with_cash_transactions()
-    tags = set(tags)
+    valid_tags: list[Attribute] = []
     for tag in tags:
+        if any(tag.name == other.name for other in valid_tags):
+            continue
+        valid_tags.append(tag)
+
+    for tag in valid_tags:
         record_keeper._tags.append(tag)
-    tag_names = [tag.name for tag in tags]
+    tag_names = [tag.name for tag in valid_tags]
     transactions = [
         transaction
         for transaction in record_keeper.transactions
@@ -1307,13 +1312,12 @@ def test_add_and_remove_tags_to_transactions(tags: list[Attribute]) -> None:
     uuids = [str(transfer.uuid) for transfer in transactions]
     record_keeper.add_tags_to_transactions(uuids, tag_names)
     for transaction in transactions:
-        for tag in tags:
+        for tag in valid_tags:
             assert tag in transaction.tags
-    for tag in tags:
+    for tag in valid_tags:
         record_keeper.remove_tags_from_transactions(uuids, [tag.name])
         for transaction in transactions:
-            for tag in tags:
-                assert tag not in transaction.tags
+            assert tag not in transaction.tags
 
 
 @given(tags=st.lists(attributes(AttributeType.TAG), min_size=1, max_size=5))

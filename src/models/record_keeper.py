@@ -876,6 +876,11 @@ class RecordKeeper:
         self._securities.remove(security)
         del security
 
+    # TODO: remove currency
+    # TODO: remove exchange rate
+    # TODO: remove category
+    # TODO: remove attribute
+
     def get_account_parent_or_none(self, path: str | None) -> AccountGroup | None:
         if path is None:
             return None
