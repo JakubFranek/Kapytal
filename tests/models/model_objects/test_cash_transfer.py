@@ -63,6 +63,7 @@ def test_creation(
     assert transfer.recipient == account_recipient
     assert transfer.amount_sent == amount_sent
     assert transfer.amount_received == amount_received
+    assert transfer.currencies == (account_sender.currency, account_recipient.currency)
     assert transfer.__repr__() == (
         f"CashTransfer(sent={transfer.amount_sent}, "
         f"sender='{transfer.sender.name}', "

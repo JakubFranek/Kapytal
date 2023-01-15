@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from decimal import Decimal
 
 import pytest
@@ -6,7 +6,10 @@ import pytest
 from src.models.constants import tzinfo
 from src.models.custom_exceptions import InvalidOperationError
 from src.models.model_objects.cash_objects import CashTransaction, RefundTransaction
-from src.models.model_objects.security_objects import SecurityType
+from src.models.model_objects.security_objects import (
+    SecurityTransactionType,
+    SecurityType,
+)
 from src.models.record_keeper import DoesNotExistError, RecordKeeper
 from tests.models.test_record_keeper import (
     get_preloaded_record_keeper_with_various_transactions,
@@ -136,3 +139,42 @@ def test_remove_security_referenced_in_transaction() -> None:
     security = record_keeper.securities[0]
     with pytest.raises(InvalidOperationError):
         record_keeper.remove_security(security.symbol)
+
+
+def test_remove_currency() -> None:
+    record_keeper = RecordKeeper()
+    record_keeper.add_currency("CZK", 2)
+    assert len(record_keeper.currencies) == 1
+    record_keeper.remove_currency("CZK")
+    assert len(record_keeper.currencies) == 0
+
+
+def test_remove_currency_referenced_in_security() -> None:
+    record_keeper = RecordKeeper()
+    record_keeper.add_currency("CZK", 2)
+    record_keeper.add_security("NAME", "SYMB", SecurityType.ETF, "CZK", 1)
+    with pytest.raises(InvalidOperationError):
+        record_keeper.remove_currency("CZK")
+
+
+def test_remove_currency_referenced_in_transaction() -> None:
+    record_keeper = RecordKeeper()
+    record_keeper.add_currency("CZK", 2)
+    record_keeper.add_security_account("SECURITY ACC", None)
+    record_keeper.add_cash_account(
+        "CASH ACC", "CZK", 0, datetime.now(tzinfo) - timedelta(days=1), None
+    )
+    record_keeper.add_security("NAME", "SYMB", SecurityType.ETF, "CZK", 1)
+    record_keeper.add_security_transaction(
+        "",
+        datetime.now(tzinfo),
+        SecurityTransactionType.BUY,
+        "SYMB",
+        1,
+        1,
+        1,
+        "SECURITY ACC",
+        "CASH ACC",
+    )
+    with pytest.raises(InvalidOperationError):
+        record_keeper.remove_currency("CZK")

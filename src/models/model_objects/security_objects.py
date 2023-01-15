@@ -296,6 +296,10 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
     def currency(self) -> Currency:
         return self._cash_account.currency
 
+    @property
+    def currencies(self) -> tuple[Currency]:
+        return (self._cash_account.currency,)
+
     def __repr__(self) -> str:
         return (
             f"SecurityTransaction({self.type_.name}, "

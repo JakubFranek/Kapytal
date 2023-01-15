@@ -59,6 +59,11 @@ class CashRelatedTransaction(Transaction, ABC):
     def _get_amount(self, account: "CashAccount") -> CashAmount:
         raise NotImplementedError
 
+    @property
+    @abstractmethod
+    def currencies(self) -> tuple[Currency]:
+        raise NotImplementedError
+
 
 class CashTransactionType(Enum):
     INCOME = auto()
@@ -223,6 +228,10 @@ class CashTransaction(CashRelatedTransaction):
     @property
     def currency(self) -> Currency:
         return self._currency
+
+    @property
+    def currencies(self) -> tuple[Currency]:
+        return (self._currency,)
 
     @property
     def payee(self) -> Attribute:
@@ -611,6 +620,10 @@ class CashTransfer(CashRelatedTransaction):
     def amount_received(self) -> CashAmount:
         return self._amount_received
 
+    @property
+    def currencies(self) -> tuple[Currency]:
+        return (self._sender.currency, self._recipient.currency)
+
     def __repr__(self) -> str:
         return (
             f"CashTransfer(sent={self.amount_sent}, "
@@ -799,6 +812,10 @@ class RefundTransaction(CashRelatedTransaction):
     @property
     def currency(self) -> Currency:
         return self._currency
+
+    @property
+    def currencies(self) -> tuple[Currency]:
+        return (self._currency,)
 
     @property
     def refunded_transaction(self) -> CashTransaction:

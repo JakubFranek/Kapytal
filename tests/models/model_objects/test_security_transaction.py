@@ -75,6 +75,7 @@ def test_buy(
     assert transaction.security_account == security_account
     assert transaction.cash_account == cash_account
     assert transaction.currency == cash_account.currency
+    assert transaction.currencies == (cash_account.currency,)
     assert (
         cash_account.get_balance(currency)
         == cash_account.initial_balance - shares * price_per_share - fees

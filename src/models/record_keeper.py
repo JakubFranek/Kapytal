@@ -17,6 +17,7 @@ from src.models.model_objects.attributes import (
 )
 from src.models.model_objects.cash_objects import (
     CashAccount,
+    CashRelatedTransaction,
     CashTransaction,
     CashTransactionType,
     CashTransfer,
@@ -867,7 +868,7 @@ class RecordKeeper:
         security = self.get_security(symbol)
         if any(
             transaction.security == security
-            for transaction in self.transactions
+            for transaction in self._transactions
             if isinstance(transaction, SecurityRelatedTransaction)
         ):
             raise InvalidOperationError(
@@ -876,7 +877,24 @@ class RecordKeeper:
         self._securities.remove(security)
         del security
 
-    # TODO: remove currency
+    # TODO: add check for Exchange Rate... EXR must be deleted first
+    def remove_currency(self, code: str) -> None:
+        currency = self.get_currency(code)
+        if any(
+            currency in transaction.currencies
+            for transaction in self._transactions
+            if isinstance(transaction, CashRelatedTransaction)
+        ):
+            raise InvalidOperationError(
+                "Cannot delete a Currency referenced in any CashRelatedTransaction."
+            )
+        if any(currency == security.currency for security in self._securities):
+            raise InvalidOperationError(
+                "Cannot delete a Currency referenced in any Security."
+            )
+        self._currencies.remove(currency)
+        del currency
+
     # TODO: remove exchange rate
     # TODO: remove category
     # TODO: remove attribute
