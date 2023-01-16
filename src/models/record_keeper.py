@@ -724,7 +724,7 @@ class RecordKeeper:
         if new_name is not None:
             category.name = new_name
         if new_parent_path is not None:
-            new_parent = self.get_category(new_parent_path, category.type_)
+            new_parent = self.get_category(new_parent_path)
             category.parent = new_parent
 
     def edit_attribute(
@@ -913,8 +913,20 @@ class RecordKeeper:
         self._exchange_rates.remove(removed_exchange_rate)
         del removed_exchange_rate
 
-    # TODO: remove category
-    # TODO: remove attribute
+    def remove_category(self, path: str) -> None:
+        category = self.get_category(path)
+        if any(
+            category in transaction.categories
+            for transaction in self._transactions
+            if isinstance(transaction, (CashTransaction, RefundTransaction))
+        ):
+            raise InvalidOperationError(
+                "Cannot delete a Category referenced in any CashTransaction "
+                "or RefundTransaction."
+            )
+        self._categories.remove(category)
+        del category
+
     def remove_tag(self, name: str) -> None:
         tag = self.get_attribute(name, AttributeType.TAG)
         if any(tag in transaction.tags for transaction in self._transactions):
@@ -1003,9 +1015,13 @@ class RecordKeeper:
                 return currency
         raise DoesNotExistError(f"A Currency with code='{code_upper}' does not exist.")
 
-    # TODO: having to specify type for existing Category is annoying...
-    # get_or_make_category?
-    def get_category(self, path: str, type_: CategoryType) -> Category:
+    def get_category(self, path: str) -> None:
+        for category in self._categories:
+            if category.path == path:
+                return category
+        raise DoesNotExistError(f"Category at path='{path}' does not exist.")
+
+    def get_or_make_category(self, path: str, type_: CategoryType) -> Category:
         """Returns Category at path. If it does not exist, creates a new Category
         at path with given type_."""
 
@@ -1095,7 +1111,7 @@ class RecordKeeper:
         category_amount_pairs: list[tuple[Category, CashAmount | None]] = []
         for category_path, amount in category_path_amount_pairs:
             valid_amount = CashAmount(amount, currency) if amount is not None else None
-            category = self.get_category(category_path, category_type)  # noqa: NEW100
+            category = self.get_or_make_category(category_path, category_type)
             pair = (category, valid_amount)
             category_amount_pairs.append(pair)
         return category_amount_pairs

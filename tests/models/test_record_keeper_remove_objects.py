@@ -5,7 +5,12 @@ import pytest
 
 from src.models.constants import tzinfo
 from src.models.custom_exceptions import InvalidOperationError
-from src.models.model_objects.attributes import Attribute, AttributeType
+from src.models.model_objects.attributes import (
+    Attribute,
+    AttributeType,
+    Category,
+    CategoryType,
+)
 from src.models.model_objects.cash_objects import (
     CashTransaction,
     CashTransactionType,
@@ -256,3 +261,27 @@ def test_remove_payee_in_transaction() -> None:
     )
     with pytest.raises(InvalidOperationError):
         record_keeper.remove_payee("PAYEE")
+
+
+def test_remove_category() -> None:
+    record_keeper = RecordKeeper()
+    record_keeper._categories.append(Category("CATEGORY", CategoryType.EXPENSE, None))
+    record_keeper.remove_category("CATEGORY")
+    assert len(record_keeper.tags) == 0
+
+
+def test_remove_category_in_transaction() -> None:
+    record_keeper = RecordKeeper()
+    record_keeper.add_currency("CZK", 2)
+    record_keeper.add_cash_account("ACCOUNT", "CZK", 0, datetime.now(tzinfo), None)
+    record_keeper.add_cash_transaction(
+        "",
+        datetime.now(tzinfo),
+        CashTransactionType.EXPENSE,
+        "ACCOUNT",
+        [("Category", Decimal(1))],
+        "PAYEE",
+        [(("TAG"), Decimal(1))],
+    )
+    with pytest.raises(InvalidOperationError):
+        record_keeper.remove_category("Category")

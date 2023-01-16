@@ -12,7 +12,9 @@ def test_edit_category() -> None:
     record_keeper.add_category("TEST PARENT 2", None, CategoryType.EXPENSE)
     record_keeper.add_category("TEST CAT", "TEST PARENT 1")
     record_keeper.edit_category("TEST PARENT 1/TEST CAT", "NEW NAME", "TEST PARENT 2")
-    cat = record_keeper.get_category("TEST PARENT 2/NEW NAME", CategoryType.EXPENSE)
+    cat = record_keeper.get_or_make_category(
+        "TEST PARENT 2/NEW NAME", CategoryType.EXPENSE
+    )
     assert cat.name == "NEW NAME"
     assert cat.path == "TEST PARENT 2/NEW NAME"
 

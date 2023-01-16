@@ -242,6 +242,10 @@ class CashTransaction(CashRelatedTransaction):
         return tuple(self._category_amount_pairs)
 
     @property
+    def categories(self) -> tuple[Category]:
+        return tuple(category for category, _ in self._category_amount_pairs)
+
+    @property
     def category_names(self) -> str:
         category_paths = [category.path for category, _ in self._category_amount_pairs]
         return ", ".join(category_paths)
@@ -824,6 +828,10 @@ class RefundTransaction(CashRelatedTransaction):
     @property
     def category_amount_pairs(self) -> tuple[tuple[Category, CashAmount], ...]:
         return tuple(self._category_amount_pairs)
+
+    @property
+    def categories(self) -> tuple[Category]:
+        return tuple(category for category, _ in self._category_amount_pairs)
 
     @property
     def category_names(self) -> str:

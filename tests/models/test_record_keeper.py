@@ -198,7 +198,7 @@ def test_add_cash_transaction(
     payee_name: str,
     data: st.DataObject,
 ) -> None:
-    record_keeper = get_preloaded_record_keeper()  # noqa: NEW100
+    record_keeper = get_preloaded_record_keeper()
     account_path = data.draw(
         st.sampled_from(
             [
@@ -270,7 +270,7 @@ def test_add_cash_transfer(
     amount_received: Decimal,
     data: st.DataObject,
 ) -> None:
-    record_keeper = get_preloaded_record_keeper()  # noqa: NEW100
+    record_keeper = get_preloaded_record_keeper()
     account_sender_path = data.draw(
         st.sampled_from(
             [
@@ -409,34 +409,41 @@ def test_get_currency_does_not_exist() -> None:
 
 
 @given(path=everything_except(str), type_=st.sampled_from(CategoryType))
-def test_get_category_invalid_path_type(path: Any, type_: CategoryType) -> None:
+def test_get_or_make_category_invalid_path_type(path: Any, type_: CategoryType) -> None:
     record_keeper = RecordKeeper()
     with pytest.raises(TypeError, match="Parameter 'path' must be a string."):
-        record_keeper.get_category(path, type_)
+        record_keeper.get_or_make_category(path, type_)
 
 
 @given(type_=everything_except(CategoryType))
-def test_get_category_invalid_type_type(type_: Any) -> None:
+def test_get_or_make_category_invalid_type_type(type_: Any) -> None:
     record_keeper = RecordKeeper()
     with pytest.raises(TypeError, match="Parameter 'type_' must be a CategoryType."):
-        record_keeper.get_category("test", type_)
+        record_keeper.get_or_make_category("test", type_)
+
+
+def test_get_or_make_category_parent_exists() -> None:
+    record_keeper = get_preloaded_record_keeper()
+    parent_path = "One/Two"
+    child_path = "One/Two/Three"
+    parent = record_keeper.get_or_make_category(parent_path, CategoryType.INCOME)
+    child = record_keeper.get_or_make_category(child_path, CategoryType.INCOME)
+    assert child.path == child_path
+    assert parent.path == parent_path
+
+
+def test_get_or_make_category_does_not_exist() -> None:
+    record_keeper = get_preloaded_record_keeper()
+    category_path = "One/Two/Three"
+    category = record_keeper.get_or_make_category(category_path, CategoryType.INCOME)
+    assert category.path == category_path
 
 
 def test_get_category_does_not_exist() -> None:
     record_keeper = get_preloaded_record_keeper()
     category_path = "One/Two/Three"
-    category = record_keeper.get_category(category_path, CategoryType.INCOME)
-    assert category.path == category_path
-
-
-def test_get_category_parent_exists() -> None:
-    record_keeper = get_preloaded_record_keeper()
-    parent_path = "One/Two"
-    child_path = "One/Two/Three"
-    parent = record_keeper.get_category(parent_path, CategoryType.INCOME)
-    child = record_keeper.get_category(child_path, CategoryType.INCOME)
-    assert child.path == child_path
-    assert parent.path == parent_path
+    with pytest.raises(DoesNotExistError):
+        record_keeper.get_category(category_path)
 
 
 def test_get_attribute() -> None:
@@ -1010,7 +1017,7 @@ def test_edit_refunds_same_values() -> None:
 
 def test_edit_refunds_wrong_transaction_types() -> None:
     record_keeper = get_preloaded_record_keeper_with_cash_transactions()
-    transactions = [transaction for transaction in record_keeper.transactions]
+    transactions = record_keeper.transactions
     uuids = [str(transfer.uuid) for transfer in transactions]
     with pytest.raises(
         TypeError, match="All edited transactions must be RefundTransactions."
@@ -1125,7 +1132,7 @@ def test_edit_security_transactions_same_values() -> None:
 
 def test_edit_security_transactions_wrong_transaction_types() -> None:
     record_keeper = get_preloaded_record_keeper_with_cash_transactions()
-    transactions = [transaction for transaction in record_keeper.transactions]
+    transactions = record_keeper.transactions
     uuids = [str(transfer.uuid) for transfer in transactions]
     with pytest.raises(
         TypeError, match="All edited transactions must be SecurityTransactions."
@@ -1250,7 +1257,7 @@ def test_edit_security_transfers_same_values() -> None:
 
 def test_edit_security_transfers_wrong_transaction_types() -> None:
     record_keeper = get_preloaded_record_keeper_with_cash_transactions()
-    transactions = [transaction for transaction in record_keeper.transactions]
+    transactions = record_keeper.transactions
     uuids = [str(transfer.uuid) for transfer in transactions]
     with pytest.raises(
         TypeError, match="All edited transactions must be SecurityTransfers."

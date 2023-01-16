@@ -68,6 +68,7 @@ def test_creation() -> None:
         tag_amount_pairs,
         payee,
     )
+    categories = tuple(category for category, _ in category_amount_pairs)
 
     assert refund.amount == CashAmount(50, currency)
     assert (
@@ -82,6 +83,7 @@ def test_creation() -> None:
     assert refund.currencies == (refunded_transaction.currency,)
     assert refund.category_names == ", ".join((cat_1.path, cat_2.path, cat_3.path))
     assert refund.category_amount_pairs == category_amount_pairs
+    assert refund.categories == categories
     assert refund.tag_amount_pairs == tag_amount_pairs
     assert refund in refunded_transaction.refunds
     assert refund.payee == payee
