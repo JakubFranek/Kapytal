@@ -5,7 +5,7 @@ from decimal import Decimal
 from src.models.constants import tzinfo
 from src.models.json.custom_json_decoder import CustomJSONDecoder
 from src.models.json.custom_json_encoder import CustomJSONEncoder
-from src.models.model_objects.currency import Currency, ExchangeRate
+from src.models.model_objects.currency import CashAmount, Currency, ExchangeRate
 
 
 def test_decimal() -> None:
@@ -51,3 +51,17 @@ def test_exchange_rate() -> None:
     assert isinstance(result, ExchangeRate)
     assert result.primary_currency == primary
     assert result.secondary_currency == secondary
+
+
+def test_cash_amount() -> None:
+    currency = Currency("EUR", 2)
+    data_dict = {
+        "datatype": "CashAmount",
+        "value": Decimal("1.23"),
+        "currency": currency,
+    }
+    data = json.dumps(data_dict, cls=CustomJSONEncoder)
+    result = json.loads(data, cls=CustomJSONDecoder)
+    assert isinstance(result, CashAmount)
+    assert result.value == Decimal("1.23")
+    assert result.currency == currency

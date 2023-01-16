@@ -222,8 +222,8 @@ class ExchangeRate(JSONSerializableMixin):
     def to_dict(self) -> dict:
         return {
             "datatype": "ExchangeRate",
-            "primary_currency": self._primary_currency.to_dict(),
-            "secondary_currency": self._secondary_currency.to_dict(),
+            "primary_currency": self._primary_currency,
+            "secondary_currency": self._secondary_currency,
         }
 
     @staticmethod
@@ -234,7 +234,7 @@ class ExchangeRate(JSONSerializableMixin):
 
 
 @total_ordering
-class CashAmount:
+class CashAmount(JSONSerializableMixin):
     """An immutable object comprising of Decimal value and a Currency."""
 
     def __init__(self, value: Decimal | int | str, currency: Currency) -> None:
@@ -331,3 +331,16 @@ class CashAmount:
             return self
         factor = self.currency.get_conversion_factor(target_currency, date_)
         return CashAmount(self.value * factor, target_currency)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "datatype": "CashAmount",
+            "value": self.value,
+            "currency": self.currency,
+        }
+
+    @staticmethod
+    def from_dict(data: dict[str, Any]) -> Self:
+        value = data["value"]
+        currency = data["currency"]
+        return CashAmount(value, currency)

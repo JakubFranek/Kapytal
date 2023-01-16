@@ -6,7 +6,7 @@ import pytest
 
 from src.models.constants import tzinfo
 from src.models.json.custom_json_encoder import CustomJSONEncoder
-from src.models.model_objects.currency import Currency, ExchangeRate
+from src.models.model_objects.currency import CashAmount, Currency, ExchangeRate
 
 
 def test_invalid_object() -> None:
@@ -49,8 +49,20 @@ def test_exchange_rate() -> None:
     result = json.dumps(exchange_rate, cls=CustomJSONEncoder)
     expected_dict = {
         "datatype": "ExchangeRate",
-        "primary_currency": primary.to_dict(),
-        "secondary_currency": secondary.to_dict(),
+        "primary_currency": primary,
+        "secondary_currency": secondary,
+    }
+    expected_string = json.dumps(expected_dict, cls=CustomJSONEncoder)
+    assert result == expected_string
+
+
+def test_cash_amount() -> None:
+    amount = CashAmount(Decimal("1.23"), Currency("CZK", 2))
+    result = json.dumps(amount, cls=CustomJSONEncoder)
+    expected_dict = {
+        "datatype": "CashAmount",
+        "value": Decimal("1.23"),
+        "currency": Currency("CZK", 2),
     }
     expected_string = json.dumps(expected_dict, cls=CustomJSONEncoder)
     assert result == expected_string

@@ -3,7 +3,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any
 
-from src.models.model_objects.currency import Currency, ExchangeRate
+from src.models.model_objects.currency import CashAmount, Currency, ExchangeRate
 
 
 class CustomJSONDecoder(json.JSONDecoder):
@@ -21,4 +21,6 @@ class CustomJSONDecoder(json.JSONDecoder):
                     return Currency.from_dict(obj)
                 case "ExchangeRate":
                     return ExchangeRate.from_dict(obj)
+                case "CashAmount":
+                    return CashAmount.from_dict(obj)
         raise NotImplementedError
