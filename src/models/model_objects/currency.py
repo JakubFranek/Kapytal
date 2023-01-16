@@ -5,9 +5,10 @@ import operator
 from datetime import date
 from decimal import Decimal
 from functools import total_ordering
-from typing import Self
+from typing import Any, Self
 
 from src.models.mixins.datetime_created_mixin import DatetimeCreatedMixin
+from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
 
 
 class CurrencyError(ValueError):
@@ -23,7 +24,7 @@ class ConversionFactorNotFoundError(ValueError):
     for the given Currency pair."""
 
 
-class Currency(DatetimeCreatedMixin):
+class Currency(DatetimeCreatedMixin, JSONSerializableMixin):
     def __init__(self, code: str, places: int) -> None:
         super().__init__()
 
@@ -147,8 +148,15 @@ class Currency(DatetimeCreatedMixin):
             return exchange_rates
         return None  # Reached a dead-end.
 
+    def to_dict(self) -> dict:
+        return {"datatype": "Currency", "code": self._code, "places": self._places}
 
-class ExchangeRate:
+    @staticmethod
+    def from_dict(data: dict[str, Any]) -> Self:
+        return Currency(code=data["code"], places=data["places"])
+
+
+class ExchangeRate(JSONSerializableMixin):
     def __init__(
         self, primary_currency: Currency, secondary_currency: Currency
     ) -> None:
@@ -210,6 +218,19 @@ class ExchangeRate:
         if not _rate.is_finite() or _rate <= 0:
             raise ValueError("Parameter 'rate' must be finite and positive.")
         self._rate_history[date_] = _rate
+
+    def to_dict(self) -> dict:
+        return {
+            "datatype": "ExchangeRate",
+            "primary_currency": self._primary_currency.to_dict(),
+            "secondary_currency": self._secondary_currency.to_dict(),
+        }
+
+    @staticmethod
+    def from_dict(data: dict[str, Any]) -> Self:
+        primary = data["primary_currency"]
+        secondary = data["secondary_currency"]
+        return ExchangeRate(primary, secondary)
 
 
 @total_ordering
