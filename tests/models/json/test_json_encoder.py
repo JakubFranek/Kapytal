@@ -3,10 +3,13 @@ from datetime import datetime
 from decimal import Decimal
 
 import pytest
+from hypothesis import given
 
 from src.models.constants import tzinfo
 from src.models.json.custom_json_encoder import CustomJSONEncoder
+from src.models.model_objects.attributes import Attribute
 from src.models.model_objects.currency import CashAmount, Currency, ExchangeRate
+from tests.models.test_assets.composites import attributes
 
 
 def test_invalid_object() -> None:
@@ -63,6 +66,18 @@ def test_cash_amount() -> None:
         "datatype": "CashAmount",
         "value": Decimal("1.23"),
         "currency": Currency("CZK", 2),
+    }
+    expected_string = json.dumps(expected_dict, cls=CustomJSONEncoder)
+    assert result == expected_string
+
+
+@given(attribute=attributes())
+def test_attribute(attribute: Attribute) -> None:
+    result = json.dumps(attribute, cls=CustomJSONEncoder)
+    expected_dict = {
+        "datatype": "Attribute",
+        "name": attribute.name,
+        "type_": attribute.type_.name,
     }
     expected_string = json.dumps(expected_dict, cls=CustomJSONEncoder)
     assert result == expected_string

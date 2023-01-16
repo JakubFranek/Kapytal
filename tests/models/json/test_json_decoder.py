@@ -2,10 +2,14 @@ import json
 from datetime import datetime
 from decimal import Decimal
 
+from hypothesis import given
+
 from src.models.constants import tzinfo
 from src.models.json.custom_json_decoder import CustomJSONDecoder
 from src.models.json.custom_json_encoder import CustomJSONEncoder
+from src.models.model_objects.attributes import Attribute
 from src.models.model_objects.currency import CashAmount, Currency, ExchangeRate
+from tests.models.test_assets.composites import attributes
 
 
 def test_decimal() -> None:
@@ -65,3 +69,17 @@ def test_cash_amount() -> None:
     assert isinstance(result, CashAmount)
     assert result.value == Decimal("1.23")
     assert result.currency == currency
+
+
+@given(attribute=attributes())
+def test_attribute(attribute: Attribute) -> None:
+    data_dict = {
+        "datatype": "Attribute",
+        "name": attribute.name,
+        "type_": attribute.type_.name,
+    }
+    data = json.dumps(data_dict, cls=CustomJSONEncoder)
+    result = json.loads(data, cls=CustomJSONDecoder)
+    assert isinstance(result, Attribute)
+    assert result.name == attribute.name
+    assert result.type_ == attribute.type_

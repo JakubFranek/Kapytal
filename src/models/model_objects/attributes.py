@@ -1,7 +1,8 @@
 from enum import Enum, auto
-from typing import Self
+from typing import Any, Self
 
 from src.models.mixins.datetime_created_mixin import DatetimeCreatedMixin
+from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
 from src.models.mixins.name_mixin import NameMixin
 
 
@@ -28,7 +29,7 @@ class CategoryType(Enum):
     INCOME_AND_EXPENSE = auto()
 
 
-class Attribute(NameMixin, DatetimeCreatedMixin):
+class Attribute(NameMixin, DatetimeCreatedMixin, JSONSerializableMixin):
     def __init__(self, name: str, type_: AttributeType) -> None:
         super().__init__(name=name)
 
@@ -43,6 +44,15 @@ class Attribute(NameMixin, DatetimeCreatedMixin):
 
     def __repr__(self) -> str:
         return f"Attribute('{self.name}', {self.type_.name})"
+
+    def to_dict(self) -> dict[str, Any]:
+        return {"datatype": "Attribute", "name": self._name, "type_": self._type.name}
+
+    @staticmethod
+    def from_dict(data: dict[str, Any]) -> Self:
+        name = data["name"]
+        type_ = AttributeType[data["type_"]]
+        return Attribute(name, type_)
 
 
 class Category(NameMixin, DatetimeCreatedMixin):
