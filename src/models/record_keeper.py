@@ -901,7 +901,6 @@ class RecordKeeper:
         self._currencies.remove(currency)
         del currency
 
-    # TODO: remove exchange rate
     def remove_exchange_rate(self, exchange_rate_code: str) -> None:
         for exchange_rate in self._exchange_rates:
             if str(exchange_rate) == exchange_rate_code:
@@ -916,6 +915,28 @@ class RecordKeeper:
 
     # TODO: remove category
     # TODO: remove attribute
+    def remove_tag(self, name: str) -> None:
+        tag = self.get_attribute(name, AttributeType.TAG)
+        if any(tag in transaction.tags for transaction in self._transactions):
+            raise InvalidOperationError(
+                "Cannot delete a tag referenced in any Transaction."
+            )
+        self._tags.remove(tag)
+        del tag
+
+    def remove_payee(self, name: str) -> None:
+        payee = self.get_attribute(name, AttributeType.PAYEE)
+        if any(
+            payee == transaction.payee
+            for transaction in self._transactions
+            if isinstance(transaction, (CashTransaction, RefundTransaction))
+        ):
+            raise InvalidOperationError(
+                "Cannot delete a payee referenced in any CashTransaction "
+                "or RefundTransaction."
+            )
+        self._payees.remove(payee)
+        del payee
 
     def get_account_parent_or_none(self, path: str | None) -> AccountGroup | None:
         if path is None:

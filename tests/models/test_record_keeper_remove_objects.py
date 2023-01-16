@@ -5,7 +5,12 @@ import pytest
 
 from src.models.constants import tzinfo
 from src.models.custom_exceptions import InvalidOperationError
-from src.models.model_objects.cash_objects import CashTransaction, RefundTransaction
+from src.models.model_objects.attributes import Attribute, AttributeType
+from src.models.model_objects.cash_objects import (
+    CashTransaction,
+    CashTransactionType,
+    RefundTransaction,
+)
 from src.models.model_objects.security_objects import (
     SecurityTransactionType,
     SecurityType,
@@ -203,3 +208,51 @@ def test_remove_exchange_rate_does_not_exist() -> None:
     record_keeper = RecordKeeper()
     with pytest.raises(DoesNotExistError):
         record_keeper.remove_exchange_rate("CZK/EUR")
+
+
+def test_remove_tag() -> None:
+    record_keeper = RecordKeeper()
+    record_keeper._tags.append(Attribute("TAG", AttributeType.TAG))
+    record_keeper.remove_tag("TAG")
+    assert len(record_keeper.tags) == 0
+
+
+def test_remove_tag_in_transaction() -> None:
+    record_keeper = RecordKeeper()
+    record_keeper.add_currency("CZK", 2)
+    record_keeper.add_cash_account("ACCOUNT", "CZK", 0, datetime.now(tzinfo), None)
+    record_keeper.add_cash_transaction(
+        "",
+        datetime.now(tzinfo),
+        CashTransactionType.EXPENSE,
+        "ACCOUNT",
+        [("Category", Decimal(1))],
+        "PAYEE",
+        [(("TAG"), Decimal(1))],
+    )
+    with pytest.raises(InvalidOperationError):
+        record_keeper.remove_tag("TAG")
+
+
+def test_remove_payee() -> None:
+    record_keeper = RecordKeeper()
+    record_keeper._payees.append(Attribute("PAYEE", AttributeType.PAYEE))
+    record_keeper.remove_payee("PAYEE")
+    assert len(record_keeper.tags) == 0
+
+
+def test_remove_payee_in_transaction() -> None:
+    record_keeper = RecordKeeper()
+    record_keeper.add_currency("CZK", 2)
+    record_keeper.add_cash_account("ACCOUNT", "CZK", 0, datetime.now(tzinfo), None)
+    record_keeper.add_cash_transaction(
+        "",
+        datetime.now(tzinfo),
+        CashTransactionType.EXPENSE,
+        "ACCOUNT",
+        [("Category", Decimal(1))],
+        "PAYEE",
+        [(("TAG"), Decimal(1))],
+    )
+    with pytest.raises(InvalidOperationError):
+        record_keeper.remove_payee("PAYEE")

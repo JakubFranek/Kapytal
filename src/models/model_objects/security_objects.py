@@ -246,6 +246,7 @@ class SecurityRelatedTransaction(Transaction, ABC):
         raise NotImplementedError
 
 
+# TODO: maybe remove fee? cannot be associated to any payee this way
 class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
     def __init__(
         self,
