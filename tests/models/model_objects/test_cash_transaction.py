@@ -84,6 +84,8 @@ def test_creation(  # noqa: CFQ002,TMN001
         tag_amount_collection,
     )
 
+    categories = tuple(category for category, _ in category_amount_collection)
+
     dt_created_diff = cash_transaction.datetime_created - dt_start
 
     assert cash_transaction.description == description
@@ -91,7 +93,9 @@ def test_creation(  # noqa: CFQ002,TMN001
     assert cash_transaction.type_ == type_
     assert cash_transaction.account == account
     assert cash_transaction.currency == account_currency
+    assert cash_transaction.currencies == (account_currency,)
     assert cash_transaction.category_amount_pairs == tuple(category_amount_collection)
+    assert cash_transaction.categories == categories
     assert cash_transaction.payee == payee
     assert cash_transaction.tag_amount_pairs == tuple(tag_amount_collection)
     assert cash_transaction in account.transactions

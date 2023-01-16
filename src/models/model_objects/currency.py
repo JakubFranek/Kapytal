@@ -58,7 +58,7 @@ class Currency(DatetimeCreatedMixin):
         return copy.deepcopy(self._exchange_rates)
 
     def __repr__(self) -> str:
-        return f"Currency({self.code})"
+        return f"Currency({self._code})"
 
     def __hash__(self) -> int:
         return hash(self._code)
@@ -136,7 +136,7 @@ class Currency(DatetimeCreatedMixin):
         # Ignore these currencies in future deeper searches (no need to go back).
         ignore_currencies = ignore_currencies | current_currency.convertible_to
         for loop_currency in iterable_currencies:
-            exchange_rates = Currency._get_exchange_rates(  # noqa: NEW100
+            exchange_rates = Currency._get_exchange_rates(
                 loop_currency, target_currency, ignore_currencies
             )
             if exchange_rates is None:

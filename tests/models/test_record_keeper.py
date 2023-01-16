@@ -198,7 +198,7 @@ def test_add_cash_transaction(
     payee_name: str,
     data: st.DataObject,
 ) -> None:
-    record_keeper = get_preloaded_record_keeper()  # noqa: NEW100
+    record_keeper = get_preloaded_record_keeper()
     account_path = data.draw(
         st.sampled_from(
             [
@@ -270,7 +270,7 @@ def test_add_cash_transfer(
     amount_received: Decimal,
     data: st.DataObject,
 ) -> None:
-    record_keeper = get_preloaded_record_keeper()  # noqa: NEW100
+    record_keeper = get_preloaded_record_keeper()
     account_sender_path = data.draw(
         st.sampled_from(
             [
@@ -366,7 +366,7 @@ def test_add_cash_account_already_exists(data: st.DataObject) -> None:
 def test_get_account_parent_does_not_exist() -> None:
     record_keeper = get_preloaded_record_keeper()
     with pytest.raises(DoesNotExistError):
-        record_keeper.get_account_parent("does not exist")
+        record_keeper.get_account_parent_or_none("does not exist")
 
 
 @given(path=everything_except(str))
@@ -409,34 +409,41 @@ def test_get_currency_does_not_exist() -> None:
 
 
 @given(path=everything_except(str), type_=st.sampled_from(CategoryType))
-def test_get_category_invalid_path_type(path: Any, type_: CategoryType) -> None:
+def test_get_or_make_category_invalid_path_type(path: Any, type_: CategoryType) -> None:
     record_keeper = RecordKeeper()
     with pytest.raises(TypeError, match="Parameter 'path' must be a string."):
-        record_keeper.get_category(path, type_)
+        record_keeper.get_or_make_category(path, type_)
 
 
 @given(type_=everything_except(CategoryType))
-def test_get_category_invalid_type_type(type_: Any) -> None:
+def test_get_or_make_category_invalid_type_type(type_: Any) -> None:
     record_keeper = RecordKeeper()
     with pytest.raises(TypeError, match="Parameter 'type_' must be a CategoryType."):
-        record_keeper.get_category("test", type_)
+        record_keeper.get_or_make_category("test", type_)
+
+
+def test_get_or_make_category_parent_exists() -> None:
+    record_keeper = get_preloaded_record_keeper()
+    parent_path = "One/Two"
+    child_path = "One/Two/Three"
+    parent = record_keeper.get_or_make_category(parent_path, CategoryType.INCOME)
+    child = record_keeper.get_or_make_category(child_path, CategoryType.INCOME)
+    assert child.path == child_path
+    assert parent.path == parent_path
+
+
+def test_get_or_make_category_does_not_exist() -> None:
+    record_keeper = get_preloaded_record_keeper()
+    category_path = "One/Two/Three"
+    category = record_keeper.get_or_make_category(category_path, CategoryType.INCOME)
+    assert category.path == category_path
 
 
 def test_get_category_does_not_exist() -> None:
     record_keeper = get_preloaded_record_keeper()
     category_path = "One/Two/Three"
-    category = record_keeper.get_category(category_path, CategoryType.INCOME)
-    assert category.path == category_path
-
-
-def test_get_category_parent_exists() -> None:
-    record_keeper = get_preloaded_record_keeper()
-    parent_path = "One/Two"
-    child_path = "One/Two/Three"
-    parent = record_keeper.get_category(parent_path, CategoryType.INCOME)
-    child = record_keeper.get_category(child_path, CategoryType.INCOME)
-    assert child.path == child_path
-    assert parent.path == parent_path
+    with pytest.raises(DoesNotExistError):
+        record_keeper.get_category(category_path)
 
 
 def test_get_attribute() -> None:
@@ -493,7 +500,7 @@ def test_add_refund_wrong_uuid() -> RecordKeeper:
         record_keeper.add_refund(
             description="Refund!",
             datetime_=datetime.now(tzinfo),
-            refunded_transaction_uuid_string="xxx",
+            refunded_transaction_uuid="xxx",
             refunded_account_path="Bank Accounts/Raiffeisen CZK",
             category_path_amount_pairs=(("Food and Drink/Groceries", Decimal(1000)),),
             tag_name_amount_pairs=(("Test Tag", Decimal(1000)),),
@@ -1010,7 +1017,7 @@ def test_edit_refunds_same_values() -> None:
 
 def test_edit_refunds_wrong_transaction_types() -> None:
     record_keeper = get_preloaded_record_keeper_with_cash_transactions()
-    transactions = [transaction for transaction in record_keeper.transactions]
+    transactions = record_keeper.transactions
     uuids = [str(transfer.uuid) for transfer in transactions]
     with pytest.raises(
         TypeError, match="All edited transactions must be RefundTransactions."
@@ -1125,7 +1132,7 @@ def test_edit_security_transactions_same_values() -> None:
 
 def test_edit_security_transactions_wrong_transaction_types() -> None:
     record_keeper = get_preloaded_record_keeper_with_cash_transactions()
-    transactions = [transaction for transaction in record_keeper.transactions]
+    transactions = record_keeper.transactions
     uuids = [str(transfer.uuid) for transfer in transactions]
     with pytest.raises(
         TypeError, match="All edited transactions must be SecurityTransactions."
@@ -1250,7 +1257,7 @@ def test_edit_security_transfers_same_values() -> None:
 
 def test_edit_security_transfers_wrong_transaction_types() -> None:
     record_keeper = get_preloaded_record_keeper_with_cash_transactions()
-    transactions = [transaction for transaction in record_keeper.transactions]
+    transactions = record_keeper.transactions
     uuids = [str(transfer.uuid) for transfer in transactions]
     with pytest.raises(
         TypeError, match="All edited transactions must be SecurityTransfers."
@@ -1295,9 +1302,15 @@ def test_edit_security_transactions_change_security_accounts() -> None:
 @given(tags=st.lists(attributes(AttributeType.TAG), min_size=1, max_size=5))
 def test_add_and_remove_tags_to_transactions(tags: list[Attribute]) -> None:
     record_keeper = get_preloaded_record_keeper_with_cash_transactions()
+    valid_tags: list[Attribute] = []
     for tag in tags:
+        if any(tag.name == other.name for other in valid_tags):
+            continue
+        valid_tags.append(tag)
+
+    for tag in valid_tags:
         record_keeper._tags.append(tag)
-    tag_names = [tag.name for tag in tags]
+    tag_names = [tag.name for tag in valid_tags]
     transactions = [
         transaction
         for transaction in record_keeper.transactions
@@ -1306,13 +1319,12 @@ def test_add_and_remove_tags_to_transactions(tags: list[Attribute]) -> None:
     uuids = [str(transfer.uuid) for transfer in transactions]
     record_keeper.add_tags_to_transactions(uuids, tag_names)
     for transaction in transactions:
-        for tag in tags:
+        for tag in valid_tags:
             assert tag in transaction.tags
-    for tag in tags:
+    for tag in valid_tags:
         record_keeper.remove_tags_from_transactions(uuids, [tag.name])
         for transaction in transactions:
-            for tag in tags:
-                assert tag not in transaction.tags
+            assert tag not in transaction.tags
 
 
 @given(tags=st.lists(attributes(AttributeType.TAG), min_size=1, max_size=5))
@@ -1415,7 +1427,7 @@ def get_preloaded_record_keeper_with_refunds() -> RecordKeeper:
     record_keeper.add_refund(
         description="An expense transaction",
         datetime_=datetime.now(tzinfo),
-        refunded_transaction_uuid_string=str(transaction_cooking.uuid),
+        refunded_transaction_uuid=str(transaction_cooking.uuid),
         refunded_account_path="Bank Accounts/Raiffeisen CZK",
         category_path_amount_pairs=(("Food and Drink/Groceries", Decimal(250)),),
         payee_name="Albert",
@@ -1424,7 +1436,7 @@ def get_preloaded_record_keeper_with_refunds() -> RecordKeeper:
     record_keeper.add_refund(
         description="An expense transaction",
         datetime_=datetime.now(tzinfo),
-        refunded_transaction_uuid_string=str(transaction_cooking.uuid),
+        refunded_transaction_uuid=str(transaction_cooking.uuid),
         refunded_account_path="Bank Accounts/Raiffeisen CZK",
         category_path_amount_pairs=(("Food and Drink/Groceries", Decimal(750)),),
         payee_name="Albert",
@@ -1433,7 +1445,7 @@ def get_preloaded_record_keeper_with_refunds() -> RecordKeeper:
     record_keeper.add_refund(
         description="An expense transaction",
         datetime_=datetime.now(tzinfo),
-        refunded_transaction_uuid_string=str(transaction_electronics.uuid),
+        refunded_transaction_uuid=str(transaction_electronics.uuid),
         refunded_account_path="Bank Accounts/Moneta EUR",
         category_path_amount_pairs=(("Electronics", Decimal(400)),),
         payee_name="Alza",
@@ -1538,6 +1550,70 @@ def get_preloaded_record_keeper_with_cash_transfers() -> RecordKeeper:
         "Bank Accounts/Fio CZK",
         1000,
         25000,
+    )
+    return record_keeper
+
+
+def get_preloaded_record_keeper_with_various_transactions() -> RecordKeeper:
+    record_keeper = get_preloaded_record_keeper()
+    record_keeper.add_cash_transfer(
+        "Salary from Fio to RB",
+        datetime.now(tzinfo) - timedelta(days=7),
+        "Bank Accounts/Fio CZK",
+        "Bank Accounts/Raiffeisen CZK",
+        50000,
+        50000,
+    )
+    record_keeper.add_cash_transaction(
+        "Ingredients for cooking",
+        datetime.now(tzinfo),
+        CashTransactionType.EXPENSE,
+        "Bank Accounts/Raiffeisen CZK",
+        (("Food and Drink/Groceries", Decimal(1000)),),
+        "Albert",
+        (("Split with GF", Decimal(500)),),
+    )
+    record_keeper.add_cash_transaction(
+        "Electronic device",
+        datetime.now(tzinfo) - timedelta(days=2),
+        CashTransactionType.EXPENSE,
+        "Bank Accounts/Moneta EUR",
+        (("Electronics", Decimal(400)),),
+        "Alza",
+        (("Test Tag", Decimal(400)),),
+    )
+    transaction_electronics = next(
+        transaction
+        for transaction in record_keeper.transactions
+        if transaction.description == "Electronic device"
+    )
+    record_keeper.add_refund(
+        description="An expense transaction",
+        datetime_=datetime.now(tzinfo),
+        refunded_transaction_uuid=str(transaction_electronics.uuid),
+        refunded_account_path="Bank Accounts/Moneta EUR",
+        category_path_amount_pairs=(("Electronics", Decimal(400)),),
+        payee_name="Alza",
+        tag_name_amount_pairs=(("Test Tag", Decimal(400)),),
+    )
+    record_keeper.add_security_transaction(
+        description="Monthly buy of ČSOB DPS",
+        datetime_=datetime.now(tzinfo) - timedelta(days=31),
+        type_=SecurityTransactionType.BUY,
+        security_symbol="CSOB.DYN",
+        shares=Decimal(2850),
+        price_per_share=Decimal(1.6),
+        fees=Decimal(0),
+        security_account_path="Security Accounts/ČSOB Penzijní účet",
+        cash_account_path="Bank Accounts/Fio CZK",
+    )
+    record_keeper.add_security_transfer(
+        description="Security transfer to Degiro",
+        datetime_=datetime.now(tzinfo),
+        security_symbol="VWCE.DE",
+        shares=Decimal(10),
+        account_sender_path="Security Accounts/Interactive Brokers",
+        account_recipient_path="Security Accounts/Degiro",
     )
     return record_keeper
 

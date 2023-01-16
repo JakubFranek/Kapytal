@@ -13,6 +13,9 @@ class ConcreteTransaction(Transaction):
     def is_account_related(self, account: Account) -> bool:
         return super().is_account_related(account)
 
+    def prepare_for_deletion(self) -> None:
+        return super().prepare_for_deletion()
+
 
 class ConcreteAccount(Account):
     @property

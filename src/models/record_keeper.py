@@ -7,7 +7,7 @@ from typing import overload
 
 from src.models.base_classes.account import Account
 from src.models.base_classes.transaction import Transaction
-from src.models.custom_exceptions import AlreadyExistsError
+from src.models.custom_exceptions import AlreadyExistsError, InvalidOperationError
 from src.models.model_objects.account_group import AccountGroup
 from src.models.model_objects.attributes import (
     Attribute,
@@ -17,6 +17,7 @@ from src.models.model_objects.attributes import (
 )
 from src.models.model_objects.cash_objects import (
     CashAccount,
+    CashRelatedTransaction,
     CashTransaction,
     CashTransactionType,
     CashTransfer,
@@ -31,6 +32,7 @@ from src.models.model_objects.currency import (
 from src.models.model_objects.security_objects import (
     Security,
     SecurityAccount,
+    SecurityRelatedTransaction,
     SecurityTransaction,
     SecurityTransactionType,
     SecurityTransfer,
@@ -165,7 +167,7 @@ class RecordKeeper:
         return category
 
     def add_account_group(self, name: str, parent_path: str | None) -> None:
-        parent = self.get_account_parent(parent_path)
+        parent = self.get_account_parent_or_none(parent_path)
         if parent is not None:
             target_path = parent.path + "/" + name
         else:
@@ -188,14 +190,14 @@ class RecordKeeper:
     ) -> None:
         self._check_account_exists(name, parent_path)
         currency = self.get_currency(currency_code)
-        parent = self.get_account_parent(parent_path)
+        parent = self.get_account_parent_or_none(parent_path)
         initial_balance = CashAmount(initial_balance_value, currency)
         account = CashAccount(name, currency, initial_balance, initial_datetime, parent)
         self._accounts.append(account)
 
     def add_security_account(self, name: str, parent_path: str | None) -> None:
         self._check_account_exists(name, parent_path)
-        parent = self.get_account_parent(parent_path)
+        parent = self.get_account_parent_or_none(parent_path)
         account = SecurityAccount(name, parent)
         self._accounts.append(account)
 
@@ -261,20 +263,18 @@ class RecordKeeper:
         self,
         description: str,
         datetime_: datetime,
-        refunded_transaction_uuid_string: int,
+        refunded_transaction_uuid: str,
         refunded_account_path: str,
         category_path_amount_pairs: Collection[tuple[str, Decimal]],
         tag_name_amount_pairs: Collection[tuple[str, Decimal]],
         payee_name: str,
     ) -> None:
-        for transaction in self._transactions:
-            if str(transaction.uuid) == refunded_transaction_uuid_string:
-                refunded_transaction = transaction
-                break
-        else:
+        refunded_transaction = self._get_transactions([refunded_transaction_uuid])
+        if len(refunded_transaction) == 0:
             raise ValueError(
-                f"Transaction with UUID '{refunded_transaction_uuid_string}' not found."
+                f"Transaction with UUID '{refunded_transaction_uuid}' not found."
             )
+        refunded_transaction = refunded_transaction[0]
 
         refunded_account = self.get_account(refunded_account_path, CashAccount)
 
@@ -353,7 +353,7 @@ class RecordKeeper:
 
     def edit_cash_transactions(
         self,
-        transaction_uuid_strings: Collection[str],
+        transaction_uuids: Collection[str],
         description: str | None = None,
         datetime_: datetime | None = None,
         transaction_type: CashTransactionType | None = None,
@@ -363,11 +363,7 @@ class RecordKeeper:
         payee_name: str | None = None,
         tag_name_amount_pairs: Collection[tuple[str, Decimal]] | None = None,
     ) -> None:
-        transactions: list[CashTransaction] = [
-            transaction
-            for transaction in self._transactions
-            if str(transaction.uuid) in transaction_uuid_strings
-        ]
+        transactions = self._get_transactions(transaction_uuids)
 
         if not all(
             isinstance(transaction, CashTransaction) for transaction in transactions
@@ -435,7 +431,7 @@ class RecordKeeper:
 
     def edit_cash_transfers(
         self,
-        transaction_uuid_strings: Collection[str],
+        transaction_uuids: Collection[str],
         description: str | None = None,
         datetime_: datetime | None = None,
         sender_path: str | None = None,
@@ -443,11 +439,7 @@ class RecordKeeper:
         amount_sent: Decimal | None = None,
         amount_received: Decimal | None = None,
     ) -> None:
-        transfers: list[CashTransfer] = [
-            transaction
-            for transaction in self._transactions
-            if str(transaction.uuid) in transaction_uuid_strings
-        ]
+        transfers = self._get_transactions(transaction_uuids)
 
         if not all(isinstance(transaction, CashTransfer) for transaction in transfers):
             raise TypeError("All edited transactions must be CashTransfers.")
@@ -508,7 +500,7 @@ class RecordKeeper:
 
     def edit_refunds(
         self,
-        transaction_uuid_strings: Collection[str],
+        transaction_uuids: Collection[str],
         description: str | None = None,
         datetime_: datetime | None = None,
         transaction_type: CashTransactionType | None = None,
@@ -518,11 +510,7 @@ class RecordKeeper:
         payee_name: str | None = None,
         tag_name_amount_pairs: Collection[tuple[str, Decimal]] | None = None,
     ) -> None:
-        refunds: list[RefundTransaction] = [
-            transaction
-            for transaction in self._transactions
-            if str(transaction.uuid) in transaction_uuid_strings
-        ]
+        refunds = self._get_transactions(transaction_uuids)
 
         if not all(isinstance(refund, RefundTransaction) for refund in refunds):
             raise TypeError("All edited transactions must be RefundTransactions.")
@@ -585,7 +573,7 @@ class RecordKeeper:
 
     def edit_security_transactions(
         self,
-        transaction_uuid_strings: Collection[str],
+        transaction_uuids: Collection[str],
         description: str | None = None,
         datetime_: datetime | None = None,
         transaction_type: SecurityTransactionType | None = None,
@@ -596,11 +584,7 @@ class RecordKeeper:
         fees: Decimal | int | str | None = None,
         shares: Decimal | int | str | None = None,
     ) -> None:
-        transactions: list[SecurityTransaction] = [
-            transaction
-            for transaction in self._transactions
-            if str(transaction.uuid) in transaction_uuid_strings
-        ]
+        transactions = self._get_transactions(transaction_uuids)
 
         if not all(
             isinstance(transaction, SecurityTransaction) for transaction in transactions
@@ -673,7 +657,7 @@ class RecordKeeper:
 
     def edit_security_transfers(
         self,
-        transaction_uuid_strings: Collection[str],
+        transaction_uuids: Collection[str],
         description: str | None = None,
         datetime_: datetime | None = None,
         security_symbol: str | None = None,
@@ -681,11 +665,7 @@ class RecordKeeper:
         sender_path: str | None = None,
         recipient_path: str | None = None,
     ) -> None:
-        transactions: list[SecurityTransfer] = [
-            transaction
-            for transaction in self._transactions
-            if str(transaction.uuid) in transaction_uuid_strings
-        ]
+        transactions = self._get_transactions(transaction_uuids)
 
         if not all(
             isinstance(transaction, SecurityTransfer) for transaction in transactions
@@ -744,7 +724,7 @@ class RecordKeeper:
         if new_name is not None:
             category.name = new_name
         if new_parent_path is not None:
-            new_parent = self.get_category(new_parent_path, category.type_)
+            new_parent = self.get_category(new_parent_path)
             category.parent = new_parent
 
     def edit_attribute(
@@ -799,7 +779,7 @@ class RecordKeeper:
         if new_name is not None:
             edited_account.name = new_name
         if new_parent_path is not None:
-            parent = self.get_account_parent(new_parent_path)
+            parent = self.get_account_parent_or_none(new_parent_path)
             edited_account.parent = parent
 
     def edit_account_group(
@@ -819,38 +799,34 @@ class RecordKeeper:
         if new_name is not None:
             edited_account_group.name = new_name
         if new_parent_path is not None:
-            parent = self.get_account_parent(new_parent_path)
+            parent = self.get_account_parent_or_none(new_parent_path)
             edited_account_group.parent = parent
 
     def add_tags_to_transactions(
-        self, transaction_uuid_strings: Collection[str], tag_names: Collection[str]
+        self, transaction_uuids: Collection[str], tag_names: Collection[str]
     ) -> None:
         self._perform_tag_operation(
-            transaction_uuid_strings=transaction_uuid_strings,
+            transaction_uuids=transaction_uuids,
             tag_names=tag_names,
             method_name="add_tags",
         )
 
     def remove_tags_from_transactions(
-        self, transaction_uuid_strings: Collection[str], tag_names: Collection[str]
+        self, transaction_uuids: Collection[str], tag_names: Collection[str]
     ) -> None:
         self._perform_tag_operation(
-            transaction_uuid_strings=transaction_uuid_strings,
+            transaction_uuids=transaction_uuids,
             tag_names=tag_names,
             method_name="remove_tags",
         )
 
     def _perform_tag_operation(
         self,
-        transaction_uuid_strings: Collection[str],
+        transaction_uuids: Collection[str],
         tag_names: Collection[str],
         method_name: str,
     ) -> None:
-        transactions: list[Transaction] = [
-            transaction
-            for transaction in self._transactions
-            if str(transaction.uuid) in transaction_uuid_strings
-        ]
+        transactions = self._get_transactions(transaction_uuids)
 
         tags = [
             self.get_attribute(tag_name, AttributeType.TAG) for tag_name in tag_names
@@ -859,15 +835,131 @@ class RecordKeeper:
             method = getattr(transaction, method_name)
             method(tags)
 
-    def get_account_parent(self, path: str | None) -> AccountGroup | None:
-        if path:
-            for account_group in self._account_groups:
-                if account_group.path == path:
-                    return account_group
-            raise DoesNotExistError(
-                f"An AccountGroup with path='{path}' does not exist."
+    def remove_account(self, account_path: str) -> None:
+        account = self.get_account(account_path, Account)
+        if any(
+            transaction.is_account_related(account)
+            for transaction in self._transactions
+        ):
+            raise InvalidOperationError(
+                "Cannot delete an Account which is still used in some transactions."
             )
-        return None
+        account.parent = None
+        self._accounts.remove(account)
+        del account
+
+    def remove_account_group(self, account_group_path: str) -> None:
+        account_group = self.get_account_parent(account_group_path)
+        if len(account_group.children) != 0:
+            raise InvalidOperationError(
+                "Cannot delete an AccountGroup which has children."
+            )
+        account_group.parent = None
+        self._account_groups.remove(account_group)
+        del account_group
+
+    def remove_transactions(self, transaction_uuids: Collection[str]) -> None:
+        transactions = self._get_transactions(transaction_uuids)
+        for transaction in transactions:
+            transaction.prepare_for_deletion()
+            self._transactions.remove(transaction)
+
+    def remove_security(self, symbol: str) -> None:
+        security = self.get_security(symbol)
+        if any(
+            transaction.security == security
+            for transaction in self._transactions
+            if isinstance(transaction, SecurityRelatedTransaction)
+        ):
+            raise InvalidOperationError(
+                "Cannot delete a Security referenced in any transaction."
+            )
+        self._securities.remove(security)
+        del security
+
+    def remove_currency(self, code: str) -> None:
+        currency = self.get_currency(code)
+        if any(
+            currency in exchange_rate.currencies
+            for exchange_rate in self._exchange_rates
+        ):
+            raise InvalidOperationError(
+                "Cannot delete a Currency referenced in any ExchangeRate."
+            )
+        if any(
+            currency in transaction.currencies
+            for transaction in self._transactions
+            if isinstance(transaction, CashRelatedTransaction)
+        ):
+            raise InvalidOperationError(
+                "Cannot delete a Currency referenced in any CashRelatedTransaction."
+            )
+        if any(currency == security.currency for security in self._securities):
+            raise InvalidOperationError(
+                "Cannot delete a Currency referenced in any Security."
+            )
+        self._currencies.remove(currency)
+        del currency
+
+    def remove_exchange_rate(self, exchange_rate_code: str) -> None:
+        for exchange_rate in self._exchange_rates:
+            if str(exchange_rate) == exchange_rate_code:
+                removed_exchange_rate = exchange_rate
+                break
+        else:
+            raise DoesNotExistError(
+                f"ExchangeRate '{exchange_rate_code}' does not exist."
+            )
+        self._exchange_rates.remove(removed_exchange_rate)
+        del removed_exchange_rate
+
+    def remove_category(self, path: str) -> None:
+        category = self.get_category(path)
+        if any(
+            category in transaction.categories
+            for transaction in self._transactions
+            if isinstance(transaction, (CashTransaction, RefundTransaction))
+        ):
+            raise InvalidOperationError(
+                "Cannot delete a Category referenced in any CashTransaction "
+                "or RefundTransaction."
+            )
+        self._categories.remove(category)
+        del category
+
+    def remove_tag(self, name: str) -> None:
+        tag = self.get_attribute(name, AttributeType.TAG)
+        if any(tag in transaction.tags for transaction in self._transactions):
+            raise InvalidOperationError(
+                "Cannot delete a tag referenced in any Transaction."
+            )
+        self._tags.remove(tag)
+        del tag
+
+    def remove_payee(self, name: str) -> None:
+        payee = self.get_attribute(name, AttributeType.PAYEE)
+        if any(
+            payee == transaction.payee
+            for transaction in self._transactions
+            if isinstance(transaction, (CashTransaction, RefundTransaction))
+        ):
+            raise InvalidOperationError(
+                "Cannot delete a payee referenced in any CashTransaction "
+                "or RefundTransaction."
+            )
+        self._payees.remove(payee)
+        del payee
+
+    def get_account_parent_or_none(self, path: str | None) -> AccountGroup | None:
+        if path is None:
+            return None
+        return self.get_account_parent(path)
+
+    def get_account_parent(self, path: str) -> AccountGroup:
+        for account_group in self._account_groups:
+            if account_group.path == path:
+                return account_group
+        raise DoesNotExistError(f"An AccountGroup with path='{path}' does not exist.")
 
     @overload
     def get_account(
@@ -879,6 +971,10 @@ class RecordKeeper:
     def get_account(
         self, path: str, type_: type[SecurityAccount]  # noqa: U100
     ) -> SecurityAccount:
+        ...
+
+    @overload
+    def get_account(self, path: str, type_: type[Account]) -> Account:  # noqa: U100
         ...
 
     def get_account(
@@ -919,8 +1015,13 @@ class RecordKeeper:
                 return currency
         raise DoesNotExistError(f"A Currency with code='{code_upper}' does not exist.")
 
-    # TODO: having to specify type for existing Category is annoying
-    def get_category(self, path: str, type_: CategoryType) -> Category:
+    def get_category(self, path: str) -> None:
+        for category in self._categories:
+            if category.path == path:
+                return category
+        raise DoesNotExistError(f"Category at path='{path}' does not exist.")
+
+    def get_or_make_category(self, path: str, type_: CategoryType) -> Category:
         """Returns Category at path. If it does not exist, creates a new Category
         at path with given type_."""
 
@@ -979,16 +1080,16 @@ class RecordKeeper:
         return attribute
 
     def set_exchange_rate(
-        self, exchange_rate_str: str, rate: Decimal, date_: date
+        self, exchange_rate_code: str, rate: Decimal, date_: date
     ) -> None:
-        if not isinstance(exchange_rate_str, str):
+        if not isinstance(exchange_rate_code, str):
             raise TypeError("Parameter 'exchange_rate_str' must be a string.")
 
         for exchange_rate in self._exchange_rates:
-            if str(exchange_rate) == exchange_rate_str:
+            if str(exchange_rate) == exchange_rate_code:
                 exchange_rate.set_rate(date_, rate)
                 return
-        raise DoesNotExistError(f"Exchange rate '{exchange_rate_str} not found.'")
+        raise DoesNotExistError(f"Exchange rate '{exchange_rate_code} not found.'")
 
     def _check_account_exists(self, name: str, parent_path: str | None) -> None:
         if not isinstance(name, str):
@@ -1010,7 +1111,7 @@ class RecordKeeper:
         category_amount_pairs: list[tuple[Category, CashAmount | None]] = []
         for category_path, amount in category_path_amount_pairs:
             valid_amount = CashAmount(amount, currency) if amount is not None else None
-            category = self.get_category(category_path, category_type)  # noqa: NEW100
+            category = self.get_or_make_category(category_path, category_type)
             pair = (category, valid_amount)
             category_amount_pairs.append(pair)
         return category_amount_pairs
@@ -1029,3 +1130,10 @@ class RecordKeeper:
                 )
             )
         return tag_amount_pairs
+
+    def _get_transactions(self, uuid_strings: Collection[str]) -> list[Transaction]:
+        return [
+            transaction
+            for transaction in self._transactions
+            if str(transaction.uuid) in uuid_strings
+        ]

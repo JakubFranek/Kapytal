@@ -43,6 +43,7 @@ class InvalidCashTransactionTypeError(ValueError):
     """Raised when the CashTransactionType is incorrect."""
 
 
+# TODO: move currency property to this ABC?
 class CashRelatedTransaction(Transaction, ABC):
     def get_amount(self, account: "CashAccount") -> CashAmount:
         if not isinstance(account, CashAccount):
@@ -56,6 +57,11 @@ class CashRelatedTransaction(Transaction, ABC):
 
     @abstractmethod
     def _get_amount(self, account: "CashAccount") -> CashAmount:
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def currencies(self) -> tuple[Currency]:
         raise NotImplementedError
 
 
@@ -224,12 +230,20 @@ class CashTransaction(CashRelatedTransaction):
         return self._currency
 
     @property
+    def currencies(self) -> tuple[Currency]:
+        return (self._currency,)
+
+    @property
     def payee(self) -> Attribute:
         return self._payee
 
     @property
     def category_amount_pairs(self) -> tuple[tuple[Category, CashAmount], ...]:
         return tuple(self._category_amount_pairs)
+
+    @property
+    def categories(self) -> tuple[Category]:
+        return tuple(category for category, _ in self._category_amount_pairs)
 
     @property
     def category_names(self) -> str:
@@ -278,6 +292,13 @@ class CashTransaction(CashRelatedTransaction):
 
     def is_account_related(self, account: Account) -> bool:
         return self.account == account
+
+    def prepare_for_deletion(self) -> None:
+        if self.is_refunded:
+            raise InvalidOperationError(
+                "Refunded CashTransaction cannot be deleted. Delete the refunds first."
+            )
+        self._account.remove_transaction(self)
 
     def add_tags(self, tags: Collection[Attribute]) -> None:
         self._validate_tags(tags)
@@ -603,6 +624,10 @@ class CashTransfer(CashRelatedTransaction):
     def amount_received(self) -> CashAmount:
         return self._amount_received
 
+    @property
+    def currencies(self) -> tuple[Currency]:
+        return (self._sender.currency, self._recipient.currency)
+
     def __repr__(self) -> str:
         return (
             f"CashTransfer(sent={self.amount_sent}, "
@@ -614,6 +639,10 @@ class CashTransfer(CashRelatedTransaction):
 
     def is_account_related(self, account: Account) -> bool:
         return self.sender == account or self.recipient == account
+
+    def prepare_for_deletion(self) -> None:
+        self._sender.remove_transaction(self)
+        self._recipient.remove_transaction(self)
 
     def set_attributes(
         self,
@@ -789,12 +818,20 @@ class RefundTransaction(CashRelatedTransaction):
         return self._currency
 
     @property
+    def currencies(self) -> tuple[Currency]:
+        return (self._currency,)
+
+    @property
     def refunded_transaction(self) -> CashTransaction:
         return self._refunded_transaction
 
     @property
     def category_amount_pairs(self) -> tuple[tuple[Category, CashAmount], ...]:
         return tuple(self._category_amount_pairs)
+
+    @property
+    def categories(self) -> tuple[Category]:
+        return tuple(category for category, _ in self._category_amount_pairs)
 
     @property
     def category_names(self) -> str:
@@ -823,6 +860,10 @@ class RefundTransaction(CashRelatedTransaction):
 
     def is_account_related(self, account: "Account") -> bool:
         return self.account == account
+
+    def prepare_for_deletion(self) -> None:
+        self._refunded_transaction.remove_refund(self)
+        self._account.remove_transaction(self)
 
     def add_tags(self, tags: Collection[Attribute]) -> None:  # noqa: U100
         raise InvalidOperationError("Adding tags to RefundTransaction is forbidden.")
