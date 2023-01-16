@@ -187,3 +187,19 @@ def test_remove_currency_referenced_in_transaction() -> None:
     )
     with pytest.raises(InvalidOperationError):
         record_keeper.remove_currency("CZK")
+
+
+def test_remove_exchange_rate() -> None:
+    record_keeper = RecordKeeper()
+    record_keeper.add_currency("CZK", 2)
+    record_keeper.add_currency("EUR", 2)
+    record_keeper.add_exchange_rate("CZK", "EUR")
+    assert len(record_keeper.exchange_rates) == 1
+    record_keeper.remove_exchange_rate("CZK/EUR")
+    assert len(record_keeper.exchange_rates) == 0
+
+
+def test_remove_exchange_rate_does_not_exist() -> None:
+    record_keeper = RecordKeeper()
+    with pytest.raises(DoesNotExistError):
+        record_keeper.remove_exchange_rate("CZK/EUR")
