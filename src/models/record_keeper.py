@@ -877,9 +877,15 @@ class RecordKeeper:
         self._securities.remove(security)
         del security
 
-    # TODO: add check for Exchange Rate... EXR must be deleted first
     def remove_currency(self, code: str) -> None:
         currency = self.get_currency(code)
+        if any(
+            currency in exchange_rate.currencies
+            for exchange_rate in self._exchange_rates
+        ):
+            raise InvalidOperationError(
+                "Cannot delete a Currency referenced in any ExchangeRate."
+            )
         if any(
             currency in transaction.currencies
             for transaction in self._transactions

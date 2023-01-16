@@ -157,6 +157,15 @@ def test_remove_currency_referenced_in_security() -> None:
         record_keeper.remove_currency("CZK")
 
 
+def test_remove_currency_referenced_in_exchange_rate() -> None:
+    record_keeper = RecordKeeper()
+    record_keeper.add_currency("CZK", 2)
+    record_keeper.add_currency("EUR", 2)
+    record_keeper.add_exchange_rate("CZK", "EUR")
+    with pytest.raises(InvalidOperationError):
+        record_keeper.remove_currency("CZK")
+
+
 def test_remove_currency_referenced_in_transaction() -> None:
     record_keeper = RecordKeeper()
     record_keeper.add_currency("CZK", 2)

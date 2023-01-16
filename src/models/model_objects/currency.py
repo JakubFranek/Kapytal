@@ -58,7 +58,7 @@ class Currency(DatetimeCreatedMixin):
         return copy.deepcopy(self._exchange_rates)
 
     def __repr__(self) -> str:
-        return f"Currency({self.code})"
+        return f"Currency({self._code})"
 
     def __hash__(self) -> int:
         return hash(self._code)
