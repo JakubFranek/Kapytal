@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Collection
 from datetime import datetime
 from enum import Enum, auto
-from typing import Any
+from typing import Any, Self
 
 from src.models.base_classes.account import Account, UnrelatedAccountError
 from src.models.base_classes.transaction import Transaction
@@ -154,6 +154,13 @@ class CashAccount(Account):
         self._validate_transaction(transaction)
         self._transactions.remove(transaction)
         self._update_balance()
+
+    def to_dict(self) -> dict[str, Any]:
+        return super().to_dict()
+
+    @staticmethod
+    def from_dict(data: dict[str, Any]) -> Self:
+        return super().from_dict(data)
 
     def _update_balance(self) -> None:
         datetime_balance_history = [(self.initial_datetime, self.initial_balance)]

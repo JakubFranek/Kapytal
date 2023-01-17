@@ -5,6 +5,7 @@ from collections import defaultdict
 from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum, auto
+from typing import Any, Self
 
 from src.models.base_classes.account import Account, UnrelatedAccountError
 from src.models.base_classes.transaction import Transaction
@@ -179,6 +180,13 @@ class SecurityAccount(Account):
         self._validate_transaction(transaction)
         self._securities[transaction.security] -= transaction.get_shares(self)
         self._transactions.remove(transaction)
+
+    def to_dict(self) -> dict[str, Any]:
+        return super().to_dict()
+
+    @staticmethod
+    def from_dict(data: dict[str, Any]) -> Self:
+        return super().from_dict(data)
 
     def _validate_transaction(self, transaction: "SecurityRelatedTransaction") -> None:
         if not isinstance(transaction, SecurityRelatedTransaction):

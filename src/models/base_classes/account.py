@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
 from src.models.mixins.get_balance_mixin import GetBalanceMixin
+from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
 from src.models.mixins.name_mixin import NameMixin
 from src.models.mixins.uuid_mixin import UUIDMixin
 from src.models.model_objects.account_group import AccountGroup
@@ -15,7 +16,7 @@ class UnrelatedAccountError(ValueError):
     not relate to it."""
 
 
-class Account(NameMixin, UUIDMixin, GetBalanceMixin, ABC):
+class Account(NameMixin, UUIDMixin, GetBalanceMixin, JSONSerializableMixin, ABC):
     def __init__(self, name: str, parent: AccountGroup | None = None) -> None:
         super().__init__(name=name)
         self.parent = parent

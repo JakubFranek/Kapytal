@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Any, Self
 
 from src.models.base_classes.account import Account
 from src.models.base_classes.transaction import Transaction
@@ -24,3 +25,10 @@ class ConcreteAccount(Account):
 
     def get_balance(self, currency: Currency) -> CashAmount:
         return super().get_balance(currency)
+
+    def to_dict(self) -> dict[str, Any]:
+        return super().to_dict()
+
+    @staticmethod
+    def from_dict(data: dict[str, Any]) -> Self:
+        return super().from_dict(data)
