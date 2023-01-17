@@ -7,7 +7,6 @@ from decimal import Decimal
 from functools import total_ordering
 from typing import Any, Self
 
-from src.models.mixins.datetime_created_mixin import DatetimeCreatedMixin
 from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
 
 
@@ -24,7 +23,7 @@ class ConversionFactorNotFoundError(ValueError):
     for the given Currency pair."""
 
 
-class Currency(DatetimeCreatedMixin, JSONSerializableMixin):
+class Currency(JSONSerializableMixin):
     def __init__(self, code: str, places: int) -> None:
         super().__init__()
 

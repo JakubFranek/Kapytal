@@ -9,7 +9,6 @@ from enum import Enum, auto
 from src.models.base_classes.account import Account, UnrelatedAccountError
 from src.models.base_classes.transaction import Transaction
 from src.models.custom_exceptions import InvalidCharacterError, TransferSameAccountError
-from src.models.mixins.datetime_created_mixin import DatetimeCreatedMixin
 from src.models.mixins.name_mixin import NameMixin
 from src.models.mixins.uuid_mixin import UUIDMixin
 from src.models.model_objects.account_group import AccountGroup
@@ -31,7 +30,7 @@ class SecurityTransactionType(Enum):
     SELL = auto()
 
 
-class Security(NameMixin, DatetimeCreatedMixin, UUIDMixin):
+class Security(NameMixin, UUIDMixin):
     NAME_MIN_LENGTH = 1
     NAME_MAX_LENGTH = 64
     SYMBOL_MIN_LENGTH = 1
