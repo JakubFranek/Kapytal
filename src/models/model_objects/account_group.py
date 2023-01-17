@@ -1,14 +1,15 @@
-from typing import TYPE_CHECKING, Self
+from typing import TYPE_CHECKING, Any, Self
 
 if TYPE_CHECKING:
     from src.models.base_classes.account import Account
 
 from src.models.mixins.get_balance_mixin import GetBalanceMixin
+from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
 from src.models.mixins.name_mixin import NameMixin
 from src.models.model_objects.currency import CashAmount, Currency
 
 
-class AccountGroup(NameMixin, GetBalanceMixin):
+class AccountGroup(NameMixin, GetBalanceMixin, JSONSerializableMixin):
     def __init__(self, name: str, parent: Self | None = None) -> None:
         super().__init__(name)
         self.parent = parent
@@ -49,3 +50,19 @@ class AccountGroup(NameMixin, GetBalanceMixin):
             (child.get_balance(currency) for child in self._children),
             start=CashAmount(0, currency),
         )
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "datatype": "AccountGroup",
+            "name": self._name,
+            "children": self._children,
+        }
+
+    @staticmethod
+    def from_dict(data: dict[str, Any]) -> Self:
+        name = data["name"]
+        obj = AccountGroup(name)
+        children: list[AccountGroup | Account] = data["children"]
+        for child in children:
+            child.parent = obj
+        return obj

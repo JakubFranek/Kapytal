@@ -3,6 +3,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any
 
+from src.models.model_objects.account_group import AccountGroup
 from src.models.model_objects.attributes import Attribute, Category
 from src.models.model_objects.currency import CashAmount, Currency, ExchangeRate
 
@@ -28,4 +29,6 @@ class CustomJSONDecoder(json.JSONDecoder):
                     return Attribute.from_dict(obj)
                 case "Category":
                     return Category.from_dict(obj)
+                case "AccountGroup":
+                    return AccountGroup.from_dict(obj)
         raise NotImplementedError
