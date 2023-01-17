@@ -200,12 +200,15 @@ def cash_transfers(
 
 @st.composite
 def categories(
-    draw: st.DrawFn, transaction_type: CashTransactionType | None = None
+    draw: st.DrawFn,
+    transaction_type: CashTransactionType | None = None,
+    category_type: CategoryType | None = None,
 ) -> Category:
     name = draw(st.text(min_size=1, max_size=32))
 
     if transaction_type is None:
-        category_type = draw(st.sampled_from(CategoryType))
+        if category_type is None:
+            category_type = draw(st.sampled_from(CategoryType))
     elif transaction_type == CashTransactionType.INCOME:
         category_type = draw(
             st.sampled_from((CategoryType.INCOME, CategoryType.INCOME_AND_EXPENSE))

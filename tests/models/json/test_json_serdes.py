@@ -4,13 +4,14 @@ from decimal import Decimal
 
 import pytest
 from hypothesis import given
+from hypothesis import strategies as st
 
 from src.models.constants import tzinfo
 from src.models.json.custom_json_decoder import CustomJSONDecoder
 from src.models.json.custom_json_encoder import CustomJSONEncoder
-from src.models.model_objects.attributes import Attribute
+from src.models.model_objects.attributes import Attribute, Category
 from src.models.model_objects.currency import CashAmount, Currency, ExchangeRate
-from tests.models.test_assets.composites import attributes
+from tests.models.test_assets.composites import attributes, categories
 
 
 def test_invalid_object() -> None:
@@ -65,3 +66,20 @@ def test_attribute(attribute: Attribute) -> None:
     assert isinstance(decoded, Attribute)
     assert decoded.name == attribute.name
     assert decoded.type_ == attribute.type_
+
+
+@given(category=categories(), data=st.data())
+def test_category(category: Category, data: st.DataObject) -> None:
+    child_1 = data.draw(categories(category_type=category.type_))
+    child_2 = data.draw(categories(category_type=category.type_))
+    child_1.parent = category
+    child_2.parent = category
+    serialized = json.dumps(category, cls=CustomJSONEncoder)
+    decoded = json.loads(serialized, cls=CustomJSONDecoder)
+    assert isinstance(decoded, Category)
+    assert decoded.name == category.name
+    assert decoded.type_ == category.type_
+    assert decoded.children[0].name == child_1.name
+    assert decoded.children[0].parent == decoded
+    assert decoded.children[1].name == child_2.name
+    assert decoded.children[1].parent == decoded

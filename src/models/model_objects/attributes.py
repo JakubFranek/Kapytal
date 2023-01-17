@@ -55,7 +55,7 @@ class Attribute(NameMixin, DatetimeCreatedMixin, JSONSerializableMixin):
         return Attribute(name, type_)
 
 
-class Category(NameMixin, DatetimeCreatedMixin):
+class Category(NameMixin, DatetimeCreatedMixin, JSONSerializableMixin):
     def __init__(
         self, name: str, type_: CategoryType, parent: Self | None = None
     ) -> None:
@@ -107,3 +107,21 @@ class Category(NameMixin, DatetimeCreatedMixin):
 
     def __repr__(self) -> str:
         return f"Category('{self.name}', {self.type_.name}, parent='{self.parent}')"
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "datatype": "Category",
+            "name": self._name,
+            "type_": self._type.name,
+            "children": self._children,
+        }
+
+    @staticmethod
+    def from_dict(data: dict[str, Any]) -> Self:
+        name = data["name"]
+        type_ = CategoryType[data["type_"]]
+        obj = Category(name, type_)
+        children: list[Category] = data["children"]
+        for child in children:
+            child.parent = obj
+        return obj
