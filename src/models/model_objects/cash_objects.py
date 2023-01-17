@@ -1,9 +1,9 @@
+import uuid
 from abc import ABC, abstractmethod
 from collections.abc import Collection
 from datetime import datetime
 from enum import Enum, auto
 from typing import Any, Self
-from uuid import UUID
 
 from src.models.base_classes.account import Account, UnrelatedAccountError
 from src.models.base_classes.transaction import Transaction
@@ -156,6 +156,7 @@ class CashAccount(Account):
         self._transactions.remove(transaction)
         self._update_balance()
 
+    # TODO: do something with transactions
     def to_dict(self) -> dict[str, Any]:
         return {
             "datatype": "CashAccount",
@@ -172,9 +173,8 @@ class CashAccount(Account):
         currency = data["currency"]
         initial_balance = data["initial_balance"]
         initial_datetime = data["initial_datetime"]
-        uuid = data["uuid"]
         obj = CashAccount(name, currency, initial_balance, initial_datetime)
-        obj._uuid = UUID(uuid)
+        obj._uuid = uuid.UUID(data["uuid"])
         return obj
 
     def _update_balance(self) -> None:

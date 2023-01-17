@@ -1,5 +1,6 @@
 import copy
 import string
+import uuid
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from datetime import date, datetime
@@ -181,12 +182,20 @@ class SecurityAccount(Account):
         self._securities[transaction.security] -= transaction.get_shares(self)
         self._transactions.remove(transaction)
 
+    # TODO: do something with transactions
     def to_dict(self) -> dict[str, Any]:
-        return super().to_dict()
+        return {
+            "datatype": "SecurityAccount",
+            "name": self._name,
+            "uuid": str(self._uuid),
+        }
 
     @staticmethod
     def from_dict(data: dict[str, Any]) -> Self:
-        return super().from_dict(data)
+        name = data["name"]
+        obj = SecurityAccount(name)
+        obj._uuid = uuid.UUID(data["uuid"])
+        return obj
 
     def _validate_transaction(self, transaction: "SecurityRelatedTransaction") -> None:
         if not isinstance(transaction, SecurityRelatedTransaction):

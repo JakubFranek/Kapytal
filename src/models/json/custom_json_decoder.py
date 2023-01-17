@@ -7,6 +7,7 @@ from src.models.model_objects.account_group import AccountGroup
 from src.models.model_objects.attributes import Attribute, Category
 from src.models.model_objects.cash_objects import CashAccount
 from src.models.model_objects.currency import CashAmount, Currency, ExchangeRate
+from src.models.model_objects.security_objects import SecurityAccount
 
 
 class CustomJSONDecoder(json.JSONDecoder):
@@ -34,4 +35,6 @@ class CustomJSONDecoder(json.JSONDecoder):
                     return AccountGroup.from_dict(obj)
                 case "CashAccount":
                     return CashAccount.from_dict(obj)
+                case "SecurityAccount":
+                    return SecurityAccount.from_dict(obj)
         raise NotImplementedError

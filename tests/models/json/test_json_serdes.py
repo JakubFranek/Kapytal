@@ -13,6 +13,7 @@ from src.models.model_objects.account_group import AccountGroup
 from src.models.model_objects.attributes import Attribute, Category
 from src.models.model_objects.cash_objects import CashAccount
 from src.models.model_objects.currency import CashAmount, Currency, ExchangeRate
+from src.models.model_objects.security_objects import SecurityAccount
 from tests.models.test_assets.composites import attributes, categories
 
 
@@ -115,4 +116,13 @@ def test_cash_account() -> None:
     assert decoded.currency == cash_account.currency
     assert decoded.initial_balance == cash_account.initial_balance
     assert decoded.initial_datetime == cash_account.initial_datetime
+    assert decoded.uuid == cash_account.uuid
+
+
+def test_security_account() -> None:
+    cash_account = SecurityAccount("Test Name")
+    serialized = json.dumps(cash_account, cls=CustomJSONEncoder)
+    decoded = json.loads(serialized, cls=CustomJSONDecoder)
+    assert isinstance(decoded, SecurityAccount)
+    assert decoded.name == cash_account.name
     assert decoded.uuid == cash_account.uuid
