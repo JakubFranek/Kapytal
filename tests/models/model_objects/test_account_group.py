@@ -20,15 +20,11 @@ from tests.models.test_assets.composites import (
 
 @given(name=st.text(min_size=1, max_size=32), currency=currencies())
 def test_creation(name: str, currency: Currency) -> None:
-    dt_start = datetime.now(tzinfo)
     account_group = AccountGroup(name)
-
-    dt_created_diff = account_group.datetime_created - dt_start
 
     assert account_group.name == name
     assert account_group.parent is None
     assert account_group.get_balance(currency) == CashAmount(Decimal(0), currency)
-    assert dt_created_diff.seconds < 1
     assert account_group.__repr__() == f"AccountGroup('{name}', parent='None')"
     assert account_group.path == name
 

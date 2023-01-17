@@ -1,11 +1,10 @@
-from datetime import datetime
+
 from typing import Any
 
 import pytest
 from hypothesis import given
 from hypothesis import strategies as st
 
-from src.models.constants import tzinfo
 from src.models.mixins.name_mixin import NameLengthError
 from src.models.model_objects.account_group import AccountGroup
 from tests.models.test_assets.composites import account_groups, everything_except
@@ -14,14 +13,9 @@ from tests.models.test_assets.concrete_abcs import ConcreteAccount
 
 @given(name=st.text(min_size=1, max_size=32))
 def test_creation(name: str) -> None:
-    dt_start = datetime.now(tzinfo)
     account = ConcreteAccount(name)
-
-    dt_created_diff = account.datetime_created - dt_start
-
     assert account.name == name
     assert account.path == name
-    assert dt_created_diff.seconds < 1
 
 
 @given(name=st.just(""))

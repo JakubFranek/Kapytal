@@ -3,13 +3,12 @@ from typing import TYPE_CHECKING, Self
 if TYPE_CHECKING:
     from src.models.base_classes.account import Account
 
-from src.models.mixins.datetime_created_mixin import DatetimeCreatedMixin
 from src.models.mixins.get_balance_mixin import GetBalanceMixin
 from src.models.mixins.name_mixin import NameMixin
 from src.models.model_objects.currency import CashAmount, Currency
 
 
-class AccountGroup(NameMixin, DatetimeCreatedMixin, GetBalanceMixin):
+class AccountGroup(NameMixin, GetBalanceMixin):
     def __init__(self, name: str, parent: Self | None = None) -> None:
         super().__init__(name)
         self.parent = parent

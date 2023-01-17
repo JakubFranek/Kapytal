@@ -1,12 +1,10 @@
 import string
-from datetime import datetime
 from typing import Any
 
 import pytest
 from hypothesis import assume, given
 from hypothesis import strategies as st
 
-from src.models.constants import tzinfo
 from src.models.model_objects.currency import Currency, CurrencyError, ExchangeRate
 from tests.models.test_assets.composites import currencies, everything_except
 
@@ -16,17 +14,13 @@ from tests.models.test_assets.composites import currencies, everything_except
     places=st.integers(min_value=0, max_value=8),
 )
 def test_creation(code: str, places: int) -> None:
-    dt_start = datetime.now(tzinfo)
     currency = Currency(code, places)
-
-    dt_created_diff = currency.datetime_created - dt_start
 
     assert currency.code == code.upper()
     assert currency.__repr__() == f"Currency({code.upper()})"
     assert currency.places == places
     assert currency.convertible_to == set()
     assert currency.exchange_rates == {}
-    assert dt_created_diff.seconds < 1
 
 
 @given(code=st.text(max_size=2), places=st.integers(min_value=0, max_value=8))
