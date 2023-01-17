@@ -13,7 +13,11 @@ from src.models.model_objects.account_group import AccountGroup
 from src.models.model_objects.attributes import Attribute, Category
 from src.models.model_objects.cash_objects import CashAccount
 from src.models.model_objects.currency import CashAmount, Currency, ExchangeRate
-from src.models.model_objects.security_objects import SecurityAccount
+from src.models.model_objects.security_objects import (
+    Security,
+    SecurityAccount,
+    SecurityType,
+)
 from tests.models.test_assets.composites import attributes, categories
 
 
@@ -120,9 +124,24 @@ def test_cash_account() -> None:
 
 
 def test_security_account() -> None:
-    cash_account = SecurityAccount("Test Name")
-    serialized = json.dumps(cash_account, cls=CustomJSONEncoder)
+    security_account = SecurityAccount("Test Name")
+    serialized = json.dumps(security_account, cls=CustomJSONEncoder)
     decoded = json.loads(serialized, cls=CustomJSONDecoder)
     assert isinstance(decoded, SecurityAccount)
-    assert decoded.name == cash_account.name
-    assert decoded.uuid == cash_account.uuid
+    assert decoded.name == security_account.name
+    assert decoded.uuid == security_account.uuid
+
+
+def test_security() -> None:
+    currency = Currency("CZK", 2)
+    security = Security("Test Name", "SYMB.OL", SecurityType.ETF, currency, 1)
+    serialized = json.dumps(security, cls=CustomJSONEncoder)
+    decoded = json.loads(serialized, cls=CustomJSONDecoder)
+    assert isinstance(decoded, Security)
+    assert decoded.name == security.name
+    assert decoded.symbol == security.symbol
+    assert decoded.currency == security.currency
+    assert decoded.type_ == security.type_
+    assert decoded.shares_unit == security.shares_unit
+    assert decoded.price_places == security.price_places
+    assert decoded.uuid == security.uuid

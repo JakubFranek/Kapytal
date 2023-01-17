@@ -11,6 +11,7 @@ from typing import Any, Self
 from src.models.base_classes.account import Account, UnrelatedAccountError
 from src.models.base_classes.transaction import Transaction
 from src.models.custom_exceptions import InvalidCharacterError, TransferSameAccountError
+from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
 from src.models.mixins.name_mixin import NameMixin
 from src.models.mixins.uuid_mixin import UUIDMixin
 from src.models.model_objects.account_group import AccountGroup
@@ -32,7 +33,7 @@ class SecurityTransactionType(Enum):
     SELL = auto()
 
 
-class Security(NameMixin, UUIDMixin):
+class Security(NameMixin, UUIDMixin, JSONSerializableMixin):
     NAME_MIN_LENGTH = 1
     NAME_MAX_LENGTH = 64
     SYMBOL_MIN_LENGTH = 1
@@ -141,6 +142,30 @@ class Security(NameMixin, UUIDMixin):
         self._price_history[date_] = CashAmount(
             round(price.value, self._places), self.currency
         )
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "datatype": "Security",
+            "name": self._name,
+            "symbol": self._symbol,
+            "type_": self._type.name,
+            "currency": self._currency,
+            "shares_unit": self._shares_unit,
+            "price_places": self._places,
+            "uuid": str(self._uuid),
+        }
+
+    @staticmethod
+    def from_dict(data: dict[str, Any]) -> Self:
+        name = data["name"]
+        symbol = data["symbol"]
+        type_ = SecurityType[data["type_"]]
+        currency = data["currency"]
+        shares_unit = data["shares_unit"]
+        price_places = data["price_places"]
+        obj = Security(name, symbol, type_, currency, shares_unit, price_places)
+        obj._uuid = uuid.UUID(data["uuid"])
+        return obj
 
 
 # TODO: maybe add shares / balance history
