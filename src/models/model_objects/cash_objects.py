@@ -3,6 +3,7 @@ from collections.abc import Collection
 from datetime import datetime
 from enum import Enum, auto
 from typing import Any, Self
+from uuid import UUID
 
 from src.models.base_classes.account import Account, UnrelatedAccountError
 from src.models.base_classes.transaction import Transaction
@@ -156,11 +157,25 @@ class CashAccount(Account):
         self._update_balance()
 
     def to_dict(self) -> dict[str, Any]:
-        return super().to_dict()
+        return {
+            "datatype": "CashAccount",
+            "name": self._name,
+            "currency": self._currency,
+            "initial_balance": self._initial_balance,
+            "initial_datetime": self._initial_datetime,
+            "uuid": str(self._uuid),
+        }
 
     @staticmethod
     def from_dict(data: dict[str, Any]) -> Self:
-        return super().from_dict(data)
+        name = data["name"]
+        currency = data["currency"]
+        initial_balance = data["initial_balance"]
+        initial_datetime = data["initial_datetime"]
+        uuid = data["uuid"]
+        obj = CashAccount(name, currency, initial_balance, initial_datetime)
+        obj._uuid = UUID(uuid)
+        return obj
 
     def _update_balance(self) -> None:
         datetime_balance_history = [(self.initial_datetime, self.initial_balance)]

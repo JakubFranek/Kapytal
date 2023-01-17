@@ -11,8 +11,9 @@ from src.models.json.custom_json_decoder import CustomJSONDecoder
 from src.models.json.custom_json_encoder import CustomJSONEncoder
 from src.models.model_objects.account_group import AccountGroup
 from src.models.model_objects.attributes import Attribute, Category
+from src.models.model_objects.cash_objects import CashAccount
 from src.models.model_objects.currency import CashAmount, Currency, ExchangeRate
-from tests.models.test_assets.composites import account_groups, attributes, categories
+from tests.models.test_assets.composites import attributes, categories
 
 
 def test_invalid_object() -> None:
@@ -86,10 +87,10 @@ def test_category(category: Category, data: st.DataObject) -> None:
     assert decoded.children[1].parent == decoded
 
 
-@given(account_group=account_groups(), data=st.data())
-def test_account_group(account_group: AccountGroup, data: st.DataObject) -> None:
-    child_1 = data.draw(account_groups())
-    child_2 = data.draw(account_groups())
+def test_account_group() -> None:
+    account_group = AccountGroup("Test Name")
+    child_1 = AccountGroup("Child 1", account_group)
+    child_2 = AccountGroup("Child 2", account_group)
     child_1.parent = account_group
     child_2.parent = account_group
     serialized = json.dumps(account_group, cls=CustomJSONEncoder)
@@ -100,3 +101,18 @@ def test_account_group(account_group: AccountGroup, data: st.DataObject) -> None
     assert decoded.children[0].parent == decoded
     assert decoded.children[1].name == child_2.name
     assert decoded.children[1].parent == decoded
+
+
+def test_cash_account() -> None:
+    currency = Currency("CZK", 2)
+    cash_account = CashAccount(
+        "Test Name", currency, CashAmount(0, currency), datetime.now(tzinfo)
+    )
+    serialized = json.dumps(cash_account, cls=CustomJSONEncoder)
+    decoded = json.loads(serialized, cls=CustomJSONDecoder)
+    assert isinstance(decoded, CashAccount)
+    assert decoded.name == cash_account.name
+    assert decoded.currency == cash_account.currency
+    assert decoded.initial_balance == cash_account.initial_balance
+    assert decoded.initial_datetime == cash_account.initial_datetime
+    assert decoded.uuid == cash_account.uuid
