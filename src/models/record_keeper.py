@@ -1101,6 +1101,8 @@ class RecordKeeper(JSONSerializableMixin):
             "securities": self._securities,
             "account_groups": sorted_account_groups,
             "accounts": self._accounts,
+            "payees": self._payees,
+            "tags": self._tags,
         }
 
     @staticmethod
@@ -1127,6 +1129,9 @@ class RecordKeeper(JSONSerializableMixin):
         obj._accounts = RecordKeeper.accounts_from_dicts(
             account_dicts, obj._account_groups
         )
+
+        obj._payees = data["payees"]
+        obj._tags = data["tags"]
 
         return obj
 

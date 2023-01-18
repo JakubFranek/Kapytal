@@ -11,7 +11,7 @@ from src.models.custom_exceptions import NotFoundError
 from src.models.json.custom_json_decoder import CustomJSONDecoder
 from src.models.json.custom_json_encoder import CustomJSONEncoder
 from src.models.model_objects.account_group import AccountGroup
-from src.models.model_objects.attributes import Attribute, Category
+from src.models.model_objects.attributes import Attribute, AttributeType, Category
 from src.models.model_objects.cash_objects import CashAccount
 from src.models.model_objects.currency import CashAmount, Currency, ExchangeRate
 from src.models.model_objects.security_objects import (
@@ -273,3 +273,20 @@ def test_record_keeper_securities() -> None:
     decoded = json.loads(serialized, cls=CustomJSONDecoder)
     assert isinstance(decoded, RecordKeeper)
     assert len(record_keeper.securities) == len(decoded.securities)
+
+
+@given(
+    tags=st.lists(attributes(AttributeType.TAG), min_size=1, max_size=5),
+    payees=st.lists(attributes(AttributeType.PAYEE), min_size=1, max_size=5),
+)
+def test_record_keeper_tags_and_payees(
+    tags: list[Attribute], payees: list[Attribute]
+) -> None:
+    record_keeper = RecordKeeper()
+    record_keeper._tags = tags
+    record_keeper._payees = payees
+    serialized = json.dumps(record_keeper, cls=CustomJSONEncoder)
+    decoded = json.loads(serialized, cls=CustomJSONDecoder)
+    assert isinstance(decoded, RecordKeeper)
+    assert len(record_keeper.tags) == len(decoded.tags)
+    assert len(record_keeper.payees) == len(decoded.payees)
