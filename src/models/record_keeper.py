@@ -1094,6 +1094,7 @@ class RecordKeeper(JSONSerializableMixin):
 
     def to_dict(self) -> dict[str, Any]:
         sorted_account_groups = sorted(self._account_groups, key=lambda x: str(x))
+        sorted_categories = sorted(self._categories, key=lambda x: str(x))
         return {
             "datatype": "RecordKeeper",
             "currencies": self._currencies,
@@ -1103,6 +1104,7 @@ class RecordKeeper(JSONSerializableMixin):
             "accounts": self._accounts,
             "payees": self._payees,
             "tags": self._tags,
+            "categories": sorted_categories,
         }
 
     @staticmethod
@@ -1120,9 +1122,8 @@ class RecordKeeper(JSONSerializableMixin):
             security_dicts, obj._currencies
         )
 
-        account_group_dicts = data["account_groups"]
         obj._account_groups = RecordKeeper.account_groups_from_dicts(
-            account_group_dicts
+            data["account_groups"]
         )
 
         account_dicts = data["accounts"]
@@ -1132,6 +1133,7 @@ class RecordKeeper(JSONSerializableMixin):
 
         obj._payees = data["payees"]
         obj._tags = data["tags"]
+        obj._categories = RecordKeeper.categories_from_dicts(data["categories"])
 
         return obj
 
@@ -1182,6 +1184,16 @@ class RecordKeeper(JSONSerializableMixin):
                 raise ValueError("Unexpected 'datatype' value.")
             accounts.append(account)
         return accounts
+
+    @staticmethod
+    def categories_from_dicts(
+        category_dicts: Collection[dict[str, Any]]
+    ) -> list[AccountGroup]:
+        categories = []
+        for category_dict in category_dicts:
+            category = Category.from_dict(category_dict, categories)
+            categories.append(category)
+        return categories
 
     def _check_account_exists(self, name: str, parent_path: str | None) -> None:
         if not isinstance(name, str):

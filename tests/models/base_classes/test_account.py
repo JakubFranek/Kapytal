@@ -7,11 +7,11 @@ from hypothesis import strategies as st
 from src.models.custom_exceptions import InvalidCharacterError
 from src.models.mixins.name_mixin import NameLengthError
 from src.models.model_objects.account_group import AccountGroup
-from tests.models.test_assets.composites import account_groups, everything_except
+from tests.models.test_assets.composites import account_groups, everything_except, names
 from tests.models.test_assets.concrete_abcs import ConcreteAccount
 
 
-@given(name=st.text(min_size=1, max_size=32))
+@given(name=names())
 def test_creation(name: str) -> None:
     account = ConcreteAccount(name)
     assert account.name == name
@@ -24,7 +24,7 @@ def test_name_too_short(name: str) -> None:
         ConcreteAccount(name)
 
 
-@given(name=st.text(min_size=33))
+@given(name=names(min_size=33))
 def test_name_too_long(name: str) -> None:
     with pytest.raises(NameLengthError):
         ConcreteAccount(name)

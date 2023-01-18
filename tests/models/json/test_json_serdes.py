@@ -11,7 +11,12 @@ from src.models.custom_exceptions import NotFoundError
 from src.models.json.custom_json_decoder import CustomJSONDecoder
 from src.models.json.custom_json_encoder import CustomJSONEncoder
 from src.models.model_objects.account_group import AccountGroup
-from src.models.model_objects.attributes import Attribute, AttributeType, Category
+from src.models.model_objects.attributes import (
+    Attribute,
+    AttributeType,
+    Category,
+    CategoryType,
+)
 from src.models.model_objects.cash_objects import CashAccount
 from src.models.model_objects.currency import CashAmount, Currency, ExchangeRate
 from src.models.model_objects.security_objects import (
@@ -78,21 +83,38 @@ def test_attribute(attribute: Attribute) -> None:
     assert decoded.type_ == attribute.type_
 
 
-@given(category=categories(), data=st.data())
-def test_category(category: Category, data: st.DataObject) -> None:
-    child_1 = data.draw(categories(category_type=category.type_))
-    child_2 = data.draw(categories(category_type=category.type_))
-    child_1.parent = category
-    child_2.parent = category
-    serialized = json.dumps(category, cls=CustomJSONEncoder)
+@given(parent=categories(), data=st.data())
+def test_category(parent: Category, data: st.DataObject) -> None:
+    child_1 = data.draw(categories(category_type=parent.type_))
+    child_2 = data.draw(categories(category_type=parent.type_))
+    child_1.parent = parent
+    child_2.parent = parent
+    category_tuple = (parent, child_1, child_2)
+    serialized = json.dumps(category_tuple, cls=CustomJSONEncoder)
     decoded = json.loads(serialized, cls=CustomJSONDecoder)
+    category_list = []
+    for category_dict in decoded:
+        category = Category.from_dict(category_dict, category_list)
+        category_list.append(category)
+    decoded = category_list[0]
     assert isinstance(decoded, Category)
-    assert decoded.name == category.name
-    assert decoded.type_ == category.type_
+    assert decoded.name == parent.name
+    assert decoded.type_ == parent.type_
     assert decoded.children[0].name == child_1.name
     assert decoded.children[0].parent == decoded
     assert decoded.children[1].name == child_2.name
     assert decoded.children[1].parent == decoded
+
+
+@given(parent=categories(), data=st.data())
+def test_category_parent_not_found(parent: Category, data: st.DataObject) -> None:
+    child = data.draw(categories(category_type=parent.type_))
+    child.parent = parent
+    category_tuple = (child,)
+    serialized = json.dumps(category_tuple, cls=CustomJSONEncoder)
+    decoded = json.loads(serialized, cls=CustomJSONDecoder)
+    with pytest.raises(NotFoundError):
+        Category.from_dict(decoded[0], category_tuple)
 
 
 def test_account_group() -> None:
@@ -290,3 +312,19 @@ def test_record_keeper_tags_and_payees(
     assert isinstance(decoded, RecordKeeper)
     assert len(record_keeper.tags) == len(decoded.tags)
     assert len(record_keeper.payees) == len(decoded.payees)
+
+
+def test_record_keeper_categories() -> None:
+    record_keeper = RecordKeeper()
+    record_keeper.add_category("Food", None, CategoryType.EXPENSE)
+    record_keeper.add_category("Groceries", "Food", CategoryType.EXPENSE)
+    record_keeper.add_category("Eating out", "Food", CategoryType.EXPENSE)
+    record_keeper.add_category("Housing", None, CategoryType.EXPENSE)
+    record_keeper.add_category("Rent", "Housing", CategoryType.EXPENSE)
+    record_keeper.add_category("Electricity", "Housing", CategoryType.EXPENSE)
+    record_keeper.add_category("Water", "Housing", CategoryType.EXPENSE)
+    record_keeper.add_category("Work lunch", "Food", CategoryType.EXPENSE)
+    serialized = json.dumps(record_keeper, cls=CustomJSONEncoder)
+    decoded = json.loads(serialized, cls=CustomJSONDecoder)
+    assert isinstance(decoded, RecordKeeper)
+    assert len(record_keeper.categories) == len(decoded.categories)

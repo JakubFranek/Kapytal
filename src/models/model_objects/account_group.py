@@ -72,6 +72,7 @@ class AccountGroup(NameMixin, GetBalanceMixin, JSONSerializableMixin):
     ) -> "AccountGroup":
         name = data["name"]
         obj = AccountGroup(name)
+
         parent_path = data["parent_path"]
         if parent_path is None:
             return obj

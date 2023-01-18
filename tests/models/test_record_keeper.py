@@ -104,7 +104,7 @@ def test_add_exchange_rate_already_exists(
 
 
 @given(
-    name=st.text(min_size=1, max_size=32),
+    name=names(),
 )
 def test_add_account_group_no_parent(name: str) -> None:
     record_keeper = RecordKeeper()
@@ -150,12 +150,12 @@ def test_add_account_group_with_multiple_parents(
 
 
 @given(
-    name=st.text(min_size=1, max_size=32),
+    name=names(),
     currency_code=st.text(string.ascii_letters, min_size=3, max_size=3),
     places=st.integers(min_value=0, max_value=8),
     initial_balance=valid_decimals(min_value=0),
     initial_datetime=st.datetimes(),
-    parent_name=st.none() | st.text(min_size=1, max_size=32),
+    parent_name=st.none() | names(),
 )
 def test_add_cash_account(
     name: str,
@@ -189,7 +189,7 @@ def test_add_cash_account(
         min_value=datetime.now() + timedelta(days=1), timezones=st.just(tzinfo)
     ),
     transaction_type=st.sampled_from(CashTransactionType),
-    payee_name=st.text(min_size=1, max_size=32),
+    payee_name=names(),
     data=st.data(),
 )
 def test_add_cash_transaction(
@@ -316,7 +316,7 @@ def test_add_currency_already_exists(code: str, places: int) -> None:
 
 
 @given(
-    name=st.text(min_size=1, max_size=32),
+    name=names(),
     parent=st.text(min_size=1, max_size=32),
 )
 def test_add_category_parent_does_not_exist(name: str, parent: str) -> None:
@@ -326,7 +326,7 @@ def test_add_category_parent_does_not_exist(name: str, parent: str) -> None:
 
 
 @given(
-    name=st.text(min_size=1, max_size=32),
+    name=names(),
 )
 def test_add_category_invalid_type(name: str) -> None:
     record_keeper = RecordKeeper()
@@ -343,7 +343,7 @@ def test_add_category_already_exists(name: str, type_: CategoryType) -> None:
 
 
 @given(
-    name=st.text(min_size=1, max_size=32),
+    name=names(),
 )
 def test_add_account_group_already_exists(name: str) -> None:
     record_keeper = RecordKeeper()

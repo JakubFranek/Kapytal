@@ -1,6 +1,7 @@
 from enum import Enum, auto
 from typing import Any, Self
 
+from src.models.custom_exceptions import NotFoundError
 from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
 from src.models.mixins.name_mixin import NameMixin
 
@@ -104,23 +105,34 @@ class Category(NameMixin, JSONSerializableMixin):
             return self.name
         return self.parent.path + "/" + self.name
 
-    def __repr__(self) -> str:
-        return f"Category('{self.name}', {self.type_.name}, parent='{self.parent}')"
+    @property
+    def parent_path(self) -> str:
+        if self.parent is None:
+            return None
+        return self.parent.path
 
+    def __repr__(self) -> str:
+        return f"Category(path='{self.path}', {self.type_.name})"
+
+    # TODO: theoretically name and parent_path could be replaced by path
     def to_dict(self) -> dict[str, Any]:
         return {
             "datatype": "Category",
             "name": self._name,
             "type_": self._type.name,
-            "children": self._children,
+            "parent_path": self.parent_path,
         }
 
     @staticmethod
-    def from_dict(data: dict[str, Any]) -> Self:
+    def from_dict(data: dict[str, Any], categories: list["Category"]) -> "Category":
         name = data["name"]
         type_ = CategoryType[data["type_"]]
         obj = Category(name, type_)
-        children: list[Category] = data["children"]
-        for child in children:
-            child.parent = obj
-        return obj
+        parent_path = data["parent_path"]
+        if parent_path is None:
+            return obj
+        for category in categories:
+            if category.path == parent_path:
+                obj.parent = category
+                return obj
+        raise NotFoundError("Parent Category not found within 'categories'.")

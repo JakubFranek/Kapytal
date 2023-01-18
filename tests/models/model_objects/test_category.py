@@ -29,7 +29,7 @@ def test_name_too_short(name: str, type_: CategoryType) -> None:
 
 
 @given(
-    name=st.text(min_size=33),
+    name=names(min_size=33),
     type_=st.sampled_from(CategoryType),
 )
 def test_name_too_long(name: str, type_: CategoryType) -> None:
@@ -59,7 +59,7 @@ def test_parent_invalid_type(category: Category, parent: Any) -> None:
 
 
 @given(
-    name=st.text(min_size=1, max_size=32),
+    name=names(),
     category_type=everything_except(CategoryType),
 )
 def test_type_invalid_type(name: str, category_type: Any) -> None:

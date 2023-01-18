@@ -3,7 +3,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any
 
-from src.models.model_objects.attributes import Attribute, Category
+from src.models.model_objects.attributes import Attribute
 from src.models.model_objects.currency import CashAmount, Currency
 from src.models.record_keeper import RecordKeeper
 
@@ -27,8 +27,6 @@ class CustomJSONDecoder(json.JSONDecoder):
                     return CashAmount.from_dict(obj)
                 case "Attribute":
                     return Attribute.from_dict(obj)
-                case "Category":
-                    return Category.from_dict(obj)
                 case _:
                     return obj
         raise NotImplementedError

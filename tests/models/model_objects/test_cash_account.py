@@ -24,12 +24,13 @@ from tests.models.test_assets.composites import (
     cash_transfers,
     currencies,
     everything_except,
+    names,
     valid_decimals,
 )
 
 
 @given(
-    name=st.text(min_size=1, max_size=32),
+    name=names(),
     currency=currencies(),
     initial_balance=valid_decimals(min_value=0),
     initial_datetime=st.datetimes(),
@@ -109,7 +110,7 @@ def test_initial_balance_invalid_currency(
 
 
 @given(
-    name=st.text(min_size=1, max_size=32),
+    name=names(),
     currency=currencies(),
     initial_datetime=everything_except(datetime),
     data=st.data(),
