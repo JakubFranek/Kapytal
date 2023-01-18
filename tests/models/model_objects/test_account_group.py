@@ -25,30 +25,29 @@ def test_creation(name: str, currency: Currency) -> None:
     assert account_group.name == name
     assert account_group.parent is None
     assert account_group.get_balance(currency) == CashAmount(Decimal(0), currency)
-    assert account_group.__repr__() == f"AccountGroup('{name}', parent='None')"
+    assert account_group.__repr__() == f"AccountGroup(path='{name}')"
     assert account_group.path == name
 
 
 @given(parent=account_groups())
 def test_add_and_remove_parent(parent: AccountGroup) -> None:
     account_group = get_account_group()
-    expected_repr = f"AccountGroup('{account_group.name}', parent='None')"
+    expected_repr = f"AccountGroup(path='{account_group.name}')"
     assert account_group.parent is None
     assert account_group.children == ()
     assert account_group.__repr__() == expected_repr
     assert account_group.path == account_group.name
 
     account_group.parent = parent
-    expected_repr = (
-        f"AccountGroup('{account_group.name}', parent='{account_group.parent}')"
-    )
+    expected_path = parent.path + "/" + account_group.name
+    expected_repr = f"AccountGroup(path='{expected_path}')"
     assert account_group.parent == parent
     assert account_group in parent.children
     assert account_group.__repr__() == expected_repr
     assert account_group.path == f"{account_group.parent.name}/{account_group.name}"
 
     account_group.parent = None
-    expected_repr = f"AccountGroup('{account_group.name}', parent='None')"
+    expected_repr = f"AccountGroup(path='{account_group.name}')"
     assert account_group.parent is None
     assert account_group not in parent.children
     assert account_group.__repr__() == expected_repr

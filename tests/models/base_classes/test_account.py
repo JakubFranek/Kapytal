@@ -1,10 +1,10 @@
-
 from typing import Any
 
 import pytest
 from hypothesis import given
 from hypothesis import strategies as st
 
+from src.models.custom_exceptions import InvalidCharacterError
 from src.models.mixins.name_mixin import NameLengthError
 from src.models.model_objects.account_group import AccountGroup
 from tests.models.test_assets.composites import account_groups, everything_except
@@ -28,6 +28,11 @@ def test_name_too_short(name: str) -> None:
 def test_name_too_long(name: str) -> None:
     with pytest.raises(NameLengthError):
         ConcreteAccount(name)
+
+
+def test_name_invalid_character() -> None:
+    with pytest.raises(InvalidCharacterError):
+        ConcreteAccount("Invalid/name/with/slashes")
 
 
 @given(name=everything_except(str))

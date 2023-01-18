@@ -36,6 +36,7 @@ from tests.models.test_assets.composites import (
     attributes,
     currencies,
     everything_except,
+    names,
     valid_decimals,
 )
 
@@ -114,8 +115,8 @@ def test_add_account_group_no_parent(name: str) -> None:
 
 
 @given(
-    name=st.text(min_size=1, max_size=32),
-    parent_name=st.text(min_size=1, max_size=32),
+    name=names(),
+    parent_name=names(),
 )
 def test_add_account_group_with_parent(name: str, parent_name: str) -> None:
     record_keeper = RecordKeeper()
@@ -128,9 +129,9 @@ def test_add_account_group_with_parent(name: str, parent_name: str) -> None:
 
 
 @given(
-    name=st.text(min_size=1, max_size=32),
-    grandparent_name=st.text(min_size=1, max_size=32),
-    parent_name=st.text(min_size=1, max_size=32),
+    name=names(),
+    grandparent_name=names(),
+    parent_name=names(),
 )
 def test_add_account_group_with_multiple_parents(
     name: str, grandparent_name: str, parent_name: str
@@ -333,7 +334,7 @@ def test_add_category_invalid_type(name: str) -> None:
         record_keeper.add_category(name, None, None)
 
 
-@given(name=st.text(min_size=1, max_size=32), type_=st.sampled_from(CategoryType))
+@given(name=names(), type_=st.sampled_from(CategoryType))
 def test_add_category_already_exists(name: str, type_: CategoryType) -> None:
     record_keeper = RecordKeeper()
     record_keeper.add_category(name, None, type_)

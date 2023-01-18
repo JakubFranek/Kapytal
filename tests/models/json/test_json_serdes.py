@@ -7,6 +7,7 @@ from hypothesis import given
 from hypothesis import strategies as st
 
 from src.models.constants import tzinfo
+from src.models.custom_exceptions import NotFoundError
 from src.models.json.custom_json_decoder import CustomJSONDecoder
 from src.models.json.custom_json_encoder import CustomJSONEncoder
 from src.models.model_objects.account_group import AccountGroup
@@ -18,6 +19,7 @@ from src.models.model_objects.security_objects import (
     SecurityAccount,
     SecurityType,
 )
+from src.models.record_keeper import RecordKeeper
 from tests.models.test_assets.composites import attributes, categories
 
 
@@ -53,6 +55,7 @@ def test_exchange_rate() -> None:
     exchange_rate = ExchangeRate(primary, secondary)
     serialized = json.dumps(exchange_rate, cls=CustomJSONEncoder)
     decoded = json.loads(serialized, cls=CustomJSONDecoder)
+    decoded = ExchangeRate.from_dict(decoded, [primary, secondary])
     assert isinstance(decoded, ExchangeRate)
     assert decoded.primary_currency == exchange_rate.primary_currency
     assert decoded.secondary_currency == exchange_rate.secondary_currency
@@ -93,19 +96,36 @@ def test_category(category: Category, data: st.DataObject) -> None:
 
 
 def test_account_group() -> None:
-    account_group = AccountGroup("Test Name")
-    child_1 = AccountGroup("Child 1", account_group)
-    child_2 = AccountGroup("Child 2", account_group)
-    child_1.parent = account_group
-    child_2.parent = account_group
-    serialized = json.dumps(account_group, cls=CustomJSONEncoder)
+    parent = AccountGroup("Test Name")
+    child_1 = AccountGroup("Child 1", parent)
+    child_2 = AccountGroup("Child 2", parent)
+    child_1.parent = parent
+    child_2.parent = parent
+    account_groups = [parent, child_1, child_2]
+    serialized = json.dumps(account_groups, cls=CustomJSONEncoder)
     decoded = json.loads(serialized, cls=CustomJSONDecoder)
+    account_groups = []
+    for account_group_dict in decoded:
+        account_group = AccountGroup.from_dict(account_group_dict, account_groups)
+        account_groups.append(account_group)
+    decoded = account_groups[0]
     assert isinstance(decoded, AccountGroup)
-    assert decoded.name == account_group.name
+    assert decoded.name == parent.name
     assert decoded.children[0].name == child_1.name
     assert decoded.children[0].parent == decoded
     assert decoded.children[1].name == child_2.name
     assert decoded.children[1].parent == decoded
+
+
+def test_account_group_parent_not_found() -> None:
+    parent = AccountGroup("Test Name")
+    child_1 = AccountGroup("Child 1", parent)
+    child_1.parent = parent
+    account_groups = [child_1]
+    serialized = json.dumps(account_groups, cls=CustomJSONEncoder)
+    decoded = json.loads(serialized, cls=CustomJSONDecoder)
+    with pytest.raises(NotFoundError):
+        AccountGroup.from_dict(decoded[0], account_groups)
 
 
 def test_cash_account() -> None:
@@ -145,3 +165,32 @@ def test_security() -> None:
     assert decoded.shares_unit == security.shares_unit
     assert decoded.price_places == security.price_places
     assert decoded.uuid == security.uuid
+
+
+def test_record_keeper_currencies_exchange_rates() -> None:
+    record_keeper = RecordKeeper()
+    record_keeper.add_currency("CZK", 2)
+    record_keeper.add_currency("EUR", 2)
+    record_keeper.add_currency("USD", 2)
+    record_keeper.add_exchange_rate("EUR", "CZK")
+    record_keeper.add_exchange_rate("USD", "EUR")
+    serialized = json.dumps(record_keeper, cls=CustomJSONEncoder)
+    decoded = json.loads(serialized, cls=CustomJSONDecoder)
+    assert isinstance(decoded, RecordKeeper)
+    assert decoded.currencies == decoded.currencies
+    assert str(decoded.exchange_rates[0]) == str(record_keeper.exchange_rates[0])
+    assert str(decoded.exchange_rates[1]) == str(record_keeper.exchange_rates[1])
+
+
+def test_record_keeper_account_groups() -> None:
+    record_keeper = RecordKeeper()
+    record_keeper.add_account_group("A1", None)
+    record_keeper.add_account_group("A2", "A1")
+    record_keeper.add_account_group("B2", "A1")
+    record_keeper.add_account_group("A3", "A1/A2")
+    record_keeper.add_account_group("B1", None)
+    record_keeper.add_account_group("C1", None)
+    serialized = json.dumps(record_keeper, cls=CustomJSONEncoder)
+    decoded = json.loads(serialized, cls=CustomJSONDecoder)
+    assert isinstance(decoded, RecordKeeper)
+    assert len(record_keeper.account_groups) == len(decoded.account_groups)

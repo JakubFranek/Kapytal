@@ -1,7 +1,7 @@
 # TODO: rename this module
-
 import copy
 import operator
+from collections.abc import Collection
 from datetime import date
 from decimal import Decimal
 from functools import total_ordering
@@ -221,14 +221,25 @@ class ExchangeRate(JSONSerializableMixin):
     def to_dict(self) -> dict:
         return {
             "datatype": "ExchangeRate",
-            "primary_currency": self._primary_currency,
-            "secondary_currency": self._secondary_currency,
+            "primary_currency_code": self._primary_currency.code,
+            "secondary_currency_code": self._secondary_currency.code,
         }
 
     @staticmethod
-    def from_dict(data: dict[str, Any]) -> Self:
-        primary = data["primary_currency"]
-        secondary = data["secondary_currency"]
+    def from_dict(data: dict[str, Any], currencies: Collection[Currency]) -> Self:
+        primary_code = data["primary_currency_code"]
+        secondary_code = data["secondary_currency_code"]
+
+        primary = None
+        secondary = None
+        for currency in currencies:
+            if currency.code == primary_code:
+                primary = currency
+            if currency.code == secondary_code:
+                secondary = currency
+            if primary and secondary:
+                break
+
         return ExchangeRate(primary, secondary)
 
 

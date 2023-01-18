@@ -10,6 +10,10 @@ class InvalidOperationError(Exception):
     """Raised when an invalid operation is attempted."""
 
 
+class NotFoundError(Exception):
+    """Raised when a required object is not found."""
+
+
 class TransferSameAccountError(ValueError):
     """Raised when an attempt is made to set the recipient and the sender of a
     Transfer to the same Account."""

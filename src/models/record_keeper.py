@@ -3,11 +3,12 @@
 from collections.abc import Collection
 from datetime import date, datetime
 from decimal import Decimal
-from typing import overload
+from typing import Any, Self, overload
 
 from src.models.base_classes.account import Account
 from src.models.base_classes.transaction import Transaction
 from src.models.custom_exceptions import AlreadyExistsError, InvalidOperationError
+from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
 from src.models.model_objects.account_group import AccountGroup
 from src.models.model_objects.attributes import (
     Attribute,
@@ -44,7 +45,7 @@ class DoesNotExistError(ValueError):
     """Raised when a search for an object finds nothing."""
 
 
-class RecordKeeper:
+class RecordKeeper(JSONSerializableMixin):
     def __init__(self) -> None:
         self._accounts: list[Account] = []
         self._account_groups: list[AccountGroup] = []
@@ -1090,6 +1091,36 @@ class RecordKeeper:
                 exchange_rate.set_rate(date_, rate)
                 return
         raise DoesNotExistError(f"Exchange rate '{exchange_rate_code} not found.'")
+
+    def to_dict(self) -> dict[str, Any]:
+        sorted_account_groups = sorted(self._account_groups, key=lambda x: str(x))
+        return {
+            "datatype": "RecordKeeper",
+            "currencies": self._currencies,
+            "exchange_rates": self._exchange_rates,
+            "account_groups": sorted_account_groups,
+        }
+
+    @staticmethod
+    def from_dict(data: dict[str, Any]) -> Self:
+        obj = RecordKeeper()
+        obj._currencies = data["currencies"]
+
+        exchange_rates_dicts: list[dict[str, str]] = data["exchange_rates"]
+        exchange_rates = []
+        for exchange_rate_dict in exchange_rates_dicts:
+            exchange_rate = ExchangeRate.from_dict(exchange_rate_dict, obj._currencies)
+            exchange_rates.append(exchange_rate)
+        obj._exchange_rates = exchange_rates
+
+        account_group_dicts = data["account_groups"]
+        account_groups = []
+        for account_group_dict in account_group_dicts:
+            account_group = AccountGroup.from_dict(account_group_dict, account_groups)
+            account_groups.append(account_group)
+        obj._account_groups = account_groups
+
+        return obj
 
     def _check_account_exists(self, name: str, parent_path: str | None) -> None:
         if not isinstance(name, str):

@@ -3,11 +3,11 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any
 
-from src.models.model_objects.account_group import AccountGroup
 from src.models.model_objects.attributes import Attribute, Category
 from src.models.model_objects.cash_objects import CashAccount
-from src.models.model_objects.currency import CashAmount, Currency, ExchangeRate
+from src.models.model_objects.currency import CashAmount, Currency
 from src.models.model_objects.security_objects import Security, SecurityAccount
+from src.models.record_keeper import RecordKeeper
 
 
 class CustomJSONDecoder(json.JSONDecoder):
@@ -21,10 +21,12 @@ class CustomJSONDecoder(json.JSONDecoder):
                     return datetime.fromisoformat(obj["datetime"])
                 case "Decimal":
                     return Decimal(obj["number"])
+                case "RecordKeeper":
+                    return RecordKeeper.from_dict(obj)
                 case "Currency":
                     return Currency.from_dict(obj)
                 case "ExchangeRate":
-                    return ExchangeRate.from_dict(obj)
+                    return obj
                 case "CashAmount":
                     return CashAmount.from_dict(obj)
                 case "Attribute":
@@ -32,7 +34,7 @@ class CustomJSONDecoder(json.JSONDecoder):
                 case "Category":
                     return Category.from_dict(obj)
                 case "AccountGroup":
-                    return AccountGroup.from_dict(obj)
+                    return obj
                 case "CashAccount":
                     return CashAccount.from_dict(obj)
                 case "SecurityAccount":

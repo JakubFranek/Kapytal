@@ -65,13 +65,13 @@ def valid_decimals(
 
 @st.composite
 def account_groups(draw: st.DrawFn) -> AccountGroup:
-    name = draw(st.text(min_size=1, max_size=32))
+    name = draw(names())
     return AccountGroup(name)
 
 
 @st.composite
 def attributes(draw: st.DrawFn, type_: AttributeType | None = None) -> Attribute:
-    name = draw(st.text(min_size=1, max_size=32))
+    name = draw(names())
     if type_ is None:
         attr_type = draw(st.sampled_from(AttributeType))
     else:
@@ -102,7 +102,7 @@ def cash_accounts(
     max_datetime: datetime = max_datetime,
     currency: Currency | None = None,
 ) -> CashAccount:
-    name = draw(st.text(min_size=1, max_size=32))
+    name = draw(names())
     if currency is None:
         currency = draw(currencies())
     initial_amount = draw(cash_amounts(currency=currency))
@@ -204,7 +204,7 @@ def categories(
     transaction_type: CashTransactionType | None = None,
     category_type: CategoryType | None = None,
 ) -> Category:
-    name = draw(st.text(min_size=1, max_size=32))
+    name = draw(names())
 
     if transaction_type is None:
         if category_type is None:
@@ -238,14 +238,14 @@ def category_amount_pairs(
 
 @st.composite
 def currencies(draw: st.DrawFn, min_places: int = 2, max_places: int = 8) -> Currency:
-    name = draw(st.text(alphabet=string.ascii_letters, min_size=3, max_size=3))
+    code = draw(st.text(alphabet=string.ascii_letters, min_size=3, max_size=3))
     places = draw(st.integers(min_value=min_places, max_value=max_places))
-    return Currency(name, places)
+    return Currency(code, places)
 
 
 @st.composite
 def securities(draw: st.DrawFn, currency: Currency | None = None) -> Security:
-    name = draw(st.text(min_size=1, max_size=32))
+    name = draw(names())
     symbol = draw(
         st.text(alphabet=Security.SYMBOL_ALLOWED_CHARS, min_size=1, max_size=8)
     )
@@ -264,7 +264,7 @@ def securities(draw: st.DrawFn, currency: Currency | None = None) -> Security:
 
 @st.composite
 def security_accounts(draw: st.DrawFn) -> SecurityAccount:
-    name = draw(st.text(min_size=1, max_size=32))
+    name = draw(names())
     parent = draw(st.none() | account_groups())
     return SecurityAccount(name, parent)
 
@@ -346,3 +346,20 @@ def transactions(draw: st.DrawFn) -> ConcreteTransaction:
     description = draw(st.text(min_size=0, max_size=256))
     datetime_ = draw(st.datetimes(timezones=st.just(tzinfo)))
     return ConcreteTransaction(description, datetime_)
+
+
+@st.composite
+def names(
+    draw: st.DrawFn, min_size: int | None = None, max_size: int | None = None
+) -> str:
+    if min_size is None:
+        min_size = 1
+        if max_size is None:
+            max_size = 32
+    return draw(
+        st.text(
+            alphabet=st.characters(blacklist_characters=("/")),
+            min_size=min_size,
+            max_size=max_size,
+        )
+    )

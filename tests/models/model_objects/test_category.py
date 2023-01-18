@@ -6,12 +6,10 @@ from hypothesis import strategies as st
 
 from src.models.mixins.name_mixin import NameLengthError
 from src.models.model_objects.attributes import Category, CategoryType
-from tests.models.test_assets.composites import categories, everything_except
+from tests.models.test_assets.composites import categories, everything_except, names
 
 
-@given(
-    name=st.text(min_size=1, max_size=32), category_type=st.sampled_from(CategoryType)
-)
+@given(name=names(), category_type=st.sampled_from(CategoryType))
 def test_creation(name: str, category_type: CategoryType) -> None:
     category = Category(name, category_type)
 

@@ -1,5 +1,7 @@
 from typing import TYPE_CHECKING, Any, Self
 
+from src.models.custom_exceptions import NotFoundError
+
 if TYPE_CHECKING:
     from src.models.base_classes.account import Account
 
@@ -37,13 +39,19 @@ class AccountGroup(NameMixin, GetBalanceMixin, JSONSerializableMixin):
         return tuple(self._children)
 
     def __repr__(self) -> str:
-        return f"AccountGroup('{self.name}', parent='{self.parent}')"
+        return f"AccountGroup(path='{self.path}')"
 
     @property
     def path(self) -> str:
         if self.parent is None:
             return self.name
         return self.parent.path + "/" + self.name
+
+    @property
+    def parent_path(self) -> str | None:
+        if self.parent is None:
+            return None
+        return self.parent.path
 
     def get_balance(self, currency: Currency) -> CashAmount:
         return sum(
@@ -55,14 +63,20 @@ class AccountGroup(NameMixin, GetBalanceMixin, JSONSerializableMixin):
         return {
             "datatype": "AccountGroup",
             "name": self._name,
-            "children": self._children,
+            "parent_path": self.parent_path,
         }
 
     @staticmethod
-    def from_dict(data: dict[str, Any]) -> Self:
+    def from_dict(data: dict[str, Any], account_groups: list["AccountGroup"]) -> Self:
         name = data["name"]
         obj = AccountGroup(name)
-        children: list[AccountGroup | Account] = data["children"]
-        for child in children:
-            child.parent = obj
+        parent_path = data["parent_path"]
+        if parent_path is not None:
+            for account_group in account_groups:
+                if account_group.path == parent_path:
+                    obj.parent = account_group
+                    return obj
+            raise NotFoundError(
+                "Parent AccountGroup not found within 'account_groups'."
+            )
         return obj
