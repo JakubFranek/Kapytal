@@ -23,7 +23,7 @@ from tests.models.test_assets.composites import (
 
 
 @given(
-    name=st.text(min_size=1, max_size=64),
+    name=names(min_size=1, max_size=64),
     symbol=st.text(alphabet=Security.SYMBOL_ALLOWED_CHARS, min_size=1, max_size=8),
     type_=st.sampled_from(SecurityType),
     currency=currencies(),

@@ -5,7 +5,6 @@ from typing import Any
 
 from src.models.model_objects.attributes import Attribute, Category
 from src.models.model_objects.currency import CashAmount, Currency
-from src.models.model_objects.security_objects import Security
 from src.models.record_keeper import RecordKeeper
 
 
@@ -30,8 +29,6 @@ class CustomJSONDecoder(json.JSONDecoder):
                     return Attribute.from_dict(obj)
                 case "Category":
                     return Category.from_dict(obj)
-                case "Security":
-                    return Security.from_dict(obj)
                 case _:
                     return obj
         raise NotImplementedError

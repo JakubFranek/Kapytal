@@ -154,21 +154,34 @@ class Security(NameMixin, UUIDMixin, JSONSerializableMixin):
             "name": self._name,
             "symbol": self._symbol,
             "type_": self._type.name,
-            "currency": self._currency,
+            "currency_code": self._currency.code,
             "shares_unit": self._shares_unit,
             "price_places": self._places,
             "uuid": str(self._uuid),
         }
 
     @staticmethod
-    def from_dict(data: dict[str, Any]) -> "CashAccount":
+    def from_dict(data: dict[str, Any], currencies: Collection[Currency]) -> "Security":
         name = data["name"]
         symbol = data["symbol"]
         type_ = SecurityType[data["type_"]]
-        currency = data["currency"]
+        currency_code = data["currency_code"]
+
+        security_currency = None
+        for currency in currencies:
+            if currency.code == currency_code:
+                security_currency = currency
+                break
+        else:
+            raise NotFoundError(
+                f"Currency '{currency_code}' not found in 'currencies'."
+            )
+
         shares_unit = data["shares_unit"]
         price_places = data["price_places"]
-        obj = Security(name, symbol, type_, currency, shares_unit, price_places)
+        obj = Security(
+            name, symbol, type_, security_currency, shares_unit, price_places
+        )
         obj._uuid = uuid.UUID(data["uuid"])
         return obj
 

@@ -14,11 +14,12 @@ from tests.models.test_assets.composites import (
     cash_accounts,
     currencies,
     everything_except,
+    names,
     valid_decimals,
 )
 
 
-@given(name=st.text(min_size=1, max_size=32), currency=currencies())
+@given(name=names(), currency=currencies())
 def test_creation(name: str, currency: Currency) -> None:
     account_group = AccountGroup(name)
 

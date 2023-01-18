@@ -1098,6 +1098,7 @@ class RecordKeeper(JSONSerializableMixin):
             "datatype": "RecordKeeper",
             "currencies": self._currencies,
             "exchange_rates": self._exchange_rates,
+            "securities": self._securities,
             "account_groups": sorted_account_groups,
             "accounts": self._accounts,
         }
@@ -1110,6 +1111,11 @@ class RecordKeeper(JSONSerializableMixin):
         exchange_rates_dicts = data["exchange_rates"]
         obj._exchange_rates = RecordKeeper.exchange_rates_from_dicts(
             exchange_rates_dicts, obj._currencies
+        )
+
+        security_dicts = data["securities"]
+        obj._securities = RecordKeeper.securities_from_dicts(
+            security_dicts, obj._currencies
         )
 
         account_group_dicts = data["account_groups"]
@@ -1134,6 +1140,17 @@ class RecordKeeper(JSONSerializableMixin):
             exchange_rate = ExchangeRate.from_dict(exchange_rate_dict, currencies)
             exchange_rates.append(exchange_rate)
         return exchange_rates
+
+    @staticmethod
+    def securities_from_dicts(
+        security_dicts: Collection[dict[str, Any]],
+        currencies: Collection[Currency],
+    ) -> list[Security]:
+        securities = []
+        for security_dict in security_dicts:
+            security = Security.from_dict(security_dict, currencies)
+            securities.append(security)
+        return securities
 
     @staticmethod
     def account_groups_from_dicts(

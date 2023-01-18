@@ -184,6 +184,7 @@ def test_security() -> None:
     security = Security("Test Name", "SYMB.OL", SecurityType.ETF, currency, 1)
     serialized = json.dumps(security, cls=CustomJSONEncoder)
     decoded = json.loads(serialized, cls=CustomJSONDecoder)
+    decoded = Security.from_dict(decoded, [currency])
     assert isinstance(decoded, Security)
     assert decoded.name == security.name
     assert decoded.symbol == security.symbol
@@ -192,6 +193,15 @@ def test_security() -> None:
     assert decoded.shares_unit == security.shares_unit
     assert decoded.price_places == security.price_places
     assert decoded.uuid == security.uuid
+
+
+def test_security_currency_not_found() -> None:
+    currency = Currency("CZK", 2)
+    security = Security("Test Name", "SYMB.OL", SecurityType.ETF, currency, 1)
+    serialized = json.dumps(security, cls=CustomJSONEncoder)
+    decoded = json.loads(serialized, cls=CustomJSONDecoder)
+    with pytest.raises(NotFoundError):
+        Security.from_dict(decoded, [])
 
 
 def test_record_keeper_currencies_exchange_rates() -> None:
@@ -247,3 +257,19 @@ def test_record_keeper_invalid_account_datatype() -> None:
     dictionary = {"datatype": "not a valid Account sub-class"}
     with pytest.raises(ValueError, match="Unexpected 'datatype' value."):
         record_keeper.accounts_from_dicts([dictionary], None)
+
+
+def test_record_keeper_securities() -> None:
+    record_keeper = RecordKeeper()
+    record_keeper.add_currency("CZK", 2)
+    record_keeper.add_currency("EUR", 2)
+    record_keeper.add_security(
+        "iShares MSCI All World", "IWDA.AS", SecurityType.ETF, "EUR", 1
+    )
+    record_keeper.add_security(
+        "ČSOB Dynamický penzijní fond", "CSOB.DYN", SecurityType.MUTUAL_FUND, "CZK", 1
+    )
+    serialized = json.dumps(record_keeper, cls=CustomJSONEncoder)
+    decoded = json.loads(serialized, cls=CustomJSONDecoder)
+    assert isinstance(decoded, RecordKeeper)
+    assert len(record_keeper.securities) == len(decoded.securities)
