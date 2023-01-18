@@ -3,14 +3,19 @@ import string
 import uuid
 from abc import ABC, abstractmethod
 from collections import defaultdict
+from collections.abc import Collection
 from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum, auto
-from typing import Any, Self
+from typing import Any
 
 from src.models.base_classes.account import Account, UnrelatedAccountError
 from src.models.base_classes.transaction import Transaction
-from src.models.custom_exceptions import InvalidCharacterError, TransferSameAccountError
+from src.models.custom_exceptions import (
+    InvalidCharacterError,
+    NotFoundError,
+    TransferSameAccountError,
+)
 from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
 from src.models.mixins.name_mixin import NameMixin
 from src.models.mixins.uuid_mixin import UUIDMixin
@@ -156,7 +161,7 @@ class Security(NameMixin, UUIDMixin, JSONSerializableMixin):
         }
 
     @staticmethod
-    def from_dict(data: dict[str, Any]) -> Self:
+    def from_dict(data: dict[str, Any]) -> "CashAccount":
         name = data["name"]
         symbol = data["symbol"]
         type_ = SecurityType[data["type_"]]
@@ -186,7 +191,7 @@ class SecurityAccount(Account):
         return tuple(self._transactions)
 
     def __repr__(self) -> str:
-        return f"SecurityAccount('{self.name}')"
+        return f"SecurityAccount(path='{self.path}')"
 
     def get_balance(self, currency: Currency) -> CashAmount:
         return sum(
@@ -212,15 +217,26 @@ class SecurityAccount(Account):
         return {
             "datatype": "SecurityAccount",
             "name": self._name,
+            "parent_path": self.parent_path,
             "uuid": str(self._uuid),
         }
 
     @staticmethod
-    def from_dict(data: dict[str, Any]) -> Self:
+    def from_dict(
+        data: dict[str, Any], account_groups: Collection[AccountGroup]
+    ) -> "SecurityAccount":
         name = data["name"]
         obj = SecurityAccount(name)
         obj._uuid = uuid.UUID(data["uuid"])
-        return obj
+
+        parent_path = data["parent_path"]
+        if parent_path is None:
+            return obj
+        for account_group in account_groups:
+            if account_group.path == parent_path:
+                obj.parent = account_group
+                return obj
+        raise NotFoundError("Parent AccountGroup not found within 'account_groups'.")
 
     def _validate_transaction(self, transaction: "SecurityRelatedTransaction") -> None:
         if not isinstance(transaction, SecurityRelatedTransaction):

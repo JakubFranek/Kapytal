@@ -46,7 +46,7 @@ def test_creation(
     assert cash_account.path == name
     assert (
         cash_account.__repr__()
-        == f"CashAccount('{name}', currency='{cash_account.currency.code}')"
+        == f"CashAccount(path='{name}', currency='{cash_account.currency.code}')"
     )
     assert cash_account.currency == currency
     assert cash_account.get_balance(currency) == initial_amount

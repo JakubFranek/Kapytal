@@ -67,16 +67,16 @@ class AccountGroup(NameMixin, GetBalanceMixin, JSONSerializableMixin):
         }
 
     @staticmethod
-    def from_dict(data: dict[str, Any], account_groups: list["AccountGroup"]) -> Self:
+    def from_dict(
+        data: dict[str, Any], account_groups: list["AccountGroup"]
+    ) -> "AccountGroup":
         name = data["name"]
         obj = AccountGroup(name)
         parent_path = data["parent_path"]
-        if parent_path is not None:
-            for account_group in account_groups:
-                if account_group.path == parent_path:
-                    obj.parent = account_group
-                    return obj
-            raise NotFoundError(
-                "Parent AccountGroup not found within 'account_groups'."
-            )
-        return obj
+        if parent_path is None:
+            return obj
+        for account_group in account_groups:
+            if account_group.path == parent_path:
+                obj.parent = account_group
+                return obj
+        raise NotFoundError("Parent AccountGroup not found within 'account_groups'.")

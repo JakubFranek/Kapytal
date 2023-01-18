@@ -119,9 +119,9 @@ def test_account_group() -> None:
 
 def test_account_group_parent_not_found() -> None:
     parent = AccountGroup("Test Name")
-    child_1 = AccountGroup("Child 1", parent)
-    child_1.parent = parent
-    account_groups = [child_1]
+    child = AccountGroup("Child 1", parent)
+    child.parent = parent
+    account_groups = [child]
     serialized = json.dumps(account_groups, cls=CustomJSONEncoder)
     decoded = json.loads(serialized, cls=CustomJSONDecoder)
     with pytest.raises(NotFoundError):
@@ -135,6 +135,7 @@ def test_cash_account() -> None:
     )
     serialized = json.dumps(cash_account, cls=CustomJSONEncoder)
     decoded = json.loads(serialized, cls=CustomJSONDecoder)
+    decoded = CashAccount.from_dict(decoded, None)
     assert isinstance(decoded, CashAccount)
     assert decoded.name == cash_account.name
     assert decoded.currency == cash_account.currency
@@ -143,13 +144,39 @@ def test_cash_account() -> None:
     assert decoded.uuid == cash_account.uuid
 
 
+def test_cash_account_parent_not_found() -> None:
+    currency = Currency("CZK", 2)
+    parent = AccountGroup("Test Name")
+    child = CashAccount(
+        "Child Account", currency, CashAmount(0, currency), datetime.now(tzinfo)
+    )
+    child.parent = parent
+    account_groups = [child]
+    serialized = json.dumps(account_groups, cls=CustomJSONEncoder)
+    decoded = json.loads(serialized, cls=CustomJSONDecoder)
+    with pytest.raises(NotFoundError):
+        CashAccount.from_dict(decoded[0], account_groups)
+
+
 def test_security_account() -> None:
     security_account = SecurityAccount("Test Name")
     serialized = json.dumps(security_account, cls=CustomJSONEncoder)
     decoded = json.loads(serialized, cls=CustomJSONDecoder)
+    decoded = SecurityAccount.from_dict(decoded, None)
     assert isinstance(decoded, SecurityAccount)
     assert decoded.name == security_account.name
     assert decoded.uuid == security_account.uuid
+
+
+def test_security_account_parent_not_found() -> None:
+    parent = AccountGroup("Test Name")
+    child = SecurityAccount("Child Account")
+    child.parent = parent
+    account_groups = [child]
+    serialized = json.dumps(account_groups, cls=CustomJSONEncoder)
+    decoded = json.loads(serialized, cls=CustomJSONDecoder)
+    with pytest.raises(NotFoundError):
+        SecurityAccount.from_dict(decoded[0], account_groups)
 
 
 def test_security() -> None:
@@ -194,3 +221,29 @@ def test_record_keeper_account_groups() -> None:
     decoded = json.loads(serialized, cls=CustomJSONDecoder)
     assert isinstance(decoded, RecordKeeper)
     assert len(record_keeper.account_groups) == len(decoded.account_groups)
+
+
+def test_record_keeper_accounts() -> None:
+    record_keeper = RecordKeeper()
+    record_keeper.add_currency("CZK", 2)
+    record_keeper.add_currency("EUR", 2)
+    record_keeper.add_account_group("Security Accounts", None)
+    record_keeper.add_account_group("Cash Accounts", None)
+    record_keeper.add_cash_account(
+        "CZK Account", "CZK", 0, datetime.now(tzinfo), "Cash Accounts"
+    )
+    record_keeper.add_cash_account(
+        "EUR Account", "EUR", 0, datetime.now(tzinfo), "Cash Accounts"
+    )
+    record_keeper.add_security_account("Degiro", "Security Accounts")
+    serialized = json.dumps(record_keeper, cls=CustomJSONEncoder)
+    decoded = json.loads(serialized, cls=CustomJSONDecoder)
+    assert isinstance(decoded, RecordKeeper)
+    assert len(record_keeper.accounts) == len(decoded.accounts)
+
+
+def test_record_keeper_invalid_account_datatype() -> None:
+    record_keeper = RecordKeeper()
+    dictionary = {"datatype": "not a valid Account sub-class"}
+    with pytest.raises(ValueError, match="Unexpected 'datatype' value."):
+        record_keeper.accounts_from_dicts([dictionary], None)

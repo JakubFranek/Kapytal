@@ -151,7 +151,7 @@ class Currency(JSONSerializableMixin):
         return {"datatype": "Currency", "code": self._code, "places": self._places}
 
     @staticmethod
-    def from_dict(data: dict[str, Any]) -> Self:
+    def from_dict(data: dict[str, Any]) -> "Currency":
         return Currency(code=data["code"], places=data["places"])
 
 
@@ -226,7 +226,9 @@ class ExchangeRate(JSONSerializableMixin):
         }
 
     @staticmethod
-    def from_dict(data: dict[str, Any], currencies: Collection[Currency]) -> Self:
+    def from_dict(
+        data: dict[str, Any], currencies: Collection[Currency]
+    ) -> "ExchangeRate":
         primary_code = data["primary_currency_code"]
         secondary_code = data["secondary_currency_code"]
 
@@ -350,7 +352,7 @@ class CashAmount(JSONSerializableMixin):
         }
 
     @staticmethod
-    def from_dict(data: dict[str, Any]) -> Self:
+    def from_dict(data: dict[str, Any]) -> "CashAmount":
         value = data["value"]
         currency = data["currency"]
         return CashAmount(value, currency)

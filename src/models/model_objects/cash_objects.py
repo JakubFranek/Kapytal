@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Collection
 from datetime import datetime
 from enum import Enum, auto
-from typing import Any, Self
+from typing import Any
 
 from src.models.base_classes.account import Account, UnrelatedAccountError
 from src.models.base_classes.transaction import Transaction
@@ -11,6 +11,7 @@ from src.models.constants import tzinfo
 from src.models.custom_exceptions import (
     AlreadyExistsError,
     InvalidOperationError,
+    NotFoundError,
     TransferSameAccountError,
 )
 from src.models.model_objects.account_group import AccountGroup
@@ -136,7 +137,7 @@ class CashAccount(Account):
         return tuple(self._transactions)
 
     def __repr__(self) -> str:
-        return f"CashAccount('{self.name}', currency='{self.currency.code}')"
+        return f"CashAccount(path='{self.path}', currency='{self.currency.code}')"
 
     def get_balance(self, currency: Currency) -> CashAmount:
         return self._balance_history[-1][1].convert(currency)
@@ -164,18 +165,30 @@ class CashAccount(Account):
             "currency": self._currency,
             "initial_balance": self._initial_balance,
             "initial_datetime": self._initial_datetime,
+            "parent_path": self.parent_path,
             "uuid": str(self._uuid),
         }
 
     @staticmethod
-    def from_dict(data: dict[str, Any]) -> Self:
+    def from_dict(
+        data: dict[str, Any], account_groups: Collection[AccountGroup]
+    ) -> "CashAccount":
         name = data["name"]
         currency = data["currency"]
         initial_balance = data["initial_balance"]
         initial_datetime = data["initial_datetime"]
+
         obj = CashAccount(name, currency, initial_balance, initial_datetime)
         obj._uuid = uuid.UUID(data["uuid"])
-        return obj
+
+        parent_path = data["parent_path"]
+        if parent_path is None:
+            return obj
+        for account_group in account_groups:
+            if account_group.path == parent_path:
+                obj.parent = account_group
+                return obj
+        raise NotFoundError("Parent AccountGroup not found within 'account_groups'.")
 
     def _update_balance(self) -> None:
         datetime_balance_history = [(self.initial_datetime, self.initial_balance)]

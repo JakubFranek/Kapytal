@@ -1099,6 +1099,7 @@ class RecordKeeper(JSONSerializableMixin):
             "currencies": self._currencies,
             "exchange_rates": self._exchange_rates,
             "account_groups": sorted_account_groups,
+            "accounts": self._accounts,
         }
 
     @staticmethod
@@ -1106,21 +1107,59 @@ class RecordKeeper(JSONSerializableMixin):
         obj = RecordKeeper()
         obj._currencies = data["currencies"]
 
-        exchange_rates_dicts: list[dict[str, str]] = data["exchange_rates"]
-        exchange_rates = []
-        for exchange_rate_dict in exchange_rates_dicts:
-            exchange_rate = ExchangeRate.from_dict(exchange_rate_dict, obj._currencies)
-            exchange_rates.append(exchange_rate)
-        obj._exchange_rates = exchange_rates
+        exchange_rates_dicts = data["exchange_rates"]
+        obj._exchange_rates = RecordKeeper.exchange_rates_from_dicts(
+            exchange_rates_dicts, obj._currencies
+        )
 
         account_group_dicts = data["account_groups"]
+        obj._account_groups = RecordKeeper.account_groups_from_dicts(
+            account_group_dicts
+        )
+
+        account_dicts = data["accounts"]
+        obj._accounts = RecordKeeper.accounts_from_dicts(
+            account_dicts, obj._account_groups
+        )
+
+        return obj
+
+    @staticmethod
+    def exchange_rates_from_dicts(
+        exchange_rate_dicts: Collection[dict[str, Any]],
+        currencies: Collection[Currency],
+    ) -> list[ExchangeRate]:
+        exchange_rates = []
+        for exchange_rate_dict in exchange_rate_dicts:
+            exchange_rate = ExchangeRate.from_dict(exchange_rate_dict, currencies)
+            exchange_rates.append(exchange_rate)
+        return exchange_rates
+
+    @staticmethod
+    def account_groups_from_dicts(
+        account_group_dicts: Collection[dict[str, Any]]
+    ) -> list[AccountGroup]:
         account_groups = []
         for account_group_dict in account_group_dicts:
             account_group = AccountGroup.from_dict(account_group_dict, account_groups)
             account_groups.append(account_group)
-        obj._account_groups = account_groups
+        return account_groups
 
-        return obj
+    @staticmethod
+    def accounts_from_dicts(
+        account_dicts: Collection[dict[str, Any]],
+        account_groups: Collection[AccountGroup],
+    ) -> list[Account]:
+        accounts = []
+        for account_dict in account_dicts:
+            if account_dict["datatype"] == "CashAccount":
+                account = CashAccount.from_dict(account_dict, account_groups)
+            elif account_dict["datatype"] == "SecurityAccount":
+                account = SecurityAccount.from_dict(account_dict, account_groups)
+            else:
+                raise ValueError("Unexpected 'datatype' value.")
+            accounts.append(account)
+        return accounts
 
     def _check_account_exists(self, name: str, parent_path: str | None) -> None:
         if not isinstance(name, str):
