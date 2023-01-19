@@ -161,8 +161,8 @@ class CashAccount(Account):
         return {
             "datatype": "CashAccount",
             "name": self._name,
-            "currency": self._currency,
-            "initial_balance": self._initial_balance,
+            "currency_code": self._currency.code,
+            "initial_balance": self._initial_balance.value,
             "initial_datetime": self._initial_datetime,
             "parent_path": self.parent_path,
             "uuid": str(self._uuid),
@@ -170,14 +170,28 @@ class CashAccount(Account):
 
     @staticmethod
     def from_dict(
-        data: dict[str, Any], account_groups: Collection[AccountGroup]
+        data: dict[str, Any],
+        account_groups: Collection[AccountGroup],
+        currencies: Collection[Currency],
     ) -> "CashAccount":
         name = data["name"]
-        currency = data["currency"]
-        initial_balance = data["initial_balance"]
+        initial_balance_value = data["initial_balance"]
+
         initial_datetime = data["initial_datetime"]
 
-        obj = CashAccount(name, currency, initial_balance, initial_datetime)
+        currency_code = data["currency_code"]
+        for currency in currencies:
+            if currency.code == currency_code:
+                searched_currency = currency
+                break
+        else:
+            raise NotFoundError(
+                f"Currency '{currency_code}' not found in 'currencies'."
+            )
+
+        initial_balance = CashAmount(initial_balance_value, searched_currency)
+
+        obj = CashAccount(name, searched_currency, initial_balance, initial_datetime)
         obj._uuid = uuid.UUID(data["uuid"])
 
         parent_path = data["parent_path"]
@@ -344,6 +358,7 @@ class CashTransaction(CashRelatedTransaction):
         payees: list[Attribute],
         categories: list[Category],
         tags: list[Attribute],
+        currencies: list[Currency],
     ) -> "CashTransaction":
         description = data["description"]
         datetime_ = data["datetime_"]
@@ -367,11 +382,11 @@ class CashTransaction(CashRelatedTransaction):
         else:
             raise NotFoundError(f"Payee '{payee_name}' not found in 'payees'.")
 
-        category_path_amount_pairs: list[list[str, CashAmount]] = data[
+        category_path_amount_pairs: list[list[str, dict[str, Any]]] = data[
             "category_path_amount_pairs"
         ]
         decoded_category_amount_pairs = []
-        for category_path, amount in category_path_amount_pairs:
+        for category_path, amount_dict in category_path_amount_pairs:
             for category in categories:
                 if category.path == category_path:
                     searched_category = category
@@ -380,6 +395,7 @@ class CashTransaction(CashRelatedTransaction):
                 raise NotFoundError(
                     f"Category path='{category_path}' not found in 'categories'."
                 )
+            amount = CashAmount.from_dict(amount_dict, currencies)
             tup = (searched_category, amount)
             decoded_category_amount_pairs.append(tup)
 
@@ -387,13 +403,15 @@ class CashTransaction(CashRelatedTransaction):
             "tag_name_amount_pairs"
         ]
         decoded_tag_amount_pairs = []
-        for tag_name, amount in tag_name_amount_pairs:
+        for tag_name, amount_dict in tag_name_amount_pairs:
             for tag in tags:
                 if tag.name == tag_name:
-                    tup = (tag, amount)
+                    searched_tag = tag
                     break
             else:
                 raise NotFoundError(f"Tag '{tag_name}' not found in 'tags'.")
+            amount = CashAmount.from_dict(amount_dict, currencies)
+            tup = (searched_tag, amount)
             decoded_tag_amount_pairs.append(tup)
 
         obj = CashTransaction(

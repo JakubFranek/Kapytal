@@ -4,7 +4,7 @@ from decimal import Decimal
 from typing import Any
 
 from src.models.model_objects.attributes import Attribute
-from src.models.model_objects.currency import CashAmount, Currency
+from src.models.model_objects.currency import Currency
 from src.models.record_keeper import RecordKeeper
 
 
@@ -23,8 +23,6 @@ class CustomJSONDecoder(json.JSONDecoder):
                     return RecordKeeper.from_dict(obj)
                 case "Currency":
                     return Currency.from_dict(obj)
-                case "CashAmount":
-                    return CashAmount.from_dict(obj)
                 case "Attribute":
                     return Attribute.from_dict(obj)
                 case _:

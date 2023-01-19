@@ -75,7 +75,17 @@ def test_cash_amount() -> None:
     cash_amount = CashAmount(Decimal("1.23"), currency)
     serialized = json.dumps(cash_amount, cls=CustomJSONEncoder)
     decoded = json.loads(serialized, cls=CustomJSONDecoder)
+    decoded = CashAmount.from_dict(decoded, [currency])
     assert decoded == cash_amount
+
+
+def test_cash_amount_currency_not_found() -> None:
+    currency = Currency("EUR", 2)
+    cash_amount = CashAmount(Decimal("1.23"), currency)
+    serialized = json.dumps(cash_amount, cls=CustomJSONEncoder)
+    decoded = json.loads(serialized, cls=CustomJSONDecoder)
+    with pytest.raises(NotFoundError):
+        CashAmount.from_dict(decoded, [])
 
 
 @given(attribute=attributes())
@@ -161,7 +171,7 @@ def test_cash_account() -> None:
     )
     serialized = json.dumps(cash_account, cls=CustomJSONEncoder)
     decoded = json.loads(serialized, cls=CustomJSONDecoder)
-    decoded = CashAccount.from_dict(decoded, None)
+    decoded = CashAccount.from_dict(decoded, None, [currency])
     assert isinstance(decoded, CashAccount)
     assert decoded.name == cash_account.name
     assert decoded.currency == cash_account.currency
@@ -178,10 +188,24 @@ def test_cash_account_parent_not_found() -> None:
     )
     child.parent = parent
     account_groups = [child]
-    serialized = json.dumps(account_groups, cls=CustomJSONEncoder)
+    serialized = json.dumps(child, cls=CustomJSONEncoder)
     decoded = json.loads(serialized, cls=CustomJSONDecoder)
     with pytest.raises(NotFoundError):
-        CashAccount.from_dict(decoded[0], account_groups)
+        CashAccount.from_dict(decoded, account_groups, [currency])
+
+
+def test_cash_account_currency_not_found() -> None:
+    currency = Currency("CZK", 2)
+    parent = AccountGroup("Test Name")
+    child = CashAccount(
+        "Child Account", currency, CashAmount(0, currency), datetime.now(tzinfo)
+    )
+    child.parent = parent
+    account_groups = [parent]
+    serialized = json.dumps(child, cls=CustomJSONEncoder)
+    decoded = json.loads(serialized, cls=CustomJSONDecoder)
+    with pytest.raises(NotFoundError):
+        CashAccount.from_dict(decoded, account_groups, [])
 
 
 def test_security_account() -> None:
@@ -282,7 +306,7 @@ def test_record_keeper_invalid_account_datatype() -> None:
     record_keeper = RecordKeeper()
     dictionary = {"datatype": "not a valid Account sub-class"}
     with pytest.raises(ValueError, match="Unexpected 'datatype' value."):
-        record_keeper.accounts_from_dicts([dictionary], None)
+        record_keeper.accounts_from_dicts([dictionary], None, None)
 
 
 def test_record_keeper_securities() -> None:
@@ -344,6 +368,7 @@ def test_cash_transaction(transaction: CashTransaction) -> None:
         [transaction.payee],
         transaction.categories,
         transaction.tags,
+        [transaction.currency],
     )
     assert isinstance(decoded, CashTransaction)
     assert decoded.uuid == transaction.uuid
@@ -368,6 +393,7 @@ def test_cash_transaction_account_not_found(transaction: CashTransaction) -> Non
             [transaction.payee],
             transaction.categories,
             transaction.tags,
+            [transaction.currency],
         )
 
 
@@ -382,6 +408,7 @@ def test_cash_transaction_payee_not_found(transaction: CashTransaction) -> None:
             [],
             transaction.categories,
             transaction.tags,
+            [transaction.currency],
         )
 
 
@@ -396,6 +423,7 @@ def test_cash_transaction_category_not_found(transaction: CashTransaction) -> No
             [transaction.payee],
             [],
             transaction.tags,
+            [transaction.currency],
         )
 
 
@@ -418,4 +446,5 @@ def test_cash_transaction_tag_not_found(transaction: CashTransaction) -> None:
             [transaction.payee],
             transaction.categories,
             [],
+            [transaction.currency],
         )

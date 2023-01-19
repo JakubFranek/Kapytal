@@ -7,6 +7,7 @@ from decimal import Decimal
 from functools import total_ordering
 from typing import Any, Self
 
+from src.models.custom_exceptions import NotFoundError
 from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
 
 
@@ -349,11 +350,22 @@ class CashAmount(JSONSerializableMixin):
         return {
             "datatype": "CashAmount",
             "value": self.value,
-            "currency": self.currency,
+            "currency_code": self.currency.code,
         }
 
     @staticmethod
-    def from_dict(data: dict[str, Any]) -> "CashAmount":
+    def from_dict(
+        data: dict[str, Any], currencies: Collection[Currency]
+    ) -> "CashAmount":
         value = data["value"]
-        currency = data["currency"]
-        return CashAmount(value, currency)
+        currency_code = data["currency_code"]
+        for currency in currencies:
+            if currency.code == currency_code:
+                searched_currency = currency
+                break
+        else:
+            raise NotFoundError(
+                f"Currency '{currency_code}' not found in 'currencies'."
+            )
+
+        return CashAmount(value, searched_currency)

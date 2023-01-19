@@ -1129,7 +1129,7 @@ class RecordKeeper(JSONSerializableMixin):
 
         account_dicts = data["accounts"]
         obj._accounts = RecordKeeper.accounts_from_dicts(
-            account_dicts, obj._account_groups
+            account_dicts, obj._account_groups, obj._currencies
         )
 
         obj._payees = data["payees"]
@@ -1174,11 +1174,14 @@ class RecordKeeper(JSONSerializableMixin):
     def accounts_from_dicts(
         account_dicts: Collection[dict[str, Any]],
         account_groups: Collection[AccountGroup],
+        currencies: Collection[Currency],
     ) -> list[Account]:
         accounts = []
         for account_dict in account_dicts:
             if account_dict["datatype"] == "CashAccount":
-                account = CashAccount.from_dict(account_dict, account_groups)
+                account = CashAccount.from_dict(
+                    account_dict, account_groups, currencies
+                )
             elif account_dict["datatype"] == "SecurityAccount":
                 account = SecurityAccount.from_dict(account_dict, account_groups)
             else:
