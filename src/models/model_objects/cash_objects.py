@@ -25,6 +25,11 @@ from src.models.model_objects.attributes import (
     InvalidCategoryTypeError,
 )
 from src.models.model_objects.currency import CashAmount, Currency, CurrencyError
+from src.models.utilities.find_helpers import (
+    find_account_by_uuid,
+    find_attribute_by_name,
+    find_category_by_path,
+)
 
 
 class UnrelatedTransactionError(ValueError):
@@ -1028,7 +1033,6 @@ class RefundTransaction(CashRelatedTransaction):
         self._refunded_transaction.remove_refund(self)
         self._account.remove_transaction(self)
 
-    # TODO: provide implementation for JSON serdes methods
     def to_dict(self) -> dict[str, Any]:
         tag_name_amount_pairs = [
             (tag.name, amount) for tag, amount in self._tag_amount_pairs
@@ -1076,7 +1080,6 @@ class RefundTransaction(CashRelatedTransaction):
                 "'transactions'."
             )
 
-        # REFACTOR: many of these search methods are shared by CashTransaction
         payee_name = data["payee_name"]
         payee = find_attribute_by_name(payee_name, payees)
 
@@ -1392,24 +1395,3 @@ def validate_collection_of_tuple_pairs(
             "Second element of 'collection' tuples must be of type "
             f"{second_type.__name__}."
         )
-
-
-def find_account_by_uuid(uuid: uuid.UUID, accounts: list[Account]) -> Account:
-    for account in accounts:
-        if account.uuid == uuid:
-            return account
-    raise NotFoundError(f"Account uuid='{uuid}' not found.")
-
-
-def find_attribute_by_name(name: str, attributes: list[Attribute]) -> Attribute:
-    for attribute in attributes:
-        if attribute.name == name:
-            return attribute
-    raise NotFoundError(f"Attribute name='{name}' not found.")
-
-
-def find_category_by_path(path: str, categories: list[Category]) -> Category:
-    for attribute in categories:
-        if attribute.path == path:
-            return attribute
-    raise NotFoundError(f"Category path='{path}' not found.")

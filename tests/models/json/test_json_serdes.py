@@ -28,6 +28,8 @@ from src.models.model_objects.currency import CashAmount, Currency, ExchangeRate
 from src.models.model_objects.security_objects import (
     Security,
     SecurityAccount,
+    SecurityTransaction,
+    SecurityTransfer,
     SecurityType,
 )
 from src.models.record_keeper import RecordKeeper
@@ -36,6 +38,8 @@ from tests.models.test_assets.composites import (
     cash_transactions,
     cash_transfers,
     categories,
+    security_transactions,
+    security_transfers,
 )
 
 
@@ -550,3 +554,61 @@ def test_refund_transaction_refunded_transaction_not_found(
             transaction.tags,
             transaction.currencies,
         )
+
+
+@given(transaction=security_transactions())
+def test_security_transaction(transaction: SecurityTransaction) -> None:
+    serialized = json.dumps(transaction, cls=CustomJSONEncoder)
+    decoded = json.loads(serialized, cls=CustomJSONDecoder)
+    decoded = SecurityTransaction.from_dict(
+        decoded,
+        [transaction.cash_account, transaction.security_account],
+        [transaction.currency],
+        [transaction.security],
+    )
+    assert isinstance(decoded, SecurityTransaction)
+    assert decoded.uuid == transaction.uuid
+    assert decoded.description == transaction.description
+    assert decoded.datetime_ == transaction.datetime_
+    assert decoded.datetime_created == transaction.datetime_created
+    assert decoded.type_ == transaction.type_
+    assert decoded.security == transaction.security
+    assert decoded.price_per_share == transaction.price_per_share
+    assert decoded.fees == transaction.fees
+    assert decoded.cash_account == transaction.cash_account
+    assert decoded.security_account == transaction.security_account
+
+
+# REFACTOR: remove these tests in favor of smaller unit tests of helpers
+@given(transaction=security_transactions())
+def test_security_transaction_security_not_found(
+    transaction: SecurityTransaction,
+) -> None:
+    serialized = json.dumps(transaction, cls=CustomJSONEncoder)
+    decoded = json.loads(serialized, cls=CustomJSONDecoder)
+    with pytest.raises(NotFoundError):
+        SecurityTransaction.from_dict(
+            decoded,
+            [transaction.cash_account, transaction.security_account],
+            [transaction.currency],
+            [],
+        )
+
+
+@given(transaction=security_transfers())
+def test_security_transfer(transaction: SecurityTransfer) -> None:
+    serialized = json.dumps(transaction, cls=CustomJSONEncoder)
+    decoded = json.loads(serialized, cls=CustomJSONDecoder)
+    decoded = SecurityTransfer.from_dict(
+        decoded,
+        [transaction.sender, transaction.recipient],
+        [transaction.security],
+    )
+    assert isinstance(decoded, SecurityTransfer)
+    assert decoded.uuid == transaction.uuid
+    assert decoded.description == transaction.description
+    assert decoded.datetime_ == transaction.datetime_
+    assert decoded.datetime_created == transaction.datetime_created
+    assert decoded.security == transaction.security
+    assert decoded.sender == transaction.sender
+    assert decoded.recipient == transaction.recipient

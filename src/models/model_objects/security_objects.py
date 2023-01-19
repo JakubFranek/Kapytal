@@ -22,6 +22,10 @@ from src.models.mixins.uuid_mixin import UUIDMixin
 from src.models.model_objects.account_group import AccountGroup
 from src.models.model_objects.cash_objects import CashAccount, CashRelatedTransaction
 from src.models.model_objects.currency import CashAmount, Currency, CurrencyError
+from src.models.utilities.find_helpers import (
+    find_account_by_uuid,
+    find_security_by_uuid,
+)
 
 
 class PriceNotFoundError(ValueError):
@@ -225,7 +229,6 @@ class SecurityAccount(Account):
         self._securities[transaction.security] -= transaction.get_shares(self)
         self._transactions.remove(transaction)
 
-    # TODO: do something with transactions
     def to_dict(self) -> dict[str, Any]:
         return {
             "datatype": "SecurityAccount",
@@ -386,13 +389,58 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
         self._cash_account.remove_transaction(self)
         self._security_account.remove_transaction(self)
 
-    # TODO: provide implementation for JSON serdes methods
     def to_dict(self) -> dict[str, Any]:
-        return super().to_dict()
+        return {
+            "datatype": "SecurityTransaction",
+            "description": self._description,
+            "datetime_": self._datetime,
+            "type_": self._type.name,
+            "security_uuid": str(self._security.uuid),
+            "shares": self._shares,
+            "price_per_share": self._price_per_share,
+            "fees": self._fees,
+            "security_account_uuid": str(self._security_account.uuid),
+            "cash_account_uuid": str(self._cash_account.uuid),
+            "datetime_created": self._datetime_created,
+            "uuid": str(self._uuid),
+        }
 
     @staticmethod
-    def from_dict(data: dict[str, Any]) -> "JSONSerializableMixin":
-        return super().from_dict(data)
+    def from_dict(
+        data: dict[str, Any],
+        accounts: list[Account],
+        currencies: list[Currency],
+        securities: list[Security],
+    ) -> "SecurityTransaction":
+        description = data["description"]
+        datetime_ = data["datetime_"]
+        type_ = SecurityTransactionType[data["type_"]]
+        shares = data["shares"]
+        price_per_share = CashAmount.from_dict(data["price_per_share"], currencies)
+        fees = CashAmount.from_dict(data["fees"], currencies)
+
+        security_uuid = uuid.UUID(data["security_uuid"])
+        security = find_security_by_uuid(security_uuid, securities)
+
+        cash_account_uuid = uuid.UUID(data["cash_account_uuid"])
+        security_account_uuid = uuid.UUID(data["security_account_uuid"])
+        cash_account = find_account_by_uuid(cash_account_uuid, accounts)
+        security_account = find_account_by_uuid(security_account_uuid, accounts)
+
+        obj = SecurityTransaction(
+            description=description,
+            datetime_=datetime_,
+            type_=type_,
+            security=security,
+            shares=shares,
+            price_per_share=price_per_share,
+            fees=fees,
+            security_account=security_account,
+            cash_account=cash_account,
+        )
+        obj._datetime_created = data["datetime_created"]
+        obj._uuid = uuid.UUID(data["uuid"])
+        return obj
 
     def set_attributes(
         self,
@@ -625,13 +673,48 @@ class SecurityTransfer(SecurityRelatedTransaction):
         self._sender.remove_transaction(self)
         self._recipient.remove_transaction(self)
 
-    # TODO: provide implementation for JSON serdes methods
     def to_dict(self) -> dict[str, Any]:
-        return super().to_dict()
+        return {
+            "datatype": "SecurityTransfer",
+            "description": self._description,
+            "datetime_": self._datetime,
+            "security_uuid": str(self._security.uuid),
+            "shares": self._shares,
+            "sender_uuid": str(self._sender.uuid),
+            "recipient_uuid": str(self._recipient.uuid),
+            "datetime_created": self._datetime_created,
+            "uuid": str(self._uuid),
+        }
 
     @staticmethod
-    def from_dict(data: dict[str, Any]) -> "SecurityTransfer":
-        return super().from_dict(data)
+    def from_dict(
+        data: dict[str, Any],
+        accounts: list[Account],
+        securities: list[Security],
+    ) -> "SecurityTransfer":
+        description = data["description"]
+        datetime_ = data["datetime_"]
+        shares = data["shares"]
+
+        security_uuid = uuid.UUID(data["security_uuid"])
+        security = find_security_by_uuid(security_uuid, securities)
+
+        sender_uuid = uuid.UUID(data["sender_uuid"])
+        recipient_uuid = uuid.UUID(data["recipient_uuid"])
+        sender = find_account_by_uuid(sender_uuid, accounts)
+        recipient = find_account_by_uuid(recipient_uuid, accounts)
+
+        obj = SecurityTransfer(
+            description=description,
+            datetime_=datetime_,
+            security=security,
+            shares=shares,
+            sender=sender,
+            recipient=recipient,
+        )
+        obj._datetime_created = data["datetime_created"]
+        obj._uuid = uuid.UUID(data["uuid"])
+        return obj
 
     def set_attributes(
         self,
