@@ -1,5 +1,5 @@
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 from decimal import Decimal
 
 import pytest
@@ -20,7 +20,9 @@ from src.models.model_objects.attributes import (
 from src.models.model_objects.cash_objects import (
     CashAccount,
     CashTransaction,
+    CashTransactionType,
     CashTransfer,
+    RefundTransaction,
 )
 from src.models.model_objects.currency import CashAmount, Currency, ExchangeRate
 from src.models.model_objects.security_objects import (
@@ -483,5 +485,68 @@ def test_cash_transfer_account_not_found(transaction: CashTransfer) -> None:
         CashTransfer.from_dict(
             decoded,
             [],
+            transaction.currencies,
+        )
+
+
+@given(transaction=cash_transactions(type_=CashTransactionType.EXPENSE))
+def test_refund_transaction(transaction: CashTransaction) -> None:
+    refund = RefundTransaction(
+        "A short description",
+        transaction.datetime_ + timedelta(days=1),
+        transaction.account,
+        transaction,
+        transaction.category_amount_pairs,
+        transaction.tag_amount_pairs,
+        transaction.payee,
+    )
+    transaction.remove_refund(refund)
+    serialized = json.dumps(refund, cls=CustomJSONEncoder)
+    decoded = json.loads(serialized, cls=CustomJSONDecoder)
+    decoded = RefundTransaction.from_dict(
+        decoded,
+        [transaction.account],
+        [transaction],
+        [transaction.payee],
+        transaction.categories,
+        transaction.tags,
+        transaction.currencies,
+    )
+    assert isinstance(decoded, RefundTransaction)
+    assert decoded.uuid == refund.uuid
+    assert decoded.description == refund.description
+    assert decoded.datetime_ == refund.datetime_
+    assert decoded.datetime_created == refund.datetime_created
+    assert decoded.account == refund.account
+    assert decoded.refunded_transaction.uuid == transaction.uuid
+    assert decoded.payee == refund.payee
+    assert decoded.category_amount_pairs == refund.category_amount_pairs
+    assert decoded.tag_amount_pairs == refund.tag_amount_pairs
+
+
+@given(transaction=cash_transactions(type_=CashTransactionType.EXPENSE))
+def test_refund_transaction_refunded_transaction_not_found(
+    transaction: CashTransaction,
+) -> None:
+    refund = RefundTransaction(
+        "A short description",
+        transaction.datetime_ + timedelta(days=1),
+        transaction.account,
+        transaction,
+        transaction.category_amount_pairs,
+        transaction.tag_amount_pairs,
+        transaction.payee,
+    )
+    transaction.remove_refund(refund)
+    serialized = json.dumps(refund, cls=CustomJSONEncoder)
+    decoded = json.loads(serialized, cls=CustomJSONDecoder)
+    with pytest.raises(NotFoundError):
+        RefundTransaction.from_dict(
+            decoded,
+            [transaction.account],
+            [],
+            [transaction.payee],
+            transaction.categories,
+            transaction.tags,
             transaction.currencies,
         )

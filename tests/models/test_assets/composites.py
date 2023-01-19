@@ -123,9 +123,11 @@ def cash_transactions(
     min_datetime: datetime = min_datetime,
     max_datetime: datetime = datetime.max,
     account: CashAccount = None,
+    type_: CashTransactionType | None = None,
 ) -> CashTransaction:
     description = draw(st.text(min_size=0, max_size=256))
-    type_ = draw(st.sampled_from(CashTransactionType))
+    if type_ is None:
+        type_ = draw(st.sampled_from(CashTransactionType))
     if account is None:
         account = draw(cash_accounts(currency=currency))
     currency = account.currency

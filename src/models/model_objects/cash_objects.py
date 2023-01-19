@@ -330,7 +330,6 @@ class CashTransaction(CashRelatedTransaction):
             f"{self.datetime_.strftime('%Y-%m-%d')})"
         )
 
-    # TODO: store only category paths (and types?)
     def to_dict(self) -> dict[str, Any]:
         tag_name_amount_pairs = [
             (tag.name, amount) for tag, amount in self._tag_amount_pairs
@@ -365,38 +364,19 @@ class CashTransaction(CashRelatedTransaction):
         type_ = CashTransactionType[data["type_"]]
 
         account_uuid = uuid.UUID(data["account_uuid"])
-        for account in accounts:
-            if account.uuid == account_uuid:
-                cash_account = account
-                break
-        else:
-            raise NotFoundError(
-                f"Account uuid='{account_uuid}' not found in 'accounts'."
-            )
+        cash_account = find_account_by_uuid(account_uuid, accounts)
 
         payee_name = data["payee_name"]
-        for payee in payees:
-            if payee.name == payee_name:
-                payee_obj = payee
-                break
-        else:
-            raise NotFoundError(f"Payee '{payee_name}' not found in 'payees'.")
+        payee = find_attribute_by_name(payee_name, payees)
 
         category_path_amount_pairs: list[list[str, dict[str, Any]]] = data[
             "category_path_amount_pairs"
         ]
         decoded_category_amount_pairs = []
         for category_path, amount_dict in category_path_amount_pairs:
-            for category in categories:
-                if category.path == category_path:
-                    searched_category = category
-                    break
-            else:
-                raise NotFoundError(
-                    f"Category path='{category_path}' not found in 'categories'."
-                )
+            category = find_category_by_path(category_path, categories)
             amount = CashAmount.from_dict(amount_dict, currencies)
-            tup = (searched_category, amount)
+            tup = (category, amount)
             decoded_category_amount_pairs.append(tup)
 
         tag_name_amount_pairs: list[list[str, CashAmount]] = data[
@@ -404,14 +384,9 @@ class CashTransaction(CashRelatedTransaction):
         ]
         decoded_tag_amount_pairs = []
         for tag_name, amount_dict in tag_name_amount_pairs:
-            for tag in tags:
-                if tag.name == tag_name:
-                    searched_tag = tag
-                    break
-            else:
-                raise NotFoundError(f"Tag '{tag_name}' not found in 'tags'.")
+            tag = find_attribute_by_name(tag_name, tags)
             amount = CashAmount.from_dict(amount_dict, currencies)
-            tup = (searched_tag, amount)
+            tup = (tag, amount)
             decoded_tag_amount_pairs.append(tup)
 
         obj = CashTransaction(
@@ -419,7 +394,7 @@ class CashTransaction(CashRelatedTransaction):
             datetime_=datetime_,
             type_=type_,
             account=cash_account,
-            payee=payee_obj,
+            payee=payee,
             category_amount_pairs=decoded_category_amount_pairs,
             tag_amount_pairs=decoded_tag_amount_pairs,
         )
@@ -789,7 +764,6 @@ class CashTransfer(CashRelatedTransaction):
         self._sender.remove_transaction(self)
         self._recipient.remove_transaction(self)
 
-    # TODO: provide implementation for JSON serdes methods
     # IDEA: maybe partly rely on super? (description,datetime?)
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -815,24 +789,8 @@ class CashTransfer(CashRelatedTransaction):
 
         sender_uuid = uuid.UUID(data["sender_uuid"])
         recipient_uuid = uuid.UUID(data["recipient_uuid"])
-        sender = None
-        recipient = None
-        for account in accounts:
-            if account.uuid == sender_uuid:
-                sender = account
-            if account.uuid == recipient_uuid:
-                recipient = account
-            if sender is not None and recipient is not None:
-                break
-        else:
-            uuids_not_found = []
-            if sender is None:
-                uuids_not_found.append(sender_uuid)
-            if recipient is None:
-                uuids_not_found.append(recipient_uuid)
-            raise NotFoundError(
-                f"Account uuids=[{uuids_not_found}] not found in 'accounts'."
-            )
+        sender = find_account_by_uuid(sender_uuid, accounts)
+        recipient = find_account_by_uuid(recipient_uuid, accounts)
 
         amount_sent = CashAmount.from_dict(data["amount_sent"], currencies)
         amount_received = CashAmount.from_dict(data["amount_received"], currencies)
@@ -1072,11 +1030,88 @@ class RefundTransaction(CashRelatedTransaction):
 
     # TODO: provide implementation for JSON serdes methods
     def to_dict(self) -> dict[str, Any]:
-        return super().to_dict()
+        tag_name_amount_pairs = [
+            (tag.name, amount) for tag, amount in self._tag_amount_pairs
+        ]
+        category_path_amount_pairs = [
+            (category.path, amount) for category, amount in self._category_amount_pairs
+        ]
+        return {
+            "datatype": "RefundTransaction",
+            "description": self._description,
+            "datetime_": self._datetime,
+            "account_uuid": str(self._account.uuid),
+            "refunded_transaction_uuid": str(self._refunded_transaction.uuid),
+            "payee_name": self._payee.name,
+            "category_path_amount_pairs": category_path_amount_pairs,
+            "tag_name_amount_pairs": tag_name_amount_pairs,
+            "datetime_created": self._datetime_created,
+            "uuid": str(self._uuid),
+        }
 
     @staticmethod
-    def from_dict(data: dict[str, Any]) -> "RefundTransaction":
-        return super().from_dict(data)
+    def from_dict(
+        data: dict[str, Any],
+        accounts: list[Account],
+        transactions: list[Transaction],
+        payees: list[Attribute],
+        categories: list[Category],
+        tags: list[Attribute],
+        currencies: list[Currency],
+    ) -> "CashTransaction":
+        description = data["description"]
+        datetime_ = data["datetime_"]
+
+        account_uuid = uuid.UUID(data["account_uuid"])
+        cash_account = find_account_by_uuid(account_uuid, accounts)
+
+        transaction_uuid = uuid.UUID(data["refunded_transaction_uuid"])
+        for transaction in transactions:
+            if transaction.uuid == transaction_uuid:
+                refunded_transaction = transaction
+                break
+        else:
+            raise NotFoundError(
+                f"Refunded transaction uuid='{transaction_uuid}' not found in "
+                "'transactions'."
+            )
+
+        # REFACTOR: many of these search methods are shared by CashTransaction
+        payee_name = data["payee_name"]
+        payee = find_attribute_by_name(payee_name, payees)
+
+        category_path_amount_pairs: list[list[str, dict[str, Any]]] = data[
+            "category_path_amount_pairs"
+        ]
+        decoded_category_amount_pairs = []
+        for category_path, amount_dict in category_path_amount_pairs:
+            category = find_category_by_path(category_path, categories)
+            amount = CashAmount.from_dict(amount_dict, currencies)
+            tup = (category, amount)
+            decoded_category_amount_pairs.append(tup)
+
+        tag_name_amount_pairs: list[list[str, CashAmount]] = data[
+            "tag_name_amount_pairs"
+        ]
+        decoded_tag_amount_pairs = []
+        for tag_name, amount_dict in tag_name_amount_pairs:
+            tag = find_attribute_by_name(tag_name, tags)
+            amount = CashAmount.from_dict(amount_dict, currencies)
+            tup = (tag, amount)
+            decoded_tag_amount_pairs.append(tup)
+
+        obj = RefundTransaction(
+            description=description,
+            datetime_=datetime_,
+            account=cash_account,
+            refunded_transaction=refunded_transaction,
+            payee=payee,
+            category_amount_pairs=decoded_category_amount_pairs,
+            tag_amount_pairs=decoded_tag_amount_pairs,
+        )
+        obj._datetime_created = data["datetime_created"]
+        obj._uuid = uuid.UUID(data["uuid"])
+        return obj
 
     def add_tags(self, tags: Collection[Attribute]) -> None:  # noqa: U100
         raise InvalidOperationError("Adding tags to RefundTransaction is forbidden.")
@@ -1357,3 +1392,24 @@ def validate_collection_of_tuple_pairs(
             "Second element of 'collection' tuples must be of type "
             f"{second_type.__name__}."
         )
+
+
+def find_account_by_uuid(uuid: uuid.UUID, accounts: list[Account]) -> Account:
+    for account in accounts:
+        if account.uuid == uuid:
+            return account
+    raise NotFoundError(f"Account uuid='{uuid}' not found.")
+
+
+def find_attribute_by_name(name: str, attributes: list[Attribute]) -> Attribute:
+    for attribute in attributes:
+        if attribute.name == name:
+            return attribute
+    raise NotFoundError(f"Attribute name='{name}' not found.")
+
+
+def find_category_by_path(path: str, categories: list[Category]) -> Category:
+    for attribute in categories:
+        if attribute.path == path:
+            return attribute
+    raise NotFoundError(f"Category path='{path}' not found.")
