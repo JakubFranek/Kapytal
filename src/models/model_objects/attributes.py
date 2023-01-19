@@ -114,7 +114,7 @@ class Category(NameMixin, JSONSerializableMixin):
     def __repr__(self) -> str:
         return f"Category(path='{self.path}', {self.type_.name})"
 
-    # TODO: theoretically name and parent_path could be replaced by path
+    # REFACTOR: name and parent_path could be replaced by path
     def to_dict(self) -> dict[str, Any]:
         return {
             "datatype": "Category",

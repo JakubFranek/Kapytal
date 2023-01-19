@@ -1,4 +1,4 @@
-# TODO: this file belongs somewhere else...
+# FIXME: this file belongs somewhere else...
 
 from collections.abc import Collection
 from datetime import date, datetime
@@ -1105,6 +1105,7 @@ class RecordKeeper(JSONSerializableMixin):
             "payees": self._payees,
             "tags": self._tags,
             "categories": sorted_categories,
+            "transactions": self._transactions,
         }
 
     @staticmethod

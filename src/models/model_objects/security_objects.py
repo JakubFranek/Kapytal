@@ -186,7 +186,7 @@ class Security(NameMixin, UUIDMixin, JSONSerializableMixin):
         return obj
 
 
-# TODO: maybe add shares / balance history
+# IDEA: maybe add shares / balance history
 class SecurityAccount(Account):
     def __init__(self, name: str, parent: AccountGroup | None = None) -> None:
         super().__init__(name, parent)
@@ -316,7 +316,7 @@ class SecurityRelatedTransaction(Transaction, ABC):
         raise NotImplementedError
 
 
-# TODO: maybe remove fee? cannot be associated to any payee this way
+# IDEA: maybe remove fee? cannot be associated to any payee this way
 class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
     def __init__(
         self,
@@ -385,6 +385,14 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
     def prepare_for_deletion(self) -> None:
         self._cash_account.remove_transaction(self)
         self._security_account.remove_transaction(self)
+
+    # TODO: provide implementation for JSON serdes methods
+    def to_dict(self) -> dict[str, Any]:
+        return super().to_dict()
+
+    @staticmethod
+    def from_dict(data: dict[str, Any]) -> "JSONSerializableMixin":
+        return super().from_dict(data)
 
     def set_attributes(
         self,
@@ -616,6 +624,14 @@ class SecurityTransfer(SecurityRelatedTransaction):
     def prepare_for_deletion(self) -> None:
         self._sender.remove_transaction(self)
         self._recipient.remove_transaction(self)
+
+    # TODO: provide implementation for JSON serdes methods
+    def to_dict(self) -> dict[str, Any]:
+        return super().to_dict()
+
+    @staticmethod
+    def from_dict(data: dict[str, Any]) -> "SecurityTransfer":
+        return super().from_dict(data)
 
     def set_attributes(
         self,

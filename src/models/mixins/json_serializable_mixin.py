@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, Self
+from typing import Any
 
 
 class JSONSerializableMixin(ABC):
@@ -9,5 +9,5 @@ class JSONSerializableMixin(ABC):
 
     @staticmethod
     @abstractmethod
-    def from_dict(data: dict[str, Any]) -> Self:
+    def from_dict(data: dict[str, Any]) -> "JSONSerializableMixin":
         raise NotImplementedError

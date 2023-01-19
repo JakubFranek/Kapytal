@@ -344,6 +344,7 @@ class CashAmount(JSONSerializableMixin):
         factor = self.currency.get_conversion_factor(target_currency, date_)
         return CashAmount(self.value * factor, target_currency)
 
+    # BUG: this creates new currency instances!
     def to_dict(self) -> dict[str, Any]:
         return {
             "datatype": "CashAmount",

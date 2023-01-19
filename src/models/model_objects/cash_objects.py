@@ -45,7 +45,7 @@ class InvalidCashTransactionTypeError(ValueError):
     """Raised when the CashTransactionType is incorrect."""
 
 
-# TODO: move currency property to this ABC?
+# IDEA: move currency property to this ABC?
 class CashRelatedTransaction(Transaction, ABC):
     def get_amount(self, account: "CashAccount") -> CashAmount:
         if not isinstance(account, CashAccount):
@@ -157,7 +157,6 @@ class CashAccount(Account):
         self._transactions.remove(transaction)
         self._update_balance()
 
-    # TODO: do something with transactions
     def to_dict(self) -> dict[str, Any]:
         return {
             "datatype": "CashAccount",
@@ -287,7 +286,7 @@ class CashTransaction(CashRelatedTransaction):
 
     @property
     def tag_amount_pairs(self) -> tuple[tuple[Attribute, CashAmount], ...]:
-        return self._tag_amount_pairs
+        return tuple(self._tag_amount_pairs)
 
     @property
     def tags(self) -> tuple[Attribute]:
@@ -316,6 +315,99 @@ class CashTransaction(CashRelatedTransaction):
             f"category={{{self.category_names}}}, "
             f"{self.datetime_.strftime('%Y-%m-%d')})"
         )
+
+    # TODO: store only category paths (and types?)
+    def to_dict(self) -> dict[str, Any]:
+        tag_name_amount_pairs = [
+            (tag.name, amount) for tag, amount in self._tag_amount_pairs
+        ]
+        category_path_amount_pairs = [
+            (category.path, amount) for category, amount in self._category_amount_pairs
+        ]
+        return {
+            "datatype": "CashTransaction",
+            "description": self._description,
+            "datetime_": self._datetime,
+            "type_": self._type.name,
+            "account_uuid": str(self._account.uuid),
+            "payee_name": self._payee.name,
+            "category_path_amount_pairs": category_path_amount_pairs,
+            "tag_name_amount_pairs": tag_name_amount_pairs,
+            "datetime_created": self._datetime_created,
+            "uuid": str(self._uuid),
+        }
+
+    @staticmethod
+    def from_dict(
+        data: dict[str, Any],
+        accounts: list[Account],
+        payees: list[Attribute],
+        categories: list[Category],
+        tags: list[Attribute],
+    ) -> "CashTransaction":
+        description = data["description"]
+        datetime_ = data["datetime_"]
+        type_ = CashTransactionType[data["type_"]]
+
+        account_uuid = uuid.UUID(data["account_uuid"])
+        for account in accounts:
+            if account.uuid == account_uuid:
+                cash_account = account
+                break
+        else:
+            raise NotFoundError(
+                f"Account uuid='{account_uuid}' not found in 'accounts'."
+            )
+
+        payee_name = data["payee_name"]
+        for payee in payees:
+            if payee.name == payee_name:
+                payee_obj = payee
+                break
+        else:
+            raise NotFoundError(f"Payee '{payee_name}' not found in 'payees'.")
+
+        category_path_amount_pairs: list[list[str, CashAmount]] = data[
+            "category_path_amount_pairs"
+        ]
+        decoded_category_amount_pairs = []
+        for category_path, amount in category_path_amount_pairs:
+            for category in categories:
+                if category.path == category_path:
+                    searched_category = category
+                    break
+            else:
+                raise NotFoundError(
+                    f"Category path='{category_path}' not found in 'categories'."
+                )
+            tup = (searched_category, amount)
+            decoded_category_amount_pairs.append(tup)
+
+        tag_name_amount_pairs: list[list[str, CashAmount]] = data[
+            "tag_name_amount_pairs"
+        ]
+        decoded_tag_amount_pairs = []
+        for tag_name, amount in tag_name_amount_pairs:
+            for tag in tags:
+                if tag.name == tag_name:
+                    tup = (tag, amount)
+                    break
+            else:
+                raise NotFoundError(f"Tag '{tag_name}' not found in 'tags'.")
+            decoded_tag_amount_pairs.append(tup)
+
+        obj = CashTransaction(
+            description=description,
+            datetime_=datetime_,
+            type_=type_,
+            account=cash_account,
+            payee=payee_obj,
+            category_amount_pairs=decoded_category_amount_pairs,
+            tag_amount_pairs=decoded_tag_amount_pairs,
+        )
+        obj._datetime_created = data["datetime_created"]
+        obj._uuid = uuid.UUID(data["uuid"])
+        return obj
 
     def add_refund(self, refund: "RefundTransaction") -> None:
         self._validate_refund(refund)
@@ -474,11 +566,11 @@ class CashTransaction(CashRelatedTransaction):
         self._datetime = datetime_
         self._type = type_
         self._payee = payee
-        self._category_amount_pairs = tuple(category_amount_pairs)
-        self._tag_amount_pairs = tuple(tag_amount_pairs)
+        self._category_amount_pairs = list(category_amount_pairs)
+        self._tag_amount_pairs = list(tag_amount_pairs)
         self._set_account(account)
 
-    # TODO: looks very similar to its Security counterpart
+    # IDEA: looks very similar to its Security counterpart
     def _set_account(self, account: CashAccount) -> None:
         if hasattr(self, "_account"):
             if self._account == account:
@@ -679,6 +771,14 @@ class CashTransfer(CashRelatedTransaction):
         self._sender.remove_transaction(self)
         self._recipient.remove_transaction(self)
 
+    # TODO: provide implementation for JSON serdes methods
+    def to_dict(self) -> dict[str, Any]:
+        return super().to_dict()
+
+    @staticmethod
+    def from_dict(data: dict[str, Any]) -> "CashTransfer":
+        return super().from_dict(data)
+
     def set_attributes(
         self,
         *,
@@ -765,7 +865,7 @@ class CashTransfer(CashRelatedTransaction):
         self._amount_received = amount_received
         self._set_accounts(sender, recipient)
 
-    # TODO: looks very similar to its security counterpart
+    # IDEA: looks very similar to its security counterpart
     def _set_accounts(self, sender: CashAccount, recipient: CashAccount) -> None:
         add_sender = True
         add_recipient = True
@@ -899,6 +999,14 @@ class RefundTransaction(CashRelatedTransaction):
     def prepare_for_deletion(self) -> None:
         self._refunded_transaction.remove_refund(self)
         self._account.remove_transaction(self)
+
+    # TODO: provide implementation for JSON serdes methods
+    def to_dict(self) -> dict[str, Any]:
+        return super().to_dict()
+
+    @staticmethod
+    def from_dict(data: dict[str, Any]) -> "RefundTransaction":
+        return super().from_dict(data)
 
     def add_tags(self, tags: Collection[Attribute]) -> None:  # noqa: U100
         raise InvalidOperationError("Adding tags to RefundTransaction is forbidden.")

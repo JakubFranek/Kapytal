@@ -17,7 +17,7 @@ from src.models.model_objects.attributes import (
     Category,
     CategoryType,
 )
-from src.models.model_objects.cash_objects import CashAccount
+from src.models.model_objects.cash_objects import CashAccount, CashTransaction
 from src.models.model_objects.currency import CashAmount, Currency, ExchangeRate
 from src.models.model_objects.security_objects import (
     Security,
@@ -25,7 +25,11 @@ from src.models.model_objects.security_objects import (
     SecurityType,
 )
 from src.models.record_keeper import RecordKeeper
-from tests.models.test_assets.composites import attributes, categories
+from tests.models.test_assets.composites import (
+    attributes,
+    cash_transactions,
+    categories,
+)
 
 
 def test_invalid_object() -> None:
@@ -328,3 +332,90 @@ def test_record_keeper_categories() -> None:
     decoded = json.loads(serialized, cls=CustomJSONDecoder)
     assert isinstance(decoded, RecordKeeper)
     assert len(record_keeper.categories) == len(decoded.categories)
+
+
+@given(transaction=cash_transactions())
+def test_cash_transaction(transaction: CashTransaction) -> None:
+    serialized = json.dumps(transaction, cls=CustomJSONEncoder)
+    decoded = json.loads(serialized, cls=CustomJSONDecoder)
+    decoded = CashTransaction.from_dict(
+        decoded,
+        [transaction.account],
+        [transaction.payee],
+        transaction.categories,
+        transaction.tags,
+    )
+    assert isinstance(decoded, CashTransaction)
+    assert decoded.uuid == transaction.uuid
+    assert decoded.description == transaction.description
+    assert decoded.datetime_ == transaction.datetime_
+    assert decoded.datetime_created == transaction.datetime_created
+    assert decoded.type_ == transaction.type_
+    assert decoded.account == transaction.account
+    assert transaction.payee == transaction.payee
+    assert transaction.category_amount_pairs == transaction.category_amount_pairs
+    assert transaction.tag_amount_pairs == transaction.tag_amount_pairs
+
+
+@given(transaction=cash_transactions())
+def test_cash_transaction_account_not_found(transaction: CashTransaction) -> None:
+    serialized = json.dumps(transaction, cls=CustomJSONEncoder)
+    decoded = json.loads(serialized, cls=CustomJSONDecoder)
+    with pytest.raises(NotFoundError):
+        CashTransaction.from_dict(
+            decoded,
+            [],
+            [transaction.payee],
+            transaction.categories,
+            transaction.tags,
+        )
+
+
+@given(transaction=cash_transactions())
+def test_cash_transaction_payee_not_found(transaction: CashTransaction) -> None:
+    serialized = json.dumps(transaction, cls=CustomJSONEncoder)
+    decoded = json.loads(serialized, cls=CustomJSONDecoder)
+    with pytest.raises(NotFoundError):
+        CashTransaction.from_dict(
+            decoded,
+            [transaction.account],
+            [],
+            transaction.categories,
+            transaction.tags,
+        )
+
+
+@given(transaction=cash_transactions())
+def test_cash_transaction_category_not_found(transaction: CashTransaction) -> None:
+    serialized = json.dumps(transaction, cls=CustomJSONEncoder)
+    decoded = json.loads(serialized, cls=CustomJSONDecoder)
+    with pytest.raises(NotFoundError):
+        CashTransaction.from_dict(
+            decoded,
+            [transaction.account],
+            [transaction.payee],
+            [],
+            transaction.tags,
+        )
+
+
+@given(transaction=cash_transactions())
+def test_cash_transaction_tag_not_found(transaction: CashTransaction) -> None:
+    transaction.set_attributes(
+        tag_amount_pairs=[
+            (
+                Attribute("tag", AttributeType.TAG),
+                transaction.amount,
+            )
+        ]
+    )
+    serialized = json.dumps(transaction, cls=CustomJSONEncoder)
+    decoded = json.loads(serialized, cls=CustomJSONDecoder)
+    with pytest.raises(NotFoundError):
+        CashTransaction.from_dict(
+            decoded,
+            [transaction.account],
+            [transaction.payee],
+            transaction.categories,
+            [],
+        )

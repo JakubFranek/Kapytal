@@ -17,6 +17,13 @@ class ConcreteTransaction(Transaction):
     def prepare_for_deletion(self) -> None:
         return super().prepare_for_deletion()
 
+    def to_dict(self) -> dict[str, Any]:
+        return super().to_dict()
+
+    @staticmethod
+    def from_dict(data: dict[str, Any]) -> "ConcreteTransaction":
+        return super().from_dict(data)
+
 
 class ConcreteAccount(Account):
     @property

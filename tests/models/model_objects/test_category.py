@@ -82,7 +82,7 @@ def test_path(first_category: Category, length: int, data: st.DataObject) -> Non
     type_ = first_category.type_
     categories = [first_category]
     for i in range(0, length):
-        category = Category(data.draw(st.text(min_size=1, max_size=32)), type_)
+        category = Category(data.draw(names()), type_)
         category.parent = categories[i]
         categories.append(category)
 
