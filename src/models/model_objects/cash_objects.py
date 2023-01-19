@@ -790,12 +790,64 @@ class CashTransfer(CashRelatedTransaction):
         self._recipient.remove_transaction(self)
 
     # TODO: provide implementation for JSON serdes methods
+    # IDEA: maybe partly rely on super? (description,datetime?)
     def to_dict(self) -> dict[str, Any]:
-        return super().to_dict()
+        return {
+            "datatype": "CashTransfer",
+            "description": self._description,
+            "datetime_": self._datetime,
+            "sender_uuid": str(self._sender.uuid),
+            "recipient_uuid": str(self._recipient.uuid),
+            "amount_sent": self._amount_sent,
+            "amount_received": self._amount_received,
+            "datetime_created": self._datetime_created,
+            "uuid": str(self._uuid),
+        }
 
     @staticmethod
-    def from_dict(data: dict[str, Any]) -> "CashTransfer":
-        return super().from_dict(data)
+    def from_dict(
+        data: dict[str, Any],
+        accounts: list[Account],
+        currencies: list[Currency],
+    ) -> "CashTransaction":
+        description = data["description"]
+        datetime_ = data["datetime_"]
+
+        sender_uuid = uuid.UUID(data["sender_uuid"])
+        recipient_uuid = uuid.UUID(data["recipient_uuid"])
+        sender = None
+        recipient = None
+        for account in accounts:
+            if account.uuid == sender_uuid:
+                sender = account
+            if account.uuid == recipient_uuid:
+                recipient = account
+            if sender is not None and recipient is not None:
+                break
+        else:
+            uuids_not_found = []
+            if sender is None:
+                uuids_not_found.append(sender_uuid)
+            if recipient is None:
+                uuids_not_found.append(recipient_uuid)
+            raise NotFoundError(
+                f"Account uuids=[{uuids_not_found}] not found in 'accounts'."
+            )
+
+        amount_sent = CashAmount.from_dict(data["amount_sent"], currencies)
+        amount_received = CashAmount.from_dict(data["amount_received"], currencies)
+
+        obj = CashTransfer(
+            description=description,
+            datetime_=datetime_,
+            sender=sender,
+            recipient=recipient,
+            amount_sent=amount_sent,
+            amount_received=amount_received,
+        )
+        obj._datetime_created = data["datetime_created"]
+        obj._uuid = uuid.UUID(data["uuid"])
+        return obj
 
     def set_attributes(
         self,

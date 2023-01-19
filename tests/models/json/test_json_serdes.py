@@ -17,7 +17,11 @@ from src.models.model_objects.attributes import (
     Category,
     CategoryType,
 )
-from src.models.model_objects.cash_objects import CashAccount, CashTransaction
+from src.models.model_objects.cash_objects import (
+    CashAccount,
+    CashTransaction,
+    CashTransfer,
+)
 from src.models.model_objects.currency import CashAmount, Currency, ExchangeRate
 from src.models.model_objects.security_objects import (
     Security,
@@ -28,6 +32,7 @@ from src.models.record_keeper import RecordKeeper
 from tests.models.test_assets.composites import (
     attributes,
     cash_transactions,
+    cash_transfers,
     categories,
 )
 
@@ -447,4 +452,36 @@ def test_cash_transaction_tag_not_found(transaction: CashTransaction) -> None:
             transaction.categories,
             [],
             [transaction.currency],
+        )
+
+
+@given(transaction=cash_transfers())
+def test_cash_transfer(transaction: CashTransfer) -> None:
+    serialized = json.dumps(transaction, cls=CustomJSONEncoder)
+    decoded = json.loads(serialized, cls=CustomJSONDecoder)
+    decoded = CashTransfer.from_dict(
+        decoded,
+        [transaction.sender, transaction.recipient],
+        transaction.currencies,
+    )
+    assert isinstance(decoded, CashTransfer)
+    assert decoded.uuid == transaction.uuid
+    assert decoded.description == transaction.description
+    assert decoded.datetime_ == transaction.datetime_
+    assert decoded.datetime_created == transaction.datetime_created
+    assert decoded.sender == transaction.sender
+    assert decoded.recipient == transaction.recipient
+    assert decoded.amount_sent == transaction.amount_sent
+    assert decoded.amount_received == transaction.amount_received
+
+
+@given(transaction=cash_transfers())
+def test_cash_transfer_account_not_found(transaction: CashTransfer) -> None:
+    serialized = json.dumps(transaction, cls=CustomJSONEncoder)
+    decoded = json.loads(serialized, cls=CustomJSONDecoder)
+    with pytest.raises(NotFoundError):
+        CashTransfer.from_dict(
+            decoded,
+            [],
+            transaction.currencies,
         )
