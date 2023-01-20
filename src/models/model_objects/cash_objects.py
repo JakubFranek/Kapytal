@@ -50,7 +50,6 @@ class InvalidCashTransactionTypeError(ValueError):
     """Raised when the CashTransactionType is incorrect."""
 
 
-# IDEA: move currency property to this ABC?
 class CashRelatedTransaction(Transaction, ABC):
     def get_amount(self, account: "CashAccount") -> CashAmount:
         if not isinstance(account, CashAccount):
@@ -769,7 +768,6 @@ class CashTransfer(CashRelatedTransaction):
         self._sender.remove_transaction(self)
         self._recipient.remove_transaction(self)
 
-    # IDEA: maybe partly rely on super? (description,datetime?)
     def to_dict(self) -> dict[str, Any]:
         return {
             "datatype": "CashTransfer",
