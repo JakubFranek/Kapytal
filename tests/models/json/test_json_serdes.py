@@ -495,6 +495,11 @@ def test_cash_transfer_account_not_found(transaction: CashTransfer) -> None:
 
 @given(transaction=cash_transactions(type_=CashTransactionType.EXPENSE))
 def test_refund_transaction(transaction: CashTransaction) -> None:
+    transaction.set_attributes(
+        tag_amount_pairs=[
+            (Attribute("test tag", AttributeType.TAG), transaction.amount)
+        ]
+    )
     refund = RefundTransaction(
         "A short description",
         transaction.datetime_ + timedelta(days=1),
