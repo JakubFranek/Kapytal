@@ -944,6 +944,7 @@ class CashTransfer(CashRelatedTransaction):
         return -self.amount_sent
 
 
+# REFACTOR: inconsistent parameter order with CashTransactions (payee)
 class RefundTransaction(CashRelatedTransaction):
     """A refund which attaches itself to an expense CashTransaction"""
 

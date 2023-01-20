@@ -29,6 +29,7 @@ from src.models.model_objects.security_objects import (
     Security,
     SecurityAccount,
     SecurityTransaction,
+    SecurityTransactionType,
     SecurityTransfer,
     SecurityType,
 )
@@ -617,3 +618,97 @@ def test_security_transfer(transaction: SecurityTransfer) -> None:
     assert decoded.security == transaction.security
     assert decoded.sender == transaction.sender
     assert decoded.recipient == transaction.recipient
+
+
+def test_record_keeper_transactions() -> None:
+    record_keeper = RecordKeeper()
+    record_keeper.add_currency("CZK", 2)
+    record_keeper.add_currency("EUR", 2)
+    record_keeper.add_exchange_rate("EUR", "CZK")
+    record_keeper.add_security(
+        "ČSOB Dynamický penzijní fond", "CSOB.DYN", SecurityType.MUTUAL_FUND, "CZK", 1
+    )
+    record_keeper.add_account_group("Bank Accounts", None)
+    record_keeper.add_cash_account(
+        "Raiffeisen", "CZK", 15000, datetime.now(tzinfo), "Bank Accounts"
+    )
+    record_keeper.add_cash_account(
+        "Moneta", "CZK", 0, datetime.now(tzinfo), "Bank Accounts"
+    )
+    record_keeper.add_security_account("ČSOB penzijní účet", None)
+    record_keeper.add_security_account("ČSOB penzijní účet 2", None)
+    record_keeper.add_cash_transaction(
+        "chili con carne ingredients",
+        datetime.now(tzinfo),
+        CashTransactionType.EXPENSE,
+        "Bank Accounts/Raiffeisen",
+        [("Food/Groceries", 1000)],
+        "Albert",
+        [("Split", 500)],
+    )
+    record_keeper.add_cash_transaction(
+        "some stupid electronic device",
+        datetime.now(tzinfo),
+        CashTransactionType.EXPENSE,
+        "Bank Accounts/Raiffeisen",
+        [("Electronics", 10000)],
+        "Alza",
+        [],
+    )
+    record_keeper.add_refund(
+        "refunding stupid electronic device",
+        datetime.now(tzinfo) + timedelta(days=1),
+        str(record_keeper.transactions[1].uuid),
+        "Bank Accounts/Raiffeisen",
+        [("Electronics", 10000)],
+        [],
+        "Alza",
+    )
+    record_keeper.add_cash_transfer(
+        "sending money to Moneta",
+        datetime.now(tzinfo),
+        "Bank Accounts/Raiffeisen",
+        "Bank Accounts/Moneta",
+        1000,
+        1000,
+    )
+    record_keeper.add_security_transaction(
+        "buying ČSOB DPS shares",
+        datetime.now(tzinfo),
+        SecurityTransactionType.BUY,
+        "CSOB.DYN",
+        1000,
+        "1.7",
+        0,
+        "ČSOB penzijní účet",
+        "Bank Accounts/Raiffeisen",
+    )
+    record_keeper.add_security_transfer(
+        "transfering DPS shares",
+        datetime.now(tzinfo),
+        "CSOB.DYN",
+        10,
+        "ČSOB penzijní účet",
+        "ČSOB penzijní účet 2",
+    )
+
+    serialized = json.dumps(record_keeper, cls=CustomJSONEncoder)
+    decoded = json.loads(serialized, cls=CustomJSONDecoder)
+    assert isinstance(decoded, RecordKeeper)
+    assert decoded.currencies == record_keeper.currencies
+    assert len(decoded.exchange_rates) == len(record_keeper.exchange_rates)
+    assert decoded.securities == record_keeper.securities
+    assert len(decoded.tags) == len(record_keeper.tags)
+    assert len(decoded.payees) == len(record_keeper.payees)
+    assert len(decoded.account_groups) == len(record_keeper.account_groups)
+    assert len(decoded.accounts) == len(record_keeper.accounts)
+    assert len(decoded.transactions) == len(record_keeper.transactions)
+
+
+def test_record_keeper_transactions_invalid_datatype() -> None:
+    record_keeper = RecordKeeper()
+    transaction_dict = {"datatype": "invalid type!"}
+    with pytest.raises(ValueError, match="Unexpected 'datatype' value."):
+        record_keeper.transactions_from_dicts(
+            [transaction_dict], None, None, None, None, None, None
+        )

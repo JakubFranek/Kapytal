@@ -1136,8 +1136,19 @@ class RecordKeeper(JSONSerializableMixin):
         obj._tags = data["tags"]
         obj._categories = RecordKeeper.categories_from_dicts(data["categories"])
 
+        obj._transactions = RecordKeeper.transactions_from_dicts(
+            data["transactions"],
+            obj._accounts,
+            obj._payees,
+            obj._tags,
+            obj._categories,
+            obj._currencies,
+            obj._securities,
+        )
+
         return obj
 
+    # REFACTOR: methods below should be private
     @staticmethod
     def exchange_rates_from_dicts(
         exchange_rate_dicts: Collection[dict[str, Any]],
@@ -1209,6 +1220,49 @@ class RecordKeeper(JSONSerializableMixin):
             raise AlreadyExistsError(
                 f"An Account with path={target_path} already exists."
             )
+
+    @staticmethod
+    def transactions_from_dicts(
+        transaction_dicts: Collection[dict[str, Any]],
+        accounts: Collection[Account],
+        payees: Collection[Attribute],
+        tags: Collection[Attribute],
+        categories: Collection[Category],
+        currencies: Collection[Currency],
+        securities: Collection[Security],
+    ) -> list[Transaction]:
+        transactions = []
+        for transaction_dict in transaction_dicts:
+            if transaction_dict["datatype"] == "CashTransaction":
+                transaction = CashTransaction.from_dict(
+                    transaction_dict, accounts, payees, categories, tags, currencies
+                )
+            elif transaction_dict["datatype"] == "CashTransfer":
+                transaction = CashTransfer.from_dict(
+                    transaction_dict, accounts, currencies
+                )
+            elif transaction_dict["datatype"] == "RefundTransaction":
+                transaction = RefundTransaction.from_dict(
+                    transaction_dict,
+                    accounts,
+                    transactions,
+                    payees,
+                    categories,
+                    tags,
+                    currencies,
+                )
+            elif transaction_dict["datatype"] == "SecurityTransaction":
+                transaction = SecurityTransaction.from_dict(
+                    transaction_dict, accounts, currencies, securities
+                )
+            elif transaction_dict["datatype"] == "SecurityTransfer":
+                transaction = SecurityTransfer.from_dict(
+                    transaction_dict, accounts, securities
+                )
+            else:
+                raise ValueError("Unexpected 'datatype' value.")
+            transactions.append(transaction)
+        return transactions
 
     def _create_category_amount_pairs(
         self,
