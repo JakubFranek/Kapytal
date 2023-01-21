@@ -24,7 +24,7 @@ from src.models.model_objects.cash_objects import (
     CashTransfer,
     RefundTransaction,
 )
-from src.models.model_objects.currency import (
+from src.models.model_objects.currency_objects import (
     CashAmount,
     Currency,
     CurrencyError,
@@ -309,7 +309,6 @@ class RecordKeeper(JSONSerializableMixin):
         security_symbol: str,
         shares: Decimal | int | str,
         price_per_share: Decimal | int | str,
-        fees: Decimal | int | str,
         security_account_path: str,
         cash_account_path: str,
     ) -> None:
@@ -324,7 +323,6 @@ class RecordKeeper(JSONSerializableMixin):
             security=security,
             shares=shares,
             price_per_share=CashAmount(price_per_share, cash_account.currency),
-            fees=CashAmount(fees, cash_account.currency),
             security_account=security_account,
             cash_account=cash_account,
         )
@@ -582,7 +580,6 @@ class RecordKeeper(JSONSerializableMixin):
         cash_account_path: str | None = None,
         security_account_path: str | None = None,
         price_per_share: Decimal | int | str | None = None,
-        fees: Decimal | int | str | None = None,
         shares: Decimal | int | str | None = None,
     ) -> None:
         transactions = self._get_transactions(transaction_uuids)
@@ -624,9 +621,6 @@ class RecordKeeper(JSONSerializableMixin):
         if price_per_share is not None:
             price_per_share = CashAmount(price_per_share, currency)
 
-        if fees is not None:
-            fees = CashAmount(fees, currency)
-
         if shares is not None:
             shares = Decimal(shares)
 
@@ -637,7 +631,6 @@ class RecordKeeper(JSONSerializableMixin):
                 type_=transaction_type,
                 security=security,
                 price_per_share=price_per_share,
-                fees=fees,
                 shares=shares,
                 cash_account=cash_account,
                 security_account=security_account,
@@ -650,7 +643,6 @@ class RecordKeeper(JSONSerializableMixin):
                 type_=transaction_type,
                 security=security,
                 price_per_share=price_per_share,
-                fees=fees,
                 shares=shares,
                 cash_account=cash_account,
                 security_account=security_account,
@@ -1038,7 +1030,7 @@ class RecordKeeper(JSONSerializableMixin):
         parent = None
         if "/" in current_path:
             while "/" in current_path:
-                current_path = current_path[: current_path.rfind("/")]
+                current_path, _, _ = current_path.rpartition("/")
                 for category in self._categories:
                     if category.path == current_path:
                         parent = category

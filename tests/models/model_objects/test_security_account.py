@@ -9,7 +9,7 @@ from hypothesis import strategies as st
 from src.models.base_classes.account import UnrelatedAccountError
 from src.models.constants import tzinfo
 from src.models.model_objects.account_group import AccountGroup
-from src.models.model_objects.currency import CashAmount, Currency, ExchangeRate
+from src.models.model_objects.currency_objects import CashAmount, Currency, ExchangeRate
 from src.models.model_objects.security_objects import (
     Security,
     SecurityAccount,

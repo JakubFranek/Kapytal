@@ -8,7 +8,7 @@ if TYPE_CHECKING:
     from src.models.base_classes.transaction import Transaction
     from src.models.model_objects.account_group import AccountGroup
     from src.models.model_objects.attributes import Attribute, Category
-    from src.models.model_objects.currency import Currency
+    from src.models.model_objects.currency_objects import Currency
     from src.models.model_objects.security_objects import Security
 
 

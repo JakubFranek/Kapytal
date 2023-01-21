@@ -27,7 +27,11 @@ from src.models.model_objects.cash_objects import (
     UnrelatedAccountError,
     UnrelatedTransactionError,
 )
-from src.models.model_objects.currency import CashAmount, Currency, CurrencyError
+from src.models.model_objects.currency_objects import (
+    CashAmount,
+    Currency,
+    CurrencyError,
+)
 from tests.models.test_assets.composites import (
     cash_accounts,
     cash_transactions,
@@ -64,9 +68,9 @@ def test_creation() -> None:
         datetime_,
         refunded_account,
         refunded_transaction,
+        payee,
         category_amount_pairs,
         tag_amount_pairs,
-        payee,
     )
     categories = tuple(category for category, _ in category_amount_pairs)
 
@@ -203,9 +207,9 @@ def test_invalid_category_pair_categories() -> None:
             datetime_,
             refunded_account,
             refunded_transaction,
+            payee,
             category_amount_pairs,
             tag_amount_pairs,
-            payee,
         )
 
 
@@ -230,9 +234,9 @@ def test_invalid_category_pair_decimal_values() -> None:
             datetime_,
             refunded_account,
             refunded_transaction,
+            payee,
             category_amount_pairs,
             tag_amount_pairs,
-            payee,
         )
 
 
@@ -255,9 +259,9 @@ def test_invalid_refund_amount() -> None:
             datetime_,
             refunded_account,
             refunded_transaction,
+            payee,
             category_amount_pairs,
             tag_amount_pairs,
-            payee,
         )
 
 
@@ -280,9 +284,9 @@ def test_invalid_category_refund_amount() -> None:
             datetime_,
             refunded_account,
             refunded_transaction,
+            payee,
             category_amount_pairs,
             tag_amount_pairs,
-            payee,
         )
 
 
@@ -307,9 +311,9 @@ def test_invalid_tag_type() -> None:
             datetime_,
             refunded_account,
             refunded_transaction,
+            payee,
             category_amount_pairs,
             tag_amount_pairs,
-            payee,
         )
 
 
@@ -334,9 +338,9 @@ def test_invalid_tag() -> None:
             datetime_,
             refunded_account,
             refunded_transaction,
+            payee,
             category_amount_pairs,
             tag_amount_pairs,
-            payee,
         )
 
 
@@ -360,9 +364,9 @@ def test_invalid_tag_decimal() -> None:
             datetime_,
             refunded_account,
             refunded_transaction,
+            payee,
             category_amount_pairs,
             tag_amount_pairs,
-            payee,
         )
 
 
@@ -386,9 +390,9 @@ def test_invalid_tag_amount() -> None:
             datetime_,
             refunded_account,
             refunded_transaction,
+            payee,
             category_amount_pairs,
             tag_amount_pairs,
-            payee,
         )
 
 
@@ -411,9 +415,9 @@ def test_invalid_pair_type() -> None:
             datetime_,
             refunded_account,
             refunded_transaction,
+            payee,
             category_amount_pairs,  # type: ignore
             tag_amount_pairs,
-            payee,
         )
 
 
@@ -430,9 +434,9 @@ def test_invalid_payee_type(payee: Any) -> None:
             datetime_,
             account,
             refunded_transaction,
+            payee,
             category_amount_pairs,
             tag_amount_pairs,
-            payee,
         )
 
 
@@ -452,9 +456,9 @@ def test_invalid_type_of_payee() -> None:
             datetime_,
             account,
             refunded_transaction,
+            payee,
             category_amount_pairs,
             tag_amount_pairs,
-            payee,
         )
 
 
@@ -475,9 +479,9 @@ def test_multi_refund() -> None:
         datetime_,
         refunded_account,
         refunded_transaction,
+        payee,
         category_amount_pairs,
         tag_amount_pairs,
-        payee,
     )
 
     category_amount_pairs = (
@@ -497,9 +501,9 @@ def test_multi_refund() -> None:
         datetime_,
         refunded_account,
         refunded_transaction,
+        payee,
         category_amount_pairs,
         tag_amount_pairs,
-        payee,
     )
 
     assert refund_1.amount == CashAmount(50, currency)
@@ -549,9 +553,9 @@ def test_remove_refund() -> None:
         datetime_,
         refunded_account,
         refunded_transaction,
+        payee,
         category_amount_pairs,
         tag_amount_pairs,
-        payee,
     )
 
     assert refund in refunded_transaction.refunds
@@ -639,9 +643,9 @@ def get_preloaded_refund() -> RefundTransaction:
         datetime_,
         refunded_account,
         refunded_transaction,
+        payee,
         category_amount_pairs,
         tag_amount_pairs,
-        payee,
     )
 
 

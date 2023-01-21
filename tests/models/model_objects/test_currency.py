@@ -5,7 +5,11 @@ import pytest
 from hypothesis import assume, given
 from hypothesis import strategies as st
 
-from src.models.model_objects.currency import Currency, CurrencyError, ExchangeRate
+from src.models.model_objects.currency_objects import (
+    Currency,
+    CurrencyError,
+    ExchangeRate,
+)
 from tests.models.test_assets.composites import currencies, everything_except
 
 

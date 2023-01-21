@@ -3,7 +3,7 @@ from typing import Any, Self
 
 from src.models.base_classes.account import Account
 from src.models.base_classes.transaction import Transaction
-from src.models.model_objects.currency import CashAmount, Currency
+from src.models.model_objects.currency_objects import CashAmount, Currency
 
 
 class ConcreteTransaction(Transaction):

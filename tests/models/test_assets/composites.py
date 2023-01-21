@@ -20,7 +20,7 @@ from src.models.model_objects.cash_objects import (
     CashTransactionType,
     CashTransfer,
 )
-from src.models.model_objects.currency import CashAmount, Currency
+from src.models.model_objects.currency_objects import CashAmount, Currency
 from src.models.model_objects.security_objects import (
     Security,
     SecurityAccount,
@@ -287,7 +287,6 @@ def security_transactions(
 
     cash_account = draw(cash_accounts())
     price_per_share = draw(cash_amounts(currency=cash_account.currency, min_value=0))
-    fees = draw(cash_amounts(currency=cash_account.currency, min_value=0))
     security = draw(securities(currency=cash_account.currency))
     security_account = draw(security_accounts())
 
@@ -300,7 +299,6 @@ def security_transactions(
         security,
         shares,
         price_per_share,
-        fees,
         security_account,
         cash_account,
     )

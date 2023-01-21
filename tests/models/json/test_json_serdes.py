@@ -23,7 +23,7 @@ from src.models.model_objects.cash_objects import (
     CashTransfer,
     RefundTransaction,
 )
-from src.models.model_objects.currency import CashAmount, Currency, ExchangeRate
+from src.models.model_objects.currency_objects import CashAmount, Currency, ExchangeRate
 from src.models.model_objects.security_objects import (
     Security,
     SecurityAccount,
@@ -346,9 +346,9 @@ def test_refund_transaction(transaction: CashTransaction) -> None:
         transaction.datetime_ + timedelta(days=1),
         transaction.account,
         transaction,
+        transaction.payee,
         transaction.category_amount_pairs,
         transaction.tag_amount_pairs,
-        transaction.payee,
     )
     transaction.remove_refund(refund)
     serialized = json.dumps(refund, cls=CustomJSONEncoder)
@@ -392,7 +392,6 @@ def test_security_transaction(transaction: SecurityTransaction) -> None:
     assert decoded.type_ == transaction.type_
     assert decoded.security == transaction.security
     assert decoded.price_per_share == transaction.price_per_share
-    assert decoded.fees == transaction.fees
     assert decoded.cash_account == transaction.cash_account
     assert decoded.security_account == transaction.security_account
 
@@ -475,7 +474,6 @@ def test_record_keeper_transactions() -> None:
         "CSOB.DYN",
         1000,
         "1.7",
-        0,
         "ČSOB penzijní účet",
         "Bank Accounts/Raiffeisen",
     )

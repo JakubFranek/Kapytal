@@ -191,7 +191,6 @@ def test_remove_currency_referenced_in_transaction() -> None:
         "SYMB",
         1,
         1,
-        1,
         "SECURITY ACC",
         "CASH ACC",
     )

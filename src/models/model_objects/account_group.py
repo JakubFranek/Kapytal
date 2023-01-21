@@ -6,7 +6,7 @@ if TYPE_CHECKING:
 from src.models.mixins.get_balance_mixin import GetBalanceMixin
 from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
 from src.models.mixins.name_mixin import NameMixin
-from src.models.model_objects.currency import CashAmount, Currency
+from src.models.model_objects.currency_objects import CashAmount, Currency
 from src.models.utilities.find_helpers import find_account_group_by_path
 
 
@@ -46,12 +46,6 @@ class AccountGroup(NameMixin, GetBalanceMixin, JSONSerializableMixin):
             return self.name
         return self.parent.path + "/" + self.name
 
-    @property
-    def parent_path(self) -> str | None:
-        if self.parent is None:
-            return None
-        return self.parent.path
-
     def get_balance(self, currency: Currency) -> CashAmount:
         return sum(
             (child.get_balance(currency) for child in self._children),
@@ -61,18 +55,16 @@ class AccountGroup(NameMixin, GetBalanceMixin, JSONSerializableMixin):
     def serialize(self) -> dict[str, Any]:
         return {
             "datatype": "AccountGroup",
-            "name": self._name,
-            "parent_path": self.parent_path,
+            "path": self.path,
         }
 
     @staticmethod
     def deserialize(
         data: dict[str, Any], account_groups: list["AccountGroup"]
     ) -> "AccountGroup":
-        name = data["name"]
+        path: str = data["path"]
+        parent_path, _, name = path.rpartition("/")
         obj = AccountGroup(name)
-
-        parent_path = data["parent_path"]
-        if parent_path is not None:
+        if parent_path != "":
             obj.parent = find_account_group_by_path(parent_path, account_groups)
         return obj

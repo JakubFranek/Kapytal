@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from src.models.model_objects.currency import CashAmount, Currency
+from src.models.model_objects.currency_objects import CashAmount, Currency
 
 
 class GetBalanceMixin(ABC):

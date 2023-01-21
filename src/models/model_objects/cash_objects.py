@@ -23,7 +23,11 @@ from src.models.model_objects.attributes import (
     InvalidCategoryError,
     InvalidCategoryTypeError,
 )
-from src.models.model_objects.currency import CashAmount, Currency, CurrencyError
+from src.models.model_objects.currency_objects import (
+    CashAmount,
+    Currency,
+    CurrencyError,
+)
 from src.models.utilities.find_helpers import (
     find_account_by_uuid,
     find_account_group_by_path,
@@ -166,11 +170,10 @@ class CashAccount(Account):
     def serialize(self) -> dict[str, Any]:
         return {
             "datatype": "CashAccount",
-            "name": self._name,
+            "path": self.path,
             "currency_code": self._currency.code,
             "initial_balance": self._initial_balance.value,
             "initial_datetime": self._initial_datetime,
-            "parent_path": self.parent_path,
             "uuid": str(self._uuid),
         }
 
@@ -180,9 +183,9 @@ class CashAccount(Account):
         account_groups: Collection[AccountGroup],
         currencies: Collection[Currency],
     ) -> "CashAccount":
-        name = data["name"]
+        path: str = data["path"]
+        parent_path, _, name = path.rpartition("/")
         initial_balance_value = data["initial_balance"]
-
         initial_datetime = data["initial_datetime"]
 
         currency_code = data["currency_code"]
@@ -193,8 +196,7 @@ class CashAccount(Account):
         obj = CashAccount(name, currency, initial_balance, initial_datetime)
         obj._uuid = uuid.UUID(data["uuid"])
 
-        parent_path = data["parent_path"]
-        if parent_path is not None:
+        if parent_path != "":
             obj.parent = find_account_group_by_path(parent_path, account_groups)
         return obj
 
@@ -265,16 +267,16 @@ class CashTransaction(CashRelatedTransaction):
     def amount(self) -> CashAmount:
         return sum(
             (amount for _, amount in self._category_amount_pairs),
-            start=CashAmount(0, self._currency),
+            start=CashAmount(0, self.currency),
         )
 
     @property
     def currency(self) -> Currency:
-        return self._currency
+        return self._account.currency
 
     @property
     def currencies(self) -> tuple[Currency]:
-        return (self._currency,)
+        return (self.currency,)
 
     @property
     def payee(self) -> Attribute:
@@ -565,7 +567,6 @@ class CashTransaction(CashRelatedTransaction):
                 return
             self._account.remove_transaction(self)
         self._account = account
-        self._currency = account.currency
         self._account.add_transaction(self)
 
     def _validate_type(self, type_: CashTransactionType) -> None:
@@ -887,7 +888,7 @@ class CashTransfer(CashRelatedTransaction):
         self._amount_received = amount_received
         self._set_accounts(sender, recipient)
 
-    # IDEA: looks very similar to its security counterpart
+    # IDEA: looks very similar to its Security counterpart
     def _set_accounts(self, sender: CashAccount, recipient: CashAccount) -> None:
         add_sender = True
         add_recipient = True
@@ -935,7 +936,6 @@ class CashTransfer(CashRelatedTransaction):
         return -self.amount_sent
 
 
-# REFACTOR: inconsistent parameter order with CashTransactions (payee)
 class RefundTransaction(CashRelatedTransaction):
     """A refund which attaches itself to an expense CashTransaction"""
 
@@ -945,9 +945,9 @@ class RefundTransaction(CashRelatedTransaction):
         datetime_: datetime,
         account: CashAccount,
         refunded_transaction: CashTransaction,
+        payee: Attribute,
         category_amount_pairs: Collection[tuple[Category, CashAmount]],
         tag_amount_pairs: Collection[tuple[Attribute, CashAmount]],
-        payee: Attribute,
     ) -> None:
         super().__init__()
         self._set_refunded_transaction(refunded_transaction)
@@ -968,16 +968,16 @@ class RefundTransaction(CashRelatedTransaction):
     def amount(self) -> CashAmount:
         return sum(
             (amount for _, amount in self._category_amount_pairs),
-            start=CashAmount(0, self._currency),
+            start=CashAmount(0, self.currency),
         )
 
     @property
     def currency(self) -> Currency:
-        return self._currency
+        return self._account.currency
 
     @property
     def currencies(self) -> tuple[Currency]:
-        return (self._currency,)
+        return (self.currency,)
 
     @property
     def refunded_transaction(self) -> CashTransaction:
@@ -1218,7 +1218,6 @@ class RefundTransaction(CashRelatedTransaction):
                 return
             self._account.remove_transaction(self)
         self._account = account
-        self._currency = account.currency
         self._account.add_transaction(self)
 
     def _validate_account(
