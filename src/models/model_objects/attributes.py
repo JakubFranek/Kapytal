@@ -45,11 +45,11 @@ class Attribute(NameMixin, JSONSerializableMixin):
     def __repr__(self) -> str:
         return f"Attribute('{self.name}', {self.type_.name})"
 
-    def to_dict(self) -> dict[str, Any]:
+    def serialize(self) -> dict[str, Any]:
         return {"datatype": "Attribute", "name": self._name, "type_": self._type.name}
 
     @staticmethod
-    def from_dict(data: dict[str, Any]) -> Self:
+    def deserialize(data: dict[str, Any]) -> Self:
         name = data["name"]
         type_ = AttributeType[data["type_"]]
         return Attribute(name, type_)
@@ -115,7 +115,7 @@ class Category(NameMixin, JSONSerializableMixin):
         return f"Category(path='{self.path}', {self.type_.name})"
 
     # REFACTOR: name and parent_path could be replaced by path
-    def to_dict(self) -> dict[str, Any]:
+    def serialize(self) -> dict[str, Any]:
         return {
             "datatype": "Category",
             "name": self._name,
@@ -124,7 +124,7 @@ class Category(NameMixin, JSONSerializableMixin):
         }
 
     @staticmethod
-    def from_dict(data: dict[str, Any], categories: list["Category"]) -> "Category":
+    def deserialize(data: dict[str, Any], categories: list["Category"]) -> "Category":
         name = data["name"]
         type_ = CategoryType[data["type_"]]
         obj = Category(name, type_)

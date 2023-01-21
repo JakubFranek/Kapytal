@@ -161,7 +161,7 @@ class CashAccount(Account):
         self._transactions.remove(transaction)
         self._update_balance()
 
-    def to_dict(self) -> dict[str, Any]:
+    def serialize(self) -> dict[str, Any]:
         return {
             "datatype": "CashAccount",
             "name": self._name,
@@ -173,7 +173,7 @@ class CashAccount(Account):
         }
 
     @staticmethod
-    def from_dict(
+    def deserialize(
         data: dict[str, Any],
         account_groups: Collection[AccountGroup],
         currencies: Collection[Currency],
@@ -334,7 +334,7 @@ class CashTransaction(CashRelatedTransaction):
             f"{self.datetime_.strftime('%Y-%m-%d')})"
         )
 
-    def to_dict(self) -> dict[str, Any]:
+    def serialize(self) -> dict[str, Any]:
         tag_name_amount_pairs = [
             (tag.name, amount) for tag, amount in self._tag_amount_pairs
         ]
@@ -355,7 +355,7 @@ class CashTransaction(CashRelatedTransaction):
         }
 
     @staticmethod
-    def from_dict(
+    def deserialize(
         data: dict[str, Any],
         accounts: list[Account],
         payees: list[Attribute],
@@ -379,7 +379,7 @@ class CashTransaction(CashRelatedTransaction):
         decoded_category_amount_pairs = []
         for category_path, amount_dict in category_path_amount_pairs:
             category = find_category_by_path(category_path, categories)
-            amount = CashAmount.from_dict(amount_dict, currencies)
+            amount = CashAmount.deserialize(amount_dict, currencies)
             tup = (category, amount)
             decoded_category_amount_pairs.append(tup)
 
@@ -389,7 +389,7 @@ class CashTransaction(CashRelatedTransaction):
         decoded_tag_amount_pairs = []
         for tag_name, amount_dict in tag_name_amount_pairs:
             tag = find_attribute_by_name(tag_name, tags)
-            amount = CashAmount.from_dict(amount_dict, currencies)
+            amount = CashAmount.deserialize(amount_dict, currencies)
             tup = (tag, amount)
             decoded_tag_amount_pairs.append(tup)
 
@@ -768,7 +768,7 @@ class CashTransfer(CashRelatedTransaction):
         self._sender.remove_transaction(self)
         self._recipient.remove_transaction(self)
 
-    def to_dict(self) -> dict[str, Any]:
+    def serialize(self) -> dict[str, Any]:
         return {
             "datatype": "CashTransfer",
             "description": self._description,
@@ -782,7 +782,7 @@ class CashTransfer(CashRelatedTransaction):
         }
 
     @staticmethod
-    def from_dict(
+    def deserialize(
         data: dict[str, Any],
         accounts: list[Account],
         currencies: list[Currency],
@@ -795,8 +795,8 @@ class CashTransfer(CashRelatedTransaction):
         sender = find_account_by_uuid(sender_uuid, accounts)
         recipient = find_account_by_uuid(recipient_uuid, accounts)
 
-        amount_sent = CashAmount.from_dict(data["amount_sent"], currencies)
-        amount_received = CashAmount.from_dict(data["amount_received"], currencies)
+        amount_sent = CashAmount.deserialize(data["amount_sent"], currencies)
+        amount_received = CashAmount.deserialize(data["amount_received"], currencies)
 
         obj = CashTransfer(
             description=description,
@@ -1032,7 +1032,7 @@ class RefundTransaction(CashRelatedTransaction):
         self._refunded_transaction.remove_refund(self)
         self._account.remove_transaction(self)
 
-    def to_dict(self) -> dict[str, Any]:
+    def serialize(self) -> dict[str, Any]:
         tag_name_amount_pairs = [
             (tag.name, amount) for tag, amount in self._tag_amount_pairs
         ]
@@ -1053,7 +1053,7 @@ class RefundTransaction(CashRelatedTransaction):
         }
 
     @staticmethod
-    def from_dict(
+    def deserialize(
         data: dict[str, Any],
         accounts: list[Account],
         transactions: list[Transaction],
@@ -1088,7 +1088,7 @@ class RefundTransaction(CashRelatedTransaction):
         decoded_category_amount_pairs = []
         for category_path, amount_dict in category_path_amount_pairs:
             category = find_category_by_path(category_path, categories)
-            amount = CashAmount.from_dict(amount_dict, currencies)
+            amount = CashAmount.deserialize(amount_dict, currencies)
             tup = (category, amount)
             decoded_category_amount_pairs.append(tup)
 
@@ -1098,7 +1098,7 @@ class RefundTransaction(CashRelatedTransaction):
         decoded_tag_amount_pairs = []
         for tag_name, amount_dict in tag_name_amount_pairs:
             tag = find_attribute_by_name(tag_name, tags)
-            amount = CashAmount.from_dict(amount_dict, currencies)
+            amount = CashAmount.deserialize(amount_dict, currencies)
             tup = (tag, amount)
             decoded_tag_amount_pairs.append(tup)
 

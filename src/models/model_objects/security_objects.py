@@ -152,7 +152,7 @@ class Security(NameMixin, UUIDMixin, JSONSerializableMixin):
             round(price.value, self._places), self.currency
         )
 
-    def to_dict(self) -> dict[str, Any]:
+    def serialize(self) -> dict[str, Any]:
         return {
             "datatype": "Security",
             "name": self._name,
@@ -165,7 +165,9 @@ class Security(NameMixin, UUIDMixin, JSONSerializableMixin):
         }
 
     @staticmethod
-    def from_dict(data: dict[str, Any], currencies: Collection[Currency]) -> "Security":
+    def deserialize(
+        data: dict[str, Any], currencies: Collection[Currency]
+    ) -> "Security":
         name = data["name"]
         symbol = data["symbol"]
         type_ = SecurityType[data["type_"]]
@@ -229,7 +231,7 @@ class SecurityAccount(Account):
         self._securities[transaction.security] -= transaction.get_shares(self)
         self._transactions.remove(transaction)
 
-    def to_dict(self) -> dict[str, Any]:
+    def serialize(self) -> dict[str, Any]:
         return {
             "datatype": "SecurityAccount",
             "name": self._name,
@@ -238,7 +240,7 @@ class SecurityAccount(Account):
         }
 
     @staticmethod
-    def from_dict(
+    def deserialize(
         data: dict[str, Any], account_groups: Collection[AccountGroup]
     ) -> "SecurityAccount":
         name = data["name"]
@@ -389,7 +391,7 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
         self._cash_account.remove_transaction(self)
         self._security_account.remove_transaction(self)
 
-    def to_dict(self) -> dict[str, Any]:
+    def serialize(self) -> dict[str, Any]:
         return {
             "datatype": "SecurityTransaction",
             "description": self._description,
@@ -406,7 +408,7 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
         }
 
     @staticmethod
-    def from_dict(
+    def deserialize(
         data: dict[str, Any],
         accounts: list[Account],
         currencies: list[Currency],
@@ -416,8 +418,8 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
         datetime_ = data["datetime_"]
         type_ = SecurityTransactionType[data["type_"]]
         shares = data["shares"]
-        price_per_share = CashAmount.from_dict(data["price_per_share"], currencies)
-        fees = CashAmount.from_dict(data["fees"], currencies)
+        price_per_share = CashAmount.deserialize(data["price_per_share"], currencies)
+        fees = CashAmount.deserialize(data["fees"], currencies)
 
         security_uuid = uuid.UUID(data["security_uuid"])
         security = find_security_by_uuid(security_uuid, securities)
@@ -673,7 +675,7 @@ class SecurityTransfer(SecurityRelatedTransaction):
         self._sender.remove_transaction(self)
         self._recipient.remove_transaction(self)
 
-    def to_dict(self) -> dict[str, Any]:
+    def serialize(self) -> dict[str, Any]:
         return {
             "datatype": "SecurityTransfer",
             "description": self._description,
@@ -687,7 +689,7 @@ class SecurityTransfer(SecurityRelatedTransaction):
         }
 
     @staticmethod
-    def from_dict(
+    def deserialize(
         data: dict[str, Any],
         accounts: list[Account],
         securities: list[Security],

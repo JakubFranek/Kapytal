@@ -148,11 +148,11 @@ class Currency(JSONSerializableMixin):
             return exchange_rates
         return None  # Reached a dead-end.
 
-    def to_dict(self) -> dict:
+    def serialize(self) -> dict:
         return {"datatype": "Currency", "code": self._code, "places": self._places}
 
     @staticmethod
-    def from_dict(data: dict[str, Any]) -> "Currency":
+    def deserialize(data: dict[str, Any]) -> "Currency":
         return Currency(code=data["code"], places=data["places"])
 
 
@@ -219,7 +219,7 @@ class ExchangeRate(JSONSerializableMixin):
             raise ValueError("Parameter 'rate' must be finite and positive.")
         self._rate_history[date_] = _rate
 
-    def to_dict(self) -> dict:
+    def serialize(self) -> dict:
         return {
             "datatype": "ExchangeRate",
             "primary_currency_code": self._primary_currency.code,
@@ -227,7 +227,7 @@ class ExchangeRate(JSONSerializableMixin):
         }
 
     @staticmethod
-    def from_dict(
+    def deserialize(
         data: dict[str, Any], currencies: Collection[Currency]
     ) -> "ExchangeRate":
         primary_code = data["primary_currency_code"]
@@ -345,7 +345,7 @@ class CashAmount(JSONSerializableMixin):
         factor = self.currency.get_conversion_factor(target_currency, date_)
         return CashAmount(self.value * factor, target_currency)
 
-    def to_dict(self) -> dict[str, Any]:
+    def serialize(self) -> dict[str, Any]:
         return {
             "datatype": "CashAmount",
             "value": self.value,
@@ -353,7 +353,7 @@ class CashAmount(JSONSerializableMixin):
         }
 
     @staticmethod
-    def from_dict(
+    def deserialize(
         data: dict[str, Any], currencies: Collection[Currency]
     ) -> "CashAmount":
         value = data["value"]

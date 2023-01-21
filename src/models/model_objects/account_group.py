@@ -59,7 +59,7 @@ class AccountGroup(NameMixin, GetBalanceMixin, JSONSerializableMixin):
             start=CashAmount(0, currency),
         )
 
-    def to_dict(self) -> dict[str, Any]:
+    def serialize(self) -> dict[str, Any]:
         return {
             "datatype": "AccountGroup",
             "name": self._name,
@@ -67,7 +67,7 @@ class AccountGroup(NameMixin, GetBalanceMixin, JSONSerializableMixin):
         }
 
     @staticmethod
-    def from_dict(
+    def deserialize(
         data: dict[str, Any], account_groups: list["AccountGroup"]
     ) -> "AccountGroup":
         name = data["name"]

@@ -20,11 +20,11 @@ class CustomJSONDecoder(json.JSONDecoder):
                 case "Decimal":
                     return Decimal(obj["number"])
                 case "RecordKeeper":
-                    return RecordKeeper.from_dict(obj)
+                    return RecordKeeper.deserialize(obj)
                 case "Currency":
-                    return Currency.from_dict(obj)
+                    return Currency.deserialize(obj)
                 case "Attribute":
-                    return Attribute.from_dict(obj)
+                    return Attribute.deserialize(obj)
                 case _:
                     return obj
         raise NotImplementedError

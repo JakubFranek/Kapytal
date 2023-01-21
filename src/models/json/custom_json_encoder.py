@@ -16,5 +16,5 @@ class CustomJSONEncoder(json.JSONEncoder):
         if isinstance(arg, Decimal):
             return {"datatype": "Decimal", "number": str(arg)}
         if isinstance(arg, JSONSerializableMixin):
-            return arg.to_dict()
+            return arg.serialize()
         return super().default(arg)  # call to raise proper TypeError

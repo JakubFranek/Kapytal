@@ -3,7 +3,7 @@
 from collections.abc import Collection
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Any, Self, overload
+from typing import Any, overload
 
 from src.models.base_classes.account import Account
 from src.models.base_classes.transaction import Transaction
@@ -1092,7 +1092,7 @@ class RecordKeeper(JSONSerializableMixin):
                 return
         raise DoesNotExistError(f"Exchange rate '{exchange_rate_code} not found.'")
 
-    def to_dict(self) -> dict[str, Any]:
+    def serialize(self) -> dict[str, Any]:
         sorted_account_groups = sorted(self._account_groups, key=lambda x: str(x))
         sorted_categories = sorted(self._categories, key=lambda x: str(x))
         return {
@@ -1109,34 +1109,34 @@ class RecordKeeper(JSONSerializableMixin):
         }
 
     @staticmethod
-    def from_dict(data: dict[str, Any]) -> Self:
+    def deserialize(data: dict[str, Any]) -> "RecordKeeper":
         obj = RecordKeeper()
         obj._currencies = data["currencies"]
 
         exchange_rates_dicts = data["exchange_rates"]
-        obj._exchange_rates = RecordKeeper.exchange_rates_from_dicts(
+        obj._exchange_rates = RecordKeeper._deserialize_exchange_rates(
             exchange_rates_dicts, obj._currencies
         )
 
         security_dicts = data["securities"]
-        obj._securities = RecordKeeper.securities_from_dicts(
+        obj._securities = RecordKeeper._deserialize_securities(
             security_dicts, obj._currencies
         )
 
-        obj._account_groups = RecordKeeper.account_groups_from_dicts(
+        obj._account_groups = RecordKeeper._deserialize_account_groups(
             data["account_groups"]
         )
 
         account_dicts = data["accounts"]
-        obj._accounts = RecordKeeper.accounts_from_dicts(
+        obj._accounts = RecordKeeper._deserialize_accounts(
             account_dicts, obj._account_groups, obj._currencies
         )
 
         obj._payees = data["payees"]
         obj._tags = data["tags"]
-        obj._categories = RecordKeeper.categories_from_dicts(data["categories"])
+        obj._categories = RecordKeeper._deserialize_categories(data["categories"])
 
-        obj._transactions = RecordKeeper.transactions_from_dicts(
+        obj._transactions = RecordKeeper._deserialize_transactions(
             data["transactions"],
             obj._accounts,
             obj._payees,
@@ -1148,41 +1148,40 @@ class RecordKeeper(JSONSerializableMixin):
 
         return obj
 
-    # REFACTOR: methods below should be private
     @staticmethod
-    def exchange_rates_from_dicts(
+    def _deserialize_exchange_rates(
         exchange_rate_dicts: Collection[dict[str, Any]],
         currencies: Collection[Currency],
     ) -> list[ExchangeRate]:
         exchange_rates = []
         for exchange_rate_dict in exchange_rate_dicts:
-            exchange_rate = ExchangeRate.from_dict(exchange_rate_dict, currencies)
+            exchange_rate = ExchangeRate.deserialize(exchange_rate_dict, currencies)
             exchange_rates.append(exchange_rate)
         return exchange_rates
 
     @staticmethod
-    def securities_from_dicts(
+    def _deserialize_securities(
         security_dicts: Collection[dict[str, Any]],
         currencies: Collection[Currency],
     ) -> list[Security]:
         securities = []
         for security_dict in security_dicts:
-            security = Security.from_dict(security_dict, currencies)
+            security = Security.deserialize(security_dict, currencies)
             securities.append(security)
         return securities
 
     @staticmethod
-    def account_groups_from_dicts(
+    def _deserialize_account_groups(
         account_group_dicts: Collection[dict[str, Any]]
     ) -> list[AccountGroup]:
         account_groups = []
         for account_group_dict in account_group_dicts:
-            account_group = AccountGroup.from_dict(account_group_dict, account_groups)
+            account_group = AccountGroup.deserialize(account_group_dict, account_groups)
             account_groups.append(account_group)
         return account_groups
 
     @staticmethod
-    def accounts_from_dicts(
+    def _deserialize_accounts(
         account_dicts: Collection[dict[str, Any]],
         account_groups: Collection[AccountGroup],
         currencies: Collection[Currency],
@@ -1190,39 +1189,28 @@ class RecordKeeper(JSONSerializableMixin):
         accounts = []
         for account_dict in account_dicts:
             if account_dict["datatype"] == "CashAccount":
-                account = CashAccount.from_dict(
+                account = CashAccount.deserialize(
                     account_dict, account_groups, currencies
                 )
             elif account_dict["datatype"] == "SecurityAccount":
-                account = SecurityAccount.from_dict(account_dict, account_groups)
+                account = SecurityAccount.deserialize(account_dict, account_groups)
             else:
                 raise ValueError("Unexpected 'datatype' value.")
             accounts.append(account)
         return accounts
 
     @staticmethod
-    def categories_from_dicts(
+    def _deserialize_categories(
         category_dicts: Collection[dict[str, Any]]
     ) -> list[AccountGroup]:
         categories = []
         for category_dict in category_dicts:
-            category = Category.from_dict(category_dict, categories)
+            category = Category.deserialize(category_dict, categories)
             categories.append(category)
         return categories
 
-    def _check_account_exists(self, name: str, parent_path: str | None) -> None:
-        if not isinstance(name, str):
-            raise TypeError("Parameter 'name' must be a string.")
-        if not isinstance(parent_path, str) and parent_path is not None:
-            raise TypeError("Parameter 'parent_path' must be a string or a None.")
-        target_path = parent_path + "/" + name if parent_path is not None else name
-        if any(account.path == target_path for account in self._accounts):
-            raise AlreadyExistsError(
-                f"An Account with path={target_path} already exists."
-            )
-
     @staticmethod
-    def transactions_from_dicts(
+    def _deserialize_transactions(
         transaction_dicts: Collection[dict[str, Any]],
         accounts: Collection[Account],
         payees: Collection[Attribute],
@@ -1234,15 +1222,15 @@ class RecordKeeper(JSONSerializableMixin):
         transactions = []
         for transaction_dict in transaction_dicts:
             if transaction_dict["datatype"] == "CashTransaction":
-                transaction = CashTransaction.from_dict(
+                transaction = CashTransaction.deserialize(
                     transaction_dict, accounts, payees, categories, tags, currencies
                 )
             elif transaction_dict["datatype"] == "CashTransfer":
-                transaction = CashTransfer.from_dict(
+                transaction = CashTransfer.deserialize(
                     transaction_dict, accounts, currencies
                 )
             elif transaction_dict["datatype"] == "RefundTransaction":
-                transaction = RefundTransaction.from_dict(
+                transaction = RefundTransaction.deserialize(
                     transaction_dict,
                     accounts,
                     transactions,
@@ -1252,17 +1240,28 @@ class RecordKeeper(JSONSerializableMixin):
                     currencies,
                 )
             elif transaction_dict["datatype"] == "SecurityTransaction":
-                transaction = SecurityTransaction.from_dict(
+                transaction = SecurityTransaction.deserialize(
                     transaction_dict, accounts, currencies, securities
                 )
             elif transaction_dict["datatype"] == "SecurityTransfer":
-                transaction = SecurityTransfer.from_dict(
+                transaction = SecurityTransfer.deserialize(
                     transaction_dict, accounts, securities
                 )
             else:
                 raise ValueError("Unexpected 'datatype' value.")
             transactions.append(transaction)
         return transactions
+
+    def _check_account_exists(self, name: str, parent_path: str | None) -> None:
+        if not isinstance(name, str):
+            raise TypeError("Parameter 'name' must be a string.")
+        if not isinstance(parent_path, str) and parent_path is not None:
+            raise TypeError("Parameter 'parent_path' must be a string or a None.")
+        target_path = parent_path + "/" + name if parent_path is not None else name
+        if any(account.path == target_path for account in self._accounts):
+            raise AlreadyExistsError(
+                f"An Account with path={target_path} already exists."
+            )
 
     def _create_category_amount_pairs(
         self,

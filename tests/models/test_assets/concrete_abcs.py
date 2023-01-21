@@ -17,12 +17,12 @@ class ConcreteTransaction(Transaction):
     def prepare_for_deletion(self) -> None:
         return super().prepare_for_deletion()
 
-    def to_dict(self) -> dict[str, Any]:
-        return super().to_dict()
+    def serialize(self) -> dict[str, Any]:
+        return super().serialize()
 
     @staticmethod
-    def from_dict(data: dict[str, Any]) -> "ConcreteTransaction":
-        return super().from_dict(data)
+    def deserialize(data: dict[str, Any]) -> "ConcreteTransaction":
+        return super().deserialize(data)
 
 
 class ConcreteAccount(Account):
@@ -33,9 +33,9 @@ class ConcreteAccount(Account):
     def get_balance(self, currency: Currency) -> CashAmount:
         return super().get_balance(currency)
 
-    def to_dict(self) -> dict[str, Any]:
-        return super().to_dict()
+    def serialize(self) -> dict[str, Any]:
+        return super().serialize()
 
     @staticmethod
-    def from_dict(data: dict[str, Any]) -> Self:
-        return super().from_dict(data)
+    def deserialize(data: dict[str, Any]) -> Self:
+        return super().deserialize(data)
