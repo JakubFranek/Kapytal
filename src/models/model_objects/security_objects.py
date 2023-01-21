@@ -11,11 +11,7 @@ from typing import Any
 
 from src.models.base_classes.account import Account, UnrelatedAccountError
 from src.models.base_classes.transaction import Transaction
-from src.models.custom_exceptions import (
-    InvalidCharacterError,
-    NotFoundError,
-    TransferSameAccountError,
-)
+from src.models.custom_exceptions import InvalidCharacterError, TransferSameAccountError
 from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
 from src.models.mixins.name_mixin import NameMixin
 from src.models.mixins.uuid_mixin import UUIDMixin
@@ -24,6 +20,8 @@ from src.models.model_objects.cash_objects import CashAccount, CashRelatedTransa
 from src.models.model_objects.currency import CashAmount, Currency, CurrencyError
 from src.models.utilities.find_helpers import (
     find_account_by_uuid,
+    find_account_group_by_path,
+    find_currency_by_code,
     find_security_by_uuid,
 )
 
@@ -171,17 +169,9 @@ class Security(NameMixin, UUIDMixin, JSONSerializableMixin):
         name = data["name"]
         symbol = data["symbol"]
         type_ = SecurityType[data["type_"]]
-        currency_code = data["currency_code"]
 
-        security_currency = None
-        for currency in currencies:
-            if currency.code == currency_code:
-                security_currency = currency
-                break
-        else:
-            raise NotFoundError(
-                f"Currency '{currency_code}' not found in 'currencies'."
-            )
+        currency_code = data["currency_code"]
+        security_currency = find_currency_by_code(currency_code, currencies)
 
         shares_unit = data["shares_unit"]
         price_places = data["price_places"]
@@ -248,13 +238,9 @@ class SecurityAccount(Account):
         obj._uuid = uuid.UUID(data["uuid"])
 
         parent_path = data["parent_path"]
-        if parent_path is None:
-            return obj
-        for account_group in account_groups:
-            if account_group.path == parent_path:
-                obj.parent = account_group
-                return obj
-        raise NotFoundError("Parent AccountGroup not found within 'account_groups'.")
+        if parent_path is not None:
+            obj.parent = find_account_group_by_path(parent_path, account_groups)
+        return obj
 
     def _validate_transaction(self, transaction: "SecurityRelatedTransaction") -> None:
         if not isinstance(transaction, SecurityRelatedTransaction):

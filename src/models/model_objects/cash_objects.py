@@ -11,7 +11,6 @@ from src.models.constants import tzinfo
 from src.models.custom_exceptions import (
     AlreadyExistsError,
     InvalidOperationError,
-    NotFoundError,
     TransferSameAccountError,
 )
 from src.models.model_objects.account_group import AccountGroup
@@ -27,8 +26,11 @@ from src.models.model_objects.attributes import (
 from src.models.model_objects.currency import CashAmount, Currency, CurrencyError
 from src.models.utilities.find_helpers import (
     find_account_by_uuid,
+    find_account_group_by_path,
     find_attribute_by_name,
     find_category_by_path,
+    find_currency_by_code,
+    find_transaction_by_uuid,
 )
 
 
@@ -184,28 +186,17 @@ class CashAccount(Account):
         initial_datetime = data["initial_datetime"]
 
         currency_code = data["currency_code"]
-        for currency in currencies:
-            if currency.code == currency_code:
-                searched_currency = currency
-                break
-        else:
-            raise NotFoundError(
-                f"Currency '{currency_code}' not found in 'currencies'."
-            )
+        currency = find_currency_by_code(currency_code, currencies)
 
-        initial_balance = CashAmount(initial_balance_value, searched_currency)
+        initial_balance = CashAmount(initial_balance_value, currency)
 
-        obj = CashAccount(name, searched_currency, initial_balance, initial_datetime)
+        obj = CashAccount(name, currency, initial_balance, initial_datetime)
         obj._uuid = uuid.UUID(data["uuid"])
 
         parent_path = data["parent_path"]
-        if parent_path is None:
-            return obj
-        for account_group in account_groups:
-            if account_group.path == parent_path:
-                obj.parent = account_group
-                return obj
-        raise NotFoundError("Parent AccountGroup not found within 'account_groups'.")
+        if parent_path is not None:
+            obj.parent = find_account_group_by_path(parent_path, account_groups)
+        return obj
 
     def _update_balance(self) -> None:
         datetime_balance_history = [(self.initial_datetime, self.initial_balance)]
@@ -1069,18 +1060,9 @@ class RefundTransaction(CashRelatedTransaction):
         cash_account = find_account_by_uuid(account_uuid, accounts)
 
         transaction_uuid = uuid.UUID(data["refunded_transaction_uuid"])
-        for transaction in transactions:
-            if transaction.uuid == transaction_uuid:
-                refunded_transaction = transaction
-                break
-        else:
-            raise NotFoundError(
-                f"Refunded transaction uuid='{transaction_uuid}' not found in "
-                "'transactions'."
-            )
+        refunded_transaction = find_transaction_by_uuid(transaction_uuid, transactions)
 
-        payee_name = data["payee_name"]
-        payee = find_attribute_by_name(payee_name, payees)
+        payee = find_attribute_by_name(data["payee_name"], payees)
 
         category_path_amount_pairs: list[list[str, dict[str, Any]]] = data[
             "category_path_amount_pairs"

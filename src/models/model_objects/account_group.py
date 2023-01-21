@@ -1,7 +1,5 @@
 from typing import TYPE_CHECKING, Any, Self
 
-from src.models.custom_exceptions import NotFoundError
-
 if TYPE_CHECKING:
     from src.models.base_classes.account import Account
 
@@ -9,6 +7,7 @@ from src.models.mixins.get_balance_mixin import GetBalanceMixin
 from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
 from src.models.mixins.name_mixin import NameMixin
 from src.models.model_objects.currency import CashAmount, Currency
+from src.models.utilities.find_helpers import find_account_group_by_path
 
 
 class AccountGroup(NameMixin, GetBalanceMixin, JSONSerializableMixin):
@@ -74,10 +73,6 @@ class AccountGroup(NameMixin, GetBalanceMixin, JSONSerializableMixin):
         obj = AccountGroup(name)
 
         parent_path = data["parent_path"]
-        if parent_path is None:
-            return obj
-        for account_group in account_groups:
-            if account_group.path == parent_path:
-                obj.parent = account_group
-                return obj
-        raise NotFoundError("Parent AccountGroup not found within 'account_groups'.")
+        if parent_path is not None:
+            obj.parent = find_account_group_by_path(parent_path, account_groups)
+        return obj

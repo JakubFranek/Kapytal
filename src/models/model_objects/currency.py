@@ -7,8 +7,8 @@ from decimal import Decimal
 from functools import total_ordering
 from typing import Any, Self
 
-from src.models.custom_exceptions import NotFoundError
 from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
+from src.models.utilities.find_helpers import find_currency_by_code
 
 
 class CurrencyError(ValueError):
@@ -358,13 +358,5 @@ class CashAmount(JSONSerializableMixin):
     ) -> "CashAmount":
         value = data["value"]
         currency_code = data["currency_code"]
-        for currency in currencies:
-            if currency.code == currency_code:
-                searched_currency = currency
-                break
-        else:
-            raise NotFoundError(
-                f"Currency '{currency_code}' not found in 'currencies'."
-            )
-
-        return CashAmount(value, searched_currency)
+        currency = find_currency_by_code(currency_code, currencies)
+        return CashAmount(value, currency)

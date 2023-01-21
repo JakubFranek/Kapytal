@@ -1,9 +1,9 @@
 from enum import Enum, auto
 from typing import Any, Self
 
-from src.models.custom_exceptions import NotFoundError
 from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
 from src.models.mixins.name_mixin import NameMixin
+from src.models.utilities.find_helpers import find_category_by_path
 
 
 class InvalidAttributeError(ValueError):
@@ -129,10 +129,6 @@ class Category(NameMixin, JSONSerializableMixin):
         type_ = CategoryType[data["type_"]]
         obj = Category(name, type_)
         parent_path = data["parent_path"]
-        if parent_path is None:
-            return obj
-        for category in categories:
-            if category.path == parent_path:
-                obj.parent = category
-                return obj
-        raise NotFoundError("Parent Category not found within 'categories'.")
+        if parent_path is not None:
+            obj.parent = find_category_by_path(parent_path, categories)
+        return obj
