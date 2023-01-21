@@ -46,12 +46,6 @@ class AccountGroup(NameMixin, GetBalanceMixin, JSONSerializableMixin):
             return self.name
         return self.parent.path + "/" + self.name
 
-    @property
-    def parent_path(self) -> str | None:
-        if self.parent is None:
-            return None
-        return self.parent.path
-
     def get_balance(self, currency: Currency) -> CashAmount:
         return sum(
             (child.get_balance(currency) for child in self._children),

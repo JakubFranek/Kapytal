@@ -170,11 +170,10 @@ class CashAccount(Account):
     def serialize(self) -> dict[str, Any]:
         return {
             "datatype": "CashAccount",
-            "name": self._name,
+            "path": self.path,
             "currency_code": self._currency.code,
             "initial_balance": self._initial_balance.value,
             "initial_datetime": self._initial_datetime,
-            "parent_path": self.parent_path,
             "uuid": str(self._uuid),
         }
 
@@ -184,9 +183,9 @@ class CashAccount(Account):
         account_groups: Collection[AccountGroup],
         currencies: Collection[Currency],
     ) -> "CashAccount":
-        name = data["name"]
+        path: str = data["path"]
+        parent_path, _, name = path.rpartition("/")
         initial_balance_value = data["initial_balance"]
-
         initial_datetime = data["initial_datetime"]
 
         currency_code = data["currency_code"]
@@ -197,8 +196,7 @@ class CashAccount(Account):
         obj = CashAccount(name, currency, initial_balance, initial_datetime)
         obj._uuid = uuid.UUID(data["uuid"])
 
-        parent_path = data["parent_path"]
-        if parent_path is not None:
+        if parent_path != "":
             obj.parent = find_account_group_by_path(parent_path, account_groups)
         return obj
 

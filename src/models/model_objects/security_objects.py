@@ -228,8 +228,7 @@ class SecurityAccount(Account):
     def serialize(self) -> dict[str, Any]:
         return {
             "datatype": "SecurityAccount",
-            "name": self._name,
-            "parent_path": self.parent_path,
+            "path": self.path,
             "uuid": str(self._uuid),
         }
 
@@ -237,12 +236,13 @@ class SecurityAccount(Account):
     def deserialize(
         data: dict[str, Any], account_groups: Collection[AccountGroup]
     ) -> "SecurityAccount":
-        name = data["name"]
+        path: str = data["path"]
+        parent_path, _, name = path.rpartition("/")
+
         obj = SecurityAccount(name)
         obj._uuid = uuid.UUID(data["uuid"])
 
-        parent_path = data["parent_path"]
-        if parent_path is not None:
+        if parent_path != "":
             obj.parent = find_account_group_by_path(parent_path, account_groups)
         return obj
 

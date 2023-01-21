@@ -41,12 +41,6 @@ class Account(NameMixin, UUIDMixin, GetBalanceMixin, JSONSerializableMixin, ABC)
         self._parent = new_parent
 
     @property
-    def parent_path(self) -> str | None:
-        if self.parent is None:
-            return None
-        return self.parent.path
-
-    @property
     def path(self) -> str:
         if self.parent is None:
             return self.name

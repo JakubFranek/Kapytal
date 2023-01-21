@@ -222,7 +222,7 @@ def test_add_cash_transaction(
     tag_name_amount_pairs = data.draw(
         st.lists(
             st.tuples(
-                st.text(min_size=1, max_size=32),
+                names(),
                 valid_decimals(min_value=0.01, max_value=max_tag_amount),
             ),
             min_size=0,
