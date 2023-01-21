@@ -14,45 +14,41 @@ from tests.models.test_assets.composites import (
     cash_accounts,
     currencies,
     everything_except,
+    names,
     valid_decimals,
 )
 
 
-@given(name=st.text(min_size=1, max_size=32), currency=currencies())
+@given(name=names(), currency=currencies())
 def test_creation(name: str, currency: Currency) -> None:
-    dt_start = datetime.now(tzinfo)
     account_group = AccountGroup(name)
-
-    dt_created_diff = account_group.datetime_created - dt_start
 
     assert account_group.name == name
     assert account_group.parent is None
     assert account_group.get_balance(currency) == CashAmount(Decimal(0), currency)
-    assert dt_created_diff.seconds < 1
-    assert account_group.__repr__() == f"AccountGroup('{name}', parent='None')"
+    assert account_group.__repr__() == f"AccountGroup(path='{name}')"
     assert account_group.path == name
 
 
 @given(parent=account_groups())
 def test_add_and_remove_parent(parent: AccountGroup) -> None:
     account_group = get_account_group()
-    expected_repr = f"AccountGroup('{account_group.name}', parent='None')"
+    expected_repr = f"AccountGroup(path='{account_group.name}')"
     assert account_group.parent is None
     assert account_group.children == ()
     assert account_group.__repr__() == expected_repr
     assert account_group.path == account_group.name
 
     account_group.parent = parent
-    expected_repr = (
-        f"AccountGroup('{account_group.name}', parent='{account_group.parent}')"
-    )
+    expected_path = parent.path + "/" + account_group.name
+    expected_repr = f"AccountGroup(path='{expected_path}')"
     assert account_group.parent == parent
     assert account_group in parent.children
     assert account_group.__repr__() == expected_repr
     assert account_group.path == f"{account_group.parent.name}/{account_group.name}"
 
     account_group.parent = None
-    expected_repr = f"AccountGroup('{account_group.name}', parent='None')"
+    expected_repr = f"AccountGroup(path='{account_group.name}')"
     assert account_group.parent is None
     assert account_group not in parent.children
     assert account_group.__repr__() == expected_repr

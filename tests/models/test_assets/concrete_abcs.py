@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Any, Self
 
 from src.models.base_classes.account import Account
 from src.models.base_classes.transaction import Transaction
@@ -16,6 +17,13 @@ class ConcreteTransaction(Transaction):
     def prepare_for_deletion(self) -> None:
         return super().prepare_for_deletion()
 
+    def serialize(self) -> dict[str, Any]:
+        return super().serialize()
+
+    @staticmethod
+    def deserialize(data: dict[str, Any]) -> "ConcreteTransaction":
+        return super().deserialize(data)
+
 
 class ConcreteAccount(Account):
     @property
@@ -24,3 +32,10 @@ class ConcreteAccount(Account):
 
     def get_balance(self, currency: Currency) -> CashAmount:
         return super().get_balance(currency)
+
+    def serialize(self) -> dict[str, Any]:
+        return super().serialize()
+
+    @staticmethod
+    def deserialize(data: dict[str, Any]) -> Self:
+        return super().deserialize(data)

@@ -1,20 +1,29 @@
 import copy
 import string
+import uuid
 from abc import ABC, abstractmethod
 from collections import defaultdict
+from collections.abc import Collection
 from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum, auto
+from typing import Any
 
 from src.models.base_classes.account import Account, UnrelatedAccountError
 from src.models.base_classes.transaction import Transaction
 from src.models.custom_exceptions import InvalidCharacterError, TransferSameAccountError
-from src.models.mixins.datetime_created_mixin import DatetimeCreatedMixin
+from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
 from src.models.mixins.name_mixin import NameMixin
 from src.models.mixins.uuid_mixin import UUIDMixin
 from src.models.model_objects.account_group import AccountGroup
 from src.models.model_objects.cash_objects import CashAccount, CashRelatedTransaction
 from src.models.model_objects.currency import CashAmount, Currency, CurrencyError
+from src.models.utilities.find_helpers import (
+    find_account_by_uuid,
+    find_account_group_by_path,
+    find_currency_by_code,
+    find_security_by_uuid,
+)
 
 
 class PriceNotFoundError(ValueError):
@@ -31,7 +40,7 @@ class SecurityTransactionType(Enum):
     SELL = auto()
 
 
-class Security(NameMixin, DatetimeCreatedMixin, UUIDMixin):
+class Security(NameMixin, UUIDMixin, JSONSerializableMixin):
     NAME_MIN_LENGTH = 1
     NAME_MAX_LENGTH = 64
     SYMBOL_MIN_LENGTH = 1
@@ -141,8 +150,39 @@ class Security(NameMixin, DatetimeCreatedMixin, UUIDMixin):
             round(price.value, self._places), self.currency
         )
 
+    def serialize(self) -> dict[str, Any]:
+        return {
+            "datatype": "Security",
+            "name": self._name,
+            "symbol": self._symbol,
+            "type_": self._type.name,
+            "currency_code": self._currency.code,
+            "shares_unit": self._shares_unit,
+            "price_places": self._places,
+            "uuid": str(self._uuid),
+        }
 
-# TODO: maybe add shares / balance history
+    @staticmethod
+    def deserialize(
+        data: dict[str, Any], currencies: Collection[Currency]
+    ) -> "Security":
+        name = data["name"]
+        symbol = data["symbol"]
+        type_ = SecurityType[data["type_"]]
+
+        currency_code = data["currency_code"]
+        security_currency = find_currency_by_code(currency_code, currencies)
+
+        shares_unit = data["shares_unit"]
+        price_places = data["price_places"]
+        obj = Security(
+            name, symbol, type_, security_currency, shares_unit, price_places
+        )
+        obj._uuid = uuid.UUID(data["uuid"])
+        return obj
+
+
+# IDEA: maybe add shares / balance history
 class SecurityAccount(Account):
     def __init__(self, name: str, parent: AccountGroup | None = None) -> None:
         super().__init__(name, parent)
@@ -160,7 +200,7 @@ class SecurityAccount(Account):
         return tuple(self._transactions)
 
     def __repr__(self) -> str:
-        return f"SecurityAccount('{self.name}')"
+        return f"SecurityAccount(path='{self.path}')"
 
     def get_balance(self, currency: Currency) -> CashAmount:
         return sum(
@@ -180,6 +220,27 @@ class SecurityAccount(Account):
         self._validate_transaction(transaction)
         self._securities[transaction.security] -= transaction.get_shares(self)
         self._transactions.remove(transaction)
+
+    def serialize(self) -> dict[str, Any]:
+        return {
+            "datatype": "SecurityAccount",
+            "name": self._name,
+            "parent_path": self.parent_path,
+            "uuid": str(self._uuid),
+        }
+
+    @staticmethod
+    def deserialize(
+        data: dict[str, Any], account_groups: Collection[AccountGroup]
+    ) -> "SecurityAccount":
+        name = data["name"]
+        obj = SecurityAccount(name)
+        obj._uuid = uuid.UUID(data["uuid"])
+
+        parent_path = data["parent_path"]
+        if parent_path is not None:
+            obj.parent = find_account_group_by_path(parent_path, account_groups)
+        return obj
 
     def _validate_transaction(self, transaction: "SecurityRelatedTransaction") -> None:
         if not isinstance(transaction, SecurityRelatedTransaction):
@@ -246,7 +307,7 @@ class SecurityRelatedTransaction(Transaction, ABC):
         raise NotImplementedError
 
 
-# TODO: maybe remove fee? cannot be associated to any payee this way
+# IDEA: maybe remove fee? cannot be associated to any payee this way
 class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
     def __init__(
         self,
@@ -315,6 +376,59 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
     def prepare_for_deletion(self) -> None:
         self._cash_account.remove_transaction(self)
         self._security_account.remove_transaction(self)
+
+    def serialize(self) -> dict[str, Any]:
+        return {
+            "datatype": "SecurityTransaction",
+            "description": self._description,
+            "datetime_": self._datetime,
+            "type_": self._type.name,
+            "security_uuid": str(self._security.uuid),
+            "shares": self._shares,
+            "price_per_share": self._price_per_share,
+            "fees": self._fees,
+            "security_account_uuid": str(self._security_account.uuid),
+            "cash_account_uuid": str(self._cash_account.uuid),
+            "datetime_created": self._datetime_created,
+            "uuid": str(self._uuid),
+        }
+
+    @staticmethod
+    def deserialize(
+        data: dict[str, Any],
+        accounts: list[Account],
+        currencies: list[Currency],
+        securities: list[Security],
+    ) -> "SecurityTransaction":
+        description = data["description"]
+        datetime_ = data["datetime_"]
+        type_ = SecurityTransactionType[data["type_"]]
+        shares = data["shares"]
+        price_per_share = CashAmount.deserialize(data["price_per_share"], currencies)
+        fees = CashAmount.deserialize(data["fees"], currencies)
+
+        security_uuid = uuid.UUID(data["security_uuid"])
+        security = find_security_by_uuid(security_uuid, securities)
+
+        cash_account_uuid = uuid.UUID(data["cash_account_uuid"])
+        security_account_uuid = uuid.UUID(data["security_account_uuid"])
+        cash_account = find_account_by_uuid(cash_account_uuid, accounts)
+        security_account = find_account_by_uuid(security_account_uuid, accounts)
+
+        obj = SecurityTransaction(
+            description=description,
+            datetime_=datetime_,
+            type_=type_,
+            security=security,
+            shares=shares,
+            price_per_share=price_per_share,
+            fees=fees,
+            security_account=security_account,
+            cash_account=cash_account,
+        )
+        obj._datetime_created = data["datetime_created"]
+        obj._uuid = uuid.UUID(data["uuid"])
+        return obj
 
     def set_attributes(
         self,
@@ -546,6 +660,49 @@ class SecurityTransfer(SecurityRelatedTransaction):
     def prepare_for_deletion(self) -> None:
         self._sender.remove_transaction(self)
         self._recipient.remove_transaction(self)
+
+    def serialize(self) -> dict[str, Any]:
+        return {
+            "datatype": "SecurityTransfer",
+            "description": self._description,
+            "datetime_": self._datetime,
+            "security_uuid": str(self._security.uuid),
+            "shares": self._shares,
+            "sender_uuid": str(self._sender.uuid),
+            "recipient_uuid": str(self._recipient.uuid),
+            "datetime_created": self._datetime_created,
+            "uuid": str(self._uuid),
+        }
+
+    @staticmethod
+    def deserialize(
+        data: dict[str, Any],
+        accounts: list[Account],
+        securities: list[Security],
+    ) -> "SecurityTransfer":
+        description = data["description"]
+        datetime_ = data["datetime_"]
+        shares = data["shares"]
+
+        security_uuid = uuid.UUID(data["security_uuid"])
+        security = find_security_by_uuid(security_uuid, securities)
+
+        sender_uuid = uuid.UUID(data["sender_uuid"])
+        recipient_uuid = uuid.UUID(data["recipient_uuid"])
+        sender = find_account_by_uuid(sender_uuid, accounts)
+        recipient = find_account_by_uuid(recipient_uuid, accounts)
+
+        obj = SecurityTransfer(
+            description=description,
+            datetime_=datetime_,
+            security=security,
+            shares=shares,
+            sender=sender,
+            recipient=recipient,
+        )
+        obj._datetime_created = data["datetime_created"]
+        obj._uuid = uuid.UUID(data["uuid"])
+        return obj
 
     def set_attributes(
         self,

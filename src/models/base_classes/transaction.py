@@ -7,6 +7,7 @@ if TYPE_CHECKING:
     from src.models.base_classes.account import Account
 
 from src.models.mixins.datetime_created_mixin import DatetimeCreatedMixin
+from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
 from src.models.mixins.uuid_mixin import UUIDMixin
 from src.models.model_objects.attributes import (
     Attribute,
@@ -15,8 +16,8 @@ from src.models.model_objects.attributes import (
 )
 
 
-# TODO: think about slots
-class Transaction(DatetimeCreatedMixin, UUIDMixin, ABC):
+# IDEA: think about slots
+class Transaction(DatetimeCreatedMixin, UUIDMixin, JSONSerializableMixin, ABC):
     DESCRIPTION_MIN_LENGTH = 0
     DESCRIPTION_MAX_LENGTH = 256
 

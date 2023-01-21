@@ -1,27 +1,21 @@
-from datetime import datetime
 from typing import Any
 
 import pytest
 from hypothesis import given
 from hypothesis import strategies as st
 
-from src.models.constants import tzinfo
+from src.models.custom_exceptions import InvalidCharacterError
 from src.models.mixins.name_mixin import NameLengthError
 from src.models.model_objects.account_group import AccountGroup
-from tests.models.test_assets.composites import account_groups, everything_except
+from tests.models.test_assets.composites import account_groups, everything_except, names
 from tests.models.test_assets.concrete_abcs import ConcreteAccount
 
 
-@given(name=st.text(min_size=1, max_size=32))
+@given(name=names())
 def test_creation(name: str) -> None:
-    dt_start = datetime.now(tzinfo)
     account = ConcreteAccount(name)
-
-    dt_created_diff = account.datetime_created - dt_start
-
     assert account.name == name
     assert account.path == name
-    assert dt_created_diff.seconds < 1
 
 
 @given(name=st.just(""))
@@ -30,10 +24,15 @@ def test_name_too_short(name: str) -> None:
         ConcreteAccount(name)
 
 
-@given(name=st.text(min_size=33))
+@given(name=names(min_size=33))
 def test_name_too_long(name: str) -> None:
     with pytest.raises(NameLengthError):
         ConcreteAccount(name)
+
+
+def test_name_invalid_character() -> None:
+    with pytest.raises(InvalidCharacterError):
+        ConcreteAccount("Invalid/name/with/slashes")
 
 
 @given(name=everything_except(str))

@@ -20,6 +20,7 @@ from tests.models.test_assets.composites import (
     account_groups,
     currencies,
     everything_except,
+    names,
     security_accounts,
     security_transactions,
     security_transfers,
@@ -27,14 +28,15 @@ from tests.models.test_assets.composites import (
 )
 
 
-@given(name=st.text(min_size=1, max_size=32), parent=st.none() | account_groups())
+@given(name=names(), parent=st.none() | account_groups())
 def test_creation(name: str, parent: AccountGroup | None) -> None:
     security_account = SecurityAccount(name, parent)
+    expected_path = parent.path + "/" + name if parent is not None else name
     assert security_account.name == name
     assert security_account.parent == parent
     assert security_account.securities == {}
     assert security_account.transactions == ()
-    assert security_account.__repr__() == f"SecurityAccount('{name}')"
+    assert security_account.__repr__() == f"SecurityAccount(path='{expected_path}')"
 
 
 @given(

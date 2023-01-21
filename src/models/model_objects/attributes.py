@@ -1,8 +1,9 @@
 from enum import Enum, auto
-from typing import Self
+from typing import Any, Self
 
-from src.models.mixins.datetime_created_mixin import DatetimeCreatedMixin
+from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
 from src.models.mixins.name_mixin import NameMixin
+from src.models.utilities.find_helpers import find_category_by_path
 
 
 class InvalidAttributeError(ValueError):
@@ -28,7 +29,7 @@ class CategoryType(Enum):
     INCOME_AND_EXPENSE = auto()
 
 
-class Attribute(NameMixin, DatetimeCreatedMixin):
+class Attribute(NameMixin, JSONSerializableMixin):
     def __init__(self, name: str, type_: AttributeType) -> None:
         super().__init__(name=name)
 
@@ -44,8 +45,17 @@ class Attribute(NameMixin, DatetimeCreatedMixin):
     def __repr__(self) -> str:
         return f"Attribute('{self.name}', {self.type_.name})"
 
+    def serialize(self) -> dict[str, Any]:
+        return {"datatype": "Attribute", "name": self._name, "type_": self._type.name}
 
-class Category(NameMixin, DatetimeCreatedMixin):
+    @staticmethod
+    def deserialize(data: dict[str, Any]) -> Self:
+        name = data["name"]
+        type_ = AttributeType[data["type_"]]
+        return Attribute(name, type_)
+
+
+class Category(NameMixin, JSONSerializableMixin):
     def __init__(
         self, name: str, type_: CategoryType, parent: Self | None = None
     ) -> None:
@@ -95,5 +105,30 @@ class Category(NameMixin, DatetimeCreatedMixin):
             return self.name
         return self.parent.path + "/" + self.name
 
+    @property
+    def parent_path(self) -> str:
+        if self.parent is None:
+            return None
+        return self.parent.path
+
     def __repr__(self) -> str:
-        return f"Category('{self.name}', {self.type_.name}, parent='{self.parent}')"
+        return f"Category(path='{self.path}', {self.type_.name})"
+
+    # REFACTOR: name and parent_path could be replaced by path
+    def serialize(self) -> dict[str, Any]:
+        return {
+            "datatype": "Category",
+            "name": self._name,
+            "type_": self._type.name,
+            "parent_path": self.parent_path,
+        }
+
+    @staticmethod
+    def deserialize(data: dict[str, Any], categories: list["Category"]) -> "Category":
+        name = data["name"]
+        type_ = CategoryType[data["type_"]]
+        obj = Category(name, type_)
+        parent_path = data["parent_path"]
+        if parent_path is not None:
+            obj.parent = find_category_by_path(parent_path, categories)
+        return obj

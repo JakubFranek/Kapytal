@@ -16,13 +16,14 @@ from src.models.model_objects.security_objects import (
 from tests.models.test_assets.composites import (
     currencies,
     everything_except,
+    names,
     securities,
     valid_decimals,
 )
 
 
 @given(
-    name=st.text(min_size=1, max_size=64),
+    name=names(min_size=1, max_size=64),
     symbol=st.text(alphabet=Security.SYMBOL_ALLOWED_CHARS, min_size=1, max_size=8),
     type_=st.sampled_from(SecurityType),
     currency=currencies(),
@@ -76,7 +77,7 @@ def test_name_too_short(
 
 
 @given(
-    name=st.text(min_size=65),
+    name=names(min_size=65),
     symbol=st.text(alphabet=Security.SYMBOL_ALLOWED_CHARS, min_size=1, max_size=8),
     type_=st.sampled_from(SecurityType),
     currency=currencies(),
@@ -94,7 +95,7 @@ def test_name_too_long(
 
 
 @given(
-    name=st.text(min_size=1, max_size=64),
+    name=names(max_size=64),
     symbol=st.text(alphabet=Security.SYMBOL_ALLOWED_CHARS, min_size=1, max_size=8),
     type_=everything_except(SecurityType),
     currency=currencies(),
@@ -108,7 +109,7 @@ def test_type_invalid_type(
 
 
 @given(
-    name=st.text(min_size=1, max_size=64),
+    name=names(min_size=1, max_size=64),
     symbol=everything_except(str),
     type_=st.sampled_from(SecurityType),
     currency=currencies(),
@@ -122,7 +123,7 @@ def test_symbol_invalid_type(
 
 
 @given(
-    name=st.text(min_size=1, max_size=64),
+    name=names(min_size=1, max_size=64),
     symbol=st.just(""),
     type_=st.sampled_from(SecurityType),
     currency=currencies(),
@@ -136,7 +137,7 @@ def test_symbol_too_short(
 
 
 @given(
-    name=st.text(min_size=1, max_size=64),
+    name=names(min_size=1, max_size=64),
     symbol=st.text(min_size=9),
     type_=st.sampled_from(SecurityType),
     currency=currencies(),
@@ -150,7 +151,7 @@ def test_symbol_too_long(
 
 
 @given(
-    name=st.text(min_size=1, max_size=64),
+    name=names(min_size=1, max_size=64),
     symbol=st.text(min_size=1, max_size=8),
     type_=st.sampled_from(SecurityType),
     currency=currencies(),
@@ -165,7 +166,7 @@ def test_symbol_invalid_chars(
 
 
 @given(
-    name=st.text(min_size=1, max_size=64),
+    name=names(min_size=1, max_size=64),
     symbol=st.text(alphabet=Security.SYMBOL_ALLOWED_CHARS, min_size=1, max_size=8),
     type_=st.sampled_from(SecurityType),
     currency=everything_except(Currency),
@@ -179,7 +180,7 @@ def test_currency_invalid_type(
 
 
 @given(
-    name=st.text(min_size=1, max_size=64),
+    name=names(min_size=1, max_size=64),
     symbol=st.text(alphabet=Security.SYMBOL_ALLOWED_CHARS, min_size=1, max_size=8),
     type_=st.sampled_from(SecurityType),
     currency=currencies(),
@@ -193,7 +194,7 @@ def test_shares_unit_invalid_type(
 
 
 @given(
-    name=st.text(min_size=1, max_size=64),
+    name=names(min_size=1, max_size=64),
     symbol=st.text(alphabet=Security.SYMBOL_ALLOWED_CHARS, min_size=1, max_size=8),
     type_=st.sampled_from(SecurityType),
     currency=currencies(),
@@ -218,7 +219,7 @@ def test_shares_unit_invalid_value(
 
 
 @given(
-    name=st.text(min_size=1, max_size=64),
+    name=names(),
     symbol=st.text(alphabet=Security.SYMBOL_ALLOWED_CHARS, min_size=1, max_size=8),
     type_=st.sampled_from(SecurityType),
     currency=currencies(),
@@ -238,7 +239,7 @@ def test_places_invalid_type(
 
 
 @given(
-    name=st.text(min_size=1, max_size=64),
+    name=names(min_size=1, max_size=64),
     symbol=st.text(alphabet=Security.SYMBOL_ALLOWED_CHARS, min_size=1, max_size=8),
     type_=st.sampled_from(SecurityType),
     currency=currencies(),

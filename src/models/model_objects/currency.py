@@ -1,13 +1,14 @@
 # TODO: rename this module
-
 import copy
 import operator
+from collections.abc import Collection
 from datetime import date
 from decimal import Decimal
 from functools import total_ordering
-from typing import Self
+from typing import Any, Self
 
-from src.models.mixins.datetime_created_mixin import DatetimeCreatedMixin
+from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
+from src.models.utilities.find_helpers import find_currency_by_code
 
 
 class CurrencyError(ValueError):
@@ -23,7 +24,7 @@ class ConversionFactorNotFoundError(ValueError):
     for the given Currency pair."""
 
 
-class Currency(DatetimeCreatedMixin):
+class Currency(JSONSerializableMixin):
     def __init__(self, code: str, places: int) -> None:
         super().__init__()
 
@@ -147,8 +148,15 @@ class Currency(DatetimeCreatedMixin):
             return exchange_rates
         return None  # Reached a dead-end.
 
+    def serialize(self) -> dict:
+        return {"datatype": "Currency", "code": self._code, "places": self._places}
 
-class ExchangeRate:
+    @staticmethod
+    def deserialize(data: dict[str, Any]) -> "Currency":
+        return Currency(code=data["code"], places=data["places"])
+
+
+class ExchangeRate(JSONSerializableMixin):
     def __init__(
         self, primary_currency: Currency, secondary_currency: Currency
     ) -> None:
@@ -211,9 +219,35 @@ class ExchangeRate:
             raise ValueError("Parameter 'rate' must be finite and positive.")
         self._rate_history[date_] = _rate
 
+    def serialize(self) -> dict:
+        return {
+            "datatype": "ExchangeRate",
+            "primary_currency_code": self._primary_currency.code,
+            "secondary_currency_code": self._secondary_currency.code,
+        }
+
+    @staticmethod
+    def deserialize(
+        data: dict[str, Any], currencies: Collection[Currency]
+    ) -> "ExchangeRate":
+        primary_code = data["primary_currency_code"]
+        secondary_code = data["secondary_currency_code"]
+
+        primary = None
+        secondary = None
+        for currency in currencies:
+            if currency.code == primary_code:
+                primary = currency
+            if currency.code == secondary_code:
+                secondary = currency
+            if primary and secondary:
+                break
+
+        return ExchangeRate(primary, secondary)
+
 
 @total_ordering
-class CashAmount:
+class CashAmount(JSONSerializableMixin):
     """An immutable object comprising of Decimal value and a Currency."""
 
     def __init__(self, value: Decimal | int | str, currency: Currency) -> None:
@@ -310,3 +344,19 @@ class CashAmount:
             return self
         factor = self.currency.get_conversion_factor(target_currency, date_)
         return CashAmount(self.value * factor, target_currency)
+
+    def serialize(self) -> dict[str, Any]:
+        return {
+            "datatype": "CashAmount",
+            "value": self.value,
+            "currency_code": self.currency.code,
+        }
+
+    @staticmethod
+    def deserialize(
+        data: dict[str, Any], currencies: Collection[Currency]
+    ) -> "CashAmount":
+        value = data["value"]
+        currency_code = data["currency_code"]
+        currency = find_currency_by_code(currency_code, currencies)
+        return CashAmount(value, currency)

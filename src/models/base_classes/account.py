@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
-from src.models.mixins.datetime_created_mixin import DatetimeCreatedMixin
 from src.models.mixins.get_balance_mixin import GetBalanceMixin
+from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
 from src.models.mixins.name_mixin import NameMixin
 from src.models.mixins.uuid_mixin import UUIDMixin
 from src.models.model_objects.account_group import AccountGroup
@@ -16,7 +16,7 @@ class UnrelatedAccountError(ValueError):
     not relate to it."""
 
 
-class Account(NameMixin, DatetimeCreatedMixin, UUIDMixin, GetBalanceMixin, ABC):
+class Account(NameMixin, UUIDMixin, GetBalanceMixin, JSONSerializableMixin, ABC):
     def __init__(self, name: str, parent: AccountGroup | None = None) -> None:
         super().__init__(name=name)
         self.parent = parent
@@ -39,6 +39,12 @@ class Account(NameMixin, DatetimeCreatedMixin, UUIDMixin, GetBalanceMixin, ABC):
             new_parent._children.append(self)
 
         self._parent = new_parent
+
+    @property
+    def parent_path(self) -> str | None:
+        if self.parent is None:
+            return None
+        return self.parent.path
 
     @property
     def path(self) -> str:
