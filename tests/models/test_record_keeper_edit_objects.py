@@ -651,21 +651,6 @@ def test_edit_security_transactions_change_price_per_share() -> None:
         assert transaction.price_per_share.value == edit_price
 
 
-def test_edit_security_transactions_change_fees() -> None:
-    edit_fees = Decimal("0.1")
-    record_keeper = get_preloaded_record_keeper_with_security_transactions()
-    transactions = [
-        transaction
-        for transaction in record_keeper.transactions
-        if isinstance(transaction, SecurityTransaction)
-        and transaction.security.symbol == "VWCE.DE"
-    ]
-    uuids = [str(transfer.uuid) for transfer in transactions]
-    record_keeper.edit_security_transactions(uuids, fees=edit_fees)
-    for transaction in transactions:
-        assert transaction.fees.value == edit_fees
-
-
 def test_edit_security_transactions_change_shares() -> None:
     edit_shares = Decimal(1)
     record_keeper = get_preloaded_record_keeper_with_security_transactions()

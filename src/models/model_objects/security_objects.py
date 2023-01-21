@@ -311,7 +311,7 @@ class SecurityRelatedTransaction(Transaction, ABC):
         raise NotImplementedError
 
 
-# IDEA: maybe remove fee? cannot be associated to any payee this way
+# REFACTOR: remove fee
 class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
     def __init__(
         self,
@@ -321,7 +321,6 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
         security: Security,
         shares: Decimal | int | str,
         price_per_share: CashAmount,
-        fees: CashAmount,
         security_account: SecurityAccount,
         cash_account: CashAccount,
     ) -> None:
@@ -333,7 +332,6 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
             security=security,
             shares=shares,
             price_per_share=price_per_share,
-            fees=fees,
             security_account=security_account,
             cash_account=cash_account,
         )
@@ -353,10 +351,6 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
     @property
     def price_per_share(self) -> CashAmount:
         return self._price_per_share
-
-    @property
-    def fees(self) -> CashAmount:
-        return self._fees
 
     @property
     def currency(self) -> Currency:
@@ -390,7 +384,6 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
             "security_uuid": str(self._security.uuid),
             "shares": self._shares,
             "price_per_share": self._price_per_share,
-            "fees": self._fees,
             "security_account_uuid": str(self._security_account.uuid),
             "cash_account_uuid": str(self._cash_account.uuid),
             "datetime_created": self._datetime_created,
@@ -409,7 +402,6 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
         type_ = SecurityTransactionType[data["type_"]]
         shares = data["shares"]
         price_per_share = CashAmount.deserialize(data["price_per_share"], currencies)
-        fees = CashAmount.deserialize(data["fees"], currencies)
 
         security_uuid = uuid.UUID(data["security_uuid"])
         security = find_security_by_uuid(security_uuid, securities)
@@ -426,7 +418,6 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
             security=security,
             shares=shares,
             price_per_share=price_per_share,
-            fees=fees,
             security_account=security_account,
             cash_account=cash_account,
         )
@@ -443,7 +434,6 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
         security: Security | None = None,
         shares: Decimal | None = None,
         price_per_share: CashAmount | None = None,
-        fees: CashAmount | None = None,
         security_account: SecurityAccount | None = None,
         cash_account: CashAccount | None = None,
     ) -> None:
@@ -459,8 +449,6 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
             shares = self._shares
         if price_per_share is None:
             price_per_share = self._price_per_share
-        if fees is None:
-            fees = self._fees
         if security_account is None:
             security_account = self._security_account
         if cash_account is None:
@@ -473,7 +461,6 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
             security=security,
             shares=shares,
             price_per_share=price_per_share,
-            fees=fees,
             security_account=security_account,
             cash_account=cash_account,
         )
@@ -485,7 +472,6 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
             security=security,
             shares=shares,
             price_per_share=price_per_share,
-            fees=fees,
             security_account=security_account,
             cash_account=cash_account,
         )
@@ -499,7 +485,6 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
         security: Security | None = None,
         shares: Decimal | None = None,
         price_per_share: CashAmount | None = None,
-        fees: CashAmount | None = None,
         security_account: SecurityAccount | None = None,
         cash_account: CashAccount | None = None,
     ) -> None:
@@ -515,8 +500,6 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
             shares = self._shares
         if price_per_share is None:
             price_per_share = self._price_per_share
-        if fees is None:
-            fees = self._fees
         if security_account is None:
             security_account = self._security_account
         if cash_account is None:
@@ -530,7 +513,6 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
         self._validate_cash_account(cash_account, security.currency)
         self._validate_security_account(security_account)
         self._validate_amount(price_per_share, cash_account.currency)
-        self._validate_amount(fees, cash_account.currency)
 
     def _set_attributes(
         self,
@@ -541,7 +523,6 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
         security: Security,
         shares: Decimal,
         price_per_share: CashAmount,
-        fees: CashAmount,
         security_account: SecurityAccount,
         cash_account: CashAccount,
     ) -> None:
@@ -551,7 +532,6 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
         self._security = security
         self._shares = Decimal(shares)
         self._price_per_share = price_per_share
-        self._fees = fees
         self._set_accounts(security_account, cash_account)
 
     def _set_accounts(
@@ -612,8 +592,8 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
 
     def _get_amount(self, account: CashAccount) -> CashAmount:  # noqa: U100
         if self.type_ == SecurityTransactionType.BUY:
-            return -self._shares * self.price_per_share - self.fees
-        return self._shares * self.price_per_share - self.fees
+            return -self._shares * self.price_per_share
+        return self._shares * self.price_per_share
 
     def _get_shares(self, account: SecurityAccount) -> Decimal:  # noqa: U100
         if self.type_ == SecurityTransactionType.BUY:

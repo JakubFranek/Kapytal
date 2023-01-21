@@ -550,14 +550,12 @@ def test_get_security_does_not_exists(symbol: str) -> None:
     description=st.text(min_size=1, max_size=256),
     type_=st.sampled_from(SecurityTransactionType),
     price_per_share=valid_decimals(min_value=0.0),
-    fees=valid_decimals(min_value=0),
     data=st.data(),
 )
 def test_add_security_transaction(
     description: str,
     type_: SecurityTransactionType,
     price_per_share: Decimal,
-    fees: Decimal,
     data: st.DataObject,
 ) -> None:
     record_keeper = get_preloaded_record_keeper()
@@ -591,7 +589,6 @@ def test_add_security_transaction(
         security.symbol,
         shares,
         price_per_share,
-        fees,
         security_account_path,
         cash_account_path,
     )
@@ -689,7 +686,6 @@ def get_preloaded_record_keeper_with_security_transactions() -> RecordKeeper:
         security_symbol="VWCE.DE",
         shares=Decimal(10),
         price_per_share=Decimal(90),
-        fees=Decimal(1.25),
         security_account_path="Security Accounts/Interactive Brokers",
         cash_account_path="Bank Accounts/Moneta EUR",
     )
@@ -700,7 +696,6 @@ def get_preloaded_record_keeper_with_security_transactions() -> RecordKeeper:
         security_symbol="VWCE.DE",
         shares=Decimal(10),
         price_per_share=Decimal(91),
-        fees=Decimal(1.25),
         security_account_path="Security Accounts/Interactive Brokers",
         cash_account_path="Bank Accounts/Moneta EUR",
     )
@@ -711,7 +706,6 @@ def get_preloaded_record_keeper_with_security_transactions() -> RecordKeeper:
         security_symbol="CSOB.DYN",
         shares=Decimal(2750),
         price_per_share=Decimal(1.75),
-        fees=Decimal(0),
         security_account_path="Security Accounts/ČSOB Penzijní účet",
         cash_account_path="Bank Accounts/Fio CZK",
     )
@@ -722,7 +716,6 @@ def get_preloaded_record_keeper_with_security_transactions() -> RecordKeeper:
         security_symbol="CSOB.DYN",
         shares=Decimal(2850),
         price_per_share=Decimal(1.6),
-        fees=Decimal(0),
         security_account_path="Security Accounts/ČSOB Penzijní účet",
         cash_account_path="Bank Accounts/Fio CZK",
     )
@@ -947,7 +940,6 @@ def get_preloaded_record_keeper_with_various_transactions() -> RecordKeeper:
         security_symbol="CSOB.DYN",
         shares=Decimal(2850),
         price_per_share=Decimal(1.6),
-        fees=Decimal(0),
         security_account_path="Security Accounts/ČSOB Penzijní účet",
         cash_account_path="Bank Accounts/Fio CZK",
     )

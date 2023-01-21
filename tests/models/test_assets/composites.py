@@ -287,7 +287,6 @@ def security_transactions(
 
     cash_account = draw(cash_accounts())
     price_per_share = draw(cash_amounts(currency=cash_account.currency, min_value=0))
-    fees = draw(cash_amounts(currency=cash_account.currency, min_value=0))
     security = draw(securities(currency=cash_account.currency))
     security_account = draw(security_accounts())
 
@@ -300,7 +299,6 @@ def security_transactions(
         security,
         shares,
         price_per_share,
-        fees,
         security_account,
         cash_account,
     )

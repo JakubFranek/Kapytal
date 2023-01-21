@@ -50,7 +50,6 @@ def test_buy(
 
     currency = cash_account.currency
     price_per_share = data.draw(cash_amounts(currency=currency, min_value=0))
-    fees = data.draw(cash_amounts(currency=currency, min_value=0))
     security = data.draw(securities(cash_account.currency))
     shares = data.draw(
         valid_decimals(min_value=1e-10).filter(lambda x: x % security.shares_unit == 0)
@@ -69,7 +68,6 @@ def test_buy(
         security,
         shares,
         price_per_share,
-        fees,
         security_account,
         cash_account,
     )
@@ -82,7 +80,7 @@ def test_buy(
     assert transaction.currencies == (cash_account.currency,)
     assert (
         cash_account.get_balance(currency)
-        == cash_account.initial_balance - shares * price_per_share - fees
+        == cash_account.initial_balance - shares * price_per_share
     )
     assert security_account.securities[security] == shares
     assert transaction.__repr__() == (
@@ -102,7 +100,6 @@ def test_sell(data: st.DataObject) -> None:
     shares = data.draw(st.integers(min_value=1, max_value=1e10))
     currency = security.currency
     price_per_share = data.draw(cash_amounts(currency=currency, min_value=0))
-    fees = data.draw(cash_amounts(currency=currency, min_value=0))
     security_account = buy.security_account
     cash_account = buy.cash_account
 
@@ -113,7 +110,6 @@ def test_sell(data: st.DataObject) -> None:
         security,
         shares,
         price_per_share,
-        fees,
         security_account,
         cash_account,
     )
@@ -158,7 +154,6 @@ def test_invalid_type_type(
             security,
             shares,
             Decimal("100"),
-            Decimal("1"),
             security_account,
             cash_account,
         )
@@ -194,7 +189,6 @@ def test_invalid_security_type(
             security,
             Decimal("1"),
             Decimal("100"),
-            Decimal("1"),
             security_account,
             cash_account,
         )
@@ -232,7 +226,6 @@ def test_invalid_shares_type(
             security,
             shares,
             Decimal("100"),
-            Decimal("1"),
             security_account,
             cash_account,
         )
@@ -271,7 +264,6 @@ def test_invalid_shares_str_value(
                 security,
                 shares,
                 Decimal("100"),
-                Decimal("1"),
                 security_account,
                 cash_account,
             )
@@ -310,7 +302,6 @@ def test_invalid_shares_value(
             security,
             shares,
             CashAmount("1000", security.currency),
-            CashAmount("1", security.currency),
             security_account,
             cash_account,
         )
@@ -350,7 +341,6 @@ def test_invalid_shares_unit(
             security,
             shares,
             CashAmount("1000", security.currency),
-            CashAmount("1", security.currency),
             security_account,
             cash_account,
         )
@@ -390,7 +380,6 @@ def test_valid_shares_unit_str(
         security,
         shares,
         CashAmount("1000", security.currency),
-        CashAmount("1", security.currency),
         security_account,
         cash_account,
     )
@@ -431,7 +420,6 @@ def test_invalid_security_account_type(
             security,
             shares,
             CashAmount("100", currency),
-            CashAmount("1", currency),
             security_account,
             cash_account,
         )
@@ -466,7 +454,6 @@ def test_invalid_cash_account_type(
             security,
             shares,
             CashAmount("100", currency),
-            CashAmount("1", currency),
             security_account,
             cash_account,
         )
@@ -502,43 +489,6 @@ def test_invalid_price_per_share_type(
             security,
             shares,
             price_per_share,
-            CashAmount("1", currency),
-            security_account,
-            cash_account,
-        )
-
-
-@given(
-    datetime_=st.datetimes(),
-    type_=st.sampled_from(SecurityTransactionType),
-    security=securities(),
-    security_account=security_accounts(),
-    fees=everything_except((CashAmount, NoneType)),
-    data=st.data(),
-)
-def test_invalid_fees_type(
-    datetime_: datetime,
-    type_: SecurityTransactionType,
-    security: Security,
-    security_account: SecurityAccount,
-    fees: Any,
-    data: st.DataObject,
-) -> None:
-    currency = security.currency
-    cash_account = data.draw(cash_accounts(currency=currency))
-    shares = data.draw(share_decimals(shares_unit=security.shares_unit))
-    with pytest.raises(
-        TypeError,
-        match="SecurityTransaction amounts must be CashAmounts.",
-    ):
-        SecurityTransaction(
-            "Test description",
-            datetime_,
-            type_,
-            security,
-            shares,
-            CashAmount("1", currency),
-            fees,
             security_account,
             cash_account,
         )
@@ -571,7 +521,6 @@ def test_invalid_cash_account_currency(
             security,
             shares,
             CashAmount("100", currency),
-            CashAmount("1", currency),
             security_account,
             cash_account,
         )
@@ -670,7 +619,6 @@ def get_sell() -> SecurityTransaction:
     security = buy.security
     shares = Decimal("10")
     price_per_share = CashAmount("105.49", security.currency)
-    fees = CashAmount("1.25", security.currency)
     return SecurityTransaction(
         description,
         datetime_,
@@ -678,7 +626,6 @@ def get_sell() -> SecurityTransaction:
         security,
         shares,
         price_per_share,
-        fees,
         buy.security_account,
         buy.cash_account,
     )
@@ -691,7 +638,6 @@ def get_buy() -> SecurityTransaction:
     security = get_security()
     shares = Decimal("10")
     price_per_share = CashAmount("99.77", security.currency)
-    fees = CashAmount("1.25", security.currency)
     security_account = SecurityAccount("Interactive Brokers")
     cash_account = CashAccount(
         "Interactive Brokers EUR",
@@ -706,7 +652,6 @@ def get_buy() -> SecurityTransaction:
         security,
         shares,
         price_per_share,
-        fees,
         security_account,
         cash_account,
     )

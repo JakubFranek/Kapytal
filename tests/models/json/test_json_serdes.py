@@ -392,7 +392,6 @@ def test_security_transaction(transaction: SecurityTransaction) -> None:
     assert decoded.type_ == transaction.type_
     assert decoded.security == transaction.security
     assert decoded.price_per_share == transaction.price_per_share
-    assert decoded.fees == transaction.fees
     assert decoded.cash_account == transaction.cash_account
     assert decoded.security_account == transaction.security_account
 
@@ -475,7 +474,6 @@ def test_record_keeper_transactions() -> None:
         "CSOB.DYN",
         1000,
         "1.7",
-        0,
         "ČSOB penzijní účet",
         "Bank Accounts/Raiffeisen",
     )
