@@ -311,7 +311,6 @@ class SecurityRelatedTransaction(Transaction, ABC):
         raise NotImplementedError
 
 
-# REFACTOR: remove fee
 class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
     def __init__(
         self,

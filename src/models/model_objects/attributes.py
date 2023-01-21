@@ -105,30 +105,22 @@ class Category(NameMixin, JSONSerializableMixin):
             return self.name
         return self.parent.path + "/" + self.name
 
-    @property
-    def parent_path(self) -> str:
-        if self.parent is None:
-            return None
-        return self.parent.path
-
     def __repr__(self) -> str:
         return f"Category(path='{self.path}', {self.type_.name})"
 
-    # REFACTOR: name and parent_path could be replaced by path
     def serialize(self) -> dict[str, Any]:
         return {
             "datatype": "Category",
-            "name": self._name,
+            "path": self.path,
             "type_": self._type.name,
-            "parent_path": self.parent_path,
         }
 
     @staticmethod
     def deserialize(data: dict[str, Any], categories: list["Category"]) -> "Category":
-        name = data["name"]
+        path: str = data["path"]
+        parent_path, _, name = path.rpartition("/")
         type_ = CategoryType[data["type_"]]
         obj = Category(name, type_)
-        parent_path = data["parent_path"]
-        if parent_path is not None:
+        if parent_path != "":
             obj.parent = find_category_by_path(parent_path, categories)
         return obj

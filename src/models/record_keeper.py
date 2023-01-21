@@ -1030,7 +1030,7 @@ class RecordKeeper(JSONSerializableMixin):
         parent = None
         if "/" in current_path:
             while "/" in current_path:
-                current_path = current_path[: current_path.rfind("/")]
+                current_path, _, _ = current_path.rpartition("/")
                 for category in self._categories:
                     if category.path == current_path:
                         parent = category
