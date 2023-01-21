@@ -7,7 +7,7 @@ from hypothesis import assume, given
 from hypothesis import strategies as st
 
 from src.models.constants import tzinfo
-from src.models.model_objects.currency import (
+from src.models.model_objects.currency_objects import (
     CashAmount,
     ConversionFactorNotFoundError,
     Currency,

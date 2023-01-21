@@ -24,7 +24,7 @@ from src.models.model_objects.cash_objects import (
     CashTransfer,
     RefundTransaction,
 )
-from src.models.model_objects.currency import (
+from src.models.model_objects.currency_objects import (
     CashAmount,
     Currency,
     CurrencyError,

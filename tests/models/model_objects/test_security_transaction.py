@@ -10,7 +10,11 @@ from hypothesis import strategies as st
 from src.models.base_classes.account import UnrelatedAccountError
 from src.models.constants import tzinfo
 from src.models.model_objects.cash_objects import CashAccount
-from src.models.model_objects.currency import CashAmount, Currency, CurrencyError
+from src.models.model_objects.currency_objects import (
+    CashAmount,
+    Currency,
+    CurrencyError,
+)
 from src.models.model_objects.security_objects import (
     Security,
     SecurityAccount,

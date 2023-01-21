@@ -1,4 +1,3 @@
-# TODO: rename this module
 import copy
 import operator
 from collections.abc import Collection

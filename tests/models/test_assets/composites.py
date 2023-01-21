@@ -20,7 +20,7 @@ from src.models.model_objects.cash_objects import (
     CashTransactionType,
     CashTransfer,
 )
-from src.models.model_objects.currency import CashAmount, Currency
+from src.models.model_objects.currency_objects import CashAmount, Currency
 from src.models.model_objects.security_objects import (
     Security,
     SecurityAccount,

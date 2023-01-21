@@ -23,7 +23,11 @@ from src.models.model_objects.attributes import (
     InvalidCategoryError,
     InvalidCategoryTypeError,
 )
-from src.models.model_objects.currency import CashAmount, Currency, CurrencyError
+from src.models.model_objects.currency_objects import (
+    CashAmount,
+    Currency,
+    CurrencyError,
+)
 from src.models.utilities.find_helpers import (
     find_account_by_uuid,
     find_account_group_by_path,

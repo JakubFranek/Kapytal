@@ -27,7 +27,11 @@ from src.models.model_objects.cash_objects import (
     UnrelatedAccountError,
     UnrelatedTransactionError,
 )
-from src.models.model_objects.currency import CashAmount, Currency, CurrencyError
+from src.models.model_objects.currency_objects import (
+    CashAmount,
+    Currency,
+    CurrencyError,
+)
 from tests.models.test_assets.composites import (
     cash_accounts,
     cash_transactions,

@@ -6,7 +6,7 @@ if TYPE_CHECKING:
 from src.models.mixins.get_balance_mixin import GetBalanceMixin
 from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
 from src.models.mixins.name_mixin import NameMixin
-from src.models.model_objects.currency import CashAmount, Currency
+from src.models.model_objects.currency_objects import CashAmount, Currency
 from src.models.utilities.find_helpers import find_account_group_by_path
 
 

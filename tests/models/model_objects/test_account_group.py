@@ -8,7 +8,7 @@ from hypothesis import strategies as st
 
 from src.models.constants import tzinfo
 from src.models.model_objects.account_group import AccountGroup
-from src.models.model_objects.currency import CashAmount, Currency, ExchangeRate
+from src.models.model_objects.currency_objects import CashAmount, Currency, ExchangeRate
 from tests.models.test_assets.composites import (
     account_groups,
     cash_accounts,

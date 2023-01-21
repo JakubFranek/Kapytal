@@ -17,7 +17,11 @@ from src.models.mixins.name_mixin import NameMixin
 from src.models.mixins.uuid_mixin import UUIDMixin
 from src.models.model_objects.account_group import AccountGroup
 from src.models.model_objects.cash_objects import CashAccount, CashRelatedTransaction
-from src.models.model_objects.currency import CashAmount, Currency, CurrencyError
+from src.models.model_objects.currency_objects import (
+    CashAmount,
+    Currency,
+    CurrencyError,
+)
 from src.models.utilities.find_helpers import (
     find_account_by_uuid,
     find_account_group_by_path,

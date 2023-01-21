@@ -7,7 +7,11 @@ from hypothesis import assume, given
 from hypothesis import strategies as st
 
 from src.models.mixins.name_mixin import NameLengthError
-from src.models.model_objects.currency import CashAmount, Currency, CurrencyError
+from src.models.model_objects.currency_objects import (
+    CashAmount,
+    Currency,
+    CurrencyError,
+)
 from src.models.model_objects.security_objects import (
     InvalidCharacterError,
     Security,
