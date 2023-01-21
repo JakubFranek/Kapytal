@@ -61,18 +61,16 @@ class AccountGroup(NameMixin, GetBalanceMixin, JSONSerializableMixin):
     def serialize(self) -> dict[str, Any]:
         return {
             "datatype": "AccountGroup",
-            "name": self._name,
-            "parent_path": self.parent_path,
+            "path": self.path,
         }
 
     @staticmethod
     def deserialize(
         data: dict[str, Any], account_groups: list["AccountGroup"]
     ) -> "AccountGroup":
-        name = data["name"]
+        path: str = data["path"]
+        parent_path, _, name = path.rpartition("/")
         obj = AccountGroup(name)
-
-        parent_path = data["parent_path"]
-        if parent_path is not None:
+        if parent_path != "":
             obj.parent = find_account_group_by_path(parent_path, account_groups)
         return obj
