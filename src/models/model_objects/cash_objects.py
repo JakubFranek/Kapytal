@@ -269,16 +269,16 @@ class CashTransaction(CashRelatedTransaction):
     def amount(self) -> CashAmount:
         return sum(
             (amount for _, amount in self._category_amount_pairs),
-            start=CashAmount(0, self._currency),
+            start=CashAmount(0, self.currency),
         )
 
     @property
     def currency(self) -> Currency:
-        return self._currency
+        return self._account.currency
 
     @property
     def currencies(self) -> tuple[Currency]:
-        return (self._currency,)
+        return (self.currency,)
 
     @property
     def payee(self) -> Attribute:
@@ -562,14 +562,12 @@ class CashTransaction(CashRelatedTransaction):
         self._tag_amount_pairs = list(tag_amount_pairs)
         self._set_account(account)
 
-    # IDEA: looks very similar to its Security counterpart
     def _set_account(self, account: CashAccount) -> None:
         if hasattr(self, "_account"):
             if self._account == account:
                 return
             self._account.remove_transaction(self)
         self._account = account
-        self._currency = account.currency
         self._account.add_transaction(self)
 
     def _validate_type(self, type_: CashTransactionType) -> None:
@@ -891,7 +889,7 @@ class CashTransfer(CashRelatedTransaction):
         self._amount_received = amount_received
         self._set_accounts(sender, recipient)
 
-    # IDEA: looks very similar to its security counterpart
+    # IDEA: looks very similar to its Security counterpart
     def _set_accounts(self, sender: CashAccount, recipient: CashAccount) -> None:
         add_sender = True
         add_recipient = True
@@ -971,16 +969,16 @@ class RefundTransaction(CashRelatedTransaction):
     def amount(self) -> CashAmount:
         return sum(
             (amount for _, amount in self._category_amount_pairs),
-            start=CashAmount(0, self._currency),
+            start=CashAmount(0, self.currency),
         )
 
     @property
     def currency(self) -> Currency:
-        return self._currency
+        return self._account.currency
 
     @property
     def currencies(self) -> tuple[Currency]:
-        return (self._currency,)
+        return (self.currency,)
 
     @property
     def refunded_transaction(self) -> CashTransaction:
@@ -1221,7 +1219,6 @@ class RefundTransaction(CashRelatedTransaction):
                 return
             self._account.remove_transaction(self)
         self._account = account
-        self._currency = account.currency
         self._account.add_transaction(self)
 
     def _validate_account(
