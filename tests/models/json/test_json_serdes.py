@@ -346,9 +346,9 @@ def test_refund_transaction(transaction: CashTransaction) -> None:
         transaction.datetime_ + timedelta(days=1),
         transaction.account,
         transaction,
+        transaction.payee,
         transaction.category_amount_pairs,
         transaction.tag_amount_pairs,
-        transaction.payee,
     )
     transaction.remove_refund(refund)
     serialized = json.dumps(refund, cls=CustomJSONEncoder)

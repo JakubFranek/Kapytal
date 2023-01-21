@@ -939,7 +939,6 @@ class CashTransfer(CashRelatedTransaction):
         return -self.amount_sent
 
 
-# REFACTOR: inconsistent parameter order with CashTransactions (payee)
 class RefundTransaction(CashRelatedTransaction):
     """A refund which attaches itself to an expense CashTransaction"""
 
@@ -949,9 +948,9 @@ class RefundTransaction(CashRelatedTransaction):
         datetime_: datetime,
         account: CashAccount,
         refunded_transaction: CashTransaction,
+        payee: Attribute,
         category_amount_pairs: Collection[tuple[Category, CashAmount]],
         tag_amount_pairs: Collection[tuple[Attribute, CashAmount]],
-        payee: Attribute,
     ) -> None:
         super().__init__()
         self._set_refunded_transaction(refunded_transaction)
