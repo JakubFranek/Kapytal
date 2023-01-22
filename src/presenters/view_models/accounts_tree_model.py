@@ -68,15 +68,18 @@ class AccountsTreeModel(QAbstractItemModel):
         column = index.column()
         node: Account | AccountGroup = index.internalPointer()
         if role == Qt.ItemDataRole.DisplayRole:
-            if column == AccountTreeColumns.COLUMN_NAME:
+            if column == AccountTreeColumns.COLUMN_NAME.value:
                 return node.name
-            if column == AccountTreeColumns.COLUMN_BALANCE:
+            if column == AccountTreeColumns.COLUMN_BALANCE.value:
                 return "0 CZK"
-            if column == AccountTreeColumns.COLUMN_BALANCE_BASE:
+            if column == AccountTreeColumns.COLUMN_BALANCE_BASE.value:
                 return "0 CZK"
-            if column == AccountTreeColumns.COLUMN_SHOW:
+            if column == AccountTreeColumns.COLUMN_SHOW.value:
                 return "xxx"
-        if role == Qt.ItemDataRole.DecorationRole and column == self.COLUMN_NAME:
+        if (
+            role == Qt.ItemDataRole.DecorationRole
+            and column == AccountTreeColumns.COLUMN_NAME.value
+        ):
             if isinstance(node, AccountGroup):
                 if self._view.isExpanded(index):
                     return QIcon("icons_16:folder-horizontal-open.png")
