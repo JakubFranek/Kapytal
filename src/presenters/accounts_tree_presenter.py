@@ -11,3 +11,6 @@ class AccountsTreePresenter:
             view=view.accountsTree, data=record_keeper.account_objects
         )
         self._view.accountsTree.setModel(self._accounts_tree_model)
+
+        self._view.finalize_setup()
+        self._view.show()

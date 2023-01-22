@@ -1,22 +1,18 @@
 import os
 
 from PyQt6.QtCore import QDir
-from PyQt6.QtWidgets import QMainWindow
+from PyQt6.QtWidgets import QHeaderView, QMainWindow
 
+from src.views.constants import AccountTreeColumns
 from src.views.ui_files.Ui_mainwindow import Ui_MainWindow
 
-# TODO: set up AccountTree column resizing policy
 # TODO: set up error display
-# TODO: set up icons
 
 
 class MainView(QMainWindow, Ui_MainWindow):
     def __init__(self) -> None:
         super().__init__()
         self.initial_setup()
-
-        # TODO: this will be moved to MainPresenter or something
-        self.show()
 
     def initial_setup(self) -> None:
         QDir.addSearchPath(
@@ -33,3 +29,18 @@ class MainView(QMainWindow, Ui_MainWindow):
         )
 
         self.setupUi(self)
+
+    def finalize_setup(self) -> None:
+        self.accountsTree.header().setSectionResizeMode(
+            AccountTreeColumns.COLUMN_NAME, QHeaderView.ResizeMode.Stretch
+        )
+        self.accountsTree.header().setSectionResizeMode(
+            AccountTreeColumns.COLUMN_BALANCE, QHeaderView.ResizeMode.ResizeToContents
+        )
+        self.accountsTree.header().setSectionResizeMode(
+            AccountTreeColumns.COLUMN_BALANCE_BASE,
+            QHeaderView.ResizeMode.ResizeToContents,
+        )
+        self.accountsTree.header().setSectionResizeMode(
+            AccountTreeColumns.COLUMN_SHOW, QHeaderView.ResizeMode.ResizeToContents
+        )

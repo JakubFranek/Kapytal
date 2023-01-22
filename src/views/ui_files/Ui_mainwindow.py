@@ -37,6 +37,7 @@ class Ui_MainWindow(object):
         self.accountsTree.setObjectName("accountsTree")
         self.accountsTree.header().setHighlightSections(True)
         self.accountsTree.header().setSortIndicatorShown(False)
+        self.accountsTree.header().setStretchLastSection(False)
         self.verticalLayout.addWidget(self.accountsTree)
         self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")

@@ -8,8 +8,10 @@ from src.models.base_classes.account import Account
 from src.models.model_objects.account_group import AccountGroup
 from src.models.model_objects.cash_objects import CashAccount
 from src.models.model_objects.security_objects import SecurityAccount
+from src.views.constants import AccountTreeColumns
 
 # TODO: set up model checker test
+# TODO: pass reference to settings?
 
 
 class AccountsTreeModel(QAbstractItemModel):
@@ -66,20 +68,23 @@ class AccountsTreeModel(QAbstractItemModel):
         column = index.column()
         node: Account | AccountGroup = index.internalPointer()
         if role == Qt.ItemDataRole.DisplayRole:
-            if column == 0:
+            if column == AccountTreeColumns.COLUMN_NAME:
                 return node.name
-            if column == 1:
+            if column == AccountTreeColumns.COLUMN_BALANCE:
                 return "0 CZK"
-        if role == Qt.ItemDataRole.DecorationRole:
-            if column == 0:
-                if isinstance(node, AccountGroup):
-                    if self._view.isExpanded(index):
-                        return QIcon("icons_16:folder-horizontal-open.png")
-                    return QIcon("icons_16:folder-horizontal.png")
-                if isinstance(node, SecurityAccount):
-                    return QIcon("icons_16:bank.png")
-                if isinstance(node, CashAccount):
-                    return QIcon("icons_16:money-coin.png")
+            if column == AccountTreeColumns.COLUMN_BALANCE_BASE:
+                return "0 CZK"
+            if column == AccountTreeColumns.COLUMN_SHOW:
+                return "xxx"
+        if role == Qt.ItemDataRole.DecorationRole and column == self.COLUMN_NAME:
+            if isinstance(node, AccountGroup):
+                if self._view.isExpanded(index):
+                    return QIcon("icons_16:folder-horizontal-open.png")
+                return QIcon("icons_16:folder-horizontal.png")
+            if isinstance(node, SecurityAccount):
+                return QIcon("icons_16:bank.png")
+            if isinstance(node, CashAccount):
+                return QIcon("icons_16:money-coin.png")
         return None
 
     def headerData(
