@@ -1,10 +1,15 @@
 import typing
 
 from PyQt6.QtCore import QAbstractItemModel, QModelIndex, Qt
+from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QTreeView
 
 from src.models.base_classes.account import Account
 from src.models.model_objects.account_group import AccountGroup
+from src.models.model_objects.cash_objects import CashAccount
+from src.models.model_objects.security_objects import SecurityAccount
+
+# TODO: set up model checker test
 
 
 class AccountsTreeModel(QAbstractItemModel):
@@ -65,6 +70,16 @@ class AccountsTreeModel(QAbstractItemModel):
                 return node.name
             if column == 1:
                 return "0 CZK"
+        if role == Qt.ItemDataRole.DecorationRole:
+            if column == 0:
+                if isinstance(node, AccountGroup):
+                    if self._view.isExpanded(index):
+                        return QIcon("icons_16:folder-horizontal-open.png")
+                    return QIcon("icons_16:folder-horizontal.png")
+                if isinstance(node, SecurityAccount):
+                    return QIcon("icons_16:bank.png")
+                if isinstance(node, CashAccount):
+                    return QIcon("icons_16:money-coin.png")
         return None
 
     def headerData(

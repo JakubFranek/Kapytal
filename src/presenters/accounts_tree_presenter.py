@@ -8,6 +8,6 @@ class AccountsTreePresenter:
         self._view = view
         self._record_keeper = record_keeper
         self._accounts_tree_model = AccountsTreeModel(
-            view=view, data=record_keeper.account_objects
+            view=view.accountsTree, data=record_keeper.account_objects
         )
         self._view.accountsTree.setModel(self._accounts_tree_model)
