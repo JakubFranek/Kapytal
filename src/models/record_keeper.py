@@ -65,6 +65,12 @@ class RecordKeeper(JSONSerializableMixin):
     def account_groups(self) -> tuple[AccountGroup, ...]:
         return tuple(self._account_groups)
 
+    # REFACTOR: is this a good idea? list or tuple?
+    @property
+    def account_objects(self) -> list[Account | AccountGroup]:
+        merged_lists = self._account_groups + self._accounts
+        return [obj for obj in merged_lists if obj.parent is None]
+
     @property
     def currencies(self) -> tuple[Currency, ...]:
         return tuple(self._currencies)
