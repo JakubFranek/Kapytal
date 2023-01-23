@@ -28,6 +28,12 @@
      <layout class="QVBoxLayout" name="verticalLayoutTree">
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_3">
+        <property name="topMargin">
+         <number>2</number>
+        </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
         <item>
          <widget class="QToolButton" name="toolButton_expandAll">
           <property name="text">
@@ -228,11 +234,6 @@
    <addaction name="actionSave_As"/>
    <addaction name="separator"/>
   </widget>
-  <action name="actionAdd_Account">
-   <property name="text">
-    <string>Add Account</string>
-   </property>
-  </action>
   <action name="actionSave">
    <property name="text">
     <string>Save</string>
@@ -321,6 +322,31 @@
   <action name="actionDuplicate_Transaction">
    <property name="text">
     <string>Duplicate Transaction</string>
+   </property>
+  </action>
+  <action name="actionDelete_Account_Object">
+   <property name="text">
+    <string>Delete</string>
+   </property>
+  </action>
+  <action name="actionDelete_Transactions">
+   <property name="text">
+    <string>Delete Transaction(s)</string>
+   </property>
+  </action>
+  <action name="actionEdit_Account_Object">
+   <property name="text">
+    <string>Edit</string>
+   </property>
+  </action>
+  <action name="actionAdd_Cash_Account">
+   <property name="text">
+    <string>Add Cash Account</string>
+   </property>
+  </action>
+  <action name="actionAdd_Security_Account">
+   <property name="text">
+    <string>Add Security Account</string>
    </property>
   </action>
  </widget>
