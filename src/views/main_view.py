@@ -17,9 +17,11 @@ class MainView(QMainWindow, Ui_MainWindow):
     def __init__(self) -> None:
         super().__init__()
         self.initial_setup()
-        self.accountsTree.contextMenuEvent = self.signal_tree_context_menu.emit()
+        self.accountsTree.contextMenuEvent = self.accounts_tree_context_menu
 
-    def test_context_menu(self, event: QContextMenuEvent) -> None:  # noqa: U100
+    def accounts_tree_context_menu(
+        self, event: QContextMenuEvent  # noqa: U100
+    ) -> None:
         self.menu = QMenu(self)
         self.menu.addAction(self.actionAdd_Account_Group)
         self.menu.addAction(self.actionAdd_Cash_Account)
