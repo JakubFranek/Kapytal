@@ -2,7 +2,8 @@ import logging
 
 from src.models.model_objects.account_group import AccountGroup
 from src.models.record_keeper import RecordKeeper
-from src.presenters.view_models.accounts_tree_model import AccountTreeModel
+from src.presenters.view_models.account_tree_model import AccountTreeModel
+from src.views.account_group_dialog import AccountGroupDialog
 from src.views.main_view import MainView
 from src.views.utilities.handle_exception import get_exception_info
 
@@ -25,6 +26,9 @@ class AccountTreePresenter:
         self._view.signal_tree_selection_changed.connect(self.selection_changed)
         self._view.signal_tree_expand_below.connect(self.expand_all_below)
         self._view.signal_tree_delete_item.connect(self.delete_item)
+        self._view.signal_tree_add_account_group.connect(
+            lambda: self.run_account_group_dialog(edit=False)
+        )
 
         self.selection_changed()  # called to ensure context menu is OK at start of run
 
@@ -42,10 +46,35 @@ class AccountTreePresenter:
         )
 
     def expand_all_below(self) -> None:
-        indexes = self._view.accountsTree.selectedIndexes()
+        indexes = self._view.accountTree.selectedIndexes()
         if len(indexes) == 0:
             raise ValueError("No index to expand recursively selected.")
         self._view.accountTree.expandRecursively(indexes[0])
+
+    def run_account_group_dialog(self, edit: bool) -> None:
+        self._dialog = AccountGroupDialog(edit)
+        self._dialog.signal_OK.connect(self.add_account_group)
+        item = self._model.get_selected_item()
+        self._dialog.path = "" if item is None else item.path + "/"
+        self._dialog.exec()
+
+    def add_account_group(self) -> None:
+        path = self._dialog.path
+        if "/" in path:
+            parent_path, _, name = path.rpartition("/")
+        else:
+            name = path
+            parent_path = None
+
+        try:
+            item = self._model.get_selected_item()
+            self._model.pre_add(item)
+            self._record_keeper.add_account_group(name, parent_path)
+            self._model._data = self._record_keeper.account_objects
+            self._model.post_add()
+        except Exception:
+            self._model.post_add()
+            self._handle_exception()
 
     def delete_item(self) -> None:
         item = self._model.get_selected_item()
@@ -66,8 +95,8 @@ class AccountTreePresenter:
             self._model.post_delete_item()
         except Exception:
             self._model.post_delete_item()
-            self.handle_exception()
+            self._handle_exception()
 
-    def handle_exception(self) -> None:
+    def _handle_exception(self) -> None:
         display_text, display_details = get_exception_info()  # type: ignore
         self._view.display_error(display_text, display_details)

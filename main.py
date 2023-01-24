@@ -10,7 +10,7 @@ from PyQt6.QtWidgets import QApplication
 
 from src.models.constants import tzinfo
 from src.models.record_keeper import RecordKeeper
-from src.presenters.accounts_tree_presenter import AccountTreePresenter
+from src.presenters.account_tree_presenter import AccountTreePresenter
 from src.views.main_view import MainView
 
 

@@ -108,8 +108,13 @@ class AccountTreeModel(QAbstractItemModel):
             return str(section)
         return None
 
-    def pre_add(self) -> None:
-        self.beginInsertRows(QModelIndex(), self.rowCount(), self.rowCount())
+    def pre_add(self, parent: AccountGroup | None) -> None:
+        parent_index = self.get_index_from_item(parent)
+        if parent is None:
+            row_index = len(self._data)
+        else:
+            row_index = len(parent.children)
+        self.beginInsertRows(parent_index, row_index, row_index)
 
     def post_add(self) -> None:
         self.endInsertRows()
