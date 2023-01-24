@@ -28,17 +28,20 @@ class AccountsTreePresenter:
 
         enable_object_change = len(indexes) != 0
         enable_add_objects = True
+        enable_expand_all_below = False
         if len(indexes) != 0:
+            enable_expand_all_below = True
             item = indexes[0].internalPointer()
             if not isinstance(item, AccountGroup):
                 enable_add_objects = False
+                enable_expand_all_below = False
 
         self._view.actionAdd_Account_Group.setEnabled(enable_add_objects)
         self._view.actionAdd_Security_Account.setEnabled(enable_add_objects)
         self._view.actionAdd_Cash_Account.setEnabled(enable_add_objects)
         self._view.actionEdit_Account_Object.setEnabled(enable_object_change)
         self._view.actionDelete_Account_Object.setEnabled(enable_object_change)
-        self._view.actionExpand_All_Below.setEnabled(enable_object_change)
+        self._view.actionExpand_All_Below.setEnabled(enable_expand_all_below)
 
     def expand_all_below(self) -> None:
         indexes = self._view.accountsTree.selectedIndexes()
