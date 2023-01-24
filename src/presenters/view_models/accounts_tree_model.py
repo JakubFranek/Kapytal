@@ -19,7 +19,7 @@ class AccountsTreeModel(QAbstractItemModel):
 
     def __init__(self, view: QTreeView, data: list[Account | AccountGroup]) -> None:
         super().__init__()
-        self._view = view
+        self._tree = view
         self._data = data
         self._proxy = None
 
@@ -57,10 +57,13 @@ class AccountsTreeModel(QAbstractItemModel):
 
         child: AccountGroup = index.internalPointer()
         parent = child.parent
-        if parent is not None:
-            parent_row = parent.children.index(child)
-        else:
+        if parent is None:
             return QModelIndex()
+        grandparent = parent.parent
+        if grandparent is None:
+            parent_row = self._data.index(parent)
+        else:
+            parent_row = grandparent.children.index(parent)
         return QAbstractItemModel.createIndex(self, parent_row, 0, parent)
 
     def data(self, index: QModelIndex, role: Qt.ItemDataRole = ...) -> typing.Any:
@@ -82,7 +85,7 @@ class AccountsTreeModel(QAbstractItemModel):
             and column == AccountTreeColumns.COLUMN_NAME
         ):
             if isinstance(node, AccountGroup):
-                if self._view.isExpanded(index):
+                if self._tree.isExpanded(index):
                     return QIcon("icons_16:folder-open.png")
                 return QIcon("icons_16:folder.png")
             if isinstance(node, SecurityAccount):
@@ -123,8 +126,20 @@ class AccountsTreeModel(QAbstractItemModel):
     def post_reset_model(self) -> None:
         self.endResetModel()
 
-    def pre_delete_task(self, row: int) -> None:
-        self.beginRemoveRows(QModelIndex(), row, row)
+    def pre_delete_item(self, index: QModelIndex) -> None:
+        self.beginRemoveRows(index.parent(), index.row(), index.row())
 
-    def post_delete_task(self) -> None:
+    def post_delete_item(self) -> None:
         self.endRemoveRows()
+
+    def get_selected_item_index(self) -> QModelIndex:
+        indexes = self._tree.selectedIndexes()
+        if len(indexes) == 0:
+            return QModelIndex()
+        return indexes[0]
+
+    def get_selected_item(self) -> Account | AccountGroup | None:
+        indexes = self._tree.selectedIndexes()
+        if len(indexes) == 0:
+            return None
+        return indexes[0].internalPointer()

@@ -14,6 +14,7 @@ class MainView(QMainWindow, Ui_MainWindow):
     signal_tree_selection_changed = pyqtSignal()
     signal_tree_context_menu = pyqtSignal()
     signal_tree_expand_all_below = pyqtSignal()
+    signal_tree_delete_item = pyqtSignal()
 
     def __init__(self) -> None:
         super().__init__()
@@ -28,8 +29,8 @@ class MainView(QMainWindow, Ui_MainWindow):
         self.menu.addAction(self.actionAdd_Cash_Account)
         self.menu.addAction(self.actionAdd_Security_Account)
         self.menu.addSeparator()
-        self.menu.addAction(self.actionEdit_Account_Object)
-        self.menu.addAction(self.actionDelete_Account_Object)
+        self.menu.addAction(self.actionEdit_Account_Tree_Item)
+        self.menu.addAction(self.actionDelete_Account_Tree_Item)
         self.menu.addSeparator()
         self.menu.addAction(self.actionExpand_All_Below)
         self.menu.popup(QCursor.pos())
@@ -56,14 +57,17 @@ class MainView(QMainWindow, Ui_MainWindow):
         self.actionAdd_Account_Group.setIcon(QIcon("icons_16:folder--plus.png"))
         self.actionAdd_Security_Account.setIcon(QIcon("icons_custom:bank-plus.png"))
         self.actionAdd_Cash_Account.setIcon(QIcon("icons_custom:money-coin-plus.png"))
-        self.actionEdit_Account_Object.setIcon(QIcon("icons_16:pencil.png"))
-        self.actionDelete_Account_Object.setIcon(QIcon("icons_16:minus.png"))
+        self.actionEdit_Account_Tree_Item.setIcon(QIcon("icons_16:pencil.png"))
+        self.actionDelete_Account_Tree_Item.setIcon(QIcon("icons_16:minus.png"))
 
         self.actionExpand_All.triggered.connect(self.accountsTree.expandAll)
         self.actionExpand_All_Below.triggered.connect(
             self.signal_tree_expand_all_below.emit
         )
         self.actionCollapse_All.triggered.connect(self.accountsTree.collapseAll)
+        self.actionDelete_Account_Tree_Item.triggered.connect(
+            self.signal_tree_delete_item.emit
+        )
 
         self.toolButton_expandAll.setDefaultAction(self.actionExpand_All)
         self.toolButton_collapseAll.setDefaultAction(self.actionCollapse_All)

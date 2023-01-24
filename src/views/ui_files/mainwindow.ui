@@ -324,7 +324,7 @@
     <string>Duplicate Transaction</string>
    </property>
   </action>
-  <action name="actionDelete_Account_Object">
+  <action name="actionDelete_Account_Tree_Item">
    <property name="text">
     <string>Delete</string>
    </property>
@@ -334,7 +334,7 @@
     <string>Delete Transaction(s)</string>
    </property>
   </action>
-  <action name="actionEdit_Account_Object">
+  <action name="actionEdit_Account_Tree_Item">
    <property name="text">
     <string>Edit</string>
    </property>
