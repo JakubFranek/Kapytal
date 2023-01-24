@@ -2,19 +2,19 @@ import logging
 
 from src.models.model_objects.account_group import AccountGroup
 from src.models.record_keeper import RecordKeeper
-from src.presenters.view_models.accounts_tree_model import AccountsTreeModel
+from src.presenters.view_models.accounts_tree_model import AccountTreeModel
 from src.views.main_view import MainView
 from src.views.utilities.handle_exception import get_exception_info
 
 
-class AccountsTreePresenter:
+class AccountTreePresenter:
     def __init__(self, view: MainView, record_keeper: RecordKeeper) -> None:
         self._view = view
         self._record_keeper = record_keeper
-        self._model = AccountsTreeModel(
-            view=view.accountsTree, data=record_keeper.account_objects
+        self._model = AccountTreeModel(
+            view=view.accountTree, data=record_keeper.account_objects
         )
-        self._view.accountsTree.setModel(self._model)
+        self._view.accountTree.setModel(self._model)
 
         self._setup_signals()
         self._view.finalize_setup()
@@ -45,22 +45,23 @@ class AccountsTreePresenter:
         indexes = self._view.accountsTree.selectedIndexes()
         if len(indexes) == 0:
             raise ValueError("No index to expand recursively selected.")
-        self._view.accountsTree.expandRecursively(indexes[0])
+        self._view.accountTree.expandRecursively(indexes[0])
 
     def delete_item(self) -> None:
         item = self._model.get_selected_item()
         if item is None:
             raise ValueError("Cannot delete non-existent item.")
         path = item.path
-        logging.info(f"Removing Account Tree item at path='{path}'")
+        logging.info(f"Removing {item.__class__.__name__} at path='{path}'")
 
-        index = self._model.get_selected_item_index()
+        index = self._model.get_index_from_item(item)
         try:
             self._model.pre_delete_item(index)
             if isinstance(item, AccountGroup):
                 self._record_keeper.remove_account_group(path)
             else:
                 self._record_keeper.remove_account(path)
+            # REFACTOR: is the line below ok?
             self._model._data = self._record_keeper.account_objects
             self._model.post_delete_item()
         except Exception:

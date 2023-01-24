@@ -14,7 +14,7 @@ from src.views.constants import AccountTreeColumns
 # TODO: pass reference to settings?
 
 
-class AccountsTreeModel(QAbstractItemModel):
+class AccountTreeModel(QAbstractItemModel):
     COLUMN_HEADERS = ("Name", "Balance (native)", "Balance (base)", "Show")
 
     def __init__(self, view: QTreeView, data: list[Account | AccountGroup]) -> None:
@@ -143,3 +143,13 @@ class AccountsTreeModel(QAbstractItemModel):
         if len(indexes) == 0:
             return None
         return indexes[0].internalPointer()
+
+    def get_index_from_item(self, item: Account | AccountGroup | None) -> QModelIndex:
+        if item is None:
+            return QModelIndex()
+        parent = item.parent
+        if parent is None:
+            row = self._data.index(item)
+        else:
+            row = parent.children.index(item)
+        return QAbstractItemModel.createIndex(self, row, 0, item)

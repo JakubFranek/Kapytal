@@ -17,7 +17,7 @@ class MainView(QMainWindow, Ui_MainWindow):
     def __init__(self) -> None:
         super().__init__()
         self.initial_setup()
-        self.accountsTree.contextMenuEvent = self.accounts_tree_context_menu
+        self.accountTree.contextMenuEvent = self.account_tree_context_menu
 
     def enable_accounts_tree_actions(
         self,
@@ -32,9 +32,7 @@ class MainView(QMainWindow, Ui_MainWindow):
         self.actionDelete_Account_Tree_Item.setEnabled(enable_modify_object)
         self.actionExpand_All_Below.setEnabled(enable_expand_below)
 
-    def accounts_tree_context_menu(
-        self, event: QContextMenuEvent  # noqa: U100
-    ) -> None:
+    def account_tree_context_menu(self, event: QContextMenuEvent) -> None:  # noqa: U100
         self.menu = QMenu(self)
         self.menu.addAction(self.actionAdd_Account_Group)
         self.menu.addAction(self.actionAdd_Cash_Account)
@@ -71,11 +69,11 @@ class MainView(QMainWindow, Ui_MainWindow):
         self.actionEdit_Account_Tree_Item.setIcon(QIcon("icons_16:pencil.png"))
         self.actionDelete_Account_Tree_Item.setIcon(QIcon("icons_16:minus.png"))
 
-        self.actionExpand_All.triggered.connect(self.accountsTree.expandAll)
+        self.actionExpand_All.triggered.connect(self.accountTree.expandAll)
         self.actionExpand_All_Below.triggered.connect(
             self.signal_tree_expand_below.emit
         )
-        self.actionCollapse_All.triggered.connect(self.accountsTree.collapseAll)
+        self.actionCollapse_All.triggered.connect(self.accountTree.collapseAll)
         self.actionDelete_Account_Tree_Item.triggered.connect(
             self.signal_tree_delete_item.emit
         )
@@ -84,24 +82,24 @@ class MainView(QMainWindow, Ui_MainWindow):
         self.toolButton_collapseAll.setDefaultAction(self.actionCollapse_All)
 
     def finalize_setup(self) -> None:
-        self.accountsTree.header().setSectionResizeMode(
+        self.accountTree.header().setSectionResizeMode(
             AccountTreeColumns.COLUMN_NAME,
             QHeaderView.ResizeMode.ResizeToContents,
         )
-        self.accountsTree.header().setSectionResizeMode(
+        self.accountTree.header().setSectionResizeMode(
             AccountTreeColumns.COLUMN_BALANCE,
             QHeaderView.ResizeMode.ResizeToContents,
         )
-        self.accountsTree.header().setSectionResizeMode(
+        self.accountTree.header().setSectionResizeMode(
             AccountTreeColumns.COLUMN_BALANCE_BASE,
             QHeaderView.ResizeMode.ResizeToContents,
         )
-        self.accountsTree.header().setSectionResizeMode(
+        self.accountTree.header().setSectionResizeMode(
             AccountTreeColumns.COLUMN_SHOW,
             QHeaderView.ResizeMode.ResizeToContents,
         )
 
-        self.accountsTree.selectionModel().selectionChanged.connect(
+        self.accountTree.selectionModel().selectionChanged.connect(
             self.signal_tree_selection_changed.emit
         )
 

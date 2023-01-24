@@ -10,7 +10,7 @@ from PyQt6.QtWidgets import QApplication
 
 from src.models.constants import tzinfo
 from src.models.record_keeper import RecordKeeper
-from src.presenters.accounts_tree_presenter import AccountsTreePresenter
+from src.presenters.accounts_tree_presenter import AccountTreePresenter
 from src.views.main_view import MainView
 
 
@@ -113,7 +113,7 @@ if __name__ == "__main__":
     record_keeper.add_security_account("Security Acc 4", "Group B")
 
     logging.info("Creating AccountsTreePresenter")
-    presenter = AccountsTreePresenter(main_view, record_keeper)
+    presenter = AccountTreePresenter(main_view, record_keeper)
 
     logging.info("Executing QApplication")
     app.exec()

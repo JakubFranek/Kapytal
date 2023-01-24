@@ -70,7 +70,7 @@
        </layout>
       </item>
       <item>
-       <widget class="QTreeView" name="accountsTree">
+       <widget class="QTreeView" name="accountTree">
         <property name="sizePolicy">
          <sizepolicy hsizetype="MinimumExpanding" vsizetype="Expanding">
           <horstretch>0</horstretch>
