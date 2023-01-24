@@ -23,7 +23,7 @@ class AccountsTreePresenter:
 
     def _setup_signals(self) -> None:
         self._view.signal_tree_selection_changed.connect(self.selection_changed)
-        self._view.signal_tree_expand_all_below.connect(self.expand_all_below)
+        self._view.signal_tree_expand_below.connect(self.expand_all_below)
         self._view.signal_tree_delete_item.connect(self.delete_item)
 
         self.selection_changed()  # called to ensure context menu is OK at start of run
@@ -31,16 +31,15 @@ class AccountsTreePresenter:
     def selection_changed(self) -> None:
         item = self._model.get_selected_item()
 
-        enable_object_change = item is not None
+        enable_modify_object = item is not None
         enable_add_objects = item is None or isinstance(item, AccountGroup)
-        enable_expand_all_below = isinstance(item, AccountGroup)
+        enable_expand_below = isinstance(item, AccountGroup)
 
-        self._view.actionAdd_Account_Group.setEnabled(enable_add_objects)
-        self._view.actionAdd_Security_Account.setEnabled(enable_add_objects)
-        self._view.actionAdd_Cash_Account.setEnabled(enable_add_objects)
-        self._view.actionEdit_Account_Tree_Item.setEnabled(enable_object_change)
-        self._view.actionDelete_Account_Tree_Item.setEnabled(enable_object_change)
-        self._view.actionExpand_All_Below.setEnabled(enable_expand_all_below)
+        self._view.enable_accounts_tree_actions(
+            enable_add_objects=enable_add_objects,
+            enable_modify_object=enable_modify_object,
+            enable_expand_below=enable_expand_below,
+        )
 
     def expand_all_below(self) -> None:
         indexes = self._view.accountsTree.selectedIndexes()
