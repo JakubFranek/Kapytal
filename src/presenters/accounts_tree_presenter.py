@@ -1,3 +1,5 @@
+import logging
+
 from src.models.model_objects.account_group import AccountGroup
 from src.models.record_keeper import RecordKeeper
 from src.presenters.view_models.accounts_tree_model import AccountsTreeModel
@@ -15,6 +17,7 @@ class AccountsTreePresenter:
 
         self._setup_signals()
         self._view.finalize_setup()
+        logging.info("Showing MainView")
         self._view.show()
 
     def _setup_signals(self) -> None:

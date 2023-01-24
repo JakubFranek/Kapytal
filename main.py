@@ -13,9 +13,6 @@ from src.models.record_keeper import RecordKeeper
 from src.presenters.accounts_tree_presenter import AccountsTreePresenter
 from src.views.main_view import MainView
 
-# TODO: logging
-# TODO: except hook
-
 
 def handle_uncaught_exception(
     exc_type: type[BaseException],
@@ -93,6 +90,11 @@ if __name__ == "__main__":
     logging.info("Creating QApplication")
     app = QApplication(sys.argv)
 
+    font = app.font()
+    font.setPointSize(10)
+    app.setFont(font)
+    logging.info("Set QApplication font size to 10 ")
+
     logging.info("Creating MainWindow")
     main_view = MainView()
 
@@ -112,11 +114,6 @@ if __name__ == "__main__":
 
     logging.info("Creating AccountsTreePresenter")
     presenter = AccountsTreePresenter(main_view, record_keeper)
-
-    font = app.font()
-    font.setPointSize(10)
-    app.setFont(font)
-    logging.info("Set QApplication font size to 10 ")
 
     logging.info("Executing QApplication")
     app.exec()
