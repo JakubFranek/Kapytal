@@ -349,6 +349,11 @@
     <string>Add Security Account</string>
    </property>
   </action>
+  <action name="actionExpand_All_Below">
+   <property name="text">
+    <string>Expand All Below</string>
+   </property>
+  </action>
  </widget>
  <resources/>
  <connections/>

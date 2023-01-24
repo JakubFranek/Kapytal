@@ -148,6 +148,8 @@ class Ui_MainWindow(object):
         self.actionAdd_Cash_Account.setObjectName("actionAdd_Cash_Account")
         self.actionAdd_Security_Account = QtGui.QAction(MainWindow)
         self.actionAdd_Security_Account.setObjectName("actionAdd_Security_Account")
+        self.actionExpand_All_Below = QtGui.QAction(MainWindow)
+        self.actionExpand_All_Below.setObjectName("actionExpand_All_Below")
         self.menuFile.addAction(self.actionOpen_File)
         self.menuFile.addAction(self.actionSave)
         self.menuFile.addAction(self.actionSave_As)
@@ -205,3 +207,4 @@ class Ui_MainWindow(object):
         self.actionEdit_Account_Object.setText(_translate("MainWindow", "Edit"))
         self.actionAdd_Cash_Account.setText(_translate("MainWindow", "Add Cash Account"))
         self.actionAdd_Security_Account.setText(_translate("MainWindow", "Add Security Account"))
+        self.actionExpand_All_Below.setText(_translate("MainWindow", "Expand All Below"))

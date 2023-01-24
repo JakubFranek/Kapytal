@@ -13,6 +13,7 @@ from src.views.ui_files.Ui_mainwindow import Ui_MainWindow
 class MainView(QMainWindow, Ui_MainWindow):
     signal_tree_selection_changed = pyqtSignal()
     signal_tree_context_menu = pyqtSignal()
+    signal_tree_expand_all_below = pyqtSignal()
 
     def __init__(self) -> None:
         super().__init__()
@@ -28,8 +29,9 @@ class MainView(QMainWindow, Ui_MainWindow):
         self.menu.addAction(self.actionAdd_Security_Account)
         self.menu.addSeparator()
         self.menu.addAction(self.actionEdit_Account_Object)
-        self.menu.addSeparator()
         self.menu.addAction(self.actionDelete_Account_Object)
+        self.menu.addSeparator()
+        self.menu.addAction(self.actionExpand_All_Below)
         self.menu.popup(QCursor.pos())
 
     def initial_setup(self) -> None:
@@ -48,7 +50,8 @@ class MainView(QMainWindow, Ui_MainWindow):
 
         self.setupUi(self)
 
-        self.actionExpand_All.setIcon(QIcon("icons_16:arrow-out.png"))
+        self.actionExpand_All.setIcon(QIcon("icons_custom:arrow-out.png"))
+        self.actionExpand_All_Below.setIcon(QIcon("icons_16:arrow-stop-270.png"))
         self.actionCollapse_All.setIcon(QIcon("icons_16:arrow-in.png"))
         self.actionAdd_Account_Group.setIcon(QIcon("icons_16:folder--plus.png"))
         self.actionAdd_Security_Account.setIcon(QIcon("icons_custom:bank-plus.png"))
@@ -57,6 +60,9 @@ class MainView(QMainWindow, Ui_MainWindow):
         self.actionDelete_Account_Object.setIcon(QIcon("icons_16:minus.png"))
 
         self.actionExpand_All.triggered.connect(self.accountsTree.expandAll)
+        self.actionExpand_All_Below.triggered.connect(
+            self.signal_tree_expand_all_below.emit
+        )
         self.actionCollapse_All.triggered.connect(self.accountsTree.collapseAll)
 
         self.toolButton_expandAll.setDefaultAction(self.actionExpand_All)
@@ -81,5 +87,5 @@ class MainView(QMainWindow, Ui_MainWindow):
         )
 
         self.accountsTree.selectionModel().selectionChanged.connect(
-            lambda: self.signal_tree_selection_changed.emit()
+            self.signal_tree_selection_changed.emit
         )
