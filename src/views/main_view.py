@@ -2,7 +2,7 @@ import os
 
 from PyQt6.QtCore import QDir, pyqtSignal
 from PyQt6.QtGui import QContextMenuEvent, QCursor, QIcon
-from PyQt6.QtWidgets import QHeaderView, QMainWindow, QMenu
+from PyQt6.QtWidgets import QHeaderView, QMainWindow, QMenu, QMessageBox
 
 from src.views.constants import AccountTreeColumns
 from src.views.ui_files.Ui_mainwindow import Ui_MainWindow
@@ -89,3 +89,22 @@ class MainView(QMainWindow, Ui_MainWindow):
         self.accountsTree.selectionModel().selectionChanged.connect(
             self.signal_tree_selection_changed.emit
         )
+
+    def display_error(
+        self,
+        text: str,
+        exc_details: str,
+        critical: bool = False,
+        title: str = "Error!",
+    ) -> None:
+        message_box = QMessageBox()
+        if critical is True:
+            message_box.setIcon(QMessageBox.Icon.Critical)
+            message_box.setWindowIcon(QIcon("icons_24:cross.png"))
+        else:
+            message_box.setIcon(QMessageBox.Icon.Warning)
+            message_box.setWindowIcon(QIcon("icons_24:exclamation.png"))
+        message_box.setWindowTitle(title)
+        message_box.setText(text)
+        message_box.setDetailedText(exc_details)
+        message_box.exec()
