@@ -4,11 +4,13 @@ from PyQt6.QtWidgets import QAbstractButton, QDialog, QDialogButtonBox, QMessage
 
 from src.views.ui_files.Ui_account_group_dialog import Ui_AccountGroupDialog
 
+# TODO: index change needed in edit mode!
+
 
 class AccountGroupDialog(QDialog, Ui_AccountGroupDialog):
     signal_OK = pyqtSignal()
 
-    def __init__(self, edit: bool = False) -> None:
+    def __init__(self, max_position: int, edit: bool = False) -> None:
         super().__init__()
         self.setupUi(self)
         if not edit:
@@ -18,8 +20,7 @@ class AccountGroupDialog(QDialog, Ui_AccountGroupDialog):
             self.setWindowTitle("Edit Account Group")
             self.setWindowIcon(QIcon("icons_24:pencil.png"))
 
-        self.resize(500, 100)
-
+        self.positionSpinBox.setMaximum(max_position)
         self.buttonBox.clicked.connect(self.handleButtonBoxClick)
 
     @property
@@ -29,6 +30,14 @@ class AccountGroupDialog(QDialog, Ui_AccountGroupDialog):
     @path.setter
     def path(self, text: str) -> None:
         self.pathLineEdit.setText(text)
+
+    @property
+    def position(self) -> int:
+        return self.positionSpinBox.value()
+
+    @position.setter
+    def position(self, value: int) -> None:
+        self.positionSpinBox.setValue(value)
 
     def handleButtonBoxClick(self, button: QAbstractButton) -> None:
         role = self.buttonBox.buttonRole(button)

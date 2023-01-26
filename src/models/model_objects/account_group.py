@@ -46,6 +46,12 @@ class AccountGroup(NameMixin, GetBalanceMixin, JSONSerializableMixin):
             return self.name
         return self.parent.path + "/" + self.name
 
+    def set_child_index(self, child: "Account" | Self, index: int) -> None:
+        if child not in self._children:
+            raise ValueError("Parameter 'child' not in this AccountGroup's children.")
+        self._children.remove(child)
+        self._children.insert(index, child)
+
     def get_balance(self, currency: Currency) -> CashAmount:
         return sum(
             (child.get_balance(currency) for child in self._children),

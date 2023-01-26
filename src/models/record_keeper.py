@@ -49,6 +49,7 @@ class RecordKeeper(JSONSerializableMixin):
     def __init__(self) -> None:
         self._accounts: list[Account] = []
         self._account_groups: list[AccountGroup] = []
+        self._root_account_items: list[AccountGroup | Account] = []
         self._currencies: list[Currency] = []
         self._exchange_rates: list[ExchangeRate] = []
         self._securities: list[Security] = []
@@ -68,8 +69,7 @@ class RecordKeeper(JSONSerializableMixin):
     # REFACTOR: is this a good idea? list or tuple?
     @property
     def account_objects(self) -> list[Account | AccountGroup]:
-        merged_lists = self._account_groups + self._accounts
-        return [obj for obj in merged_lists if obj.parent is None]
+        return self._root_account_items
 
     @property
     def currencies(self) -> tuple[Currency, ...]:
@@ -173,7 +173,9 @@ class RecordKeeper(JSONSerializableMixin):
         self._categories.append(category)
         return category
 
-    def add_account_group(self, name: str, parent_path: str | None) -> None:
+    def add_account_group(
+        self, name: str, parent_path: str | None, index: int | None = None
+    ) -> None:
         parent = self.get_account_parent_or_none(parent_path)
         if parent is not None:
             target_path = parent.path + "/" + name
@@ -185,6 +187,13 @@ class RecordKeeper(JSONSerializableMixin):
                 f"An AccountGroup with path '{target_path}' already exists."
             )
         account_group = AccountGroup(name, parent)
+        if parent is None:
+            if index is not None:
+                self._root_account_items.insert(index, account_group)
+            else:
+                self._root_account_items.append(account_group)
+        elif index is not None:
+            parent.set_child_index(account_group, index)
         self._account_groups.append(account_group)
 
     def add_cash_account(

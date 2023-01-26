@@ -13,3 +13,4 @@ installer
 .hypothesis
 coverage
 .mypy_cache
+*.autosave

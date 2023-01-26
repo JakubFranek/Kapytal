@@ -52,24 +52,36 @@ class AccountTreePresenter:
         self._view.accountTree.expandRecursively(indexes[0])
 
     def run_account_group_dialog(self, edit: bool) -> None:
-        self._dialog = AccountGroupDialog(edit)
+        item = self._model.get_selected_item()
+        if isinstance(item, AccountGroup):
+            max_position = len(item.children) + 1
+        elif item is None:
+            if edit is True:
+                raise ValueError("It is not allowed to edit an unselected object.")
+            max_position = len(self._record_keeper.account_objects) + 1
+        else:
+            raise ValueError("Invalid selection.")
+        self._dialog = AccountGroupDialog(max_position=max_position, edit=edit)
         self._dialog.signal_OK.connect(self.add_account_group)
         item = self._model.get_selected_item()
         self._dialog.path = "" if item is None else item.path + "/"
+        logging.info(f"Running AccountGroupDialog ({edit=})")
         self._dialog.exec()
 
     def add_account_group(self) -> None:
         path = self._dialog.path
+        index = self._dialog.position - 1
         if "/" in path:
             parent_path, _, name = path.rpartition("/")
         else:
             name = path
             parent_path = None
 
+        logging.info(f"Adding AccountGroup at path='{path}'")
         try:
             item = self._model.get_selected_item()
             self._model.pre_add(item)
-            self._record_keeper.add_account_group(name, parent_path)
+            self._record_keeper.add_account_group(name, parent_path, index)
             self._model._data = self._record_keeper.account_objects
             self._model.post_add()
         except Exception:
