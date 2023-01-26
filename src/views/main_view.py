@@ -14,6 +14,7 @@ class MainView(QMainWindow, Ui_MainWindow):
     signal_tree_expand_below = pyqtSignal()
     signal_tree_delete_item = pyqtSignal()
     signal_tree_add_account_group = pyqtSignal()
+    signal_tree_edit_item = pyqtSignal()
 
     def __init__(self) -> None:
         super().__init__()
@@ -81,6 +82,7 @@ class MainView(QMainWindow, Ui_MainWindow):
         self.actionAdd_Account_Group.triggered.connect(
             self.signal_tree_add_account_group.emit
         )
+        self.actionEdit_Account_Tree_Item.triggered.connect(self.signal_tree_edit_item)
 
         self.toolButton_expandAll.setDefaultAction(self.actionExpand_All)
         self.toolButton_collapseAll.setDefaultAction(self.actionCollapse_All)

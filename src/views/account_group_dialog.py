@@ -4,8 +4,6 @@ from PyQt6.QtWidgets import QAbstractButton, QDialog, QDialogButtonBox, QMessage
 
 from src.views.ui_files.Ui_account_group_dialog import Ui_AccountGroupDialog
 
-# TODO: index change needed in edit mode!
-
 
 class AccountGroupDialog(QDialog, Ui_AccountGroupDialog):
     signal_OK = pyqtSignal()
@@ -13,12 +11,15 @@ class AccountGroupDialog(QDialog, Ui_AccountGroupDialog):
     def __init__(self, max_position: int, edit: bool = False) -> None:
         super().__init__()
         self.setupUi(self)
-        if not edit:
-            self.setWindowTitle("Add Account Group")
-            self.setWindowIcon(QIcon("icons_24:plus.png"))
-        else:
+        self.currentPathLineEdit.setEnabled(False)
+        if edit:
             self.setWindowTitle("Edit Account Group")
             self.setWindowIcon(QIcon("icons_24:pencil.png"))
+        else:
+            self.setWindowTitle("Add Account Group")
+            self.setWindowIcon(QIcon("icons_24:plus.png"))
+            self.currentPathLabel.setVisible(False)
+            self.currentPathLineEdit.setVisible(False)
 
         self.positionSpinBox.setMaximum(max_position)
         self.buttonBox.clicked.connect(self.handleButtonBoxClick)
@@ -30,6 +31,14 @@ class AccountGroupDialog(QDialog, Ui_AccountGroupDialog):
     @path.setter
     def path(self, text: str) -> None:
         self.pathLineEdit.setText(text)
+
+    @property
+    def current_path(self) -> str:
+        return self.currentPathLineEdit.text()
+
+    @current_path.setter
+    def current_path(self, text: str) -> None:
+        self.currentPathLineEdit.setText(text)
 
     @property
     def position(self) -> int:

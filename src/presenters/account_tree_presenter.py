@@ -1,5 +1,6 @@
 import logging
 
+from src.models.base_classes.account import Account
 from src.models.model_objects.account_group import AccountGroup
 from src.models.record_keeper import RecordKeeper
 from src.presenters.view_models.account_tree_model import AccountTreeModel
@@ -27,8 +28,11 @@ class AccountTreePresenter:
         self._view.signal_tree_expand_below.connect(self.expand_all_below)
         self._view.signal_tree_delete_item.connect(self.delete_item)
         self._view.signal_tree_add_account_group.connect(
-            lambda: self.run_account_group_dialog(edit=False)
+            lambda: self.run_account_group_dialog(
+                item=self._model.get_selected_item(), edit=False
+            )
         )
+        self._view.signal_tree_edit_item.connect(self.edit_item)
 
         self.selection_changed()  # called to ensure context menu is OK at start of run
 
@@ -51,41 +55,66 @@ class AccountTreePresenter:
             raise ValueError("No index to expand recursively selected.")
         self._view.accountTree.expandRecursively(indexes[0])
 
-    def run_account_group_dialog(self, edit: bool) -> None:
-        item = self._model.get_selected_item()
-        if isinstance(item, AccountGroup):
-            max_position = len(item.children) + 1
-        elif item is None:
-            if edit is True:
-                raise ValueError("It is not allowed to edit an unselected object.")
-            max_position = len(self._record_keeper.root_account_objects) + 1
+    def run_account_group_dialog(self, edit: bool, item: AccountGroup | None) -> None:
+        if edit:
+            if item is None:
+                raise ValueError("Cannot edit an unselected item.")
+            max_position = self._get_max_parent_position(item)
+            self._dialog = AccountGroupDialog(max_position=max_position, edit=edit)
+            self._dialog.signal_OK.connect(self.edit_account_group)
+            self._dialog.current_path = item.path
+            self._dialog.path = item.path
+            if item.parent is None:
+                position = self._record_keeper.root_account_objects.index(item) + 1
+            else:
+                position = item.parent.children.index(item) + 1
+            self._dialog.position = position
         else:
-            raise ValueError("Invalid selection.")
-        self._dialog = AccountGroupDialog(max_position=max_position, edit=edit)
-        self._dialog.signal_OK.connect(self.add_account_group)
-        item = self._model.get_selected_item()
-        self._dialog.path = "" if item is None else item.path + "/"
+            max_position = self._get_max_child_position(item)
+            self._dialog = AccountGroupDialog(max_position=max_position, edit=edit)
+            self._dialog.signal_OK.connect(self.add_account_group)
+            self._dialog.path = "" if item is None else item.path + "/"
+            self._dialog.position = max_position
         logging.info(f"Running AccountGroupDialog ({edit=})")
         self._dialog.exec()
 
     def add_account_group(self) -> None:
         path = self._dialog.path
         index = self._dialog.position - 1
-        if "/" in path:
-            parent_path, _, name = path.rpartition("/")
-        else:
-            name = path
-            parent_path = None
 
-        logging.info(f"Adding AccountGroup at path='{path}'")
+        logging.info(f"Adding AccountGroup at path='{path}' and index {index}")
         try:
             item = self._model.get_selected_item()
             self._model.pre_add(item)
-            self._record_keeper.add_account_group(name, parent_path, index)
+            self._record_keeper.add_account_group(path, index)
             self._model._data = self._record_keeper.root_account_objects
             self._model.post_add()
         except Exception:
             self._model.post_add()
+            self._handle_exception()
+
+    def edit_item(self) -> None:
+        item = self._model.get_selected_item()
+        if isinstance(item, AccountGroup):
+            self.run_account_group_dialog(item=item, edit=True)
+
+    def edit_account_group(self) -> None:
+        current_path = self._dialog.current_path
+        new_path = self._dialog.path
+        index = self._dialog.position - 1
+        logging.info(
+            f"Editing AccountGroup: old path='{current_path}', old index={index},"
+            f"new path='{new_path}', new index='{index}'"
+        )
+        try:
+            self._model.pre_reset_model()
+            self._record_keeper.edit_account_group(
+                current_path=current_path, new_path=new_path, index=index
+            )
+            self._model._data = self._record_keeper.root_account_objects
+            self._model.post_reset_model()
+        except Exception:
+            self._model.post_reset_model()
             self._handle_exception()
 
     def delete_item(self) -> None:
@@ -112,3 +141,16 @@ class AccountTreePresenter:
     def _handle_exception(self) -> None:
         display_text, display_details = get_exception_info()  # type: ignore
         self._view.display_error(display_text, display_details)
+
+    def _get_max_child_position(self, item: AccountGroup | None) -> int:
+        if isinstance(item, AccountGroup):
+            return len(item.children) + 1
+        if item is None:
+            return len(self._record_keeper.root_account_objects) + 1
+        raise ValueError("Invalid selection.")
+
+    def _get_max_parent_position(self, item: AccountGroup | Account) -> int:
+        parent = item.parent
+        if parent is None:
+            return len(self._record_keeper.root_account_objects)
+        return len(parent.children)
