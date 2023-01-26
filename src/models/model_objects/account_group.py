@@ -1,5 +1,7 @@
 from typing import TYPE_CHECKING, Any, Self
 
+from src.models.custom_exceptions import NotFoundError
+
 if TYPE_CHECKING:
     from src.models.base_classes.account import Account
 
@@ -48,7 +50,9 @@ class AccountGroup(NameMixin, GetBalanceMixin, JSONSerializableMixin):
 
     def set_child_index(self, child: "Account" | Self, index: int) -> None:
         if child not in self._children:
-            raise ValueError("Parameter 'child' not in this AccountGroup's children.")
+            raise NotFoundError(
+                "Parameter 'child' not in this AccountGroup's children."
+            )
         self._children.remove(child)
         self._children.insert(index, child)
 

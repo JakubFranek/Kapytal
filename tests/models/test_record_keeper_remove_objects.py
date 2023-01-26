@@ -4,7 +4,7 @@ from decimal import Decimal
 import pytest
 
 from src.models.constants import tzinfo
-from src.models.custom_exceptions import InvalidOperationError
+from src.models.custom_exceptions import InvalidOperationError, NotFoundError
 from src.models.model_objects.attributes import (
     Attribute,
     AttributeType,
@@ -20,7 +20,7 @@ from src.models.model_objects.security_objects import (
     SecurityTransactionType,
     SecurityType,
 )
-from src.models.record_keeper import DoesNotExistError, RecordKeeper
+from src.models.record_keeper import RecordKeeper
 from tests.models.test_record_keeper import (
     get_preloaded_record_keeper_with_various_transactions,
 )
@@ -42,7 +42,7 @@ def test_remove_account() -> None:
 
 def test_remove_account_does_not_exist() -> None:
     record_keeper = RecordKeeper()
-    with pytest.raises(DoesNotExistError):
+    with pytest.raises(NotFoundError):
         record_keeper.remove_account("")
 
 
@@ -84,7 +84,7 @@ def test_remove_account_group() -> None:
 
 def test_remove_account_group_does_not_exist() -> None:
     record_keeper = RecordKeeper()
-    with pytest.raises(DoesNotExistError):
+    with pytest.raises(NotFoundError):
         record_keeper.remove_account_group("")
 
 
@@ -210,7 +210,7 @@ def test_remove_exchange_rate() -> None:
 
 def test_remove_exchange_rate_does_not_exist() -> None:
     record_keeper = RecordKeeper()
-    with pytest.raises(DoesNotExistError):
+    with pytest.raises(NotFoundError):
         record_keeper.remove_exchange_rate("CZK/EUR")
 
 

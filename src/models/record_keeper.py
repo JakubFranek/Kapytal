@@ -7,7 +7,11 @@ from typing import Any, overload
 
 from src.models.base_classes.account import Account
 from src.models.base_classes.transaction import Transaction
-from src.models.custom_exceptions import AlreadyExistsError, InvalidOperationError
+from src.models.custom_exceptions import (
+    AlreadyExistsError,
+    InvalidOperationError,
+    NotFoundError,
+)
 from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
 from src.models.model_objects.account_group import AccountGroup
 from src.models.model_objects.attributes import (
@@ -41,10 +45,6 @@ from src.models.model_objects.security_objects import (
 )
 
 
-class DoesNotExistError(ValueError):
-    """Raised when a search for an object finds nothing."""
-
-
 class RecordKeeper(JSONSerializableMixin):
     def __init__(self) -> None:
         self._accounts: list[Account] = []
@@ -66,10 +66,9 @@ class RecordKeeper(JSONSerializableMixin):
     def account_groups(self) -> tuple[AccountGroup, ...]:
         return tuple(self._account_groups)
 
-    # REFACTOR: is this a good idea? list or tuple?
     @property
-    def account_objects(self) -> list[Account | AccountGroup]:
-        return self._root_account_items
+    def root_account_objects(self) -> list[Account | AccountGroup]:
+        return tuple(self._root_account_items)
 
     @property
     def currencies(self) -> tuple[Currency, ...]:
@@ -152,7 +151,7 @@ class RecordKeeper(JSONSerializableMixin):
                     category_type = category.type_
                     break
             else:
-                raise DoesNotExistError(
+                raise NotFoundError(
                     f"The parent Category (path '{parent_path}') does not exist."
                 )
         else:
@@ -726,9 +725,7 @@ class RecordKeeper(JSONSerializableMixin):
                 current_path = category
                 break
         else:
-            raise DoesNotExistError(
-                f"Category at path='{current_path}' does not exist."
-            )
+            raise NotFoundError(f"Category at path='{current_path}' does not exist.")
         if new_name is not None:
             category.name = new_name
         if new_parent_path is not None:
@@ -748,7 +745,7 @@ class RecordKeeper(JSONSerializableMixin):
                 edited_attribute = attribute
                 break
         else:
-            raise DoesNotExistError(
+            raise NotFoundError(
                 f"Attribute of name='{current_name}' and type_={type_} does not exist."
             )
         edited_attribute.name = new_name
@@ -764,7 +761,7 @@ class RecordKeeper(JSONSerializableMixin):
                 edited_security = security
                 break
         else:
-            raise DoesNotExistError(
+            raise NotFoundError(
                 f"Security with symbol='{current_symbol}' does not exist."
             )
         if new_symbol is not None:
@@ -783,7 +780,7 @@ class RecordKeeper(JSONSerializableMixin):
                 edited_account = account
                 break
         else:
-            raise DoesNotExistError(f"Account at path='{current_path}' does not exist.")
+            raise NotFoundError(f"Account at path='{current_path}' does not exist.")
         if new_name is not None:
             edited_account.name = new_name
         if new_parent_path is not None:
@@ -801,7 +798,7 @@ class RecordKeeper(JSONSerializableMixin):
                 edited_account_group = account_group
                 break
         else:
-            raise DoesNotExistError(
+            raise NotFoundError(
                 f"AccountGroup at path='{current_path}' does not exist."
             )
         if new_name is not None:
@@ -915,9 +912,7 @@ class RecordKeeper(JSONSerializableMixin):
                 removed_exchange_rate = exchange_rate
                 break
         else:
-            raise DoesNotExistError(
-                f"ExchangeRate '{exchange_rate_code}' does not exist."
-            )
+            raise NotFoundError(f"ExchangeRate '{exchange_rate_code}' does not exist.")
         self._exchange_rates.remove(removed_exchange_rate)
         del removed_exchange_rate
 
@@ -967,7 +962,7 @@ class RecordKeeper(JSONSerializableMixin):
         for account_group in self._account_groups:
             if account_group.path == path:
                 return account_group
-        raise DoesNotExistError(f"An AccountGroup with path='{path}' does not exist.")
+        raise NotFoundError(f"An AccountGroup with path='{path}' does not exist.")
 
     @overload
     def get_account(
@@ -1001,7 +996,7 @@ class RecordKeeper(JSONSerializableMixin):
                         f"Type of Account at path='{path}' is not {type_.__name__}."
                     )
                 return account
-        raise DoesNotExistError(f"An Account with path='{path}' does not exist.")
+        raise NotFoundError(f"An Account with path='{path}' does not exist.")
 
     def get_security(self, symbol: str) -> Security:
         if not isinstance(symbol, str):
@@ -1010,9 +1005,7 @@ class RecordKeeper(JSONSerializableMixin):
         for security in self._securities:
             if security.symbol == symbol_upper:
                 return security
-        raise DoesNotExistError(
-            f"A Security with symbol='{symbol_upper}' does not exist."
-        )
+        raise NotFoundError(f"A Security with symbol='{symbol_upper}' does not exist.")
 
     def get_currency(self, code: str) -> Currency:
         if not isinstance(code, str):
@@ -1021,13 +1014,13 @@ class RecordKeeper(JSONSerializableMixin):
         for currency in self._currencies:
             if currency.code == code_upper:
                 return currency
-        raise DoesNotExistError(f"A Currency with code='{code_upper}' does not exist.")
+        raise NotFoundError(f"A Currency with code='{code_upper}' does not exist.")
 
     def get_category(self, path: str) -> None:
         for category in self._categories:
             if category.path == path:
                 return category
-        raise DoesNotExistError(f"Category at path='{path}' does not exist.")
+        raise NotFoundError(f"Category at path='{path}' does not exist.")
 
     def get_or_make_category(self, path: str, type_: CategoryType) -> Category:
         """Returns Category at path. If it does not exist, creates a new Category
@@ -1097,7 +1090,7 @@ class RecordKeeper(JSONSerializableMixin):
             if str(exchange_rate) == exchange_rate_code:
                 exchange_rate.set_rate(date_, rate)
                 return
-        raise DoesNotExistError(f"Exchange rate '{exchange_rate_code} not found.'")
+        raise NotFoundError(f"Exchange rate '{exchange_rate_code} not found.'")
 
     def serialize(self) -> dict[str, Any]:
         sorted_account_groups = sorted(self._account_groups, key=lambda x: str(x))

@@ -22,7 +22,7 @@ from src.models.model_objects.security_objects import (
     SecurityTransactionType,
     SecurityType,
 )
-from src.models.record_keeper import AlreadyExistsError, DoesNotExistError, RecordKeeper
+from src.models.record_keeper import AlreadyExistsError, NotFoundError, RecordKeeper
 from tests.models.test_assets.composites import (
     currencies,
     everything_except,
@@ -35,6 +35,7 @@ def test_creation() -> None:
     record_keeper = RecordKeeper()
     assert record_keeper.accounts == ()
     assert record_keeper.account_groups == ()
+    assert record_keeper.root_account_objects == ()
     assert record_keeper.transactions == ()
     assert record_keeper.tags == ()
     assert record_keeper.categories == ()
@@ -102,6 +103,17 @@ def test_add_account_group_no_parent(name: str) -> None:
     assert account_group.parent is None
 
 
+@given(name1=names(), name2=names())
+def test_add_account_group_with_index_no_parent(name1: str, name2: str) -> None:
+    assume(name1 != name2)
+    record_keeper = RecordKeeper()
+    record_keeper.add_account_group(name1, None, 0)
+    record_keeper.add_account_group(name2, None, 0)
+    account_group = record_keeper.root_account_objects[0]
+    assert account_group.name == name2
+    assert account_group.parent is None
+
+
 @given(
     name=names(),
     parent_name=names(),
@@ -114,6 +126,24 @@ def test_add_account_group_with_parent(name: str, parent_name: str) -> None:
     parent_group = record_keeper.account_groups[0]
     assert account_group.name == name
     assert account_group.parent == parent_group
+
+
+@given(
+    name1=names(),
+    name2=names(),
+    parent_name=names(),
+)
+def test_add_account_group_with_index_and_parent(
+    name1: str, name2: str, parent_name: str
+) -> None:
+    assume(name1 != name2)
+    record_keeper = RecordKeeper()
+    record_keeper.add_account_group(parent_name, None)
+    record_keeper.add_account_group(name1, parent_name)
+    record_keeper.add_account_group(name2, parent_name, index=0)
+    parent_group = record_keeper.account_groups[0]
+    first_child = parent_group.children[0]
+    assert first_child.name == name2
 
 
 @given(
@@ -309,7 +339,7 @@ def test_add_currency_already_exists(code: str, places: int) -> None:
 )
 def test_add_category_parent_does_not_exist(name: str, parent: str) -> None:
     record_keeper = RecordKeeper()
-    with pytest.raises(DoesNotExistError):
+    with pytest.raises(NotFoundError):
         record_keeper.add_category(name, parent)
 
 
@@ -354,7 +384,7 @@ def test_add_cash_account_already_exists(data: st.DataObject) -> None:
 
 def test_get_account_parent_does_not_exist() -> None:
     record_keeper = get_preloaded_record_keeper()
-    with pytest.raises(DoesNotExistError):
+    with pytest.raises(NotFoundError):
         record_keeper.get_account_parent_or_none("does not exist")
 
 
@@ -380,7 +410,7 @@ def test_get_account_invalid_account_type() -> None:
 
 def test_get_account_does_not_exist() -> None:
     record_keeper = get_preloaded_record_keeper()
-    with pytest.raises(DoesNotExistError):
+    with pytest.raises(NotFoundError):
         record_keeper.get_account("does not exist", Account)
 
 
@@ -393,7 +423,7 @@ def test_get_currency_invalid_code_type(code: Any) -> None:
 
 def test_get_currency_does_not_exist() -> None:
     record_keeper = get_preloaded_record_keeper()
-    with pytest.raises(DoesNotExistError):
+    with pytest.raises(NotFoundError):
         record_keeper.get_currency("does not exist")
 
 
@@ -431,7 +461,7 @@ def test_get_or_make_category_does_not_exist() -> None:
 def test_get_category_does_not_exist() -> None:
     record_keeper = get_preloaded_record_keeper()
     category_path = "One/Two/Three"
-    with pytest.raises(DoesNotExistError):
+    with pytest.raises(NotFoundError):
         record_keeper.get_category(category_path)
 
 
@@ -542,7 +572,7 @@ def test_get_security_invalid_symbol_type(symbol: Any) -> None:
 def test_get_security_does_not_exists(symbol: str) -> None:
     assume(symbol != "VWCE.DE")
     record_keeper = RecordKeeper()
-    with pytest.raises(DoesNotExistError):
+    with pytest.raises(NotFoundError):
         record_keeper.get_security(symbol)
 
 
@@ -673,7 +703,7 @@ def test_set_exchange_rate_invalid_type(exchange_rate_str: Any) -> None:
 
 def test_set_exchange_rate_does_not_exist() -> None:
     record_keeper = RecordKeeper()
-    with pytest.raises(DoesNotExistError):
+    with pytest.raises(NotFoundError):
         record_keeper.set_exchange_rate("N/A", Decimal(1), datetime.now(tzinfo).date())
 
 

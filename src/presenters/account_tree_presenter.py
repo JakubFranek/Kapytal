@@ -13,7 +13,7 @@ class AccountTreePresenter:
         self._view = view
         self._record_keeper = record_keeper
         self._model = AccountTreeModel(
-            view=view.accountTree, data=record_keeper.account_objects
+            view=view.accountTree, data=record_keeper.root_account_objects
         )
         self._view.accountTree.setModel(self._model)
 
@@ -58,7 +58,7 @@ class AccountTreePresenter:
         elif item is None:
             if edit is True:
                 raise ValueError("It is not allowed to edit an unselected object.")
-            max_position = len(self._record_keeper.account_objects) + 1
+            max_position = len(self._record_keeper.root_account_objects) + 1
         else:
             raise ValueError("Invalid selection.")
         self._dialog = AccountGroupDialog(max_position=max_position, edit=edit)
@@ -82,7 +82,7 @@ class AccountTreePresenter:
             item = self._model.get_selected_item()
             self._model.pre_add(item)
             self._record_keeper.add_account_group(name, parent_path, index)
-            self._model._data = self._record_keeper.account_objects
+            self._model._data = self._record_keeper.root_account_objects
             self._model.post_add()
         except Exception:
             self._model.post_add()
@@ -103,7 +103,7 @@ class AccountTreePresenter:
             else:
                 self._record_keeper.remove_account(path)
             # REFACTOR: is the line below ok?
-            self._model._data = self._record_keeper.account_objects
+            self._model._data = self._record_keeper.root_account_objects
             self._model.post_delete_item()
         except Exception:
             self._model.post_delete_item()

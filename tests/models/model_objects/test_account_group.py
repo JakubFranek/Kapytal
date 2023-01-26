@@ -7,6 +7,7 @@ from hypothesis import assume, given
 from hypothesis import strategies as st
 
 from src.models.constants import tzinfo
+from src.models.custom_exceptions import NotFoundError
 from src.models.model_objects.account_group import AccountGroup
 from src.models.model_objects.currency_objects import CashAmount, Currency, ExchangeRate
 from tests.models.test_assets.composites import (
@@ -109,6 +110,24 @@ def test_get_balance_multiple_currency(
     )
     assert account_group.get_balance(currency_A) == expected_sum_A
     assert account_group.get_balance(currency_B) == expected_sum_B
+
+
+@given(data=st.data())
+def test_set_child_index(data: st.DataObject) -> None:
+    parent = get_account_group()
+    children = data.draw(st.lists(account_groups(), min_size=5, max_size=5))
+    for child in children:
+        child.parent = parent
+
+    selected_child = children[2]
+    parent.set_child_index(selected_child, 0)
+    assert parent.children[0] == selected_child
+
+
+def test_set_child_index_child_does_not_exist() -> None:
+    parent = get_account_group()
+    with pytest.raises(NotFoundError):
+        parent.set_child_index(None, 0)
 
 
 def get_account_group() -> AccountGroup:

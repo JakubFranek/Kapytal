@@ -6,6 +6,7 @@ from hypothesis import given
 from hypothesis import strategies as st
 
 from src.models.constants import tzinfo
+from src.models.custom_exceptions import NotFoundError
 from src.models.model_objects.account_group import AccountGroup
 from src.models.model_objects.attributes import (
     Attribute,
@@ -25,7 +26,7 @@ from src.models.model_objects.security_objects import (
     SecurityTransfer,
     SecurityType,
 )
-from src.models.record_keeper import DoesNotExistError, RecordKeeper
+from src.models.record_keeper import RecordKeeper
 from tests.models.test_assets.composites import attributes
 from tests.models.test_record_keeper import (
     get_preloaded_record_keeper_with_cash_transactions,
@@ -50,7 +51,7 @@ def test_edit_category() -> None:
 
 def test_edit_category_does_not_exist() -> None:
     record_keeper = RecordKeeper()
-    with pytest.raises(DoesNotExistError):
+    with pytest.raises(NotFoundError):
         record_keeper.edit_category("abc", "def", "efg")
 
 
@@ -72,7 +73,7 @@ def test_edit_tag() -> None:
 
 def test_edit_attribute_does_not_exist() -> None:
     record_keeper = RecordKeeper()
-    with pytest.raises(DoesNotExistError):
+    with pytest.raises(NotFoundError):
         record_keeper.edit_attribute("abc", "def", AttributeType.PAYEE)
 
 
@@ -88,7 +89,7 @@ def test_edit_security() -> None:
 
 def test_edit_security_does_not_exist() -> None:
     record_keeper = RecordKeeper()
-    with pytest.raises(DoesNotExistError):
+    with pytest.raises(NotFoundError):
         record_keeper.edit_security("SMBL", "SYMB", "NEW NAME")
 
 
@@ -105,7 +106,7 @@ def test_edit_account() -> None:
 
 def test_edit_account_does_not_exist() -> None:
     record_keeper = RecordKeeper()
-    with pytest.raises(DoesNotExistError):
+    with pytest.raises(NotFoundError):
         record_keeper.edit_account("ABC", "DEF", "GHI")
 
 
@@ -124,7 +125,7 @@ def test_edit_account_group() -> None:
 
 def test_edit_account_group_does_not_exist() -> None:
     record_keeper = RecordKeeper()
-    with pytest.raises(DoesNotExistError):
+    with pytest.raises(NotFoundError):
         record_keeper.edit_account_group("ABC", "DEF", "GHI")
 
 
