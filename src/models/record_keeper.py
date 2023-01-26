@@ -782,15 +782,20 @@ class RecordKeeper(JSONSerializableMixin):
             edited_account.parent = parent
 
     def edit_account_group(
-        self,
-        current_path: str,
-        new_path: str,
+        self, current_path: str, new_path: str, index: int | None = None
     ) -> None:
         edited_account_group = self.get_account_parent(current_path)
         parent_path, _, name = new_path.rpartition("/")
         edited_account_group.name = name
         parent = self.get_account_parent_or_none(parent_path)
         edited_account_group.parent = parent
+        if index is None:
+            return
+        if parent is None:
+            self._root_account_items.remove(edited_account_group)
+            self._root_account_items.insert(index, edited_account_group)
+        else:
+            parent.set_child_index(edited_account_group, index)
 
     def add_tags_to_transactions(
         self, transaction_uuids: Collection[str], tag_names: Collection[str]

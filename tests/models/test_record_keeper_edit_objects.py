@@ -123,6 +123,31 @@ def test_edit_account_group() -> None:
     assert account_group.path == "NEW PARENT/NEW NAME"
 
 
+def test_edit_account_group_index() -> None:
+    record_keeper = RecordKeeper()
+    record_keeper.add_account_group("TEST PARENT")
+    record_keeper.add_account_group("TEST PARENT/DUMMY CHILD")
+    record_keeper.add_account_group("TEST PARENT/TEST CHILD")
+    record_keeper.add_account_group("NEW PARENT")
+    record_keeper.edit_account_group(
+        "TEST PARENT/TEST CHILD", "NEW PARENT/NEW NAME", index=0
+    )
+    account_group = record_keeper.get_account_parent("NEW PARENT/NEW NAME")
+    parent: AccountGroup = account_group.parent
+    assert account_group.name == "NEW NAME"
+    assert account_group.path == "NEW PARENT/NEW NAME"
+    assert parent.children[0] == account_group
+
+
+def test_edit_account_group_index_no_parent() -> None:
+    record_keeper = RecordKeeper()
+    record_keeper.add_account_group("DUMMY CHILD")
+    record_keeper.add_account_group("TEST CHILD")
+    assert record_keeper.root_account_objects[1].name == "TEST CHILD"
+    record_keeper.edit_account_group("TEST CHILD", "TEST CHILD", index=0)
+    assert record_keeper.root_account_objects[0].name == "TEST CHILD"
+
+
 def test_edit_account_group_does_not_exist() -> None:
     record_keeper = RecordKeeper()
     with pytest.raises(NotFoundError):
