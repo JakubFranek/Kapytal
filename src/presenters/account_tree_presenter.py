@@ -104,7 +104,7 @@ class AccountTreePresenter:
         index = self._dialog.position - 1
         logging.info(
             f"Editing AccountGroup: old path='{current_path}', old index={index},"
-            f"new path='{new_path}', new index='{index}'"
+            f"new path='{new_path}', new index={index}"
         )
         try:
             self._model.pre_reset_model()

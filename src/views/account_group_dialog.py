@@ -17,7 +17,7 @@ class AccountGroupDialog(QDialog, Ui_AccountGroupDialog):
             self.setWindowIcon(QIcon("icons_24:pencil.png"))
         else:
             self.setWindowTitle("Add Account Group")
-            self.setWindowIcon(QIcon("icons_24:plus.png"))
+            self.setWindowIcon(QIcon("icons_16:folder--plus.png"))
             self.currentPathLabel.setVisible(False)
             self.currentPathLineEdit.setVisible(False)
 

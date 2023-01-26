@@ -6,7 +6,11 @@ from hypothesis import given
 from hypothesis import strategies as st
 
 from src.models.constants import tzinfo
-from src.models.custom_exceptions import NotFoundError
+from src.models.custom_exceptions import (
+    AlreadyExistsError,
+    InvalidOperationError,
+    NotFoundError,
+)
 from src.models.model_objects.account_group import AccountGroup
 from src.models.model_objects.attributes import (
     Attribute,
@@ -148,10 +152,43 @@ def test_edit_account_group_index_no_parent() -> None:
     assert record_keeper.root_account_objects[0].name == "TEST CHILD"
 
 
+def test_edit_account_group_from_root_to_children() -> None:
+    record_keeper = RecordKeeper()
+    record_keeper.add_account_group("TEST")
+    record_keeper.add_account_group("DUMMY PARENT")
+    assert len(record_keeper.root_account_objects) == 2
+    record_keeper.edit_account_group("TEST", "DUMMY PARENT/TEST")
+    assert len(record_keeper.root_account_objects) == 1
+
+
+def test_edit_account_group_from_child_to_root() -> None:
+    record_keeper = RecordKeeper()
+    record_keeper.add_account_group("DUMMY PARENT")
+    record_keeper.add_account_group("DUMMY PARENT/TEST")
+    assert len(record_keeper.root_account_objects) == 1
+    record_keeper.edit_account_group("DUMMY PARENT/TEST", "TEST")
+    assert len(record_keeper.root_account_objects) == 2
+
+
+def test_edit_account_group_already_exists() -> None:
+    record_keeper = RecordKeeper()
+    record_keeper.add_account_group("TEST")
+    record_keeper.add_account_group("DUMMY")
+    with pytest.raises(AlreadyExistsError):
+        record_keeper.edit_account_group("TEST", "DUMMY")
+
+
 def test_edit_account_group_does_not_exist() -> None:
     record_keeper = RecordKeeper()
     with pytest.raises(NotFoundError):
         record_keeper.edit_account_group("ABC", "GHI/DEF")
+
+
+def test_edit_account_group_invalid_parent() -> None:
+    record_keeper = RecordKeeper()
+    record_keeper.add_account_group("TEST")
+    with pytest.raises(InvalidOperationError):
+        record_keeper.edit_account_group("TEST", "TEST/XXX")
 
 
 def test_edit_cash_transactions_descriptions() -> None:

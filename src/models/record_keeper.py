@@ -784,18 +784,32 @@ class RecordKeeper(JSONSerializableMixin):
     def edit_account_group(
         self, current_path: str, new_path: str, index: int | None = None
     ) -> None:
+        if current_path != new_path and any(
+            account_group.path == new_path for account_group in self._account_groups
+        ):
+            raise AlreadyExistsError(
+                f"An Account Group with path='{new_path}' already exists."
+            )
         edited_account_group = self.get_account_parent(current_path)
+        current_parent = edited_account_group.parent
         parent_path, _, name = new_path.rpartition("/")
+        new_parent = self.get_account_parent_or_none(parent_path)
+        if new_parent == edited_account_group:
+            raise InvalidOperationError("An AccountGroup cannot be its own parent.")
         edited_account_group.name = name
-        parent = self.get_account_parent_or_none(parent_path)
-        edited_account_group.parent = parent
+        if current_parent != new_parent:
+            edited_account_group.parent = new_parent
+            if current_parent is None and new_parent is not None:
+                self._root_account_items.remove(edited_account_group)
+            if current_parent is not None and new_parent is None:
+                self._root_account_items.append(edited_account_group)
         if index is None:
             return
-        if parent is None:
+        if new_parent is None:
             self._root_account_items.remove(edited_account_group)
             self._root_account_items.insert(index, edited_account_group)
         else:
-            parent.set_child_index(edited_account_group, index)
+            new_parent.set_child_index(edited_account_group, index)
 
     def add_tags_to_transactions(
         self, transaction_uuids: Collection[str], tag_names: Collection[str]
