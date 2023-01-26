@@ -115,7 +115,7 @@ def test_edit_account_group() -> None:
     record_keeper.add_account_group("TEST PARENT")
     record_keeper.add_account_group("TEST PARENT/TEST CHILD")
     record_keeper.add_account_group("NEW PARENT")
-    record_keeper.edit_account_group("TEST PARENT/TEST CHILD", "NEW NAME", "NEW PARENT")
+    record_keeper.edit_account_group("TEST PARENT/TEST CHILD", "NEW PARENT/NEW NAME")
     account_group: AccountGroup = record_keeper.get_account_parent_or_none(
         "NEW PARENT/NEW NAME"
     )
@@ -126,7 +126,7 @@ def test_edit_account_group() -> None:
 def test_edit_account_group_does_not_exist() -> None:
     record_keeper = RecordKeeper()
     with pytest.raises(NotFoundError):
-        record_keeper.edit_account_group("ABC", "DEF", "GHI")
+        record_keeper.edit_account_group("ABC", "GHI/DEF")
 
 
 def test_edit_cash_transactions_descriptions() -> None:

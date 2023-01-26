@@ -784,22 +784,13 @@ class RecordKeeper(JSONSerializableMixin):
     def edit_account_group(
         self,
         current_path: str,
-        new_name: str | None = None,
-        new_parent_path: str | None = None,
+        new_path: str,
     ) -> None:
-        for account_group in self._account_groups:
-            if account_group.path == current_path:
-                edited_account_group = account_group
-                break
-        else:
-            raise NotFoundError(
-                f"AccountGroup at path='{current_path}' does not exist."
-            )
-        if new_name is not None:
-            edited_account_group.name = new_name
-        if new_parent_path is not None:
-            parent = self.get_account_parent_or_none(new_parent_path)
-            edited_account_group.parent = parent
+        edited_account_group = self.get_account_parent(current_path)
+        parent_path, _, name = new_path.rpartition("/")
+        edited_account_group.name = name
+        parent = self.get_account_parent_or_none(parent_path)
+        edited_account_group.parent = parent
 
     def add_tags_to_transactions(
         self, transaction_uuids: Collection[str], tag_names: Collection[str]
