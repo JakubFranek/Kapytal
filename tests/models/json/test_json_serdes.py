@@ -203,12 +203,12 @@ def test_record_keeper_currencies_exchange_rates() -> None:
 
 def test_record_keeper_account_groups() -> None:
     record_keeper = RecordKeeper()
-    record_keeper.add_account_group("A1", None)
-    record_keeper.add_account_group("A2", "A1")
-    record_keeper.add_account_group("B2", "A1")
-    record_keeper.add_account_group("A3", "A1/A2")
-    record_keeper.add_account_group("B1", None)
-    record_keeper.add_account_group("C1", None)
+    record_keeper.add_account_group("A1")
+    record_keeper.add_account_group("A1/A2")
+    record_keeper.add_account_group("A1/B2")
+    record_keeper.add_account_group("A1/A2/A3")
+    record_keeper.add_account_group("B1")
+    record_keeper.add_account_group("C1")
     serialized = json.dumps(record_keeper, cls=CustomJSONEncoder)
     decoded = json.loads(serialized, cls=CustomJSONDecoder)
     assert isinstance(decoded, RecordKeeper)

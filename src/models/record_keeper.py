@@ -172,18 +172,12 @@ class RecordKeeper(JSONSerializableMixin):
         self._categories.append(category)
         return category
 
-    def add_account_group(
-        self, name: str, parent_path: str | None, index: int | None = None
-    ) -> None:
+    def add_account_group(self, path: str, index: int | None = None) -> None:
+        parent_path, _, name = path.rpartition("/")
         parent = self.get_account_parent_or_none(parent_path)
-        if parent is not None:
-            target_path = parent.path + "/" + name
-        else:
-            target_path = name
-            parent = None
-        if any(acc_group.path == target_path for acc_group in self._account_groups):
+        if any(acc_group.path == path for acc_group in self._account_groups):
             raise AlreadyExistsError(
-                f"An AccountGroup with path '{target_path}' already exists."
+                f"An AccountGroup with path '{path}' already exists."
             )
         account_group = AccountGroup(name, parent)
         if parent is None:
@@ -954,7 +948,7 @@ class RecordKeeper(JSONSerializableMixin):
         del payee
 
     def get_account_parent_or_none(self, path: str | None) -> AccountGroup | None:
-        if path is None:
+        if path == "" or path is None:
             return None
         return self.get_account_parent(path)
 

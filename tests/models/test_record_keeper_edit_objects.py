@@ -112,9 +112,9 @@ def test_edit_account_does_not_exist() -> None:
 
 def test_edit_account_group() -> None:
     record_keeper = RecordKeeper()
-    record_keeper.add_account_group("TEST PARENT", None)
-    record_keeper.add_account_group("TEST CHILD", "TEST PARENT")
-    record_keeper.add_account_group("NEW PARENT", None)
+    record_keeper.add_account_group("TEST PARENT")
+    record_keeper.add_account_group("TEST PARENT/TEST CHILD")
+    record_keeper.add_account_group("NEW PARENT")
     record_keeper.edit_account_group("TEST PARENT/TEST CHILD", "NEW NAME", "NEW PARENT")
     account_group: AccountGroup = record_keeper.get_account_parent_or_none(
         "NEW PARENT/NEW NAME"

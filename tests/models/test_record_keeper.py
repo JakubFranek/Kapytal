@@ -97,7 +97,7 @@ def test_add_exchange_rate_already_exists(
 )
 def test_add_account_group_no_parent(name: str) -> None:
     record_keeper = RecordKeeper()
-    record_keeper.add_account_group(name, None)
+    record_keeper.add_account_group(name)
     account_group = record_keeper.account_groups[0]
     assert account_group.name == name
     assert account_group.parent is None
@@ -107,8 +107,8 @@ def test_add_account_group_no_parent(name: str) -> None:
 def test_add_account_group_with_index_no_parent(name1: str, name2: str) -> None:
     assume(name1 != name2)
     record_keeper = RecordKeeper()
-    record_keeper.add_account_group(name1, None, 0)
-    record_keeper.add_account_group(name2, None, 0)
+    record_keeper.add_account_group(name1, 0)
+    record_keeper.add_account_group(name2, 0)
     account_group = record_keeper.root_account_objects[0]
     assert account_group.name == name2
     assert account_group.parent is None
@@ -120,8 +120,8 @@ def test_add_account_group_with_index_no_parent(name1: str, name2: str) -> None:
 )
 def test_add_account_group_with_parent(name: str, parent_name: str) -> None:
     record_keeper = RecordKeeper()
-    record_keeper.add_account_group(parent_name, None)
-    record_keeper.add_account_group(name, parent_name)
+    record_keeper.add_account_group(parent_name)
+    record_keeper.add_account_group(parent_name + "/" + name)
     account_group = record_keeper.account_groups[1]
     parent_group = record_keeper.account_groups[0]
     assert account_group.name == name
@@ -138,9 +138,9 @@ def test_add_account_group_with_index_and_parent(
 ) -> None:
     assume(name1 != name2)
     record_keeper = RecordKeeper()
-    record_keeper.add_account_group(parent_name, None)
-    record_keeper.add_account_group(name1, parent_name)
-    record_keeper.add_account_group(name2, parent_name, index=0)
+    record_keeper.add_account_group(parent_name)
+    record_keeper.add_account_group(parent_name + "/" + name1)
+    record_keeper.add_account_group(parent_name + "/" + name2, index=0)
     parent_group = record_keeper.account_groups[0]
     first_child = parent_group.children[0]
     assert first_child.name == name2
@@ -157,9 +157,9 @@ def test_add_account_group_with_multiple_parents(
     grandparent_path = grandparent_name
     parent_path = grandparent_name + "/" + parent_name
     record_keeper = RecordKeeper()
-    record_keeper.add_account_group(grandparent_name, None)
-    record_keeper.add_account_group(parent_name, grandparent_path)
-    record_keeper.add_account_group(name, parent_path)
+    record_keeper.add_account_group(grandparent_name)
+    record_keeper.add_account_group(grandparent_path + "/" + parent_name)
+    record_keeper.add_account_group(parent_path + "/" + name)
     account_group = record_keeper.account_groups[2]
     parent = record_keeper.account_groups[1]
     assert account_group.name == name
@@ -186,7 +186,7 @@ def test_add_cash_account(
     record_keeper = RecordKeeper()
     record_keeper.add_currency(currency_code, places)
     if parent_name:
-        record_keeper.add_account_group(parent_name, None)
+        record_keeper.add_account_group(parent_name)
     record_keeper.add_cash_account(
         name, currency_code, initial_balance, initial_datetime, parent_name
     )
@@ -990,8 +990,8 @@ def get_preloaded_record_keeper() -> RecordKeeper:
     record_keeper.add_currency("EUR", 2)
     record_keeper.add_exchange_rate("EUR", "CZK")
     record_keeper.set_exchange_rate("EUR/CZK", Decimal(25), datetime.now(tzinfo).date())
-    record_keeper.add_account_group("Bank Accounts", None)
-    record_keeper.add_account_group("Security Accounts", None)
+    record_keeper.add_account_group("Bank Accounts")
+    record_keeper.add_account_group("Security Accounts")
     record_keeper.add_cash_account(
         name="Raiffeisen CZK",
         currency_code="CZK",

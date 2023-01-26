@@ -70,10 +70,10 @@ def test_remove_account_has_children() -> None:
 
 def test_remove_account_group() -> None:
     record_keeper = RecordKeeper()
-    record_keeper.add_account_group("PARENT", None)
+    record_keeper.add_account_group("PARENT")
     parent = record_keeper.account_groups[0]
 
-    record_keeper.add_account_group("TEST NAME", "PARENT")
+    record_keeper.add_account_group("PARENT/TEST NAME")
     assert len(parent.children) != 0
     assert len(record_keeper.account_groups) != 0
 
@@ -90,14 +90,14 @@ def test_remove_account_group_does_not_exist() -> None:
 
 def test_remove_account_group_has_children() -> None:
     record_keeper = RecordKeeper()
-    record_keeper.add_account_group("PARENT", None)
+    record_keeper.add_account_group("PARENT")
     parent = record_keeper.account_groups[0]
 
-    record_keeper.add_account_group("TEST NAME", "PARENT")
+    record_keeper.add_account_group("PARENT/TEST NAME")
     assert len(parent.children) != 0
     assert len(record_keeper.account_groups) != 0
 
-    record_keeper.add_account_group("TEST CHILD", "PARENT/TEST NAME")
+    record_keeper.add_account_group("PARENT/TEST NAME/TEST CHILD")
 
     with pytest.raises(InvalidOperationError):
         record_keeper.remove_account_group("PARENT/TEST NAME")
