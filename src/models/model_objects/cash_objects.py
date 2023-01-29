@@ -1,7 +1,7 @@
 import uuid
 from abc import ABC, abstractmethod
 from collections.abc import Collection
-from datetime import datetime
+from datetime import datetime, timedelta
 from enum import Enum, auto
 from typing import Any
 
@@ -88,7 +88,6 @@ class CashAccount(Account):
         name: str,
         currency: Currency,
         initial_balance: CashAmount,
-        initial_datetime: datetime,
         parent: AccountGroup | None = None,
     ) -> None:
         super().__init__(name=name, parent=parent)
@@ -98,8 +97,7 @@ class CashAccount(Account):
         self._currency = currency
 
         self.initial_balance = initial_balance
-        self.initial_datetime = initial_datetime
-        self._balance_history = [(initial_datetime, initial_balance)]
+        self._balance_history = [(datetime.now(tzinfo), initial_balance)]
 
         self._transactions: list[CashRelatedTransaction] = []
 
@@ -119,21 +117,7 @@ class CashAccount(Account):
             raise CurrencyError(
                 "CashAccount.initial_balance.currency must match CashAccount.currency."
             )
-
         self._initial_balance = amount
-        self._date_last_edited = datetime.now(tzinfo)
-
-    @property
-    def initial_datetime(self) -> datetime:
-        return self._initial_datetime
-
-    @initial_datetime.setter
-    def initial_datetime(self, value: datetime) -> None:
-        if not isinstance(value, datetime):
-            raise TypeError("CashAccount.initial_datetime must be a datetime.")
-
-        self._initial_datetime = value
-        self._date_last_edited = datetime.now(tzinfo)
 
     @property
     def balance_history(self) -> tuple[tuple[datetime, CashAmount], ...]:
@@ -173,7 +157,6 @@ class CashAccount(Account):
             "path": self.path,
             "currency_code": self._currency.code,
             "initial_balance": self._initial_balance.value,
-            "initial_datetime": self._initial_datetime,
             "uuid": str(self._uuid),
         }
 
@@ -186,14 +169,13 @@ class CashAccount(Account):
         path: str = data["path"]
         parent_path, _, name = path.rpartition("/")
         initial_balance_value = data["initial_balance"]
-        initial_datetime = data["initial_datetime"]
 
         currency_code = data["currency_code"]
         currency = find_currency_by_code(currency_code, currencies)
 
         initial_balance = CashAmount(initial_balance_value, currency)
 
-        obj = CashAccount(name, currency, initial_balance, initial_datetime)
+        obj = CashAccount(name, currency, initial_balance)
         obj._uuid = uuid.UUID(data["uuid"])
 
         if parent_path != "":
@@ -201,7 +183,12 @@ class CashAccount(Account):
         return obj
 
     def _update_balance(self) -> None:
-        datetime_balance_history = [(self.initial_datetime, self.initial_balance)]
+        oldest_datetime = min(
+            transaction.datetime_ for transaction in self.transactions
+        )
+        datetime_balance_history = [
+            (oldest_datetime - timedelta(days=1), self.initial_balance)
+        ]
         for transaction in self.transactions:
             last_balance = datetime_balance_history[-1][1]
             next_balance = last_balance + transaction.get_amount(self)
