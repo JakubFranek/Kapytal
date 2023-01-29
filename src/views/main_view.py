@@ -14,6 +14,7 @@ class MainView(QMainWindow, Ui_MainWindow):
     signal_tree_expand_below = pyqtSignal()
     signal_tree_delete_item = pyqtSignal()
     signal_tree_add_account_group = pyqtSignal()
+    signal_tree_add_security_account = pyqtSignal()
     signal_tree_edit_item = pyqtSignal()
 
     def __init__(self) -> None:
@@ -82,6 +83,9 @@ class MainView(QMainWindow, Ui_MainWindow):
         self.actionAdd_Account_Group.triggered.connect(
             self.signal_tree_add_account_group.emit
         )
+        self.actionAdd_Security_Account.triggered.connect(
+            self.signal_tree_add_security_account.emit
+        )
         self.actionEdit_Account_Tree_Item.triggered.connect(self.signal_tree_edit_item)
 
         self.toolButton_expandAll.setDefaultAction(self.actionExpand_All)
@@ -93,7 +97,7 @@ class MainView(QMainWindow, Ui_MainWindow):
             QHeaderView.ResizeMode.ResizeToContents,
         )
         self.accountTree.header().setSectionResizeMode(
-            AccountTreeColumns.COLUMN_BALANCE,
+            AccountTreeColumns.COLUMN_BALANCE_NATIVE,
             QHeaderView.ResizeMode.ResizeToContents,
         )
         self.accountTree.header().setSectionResizeMode(

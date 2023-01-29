@@ -12,16 +12,21 @@ from src.views.constants import AccountTreeColumns
 
 # TODO: set up model checker test
 # TODO: pass reference to settings?
+# TODO: _data is not actually private
 
 
 class AccountTreeModel(QAbstractItemModel):
-    COLUMN_HEADERS = ("Name", "Balance (native)", "Balance (base)", "Show")
+    COLUMN_HEADERS = {
+        AccountTreeColumns.COLUMN_NAME: "Name",
+        AccountTreeColumns.COLUMN_BALANCE_NATIVE: "Native balance",
+        AccountTreeColumns.COLUMN_BALANCE_BASE: "Base balance",
+        AccountTreeColumns.COLUMN_SHOW: "Show",
+    }
 
     def __init__(self, view: QTreeView, data: list[Account | AccountGroup]) -> None:
         super().__init__()
         self._tree = view
         self._data = data
-        self._proxy = None
 
     def rowCount(self, index: QModelIndex = ...) -> int:
         if index.isValid():
@@ -74,8 +79,10 @@ class AccountTreeModel(QAbstractItemModel):
         if role == Qt.ItemDataRole.DisplayRole:
             if column == AccountTreeColumns.COLUMN_NAME:
                 return node.name
-            if column == AccountTreeColumns.COLUMN_BALANCE:
-                return "0 CZK"
+            if column == AccountTreeColumns.COLUMN_BALANCE_NATIVE:
+                if isinstance(node, CashAccount):
+                    return str(node.get_balance(node.currency))
+                return ""
             if column == AccountTreeColumns.COLUMN_BALANCE_BASE:
                 return "0 CZK"
             if column == AccountTreeColumns.COLUMN_SHOW:
@@ -93,10 +100,12 @@ class AccountTreeModel(QAbstractItemModel):
             if isinstance(node, CashAccount):
                 return QIcon("icons_16:money-coin.png")
         if role == Qt.ItemDataRole.TextAlignmentRole:
-            if column == AccountTreeColumns.COLUMN_BALANCE:
+            if column == AccountTreeColumns.COLUMN_BALANCE_NATIVE:
                 return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
             if column == AccountTreeColumns.COLUMN_BALANCE_BASE:
                 return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+            if column == AccountTreeColumns.COLUMN_SHOW:
+                return Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignHCenter
         return None
 
     def headerData(

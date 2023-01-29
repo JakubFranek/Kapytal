@@ -2,10 +2,12 @@ import logging
 
 from src.models.base_classes.account import Account
 from src.models.model_objects.account_group import AccountGroup
+from src.models.model_objects.security_objects import SecurityAccount
 from src.models.record_keeper import RecordKeeper
 from src.presenters.view_models.account_tree_model import AccountTreeModel
 from src.views.account_group_dialog import AccountGroupDialog
 from src.views.main_view import MainView
+from src.views.security_account_dialog import SecurityAccountDialog
 from src.views.utilities.handle_exception import get_exception_info
 
 
@@ -32,6 +34,11 @@ class AccountTreePresenter:
                 item=self._model.get_selected_item(), edit=False
             )
         )
+        self._view.signal_tree_add_security_account.connect(
+            lambda: self.run_security_account_dialog(
+                item=self._model.get_selected_item(), edit=False
+            )
+        )
         self._view.signal_tree_edit_item.connect(self.edit_item)
 
         self.selection_changed()  # called to ensure context menu is OK at start of run
@@ -54,6 +61,34 @@ class AccountTreePresenter:
         if len(indexes) == 0:
             raise ValueError("No index to expand recursively selected.")
         self._view.accountTree.expandRecursively(indexes[0])
+
+    def edit_item(self) -> None:
+        item = self._model.get_selected_item()
+        if isinstance(item, AccountGroup):
+            self.run_account_group_dialog(item=item, edit=True)
+        if isinstance(item, SecurityAccount):
+            self.run_security_account_dialog(item=item, edit=True)
+
+    def delete_item(self) -> None:
+        item = self._model.get_selected_item()
+        if item is None:
+            raise ValueError("Cannot delete non-existent item.")
+        path = item.path
+        logging.info(f"Removing {item.__class__.__name__} at path='{path}'")
+
+        index = self._model.get_index_from_item(item)
+        try:
+            self._model.pre_delete_item(index)
+            if isinstance(item, AccountGroup):
+                self._record_keeper.remove_account_group(path)
+            else:
+                self._record_keeper.remove_account(path)
+            # REFACTOR: is the line below ok?
+            self._model._data = self._record_keeper.root_account_objects
+            self._model.post_delete_item()
+        except Exception:
+            self._model.post_delete_item()
+            self._handle_exception()
 
     def run_account_group_dialog(self, edit: bool, item: AccountGroup | None) -> None:
         if edit:
@@ -82,7 +117,7 @@ class AccountTreePresenter:
         path = self._dialog.path
         index = self._dialog.position - 1
 
-        logging.info(f"Adding AccountGroup at path='{path}' and index {index}")
+        logging.info(f"Adding AccountGroup at path='{path}', index={index}")
         try:
             item = self._model.get_selected_item()
             self._model.pre_add(item)
@@ -93,18 +128,15 @@ class AccountTreePresenter:
             self._model.post_add()
             self._handle_exception()
 
-    def edit_item(self) -> None:
-        item = self._model.get_selected_item()
-        if isinstance(item, AccountGroup):
-            self.run_account_group_dialog(item=item, edit=True)
-
     def edit_account_group(self) -> None:
+        item = self._model.get_selected_item()
         current_path = self._dialog.current_path
         new_path = self._dialog.path
+        current_index = self._get_current_index(item)
         index = self._dialog.position - 1
         logging.info(
-            f"Editing AccountGroup: old path='{current_path}', old index={index},"
-            f"new path='{new_path}', new index={index}"
+            f"Editing AccountGroup: old path='{current_path}', "
+            f"old index={current_index}, new path='{new_path}', new index={index}"
         )
         try:
             self._model.pre_reset_model()
@@ -117,25 +149,65 @@ class AccountTreePresenter:
             self._model.post_reset_model()
             self._handle_exception()
 
-    def delete_item(self) -> None:
-        item = self._model.get_selected_item()
-        if item is None:
-            raise ValueError("Cannot delete non-existent item.")
-        path = item.path
-        logging.info(f"Removing {item.__class__.__name__} at path='{path}'")
-
-        index = self._model.get_index_from_item(item)
-        try:
-            self._model.pre_delete_item(index)
-            if isinstance(item, AccountGroup):
-                self._record_keeper.remove_account_group(path)
+    def run_security_account_dialog(
+        self, edit: bool, item: SecurityAccount | None
+    ) -> None:
+        if edit:
+            if item is None:
+                raise ValueError("Cannot edit an unselected item.")
+            max_position = self._get_max_parent_position(item)
+            self._dialog = SecurityAccountDialog(max_position=max_position, edit=edit)
+            self._dialog.signal_OK.connect(self.edit_security_account)
+            self._dialog.current_path = item.path
+            self._dialog.path = item.path
+            if item.parent is None:
+                position = self._record_keeper.root_account_objects.index(item) + 1
             else:
-                self._record_keeper.remove_account(path)
-            # REFACTOR: is the line below ok?
+                position = item.parent.children.index(item) + 1
+            self._dialog.position = position
+        else:
+            max_position = self._get_max_child_position(item)
+            self._dialog = SecurityAccountDialog(max_position=max_position, edit=edit)
+            self._dialog.signal_OK.connect(self.add_security_account)
+            self._dialog.path = "" if item is None else item.path + "/"
+            self._dialog.position = max_position
+        logging.info(f"Running SecurityAccountDialog ({edit=})")
+        self._dialog.exec()
+
+    def add_security_account(self) -> None:
+        path = self._dialog.path
+        index = self._dialog.position - 1
+
+        logging.info(f"Adding SecurityAccount at path='{path}', index={index}")
+        try:
+            item = self._model.get_selected_item()
+            self._model.pre_add(item)
+            self._record_keeper.add_security_account(path, index)
             self._model._data = self._record_keeper.root_account_objects
-            self._model.post_delete_item()
+            self._model.post_add()
         except Exception:
-            self._model.post_delete_item()
+            self._model.post_add()
+            self._handle_exception()
+
+    def edit_security_account(self) -> None:
+        item = self._model.get_selected_item()
+        current_path = self._dialog.current_path
+        new_path = self._dialog.path
+        current_index = self._get_current_index(item)
+        index = self._dialog.position - 1
+        logging.info(
+            f"Editing SecurityAccount: old path='{current_path}', "
+            f"old index={current_index}, new path='{new_path}', new index={index}"
+        )
+        try:
+            self._model.pre_reset_model()
+            self._record_keeper.edit_account(
+                current_path=current_path, new_path=new_path, index=index
+            )
+            self._model._data = self._record_keeper.root_account_objects
+            self._model.post_reset_model()
+        except Exception:
+            self._model.post_reset_model()
             self._handle_exception()
 
     def _handle_exception(self) -> None:
@@ -154,3 +226,11 @@ class AccountTreePresenter:
         if parent is None:
             return len(self._record_keeper.root_account_objects)
         return len(parent.children)
+
+    def _get_current_index(self, item: AccountGroup | Account | None) -> int:
+        if item is None:
+            raise NotImplementedError
+        parent = item.parent
+        if parent is None:
+            return self._record_keeper.root_account_objects.index(item)
+        return parent.children.index(item)

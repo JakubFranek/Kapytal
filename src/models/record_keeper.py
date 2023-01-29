@@ -204,10 +204,19 @@ class RecordKeeper(JSONSerializableMixin):
         account = CashAccount(name, currency, initial_balance, initial_datetime, parent)
         self._accounts.append(account)
 
-    def add_security_account(self, name: str, parent_path: str | None) -> None:
-        self._check_account_exists(name, parent_path)
+    def add_security_account(self, path: str, index: int | None = None) -> None:
+        parent_path, _, name = path.rpartition("/")
         parent = self.get_account_parent_or_none(parent_path)
+        if any(account.path == path for account in self._accounts):
+            raise AlreadyExistsError(f"An Account with path '{path}' already exists.")
         account = SecurityAccount(name, parent)
+        if parent is None:
+            if index is not None:
+                self._root_account_items.insert(index, account)
+            else:
+                self._root_account_items.append(account)
+        elif index is not None:
+            parent.set_child_index(account, index)
         self._accounts.append(account)
 
     def add_cash_transaction(  # noqa: CFQ002, TMN001
@@ -764,23 +773,34 @@ class RecordKeeper(JSONSerializableMixin):
             edited_security.name = new_name
 
     def edit_account(
-        self,
-        current_path: str,
-        new_name: str | None = None,
-        new_parent_path: str | None = None,
+        self, current_path: str, new_path: str, index: int | None = None
     ) -> None:
-        for account in self._accounts:
-            if account.path == current_path:
-                edited_account = account
-                break
+        if current_path != new_path and any(
+            account.path == new_path for account in self._accounts
+        ):
+            raise AlreadyExistsError(
+                f"An Account with path='{new_path}' already exists."
+            )
+        edited_account = self.get_account(current_path, Account)
+        current_parent = edited_account.parent
+        parent_path, _, name = new_path.rpartition("/")
+        new_parent = self.get_account_parent_or_none(parent_path)
+        edited_account.name = name
+        if current_parent != new_parent:
+            edited_account.parent = new_parent
+            if current_parent is None and new_parent is not None:
+                self._root_account_items.remove(edited_account)
+            if current_parent is not None and new_parent is None:
+                self._root_account_items.append(edited_account)
+        if index is None:
+            return
+        if new_parent is None:
+            self._root_account_items.remove(edited_account)
+            self._root_account_items.insert(index, edited_account)
         else:
-            raise NotFoundError(f"Account at path='{current_path}' does not exist.")
-        if new_name is not None:
-            edited_account.name = new_name
-        if new_parent_path is not None:
-            parent = self.get_account_parent_or_none(new_parent_path)
-            edited_account.parent = parent
+            new_parent.set_child_index(edited_account, index)
 
+    # REFACTOR: this method should be simplified somehow (similar to edit_account)
     def edit_account_group(
         self, current_path: str, new_path: str, index: int | None = None
     ) -> None:
@@ -853,7 +873,10 @@ class RecordKeeper(JSONSerializableMixin):
             raise InvalidOperationError(
                 "Cannot delete an Account which is still used in some transactions."
             )
-        account.parent = None
+        if account.parent is None:
+            self._root_account_items.remove(account)
+        else:
+            account.parent = None
         self._accounts.remove(account)
         del account
 
@@ -863,7 +886,10 @@ class RecordKeeper(JSONSerializableMixin):
             raise InvalidOperationError(
                 "Cannot delete an AccountGroup which has children."
             )
-        account_group.parent = None
+        if account_group.parent is None:
+            self._root_account_items.remove(account_group)
+        else:
+            account_group.parent = None
         self._account_groups.remove(account_group)
         del account_group
 

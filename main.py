@@ -102,17 +102,17 @@ if __name__ == "__main__":
     record_keeper = RecordKeeper()
     record_keeper.add_currency("CZK", 2)
     record_keeper.add_account_group("Group A")
-    record_keeper.add_security_account("Security Acc 1", "Group A")
-    record_keeper.add_security_account("Security Acc 2", "Group A")
+    record_keeper.add_security_account("Group A/Security Acc 1")
+    record_keeper.add_security_account("Group A/Security Acc 2")
     record_keeper.add_account_group(
         "Group A/Group A.A",
     )
-    record_keeper.add_security_account("Security Acc 3", "Group A/Group A.A")
+    record_keeper.add_security_account("Group A/Group A.A/Security Acc 3")
     record_keeper.add_cash_account(
         "Cash Acc 1", "CZK", 0, datetime.now(tzinfo), "Group A/Group A.A"
     )
     record_keeper.add_account_group("Group B")
-    record_keeper.add_security_account("Security Acc 4", "Group B")
+    record_keeper.add_security_account("Group B/Security Acc 4")
 
     logging.info("Creating AccountsTreePresenter")
     presenter = AccountTreePresenter(main_view, record_keeper)
