@@ -172,7 +172,6 @@ def test_add_account_group_with_multiple_parents(
     currency_code=st.text(string.ascii_letters, min_size=3, max_size=3),
     places=st.integers(min_value=0, max_value=8),
     initial_balance=valid_decimals(min_value=0),
-    initial_datetime=st.datetimes(),
     parent_name=st.none() | names(),
 )
 def test_add_cash_account(
@@ -180,16 +179,13 @@ def test_add_cash_account(
     currency_code: str,
     places: int,
     initial_balance: Decimal,
-    initial_datetime: datetime,
     parent_name: str | None,
 ) -> None:
     record_keeper = RecordKeeper()
     record_keeper.add_currency(currency_code, places)
     if parent_name:
         record_keeper.add_account_group(parent_name)
-    record_keeper.add_cash_account(
-        name, currency_code, initial_balance, initial_datetime, parent_name
-    )
+    record_keeper.add_cash_account(name, currency_code, initial_balance, parent_name)
     parent_group = record_keeper.account_groups[0] if parent_name else None
     cash_account: CashAccount = record_keeper.accounts[0]
     assert cash_account.name == name
@@ -197,7 +193,6 @@ def test_add_cash_account(
     assert cash_account.initial_balance == CashAmount(
         initial_balance, cash_account.currency
     )
-    assert cash_account.initial_datetime == initial_datetime
     assert cash_account.parent == parent_group
 
 
@@ -378,7 +373,7 @@ def test_add_cash_account_already_exists(data: st.DataObject) -> None:
     currency = data.draw(st.sampled_from(record_keeper.currencies))
     with pytest.raises(AlreadyExistsError):
         record_keeper.add_cash_account(
-            account.name, currency.code, Decimal(0), datetime.now(), parent_path
+            account.name, currency.code, Decimal(0), parent_path
         )
 
 
@@ -580,12 +575,14 @@ def test_get_security_does_not_exists(symbol: str) -> None:
     description=st.text(min_size=1, max_size=256),
     type_=st.sampled_from(SecurityTransactionType),
     price_per_share=valid_decimals(min_value=0.0),
+    datetime_=st.datetimes(timezones=st.just(tzinfo)),
     data=st.data(),
 )
 def test_add_security_transaction(
     description: str,
     type_: SecurityTransactionType,
     price_per_share: Decimal,
+    datetime_: datetime,
     data: st.DataObject,
 ) -> None:
     record_keeper = get_preloaded_record_keeper()
@@ -611,7 +608,6 @@ def test_add_security_transaction(
         )
     )
     cash_account_path = cash_account.path
-    datetime_ = cash_account.initial_datetime + timedelta(days=1)
     record_keeper.add_security_transaction(
         description,
         datetime_,
@@ -1003,35 +999,30 @@ def get_preloaded_record_keeper() -> RecordKeeper:
         name="Raiffeisen CZK",
         currency_code="CZK",
         initial_balance_value=Decimal(1500),
-        initial_datetime=datetime.now(tzinfo) - timedelta(days=365),
         parent_path="Bank Accounts",
     )
     record_keeper.add_cash_account(
         name="Fio CZK",
         currency_code="CZK",
         initial_balance_value=Decimal(0),
-        initial_datetime=datetime.now(tzinfo) - timedelta(days=365),
         parent_path="Bank Accounts",
     )
     record_keeper.add_cash_account(
         name="Creditas CZK",
         currency_code="CZK",
         initial_balance_value=Decimal(100_000),
-        initial_datetime=datetime.now(tzinfo) - timedelta(days=365),
         parent_path="Bank Accounts",
     )
     record_keeper.add_cash_account(
         name="Moneta EUR",
         currency_code="EUR",
         initial_balance_value=Decimal(1600),
-        initial_datetime=datetime.now(tzinfo) - timedelta(days=365),
         parent_path="Bank Accounts",
     )
     record_keeper.add_cash_account(
         name="Revolut EUR",
         currency_code="EUR",
         initial_balance_value=Decimal(0),
-        initial_datetime=datetime.now(tzinfo) - timedelta(days=365),
         parent_path="Bank Accounts",
     )
     record_keeper.add_security_account("Security Accounts/Degiro")

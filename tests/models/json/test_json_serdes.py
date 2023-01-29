@@ -146,9 +146,7 @@ def test_account_group() -> None:
 
 def test_cash_account() -> None:
     currency = Currency("CZK", 2)
-    cash_account = CashAccount(
-        "Test Name", currency, CashAmount(0, currency), datetime.now(tzinfo)
-    )
+    cash_account = CashAccount("Test Name", currency, CashAmount(0, currency))
     serialized = json.dumps(cash_account, cls=CustomJSONEncoder)
     decoded = json.loads(serialized, cls=CustomJSONDecoder)
     decoded = CashAccount.deserialize(decoded, None, [currency])
@@ -156,7 +154,6 @@ def test_cash_account() -> None:
     assert decoded.name == cash_account.name
     assert decoded.currency == cash_account.currency
     assert decoded.initial_balance == cash_account.initial_balance
-    assert decoded.initial_datetime == cash_account.initial_datetime
     assert decoded.uuid == cash_account.uuid
 
 
@@ -221,12 +218,8 @@ def test_record_keeper_accounts() -> None:
     record_keeper.add_currency("EUR", 2)
     record_keeper.add_account_group("Security Accounts", None)
     record_keeper.add_account_group("Cash Accounts", None)
-    record_keeper.add_cash_account(
-        "CZK Account", "CZK", 0, datetime.now(tzinfo), "Cash Accounts"
-    )
-    record_keeper.add_cash_account(
-        "EUR Account", "EUR", 0, datetime.now(tzinfo), "Cash Accounts"
-    )
+    record_keeper.add_cash_account("CZK Account", "CZK", 0, "Cash Accounts")
+    record_keeper.add_cash_account("EUR Account", "EUR", 0, "Cash Accounts")
     record_keeper.add_security_account("Security Accounts/Degiro")
     serialized = json.dumps(record_keeper, cls=CustomJSONEncoder)
     decoded = json.loads(serialized, cls=CustomJSONDecoder)
@@ -424,12 +417,8 @@ def test_record_keeper_transactions() -> None:
         "ČSOB Dynamický penzijní fond", "CSOB.DYN", SecurityType.MUTUAL_FUND, "CZK", 1
     )
     record_keeper.add_account_group("Bank Accounts", None)
-    record_keeper.add_cash_account(
-        "Raiffeisen", "CZK", 15000, datetime.now(tzinfo), "Bank Accounts"
-    )
-    record_keeper.add_cash_account(
-        "Moneta", "CZK", 0, datetime.now(tzinfo), "Bank Accounts"
-    )
+    record_keeper.add_cash_account("Raiffeisen", "CZK", 15000, "Bank Accounts")
+    record_keeper.add_cash_account("Moneta", "CZK", 0, "Bank Accounts")
     record_keeper.add_security_account("ČSOB penzijní účet", None)
     record_keeper.add_security_account("ČSOB penzijní účet 2", None)
     record_keeper.add_cash_transaction(

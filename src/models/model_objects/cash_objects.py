@@ -183,9 +183,12 @@ class CashAccount(Account):
         return obj
 
     def _update_balance(self) -> None:
-        oldest_datetime = min(
-            transaction.datetime_ for transaction in self.transactions
-        )
+        if len(self.transactions) > 0:
+            oldest_datetime = min(
+                transaction.datetime_ for transaction in self.transactions
+            )
+        else:
+            oldest_datetime = self.balance_history[0][0] + timedelta(days=1)
         datetime_balance_history = [
             (oldest_datetime - timedelta(days=1), self.initial_balance)
         ]
@@ -208,13 +211,6 @@ class CashAccount(Account):
             raise UnrelatedAccountError(
                 "This CashAccount is not related to the provided "
                 "CashRelatedTransaction."
-            )
-        if transaction.datetime_ < self.initial_datetime:
-            raise TransactionPrecedesAccountError(
-                (
-                    "The provided CashRelatedTransaction precedes this "
-                    "CashAccount.initial_datetime."
-                )
             )
         return
 

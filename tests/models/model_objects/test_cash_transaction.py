@@ -38,12 +38,12 @@ from tests.models.test_assets.composites import (
     everything_except,
     tag_amount_pairs,
 )
-from tests.models.test_assets.constants import min_datetime
+from tests.models.test_assets.constants import MIN_DATETIME
 
 
 @given(
     description=st.text(min_size=0, max_size=256),
-    datetime_=st.datetimes(min_value=min_datetime, timezones=st.just(tzinfo)),
+    datetime_=st.datetimes(min_value=MIN_DATETIME, timezones=st.just(tzinfo)),
     type_=st.sampled_from(CashTransactionType),
     account=cash_accounts(),
     payee=attributes(AttributeType.PAYEE),
