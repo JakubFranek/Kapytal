@@ -31,13 +31,24 @@ def test_remove_account() -> None:
     record_keeper.add_account_group("PARENT", None)
     parent = record_keeper.account_groups[0]
 
-    record_keeper.add_security_account("TEST NAME", "PARENT")
+    record_keeper.add_security_account("PARENT/TEST NAME")
     assert len(parent.children) != 0
     assert len(record_keeper.accounts) != 0
 
     record_keeper.remove_account("PARENT/TEST NAME")
     assert parent.children == ()
     assert record_keeper.accounts == ()
+
+
+def test_remove_account_no_parent() -> None:
+    record_keeper = RecordKeeper()
+    record_keeper.add_security_account("TEST NAME")
+    assert len(record_keeper.accounts) != 0
+    assert len(record_keeper.root_account_objects) != 0
+
+    record_keeper.remove_account("TEST NAME")
+    assert record_keeper.accounts == ()
+    assert record_keeper.root_account_objects == ()
 
 
 def test_remove_account_does_not_exist() -> None:
@@ -51,8 +62,8 @@ def test_remove_account_has_children() -> None:
     record_keeper.add_account_group("PARENT", None)
     parent = record_keeper.account_groups[0]
 
-    record_keeper.add_security_account("TEST SENDER", "PARENT")
-    record_keeper.add_security_account("TEST RECIPIENT", "PARENT")
+    record_keeper.add_security_account("PARENT/TEST SENDER")
+    record_keeper.add_security_account("PARENT/TEST RECIPIENT")
     assert len(parent.children) != 0
     assert len(record_keeper.accounts) != 0
 
@@ -80,6 +91,17 @@ def test_remove_account_group() -> None:
     record_keeper.remove_account_group("PARENT/TEST NAME")
     assert parent.children == ()
     assert record_keeper.account_groups == (parent,)
+
+
+def test_remove_account_group_no_parent() -> None:
+    record_keeper = RecordKeeper()
+    record_keeper.add_account_group("TEST NAME")
+    assert len(record_keeper.account_groups) != 0
+    assert len(record_keeper.root_account_objects) != 0
+
+    record_keeper.remove_account_group("TEST NAME")
+    assert record_keeper.account_groups == ()
+    assert record_keeper.root_account_objects == ()
 
 
 def test_remove_account_group_does_not_exist() -> None:

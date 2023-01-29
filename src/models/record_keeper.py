@@ -180,13 +180,7 @@ class RecordKeeper(JSONSerializableMixin):
                 f"An AccountGroup with path '{path}' already exists."
             )
         account_group = AccountGroup(name, parent)
-        if parent is None:
-            if index is not None:
-                self._root_account_items.insert(index, account_group)
-            else:
-                self._root_account_items.append(account_group)
-        elif index is not None:
-            parent.set_child_index(account_group, index)
+        self._set_account_item_index(account_group, index)
         self._account_groups.append(account_group)
 
     def add_cash_account(
@@ -210,13 +204,7 @@ class RecordKeeper(JSONSerializableMixin):
         if any(account.path == path for account in self._accounts):
             raise AlreadyExistsError(f"An Account with path '{path}' already exists.")
         account = SecurityAccount(name, parent)
-        if parent is None:
-            if index is not None:
-                self._root_account_items.insert(index, account)
-            else:
-                self._root_account_items.append(account)
-        elif index is not None:
-            parent.set_child_index(account, index)
+        self._set_account_item_index(account, index)
         self._accounts.append(account)
 
     def add_cash_transaction(  # noqa: CFQ002, TMN001
@@ -379,7 +367,7 @@ class RecordKeeper(JSONSerializableMixin):
         payee_name: str | None = None,
         tag_name_amount_pairs: Collection[tuple[str, Decimal]] | None = None,
     ) -> None:
-        transactions = self._get_transactions(transaction_uuids)
+        transactions: list[CashTransaction] = self._get_transactions(transaction_uuids)
 
         if not all(
             isinstance(transaction, CashTransaction) for transaction in transactions
@@ -455,7 +443,7 @@ class RecordKeeper(JSONSerializableMixin):
         amount_sent: Decimal | None = None,
         amount_received: Decimal | None = None,
     ) -> None:
-        transfers = self._get_transactions(transaction_uuids)
+        transfers: list[CashTransfer] = self._get_transactions(transaction_uuids)
 
         if not all(isinstance(transaction, CashTransfer) for transaction in transfers):
             raise TypeError("All edited transactions must be CashTransfers.")
@@ -526,7 +514,7 @@ class RecordKeeper(JSONSerializableMixin):
         payee_name: str | None = None,
         tag_name_amount_pairs: Collection[tuple[str, Decimal]] | None = None,
     ) -> None:
-        refunds = self._get_transactions(transaction_uuids)
+        refunds: list[RefundTransaction] = self._get_transactions(transaction_uuids)
 
         if not all(isinstance(refund, RefundTransaction) for refund in refunds):
             raise TypeError("All edited transactions must be RefundTransactions.")
@@ -599,7 +587,9 @@ class RecordKeeper(JSONSerializableMixin):
         price_per_share: Decimal | int | str | None = None,
         shares: Decimal | int | str | None = None,
     ) -> None:
-        transactions = self._get_transactions(transaction_uuids)
+        transactions: list[SecurityTransaction] = self._get_transactions(
+            transaction_uuids
+        )
 
         if not all(
             isinstance(transaction, SecurityTransaction) for transaction in transactions
@@ -675,7 +665,7 @@ class RecordKeeper(JSONSerializableMixin):
         sender_path: str | None = None,
         recipient_path: str | None = None,
     ) -> None:
-        transactions = self._get_transactions(transaction_uuids)
+        transactions: list[SecurityTransfer] = self._get_transactions(transaction_uuids)
 
         if not all(
             isinstance(transaction, SecurityTransfer) for transaction in transactions
@@ -772,6 +762,7 @@ class RecordKeeper(JSONSerializableMixin):
         if new_name is not None:
             edited_security.name = new_name
 
+    # TODO: CashAccount requires different method (can edit initial balance)
     def edit_account(
         self, current_path: str, new_path: str, index: int | None = None
     ) -> None:
@@ -782,23 +773,12 @@ class RecordKeeper(JSONSerializableMixin):
                 f"An Account with path='{new_path}' already exists."
             )
         edited_account = self.get_account(current_path, Account)
-        current_parent = edited_account.parent
         parent_path, _, name = new_path.rpartition("/")
         new_parent = self.get_account_parent_or_none(parent_path)
         edited_account.name = name
-        if current_parent != new_parent:
-            edited_account.parent = new_parent
-            if current_parent is None and new_parent is not None:
-                self._root_account_items.remove(edited_account)
-            if current_parent is not None and new_parent is None:
-                self._root_account_items.append(edited_account)
-        if index is None:
-            return
-        if new_parent is None:
-            self._root_account_items.remove(edited_account)
-            self._root_account_items.insert(index, edited_account)
-        else:
-            new_parent.set_child_index(edited_account, index)
+        self._edit_account_item_parent(
+            item=edited_account, new_parent=new_parent, index=index
+        )
 
     # REFACTOR: this method should be simplified somehow (similar to edit_account)
     def edit_account_group(
@@ -811,25 +791,14 @@ class RecordKeeper(JSONSerializableMixin):
                 f"An Account Group with path='{new_path}' already exists."
             )
         edited_account_group = self.get_account_parent(current_path)
-        current_parent = edited_account_group.parent
         parent_path, _, name = new_path.rpartition("/")
         new_parent = self.get_account_parent_or_none(parent_path)
         if new_parent == edited_account_group:
             raise InvalidOperationError("An AccountGroup cannot be its own parent.")
         edited_account_group.name = name
-        if current_parent != new_parent:
-            edited_account_group.parent = new_parent
-            if current_parent is None and new_parent is not None:
-                self._root_account_items.remove(edited_account_group)
-            if current_parent is not None and new_parent is None:
-                self._root_account_items.append(edited_account_group)
-        if index is None:
-            return
-        if new_parent is None:
-            self._root_account_items.remove(edited_account_group)
-            self._root_account_items.insert(index, edited_account_group)
-        else:
-            new_parent.set_child_index(edited_account_group, index)
+        self._edit_account_item_parent(
+            item=edited_account_group, new_parent=new_parent, index=index
+        )
 
     def add_tags_to_transactions(
         self, transaction_uuids: Collection[str], tag_names: Collection[str]
@@ -864,12 +833,9 @@ class RecordKeeper(JSONSerializableMixin):
             method = getattr(transaction, method_name)
             method(tags)
 
-    def remove_account(self, account_path: str) -> None:
-        account = self.get_account(account_path, Account)
-        if any(
-            transaction.is_account_related(account)
-            for transaction in self._transactions
-        ):
+    def remove_account(self, path: str) -> None:
+        account = self.get_account(path, Account)
+        if len(account.transactions) != 0:
             raise InvalidOperationError(
                 "Cannot delete an Account which is still used in some transactions."
             )
@@ -1328,3 +1294,36 @@ class RecordKeeper(JSONSerializableMixin):
             for transaction in self._transactions
             if str(transaction.uuid) in uuid_strings
         ]
+
+    def _set_account_item_index(
+        self, item: Account | AccountGroup, index: int | None
+    ) -> None:
+        parent = item.parent
+        if parent is None:
+            if index is not None:
+                self._root_account_items.insert(index, item)
+            else:
+                self._root_account_items.append(item)
+        elif index is not None:
+            parent.set_child_index(item, index)
+
+    def _edit_account_item_parent(
+        self,
+        item: Account | AccountGroup,
+        new_parent: AccountGroup | None,
+        index: int | None,
+    ) -> None:
+        current_parent = item.parent
+        if current_parent != new_parent:
+            item.parent = new_parent
+            if current_parent is None and new_parent is not None:
+                self._root_account_items.remove(item)
+            if current_parent is not None and new_parent is None:
+                self._root_account_items.append(item)
+        if index is None:
+            return
+        if new_parent is None:
+            self._root_account_items.remove(item)
+            self._root_account_items.insert(index, item)
+        else:
+            new_parent.set_child_index(item, index)

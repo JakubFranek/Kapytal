@@ -707,6 +707,13 @@ def test_set_exchange_rate_does_not_exist() -> None:
         record_keeper.set_exchange_rate("N/A", Decimal(1), datetime.now(tzinfo).date())
 
 
+def test_add_security_account_already_exists() -> None:
+    record_keeper = RecordKeeper()
+    record_keeper.add_security_account("Test path")
+    with pytest.raises(AlreadyExistsError):
+        record_keeper.add_security_account("Test path")
+
+
 def get_preloaded_record_keeper_with_security_transactions() -> RecordKeeper:
     record_keeper = get_preloaded_record_keeper()
     record_keeper.add_security_transaction(
@@ -1027,13 +1034,9 @@ def get_preloaded_record_keeper() -> RecordKeeper:
         initial_datetime=datetime.now(tzinfo) - timedelta(days=365),
         parent_path="Bank Accounts",
     )
-    record_keeper.add_security_account(name="Degiro", parent_path="Security Accounts")
-    record_keeper.add_security_account(
-        name="Interactive Brokers", parent_path="Security Accounts"
-    )
-    record_keeper.add_security_account(
-        name="ČSOB Penzijní účet", parent_path="Security Accounts"
-    )
+    record_keeper.add_security_account("Security Accounts/Degiro")
+    record_keeper.add_security_account("Security Accounts/Interactive Brokers")
+    record_keeper.add_security_account("Security Accounts/ČSOB Penzijní účet")
     record_keeper.add_security(
         "Vanguard FTSE All-World", "VWCE.DE", SecurityType.ETF, "EUR", 1
     )

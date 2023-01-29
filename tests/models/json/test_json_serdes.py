@@ -227,7 +227,7 @@ def test_record_keeper_accounts() -> None:
     record_keeper.add_cash_account(
         "EUR Account", "EUR", 0, datetime.now(tzinfo), "Cash Accounts"
     )
-    record_keeper.add_security_account("Degiro", "Security Accounts")
+    record_keeper.add_security_account("Security Accounts/Degiro")
     serialized = json.dumps(record_keeper, cls=CustomJSONEncoder)
     decoded = json.loads(serialized, cls=CustomJSONDecoder)
     assert isinstance(decoded, RecordKeeper)
