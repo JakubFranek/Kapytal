@@ -188,14 +188,13 @@ class RecordKeeper(JSONSerializableMixin):
         name: str,
         currency_code: str,
         initial_balance_value: Decimal | int | str,
-        initial_datetime: datetime,
         parent_path: str | None,
     ) -> None:
         self._check_account_exists(name, parent_path)
         currency = self.get_currency(currency_code)
         parent = self.get_account_parent_or_none(parent_path)
         initial_balance = CashAmount(initial_balance_value, currency)
-        account = CashAccount(name, currency, initial_balance, initial_datetime, parent)
+        account = CashAccount(name, currency, initial_balance, parent)
         self._accounts.append(account)
 
     def add_security_account(self, path: str, index: int | None = None) -> None:

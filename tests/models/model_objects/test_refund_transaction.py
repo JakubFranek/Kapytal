@@ -591,11 +591,7 @@ def test_set_attributes_same_values() -> None:
 def test_change_account(data: st.DataObject) -> None:
     refund = get_preloaded_refund()
     old_account = refund.account
-    new_account = data.draw(
-        cash_accounts(
-            max_datetime=refund.datetime_.replace(tzinfo=None), currency=refund.currency
-        )
-    )
+    new_account = data.draw(cash_accounts(currency=refund.currency))
 
     assert refund in old_account.transactions
     assert refund not in new_account.transactions
@@ -650,12 +646,7 @@ def get_preloaded_refund() -> RefundTransaction:
 
 
 def get_preloaded_expense() -> CashTransaction:
-    initial_datetime = datetime.strptime(
-        "01-01-2021 00:00:00", "%m-%d-%Y %H:%M:%S"
-    ).replace(tzinfo=tzinfo)
-    account = CashAccount(
-        "Test Account", currency, CashAmount(Decimal(1000), currency), initial_datetime
-    )
+    account = CashAccount("Test Account", currency, CashAmount(Decimal(1000), currency))
 
     description = "A transaction to be refunded."
     datetime_ = datetime.strptime("01-01-2022 00:00:00", "%m-%d-%Y %H:%M:%S").replace(
@@ -686,15 +677,7 @@ def get_preloaded_expense() -> CashTransaction:
 
 
 def get_refunded_account() -> CashAccount:
-    initial_datetime = datetime.strptime(
-        "01-01-2021 00:00:00", "%m-%d-%Y %H:%M:%S"
-    ).replace(tzinfo=tzinfo)
-    return CashAccount(
-        "Refunded Account",
-        currency,
-        CashAmount(0, currency),
-        initial_datetime,
-    )
+    return CashAccount("Refunded Account", currency, CashAmount(0, currency))
 
 
 def get_valid_category_amount_pairs() -> tuple[tuple[Category, Decimal], ...]:

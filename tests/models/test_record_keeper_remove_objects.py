@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 from decimal import Decimal
 
 import pytest
@@ -202,9 +202,7 @@ def test_remove_currency_referenced_in_transaction() -> None:
     record_keeper = RecordKeeper()
     record_keeper.add_currency("CZK", 2)
     record_keeper.add_security_account("SECURITY ACC", None)
-    record_keeper.add_cash_account(
-        "CASH ACC", "CZK", 0, datetime.now(tzinfo) - timedelta(days=1), None
-    )
+    record_keeper.add_cash_account("CASH ACC", "CZK", 0, None)
     record_keeper.add_security("NAME", "SYMB", SecurityType.ETF, "CZK", 1)
     record_keeper.add_security_transaction(
         "",
@@ -246,7 +244,7 @@ def test_remove_tag() -> None:
 def test_remove_tag_in_transaction() -> None:
     record_keeper = RecordKeeper()
     record_keeper.add_currency("CZK", 2)
-    record_keeper.add_cash_account("ACCOUNT", "CZK", 0, datetime.now(tzinfo), None)
+    record_keeper.add_cash_account("ACCOUNT", "CZK", 0, None)
     record_keeper.add_cash_transaction(
         "",
         datetime.now(tzinfo),
@@ -270,7 +268,7 @@ def test_remove_payee() -> None:
 def test_remove_payee_in_transaction() -> None:
     record_keeper = RecordKeeper()
     record_keeper.add_currency("CZK", 2)
-    record_keeper.add_cash_account("ACCOUNT", "CZK", 0, datetime.now(tzinfo), None)
+    record_keeper.add_cash_account("ACCOUNT", "CZK", 0, None)
     record_keeper.add_cash_transaction(
         "",
         datetime.now(tzinfo),
@@ -294,7 +292,7 @@ def test_remove_category() -> None:
 def test_remove_category_in_transaction() -> None:
     record_keeper = RecordKeeper()
     record_keeper.add_currency("CZK", 2)
-    record_keeper.add_cash_account("ACCOUNT", "CZK", 0, datetime.now(tzinfo), None)
+    record_keeper.add_cash_account("ACCOUNT", "CZK", 0, None)
     record_keeper.add_cash_transaction(
         "",
         datetime.now(tzinfo),

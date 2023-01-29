@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 from decimal import Decimal
 
 import pytest
@@ -355,7 +355,6 @@ def test_edit_cash_transactions_account_pass() -> None:
         name="Test Account CZK",
         currency_code="CZK",
         initial_balance_value=Decimal(0),
-        initial_datetime=datetime.now(tzinfo) - timedelta(days=700),
         parent_path=None,
     )
     record_keeper.edit_cash_transactions(uuids, account_path=edit_account)

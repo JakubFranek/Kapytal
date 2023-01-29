@@ -1,4 +1,4 @@
 from datetime import datetime, timedelta
 
-max_datetime = datetime.now()  # noqa: DTZ005
-min_datetime = max_datetime + timedelta(seconds=1)
+MAX_DATETIME = datetime.now()  # noqa: DTZ005
+MIN_DATETIME = MAX_DATETIME + timedelta(seconds=1)

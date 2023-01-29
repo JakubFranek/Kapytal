@@ -25,14 +25,14 @@ from tests.models.test_assets.composites import (
     currencies,
     everything_except,
 )
-from tests.models.test_assets.constants import min_datetime
+from tests.models.test_assets.constants import MIN_DATETIME
 
 
 @given(
     description=st.text(min_size=0, max_size=256),
     account_sender=cash_accounts(),
     account_recipient=cash_accounts(),
-    datetime_=st.datetimes(min_value=min_datetime, timezones=st.just(tzinfo)),
+    datetime_=st.datetimes(min_value=MIN_DATETIME, timezones=st.just(tzinfo)),
     data=st.data(),
 )
 def test_creation(

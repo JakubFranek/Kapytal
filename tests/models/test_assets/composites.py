@@ -30,7 +30,7 @@ from src.models.model_objects.security_objects import (
     SecurityType,
 )
 from tests.models.test_assets.concrete_abcs import ConcreteTransaction
-from tests.models.test_assets.constants import max_datetime, min_datetime
+from tests.models.test_assets.constants import MIN_DATETIME
 
 # IDEA: check if optional params for some composites can help optimize tests
 
@@ -98,29 +98,20 @@ def cash_amounts(
 @st.composite
 def cash_accounts(
     draw: st.DrawFn,
-    min_datetime: datetime = datetime.min,
-    max_datetime: datetime = max_datetime,
     currency: Currency | None = None,
 ) -> CashAccount:
     name = draw(names())
     if currency is None:
         currency = draw(currencies())
     initial_amount = draw(cash_amounts(currency=currency))
-    initial_datetime = draw(
-        st.datetimes(
-            min_value=min_datetime,
-            max_value=max_datetime,
-            timezones=st.just(tzinfo),
-        )
-    )
-    return CashAccount(name, currency, initial_amount, initial_datetime)
+    return CashAccount(name, currency, initial_amount)
 
 
 @st.composite
 def cash_transactions(
     draw: st.DrawFn,
     currency: Currency | None = None,
-    min_datetime: datetime = min_datetime,
+    min_datetime: datetime = MIN_DATETIME,
     max_datetime: datetime = datetime.max,
     account: CashAccount = None,
     type_: CashTransactionType | None = None,
@@ -175,7 +166,7 @@ def cash_transactions(
 @st.composite
 def cash_transfers(
     draw: st.DrawFn,
-    min_datetime: datetime = min_datetime,
+    min_datetime: datetime = MIN_DATETIME,
     max_datetime: datetime = datetime.max,
     currency_sender: Currency | None = None,
     currency_recipient: Currency | None = None,
@@ -274,7 +265,7 @@ def security_accounts(draw: st.DrawFn) -> SecurityAccount:
 @st.composite
 def security_transactions(
     draw: st.DrawFn,
-    min_datetime: datetime = min_datetime,
+    min_datetime: datetime = MIN_DATETIME,
     max_datetime: datetime = datetime.max,
 ) -> SecurityTransaction:
     description = draw(st.text(min_size=1, max_size=256))
