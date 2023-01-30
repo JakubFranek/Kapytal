@@ -37,15 +37,18 @@ class CurrencyFormPresenter:
     def add_currency(self) -> None:
         code = self._dialog.currency_code
         places = self._dialog.currency_places
+
         logging.info(f"Adding Currency(code='{code}', places='{places}')")
         try:
-            self._currency_table_model.pre_add()
             self._record_keeper.add_currency(code, places)
-            self._currency_table_model._data = self._record_keeper.currencies
-            self._currency_table_model.post_add()
-            self._dialog.close()
         except Exception:
             self._handle_exception()
+            return
+
+        self._currency_table_model.pre_add()
+        self._currency_table_model._data = self._record_keeper.currencies
+        self._currency_table_model.post_add()
+        self._dialog.close()
 
     def remove_currency(self) -> None:
         currency = self._currency_table_model.get_selected_item()

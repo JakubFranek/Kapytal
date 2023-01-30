@@ -114,44 +114,46 @@ class AccountTreePresenter:
         logging.info(f"Running AccountGroupDialog ({edit=})")
         self._dialog.exec()
 
-    # IDEA: perform the add in a try/except and only if it didn't fail update the data
     def add_account_group(self) -> None:
         path = self._dialog.path
         index = self._dialog.position - 1
 
         logging.info(f"Adding AccountGroup at path='{path}', index={index}")
         try:
-            item = self._model.get_selected_item()
-            self._model.pre_add(item)
             self._record_keeper.add_account_group(path, index)
-            self._model._data = self._record_keeper.root_account_objects
-            self._model.post_add()
-            self._dialog.close()
         except Exception:
             self._handle_exception()
+            return
 
-    # IDEA: perform the edit in a try/except and only if it didn't fail update the data
+        item = self._model.get_selected_item()
+        self._model.pre_add(item)
+        self._model._data = self._record_keeper.root_account_objects
+        self._model.post_add()
+        self._dialog.close()
+
     def edit_account_group(self) -> None:
         item = self._model.get_selected_item()
         current_path = self._dialog.current_path
         new_path = self._dialog.path
         current_index = self._get_current_index(item)
         index = self._dialog.position - 1
+
         logging.info(
             f"Editing AccountGroup: old path='{current_path}', "
             f"old index={current_index}, new path='{new_path}', new index={index}"
         )
         try:
-            self._model.pre_reset_model()
             self._record_keeper.edit_account_group(
                 current_path=current_path, new_path=new_path, index=index
             )
-            self._model._data = self._record_keeper.root_account_objects
-            self._model.post_reset_model()
-            self._dialog.close()
         except Exception:
-            self._model.post_reset_model()
             self._handle_exception()
+            return
+
+        self._model.pre_reset_model()
+        self._model._data = self._record_keeper.root_account_objects
+        self._model.post_reset_model()
+        self._dialog.close()
 
     def run_security_account_dialog(
         self, edit: bool, item: SecurityAccount | None
@@ -184,14 +186,16 @@ class AccountTreePresenter:
 
         logging.info(f"Adding SecurityAccount at path='{path}', index={index}")
         try:
-            item = self._model.get_selected_item()
-            self._model.pre_add(item)
             self._record_keeper.add_security_account(path, index)
-            self._model._data = self._record_keeper.root_account_objects
-            self._model.post_add()
-            self._dialog.close()
         except Exception:
             self._handle_exception()
+            return
+
+        item = self._model.get_selected_item()
+        self._model.pre_add(item)
+        self._model._data = self._record_keeper.root_account_objects
+        self._model.post_add()
+        self._dialog.close()
 
     def edit_security_account(self) -> None:
         item = self._model.get_selected_item()
@@ -199,21 +203,23 @@ class AccountTreePresenter:
         new_path = self._dialog.path
         current_index = self._get_current_index(item)
         index = self._dialog.position - 1
+
         logging.info(
             f"Editing SecurityAccount: old path='{current_path}', "
             f"old index={current_index}, new path='{new_path}', new index={index}"
         )
         try:
-            self._model.pre_reset_model()
             self._record_keeper.edit_account(
                 current_path=current_path, new_path=new_path, index=index
             )
-            self._model._data = self._record_keeper.root_account_objects
-            self._model.post_reset_model()
-            self._dialog.close()
         except Exception:
-            self._model.post_reset_model()
             self._handle_exception()
+            return
+
+        self._model.pre_reset_model()
+        self._model._data = self._record_keeper.root_account_objects
+        self._model.post_reset_model()
+        self._dialog.close()
 
     def _handle_exception(self) -> None:
         display_text, display_details = get_exception_info()  # type: ignore
