@@ -8,7 +8,10 @@ from src.presenters.view_models.account_tree_model import AccountTreeModel
 from src.views.account_group_dialog import AccountGroupDialog
 from src.views.account_tree import AccountTree
 from src.views.security_account_dialog import SecurityAccountDialog
-from src.views.utilities.handle_exception import get_exception_info
+from src.views.utilities.handle_exception import (
+    display_error_message,
+    get_exception_info,
+)
 
 
 # TODO: view should be QTreeView, not MainView
@@ -214,7 +217,7 @@ class AccountTreePresenter:
 
     def _handle_exception(self) -> None:
         display_text, display_details = get_exception_info()  # type: ignore
-        self._view.display_error(display_text, display_details)
+        display_error_message(display_text, display_details)
 
     def _get_max_child_position(self, item: AccountGroup | None) -> int:
         if isinstance(item, AccountGroup):

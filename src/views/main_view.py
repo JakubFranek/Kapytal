@@ -1,8 +1,7 @@
 import os
 
 from PyQt6.QtCore import QDir, pyqtSignal
-from PyQt6.QtGui import QIcon
-from PyQt6.QtWidgets import QMainWindow, QMessageBox
+from PyQt6.QtWidgets import QMainWindow
 
 from src.views.account_tree import AccountTree
 from src.views.ui_files.Ui_main_window import Ui_MainWindow
@@ -42,23 +41,3 @@ class MainView(QMainWindow, Ui_MainWindow):
         self.toolButton_collapseAll.setDefaultAction(
             self.account_tree.actionCollapse_All
         )
-
-    # IDEA: place this in some utility module?
-    def display_error(
-        self,
-        text: str,
-        exc_details: str,
-        critical: bool = False,
-        title: str = "Error!",
-    ) -> None:
-        message_box = QMessageBox()
-        if critical is True:
-            message_box.setIcon(QMessageBox.Icon.Critical)
-            message_box.setWindowIcon(QIcon("icons_24:cross.png"))
-        else:
-            message_box.setIcon(QMessageBox.Icon.Warning)
-            message_box.setWindowIcon(QIcon("icons_24:exclamation.png"))
-        message_box.setWindowTitle(title)
-        message_box.setText(text)
-        message_box.setDetailedText(exc_details)
-        message_box.exec()

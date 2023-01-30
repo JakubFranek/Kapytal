@@ -1,7 +1,7 @@
 from PyQt6 import QtGui, QtWidgets
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtGui import QContextMenuEvent, QCursor, QIcon
-from PyQt6.QtWidgets import QHeaderView, QMenu, QMessageBox, QTreeView, QWidget
+from PyQt6.QtWidgets import QHeaderView, QMenu, QTreeView, QWidget
 
 from src.views.constants import AccountTreeColumns
 
@@ -122,22 +122,3 @@ class AccountTree(QTreeView):
         self.selectionModel().selectionChanged.connect(
             self.signal_selection_changed.emit
         )
-
-    def display_error(
-        self,
-        text: str,
-        exc_details: str,
-        critical: bool = False,
-        title: str = "Error!",
-    ) -> None:
-        message_box = QMessageBox()
-        if critical is True:
-            message_box.setIcon(QMessageBox.Icon.Critical)
-            message_box.setWindowIcon(QIcon("icons_24:cross.png"))
-        else:
-            message_box.setIcon(QMessageBox.Icon.Warning)
-            message_box.setWindowIcon(QIcon("icons_24:exclamation.png"))
-        message_box.setWindowTitle(title)
-        message_box.setText(text)
-        message_box.setDetailedText(exc_details)
-        message_box.exec()

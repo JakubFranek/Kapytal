@@ -3,6 +3,9 @@ import os
 import sys
 import traceback
 
+from PyQt6.QtGui import QIcon
+from PyQt6.QtWidgets import QMessageBox
+
 
 def get_exception_info() -> tuple[str, str] | None:
     exc_type, exc_value, exc_traceback = sys.exc_info()
@@ -32,3 +35,22 @@ def get_exception_info() -> tuple[str, str] | None:
 
         return display_text, display_details
     return None
+
+
+def display_error_message(
+    text: str,
+    exc_details: str,
+    critical: bool = False,
+    title: str = "Error!",
+) -> None:
+    message_box = QMessageBox()
+    if critical is True:
+        message_box.setIcon(QMessageBox.Icon.Critical)
+        message_box.setWindowIcon(QIcon("icons_24:cross.png"))
+    else:
+        message_box.setIcon(QMessageBox.Icon.Warning)
+        message_box.setWindowIcon(QIcon("icons_24:exclamation.png"))
+    message_box.setWindowTitle(title)
+    message_box.setText(text)
+    message_box.setDetailedText(exc_details)
+    message_box.exec()

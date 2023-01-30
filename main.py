@@ -12,6 +12,7 @@ from src.models.constants import tzinfo
 from src.models.record_keeper import RecordKeeper
 from src.presenters.main_presenter import MainPresenter
 from src.views.main_view import MainView
+from src.views.utilities.handle_exception import display_error_message
 
 
 def handle_uncaught_exception(
@@ -39,7 +40,7 @@ def handle_uncaught_exception(
     logging.critical(
         "Uncaught exception", exc_info=(exc_type, exc_value, exc_traceback)
     )
-    main_view.display_error(text=text, exc_details=exc_details, critical=True)
+    display_error_message(text=text, exc_details=exc_details, critical=True)
     app.exit()
 
 

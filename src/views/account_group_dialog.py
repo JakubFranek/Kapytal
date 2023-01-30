@@ -1,6 +1,6 @@
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtGui import QIcon
-from PyQt6.QtWidgets import QAbstractButton, QDialog, QDialogButtonBox, QMessageBox
+from PyQt6.QtWidgets import QAbstractButton, QDialog, QDialogButtonBox
 
 from src.views.ui_files.Ui_account_group_dialog import Ui_AccountGroupDialog
 
@@ -57,25 +57,3 @@ class AccountGroupDialog(QDialog, Ui_AccountGroupDialog):
             self.close()
         else:
             raise ValueError("Unknown role of the clicked button in the ButtonBox")
-
-    def display_error(
-        self,
-        text: str,
-        exc_details: str,
-        critical: bool = False,
-        title: str = "Error!",
-    ) -> None:
-        message_box = QMessageBox()
-
-        if critical is True:
-            message_box.setIcon(QMessageBox.Icon.Critical)
-            message_box.setWindowIcon(QIcon("icons_24:cross.png"))
-        else:
-            message_box.setIcon(QMessageBox.Icon.Warning)
-            message_box.setWindowIcon(QIcon("icons_24:exclamation.png"))
-
-        message_box.setWindowTitle(title)
-        message_box.setText(text)
-        message_box.setDetailedText(exc_details)
-
-        message_box.exec()
