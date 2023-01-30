@@ -1,16 +1,15 @@
 # Tasks
 
-1. Think about initial_datetime for CashAccounts
-    - remove! initial date will be 1 day before 1st transaction
-2. CashAccount support
-3. Settings
+1. CashAccount support
+1. Settings
     - base currency
     - backup location
     - no./size of backups
-4. Implement Account(Group) balances to accountTree
-5. Saving/loading RecordKeeper to/from a file
-6. Currency and Exchange Rate manager
-7. Payee, tag manager
-8. Category manager
-9. Security manager
-10. Transaction table
+    - timezone
+1. Implement Account(Group) balances to accountTree
+1. Saving/loading RecordKeeper to/from a file
+1. Currency and Exchange Rate manager
+1. Payee, tag manager
+1. Category manager
+1. Security manager
+1. Transaction table

@@ -6,40 +6,40 @@ from src.models.model_objects.security_objects import SecurityAccount
 from src.models.record_keeper import RecordKeeper
 from src.presenters.view_models.account_tree_model import AccountTreeModel
 from src.views.account_group_dialog import AccountGroupDialog
-from src.views.main_view import MainView
+from src.views.account_tree import AccountTree
 from src.views.security_account_dialog import SecurityAccountDialog
 from src.views.utilities.handle_exception import get_exception_info
 
 
+# TODO: view should be QTreeView, not MainView
+# TODO: create MainPresenter
 class AccountTreePresenter:
-    def __init__(self, view: MainView, record_keeper: RecordKeeper) -> None:
+    def __init__(self, view: AccountTree, record_keeper: RecordKeeper) -> None:
         self._view = view
         self._record_keeper = record_keeper
         self._model = AccountTreeModel(
-            view=view.accountTree, data=record_keeper.root_account_objects
+            view=view, data=record_keeper.root_account_objects
         )
-        self._view.accountTree.setModel(self._model)
+        self._view.setModel(self._model)
 
         self._setup_signals()
         self._view.finalize_setup()
-        logging.info("Showing MainView")
-        self._view.show()
 
     def _setup_signals(self) -> None:
-        self._view.signal_tree_selection_changed.connect(self.selection_changed)
-        self._view.signal_tree_expand_below.connect(self.expand_all_below)
-        self._view.signal_tree_delete_item.connect(self.delete_item)
-        self._view.signal_tree_add_account_group.connect(
+        self._view.signal_selection_changed.connect(self.selection_changed)
+        self._view.signal_expand_below.connect(self.expand_all_below)
+        self._view.signal_delete_item.connect(self.delete_item)
+        self._view.signal_add_account_group.connect(
             lambda: self.run_account_group_dialog(
                 item=self._model.get_selected_item(), edit=False
             )
         )
-        self._view.signal_tree_add_security_account.connect(
+        self._view.signal_add_security_account.connect(
             lambda: self.run_security_account_dialog(
                 item=self._model.get_selected_item(), edit=False
             )
         )
-        self._view.signal_tree_edit_item.connect(self.edit_item)
+        self._view.signal_edit_item.connect(self.edit_item)
 
         self.selection_changed()  # called to ensure context menu is OK at start of run
 
@@ -57,10 +57,10 @@ class AccountTreePresenter:
         )
 
     def expand_all_below(self) -> None:
-        indexes = self._view.accountTree.selectedIndexes()
+        indexes = self._view.selectedIndexes()
         if len(indexes) == 0:
             raise ValueError("No index to expand recursively selected.")
-        self._view.accountTree.expandRecursively(indexes[0])
+        self._view.expandRecursively(indexes[0])
 
     def edit_item(self) -> None:
         item = self._model.get_selected_item()
@@ -124,8 +124,8 @@ class AccountTreePresenter:
             self._record_keeper.add_account_group(path, index)
             self._model._data = self._record_keeper.root_account_objects
             self._model.post_add()
+            self._dialog.close()
         except Exception:
-            self._model.post_add()
             self._handle_exception()
 
     def edit_account_group(self) -> None:
@@ -145,8 +145,8 @@ class AccountTreePresenter:
             )
             self._model._data = self._record_keeper.root_account_objects
             self._model.post_reset_model()
+            self._dialog.close()
         except Exception:
-            self._model.post_reset_model()
             self._handle_exception()
 
     def run_security_account_dialog(
@@ -185,6 +185,7 @@ class AccountTreePresenter:
             self._record_keeper.add_security_account(path, index)
             self._model._data = self._record_keeper.root_account_objects
             self._model.post_add()
+            self._dialog.close()
         except Exception:
             self._model.post_add()
             self._handle_exception()
@@ -206,6 +207,7 @@ class AccountTreePresenter:
             )
             self._model._data = self._record_keeper.root_account_objects
             self._model.post_reset_model()
+            self._dialog.close()
         except Exception:
             self._model.post_reset_model()
             self._handle_exception()

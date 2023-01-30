@@ -11,6 +11,7 @@ class AccountGroupDialog(QDialog, Ui_AccountGroupDialog):
     def __init__(self, max_position: int, edit: bool = False) -> None:
         super().__init__()
         self.setupUi(self)
+        self.resize(270, 105)
         self.currentPathLineEdit.setEnabled(False)
         if edit:
             self.setWindowTitle("Edit Account Group")
@@ -22,7 +23,7 @@ class AccountGroupDialog(QDialog, Ui_AccountGroupDialog):
             self.currentPathLineEdit.setVisible(False)
 
         self.positionSpinBox.setMaximum(max_position)
-        self.buttonBox.clicked.connect(self.handleButtonBoxClick)
+        self.buttonBox.clicked.connect(self.handle_button_box_click)
 
     @property
     def path(self) -> str:
@@ -48,7 +49,7 @@ class AccountGroupDialog(QDialog, Ui_AccountGroupDialog):
     def position(self, value: int) -> None:
         self.positionSpinBox.setValue(value)
 
-    def handleButtonBoxClick(self, button: QAbstractButton) -> None:
+    def handle_button_box_click(self, button: QAbstractButton) -> None:
         role = self.buttonBox.buttonRole(button)
         if role == QDialogButtonBox.ButtonRole.AcceptRole:
             self.signal_OK.emit()

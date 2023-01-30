@@ -10,7 +10,7 @@ from PyQt6.QtWidgets import QApplication
 
 from src.models.constants import tzinfo
 from src.models.record_keeper import RecordKeeper
-from src.presenters.account_tree_presenter import AccountTreePresenter
+from src.presenters.main_presenter import MainPresenter
 from src.views.main_view import MainView
 
 
@@ -108,14 +108,12 @@ if __name__ == "__main__":
         "Group A/Group A.A",
     )
     record_keeper.add_security_account("Group A/Group A.A/Security Acc 3")
-    record_keeper.add_cash_account(
-        "Cash Acc 1", "CZK", 0, datetime.now(tzinfo), "Group A/Group A.A"
-    )
+    record_keeper.add_cash_account("Cash Acc 1", "CZK", 0, "Group A/Group A.A")
     record_keeper.add_account_group("Group B")
     record_keeper.add_security_account("Group B/Security Acc 4")
 
-    logging.info("Creating AccountsTreePresenter")
-    presenter = AccountTreePresenter(main_view, record_keeper)
+    logging.info("Creating MainPresenter")
+    main_presenter = MainPresenter(main_view, record_keeper)
 
     logging.info("Executing QApplication")
     app.exec()
