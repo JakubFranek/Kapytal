@@ -1,6 +1,7 @@
 import os
 
 from PyQt6.QtCore import QDir, pyqtSignal
+from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QMainWindow
 
 from src.views.account_tree import AccountTree
@@ -33,6 +34,7 @@ class MainView(QMainWindow, Ui_MainWindow):
         self.account_tree = AccountTree(self)
         self.verticalLayoutTree.addWidget(self.account_tree)
 
+        self.actionCurrencies_and_Exchange_Rates.setIcon(QIcon("icons_16:currency.png"))
         self.actionCurrencies_and_Exchange_Rates.triggered.connect(
             self.signal_open_currency_form.emit
         )

@@ -14,8 +14,6 @@ from src.views.utilities.handle_exception import (
 )
 
 
-# TODO: view should be QTreeView, not MainView
-# TODO: create MainPresenter
 class AccountTreePresenter:
     def __init__(self, view: AccountTree, record_keeper: RecordKeeper) -> None:
         self._view = view
@@ -81,17 +79,17 @@ class AccountTreePresenter:
 
         index = self._model.get_index_from_item(item)
         try:
-            self._model.pre_delete_item(index)
             if isinstance(item, AccountGroup):
                 self._record_keeper.remove_account_group(path)
             else:
                 self._record_keeper.remove_account(path)
-            # REFACTOR: is the line below ok?
-            self._model._data = self._record_keeper.root_account_objects
-            self._model.post_delete_item()
         except Exception:
-            self._model.post_delete_item()
             self._handle_exception()
+            return
+
+        self._model.pre_delete_item(index)
+        self._model._data = self._record_keeper.root_account_objects
+        self._model.post_delete_item()
 
     def run_account_group_dialog(self, edit: bool, item: AccountGroup | None) -> None:
         if edit:
@@ -116,6 +114,7 @@ class AccountTreePresenter:
         logging.info(f"Running AccountGroupDialog ({edit=})")
         self._dialog.exec()
 
+    # IDEA: perform the add in a try/except and only if it didn't fail update the data
     def add_account_group(self) -> None:
         path = self._dialog.path
         index = self._dialog.position - 1
@@ -131,6 +130,7 @@ class AccountTreePresenter:
         except Exception:
             self._handle_exception()
 
+    # IDEA: perform the edit in a try/except and only if it didn't fail update the data
     def edit_account_group(self) -> None:
         item = self._model.get_selected_item()
         current_path = self._dialog.current_path
@@ -150,6 +150,7 @@ class AccountTreePresenter:
             self._model.post_reset_model()
             self._dialog.close()
         except Exception:
+            self._model.post_reset_model()
             self._handle_exception()
 
     def run_security_account_dialog(
@@ -190,7 +191,6 @@ class AccountTreePresenter:
             self._model.post_add()
             self._dialog.close()
         except Exception:
-            self._model.post_add()
             self._handle_exception()
 
     def edit_security_account(self) -> None:

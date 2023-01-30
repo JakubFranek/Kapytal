@@ -102,6 +102,8 @@ if __name__ == "__main__":
     logging.info("Creating RecordKeeper")
     record_keeper = RecordKeeper()
     record_keeper.add_currency("CZK", 2)
+    record_keeper.add_currency("EUR", 2)
+    record_keeper.add_currency("BTC", 8)
     record_keeper.add_account_group("Group A")
     record_keeper.add_security_account("Group A/Security Acc 1")
     record_keeper.add_security_account("Group A/Security Acc 2")

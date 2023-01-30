@@ -12,14 +12,13 @@ from PyQt6 import QtCore, QtGui, QtWidgets
 class Ui_CurrencyDialog(object):
     def setupUi(self, CurrencyDialog):
         CurrencyDialog.setObjectName("CurrencyDialog")
-        CurrencyDialog.resize(398, 272)
-        self.formLayout = QtWidgets.QFormLayout(CurrencyDialog)
+        CurrencyDialog.setWindowModality(QtCore.Qt.WindowModality.WindowModal)
+        CurrencyDialog.resize(398, 105)
+        CurrencyDialog.setLocale(QtCore.QLocale(QtCore.QLocale.Language.English, QtCore.QLocale.Country.UnitedKingdom))
+        self.verticalLayout = QtWidgets.QVBoxLayout(CurrencyDialog)
+        self.verticalLayout.setObjectName("verticalLayout")
+        self.formLayout = QtWidgets.QFormLayout()
         self.formLayout.setObjectName("formLayout")
-        self.buttonBox = QtWidgets.QDialogButtonBox(CurrencyDialog)
-        self.buttonBox.setOrientation(QtCore.Qt.Orientation.Horizontal)
-        self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.StandardButton.Cancel|QtWidgets.QDialogButtonBox.StandardButton.Ok)
-        self.buttonBox.setObjectName("buttonBox")
-        self.formLayout.setWidget(2, QtWidgets.QFormLayout.ItemRole.LabelRole, self.buttonBox)
         self.currencyCodeLabel = QtWidgets.QLabel(CurrencyDialog)
         self.currencyCodeLabel.setObjectName("currencyCodeLabel")
         self.formLayout.setWidget(0, QtWidgets.QFormLayout.ItemRole.LabelRole, self.currencyCodeLabel)
@@ -33,15 +32,18 @@ class Ui_CurrencyDialog(object):
         self.currencyPlacesSpinBox = QtWidgets.QSpinBox(CurrencyDialog)
         self.currencyPlacesSpinBox.setObjectName("currencyPlacesSpinBox")
         self.formLayout.setWidget(1, QtWidgets.QFormLayout.ItemRole.FieldRole, self.currencyPlacesSpinBox)
+        self.verticalLayout.addLayout(self.formLayout)
+        self.buttonBox = QtWidgets.QDialogButtonBox(CurrencyDialog)
+        self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.StandardButton.Cancel|QtWidgets.QDialogButtonBox.StandardButton.Ok)
+        self.buttonBox.setObjectName("buttonBox")
+        self.verticalLayout.addWidget(self.buttonBox)
 
         self.retranslateUi(CurrencyDialog)
-        self.buttonBox.accepted.connect(CurrencyDialog.accept) # type: ignore
-        self.buttonBox.rejected.connect(CurrencyDialog.reject) # type: ignore
         QtCore.QMetaObject.connectSlotsByName(CurrencyDialog)
 
     def retranslateUi(self, CurrencyDialog):
         _translate = QtCore.QCoreApplication.translate
-        CurrencyDialog.setWindowTitle(_translate("CurrencyDialog", "Dialog"))
+        CurrencyDialog.setWindowTitle(_translate("CurrencyDialog", "Add Currency"))
         self.currencyCodeLabel.setText(_translate("CurrencyDialog", "Currency Code"))
         self.currencyCodeLineEdit.setPlaceholderText(_translate("CurrencyDialog", "Enter an ISO 4217 currency code."))
         self.currencyPlacesLabel.setText(_translate("CurrencyDialog", "Number of decimal places"))

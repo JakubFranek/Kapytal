@@ -67,7 +67,7 @@ class RecordKeeper(JSONSerializableMixin):
         return tuple(self._account_groups)
 
     @property
-    def root_account_objects(self) -> list[Account | AccountGroup]:
+    def root_account_objects(self) -> tuple[Account | AccountGroup, ...]:
         return tuple(self._root_account_items)
 
     @property
