@@ -35,7 +35,7 @@ def test_creation() -> None:
     record_keeper = RecordKeeper()
     assert record_keeper.accounts == ()
     assert record_keeper.account_groups == ()
-    assert record_keeper.root_account_objects == ()
+    assert record_keeper.root_account_items == ()
     assert record_keeper.transactions == ()
     assert record_keeper.tags == ()
     assert record_keeper.categories == ()
@@ -109,7 +109,7 @@ def test_add_account_group_with_index_no_parent(name1: str, name2: str) -> None:
     record_keeper = RecordKeeper()
     record_keeper.add_account_group(name1, 0)
     record_keeper.add_account_group(name2, 0)
-    account_group = record_keeper.root_account_objects[0]
+    account_group = record_keeper.root_account_items[0]
     assert account_group.name == name2
     assert account_group.parent is None
 

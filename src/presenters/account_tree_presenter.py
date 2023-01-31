@@ -18,31 +18,17 @@ class AccountTreePresenter:
     def __init__(self, view: AccountTree, record_keeper: RecordKeeper) -> None:
         self._view = view
         self._record_keeper = record_keeper
-        self._model = AccountTreeModel(
-            view=view, data=record_keeper.root_account_objects
-        )
+        self._model = AccountTreeModel(view=view, data=record_keeper.root_account_items)
         self._view.setModel(self._model)
 
         self._setup_signals()
         self._view.finalize_setup()
 
-    def _setup_signals(self) -> None:
-        self._view.signal_selection_changed.connect(self.selection_changed)
-        self._view.signal_expand_below.connect(self.expand_all_below)
-        self._view.signal_delete_item.connect(self.delete_item)
-        self._view.signal_add_account_group.connect(
-            lambda: self.run_account_group_dialog(
-                item=self._model.get_selected_item(), edit=False
-            )
-        )
-        self._view.signal_add_security_account.connect(
-            lambda: self.run_security_account_dialog(
-                item=self._model.get_selected_item(), edit=False
-            )
-        )
-        self._view.signal_edit_item.connect(self.edit_item)
-
-        self.selection_changed()  # called to ensure context menu is OK at start of run
+    def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
+        self._model.pre_reset_model()
+        self._record_keeper = record_keeper
+        self._model._data = record_keeper.root_account_items
+        self._model.post_reset_model()
 
     def selection_changed(self) -> None:
         item = self._model.get_selected_item()
@@ -88,7 +74,7 @@ class AccountTreePresenter:
             return
 
         self._model.pre_delete_item(index)
-        self._model._data = self._record_keeper.root_account_objects
+        self._model._data = self._record_keeper.root_account_items
         self._model.post_delete_item()
 
     def run_account_group_dialog(self, edit: bool, item: AccountGroup | None) -> None:
@@ -101,7 +87,7 @@ class AccountTreePresenter:
             self._dialog.current_path = item.path
             self._dialog.path = item.path
             if item.parent is None:
-                position = self._record_keeper.root_account_objects.index(item) + 1
+                position = self._record_keeper.root_account_items.index(item) + 1
             else:
                 position = item.parent.children.index(item) + 1
             self._dialog.position = position
@@ -127,7 +113,7 @@ class AccountTreePresenter:
 
         item = self._model.get_selected_item()
         self._model.pre_add(item)
-        self._model._data = self._record_keeper.root_account_objects
+        self._model._data = self._record_keeper.root_account_items
         self._model.post_add()
         self._dialog.close()
 
@@ -151,7 +137,7 @@ class AccountTreePresenter:
             return
 
         self._model.pre_reset_model()
-        self._model._data = self._record_keeper.root_account_objects
+        self._model._data = self._record_keeper.root_account_items
         self._model.post_reset_model()
         self._dialog.close()
 
@@ -167,7 +153,7 @@ class AccountTreePresenter:
             self._dialog.current_path = item.path
             self._dialog.path = item.path
             if item.parent is None:
-                position = self._record_keeper.root_account_objects.index(item) + 1
+                position = self._record_keeper.root_account_items.index(item) + 1
             else:
                 position = item.parent.children.index(item) + 1
             self._dialog.position = position
@@ -193,7 +179,7 @@ class AccountTreePresenter:
 
         item = self._model.get_selected_item()
         self._model.pre_add(item)
-        self._model._data = self._record_keeper.root_account_objects
+        self._model._data = self._record_keeper.root_account_items
         self._model.post_add()
         self._dialog.close()
 
@@ -217,7 +203,7 @@ class AccountTreePresenter:
             return
 
         self._model.pre_reset_model()
-        self._model._data = self._record_keeper.root_account_objects
+        self._model._data = self._record_keeper.root_account_items
         self._model.post_reset_model()
         self._dialog.close()
 
@@ -229,13 +215,13 @@ class AccountTreePresenter:
         if isinstance(item, AccountGroup):
             return len(item.children) + 1
         if item is None:
-            return len(self._record_keeper.root_account_objects) + 1
+            return len(self._record_keeper.root_account_items) + 1
         raise ValueError("Invalid selection.")
 
     def _get_max_parent_position(self, item: AccountGroup | Account) -> int:
         parent = item.parent
         if parent is None:
-            return len(self._record_keeper.root_account_objects)
+            return len(self._record_keeper.root_account_items)
         return len(parent.children)
 
     def _get_current_index(self, item: AccountGroup | Account | None) -> int:
@@ -243,5 +229,23 @@ class AccountTreePresenter:
             raise NotImplementedError
         parent = item.parent
         if parent is None:
-            return self._record_keeper.root_account_objects.index(item)
+            return self._record_keeper.root_account_items.index(item)
         return parent.children.index(item)
+
+    def _setup_signals(self) -> None:
+        self._view.signal_selection_changed.connect(self.selection_changed)
+        self._view.signal_expand_below.connect(self.expand_all_below)
+        self._view.signal_delete_item.connect(self.delete_item)
+        self._view.signal_add_account_group.connect(
+            lambda: self.run_account_group_dialog(
+                item=self._model.get_selected_item(), edit=False
+            )
+        )
+        self._view.signal_add_security_account.connect(
+            lambda: self.run_security_account_dialog(
+                item=self._model.get_selected_item(), edit=False
+            )
+        )
+        self._view.signal_edit_item.connect(self.edit_item)
+
+        self.selection_changed()  # called to ensure context menu is OK at start of run

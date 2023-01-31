@@ -155,27 +155,27 @@ def test_edit_account_group_index_no_parent() -> None:
     record_keeper = RecordKeeper()
     record_keeper.add_account_group("DUMMY CHILD")
     record_keeper.add_account_group("TEST CHILD")
-    assert record_keeper.root_account_objects[1].name == "TEST CHILD"
+    assert record_keeper.root_account_items[1].name == "TEST CHILD"
     record_keeper.edit_account_group("TEST CHILD", "TEST CHILD", index=0)
-    assert record_keeper.root_account_objects[0].name == "TEST CHILD"
+    assert record_keeper.root_account_items[0].name == "TEST CHILD"
 
 
 def test_edit_account_group_from_root_to_children() -> None:
     record_keeper = RecordKeeper()
     record_keeper.add_account_group("TEST")
     record_keeper.add_account_group("DUMMY PARENT")
-    assert len(record_keeper.root_account_objects) == 2
+    assert len(record_keeper.root_account_items) == 2
     record_keeper.edit_account_group("TEST", "DUMMY PARENT/TEST")
-    assert len(record_keeper.root_account_objects) == 1
+    assert len(record_keeper.root_account_items) == 1
 
 
 def test_edit_account_group_from_child_to_root() -> None:
     record_keeper = RecordKeeper()
     record_keeper.add_account_group("DUMMY PARENT")
     record_keeper.add_account_group("DUMMY PARENT/TEST")
-    assert len(record_keeper.root_account_objects) == 1
+    assert len(record_keeper.root_account_items) == 1
     record_keeper.edit_account_group("DUMMY PARENT/TEST", "TEST")
-    assert len(record_keeper.root_account_objects) == 2
+    assert len(record_keeper.root_account_items) == 2
 
 
 def test_edit_account_group_already_exists() -> None:

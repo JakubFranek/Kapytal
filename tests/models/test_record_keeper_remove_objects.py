@@ -44,11 +44,11 @@ def test_remove_account_no_parent() -> None:
     record_keeper = RecordKeeper()
     record_keeper.add_security_account("TEST NAME")
     assert len(record_keeper.accounts) != 0
-    assert len(record_keeper.root_account_objects) != 0
+    assert len(record_keeper.root_account_items) != 0
 
     record_keeper.remove_account("TEST NAME")
     assert record_keeper.accounts == ()
-    assert record_keeper.root_account_objects == ()
+    assert record_keeper.root_account_items == ()
 
 
 def test_remove_account_does_not_exist() -> None:
@@ -97,11 +97,11 @@ def test_remove_account_group_no_parent() -> None:
     record_keeper = RecordKeeper()
     record_keeper.add_account_group("TEST NAME")
     assert len(record_keeper.account_groups) != 0
-    assert len(record_keeper.root_account_objects) != 0
+    assert len(record_keeper.root_account_items) != 0
 
     record_keeper.remove_account_group("TEST NAME")
     assert record_keeper.account_groups == ()
-    assert record_keeper.root_account_objects == ()
+    assert record_keeper.root_account_items == ()
 
 
 def test_remove_account_group_does_not_exist() -> None:

@@ -25,6 +25,12 @@ class CurrencyFormPresenter:
         self._view.signal_add_currency.connect(self.run_add_currency_dialog)
         self._view.signal_remove_currency.connect(self.remove_currency)
 
+    def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
+        self._currency_table_model.pre_reset_model()
+        self._record_keeper = record_keeper
+        self._currency_table_model._data = record_keeper.currencies
+        self._currency_table_model.post_reset_model()
+
     def show_form(self) -> None:
         logging.info("Showing CurrencyForm")
         self._view.show_form()

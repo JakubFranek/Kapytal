@@ -2,19 +2,27 @@ import os
 
 from PyQt6.QtCore import QDir, pyqtSignal
 from PyQt6.QtGui import QIcon
-from PyQt6.QtWidgets import QMainWindow
+from PyQt6.QtWidgets import QFileDialog, QMainWindow
 
 from src.views.account_tree import AccountTree
 from src.views.ui_files.Ui_main_window import Ui_MainWindow
 
 
 class MainView(QMainWindow, Ui_MainWindow):
-
     signal_open_currency_form = pyqtSignal()
+    signal_save = pyqtSignal()
+    signal_save_as = pyqtSignal()
+    signal_open = pyqtSignal()
 
     def __init__(self) -> None:
         super().__init__()
         self.initial_setup()
+
+    def get_save_path(self) -> str:
+        return QFileDialog.getSaveFileName(self, filter="JSON file (*.json)")[0]
+
+    def get_open_path(self) -> str:
+        return QFileDialog.getOpenFileName(self, filter="JSON file (*.json)")[0]
 
     def initial_setup(self) -> None:
         QDir.addSearchPath(
@@ -42,6 +50,9 @@ class MainView(QMainWindow, Ui_MainWindow):
         self.actionCurrencies_and_Exchange_Rates.triggered.connect(
             self.signal_open_currency_form.emit
         )
+        self.actionSave.triggered.connect(self.signal_save.emit)
+        self.actionSave_As.triggered.connect(self.signal_save_as.emit)
+        self.actionOpen_File.triggered.connect(self.signal_open.emit)
 
         self.toolButton_expandAll.setDefaultAction(self.account_tree.actionExpand_All)
         self.toolButton_collapseAll.setDefaultAction(
