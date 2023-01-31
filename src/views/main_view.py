@@ -34,7 +34,11 @@ class MainView(QMainWindow, Ui_MainWindow):
         self.account_tree = AccountTree(self)
         self.verticalLayoutTree.addWidget(self.account_tree)
 
+        self.actionOpen_File.setIcon(QIcon("icons_16:folder-open-document.png"))
+        self.actionSave.setIcon(QIcon("icons_16:disk.png"))
+        self.actionSave_As.setIcon(QIcon("icons_16:disks.png"))
         self.actionCurrencies_and_Exchange_Rates.setIcon(QIcon("icons_16:currency.png"))
+
         self.actionCurrencies_and_Exchange_Rates.triggered.connect(
             self.signal_open_currency_form.emit
         )

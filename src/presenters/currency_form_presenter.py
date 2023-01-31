@@ -26,6 +26,7 @@ class CurrencyFormPresenter:
         self._view.signal_remove_currency.connect(self.remove_currency)
 
     def show_form(self) -> None:
+        logging.info("Showing CurrencyForm")
         self._view.show_form()
 
     def run_add_currency_dialog(self) -> None:

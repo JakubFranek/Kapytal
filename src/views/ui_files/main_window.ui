@@ -207,7 +207,6 @@
    </attribute>
    <addaction name="actionOpen_File"/>
    <addaction name="actionSave"/>
-   <addaction name="actionSave_As"/>
    <addaction name="separator"/>
   </widget>
   <action name="actionSave">

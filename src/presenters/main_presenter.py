@@ -6,6 +6,8 @@ from src.presenters.currency_form_presenter import CurrencyFormPresenter
 from src.views.main_view import MainView
 
 
+# TODO: add file open/load
+# TODO: add edited file functionality (window title, save icon, close before save)
 class MainPresenter:
     def __init__(self, view: MainView, record_keeper: RecordKeeper) -> None:
         self._view = view
