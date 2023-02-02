@@ -234,6 +234,13 @@ def test_record_keeper_invalid_account_datatype() -> None:
         record_keeper._deserialize_accounts([dictionary], None, None)
 
 
+def test_record_keeper_invalid_root_account_item_datatype() -> None:
+    record_keeper = RecordKeeper()
+    dictionary = {"datatype": "not a valid Account sub-class"}
+    with pytest.raises(ValueError, match="Unexpected 'datatype' value."):
+        record_keeper._deserialize_root_account_items([dictionary], None, None)
+
+
 def test_record_keeper_securities() -> None:
     record_keeper = RecordKeeper()
     record_keeper.add_currency("CZK", 2)

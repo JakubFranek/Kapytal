@@ -56,6 +56,14 @@ def test_add_and_remove_parent(parent: AccountGroup) -> None:
     assert account_group.path == account_group.name
 
 
+@given(parent=account_groups())
+def test_set_same_parent(parent: AccountGroup) -> None:
+    account_group = get_account_group()
+    account_group.parent = parent
+    account_group.parent = parent
+    assert account_group.parent == parent
+
+
 @given(parent=everything_except((AccountGroup, type(None))))
 def test_invalid_parent_type(parent: Any) -> None:
     account_group = get_account_group()
@@ -119,15 +127,21 @@ def test_set_child_index(data: st.DataObject) -> None:
     for child in children:
         child.parent = parent
 
-    selected_child = children[2]
-    parent.set_child_index(selected_child, 0)
-    assert parent.children[0] == selected_child
+    selected_child = children[0]
+    parent.set_child_index(selected_child, 2)
+    assert parent.children[2] == selected_child
 
 
 def test_set_child_index_child_does_not_exist() -> None:
     parent = get_account_group()
     with pytest.raises(NotFoundError):
         parent.set_child_index(None, 0)
+
+
+def test_set_child_index_negative() -> None:
+    parent = get_account_group()
+    with pytest.raises(ValueError, match="negative"):
+        parent.set_child_index(None, -1)
 
 
 def get_account_group() -> AccountGroup:

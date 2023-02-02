@@ -56,6 +56,14 @@ def test_add_and_remove_parent(parent: AccountGroup) -> None:
     assert account.path == account.name
 
 
+@given(parent=account_groups())
+def test_set_same_parent(parent: AccountGroup) -> None:
+    account = get_concrete_account()
+    account.parent = parent
+    account.parent = parent
+    assert account.parent == parent
+
+
 @given(
     parent=everything_except((AccountGroup, type(None))),
 )

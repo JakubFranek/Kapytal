@@ -68,12 +68,12 @@ class AccountGroup(NameMixin, GetBalanceMixin, JSONSerializableMixin):
         self._children = aux_dict
 
     def set_child_index(self, child: "Account" | Self, index: int) -> None:
+        if index < 0:
+            raise ValueError("Parameter 'index' must not be negative.")
         if child not in self.children:
             raise NotFoundError(
                 "Parameter 'child' not in this AccountGroup's children."
             )
-        if index < 0:
-            raise ValueError("Parameter 'index' must not be negative.")
         self._remove_child(child)
         aux_dict: dict[int, AccountGroup | Account] = {}
         for key, value in self._children.items():
