@@ -23,7 +23,7 @@ class SecurityAccountDialog(QDialog, Ui_SecurityAccountDialog):
             self.currentPathLineEdit.setVisible(False)
 
         self.positionSpinBox.setMaximum(max_position)
-        self.buttonBox.clicked.connect(self.handle_button_box_click)
+        self.buttonBox.clicked.connect(self._handle_button_box_click)
 
     @property
     def path(self) -> str:
@@ -49,7 +49,7 @@ class SecurityAccountDialog(QDialog, Ui_SecurityAccountDialog):
     def position(self, value: int) -> None:
         self.positionSpinBox.setValue(value)
 
-    def handle_button_box_click(self, button: QAbstractButton) -> None:
+    def _handle_button_box_click(self, button: QAbstractButton) -> None:
         role = self.buttonBox.buttonRole(button)
         if role == QDialogButtonBox.ButtonRole.AcceptRole:
             self.signal_OK.emit()

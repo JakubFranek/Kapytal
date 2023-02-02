@@ -1,11 +1,14 @@
 import logging
+from decimal import Decimal
 
 from src.models.record_keeper import RecordKeeper
 from src.presenters.utilities.event import Event
 from src.presenters.view_models.currency_table_model import CurrencyTableModel
 from src.utilities.general import get_exception_display_info
+from src.views.add_exchange_rate_dialog import AddExchangeRateDialog
 from src.views.currency_dialog import CurrencyDialog
 from src.views.currency_form import CurrencyForm
+from src.views.set_exchange_rate_dialog import SetExchangeRateDialog
 from src.views.utilities.handle_exception import display_error_message
 
 
@@ -23,6 +26,9 @@ class CurrencyFormPresenter:
 
         self._view.signal_add_currency.connect(self.run_add_currency_dialog)
         self._view.signal_remove_currency.connect(self.remove_currency)
+        self._view.signal_add_exchange_rate.connect(self.run_add_exchange_rate_dialog)
+        self._view.signal_set_exchange_rate.connect(self.run_set_exchange_rate_dialog)
+        self._view.signal_remove_exchange_rate.connect(self.remove_exchange_rate)
 
     def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
         self._currency_table_model.pre_reset_model()
@@ -74,6 +80,58 @@ class CurrencyFormPresenter:
         self._currency_table_model._data = self._record_keeper.currencies
         self._currency_table_model.post_delete_item()
         self.event_data_changed()
+
+    def run_add_exchange_rate_dialog(self) -> None:
+        codes = [currency.code for currency in self._record_keeper.currencies]
+        self._dialog = AddExchangeRateDialog(currency_codes=codes, parent=self._view)
+        self._dialog.signal_OK.connect(self.add_exchange_rate)
+        logging.info("Running AddExchangeRateDialog")
+        self._dialog.exec()
+
+    def add_exchange_rate(self) -> None:
+        primary_code = self._dialog.primary_currency_code
+        secondary_code = self._dialog.secondary_currency_code
+
+        logging.info(f"Adding ExchangeRate '{primary_code}/{secondary_code}'")
+        try:
+            self._record_keeper.add_exchange_rate(primary_code, secondary_code)
+        except Exception:
+            self._handle_exception()
+            return
+
+        # TODO: fill in pre/data/post add lines once ExchangeRateTableModel is ready
+        self._dialog.close()
+        self.event_data_changed()
+
+    def run_set_exchange_rate_dialog(self) -> None:
+        # TODO: get selected exchange rate here
+        exchange_rate = "AAA/BBB"
+        last_value = Decimal("23.84")
+        self._dialog = SetExchangeRateDialog(
+            exchange_rate=exchange_rate, last_value=last_value, parent=self._view
+        )
+        self._dialog.signal_OK.connect(self.set_exchange_rate)
+        logging.info("Running SetExchangeRateDialog")
+        self._dialog.exec()
+
+    def set_exchange_rate(self) -> None:
+        value = self._dialog.value
+        date_ = self._dialog.date_
+        exchange_rate_code = self._dialog.exchange_rate_code
+        logging.info(f"Setting ExchangeRate '{exchange_rate_code}': {value} on {date_}")
+        try:
+            self._record_keeper.set_exchange_rate(exchange_rate_code, value, date_)
+        except Exception:
+            self._handle_exception()
+            return
+
+        # TODO: fill in pre/data/post edit lines once ExchangeRateTableModel is ready
+        self._dialog.close()
+        self.event_data_changed()
+
+    def remove_exchange_rate(self) -> None:
+        # TODO: fill in pre/data/post remove lines once ExchangeRateTableModel is ready
+        pass
 
     def _handle_exception(self) -> None:
         display_text, display_details = get_exception_display_info()  # type: ignore

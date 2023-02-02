@@ -12,7 +12,7 @@ class CurrencyDialog(QDialog, Ui_CurrencyDialog):
         super().__init__(parent)
         self.setupUi(self)
         self.setWindowIcon(QIcon("icons_custom:currency-plus.png"))
-        self.buttonBox.clicked.connect(self.handle_button_box_click)
+        self.buttonBox.clicked.connect(self._handle_button_box_click)
 
     @property
     def currency_code(self) -> str:
@@ -22,7 +22,7 @@ class CurrencyDialog(QDialog, Ui_CurrencyDialog):
     def currency_places(self) -> int:
         return self.currencyPlacesSpinBox.value()
 
-    def handle_button_box_click(self, button: QAbstractButton) -> None:
+    def _handle_button_box_click(self, button: QAbstractButton) -> None:
         role = self.buttonBox.buttonRole(button)
         if role == QDialogButtonBox.ButtonRole.AcceptRole:
             self.signal_OK.emit()
