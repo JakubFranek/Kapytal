@@ -67,7 +67,7 @@ class RecordKeeper(JSONSerializableMixin):
         return tuple(self._account_groups)
 
     @property
-    def root_account_objects(self) -> tuple[Account | AccountGroup, ...]:
+    def root_account_items(self) -> tuple[Account | AccountGroup, ...]:
         return tuple(self._root_account_items)
 
     @property
@@ -1090,6 +1090,18 @@ class RecordKeeper(JSONSerializableMixin):
     def serialize(self) -> dict[str, Any]:
         sorted_account_groups = sorted(self._account_groups, key=lambda x: str(x))
         sorted_categories = sorted(self._categories, key=lambda x: str(x))
+
+        root_item_references = []
+        for item in self._root_account_items:
+            if isinstance(item, AccountGroup):
+                root_item_references.append(
+                    {"datatype": "AccountGroup", "path": item.path}
+                )
+            else:
+                root_item_references.append(
+                    {"datatype": "Account", "uuid": str(item.uuid)}
+                )
+
         return {
             "datatype": "RecordKeeper",
             "currencies": self._currencies,
@@ -1097,6 +1109,7 @@ class RecordKeeper(JSONSerializableMixin):
             "securities": self._securities,
             "account_groups": sorted_account_groups,
             "accounts": self._accounts,
+            "root_account_items": root_item_references,
             "payees": self._payees,
             "tags": self._tags,
             "categories": sorted_categories,
@@ -1125,6 +1138,10 @@ class RecordKeeper(JSONSerializableMixin):
         account_dicts = data["accounts"]
         obj._accounts = RecordKeeper._deserialize_accounts(
             account_dicts, obj._account_groups, obj._currencies
+        )
+
+        obj._root_account_items = RecordKeeper._deserialize_root_account_items(
+            data["root_account_items"], obj._account_groups, obj._accounts
         )
 
         obj._payees = data["payees"]
@@ -1193,6 +1210,26 @@ class RecordKeeper(JSONSerializableMixin):
                 raise ValueError("Unexpected 'datatype' value.")
             accounts.append(account)
         return accounts
+
+    @staticmethod
+    def _deserialize_root_account_items(
+        root_item_dicts: Collection[dict[str, Any]],
+        account_groups: Collection[AccountGroup],
+        accounts: Collection[Account],
+    ) -> list[AccountGroup | Account]:
+        root_items = []
+        for item_dict in root_item_dicts:
+            if item_dict["datatype"] == "AccountGroup":
+                for account_group in account_groups:
+                    if account_group.path == item_dict["path"]:
+                        root_items.append(account_group)
+            elif item_dict["datatype"] == "Account":
+                for account in accounts:
+                    if str(account.uuid) == item_dict["uuid"]:
+                        root_items.append(account)
+            else:
+                raise ValueError("Unexpected 'datatype' value.")
+        return root_items
 
     @staticmethod
     def _deserialize_categories(

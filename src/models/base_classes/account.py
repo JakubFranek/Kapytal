@@ -34,11 +34,14 @@ class Account(NameMixin, UUIDMixin, GetBalanceMixin, JSONSerializableMixin, ABC)
                 f"{self.__class__.__name__}.parent must be an AccountGroup or a None."
             )
 
-        if hasattr(self, "_parent") and self._parent is not None:
-            self._parent._children.remove(self)
+        if hasattr(self, "_parent"):
+            if self._parent == new_parent:
+                return
+            if self._parent is not None:
+                self._parent._remove_child(self)
 
         if new_parent is not None:
-            new_parent._children.append(self)
+            new_parent._add_child(self)
 
         self._parent = new_parent
 

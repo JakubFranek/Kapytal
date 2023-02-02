@@ -152,9 +152,11 @@ class CashAccount(Account):
         self._update_balance()
 
     def serialize(self) -> dict[str, Any]:
+        index = self.parent.children.index(self) if self.parent is not None else None
         return {
             "datatype": "CashAccount",
             "path": self.path,
+            "index": index,
             "currency_code": self._currency.code,
             "initial_balance": self._initial_balance.value,
             "uuid": str(self._uuid),
@@ -167,6 +169,7 @@ class CashAccount(Account):
         currencies: Collection[Currency],
     ) -> "CashAccount":
         path: str = data["path"]
+        index: int | None = data["index"]
         parent_path, _, name = path.rpartition("/")
         initial_balance_value = data["initial_balance"]
 
@@ -179,7 +182,8 @@ class CashAccount(Account):
         obj._uuid = uuid.UUID(data["uuid"])
 
         if parent_path != "":
-            obj.parent = find_account_group_by_path(parent_path, account_groups)
+            obj._parent = find_account_group_by_path(parent_path, account_groups)
+            obj._parent._children[index] = obj
         return obj
 
     def _update_balance(self) -> None:
