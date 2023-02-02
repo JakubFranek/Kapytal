@@ -27,7 +27,7 @@ class SetExchangeRateDialog(QDialog, Ui_SetExchangeRateDialog):
 
     @property
     def value(self) -> Decimal:
-        return Decimal(self.exchangeRateDoubleSpinBox.value())
+        return Decimal(self.exchangeRateDoubleSpinBox.text())
 
     @property
     def date_(self) -> date:

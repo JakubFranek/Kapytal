@@ -1,9 +1,9 @@
 import logging
-from decimal import Decimal
 
 from src.models.record_keeper import RecordKeeper
 from src.presenters.utilities.event import Event
 from src.presenters.view_models.currency_table_model import CurrencyTableModel
+from src.presenters.view_models.exchange_rate_table_model import ExchangeRateTableModel
 from src.utilities.general import get_exception_display_info
 from src.views.add_exchange_rate_dialog import AddExchangeRateDialog
 from src.views.currency_dialog import CurrencyDialog
@@ -23,6 +23,11 @@ class CurrencyFormPresenter:
             self._view.currencyTable, record_keeper.currencies
         )
         self._view.currencyTable.setModel(self._currency_table_model)
+
+        self._exchange_rate_table_model = ExchangeRateTableModel(
+            self._view.exchangeRateTable, record_keeper.exchange_rates
+        )
+        self._view.exchangeRateTable.setModel(self._exchange_rate_table_model)
 
         self._view.signal_add_currency.connect(self.run_add_currency_dialog)
         self._view.signal_remove_currency.connect(self.remove_currency)
@@ -99,16 +104,20 @@ class CurrencyFormPresenter:
             self._handle_exception()
             return
 
-        # TODO: fill in pre/data/post add lines once ExchangeRateTableModel is ready
+        self._exchange_rate_table_model.pre_add()
+        self._exchange_rate_table_model._data = self._record_keeper.exchange_rates
+        self._exchange_rate_table_model.post_add()
         self._dialog.close()
         self.event_data_changed()
 
     def run_set_exchange_rate_dialog(self) -> None:
-        # TODO: get selected exchange rate here
-        exchange_rate = "AAA/BBB"
-        last_value = Decimal("23.84")
+        exchange_rate = self._exchange_rate_table_model.get_selected_item()
+        if exchange_rate is None:
+            raise ValueError("An ExchangeRate must be selected to set its value.")
+        exchange_rate_code = str(exchange_rate)
+        last_value = exchange_rate.latest_rate
         self._dialog = SetExchangeRateDialog(
-            exchange_rate=exchange_rate, last_value=last_value, parent=self._view
+            exchange_rate=exchange_rate_code, last_value=last_value, parent=self._view
         )
         self._dialog.signal_OK.connect(self.set_exchange_rate)
         logging.info("Running SetExchangeRateDialog")
@@ -125,13 +134,29 @@ class CurrencyFormPresenter:
             self._handle_exception()
             return
 
-        # TODO: fill in pre/data/post edit lines once ExchangeRateTableModel is ready
+        self._exchange_rate_table_model.pre_reset_model()
+        self._exchange_rate_table_model._data = self._record_keeper.exchange_rates
+        self._exchange_rate_table_model.post_reset_model()
         self._dialog.close()
         self.event_data_changed()
 
     def remove_exchange_rate(self) -> None:
-        # TODO: fill in pre/data/post remove lines once ExchangeRateTableModel is ready
-        pass
+        exchange_rate = self._exchange_rate_table_model.get_selected_item()
+        if exchange_rate is None:
+            return
+
+        logging.info(f"Removing ExchangeRate '{str(exchange_rate)}'")
+        try:
+            self._record_keeper.remove_exchange_rate(str(exchange_rate))
+        except Exception:
+            self._handle_exception()
+            return
+
+        index = self._exchange_rate_table_model.get_index_from_item(exchange_rate)
+        self._exchange_rate_table_model.pre_delete_item(index)
+        self._exchange_rate_table_model._data = self._record_keeper.exchange_rates
+        self._exchange_rate_table_model.post_delete_item()
+        self.event_data_changed()
 
     def _handle_exception(self) -> None:
         display_text, display_details = get_exception_display_info()  # type: ignore

@@ -13,7 +13,7 @@ class Ui_CurrencyForm(object):
     def setupUi(self, CurrencyForm):
         CurrencyForm.setObjectName("CurrencyForm")
         CurrencyForm.setWindowModality(QtCore.Qt.WindowModality.WindowModal)
-        CurrencyForm.resize(350, 325)
+        CurrencyForm.resize(478, 325)
         CurrencyForm.setLocale(QtCore.QLocale(QtCore.QLocale.Language.English, QtCore.QLocale.Country.UnitedKingdom))
         self.horizontalLayout = QtWidgets.QHBoxLayout(CurrencyForm)
         self.horizontalLayout.setObjectName("horizontalLayout")
@@ -48,7 +48,12 @@ class Ui_CurrencyForm(object):
         self.horizontalLayout_3 = QtWidgets.QHBoxLayout(self.exchangeRateTab)
         self.horizontalLayout_3.setObjectName("horizontalLayout_3")
         self.exchangeRateTable = QtWidgets.QTableView(self.exchangeRateTab)
+        self.exchangeRateTable.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.SingleSelection)
+        self.exchangeRateTable.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)
         self.exchangeRateTable.setObjectName("exchangeRateTable")
+        self.exchangeRateTable.horizontalHeader().setHighlightSections(False)
+        self.exchangeRateTable.horizontalHeader().setStretchLastSection(True)
+        self.exchangeRateTable.verticalHeader().setVisible(False)
         self.horizontalLayout_3.addWidget(self.exchangeRateTable)
         self.exchangeRateButtonLayout = QtWidgets.QVBoxLayout()
         self.exchangeRateButtonLayout.setObjectName("exchangeRateButtonLayout")
@@ -68,7 +73,7 @@ class Ui_CurrencyForm(object):
         self.horizontalLayout.addWidget(self.tabWidget)
 
         self.retranslateUi(CurrencyForm)
-        self.tabWidget.setCurrentIndex(0)
+        self.tabWidget.setCurrentIndex(1)
         QtCore.QMetaObject.connectSlotsByName(CurrencyForm)
 
     def retranslateUi(self, CurrencyForm):

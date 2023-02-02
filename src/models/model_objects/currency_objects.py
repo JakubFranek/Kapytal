@@ -192,9 +192,15 @@ class ExchangeRate(JSONSerializableMixin):
     @property
     def latest_rate(self) -> Decimal:
         if len(self._rate_history) == 0:
-            raise NoExchangeRateError("No exchange rate data.")
+            return Decimal("NaN")
         latest_date = max(date_ for date_ in self._rate_history)
         return self._rate_history[latest_date]
+
+    @property
+    def latest_date(self) -> date | None:
+        if len(self._rate_history) == 0:
+            return None
+        return max(date_ for date_ in self._rate_history)
 
     def __repr__(self) -> str:
         return (
@@ -217,6 +223,8 @@ class ExchangeRate(JSONSerializableMixin):
         if not _rate.is_finite() or _rate <= 0:
             raise ValueError("Parameter 'rate' must be finite and positive.")
         self._rate_history[date_] = _rate
+
+    # FIXME: exchange rate values not serialized!
 
     def serialize(self) -> dict:
         return {

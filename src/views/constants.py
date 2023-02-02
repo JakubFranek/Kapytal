@@ -11,3 +11,9 @@ class AccountTreeColumns(IntEnum):
 class CurrencyTableColumns(IntEnum):
     COLUMN_CODE = 0
     COLUMN_PLACES = 1
+
+
+class ExchangeRateTableColumns(IntEnum):
+    COLUMN_CODE = 0
+    COLUMN_VALUE = 1
+    COLUMN_LAST_DATE = 2
