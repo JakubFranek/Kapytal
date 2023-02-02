@@ -4,17 +4,18 @@ from src.models.base_classes.account import Account
 from src.models.model_objects.account_group import AccountGroup
 from src.models.model_objects.security_objects import SecurityAccount
 from src.models.record_keeper import RecordKeeper
+from src.presenters.utilities.event import Event
 from src.presenters.view_models.account_tree_model import AccountTreeModel
+from src.utilities.general import get_exception_display_info
 from src.views.account_group_dialog import AccountGroupDialog
 from src.views.account_tree import AccountTree
 from src.views.security_account_dialog import SecurityAccountDialog
-from src.views.utilities.handle_exception import (
-    display_error_message,
-    get_exception_info,
-)
+from src.views.utilities.handle_exception import display_error_message
 
 
 class AccountTreePresenter:
+    event_data_changed = Event()
+
     def __init__(self, view: AccountTree, record_keeper: RecordKeeper) -> None:
         self._view = view
         self._record_keeper = record_keeper
@@ -76,6 +77,7 @@ class AccountTreePresenter:
         self._model.pre_delete_item(index)
         self._model._data = self._record_keeper.root_account_items
         self._model.post_delete_item()
+        self.event_data_changed()
 
     def run_account_group_dialog(self, edit: bool, item: AccountGroup | None) -> None:
         if edit:
@@ -116,6 +118,7 @@ class AccountTreePresenter:
         self._model._data = self._record_keeper.root_account_items
         self._model.post_add()
         self._dialog.close()
+        self.event_data_changed()
 
     def edit_account_group(self) -> None:
         item = self._model.get_selected_item()
@@ -140,6 +143,7 @@ class AccountTreePresenter:
         self._model._data = self._record_keeper.root_account_items
         self._model.post_reset_model()
         self._dialog.close()
+        self.event_data_changed()
 
     def run_security_account_dialog(
         self, edit: bool, item: SecurityAccount | None
@@ -182,6 +186,7 @@ class AccountTreePresenter:
         self._model._data = self._record_keeper.root_account_items
         self._model.post_add()
         self._dialog.close()
+        self.event_data_changed()
 
     def edit_security_account(self) -> None:
         item = self._model.get_selected_item()
@@ -206,9 +211,10 @@ class AccountTreePresenter:
         self._model._data = self._record_keeper.root_account_items
         self._model.post_reset_model()
         self._dialog.close()
+        self.event_data_changed()
 
     def _handle_exception(self) -> None:
-        display_text, display_details = get_exception_info()  # type: ignore
+        display_text, display_details = get_exception_display_info()  # type: ignore
         display_error_message(display_text, display_details)
 
     def _get_max_child_position(self, item: AccountGroup | None) -> int:

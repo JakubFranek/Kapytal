@@ -1,40 +1,37 @@
 import logging
-import os
 import sys
-import traceback
+from types import TracebackType
 
 from PyQt6.QtGui import QIcon
-from PyQt6.QtWidgets import QMessageBox
+from PyQt6.QtWidgets import QApplication, QMessageBox
+
+from src.utilities.general import get_exception_info
 
 
-def get_exception_info() -> tuple[str, str] | None:
-    exc_type, exc_value, exc_traceback = sys.exc_info()
+def handle_uncaught_exception(
+    exc_type: type[BaseException],
+    exc_value: BaseException,
+    exc_traceback: TracebackType,
+) -> None:
+    # Ignore KeyboardInterrupt (special case)
+    if issubclass(exc_type, KeyboardInterrupt):
+        sys.__excepthook__(exc_type, exc_value, exc_traceback)
+        return
 
-    if exc_type and exc_value and exc_traceback is not None:
-        # Ignore KeyboardInterrupt (special case)
-        if issubclass(exc_type, KeyboardInterrupt):
-            sys.__excepthook__(exc_type, exc_value, exc_traceback)
-            return None
+    filename, line, exc_details = get_exception_info(exc_type, exc_value, exc_traceback)
 
-        stack_summary = traceback.extract_tb(exc_traceback)
-        filename, line, _, _ = stack_summary.pop()
-        exc_details_list = traceback.format_exception(
-            exc_type, exc_value, exc_traceback
-        )
-        display_details = "".join(exc_details_list)
-        filename = os.path.basename(filename)
-        error = "%s: %s" % (exc_type.__name__, exc_value)
+    error = "%s: %s" % (exc_type.__name__, exc_value)
+    text = f"""<html>The following unexpected error has occured:<br/>
+        <b>{error}</b><br/><br/>
+        It occurred at <b>line {line}</b> of file <b>{filename}</b>.<br/><br/>
+        The program will Quit (without saving) after closing this window.</html>"""
+    logging.critical(
+        "Uncaught exception", exc_info=(exc_type, exc_value, exc_traceback)
+    )
 
-        display_text = f"""<html>The following error has occured:<br/>
-            <b>{error}</b><br/><br/>
-            It occurred at <b>line {line}</b> of file <b>{filename}</b>.<br/></html>"""
-
-        logging.warning(
-            "Handled exception", exc_info=(exc_type, exc_value, exc_traceback)
-        )
-
-        return display_text, display_details
-    return None
+    display_error_message(text=text, exc_details=exc_details, critical=True)
+    app = QApplication.instance()
+    app.exit()
 
 
 def display_error_message(

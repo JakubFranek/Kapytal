@@ -129,6 +129,7 @@ class Ui_MainWindow(object):
         self.menubar.addAction(self.menuAbout.menuAction())
         self.toolBar.addAction(self.actionOpen_File)
         self.toolBar.addAction(self.actionSave)
+        self.toolBar.addAction(self.actionSave_As)
         self.toolBar.addSeparator()
 
         self.retranslateUi(MainWindow)

@@ -1,20 +1,19 @@
 import logging
 
-from PyQt6.QtWidgets import QWidget
-
 from src.models.record_keeper import RecordKeeper
+from src.presenters.utilities.event import Event
 from src.presenters.view_models.currency_table_model import CurrencyTableModel
+from src.utilities.general import get_exception_display_info
 from src.views.currency_dialog import CurrencyDialog
 from src.views.currency_form import CurrencyForm
-from src.views.utilities.handle_exception import (
-    display_error_message,
-    get_exception_info,
-)
+from src.views.utilities.handle_exception import display_error_message
 
 
 class CurrencyFormPresenter:
-    def __init__(self, parent_view: QWidget, record_keeper: RecordKeeper) -> None:
-        self._view = CurrencyForm(parent=parent_view)
+    event_data_changed = Event()
+
+    def __init__(self, view: CurrencyForm, record_keeper: RecordKeeper) -> None:
+        self._view = view
         self._record_keeper = record_keeper
 
         self._currency_table_model = CurrencyTableModel(
@@ -56,6 +55,7 @@ class CurrencyFormPresenter:
         self._currency_table_model._data = self._record_keeper.currencies
         self._currency_table_model.post_add()
         self._dialog.close()
+        self.event_data_changed()
 
     def remove_currency(self) -> None:
         currency = self._currency_table_model.get_selected_item()
@@ -73,7 +73,8 @@ class CurrencyFormPresenter:
         self._currency_table_model.pre_delete_item(index)
         self._currency_table_model._data = self._record_keeper.currencies
         self._currency_table_model.post_delete_item()
+        self.event_data_changed()
 
     def _handle_exception(self) -> None:
-        display_text, display_details = get_exception_info()  # type: ignore
+        display_text, display_details = get_exception_display_info()  # type: ignore
         display_error_message(display_text, display_details)

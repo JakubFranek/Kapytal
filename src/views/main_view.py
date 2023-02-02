@@ -2,7 +2,7 @@ import os
 
 from PyQt6.QtCore import QDir, pyqtSignal
 from PyQt6.QtGui import QIcon
-from PyQt6.QtWidgets import QFileDialog, QMainWindow
+from PyQt6.QtWidgets import QApplication, QFileDialog, QMainWindow, QMessageBox
 
 from src.views.account_tree import AccountTree
 from src.views.ui_files.Ui_main_window import Ui_MainWindow
@@ -23,6 +23,45 @@ class MainView(QMainWindow, Ui_MainWindow):
 
     def get_open_path(self) -> str:
         return QFileDialog.getOpenFileName(self, filter="JSON file (*.json)")[0]
+
+    def ask_save_before_close(self) -> bool | None:
+        reply = QMessageBox.question(
+            self,
+            "Save changes before quitting?",
+            """Unsaved changes have been made.
+            Do you want to save them before quitting?""",
+            (
+                QMessageBox.StandardButton.Yes
+                | QMessageBox.StandardButton.No
+                | QMessageBox.StandardButton.Cancel
+            ),
+            QMessageBox.StandardButton.Cancel,
+        )
+        if reply == QMessageBox.StandardButton.Yes:
+            return True
+        if reply == QMessageBox.StandardButton.No:
+            return False
+        return None
+
+    def set_save_status(
+        self, current_file_path: str | None, unsaved_changes: bool
+    ) -> None:
+        if unsaved_changes is True:
+            self.actionSave.setIcon(QIcon("icons_16:disk--exclamation.png"))
+            star_str = "*"
+        else:
+            self.actionSave.setIcon(QIcon("icons_16:disk.png"))
+            star_str = ""
+
+        app = QApplication.instance()
+        version = app.applicationVersion()
+
+        if current_file_path is None:
+            self.actionSave.setEnabled(False)
+            self.setWindowTitle(f"Kapytal v{version}")
+        else:
+            self.actionSave.setEnabled(True)
+            self.setWindowTitle(f"Kapytal v{version} - " + current_file_path + star_str)
 
     def initial_setup(self) -> None:
         QDir.addSearchPath(
