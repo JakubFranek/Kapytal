@@ -226,9 +226,11 @@ class SecurityAccount(Account):
         self._transactions.remove(transaction)
 
     def serialize(self) -> dict[str, Any]:
+        index = self.parent.children.index(self) if self.parent is not None else None
         return {
             "datatype": "SecurityAccount",
             "path": self.path,
+            "index": index,
             "uuid": str(self._uuid),
         }
 
@@ -237,13 +239,15 @@ class SecurityAccount(Account):
         data: dict[str, Any], account_groups: Collection[AccountGroup]
     ) -> "SecurityAccount":
         path: str = data["path"]
+        index: int | None = data["index"]
         parent_path, _, name = path.rpartition("/")
 
         obj = SecurityAccount(name)
         obj._uuid = uuid.UUID(data["uuid"])
 
         if parent_path != "":
-            obj.parent = find_account_group_by_path(parent_path, account_groups)
+            obj._parent = find_account_group_by_path(parent_path, account_groups)
+            obj._parent._children[index] = obj
         return obj
 
     def _validate_transaction(self, transaction: "SecurityRelatedTransaction") -> None:

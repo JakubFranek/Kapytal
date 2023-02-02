@@ -126,8 +126,6 @@ def test_account_group() -> None:
     parent = AccountGroup("Test Name")
     child_1 = AccountGroup("Child 1", parent)
     child_2 = AccountGroup("Child 2", parent)
-    child_1.parent = parent
-    child_2.parent = parent
     account_groups = [parent, child_1, child_2]
     serialized = json.dumps(account_groups, cls=CustomJSONEncoder)
     decoded = json.loads(serialized, cls=CustomJSONDecoder)
@@ -203,6 +201,8 @@ def test_record_keeper_account_groups() -> None:
     record_keeper.add_account_group("A1")
     record_keeper.add_account_group("A1/A2")
     record_keeper.add_account_group("A1/B2")
+    record_keeper.add_account_group("A1/C2")
+    record_keeper.add_account_group("A1/D2")
     record_keeper.add_account_group("A1/A2/A3")
     record_keeper.add_account_group("B1")
     record_keeper.add_account_group("C1")
@@ -232,6 +232,13 @@ def test_record_keeper_invalid_account_datatype() -> None:
     dictionary = {"datatype": "not a valid Account sub-class"}
     with pytest.raises(ValueError, match="Unexpected 'datatype' value."):
         record_keeper._deserialize_accounts([dictionary], None, None)
+
+
+def test_record_keeper_invalid_root_account_item_datatype() -> None:
+    record_keeper = RecordKeeper()
+    dictionary = {"datatype": "not a valid Account sub-class"}
+    with pytest.raises(ValueError, match="Unexpected 'datatype' value."):
+        record_keeper._deserialize_root_account_items([dictionary], None, None)
 
 
 def test_record_keeper_securities() -> None:
