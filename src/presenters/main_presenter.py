@@ -37,6 +37,7 @@ class MainPresenter:
         )
 
         # View pyqtSignal connections
+        self._view.signal_exit.connect(self._close)
         self._view.signal_open_currency_form.connect(
             self._currency_form_presenter.show_form
         )
@@ -91,6 +92,26 @@ class MainPresenter:
                 logging.info("Invalid or no file path received, file load cancelled")
         except Exception:
             self._handle_exception()
+
+    def _close(self) -> None:
+        if self._unsaved_changes is True:
+            logging.info("Close called with unsaved changes...")
+            reply = self._view.ask_save_before_close()
+            if reply is True:
+                self._save_to_file(save_as=False)
+                if self._unsaved_changes is False:
+                    logging.info("Closing after saving")
+                    self._view.close()
+                else:
+                    logging.info("Close cancelled")
+            elif reply is False:
+                logging.info("Closing without saving")
+                self._view.close()
+            else:
+                logging.info("Close cancelled")
+        else:
+            logging.info("Closing")
+            self._view.close()
 
     def _update_unsaved_changes(self, unsaved_changes: bool) -> None:
         self._unsaved_changes = unsaved_changes

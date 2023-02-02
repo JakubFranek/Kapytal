@@ -1,7 +1,7 @@
 import os
 
 from PyQt6.QtCore import QDir, pyqtSignal
-from PyQt6.QtGui import QIcon
+from PyQt6.QtGui import QCloseEvent, QIcon
 from PyQt6.QtWidgets import QApplication, QFileDialog, QMainWindow, QMessageBox
 
 from src.views.account_tree import AccountTree
@@ -9,6 +9,7 @@ from src.views.ui_files.Ui_main_window import Ui_MainWindow
 
 
 class MainView(QMainWindow, Ui_MainWindow):
+    signal_exit = pyqtSignal()
     signal_open_currency_form = pyqtSignal()
     signal_save = pyqtSignal()
     signal_save_as = pyqtSignal()
@@ -28,8 +29,10 @@ class MainView(QMainWindow, Ui_MainWindow):
         reply = QMessageBox.question(
             self,
             "Save changes before quitting?",
-            """Unsaved changes have been made.
-            Do you want to save them before quitting?""",
+            (
+                "Unsaved changes have been made.\n"
+                "Do you want to save them before quitting?"
+            ),
             (
                 QMessageBox.StandardButton.Yes
                 | QMessageBox.StandardButton.No
@@ -62,6 +65,10 @@ class MainView(QMainWindow, Ui_MainWindow):
         else:
             self.actionSave.setEnabled(True)
             self.setWindowTitle(f"Kapytal v{version} - " + current_file_path + star_str)
+
+    def closeEvent(self, event: QCloseEvent) -> None:
+        self.signal_exit.emit()
+        event.ignore()
 
     def initial_setup(self) -> None:
         QDir.addSearchPath(

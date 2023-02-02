@@ -17,7 +17,7 @@ if __name__ == "__main__":
 
     # The following three lines are needed to make sure task bar icon works on Windows
     if os.name == "nt":
-        myappid = "Jakub_Franek.Blbnicheck.v0.1"  # arbitrary string
+        myappid = f"Jakub_Franek.Kapytal.v{VERSION}"  # arbitrary string
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
 
     dir_current = os.path.dirname(os.path.realpath(__file__))
@@ -33,7 +33,7 @@ if __name__ == "__main__":
     font = app.font()
     font.setPointSize(10)
     app.setFont(font)
-    logging.info("Set QApplication font size to 10 ")
+    logging.info("Set QApplication font size to 10 pts")
 
     logging.info("Creating MainWindow")
     main_view = MainView()
