@@ -8,7 +8,6 @@ from src.views.constants import CurrencyTableColumns
 
 # TODO: set up model checker test
 # TODO: pass reference to settings?
-# TODO: _data is not actually private
 
 
 class CurrencyTableModel(QAbstractTableModel):
@@ -17,15 +16,15 @@ class CurrencyTableModel(QAbstractTableModel):
         CurrencyTableColumns.COLUMN_PLACES: "Decimal places",
     }
 
-    def __init__(self, view: QTableView, data: tuple[Currency, ...]) -> None:
+    def __init__(self, view: QTableView, currencies: tuple[Currency, ...]) -> None:
         super().__init__()
         self._tree = view
-        self._data = data
+        self.currencies = currencies
 
     def rowCount(self, index: QModelIndex = ...) -> int:
         if isinstance(index, QModelIndex) and index.isValid():
             return 0
-        return len(self._data)
+        return len(self.currencies)
 
     def columnCount(self, index: QModelIndex = ...) -> int:  # noqa: U100
         return 2
@@ -35,14 +34,14 @@ class CurrencyTableModel(QAbstractTableModel):
             return QModelIndex()
         if not QAbstractTableModel.hasIndex(self, row, column, QModelIndex()):
             return QModelIndex()
-        item = self._data[row]
+        item = self.currencies[row]
         return QAbstractTableModel.createIndex(self, row, column, item)
 
     def data(self, index: QModelIndex, role: Qt.ItemDataRole = ...) -> typing.Any:
         if not index.isValid():
             return None
         column = index.column()
-        currency = self._data[index.row()]
+        currency = self.currencies[index.row()]
         if role == Qt.ItemDataRole.DisplayRole:
             if column == CurrencyTableColumns.COLUMN_CODE:
                 return currency.code
@@ -98,5 +97,5 @@ class CurrencyTableModel(QAbstractTableModel):
     def get_index_from_item(self, item: Currency | None) -> QModelIndex:
         if item is None:
             return QModelIndex()
-        row = self._data.index(item)
+        row = self.currencies.index(item)
         return QAbstractTableModel.createIndex(self, row, 0, item)

@@ -12,7 +12,6 @@ from src.views.constants import AccountTreeColumns
 
 # TODO: set up model checker test
 # TODO: pass reference to settings?
-# TODO: _data is not actually private
 
 
 class AccountTreeModel(QAbstractItemModel):
@@ -23,10 +22,12 @@ class AccountTreeModel(QAbstractItemModel):
         AccountTreeColumns.COLUMN_SHOW: "Show",
     }
 
-    def __init__(self, view: QTreeView, data: list[Account | AccountGroup]) -> None:
+    def __init__(
+        self, view: QTreeView, root_items: list[Account | AccountGroup]
+    ) -> None:
         super().__init__()
         self._tree = view
-        self._data = data
+        self.root_items = root_items
 
     def rowCount(self, index: QModelIndex = ...) -> int:
         if index.isValid():
@@ -34,7 +35,7 @@ class AccountTreeModel(QAbstractItemModel):
             if isinstance(node, AccountGroup):
                 return len(node.children)
             return 0
-        return len(self._data)
+        return len(self.root_items)
 
     def columnCount(self, index: QModelIndex = ...) -> int:  # noqa: U100
         return 4
@@ -49,7 +50,7 @@ class AccountTreeModel(QAbstractItemModel):
             return QModelIndex()
 
         if parent is None:
-            child = self._data[row]
+            child = self.root_items[row]
         else:
             child = parent.children[row]
         if child:
@@ -66,7 +67,7 @@ class AccountTreeModel(QAbstractItemModel):
             return QModelIndex()
         grandparent = parent.parent
         if grandparent is None:
-            parent_row = self._data.index(parent)
+            parent_row = self.root_items.index(parent)
         else:
             parent_row = grandparent.children.index(parent)
         return QAbstractItemModel.createIndex(self, parent_row, 0, parent)
@@ -120,7 +121,7 @@ class AccountTreeModel(QAbstractItemModel):
     def pre_add(self, parent: AccountGroup | None) -> None:
         parent_index = self.get_index_from_item(parent)
         if parent is None:
-            row_index = len(self._data)
+            row_index = len(self.root_items)
         else:
             row_index = len(parent.children)
         self.beginInsertRows(parent_index, row_index, row_index)
@@ -163,7 +164,7 @@ class AccountTreeModel(QAbstractItemModel):
             return QModelIndex()
         parent = item.parent
         if parent is None:
-            row = self._data.index(item)
+            row = self.root_items.index(item)
         else:
             row = parent.children.index(item)
         return QAbstractItemModel.createIndex(self, row, 0, item)

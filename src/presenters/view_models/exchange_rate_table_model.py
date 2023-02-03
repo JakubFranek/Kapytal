@@ -8,7 +8,6 @@ from src.views.constants import ExchangeRateTableColumns
 
 # TODO: set up model checker test
 # TODO: pass reference to settings?
-# TODO: _data is not actually private
 
 
 class ExchangeRateTableModel(QAbstractTableModel):
@@ -18,15 +17,17 @@ class ExchangeRateTableModel(QAbstractTableModel):
         ExchangeRateTableColumns.COLUMN_LAST_DATE: "Latest date",
     }
 
-    def __init__(self, view: QTableView, data: tuple[ExchangeRate, ...]) -> None:
+    def __init__(
+        self, view: QTableView, exchange_rates: tuple[ExchangeRate, ...]
+    ) -> None:
         super().__init__()
         self._tree = view
-        self._data = data
+        self.exchange_rates = exchange_rates
 
     def rowCount(self, index: QModelIndex = ...) -> int:
         if isinstance(index, QModelIndex) and index.isValid():
             return 0
-        return len(self._data)
+        return len(self.exchange_rates)
 
     def columnCount(self, index: QModelIndex = ...) -> int:  # noqa: U100
         return 3
@@ -36,14 +37,14 @@ class ExchangeRateTableModel(QAbstractTableModel):
             return QModelIndex()
         if not QAbstractTableModel.hasIndex(self, row, column, QModelIndex()):
             return QModelIndex()
-        item = self._data[row]
+        item = self.exchange_rates[row]
         return QAbstractTableModel.createIndex(self, row, column, item)
 
     def data(self, index: QModelIndex, role: Qt.ItemDataRole = ...) -> typing.Any:
         if not index.isValid():
             return None
         column = index.column()
-        exchange_rate = self._data[index.row()]
+        exchange_rate = self.exchange_rates[index.row()]
         if role == Qt.ItemDataRole.DisplayRole:
             if column == ExchangeRateTableColumns.COLUMN_CODE:
                 return str(exchange_rate)
@@ -105,5 +106,5 @@ class ExchangeRateTableModel(QAbstractTableModel):
     def get_index_from_item(self, item: ExchangeRate | None) -> QModelIndex:
         if item is None:
             return QModelIndex()
-        row = self._data.index(item)
+        row = self.exchange_rates.index(item)
         return QAbstractTableModel.createIndex(self, row, 0, item)

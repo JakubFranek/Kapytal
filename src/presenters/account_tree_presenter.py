@@ -19,7 +19,9 @@ class AccountTreePresenter:
     def __init__(self, view: AccountTree, record_keeper: RecordKeeper) -> None:
         self._view = view
         self._record_keeper = record_keeper
-        self._model = AccountTreeModel(view=view, data=record_keeper.root_account_items)
+        self._model = AccountTreeModel(
+            view=view, root_items=record_keeper.root_account_items
+        )
         self._view.setModel(self._model)
 
         self._setup_signals()
@@ -28,7 +30,7 @@ class AccountTreePresenter:
     def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
         self._model.pre_reset_model()
         self._record_keeper = record_keeper
-        self._model._data = record_keeper.root_account_items
+        self._model.root_items = record_keeper.root_account_items
         self._model.post_reset_model()
 
     def _selection_changed(self) -> None:
@@ -75,7 +77,7 @@ class AccountTreePresenter:
             return
 
         self._model.pre_delete_item(index)
-        self._model._data = self._record_keeper.root_account_items
+        self._model.root_items = self._record_keeper.root_account_items
         self._model.post_delete_item()
         self.event_data_changed()
 
@@ -115,7 +117,7 @@ class AccountTreePresenter:
 
         item = self._model.get_selected_item()
         self._model.pre_add(item)
-        self._model._data = self._record_keeper.root_account_items
+        self._model.root_items = self._record_keeper.root_account_items
         self._model.post_add()
         self._dialog.close()
         self.event_data_changed()
@@ -140,7 +142,7 @@ class AccountTreePresenter:
             return
 
         self._model.pre_reset_model()
-        self._model._data = self._record_keeper.root_account_items
+        self._model.root_items = self._record_keeper.root_account_items
         self._model.post_reset_model()
         self._dialog.close()
         self.event_data_changed()
@@ -183,7 +185,7 @@ class AccountTreePresenter:
 
         item = self._model.get_selected_item()
         self._model.pre_add(item)
-        self._model._data = self._record_keeper.root_account_items
+        self._model.root_items = self._record_keeper.root_account_items
         self._model.post_add()
         self._dialog.close()
         self.event_data_changed()
@@ -208,7 +210,7 @@ class AccountTreePresenter:
             return
 
         self._model.pre_reset_model()
-        self._model._data = self._record_keeper.root_account_items
+        self._model.root_items = self._record_keeper.root_account_items
         self._model.post_reset_model()
         self._dialog.close()
         self.event_data_changed()

@@ -41,6 +41,7 @@ def test_creation() -> None:
     assert record_keeper.categories == ()
     assert record_keeper.payees == ()
     assert record_keeper.currencies == ()
+    assert record_keeper.base_currency is None
     assert record_keeper.exchange_rates == ()
     assert record_keeper.securities == ()
     assert record_keeper.__repr__() == "RecordKeeper"
@@ -55,6 +56,16 @@ def test_add_currency(code: str, places: int) -> None:
     record_keeper.add_currency(code, places)
     currency = record_keeper.currencies[0]
     assert currency.code == code.upper()
+    assert record_keeper.base_currency == currency
+
+
+def test_set_base_currency() -> None:
+    record_keeper = RecordKeeper()
+    record_keeper.add_currency("CZK", 2)
+    record_keeper.add_currency("EUR", 2)
+    record_keeper.add_currency("DKK", 2)
+    record_keeper.set_base_currency("EUR")
+    assert record_keeper.base_currency.code == "EUR"
 
 
 @given(

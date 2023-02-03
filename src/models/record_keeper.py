@@ -57,6 +57,7 @@ class RecordKeeper(JSONSerializableMixin):
         self._categories: list[Category] = []
         self._tags: list[Attribute] = []
         self._transactions: list[Transaction] = []
+        self._base_currency: Currency | None = None
 
     @property
     def accounts(self) -> tuple[Account, ...]:
@@ -73,6 +74,10 @@ class RecordKeeper(JSONSerializableMixin):
     @property
     def currencies(self) -> tuple[Currency, ...]:
         return tuple(self._currencies)
+
+    @property
+    def base_currency(self) -> Currency:
+        return self._base_currency
 
     @property
     def exchange_rates(self) -> tuple[ExchangeRate, ...]:
@@ -108,6 +113,8 @@ class RecordKeeper(JSONSerializableMixin):
                 f"A Currency with code '{code_upper}' already exists."
             )
         currency = Currency(code_upper, places)
+        if len(self._currencies) == 0:
+            self._base_currency = currency
         self._currencies.append(currency)
 
     def add_exchange_rate(
@@ -899,6 +906,10 @@ class RecordKeeper(JSONSerializableMixin):
                 "Cannot delete a Currency referenced in any Security."
             )
         self._currencies.remove(currency)
+        if currency == self._base_currency:
+            self._base_currency = (
+                self._currencies[0] if len(self._currencies) > 0 else None
+            )
         del currency
 
     def remove_exchange_rate(self, exchange_rate_code: str) -> None:
@@ -947,6 +958,10 @@ class RecordKeeper(JSONSerializableMixin):
             )
         self._payees.remove(payee)
         del payee
+
+    def set_base_currency(self, code: str) -> None:
+        currency = self.get_currency(code)
+        self._base_currency = currency
 
     def get_account_parent_or_none(self, path: str | None) -> AccountGroup | None:
         if path == "" or path is None:

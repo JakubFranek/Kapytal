@@ -46,8 +46,8 @@ class CurrencyFormPresenter:
         self._currency_table_model.pre_reset_model()
         self._exchange_rate_table_model.pre_reset_model()
         self._record_keeper = record_keeper
-        self._currency_table_model._data = record_keeper.currencies
-        self._exchange_rate_table_model._data = record_keeper.exchange_rates
+        self._currency_table_model.currencies = record_keeper.currencies
+        self._exchange_rate_table_model.exchange_rates = record_keeper.exchange_rates
         self._currency_table_model.post_reset_model()
         self._exchange_rate_table_model.post_reset_model()
 
@@ -73,7 +73,7 @@ class CurrencyFormPresenter:
             return
 
         self._currency_table_model.pre_add()
-        self._currency_table_model._data = self._record_keeper.currencies
+        self._currency_table_model.currencies = self._record_keeper.currencies
         self._currency_table_model.post_add()
         self._dialog.close()
         self.event_data_changed()
@@ -92,7 +92,7 @@ class CurrencyFormPresenter:
 
         index = self._currency_table_model.get_index_from_item(currency)
         self._currency_table_model.pre_delete_item(index)
-        self._currency_table_model._data = self._record_keeper.currencies
+        self._currency_table_model.currencies = self._record_keeper.currencies
         self._currency_table_model.post_delete_item()
         self.event_data_changed()
 
@@ -115,7 +115,9 @@ class CurrencyFormPresenter:
             return
 
         self._exchange_rate_table_model.pre_add()
-        self._exchange_rate_table_model._data = self._record_keeper.exchange_rates
+        self._exchange_rate_table_model.exchange_rates = (
+            self._record_keeper.exchange_rates
+        )
         self._exchange_rate_table_model.post_add()
         self._dialog.close()
         self.event_data_changed()
@@ -148,7 +150,9 @@ class CurrencyFormPresenter:
             return
 
         self._exchange_rate_table_model.pre_reset_model()
-        self._exchange_rate_table_model._data = self._record_keeper.exchange_rates
+        self._exchange_rate_table_model.exchange_rates = (
+            self._record_keeper.exchange_rates
+        )
         self._exchange_rate_table_model.post_reset_model()
         self._dialog.close()
         self.event_data_changed()
@@ -167,7 +171,9 @@ class CurrencyFormPresenter:
 
         index = self._exchange_rate_table_model.get_index_from_item(exchange_rate)
         self._exchange_rate_table_model.pre_delete_item(index)
-        self._exchange_rate_table_model._data = self._record_keeper.exchange_rates
+        self._exchange_rate_table_model.exchange_rates = (
+            self._record_keeper.exchange_rates
+        )
         self._exchange_rate_table_model.post_delete_item()
         self.event_data_changed()
 

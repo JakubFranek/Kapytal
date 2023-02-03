@@ -177,8 +177,10 @@ def test_remove_currency() -> None:
     record_keeper = RecordKeeper()
     record_keeper.add_currency("CZK", 2)
     assert len(record_keeper.currencies) == 1
+    assert record_keeper.base_currency.code == "CZK"
     record_keeper.remove_currency("CZK")
     assert len(record_keeper.currencies) == 0
+    assert record_keeper.base_currency is None
 
 
 def test_remove_currency_referenced_in_security() -> None:
