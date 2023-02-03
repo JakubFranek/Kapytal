@@ -102,7 +102,7 @@ def test_edit_account() -> None:
     record_keeper.add_account_group("TEST PARENT", None)
     record_keeper.add_account_group("NEW PARENT", None)
     record_keeper.add_security_account("TEST PARENT/TEST NAME")
-    record_keeper.edit_account("TEST PARENT/TEST NAME", "NEW PARENT/NEW NAME")
+    record_keeper.edit_security_account("TEST PARENT/TEST NAME", "NEW PARENT/NEW NAME")
     account = record_keeper.accounts[0]
     assert account.name == "NEW NAME"
     assert account.path == "NEW PARENT/NEW NAME"
@@ -111,7 +111,7 @@ def test_edit_account() -> None:
 def test_edit_account_does_not_exist() -> None:
     record_keeper = RecordKeeper()
     with pytest.raises(NotFoundError):
-        record_keeper.edit_account("ABC", "DEF", "GHI")
+        record_keeper.edit_security_account("ABC", "DEF", "GHI")
 
 
 def test_edit_account_already_exists() -> None:
@@ -119,7 +119,7 @@ def test_edit_account_already_exists() -> None:
     record_keeper.add_security_account("TEST")
     record_keeper.add_security_account("DUMMY")
     with pytest.raises(AlreadyExistsError):
-        record_keeper.edit_account("TEST", "DUMMY")
+        record_keeper.edit_security_account("TEST", "DUMMY")
 
 
 def test_edit_account_group() -> None:

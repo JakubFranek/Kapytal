@@ -2,6 +2,7 @@ import logging
 
 from src.models.base_classes.account import Account
 from src.models.model_objects.account_group import AccountGroup
+from src.models.model_objects.cash_objects import CashAccount
 from src.models.model_objects.security_objects import SecurityAccount
 from src.models.record_keeper import RecordKeeper
 from src.presenters.utilities.event import Event
@@ -9,6 +10,7 @@ from src.presenters.view_models.account_tree_model import AccountTreeModel
 from src.utilities.general import get_exception_display_info
 from src.views.account_group_dialog import AccountGroupDialog
 from src.views.account_tree import AccountTree
+from src.views.cash_account_dialog import CashAccountDialog
 from src.views.security_account_dialog import SecurityAccountDialog
 from src.views.utilities.handle_exception import display_error_message
 
@@ -61,6 +63,8 @@ class AccountTreePresenter:
             self.run_account_group_dialog(item=item, edit=True)
         if isinstance(item, SecurityAccount):
             self.run_security_account_dialog(item=item, edit=True)
+        if isinstance(item, CashAccount):
+            self.run_cash_account_dialog(item=item, edit=True)
 
     def delete_item(self) -> None:
         item = self._model.get_selected_item()
@@ -205,8 +209,99 @@ class AccountTreePresenter:
             f"old index={current_index}, new path='{new_path}', new index={index}"
         )
         try:
-            self._record_keeper.edit_account(
+            self._record_keeper.edit_security_account(
                 current_path=current_path, new_path=new_path, index=index
+            )
+        except Exception:
+            self._handle_exception()
+            return
+
+        self._model.pre_reset_model()
+        self._model.root_items = self._record_keeper.root_account_items
+        self._model.post_reset_model()
+        self._dialog.close()
+        self.event_data_changed()
+
+    def run_cash_account_dialog(self, edit: bool, item: CashAccount | None) -> None:
+        if edit:
+            if item is None:
+                raise ValueError("Cannot edit an unselected item.")
+            max_position = self._get_max_parent_position(item)
+            code_places_pairs = [(item.currency.code, item.currency.places)]
+            self._dialog = CashAccountDialog(
+                max_position=max_position,
+                code_places_pairs=code_places_pairs,
+                edit=edit,
+            )
+            self._dialog.signal_OK.connect(self.edit_cash_account)
+            self._dialog.current_path = item.path
+            self._dialog.path = item.path
+            self._dialog.initial_balance = item.initial_balance.value
+            if item.parent is None:
+                position = self._record_keeper.root_account_items.index(item) + 1
+            else:
+                position = item.parent.children.index(item) + 1
+            self._dialog.position = position
+        else:
+            code_places_pairs = [
+                (currency.code, currency.places)
+                for currency in self._record_keeper.currencies
+            ]
+            max_position = self._get_max_child_position(item)
+            self._dialog = CashAccountDialog(
+                max_position=max_position,
+                code_places_pairs=code_places_pairs,
+                edit=edit,
+            )
+            self._dialog.signal_OK.connect(self.add_cash_account)
+            self._dialog.path = "" if item is None else item.path + "/"
+            self._dialog.position = max_position
+        logging.info(f"Running CashAccountDialog ({edit=})")
+        self._dialog.exec()
+
+    def add_cash_account(self) -> None:
+        path = self._dialog.path
+        index = self._dialog.position - 1
+        currency_code = self._dialog.currency_code
+        initial_balance = self._dialog.initial_balance
+
+        logging.info(
+            f"Adding CashAccount at path='{path}', index={index}, "
+            f"currency='{currency_code}', initial_balance='{initial_balance}'"
+        )
+        try:
+            self._record_keeper.add_cash_account(
+                path, currency_code, initial_balance, index
+            )
+        except Exception:
+            self._handle_exception()
+            return
+
+        item = self._model.get_selected_item()
+        self._model.pre_add(item)
+        self._model.root_items = self._record_keeper.root_account_items
+        self._model.post_add()
+        self._dialog.close()
+        self.event_data_changed()
+
+    def edit_cash_account(self) -> None:
+        item = self._model.get_selected_item()
+        current_path = self._dialog.current_path
+        new_path = self._dialog.path
+        initial_balance = self._dialog.initial_balance
+        current_index = self._get_current_index(item)
+        index = self._dialog.position - 1
+
+        logging.info(
+            f"Editing CashAccount: old path='{current_path}', "
+            f"old index={current_index}, new path='{new_path}', new index={index}"
+        )
+        try:
+            self._record_keeper.edit_cash_account(
+                current_path=current_path,
+                new_path=new_path,
+                initial_balance=initial_balance,
+                index=index,
             )
         except Exception:
             self._handle_exception()
@@ -254,6 +349,11 @@ class AccountTreePresenter:
         )
         self._view.signal_add_security_account.connect(
             lambda: self.run_security_account_dialog(
+                item=self._model.get_selected_item(), edit=False
+            )
+        )
+        self._view.signal_add_cash_account.connect(
+            lambda: self.run_cash_account_dialog(
                 item=self._model.get_selected_item(), edit=False
             )
         )

@@ -13,6 +13,7 @@ from src.views.constants import AccountTreeColumns
 
 # TODO: set up model checker test
 # TODO: pass reference to settings?
+# TODO: save expand state before reset and load after it
 
 
 class AccountTreeModel(QAbstractItemModel):

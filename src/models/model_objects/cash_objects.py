@@ -96,10 +96,10 @@ class CashAccount(Account):
             raise TypeError("CashAccount.currency must be a Currency.")
         self._currency = currency
 
-        self.initial_balance = initial_balance
         self._balance_history = [(datetime.now(tzinfo), initial_balance)]
-
         self._transactions: list[CashRelatedTransaction] = []
+
+        self.initial_balance = initial_balance
 
     @property
     def currency(self) -> Currency:
@@ -118,6 +118,7 @@ class CashAccount(Account):
                 "CashAccount.initial_balance.currency must match CashAccount.currency."
             )
         self._initial_balance = amount
+        self._update_balance()
 
     @property
     def balance_history(self) -> tuple[tuple[datetime, CashAmount], ...]:

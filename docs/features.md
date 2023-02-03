@@ -76,8 +76,6 @@ Kapytal will support multiple currencies. The user can enable or create currenci
 
 The user can also designate a single currency as a base currency. This will be the currency used for account group balances and reports.
 
-TODO: base currency recalculation
-
 ## Financial Instruments
 
 The user can create Buy or Sell transactions to record the buy or sale of financial instruments such as stocks or fund shares. The user can pre-define these financial instruments and update their price. The shares of these instruments will be kept in a special type of account, which can only keep financial instruments.

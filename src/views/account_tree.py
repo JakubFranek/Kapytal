@@ -13,6 +13,7 @@ class AccountTree(QTreeView):
     signal_delete_item = pyqtSignal()
     signal_add_account_group = pyqtSignal()
     signal_add_security_account = pyqtSignal()
+    signal_add_cash_account = pyqtSignal()
     signal_edit_item = pyqtSignal()
 
     def __init__(self, parent: QWidget | None = ...) -> None:
@@ -72,6 +73,7 @@ class AccountTree(QTreeView):
         self.actionAdd_Security_Account.triggered.connect(
             self.signal_add_security_account.emit
         )
+        self.actionAdd_Cash_Account.triggered.connect(self.signal_add_cash_account.emit)
         self.actionEdit_Account_Tree_Item.triggered.connect(self.signal_edit_item.emit)
 
         self.contextMenuEvent = self.create_context_menu

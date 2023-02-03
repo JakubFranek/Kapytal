@@ -192,23 +192,24 @@ class RecordKeeper(JSONSerializableMixin):
 
     def add_cash_account(
         self,
-        name: str,
+        path: str,
         currency_code: str,
         initial_balance_value: Decimal | int | str,
-        parent_path: str | None,
+        index: int | None = None,
     ) -> None:
+        parent_path, _, name = path.rpartition("/")
         self._check_account_exists(name, parent_path)
         currency = self.get_currency(currency_code)
         parent = self.get_account_parent_or_none(parent_path)
         initial_balance = CashAmount(initial_balance_value, currency)
         account = CashAccount(name, currency, initial_balance, parent)
+        self._set_account_item_index(account, index)
         self._accounts.append(account)
 
     def add_security_account(self, path: str, index: int | None = None) -> None:
         parent_path, _, name = path.rpartition("/")
+        self._check_account_exists(name, parent_path)
         parent = self.get_account_parent_or_none(parent_path)
-        if any(account.path == path for account in self._accounts):
-            raise AlreadyExistsError(f"An Account with path '{path}' already exists.")
         account = SecurityAccount(name, parent)
         self._set_account_item_index(account, index)
         self._accounts.append(account)
@@ -768,18 +769,33 @@ class RecordKeeper(JSONSerializableMixin):
         if new_name is not None:
             edited_security.name = new_name
 
-    # TODO: CashAccount requires different method (can edit initial balance)
-    def edit_account(
+    def edit_cash_account(
+        self,
+        current_path: str,
+        new_path: str,
+        initial_balance: Decimal | int | str,
+        index: int | None = None,
+    ) -> None:
+        parent_path, _, name = new_path.rpartition("/")
+        if current_path != new_path:
+            self._check_account_exists(name, parent_path)
+        edited_account = self.get_account(current_path, CashAccount)
+        new_parent = self.get_account_parent_or_none(parent_path)
+        edited_account.name = name
+        edited_account.initial_balance = CashAmount(
+            initial_balance, edited_account.currency
+        )
+        self._edit_account_item_parent(
+            item=edited_account, new_parent=new_parent, index=index
+        )
+
+    def edit_security_account(
         self, current_path: str, new_path: str, index: int | None = None
     ) -> None:
-        if current_path != new_path and any(
-            account.path == new_path for account in self._accounts
-        ):
-            raise AlreadyExistsError(
-                f"An Account with path='{new_path}' already exists."
-            )
-        edited_account = self.get_account(current_path, Account)
         parent_path, _, name = new_path.rpartition("/")
+        if current_path != new_path:
+            self._check_account_exists(name, parent_path)
+        edited_account = self.get_account(current_path, SecurityAccount)
         new_parent = self.get_account_parent_or_none(parent_path)
         edited_account.name = name
         self._edit_account_item_parent(
