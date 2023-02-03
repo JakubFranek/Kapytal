@@ -14,8 +14,8 @@ from src.views.constants import ExchangeRateTableColumns
 class ExchangeRateTableModel(QAbstractTableModel):
     COLUMN_HEADERS = {
         ExchangeRateTableColumns.COLUMN_CODE: "Exchange Rate",
-        ExchangeRateTableColumns.COLUMN_VALUE: "Current value",
-        ExchangeRateTableColumns.COLUMN_LAST_DATE: "Date updated",
+        ExchangeRateTableColumns.COLUMN_VALUE: "Latest value",
+        ExchangeRateTableColumns.COLUMN_LAST_DATE: "Latest date",
     }
 
     def __init__(self, view: QTableView, data: tuple[ExchangeRate, ...]) -> None:

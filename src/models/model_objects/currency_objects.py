@@ -1,21 +1,18 @@
 import copy
 import operator
 from collections.abc import Collection
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 from functools import total_ordering
 from typing import Any, Self
 
+from src.models.constants import tzinfo
 from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
 from src.models.utilities.find_helpers import find_currency_by_code
 
 
 class CurrencyError(ValueError):
     """Raised when invalid Currency is supplied."""
-
-
-class NoExchangeRateError(ValueError):
-    """Raised when exchange rate is requested but none is available."""
 
 
 class ConversionFactorNotFoundError(ValueError):
@@ -155,6 +152,7 @@ class Currency(JSONSerializableMixin):
         return Currency(code=data["code"], places=data["places"])
 
 
+# TODO: decimal places needed for ExchangeRate
 class ExchangeRate(JSONSerializableMixin):
     def __init__(
         self, primary_currency: Currency, secondary_currency: Currency
@@ -188,6 +186,12 @@ class ExchangeRate(JSONSerializableMixin):
     @property
     def rate_history(self) -> dict[date, Decimal]:
         return copy.deepcopy(self._rate_history)
+
+    @property
+    def rate_history_pairs(self) -> tuple[tuple[date, Decimal]]:
+        pairs = [(date_, rate) for date_, rate in self._rate_history.items()]
+        pairs.sort()
+        return tuple(pairs)
 
     @property
     def latest_rate(self) -> Decimal:
@@ -224,13 +228,16 @@ class ExchangeRate(JSONSerializableMixin):
             raise ValueError("Parameter 'rate' must be finite and positive.")
         self._rate_history[date_] = _rate
 
-    # FIXME: exchange rate values not serialized!
-
     def serialize(self) -> dict:
+        date_rate_pairs = [
+            [date_.strftime("%Y-%m-%d"), str(rate)]
+            for date_, rate in self.rate_history_pairs
+        ]
         return {
             "datatype": "ExchangeRate",
             "primary_currency_code": self._primary_currency.code,
             "secondary_currency_code": self._secondary_currency.code,
+            "date_rate_pairs": date_rate_pairs,
         }
 
     @staticmethod
@@ -239,6 +246,7 @@ class ExchangeRate(JSONSerializableMixin):
     ) -> "ExchangeRate":
         primary_code = data["primary_currency_code"]
         secondary_code = data["secondary_currency_code"]
+        date_rate_pairs: list[list[str, str]] = data["date_rate_pairs"]
 
         primary = None
         secondary = None
@@ -250,7 +258,13 @@ class ExchangeRate(JSONSerializableMixin):
             if primary and secondary:
                 break
 
-        return ExchangeRate(primary, secondary)
+        obj = ExchangeRate(primary, secondary)
+        for date_, rate in date_rate_pairs:
+            obj.set_rate(
+                datetime.strptime(date_, "%Y-%m-%d").replace(tzinfo=tzinfo).date(), rate
+            )
+
+        return obj
 
 
 @total_ordering

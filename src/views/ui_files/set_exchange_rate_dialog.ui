@@ -37,7 +37,11 @@
       </widget>
      </item>
      <item row="0" column="1">
-      <widget class="QDoubleSpinBox" name="exchangeRateDoubleSpinBox"/>
+      <widget class="QDoubleSpinBox" name="exchangeRateDoubleSpinBox">
+       <property name="decimals">
+        <number>14</number>
+       </property>
+      </widget>
      </item>
      <item row="1" column="1">
       <widget class="QDateEdit" name="dateEdit">

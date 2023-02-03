@@ -158,7 +158,7 @@ class CashAccount(Account):
             "path": self.path,
             "index": index,
             "currency_code": self._currency.code,
-            "initial_balance": self._initial_balance.value,
+            "initial_balance": str(self._initial_balance.value),
             "uuid": str(self._uuid),
         }
 

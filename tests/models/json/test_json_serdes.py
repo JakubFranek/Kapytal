@@ -73,12 +73,15 @@ def test_exchange_rate() -> None:
     primary = Currency("EUR", 2)
     secondary = Currency("CZK", 2)
     exchange_rate = ExchangeRate(primary, secondary)
+    exchange_rate.set_rate(datetime.now(tzinfo).date(), 1)
     serialized = json.dumps(exchange_rate, cls=CustomJSONEncoder)
     decoded = json.loads(serialized, cls=CustomJSONDecoder)
     decoded = ExchangeRate.deserialize(decoded, [primary, secondary])
     assert isinstance(decoded, ExchangeRate)
     assert decoded.primary_currency == exchange_rate.primary_currency
     assert decoded.secondary_currency == exchange_rate.secondary_currency
+    assert decoded.latest_date == datetime.now(tzinfo).date()
+    assert decoded.latest_rate == 1
 
 
 def test_cash_amount() -> None:

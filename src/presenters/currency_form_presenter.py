@@ -1,5 +1,7 @@
 import logging
+from datetime import datetime
 
+from src.models.constants import tzinfo
 from src.models.record_keeper import RecordKeeper
 from src.presenters.utilities.event import Event
 from src.presenters.view_models.currency_table_model import CurrencyTableModel
@@ -35,11 +37,19 @@ class CurrencyFormPresenter:
         self._view.signal_set_exchange_rate.connect(self.run_set_exchange_rate_dialog)
         self._view.signal_remove_exchange_rate.connect(self.remove_exchange_rate)
 
+        self._view.exchangeRateTable.selectionModel().selectionChanged.connect(
+            self._exchange_rate_selection_changed
+        )
+        self._exchange_rate_selection_changed()
+
     def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
         self._currency_table_model.pre_reset_model()
+        self._exchange_rate_table_model.pre_reset_model()
         self._record_keeper = record_keeper
         self._currency_table_model._data = record_keeper.currencies
+        self._exchange_rate_table_model._data = record_keeper.exchange_rates
         self._currency_table_model.post_reset_model()
+        self._exchange_rate_table_model.post_reset_model()
 
     def show_form(self) -> None:
         logging.info("Showing CurrencyForm")
@@ -117,7 +127,10 @@ class CurrencyFormPresenter:
         exchange_rate_code = str(exchange_rate)
         last_value = exchange_rate.latest_rate
         self._dialog = SetExchangeRateDialog(
-            exchange_rate=exchange_rate_code, last_value=last_value, parent=self._view
+            date_today=datetime.now(tzinfo).date(),
+            exchange_rate=exchange_rate_code,
+            last_value=last_value,
+            parent=self._view,
         )
         self._dialog.signal_OK.connect(self.set_exchange_rate)
         logging.info("Running SetExchangeRateDialog")
@@ -157,6 +170,11 @@ class CurrencyFormPresenter:
         self._exchange_rate_table_model._data = self._record_keeper.exchange_rates
         self._exchange_rate_table_model.post_delete_item()
         self.event_data_changed()
+
+    def _exchange_rate_selection_changed(self) -> None:
+        item = self._exchange_rate_table_model.get_selected_item()
+        is_exchange_rate_selected = item is not None
+        self._view.setExchangeRateButton.setEnabled(is_exchange_rate_selected)
 
     def _handle_exception(self) -> None:
         display_text, display_details = get_exception_display_info()  # type: ignore

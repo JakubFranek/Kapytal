@@ -10,7 +10,6 @@ from src.models.model_objects.currency_objects import (
     Currency,
     CurrencyError,
     ExchangeRate,
-    NoExchangeRateError,
 )
 from tests.models.test_assets.composites import (
     currencies,
@@ -27,8 +26,9 @@ def test_creation(primary: Currency, secondary: Currency) -> None:
     assert exchange_rate.secondary_currency == secondary
     assert exchange_rate.currencies == {primary, secondary}
     assert exchange_rate.rate_history == {}
-    with pytest.raises(NoExchangeRateError):
-        exchange_rate.latest_rate
+    assert exchange_rate.rate_history_pairs == ()
+    assert exchange_rate.latest_rate.is_nan()
+    assert exchange_rate.latest_date is None
     assert exchange_rate.__repr__() == (
         f"ExchangeRate({primary.code}/{secondary.code})"
     )

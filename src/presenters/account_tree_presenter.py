@@ -31,7 +31,7 @@ class AccountTreePresenter:
         self._model._data = record_keeper.root_account_items
         self._model.post_reset_model()
 
-    def selection_changed(self) -> None:
+    def _selection_changed(self) -> None:
         item = self._model.get_selected_item()
 
         enable_modify_object = item is not None
@@ -239,7 +239,7 @@ class AccountTreePresenter:
         return parent.children.index(item)
 
     def _setup_signals(self) -> None:
-        self._view.signal_selection_changed.connect(self.selection_changed)
+        self._view.signal_selection_changed.connect(self._selection_changed)
         self._view.signal_expand_below.connect(self.expand_all_below)
         self._view.signal_delete_item.connect(self.delete_item)
         self._view.signal_add_account_group.connect(
@@ -254,4 +254,4 @@ class AccountTreePresenter:
         )
         self._view.signal_edit_item.connect(self.edit_item)
 
-        self.selection_changed()  # called to ensure context menu is OK at start of run
+        self._selection_changed()  # called to ensure context menu is OK at start of run

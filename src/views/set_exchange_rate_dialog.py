@@ -13,6 +13,7 @@ class SetExchangeRateDialog(QDialog, Ui_SetExchangeRateDialog):
 
     def __init__(
         self,
+        date_today: date,
         exchange_rate: str,
         last_value: Decimal,
         parent: QWidget | None = None,
@@ -22,6 +23,8 @@ class SetExchangeRateDialog(QDialog, Ui_SetExchangeRateDialog):
         self.setWindowIcon(QIcon("icons_custom:currency-arrow.png"))
         self.exchangeRateLabel.setText(exchange_rate)
         self.exchangeRateDoubleSpinBox.setValue(last_value)
+        self.dateEdit.setDate(date_today)
+        self.dateEdit.setMaximumDate(date_today)
 
         self.buttonBox.clicked.connect(self._handle_button_box_click)
 
