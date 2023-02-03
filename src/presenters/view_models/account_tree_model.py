@@ -7,6 +7,7 @@ from PyQt6.QtWidgets import QTreeView
 from src.models.base_classes.account import Account
 from src.models.model_objects.account_group import AccountGroup
 from src.models.model_objects.cash_objects import CashAccount
+from src.models.model_objects.currency_objects import Currency
 from src.models.model_objects.security_objects import SecurityAccount
 from src.views.constants import AccountTreeColumns
 
@@ -23,11 +24,15 @@ class AccountTreeModel(QAbstractItemModel):
     }
 
     def __init__(
-        self, view: QTreeView, root_items: list[Account | AccountGroup]
+        self,
+        view: QTreeView,
+        root_items: list[Account | AccountGroup],
+        base_currency: Currency,
     ) -> None:
         super().__init__()
         self._tree = view
         self.root_items = root_items
+        self.base_currency = base_currency
 
     def rowCount(self, index: QModelIndex = ...) -> int:
         if index.isValid():
@@ -85,7 +90,7 @@ class AccountTreeModel(QAbstractItemModel):
                     return str(node.get_balance(node.currency))
                 return ""
             if column == AccountTreeColumns.COLUMN_BALANCE_BASE:
-                return "0 CZK"
+                return str(node.get_balance(self.base_currency))
             if column == AccountTreeColumns.COLUMN_SHOW:
                 return "xxx"
         if (

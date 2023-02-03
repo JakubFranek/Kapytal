@@ -20,7 +20,9 @@ class AccountTreePresenter:
         self._view = view
         self._record_keeper = record_keeper
         self._model = AccountTreeModel(
-            view=view, root_items=record_keeper.root_account_items
+            view=view,
+            root_items=record_keeper.root_account_items,
+            base_currency=record_keeper.base_currency,
         )
         self._view.setModel(self._model)
 
@@ -31,6 +33,7 @@ class AccountTreePresenter:
         self._model.pre_reset_model()
         self._record_keeper = record_keeper
         self._model.root_items = record_keeper.root_account_items
+        self._model.base_currency = record_keeper.base_currency
         self._model.post_reset_model()
 
     def _selection_changed(self) -> None:

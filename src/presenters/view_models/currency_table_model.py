@@ -1,6 +1,7 @@
 import typing
 
 from PyQt6.QtCore import QAbstractTableModel, QModelIndex, Qt
+from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QTableView
 
 from src.models.model_objects.currency_objects import Currency
@@ -16,10 +17,16 @@ class CurrencyTableModel(QAbstractTableModel):
         CurrencyTableColumns.COLUMN_PLACES: "Decimal places",
     }
 
-    def __init__(self, view: QTableView, currencies: tuple[Currency, ...]) -> None:
+    def __init__(
+        self,
+        view: QTableView,
+        currencies: tuple[Currency, ...],
+        base_currency: Currency,
+    ) -> None:
         super().__init__()
         self._tree = view
         self.currencies = currencies
+        self.base_currency = base_currency
 
     def rowCount(self, index: QModelIndex = ...) -> int:
         if isinstance(index, QModelIndex) and index.isValid():
@@ -47,6 +54,12 @@ class CurrencyTableModel(QAbstractTableModel):
                 return currency.code
             if column == CurrencyTableColumns.COLUMN_PLACES:
                 return str(currency.places)
+        if (
+            role == Qt.ItemDataRole.DecorationRole
+            and column == CurrencyTableColumns.COLUMN_CODE
+        ):
+            if currency == self.base_currency:
+                return QIcon("icons_16:star.png")
         return None
 
     def headerData(

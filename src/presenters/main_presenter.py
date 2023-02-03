@@ -35,6 +35,9 @@ class MainPresenter:
         self._currency_form_presenter.event_data_changed.append(
             lambda: self._update_unsaved_changes(True)
         )
+        self._currency_form_presenter.event_base_currency_changed.append(
+            lambda: self._account_tree_presenter.load_record_keeper(self._record_keeper)
+        )
 
         # View pyqtSignal connections
         self._view.signal_exit.connect(self._close)

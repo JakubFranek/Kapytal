@@ -23,7 +23,7 @@
    <item>
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>1</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="currencyTab">
       <attribute name="title">
@@ -55,6 +55,13 @@
           <widget class="QPushButton" name="addCurrencyButton">
            <property name="text">
             <string>Add</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="setBaseCurrencyButton">
+           <property name="text">
+            <string>Set as Base</string>
            </property>
           </widget>
          </item>
@@ -116,16 +123,16 @@
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="removeExchangeRateButton">
+          <widget class="QPushButton" name="setExchangeRateButton">
            <property name="text">
-            <string>Remove</string>
+            <string>Set Rate</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="setExchangeRateButton">
+          <widget class="QPushButton" name="removeExchangeRateButton">
            <property name="text">
-            <string>Set Rate</string>
+            <string>Remove</string>
            </property>
           </widget>
          </item>

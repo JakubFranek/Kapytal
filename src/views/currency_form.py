@@ -7,6 +7,7 @@ from src.views.ui_files.Ui_currency_form import Ui_CurrencyForm
 
 class CurrencyForm(QWidget, Ui_CurrencyForm):
     signal_add_currency = pyqtSignal()
+    signal_set_base_currency = pyqtSignal()
     signal_remove_currency = pyqtSignal()
     signal_add_exchange_rate = pyqtSignal()
     signal_remove_exchange_rate = pyqtSignal()
@@ -18,7 +19,10 @@ class CurrencyForm(QWidget, Ui_CurrencyForm):
         self.setWindowFlag(Qt.WindowType.Window)
         self.setWindowIcon(QIcon("icons_16:currency.png"))
 
+        self.setBaseCurrencyButton.setIcon(QIcon("icons_16:star.png"))
+
         self.addCurrencyButton.clicked.connect(self.signal_add_currency.emit)
+        self.setBaseCurrencyButton.clicked.connect(self.signal_set_base_currency.emit)
         self.removeCurrencyButton.clicked.connect(self.signal_remove_currency.emit)
         self.addExchangeRateButton.clicked.connect(self.signal_add_exchange_rate.emit)
         self.removeExchangeRateButton.clicked.connect(

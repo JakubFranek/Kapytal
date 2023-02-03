@@ -16,13 +16,16 @@ from src.views.utilities.handle_exception import display_error_message
 
 class CurrencyFormPresenter:
     event_data_changed = Event()
+    event_base_currency_changed = Event()
 
     def __init__(self, view: CurrencyForm, record_keeper: RecordKeeper) -> None:
         self._view = view
         self._record_keeper = record_keeper
 
         self._currency_table_model = CurrencyTableModel(
-            self._view.currencyTable, record_keeper.currencies
+            self._view.currencyTable,
+            record_keeper.currencies,
+            record_keeper.base_currency,
         )
         self._view.currencyTable.setModel(self._currency_table_model)
 
@@ -32,6 +35,7 @@ class CurrencyFormPresenter:
         self._view.exchangeRateTable.setModel(self._exchange_rate_table_model)
 
         self._view.signal_add_currency.connect(self.run_add_currency_dialog)
+        self._view.signal_set_base_currency.connect(self.set_base_currency)
         self._view.signal_remove_currency.connect(self.remove_currency)
         self._view.signal_add_exchange_rate.connect(self.run_add_exchange_rate_dialog)
         self._view.signal_set_exchange_rate.connect(self.run_set_exchange_rate_dialog)
@@ -47,6 +51,7 @@ class CurrencyFormPresenter:
         self._exchange_rate_table_model.pre_reset_model()
         self._record_keeper = record_keeper
         self._currency_table_model.currencies = record_keeper.currencies
+        self._currency_table_model.base_currency = record_keeper.base_currency
         self._exchange_rate_table_model.exchange_rates = record_keeper.exchange_rates
         self._currency_table_model.post_reset_model()
         self._exchange_rate_table_model.post_reset_model()
@@ -74,8 +79,28 @@ class CurrencyFormPresenter:
 
         self._currency_table_model.pre_add()
         self._currency_table_model.currencies = self._record_keeper.currencies
+        self._currency_table_model.base_currency = self._record_keeper.base_currency
         self._currency_table_model.post_add()
         self._dialog.close()
+        self.event_data_changed()
+
+    def set_base_currency(self) -> None:
+        currency = self._currency_table_model.get_selected_item()
+        if currency is None:
+            return
+
+        logging.info(f"Setting Currency code='{currency.code}' as base currency")
+        try:
+            self._record_keeper.set_base_currency(currency.code)
+        except Exception:
+            self._handle_exception()
+            return
+
+        self._currency_table_model.pre_reset_model()
+        self._currency_table_model.currencies = self._record_keeper.currencies
+        self._currency_table_model.base_currency = self._record_keeper.base_currency
+        self._currency_table_model.post_reset_model()
+        self.event_base_currency_changed()
         self.event_data_changed()
 
     def remove_currency(self) -> None:
@@ -93,6 +118,7 @@ class CurrencyFormPresenter:
         index = self._currency_table_model.get_index_from_item(currency)
         self._currency_table_model.pre_delete_item(index)
         self._currency_table_model.currencies = self._record_keeper.currencies
+        self._currency_table_model.base_currency = self._record_keeper.base_currency
         self._currency_table_model.post_delete_item()
         self.event_data_changed()
 

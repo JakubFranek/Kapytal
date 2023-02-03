@@ -1116,10 +1116,14 @@ class RecordKeeper(JSONSerializableMixin):
                 root_item_references.append(
                     {"datatype": "Account", "uuid": str(item.uuid)}
                 )
+        base_currency_code = (
+            self._base_currency.code if self._base_currency is not None else None
+        )
 
         return {
             "datatype": "RecordKeeper",
             "currencies": self._currencies,
+            "base_currency_code": base_currency_code,
             "exchange_rates": self._exchange_rates,
             "securities": self._securities,
             "account_groups": sorted_account_groups,
@@ -1135,6 +1139,9 @@ class RecordKeeper(JSONSerializableMixin):
     def deserialize(data: dict[str, Any]) -> "RecordKeeper":
         obj = RecordKeeper()
         obj._currencies = data["currencies"]
+        base_currency_code = data["base_currency_code"]
+        if base_currency_code is not None:
+            obj.set_base_currency(base_currency_code)
 
         exchange_rates_dicts = data["exchange_rates"]
         obj._exchange_rates = RecordKeeper._deserialize_exchange_rates(
