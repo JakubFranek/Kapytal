@@ -1,5 +1,6 @@
 import copy
 import logging
+from collections.abc import Callable
 
 from src.models.base_classes.account import Account
 from src.models.model_objects.account_group import AccountGroup
@@ -51,11 +52,14 @@ class AccountTreePresenter:
     def edit_item(self) -> None:
         item = self._model.get_selected_item()
         if isinstance(item, AccountGroup):
-            self.run_account_group_dialog(item=item, edit=True)
-        if isinstance(item, SecurityAccount):
-            self.run_security_account_dialog(item=item, edit=True)
-        if isinstance(item, CashAccount):
-            self.run_cash_account_dialog(item=item, edit=True)
+            setup_dialog = self.setup_account_group_dialog
+        elif isinstance(item, SecurityAccount):
+            setup_dialog = self.setup_security_account_dialog
+        elif isinstance(item, CashAccount):
+            setup_dialog = self.setup_cash_account_dialog
+        else:
+            raise TypeError("Unexpected selected item type.")
+        self.run_edit_dialog(item=item, setup_dialog=setup_dialog)
 
     def delete_item(self) -> None:
         item = self._model.get_selected_item()
@@ -85,32 +89,49 @@ class AccountTreePresenter:
         self._model.post_delete_item()
         self.event_data_changed()
 
-    def run_account_group_dialog(self, edit: bool, item: AccountGroup | None) -> None:
+    SetupDialogCallable = Callable[[bool, AccountGroup | Account | None, int], None]
+
+    def run_add_dialog(self, setup_dialog: SetupDialogCallable) -> None:
+        item = self._model.get_selected_item()
+        max_position = self._get_max_child_position(item)
+        setup_dialog(False, item, max_position)
+        self._dialog.path = "" if item is None else item.path + "/"
+        self._dialog.position = self._dialog.positionSpinBox.maximum()
+        logging.info(f"Running {self._dialog.__class__.__name__} (edit=False)...")
+        self._dialog.exec()
+
+    def run_edit_dialog(
+        self,
+        item: AccountGroup | Account | None,
+        setup_dialog: SetupDialogCallable,
+    ) -> None:
+        if item is None:
+            raise ValueError("Cannot edit an unselected item.")
+        max_position = self._get_max_parent_position(item)
+        setup_dialog(True, item, max_position)
+        self._dialog.current_path = item.path
+        self._dialog.path = item.path
+        if item.parent is None:
+            index = self._record_keeper.root_account_items.index(item)
+        else:
+            index = item.parent.get_child_index(item)
+        self._dialog.position = index + 1
+        logging.info(f"Running {self._dialog.__class__.__name__} (edit=True)...")
+        self._dialog.exec()
+
+    def setup_account_group_dialog(
+        self, edit: bool, item: AccountGroup, max_position: int  # noqa: U100
+    ) -> None:
         if edit:
-            if item is None:
-                raise ValueError("Cannot edit an unselected item.")
-            max_position = self._get_max_parent_position(item)
             self._dialog = AccountGroupDialog(
                 parent=self._view, max_position=max_position, edit=edit
             )
             self._dialog.signal_OK.connect(self.edit_account_group)
-            self._dialog.current_path = item.path
-            self._dialog.path = item.path
-            if item.parent is None:
-                position = self._record_keeper.root_account_items.index(item) + 1
-            else:
-                position = item.parent.children.index(item) + 1
-            self._dialog.position = position
         else:
-            max_position = self._get_max_child_position(item)
             self._dialog = AccountGroupDialog(
                 parent=self._view, max_position=max_position, edit=edit
             )
             self._dialog.signal_OK.connect(self.add_account_group)
-            self._dialog.path = "" if item is None else item.path + "/"
-            self._dialog.position = max_position
-        logging.info(f"Running AccountGroupDialog ({edit=})...")
-        self._dialog.exec()
 
     def add_account_group(self) -> None:
         path = self._dialog.path
@@ -174,34 +195,19 @@ class AccountTreePresenter:
         self._selection_changed()
         self.event_data_changed()
 
-    def run_security_account_dialog(
-        self, edit: bool, item: SecurityAccount | None
+    def setup_security_account_dialog(
+        self, edit: bool, item: SecurityAccount, max_position: int  # noqa: U100
     ) -> None:
         if edit:
-            if item is None:
-                raise ValueError("Cannot edit an unselected item.")
-            max_position = self._get_max_parent_position(item)
             self._dialog = SecurityAccountDialog(
                 parent=self._view, max_position=max_position, edit=edit
             )
             self._dialog.signal_OK.connect(self.edit_security_account)
-            self._dialog.current_path = item.path
-            self._dialog.path = item.path
-            if item.parent is None:
-                position = self._record_keeper.root_account_items.index(item) + 1
-            else:
-                position = item.parent.children.index(item) + 1
-            self._dialog.position = position
         else:
-            max_position = self._get_max_child_position(item)
             self._dialog = SecurityAccountDialog(
                 parent=self._view, max_position=max_position, edit=edit
             )
             self._dialog.signal_OK.connect(self.add_security_account)
-            self._dialog.path = "" if item is None else item.path + "/"
-            self._dialog.position = max_position
-        logging.info(f"Running SecurityAccountDialog ({edit=})...")
-        self._dialog.exec()
 
     def add_security_account(self) -> None:
         path = self._dialog.path
@@ -264,11 +270,10 @@ class AccountTreePresenter:
         self._dialog.close()
         self.event_data_changed()
 
-    def run_cash_account_dialog(self, edit: bool, item: CashAccount | None) -> None:
+    def setup_cash_account_dialog(
+        self, edit: bool, item: CashAccount, max_position: int
+    ) -> None:
         if edit:
-            if item is None:
-                raise ValueError("Cannot edit an unselected item.")
-            max_position = self._get_max_parent_position(item)
             code_places_pairs = [(item.currency.code, item.currency.places)]
             self._dialog = CashAccountDialog(
                 parent=self._view,
@@ -277,20 +282,12 @@ class AccountTreePresenter:
                 edit=edit,
             )
             self._dialog.signal_OK.connect(self.edit_cash_account)
-            self._dialog.current_path = item.path
-            self._dialog.path = item.path
             self._dialog.initial_balance = item.initial_balance.value
-            if item.parent is None:
-                position = self._record_keeper.root_account_items.index(item) + 1
-            else:
-                position = item.parent.children.index(item) + 1
-            self._dialog.position = position
         else:
             code_places_pairs = [
                 (currency.code, currency.places)
                 for currency in self._record_keeper.currencies
             ]
-            max_position = self._get_max_child_position(item)
             self._dialog = CashAccountDialog(
                 parent=self._view,
                 max_position=max_position,
@@ -298,10 +295,6 @@ class AccountTreePresenter:
                 edit=edit,
             )
             self._dialog.signal_OK.connect(self.add_cash_account)
-            self._dialog.path = "" if item is None else item.path + "/"
-            self._dialog.position = max_position
-        logging.info(f"Running CashAccountDialog ({edit=})...")
-        self._dialog.exec()
 
     def add_cash_account(self) -> None:
         path = self._dialog.path
@@ -405,18 +398,18 @@ class AccountTreePresenter:
         self._view.signal_expand_below.connect(self.expand_all_below)
         self._view.signal_delete_item.connect(self.delete_item)
         self._view.signal_add_account_group.connect(
-            lambda: self.run_account_group_dialog(
-                item=self._model.get_selected_item(), edit=False
+            lambda: self.run_add_dialog(
+                setup_dialog=self.setup_account_group_dialog,
             )
         )
         self._view.signal_add_security_account.connect(
-            lambda: self.run_security_account_dialog(
-                item=self._model.get_selected_item(), edit=False
+            lambda: self.run_add_dialog(
+                setup_dialog=self.setup_security_account_dialog,
             )
         )
         self._view.signal_add_cash_account.connect(
-            lambda: self.run_cash_account_dialog(
-                item=self._model.get_selected_item(), edit=False
+            lambda: self.run_add_dialog(
+                setup_dialog=self.setup_cash_account_dialog,
             )
         )
         self._view.signal_edit_item.connect(self.edit_item)
