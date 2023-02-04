@@ -221,8 +221,8 @@ def test_record_keeper_accounts() -> None:
     record_keeper.add_currency("EUR", 2)
     record_keeper.add_account_group("Security Accounts", None)
     record_keeper.add_account_group("Cash Accounts", None)
-    record_keeper.add_cash_account("CZK Account", "CZK", 0, "Cash Accounts")
-    record_keeper.add_cash_account("EUR Account", "EUR", 0, "Cash Accounts")
+    record_keeper.add_cash_account("Cash Accounts/CZK Account", "CZK", 0)
+    record_keeper.add_cash_account("Cash Accounts/EUR Account", "EUR", 0)
     record_keeper.add_security_account("Security Accounts/Degiro")
     serialized = json.dumps(record_keeper, cls=CustomJSONEncoder)
     decoded = json.loads(serialized, cls=CustomJSONDecoder)
@@ -427,8 +427,8 @@ def test_record_keeper_transactions() -> None:
         "ČSOB Dynamický penzijní fond", "CSOB.DYN", SecurityType.MUTUAL_FUND, "CZK", 1
     )
     record_keeper.add_account_group("Bank Accounts", None)
-    record_keeper.add_cash_account("Raiffeisen", "CZK", 15000, "Bank Accounts")
-    record_keeper.add_cash_account("Moneta", "CZK", 0, "Bank Accounts")
+    record_keeper.add_cash_account("Bank Accounts/Raiffeisen", "CZK", 15000)
+    record_keeper.add_cash_account("Bank Accounts/Moneta", "CZK", 0)
     record_keeper.add_security_account("ČSOB penzijní účet", None)
     record_keeper.add_security_account("ČSOB penzijní účet 2", None)
     record_keeper.add_cash_transaction(

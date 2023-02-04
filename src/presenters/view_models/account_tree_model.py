@@ -11,8 +11,6 @@ from src.models.model_objects.currency_objects import Currency
 from src.models.model_objects.security_objects import SecurityAccount
 from src.views.constants import AccountTreeColumns
 
-# TODO: set up model checker test
-# TODO: pass reference to settings?
 # TODO: save expand state before reset and load after it
 
 
@@ -37,6 +35,8 @@ class AccountTreeModel(QAbstractItemModel):
 
     def rowCount(self, index: QModelIndex = ...) -> int:
         if index.isValid():
+            if index.column() != 0:
+                return 0
             node: Account | AccountGroup = index.internalPointer()
             if isinstance(node, AccountGroup):
                 return len(node.children)
@@ -44,16 +44,16 @@ class AccountTreeModel(QAbstractItemModel):
         return len(self.root_items)
 
     def columnCount(self, index: QModelIndex = ...) -> int:  # noqa: U100
-        return 4
+        return 4 if not index.isValid() or index.column() == 0 else 0
 
     def index(self, row: int, column: int, _parent: QModelIndex = ...) -> QModelIndex:
+        if _parent.isValid() and _parent.column() != 0:
+            return QModelIndex()
+
         if not _parent or not _parent.isValid():
             parent = None
         else:
-            parent: Account | AccountGroup = _parent.internalPointer()
-
-        if not QAbstractItemModel.hasIndex(self, row, column, _parent):
-            return QModelIndex()
+            parent: AccountGroup = _parent.internalPointer()
 
         if parent is None:
             child = self.root_items[row]

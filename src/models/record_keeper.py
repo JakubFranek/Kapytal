@@ -198,7 +198,7 @@ class RecordKeeper(JSONSerializableMixin):
         index: int | None = None,
     ) -> None:
         parent_path, _, name = path.rpartition("/")
-        self._check_account_exists(name, parent_path)
+        self._check_account_exists(path)
         currency = self.get_currency(currency_code)
         parent = self.get_account_parent_or_none(parent_path)
         initial_balance = CashAmount(initial_balance_value, currency)
@@ -208,7 +208,7 @@ class RecordKeeper(JSONSerializableMixin):
 
     def add_security_account(self, path: str, index: int | None = None) -> None:
         parent_path, _, name = path.rpartition("/")
-        self._check_account_exists(name, parent_path)
+        self._check_account_exists(path)
         parent = self.get_account_parent_or_none(parent_path)
         account = SecurityAccount(name, parent)
         self._set_account_item_index(account, index)
@@ -778,7 +778,7 @@ class RecordKeeper(JSONSerializableMixin):
     ) -> None:
         parent_path, _, name = new_path.rpartition("/")
         if current_path != new_path:
-            self._check_account_exists(name, parent_path)
+            self._check_account_exists(new_path)
         edited_account = self.get_account(current_path, CashAccount)
         new_parent = self.get_account_parent_or_none(parent_path)
         edited_account.name = name
@@ -794,7 +794,7 @@ class RecordKeeper(JSONSerializableMixin):
     ) -> None:
         parent_path, _, name = new_path.rpartition("/")
         if current_path != new_path:
-            self._check_account_exists(name, parent_path)
+            self._check_account_exists(new_path)
         edited_account = self.get_account(current_path, SecurityAccount)
         new_parent = self.get_account_parent_or_none(parent_path)
         edited_account.name = name
@@ -1322,16 +1322,9 @@ class RecordKeeper(JSONSerializableMixin):
             transactions.append(transaction)
         return transactions
 
-    def _check_account_exists(self, name: str, parent_path: str | None) -> None:
-        if not isinstance(name, str):
-            raise TypeError("Parameter 'name' must be a string.")
-        if not isinstance(parent_path, str) and parent_path is not None:
-            raise TypeError("Parameter 'parent_path' must be a string or a None.")
-        target_path = parent_path + "/" + name if parent_path is not None else name
-        if any(account.path == target_path for account in self._accounts):
-            raise AlreadyExistsError(
-                f"An Account with path={target_path} already exists."
-            )
+    def _check_account_exists(self, path: str) -> None:
+        if any(account.path == path for account in self._accounts):
+            raise AlreadyExistsError(f"An Account with path={path} already exists.")
 
     def _create_category_amount_pairs(
         self,

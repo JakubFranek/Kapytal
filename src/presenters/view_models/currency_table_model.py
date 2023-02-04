@@ -7,9 +7,6 @@ from PyQt6.QtWidgets import QTableView
 from src.models.model_objects.currency_objects import Currency
 from src.views.constants import CurrencyTableColumns
 
-# TODO: set up model checker test
-# TODO: pass reference to settings?
-
 
 class CurrencyTableModel(QAbstractTableModel):
     COLUMN_HEADERS = {
@@ -57,9 +54,9 @@ class CurrencyTableModel(QAbstractTableModel):
         if (
             role == Qt.ItemDataRole.DecorationRole
             and column == CurrencyTableColumns.COLUMN_CODE
+            and currency == self.base_currency
         ):
-            if currency == self.base_currency:
-                return QIcon("icons_16:star.png")
+            return QIcon("icons_16:star.png")
         return None
 
     def headerData(

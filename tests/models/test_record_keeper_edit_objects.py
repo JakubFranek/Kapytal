@@ -19,6 +19,7 @@ from src.models.model_objects.attributes import (
     InvalidCategoryTypeError,
 )
 from src.models.model_objects.cash_objects import (
+    CashAccount,
     CashTransaction,
     CashTransactionType,
     CashTransfer,
@@ -199,6 +200,21 @@ def test_edit_security_account_group_invalid_parent() -> None:
         record_keeper.edit_account_group("TEST", "TEST/XXX")
 
 
+def test_edit_cash_account() -> None:
+    record_keeper = RecordKeeper()
+    record_keeper.add_currency("CZK", 2)
+    record_keeper.add_account_group("TEST PARENT", None)
+    record_keeper.add_account_group("NEW PARENT", None)
+    record_keeper.add_cash_account("TEST PARENT/TEST NAME", "CZK", 0)
+    record_keeper.edit_cash_account(
+        "TEST PARENT/TEST NAME", "NEW PARENT/NEW NAME", 1000
+    )
+    account: CashAccount = record_keeper.accounts[0]
+    assert account.name == "NEW NAME"
+    assert account.path == "NEW PARENT/NEW NAME"
+    assert account.initial_balance.value == Decimal(1000)
+
+
 def test_edit_cash_transactions_descriptions() -> None:
     record_keeper = get_preloaded_record_keeper_with_cash_transactions()
     cash_transactions = [
@@ -352,10 +368,9 @@ def test_edit_cash_transactions_account_pass() -> None:
     uuids = [str(transaction.uuid) for transaction in cash_transactions]
     edit_account = "Test Account CZK"
     record_keeper.add_cash_account(
-        name="Test Account CZK",
+        path="Test Account CZK",
         currency_code="CZK",
         initial_balance_value=Decimal(0),
-        parent_path=None,
     )
     record_keeper.edit_cash_transactions(uuids, account_path=edit_account)
     for transaction in cash_transactions:

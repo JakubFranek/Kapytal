@@ -6,9 +6,6 @@ from PyQt6.QtWidgets import QTableView
 from src.models.model_objects.currency_objects import ExchangeRate
 from src.views.constants import ExchangeRateTableColumns
 
-# TODO: set up model checker test
-# TODO: pass reference to settings?
-
 
 class ExchangeRateTableModel(QAbstractTableModel):
     COLUMN_HEADERS = {

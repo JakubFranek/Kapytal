@@ -1,7 +1,6 @@
 import string
 from datetime import datetime, timedelta
 from decimal import Decimal
-from types import NoneType
 from typing import Any
 
 import pytest
@@ -192,11 +191,12 @@ def test_add_cash_account(
     initial_balance: Decimal,
     parent_name: str | None,
 ) -> None:
+    path = parent_name + "/" + name if parent_name is not None else name
     record_keeper = RecordKeeper()
     record_keeper.add_currency(currency_code, places)
     if parent_name:
         record_keeper.add_account_group(parent_name)
-    record_keeper.add_cash_account(name, currency_code, initial_balance, parent_name)
+    record_keeper.add_cash_account(path, currency_code, initial_balance)
     parent_group = record_keeper.account_groups[0] if parent_name else None
     cash_account: CashAccount = record_keeper.accounts[0]
     assert cash_account.name == name
@@ -380,12 +380,10 @@ def test_add_account_group_already_exists(name: str) -> None:
 def test_add_cash_account_already_exists(data: st.DataObject) -> None:
     record_keeper = get_preloaded_record_keeper()
     account = data.draw(st.sampled_from(record_keeper.accounts))
-    parent_path = account.parent.path if account.parent is not None else None
+    path = account.path
     currency = data.draw(st.sampled_from(record_keeper.currencies))
     with pytest.raises(AlreadyExistsError):
-        record_keeper.add_cash_account(
-            account.name, currency.code, Decimal(0), parent_path
-        )
+        record_keeper.add_cash_account(path, currency.code, Decimal(0))
 
 
 def test_get_account_parent_does_not_exist() -> None:
@@ -673,20 +671,6 @@ def test_add_security_transfer(
         account_recipient_path,
     )
     assert len(record_keeper.transactions) == 1
-
-
-@given(name=everything_except(str))
-def test_check_account_exists_invalid_name_type(name: Any) -> None:
-    record_keeper = RecordKeeper()
-    with pytest.raises(TypeError, match="Parameter 'name' must be a string."):
-        record_keeper._check_account_exists(name, None)
-
-
-@given(parent_path=everything_except((str, NoneType)))
-def test_check_account_exists_invalid_parent_path_type(parent_path: Any) -> None:
-    record_keeper = RecordKeeper()
-    with pytest.raises(TypeError, match="Parameter 'parent_path' must be a string or"):
-        record_keeper._check_account_exists("test", parent_path)
 
 
 def test_set_exchange() -> None:
@@ -1002,39 +986,39 @@ def get_preloaded_record_keeper() -> RecordKeeper:
     record_keeper = RecordKeeper()
     record_keeper.add_currency("CZK", 2)
     record_keeper.add_currency("EUR", 2)
+    record_keeper.add_currency("BTC", 8)
     record_keeper.add_exchange_rate("EUR", "CZK")
     record_keeper.set_exchange_rate("EUR/CZK", Decimal(25), datetime.now(tzinfo).date())
+    record_keeper.add_exchange_rate("BTC", "CZK")
+    record_keeper.set_exchange_rate(
+        "BTC/CZK", Decimal("600000"), datetime.now(tzinfo).date()
+    )
     record_keeper.add_account_group("Bank Accounts")
     record_keeper.add_account_group("Security Accounts")
     record_keeper.add_cash_account(
-        name="Raiffeisen CZK",
+        path="Bank Accounts/Raiffeisen CZK",
         currency_code="CZK",
         initial_balance_value=Decimal(1500),
-        parent_path="Bank Accounts",
     )
     record_keeper.add_cash_account(
-        name="Fio CZK",
+        path="Bank Accounts/Fio CZK",
         currency_code="CZK",
         initial_balance_value=Decimal(0),
-        parent_path="Bank Accounts",
     )
     record_keeper.add_cash_account(
-        name="Creditas CZK",
+        path="Bank Accounts/Creditas CZK",
         currency_code="CZK",
         initial_balance_value=Decimal(100_000),
-        parent_path="Bank Accounts",
     )
     record_keeper.add_cash_account(
-        name="Moneta EUR",
+        path="Bank Accounts/Moneta EUR",
         currency_code="EUR",
         initial_balance_value=Decimal(1600),
-        parent_path="Bank Accounts",
     )
     record_keeper.add_cash_account(
-        name="Revolut EUR",
+        path="Bank Accounts/Revolut EUR",
         currency_code="EUR",
         initial_balance_value=Decimal(0),
-        parent_path="Bank Accounts",
     )
     record_keeper.add_security_account("Security Accounts/Degiro")
     record_keeper.add_security_account("Security Accounts/Interactive Brokers")
