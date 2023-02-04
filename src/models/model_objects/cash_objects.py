@@ -192,7 +192,7 @@ class CashAccount(Account):
         return obj
 
     def _update_balance(self) -> None:
-        logging.info(f"Updating balance of CashAccount at path={self.path}")
+        logging.info(f"Updating balance of CashAccount at path='{self.path}'")
         if len(self.transactions) > 0:
             oldest_datetime = min(
                 transaction.datetime_ for transaction in self.transactions

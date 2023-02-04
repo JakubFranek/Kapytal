@@ -97,7 +97,7 @@ class AccountTreePresenter:
         setup_dialog(False, item, max_position)
         self._dialog.path = "" if item is None else item.path + "/"
         self._dialog.position = self._dialog.positionSpinBox.maximum()
-        logging.info(f"Running {self._dialog.__class__.__name__} (edit=False)...")
+        logging.info(f"Running {self._dialog.__class__.__name__} (edit=False)")
         self._dialog.exec()
 
     def run_edit_dialog(
@@ -116,7 +116,7 @@ class AccountTreePresenter:
         else:
             index = item.parent.get_child_index(item)
         self._dialog.position = index + 1
-        logging.info(f"Running {self._dialog.__class__.__name__} (edit=True)...")
+        logging.info(f"Running {self._dialog.__class__.__name__} (edit=True)")
         self._dialog.exec()
 
     def setup_account_group_dialog(
@@ -137,7 +137,7 @@ class AccountTreePresenter:
         path = self._dialog.path
         index = self._dialog.position - 1
 
-        logging.info("Adding AccountGroup...")
+        logging.info("Adding AccountGroup")
         try:
             self._record_keeper.add_account_group(path, index)
         except Exception:
@@ -213,7 +213,7 @@ class AccountTreePresenter:
         path = self._dialog.path
         index = self._dialog.position - 1
 
-        logging.info("Adding SecurityAccount...")
+        logging.info("Adding SecurityAccount")
         try:
             self._record_keeper.add_security_account(path, index)
         except Exception:
@@ -302,7 +302,7 @@ class AccountTreePresenter:
         currency_code = self._dialog.currency_code
         initial_balance = self._dialog.initial_balance
 
-        logging.info("Adding CashAccount...")
+        logging.info("Adding CashAccount")
         try:
             self._record_keeper.add_cash_account(
                 path, currency_code, initial_balance, index

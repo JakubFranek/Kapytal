@@ -17,7 +17,7 @@ class SecurityAccountDialog(QDialog, Ui_SecurityAccountDialog):
         self.currentPathLineEdit.setEnabled(False)
         if edit:
             self.setWindowTitle("Edit Security Account")
-            self.setWindowIcon(QIcon("icons_24:pencil.png"))
+            self.setWindowIcon(QIcon("icons_16:bank--pencil.png"))
         else:
             self.setWindowTitle("Add Security Account")
             self.setWindowIcon(QIcon("icons_custom:bank-plus.png"))

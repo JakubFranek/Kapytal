@@ -1,3 +1,4 @@
+import logging
 import typing
 
 from PyQt6.QtCore import QAbstractItemModel, QModelIndex, Qt
@@ -92,6 +93,9 @@ class AccountTreeModel(QAbstractItemModel):
                 try:
                     return str(node.get_balance(self.base_currency))
                 except Exception:
+                    logging.warning(
+                        f"Could not convert {node} balance to {self.base_currency.code}"
+                    )
                     return "Error!"
             if column == AccountTreeColumns.COLUMN_SHOW:
                 return "xxx"

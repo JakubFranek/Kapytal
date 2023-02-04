@@ -42,7 +42,7 @@ if __name__ == "__main__":
     record_keeper = RecordKeeper()
 
     logging.info("Creating MainPresenter")
-    main_presenter = MainPresenter(main_view, record_keeper)
+    main_presenter = MainPresenter(main_view, record_keeper, app)
 
     logging.info("Executing QApplication")
     app.exec()

@@ -1,6 +1,8 @@
 import json
 import logging
 
+from PyQt6.QtWidgets import QApplication
+
 from src.models.json.custom_json_decoder import CustomJSONDecoder
 from src.models.json.custom_json_encoder import CustomJSONEncoder
 from src.models.record_keeper import RecordKeeper
@@ -13,9 +15,12 @@ from src.views.utilities.handle_exception import display_error_message
 
 
 class MainPresenter:
-    def __init__(self, view: MainView, record_keeper: RecordKeeper) -> None:
+    def __init__(
+        self, view: MainView, record_keeper: RecordKeeper, app: QApplication
+    ) -> None:
         self._view = view
         self._record_keeper = record_keeper
+        self._app = app
 
         # Presenter initialization
         logging.info("Creating AccountTreePresenter")
@@ -36,11 +41,11 @@ class MainPresenter:
             lambda: self._update_unsaved_changes(True)
         )
         self._currency_form_presenter.event_base_currency_changed.append(
-            lambda: self._account_tree_presenter.load_record_keeper(self._record_keeper)
+            self._account_tree_presenter.update_model_data
         )
 
         # View pyqtSignal connections
-        self._view.signal_exit.connect(self._close)
+        self._view.signal_exit.connect(self._quit)
         self._view.signal_open_currency_form.connect(
             self._currency_form_presenter.show_form
         )
@@ -55,19 +60,21 @@ class MainPresenter:
         self._view.show()
 
     def _save_to_file(self, save_as: bool) -> None:
-        logging.info("Saving to JSON file...")
+        logging.info("Save to file initiated")
         try:
             if save_as is True or self.current_file_path is None:
+                logging.info("Asking the user for destination path")
                 file_path = self._view.get_save_path()
                 if file_path != "":
                     self.current_file_path = file_path
 
             if isinstance(self.current_file_path, str):
                 with open(self.current_file_path, mode="w", encoding="UTF-8") as file:
+                    logging.info(f"Saving to file ({self.current_file_path})")
                     json.dump(self._record_keeper, file, cls=CustomJSONEncoder)
                     self._update_unsaved_changes(False)
                     self._view.statusBar().showMessage(
-                        f"File saved ({self.current_file_path})", 2000
+                        f"File saved ({self.current_file_path})", 3000
                     )
                     logging.info(f"File saved to {self.current_file_path}")
             else:
@@ -76,47 +83,59 @@ class MainPresenter:
             self._handle_exception()
 
     def _load_from_file(self) -> None:
-        logging.info("Loading from JSON file...")
+        logging.info("Load from file initiated")
         try:
             file_path = self._view.get_open_path()
-            if file_path != "":
-                self.current_file_path = file_path
-                with open(file_path, mode="r", encoding="UTF-8") as file:
-                    logging.disable(logging.INFO)
-                    record_keeper = json.load(file, cls=CustomJSONDecoder)
-                    logging.disable(logging.NOTSET)
-                    self._record_keeper = record_keeper
-                    self._account_tree_presenter.load_record_keeper(record_keeper)
-                    self._currency_form_presenter.load_record_keeper(record_keeper)
-                    self._view.statusBar().showMessage(
-                        f"File loaded ({self.current_file_path})", 2000
-                    )
-                    self._update_unsaved_changes(False)
-                    logging.info(f"JSON file loaded from {file_path}")
-            else:
+            if file_path == "":
                 logging.info("Invalid or no file path received, file load cancelled")
+                return
+            self.current_file_path = file_path
+            with open(file_path, mode="r", encoding="UTF-8") as file:
+                logging.info(f"File path received ({file_path}), loading the file now")
+                logging.disable(logging.INFO)
+                record_keeper: RecordKeeper = json.load(file, cls=CustomJSONDecoder)
+                logging.disable(logging.NOTSET)
+                self._record_keeper = record_keeper
+                self._account_tree_presenter.load_record_keeper(record_keeper)
+                self._currency_form_presenter.load_record_keeper(record_keeper)
+                self._view.statusBar().showMessage(
+                    f"File loaded ({self.current_file_path})", 3000
+                )
+                self._update_unsaved_changes(False)
+                logging.info(f"Currencies: {len(record_keeper.currencies)}")
+                logging.info(f"Exchange Rates: {len(record_keeper.exchange_rates)}")
+                logging.info(f"Securities: {len(record_keeper.securities)}")
+                logging.info(f"AccountGroups: {len(record_keeper.account_groups)}")
+                logging.info(f"Accounts: {len(record_keeper.accounts)}")
+                logging.info(f"Transactions: {len(record_keeper.transactions)}")
+                logging.info(f"Categories: {len(record_keeper.categories)}")
+                logging.info(f"Tags: {len(record_keeper.tags)}")
+                logging.info(f"Payees: {len(record_keeper.payees)}")
+                logging.info(f"File loaded from {file_path}")
         except Exception:
             self._handle_exception()
 
-    def _close(self) -> None:
+    def _quit(self) -> None:
         if self._unsaved_changes is True:
-            logging.info("Close called with unsaved changes...")
-            reply = self._view.ask_save_before_close()
+            logging.info(
+                "Quit called with unsaved changes, asking the user for instructions"
+            )
+            reply = self._view.ask_save_before_quit()
             if reply is True:
                 self._save_to_file(save_as=False)
                 if self._unsaved_changes is False:
-                    logging.info("Closing after saving")
-                    self._view.close()
+                    logging.info("Quitting after saving")
+                    self._app.quit()
                 else:
-                    logging.info("Close cancelled")
+                    logging.info("Quit cancelled")
             elif reply is False:
-                logging.info("Closing without saving")
-                self._view.close()
+                logging.info("Quit without saving")
+                self._app.quit()
             else:
-                logging.info("Close cancelled")
+                logging.info("Quit cancelled")
         else:
-            logging.info("Closing")
-            self._view.close()
+            logging.info("Quitting")
+            self._app.quit()
 
     def _update_unsaved_changes(self, unsaved_changes: bool) -> None:
         self._unsaved_changes = unsaved_changes

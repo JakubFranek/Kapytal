@@ -25,7 +25,7 @@ class CashAccountDialog(QDialog, Ui_CashAccountDialog):
         self.currentPathLineEdit.setEnabled(False)
         if edit:
             self.setWindowTitle("Edit Cash Account")
-            self.setWindowIcon(QIcon("icons_24:pencil.png"))
+            self.setWindowIcon(QIcon("icons_custom:money-coin-pencil.png"))
             self.currencyComboBox.setVisible(False)
             self.currencyLabel.setVisible(False)
         else:

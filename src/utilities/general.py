@@ -28,7 +28,8 @@ def setup_logging(root_directory: str) -> None:
     start_dt = datetime.now(tzinfo)
     file_name = dir_logs + r"\debug_" + start_dt.strftime("%Y_%m_%d_%Hh%Mm%Ss") + ".log"
     log_format = (
-        "%(asctime)s.%(msecs)03d %(levelname)s {%(module)s} [%(funcName)s] %(message)s"
+        "%(asctime)s.%(msecs)03d %(levelname)s "
+        "{%(module)s} [%(funcName)s] %(message)s"
     )
     logging.basicConfig(
         filename=file_name,
@@ -58,7 +59,7 @@ def get_exception_display_info() -> tuple[str, str] | None:
             <b>{error}</b><br/><br/>
             It occurred at <b>line {line}</b> of file <b>{filename}</b>.<br/></html>"""
 
-        logging.warning(
+        logging.error(
             "Handled exception", exc_info=(exc_type, exc_value, exc_traceback)
         )
 

@@ -63,7 +63,7 @@ class CurrencyFormPresenter:
     def run_add_currency_dialog(self) -> None:
         self._dialog = CurrencyDialog(self._view)
         self._dialog.signal_OK.connect(self.add_currency)
-        logging.info("Running CurrencyDialog...")
+        logging.info("Running CurrencyDialog")
         self._dialog.exec()
 
     def add_currency(self) -> None:
@@ -89,7 +89,7 @@ class CurrencyFormPresenter:
         if currency is None:
             return
 
-        logging.info(f"Setting Currency code='{currency.code}' as base currency")
+        logging.info(f"Setting {currency} as base currency")
         try:
             self._record_keeper.set_base_currency(currency.code)
         except Exception:
@@ -108,7 +108,7 @@ class CurrencyFormPresenter:
         if currency is None:
             return
 
-        logging.info(f"Removing Currency code='{currency.code}'")
+        logging.info(f"Removing {currency}")
         try:
             self._record_keeper.remove_currency(currency.code)
         except Exception:
@@ -126,14 +126,14 @@ class CurrencyFormPresenter:
         codes = [currency.code for currency in self._record_keeper.currencies]
         self._dialog = AddExchangeRateDialog(currency_codes=codes, parent=self._view)
         self._dialog.signal_OK.connect(self.add_exchange_rate)
-        logging.info("Running AddExchangeRateDialog...")
+        logging.info("Running AddExchangeRateDialog")
         self._dialog.exec()
 
     def add_exchange_rate(self) -> None:
         primary_code = self._dialog.primary_currency_code
         secondary_code = self._dialog.secondary_currency_code
 
-        logging.info(f"Adding ExchangeRate '{primary_code}/{secondary_code}'")
+        logging.info(f"Adding ExchangeRate({primary_code}/{secondary_code})")
         try:
             self._record_keeper.add_exchange_rate(primary_code, secondary_code)
         except Exception:
@@ -161,14 +161,14 @@ class CurrencyFormPresenter:
             parent=self._view,
         )
         self._dialog.signal_OK.connect(self.set_exchange_rate)
-        logging.info("Running SetExchangeRateDialog...")
+        logging.info("Running SetExchangeRateDialog")
         self._dialog.exec()
 
     def set_exchange_rate(self) -> None:
         value = self._dialog.value
         date_ = self._dialog.date_
         exchange_rate_code = self._dialog.exchange_rate_code
-        logging.info(f"Setting ExchangeRate '{exchange_rate_code}': {value} on {date_}")
+        logging.info(f"Setting ExchangeRate({exchange_rate_code}): {value} on {date_}")
         try:
             self._record_keeper.set_exchange_rate(exchange_rate_code, value, date_)
         except Exception:
@@ -188,7 +188,7 @@ class CurrencyFormPresenter:
         if exchange_rate is None:
             return
 
-        logging.info(f"Removing ExchangeRate '{str(exchange_rate)}'")
+        logging.info(f"Removing {repr(exchange_rate)}")
         try:
             self._record_keeper.remove_exchange_rate(str(exchange_rate))
         except Exception:

@@ -25,13 +25,13 @@ class MainView(QMainWindow, Ui_MainWindow):
     def get_open_path(self) -> str:
         return QFileDialog.getOpenFileName(self, filter="JSON file (*.json)")[0]
 
-    def ask_save_before_close(self) -> bool | None:
+    def ask_save_before_quit(self) -> bool | None:
         message_box = QMessageBox(
             QMessageBox.Icon.Question,
             "Save changes before quitting?",
             (
-                "Unsaved changes have been made.\n"
-                "Do you want to save them before quitting?"
+                "The data has been changed since the last save.\n"
+                "Do you want to save before quitting?"
             ),
             (
                 QMessageBox.StandardButton.Yes
@@ -95,6 +95,12 @@ class MainView(QMainWindow, Ui_MainWindow):
         self.actionSave.setIcon(QIcon("icons_16:disk.png"))
         self.actionSave_As.setIcon(QIcon("icons_16:disks.png"))
         self.actionCurrencies_and_Exchange_Rates.setIcon(QIcon("icons_16:currency.png"))
+        self.actionQuit.setIcon(QIcon("icons_16:door-open-out.png"))
+        self.actionSecurities.setIcon(QIcon("icons_16:certificate.png"))
+        self.actionCategories.setIcon(QIcon("icons_16:category.png"))
+        self.actionTags.setIcon(QIcon("icons_16:tag.png"))
+        self.actionPayees.setIcon(QIcon("icons_16:user-silhouette.png"))
+        self.actionSettings.setIcon(QIcon("icons_16:gear.png"))
 
         self.actionCurrencies_and_Exchange_Rates.triggered.connect(
             self.signal_open_currency_form.emit
@@ -102,6 +108,7 @@ class MainView(QMainWindow, Ui_MainWindow):
         self.actionSave.triggered.connect(self.signal_save.emit)
         self.actionSave_As.triggered.connect(self.signal_save_as.emit)
         self.actionOpen_File.triggered.connect(self.signal_open.emit)
+        self.actionQuit.triggered.connect(self.close)
 
         self.toolButton_expandAll.setDefaultAction(self.account_tree.actionExpand_All)
         self.toolButton_collapseAll.setDefaultAction(
