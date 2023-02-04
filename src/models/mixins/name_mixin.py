@@ -1,3 +1,4 @@
+
 from typing import Any
 
 from src.models.custom_exceptions import InvalidCharacterError
@@ -24,6 +25,9 @@ class NameMixin:
         if not isinstance(value, str):
             raise TypeError(f"{self.__class__.__name__}.name must be a string.")
 
+        if hasattr(self, "_name") and self._name == value:
+            return
+
         if len(value) < self.NAME_MIN_LENGTH or len(value) > self.NAME_MAX_LENGTH:
             raise NameLengthError(
                 f"{self.__class__.__name__}.name length must be between "
@@ -32,4 +36,5 @@ class NameMixin:
             )
         if "/" in value:
             raise InvalidCharacterError("Slashes in object names are forbidden.")
+
         self._name = value

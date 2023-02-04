@@ -1,3 +1,4 @@
+import logging
 from collections.abc import Collection
 from decimal import Decimal
 
@@ -95,6 +96,10 @@ class CashAccountDialog(QDialog, Ui_CashAccountDialog):
         if role == QDialogButtonBox.ButtonRole.AcceptRole:
             self.signal_OK.emit()
         elif role == QDialogButtonBox.ButtonRole.RejectRole:
-            self.close()
+            self.reject()
         else:
             raise ValueError("Unknown role of the clicked button in the ButtonBox")
+
+    def reject(self) -> None:
+        logging.info(f"Closing {self.__class__.__name__}")
+        return super().reject()

@@ -1,3 +1,4 @@
+import logging
 from datetime import date
 from decimal import Decimal
 
@@ -23,6 +24,7 @@ class SetExchangeRateDialog(QDialog, Ui_SetExchangeRateDialog):
         self.setWindowIcon(QIcon("icons_custom:currency-arrow.png"))
         self.exchangeRateLabel.setText(exchange_rate)
         self.exchangeRateDoubleSpinBox.setValue(last_value)
+        self.exchangeRateDoubleSpinBox.setMaximum(1_000_000_000_000)
         self.dateEdit.setDate(date_today)
         self.dateEdit.setMaximumDate(date_today)
 
@@ -45,6 +47,10 @@ class SetExchangeRateDialog(QDialog, Ui_SetExchangeRateDialog):
         if role == QDialogButtonBox.ButtonRole.AcceptRole:
             self.signal_OK.emit()
         elif role == QDialogButtonBox.ButtonRole.RejectRole:
-            self.close()
+            self.reject()
         else:
             raise ValueError("Unknown role of the clicked button in the ButtonBox")
+
+    def reject(self) -> None:
+        logging.info(f"Closing {self.__class__.__name__}")
+        return super().reject()

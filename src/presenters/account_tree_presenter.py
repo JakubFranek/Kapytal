@@ -123,7 +123,7 @@ class AccountTreePresenter:
             self._dialog.signal_OK.connect(self.add_account_group)
             self._dialog.path = "" if item is None else item.path + "/"
             self._dialog.position = max_position
-        logging.info(f"Running AccountGroupDialog ({edit=})")
+        logging.info(f"Running AccountGroupDialog ({edit=})...")
         self._dialog.exec()
 
     def add_account_group(self) -> None:
@@ -155,10 +155,7 @@ class AccountTreePresenter:
         new_index = self._dialog.position - 1
 
         # FIXME: figure out smarter edit logging
-        logging.info(
-            f"Editing AccountGroup: old path='{previous_path}', "
-            f"old index={previous_index}, new path='{new_path}', new index={new_index}"
-        )
+        logging.info(f"Editing AccountGroup at path='{previous_path}'")
         record_keeper_copy = copy.deepcopy(self._record_keeper)
         try:
             record_keeper_copy.edit_account_group(
@@ -216,7 +213,7 @@ class AccountTreePresenter:
             self._dialog.signal_OK.connect(self.add_security_account)
             self._dialog.path = "" if item is None else item.path + "/"
             self._dialog.position = max_position
-        logging.info(f"Running SecurityAccountDialog ({edit=})")
+        logging.info(f"Running SecurityAccountDialog ({edit=})...")
         self._dialog.exec()
 
     def add_security_account(self) -> None:
@@ -317,7 +314,7 @@ class AccountTreePresenter:
             self._dialog.signal_OK.connect(self.add_cash_account)
             self._dialog.path = "" if item is None else item.path + "/"
             self._dialog.position = max_position
-        logging.info(f"Running CashAccountDialog ({edit=})")
+        logging.info(f"Running CashAccountDialog ({edit=})...")
         self._dialog.exec()
 
     def add_cash_account(self) -> None:

@@ -63,7 +63,7 @@ class CurrencyFormPresenter:
     def run_add_currency_dialog(self) -> None:
         self._dialog = CurrencyDialog(self._view)
         self._dialog.signal_OK.connect(self.add_currency)
-        logging.info("Running CurrencyDialog")
+        logging.info("Running CurrencyDialog...")
         self._dialog.exec()
 
     def add_currency(self) -> None:
@@ -126,7 +126,7 @@ class CurrencyFormPresenter:
         codes = [currency.code for currency in self._record_keeper.currencies]
         self._dialog = AddExchangeRateDialog(currency_codes=codes, parent=self._view)
         self._dialog.signal_OK.connect(self.add_exchange_rate)
-        logging.info("Running AddExchangeRateDialog")
+        logging.info("Running AddExchangeRateDialog...")
         self._dialog.exec()
 
     def add_exchange_rate(self) -> None:
@@ -161,7 +161,7 @@ class CurrencyFormPresenter:
             parent=self._view,
         )
         self._dialog.signal_OK.connect(self.set_exchange_rate)
-        logging.info("Running SetExchangeRateDialog")
+        logging.info("Running SetExchangeRateDialog...")
         self._dialog.exec()
 
     def set_exchange_rate(self) -> None:

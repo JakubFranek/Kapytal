@@ -1,3 +1,5 @@
+import logging
+
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QAbstractButton, QDialog, QDialogButtonBox, QWidget
@@ -27,6 +29,10 @@ class CurrencyDialog(QDialog, Ui_CurrencyDialog):
         if role == QDialogButtonBox.ButtonRole.AcceptRole:
             self.signal_OK.emit()
         elif role == QDialogButtonBox.ButtonRole.RejectRole:
-            self.close()
+            self.reject()
         else:
             raise ValueError("Unknown role of the clicked button in the ButtonBox")
+
+    def reject(self) -> None:
+        logging.info(f"Closing {self.__class__.__name__}")
+        return super().reject()

@@ -30,10 +30,10 @@ if __name__ == "__main__":
     app.setApplicationName("Kapytal")
     app.setApplicationVersion(VERSION)
 
+    logging.info("Setting QApplication font size to 10 pts")
     font = app.font()
     font.setPointSize(10)
     app.setFont(font)
-    logging.info("Set QApplication font size to 10 pts")
 
     logging.info("Creating MainWindow")
     main_view = MainView()
