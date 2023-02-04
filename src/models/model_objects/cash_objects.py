@@ -1,3 +1,4 @@
+import logging
 import uuid
 from abc import ABC, abstractmethod
 from collections.abc import Collection
@@ -113,10 +114,13 @@ class CashAccount(Account):
     def initial_balance(self, amount: CashAmount) -> None:
         if not isinstance(amount, CashAmount):
             raise TypeError("CashAccount.initial_balance must be a CashAmount.")
+        if hasattr(self, "_initial_balance") and self._initial_balance == amount:
+            return
         if self.currency != amount.currency:
             raise CurrencyError(
                 "CashAccount.initial_balance.currency must match CashAccount.currency."
             )
+        logging.info(f"Setting initial_balance={amount}")
         self._initial_balance = amount
         self._update_balance()
 
@@ -188,6 +192,7 @@ class CashAccount(Account):
         return obj
 
     def _update_balance(self) -> None:
+        logging.info(f"Updating balance of CashAccount at path={self.path}")
         if len(self.transactions) > 0:
             oldest_datetime = min(
                 transaction.datetime_ for transaction in self.transactions

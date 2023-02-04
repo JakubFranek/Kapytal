@@ -1,3 +1,4 @@
+import logging
 from typing import TYPE_CHECKING, Any, Self
 
 from src.models.custom_exceptions import NotFoundError
@@ -23,20 +24,21 @@ class AccountGroup(NameMixin, GetBalanceMixin, JSONSerializableMixin):
         return self._parent
 
     @parent.setter
-    def parent(self, new_parent: Self | None) -> None:
-        if new_parent is not None and not isinstance(new_parent, AccountGroup):
+    def parent(self, parent: Self | None) -> None:
+        if parent is not None and not isinstance(parent, AccountGroup):
             raise TypeError("AccountGroup.parent must be an AccountGroup or a None.")
 
         if hasattr(self, "_parent"):
-            if self._parent == new_parent:
+            if self._parent == parent:
                 return
             if self._parent is not None:
                 self._parent._remove_child(self)
 
-        if new_parent is not None:
-            new_parent._add_child(self)
+        if parent is not None:
+            parent._add_child(self)
 
-        self._parent = new_parent
+        logging.info(f"Setting {parent=}")
+        self._parent = parent
 
     @property
     def children(self) -> tuple["Account" | Self, ...]:
@@ -56,7 +58,7 @@ class AccountGroup(NameMixin, GetBalanceMixin, JSONSerializableMixin):
         self._children[max_index + 1] = child
 
     def _remove_child(self, child: Self | "Account") -> None:
-        index = list(self._children.keys())[list(self._children.values()).index(child)]
+        index = self.get_child_index(child)
         aux_dict: dict[int, AccountGroup | Account] = {}
         for key, value in self._children.items():
             if key >= index:
@@ -74,6 +76,11 @@ class AccountGroup(NameMixin, GetBalanceMixin, JSONSerializableMixin):
             raise NotFoundError(
                 "Parameter 'child' not in this AccountGroup's children."
             )
+
+        current_index = self.get_child_index(child)
+        if current_index == index:
+            return
+
         self._remove_child(child)
         aux_dict: dict[int, AccountGroup | Account] = {}
         for key, value in self._children.items():
@@ -83,6 +90,10 @@ class AccountGroup(NameMixin, GetBalanceMixin, JSONSerializableMixin):
                 aux_dict[key] = value
         aux_dict[index] = child
         self._children = aux_dict
+        logging.info(f"Setting {index=}")
+
+    def get_child_index(self, child: "Account" | Self) -> int:
+        return list(self._children.keys())[list(self._children.values()).index(child)]
 
     def get_balance(self, currency: Currency) -> CashAmount:
         return sum(

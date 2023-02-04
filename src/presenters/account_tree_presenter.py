@@ -42,19 +42,6 @@ class AccountTreePresenter:
         self._model.root_items = self._record_keeper.root_account_items
         self._model.base_currency = self._record_keeper.base_currency
 
-    def _selection_changed(self) -> None:
-        item = self._model.get_selected_item()
-
-        enable_modify_object = item is not None
-        enable_add_objects = item is None or isinstance(item, AccountGroup)
-        enable_expand_below = isinstance(item, AccountGroup)
-
-        self._view.enable_accounts_tree_actions(
-            enable_add_objects=enable_add_objects,
-            enable_modify_object=enable_modify_object,
-            enable_expand_below=enable_expand_below,
-        )
-
     def expand_all_below(self) -> None:
         indexes = self._view.selectedIndexes()
         if len(indexes) == 0:
@@ -74,16 +61,15 @@ class AccountTreePresenter:
         item = self._model.get_selected_item()
         if item is None:
             raise ValueError("Cannot delete non-existent item.")
-        path = item.path
-        logging.info(f"Removing {item.__class__.__name__} at path='{path}'")
+        logging.info(f"Removing {item.__class__.__name__} at path='{item.path}'")
 
         # Attempt deletion on a RecordKeeper copy
         record_keeper_copy = copy.deepcopy(self._record_keeper)
         try:
             if isinstance(item, AccountGroup):
-                record_keeper_copy.remove_account_group(path)
+                record_keeper_copy.remove_account_group(item.path)
             else:
-                record_keeper_copy.remove_account(path)
+                record_keeper_copy.remove_account(item.path)
         except Exception:
             self._handle_exception()
             return
@@ -92,9 +78,9 @@ class AccountTreePresenter:
         index = self._model.get_index_from_item(item)
         self._model.pre_delete_item(index)
         if isinstance(item, AccountGroup):
-            self._record_keeper.remove_account_group(path)
+            self._record_keeper.remove_account_group(item.path)
         else:
-            self._record_keeper.remove_account(path)
+            self._record_keeper.remove_account(item.path)
         self.update_model_data()
         self._model.post_delete_item()
         self.event_data_changed()
@@ -130,7 +116,7 @@ class AccountTreePresenter:
         path = self._dialog.path
         index = self._dialog.position - 1
 
-        logging.info(f"Adding AccountGroup at path='{path}', index={index}")
+        logging.info("Adding AccountGroup...")
         try:
             self._record_keeper.add_account_group(path, index)
         except Exception:
@@ -154,13 +140,14 @@ class AccountTreePresenter:
         new_parent = self._record_keeper.get_account_parent_or_none(new_parent_path)
         new_index = self._dialog.position - 1
 
-        # FIXME: figure out smarter edit logging
-        logging.info(f"Editing AccountGroup at path='{previous_path}'")
+        logging.info(f"Editing AccountGroup at path='{item.path}'")
         record_keeper_copy = copy.deepcopy(self._record_keeper)
         try:
+            logging.disable(logging.INFO)
             record_keeper_copy.edit_account_group(
                 current_path=previous_path, new_path=new_path, index=new_index
             )
+            logging.disable(logging.NOTSET)
         except Exception:
             self._handle_exception()
             return
@@ -220,7 +207,7 @@ class AccountTreePresenter:
         path = self._dialog.path
         index = self._dialog.position - 1
 
-        logging.info(f"Adding SecurityAccount at path='{path}', index={index}")
+        logging.info("Adding SecurityAccount...")
         try:
             self._record_keeper.add_security_account(path, index)
         except Exception:
@@ -244,15 +231,14 @@ class AccountTreePresenter:
         new_parent = self._record_keeper.get_account_parent_or_none(new_parent_path)
         new_index = self._dialog.position - 1
 
-        logging.info(
-            f"Editing SecurityAccount: old path='{previous_path}', "
-            f"old index={previous_index}, new path='{new_path}', new index={new_index}"
-        )
+        logging.info(f"Editing SecurityAccount at path='{item.path}'")
         record_keeper_deepcopy = copy.deepcopy(self._record_keeper)
         try:
+            logging.disable(logging.INFO)
             record_keeper_deepcopy.edit_security_account(
                 current_path=previous_path, new_path=new_path, index=previous_index
             )
+            logging.disable(logging.NOTSET)
         except Exception:
             self._handle_exception()
             return
@@ -323,10 +309,7 @@ class AccountTreePresenter:
         currency_code = self._dialog.currency_code
         initial_balance = self._dialog.initial_balance
 
-        logging.info(
-            f"Adding CashAccount at path='{path}', index={index}, "
-            f"currency='{currency_code}', initial_balance='{initial_balance}'"
-        )
+        logging.info("Adding CashAccount...")
         try:
             self._record_keeper.add_cash_account(
                 path, currency_code, initial_balance, index
@@ -353,18 +336,17 @@ class AccountTreePresenter:
         new_index = self._dialog.position - 1
         initial_balance = self._dialog.initial_balance
 
-        logging.info(
-            f"Editing CashAccount: old path='{previous_path}', "
-            f"old index={previous_index}, new path='{new_path}', new index={new_index}"
-        )
+        logging.info(f"Editing CashAccount at path='{item.path}'")
         record_keeper_deepcopy = copy.deepcopy(self._record_keeper)
         try:
+            logging.disable(logging.INFO)
             record_keeper_deepcopy.edit_cash_account(
                 current_path=previous_path,
                 new_path=new_path,
                 initial_balance=initial_balance,
                 index=new_index,
             )
+            logging.disable(logging.NOTSET)
         except Exception:
             self._handle_exception()
             return
@@ -440,3 +422,16 @@ class AccountTreePresenter:
         self._view.signal_edit_item.connect(self.edit_item)
 
         self._selection_changed()  # called to ensure context menu is OK at start of run
+
+    def _selection_changed(self) -> None:
+        item = self._model.get_selected_item()
+
+        enable_modify_object = item is not None
+        enable_add_objects = item is None or isinstance(item, AccountGroup)
+        enable_expand_below = isinstance(item, AccountGroup)
+
+        self._view.enable_accounts_tree_actions(
+            enable_add_objects=enable_add_objects,
+            enable_modify_object=enable_modify_object,
+            enable_expand_below=enable_expand_below,
+        )

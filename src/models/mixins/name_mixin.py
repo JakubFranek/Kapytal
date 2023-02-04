@@ -1,4 +1,4 @@
-
+import logging
 from typing import Any
 
 from src.models.custom_exceptions import InvalidCharacterError
@@ -21,20 +21,21 @@ class NameMixin:
         return self._name
 
     @name.setter
-    def name(self, value: str) -> None:
-        if not isinstance(value, str):
+    def name(self, name: str) -> None:
+        if not isinstance(name, str):
             raise TypeError(f"{self.__class__.__name__}.name must be a string.")
 
-        if hasattr(self, "_name") and self._name == value:
+        if hasattr(self, "_name") and self._name == name:
             return
 
-        if len(value) < self.NAME_MIN_LENGTH or len(value) > self.NAME_MAX_LENGTH:
+        if len(name) < self.NAME_MIN_LENGTH or len(name) > self.NAME_MAX_LENGTH:
             raise NameLengthError(
                 f"{self.__class__.__name__}.name length must be between "
                 f"{self.NAME_MIN_LENGTH} and "
                 f"{self.NAME_MAX_LENGTH} characters."
             )
-        if "/" in value:
+        if "/" in name:
             raise InvalidCharacterError("Slashes in object names are forbidden.")
 
-        self._name = value
+        logging.info(f"Setting {name=}")
+        self._name = name

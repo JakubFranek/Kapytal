@@ -1,3 +1,4 @@
+import logging
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
@@ -31,22 +32,23 @@ class Account(
         return self._parent
 
     @parent.setter
-    def parent(self, new_parent: AccountGroup | None) -> None:
-        if new_parent is not None and not isinstance(new_parent, AccountGroup):
+    def parent(self, parent: AccountGroup | None) -> None:
+        if parent is not None and not isinstance(parent, AccountGroup):
             raise TypeError(
                 f"{self.__class__.__name__}.parent must be an AccountGroup or a None."
             )
 
         if hasattr(self, "_parent"):
-            if self._parent == new_parent:
+            if self._parent == parent:
                 return
             if self._parent is not None:
                 self._parent._remove_child(self)
 
-        if new_parent is not None:
-            new_parent._add_child(self)
+        if parent is not None:
+            parent._add_child(self)
 
-        self._parent = new_parent
+        logging.info(f"Setting {parent=}")
+        self._parent = parent
 
     @property
     def path(self) -> str:

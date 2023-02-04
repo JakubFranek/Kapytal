@@ -82,7 +82,9 @@ class MainPresenter:
             if file_path != "":
                 self.current_file_path = file_path
                 with open(file_path, mode="r", encoding="UTF-8") as file:
+                    logging.disable(logging.INFO)
                     record_keeper = json.load(file, cls=CustomJSONDecoder)
+                    logging.disable(logging.NOTSET)
                     self._record_keeper = record_keeper
                     self._account_tree_presenter.load_record_keeper(record_keeper)
                     self._currency_form_presenter.load_record_keeper(record_keeper)
