@@ -68,6 +68,13 @@ def test_currency_incorrect_type(
         CashAccount(name, currency, initial_balance)
 
 
+@given(cash_account=cash_accounts())
+def test_initial_balance_same_value(cash_account: CashAccount) -> None:
+    prev_balance = cash_account.initial_balance
+    cash_account.initial_balance = prev_balance
+    assert cash_account.initial_balance == prev_balance
+
+
 @given(
     name=st.just("Valid Name"),
     currency=currencies(),
