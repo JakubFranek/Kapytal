@@ -11,8 +11,6 @@ from src.models.model_objects.currency_objects import Currency
 from src.models.model_objects.security_objects import SecurityAccount
 from src.views.constants import AccountTreeColumns
 
-# TODO: save expand state before reset and load after it
-
 
 class AccountTreeModel(QAbstractItemModel):
     COLUMN_HEADERS = {
@@ -138,12 +136,6 @@ class AccountTreeModel(QAbstractItemModel):
     def post_add(self) -> None:
         self.endInsertRows()
 
-    def pre_new_list(self) -> None:
-        self.beginResetModel()
-
-    def post_new_list(self) -> None:
-        self.endResetModel()
-
     def pre_reset_model(self) -> None:
         self.beginResetModel()
 
@@ -155,6 +147,35 @@ class AccountTreeModel(QAbstractItemModel):
 
     def post_delete_item(self) -> None:
         self.endRemoveRows()
+
+    def pre_move_item(
+        self,
+        previous_parent: AccountGroup | None,
+        previous_index: int,
+        new_parent: AccountGroup | None,
+        new_index: int,
+    ) -> None:
+        previous_parent_index = self.get_index_from_item(previous_parent)
+        new_parent_index = self.get_index_from_item(new_parent)
+        # Index must be limited to valid indexes
+        if new_parent is None:
+            if new_index > len(self.root_items):
+                new_index = len(self.root_items)
+        else:
+            if new_index > len(new_parent.children):
+                new_index = len(new_parent.children)
+        if previous_parent == new_parent and new_index > previous_index:
+            new_index += 1
+        self.beginMoveRows(
+            previous_parent_index,
+            previous_index,
+            previous_index,
+            new_parent_index,
+            new_index,
+        )
+
+    def post_move_item(self) -> None:
+        self.endMoveRows()
 
     def get_selected_item_index(self) -> QModelIndex:
         indexes = self._tree.selectedIndexes()

@@ -12,6 +12,7 @@ from src.models.custom_exceptions import (
     InvalidOperationError,
     NotFoundError,
 )
+from src.models.mixins.copyable_mixin import CopyableMixin
 from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
 from src.models.model_objects.account_group import AccountGroup
 from src.models.model_objects.attributes import (
@@ -45,7 +46,7 @@ from src.models.model_objects.security_objects import (
 )
 
 
-class RecordKeeper(JSONSerializableMixin):
+class RecordKeeper(CopyableMixin, JSONSerializableMixin):
     def __init__(self) -> None:
         self._accounts: list[Account] = []
         self._account_groups: list[AccountGroup] = []

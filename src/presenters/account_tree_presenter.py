@@ -1,3 +1,4 @@
+import copy
 import logging
 
 from src.models.base_classes.account import Account
@@ -34,9 +35,12 @@ class AccountTreePresenter:
     def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
         self._model.pre_reset_model()
         self._record_keeper = record_keeper
-        self._model.root_items = record_keeper.root_account_items
-        self._model.base_currency = record_keeper.base_currency
+        self.update_model_data()
         self._model.post_reset_model()
+
+    def update_model_data(self) -> None:
+        self._model.root_items = self._record_keeper.root_account_items
+        self._model.base_currency = self._record_keeper.base_currency
 
     def _selection_changed(self) -> None:
         item = self._model.get_selected_item()
@@ -73,18 +77,25 @@ class AccountTreePresenter:
         path = item.path
         logging.info(f"Removing {item.__class__.__name__} at path='{path}'")
 
-        index = self._model.get_index_from_item(item)
+        # Attempt deletion on a RecordKeeper copy
+        record_keeper_copy = copy.deepcopy(self._record_keeper)
         try:
             if isinstance(item, AccountGroup):
-                self._record_keeper.remove_account_group(path)
+                record_keeper_copy.remove_account_group(path)
             else:
-                self._record_keeper.remove_account(path)
+                record_keeper_copy.remove_account(path)
         except Exception:
             self._handle_exception()
             return
 
+        # Perform the deletion on the "real" RecordKeeper if it went fine
+        index = self._model.get_index_from_item(item)
         self._model.pre_delete_item(index)
-        self._model.root_items = self._record_keeper.root_account_items
+        if isinstance(item, AccountGroup):
+            self._record_keeper.remove_account_group(path)
+        else:
+            self._record_keeper.remove_account(path)
+        self.update_model_data()
         self._model.post_delete_item()
         self.event_data_changed()
 
@@ -93,7 +104,9 @@ class AccountTreePresenter:
             if item is None:
                 raise ValueError("Cannot edit an unselected item.")
             max_position = self._get_max_parent_position(item)
-            self._dialog = AccountGroupDialog(max_position=max_position, edit=edit)
+            self._dialog = AccountGroupDialog(
+                parent=self._view, max_position=max_position, edit=edit
+            )
             self._dialog.signal_OK.connect(self.edit_account_group)
             self._dialog.current_path = item.path
             self._dialog.path = item.path
@@ -104,7 +117,9 @@ class AccountTreePresenter:
             self._dialog.position = position
         else:
             max_position = self._get_max_child_position(item)
-            self._dialog = AccountGroupDialog(max_position=max_position, edit=edit)
+            self._dialog = AccountGroupDialog(
+                parent=self._view, max_position=max_position, edit=edit
+            )
             self._dialog.signal_OK.connect(self.add_account_group)
             self._dialog.path = "" if item is None else item.path + "/"
             self._dialog.position = max_position
@@ -124,34 +139,55 @@ class AccountTreePresenter:
 
         item = self._model.get_selected_item()
         self._model.pre_add(item)
-        self._model.root_items = self._record_keeper.root_account_items
+        self.update_model_data()
         self._model.post_add()
         self._dialog.close()
         self.event_data_changed()
 
     def edit_account_group(self) -> None:
-        item = self._model.get_selected_item()
-        current_path = self._dialog.current_path
+        item: AccountGroup = self._model.get_selected_item()
+        previous_parent = item.parent
+        previous_path = self._dialog.current_path
+        previous_index = self._get_current_index(item)
         new_path = self._dialog.path
-        current_index = self._get_current_index(item)
-        index = self._dialog.position - 1
+        new_parent_path, _, _ = new_path.rpartition("/")
+        new_parent = self._record_keeper.get_account_parent_or_none(new_parent_path)
+        new_index = self._dialog.position - 1
 
+        # FIXME: figure out smarter edit logging
         logging.info(
-            f"Editing AccountGroup: old path='{current_path}', "
-            f"old index={current_index}, new path='{new_path}', new index={index}"
+            f"Editing AccountGroup: old path='{previous_path}', "
+            f"old index={previous_index}, new path='{new_path}', new index={new_index}"
         )
+        record_keeper_copy = copy.deepcopy(self._record_keeper)
         try:
-            self._record_keeper.edit_account_group(
-                current_path=current_path, new_path=new_path, index=index
+            record_keeper_copy.edit_account_group(
+                current_path=previous_path, new_path=new_path, index=new_index
             )
         except Exception:
             self._handle_exception()
             return
 
-        self._model.pre_reset_model()
-        self._model.root_items = self._record_keeper.root_account_items
-        self._model.post_reset_model()
+        if new_parent == previous_parent and new_index == previous_index:
+            move = False
+        else:
+            move = True
+
+        if move:
+            self._model.pre_move_item(
+                previous_parent=previous_parent,
+                previous_index=previous_index,
+                new_parent=new_parent,
+                new_index=new_index,
+            )
+        self._record_keeper.edit_account_group(
+            current_path=previous_path, new_path=new_path, index=new_index
+        )
+        self.update_model_data()
+        if move:
+            self._model.post_move_item()
         self._dialog.close()
+        self._selection_changed()
         self.event_data_changed()
 
     def run_security_account_dialog(
@@ -161,7 +197,9 @@ class AccountTreePresenter:
             if item is None:
                 raise ValueError("Cannot edit an unselected item.")
             max_position = self._get_max_parent_position(item)
-            self._dialog = SecurityAccountDialog(max_position=max_position, edit=edit)
+            self._dialog = SecurityAccountDialog(
+                parent=self._view, max_position=max_position, edit=edit
+            )
             self._dialog.signal_OK.connect(self.edit_security_account)
             self._dialog.current_path = item.path
             self._dialog.path = item.path
@@ -172,7 +210,9 @@ class AccountTreePresenter:
             self._dialog.position = position
         else:
             max_position = self._get_max_child_position(item)
-            self._dialog = SecurityAccountDialog(max_position=max_position, edit=edit)
+            self._dialog = SecurityAccountDialog(
+                parent=self._view, max_position=max_position, edit=edit
+            )
             self._dialog.signal_OK.connect(self.add_security_account)
             self._dialog.path = "" if item is None else item.path + "/"
             self._dialog.position = max_position
@@ -192,35 +232,52 @@ class AccountTreePresenter:
 
         item = self._model.get_selected_item()
         self._model.pre_add(item)
-        self._model.root_items = self._record_keeper.root_account_items
+        self.update_model_data()
         self._model.post_add()
         self._dialog.close()
         self.event_data_changed()
 
     def edit_security_account(self) -> None:
-        item = self._model.get_selected_item()
-        current_path = self._dialog.current_path
+        item: SecurityAccount = self._model.get_selected_item()
+        previous_parent = item.parent
+        previous_path = self._dialog.current_path
+        previous_index = self._get_current_index(item)
         new_path = self._dialog.path
-        current_index = self._get_current_index(item)
-        index = self._dialog.position - 1
+        new_parent_path, _, _ = new_path.rpartition("/")
+        new_parent = self._record_keeper.get_account_parent_or_none(new_parent_path)
+        new_index = self._dialog.position - 1
 
-        # TODO: figure out logging only changes
-        # maybe in RecordKeeper or even within SecurityAccount?
         logging.info(
-            f"Editing SecurityAccount: old path='{current_path}', "
-            f"old index={current_index}, new path='{new_path}', new index={index}"
+            f"Editing SecurityAccount: old path='{previous_path}', "
+            f"old index={previous_index}, new path='{new_path}', new index={new_index}"
         )
+        record_keeper_deepcopy = copy.deepcopy(self._record_keeper)
         try:
-            self._record_keeper.edit_security_account(
-                current_path=current_path, new_path=new_path, index=index
+            record_keeper_deepcopy.edit_security_account(
+                current_path=previous_path, new_path=new_path, index=previous_index
             )
         except Exception:
             self._handle_exception()
             return
 
-        self._model.pre_reset_model()
-        self._model.root_items = self._record_keeper.root_account_items
-        self._model.post_reset_model()
+        if new_parent == previous_parent and new_index == previous_index:
+            move = False
+        else:
+            move = True
+
+        if move:
+            self._model.pre_move_item(
+                previous_parent=previous_parent,
+                previous_index=previous_index,
+                new_parent=new_parent,
+                new_index=new_index,
+            )
+        self._record_keeper.edit_security_account(
+            current_path=previous_path, new_path=new_path, index=new_index
+        )
+        self.update_model_data()
+        if move:
+            self._model.post_move_item()
         self._dialog.close()
         self.event_data_changed()
 
@@ -231,6 +288,7 @@ class AccountTreePresenter:
             max_position = self._get_max_parent_position(item)
             code_places_pairs = [(item.currency.code, item.currency.places)]
             self._dialog = CashAccountDialog(
+                parent=self._view,
                 max_position=max_position,
                 code_places_pairs=code_places_pairs,
                 edit=edit,
@@ -251,6 +309,7 @@ class AccountTreePresenter:
             ]
             max_position = self._get_max_child_position(item)
             self._dialog = CashAccountDialog(
+                parent=self._view,
                 max_position=max_position,
                 code_places_pairs=code_places_pairs,
                 edit=edit,
@@ -281,37 +340,59 @@ class AccountTreePresenter:
 
         item = self._model.get_selected_item()
         self._model.pre_add(item)
-        self._model.root_items = self._record_keeper.root_account_items
+        self.update_model_data()
         self._model.post_add()
         self._dialog.close()
         self.event_data_changed()
 
     def edit_cash_account(self) -> None:
-        item = self._model.get_selected_item()
-        current_path = self._dialog.current_path
+        item: CashAccount = self._model.get_selected_item()
+        previous_parent = item.parent
+        previous_path = self._dialog.current_path
+        previous_index = self._get_current_index(item)
         new_path = self._dialog.path
+        new_parent_path, _, _ = new_path.rpartition("/")
+        new_parent = self._record_keeper.get_account_parent_or_none(new_parent_path)
+        new_index = self._dialog.position - 1
         initial_balance = self._dialog.initial_balance
-        current_index = self._get_current_index(item)
-        index = self._dialog.position - 1
 
         logging.info(
-            f"Editing CashAccount: old path='{current_path}', "
-            f"old index={current_index}, new path='{new_path}', new index={index}"
+            f"Editing CashAccount: old path='{previous_path}', "
+            f"old index={previous_index}, new path='{new_path}', new index={new_index}"
         )
+        record_keeper_deepcopy = copy.deepcopy(self._record_keeper)
         try:
-            self._record_keeper.edit_cash_account(
-                current_path=current_path,
+            record_keeper_deepcopy.edit_cash_account(
+                current_path=previous_path,
                 new_path=new_path,
                 initial_balance=initial_balance,
-                index=index,
+                index=new_index,
             )
         except Exception:
             self._handle_exception()
             return
 
-        self._model.pre_reset_model()
-        self._model.root_items = self._record_keeper.root_account_items
-        self._model.post_reset_model()
+        if new_parent == previous_parent and new_index == previous_index:
+            move = False
+        else:
+            move = True
+
+        if move:
+            self._model.pre_move_item(
+                previous_parent=previous_parent,
+                previous_index=previous_index,
+                new_parent=new_parent,
+                new_index=new_index,
+            )
+        self._record_keeper.edit_cash_account(
+            current_path=previous_path,
+            new_path=new_path,
+            initial_balance=initial_balance,
+            index=new_index,
+        )
+        self.update_model_data()
+        if move:
+            self._model.post_move_item()
         self._dialog.close()
         self.event_data_changed()
 

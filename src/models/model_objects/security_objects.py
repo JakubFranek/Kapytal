@@ -12,6 +12,7 @@ from typing import Any
 from src.models.base_classes.account import Account, UnrelatedAccountError
 from src.models.base_classes.transaction import Transaction
 from src.models.custom_exceptions import InvalidCharacterError, TransferSameAccountError
+from src.models.mixins.copyable_mixin import CopyableMixin
 from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
 from src.models.mixins.name_mixin import NameMixin
 from src.models.mixins.uuid_mixin import UUIDMixin
@@ -44,7 +45,7 @@ class SecurityTransactionType(Enum):
     SELL = auto()
 
 
-class Security(NameMixin, UUIDMixin, JSONSerializableMixin):
+class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
     NAME_MIN_LENGTH = 1
     NAME_MAX_LENGTH = 64
     SYMBOL_MIN_LENGTH = 1
