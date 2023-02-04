@@ -97,7 +97,7 @@ def test_edit_security_does_not_exist() -> None:
         record_keeper.edit_security("SMBL", "SYMB", "NEW NAME")
 
 
-def test_edit_account() -> None:
+def test_edit_security_account() -> None:
     record_keeper = RecordKeeper()
     record_keeper.add_account_group("TEST PARENT", None)
     record_keeper.add_account_group("NEW PARENT", None)
@@ -108,13 +108,13 @@ def test_edit_account() -> None:
     assert account.path == "NEW PARENT/NEW NAME"
 
 
-def test_edit_account_does_not_exist() -> None:
+def test_edit_security_account_does_not_exist() -> None:
     record_keeper = RecordKeeper()
     with pytest.raises(NotFoundError):
         record_keeper.edit_security_account("ABC", "DEF", "GHI")
 
 
-def test_edit_account_already_exists() -> None:
+def test_edit_security_account_already_exists() -> None:
     record_keeper = RecordKeeper()
     record_keeper.add_security_account("TEST")
     record_keeper.add_security_account("DUMMY")
@@ -122,7 +122,7 @@ def test_edit_account_already_exists() -> None:
         record_keeper.edit_security_account("TEST", "DUMMY")
 
 
-def test_edit_account_group() -> None:
+def test_edit_security_account_group() -> None:
     record_keeper = RecordKeeper()
     record_keeper.add_account_group("TEST PARENT")
     record_keeper.add_account_group("TEST PARENT/TEST CHILD")
@@ -135,7 +135,7 @@ def test_edit_account_group() -> None:
     assert account_group.path == "NEW PARENT/NEW NAME"
 
 
-def test_edit_account_group_index() -> None:
+def test_edit_security_account_group_index() -> None:
     record_keeper = RecordKeeper()
     record_keeper.add_account_group("TEST PARENT")
     record_keeper.add_account_group("TEST PARENT/DUMMY CHILD")
@@ -151,7 +151,7 @@ def test_edit_account_group_index() -> None:
     assert parent.children[0] == account_group
 
 
-def test_edit_account_group_index_no_parent() -> None:
+def test_edit_security_account_group_index_no_parent() -> None:
     record_keeper = RecordKeeper()
     record_keeper.add_account_group("DUMMY CHILD")
     record_keeper.add_account_group("TEST CHILD")
@@ -160,7 +160,7 @@ def test_edit_account_group_index_no_parent() -> None:
     assert record_keeper.root_account_items[0].name == "TEST CHILD"
 
 
-def test_edit_account_group_from_root_to_children() -> None:
+def test_edit_security_account_group_from_root_to_children() -> None:
     record_keeper = RecordKeeper()
     record_keeper.add_account_group("TEST")
     record_keeper.add_account_group("DUMMY PARENT")
@@ -169,7 +169,7 @@ def test_edit_account_group_from_root_to_children() -> None:
     assert len(record_keeper.root_account_items) == 1
 
 
-def test_edit_account_group_from_child_to_root() -> None:
+def test_edit_security_account_group_from_child_to_root() -> None:
     record_keeper = RecordKeeper()
     record_keeper.add_account_group("DUMMY PARENT")
     record_keeper.add_account_group("DUMMY PARENT/TEST")
@@ -178,7 +178,7 @@ def test_edit_account_group_from_child_to_root() -> None:
     assert len(record_keeper.root_account_items) == 2
 
 
-def test_edit_account_group_already_exists() -> None:
+def test_edit_security_account_group_already_exists() -> None:
     record_keeper = RecordKeeper()
     record_keeper.add_account_group("TEST")
     record_keeper.add_account_group("DUMMY")
@@ -186,13 +186,13 @@ def test_edit_account_group_already_exists() -> None:
         record_keeper.edit_account_group("TEST", "DUMMY")
 
 
-def test_edit_account_group_does_not_exist() -> None:
+def test_edit_security_account_group_does_not_exist() -> None:
     record_keeper = RecordKeeper()
     with pytest.raises(NotFoundError):
         record_keeper.edit_account_group("ABC", "GHI/DEF")
 
 
-def test_edit_account_group_invalid_parent() -> None:
+def test_edit_security_account_group_invalid_parent() -> None:
     record_keeper = RecordKeeper()
     record_keeper.add_account_group("TEST")
     with pytest.raises(InvalidOperationError):

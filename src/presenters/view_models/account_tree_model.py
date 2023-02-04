@@ -91,7 +91,10 @@ class AccountTreeModel(QAbstractItemModel):
                     return str(node.get_balance(node.currency))
                 return ""
             if column == AccountTreeColumns.COLUMN_BALANCE_BASE:
-                return str(node.get_balance(self.base_currency))
+                try:
+                    return str(node.get_balance(self.base_currency))
+                except Exception:
+                    return "Error!"
             if column == AccountTreeColumns.COLUMN_SHOW:
                 return "xxx"
         if (

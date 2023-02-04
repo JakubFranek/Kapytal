@@ -204,6 +204,8 @@ class AccountTreePresenter:
         current_index = self._get_current_index(item)
         index = self._dialog.position - 1
 
+        # TODO: figure out logging only changes
+        # maybe in RecordKeeper or even within SecurityAccount?
         logging.info(
             f"Editing SecurityAccount: old path='{current_path}', "
             f"old index={current_index}, new path='{new_path}', new index={index}"
