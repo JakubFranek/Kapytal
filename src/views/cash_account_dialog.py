@@ -3,7 +3,7 @@ from decimal import Decimal
 
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtGui import QIcon
-from PyQt6.QtWidgets import QAbstractButton, QDialog, QDialogButtonBox
+from PyQt6.QtWidgets import QAbstractButton, QDialog, QDialogButtonBox, QWidget
 
 from src.views.ui_files.Ui_cash_account_dialog import Ui_CashAccountDialog
 
@@ -13,11 +13,12 @@ class CashAccountDialog(QDialog, Ui_CashAccountDialog):
 
     def __init__(
         self,
+        parent: QWidget,
         max_position: int,
         code_places_pairs: Collection[tuple[str, int]],
         edit: bool = False,
     ) -> None:
-        super().__init__()
+        super().__init__(parent=parent)
         self.setupUi(self)
         self.resize(270, 105)
         self.currentPathLineEdit.setEnabled(False)
@@ -81,7 +82,11 @@ class CashAccountDialog(QDialog, Ui_CashAccountDialog):
 
     def _currency_changed(self) -> None:
         index = self.currencyComboBox.currentIndex()
-        code, places = self.code_places_pairs[index]
+        if len(self.code_places_pairs) != 0:
+            code, places = self.code_places_pairs[index]
+        else:
+            code = ""
+            places = 0
         self.initialBalanceDoubleSpinBox.setSuffix(" " + code)
         self.initialBalanceDoubleSpinBox.setDecimals(places)
 

@@ -26,8 +26,8 @@ class MainView(QMainWindow, Ui_MainWindow):
         return QFileDialog.getOpenFileName(self, filter="JSON file (*.json)")[0]
 
     def ask_save_before_close(self) -> bool | None:
-        reply = QMessageBox.question(
-            self,
+        message_box = QMessageBox(
+            QMessageBox.Icon.Question,
             "Save changes before quitting?",
             (
                 "Unsaved changes have been made.\n"
@@ -38,8 +38,11 @@ class MainView(QMainWindow, Ui_MainWindow):
                 | QMessageBox.StandardButton.No
                 | QMessageBox.StandardButton.Cancel
             ),
-            QMessageBox.StandardButton.Cancel,
+            self,
         )
+        message_box.setWindowIcon(QIcon("icons_16:question.png"))
+        message_box.setDefaultButton(QMessageBox.StandardButton.Cancel)
+        reply = message_box.exec()
         if reply == QMessageBox.StandardButton.Yes:
             return True
         if reply == QMessageBox.StandardButton.No:

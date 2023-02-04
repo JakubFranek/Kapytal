@@ -3,6 +3,8 @@ from collections.abc import Collection
 from datetime import datetime
 from typing import TYPE_CHECKING
 
+from src.models.mixins.copyable_mixin import CopyableMixin
+
 if TYPE_CHECKING:
     from src.models.base_classes.account import Account
 
@@ -17,7 +19,9 @@ from src.models.model_objects.attributes import (
 
 
 # IDEA: think about slots
-class Transaction(DatetimeCreatedMixin, UUIDMixin, JSONSerializableMixin, ABC):
+class Transaction(
+    CopyableMixin, DatetimeCreatedMixin, UUIDMixin, JSONSerializableMixin, ABC
+):
     DESCRIPTION_MIN_LENGTH = 0
     DESCRIPTION_MAX_LENGTH = 256
 

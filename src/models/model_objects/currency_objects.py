@@ -7,6 +7,7 @@ from functools import total_ordering
 from typing import Any, Self
 
 from src.models.constants import tzinfo
+from src.models.mixins.copyable_mixin import CopyableMixin
 from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
 from src.models.utilities.find_helpers import find_currency_by_code
 
@@ -20,7 +21,7 @@ class ConversionFactorNotFoundError(ValueError):
     for the given Currency pair."""
 
 
-class Currency(JSONSerializableMixin):
+class Currency(CopyableMixin, JSONSerializableMixin):
     def __init__(self, code: str, places: int) -> None:
         super().__init__()
 
@@ -153,7 +154,7 @@ class Currency(JSONSerializableMixin):
 
 
 # TODO: decimal places needed for ExchangeRate
-class ExchangeRate(JSONSerializableMixin):
+class ExchangeRate(CopyableMixin, JSONSerializableMixin):
     def __init__(
         self, primary_currency: Currency, secondary_currency: Currency
     ) -> None:
@@ -268,7 +269,7 @@ class ExchangeRate(JSONSerializableMixin):
 
 
 @total_ordering
-class CashAmount(JSONSerializableMixin):
+class CashAmount(CopyableMixin, JSONSerializableMixin):
     """An immutable object comprising of Decimal value and a Currency."""
 
     def __init__(self, value: Decimal | int | str, currency: Currency) -> None:

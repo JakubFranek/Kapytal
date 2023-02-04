@@ -74,12 +74,6 @@ class CurrencyTableModel(QAbstractTableModel):
     def post_add(self) -> None:
         self.endInsertRows()
 
-    def pre_new_list(self) -> None:
-        self.beginResetModel()
-
-    def post_new_list(self) -> None:
-        self.endResetModel()
-
     def pre_reset_model(self) -> None:
         self.beginResetModel()
 
