@@ -1,5 +1,6 @@
 import logging
 import os
+import shutil
 import sys
 import traceback
 from datetime import datetime
@@ -8,25 +9,41 @@ from types import TracebackType
 from src.models.constants import tzinfo
 
 
+def backup_json_file(file_path: str, backup_directories: list[str]) -> None:
+    dt_now = datetime.now(tzinfo)
+    file_name = os.path.basename(file_path).removesuffix(".json")
+    backup_name = (
+        file_name + "_backup_" + dt_now.strftime("%Y_%m_%d_%Hh%Mm%Ss") + ".json"
+    )
+    for backup_directory in backup_directories:
+        if not os.path.exists(backup_directory):
+            os.makedirs(backup_directory)
+
+        backup_path = os.path.join(backup_directory, backup_name)
+        shutil.copyfile(file_path, backup_path)
+        logging.info(f"Backed up {file_path} to {backup_path}")
+
+        listdir = os.listdir(backup_directory)
+        old_backup_paths = [
+            os.path.join(backup_directory, backup)
+            for backup in listdir
+            if os.path.isfile(os.path.join(backup_directory, backup))
+        ]
+        no_of_backups = len(old_backup_paths)
+        _ = sum(os.path.getsize(backup) for backup in old_backup_paths)  # size in bytes
+        if no_of_backups > 10:  # NOTE: will be determined by size in release
+            oldest_backup = min(old_backup_paths, key=os.path.getctime)
+            logging.info(f"Removing oldest backup: {oldest_backup}")
+            os.remove(oldest_backup)
+
+
 def setup_logging(root_directory: str) -> None:
     dir_logs = root_directory + r"\logs"
     if not os.path.exists(dir_logs):
         os.makedirs(dir_logs)
 
-    listdir = os.listdir(dir_logs)
-    logs_paths = [
-        os.path.join(dir_logs, log)
-        for log in listdir
-        if os.path.isfile(os.path.join(dir_logs, log))
-    ]
-    no_of_logs = len(logs_paths)
-    _ = sum(os.path.getsize(log) for log in logs_paths)  # size in bytes
-    if no_of_logs > 10:  # TODO: will be determined by size in release
-        oldest_log = min(logs_paths, key=os.path.getctime)
-        os.remove(oldest_log)
-
-    start_dt = datetime.now(tzinfo)
-    file_name = dir_logs + r"\debug_" + start_dt.strftime("%Y_%m_%d_%Hh%Mm%Ss") + ".log"
+    dt_now = datetime.now(tzinfo)
+    file_name = dir_logs + r"\debug_" + dt_now.strftime("%Y_%m_%d_%Hh%Mm%Ss") + ".log"
     log_format = (
         "%(asctime)s.%(msecs)03d %(levelname)s "
         "{%(module)s} [%(funcName)s] %(message)s"
@@ -39,6 +56,20 @@ def setup_logging(root_directory: str) -> None:
         filemode="w+",
         encoding="utf-8",
     )
+    logging.info("Logging setup complete")
+
+    listdir = os.listdir(dir_logs)
+    logs_paths = [
+        os.path.join(dir_logs, log)
+        for log in listdir
+        if os.path.isfile(os.path.join(dir_logs, log))
+    ]
+    no_of_logs = len(logs_paths)
+    _ = sum(os.path.getsize(log) for log in logs_paths)  # size in bytes
+    if no_of_logs > 10:  # NOTE: will be determined by size in release
+        oldest_log = min(logs_paths, key=os.path.getctime)
+        logging.info(f"Removing oldest log: {oldest_log}")
+        os.remove(oldest_log)
 
 
 def get_exception_display_info() -> tuple[str, str] | None:

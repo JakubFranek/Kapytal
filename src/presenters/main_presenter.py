@@ -8,7 +8,7 @@ from src.models.json.custom_json_encoder import CustomJSONEncoder
 from src.models.record_keeper import RecordKeeper
 from src.presenters.account_tree_presenter import AccountTreePresenter
 from src.presenters.currency_form_presenter import CurrencyFormPresenter
-from src.utilities.general import get_exception_display_info
+from src.utilities.general import backup_json_file, get_exception_display_info
 from src.views.currency_form import CurrencyForm
 from src.views.main_view import MainView
 from src.views.utilities.handle_exception import display_error_message
@@ -16,7 +16,11 @@ from src.views.utilities.handle_exception import display_error_message
 
 class MainPresenter:
     def __init__(
-        self, view: MainView, record_keeper: RecordKeeper, app: QApplication
+        self,
+        view: MainView,
+        record_keeper: RecordKeeper,
+        app: QApplication,
+        app_root_directory: str,
     ) -> None:
         self._view = view
         self._record_keeper = record_keeper
@@ -54,6 +58,9 @@ class MainPresenter:
         self._view.signal_open.connect(self._load_from_file)
 
         self.current_file_path: str | None = None
+        self.backup_directories: list[str] = [
+            app_root_directory + "/saved_data/backups/"
+        ]
         self._update_unsaved_changes(False)
 
         logging.info("Showing MainView")
@@ -70,15 +77,15 @@ class MainPresenter:
 
             if isinstance(self.current_file_path, str):
                 with open(self.current_file_path, mode="w", encoding="UTF-8") as file:
-                    logging.info(f"Saving to file ({self.current_file_path})")
+                    logging.info(f"Saving to file: {self.current_file_path}")
                     json.dump(self._record_keeper, file, cls=CustomJSONEncoder)
                     self._update_unsaved_changes(False)
                     self._view.statusBar().showMessage(
-                        f"File saved ({self.current_file_path})", 3000
+                        f"File saved: {self.current_file_path}", 3000
                     )
-                    logging.info(f"File saved to {self.current_file_path}")
+                    logging.info(f"File saved: {self.current_file_path}")
             else:
-                logging.info("Invalid or no file path received, file saving cancelled")
+                logging.info("Invalid or no file path received, file save cancelled")
         except Exception:
             self._handle_exception()
 
@@ -92,7 +99,9 @@ class MainPresenter:
                 return
             self.current_file_path = file_path
             with open(file_path, mode="r", encoding="UTF-8") as file:
-                logging.info(f"File path received ({file_path}), loading the file now")
+                logging.info(f"File path received: {file_path}")
+                backup_json_file(file_path, self.backup_directories)
+                logging.info(f"Loading file: {file_path}")
                 logging.disable(logging.INFO)
                 record_keeper: RecordKeeper = json.load(file, cls=CustomJSONDecoder)
                 logging.disable(logging.NOTSET)
@@ -100,7 +109,7 @@ class MainPresenter:
                 self._account_tree_presenter.load_record_keeper(record_keeper)
                 self._currency_form_presenter.load_record_keeper(record_keeper)
                 self._view.statusBar().showMessage(
-                    f"File loaded ({self.current_file_path})", 3000
+                    f"File loaded: {self.current_file_path}", 3000
                 )
                 self._update_unsaved_changes(False)
                 logging.info(f"Currencies: {len(record_keeper.currencies)}")
@@ -112,7 +121,7 @@ class MainPresenter:
                 logging.info(f"Categories: {len(record_keeper.categories)}")
                 logging.info(f"Tags: {len(record_keeper.tags)}")
                 logging.info(f"Payees: {len(record_keeper.payees)}")
-                logging.info(f"File loaded from {file_path}")
+                logging.info(f"File loaded: {file_path}")
         except Exception:
             self._handle_exception()
 

@@ -20,8 +20,8 @@ if __name__ == "__main__":
         myappid = f"Jakub_Franek.Kapytal.v{VERSION}"  # arbitrary string
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
 
-    dir_current = os.path.dirname(os.path.realpath(__file__))
-    setup_logging(dir_current)
+    app_root_dir = os.path.dirname(os.path.realpath(__file__))
+    setup_logging(app_root_dir)
 
     sys.excepthook = handle_uncaught_exception
 
@@ -42,7 +42,7 @@ if __name__ == "__main__":
     record_keeper = RecordKeeper()
 
     logging.info("Creating MainPresenter")
-    main_presenter = MainPresenter(main_view, record_keeper, app)
+    main_presenter = MainPresenter(main_view, record_keeper, app, app_root_dir)
 
     logging.info("Executing QApplication")
     app.exec()
