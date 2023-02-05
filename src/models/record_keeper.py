@@ -118,6 +118,18 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
             self._base_currency = currency
         self._currencies.append(currency)
 
+    def add_payee(self, name: str) -> None:
+        if any(payee.name == name for payee in self._payees):
+            raise AlreadyExistsError(f"A Payee {name=} already exists.")
+        payee = Attribute(name, AttributeType.PAYEE)
+        self._payees.append(payee)
+
+    def add_tag(self, name: str) -> None:
+        if any(tag.name == name for tag in self._tags):
+            raise AlreadyExistsError(f"A Tag {name=} already exists.")
+        tag = Attribute(name, AttributeType.TAG)
+        self._tags.append(tag)
+
     def add_exchange_rate(
         self, primary_currency_code: str, secondary_currency_code: str
     ) -> None:

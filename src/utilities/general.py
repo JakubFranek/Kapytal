@@ -56,7 +56,7 @@ def setup_logging(root_directory: str) -> None:
         filemode="w+",
         encoding="utf-8",
     )
-    logging.info("Logging setup complete")
+    logging.debug("Logging setup complete")
 
     listdir = os.listdir(dir_logs)
     logs_paths = [

@@ -57,13 +57,12 @@ class CurrencyFormPresenter:
         self._exchange_rate_table_model.post_reset_model()
 
     def show_form(self) -> None:
-        logging.info("Showing CurrencyForm")
         self._view.show_form()
 
     def run_add_currency_dialog(self) -> None:
         self._dialog = CurrencyDialog(self._view)
         self._dialog.signal_OK.connect(self.add_currency)
-        logging.info("Running CurrencyDialog")
+        logging.debug("Running CurrencyDialog")
         self._dialog.exec()
 
     def add_currency(self) -> None:
@@ -129,7 +128,7 @@ class CurrencyFormPresenter:
         codes = [currency.code for currency in self._record_keeper.currencies]
         self._dialog = AddExchangeRateDialog(currency_codes=codes, parent=self._view)
         self._dialog.signal_OK.connect(self.add_exchange_rate)
-        logging.info("Running AddExchangeRateDialog")
+        logging.debug("Running AddExchangeRateDialog")
         self._dialog.exec()
 
     def add_exchange_rate(self) -> None:
@@ -164,7 +163,7 @@ class CurrencyFormPresenter:
             parent=self._view,
         )
         self._dialog.signal_OK.connect(self.set_exchange_rate)
-        logging.info("Running SetExchangeRateDialog")
+        logging.debug("Running SetExchangeRateDialog")
         self._dialog.exec()
 
     def set_exchange_rate(self) -> None:

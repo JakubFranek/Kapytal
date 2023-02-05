@@ -45,6 +45,7 @@ class SecurityTransactionType(Enum):
     SELL = auto()
 
 
+# IDEA: make symbol optional (not needed for securities not updated online)
 class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
     NAME_MIN_LENGTH = 1
     NAME_MAX_LENGTH = 64

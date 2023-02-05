@@ -32,10 +32,13 @@ class NameMixin:
             raise NameLengthError(
                 f"{self.__class__.__name__}.name length must be between "
                 f"{self.NAME_MIN_LENGTH} and "
-                f"{self.NAME_MAX_LENGTH} characters."
+                f"{self.NAME_MAX_LENGTH} characters (currently {len(name)})."
             )
         if "/" in name:
             raise InvalidCharacterError("Slashes in object names are forbidden.")
 
-        logging.info(f"Setting {name=}")
+        if hasattr(self, "_name"):
+            logging.info(f"Renaming from '{self._name}' to '{name}'")
+        else:
+            logging.info(f"Setting {name=}")
         self._name = name

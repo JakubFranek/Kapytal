@@ -46,5 +46,5 @@ class AddExchangeRateDialog(QDialog, Ui_AddExchangeRateDialog):
             raise ValueError("Unknown role of the clicked button in the ButtonBox")
 
     def reject(self) -> None:
-        logging.info(f"Closing {self.__class__.__name__}")
+        logging.debug(f"Closing {self.__class__.__name__}")
         return super().reject()

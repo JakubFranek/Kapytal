@@ -25,24 +25,24 @@ if __name__ == "__main__":
 
     sys.excepthook = handle_uncaught_exception
 
-    logging.info("Creating QApplication")
+    logging.debug("Creating QApplication")
     app = QApplication(sys.argv)
     app.setApplicationName("Kapytal")
     app.setApplicationVersion(VERSION)
 
-    logging.info("Setting QApplication font size to 10 pts")
+    logging.debug("Setting QApplication font size to 10 pts")
     font = app.font()
     font.setPointSize(10)
     app.setFont(font)
 
-    logging.info("Creating MainWindow")
+    logging.debug("Creating MainWindow")
     main_view = MainView()
 
-    logging.info("Creating RecordKeeper")
+    logging.debug("Creating RecordKeeper")
     record_keeper = RecordKeeper()
 
-    logging.info("Creating MainPresenter")
+    logging.debug("Creating MainPresenter")
     main_presenter = MainPresenter(main_view, record_keeper, app, app_root_dir)
 
-    logging.info("Executing QApplication")
+    logging.info("Executing QApplication, awaiting user input")
     app.exec()

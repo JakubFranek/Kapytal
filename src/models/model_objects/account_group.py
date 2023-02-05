@@ -37,7 +37,10 @@ class AccountGroup(NameMixin, GetBalanceMixin, JSONSerializableMixin):
         if parent is not None:
             parent._add_child(self)
 
-        logging.info(f"Setting {parent=}")
+        if hasattr(self, "_parent"):
+            logging.info(f"Changing parent from {self._parent} to {parent}")
+        else:
+            logging.info(f"Setting {parent=}")
         self._parent = parent
 
     @property
@@ -90,7 +93,7 @@ class AccountGroup(NameMixin, GetBalanceMixin, JSONSerializableMixin):
                 aux_dict[key] = value
         aux_dict[index] = child
         self._children = aux_dict
-        logging.info(f"Setting {index=}")
+        logging.info(f"Changing index from {current_index} to {index}")
 
     def get_child_index(self, child: "Account" | Self) -> int:
         return list(self._children.keys())[list(self._children.values()).index(child)]

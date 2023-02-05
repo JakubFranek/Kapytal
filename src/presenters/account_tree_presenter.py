@@ -99,7 +99,7 @@ class AccountTreePresenter:
         setup_dialog(False, item, max_position)
         self._dialog.path = "" if item is None else item.path + "/"
         self._dialog.position = self._dialog.positionSpinBox.maximum()
-        logging.info(f"Running {self._dialog.__class__.__name__} (edit=False)")
+        logging.debug(f"Running {self._dialog.__class__.__name__} (edit=False)")
         self._dialog.exec()
 
     def run_edit_dialog(
@@ -118,7 +118,7 @@ class AccountTreePresenter:
         else:
             index = item.parent.get_child_index(item)
         self._dialog.position = index + 1
-        logging.info(f"Running {self._dialog.__class__.__name__} (edit=True)")
+        logging.debug(f"Running {self._dialog.__class__.__name__} (edit=True)")
         self._dialog.exec()
 
     def setup_account_group_dialog(

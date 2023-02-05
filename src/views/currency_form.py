@@ -33,8 +33,9 @@ class CurrencyForm(QWidget, Ui_CurrencyForm):
         self.setExchangeRateButton.clicked.connect(self.signal_set_exchange_rate.emit)
 
     def show_form(self) -> None:
+        logging.debug(f"Showing {self.__class__.__name__}")
         self.show()
 
     def closeEvent(self, a0: QCloseEvent) -> None:
-        logging.info(f"Closing {self.__class__.__name__}")
+        logging.debug(f"Closing {self.__class__.__name__}")
         return super().closeEvent(a0)
