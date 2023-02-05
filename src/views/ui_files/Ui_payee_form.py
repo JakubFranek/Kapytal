@@ -28,6 +28,7 @@ class Ui_PayeeForm(object):
         self.sortDescendingButton.setObjectName("sortDescendingButton")
         self.controlsHorizontalLayout.addWidget(self.sortDescendingButton)
         self.searchLineEdit = QtWidgets.QLineEdit(PayeeForm)
+        self.searchLineEdit.setClearButtonEnabled(True)
         self.searchLineEdit.setObjectName("searchLineEdit")
         self.controlsHorizontalLayout.addWidget(self.searchLineEdit)
         self.leftVerticalLayout.addLayout(self.controlsHorizontalLayout)

@@ -2,7 +2,7 @@ import logging
 
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QAction, QCloseEvent, QIcon
-from PyQt6.QtWidgets import QWidget
+from PyQt6.QtWidgets import QLineEdit, QWidget
 
 from src.views.ui_files.Ui_payee_form import Ui_PayeeForm
 
@@ -38,6 +38,10 @@ class PayeeForm(QWidget, Ui_PayeeForm):
 
         self.actionSortAscending.triggered.connect(self.signal_sort_ascending.emit)
         self.actionSortDescending.triggered.connect(self.signal_sort_descending.emit)
+
+        self.searchLineEdit.addAction(
+            QIcon("icons_16:magnifier.png"), QLineEdit.ActionPosition.LeadingPosition
+        )
 
     def show_form(self) -> None:
         logging.debug(f"Showing {self.__class__.__name__}")

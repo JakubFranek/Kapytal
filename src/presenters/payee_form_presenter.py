@@ -40,6 +40,7 @@ class PayeeFormPresenter:
             self._selection_changed
         )
         self._selection_changed()
+        self._sort(ascending=True)
 
     def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
         self._model.pre_reset_model()
