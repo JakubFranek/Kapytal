@@ -5,8 +5,8 @@ from src.models.record_keeper import RecordKeeper
 from src.presenters.utilities.event import Event
 from src.presenters.view_models.payee_list_model import PayeeListModel
 from src.utilities.general import get_exception_display_info
-from src.views.payee_dialog import PayeeDialog
-from src.views.payee_form import PayeeForm
+from src.views.dialogs.payee_dialog import PayeeDialog
+from src.views.forms.payee_form import PayeeForm
 from src.views.utilities.handle_exception import display_error_message
 
 

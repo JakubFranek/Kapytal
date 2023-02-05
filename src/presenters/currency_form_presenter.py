@@ -7,10 +7,10 @@ from src.presenters.utilities.event import Event
 from src.presenters.view_models.currency_table_model import CurrencyTableModel
 from src.presenters.view_models.exchange_rate_table_model import ExchangeRateTableModel
 from src.utilities.general import get_exception_display_info
-from src.views.add_exchange_rate_dialog import AddExchangeRateDialog
-from src.views.currency_dialog import CurrencyDialog
-from src.views.currency_form import CurrencyForm
-from src.views.set_exchange_rate_dialog import SetExchangeRateDialog
+from src.views.dialogs.add_exchange_rate_dialog import AddExchangeRateDialog
+from src.views.dialogs.currency_dialog import CurrencyDialog
+from src.views.dialogs.set_exchange_rate_dialog import SetExchangeRateDialog
+from src.views.forms.currency_form import CurrencyForm
 from src.views.utilities.handle_exception import display_error_message
 
 

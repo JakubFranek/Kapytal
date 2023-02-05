@@ -10,9 +10,9 @@ from src.presenters.account_tree_presenter import AccountTreePresenter
 from src.presenters.currency_form_presenter import CurrencyFormPresenter
 from src.presenters.payee_form_presenter import PayeeFormPresenter
 from src.utilities.general import backup_json_file, get_exception_display_info
-from src.views.currency_form import CurrencyForm
+from src.views.forms.currency_form import CurrencyForm
+from src.views.forms.payee_form import PayeeForm
 from src.views.main_view import MainView
-from src.views.payee_form import PayeeForm
 from src.views.utilities.handle_exception import display_error_message
 
 
