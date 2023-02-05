@@ -14,6 +14,7 @@ from src.views.set_exchange_rate_dialog import SetExchangeRateDialog
 from src.views.utilities.handle_exception import display_error_message
 
 
+# TODO: change currency button enable state based on selection
 class CurrencyFormPresenter:
     event_data_changed = Event()
     event_base_currency_changed = Event()

@@ -77,17 +77,18 @@ class MainView(QMainWindow, Ui_MainWindow):
         event.ignore()
 
     def show_about(self) -> None:
-        logging.info("Showing About dialog")
+        logging.debug("Showing About dialog")
         app = QApplication.instance()
         version = app.applicationVersion()
         text = (
             "<html>"
-            "<b>Kapytal</b> - a tool for managing personal and household finances<br/>"
+            "<b>Kapytal</b> - <em>a tool for managing personal and "
+            "household finances</em><br/>"
             "Source code and documentation available on "
             "<a href=https://github.com/JakubFranek/Kapytal>"
-            "Kapytal GitHub repository</a><br/>"
-            "Released under <a href=https://www.gnu.org/licenses/gpl-3.0.html>"
-            "GNU General Public Licence v3.0</a><br/>"
+            "Kapytal GitHub repository</a>.<br/>"
+            "Published under <a href=https://www.gnu.org/licenses/gpl-3.0.html>"
+            "GNU General Public Licence v3.0</a>.<br/>"
             "<br/>"
             "<b>Version info</b><br/>"
             f"Kapytal {version}<br/>"
@@ -98,8 +99,8 @@ class MainView(QMainWindow, Ui_MainWindow):
             "<b>Icons info</b><br/>"
             "<a href=https://p.yusukekamiyamane.com>Fugue Icons set</a> by "
             "Yusuke Kamiyamane.<br/>"
-            "Custom icons in <tt>Kapytal/resources/icons/icons-custom</tt> "
-            "are modified Fugue Icons.<br/>"
+            "Custom icons located in <tt>Kapytal/resources/icons/icons-custom</tt> "
+            "are modifications of existing Fugue Icons.<br/>"
             "</html"
         )
         message_box = QMessageBox(self)
@@ -109,7 +110,7 @@ class MainView(QMainWindow, Ui_MainWindow):
         message_box.setText(text)
         message_box.setStandardButtons(QMessageBox.StandardButton.Ok)
         message_box.exec()
-        logging.info("Closing About dialog")
+        logging.debug("Closing About dialog")
 
     def initial_setup(self) -> None:
         QDir.addSearchPath(

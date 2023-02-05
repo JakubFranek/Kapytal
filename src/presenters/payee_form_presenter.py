@@ -10,6 +10,8 @@ from src.views.payee_form import PayeeForm
 from src.views.utilities.handle_exception import display_error_message
 
 
+# TODO: sorting
+# TODO: filtering by search
 class PayeeFormPresenter:
     event_data_changed = Event()
 
