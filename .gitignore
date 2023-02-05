@@ -4,8 +4,8 @@ build
 dist
 __pycache__
 main.spec
-logs
-saved_data
+*.log
+saved_data/**/*.json
 .pytest_cache
 .coverage
 coverage.xml

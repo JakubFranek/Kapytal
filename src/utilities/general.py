@@ -25,9 +25,10 @@ def backup_json_file(file_path: str, backup_directories: list[str]) -> None:
 
         listdir = os.listdir(backup_directory)
         old_backup_paths = [
-            os.path.join(backup_directory, backup)
-            for backup in listdir
-            if os.path.isfile(os.path.join(backup_directory, backup))
+            os.path.join(backup_directory, file_name)
+            for file_name in listdir
+            if os.path.isfile(os.path.join(backup_directory, file_name))
+            and file_name != "README.md"
         ]
         no_of_backups = len(old_backup_paths)
         _ = sum(os.path.getsize(backup) for backup in old_backup_paths)  # size in bytes
@@ -43,7 +44,7 @@ def setup_logging(root_directory: str) -> None:
         os.makedirs(dir_logs)
 
     dt_now = datetime.now(tzinfo)
-    file_name = dir_logs + r"\debug_" + dt_now.strftime("%Y_%m_%d_%Hh%Mm%Ss") + ".log"
+    file_name = dir_logs + r"\logfile_" + dt_now.strftime("%Y_%m_%d_%Hh%Mm%Ss") + ".log"
     log_format = (
         "%(asctime)s.%(msecs)03d %(levelname)s "
         "{%(module)s} [%(funcName)s] %(message)s"
@@ -59,15 +60,16 @@ def setup_logging(root_directory: str) -> None:
     logging.debug("Logging setup complete")
 
     listdir = os.listdir(dir_logs)
-    logs_paths = [
-        os.path.join(dir_logs, log)
-        for log in listdir
-        if os.path.isfile(os.path.join(dir_logs, log))
+    log_paths = [
+        os.path.join(dir_logs, file_name)
+        for file_name in listdir
+        if os.path.isfile(os.path.join(dir_logs, file_name))
+        and file_name != "README.md"
     ]
-    no_of_logs = len(logs_paths)
-    _ = sum(os.path.getsize(log) for log in logs_paths)  # size in bytes
+    no_of_logs = len(log_paths)
+    _ = sum(os.path.getsize(log) for log in log_paths)  # size in bytes
     if no_of_logs > 10:  # NOTE: will be determined by size in release
-        oldest_log = min(logs_paths, key=os.path.getctime)
+        oldest_log = min(log_paths, key=os.path.getctime)
         logging.info(f"Removing oldest log: {oldest_log}")
         os.remove(oldest_log)
 
