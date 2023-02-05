@@ -35,6 +35,7 @@ class PayeeFormPresenter:
         self._view.signal_select_payee.connect(self.select_payee)
         self._view.signal_sort_ascending.connect(lambda: self._sort(ascending=True))
         self._view.signal_sort_descending.connect(lambda: self._sort(ascending=False))
+        self._view.signal_search_text_changed.connect(self._filter)
 
         self._view.listView.selectionModel().selectionChanged.connect(
             self._selection_changed
@@ -129,6 +130,11 @@ class PayeeFormPresenter:
         else:
             logging.debug("Sorting Payees in descending order")
             self._proxy_model.sort(0, Qt.SortOrder.DescendingOrder)
+
+    def _filter(self) -> None:
+        pattern = self._view.search_bar_text
+        logging.debug(f"Filtering Payees: {pattern=}")
+        self._proxy_model.setFilterWildcard(pattern)
 
     def _selection_changed(self) -> None:
         item = self._model.get_selected_item()

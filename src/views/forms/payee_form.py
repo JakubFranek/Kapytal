@@ -14,6 +14,7 @@ class PayeeForm(QWidget, Ui_PayeeForm):
     signal_select_payee = pyqtSignal()
     signal_sort_ascending = pyqtSignal()
     signal_sort_descending = pyqtSignal()
+    signal_search_text_changed = pyqtSignal()
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent=parent)
@@ -42,6 +43,19 @@ class PayeeForm(QWidget, Ui_PayeeForm):
         self.searchLineEdit.addAction(
             QIcon("icons_16:magnifier.png"), QLineEdit.ActionPosition.LeadingPosition
         )
+        self.searchLineEdit.textChanged.connect(self.signal_search_text_changed.emit)
+        self.searchLineEdit.setToolTip(
+            (
+                "Special characters:\n"
+                "* matches zero or more of any characters\n"
+                "? matches any single character\n"
+                "[...] matches any character within square brackets"
+            )
+        )
+
+    @property
+    def search_bar_text(self) -> str:
+        return self.searchLineEdit.text()
 
     def show_form(self) -> None:
         logging.debug(f"Showing {self.__class__.__name__}")
