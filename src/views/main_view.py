@@ -1,6 +1,7 @@
 import os
+import sys
 
-from PyQt6.QtCore import QDir, pyqtSignal
+from PyQt6.QtCore import PYQT_VERSION_STR, QT_VERSION_STR, QDir, QSize, Qt, pyqtSignal
 from PyQt6.QtGui import QCloseEvent, QIcon
 from PyQt6.QtWidgets import QApplication, QFileDialog, QMainWindow, QMessageBox
 
@@ -73,6 +74,39 @@ class MainView(QMainWindow, Ui_MainWindow):
         self.signal_exit.emit()
         event.ignore()
 
+    def show_about(self) -> None:
+        app = QApplication.instance()
+        version = app.applicationVersion()
+        text = (
+            "<html>"
+            "<b>Kapytal</b> - a tool for managing personal and household finances<br/>"
+            "Source code and documentation available on "
+            "<a href=https://github.com/JakubFranek/Kapytal>"
+            "Kapytal GitHub repository</a><br/>"
+            "Released under <a href=https://www.gnu.org/licenses/gpl-3.0.html>"
+            "GNU General Public Licence v3.0</a><br/>"
+            "<br/>"
+            "<b>Version info</b><br/>"
+            f"Kapytal {version}<br/>"
+            f"Python {sys.version}<br/>"
+            f"Qt {QT_VERSION_STR}<br/>"
+            f"PyQt {PYQT_VERSION_STR}<br/>"
+            "<br/>"
+            "<b>Icons info</b><br/>"
+            "<a href=https://p.yusukekamiyamane.com>Fugue Icons set</a> by "
+            "Yusuke Kamiyamane.<br/>"
+            "Custom icons in <tt>Kapytal/resources/icons/icons-custom</tt> "
+            "are modified Fugue Icons.<br/>"
+            "</html"
+        )
+        message_box = QMessageBox(self)
+        message_box.setWindowTitle("About Kapytal")
+        message_box.setIcon(QMessageBox.Icon.Information)
+        message_box.setTextFormat(Qt.TextFormat.RichText)
+        message_box.setText(text)
+        message_box.setStandardButtons(QMessageBox.StandardButton.Ok)
+        message_box.exec()
+
     def initial_setup(self) -> None:
         QDir.addSearchPath(
             "icons_24",
@@ -90,6 +124,11 @@ class MainView(QMainWindow, Ui_MainWindow):
         self.setupUi(self)
         self.account_tree = AccountTree(self)
         self.verticalLayoutTree.addWidget(self.account_tree)
+
+        app_icon = QIcon()
+        app_icon.addFile("icons_custom:coin-k.png", QSize(24, 24))
+        app_icon.addFile("icons_custom:coin-k-small.png", QSize(16, 16))
+        self.setWindowIcon(app_icon)
 
         self.actionOpen_File.setIcon(QIcon("icons_16:folder-open-document.png"))
         self.actionSave.setIcon(QIcon("icons_16:disk.png"))
@@ -110,6 +149,7 @@ class MainView(QMainWindow, Ui_MainWindow):
         self.actionSave_As.triggered.connect(self.signal_save_as.emit)
         self.actionOpen_File.triggered.connect(self.signal_open.emit)
         self.actionQuit.triggered.connect(self.close)
+        self.actionAbout.triggered.connect(self.show_about)
 
         self.toolButton_expandAll.setDefaultAction(self.account_tree.actionExpand_All)
         self.toolButton_collapseAll.setDefaultAction(
