@@ -19,7 +19,7 @@ class CurrencyForm(QWidget, Ui_CurrencyForm):
         super().__init__(parent=parent)
         self.setupUi(self)
         self.setWindowFlag(Qt.WindowType.Window)
-        self.setWindowIcon(QIcon("icons_16:currency.png"))
+        self.setWindowIcon(QIcon("icons_custom:currency.png"))
 
         self.setBaseCurrencyButton.setIcon(QIcon("icons_16:star.png"))
 

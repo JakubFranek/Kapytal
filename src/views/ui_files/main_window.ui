@@ -27,7 +27,7 @@
     <item>
      <layout class="QVBoxLayout" name="verticalLayoutTree">
       <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_3">
+       <layout class="QHBoxLayout" name="treeControlsHorizontalLayout">
         <property name="topMargin">
          <number>2</number>
         </property>
@@ -35,7 +35,7 @@
          <number>0</number>
         </property>
         <item>
-         <widget class="QToolButton" name="toolButton_expandAll">
+         <widget class="QToolButton" name="expandAllToolButton">
           <property name="text">
            <string>Expand All</string>
           </property>
@@ -48,14 +48,14 @@
          </widget>
         </item>
         <item>
-         <widget class="QToolButton" name="toolButton_collapseAll">
+         <widget class="QToolButton" name="collapseAllToolButton">
           <property name="text">
            <string>Collapse All</string>
           </property>
          </widget>
         </item>
         <item>
-         <spacer name="horizontalSpacer_2">
+         <spacer name="treeControlsHorizontalSpacer">
           <property name="orientation">
            <enum>Qt::Horizontal</enum>
           </property>
@@ -74,44 +74,59 @@
     <item>
      <layout class="QVBoxLayout" name="verticalLayoutTable">
       <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="0,0,0,0,0,1,0,0">
+       <layout class="QHBoxLayout" name="tableControlsHorizontalLayout" stretch="0,0,0,0,0,1,0,0">
         <item>
-         <widget class="QToolButton" name="toolButton_4">
-          <property name="text">
-           <string>Expense</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QToolButton" name="toolButton_5">
+         <widget class="QToolButton" name="incomeToolButton">
           <property name="text">
            <string>Income</string>
           </property>
+          <property name="toolButtonStyle">
+           <enum>Qt::ToolButtonTextBesideIcon</enum>
+          </property>
          </widget>
         </item>
         <item>
-         <widget class="QToolButton" name="toolButton_6">
+         <widget class="QToolButton" name="expenseToolButton">
+          <property name="text">
+           <string>Expense</string>
+          </property>
+          <property name="toolButtonStyle">
+           <enum>Qt::ToolButtonTextBesideIcon</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QToolButton" name="transferToolButton">
           <property name="text">
            <string>Transfer</string>
           </property>
+          <property name="toolButtonStyle">
+           <enum>Qt::ToolButtonTextBesideIcon</enum>
+          </property>
          </widget>
         </item>
         <item>
-         <widget class="QToolButton" name="toolButton_7">
+         <widget class="QToolButton" name="buyToolButton">
           <property name="text">
            <string>Buy</string>
           </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QToolButton" name="toolButton_8">
-          <property name="text">
-           <string>Sell</string>
+          <property name="toolButtonStyle">
+           <enum>Qt::ToolButtonTextBesideIcon</enum>
           </property>
          </widget>
         </item>
         <item>
-         <spacer name="horizontalSpacer">
+         <widget class="QToolButton" name="sellToolButton">
+          <property name="text">
+           <string>Sell</string>
+          </property>
+          <property name="toolButtonStyle">
+           <enum>Qt::ToolButtonTextBesideIcon</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="tableControlsHorizontalSpacer">
           <property name="orientation">
            <enum>Qt::Horizontal</enum>
           </property>
@@ -124,22 +139,31 @@
          </spacer>
         </item>
         <item>
-         <widget class="QToolButton" name="toolButton">
+         <widget class="QToolButton" name="filterToolButton">
           <property name="text">
            <string>Filter</string>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="QLineEdit" name="lineEdit">
+         <widget class="QLineEdit" name="searchLineEdit">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
           <property name="maximumSize">
            <size>
-            <width>16777215</width>
+            <width>155</width>
             <height>16777215</height>
            </size>
           </property>
           <property name="placeholderText">
            <string>Search</string>
+          </property>
+          <property name="clearButtonEnabled">
+           <bool>true</bool>
           </property>
          </widget>
         </item>
@@ -254,34 +278,34 @@
     <string>Ctrl+O</string>
    </property>
   </action>
-  <action name="actionAdd_Expense">
+  <action name="actionExpense">
    <property name="text">
-    <string>Add Expense</string>
+    <string>Expense</string>
    </property>
   </action>
-  <action name="actionAdd_Income">
+  <action name="actionIncome">
    <property name="text">
-    <string>Add Income</string>
+    <string>Income</string>
    </property>
   </action>
-  <action name="actionAdd_Transfer">
+  <action name="actionTransfer">
    <property name="text">
-    <string>Add Transfer</string>
+    <string>Transfer</string>
    </property>
   </action>
-  <action name="actionAdd_Buy">
+  <action name="actionBuy">
    <property name="text">
-    <string>Add Buy</string>
+    <string>Buy</string>
    </property>
   </action>
-  <action name="actionAdd_Sell">
+  <action name="actionSell">
    <property name="text">
-    <string>Add Sell</string>
+    <string>Sell</string>
    </property>
   </action>
-  <action name="actionAdd_Refund">
+  <action name="actionRefund">
    <property name="text">
-    <string>Add Refund</string>
+    <string>Refund</string>
    </property>
   </action>
   <action name="actionDuplicate_Transaction">

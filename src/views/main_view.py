@@ -3,8 +3,14 @@ import os
 import sys
 
 from PyQt6.QtCore import PYQT_VERSION_STR, QT_VERSION_STR, QDir, QSize, Qt, pyqtSignal
-from PyQt6.QtGui import QCloseEvent, QIcon
-from PyQt6.QtWidgets import QApplication, QFileDialog, QMainWindow, QMessageBox
+from PyQt6.QtGui import QAction, QCloseEvent, QIcon
+from PyQt6.QtWidgets import (
+    QApplication,
+    QFileDialog,
+    QLineEdit,
+    QMainWindow,
+    QMessageBox,
+)
 
 from src.views.account_tree import AccountTree
 from src.views.ui_files.Ui_main_window import Ui_MainWindow
@@ -135,10 +141,14 @@ class MainView(QMainWindow, Ui_MainWindow):
         app_icon.addFile("icons_custom:coin-k-small.png", QSize(16, 16))
         self.setWindowIcon(app_icon)
 
+        self.actionFilterTransactions = QAction(self)
+
         self.actionOpen_File.setIcon(QIcon("icons_16:folder-open-document.png"))
         self.actionSave.setIcon(QIcon("icons_16:disk.png"))
         self.actionSave_As.setIcon(QIcon("icons_16:disks.png"))
-        self.actionCurrencies_and_Exchange_Rates.setIcon(QIcon("icons_16:currency.png"))
+        self.actionCurrencies_and_Exchange_Rates.setIcon(
+            QIcon("icons_custom:currency.png")
+        )
         self.actionQuit.setIcon(QIcon("icons_16:door-open-out.png"))
         self.actionSecurities.setIcon(QIcon("icons_16:certificate.png"))
         self.actionCategories.setIcon(QIcon("icons_16:category.png"))
@@ -146,6 +156,12 @@ class MainView(QMainWindow, Ui_MainWindow):
         self.actionPayees.setIcon(QIcon("icons_16:user-silhouette.png"))
         self.actionSettings.setIcon(QIcon("icons_16:gear.png"))
         self.actionAbout.setIcon(QIcon("icons_16:information.png"))
+        self.actionFilterTransactions.setIcon(QIcon("icons_16:funnel.png"))
+        self.actionIncome.setIcon(QIcon("icons_16:money--plus.png"))
+        self.actionExpense.setIcon(QIcon("icons_16:money--minus.png"))
+        self.actionBuy.setIcon(QIcon("icons_custom:certificate-plus.png"))
+        self.actionSell.setIcon(QIcon("icons_custom:certificate-minus.png"))
+        self.actionTransfer.setIcon(QIcon("icons_16:zone--arrow.png"))
 
         self.actionCurrencies_and_Exchange_Rates.triggered.connect(
             self.signal_open_currency_form.emit
@@ -157,7 +173,25 @@ class MainView(QMainWindow, Ui_MainWindow):
         self.actionQuit.triggered.connect(self.close)
         self.actionAbout.triggered.connect(self.show_about)
 
-        self.toolButton_expandAll.setDefaultAction(self.account_tree.actionExpand_All)
-        self.toolButton_collapseAll.setDefaultAction(
+        self.expandAllToolButton.setDefaultAction(self.account_tree.actionExpand_All)
+        self.collapseAllToolButton.setDefaultAction(
             self.account_tree.actionCollapse_All
+        )
+        self.filterToolButton.setDefaultAction(self.actionFilterTransactions)
+        self.buyToolButton.setDefaultAction(self.actionBuy)
+        self.sellToolButton.setDefaultAction(self.actionSell)
+        self.incomeToolButton.setDefaultAction(self.actionIncome)
+        self.expenseToolButton.setDefaultAction(self.actionExpense)
+        self.transferToolButton.setDefaultAction(self.actionTransfer)
+
+        self.searchLineEdit.addAction(
+            QIcon("icons_16:magnifier.png"), QLineEdit.ActionPosition.LeadingPosition
+        )
+        self.searchLineEdit.setToolTip(
+            (
+                "Special characters:\n"
+                "* matches zero or more of any characters\n"
+                "? matches any single character\n"
+                "[...] matches any character within square brackets"
+            )
         )

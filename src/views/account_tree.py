@@ -78,6 +78,8 @@ class AccountTree(QTreeView):
         self.actionAdd_Cash_Account.triggered.connect(self.signal_add_cash_account.emit)
         self.actionEdit_Account_Tree_Item.triggered.connect(self.signal_edit_item.emit)
 
+        self.setStatusTip("Account Tree: right click to open the context menu")
+
         self.contextMenuEvent = self.create_context_menu
 
     def expand_all(self) -> None:

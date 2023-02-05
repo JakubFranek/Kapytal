@@ -1,5 +1,7 @@
 # Tasks
 
+1. Add more tooltips or status bar info
+    - for example account item dialogs
 1. Settings
     - backup location
     - no./size of backups
