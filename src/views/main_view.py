@@ -1,3 +1,4 @@
+import logging
 import os
 import sys
 
@@ -75,6 +76,7 @@ class MainView(QMainWindow, Ui_MainWindow):
         event.ignore()
 
     def show_about(self) -> None:
+        logging.info("Showing About dialog")
         app = QApplication.instance()
         version = app.applicationVersion()
         text = (
@@ -106,6 +108,7 @@ class MainView(QMainWindow, Ui_MainWindow):
         message_box.setText(text)
         message_box.setStandardButtons(QMessageBox.StandardButton.Ok)
         message_box.exec()
+        logging.info("Closing About dialog")
 
     def initial_setup(self) -> None:
         QDir.addSearchPath(

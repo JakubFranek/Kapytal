@@ -1,3 +1,5 @@
+import logging
+
 from PyQt6 import QtGui, QtWidgets
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtGui import QContextMenuEvent, QCursor, QIcon
@@ -61,9 +63,9 @@ class AccountTree(QTreeView):
         self.actionEdit_Account_Tree_Item.setIcon(QIcon("icons_16:pencil.png"))
         self.actionDelete_Account_Tree_Item.setIcon(QIcon("icons_16:minus.png"))
 
-        self.actionExpand_All.triggered.connect(self.expandAll)
+        self.actionExpand_All.triggered.connect(self.expand_all)
         self.actionExpand_All_Below.triggered.connect(self.signal_expand_below.emit)
-        self.actionCollapse_All.triggered.connect(self.collapseAll)
+        self.actionCollapse_All.triggered.connect(self.collapse_all)
         self.actionDelete_Account_Tree_Item.triggered.connect(
             self.signal_delete_item.emit
         )
@@ -77,6 +79,14 @@ class AccountTree(QTreeView):
         self.actionEdit_Account_Tree_Item.triggered.connect(self.signal_edit_item.emit)
 
         self.contextMenuEvent = self.create_context_menu
+
+    def expand_all(self) -> None:
+        logging.info("Expanding all AccountTree nodes")
+        self.expandAll()
+
+    def collapse_all(self) -> None:
+        logging.info("Collapsing all AccountTree nodes")
+        self.collapseAll()
 
     def enable_accounts_tree_actions(
         self,
