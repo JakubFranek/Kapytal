@@ -91,6 +91,8 @@ class AccountTreeModel(QAbstractItemModel):
                 return ""
             if column == AccountTreeColumns.COLUMN_BALANCE_BASE:
                 try:
+                    if self.base_currency is None:
+                        return ""
                     return str(node.get_balance(self.base_currency))
                 except Exception:
                     logging.warning(

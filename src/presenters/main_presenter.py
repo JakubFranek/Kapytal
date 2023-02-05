@@ -82,6 +82,7 @@ class MainPresenter:
         except Exception:
             self._handle_exception()
 
+    # TODO: create a local backup of loaded files
     def _load_from_file(self) -> None:
         logging.info("Load from file initiated")
         try:

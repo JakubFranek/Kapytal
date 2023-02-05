@@ -101,6 +101,7 @@ class MainView(QMainWindow, Ui_MainWindow):
         self.actionTags.setIcon(QIcon("icons_16:tag.png"))
         self.actionPayees.setIcon(QIcon("icons_16:user-silhouette.png"))
         self.actionSettings.setIcon(QIcon("icons_16:gear.png"))
+        self.actionAbout.setIcon(QIcon("icons_16:information.png"))
 
         self.actionCurrencies_and_Exchange_Rates.triggered.connect(
             self.signal_open_currency_form.emit

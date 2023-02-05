@@ -67,6 +67,7 @@ class CurrencyFormPresenter:
         self._dialog.exec()
 
     def add_currency(self) -> None:
+        previous_base_currency = self._record_keeper.base_currency
         code = self._dialog.currency_code
         places = self._dialog.currency_places
 
@@ -83,6 +84,8 @@ class CurrencyFormPresenter:
         self._currency_table_model.post_add()
         self._dialog.close()
         self.event_data_changed()
+        if self._record_keeper.base_currency != previous_base_currency:
+            self.event_base_currency_changed()
 
     def set_base_currency(self) -> None:
         currency = self._currency_table_model.get_selected_item()

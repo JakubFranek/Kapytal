@@ -77,7 +77,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         return tuple(self._currencies)
 
     @property
-    def base_currency(self) -> Currency:
+    def base_currency(self) -> Currency | None:
         return self._base_currency
 
     @property
