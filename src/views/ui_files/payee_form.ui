@@ -23,11 +23,29 @@
    <item>
     <layout class="QVBoxLayout" name="leftVerticalLayout">
      <item>
-      <widget class="QLineEdit" name="searchLineEdit">
-       <property name="placeholderText">
-        <string>Search...</string>
-       </property>
-      </widget>
+      <layout class="QHBoxLayout" name="controlsHorizontalLayout">
+       <item>
+        <widget class="QToolButton" name="sortAscendingButton">
+         <property name="text">
+          <string>...</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QToolButton" name="sortDescendingButton">
+         <property name="text">
+          <string>...</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="searchLineEdit">
+         <property name="placeholderText">
+          <string>Search...</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </item>
      <item>
       <widget class="QListView" name="listView"/>

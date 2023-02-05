@@ -1,5 +1,7 @@
 import logging
 
+from PyQt6.QtCore import QSortFilterProxyModel, Qt
+
 from src.models.model_objects.attributes import AttributeType
 from src.models.record_keeper import RecordKeeper
 from src.presenters.utilities.event import Event
@@ -10,7 +12,6 @@ from src.views.forms.payee_form import PayeeForm
 from src.views.utilities.handle_exception import display_error_message
 
 
-# TODO: sorting
 # TODO: filtering by search
 class PayeeFormPresenter:
     event_data_changed = Event()
@@ -19,13 +20,21 @@ class PayeeFormPresenter:
         self._view = view
         self._record_keeper = record_keeper
 
-        self._model = PayeeListModel(self._view.listView, record_keeper.payees)
-        self._view.listView.setModel(self._model)
+        self._proxy_model = QSortFilterProxyModel(self._view.listView)
+        self._model = PayeeListModel(
+            self._view.listView, record_keeper.payees, self._proxy_model
+        )
+        self._proxy_model.setSourceModel(self._model)
+        self._proxy_model.setSortCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+        self._proxy_model.setSortRole(Qt.ItemDataRole.UserRole)
+        self._view.listView.setModel(self._proxy_model)
 
         self._view.signal_add_payee.connect(lambda: self.run_payee_dialog(edit=False))
         self._view.signal_remove_payee.connect(self.remove_payee)
         self._view.signal_rename_payee.connect(lambda: self.run_payee_dialog(edit=True))
         self._view.signal_select_payee.connect(self.select_payee)
+        self._view.signal_sort_ascending.connect(lambda: self._sort(ascending=True))
+        self._view.signal_sort_descending.connect(lambda: self._sort(ascending=False))
 
         self._view.listView.selectionModel().selectionChanged.connect(
             self._selection_changed
@@ -87,9 +96,7 @@ class PayeeFormPresenter:
             self._handle_exception()
             return
 
-        self._model.pre_add()
         self._model.payees = self._record_keeper.payees
-        self._model.post_add()
         self._dialog.close()
         self.event_data_changed()
 
@@ -113,6 +120,14 @@ class PayeeFormPresenter:
 
     def select_payee(self) -> None:
         pass
+
+    def _sort(self, ascending: bool) -> None:
+        if ascending:
+            logging.debug("Sorting Payees in ascending order")
+            self._proxy_model.sort(0, Qt.SortOrder.AscendingOrder)
+        else:
+            logging.debug("Sorting Payees in descending order")
+            self._proxy_model.sort(0, Qt.SortOrder.DescendingOrder)
 
     def _selection_changed(self) -> None:
         item = self._model.get_selected_item()

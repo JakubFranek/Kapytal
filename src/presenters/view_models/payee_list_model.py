@@ -1,22 +1,23 @@
 import typing
+import unicodedata
 
-from PyQt6.QtCore import QAbstractListModel, QModelIndex, Qt
+from PyQt6.QtCore import QAbstractListModel, QModelIndex, QSortFilterProxyModel, Qt
 from PyQt6.QtWidgets import QTableView
 
 from src.models.model_objects.attributes import Attribute
 
 
 class PayeeListModel(QAbstractListModel):
-    COLUMN_HEADERS = {"Payee name"}
-
     def __init__(
         self,
         view: QTableView,
         payees: tuple[Attribute, ...],
+        proxy: QSortFilterProxyModel,
     ) -> None:
         super().__init__()
         self._list = view
         self.payees = payees
+        self._proxy = proxy
 
     def rowCount(self, index: QModelIndex = ...) -> int:
         if isinstance(index, QModelIndex) and index.isValid():
@@ -28,6 +29,7 @@ class PayeeListModel(QAbstractListModel):
     ) -> QModelIndex:
         if parent.isValid():
             return QModelIndex()
+        # NOTE: is the check below even necessary in any model?
         if not QAbstractListModel.hasIndex(self, row, 0, QModelIndex()):
             return QModelIndex()
         item = self.payees[row]
@@ -39,15 +41,8 @@ class PayeeListModel(QAbstractListModel):
         payee = self.payees[index.row()]
         if role == Qt.ItemDataRole.DisplayRole:
             return payee.name
-        return None
-
-    def headerData(
-        self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole = ...
-    ) -> str | int | None:
-        if role == Qt.ItemDataRole.DisplayRole:
-            if orientation == Qt.Orientation.Horizontal:
-                return self.COLUMN_HEADERS[section]
-            return str(section)
+        if role == Qt.ItemDataRole.UserRole:
+            return unicodedata.normalize("NFD", payee.name)
         return None
 
     def pre_add(self) -> None:
@@ -62,6 +57,7 @@ class PayeeListModel(QAbstractListModel):
     def post_reset_model(self) -> None:
         self.endResetModel()
 
+    # IDEA: wouldn't it be more practical to accept item and make index here?
     def pre_delete_item(self, index: QModelIndex) -> None:
         self.beginRemoveRows(QModelIndex(), index.row(), index.row())
 
@@ -69,16 +65,18 @@ class PayeeListModel(QAbstractListModel):
         self.endRemoveRows()
 
     def get_selected_item_index(self) -> QModelIndex:
-        indexes = self._list.selectedIndexes()
-        if len(indexes) == 0:
+        proxy_indexes = self._list.selectedIndexes()
+        source_indexes = [self._proxy.mapToSource(index) for index in proxy_indexes]
+        if len(source_indexes) == 0:
             return QModelIndex()
-        return indexes[0]
+        return source_indexes[0]
 
     def get_selected_item(self) -> Attribute | None:
-        indexes = self._list.selectedIndexes()
-        if len(indexes) == 0:
+        proxy_indexes = self._list.selectedIndexes()
+        source_indexes = [self._proxy.mapToSource(index) for index in proxy_indexes]
+        if len(source_indexes) == 0:
             return None
-        return indexes[0].internalPointer()
+        return source_indexes[0].internalPointer()
 
     def get_index_from_item(self, item: Attribute | None) -> QModelIndex:
         if item is None:

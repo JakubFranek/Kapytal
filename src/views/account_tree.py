@@ -81,11 +81,11 @@ class AccountTree(QTreeView):
         self.contextMenuEvent = self.create_context_menu
 
     def expand_all(self) -> None:
-        logging.info("Expanding all AccountTree nodes")
+        logging.debug("Expanding all AccountTree nodes")
         self.expandAll()
 
     def collapse_all(self) -> None:
-        logging.info("Collapsing all AccountTree nodes")
+        logging.debug("Collapsing all AccountTree nodes")
         self.collapseAll()
 
     def enable_accounts_tree_actions(
