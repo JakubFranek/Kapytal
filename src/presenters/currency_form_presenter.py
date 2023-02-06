@@ -121,11 +121,10 @@ class CurrencyFormPresenter:
             self._handle_exception()
             return
 
-        index = self._currency_table_model.get_index_from_item(currency)
-        self._currency_table_model.pre_delete_item(index)
+        self._currency_table_model.pre_remove_item(currency)
         self._currency_table_model.currencies = self._record_keeper.currencies
         self._currency_table_model.base_currency = self._record_keeper.base_currency
-        self._currency_table_model.post_delete_item()
+        self._currency_table_model.post_remove_item()
         self.event_data_changed()
         if self._record_keeper.base_currency != previous_base_currency:
             self.event_base_currency_changed()
@@ -201,12 +200,11 @@ class CurrencyFormPresenter:
             self._handle_exception()
             return
 
-        index = self._exchange_rate_table_model.get_index_from_item(exchange_rate)
-        self._exchange_rate_table_model.pre_delete_item(index)
+        self._exchange_rate_table_model.pre_remove_item(exchange_rate)
         self._exchange_rate_table_model.exchange_rates = (
             self._record_keeper.exchange_rates
         )
-        self._exchange_rate_table_model.post_delete_item()
+        self._exchange_rate_table_model.post_remove_item()
         self.event_data_changed()
 
     def _exchange_rate_selection_changed(self) -> None:

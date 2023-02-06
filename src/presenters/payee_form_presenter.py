@@ -25,8 +25,9 @@ class PayeeFormPresenter:
             self._view.listView, record_keeper.payees, self._proxy_model
         )
         self._proxy_model.setSourceModel(self._model)
-        self._proxy_model.setSortCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
         self._proxy_model.setSortRole(Qt.ItemDataRole.UserRole)
+        self._proxy_model.setSortCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+        self._proxy_model.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
         self._view.listView.setModel(self._proxy_model)
 
         self._view.signal_add_payee.connect(lambda: self.run_payee_dialog(edit=False))
@@ -114,10 +115,9 @@ class PayeeFormPresenter:
             self._handle_exception()
             return
 
-        index = self._model.get_index_from_item(payee)
-        self._model.pre_delete_item(index)
+        self._model.pre_removee_item(payee)
         self._model.payees = self._record_keeper.payees
-        self._model.post_delete_item()
+        self._model.post_remove_item()
         self.event_data_changed()
 
     def select_payee(self) -> None:

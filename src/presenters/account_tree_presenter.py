@@ -18,6 +18,9 @@ from src.views.utilities.handle_exception import display_error_message
 
 
 class AccountTreePresenter:
+    # Definition of custom Callable type for setting up dialogs
+    SetupDialogCallable = Callable[[bool, AccountGroup | Account | None, int], None]
+
     event_data_changed = Event()
 
     def __init__(self, view: AccountTree, record_keeper: RecordKeeper) -> None:
@@ -63,7 +66,7 @@ class AccountTreePresenter:
             raise TypeError("Unexpected selected item type.")
         self.run_edit_dialog(item=item, setup_dialog=setup_dialog)
 
-    def delete_item(self) -> None:
+    def remove_item(self) -> None:
         item = self._model.get_selected_item()
         if item is None:
             raise ValueError("Cannot delete non-existent item.")
@@ -81,17 +84,14 @@ class AccountTreePresenter:
             return
 
         # Perform the deletion on the "real" RecordKeeper if it went fine
-        index = self._model.get_index_from_item(item)
-        self._model.pre_delete_item(index)
+        self._model.pre_remove_item(item)
         if isinstance(item, AccountGroup):
             self._record_keeper.remove_account_group(item.path)
         else:
             self._record_keeper.remove_account(item.path)
         self.update_model_data()
-        self._model.post_delete_item()
+        self._model.post_remove_item()
         self.event_data_changed()
-
-    SetupDialogCallable = Callable[[bool, AccountGroup | Account | None, int], None]
 
     def run_add_dialog(self, setup_dialog: SetupDialogCallable) -> None:
         item = self._model.get_selected_item()
@@ -398,7 +398,7 @@ class AccountTreePresenter:
     def _setup_signals(self) -> None:
         self._view.signal_selection_changed.connect(self._selection_changed)
         self._view.signal_expand_below.connect(self.expand_all_below)
-        self._view.signal_delete_item.connect(self.delete_item)
+        self._view.signal_delete_item.connect(self.remove_item)
         self._view.signal_add_account_group.connect(
             lambda: self.run_add_dialog(
                 setup_dialog=self.setup_account_group_dialog,

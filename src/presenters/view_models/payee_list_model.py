@@ -57,11 +57,11 @@ class PayeeListModel(QAbstractListModel):
     def post_reset_model(self) -> None:
         self.endResetModel()
 
-    # IDEA: wouldn't it be more practical to accept item and make index here?
-    def pre_delete_item(self, index: QModelIndex) -> None:
+    def pre_removee_item(self, item: Attribute) -> None:
+        index = self.get_index_from_item(item)
         self.beginRemoveRows(QModelIndex(), index.row(), index.row())
 
-    def post_delete_item(self) -> None:
+    def post_remove_item(self) -> None:
         self.endRemoveRows()
 
     def get_selected_item_index(self) -> QModelIndex:
