@@ -59,7 +59,7 @@ class AccountTree(QTreeView):
         self.actionCollapse_All.setIcon(QIcon("icons_16:arrow-in.png"))
         self.actionAdd_Account_Group.setIcon(QIcon("icons_16:folder--plus.png"))
         self.actionAdd_Security_Account.setIcon(QIcon("icons_custom:bank-plus.png"))
-        self.actionAdd_Cash_Account.setIcon(QIcon("icons_custom:money-coin-plus.png"))
+        self.actionAdd_Cash_Account.setIcon(QIcon("icons_custom:piggy-bank-plus.png"))
         self.actionEdit_Account_Tree_Item.setIcon(QIcon("icons_16:pencil.png"))
         self.actionDelete_Account_Tree_Item.setIcon(QIcon("icons_16:minus.png"))
 

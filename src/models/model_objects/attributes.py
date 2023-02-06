@@ -29,6 +29,9 @@ class CategoryType(Enum):
     INCOME_AND_EXPENSE = auto()
 
 
+# TODO: add no. of transactions and total balance to Attribute and Category
+
+
 class Attribute(NameMixin, JSONSerializableMixin):
     def __init__(self, name: str, type_: AttributeType) -> None:
         super().__init__(name=name)

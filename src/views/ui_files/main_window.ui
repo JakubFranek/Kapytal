@@ -52,6 +52,9 @@
           <property name="text">
            <string>Collapse All</string>
           </property>
+          <property name="toolButtonStyle">
+           <enum>Qt::ToolButtonIconOnly</enum>
+          </property>
          </widget>
         </item>
         <item>
@@ -100,8 +103,14 @@
           <property name="text">
            <string>Transfer</string>
           </property>
+          <property name="popupMode">
+           <enum>QToolButton::InstantPopup</enum>
+          </property>
           <property name="toolButtonStyle">
            <enum>Qt::ToolButtonTextBesideIcon</enum>
+          </property>
+          <property name="arrowType">
+           <enum>Qt::NoArrow</enum>
           </property>
          </widget>
         </item>
@@ -356,6 +365,19 @@
   <action name="actionSettings">
    <property name="text">
     <string>Settings</string>
+   </property>
+  </action>
+  <action name="actionCashTransfer">
+   <property name="text">
+    <string>Cash Transfer</string>
+   </property>
+  </action>
+  <action name="actionSecurityTransfer">
+   <property name="text">
+    <string>Security Transfer</string>
+   </property>
+   <property name="toolTip">
+    <string>Security Transfer</string>
    </property>
   </action>
  </widget>

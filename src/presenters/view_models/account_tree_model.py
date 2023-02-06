@@ -112,7 +112,9 @@ class AccountTreeModel(QAbstractItemModel):
             if isinstance(node, SecurityAccount):
                 return QIcon("icons_16:bank.png")
             if isinstance(node, CashAccount):
-                return QIcon("icons_16:money-coin.png")
+                if node.get_balance(node.currency).is_positive():
+                    return QIcon("icons_16:piggy-bank.png")
+                return QIcon("icons_16:piggy-bank-empty.png")
         if role == Qt.ItemDataRole.TextAlignmentRole:
             if column == AccountTreeColumns.COLUMN_BALANCE_NATIVE:
                 return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
@@ -125,6 +127,13 @@ class AccountTreeModel(QAbstractItemModel):
     def headerData(
         self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole = ...
     ) -> str | int | None:
+        if role == Qt.ItemDataRole.TextAlignmentRole:
+            if section == AccountTreeColumns.COLUMN_BALANCE_NATIVE:
+                return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+            if section == AccountTreeColumns.COLUMN_BALANCE_BASE:
+                return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+            if section == AccountTreeColumns.COLUMN_SHOW:
+                return Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignHCenter
         if role == Qt.ItemDataRole.DisplayRole:
             if orientation == Qt.Orientation.Horizontal:
                 return self.COLUMN_HEADERS[section]

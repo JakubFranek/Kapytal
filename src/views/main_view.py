@@ -157,11 +157,13 @@ class MainView(QMainWindow, Ui_MainWindow):
         self.actionSettings.setIcon(QIcon("icons_16:gear.png"))
         self.actionAbout.setIcon(QIcon("icons_16:information.png"))
         self.actionFilterTransactions.setIcon(QIcon("icons_16:funnel.png"))
-        self.actionIncome.setIcon(QIcon("icons_16:money--plus.png"))
-        self.actionExpense.setIcon(QIcon("icons_16:money--minus.png"))
+        self.actionIncome.setIcon(QIcon("icons_custom:coins-plus.png"))
+        self.actionExpense.setIcon(QIcon("icons_custom:coins-minus.png"))
         self.actionBuy.setIcon(QIcon("icons_custom:certificate-plus.png"))
         self.actionSell.setIcon(QIcon("icons_custom:certificate-minus.png"))
-        self.actionTransfer.setIcon(QIcon("icons_16:zone--arrow.png"))
+        self.actionTransfer.setIcon(QIcon("icons_16:arrow-curve-000-left.png"))
+        self.actionCashTransfer.setIcon(QIcon("icons_custom:coins-arrow.png"))
+        self.actionSecurityTransfer.setIcon(QIcon("icons_custom:certificate-arrow.png"))
 
         self.actionCurrencies_and_Exchange_Rates.triggered.connect(
             self.signal_open_currency_form.emit
@@ -182,7 +184,9 @@ class MainView(QMainWindow, Ui_MainWindow):
         self.sellToolButton.setDefaultAction(self.actionSell)
         self.incomeToolButton.setDefaultAction(self.actionIncome)
         self.expenseToolButton.setDefaultAction(self.actionExpense)
-        self.transferToolButton.setDefaultAction(self.actionTransfer)
+        self.transferToolButton.setIcon(QIcon("icons_16:arrow-curve-000-left.png"))
+        self.transferToolButton.addAction(self.actionCashTransfer)
+        self.transferToolButton.addAction(self.actionSecurityTransfer)
 
         self.searchLineEdit.addAction(
             QIcon("icons_16:magnifier.png"), QLineEdit.ActionPosition.LeadingPosition

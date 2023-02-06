@@ -299,7 +299,7 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
         return f"CashAmount({self.value} {self._currency.code})"
 
     def __str__(self) -> str:
-        return f"{self.value} {self._currency.code}"
+        return f"{self.value:,} {self._currency.code}"
 
     def __hash__(self) -> int:
         return hash((self.value, self.currency))

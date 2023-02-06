@@ -25,12 +25,12 @@ class CashAccountDialog(QDialog, Ui_CashAccountDialog):
         self.currentPathLineEdit.setEnabled(False)
         if edit:
             self.setWindowTitle("Edit Cash Account")
-            self.setWindowIcon(QIcon("icons_custom:money-coin-pencil.png"))
+            self.setWindowIcon(QIcon("icons_custom:piggy-bank-pencil.png"))
             self.currencyComboBox.setVisible(False)
             self.currencyLabel.setVisible(False)
         else:
             self.setWindowTitle("Add Cash Account")
-            self.setWindowIcon(QIcon("icons_custom:money-coin-plus.png"))
+            self.setWindowIcon(QIcon("icons_custom:piggy-bank-plus.png"))
             self.currentPathLabel.setVisible(False)
             self.currentPathLineEdit.setVisible(False)
             for code, _ in code_places_pairs:
