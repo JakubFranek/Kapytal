@@ -46,6 +46,8 @@ from src.models.model_objects.security_objects import (
 )
 
 
+# TODO: add method for calculating no. of transactions and total
+# for given attribute and date range
 class RecordKeeper(CopyableMixin, JSONSerializableMixin):
     def __init__(self) -> None:
         self._accounts: list[Account] = []

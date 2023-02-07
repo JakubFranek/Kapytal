@@ -15,6 +15,8 @@ from PyQt6.QtWidgets import (
 from src.views.account_tree import AccountTree
 from src.views.ui_files.Ui_main_window import Ui_MainWindow
 
+# IDEA: swap QToolButtons for QPushButtons (see how drop down menu works though)
+
 
 class MainView(QMainWindow, Ui_MainWindow):
     signal_exit = pyqtSignal()
@@ -164,6 +166,7 @@ class MainView(QMainWindow, Ui_MainWindow):
         self.actionTransfer.setIcon(QIcon("icons_16:arrow-curve-000-left.png"))
         self.actionCashTransfer.setIcon(QIcon("icons_custom:coins-arrow.png"))
         self.actionSecurityTransfer.setIcon(QIcon("icons_custom:certificate-arrow.png"))
+        self.actionRefund.setIcon(QIcon("icons_custom:coins-arrow-back.png"))
 
         self.actionCurrencies_and_Exchange_Rates.triggered.connect(
             self.signal_open_currency_form.emit
