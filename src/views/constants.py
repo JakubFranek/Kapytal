@@ -17,3 +17,9 @@ class ExchangeRateTableColumns(IntEnum):
     COLUMN_CODE = 0
     COLUMN_VALUE = 1
     COLUMN_LAST_DATE = 2
+
+
+class PayeeTableColumns(IntEnum):
+    COLUMN_NAME = 0
+    COLUMN_TRANSACTIONS = 1
+    COLUMN_BALANCE = 2

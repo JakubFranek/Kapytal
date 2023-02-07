@@ -33,7 +33,7 @@ def test_creation(value: Decimal, currency: Currency) -> None:
         cash_amount.__repr__()
         == f"CashAmount({round(value,currency.places)} {currency.code})"
     )
-    assert str(cash_amount) == f"{round(value,currency.places)} {currency.code}"
+    assert str(cash_amount) == f"{round(value,currency.places):,} {currency.code}"
 
 
 @given(

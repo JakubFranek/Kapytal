@@ -65,7 +65,8 @@ def test_set_base_currency() -> None:
     record_keeper.add_currency("EUR", 2)
     record_keeper.add_currency("DKK", 2)
     record_keeper.set_base_currency("EUR")
-    assert record_keeper.base_currency.code == "EUR"
+    base_currency: Currency = record_keeper.base_currency
+    assert base_currency.code == "EUR"
 
 
 @given(
@@ -721,6 +722,40 @@ def test_record_keeper_deep_copy() -> None:
     assert id(record_keeper) != id(record_keeper_deep_copy)
     assert id(record_keeper.currencies) != id(record_keeper_deep_copy.currencies)
     assert id(record_keeper.currencies[0]) != id(record_keeper_deep_copy.currencies[0])
+
+
+@given(name=names())
+def test_record_keeper_add_payee(name: str) -> None:
+    record_keeper = RecordKeeper()
+    record_keeper.add_payee(name)
+    payee = record_keeper.get_attribute(name, AttributeType.PAYEE)
+    assert len(record_keeper.payees) == 1
+    assert payee.name == name
+
+
+@given(name=names())
+def test_record_keeper_add_payee_already_exists(name: str) -> None:
+    record_keeper = RecordKeeper()
+    record_keeper.add_payee(name)
+    with pytest.raises(AlreadyExistsError):
+        record_keeper.add_payee(name)
+
+
+@given(name=names())
+def test_record_keeper_add_tag(name: str) -> None:
+    record_keeper = RecordKeeper()
+    record_keeper.add_tag(name)
+    tag = record_keeper.get_attribute(name, AttributeType.TAG)
+    assert len(record_keeper.tags) == 1
+    assert tag.name == name
+
+
+@given(name=names())
+def test_record_keeper_add_tag_already_exists(name: str) -> None:
+    record_keeper = RecordKeeper()
+    record_keeper.add_tag(name)
+    with pytest.raises(AlreadyExistsError):
+        record_keeper.add_tag(name)
 
 
 def get_preloaded_record_keeper_with_security_transactions() -> RecordKeeper:

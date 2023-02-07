@@ -4,8 +4,9 @@ from PyQt6.QtCore import QSortFilterProxyModel, Qt
 
 from src.models.model_objects.attributes import AttributeType
 from src.models.record_keeper import RecordKeeper
+from src.models.utilities.calculation import AttributeStats, get_attribute_stats
 from src.presenters.utilities.event import Event
-from src.presenters.view_models.payee_list_model import PayeeListModel
+from src.presenters.view_models.payee_table_model import PayeeTableModel
 from src.utilities.general import get_exception_display_info
 from src.views.dialogs.payee_dialog import PayeeDialog
 from src.views.forms.payee_form import PayeeForm
@@ -19,37 +20,47 @@ class PayeeFormPresenter:
         self._view = view
         self._record_keeper = record_keeper
 
-        self._proxy_model = QSortFilterProxyModel(self._view.listView)
-        self._model = PayeeListModel(
-            self._view.listView, record_keeper.payees, self._proxy_model
-        )
+        self._proxy_model = QSortFilterProxyModel(self._view.tableView)
+        self._model = PayeeTableModel(self._view.tableView, [], self._proxy_model)
+        self.update_model_data()
         self._proxy_model.setSourceModel(self._model)
         self._proxy_model.setSortRole(Qt.ItemDataRole.UserRole)
         self._proxy_model.setSortCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
         self._proxy_model.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
-        self._view.listView.setModel(self._proxy_model)
+        self._view.tableView.setModel(self._proxy_model)
 
         self._view.signal_add_payee.connect(lambda: self.run_payee_dialog(edit=False))
         self._view.signal_remove_payee.connect(self.remove_payee)
         self._view.signal_rename_payee.connect(lambda: self.run_payee_dialog(edit=True))
         self._view.signal_select_payee.connect(self.select_payee)
-        self._view.signal_sort_ascending.connect(lambda: self._sort(ascending=True))
-        self._view.signal_sort_descending.connect(lambda: self._sort(ascending=False))
         self._view.signal_search_text_changed.connect(self._filter)
 
-        self._view.listView.selectionModel().selectionChanged.connect(
+        self._view.tableView.selectionModel().selectionChanged.connect(
             self._selection_changed
         )
         self._selection_changed()
-        self._sort(ascending=True)
+        self._view.tableView.sortByColumn(0, Qt.SortOrder.AscendingOrder)
 
     def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
         self._model.pre_reset_model()
         self._record_keeper = record_keeper
-        self._model.payees = record_keeper.payees
+        self.update_model_data()
         self._model.post_reset_model()
 
+    def update_model_data(self) -> None:
+        payee_stats: list[AttributeStats] = []
+        for payee in self._record_keeper.payees:
+            payee_stats.append(
+                get_attribute_stats(
+                    payee,
+                    self._record_keeper.transactions,
+                    self._record_keeper.base_currency,
+                )
+            )
+        self._model.payee_stats = payee_stats
+
     def show_form(self) -> None:
+        self.update_model_data()
         self._view.selectButton.setVisible(False)
         self._view.show_form()
 
@@ -77,7 +88,7 @@ class PayeeFormPresenter:
             return
 
         self._model.pre_add()
-        self._model.payees = self._record_keeper.payees
+        self.update_model_data()
         self._model.post_add()
         self._dialog.close()
         self.event_data_changed()
@@ -98,7 +109,7 @@ class PayeeFormPresenter:
             self._handle_exception()
             return
 
-        self._model.payees = self._record_keeper.payees
+        self.update_model_data()
         self._dialog.close()
         self.event_data_changed()
 
@@ -114,21 +125,13 @@ class PayeeFormPresenter:
             self._handle_exception()
             return
 
-        self._model.pre_removee_item(payee)
-        self._model.payees = self._record_keeper.payees
+        self._model.pre_remove_item(payee)
+        self.update_model_data()
         self._model.post_remove_item()
         self.event_data_changed()
 
     def select_payee(self) -> None:
         pass
-
-    def _sort(self, ascending: bool) -> None:
-        if ascending:
-            logging.debug("Sorting Payees in ascending order")
-            self._proxy_model.sort(0, Qt.SortOrder.AscendingOrder)
-        else:
-            logging.debug("Sorting Payees in descending order")
-            self._proxy_model.sort(0, Qt.SortOrder.DescendingOrder)
 
     def _filter(self) -> None:
         pattern = self._view.search_bar_text

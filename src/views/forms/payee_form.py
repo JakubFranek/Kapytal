@@ -1,7 +1,7 @@
 import logging
 
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QAction, QCloseEvent, QIcon
+from PyQt6.QtGui import QCloseEvent, QIcon
 from PyQt6.QtWidgets import QLineEdit, QWidget
 
 from src.views.ui_files.Ui_payee_form import Ui_PayeeForm
@@ -12,8 +12,6 @@ class PayeeForm(QWidget, Ui_PayeeForm):
     signal_rename_payee = pyqtSignal()
     signal_remove_payee = pyqtSignal()
     signal_select_payee = pyqtSignal()
-    signal_sort_ascending = pyqtSignal()
-    signal_sort_descending = pyqtSignal()
     signal_search_text_changed = pyqtSignal()
 
     def __init__(self, parent: QWidget | None = None) -> None:
@@ -26,19 +24,6 @@ class PayeeForm(QWidget, Ui_PayeeForm):
         self.removeButton.clicked.connect(self.signal_remove_payee.emit)
         self.renameButton.clicked.connect(self.signal_rename_payee.emit)
         self.selectButton.clicked.connect(self.signal_select_payee.emit)
-
-        self.actionSortAscending = QAction(self)
-        self.actionSortDescending = QAction(self)
-        self.actionSortAscending.setIcon(QIcon("icons_16:sort-alphabet.png"))
-        self.actionSortDescending.setIcon(
-            QIcon("icons_16:sort-alphabet-descending.png")
-        )
-
-        self.sortAscendingButton.setDefaultAction(self.actionSortAscending)
-        self.sortDescendingButton.setDefaultAction(self.actionSortDescending)
-
-        self.actionSortAscending.triggered.connect(self.signal_sort_ascending.emit)
-        self.actionSortDescending.triggered.connect(self.signal_sort_descending.emit)
 
         self.searchLineEdit.addAction(
             QIcon("icons_16:magnifier.png"), QLineEdit.ActionPosition.LeadingPosition

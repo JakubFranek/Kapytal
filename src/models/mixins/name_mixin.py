@@ -38,7 +38,9 @@ class NameMixin:
             raise InvalidCharacterError("Slashes in object names are forbidden.")
 
         if hasattr(self, "_name"):
-            logging.info(f"Renaming from '{self._name}' to '{name}'")
+            logging.info(
+                f"Renaming {self.__class__.__name__} from '{self._name}' to '{name}'"
+            )
         else:
-            logging.info(f"Setting {name=}")
+            logging.info(f"Setting {self.__class__.__name__} {name=}")
         self._name = name

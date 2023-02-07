@@ -46,7 +46,7 @@ def setup_logging(root_directory: str) -> None:
     dt_now = datetime.now(tzinfo)
     file_name = dir_logs + r"\logfile_" + dt_now.strftime("%Y_%m_%d_%Hh%Mm%Ss") + ".log"
     log_format = (
-        "%(asctime)s.%(msecs)03d %(levelname)s "
+        "%(asctime)s.%(msecs)03d %(levelname)-8s "
         "{%(module)s} [%(funcName)s] %(message)s"
     )
     logging.basicConfig(
