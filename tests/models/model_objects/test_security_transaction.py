@@ -20,7 +20,6 @@ from src.models.model_objects.security_objects import (
     SecurityAccount,
     SecurityTransaction,
     SecurityTransactionType,
-    SecurityType,
 )
 from tests.models.test_assets.composites import (
     cash_accounts,
@@ -616,7 +615,7 @@ def get_security() -> Security:
     return Security(
         "Vanguard FTSE All-World UCITS ETF USD Acc",
         "VWCE.DE",
-        SecurityType.ETF,
+        "ETF",
         Currency("EUR", 2),
         1,
     )

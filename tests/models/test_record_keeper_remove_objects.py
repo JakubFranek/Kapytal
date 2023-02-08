@@ -16,10 +16,8 @@ from src.models.model_objects.cash_objects import (
     CashTransactionType,
     RefundTransaction,
 )
-from src.models.model_objects.security_objects import (
-    SecurityTransactionType,
-    SecurityType,
-)
+from src.models.model_objects.currency_objects import Currency
+from src.models.model_objects.security_objects import SecurityTransactionType
 from src.models.record_keeper import RecordKeeper
 from tests.models.test_record_keeper import (
     get_preloaded_record_keeper_with_various_transactions,
@@ -68,7 +66,7 @@ def test_remove_account_has_children() -> None:
     assert len(record_keeper.accounts) != 0
 
     record_keeper.add_currency("CZK", 2)
-    record_keeper.add_security("NAME", "SYMB", SecurityType.ETF, "CZK", 1)
+    record_keeper.add_security("NAME", "SYMB", "ETF", "CZK", 1)
     sender_path = "PARENT/TEST SENDER"
     recipient_path = "PARENT/TEST RECIPIENT"
     record_keeper.add_security_transfer(
@@ -160,7 +158,7 @@ def test_remove_transactions_is_refunded() -> None:
 def test_remove_security() -> None:
     record_keeper = RecordKeeper()
     record_keeper.add_currency("CZK", 2)
-    record_keeper.add_security("NAME", "SYMB", SecurityType.ETF, "CZK", 1)
+    record_keeper.add_security("NAME", "SYMB", "ETF", "CZK", 1)
     assert len(record_keeper.securities) == 1
     record_keeper.remove_security("SYMB")
     assert record_keeper.securities == ()
@@ -176,8 +174,9 @@ def test_remove_security_referenced_in_transaction() -> None:
 def test_remove_currency() -> None:
     record_keeper = RecordKeeper()
     record_keeper.add_currency("CZK", 2)
+    base_currency: Currency = record_keeper.base_currency
     assert len(record_keeper.currencies) == 1
-    assert record_keeper.base_currency.code == "CZK"
+    assert base_currency.code == "CZK"
     record_keeper.remove_currency("CZK")
     assert len(record_keeper.currencies) == 0
     assert record_keeper.base_currency is None
@@ -186,7 +185,7 @@ def test_remove_currency() -> None:
 def test_remove_currency_referenced_in_security() -> None:
     record_keeper = RecordKeeper()
     record_keeper.add_currency("CZK", 2)
-    record_keeper.add_security("NAME", "SYMB", SecurityType.ETF, "CZK", 1)
+    record_keeper.add_security("NAME", "SYMB", "ETF", "CZK", 1)
     with pytest.raises(InvalidOperationError):
         record_keeper.remove_currency("CZK")
 
@@ -205,7 +204,7 @@ def test_remove_currency_referenced_in_transaction() -> None:
     record_keeper.add_currency("CZK", 2)
     record_keeper.add_security_account("SECURITY ACC", None)
     record_keeper.add_cash_account("CASH ACC", "CZK", 0, None)
-    record_keeper.add_security("NAME", "SYMB", SecurityType.ETF, "CZK", 1)
+    record_keeper.add_security("NAME", "SYMB", "ETF", "CZK", 1)
     record_keeper.add_security_transaction(
         "",
         datetime.now(tzinfo),

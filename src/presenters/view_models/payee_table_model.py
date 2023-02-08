@@ -41,9 +41,9 @@ class PayeeTableModel(QAbstractTableModel):
     ) -> QModelIndex:
         if parent.isValid():
             return QModelIndex()
-        # NOTE: is the check below even necessary in any model?
         if not QAbstractTableModel.hasIndex(self, row, column, QModelIndex()):
             return QModelIndex()
+
         item = self.payee_stats[row].attribute
         return QAbstractTableModel.createIndex(self, row, column, item)
 

@@ -7,6 +7,8 @@ from PyQt6.QtWidgets import QAbstractButton, QDialog, QDialogButtonBox, QWidget
 from src.views.ui_files.Ui_account_group_dialog import Ui_AccountGroupDialog
 
 
+# IDEA: editable combobox instead of lineedit for path?
+# IDEA: update position limits based on path state?
 class AccountGroupDialog(QDialog, Ui_AccountGroupDialog):
     signal_OK = pyqtSignal()
 

@@ -42,7 +42,6 @@ from src.models.model_objects.security_objects import (
     SecurityTransaction,
     SecurityTransactionType,
     SecurityTransfer,
-    SecurityType,
 )
 
 
@@ -150,7 +149,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         self,
         name: str,
         symbol: str,
-        type_: SecurityType,
+        type_: str,
         currency_code: str,
         unit: Decimal | int | str,
     ) -> None:

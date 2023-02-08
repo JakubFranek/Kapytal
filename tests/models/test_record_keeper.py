@@ -20,7 +20,6 @@ from src.models.model_objects.currency_objects import CashAmount, Currency
 from src.models.model_objects.security_objects import (
     SecurityAccount,
     SecurityTransactionType,
-    SecurityType,
 )
 from src.models.record_keeper import AlreadyExistsError, NotFoundError, RecordKeeper
 from tests.models.test_assets.composites import (
@@ -537,7 +536,7 @@ def test_add_security() -> None:
     record_keeper = RecordKeeper()
     name = "Security Name"
     symbol = "ABCD.EF"
-    type_ = SecurityType.ETF
+    type_ = "ETF"
     currency_code = "EUR"
     places = 2
     unit = 1
@@ -556,8 +555,8 @@ def test_add_security_already_exists() -> None:
     name_1 = "Security Name"
     name_2 = "Another Name"
     symbol = "ABCD.EF"
-    type_ = SecurityType.ETF
-    type_2 = SecurityType.MUTUAL_FUND
+    type_ = "ETF"
+    type_2 = "Mutual Fund"
     currency_code = "EUR"
     places = 2
     unit = 1
@@ -1076,14 +1075,10 @@ def get_preloaded_record_keeper() -> RecordKeeper:
     record_keeper.add_security_account("Security Accounts/Degiro")
     record_keeper.add_security_account("Security Accounts/Interactive Brokers")
     record_keeper.add_security_account("Security Accounts/ČSOB Penzijní účet")
+    record_keeper.add_security("Vanguard FTSE All-World", "VWCE.DE", "ETF", "EUR", 1)
+    record_keeper.add_security("iShares MSCI World", "IWDA.AS", "ETF", "EUR", 1)
     record_keeper.add_security(
-        "Vanguard FTSE All-World", "VWCE.DE", SecurityType.ETF, "EUR", 1
-    )
-    record_keeper.add_security(
-        "iShares MSCI World", "IWDA.AS", SecurityType.ETF, "EUR", 1
-    )
-    record_keeper.add_security(
-        "ČSOB Dynamický penzijní fond", "CSOB.DYN", SecurityType.MUTUAL_FUND, "CZK", 1
+        "ČSOB Dynamický penzijní fond", "CSOB.DYN", "Pension Fund", "CZK", 1
     )
     record_keeper.add_category("Food and Drink", None, CategoryType.EXPENSE)
     record_keeper.add_category("Electronics", None, CategoryType.EXPENSE)

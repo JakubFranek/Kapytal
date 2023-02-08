@@ -13,7 +13,7 @@ class Ui_AddExchangeRateDialog(object):
     def setupUi(self, AddExchangeRateDialog):
         AddExchangeRateDialog.setObjectName("AddExchangeRateDialog")
         AddExchangeRateDialog.setWindowModality(QtCore.Qt.WindowModality.WindowModal)
-        AddExchangeRateDialog.resize(398, 104)
+        AddExchangeRateDialog.resize(202, 104)
         AddExchangeRateDialog.setLocale(QtCore.QLocale(QtCore.QLocale.Language.English, QtCore.QLocale.Country.UnitedKingdom))
         self.verticalLayout = QtWidgets.QVBoxLayout(AddExchangeRateDialog)
         self.verticalLayout.setObjectName("verticalLayout")

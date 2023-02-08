@@ -30,7 +30,6 @@ from src.models.model_objects.security_objects import (
     SecurityTransaction,
     SecurityTransactionType,
     SecurityTransfer,
-    SecurityType,
 )
 from src.models.record_keeper import RecordKeeper
 from tests.models.test_assets.composites import (
@@ -170,7 +169,7 @@ def test_security_account() -> None:
 
 def test_security() -> None:
     currency = Currency("CZK", 2)
-    security = Security("Test Name", "SYMB.OL", SecurityType.ETF, currency, 1)
+    security = Security("Test Name", "SYMB.OL", "ETF", currency, 1)
     serialized = json.dumps(security, cls=CustomJSONEncoder)
     decoded = json.loads(serialized, cls=CustomJSONDecoder)
     decoded = Security.deserialize(decoded, [currency])
@@ -248,11 +247,9 @@ def test_record_keeper_securities() -> None:
     record_keeper = RecordKeeper()
     record_keeper.add_currency("CZK", 2)
     record_keeper.add_currency("EUR", 2)
+    record_keeper.add_security("iShares MSCI All World", "IWDA.AS", "ETF", "EUR", 1)
     record_keeper.add_security(
-        "iShares MSCI All World", "IWDA.AS", SecurityType.ETF, "EUR", 1
-    )
-    record_keeper.add_security(
-        "ČSOB Dynamický penzijní fond", "CSOB.DYN", SecurityType.MUTUAL_FUND, "CZK", 1
+        "ČSOB Dynamický penzijní fond", "CSOB.DYN", "Pension Fund", "CZK", 1
     )
     serialized = json.dumps(record_keeper, cls=CustomJSONEncoder)
     decoded = json.loads(serialized, cls=CustomJSONDecoder)
@@ -424,7 +421,7 @@ def test_record_keeper_transactions() -> None:
     record_keeper.add_currency("EUR", 2)
     record_keeper.add_exchange_rate("EUR", "CZK")
     record_keeper.add_security(
-        "ČSOB Dynamický penzijní fond", "CSOB.DYN", SecurityType.MUTUAL_FUND, "CZK", 1
+        "ČSOB Dynamický penzijní fond", "CSOB.DYN", "Pension Fund", "CZK", 1
     )
     record_keeper.add_account_group("Bank Accounts", None)
     record_keeper.add_cash_account("Bank Accounts/Raiffeisen", "CZK", 15000)

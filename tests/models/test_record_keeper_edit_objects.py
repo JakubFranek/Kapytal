@@ -29,7 +29,6 @@ from src.models.model_objects.currency_objects import CashAmount, CurrencyError
 from src.models.model_objects.security_objects import (
     SecurityTransaction,
     SecurityTransfer,
-    SecurityType,
 )
 from src.models.record_keeper import RecordKeeper
 from tests.models.test_assets.composites import attributes
@@ -85,7 +84,7 @@ def test_edit_attribute_does_not_exist() -> None:
 def test_edit_security() -> None:
     record_keeper = RecordKeeper()
     record_keeper.add_currency("CZK", 2)
-    record_keeper.add_security("TEST NAME", "SMBL", SecurityType.ETF, "CZK", 1)
+    record_keeper.add_security("TEST NAME", "SMBL", "ETF", "CZK", 1)
     record_keeper.edit_security("SMBL", "SYMB", "NEW NAME")
     security = record_keeper.securities[0]
     assert security.symbol == "SYMB"

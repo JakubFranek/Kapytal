@@ -13,7 +13,7 @@ class Ui_SetExchangeRateDialog(object):
     def setupUi(self, SetExchangeRateDialog):
         SetExchangeRateDialog.setObjectName("SetExchangeRateDialog")
         SetExchangeRateDialog.setWindowModality(QtCore.Qt.WindowModality.WindowModal)
-        SetExchangeRateDialog.resize(398, 104)
+        SetExchangeRateDialog.resize(229, 106)
         SetExchangeRateDialog.setLocale(QtCore.QLocale(QtCore.QLocale.Language.English, QtCore.QLocale.Country.UnitedKingdom))
         self.verticalLayout = QtWidgets.QVBoxLayout(SetExchangeRateDialog)
         self.verticalLayout.setObjectName("verticalLayout")
@@ -26,6 +26,7 @@ class Ui_SetExchangeRateDialog(object):
         self.dateLabel.setObjectName("dateLabel")
         self.formLayout.setWidget(1, QtWidgets.QFormLayout.ItemRole.LabelRole, self.dateLabel)
         self.exchangeRateDoubleSpinBox = QtWidgets.QDoubleSpinBox(SetExchangeRateDialog)
+        self.exchangeRateDoubleSpinBox.setDecimals(14)
         self.exchangeRateDoubleSpinBox.setObjectName("exchangeRateDoubleSpinBox")
         self.formLayout.setWidget(0, QtWidgets.QFormLayout.ItemRole.FieldRole, self.exchangeRateDoubleSpinBox)
         self.dateEdit = QtWidgets.QDateEdit(SetExchangeRateDialog)

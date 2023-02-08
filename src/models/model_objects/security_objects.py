@@ -35,21 +35,19 @@ class PriceNotFoundError(ValueError):
     """Raised when Security price does not exist."""
 
 
-class SecurityType(Enum):
-    ETF = auto()
-    MUTUAL_FUND = auto()
-
-
 class SecurityTransactionType(Enum):
     BUY = auto()
     SELL = auto()
 
 
 # IDEA: make symbol optional (not needed for securities not updated online)
+# IDEA: is type_ even necessary
 class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
     NAME_MIN_LENGTH = 1
     NAME_MAX_LENGTH = 64
-    SYMBOL_MIN_LENGTH = 1
+    TYPE_MIN_LENGTH = 1
+    TYPE_MAX_LENGTH = 32
+    SYMBOL_MIN_LENGTH = 0
     SYMBOL_MAX_LENGTH = 8
     SYMBOL_ALLOWED_CHARS = string.ascii_letters + string.digits + "."
 
@@ -57,17 +55,14 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
         self,
         name: str,
         symbol: str,
-        type_: SecurityType,
+        type_: str,
         currency: Currency,
         shares_unit: Decimal | int | str,
         price_places: int | None = None,
     ) -> None:
         super().__init__(name=name, allow_slash=True)
         self.symbol = symbol
-
-        if not isinstance(type_, SecurityType):
-            raise TypeError("Security.type_ must be a SecurityType.")
-        self._type = type_
+        self.type_ = type_
 
         if not isinstance(currency, Currency):
             raise TypeError("Security.currency must be a Currency.")
@@ -97,8 +92,19 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
         self._price_history: dict[date, CashAmount] = {}
 
     @property
-    def type_(self) -> SecurityType:
+    def type_(self) -> str:
         return self._type
+
+    @type_.setter
+    def type_(self, value: str) -> None:
+        if not isinstance(value, str):
+            raise TypeError("Security.type_ must be a string.")
+        if len(value) < self.TYPE_MIN_LENGTH or len(value) > self.TYPE_MAX_LENGTH:
+            raise ValueError(
+                "Security.type_ length must be within "
+                f"{self.TYPE_MIN_LENGTH} and {self.TYPE_MAX_LENGTH}"
+            )
+        self._type = value
 
     @property
     def currency(self) -> Currency:
@@ -143,7 +149,7 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
         return self._shares_unit
 
     def __repr__(self) -> str:
-        return f"Security(symbol='{self.symbol}', type={self.type_.name})"
+        return f"Security('{self.name}')"
 
     def set_price(self, date_: date, price: CashAmount) -> None:
         if not isinstance(date_, date):
@@ -161,7 +167,7 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
             "datatype": "Security",
             "name": self._name,
             "symbol": self._symbol,
-            "type_": self._type.name,
+            "type_": self._type,
             "currency_code": self._currency.code,
             "shares_unit": self._shares_unit,
             "price_places": self._places,
@@ -174,7 +180,7 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
     ) -> "Security":
         name = data["name"]
         symbol = data["symbol"]
-        type_ = SecurityType[data["type_"]]
+        type_ = data["type_"]
 
         currency_code = data["currency_code"]
         security_currency = find_currency_by_code(currency_code, currencies)

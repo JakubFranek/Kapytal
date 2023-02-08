@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>AddExchangeRateDialog</class>
- <widget class="QDialog" name="AddExchangeRateDialog">
+ <class>SetSecurityPriceDialog</class>
+ <widget class="QDialog" name="SetSecurityPriceDialog">
   <property name="windowModality">
    <enum>Qt::WindowModal</enum>
   </property>
@@ -9,12 +9,12 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>202</width>
-    <height>104</height>
+    <width>229</width>
+    <height>106</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Add Exchange Rate</string>
+   <string>Set Security Price</string>
   </property>
   <property name="locale">
    <locale language="English" country="UnitedKingdom"/>
@@ -23,24 +23,32 @@
    <item>
     <layout class="QFormLayout" name="formLayout">
      <item row="0" column="0">
-      <widget class="QLabel" name="primaryCurrencyLabel">
+      <widget class="QLabel" name="priceLabel">
        <property name="text">
-        <string>Primary currency</string>
+        <string>Price</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="dateLabel">
+       <property name="text">
+        <string>Date</string>
        </property>
       </widget>
      </item>
      <item row="0" column="1">
-      <widget class="QComboBox" name="primaryCurrencyComboBox"/>
-     </item>
-     <item row="1" column="0">
-      <widget class="QLabel" name="secondaryCurrencyLabel">
-       <property name="text">
-        <string>Secondary currency</string>
+      <widget class="QDoubleSpinBox" name="priceDoubleSpinBox">
+       <property name="decimals">
+        <number>14</number>
        </property>
       </widget>
      </item>
      <item row="1" column="1">
-      <widget class="QComboBox" name="secondaryCurrencyComboBox"/>
+      <widget class="QDateEdit" name="dateEdit">
+       <property name="calendarPopup">
+        <bool>true</bool>
+       </property>
+      </widget>
      </item>
     </layout>
    </item>

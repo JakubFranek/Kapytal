@@ -27,7 +27,6 @@ from src.models.model_objects.security_objects import (
     SecurityTransaction,
     SecurityTransactionType,
     SecurityTransfer,
-    SecurityType,
 )
 from tests.models.test_assets.concrete_abcs import ConcreteTransaction
 from tests.models.test_assets.constants import MIN_DATETIME
@@ -242,7 +241,7 @@ def securities(draw: st.DrawFn, currency: Currency | None = None) -> Security:
     symbol = draw(
         st.text(alphabet=Security.SYMBOL_ALLOWED_CHARS, min_size=1, max_size=8)
     )
-    type_ = draw(st.sampled_from(SecurityType))
+    type_ = draw(names(min_size=1, max_size=32))
     if currency is None:
         currency = draw(currencies())
     shares_unit = draw(valid_decimals(min_value=1e-10, max_value=1))
