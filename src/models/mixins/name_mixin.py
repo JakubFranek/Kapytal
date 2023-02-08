@@ -8,6 +8,7 @@ class NameLengthError(ValueError):
     """Raised when the length of 'name' string is incorrect."""
 
 
+# TODO: allow slashes in Attributes
 class NameMixin:
     NAME_MIN_LENGTH = 1
     NAME_MAX_LENGTH = 32

@@ -23,3 +23,9 @@ class PayeeTableColumns(IntEnum):
     COLUMN_NAME = 0
     COLUMN_TRANSACTIONS = 1
     COLUMN_BALANCE = 2
+
+
+class TagTableColumns(IntEnum):
+    COLUMN_NAME = 0
+    COLUMN_TRANSACTIONS = 1
+    COLUMN_BALANCE = 2

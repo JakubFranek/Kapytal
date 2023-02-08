@@ -6,22 +6,22 @@ from src.models.model_objects.attributes import AttributeType
 from src.models.record_keeper import RecordKeeper
 from src.models.utilities.calculation import AttributeStats, get_attribute_stats
 from src.presenters.utilities.event import Event
-from src.presenters.view_models.payee_table_model import PayeeTableModel
+from src.presenters.view_models.tag_table_model import TagTableModel
 from src.utilities.general import get_exception_display_info
-from src.views.dialogs.payee_dialog import PayeeDialog
-from src.views.forms.payee_form import PayeeForm
+from src.views.dialogs.tag_dialog import TagDialog
+from src.views.forms.tag_form import TagForm
 from src.views.utilities.handle_exception import display_error_message
 
 
-class PayeeFormPresenter:
+class TagFormPresenter:
     event_data_changed = Event()
 
-    def __init__(self, view: PayeeForm, record_keeper: RecordKeeper) -> None:
+    def __init__(self, view: TagForm, record_keeper: RecordKeeper) -> None:
         self._view = view
         self._record_keeper = record_keeper
 
         self._proxy_model = QSortFilterProxyModel(self._view.tableView)
-        self._model = PayeeTableModel(self._view.tableView, [], self._proxy_model)
+        self._model = TagTableModel(self._view.tableView, [], self._proxy_model)
         self.update_model_data()
         self._proxy_model.setSourceModel(self._model)
         self._proxy_model.setSortRole(Qt.ItemDataRole.UserRole)
@@ -29,10 +29,10 @@ class PayeeFormPresenter:
         self._proxy_model.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
         self._view.tableView.setModel(self._proxy_model)
 
-        self._view.signal_add_payee.connect(lambda: self.run_payee_dialog(edit=False))
-        self._view.signal_remove_payee.connect(self.remove_payee)
-        self._view.signal_rename_payee.connect(lambda: self.run_payee_dialog(edit=True))
-        self._view.signal_select_payee.connect(self.select_payee)
+        self._view.signal_add_tag.connect(lambda: self.run_tag_dialog(edit=False))
+        self._view.signal_remove_tag.connect(self.remove_tag)
+        self._view.signal_rename_tag.connect(lambda: self.run_tag_dialog(edit=True))
+        self._view.signal_select_tag.connect(self.select_tag)
         self._view.signal_search_text_changed.connect(self._filter)
 
         self._view.finalize_setup()
@@ -49,41 +49,41 @@ class PayeeFormPresenter:
         self._model.post_reset_model()
 
     def update_model_data(self) -> None:
-        payee_stats: list[AttributeStats] = []
-        for payee in self._record_keeper.payees:
-            payee_stats.append(
+        tag_stats: list[AttributeStats] = []
+        for tag in self._record_keeper.tags:
+            tag_stats.append(
                 get_attribute_stats(
-                    payee,
+                    tag,
                     self._record_keeper.transactions,
                     self._record_keeper.base_currency,
                 )
             )
-        self._model.payee_stats = payee_stats
+        self._model.tag_stats = tag_stats
 
     def show_form(self) -> None:
         self.update_model_data()
         self._view.selectButton.setVisible(False)
         self._view.show_form()
 
-    def run_payee_dialog(self, edit: bool) -> None:
-        self._dialog = PayeeDialog(self._view, edit)
+    def run_tag_dialog(self, edit: bool) -> None:
+        self._dialog = TagDialog(self._view, edit)
         if edit:
             item = self._model.get_selected_item()
             if item is None:
                 raise ValueError("Cannot edit an unselected item.")
-            self._dialog.signal_OK.connect(self.rename_payee)
+            self._dialog.signal_OK.connect(self.rename_tag)
             self._dialog.name = item.name
         else:
-            self._dialog.signal_OK.connect(self.add_payee)
-        logging.debug(f"Running PayeeDialog ({edit=})")
+            self._dialog.signal_OK.connect(self.add_tag)
+        logging.debug(f"Running TagDialog ({edit=})")
         self._dialog.exec()
 
-    def add_payee(self) -> None:
+    def add_tag(self) -> None:
         name = self._dialog.name
 
-        logging.info("Adding Payee")
+        logging.info("Adding Tag")
         try:
-            self._record_keeper.add_payee(name)
+            self._record_keeper.add_tag(name)
         except Exception:
             self._handle_exception()
             return
@@ -94,17 +94,17 @@ class PayeeFormPresenter:
         self._dialog.close()
         self.event_data_changed()
 
-    def rename_payee(self) -> None:
-        payee = self._model.get_selected_item()
-        if payee is None:
+    def rename_tag(self) -> None:
+        tag = self._model.get_selected_item()
+        if tag is None:
             raise ValueError("Cannot edit an unselected item.")
-        current_name = payee.name
+        current_name = tag.name
         new_name = self._dialog.name
 
-        logging.info(f"Renaming Payee: {current_name=}, {new_name=}")
+        logging.info(f"Renaming Tag: {current_name=}, {new_name=}")
         try:
             self._record_keeper.edit_attribute(
-                current_name, new_name, AttributeType.PAYEE
+                current_name, new_name, AttributeType.TAG
             )
         except Exception:
             self._handle_exception()
@@ -114,37 +114,37 @@ class PayeeFormPresenter:
         self._dialog.close()
         self.event_data_changed()
 
-    def remove_payee(self) -> None:
-        payee = self._model.get_selected_item()
-        if payee is None:
+    def remove_tag(self) -> None:
+        tag = self._model.get_selected_item()
+        if tag is None:
             return
 
-        logging.info(f"Removing {payee}")
+        logging.info(f"Removing {tag}")
         try:
-            self._record_keeper.remove_payee(payee.name)
+            self._record_keeper.remove_tag(tag.name)
         except Exception:
             self._handle_exception()
             return
 
-        self._model.pre_remove_item(payee)
+        self._model.pre_remove_item(tag)
         self.update_model_data()
         self._model.post_remove_item()
         self.event_data_changed()
 
-    def select_payee(self) -> None:
+    def select_tag(self) -> None:
         pass
 
     def _filter(self) -> None:
         pattern = self._view.search_bar_text
-        logging.debug(f"Filtering Payees: {pattern=}")
+        logging.debug(f"Filtering Tags: {pattern=}")
         self._proxy_model.setFilterWildcard(pattern)
 
     def _selection_changed(self) -> None:
         item = self._model.get_selected_item()
-        is_payee_selected = item is not None
-        self._view.removeButton.setEnabled(is_payee_selected)
-        self._view.renameButton.setEnabled(is_payee_selected)
-        self._view.selectButton.setEnabled(is_payee_selected)
+        is_tag_selected = item is not None
+        self._view.removeButton.setEnabled(is_tag_selected)
+        self._view.renameButton.setEnabled(is_tag_selected)
+        self._view.selectButton.setEnabled(is_tag_selected)
 
     def _handle_exception(self) -> None:
         display_text, display_details = get_exception_display_info()  # type: ignore

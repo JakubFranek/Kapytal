@@ -4,27 +4,27 @@ from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QCloseEvent, QIcon
 from PyQt6.QtWidgets import QHeaderView, QLineEdit, QWidget
 
-from src.views.constants import PayeeTableColumns
-from src.views.ui_files.Ui_payee_form import Ui_PayeeForm
+from src.views.constants import TagTableColumns
+from src.views.ui_files.Ui_tag_form import Ui_TagForm
 
 
-class PayeeForm(QWidget, Ui_PayeeForm):
-    signal_add_payee = pyqtSignal()
-    signal_rename_payee = pyqtSignal()
-    signal_remove_payee = pyqtSignal()
-    signal_select_payee = pyqtSignal()
+class TagForm(QWidget, Ui_TagForm):
+    signal_add_tag = pyqtSignal()
+    signal_rename_tag = pyqtSignal()
+    signal_remove_tag = pyqtSignal()
+    signal_select_tag = pyqtSignal()
     signal_search_text_changed = pyqtSignal()
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent=parent)
         self.setupUi(self)
         self.setWindowFlag(Qt.WindowType.Window)
-        self.setWindowIcon(QIcon("icons_16:user-silhouette.png"))
+        self.setWindowIcon(QIcon("icons_16:tag.png"))
 
-        self.addButton.clicked.connect(self.signal_add_payee.emit)
-        self.removeButton.clicked.connect(self.signal_remove_payee.emit)
-        self.renameButton.clicked.connect(self.signal_rename_payee.emit)
-        self.selectButton.clicked.connect(self.signal_select_payee.emit)
+        self.addButton.clicked.connect(self.signal_add_tag.emit)
+        self.removeButton.clicked.connect(self.signal_remove_tag.emit)
+        self.renameButton.clicked.connect(self.signal_rename_tag.emit)
+        self.selectButton.clicked.connect(self.signal_select_tag.emit)
 
         self.searchLineEdit.addAction(
             QIcon("icons_16:magnifier.png"), QLineEdit.ActionPosition.LeadingPosition
@@ -53,10 +53,10 @@ class PayeeForm(QWidget, Ui_PayeeForm):
 
     def finalize_setup(self) -> None:
         self.tableView.horizontalHeader().setSectionResizeMode(
-            PayeeTableColumns.COLUMN_NAME,
+            TagTableColumns.COLUMN_NAME,
             QHeaderView.ResizeMode.ResizeToContents,
         )
         self.tableView.horizontalHeader().setSectionResizeMode(
-            PayeeTableColumns.COLUMN_TRANSACTIONS,
+            TagTableColumns.COLUMN_TRANSACTIONS,
             QHeaderView.ResizeMode.ResizeToContents,
         )

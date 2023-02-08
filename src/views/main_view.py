@@ -22,6 +22,7 @@ class MainView(QMainWindow, Ui_MainWindow):
     signal_exit = pyqtSignal()
     signal_open_currency_form = pyqtSignal()
     signal_open_payee_form = pyqtSignal()
+    signal_open_tag_form = pyqtSignal()
     signal_save = pyqtSignal()
     signal_save_as = pyqtSignal()
     signal_open = pyqtSignal()
@@ -172,6 +173,7 @@ class MainView(QMainWindow, Ui_MainWindow):
             self.signal_open_currency_form.emit
         )
         self.actionPayees.triggered.connect(self.signal_open_payee_form.emit)
+        self.actionTags.triggered.connect(self.signal_open_tag_form.emit)
         self.actionSave.triggered.connect(self.signal_save.emit)
         self.actionSave_As.triggered.connect(self.signal_save_as.emit)
         self.actionOpen_File.triggered.connect(self.signal_open.emit)
