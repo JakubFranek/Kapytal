@@ -31,11 +31,10 @@ class CategoryType(Enum):
 
 class Attribute(NameMixin, JSONSerializableMixin):
     def __init__(self, name: str, type_: AttributeType) -> None:
-        super().__init__(name=name)
+        super().__init__(name=name, allow_slash=True)
 
         if not isinstance(type_, AttributeType):
             raise TypeError("Attribute.type_ must be an AttributeType.")
-
         self._type = type_
 
     @property
@@ -59,7 +58,7 @@ class Category(NameMixin, JSONSerializableMixin):
     def __init__(
         self, name: str, type_: CategoryType, parent: Self | None = None
     ) -> None:
-        super().__init__(name)
+        super().__init__(name, allow_slash=False)
 
         if not isinstance(type_, CategoryType):
             raise TypeError("Category.type_ must be a CategoryType.")

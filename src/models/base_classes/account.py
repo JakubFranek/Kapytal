@@ -24,7 +24,7 @@ class Account(
     CopyableMixin, NameMixin, UUIDMixin, GetBalanceMixin, JSONSerializableMixin, ABC
 ):
     def __init__(self, name: str, parent: AccountGroup | None = None) -> None:
-        super().__init__(name=name)
+        super().__init__(name=name, allow_slash=False)
         self.parent = parent
 
     @property

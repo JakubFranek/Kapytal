@@ -8,13 +8,17 @@ class NameLengthError(ValueError):
     """Raised when the length of 'name' string is incorrect."""
 
 
-# TODO: allow slashes in Attributes
 class NameMixin:
     NAME_MIN_LENGTH = 1
     NAME_MAX_LENGTH = 32
 
-    def __init__(self, name: str, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, name: str, allow_slash: bool, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
+
+        if not isinstance(allow_slash, bool):
+            raise TypeError("Parameter 'allow_slash' must be a boolean.")
+        self._allow_slash = allow_slash
+
         self.name = name
 
     @property
@@ -35,8 +39,10 @@ class NameMixin:
                 f"{self.NAME_MIN_LENGTH} and "
                 f"{self.NAME_MAX_LENGTH} characters (currently {len(name)})."
             )
-        if "/" in name:
-            raise InvalidCharacterError("Slashes in object names are forbidden.")
+        if not self._allow_slash and "/" in name:
+            raise InvalidCharacterError(
+                f"Slashes in {self.__class__.__name__}.name are forbidden."
+            )
 
         if hasattr(self, "_name"):
             logging.info(

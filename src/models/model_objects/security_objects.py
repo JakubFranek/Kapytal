@@ -62,7 +62,7 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
         shares_unit: Decimal | int | str,
         price_places: int | None = None,
     ) -> None:
-        super().__init__(name=name)
+        super().__init__(name=name, allow_slash=True)
         self.symbol = symbol
 
         if not isinstance(type_, SecurityType):

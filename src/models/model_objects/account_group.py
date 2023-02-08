@@ -15,7 +15,7 @@ from src.models.utilities.find_helpers import find_account_group_by_path
 
 class AccountGroup(NameMixin, GetBalanceMixin, JSONSerializableMixin):
     def __init__(self, name: str, parent: Self | None = None) -> None:
-        super().__init__(name)
+        super().__init__(name=name, allow_slash=False)
         self.parent = parent
         self._children: dict[int, Self | Account] = {}
 
