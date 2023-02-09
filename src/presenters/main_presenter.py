@@ -9,10 +9,12 @@ from src.models.record_keeper import RecordKeeper
 from src.presenters.account_tree_presenter import AccountTreePresenter
 from src.presenters.currency_form_presenter import CurrencyFormPresenter
 from src.presenters.payee_form_presenter import PayeeFormPresenter
+from src.presenters.security_form_presenter import SecurityFormPresenter
 from src.presenters.tag_form_presenter import TagFormPresenter
 from src.utilities.general import backup_json_file, get_exception_display_info
 from src.views.forms.currency_form import CurrencyForm
 from src.views.forms.payee_form import PayeeForm
+from src.views.forms.security_form import SecurityForm
 from src.views.forms.tag_form import TagForm
 from src.views.main_view import MainView
 from src.views.utilities.handle_exception import display_error_message
@@ -40,16 +42,24 @@ class MainPresenter:
         self._currency_form_presenter = CurrencyFormPresenter(
             currency_form, record_keeper
         )
-        logging.debug("Creating PayesForm and PayeeFormPresenter")
+        logging.debug("Creating PayeeForm and PayeeFormPresenter")
         payee_form = PayeeForm(parent=view)
         self._payee_form_presenter = PayeeFormPresenter(payee_form, record_keeper)
-        logging.debug("Creating TagsForm and TagsFormPresenter")
+        logging.debug("Creating TagForm and TagFormPresenter")
         tag_form = TagForm(parent=view)
         self._tag_form_presenter = TagFormPresenter(tag_form, record_keeper)
+        logging.debug("Creating SecurityForm and SecurityFormPresenter")
+        security_form = SecurityForm(parent=view)
+        self._security_form_presenter = SecurityFormPresenter(
+            security_form, record_keeper
+        )
 
         # Setting up Event observers
         self._account_tree_presenter.event_data_changed.append(
             lambda: self._update_unsaved_changes(True)
+        )
+        self._currency_form_presenter.event_base_currency_changed.append(
+            self._account_tree_presenter.update_model_data
         )
         self._currency_form_presenter.event_data_changed.append(
             lambda: self._update_unsaved_changes(True)
@@ -60,8 +70,8 @@ class MainPresenter:
         self._tag_form_presenter.event_data_changed.append(
             lambda: self._update_unsaved_changes(True)
         )
-        self._currency_form_presenter.event_base_currency_changed.append(
-            self._account_tree_presenter.update_model_data
+        self._security_form_presenter.event_data_changed.append(
+            lambda: self._update_unsaved_changes(True)
         )
 
         # MainView pyqtSignal connections
@@ -71,6 +81,9 @@ class MainPresenter:
         )
         self._view.signal_open_payee_form.connect(self._payee_form_presenter.show_form)
         self._view.signal_open_tag_form.connect(self._tag_form_presenter.show_form)
+        self._view.signal_open_security_form.connect(
+            self._security_form_presenter.show_form
+        )
         self._view.signal_save.connect(lambda: self._save_to_file(save_as=False))
         self._view.signal_save_as.connect(lambda: self._save_to_file(save_as=True))
         self._view.signal_open.connect(self._load_from_file)
@@ -130,6 +143,7 @@ class MainPresenter:
                 self._currency_form_presenter.load_record_keeper(record_keeper)
                 self._payee_form_presenter.load_record_keeper(record_keeper)
                 self._tag_form_presenter.load_record_keeper(record_keeper)
+                self._security_form_presenter.load_record_keeper(record_keeper)
                 self._view.statusBar().showMessage(
                     f"File loaded: {self.current_file_path}", 3000
                 )

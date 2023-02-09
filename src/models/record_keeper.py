@@ -154,9 +154,15 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         unit: Decimal | int | str,
     ) -> None:
         symbol_upper = symbol.upper()
-        if any(security.symbol == symbol_upper for security in self._securities):
+        if len(symbol_upper) != 0 and any(
+            security.symbol == symbol_upper for security in self._securities
+        ):
             raise AlreadyExistsError(
-                f"A Security with symbol '{symbol_upper}' already exists."
+                f"A Security with symbol='{symbol_upper}' already exists."
+            )
+        if any(security.name == name for security in self._securities):
+            raise AlreadyExistsError(
+                f"A Security with name='{symbol_upper}' already exists."
             )
         currency = self.get_currency(currency_code)
         security = Security(name, symbol, type_, currency, unit)
@@ -766,22 +772,18 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
 
     def edit_security(
         self,
-        current_symbol: str,
-        new_symbol: str | None = None,
-        new_name: str | None = None,
+        uuid: str,
+        name: str | None = None,
+        symbol: str | None = None,
+        type_: str | None = None,
     ) -> None:
-        for security in self._securities:
-            if security.symbol == current_symbol.upper():
-                edited_security = security
-                break
-        else:
-            raise NotFoundError(
-                f"Security with symbol='{current_symbol}' does not exist."
-            )
-        if new_symbol is not None:
-            edited_security.symbol = new_symbol
-        if new_name is not None:
-            edited_security.name = new_name
+        edited_security = self.get_security(uuid)
+        if name is not None:
+            edited_security.name = name
+        if symbol is not None:
+            edited_security.symbol = symbol
+        if type_ is not None:
+            edited_security.type_ = type_
 
     def edit_cash_account(
         self,
@@ -901,8 +903,8 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
             transaction.prepare_for_deletion()
             self._transactions.remove(transaction)
 
-    def remove_security(self, symbol: str) -> None:
-        security = self.get_security(symbol)
+    def remove_security(self, uuid: str) -> None:
+        security = self.get_security(uuid)
         if any(
             transaction.security == security
             for transaction in self._transactions
@@ -1038,14 +1040,13 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
                 return account
         raise NotFoundError(f"An Account with path='{path}' does not exist.")
 
-    def get_security(self, symbol: str) -> Security:
-        if not isinstance(symbol, str):
-            raise TypeError("Parameter 'symbol' must be a string.")
-        symbol_upper = symbol.upper()
+    def get_security(self, uuid: str) -> Security:
+        if not isinstance(uuid, str):
+            raise TypeError("Parameter 'uuid' must be a string.")
         for security in self._securities:
-            if security.symbol == symbol_upper:
+            if str(security.uuid) == uuid:
                 return security
-        raise NotFoundError(f"A Security with symbol='{symbol_upper}' does not exist.")
+        raise NotFoundError(f"A Security with uuid='{uuid}' does not exist.")
 
     def get_currency(self, code: str) -> Currency:
         if not isinstance(code, str):
@@ -1131,6 +1132,11 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
                 exchange_rate.set_rate(date_, rate)
                 return
         raise NotFoundError(f"Exchange rate '{exchange_rate_code} not found.'")
+
+    def set_security_price(self, uuid: str, value: Decimal, date_: date) -> None:
+        security = self.get_security(uuid)
+        price = CashAmount(value, security.currency)
+        security.set_price(date_, price)
 
     def serialize(self) -> dict[str, Any]:
         sorted_account_groups = sorted(self._account_groups, key=lambda x: str(x))

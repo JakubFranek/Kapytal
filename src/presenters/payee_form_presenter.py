@@ -101,7 +101,7 @@ class PayeeFormPresenter:
         current_name = payee.name
         new_name = self._dialog.name
 
-        logging.info(f"Renaming Payee: {current_name=}, {new_name=}")
+        logging.info("Renaming Payee")
         try:
             self._record_keeper.edit_attribute(
                 current_name, new_name, AttributeType.PAYEE

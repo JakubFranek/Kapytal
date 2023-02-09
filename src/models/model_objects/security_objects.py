@@ -40,8 +40,6 @@ class SecurityTransactionType(Enum):
     SELL = auto()
 
 
-# IDEA: make symbol optional (not needed for securities not updated online)
-# IDEA: is type_ even necessary
 class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
     NAME_MIN_LENGTH = 1
     NAME_MAX_LENGTH = 64
@@ -133,8 +131,14 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
     def price(self) -> CashAmount:
         if len(self._price_history) == 0:
             return CashAmount(Decimal(0), self.currency)
-        latest_date = max(date_ for date_ in self._price_history)
+        latest_date = self.latest_date
         return self._price_history[latest_date]
+
+    @property
+    def latest_date(self) -> date | None:
+        if len(self._price_history) == 0:
+            return None
+        return max(date_ for date_ in self._price_history)
 
     @property
     def price_history(self) -> dict[date, CashAmount]:
@@ -162,6 +166,8 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
             round(price.value, self._places), self.currency
         )
 
+    # TODO: shares_unit can be serialized directly
+    # TODO: price history must be saved
     def serialize(self) -> dict[str, Any]:
         return {
             "datatype": "Security",

@@ -29,3 +29,11 @@ class TagTableColumns(IntEnum):
     COLUMN_NAME = 0
     COLUMN_TRANSACTIONS = 1
     COLUMN_BALANCE = 2
+
+
+class SecurityTableColumns(IntEnum):
+    COLUMN_NAME = 0
+    COLUMN_SYMBOL = 1
+    COLUMN_TYPE = 2
+    COLUMN_PRICE = 3
+    COLUMN_LAST_DATE = 4

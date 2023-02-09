@@ -4,6 +4,7 @@
     - backup location
     - no./size of backups
     - timezone
+    - default file path
 1. Category manager
 1. Security manager
 1. Transaction table

@@ -101,7 +101,7 @@ class TagFormPresenter:
         current_name = tag.name
         new_name = self._dialog.name
 
-        logging.info(f"Renaming Tag: {current_name=}, {new_name=}")
+        logging.info("Renaming Tag")
         try:
             self._record_keeper.edit_attribute(
                 current_name, new_name, AttributeType.TAG

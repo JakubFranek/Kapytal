@@ -38,6 +38,9 @@ def backup_json_file(file_path: str, backup_directories: list[str]) -> None:
             os.remove(oldest_backup)
 
 
+# TODO: setup multiple file handlers (info, debug)
+
+
 def setup_logging(root_directory: str) -> None:
     dir_logs = root_directory + r"\logs"
     if not os.path.exists(dir_logs):

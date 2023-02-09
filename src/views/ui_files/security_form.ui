@@ -9,7 +9,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>425</width>
+    <width>700</width>
     <height>360</height>
    </rect>
   </property>
@@ -70,9 +70,9 @@
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="renameButton">
+      <widget class="QPushButton" name="editButton">
        <property name="text">
-        <string>Rename</string>
+        <string>Edit</string>
        </property>
       </widget>
      </item>
