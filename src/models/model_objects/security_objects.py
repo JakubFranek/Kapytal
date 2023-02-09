@@ -11,6 +11,7 @@ from typing import Any
 
 from src.models.base_classes.account import Account, UnrelatedAccountError
 from src.models.base_classes.transaction import Transaction
+from src.models.constants import tzinfo
 from src.models.custom_exceptions import InvalidCharacterError, TransferSameAccountError
 from src.models.mixins.copyable_mixin import CopyableMixin
 from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
@@ -145,6 +146,12 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
         return copy.deepcopy(self._price_history)
 
     @property
+    def price_history_pairs(self) -> tuple[tuple[date, Decimal]]:
+        pairs = [(date_, rate) for date_, rate in self._price_history.items()]
+        pairs.sort()
+        return tuple(pairs)
+
+    @property
     def price_places(self) -> int:
         return self._places
 
@@ -166,18 +173,21 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
             round(price.value, self._places), self.currency
         )
 
-    # TODO: shares_unit can be serialized directly
-    # TODO: price history must be saved
     def serialize(self) -> dict[str, Any]:
+        date_price_pairs = [
+            [date_.strftime("%Y-%m-%d"), str(rate)]
+            for date_, rate in self.price_history_pairs
+        ]
         return {
             "datatype": "Security",
             "name": self._name,
             "symbol": self._symbol,
             "type_": self._type,
             "currency_code": self._currency.code,
-            "shares_unit": self._shares_unit,
+            "shares_unit": str(self._shares_unit),
             "price_places": self._places,
             "uuid": str(self._uuid),
+            "date_price_pairs": date_price_pairs,
         }
 
     @staticmethod
@@ -191,11 +201,19 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
         currency_code = data["currency_code"]
         security_currency = find_currency_by_code(currency_code, currencies)
 
-        shares_unit = data["shares_unit"]
+        shares_unit = Decimal(data["shares_unit"])
         price_places = data["price_places"]
+
+        date_price_pairs: list[list[str, str]] = data["date_price_pairs"]
+
         obj = Security(
             name, symbol, type_, security_currency, shares_unit, price_places
         )
+        for date_, price in date_price_pairs:
+            obj.set_price(
+                datetime.strptime(date_, "%Y-%m-%d").replace(tzinfo=tzinfo).date(),
+                price,
+            )
         obj._uuid = uuid.UUID(data["uuid"])
         return obj
 
