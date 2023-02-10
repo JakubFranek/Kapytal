@@ -163,7 +163,7 @@ class CashAccount(Account):
             "path": self.path,
             "index": index,
             "currency_code": self._currency.code,
-            "initial_balance": str(self._initial_balance.value),
+            "initial_balance": str(self._initial_balance.value_rounded),
             "uuid": str(self._uuid),
         }
 
@@ -1252,7 +1252,7 @@ class RefundTransaction(CashRelatedTransaction):
             raise InvalidCategoryError(
                 "Only categories present in the refunded CashTransaction are accepted."
             )
-        if not all(amount.value >= 0 for _, amount in pairs):
+        if not all(amount.value_rounded >= 0 for _, amount in pairs):
             raise ValueError(
                 "Second member of RefundTransaction.category_amount_pairs "
                 "tuples must be a non-negative CashAmount."
@@ -1260,7 +1260,7 @@ class RefundTransaction(CashRelatedTransaction):
         refund_amount = sum(
             (amount for _, amount in pairs), start=CashAmount(0, currency)
         )
-        if not refund_amount.value > 0:
+        if not refund_amount.value_rounded > 0:
             raise ValueError("Total refunded amount must be positive.")
 
         max_values = {}
@@ -1298,7 +1298,7 @@ class RefundTransaction(CashRelatedTransaction):
         delivered_tags = {tag for tag, _ in pairs}
         if delivered_tags != expected_tags:
             raise InvalidAttributeError("Delivered tags do not match expected tags.")
-        if not all(amount.value >= 0 for _, amount in pairs):
+        if not all(amount.value_rounded >= 0 for _, amount in pairs):
             raise ValueError(
                 "Second member of RefundTransaction.tag_amount_pairs "
                 "tuples must be a non-negative CashAmount."

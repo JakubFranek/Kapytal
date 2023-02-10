@@ -85,10 +85,14 @@ def test_edit_security() -> None:
     record_keeper = RecordKeeper()
     record_keeper.add_currency("CZK", 2)
     record_keeper.add_security("TEST NAME", "SMBL", "ETF", "CZK", 1)
-    record_keeper.edit_security("SMBL", "SYMB", "NEW NAME")
+    security = record_keeper.get_security_by_name("TEST NAME")
+    record_keeper.edit_security(
+        uuid=str(security.uuid), name="NEW NAME", symbol="NEWSYMB", type_="NEW TYPE"
+    )
     security = record_keeper.securities[0]
-    assert security.symbol == "SYMB"
+    assert security.symbol == "NEWSYMB"
     assert security.name == "NEW NAME"
+    assert security.type_ == "NEW TYPE"
 
 
 def test_edit_security_does_not_exist() -> None:
@@ -211,7 +215,7 @@ def test_edit_cash_account() -> None:
     account: CashAccount = record_keeper.accounts[0]
     assert account.name == "NEW NAME"
     assert account.path == "NEW PARENT/NEW NAME"
-    assert account.initial_balance.value == Decimal(1000)
+    assert account.initial_balance.value_rounded == Decimal(1000)
 
 
 def test_edit_cash_transactions_descriptions() -> None:
@@ -480,7 +484,7 @@ def test_edit_cash_transfer_amount_sent() -> None:
     uuids = [str(transfer.uuid) for transfer in transfers]
     record_keeper.edit_cash_transfers(uuids, amount_sent=edit_amount_sent)
     for transfer in transfers:
-        assert transfer.amount_sent.value == edit_amount_sent
+        assert transfer.amount_sent.value_rounded == edit_amount_sent
 
 
 def test_edit_cash_transfer_amount_received() -> None:
@@ -495,7 +499,7 @@ def test_edit_cash_transfer_amount_received() -> None:
     uuids = [str(transfer.uuid) for transfer in transfers]
     record_keeper.edit_cash_transfers(uuids, amount_received=edit_amount_received)
     for transfer in transfers:
-        assert transfer.amount_received.value == edit_amount_received
+        assert transfer.amount_received.value_rounded == edit_amount_received
 
 
 def test_edit_cash_transfer_amount_sent_currency_not_same() -> None:
@@ -674,7 +678,7 @@ def test_edit_security_transactions_currency_not_same() -> None:
 
 
 def test_edit_security_transactions_change_symbol() -> None:
-    edit_symbol = "IWDA.AS"
+    edit_name = "iShares MSCI World"
     record_keeper = get_preloaded_record_keeper_with_security_transactions()
     transactions = [
         transaction
@@ -683,9 +687,10 @@ def test_edit_security_transactions_change_symbol() -> None:
         and transaction.security.symbol == "VWCE.DE"
     ]
     uuids = [str(transfer.uuid) for transfer in transactions]
-    record_keeper.edit_security_transactions(uuids, security_symbol=edit_symbol)
+    security = record_keeper.get_security_by_name(edit_name)
+    record_keeper.edit_security_transactions(uuids, security_name=security.name)
     for transaction in transactions:
-        assert transaction.security.symbol == edit_symbol
+        assert transaction.security.name == edit_name
 
 
 def test_edit_security_transactions_change_cash_account() -> None:
@@ -732,7 +737,7 @@ def test_edit_security_transactions_change_price_per_share() -> None:
     uuids = [str(transfer.uuid) for transfer in transactions]
     record_keeper.edit_security_transactions(uuids, price_per_share=edit_price)
     for transaction in transactions:
-        assert transaction.price_per_share.value == edit_price
+        assert transaction.price_per_share.value_rounded == edit_price
 
 
 def test_edit_security_transactions_change_shares() -> None:
@@ -772,7 +777,7 @@ def test_edit_security_transfers_wrong_transaction_types() -> None:
 
 
 def test_edit_security_transfers_change_symbol() -> None:
-    edit_symbol = "IWDA.AS"
+    edit_name = "iShares MSCI World"
     record_keeper = get_preloaded_record_keeper_with_security_transactions()
     transactions = [
         transaction
@@ -781,9 +786,9 @@ def test_edit_security_transfers_change_symbol() -> None:
         and transaction.security.symbol == "VWCE.DE"
     ]
     uuids = [str(transfer.uuid) for transfer in transactions]
-    record_keeper.edit_security_transfers(uuids, security_symbol=edit_symbol)
+    record_keeper.edit_security_transfers(uuids, security_name=edit_name)
     for transaction in transactions:
-        assert transaction.security.symbol == edit_symbol
+        assert transaction.security.name == edit_name
 
 
 def test_edit_security_transactions_change_security_accounts() -> None:

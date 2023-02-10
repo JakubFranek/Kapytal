@@ -14,6 +14,7 @@ from src.models.model_objects.currency_objects import (
     CurrencyError,
     ExchangeRate,
 )
+from src.utilities.general import normalize_decimal_to_min_places
 from tests.models.test_assets.composites import (
     cash_amounts,
     currencies,
@@ -28,12 +29,19 @@ from tests.models.test_assets.composites import (
 )
 def test_creation(value: Decimal, currency: Currency) -> None:
     cash_amount = CashAmount(value, currency)
-    assert cash_amount.value == round(value, currency.places)
+    assert cash_amount.value_rounded == round(value, currency.places)
+    assert cash_amount.value_normalized == normalize_decimal_to_min_places(
+        value, currency.places
+    )
     assert (
         cash_amount.__repr__()
-        == f"CashAmount({round(value,currency.places)} {currency.code})"
+        == f"CashAmount({normalize_decimal_to_min_places(value,currency.places)}"
+        f" {currency.code})"
     )
-    assert str(cash_amount) == f"{round(value,currency.places):,} {currency.code}"
+    assert (
+        cash_amount.to_str_rounded()
+        == f"{round(value,currency.places):,} {currency.code}"
+    )
 
 
 @given(
@@ -72,7 +80,7 @@ def test_value_invalid_str(value: str, currency: Currency) -> None:
 def test_value_valid_str(value: str, currency: Currency) -> None:
     value = str(value)
     amount = CashAmount(value, currency)
-    assert amount.value == round(Decimal(value), currency.places)
+    assert amount.value_rounded == round(Decimal(value), currency.places)
 
 
 @given(
@@ -103,7 +111,7 @@ def test_currency_invalid_type(value: Decimal, currency: Currency) -> None:
 def test_eq(value_1: Decimal, value_2: Decimal, currency: Currency) -> None:
     amount_1 = CashAmount(value_1, currency)
     amount_2 = CashAmount(value_2, currency)
-    expected = amount_1.value == amount_2.value
+    expected = amount_1.value_normalized == amount_2.value_normalized
     assert (amount_1 == amount_2) == expected
 
 
@@ -145,7 +153,7 @@ def test_eq_different_currency_nonzero_value(
 def test_lt(value_1: Decimal, value_2: Decimal, currency: Currency) -> None:
     amount_1 = CashAmount(value_1, currency)
     amount_2 = CashAmount(value_2, currency)
-    expected = amount_1.value < amount_2.value
+    expected = amount_1.value_normalized < amount_2.value_normalized
     assert (amount_1 < amount_2) == expected
 
 
@@ -173,7 +181,9 @@ def test_sum(value_1: Decimal, value_2: Decimal, currency: Currency) -> None:
     amount_1 = CashAmount(value_1, currency)
     amount_2 = CashAmount(value_2, currency)
     result = sum([amount_1, amount_2], start=CashAmount(0, currency))
-    expected = CashAmount(amount_1.value + amount_2.value, currency)
+    expected = CashAmount(
+        amount_1.value_normalized + amount_2.value_normalized, currency
+    )
     assert result == expected
 
 
@@ -185,7 +195,9 @@ def test_sum(value_1: Decimal, value_2: Decimal, currency: Currency) -> None:
 def test_add_radd(value_1: Decimal, value_2: Decimal, currency: Currency) -> None:
     amount_1 = CashAmount(value_1, currency)
     amount_2 = CashAmount(value_2, currency)
-    expected = CashAmount(amount_1.value + amount_2.value, currency)
+    expected = CashAmount(
+        amount_1.value_normalized + amount_2.value_normalized, currency
+    )
     assert amount_1.__add__(amount_2) == expected
     assert amount_1.__radd__(amount_2) == expected
 
@@ -217,8 +229,12 @@ def test_add_radd_invalid_type(cash_amount: CashAmount, number: Any) -> None:
 def test_sub_rsub(value_1: Decimal, value_2: Decimal, currency: Currency) -> None:
     amount_1 = CashAmount(value_1, currency)
     amount_2 = CashAmount(value_2, currency)
-    expected_sub = CashAmount(amount_1.value - amount_2.value, currency)
-    expected_rsub = CashAmount(amount_2.value - amount_1.value, currency)
+    expected_sub = CashAmount(
+        amount_1.value_normalized - amount_2.value_normalized, currency
+    )
+    expected_rsub = CashAmount(
+        amount_2.value_normalized - amount_1.value_normalized, currency
+    )
     assert amount_1.__sub__(amount_2) == expected_sub
     assert amount_1.__rsub__(amount_2) == expected_rsub
 
@@ -248,7 +264,7 @@ def test_sub_rsub_invalid_type(cash_amount: CashAmount, number: Any) -> None:
     | valid_decimals(min_value=-1e6, max_value=1e6),
 )
 def test_mul_rmul(cash_amount: CashAmount, number: int | Decimal) -> None:
-    expected_mul = CashAmount(cash_amount.value * number, cash_amount.currency)
+    expected_mul = CashAmount(cash_amount.value_rounded * number, cash_amount.currency)
     assert cash_amount.__mul__(number) == expected_mul
     assert cash_amount.__rmul__(number) == expected_mul
 
@@ -263,7 +279,7 @@ def test_mul_rmul_invalid_type(cash_amount: CashAmount, number: Any) -> None:
 
 @given(cash_amount=cash_amounts())
 def test_is_positive(cash_amount: CashAmount) -> None:
-    assert (cash_amount.value > 0) == cash_amount.is_positive()
+    assert (cash_amount.value_rounded > 0) == cash_amount.is_positive()
 
 
 @given(cash_amount=cash_amounts())
@@ -275,7 +291,7 @@ def test_convert_czk_to_btc() -> None:
     currencies = get_currencies()
     cash_amount = CashAmount(Decimal(1_000_000), currencies["CZK"])
     result = cash_amount.convert(currencies["BTC"])
-    assert result == CashAmount(Decimal(0.9), currencies["BTC"])
+    assert result == CashAmount(Decimal("0.9"), currencies["BTC"])
 
 
 def test_convert_czk_to_btc_date() -> None:

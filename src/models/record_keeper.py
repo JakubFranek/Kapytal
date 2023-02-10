@@ -45,8 +45,6 @@ from src.models.model_objects.security_objects import (
 )
 
 
-# TODO: add method for calculating no. of transactions and total
-# for given attribute and date range
 class RecordKeeper(CopyableMixin, JSONSerializableMixin):
     def __init__(self) -> None:
         self._accounts: list[Account] = []
@@ -153,6 +151,8 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         currency_code: str,
         unit: Decimal | int | str,
     ) -> None:
+        if any(security.name == name for security in self._securities):
+            raise AlreadyExistsError(f"A Security with name='{name}' already exists.")
         symbol_upper = symbol.upper()
         if len(symbol_upper) != 0 and any(
             security.symbol == symbol_upper for security in self._securities
@@ -160,10 +160,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
             raise AlreadyExistsError(
                 f"A Security with symbol='{symbol_upper}' already exists."
             )
-        if any(security.name == name for security in self._securities):
-            raise AlreadyExistsError(
-                f"A Security with name='{symbol_upper}' already exists."
-            )
+
         currency = self.get_currency(currency_code)
         security = Security(name, symbol, type_, currency, unit)
         self._securities.append(security)
@@ -338,13 +335,13 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         description: str,
         datetime_: datetime,
         type_: SecurityTransactionType,
-        security_symbol: str,
+        security_name: str,
         shares: Decimal | int | str,
         price_per_share: Decimal | int | str,
         security_account_path: str,
         cash_account_path: str,
     ) -> None:
-        security = self.get_security(security_symbol)
+        security = self.get_security_by_name(security_name)
         cash_account = self.get_account(cash_account_path, CashAccount)
         security_account = self.get_account(security_account_path, SecurityAccount)
 
@@ -364,12 +361,12 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         self,
         description: str,
         datetime_: datetime,
-        security_symbol: str,
+        security_name: str,
         shares: Decimal | int | str,
         account_sender_path: str,
         account_recipient_path: str,
     ) -> None:
-        security = self.get_security(security_symbol)
+        security = self.get_security_by_name(security_name)
         account_sender = self.get_account(account_sender_path, SecurityAccount)
         account_recipient = self.get_account(account_recipient_path, SecurityAccount)
         transaction = SecurityTransfer(
@@ -608,7 +605,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         description: str | None = None,
         datetime_: datetime | None = None,
         transaction_type: SecurityTransactionType | None = None,
-        security_symbol: str | None = None,
+        security_name: str | None = None,
         cash_account_path: str | None = None,
         security_account_path: str | None = None,
         price_per_share: Decimal | int | str | None = None,
@@ -631,8 +628,8 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
                 "Edited SecurityTransactions must have the same currency."
             )
 
-        if security_symbol is not None:
-            security = self.get_security(security_symbol)
+        if security_name is not None:
+            security = self.get_security_by_name(security_name)
         else:
             security = None
 
@@ -687,7 +684,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         transaction_uuids: Collection[str],
         description: str | None = None,
         datetime_: datetime | None = None,
-        security_symbol: str | None = None,
+        security_name: str | None = None,
         shares: Decimal | None = None,
         sender_path: str | None = None,
         recipient_path: str | None = None,
@@ -699,8 +696,8 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         ):
             raise TypeError("All edited transactions must be SecurityTransfers.")
 
-        if security_symbol is not None:
-            security = self.get_security(security_symbol)
+        if security_name is not None:
+            security = self.get_security_by_name(security_name)
         else:
             security = None
 
@@ -777,7 +774,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         symbol: str | None = None,
         type_: str | None = None,
     ) -> None:
-        edited_security = self.get_security(uuid)
+        edited_security = self.get_security_by_uuid(uuid)
         if name is not None:
             edited_security.name = name
         if symbol is not None:
@@ -904,7 +901,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
             self._transactions.remove(transaction)
 
     def remove_security(self, uuid: str) -> None:
-        security = self.get_security(uuid)
+        security = self.get_security_by_uuid(uuid)
         if any(
             transaction.security == security
             for transaction in self._transactions
@@ -1040,13 +1037,21 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
                 return account
         raise NotFoundError(f"An Account with path='{path}' does not exist.")
 
-    def get_security(self, uuid: str) -> Security:
+    def get_security_by_uuid(self, uuid: str) -> Security:
         if not isinstance(uuid, str):
             raise TypeError("Parameter 'uuid' must be a string.")
         for security in self._securities:
             if str(security.uuid) == uuid:
                 return security
         raise NotFoundError(f"A Security with uuid='{uuid}' does not exist.")
+
+    def get_security_by_name(self, name: str) -> Security:
+        if not isinstance(name, str):
+            raise TypeError("Parameter 'name' must be a string.")
+        for security in self._securities:
+            if security.name == name:
+                return security
+        raise NotFoundError(f"A Security with name='{name}' does not exist.")
 
     def get_currency(self, code: str) -> Currency:
         if not isinstance(code, str):
@@ -1134,7 +1139,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         raise NotFoundError(f"Exchange rate '{exchange_rate_code} not found.'")
 
     def set_security_price(self, uuid: str, value: Decimal, date_: date) -> None:
-        security = self.get_security(uuid)
+        security = self.get_security_by_uuid(uuid)
         price = CashAmount(value, security.currency)
         security.set_price(date_, price)
 

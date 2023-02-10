@@ -28,7 +28,6 @@ from tests.models.test_assets.composites import (
     type_=names(min_size=1, max_size=32),
     currency=currencies(),
     shares_unit=valid_decimals(min_value=1e-10, max_value=1),
-    data=st.data(),
 )
 def test_creation(
     name: str,
@@ -36,22 +35,17 @@ def test_creation(
     type_: str,
     currency: Currency,
     shares_unit: Decimal,
-    data: st.DataObject,
 ) -> None:
-    places = data.draw(st.integers(min_value=currency.places, max_value=8) | st.none())
-    security = Security(name, symbol, type_, currency, shares_unit, places)
+    security = Security(name, symbol, type_, currency, shares_unit)
     assert security.name == name
     assert security.symbol == symbol.upper()
     assert security.type_ == type_
     assert security.currency == currency
     assert security.price == CashAmount(Decimal(0), currency)
+    assert security.latest_date is None
     assert security.price_history == {}
     assert security.__repr__() == f"Security('{security.name}')"
     assert isinstance(security.__hash__(), int)
-    if places is None:
-        assert security.price_places == currency.places
-    else:
-        assert security.price_places == places
     assert security.shares_unit == shares_unit
 
 
@@ -230,50 +224,6 @@ def test_shares_unit_invalid_value(
 
 
 @given(
-    name=names(),
-    symbol=st.text(alphabet=Security.SYMBOL_ALLOWED_CHARS, min_size=1, max_size=8),
-    type_=names(min_size=1, max_size=32),
-    currency=currencies(),
-    places=everything_except((int, type(None))),
-    shares_unit=valid_decimals(min_value=1e-10, max_value=1),
-)
-def test_places_invalid_type(
-    name: str,
-    symbol: str,
-    type_: str,
-    currency: Currency,
-    places: Any,
-    shares_unit: Decimal,
-) -> None:
-    with pytest.raises(TypeError, match="Security.places must be an integer or None."):
-        Security(name, symbol, type_, currency, shares_unit, places)
-
-
-@given(
-    name=names(min_size=1, max_size=64),
-    symbol=st.text(alphabet=Security.SYMBOL_ALLOWED_CHARS, min_size=1, max_size=8),
-    type_=names(min_size=1, max_size=32),
-    currency=currencies(),
-    shares_unit=valid_decimals(min_value=1e-10, max_value=1),
-    data=st.data(),
-)
-def test_places_invalid_value(
-    name: str,
-    symbol: str,
-    type_: str,
-    currency: Currency,
-    shares_unit: Decimal,
-    data: st.DataObject,
-) -> None:
-    places = data.draw(st.integers(max_value=currency.places - 1))
-    with pytest.raises(
-        ValueError,
-        match="Security.places must not be smaller than Security.currency.places.",
-    ):
-        Security(name, symbol, type_, currency, shares_unit, places)
-
-
-@given(
     date_=st.dates(),
     value=valid_decimals(),
 )
@@ -282,10 +232,8 @@ def test_set_price(date_: date, value: Decimal) -> None:
     currency = security.currency
     price = CashAmount(value, currency)
     security.set_price(date_, price)
-    assert security.price.value == round(price.value, security.price_places)
-    assert security.price_history[date_].value == round(
-        price.value, security.price_places
-    )
+    assert security.price.value_normalized == price.value_normalized
+    assert security.price_history[date_].value_normalized == price.value_normalized
 
 
 @given(

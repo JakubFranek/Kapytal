@@ -1,6 +1,6 @@
 import copy
 import string
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 from typing import Any
 
@@ -542,7 +542,7 @@ def test_add_security() -> None:
     unit = 1
     record_keeper.add_currency(currency_code, places)
     record_keeper.add_security(name, symbol, type_, currency_code, unit)
-    security = record_keeper.get_security(symbol)
+    security = record_keeper.get_security_by_name(name)
     assert security.name == name
     assert security.symbol == symbol
     assert security.type_ == type_
@@ -550,7 +550,7 @@ def test_add_security() -> None:
     assert security in record_keeper.securities
 
 
-def test_add_security_already_exists() -> None:
+def test_add_security_symbol_already_exists() -> None:
     record_keeper = RecordKeeper()
     name_1 = "Security Name"
     name_2 = "Another Name"
@@ -566,19 +566,48 @@ def test_add_security_already_exists() -> None:
         record_keeper.add_security(name_2, symbol, type_2, currency_code, unit)
 
 
-@given(symbol=everything_except(str))
-def test_get_security_invalid_symbol_type(symbol: Any) -> None:
+def test_add_security_name_already_exists() -> None:
     record_keeper = RecordKeeper()
-    with pytest.raises(TypeError, match="Parameter 'symbol' must be a string."):
-        record_keeper.get_security(symbol)
+    name = "Security Name"
+    symbol_1 = "ABCD.EF"
+    symbol_2 = "GHIJ.KL"
+    type_ = "ETF"
+    type_2 = "Mutual Fund"
+    currency_code = "EUR"
+    places = 2
+    unit = 1
+    record_keeper.add_currency(currency_code, places)
+    record_keeper.add_security(name, symbol_1, type_, currency_code, unit)
+    with pytest.raises(AlreadyExistsError):
+        record_keeper.add_security(name, symbol_2, type_2, currency_code, unit)
 
 
-@given(symbol=st.text(min_size=1, max_size=8))
-def test_get_security_does_not_exists(symbol: str) -> None:
-    assume(symbol != "VWCE.DE")
+@given(name=everything_except(str))
+def test_get_security_by_name_invalid_type(name: Any) -> None:
+    record_keeper = RecordKeeper()
+    with pytest.raises(TypeError, match="Parameter 'name' must be a string."):
+        record_keeper.get_security_by_name(name)
+
+
+@given(name=st.text(min_size=1, max_size=32))
+def test_get_security_by_name_does_not_exist(name: str) -> None:
     record_keeper = RecordKeeper()
     with pytest.raises(NotFoundError):
-        record_keeper.get_security(symbol)
+        record_keeper.get_security_by_name(name)
+
+
+@given(uuid=everything_except(str))
+def test_get_security_by_uuid_invalid_type(uuid: Any) -> None:
+    record_keeper = RecordKeeper()
+    with pytest.raises(TypeError, match="Parameter 'uuid' must be a string."):
+        record_keeper.get_security_by_uuid(uuid)
+
+
+@given(uuid=st.text(min_size=1, max_size=32))
+def test_get_security_by_uuid_does_not_exist(uuid: str) -> None:
+    record_keeper = RecordKeeper()
+    with pytest.raises(NotFoundError):
+        record_keeper.get_security_by_uuid(uuid)
 
 
 @given(
@@ -622,7 +651,7 @@ def test_add_security_transaction(
         description,
         datetime_,
         type_,
-        security.symbol,
+        security.name,
         shares,
         price_per_share,
         security_account_path,
@@ -666,7 +695,7 @@ def test_add_security_transfer(
     record_keeper.add_security_transfer(
         description,
         datetime_,
-        security.symbol,
+        security.name,
         shares,
         account_sender_path,
         account_recipient_path,
@@ -757,13 +786,23 @@ def test_record_keeper_add_tag_already_exists(name: str) -> None:
         record_keeper.add_tag(name)
 
 
+@given(value=valid_decimals(), date_=st.dates())
+def test_record_keeper_set_security_price(value: Decimal, date_: date) -> None:
+    record_keeper = RecordKeeper()
+    record_keeper.add_currency("EUR", 2)
+    record_keeper.add_security("NAME", "SYMBOL", "TYPE", "EUR", 1)
+    security = record_keeper.get_security_by_name("NAME")
+    record_keeper.set_security_price(uuid=str(security.uuid), value=value, date_=date_)
+    assert security.price.value_normalized == value
+
+
 def get_preloaded_record_keeper_with_security_transactions() -> RecordKeeper:
     record_keeper = get_preloaded_record_keeper()
     record_keeper.add_security_transaction(
         description="Monthly buy of VWCE",
         datetime_=datetime.now(tzinfo) - timedelta(days=1),
         type_=SecurityTransactionType.BUY,
-        security_symbol="VWCE.DE",
+        security_name="Vanguard FTSE All-World",
         shares=Decimal(10),
         price_per_share=Decimal(90),
         security_account_path="Security Accounts/Interactive Brokers",
@@ -773,7 +812,7 @@ def get_preloaded_record_keeper_with_security_transactions() -> RecordKeeper:
         description="Monthly buy of VWCE",
         datetime_=datetime.now(tzinfo) - timedelta(days=31),
         type_=SecurityTransactionType.BUY,
-        security_symbol="VWCE.DE",
+        security_name="Vanguard FTSE All-World",
         shares=Decimal(10),
         price_per_share=Decimal(91),
         security_account_path="Security Accounts/Interactive Brokers",
@@ -783,7 +822,7 @@ def get_preloaded_record_keeper_with_security_transactions() -> RecordKeeper:
         description="Monthly buy of ČSOB DPS",
         datetime_=datetime.now(tzinfo) - timedelta(days=1),
         type_=SecurityTransactionType.BUY,
-        security_symbol="CSOB.DYN",
+        security_name="ČSOB Dynamický penzijní fond",
         shares=Decimal(2750),
         price_per_share=Decimal(1.75),
         security_account_path="Security Accounts/ČSOB Penzijní účet",
@@ -793,7 +832,7 @@ def get_preloaded_record_keeper_with_security_transactions() -> RecordKeeper:
         description="Monthly buy of ČSOB DPS",
         datetime_=datetime.now(tzinfo) - timedelta(days=31),
         type_=SecurityTransactionType.BUY,
-        security_symbol="CSOB.DYN",
+        security_name="ČSOB Dynamický penzijní fond",
         shares=Decimal(2850),
         price_per_share=Decimal(1.6),
         security_account_path="Security Accounts/ČSOB Penzijní účet",
@@ -802,7 +841,7 @@ def get_preloaded_record_keeper_with_security_transactions() -> RecordKeeper:
     record_keeper.add_security_transfer(
         description="Security transfer to Degiro",
         datetime_=datetime.now(tzinfo),
-        security_symbol="VWCE.DE",
+        security_name="Vanguard FTSE All-World",
         shares=Decimal(10),
         account_sender_path="Security Accounts/Interactive Brokers",
         account_recipient_path="Security Accounts/Degiro",
@@ -810,7 +849,7 @@ def get_preloaded_record_keeper_with_security_transactions() -> RecordKeeper:
     record_keeper.add_security_transfer(
         description="Security transfer to Degiro",
         datetime_=datetime.now(tzinfo) - timedelta(days=30),
-        security_symbol="VWCE.DE",
+        security_name="Vanguard FTSE All-World",
         shares=Decimal(10),
         account_sender_path="Security Accounts/Interactive Brokers",
         account_recipient_path="Security Accounts/Degiro",
@@ -1017,7 +1056,7 @@ def get_preloaded_record_keeper_with_various_transactions() -> RecordKeeper:
         description="Monthly buy of ČSOB DPS",
         datetime_=datetime.now(tzinfo) - timedelta(days=31),
         type_=SecurityTransactionType.BUY,
-        security_symbol="CSOB.DYN",
+        security_name="ČSOB Dynamický penzijní fond",
         shares=Decimal(2850),
         price_per_share=Decimal(1.6),
         security_account_path="Security Accounts/ČSOB Penzijní účet",
@@ -1026,7 +1065,7 @@ def get_preloaded_record_keeper_with_various_transactions() -> RecordKeeper:
     record_keeper.add_security_transfer(
         description="Security transfer to Degiro",
         datetime_=datetime.now(tzinfo),
-        security_symbol="VWCE.DE",
+        security_name="Vanguard FTSE All-World",
         shares=Decimal(10),
         account_sender_path="Security Accounts/Interactive Brokers",
         account_recipient_path="Security Accounts/Degiro",

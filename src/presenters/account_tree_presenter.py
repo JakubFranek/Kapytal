@@ -284,7 +284,7 @@ class AccountTreePresenter:
                 edit=edit,
             )
             self._dialog.signal_OK.connect(self.edit_cash_account)
-            self._dialog.initial_balance = item.initial_balance.value
+            self._dialog.initial_balance = item.initial_balance.value_rounded
         else:
             code_places_pairs = [
                 (currency.code, currency.places)

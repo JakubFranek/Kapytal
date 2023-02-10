@@ -170,6 +170,7 @@ def test_security_account() -> None:
 def test_security() -> None:
     currency = Currency("CZK", 2)
     security = Security("Test Name", "SYMB.OL", "ETF", currency, 1)
+    security.set_price(datetime.now(tzinfo).date(), CashAmount("1.234567890", currency))
     serialized = json.dumps(security, cls=CustomJSONEncoder)
     decoded = json.loads(serialized, cls=CustomJSONDecoder)
     decoded = Security.deserialize(decoded, [currency])
@@ -179,8 +180,8 @@ def test_security() -> None:
     assert decoded.currency == security.currency
     assert decoded.type_ == security.type_
     assert decoded.shares_unit == security.shares_unit
-    assert decoded.price_places == security.price_places
     assert decoded.uuid == security.uuid
+    assert decoded.price == security.price
 
 
 def test_record_keeper_currencies_exchange_rates() -> None:
@@ -467,7 +468,7 @@ def test_record_keeper_transactions() -> None:
         "buying ČSOB DPS shares",
         datetime.now(tzinfo),
         SecurityTransactionType.BUY,
-        "CSOB.DYN",
+        "ČSOB Dynamický penzijní fond",
         1000,
         "1.7",
         "ČSOB penzijní účet",
@@ -476,7 +477,7 @@ def test_record_keeper_transactions() -> None:
     record_keeper.add_security_transfer(
         "transfering DPS shares",
         datetime.now(tzinfo),
-        "CSOB.DYN",
+        "ČSOB Dynamický penzijní fond",
         10,
         "ČSOB penzijní účet",
         "ČSOB penzijní účet 2",

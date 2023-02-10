@@ -4,6 +4,7 @@ import shutil
 import sys
 import traceback
 from datetime import datetime
+from decimal import Decimal
 from types import TracebackType
 
 from src.models.constants import tzinfo
@@ -38,6 +39,7 @@ def backup_json_file(file_path: str, backup_directories: list[str]) -> None:
             os.remove(oldest_backup)
 
 
+# REFACTOR: clean up this function
 def setup_logging(root_directory: str) -> None:
     dir_logs_info = root_directory + r"\logs\info"
     dir_logs_debug = root_directory + r"\logs\debug"
@@ -151,3 +153,14 @@ def get_exception_info(
     filename = os.path.basename(filename)
 
     return filename, line, exc_details
+
+
+def normalize_decimal_to_min_places(value: Decimal, min_places: int) -> Decimal:
+    """Returns a Decimal which has at least 'min_places' decimal places,
+    but has no trailing zeroes beyond that limit."""
+
+    normalized = value.normalize()
+    _, _, exponent = normalized.as_tuple()
+    if isinstance(exponent, int) and -exponent < min_places:
+        return normalized.quantize(Decimal(f"1e-{min_places}"))
+    return normalized

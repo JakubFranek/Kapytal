@@ -70,7 +70,7 @@ def test_remove_account_has_children() -> None:
     sender_path = "PARENT/TEST SENDER"
     recipient_path = "PARENT/TEST RECIPIENT"
     record_keeper.add_security_transfer(
-        "", datetime.now(tzinfo), "SYMB", Decimal(1), sender_path, recipient_path
+        "", datetime.now(tzinfo), "NAME", Decimal(1), sender_path, recipient_path
     )
 
     with pytest.raises(InvalidOperationError):
@@ -159,8 +159,9 @@ def test_remove_security() -> None:
     record_keeper = RecordKeeper()
     record_keeper.add_currency("CZK", 2)
     record_keeper.add_security("NAME", "SYMB", "ETF", "CZK", 1)
+    security = record_keeper.get_security_by_name("NAME")
     assert len(record_keeper.securities) == 1
-    record_keeper.remove_security("SYMB")
+    record_keeper.remove_security(str(security.uuid))
     assert record_keeper.securities == ()
 
 
@@ -168,7 +169,7 @@ def test_remove_security_referenced_in_transaction() -> None:
     record_keeper = get_preloaded_record_keeper_with_various_transactions()
     security = record_keeper.securities[0]
     with pytest.raises(InvalidOperationError):
-        record_keeper.remove_security(security.symbol)
+        record_keeper.remove_security(str(security.uuid))
 
 
 def test_remove_currency() -> None:
@@ -209,7 +210,7 @@ def test_remove_currency_referenced_in_transaction() -> None:
         "",
         datetime.now(tzinfo),
         SecurityTransactionType.BUY,
-        "SYMB",
+        "NAME",
         1,
         1,
         "SECURITY ACC",

@@ -57,7 +57,6 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
         type_: str,
         currency: Currency,
         shares_unit: Decimal | int | str,
-        price_places: int | None = None,
     ) -> None:
         super().__init__(name=name, allow_slash=True)
         self.symbol = symbol
@@ -76,17 +75,6 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
         if not _shares_unit.is_finite() or _shares_unit <= 0:
             raise ValueError("Security.shares_unit must be finite and positive.")
         self._shares_unit = _shares_unit
-
-        if price_places is None:
-            self._places = self._currency.places
-        else:
-            if not isinstance(price_places, int):
-                raise TypeError("Security.places must be an integer or None.")
-            if price_places < self._currency.places:
-                raise ValueError(
-                    "Security.places must not be smaller than Security.currency.places."
-                )
-            self._places = price_places
 
         self._price_history: dict[date, CashAmount] = {}
 
@@ -146,14 +134,10 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
         return copy.deepcopy(self._price_history)
 
     @property
-    def price_history_pairs(self) -> tuple[tuple[date, Decimal]]:
-        pairs = [(date_, rate) for date_, rate in self._price_history.items()]
+    def price_history_pairs(self) -> tuple[tuple[date, CashAmount]]:
+        pairs = [(date_, price) for date_, price in self._price_history.items()]
         pairs.sort()
         return tuple(pairs)
-
-    @property
-    def price_places(self) -> int:
-        return self._places
 
     @property
     def shares_unit(self) -> Decimal:
@@ -169,14 +153,12 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
             raise TypeError("Parameter 'price' must be a CashAmount.")
         if price.currency != self.currency:
             raise CurrencyError("Security.currency and price.currency must match.")
-        self._price_history[date_] = CashAmount(
-            round(price.value, self._places), self.currency
-        )
+        self._price_history[date_] = price
 
     def serialize(self) -> dict[str, Any]:
         date_price_pairs = [
-            [date_.strftime("%Y-%m-%d"), str(rate)]
-            for date_, rate in self.price_history_pairs
+            (date_.strftime("%Y-%m-%d"), str(price.value_normalized))
+            for date_, price in self.price_history_pairs
         ]
         return {
             "datatype": "Security",
@@ -184,8 +166,7 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
             "symbol": self._symbol,
             "type_": self._type,
             "currency_code": self._currency.code,
-            "shares_unit": str(self._shares_unit),
-            "price_places": self._places,
+            "shares_unit": str(self._shares_unit.normalize()),
             "uuid": str(self._uuid),
             "date_price_pairs": date_price_pairs,
         }
@@ -202,18 +183,16 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
         security_currency = find_currency_by_code(currency_code, currencies)
 
         shares_unit = Decimal(data["shares_unit"])
-        price_places = data["price_places"]
 
-        date_price_pairs: list[list[str, str]] = data["date_price_pairs"]
+        obj = Security(name, symbol, type_, security_currency, shares_unit)
 
-        obj = Security(
-            name, symbol, type_, security_currency, shares_unit, price_places
-        )
+        date_price_pairs: list[tuple[str, str]] = data["date_price_pairs"]
         for date_, price in date_price_pairs:
             obj.set_price(
                 datetime.strptime(date_, "%Y-%m-%d").replace(tzinfo=tzinfo).date(),
-                price,
+                CashAmount(price, obj.currency),
             )
+
         obj._uuid = uuid.UUID(data["uuid"])
         return obj
 

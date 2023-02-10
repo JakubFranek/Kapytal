@@ -43,10 +43,10 @@ def test_calculate_attribute_stats() -> None:
     )
     assert payee_stats.attribute == payee
     assert payee_stats.no_of_transactions == 4
-    assert payee_stats.balance.value == -1 - 2 + 3 + 5
+    assert payee_stats.balance.value_rounded == -1 - 2 + 3 + 5
     assert tag_stats.attribute == tag
     assert tag_stats.no_of_transactions == 4
-    assert tag_stats.balance.value == -1 - 2 + 3 + 4
+    assert tag_stats.balance.value_rounded == -1 - 2 + 3 + 4
 
 
 def get_transactions() -> list[CashTransaction]:

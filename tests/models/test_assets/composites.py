@@ -145,7 +145,7 @@ def cash_transactions(
         st.lists(
             tag_amount_pairs(
                 currency=currency,
-                max_value=max_tag_amount.value,
+                max_value=max_tag_amount.value_rounded,
             ),
             min_size=0,
             max_size=5,

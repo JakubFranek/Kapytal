@@ -71,7 +71,7 @@ def test_creation(  # noqa: CFQ002,TMN001
     )
     tag_amount_collection = data.draw(
         st.lists(
-            tag_amount_pairs(currency=currency, max_value=max_tag_amount.value),
+            tag_amount_pairs(currency=currency, max_value=max_tag_amount.value_rounded),
             min_size=0,
             max_size=5,
         )
@@ -230,8 +230,8 @@ def test_tags_invalid_second_member_value(
             data.draw(
                 cash_amounts(
                     currency=currency,
-                    min_value=max_tag_amount.value + Decimal("0.01"),
-                    max_value=max_tag_amount.value + Decimal("1e3"),
+                    min_value=max_tag_amount.value_rounded + Decimal("0.01"),
+                    max_value=max_tag_amount.value_rounded + Decimal("1e3"),
                 )
             ),
         )
@@ -255,7 +255,9 @@ def test_tag_amount_pairs_invalid_amount_currency(
     max_amount = transaction.amount
     amount = data.draw(
         cash_amounts(
-            min_value="0.01", max_value=max_amount.value, currency=invalid_currency
+            min_value="0.01",
+            max_value=max_amount.value_rounded,
+            currency=invalid_currency,
         ),
     )
     tag = data.draw(attributes(type_=AttributeType.TAG))
@@ -276,7 +278,9 @@ def test_tag_amount_pairs_not_unique(
     max_amount = transaction.amount
     amount = data.draw(
         cash_amounts(
-            min_value="0.01", max_value=max_amount.value, currency=transaction.currency
+            min_value="0.01",
+            max_value=max_amount.value_rounded,
+            currency=transaction.currency,
         ),
     )
     tag = data.draw(attributes(type_=AttributeType.TAG))

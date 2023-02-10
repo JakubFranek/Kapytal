@@ -10,6 +10,7 @@ from src.models.constants import tzinfo
 from src.models.mixins.copyable_mixin import CopyableMixin
 from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
 from src.models.utilities.find_helpers import find_currency_by_code
+from src.utilities.general import normalize_decimal_to_min_places
 
 
 class CurrencyError(ValueError):
@@ -281,54 +282,58 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
         _value = Decimal(value)
         if not _value.is_finite():
             raise ValueError("CashAmount.value must be finite.")
-        self._value = _value
+        self._raw_value = _value
 
         if not isinstance(currency, Currency):
             raise TypeError("CashAmount.currency must be a Currency.")
         self._currency = currency
 
     @property
-    def value(self) -> Decimal:
-        return round(self._value, self.currency.places)
+    def value_rounded(self) -> Decimal:
+        return round(self._raw_value, self.currency.places)
+
+    @property
+    def value_normalized(self) -> Decimal:
+        return normalize_decimal_to_min_places(self._raw_value, self.currency.places)
 
     @property
     def currency(self) -> Currency:
         return self._currency
 
     def __repr__(self) -> str:
-        return f"CashAmount({self.value} {self._currency.code})"
+        return f"CashAmount({self.value_normalized} {self._currency.code})"
 
     def __str__(self) -> str:
-        return f"{self.value:,} {self._currency.code}"
+        return self.to_str_normalized()
 
     def __hash__(self) -> int:
-        return hash((self.value, self.currency))
+        return hash((self.value_normalized, self.currency))
 
     def __eq__(self, __o: object) -> bool:
         if not isinstance(__o, CashAmount):
             return NotImplemented
         if self.currency != __o.currency:
-            if self.value == 0 and __o.value == 0:
+            if self.value_normalized == 0 and __o.value_normalized == 0:
                 return True  # If values are zero, amounts are always equal
             raise CurrencyError("CashAmount.currency of operands must match.")
-        return self.value == __o.value
+        return self.value_normalized == __o.value_normalized
 
     def __lt__(self, __o: object) -> bool:
         if not isinstance(__o, CashAmount):
             return NotImplemented
         if self.currency != __o.currency:
             raise CurrencyError("CashAmount.currency of operands must match.")
-        return self.value < __o.value
+        return self.value_normalized < __o.value_normalized
 
     def __neg__(self) -> Self:
-        return CashAmount(-self.value, self.currency)
+        return CashAmount(-self.value_normalized, self.currency)
 
     def __add__(self, __o: object) -> Self:
         if not isinstance(__o, CashAmount):
             return NotImplemented
         if self.currency != __o.currency:
             raise CurrencyError("CashAmount.currency of operands must match.")
-        return CashAmount(self.value + __o.value, self.currency)
+        return CashAmount(self.value_normalized + __o.value_normalized, self.currency)
 
     def __radd__(self, __o: object) -> Self:
         return self.__add__(__o)
@@ -338,39 +343,45 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
             return NotImplemented
         if self.currency != __o.currency:
             raise CurrencyError("CashAmount.currency of operands must match.")
-        return CashAmount(self.value - __o.value, self.currency)
+        return CashAmount(self.value_normalized - __o.value_normalized, self.currency)
 
     def __rsub__(self, __o: object) -> Self:
         if not isinstance(__o, CashAmount):
             return NotImplemented
         if self.currency != __o.currency:
             raise CurrencyError("CashAmount.currency of operands must match.")
-        return CashAmount(__o.value - self.value, self.currency)
+        return CashAmount(__o.value_normalized - self.value_normalized, self.currency)
 
     def __mul__(self, __o: object) -> Self:
         if not isinstance(__o, (int, Decimal)):
             return NotImplemented
-        return CashAmount(self.value * __o, self.currency)
+        return CashAmount(self.value_normalized * __o, self.currency)
 
     def __rmul__(self, __o: object) -> Self:
         return self.__mul__(__o)
 
     def is_positive(self) -> bool:
-        return self.value > 0
+        return self.value_normalized > 0
 
     def is_negative(self) -> bool:
-        return self.value < 0
+        return self.value_normalized < 0
+
+    def to_str_rounded(self) -> str:
+        return f"{self.value_rounded:,} {self.currency.code}"
+
+    def to_str_normalized(self) -> str:
+        return f"{self.value_normalized:,} {self.currency.code}"
 
     def convert(self, target_currency: Currency, date_: date | None = None) -> Self:
         if target_currency == self.currency:
             return self
         factor = self.currency.get_conversion_factor(target_currency, date_)
-        return CashAmount(self.value * factor, target_currency)
+        return CashAmount(self.value_normalized * factor, target_currency)
 
     def serialize(self) -> dict[str, Any]:
         return {
             "datatype": "CashAmount",
-            "value": self.value,
+            "value": self.value_normalized,
             "currency_code": self.currency.code,
         }
 

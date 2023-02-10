@@ -155,7 +155,7 @@ class SecurityFormPresenter:
         if security is None:
             raise ValueError("A Security must be selected to set its price.")
 
-        last_value = security.price.value
+        last_value = security.price.value_rounded
         self._dialog = SetSecurityPriceDialog(
             date_today=datetime.now(tzinfo).date(),
             last_value=last_value,
