@@ -15,6 +15,7 @@ class SecurityForm(QWidget, Ui_SecurityForm):
     signal_remove_security = pyqtSignal()
     signal_select_security = pyqtSignal()
     signal_search_text_changed = pyqtSignal()
+    signal_selection_changed = pyqtSignal()
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent=parent)
@@ -53,6 +54,12 @@ class SecurityForm(QWidget, Ui_SecurityForm):
         logging.debug(f"Closing {self.__class__.__name__}")
         return super().closeEvent(a0)
 
+    def set_buttons(self, is_security_selected: bool) -> None:
+        self.removeButton.setEnabled(is_security_selected)
+        self.editButton.setEnabled(is_security_selected)
+        self.setPriceButton.setEnabled(is_security_selected)
+        self.selectButton.setEnabled(is_security_selected)
+
     def finalize_setup(self) -> None:
         self.tableView.horizontalHeader().setSectionResizeMode(
             SecurityTableColumns.COLUMN_NAME,
@@ -70,3 +77,7 @@ class SecurityForm(QWidget, Ui_SecurityForm):
             SecurityTableColumns.COLUMN_PRICE,
             QHeaderView.ResizeMode.ResizeToContents,
         )
+        self.tableView.selectionModel().selectionChanged.connect(
+            self.signal_selection_changed.emit
+        )
+        self.tableView.sortByColumn(0, Qt.SortOrder.AscendingOrder)

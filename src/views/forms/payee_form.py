@@ -14,6 +14,7 @@ class PayeeForm(QWidget, Ui_PayeeForm):
     signal_remove_payee = pyqtSignal()
     signal_select_payee = pyqtSignal()
     signal_search_text_changed = pyqtSignal()
+    signal_selection_changed = pyqtSignal()
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent=parent)
@@ -51,6 +52,11 @@ class PayeeForm(QWidget, Ui_PayeeForm):
         logging.debug(f"Closing {self.__class__.__name__}")
         return super().closeEvent(a0)
 
+    def set_buttons(self, is_payee_selected: bool) -> None:
+        self.removeButton.setEnabled(is_payee_selected)
+        self.renameButton.setEnabled(is_payee_selected)
+        self.selectButton.setEnabled(is_payee_selected)
+
     def finalize_setup(self) -> None:
         self.tableView.horizontalHeader().setSectionResizeMode(
             PayeeTableColumns.COLUMN_NAME,
@@ -60,3 +66,7 @@ class PayeeForm(QWidget, Ui_PayeeForm):
             PayeeTableColumns.COLUMN_TRANSACTIONS,
             QHeaderView.ResizeMode.ResizeToContents,
         )
+        self.tableView.selectionModel().selectionChanged.connect(
+            self.signal_selection_changed.emit
+        )
+        self.tableView.sortByColumn(0, Qt.SortOrder.AscendingOrder)

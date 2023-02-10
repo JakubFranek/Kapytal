@@ -46,11 +46,8 @@ class SecurityFormPresenter:
         self._view.signal_search_text_changed.connect(self._filter)
 
         self._view.finalize_setup()
-        self._view.tableView.selectionModel().selectionChanged.connect(
-            self._selection_changed
-        )
+        self._view.signal_selection_changed.connect(self._selection_changed)
         self._selection_changed()
-        self._view.tableView.sortByColumn(0, Qt.SortOrder.AscendingOrder)
 
     def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
         self._model.pre_reset_model()
@@ -192,14 +189,10 @@ class SecurityFormPresenter:
         logging.debug(f"Filtering Securities: {pattern=}")
         self._proxy_model.setFilterWildcard(pattern)
 
-    # REFACTOR: buttons should be set in view
     def _selection_changed(self) -> None:
         item = self._model.get_selected_item()
-        is_payee_selected = item is not None
-        self._view.removeButton.setEnabled(is_payee_selected)
-        self._view.editButton.setEnabled(is_payee_selected)
-        self._view.setPriceButton.setEnabled(is_payee_selected)
-        self._view.selectButton.setEnabled(is_payee_selected)
+        is_security_selected = item is not None
+        self._view.set_buttons(is_security_selected)
 
     def _handle_exception(self) -> None:
         display_text, display_details = get_exception_display_info()  # type: ignore

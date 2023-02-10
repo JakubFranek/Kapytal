@@ -14,6 +14,8 @@ class CurrencyForm(QWidget, Ui_CurrencyForm):
     signal_add_exchange_rate = pyqtSignal()
     signal_remove_exchange_rate = pyqtSignal()
     signal_set_exchange_rate = pyqtSignal()
+    signal_currency_selection_changed = pyqtSignal()
+    signal_exchange_rate_selection_changed = pyqtSignal()
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent=parent)
@@ -39,3 +41,22 @@ class CurrencyForm(QWidget, Ui_CurrencyForm):
     def closeEvent(self, a0: QCloseEvent) -> None:
         logging.debug(f"Closing {self.__class__.__name__}")
         return super().closeEvent(a0)
+
+    def set_currency_buttons(self, is_currency_selected: bool) -> None:
+        self.setBaseCurrencyButton.setEnabled(is_currency_selected)
+        self.removeCurrencyButton.setEnabled(is_currency_selected)
+
+    def set_exchange_rate_buttons(self, is_exchange_rate_selected: bool) -> None:
+        self.setExchangeRateButton.setEnabled(is_exchange_rate_selected)
+        self.removeExchangeRateButton.setEnabled(is_exchange_rate_selected)
+
+    def refresh_currency_table(self) -> None:
+        self.currencyTable.viewport().update()
+
+    def finalize_setup(self) -> None:
+        self.exchangeRateTable.selectionModel().selectionChanged.connect(
+            self.signal_exchange_rate_selection_changed.emit
+        )
+        self.currencyTable.selectionModel().selectionChanged.connect(
+            self.signal_currency_selection_changed.emit
+        )

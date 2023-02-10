@@ -41,10 +41,12 @@ class CurrencyFormPresenter:
         self._view.signal_set_exchange_rate.connect(self.run_set_exchange_rate_dialog)
         self._view.signal_remove_exchange_rate.connect(self.remove_exchange_rate)
 
-        self._view.exchangeRateTable.selectionModel().selectionChanged.connect(
+        self._view.finalize_setup()
+
+        self._view.signal_exchange_rate_selection_changed.connect(
             self._exchange_rate_selection_changed
         )
-        self._view.currencyTable.selectionModel().selectionChanged.connect(
+        self._view.signal_currency_selection_changed.connect(
             self._currency_selection_changed
         )
         self._exchange_rate_selection_changed()
@@ -106,7 +108,7 @@ class CurrencyFormPresenter:
         self._currency_table_model.base_currency = self._record_keeper.base_currency
         self.event_base_currency_changed()
         self.event_data_changed()
-        self._view.currencyTable.viewport().update()
+        self._view.refresh_currency_table()
 
     def remove_currency(self) -> None:
         previous_base_currency = self._record_keeper.base_currency
@@ -210,14 +212,14 @@ class CurrencyFormPresenter:
     def _exchange_rate_selection_changed(self) -> None:
         item = self._exchange_rate_table_model.get_selected_item()
         is_exchange_rate_selected = item is not None
-        self._view.setExchangeRateButton.setEnabled(is_exchange_rate_selected)
+        self._view.set_exchange_rate_buttons(is_exchange_rate_selected)
 
     def _currency_selection_changed(self) -> None:
         item = self._currency_table_model.get_selected_item()
         is_currency_selected = item is not None
-        self._view.setBaseCurrencyButton.setEnabled(is_currency_selected)
-        self._view.removeCurrencyButton.setEnabled(is_currency_selected)
+        self._view.set_currency_buttons(is_currency_selected)
 
+    # REFACTOR: move this method somewhere (shared by all presenters)
     def _handle_exception(self) -> None:
         display_text, display_details = get_exception_display_info()  # type: ignore
         display_error_message(display_text, display_details)
