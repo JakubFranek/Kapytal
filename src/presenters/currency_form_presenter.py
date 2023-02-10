@@ -5,14 +5,13 @@ from decimal import Decimal
 from src.models.constants import tzinfo
 from src.models.record_keeper import RecordKeeper
 from src.presenters.utilities.event import Event
+from src.presenters.utilities.handle_exception import handle_exception
 from src.presenters.view_models.currency_table_model import CurrencyTableModel
 from src.presenters.view_models.exchange_rate_table_model import ExchangeRateTableModel
-from src.utilities.general import get_exception_display_info
 from src.views.dialogs.add_exchange_rate_dialog import AddExchangeRateDialog
 from src.views.dialogs.currency_dialog import CurrencyDialog
 from src.views.dialogs.set_exchange_rate_dialog import SetExchangeRateDialog
 from src.views.forms.currency_form import CurrencyForm
-from src.views.utilities.handle_exception import display_error_message
 
 
 class CurrencyFormPresenter:
@@ -81,7 +80,7 @@ class CurrencyFormPresenter:
         try:
             self._record_keeper.add_currency(code, places)
         except Exception:
-            self._handle_exception()
+            handle_exception()
             return
 
         self._currency_table_model.pre_add()
@@ -102,7 +101,7 @@ class CurrencyFormPresenter:
         try:
             self._record_keeper.set_base_currency(currency.code)
         except Exception:
-            self._handle_exception()
+            handle_exception()
             return
 
         self._currency_table_model.currencies = self._record_keeper.currencies
@@ -121,7 +120,7 @@ class CurrencyFormPresenter:
         try:
             self._record_keeper.remove_currency(currency.code)
         except Exception:
-            self._handle_exception()
+            handle_exception()
             return
 
         self._currency_table_model.pre_remove_item(currency)
@@ -147,7 +146,7 @@ class CurrencyFormPresenter:
         try:
             self._record_keeper.add_exchange_rate(primary_code, secondary_code)
         except Exception:
-            self._handle_exception()
+            handle_exception()
             return
 
         self._exchange_rate_table_model.pre_add()
@@ -183,7 +182,7 @@ class CurrencyFormPresenter:
         try:
             self._record_keeper.set_exchange_rate(exchange_rate_code, value, date_)
         except Exception:
-            self._handle_exception()
+            handle_exception()
             return
 
         self._exchange_rate_table_model.exchange_rates = (
@@ -201,7 +200,7 @@ class CurrencyFormPresenter:
         try:
             self._record_keeper.remove_exchange_rate(str(exchange_rate))
         except Exception:
-            self._handle_exception()
+            handle_exception()
             return
 
         self._exchange_rate_table_model.pre_remove_item(exchange_rate)
@@ -220,8 +219,3 @@ class CurrencyFormPresenter:
         item = self._currency_table_model.get_selected_item()
         is_currency_selected = item is not None
         self._view.set_currency_buttons(is_currency_selected)
-
-    # REFACTOR: move this method somewhere (shared by all presenters)
-    def _handle_exception(self) -> None:
-        display_text, display_details = get_exception_display_info()  # type: ignore
-        display_error_message(display_text, display_details)

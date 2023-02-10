@@ -8,13 +8,12 @@ from src.models.model_objects.cash_objects import CashAccount
 from src.models.model_objects.security_objects import SecurityAccount
 from src.models.record_keeper import RecordKeeper
 from src.presenters.utilities.event import Event
+from src.presenters.utilities.handle_exception import handle_exception
 from src.presenters.view_models.account_tree_model import AccountTreeModel
-from src.utilities.general import get_exception_display_info
 from src.views.account_tree import AccountTree
 from src.views.dialogs.account_group_dialog import AccountGroupDialog
 from src.views.dialogs.cash_account_dialog import CashAccountDialog
 from src.views.dialogs.security_account_dialog import SecurityAccountDialog
-from src.views.utilities.handle_exception import display_error_message
 
 
 class AccountTreePresenter:
@@ -80,7 +79,7 @@ class AccountTreePresenter:
             else:
                 record_keeper_copy.remove_account(item.path)
         except Exception:
-            self._handle_exception()
+            handle_exception()
             return
 
         # Perform the deletion on the "real" RecordKeeper if it went fine
@@ -143,7 +142,7 @@ class AccountTreePresenter:
         try:
             self._record_keeper.add_account_group(path, index)
         except Exception:
-            self._handle_exception()
+            handle_exception()
             return
 
         item = self._model.get_selected_item()
@@ -172,7 +171,7 @@ class AccountTreePresenter:
             )
             logging.disable(logging.NOTSET)
         except Exception:
-            self._handle_exception()
+            handle_exception()
             return
 
         if new_parent == previous_parent and new_index == previous_index:
@@ -219,7 +218,7 @@ class AccountTreePresenter:
         try:
             self._record_keeper.add_security_account(path, index)
         except Exception:
-            self._handle_exception()
+            handle_exception()
             return
 
         item = self._model.get_selected_item()
@@ -248,7 +247,7 @@ class AccountTreePresenter:
             )
             logging.disable(logging.NOTSET)
         except Exception:
-            self._handle_exception()
+            handle_exception()
             return
 
         if new_parent == previous_parent and new_index == previous_index:
@@ -310,7 +309,7 @@ class AccountTreePresenter:
                 path, currency_code, initial_balance, index
             )
         except Exception:
-            self._handle_exception()
+            handle_exception()
             return
 
         item = self._model.get_selected_item()
@@ -343,7 +342,7 @@ class AccountTreePresenter:
             )
             logging.disable(logging.NOTSET)
         except Exception:
-            self._handle_exception()
+            handle_exception()
             return
 
         if new_parent == previous_parent and new_index == previous_index:
@@ -369,10 +368,6 @@ class AccountTreePresenter:
             self._model.post_move_item()
         self._dialog.close()
         self.event_data_changed()
-
-    def _handle_exception(self) -> None:
-        display_text, display_details = get_exception_display_info()  # type: ignore
-        display_error_message(display_text, display_details)
 
     def _get_max_child_position(self, item: AccountGroup | None) -> int:
         if isinstance(item, AccountGroup):

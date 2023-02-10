@@ -6,11 +6,10 @@ from src.models.model_objects.attributes import AttributeType
 from src.models.record_keeper import RecordKeeper
 from src.models.utilities.calculation import AttributeStats, get_attribute_stats
 from src.presenters.utilities.event import Event
+from src.presenters.utilities.handle_exception import handle_exception
 from src.presenters.view_models.payee_table_model import PayeeTableModel
-from src.utilities.general import get_exception_display_info
 from src.views.dialogs.payee_dialog import PayeeDialog
 from src.views.forms.payee_form import PayeeForm
-from src.views.utilities.handle_exception import display_error_message
 
 
 class PayeeFormPresenter:
@@ -82,7 +81,7 @@ class PayeeFormPresenter:
         try:
             self._record_keeper.add_payee(name)
         except Exception:
-            self._handle_exception()
+            handle_exception()
             return
 
         self._model.pre_add()
@@ -104,7 +103,7 @@ class PayeeFormPresenter:
                 current_name, new_name, AttributeType.PAYEE
             )
         except Exception:
-            self._handle_exception()
+            handle_exception()
             return
 
         self.update_model_data()
@@ -120,7 +119,7 @@ class PayeeFormPresenter:
         try:
             self._record_keeper.remove_payee(payee.name)
         except Exception:
-            self._handle_exception()
+            handle_exception()
             return
 
         self._model.pre_remove_item(payee)
@@ -140,7 +139,3 @@ class PayeeFormPresenter:
         item = self._model.get_selected_item()
         is_payee_selected = item is not None
         self._view.set_buttons(is_payee_selected)
-
-    def _handle_exception(self) -> None:
-        display_text, display_details = get_exception_display_info()  # type: ignore
-        display_error_message(display_text, display_details)

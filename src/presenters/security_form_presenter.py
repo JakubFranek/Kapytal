@@ -6,12 +6,11 @@ from PyQt6.QtCore import QSortFilterProxyModel, Qt
 from src.models.constants import tzinfo
 from src.models.record_keeper import RecordKeeper
 from src.presenters.utilities.event import Event
+from src.presenters.utilities.handle_exception import handle_exception
 from src.presenters.view_models.security_table_model import SecurityTableModel
-from src.utilities.general import get_exception_display_info
 from src.views.dialogs.security_dialog import SecurityDialog
 from src.views.dialogs.set_security_price_dialog import SetSecurityPriceDialog
 from src.views.forms.security_form import SecurityForm
-from src.views.utilities.handle_exception import display_error_message
 
 
 class SecurityFormPresenter:
@@ -93,7 +92,7 @@ class SecurityFormPresenter:
                 unit=unit,
             )
         except Exception:
-            self._handle_exception()
+            handle_exception()
             return
 
         self._model.pre_add()
@@ -118,7 +117,7 @@ class SecurityFormPresenter:
                 uuid=uuid, name=name, symbol=symbol, type_=type_
             )
         except Exception:
-            self._handle_exception()
+            handle_exception()
             return
 
         self.update_model_data()
@@ -136,7 +135,7 @@ class SecurityFormPresenter:
         try:
             self._record_keeper.remove_security(uuid)
         except Exception:
-            self._handle_exception()
+            handle_exception()
             return
 
         self._model.pre_remove_item(security)
@@ -171,7 +170,7 @@ class SecurityFormPresenter:
         try:
             self._record_keeper.set_security_price(uuid, value, date_)
         except Exception:
-            self._handle_exception()
+            handle_exception()
             return
 
         self.update_model_data()
@@ -190,7 +189,3 @@ class SecurityFormPresenter:
         item = self._model.get_selected_item()
         is_security_selected = item is not None
         self._view.set_buttons(is_security_selected)
-
-    def _handle_exception(self) -> None:
-        display_text, display_details = get_exception_display_info()  # type: ignore
-        display_error_message(display_text, display_details)

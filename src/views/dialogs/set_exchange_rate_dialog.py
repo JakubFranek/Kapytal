@@ -8,9 +8,6 @@ from PyQt6.QtWidgets import QAbstractButton, QDialog, QDialogButtonBox, QWidget
 
 from src.views.ui_files.Ui_set_exchange_rate_dialog import Ui_SetExchangeRateDialog
 
-# FIXME: bug when setting exchange rate in doublespinbox with high precision
-# there is a trailing 1
-
 
 class SetExchangeRateDialog(QDialog, Ui_SetExchangeRateDialog):
     signal_OK = pyqtSignal()

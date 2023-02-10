@@ -11,13 +11,13 @@ from src.presenters.currency_form_presenter import CurrencyFormPresenter
 from src.presenters.payee_form_presenter import PayeeFormPresenter
 from src.presenters.security_form_presenter import SecurityFormPresenter
 from src.presenters.tag_form_presenter import TagFormPresenter
-from src.utilities.general import backup_json_file, get_exception_display_info
+from src.presenters.utilities.handle_exception import handle_exception
+from src.utilities.general import backup_json_file
 from src.views.forms.currency_form import CurrencyForm
 from src.views.forms.payee_form import PayeeForm
 from src.views.forms.security_form import SecurityForm
 from src.views.forms.tag_form import TagForm
 from src.views.main_view import MainView
-from src.views.utilities.handle_exception import display_error_message
 
 
 class MainPresenter:
@@ -120,7 +120,7 @@ class MainPresenter:
                 )
                 logging.info(f"File saved: {self.current_file_path}")
         except Exception:
-            self._handle_exception()
+            handle_exception()
 
     def _load_from_file(self) -> None:
         logging.debug("Load from file initiated")
@@ -161,7 +161,7 @@ class MainPresenter:
                 logging.debug(f"Payees: {len(record_keeper.tags)}")
                 logging.info(f"File loaded: {file_path}")
         except Exception:
-            self._handle_exception()
+            handle_exception()
 
     def _quit(self) -> None:
         if self._unsaved_changes is True:
@@ -190,7 +190,3 @@ class MainPresenter:
     def _update_unsaved_changes(self, unsaved_changes: bool) -> None:
         self._unsaved_changes = unsaved_changes
         self._view.set_save_status(self.current_file_path, self._unsaved_changes)
-
-    def _handle_exception(self) -> None:
-        display_text, display_details = get_exception_display_info()  # type: ignore
-        display_error_message(display_text, display_details)
