@@ -1,4 +1,5 @@
 import copy
+import logging
 import operator
 from collections.abc import Collection
 from datetime import date, datetime
@@ -92,6 +93,9 @@ class Currency(CopyableMixin, JSONSerializableMixin):
     ) -> Decimal:
         exchange_rates = Currency._get_exchange_rates(self, target_currency)
         if exchange_rates is None:
+            logging.warning(
+                f"No path from {self.code} to {target_currency.code} found."
+            )
             raise ConversionFactorNotFoundError(
                 f"No path from {self.code} to {target_currency.code} found."
             )
@@ -228,6 +232,10 @@ class ExchangeRate(CopyableMixin, JSONSerializableMixin):
         if not _rate.is_finite() or _rate <= 0:
             raise ValueError("Parameter 'rate' must be finite and positive.")
         self._rate_history[date_] = _rate.normalize()
+
+    def prepare_for_deletion(self) -> None:
+        self.primary_currency.remove_exchange_rate(self)
+        self.secondary_currency.remove_exchange_rate(self)
 
     def serialize(self) -> dict:
         date_rate_pairs = [

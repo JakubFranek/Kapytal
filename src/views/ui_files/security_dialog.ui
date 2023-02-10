@@ -86,7 +86,7 @@
         <string>Enter smallest unit of Security (for example 1 share, or 0.01 for 1 percent etc)</string>
        </property>
        <property name="decimals">
-        <number>12</number>
+        <number>9</number>
        </property>
        <property name="maximum">
         <double>1000000.000000000000000</double>

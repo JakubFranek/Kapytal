@@ -133,10 +133,15 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         self, primary_currency_code: str, secondary_currency_code: str
     ) -> None:
         exchange_rate_str = f"{primary_currency_code}/{secondary_currency_code}"
+        exchange_rate_str_reverse = f"{secondary_currency_code}/{primary_currency_code}"
         for exchange_rate in self._exchange_rates:
-            if str(exchange_rate) == exchange_rate_str:
+            if (
+                str(exchange_rate) == exchange_rate_str
+                or str(exchange_rate) == exchange_rate_str_reverse
+            ):
                 raise AlreadyExistsError(
-                    f"ExchangeRate '{exchange_rate_str} already exists.'"
+                    f"An ExchangeRate between {primary_currency_code} "
+                    f"and {secondary_currency_code} already exists."
                 )
         primary_currency = self.get_currency(primary_currency_code)
         secondary_currency = self.get_currency(secondary_currency_code)
@@ -948,6 +953,8 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
                 break
         else:
             raise NotFoundError(f"ExchangeRate '{exchange_rate_code}' does not exist.")
+
+        removed_exchange_rate.prepare_for_deletion()
         self._exchange_rates.remove(removed_exchange_rate)
         del removed_exchange_rate
 

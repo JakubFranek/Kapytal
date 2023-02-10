@@ -26,7 +26,7 @@ class Ui_SetExchangeRateDialog(object):
         self.dateLabel.setObjectName("dateLabel")
         self.formLayout.setWidget(1, QtWidgets.QFormLayout.ItemRole.LabelRole, self.dateLabel)
         self.exchangeRateDoubleSpinBox = QtWidgets.QDoubleSpinBox(SetExchangeRateDialog)
-        self.exchangeRateDoubleSpinBox.setDecimals(14)
+        self.exchangeRateDoubleSpinBox.setDecimals(9)
         self.exchangeRateDoubleSpinBox.setObjectName("exchangeRateDoubleSpinBox")
         self.formLayout.setWidget(0, QtWidgets.QFormLayout.ItemRole.FieldRole, self.exchangeRateDoubleSpinBox)
         self.dateEdit = QtWidgets.QDateEdit(SetExchangeRateDialog)

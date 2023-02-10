@@ -46,7 +46,7 @@ class Ui_SecurityDialog(object):
         self.unitLabel.setObjectName("unitLabel")
         self.formLayout.setWidget(3, QtWidgets.QFormLayout.ItemRole.LabelRole, self.unitLabel)
         self.unitDoubleSpinBox = QtWidgets.QDoubleSpinBox(SecurityDialog)
-        self.unitDoubleSpinBox.setDecimals(12)
+        self.unitDoubleSpinBox.setDecimals(9)
         self.unitDoubleSpinBox.setMaximum(1000000.0)
         self.unitDoubleSpinBox.setObjectName("unitDoubleSpinBox")
         self.formLayout.setWidget(3, QtWidgets.QFormLayout.ItemRole.FieldRole, self.unitDoubleSpinBox)

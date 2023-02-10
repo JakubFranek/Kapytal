@@ -7,6 +7,7 @@ from PyQt6.QtWidgets import QWidget
 from src.views.ui_files.Ui_currency_form import Ui_CurrencyForm
 
 
+# TODO: add some way to view and edit exchange rate history
 class CurrencyForm(QWidget, Ui_CurrencyForm):
     signal_add_currency = pyqtSignal()
     signal_set_base_currency = pyqtSignal()

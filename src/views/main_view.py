@@ -16,7 +16,6 @@ from src.views.account_tree import AccountTree
 from src.views.ui_files.Ui_main_window import Ui_MainWindow
 
 # IDEA: swap QToolButtons for QPushButtons (see how drop down menu works though)
-# TODO: limit dialog line edit length based on actual string length limits
 
 
 class MainView(QMainWindow, Ui_MainWindow):

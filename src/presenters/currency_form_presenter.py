@@ -1,5 +1,6 @@
 import logging
 from datetime import datetime
+from decimal import Decimal
 
 from src.models.constants import tzinfo
 from src.models.record_keeper import RecordKeeper
@@ -163,6 +164,7 @@ class CurrencyFormPresenter:
             raise ValueError("An ExchangeRate must be selected to set its value.")
         exchange_rate_code = str(exchange_rate)
         last_value = exchange_rate.latest_rate
+        last_value = last_value if last_value.is_finite() else Decimal(1)
         self._dialog = SetExchangeRateDialog(
             date_today=datetime.now(tzinfo).date(),
             exchange_rate=exchange_rate_code,
@@ -174,7 +176,7 @@ class CurrencyFormPresenter:
         self._dialog.exec()
 
     def set_exchange_rate(self) -> None:
-        value = self._dialog.value
+        value = self._dialog.value.normalize()
         date_ = self._dialog.date_
         exchange_rate_code = self._dialog.exchange_rate_code
         logging.info(f"Setting ExchangeRate({exchange_rate_code}): {value} on {date_}")

@@ -39,7 +39,7 @@
      <item row="0" column="1">
       <widget class="QDoubleSpinBox" name="priceDoubleSpinBox">
        <property name="decimals">
-        <number>14</number>
+        <number>9</number>
        </property>
       </widget>
      </item>

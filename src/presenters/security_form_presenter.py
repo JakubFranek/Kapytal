@@ -112,7 +112,7 @@ class SecurityFormPresenter:
         symbol = self._dialog.symbol
         type_ = self._dialog.type_
 
-        logging.info("Editing Security")
+        logging.info(f"Editing Security '{security.name}'")
         try:
             self._record_keeper.edit_security(
                 uuid=uuid, name=name, symbol=symbol, type_=type_

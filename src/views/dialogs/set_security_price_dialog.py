@@ -23,7 +23,7 @@ class SetSecurityPriceDialog(QDialog, Ui_SetSecurityPriceDialog):
         self.setWindowIcon(QIcon("icons_custom:certificate-pencil.png"))
         self.priceDoubleSpinBox.setMaximum(1_000_000_000_000)
         self.priceDoubleSpinBox.setValue(last_value)
-        self.priceDoubleSpinBox.setDecimals(12)
+        self.priceDoubleSpinBox.setDecimals(9)
         self.dateEdit.setDate(date_today)
         self.dateEdit.setMaximumDate(date_today)
 

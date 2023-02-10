@@ -1,4 +1,5 @@
 import copy
+import logging
 import string
 import uuid
 from abc import ABC, abstractmethod
@@ -91,6 +92,11 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
                 "Security.type_ length must be within "
                 f"{self.TYPE_MIN_LENGTH} and {self.TYPE_MAX_LENGTH}"
             )
+
+        if hasattr(self, "_type"):
+            logging.info(f"Changing Security.type_ from '{self._type}' to '{value}'")
+        else:
+            logging.info(f"Setting Security.type_='{value}'")
         self._type = value
 
     @property
@@ -114,6 +120,11 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
             raise InvalidCharacterError(
                 "Security.symbol can contain only ASCII letters, digits or a period."
             )
+
+        if hasattr(self, "_symbol"):
+            logging.info(f"Changing Security.symbol from '{self._symbol}' to '{value}'")
+        else:
+            logging.info(f"Setting Security.symbol='{value}'")
         self._symbol = value.upper()
 
     @property

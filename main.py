@@ -7,7 +7,7 @@ from PyQt6.QtWidgets import QApplication
 
 from src.models.record_keeper import RecordKeeper
 from src.presenters.main_presenter import MainPresenter
-from src.utilities.general import setup_logging
+from src.utilities.logging import setup_logging
 from src.views.main_view import MainView
 from src.views.utilities.handle_exception import handle_uncaught_exception
 

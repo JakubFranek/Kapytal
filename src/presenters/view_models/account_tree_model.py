@@ -1,4 +1,3 @@
-import logging
 import typing
 
 from PyQt6.QtCore import QAbstractItemModel, QModelIndex, Qt
@@ -8,7 +7,10 @@ from PyQt6.QtWidgets import QTreeView
 from src.models.base_classes.account import Account
 from src.models.model_objects.account_group import AccountGroup
 from src.models.model_objects.cash_objects import CashAccount
-from src.models.model_objects.currency_objects import Currency
+from src.models.model_objects.currency_objects import (
+    ConversionFactorNotFoundError,
+    Currency,
+)
 from src.models.model_objects.security_objects import SecurityAccount
 from src.views.constants import AccountTreeColumns
 
@@ -94,10 +96,7 @@ class AccountTreeModel(QAbstractItemModel):
                     if self.base_currency is None:
                         return ""
                     return node.get_balance(self.base_currency).to_str_rounded()
-                except Exception:
-                    logging.warning(
-                        f"Could not convert {node} balance to {self.base_currency.code}"
-                    )
+                except ConversionFactorNotFoundError:
                     return "Error!"
             if column == AccountTreeColumns.COLUMN_SHOW:
                 return "xxx"

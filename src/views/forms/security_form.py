@@ -8,6 +8,7 @@ from src.views.constants import SecurityTableColumns
 from src.views.ui_files.Ui_security_form import Ui_SecurityForm
 
 
+# TODO: add some way to view and edit price history
 class SecurityForm(QWidget, Ui_SecurityForm):
     signal_add_security = pyqtSignal()
     signal_edit_security = pyqtSignal()

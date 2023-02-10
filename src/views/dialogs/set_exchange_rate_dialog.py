@@ -8,6 +8,9 @@ from PyQt6.QtWidgets import QAbstractButton, QDialog, QDialogButtonBox, QWidget
 
 from src.views.ui_files.Ui_set_exchange_rate_dialog import Ui_SetExchangeRateDialog
 
+# FIXME: bug when setting exchange rate in doublespinbox with high precision
+# there is a trailing 1
+
 
 class SetExchangeRateDialog(QDialog, Ui_SetExchangeRateDialog):
     signal_OK = pyqtSignal()
@@ -25,7 +28,7 @@ class SetExchangeRateDialog(QDialog, Ui_SetExchangeRateDialog):
         self.exchangeRateLabel.setText(exchange_rate)
         self.exchangeRateDoubleSpinBox.setMaximum(1_000_000_000_000)
         self.exchangeRateDoubleSpinBox.setValue(last_value)
-        self.exchangeRateDoubleSpinBox.setDecimals(12)
+        self.exchangeRateDoubleSpinBox.setDecimals(9)
         self.dateEdit.setDate(date_today)
         self.dateEdit.setMaximumDate(date_today)
 
