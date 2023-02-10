@@ -93,7 +93,7 @@ class AccountTreeModel(QAbstractItemModel):
                 try:
                     if self.base_currency is None:
                         return ""
-                    return str(node.get_balance(self.base_currency))
+                    return node.get_balance(self.base_currency).to_str_rounded()
                 except Exception:
                     logging.warning(
                         f"Could not convert {node} balance to {self.base_currency.code}"

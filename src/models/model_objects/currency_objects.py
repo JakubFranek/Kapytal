@@ -227,7 +227,7 @@ class ExchangeRate(CopyableMixin, JSONSerializableMixin):
         _rate = Decimal(rate)
         if not _rate.is_finite() or _rate <= 0:
             raise ValueError("Parameter 'rate' must be finite and positive.")
-        self._rate_history[date_] = _rate
+        self._rate_history[date_] = _rate.normalize()
 
     def serialize(self) -> dict:
         date_rate_pairs = [

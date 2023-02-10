@@ -13,9 +13,6 @@ from src.views.dialogs.set_security_price_dialog import SetSecurityPriceDialog
 from src.views.forms.security_form import SecurityForm
 from src.views.utilities.handle_exception import display_error_message
 
-# TODO: make SecurityDialog class
-# TODO: connect with MainPresenter and MainView
-
 
 class SecurityFormPresenter:
     event_data_changed = Event()
@@ -152,7 +149,7 @@ class SecurityFormPresenter:
         if security is None:
             raise ValueError("A Security must be selected to set its price.")
 
-        last_value = security.price.value_rounded
+        last_value = security.price.value_normalized
         self._dialog = SetSecurityPriceDialog(
             date_today=datetime.now(tzinfo).date(),
             last_value=last_value,
@@ -168,9 +165,9 @@ class SecurityFormPresenter:
             raise ValueError("A Security must be selected to set its price.")
 
         uuid = str(security.uuid)
-        value = self._dialog.value
+        value = self._dialog.value.normalize()
         date_ = self._dialog.date_
-        logging.info(f"Setting Security price ({security}): {value} on {date_}")
+        logging.info(f"Setting {security} price: {value} on {date_}")
         try:
             self._record_keeper.set_security_price(uuid, value, date_)
         except Exception:

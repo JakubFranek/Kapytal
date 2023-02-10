@@ -63,7 +63,7 @@ class SecurityTableModel(QAbstractTableModel):
             if column == SecurityTableColumns.COLUMN_TYPE:
                 return security.type_
             if column == SecurityTableColumns.COLUMN_PRICE:
-                return str(security.price.convert(security.currency))
+                return security.price.convert(security.currency).to_str_normalized()
             if column == SecurityTableColumns.COLUMN_LAST_DATE:
                 latest_date = security.latest_date
                 if latest_date is None:

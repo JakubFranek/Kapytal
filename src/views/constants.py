@@ -15,7 +15,7 @@ class CurrencyTableColumns(IntEnum):
 
 class ExchangeRateTableColumns(IntEnum):
     COLUMN_CODE = 0
-    COLUMN_VALUE = 1
+    COLUMN_RATE = 1
     COLUMN_LAST_DATE = 2
 
 

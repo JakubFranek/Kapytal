@@ -25,8 +25,7 @@ class SetExchangeRateDialog(QDialog, Ui_SetExchangeRateDialog):
         self.exchangeRateLabel.setText(exchange_rate)
         self.exchangeRateDoubleSpinBox.setMaximum(1_000_000_000_000)
         self.exchangeRateDoubleSpinBox.setValue(last_value)
-        decimals = -last_value.as_tuple().exponent
-        self.exchangeRateDoubleSpinBox.setDecimals(decimals)
+        self.exchangeRateDoubleSpinBox.setDecimals(12)
         self.dateEdit.setDate(date_today)
         self.dateEdit.setMaximumDate(date_today)
 

@@ -99,7 +99,7 @@ class MainPresenter:
         self._view.show()
 
     def _save_to_file(self, save_as: bool) -> None:
-        logging.info("Save to file initiated")
+        logging.debug("Save to file initiated")
         try:
             if save_as is True or self.current_file_path is None:
                 logging.debug("Asking the user for destination path")
@@ -108,7 +108,7 @@ class MainPresenter:
                     self.current_file_path = file_path
 
             if not isinstance(self.current_file_path, str):
-                logging.info("Invalid or no file path received, file save cancelled")
+                logging.info("Save to file cancelled: invalid or no file path received")
                 return
 
             with open(self.current_file_path, mode="w", encoding="UTF-8") as file:
@@ -123,11 +123,13 @@ class MainPresenter:
             self._handle_exception()
 
     def _load_from_file(self) -> None:
-        logging.info("Load from file initiated")
+        logging.debug("Load from file initiated")
         try:
             file_path = self._view.get_open_path()
             if file_path == "":
-                logging.info("Invalid or no file path received, file load cancelled")
+                logging.info(
+                    "Load from file cancelled: invalid or no file path received"
+                )
                 return
 
             self.current_file_path = file_path

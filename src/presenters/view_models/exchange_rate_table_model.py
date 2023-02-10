@@ -10,7 +10,7 @@ from src.views.constants import ExchangeRateTableColumns
 class ExchangeRateTableModel(QAbstractTableModel):
     COLUMN_HEADERS = {
         ExchangeRateTableColumns.COLUMN_CODE: "Exchange Rate",
-        ExchangeRateTableColumns.COLUMN_VALUE: "Latest value",
+        ExchangeRateTableColumns.COLUMN_RATE: "Latest rate",
         ExchangeRateTableColumns.COLUMN_LAST_DATE: "Latest date",
     }
 
@@ -45,14 +45,18 @@ class ExchangeRateTableModel(QAbstractTableModel):
         if role == Qt.ItemDataRole.DisplayRole:
             if column == ExchangeRateTableColumns.COLUMN_CODE:
                 return str(exchange_rate)
-            if column == ExchangeRateTableColumns.COLUMN_VALUE:
+            if column == ExchangeRateTableColumns.COLUMN_RATE:
                 return str(exchange_rate.latest_rate)
             if column == ExchangeRateTableColumns.COLUMN_LAST_DATE:
                 latest_date = exchange_rate.latest_date
                 if latest_date is None:
                     return "None"
                 return latest_date.strftime("%Y-%m-%d")
-
+        if (
+            role == Qt.ItemDataRole.TextAlignmentRole
+            and column == ExchangeRateTableColumns.COLUMN_RATE
+        ):
+            return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
         return None
 
     def headerData(

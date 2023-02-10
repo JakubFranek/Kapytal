@@ -39,7 +39,6 @@ def backup_json_file(file_path: str, backup_directories: list[str]) -> None:
             os.remove(oldest_backup)
 
 
-# REFACTOR: clean up this function
 def setup_logging(root_directory: str) -> None:
     dir_logs_info = root_directory + r"\logs\info"
     dir_logs_debug = root_directory + r"\logs\debug"
