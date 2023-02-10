@@ -9,7 +9,6 @@ from PyQt6.QtWidgets import QAbstractButton, QDialog, QDialogButtonBox, QWidget
 from src.views.ui_files.Ui_set_security_price_dialog import Ui_SetSecurityPriceDialog
 
 
-# TODO: improve decimals behavior once online sync is implemented
 class SetSecurityPriceDialog(QDialog, Ui_SetSecurityPriceDialog):
     signal_OK = pyqtSignal()
 

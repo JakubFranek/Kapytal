@@ -10,7 +10,6 @@ from src.views.ui_files.Ui_security_dialog import Ui_SecurityDialog
 
 
 # IDEA: text auto completer for type_
-# TODO: add price decimals spinbox
 class SecurityDialog(QDialog, Ui_SecurityDialog):
     signal_OK = pyqtSignal()
 

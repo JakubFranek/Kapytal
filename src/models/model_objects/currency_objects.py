@@ -154,7 +154,6 @@ class Currency(CopyableMixin, JSONSerializableMixin):
         return Currency(code=data["code"], places=data["places"])
 
 
-# TODO: decimal places needed for ExchangeRate
 class ExchangeRate(CopyableMixin, JSONSerializableMixin):
     def __init__(
         self, primary_currency: Currency, secondary_currency: Currency
@@ -232,7 +231,7 @@ class ExchangeRate(CopyableMixin, JSONSerializableMixin):
 
     def serialize(self) -> dict:
         date_rate_pairs = [
-            [date_.strftime("%Y-%m-%d"), str(rate)]
+            [date_.strftime("%Y-%m-%d"), str(rate.normalize())]
             for date_, rate in self.rate_history_pairs
         ]
         return {

@@ -132,7 +132,7 @@ class MainPresenter:
 
             self.current_file_path = file_path
             with open(file_path, mode="r", encoding="UTF-8") as file:
-                logging.info(f"File path received: {file_path}")
+                logging.debug(f"File path received: {file_path}")
                 backup_json_file(file_path, self.backup_directories)
                 logging.debug(f"Loading file: {file_path}")
                 logging.disable(logging.INFO)
