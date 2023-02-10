@@ -67,6 +67,7 @@ PyQt6-Qt6==6.4.2
 PyQt6-sip==13.4.0
 pytest==7.2.1
 pytest-cov==4.0.0
+pytest-qt==4.2.0
 pywin32-ctypes==0.2.0
 PyYAML==6.0
 six==1.16.0
