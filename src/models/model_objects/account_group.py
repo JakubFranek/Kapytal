@@ -105,7 +105,7 @@ class AccountGroup(NameMixin, GetBalanceMixin, JSONSerializableMixin):
         )
 
     def serialize(self) -> dict[str, Any]:
-        index = self.parent.children.index(self) if self.parent is not None else None
+        index = self.parent.get_child_index(self) if self.parent is not None else None
         return {
             "datatype": "AccountGroup",
             "path": self.path,

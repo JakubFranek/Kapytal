@@ -4,6 +4,7 @@ import pytest
 from hypothesis import assume, given
 from hypothesis import strategies as st
 
+from src.models.custom_exceptions import NotFoundError
 from src.models.mixins.name_mixin import NameLengthError
 from src.models.model_objects.attributes import Category, CategoryType
 from tests.models.test_assets.composites import categories, everything_except, names
@@ -50,6 +51,14 @@ def test_add_and_remove_parent(category: Category, parent: Category) -> None:
     assert category not in parent.children
 
 
+@given(category=categories(), parent=categories())
+def test_set_same_parent(category: Category, parent: Category) -> None:
+    assume(category.type_ == parent.type_)
+    category.parent = parent
+    category.parent = parent
+    assert category.parent == parent
+
+
 @given(category=categories(), parent=everything_except((Category, type(None))))
 def test_parent_invalid_type(category: Category, parent: Any) -> None:
     with pytest.raises(
@@ -91,3 +100,46 @@ def test_path(first_category: Category, length: int, data: st.DataObject) -> Non
         expected_string += category.name + "/"
 
     assert categories[-1].path == expected_string[:-1]
+
+
+@given(data=st.data())
+def test_set_child_index(data: st.DataObject) -> None:
+    parent = data.draw(categories())
+    children = data.draw(
+        st.lists(categories(category_type=parent.type_), min_size=5, max_size=5)
+    )
+    for child in children:
+        child.parent = parent
+
+    selected_index = data.draw(st.integers(min_value=0, max_value=len(children)))
+    new_index = data.draw(st.integers(min_value=0, max_value=len(children)))
+
+    selected_child = children[selected_index]
+    parent.set_child_index(selected_child, new_index)
+    assert parent.children[new_index] == selected_child
+
+
+@given(data=st.data())
+def test_set_child_index_same_value(data: st.DataObject) -> None:
+    parent = data.draw(categories())
+    children = data.draw(
+        st.lists(categories(category_type=parent.type_), min_size=5, max_size=5)
+    )
+    for child in children:
+        child.parent = parent
+
+    selected_child = children[0]
+    parent.set_child_index(selected_child, 0)
+    assert parent.children[0] == selected_child
+
+
+def test_set_child_index_child_does_not_exist() -> None:
+    parent = Category("test", CategoryType.EXPENSE)
+    with pytest.raises(NotFoundError):
+        parent.set_child_index(None, 0)
+
+
+def test_set_child_index_negative() -> None:
+    parent = Category("test", CategoryType.EXPENSE)
+    with pytest.raises(ValueError, match="negative"):
+        parent.set_child_index(None, -1)
