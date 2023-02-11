@@ -15,6 +15,7 @@ from src.models.model_objects.account_group import AccountGroup
 from src.models.model_objects.attributes import (
     Attribute,
     AttributeType,
+    Category,
     CategoryType,
     InvalidCategoryTypeError,
 )
@@ -42,15 +43,62 @@ from tests.models.test_record_keeper import (
 
 def test_edit_category() -> None:
     record_keeper = RecordKeeper()
-    record_keeper.add_category("TEST PARENT 1", None, CategoryType.EXPENSE)
-    record_keeper.add_category("TEST PARENT 2", None, CategoryType.EXPENSE)
-    record_keeper.add_category("TEST CAT", "TEST PARENT 1")
-    record_keeper.edit_category("TEST PARENT 1/TEST CAT", "NEW NAME", "TEST PARENT 2")
-    cat = record_keeper.get_or_make_category(
-        "TEST PARENT 2/NEW NAME", CategoryType.EXPENSE
-    )
+    record_keeper.add_category("TEST PARENT 1", CategoryType.EXPENSE)
+    record_keeper.add_category("TEST PARENT 2", CategoryType.EXPENSE)
+    record_keeper.add_category("TEST PARENT 1/TEST CAT")
+    record_keeper.edit_category("TEST PARENT 1/TEST CAT", "TEST PARENT 2/NEW NAME")
+    cat = record_keeper.get_category("TEST PARENT 2/NEW NAME")
     assert cat.name == "NEW NAME"
     assert cat.path == "TEST PARENT 2/NEW NAME"
+
+
+def test_edit_category_move_from_root_with_index() -> None:
+    record_keeper = RecordKeeper()
+    record_keeper.add_category("TEST PARENT 1", CategoryType.EXPENSE)
+    record_keeper.add_category("TEST PARENT 2", CategoryType.EXPENSE)
+    record_keeper.add_category("TEST CAT", CategoryType.EXPENSE)
+    record_keeper.edit_category("TEST CAT", "TEST PARENT 2/NEW NAME", 0)
+    cat = record_keeper.get_category("TEST PARENT 2/NEW NAME")
+    parent: Category = cat.parent
+    assert cat.name == "NEW NAME"
+    assert cat.path == "TEST PARENT 2/NEW NAME"
+    assert parent.get_child_index(cat) == 0
+
+
+def test_edit_category_move_to_root_with_index() -> None:
+    record_keeper = RecordKeeper()
+    record_keeper.add_category("TEST PARENT", CategoryType.EXPENSE)
+    record_keeper.add_category("TEST PARENT/TEST CAT")
+    record_keeper.edit_category("TEST PARENT/TEST CAT", "NEW NAME", 0)
+    cat = record_keeper.get_category("NEW NAME")
+    assert cat.name == "NEW NAME"
+    assert cat.path == "NEW NAME"
+    assert record_keeper.root_categories[0].name == "NEW NAME"
+
+
+def test_edit_category_remove_parent() -> None:
+    record_keeper = RecordKeeper()
+    record_keeper.add_category("TEST PARENT 1", CategoryType.EXPENSE)
+    record_keeper.add_category("TEST PARENT 1/TEST CAT")
+    record_keeper.edit_category("TEST PARENT 1/TEST CAT", "NEW NAME")
+    cat = record_keeper.get_category("NEW NAME")
+    assert cat.name == "NEW NAME"
+    assert cat.path == "NEW NAME"
+
+
+def test_edit_category_already_exists() -> None:
+    record_keeper = RecordKeeper()
+    record_keeper.add_category("TEST", CategoryType.EXPENSE)
+    record_keeper.add_category("TEST 2", CategoryType.EXPENSE)
+    with pytest.raises(AlreadyExistsError):
+        record_keeper.edit_category("TEST", "TEST 2")
+
+
+def test_edit_category_its_own_parent() -> None:
+    record_keeper = RecordKeeper()
+    record_keeper.add_category("TEST", CategoryType.EXPENSE)
+    with pytest.raises(InvalidOperationError):
+        record_keeper.edit_category("TEST", "TEST/TEST")
 
 
 def test_edit_category_does_not_exist() -> None:

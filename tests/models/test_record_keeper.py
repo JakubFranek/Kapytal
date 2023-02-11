@@ -38,6 +38,7 @@ def test_creation() -> None:
     assert record_keeper.transactions == ()
     assert record_keeper.tags == ()
     assert record_keeper.categories == ()
+    assert record_keeper.root_categories == ()
     assert record_keeper.payees == ()
     assert record_keeper.currencies == ()
     assert record_keeper.base_currency is None
@@ -341,13 +342,41 @@ def test_add_currency_already_exists(code: str, places: int) -> None:
 
 
 @given(
+    name_1=names(),
+    name_2=names(),
+    type_=st.sampled_from(CategoryType),
+)
+def test_add_category_to_root_with_index(
+    name_1: str, name_2: str, type_: CategoryType
+) -> None:
+    assume(name_1 != name_2)
+    record_keeper = RecordKeeper()
+    record_keeper.add_category(name_1, type_)
+    record_keeper.add_category(name_2, type_, 0)
+    assert record_keeper.root_categories[0].name == name_2
+
+
+def test_add_category_to_parent_with_index() -> None:
+    record_keeper = RecordKeeper()
+    record_keeper.add_category("PARENT", CategoryType.EXPENSE)
+    record_keeper.add_category("PARENT/TEST 1")
+    record_keeper.add_category("PARENT/TEST 2", index=0)
+    parent = record_keeper.get_category("PARENT")
+    assert parent.children[0].name == "TEST 2"
+
+
+@given(
     name=names(),
     parent=st.text(min_size=1, max_size=32),
+    type_=st.sampled_from(CategoryType),
 )
-def test_add_category_parent_does_not_exist(name: str, parent: str) -> None:
+def test_add_category_parent_does_not_exist(
+    name: str, parent: str, type_: CategoryType
+) -> None:
     record_keeper = RecordKeeper()
+    path = parent + "/" + name
     with pytest.raises(NotFoundError):
-        record_keeper.add_category(name, parent)
+        record_keeper.add_category(path, type_)
 
 
 @given(
@@ -355,16 +384,16 @@ def test_add_category_parent_does_not_exist(name: str, parent: str) -> None:
 )
 def test_add_category_invalid_type(name: str) -> None:
     record_keeper = RecordKeeper()
-    with pytest.raises(TypeError, match="If parameter 'parent_path' is None"):
+    with pytest.raises(TypeError, match="parameter 'type_'"):
         record_keeper.add_category(name, None, None)
 
 
 @given(name=names(), type_=st.sampled_from(CategoryType))
 def test_add_category_already_exists(name: str, type_: CategoryType) -> None:
     record_keeper = RecordKeeper()
-    record_keeper.add_category(name, None, type_)
+    record_keeper.add_category(name, type_)
     with pytest.raises(AlreadyExistsError):
-        record_keeper.add_category(name, None, type_)
+        record_keeper.add_category(name, type_)
 
 
 @given(
@@ -1119,10 +1148,10 @@ def get_preloaded_record_keeper() -> RecordKeeper:
     record_keeper.add_security(
         "ČSOB Dynamický penzijní fond", "CSOB.DYN", "Pension Fund", "CZK", 1
     )
-    record_keeper.add_category("Food and Drink", None, CategoryType.EXPENSE)
-    record_keeper.add_category("Electronics", None, CategoryType.EXPENSE)
-    record_keeper.add_category("Groceries", "Food and Drink")
-    record_keeper.add_category("Eating out", "Food and Drink")
-    record_keeper.add_category("Salary", None, CategoryType.INCOME)
-    record_keeper.add_category("Splitting costs", None, CategoryType.INCOME_AND_EXPENSE)
+    record_keeper.add_category("Food and Drink", CategoryType.EXPENSE)
+    record_keeper.add_category("Electronics", CategoryType.EXPENSE)
+    record_keeper.add_category("Food and Drink/Groceries")
+    record_keeper.add_category("Food and Drink/Eating out")
+    record_keeper.add_category("Salary", CategoryType.INCOME)
+    record_keeper.add_category("Splitting costs", CategoryType.INCOME_AND_EXPENSE)
     return record_keeper

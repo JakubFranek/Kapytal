@@ -5,12 +5,7 @@ import pytest
 
 from src.models.constants import tzinfo
 from src.models.custom_exceptions import InvalidOperationError, NotFoundError
-from src.models.model_objects.attributes import (
-    Attribute,
-    AttributeType,
-    Category,
-    CategoryType,
-)
+from src.models.model_objects.attributes import Attribute, AttributeType, CategoryType
 from src.models.model_objects.cash_objects import (
     CashTransaction,
     CashTransactionType,
@@ -286,7 +281,7 @@ def test_remove_payee_in_transaction() -> None:
 
 def test_remove_category() -> None:
     record_keeper = RecordKeeper()
-    record_keeper._categories.append(Category("CATEGORY", CategoryType.EXPENSE, None))
+    record_keeper.add_category("CATEGORY", CategoryType.EXPENSE)
     record_keeper.remove_category("CATEGORY")
     assert len(record_keeper.tags) == 0
 

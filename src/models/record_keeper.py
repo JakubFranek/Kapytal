@@ -44,6 +44,9 @@ from src.models.model_objects.security_objects import (
     SecurityTransfer,
 )
 
+# IDEA: split RecordKeeper into smaller object keepers
+# such as CategoryKeeper, AccountItem keeper etc.
+
 
 class RecordKeeper(CopyableMixin, JSONSerializableMixin):
     def __init__(self) -> None:
@@ -55,6 +58,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         self._securities: list[Security] = []
         self._payees: list[Attribute] = []
         self._categories: list[Category] = []
+        self._root_categories: list[Category] = []
         self._tags: list[Attribute] = []
         self._transactions: list[Transaction] = []
         self._base_currency: Currency | None = None
@@ -94,6 +98,10 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
     @property
     def categories(self) -> tuple[Category, ...]:
         return tuple(self._categories)
+
+    @property
+    def root_categories(self) -> tuple[Category, ...]:
+        return tuple(self._root_categories)
 
     @property
     def tags(self) -> tuple[Attribute, ...]:
@@ -171,35 +179,29 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         self._securities.append(security)
 
     def add_category(
-        self, name: str, parent_path: str | None, type_: CategoryType | None = None
-    ) -> Category:
-        if parent_path is not None:
-            for category in self._categories:
-                if category.path == parent_path:
-                    parent = category
-                    category_type = category.type_
-                    break
-            else:
-                raise NotFoundError(
-                    f"The parent Category (path '{parent_path}') does not exist."
-                )
-        else:
-            parent = None
-            if not isinstance(type_, CategoryType):
-                raise TypeError(
-                    "If parameter 'parent_path' is None, "
-                    "'type_' must be a CategoryType."
-                )
-            category_type = type_
-
-        path = parent.path + "/" + name if parent else name
+        self, path: str, type_: CategoryType | None = None, index: int | None = None
+    ) -> None:
         for category in self._categories:
             if category.path == path:
                 raise AlreadyExistsError(f"A Category at path '{path}' already exists.")
 
+        if "/" in path:
+            parent_path, _, name = path.rpartition("/")
+            parent = self.get_category(parent_path)
+            category_type = parent.type_
+        else:
+            if not isinstance(type_, CategoryType):
+                raise TypeError(
+                    "If Category to-be-added has no parent, "
+                    "parameter 'type_' must be a CategoryType."
+                )
+            name = path
+            parent = None
+            category_type = type_
+
         category = Category(name, category_type, parent)
+        self._set_category_index(category, index)
         self._categories.append(category)
-        return category
 
     def add_account_group(self, path: str, index: int | None = None) -> None:
         parent_path, _, name = path.rpartition("/")
@@ -737,22 +739,31 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
             )
 
     def edit_category(
-        self,
-        current_path: str,
-        new_name: str | None = None,
-        new_parent_path: str | None = None,
+        self, current_path: str, new_path: str, index: int | None = None
     ) -> None:
-        for category in self._categories:
-            if category.path == current_path:
-                current_path = category
-                break
+        if current_path != new_path and any(
+            category.path == new_path for category in self._categories
+        ):
+            raise AlreadyExistsError(
+                f"A Category with path='{new_path}' already exists."
+            )
+
+        edited_category = self.get_category(current_path)
+
+        if "/" in new_path:
+            parent_path, _, name = new_path.rpartition("/")
+            new_parent = self.get_category(parent_path)
         else:
-            raise NotFoundError(f"Category at path='{current_path}' does not exist.")
-        if new_name is not None:
-            category.name = new_name
-        if new_parent_path is not None:
-            new_parent = self.get_category(new_parent_path)
-            category.parent = new_parent
+            name = new_path
+            new_parent = None
+
+        if new_parent == edited_category:
+            raise InvalidOperationError("A Category cannot be its own parent.")
+
+        edited_category.name = name
+        self._edit_category_parent(
+            item=edited_category, new_parent=new_parent, index=index
+        )
 
     def edit_attribute(
         self, current_name: str, new_name: str, type_: AttributeType
@@ -970,6 +981,8 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
                 "or RefundTransaction."
             )
         self._categories.remove(category)
+        if category.parent is None:
+            self._root_categories.remove(category)
         del category
 
     def remove_tag(self, name: str) -> None:
@@ -1069,7 +1082,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
                 return currency
         raise NotFoundError(f"A Currency with code='{code_upper}' does not exist.")
 
-    def get_category(self, path: str) -> None:
+    def get_category(self, path: str) -> Category:
         for category in self._categories:
             if category.path == path:
                 return category
@@ -1406,6 +1419,16 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         elif index is not None:
             parent.set_child_index(item, index)
 
+    def _set_category_index(self, item: Category, index: int | None) -> None:
+        parent = item.parent
+        if parent is None:
+            if index is not None:
+                self._root_categories.insert(index, item)
+            else:
+                self._root_categories.append(item)
+        elif index is not None:
+            parent.set_child_index(item, index)
+
     def _edit_account_item_parent(
         self,
         item: Account | AccountGroup,
@@ -1424,5 +1447,26 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         if new_parent is None:
             self._root_account_items.remove(item)
             self._root_account_items.insert(index, item)
+        else:
+            new_parent.set_child_index(item, index)
+
+    def _edit_category_parent(
+        self,
+        item: Category,
+        new_parent: Category | None,
+        index: int | None,
+    ) -> None:
+        current_parent = item.parent
+        if current_parent != new_parent:
+            item.parent = new_parent
+            if current_parent is None and new_parent is not None:
+                self._root_categories.remove(item)
+            if current_parent is not None and new_parent is None:
+                self._root_categories.append(item)
+        if index is None:
+            return
+        if new_parent is None:
+            self._root_categories.remove(item)
+            self._root_categories.insert(index, item)
         else:
             new_parent.set_child_index(item, index)

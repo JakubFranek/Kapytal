@@ -111,8 +111,25 @@ def test_set_child_index(data: st.DataObject) -> None:
     for child in children:
         child.parent = parent
 
-    selected_index = data.draw(st.integers(min_value=0, max_value=len(children)))
-    new_index = data.draw(st.integers(min_value=0, max_value=len(children)))
+    selected_index = data.draw(st.integers(min_value=0, max_value=len(children) - 1))
+    new_index = data.draw(st.integers(min_value=0, max_value=len(children) - 1))
+
+    selected_child = children[selected_index]
+    parent.set_child_index(selected_child, new_index)
+    assert parent.children[new_index] == selected_child
+
+
+@given(data=st.data())
+def test_set_child_index_specific_case(data: st.DataObject) -> None:
+    parent = data.draw(categories())
+    children = data.draw(
+        st.lists(categories(category_type=parent.type_), min_size=10, max_size=10)
+    )
+    for child in children:
+        child.parent = parent
+
+    selected_index = 7
+    new_index = 3
 
     selected_child = children[selected_index]
     parent.set_child_index(selected_child, new_index)
