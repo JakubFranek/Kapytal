@@ -186,6 +186,15 @@ class MainView(QMainWindow, Ui_MainWindow):
         self.collapseAllToolButton.setDefaultAction(
             self.account_tree.actionCollapse_All
         )
+        self.addAccountGroupToolButton.setDefaultAction(
+            self.account_tree.actionAdd_Account_Group
+        )
+        self.addCashAccountToolButton.setDefaultAction(
+            self.account_tree.actionAdd_Cash_Account
+        )
+        self.addSecurityAccountToolButton.setDefaultAction(
+            self.account_tree.actionAdd_Security_Account
+        )
         self.filterToolButton.setDefaultAction(self.actionFilterTransactions)
         self.buyToolButton.setDefaultAction(self.actionBuy)
         self.sellToolButton.setDefaultAction(self.actionSell)
