@@ -22,7 +22,7 @@ class SecurityAccountDialog(QDialog, Ui_SecurityAccountDialog):
     ) -> None:
         super().__init__(parent=parent)
         self.setupUi(self)
-        self.resize(270, 105)
+        self.resize(400, 105)
         self.currentPathLineEdit.setEnabled(False)
 
         self.pathCompleter = QCompleter(paths)

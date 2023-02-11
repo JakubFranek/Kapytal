@@ -13,7 +13,7 @@ class TagDialog(QDialog, Ui_TagDialog):
     def __init__(self, parent: QWidget, edit: bool = False) -> None:
         super().__init__(parent=parent)
         self.setupUi(self)
-        self.resize(270, 105)
+        self.resize(270, 80)
         if edit:
             self.setWindowTitle("Rename Tag")
             self.setWindowIcon(QIcon("icons_16:tag--pencil.png"))
