@@ -97,7 +97,7 @@ class CurrencyFormPresenter:
         if currency is None:
             return
 
-        logging.info(f"Setting {currency} as base currency")
+        logging.info(f"Setting {currency.code} as base currency")
         try:
             self._record_keeper.set_base_currency(currency.code)
         except Exception:

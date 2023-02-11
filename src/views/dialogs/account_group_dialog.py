@@ -1,8 +1,15 @@
 import logging
+from collections.abc import Collection
 
-from PyQt6.QtCore import pyqtSignal
+from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QIcon
-from PyQt6.QtWidgets import QAbstractButton, QDialog, QDialogButtonBox, QWidget
+from PyQt6.QtWidgets import (
+    QAbstractButton,
+    QCompleter,
+    QDialog,
+    QDialogButtonBox,
+    QWidget,
+)
 
 from src.views.ui_files.Ui_account_group_dialog import Ui_AccountGroupDialog
 
@@ -12,11 +19,18 @@ from src.views.ui_files.Ui_account_group_dialog import Ui_AccountGroupDialog
 class AccountGroupDialog(QDialog, Ui_AccountGroupDialog):
     signal_OK = pyqtSignal()
 
-    def __init__(self, parent: QWidget, max_position: int, edit: bool = False) -> None:
+    def __init__(
+        self, parent: QWidget, max_position: int, paths: Collection[str], edit: bool
+    ) -> None:
         super().__init__(parent=parent)
         self.setupUi(self)
         self.resize(270, 105)
         self.currentPathLineEdit.setEnabled(False)
+
+        self.pathCompleter = QCompleter(paths)
+        self.pathCompleter.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+        self.pathLineEdit.setCompleter(self.pathCompleter)
+
         if edit:
             self.setWindowTitle("Edit Account Group")
             self.setWindowIcon(QIcon("icons_16:folder--pencil.png"))

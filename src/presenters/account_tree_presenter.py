@@ -123,14 +123,21 @@ class AccountTreePresenter:
     def setup_account_group_dialog(
         self, edit: bool, item: AccountGroup, max_position: int  # noqa: U100
     ) -> None:
+        account_group_paths = self._get_account_group_paths()
         if edit:
             self._dialog = AccountGroupDialog(
-                parent=self._view, max_position=max_position, edit=edit
+                parent=self._view,
+                max_position=max_position,
+                paths=account_group_paths,
+                edit=edit,
             )
             self._dialog.signal_OK.connect(self.edit_account_group)
         else:
             self._dialog = AccountGroupDialog(
-                parent=self._view, max_position=max_position, edit=edit
+                parent=self._view,
+                max_position=max_position,
+                paths=account_group_paths,
+                edit=edit,
             )
             self._dialog.signal_OK.connect(self.add_account_group)
 
@@ -199,14 +206,21 @@ class AccountTreePresenter:
     def setup_security_account_dialog(
         self, edit: bool, item: SecurityAccount, max_position: int  # noqa: U100
     ) -> None:
+        account_group_paths = self._get_account_group_paths()
         if edit:
             self._dialog = SecurityAccountDialog(
-                parent=self._view, max_position=max_position, edit=edit
+                parent=self._view,
+                max_position=max_position,
+                paths=account_group_paths,
+                edit=edit,
             )
             self._dialog.signal_OK.connect(self.edit_security_account)
         else:
             self._dialog = SecurityAccountDialog(
-                parent=self._view, max_position=max_position, edit=edit
+                parent=self._view,
+                max_position=max_position,
+                paths=account_group_paths,
+                edit=edit,
             )
             self._dialog.signal_OK.connect(self.add_security_account)
 
@@ -274,11 +288,13 @@ class AccountTreePresenter:
     def setup_cash_account_dialog(
         self, edit: bool, item: CashAccount, max_position: int
     ) -> None:
+        account_group_paths = self._get_account_group_paths()
         if edit:
             code_places_pairs = [(item.currency.code, item.currency.places)]
             self._dialog = CashAccountDialog(
                 parent=self._view,
                 max_position=max_position,
+                paths=account_group_paths,
                 code_places_pairs=code_places_pairs,
                 edit=edit,
             )
@@ -292,6 +308,7 @@ class AccountTreePresenter:
             self._dialog = CashAccountDialog(
                 parent=self._view,
                 max_position=max_position,
+                paths=account_group_paths,
                 code_places_pairs=code_places_pairs,
                 edit=edit,
             )
@@ -425,3 +442,9 @@ class AccountTreePresenter:
             enable_modify_object=enable_modify_object,
             enable_expand_below=enable_expand_below,
         )
+
+    def _get_account_group_paths(self) -> list[str]:
+        return [
+            account_group.path + "/"
+            for account_group in self._record_keeper.account_groups
+        ]

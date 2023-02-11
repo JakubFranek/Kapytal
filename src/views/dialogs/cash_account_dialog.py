@@ -2,9 +2,15 @@ import logging
 from collections.abc import Collection
 from decimal import Decimal
 
-from PyQt6.QtCore import pyqtSignal
+from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QIcon
-from PyQt6.QtWidgets import QAbstractButton, QDialog, QDialogButtonBox, QWidget
+from PyQt6.QtWidgets import (
+    QAbstractButton,
+    QCompleter,
+    QDialog,
+    QDialogButtonBox,
+    QWidget,
+)
 
 from src.views.ui_files.Ui_cash_account_dialog import Ui_CashAccountDialog
 
@@ -16,13 +22,19 @@ class CashAccountDialog(QDialog, Ui_CashAccountDialog):
         self,
         parent: QWidget,
         max_position: int,
+        paths: Collection[str],
         code_places_pairs: Collection[tuple[str, int]],
-        edit: bool = False,
+        edit: bool,
     ) -> None:
         super().__init__(parent=parent)
         self.setupUi(self)
         self.resize(270, 105)
         self.currentPathLineEdit.setEnabled(False)
+
+        self.pathCompleter = QCompleter(paths)
+        self.pathCompleter.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+        self.pathLineEdit.setCompleter(self.pathCompleter)
+
         if edit:
             self.setWindowTitle("Edit Cash Account")
             self.setWindowIcon(QIcon("icons_custom:piggy-bank-pencil.png"))
