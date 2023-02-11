@@ -22,10 +22,14 @@ class SetExchangeRateDialog(QDialog, Ui_SetExchangeRateDialog):
         super().__init__(parent)
         self.setupUi(self)
         self.setWindowIcon(QIcon("icons_custom:currency-arrow.png"))
-        self.exchangeRateLabel.setText(exchange_rate)
+
+        primary_code, _, secondary_code = exchange_rate.partition("/")
+
+        self.exchangeRateLabel.setText(f"1 {primary_code} =")
         self.exchangeRateDoubleSpinBox.setMaximum(1_000_000_000_000)
         self.exchangeRateDoubleSpinBox.setValue(last_value)
         self.exchangeRateDoubleSpinBox.setDecimals(9)
+        self.exchangeRateDoubleSpinBox.setSuffix(f" {secondary_code}")
         self.dateEdit.setDate(date_today)
         self.dateEdit.setMaximumDate(date_today)
 

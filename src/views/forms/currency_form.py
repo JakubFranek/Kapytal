@@ -2,8 +2,9 @@ import logging
 
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QCloseEvent, QIcon
-from PyQt6.QtWidgets import QWidget
+from PyQt6.QtWidgets import QHeaderView, QWidget
 
+from src.views.constants import ExchangeRateTableColumns
 from src.views.ui_files.Ui_currency_form import Ui_CurrencyForm
 
 
@@ -55,6 +56,14 @@ class CurrencyForm(QWidget, Ui_CurrencyForm):
         self.currencyTable.viewport().update()
 
     def finalize_setup(self) -> None:
+        self.exchangeRateTable.horizontalHeader().setSectionResizeMode(
+            ExchangeRateTableColumns.COLUMN_CODE,
+            QHeaderView.ResizeMode.ResizeToContents,
+        )
+        self.exchangeRateTable.horizontalHeader().setSectionResizeMode(
+            ExchangeRateTableColumns.COLUMN_RATE,
+            QHeaderView.ResizeMode.ResizeToContents,
+        )
         self.exchangeRateTable.selectionModel().selectionChanged.connect(
             self.signal_exchange_rate_selection_changed.emit
         )
