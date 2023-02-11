@@ -2,23 +2,37 @@ import logging
 from collections.abc import Collection
 from decimal import Decimal
 
-from PyQt6.QtCore import pyqtSignal
+from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QIcon
-from PyQt6.QtWidgets import QAbstractButton, QDialog, QDialogButtonBox, QWidget
+from PyQt6.QtWidgets import (
+    QAbstractButton,
+    QCompleter,
+    QDialog,
+    QDialogButtonBox,
+    QWidget,
+)
 
 from src.views.ui_files.Ui_security_dialog import Ui_SecurityDialog
 
 
-# IDEA: text auto completer for type_
 class SecurityDialog(QDialog, Ui_SecurityDialog):
     signal_OK = pyqtSignal()
 
     def __init__(
-        self, parent: QWidget, currency_codes: Collection[str], edit: bool = False
+        self,
+        parent: QWidget,
+        security_types: Collection[str],
+        currency_codes: Collection[str],
+        edit: bool = False,
     ) -> None:
         super().__init__(parent=parent)
         self.setupUi(self)
         self.resize(270, 105)
+
+        self.typeCompleter = QCompleter(security_types)
+        self.typeCompleter.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+        self.typeLineEdit.setCompleter(self.typeCompleter)
+
         if edit:
             self.setWindowTitle("Edit Security")
             self.setWindowIcon(QIcon("icons_custom:certificate-pencil.png"))

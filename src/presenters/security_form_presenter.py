@@ -60,8 +60,14 @@ class SecurityFormPresenter:
         self._view.show_form()
 
     def run_security_dialog(self, edit: bool) -> None:
+        security_types = {security.type_ for security in self._record_keeper.securities}
         currency_codes = [currency.code for currency in self._record_keeper.currencies]
-        self._dialog = SecurityDialog(self._view, currency_codes, edit)
+        self._dialog = SecurityDialog(
+            parent=self._view,
+            security_types=security_types,
+            currency_codes=currency_codes,
+            edit=edit,
+        )
         if edit:
             security = self._model.get_selected_item()
             if security is None:
