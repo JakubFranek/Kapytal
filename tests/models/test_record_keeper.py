@@ -38,7 +38,9 @@ def test_creation() -> None:
     assert record_keeper.transactions == ()
     assert record_keeper.tags == ()
     assert record_keeper.categories == ()
-    assert record_keeper.root_categories == ()
+    assert record_keeper.root_income_categories == ()
+    assert record_keeper.root_expense_categories == ()
+    assert record_keeper.root_income_and_expense_categories == ()
     assert record_keeper.payees == ()
     assert record_keeper.currencies == ()
     assert record_keeper.base_currency is None
@@ -353,7 +355,8 @@ def test_add_category_to_root_with_index(
     record_keeper = RecordKeeper()
     record_keeper.add_category(name_1, type_)
     record_keeper.add_category(name_2, type_, 0)
-    assert record_keeper.root_categories[0].name == name_2
+    list_ref = record_keeper._get_root_category_list(record_keeper.get_category(name_2))
+    assert list_ref[0].name == name_2
 
 
 def test_add_category_to_parent_with_index() -> None:

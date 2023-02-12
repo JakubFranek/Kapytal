@@ -283,7 +283,23 @@ def test_remove_category() -> None:
     record_keeper = RecordKeeper()
     record_keeper.add_category("CATEGORY", CategoryType.EXPENSE)
     record_keeper.remove_category("CATEGORY")
-    assert len(record_keeper.tags) == 0
+    assert len(record_keeper.categories) == 0
+
+
+def test_remove_category_with_parent() -> None:
+    record_keeper = RecordKeeper()
+    record_keeper.add_category("PARENT", CategoryType.EXPENSE)
+    record_keeper.add_category("PARENT/CATEGORY")
+    record_keeper.remove_category("PARENT/CATEGORY")
+    assert len(record_keeper.categories) == 1
+
+
+def test_remove_category_with_children() -> None:
+    record_keeper = RecordKeeper()
+    record_keeper.add_category("PARENT", CategoryType.EXPENSE)
+    record_keeper.add_category("PARENT/CATEGORY")
+    with pytest.raises(InvalidOperationError):
+        record_keeper.remove_category("PARENT")
 
 
 def test_remove_category_in_transaction() -> None:

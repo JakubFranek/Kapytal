@@ -74,7 +74,7 @@ def test_edit_category_move_to_root_with_index() -> None:
     cat = record_keeper.get_category("NEW NAME")
     assert cat.name == "NEW NAME"
     assert cat.path == "NEW NAME"
-    assert record_keeper.root_categories[0].name == "NEW NAME"
+    assert record_keeper.root_expense_categories[0].name == "NEW NAME"
 
 
 def test_edit_category_remove_parent() -> None:
@@ -703,9 +703,7 @@ def test_edit_security_transactions_invalid_transaction_types() -> None:
     record_keeper = get_preloaded_record_keeper_with_cash_transactions()
     transactions = record_keeper.transactions
     uuids = [str(transfer.uuid) for transfer in transactions]
-    with pytest.raises(
-        TypeError, match="All edited transactions must be SecurityTransactions."
-    ):
+    with pytest.raises(TypeError, match="Type of Transaction"):
         record_keeper.edit_security_transactions(uuids)
 
 
@@ -814,9 +812,7 @@ def test_edit_security_transfers_invalid_transaction_types() -> None:
     record_keeper = get_preloaded_record_keeper_with_cash_transactions()
     transactions = record_keeper.transactions
     uuids = [str(transfer.uuid) for transfer in transactions]
-    with pytest.raises(
-        TypeError, match="All edited transactions must be SecurityTransfers."
-    ):
+    with pytest.raises(TypeError, match="Type of Transaction"):
         record_keeper.edit_security_transfers(uuids)
 
 

@@ -277,6 +277,7 @@ def test_record_keeper_tags_and_payees(
 
 def test_record_keeper_categories() -> None:
     record_keeper = RecordKeeper()
+    record_keeper.add_category("Salary", CategoryType.INCOME)
     record_keeper.add_category("Food", CategoryType.EXPENSE)
     record_keeper.add_category("Food/Groceries")
     record_keeper.add_category("Food/Eating out")
@@ -285,10 +286,20 @@ def test_record_keeper_categories() -> None:
     record_keeper.add_category("Housing/Electricity")
     record_keeper.add_category("Housing/Water")
     record_keeper.add_category("Food/Work lunch")
+    record_keeper.add_category("Splitting costs", CategoryType.INCOME_AND_EXPENSE)
     serialized = json.dumps(record_keeper, cls=CustomJSONEncoder)
     decoded = json.loads(serialized, cls=CustomJSONDecoder)
     assert isinstance(decoded, RecordKeeper)
     assert len(record_keeper.categories) == len(decoded.categories)
+    assert len(record_keeper.root_income_categories) == len(
+        decoded.root_income_categories
+    )
+    assert len(record_keeper.root_expense_categories) == len(
+        decoded.root_expense_categories
+    )
+    assert len(record_keeper.root_income_and_expense_categories) == len(
+        decoded.root_income_and_expense_categories
+    )
 
 
 @given(transaction=cash_transactions())
