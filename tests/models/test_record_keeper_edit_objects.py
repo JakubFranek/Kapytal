@@ -59,7 +59,8 @@ def test_edit_category_move_from_root_with_index() -> None:
     record_keeper.add_category("TEST CAT", CategoryType.EXPENSE)
     record_keeper.edit_category("TEST CAT", "TEST PARENT 2/NEW NAME", 0)
     cat = record_keeper.get_category("TEST PARENT 2/NEW NAME")
-    parent: Category = cat.parent
+    parent = cat.parent
+    assert isinstance(parent, Category)
     assert cat.name == "NEW NAME"
     assert cat.path == "TEST PARENT 2/NEW NAME"
     assert parent.get_child_index(cat) == 0
@@ -104,7 +105,7 @@ def test_edit_category_its_own_parent() -> None:
 def test_edit_category_does_not_exist() -> None:
     record_keeper = RecordKeeper()
     with pytest.raises(NotFoundError):
-        record_keeper.edit_category("abc", "def", "efg")
+        record_keeper.edit_category("abc", "def")
 
 
 def test_edit_payee() -> None:
@@ -163,7 +164,7 @@ def test_edit_security_account() -> None:
 def test_edit_security_account_does_not_exist() -> None:
     record_keeper = RecordKeeper()
     with pytest.raises(NotFoundError):
-        record_keeper.edit_security_account("ABC", "DEF", "GHI")
+        record_keeper.edit_security_account("ABC", "DEF")
 
 
 def test_edit_security_account_already_exists() -> None:
@@ -180,9 +181,8 @@ def test_edit_security_account_group() -> None:
     record_keeper.add_account_group("TEST PARENT/TEST CHILD")
     record_keeper.add_account_group("NEW PARENT")
     record_keeper.edit_account_group("TEST PARENT/TEST CHILD", "NEW PARENT/NEW NAME")
-    account_group: AccountGroup = record_keeper.get_account_parent_or_none(
-        "NEW PARENT/NEW NAME"
-    )
+    account_group = record_keeper.get_account_parent_or_none("NEW PARENT/NEW NAME")
+    assert isinstance(account_group, AccountGroup)
     assert account_group.name == "NEW NAME"
     assert account_group.path == "NEW PARENT/NEW NAME"
 
@@ -197,7 +197,8 @@ def test_edit_security_account_group_index() -> None:
         "TEST PARENT/TEST CHILD", "NEW PARENT/NEW NAME", index=0
     )
     account_group = record_keeper.get_account_parent("NEW PARENT/NEW NAME")
-    parent: AccountGroup = account_group.parent
+    parent = account_group.parent
+    assert isinstance(parent, AccountGroup)
     assert account_group.name == "NEW NAME"
     assert account_group.path == "NEW PARENT/NEW NAME"
     assert parent.children[0] == account_group
@@ -260,7 +261,8 @@ def test_edit_cash_account() -> None:
     record_keeper.edit_cash_account(
         "TEST PARENT/TEST NAME", "NEW PARENT/NEW NAME", 1000
     )
-    account: CashAccount = record_keeper.accounts[0]
+    account = record_keeper.accounts[0]
+    assert isinstance(account, CashAccount)
     assert account.name == "NEW NAME"
     assert account.path == "NEW PARENT/NEW NAME"
     assert account.initial_balance.value_rounded == Decimal(1000)
@@ -440,9 +442,7 @@ def test_edit_cash_transactions_invalid_indexes() -> None:
     )
     transactions = list(record_keeper.transactions)
     uuids = [str(transaction.uuid) for transaction in transactions]
-    with pytest.raises(
-        TypeError, match="All edited transactions must be CashTransactions."
-    ):
+    with pytest.raises(TypeError, match="Type of Transaction"):
         record_keeper.edit_cash_transactions(uuids)
 
 
@@ -454,9 +454,7 @@ def test_edit_cash_transfer_invalid_types() -> None:
         if not isinstance(transaction, CashTransfer)
     ]
     uuids = [str(transfer.uuid) for transfer in transactions]
-    with pytest.raises(
-        TypeError, match="All edited transactions must be CashTransfers."
-    ):
+    with pytest.raises(TypeError, match="Type of Transaction"):
         record_keeper.edit_cash_transfers(uuids)
 
 
@@ -588,13 +586,11 @@ def test_edit_refunds_same_values() -> None:
     record_keeper.edit_refunds(uuids)
 
 
-def test_edit_refunds_wrong_transaction_types() -> None:
+def test_edit_refunds_invalid_transaction_types() -> None:
     record_keeper = get_preloaded_record_keeper_with_cash_transactions()
     transactions = record_keeper.transactions
     uuids = [str(transfer.uuid) for transfer in transactions]
-    with pytest.raises(
-        TypeError, match="All edited transactions must be RefundTransactions."
-    ):
+    with pytest.raises(TypeError, match="Type of Transaction"):
         record_keeper.edit_refunds(uuids)
 
 
@@ -703,7 +699,7 @@ def test_edit_security_transactions_same_values() -> None:
     record_keeper.edit_security_transactions(uuids)
 
 
-def test_edit_security_transactions_wrong_transaction_types() -> None:
+def test_edit_security_transactions_invalid_transaction_types() -> None:
     record_keeper = get_preloaded_record_keeper_with_cash_transactions()
     transactions = record_keeper.transactions
     uuids = [str(transfer.uuid) for transfer in transactions]
@@ -814,7 +810,7 @@ def test_edit_security_transfers_same_values() -> None:
     record_keeper.edit_security_transfers(uuids)
 
 
-def test_edit_security_transfers_wrong_transaction_types() -> None:
+def test_edit_security_transfers_invalid_transaction_types() -> None:
     record_keeper = get_preloaded_record_keeper_with_cash_transactions()
     transactions = record_keeper.transactions
     uuids = [str(transfer.uuid) for transfer in transactions]

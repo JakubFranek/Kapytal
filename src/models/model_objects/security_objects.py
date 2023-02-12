@@ -418,9 +418,9 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
     @staticmethod
     def deserialize(
         data: dict[str, Any],
-        accounts: list[Account],
-        currencies: list[Currency],
-        securities: list[Security],
+        accounts: Collection[Account],
+        currencies: Collection[Currency],
+        securities: Collection[Security],
     ) -> "SecurityTransaction":
         description = data["description"]
         datetime_ = data["datetime_"]
@@ -686,8 +686,8 @@ class SecurityTransfer(SecurityRelatedTransaction):
     @staticmethod
     def deserialize(
         data: dict[str, Any],
-        accounts: list[Account],
-        securities: list[Security],
+        accounts: Collection[Account],
+        securities: Collection[Security],
     ) -> "SecurityTransfer":
         description = data["description"]
         datetime_ = data["datetime_"]

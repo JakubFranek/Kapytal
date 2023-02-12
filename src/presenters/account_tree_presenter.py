@@ -55,6 +55,7 @@ class AccountTreePresenter:
 
     def edit_item(self) -> None:
         item = self._model.get_selected_item()
+        setup_dialog: AccountTreePresenter.SetupDialogCallable
         if isinstance(item, AccountGroup):
             setup_dialog = self.setup_account_group_dialog
         elif isinstance(item, SecurityAccount):
@@ -153,7 +154,8 @@ class AccountTreePresenter:
             return
 
         item = self._model.get_selected_item()
-        self._model.pre_add(item)
+        parent = item.parent if item is not None else None
+        self._model.pre_add(parent)
         self.update_model_data()
         self._model.post_add()
         self._dialog.close()
@@ -236,7 +238,8 @@ class AccountTreePresenter:
             return
 
         item = self._model.get_selected_item()
-        self._model.pre_add(item)
+        parent = item.parent if item is not None else None
+        self._model.pre_add(parent)
         self.update_model_data()
         self._model.post_add()
         self._dialog.close()
@@ -330,7 +333,8 @@ class AccountTreePresenter:
             return
 
         item = self._model.get_selected_item()
-        self._model.pre_add(item)
+        parent = item.parent if item is not None else None
+        self._model.pre_add(parent)
         self.update_model_data()
         self._model.post_add()
         self._dialog.close()

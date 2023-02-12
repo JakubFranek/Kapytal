@@ -50,4 +50,4 @@ class NameMixin:
             )
         else:
             logging.info(f"Setting {self.__class__.__name__} {name=}")
-        self._name = name
+        self._name: str = name

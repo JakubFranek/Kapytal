@@ -343,11 +343,11 @@ class CashTransaction(CashRelatedTransaction):
     @staticmethod
     def deserialize(
         data: dict[str, Any],
-        accounts: list[Account],
-        payees: list[Attribute],
-        categories: list[Category],
-        tags: list[Attribute],
-        currencies: list[Currency],
+        accounts: Collection[Account],
+        payees: Collection[Attribute],
+        categories: Collection[Category],
+        tags: Collection[Attribute],
+        currencies: Collection[Currency],
     ) -> "CashTransaction":
         description = data["description"]
         datetime_ = data["datetime_"]
@@ -769,8 +769,8 @@ class CashTransfer(CashRelatedTransaction):
     @staticmethod
     def deserialize(
         data: dict[str, Any],
-        accounts: list[Account],
-        currencies: list[Currency],
+        accounts: Collection[Account],
+        currencies: Collection[Currency],
     ) -> "CashTransaction":
         description = data["description"]
         datetime_ = data["datetime_"]
@@ -1039,12 +1039,12 @@ class RefundTransaction(CashRelatedTransaction):
     @staticmethod
     def deserialize(
         data: dict[str, Any],
-        accounts: list[Account],
-        transactions: list[Transaction],
-        payees: list[Attribute],
-        categories: list[Category],
-        tags: list[Attribute],
-        currencies: list[Currency],
+        accounts: Collection[Account],
+        transactions: Collection[Transaction],
+        payees: Collection[Attribute],
+        categories: Collection[Category],
+        tags: Collection[Attribute],
+        currencies: Collection[Currency],
     ) -> "CashTransaction":
         description = data["description"]
         datetime_ = data["datetime_"]
@@ -1105,7 +1105,7 @@ class RefundTransaction(CashRelatedTransaction):
         datetime_: datetime | None = None,
         account: CashAccount | None = None,
         category_amount_pairs: Collection[tuple[Category, CashAmount]] | None = None,
-        tag_amount_pairs: Collection[tuple[Category, CashAmount]] | None = None,
+        tag_amount_pairs: Collection[tuple[Attribute, CashAmount]] | None = None,
         payee: Attribute | None = None,
     ) -> None:
         if description is None:
@@ -1146,7 +1146,7 @@ class RefundTransaction(CashRelatedTransaction):
         datetime_: datetime | None = None,
         account: CashAccount | None = None,
         category_amount_pairs: Collection[tuple[Category, CashAmount]] | None = None,
-        tag_amount_pairs: Collection[tuple[Category, CashAmount]] | None = None,
+        tag_amount_pairs: Collection[tuple[Attribute, CashAmount]] | None = None,
         payee: Attribute | None = None,
     ) -> None:
         if description is None:

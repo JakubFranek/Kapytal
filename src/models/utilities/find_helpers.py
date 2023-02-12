@@ -1,4 +1,5 @@
 import uuid
+from collections.abc import Collection
 from typing import TYPE_CHECKING
 
 from src.models.custom_exceptions import NotFoundError
@@ -13,7 +14,7 @@ if TYPE_CHECKING:
 
 
 def find_account_group_by_path(
-    path: str, account_groups: list["AccountGroup"]
+    path: str, account_groups: Collection["AccountGroup"]
 ) -> "AccountGroup":
     for account_group in account_groups:
         if account_group.path == path:
@@ -21,14 +22,16 @@ def find_account_group_by_path(
     raise NotFoundError(f"AccountGroup path='{path}' not found.")
 
 
-def find_account_by_uuid(uuid: uuid.UUID, accounts: list["Account"]) -> "Account":
+def find_account_by_uuid(uuid: uuid.UUID, accounts: Collection["Account"]) -> "Account":
     for account in accounts:
         if account.uuid == uuid:
             return account
     raise NotFoundError(f"Account uuid='{uuid}' not found.")
 
 
-def find_security_by_uuid(uuid: uuid.UUID, securities: list["Security"]) -> "Security":
+def find_security_by_uuid(
+    uuid: uuid.UUID, securities: Collection["Security"]
+) -> "Security":
     for security in securities:
         if security.uuid == uuid:
             return security
@@ -36,7 +39,7 @@ def find_security_by_uuid(uuid: uuid.UUID, securities: list["Security"]) -> "Sec
 
 
 def find_transaction_by_uuid(
-    uuid: uuid.UUID, transactions: list["Transaction"]
+    uuid: uuid.UUID, transactions: Collection["Transaction"]
 ) -> "Transaction":
     for transaction in transactions:
         if transaction.uuid == uuid:
@@ -44,21 +47,23 @@ def find_transaction_by_uuid(
     raise NotFoundError(f"Refunded transaction uuid='{uuid}' not found.")
 
 
-def find_attribute_by_name(name: str, attributes: list["Attribute"]) -> "Attribute":
+def find_attribute_by_name(
+    name: str, attributes: Collection["Attribute"]
+) -> "Attribute":
     for attribute in attributes:
         if attribute.name == name:
             return attribute
     raise NotFoundError(f"Attribute name='{name}' not found.")
 
 
-def find_category_by_path(path: str, categories: list["Category"]) -> "Category":
+def find_category_by_path(path: str, categories: Collection["Category"]) -> "Category":
     for attribute in categories:
         if attribute.path == path:
             return attribute
     raise NotFoundError(f"Category path='{path}' not found.")
 
 
-def find_currency_by_code(code: str, currencies: list["Currency"]) -> "Currency":
+def find_currency_by_code(code: str, currencies: Collection["Currency"]) -> "Currency":
     for currency in currencies:
         if currency.code == code:
             return currency

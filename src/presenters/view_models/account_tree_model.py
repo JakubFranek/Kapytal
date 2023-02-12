@@ -1,4 +1,5 @@
 import typing
+from collections.abc import Sequence
 
 from PyQt6.QtCore import QAbstractItemModel, QModelIndex, Qt
 from PyQt6.QtGui import QIcon
@@ -26,7 +27,7 @@ class AccountTreeModel(QAbstractItemModel):
     def __init__(
         self,
         view: QTreeView,
-        root_items: list[Account | AccountGroup],
+        root_items: Sequence[Account | AccountGroup],
         base_currency: Currency,
     ) -> None:
         super().__init__()
