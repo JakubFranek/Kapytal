@@ -7,12 +7,14 @@ from src.models.json.custom_json_decoder import CustomJSONDecoder
 from src.models.json.custom_json_encoder import CustomJSONEncoder
 from src.models.record_keeper import RecordKeeper
 from src.presenters.account_tree_presenter import AccountTreePresenter
+from src.presenters.category_form_presenter import CategoryFormPresenter
 from src.presenters.currency_form_presenter import CurrencyFormPresenter
 from src.presenters.payee_form_presenter import PayeeFormPresenter
 from src.presenters.security_form_presenter import SecurityFormPresenter
 from src.presenters.tag_form_presenter import TagFormPresenter
 from src.presenters.utilities.handle_exception import handle_exception
 from src.utilities.general import backup_json_file
+from src.views.forms.category_form import CategoryForm
 from src.views.forms.currency_form import CurrencyForm
 from src.views.forms.payee_form import PayeeForm
 from src.views.forms.security_form import SecurityForm
@@ -42,16 +44,21 @@ class MainPresenter:
         self._currency_form_presenter = CurrencyFormPresenter(
             currency_form, record_keeper
         )
+        logging.debug("Creating SecurityForm and SecurityFormPresenter")
+        security_form = SecurityForm(parent=view)
+        self._security_form_presenter = SecurityFormPresenter(
+            security_form, record_keeper
+        )
         logging.debug("Creating PayeeForm and PayeeFormPresenter")
         payee_form = PayeeForm(parent=view)
         self._payee_form_presenter = PayeeFormPresenter(payee_form, record_keeper)
         logging.debug("Creating TagForm and TagFormPresenter")
         tag_form = TagForm(parent=view)
         self._tag_form_presenter = TagFormPresenter(tag_form, record_keeper)
-        logging.debug("Creating SecurityForm and SecurityFormPresenter")
-        security_form = SecurityForm(parent=view)
-        self._security_form_presenter = SecurityFormPresenter(
-            security_form, record_keeper
+        logging.debug("Creating CategoryForm and CategoryFormPresenter")
+        category_form = CategoryForm(parent=view)
+        self._category_form_presenter = CategoryFormPresenter(
+            category_form, record_keeper
         )
 
         # Setting up Event observers
@@ -64,13 +71,16 @@ class MainPresenter:
         self._currency_form_presenter.event_data_changed.append(
             lambda: self._update_unsaved_changes(True)
         )
+        self._security_form_presenter.event_data_changed.append(
+            lambda: self._update_unsaved_changes(True)
+        )
         self._payee_form_presenter.event_data_changed.append(
             lambda: self._update_unsaved_changes(True)
         )
         self._tag_form_presenter.event_data_changed.append(
             lambda: self._update_unsaved_changes(True)
         )
-        self._security_form_presenter.event_data_changed.append(
+        self._category_form_presenter.event_data_changed.append(
             lambda: self._update_unsaved_changes(True)
         )
 
@@ -79,10 +89,13 @@ class MainPresenter:
         self._view.signal_open_currency_form.connect(
             self._currency_form_presenter.show_form
         )
-        self._view.signal_open_payee_form.connect(self._payee_form_presenter.show_form)
-        self._view.signal_open_tag_form.connect(self._tag_form_presenter.show_form)
         self._view.signal_open_security_form.connect(
             self._security_form_presenter.show_form
+        )
+        self._view.signal_open_payee_form.connect(self._payee_form_presenter.show_form)
+        self._view.signal_open_tag_form.connect(self._tag_form_presenter.show_form)
+        self._view.signal_open_category_form.connect(
+            self._category_form_presenter.show_form
         )
         self._view.signal_save.connect(lambda: self._save_to_file(save_as=False))
         self._view.signal_save_as.connect(lambda: self._save_to_file(save_as=True))

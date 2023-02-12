@@ -37,3 +37,9 @@ class SecurityTableColumns(IntEnum):
     COLUMN_TYPE = 2
     COLUMN_PRICE = 3
     COLUMN_LAST_DATE = 4
+
+
+class CategoryTreeColumns(IntEnum):
+    COLUMN_NAME = 0
+    COLUMN_TRANSACTIONS = 1
+    COLUMN_BALANCE = 2
