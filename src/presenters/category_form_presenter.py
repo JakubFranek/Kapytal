@@ -1,10 +1,12 @@
+import copy
 import logging
 
-from src.models.base_classes.account import Account
-from src.models.model_objects.account_group import AccountGroup
+from src.models.model_objects.attributes import Category, CategoryType
 from src.models.record_keeper import RecordKeeper
 from src.presenters.utilities.event import Event
+from src.presenters.utilities.handle_exception import handle_exception
 from src.presenters.view_models.category_tree_model import CategoryTreeModel
+from src.views.dialogs.category_dialog import CategoryDialog
 from src.views.forms.category_form import CategoryForm
 
 
@@ -15,90 +17,215 @@ class CategoryFormPresenter:
         self._view = view
         self._record_keeper = record_keeper
         self._model = CategoryTreeModel(
-            view=view.treeView,
-            root_items=record_keeper.root_categories,
+            view=view.category_tree,
+            root_items=record_keeper.root_income_categories,
             base_currency=record_keeper.base_currency,
         )
-        self._view.treeView.setModel(self._model)
+        self._view.category_tree.setModel(self._model)
+
+        self._view.incomeRadioButton.setChecked(True)
 
         self._setup_signals()
         self._view.finalize_setup()
 
     def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
-        self._model.pre_reset_model()
         self._record_keeper = record_keeper
-        self.update_model_data()
-        self._model.post_reset_model()
+        self.reset_model()
 
     def update_model_data(self) -> None:
-        self._model.root_items = self._record_keeper.root_categories
+        type_ = self._view.checked_type_
+        if type_ == CategoryType.INCOME:
+            self._model.root_categories = self._record_keeper.root_income_categories
+        elif type_ == CategoryType.EXPENSE:
+            self._model.root_categories = self._record_keeper.root_expense_categories
+        else:
+            self._model.root_categories = (
+                self._record_keeper.root_income_and_expense_categories
+            )
         self._model.base_currency = self._record_keeper.base_currency
+
+    def reset_model(self) -> None:
+        self._model.pre_reset_model()
+        self.update_model_data()
+        self._model.post_reset_model()
+        self._view.category_tree.expand_all()
 
     def show_form(self) -> None:
         self.update_model_data()
         self._view.show_form()
 
     def expand_all_below(self) -> None:
-        indexes = self._view.treeView.selectedIndexes()
+        indexes = self._view.category_tree.selectedIndexes()
         item = self._model.get_selected_item()
         logging.debug(f"Expanding all nodes below {item}")
         if len(indexes) == 0:
             raise ValueError("No index to expand recursively selected.")
-        self._view.treeView.expandRecursively(indexes[0])
+        self._view.category_tree.expandRecursively(indexes[0])
 
-    def _get_max_child_position(self, item: AccountGroup | None) -> int:
-        if isinstance(item, AccountGroup):
+    def run_dialog(self, edit: bool) -> None:
+        item = self._model.get_selected_item()
+        type_ = self._view.checked_type_
+        paths = [category.path + "/" for category in self._record_keeper.categories]
+        max_position = (
+            self._get_max_child_position(item)
+            if edit is False
+            else self._get_max_parent_position(item)
+        )
+        self._dialog = CategoryDialog(
+            parent=self._view,
+            type_=type_.value,
+            paths=paths,
+            max_position=max_position,
+            edit=edit,
+        )
+        if edit:
+            item = self._model.get_selected_item()
+            if item is None:
+                raise ValueError("Cannot edit an unselected item.")
+            self._dialog.signal_OK.connect(self.edit_category)
+            self._dialog.path = item.path
+            self._dialog.current_path = item.path
+            if item.parent is None:
+                index = self._model.root_categories.index(item)
+            else:
+                index = item.parent.get_child_index(item)
+            self._dialog.position = index + 1
+        else:
+            if item is not None:
+                self._dialog.path = item.path + "/"
+            self._dialog.position = self._dialog.positionSpinBox.maximum()
+            self._dialog.signal_OK.connect(self.add_category)
+        logging.debug(f"Running CategoryDialog ({edit=})")
+        self._dialog.exec()
+
+    def add_category(self) -> None:
+        path = self._dialog.path
+        type_ = CategoryType(self._dialog.type_)
+        index = self._dialog.position - 1
+
+        logging.info("Adding Category")
+        try:
+            self._record_keeper.add_category(path, type_, index)
+        except Exception:
+            handle_exception()
+            return
+
+        item = self._model.get_selected_item()
+        parent = item.parent if item is not None else None
+        self._model.pre_add(parent)
+        self.update_model_data()
+        self._model.post_add()
+        self._dialog.close()
+        self.event_data_changed()
+
+    def edit_category(self) -> None:
+        item: Category = self._model.get_selected_item()
+        previous_parent = item.parent
+        previous_path = self._dialog.current_path
+        previous_index = self._get_current_index(item)
+        new_path = self._dialog.path
+        if "/" in new_path:
+            new_parent_path, _, _ = new_path.rpartition("/")
+            new_parent = self._record_keeper.get_category(new_parent_path)
+        else:
+            new_parent = None
+        new_index = self._dialog.position - 1
+
+        logging.info(f"Editing Category at path='{item.path}'")
+        record_keeper_copy = copy.deepcopy(self._record_keeper)
+        try:
+            logging.disable(logging.INFO)
+            record_keeper_copy.edit_category(
+                current_path=previous_path, new_path=new_path, index=new_index
+            )
+            logging.disable(logging.NOTSET)
+        except Exception:
+            handle_exception()
+            return
+
+        if new_parent == previous_parent and new_index == previous_index:
+            move = False
+        else:
+            move = True
+
+        if move:
+            self._model.pre_move_item(
+                previous_parent=previous_parent,
+                previous_index=previous_index,
+                new_parent=new_parent,
+                new_index=new_index,
+            )
+        self._record_keeper.edit_category(
+            current_path=previous_path, new_path=new_path, index=new_index
+        )
+        self.update_model_data()
+        if move:
+            self._model.post_move_item()
+        self._dialog.close()
+        self._tree_selection_changed()
+        self.event_data_changed()
+
+    def delete_category(self) -> None:
+        item = self._model.get_selected_item()
+        if item is None:
+            raise ValueError("Cannot delete non-existent item.")
+        logging.info(f"Removing {item.__class__.__name__} at path='{item.path}'")
+
+        # Attempt deletion on a RecordKeeper copy
+        record_keeper_copy = copy.deepcopy(self._record_keeper)
+        try:
+            record_keeper_copy.remove_category(item.path)
+        except Exception:
+            handle_exception()
+            return
+
+        # Perform the deletion on the "real" RecordKeeper if it went fine
+        self._model.pre_remove_item(item)
+        self._record_keeper.remove_category(item.path)
+        self.update_model_data()
+        self._model.post_remove_item()
+        self.event_data_changed()
+
+    def _get_max_child_position(self, item: Category | None) -> int:
+        if isinstance(item, Category):
             return len(item.children) + 1
         if item is None:
-            return len(self._record_keeper.root_account_items) + 1
+            return len(self._model.root_categories) + 1
         raise ValueError("Invalid selection.")
 
-    def _get_max_parent_position(self, item: AccountGroup | Account) -> int:
+    def _get_max_parent_position(self, item: Category) -> int:
         parent = item.parent
         if parent is None:
-            return len(self._record_keeper.root_account_items)
+            return len(self._model.root_categories)
         return len(parent.children)
 
-    def _get_current_index(self, item: AccountGroup | Account | None) -> int:
+    def _get_current_index(self, item: Category | None) -> int:
         if item is None:
             raise NotImplementedError
         parent = item.parent
         if parent is None:
-            return self._record_keeper.root_account_items.index(item)
+            return self._model.root_categories.index(item)
         return parent.children.index(item)
 
     def _setup_signals(self) -> None:
-        # self._view.signal_selection_changed.connect(self._selection_changed)
-        # self._view.signal_expand_below.connect(self.expand_all_below)
-        # self._view.signal_delete_item.connect(self.remove_item)
-        # self._view.signal_add_account_group.connect(
-        #     lambda: self.run_add_dialog(
-        #         setup_dialog=self.setup_account_group_dialog,
-        #     )
-        # )
-        # self._view.signal_add_security_account.connect(
-        #     lambda: self.run_add_dialog(
-        #         setup_dialog=self.setup_security_account_dialog,
-        #     )
-        # )
-        # self._view.signal_add_cash_account.connect(
-        #     lambda: self.run_add_dialog(
-        #         setup_dialog=self.setup_cash_account_dialog,
-        #     )
-        # )
-        # self._view.signal_edit_item.connect(self.edit_item)
+        self._view.signal_tree_selection_changed.connect(self._tree_selection_changed)
+        self._view.signal_expand_all_below.connect(self.expand_all_below)
+        self._view.signal_add_category.connect(lambda: self.run_dialog(edit=False))
+        self._view.signal_edit_category.connect(lambda: self.run_dialog(edit=True))
+        self._view.signal_delete_category.connect(self.delete_category)
+        self._view.signal_type_selection_changed.connect(self.reset_model)
 
-        self._selection_changed()  # called to ensure context menu is OK at start of run
+        self._tree_selection_changed()  # called to ensure context menu is OK at start
 
-    def _selection_changed(self) -> None:
+    def _tree_selection_changed(self) -> None:
         item = self._model.get_selected_item()
 
         enable_modify_object = item is not None
-        enable_add_objects = item is None or isinstance(item, AccountGroup)
-        enable_expand_below = isinstance(item, AccountGroup)
+        enable_add_objects = True
+        enable_expand_below = isinstance(item, Category)
 
-        # self._view.enable_accounts_tree_actions(
-        #     enable_add_objects=enable_add_objects,
-        #     enable_modify_object=enable_modify_object,
-        #     enable_expand_below=enable_expand_below,
-        # )
+        self._view.category_tree.enable_actions(
+            enable_add_objects=enable_add_objects,
+            enable_modify_object=enable_modify_object,
+            enable_expand_below=enable_expand_below,
+        )

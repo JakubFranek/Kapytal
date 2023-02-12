@@ -21,7 +21,7 @@
   </property>
   <layout class="QHBoxLayout" name="horizontalLayout">
    <item>
-    <layout class="QVBoxLayout" name="leftVerticalLayout">
+    <layout class="QVBoxLayout" name="verticalLayout">
      <item>
       <widget class="QGroupBox" name="typeGroupBox">
        <property name="title">
@@ -76,20 +76,6 @@
         </widget>
        </item>
        <item>
-        <widget class="QToolButton" name="editToolButton">
-         <property name="text">
-          <string>...</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QToolButton" name="removeToolButton">
-         <property name="text">
-          <string>...</string>
-         </property>
-        </widget>
-       </item>
-       <item>
         <widget class="QLineEdit" name="searchLineEdit">
          <property name="placeholderText">
           <string>Search...</string>
@@ -100,9 +86,6 @@
         </widget>
        </item>
       </layout>
-     </item>
-     <item>
-      <widget class="QTreeView" name="treeView"/>
      </item>
     </layout>
    </item>

@@ -13,7 +13,7 @@ class CategoryTreeModel(QAbstractItemModel):
     COLUMN_HEADERS = {
         CategoryTreeColumns.COLUMN_NAME: "Name",
         CategoryTreeColumns.COLUMN_TRANSACTIONS: "Transactions",
-        CategoryTreeColumns.COLUMN_BALANCE: "Balance",
+        CategoryTreeColumns.COLUMN_BALANCE: "Total balance",
     }
 
     def __init__(
@@ -24,7 +24,7 @@ class CategoryTreeModel(QAbstractItemModel):
     ) -> None:
         super().__init__()
         self._tree = view
-        self.root_items = tuple(root_items)
+        self.root_categories = tuple(root_items)
         self.base_currency = base_currency
 
     def rowCount(self, index: QModelIndex = ...) -> int:
@@ -33,7 +33,7 @@ class CategoryTreeModel(QAbstractItemModel):
                 return 0
             node: Category = index.internalPointer()
             return len(node.children)
-        return len(self.root_items)
+        return len(self.root_categories)
 
     def columnCount(self, index: QModelIndex = ...) -> int:  # noqa: U100
         return 3 if not index.isValid() or index.column() == 0 else 0
@@ -48,7 +48,7 @@ class CategoryTreeModel(QAbstractItemModel):
             parent: Category = _parent.internalPointer()
 
         if parent is None:
-            child = self.root_items[row]
+            child = self.root_categories[row]
         else:
             child = parent.children[row]
         if child:
@@ -65,7 +65,7 @@ class CategoryTreeModel(QAbstractItemModel):
             return QModelIndex()
         grandparent = parent.parent
         if grandparent is None:
-            parent_row = self.root_items.index(parent)
+            parent_row = self.root_categories.index(parent)
         else:
             parent_row = grandparent.children.index(parent)
         return QAbstractItemModel.createIndex(self, parent_row, 0, parent)
@@ -107,7 +107,7 @@ class CategoryTreeModel(QAbstractItemModel):
     def pre_add(self, parent: Category | None) -> None:
         parent_index = self.get_index_from_item(parent)
         if parent is None:
-            row_index = len(self.root_items)
+            row_index = len(self.root_categories)
         else:
             row_index = len(parent.children)
         self.beginInsertRows(parent_index, row_index, row_index)
@@ -139,8 +139,8 @@ class CategoryTreeModel(QAbstractItemModel):
         new_parent_index = self.get_index_from_item(new_parent)
         # Index must be limited to valid indexes
         if new_parent is None:
-            if new_index > len(self.root_items):
-                new_index = len(self.root_items)
+            if new_index > len(self.root_categories):
+                new_index = len(self.root_categories)
         else:
             if new_index > len(new_parent.children):
                 new_index = len(new_parent.children)
@@ -174,7 +174,7 @@ class CategoryTreeModel(QAbstractItemModel):
             return QModelIndex()
         parent = item.parent
         if parent is None:
-            row = self.root_items.index(item)
+            row = self.root_categories.index(item)
         else:
             row = parent.children.index(item)
         return QAbstractItemModel.createIndex(self, row, 0, item)

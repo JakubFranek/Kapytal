@@ -158,7 +158,7 @@ class MainView(QMainWindow, Ui_MainWindow):
         )
         self.actionQuit.setIcon(QIcon("icons_16:door-open-out.png"))
         self.actionSecurities.setIcon(QIcon("icons_16:certificate.png"))
-        self.actionCategories.setIcon(QIcon("icons_16:category.png"))
+        self.actionCategories.setIcon(QIcon("icons_custom:category.png"))
         self.actionTags.setIcon(QIcon("icons_16:tag.png"))
         self.actionPayees.setIcon(QIcon("icons_16:user-silhouette.png"))
         self.actionSettings.setIcon(QIcon("icons_16:gear.png"))

@@ -27,4 +27,4 @@ class CustomJSONDecoder(json.JSONDecoder):
                     return Attribute.deserialize(obj)
                 case _:
                     return obj
-        raise NotImplementedError
+        return obj

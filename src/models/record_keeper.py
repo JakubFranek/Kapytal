@@ -58,7 +58,9 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         self._securities: list[Security] = []
         self._payees: list[Attribute] = []
         self._categories: list[Category] = []
-        self._root_categories: list[Category] = []
+        self._root_income_categories: list[Category] = []
+        self._root_expense_categories: list[Category] = []
+        self._root_income_and_expense_categories: list[Category] = []
         self._tags: list[Attribute] = []
         self._transactions: list[Transaction] = []
         self._base_currency: Currency | None = None
@@ -100,8 +102,16 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         return tuple(self._categories)
 
     @property
-    def root_categories(self) -> tuple[Category, ...]:
-        return tuple(self._root_categories)
+    def root_income_categories(self) -> tuple[Category, ...]:
+        return tuple(self._root_income_categories)
+
+    @property
+    def root_expense_categories(self) -> tuple[Category, ...]:
+        return tuple(self._root_expense_categories)
+
+    @property
+    def root_income_and_expense_categories(self) -> tuple[Category, ...]:
+        return tuple(self._root_income_and_expense_categories)
 
     @property
     def tags(self) -> tuple[Attribute, ...]:
@@ -747,7 +757,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
 
         edited_category.name = name
         self._edit_category_parent(
-            item=edited_category, new_parent=new_parent, index=index
+            category=edited_category, new_parent=new_parent, index=index
         )
 
     def edit_attribute(
@@ -956,6 +966,8 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
 
     def remove_category(self, path: str) -> None:
         category = self.get_category(path)
+        if len(category.children) != 0:
+            raise InvalidOperationError("Cannot delete a Category with children.")
         if any(
             category in transaction.categories
             for transaction in self._transactions
@@ -967,7 +979,10 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
             )
         self._categories.remove(category)
         if category.parent is None:
-            self._root_categories.remove(category)
+            list_ref = self._get_root_category_list(category)
+            list_ref.remove(category)
+        else:
+            category.parent = None
         del category
 
     def remove_tag(self, name: str) -> None:
@@ -1152,6 +1167,16 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
             self._base_currency.code if self._base_currency is not None else None
         )
 
+        root_income_category_refs = []
+        for category in self._root_income_categories:
+            root_income_category_refs.append(category.path)
+        root_expense_category_refs = []
+        for category in self._root_expense_categories:
+            root_expense_category_refs.append(category.path)
+        root_income_and_expense_category_refs = []
+        for category in self._root_income_and_expense_categories:
+            root_income_and_expense_category_refs.append(category.path)
+
         return {
             "datatype": "RecordKeeper",
             "currencies": self._currencies,
@@ -1164,6 +1189,9 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
             "payees": self._payees,
             "tags": self._tags,
             "categories": sorted_categories,
+            "root_income_categories": root_income_category_refs,
+            "root_expense_categories": root_expense_category_refs,
+            "root_income_and_expense_categories": root_income_and_expense_category_refs,
             "transactions": self._transactions,
         }
 
@@ -1200,7 +1228,19 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
 
         obj._payees = data["payees"]
         obj._tags = data["tags"]
+
         obj._categories = RecordKeeper._deserialize_categories(data["categories"])
+        obj._root_income_categories = RecordKeeper._deserialize_root_categories(
+            data["root_income_categories"], obj._categories
+        )
+        obj._root_expense_categories = RecordKeeper._deserialize_root_categories(
+            data["root_expense_categories"], obj._categories
+        )
+        obj._root_income_and_expense_categories = (
+            RecordKeeper._deserialize_root_categories(
+                data["root_income_and_expense_categories"], obj._categories
+            )
+        )
 
         obj._transactions = RecordKeeper._deserialize_transactions(
             data["transactions"],
@@ -1278,10 +1318,12 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
                 for account_group in account_groups:
                     if account_group.path == item_dict["path"]:
                         root_items.append(account_group)
+                        break
             elif item_dict["datatype"] == "Account":
                 for account in accounts:
                     if str(account.uuid) == item_dict["uuid"]:
                         root_items.append(account)
+                        break
             else:
                 raise ValueError("Unexpected 'datatype' value.")
         return root_items
@@ -1295,6 +1337,19 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
             category = Category.deserialize(category_dict, categories)
             categories.append(category)
         return categories
+
+    @staticmethod
+    def _deserialize_root_categories(
+        root_category_paths: Collection[str],
+        categories: Collection[Category],
+    ) -> list[Category]:
+        root_categories = []
+        for path in root_category_paths:
+            for category in categories:
+                if category.path == path:
+                    root_categories.append(category)
+                    break
+        return root_categories
 
     @staticmethod
     def _deserialize_transactions(
@@ -1401,15 +1456,17 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         elif index is not None:
             parent.set_child_index(item, index)
 
-    def _set_category_index(self, item: Category, index: int | None) -> None:
-        parent = item.parent
+    def _set_category_index(self, category: Category, index: int | None) -> None:
+        parent = category.parent
         if parent is None:
+            list_ref = self._get_root_category_list(category)
+
             if index is not None:
-                self._root_categories.insert(index, item)
+                list_ref.insert(index, category)
             else:
-                self._root_categories.append(item)
+                list_ref.append(category)
         elif index is not None:
-            parent.set_child_index(item, index)
+            parent.set_child_index(category, index)
 
     def _edit_account_item_parent(
         self,
@@ -1434,21 +1491,30 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
 
     def _edit_category_parent(
         self,
-        item: Category,
+        category: Category,
         new_parent: Category | None,
         index: int | None,
     ) -> None:
-        current_parent = item.parent
+        current_parent = category.parent
         if current_parent != new_parent:
-            item.parent = new_parent
+            category.parent = new_parent
+            list_ref = self._get_root_category_list(category)
             if current_parent is None and new_parent is not None:
-                self._root_categories.remove(item)
+                list_ref.remove(category)
             if current_parent is not None and new_parent is None:
-                self._root_categories.append(item)
+                list_ref.append(category)
         if index is None:
             return
         if new_parent is None:
-            self._root_categories.remove(item)
-            self._root_categories.insert(index, item)
+            list_ref = self._get_root_category_list(category)
+            list_ref.remove(category)
+            list_ref.insert(index, category)
         else:
-            new_parent.set_child_index(item, index)
+            new_parent.set_child_index(category, index)
+
+    def _get_root_category_list(self, category: Category) -> list[Category]:
+        if category.type_ == CategoryType.INCOME:
+            return self._root_income_categories
+        if category.type_ == CategoryType.EXPENSE:
+            return self._root_expense_categories
+        return self._root_income_and_expense_categories

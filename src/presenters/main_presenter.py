@@ -159,6 +159,7 @@ class MainPresenter:
                 self._payee_form_presenter.load_record_keeper(record_keeper)
                 self._tag_form_presenter.load_record_keeper(record_keeper)
                 self._security_form_presenter.load_record_keeper(record_keeper)
+                self._category_form_presenter.load_record_keeper(record_keeper)
                 self._view.statusBar().showMessage(
                     f"File loaded: {self.current_file_path}", 3000
                 )

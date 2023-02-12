@@ -10,7 +10,6 @@ from src.views.constants import AccountTreeColumns
 
 class AccountTree(QTreeView):
     signal_selection_changed = pyqtSignal()
-    signal_context_menu = pyqtSignal()
     signal_expand_below = pyqtSignal()
     signal_delete_item = pyqtSignal()
     signal_add_account_group = pyqtSignal()
@@ -90,7 +89,7 @@ class AccountTree(QTreeView):
         logging.debug("Collapsing all AccountTree nodes")
         self.collapseAll()
 
-    def enable_accounts_tree_actions(
+    def enable_actions(
         self,
         enable_add_objects: bool,
         enable_modify_object: bool,

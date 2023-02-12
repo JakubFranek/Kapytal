@@ -441,7 +441,7 @@ class AccountTreePresenter:
         enable_add_objects = item is None or isinstance(item, AccountGroup)
         enable_expand_below = isinstance(item, AccountGroup)
 
-        self._view.enable_accounts_tree_actions(
+        self._view.enable_actions(
             enable_add_objects=enable_add_objects,
             enable_modify_object=enable_modify_object,
             enable_expand_below=enable_expand_below,

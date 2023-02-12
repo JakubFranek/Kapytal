@@ -26,9 +26,9 @@ class AttributeType(Enum):
 
 
 class CategoryType(Enum):
-    INCOME = auto()
-    EXPENSE = auto()
-    INCOME_AND_EXPENSE = auto()
+    INCOME = "Income"
+    EXPENSE = "Expense"
+    INCOME_AND_EXPENSE = "Income and Expense"
 
 
 class Attribute(NameMixin, JSONSerializableMixin):
