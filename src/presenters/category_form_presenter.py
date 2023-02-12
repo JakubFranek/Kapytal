@@ -1,6 +1,8 @@
 import copy
 import logging
 
+from PyQt6.QtCore import QSortFilterProxyModel, Qt
+
 from src.models.model_objects.attributes import Category, CategoryType
 from src.models.record_keeper import RecordKeeper
 from src.presenters.utilities.event import Event
@@ -16,12 +18,17 @@ class CategoryFormPresenter:
     def __init__(self, view: CategoryForm, record_keeper: RecordKeeper) -> None:
         self._view = view
         self._record_keeper = record_keeper
+        self._proxy_model = QSortFilterProxyModel(self._view.category_tree)
         self._model = CategoryTreeModel(
-            view=view.category_tree,
+            tree_view=view.category_tree,
             root_items=record_keeper.root_income_categories,
             base_currency=record_keeper.base_currency,
+            proxy=self._proxy_model,
         )
-        self._view.category_tree.setModel(self._model)
+        self._proxy_model.setSourceModel(self._model)
+        self._proxy_model.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+        self._proxy_model.setRecursiveFilteringEnabled(True)
+        self._view.category_tree.setModel(self._proxy_model)
 
         self._view.incomeRadioButton.setChecked(True)
 
@@ -214,6 +221,7 @@ class CategoryFormPresenter:
         self._view.signal_edit_category.connect(lambda: self.run_dialog(edit=True))
         self._view.signal_delete_category.connect(self.delete_category)
         self._view.signal_type_selection_changed.connect(self.reset_model)
+        self._view.signal_search_text_changed.connect(self._filter)
 
         self._tree_selection_changed()  # called to ensure context menu is OK at start
 
@@ -229,3 +237,8 @@ class CategoryFormPresenter:
             enable_modify_object=enable_modify_object,
             enable_expand_below=enable_expand_below,
         )
+
+    def _filter(self) -> None:
+        pattern = self._view.search_bar_text
+        logging.debug(f"Filtering Categories: {pattern=}")
+        self._proxy_model.setFilterWildcard(pattern)

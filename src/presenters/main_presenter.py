@@ -149,17 +149,14 @@ class MainPresenter:
             with open(file_path, mode="r", encoding="UTF-8") as file:
                 logging.debug(f"File path received: {file_path}")
                 backup_json_file(file_path, self.backup_directories)
+
                 logging.debug(f"Loading file: {file_path}")
                 logging.disable(logging.INFO)
                 record_keeper: RecordKeeper = json.load(file, cls=CustomJSONDecoder)
                 logging.disable(logging.NOTSET)
-                self._record_keeper = record_keeper
-                self._account_tree_presenter.load_record_keeper(record_keeper)
-                self._currency_form_presenter.load_record_keeper(record_keeper)
-                self._payee_form_presenter.load_record_keeper(record_keeper)
-                self._tag_form_presenter.load_record_keeper(record_keeper)
-                self._security_form_presenter.load_record_keeper(record_keeper)
-                self._category_form_presenter.load_record_keeper(record_keeper)
+
+                self._load_record_keeper(record_keeper)
+
                 self._view.statusBar().showMessage(
                     f"File loaded: {self.current_file_path}", 3000
                 )
@@ -204,3 +201,12 @@ class MainPresenter:
     def _update_unsaved_changes(self, unsaved_changes: bool) -> None:
         self._unsaved_changes = unsaved_changes
         self._view.set_save_status(self.current_file_path, self._unsaved_changes)
+
+    def _load_record_keeper(self, record_keeper: RecordKeeper) -> None:
+        self._record_keeper = record_keeper
+        self._account_tree_presenter.load_record_keeper(record_keeper)
+        self._currency_form_presenter.load_record_keeper(record_keeper)
+        self._payee_form_presenter.load_record_keeper(record_keeper)
+        self._tag_form_presenter.load_record_keeper(record_keeper)
+        self._security_form_presenter.load_record_keeper(record_keeper)
+        self._category_form_presenter.load_record_keeper(record_keeper)

@@ -17,8 +17,8 @@ class CategoryTree(QTreeView):
 
     def __init__(self, parent: QWidget | None = ...) -> None:
         super().__init__(parent)
+
         self.setObjectName("categoryTree")
-        self.header().setHighlightSections(True)
         self.header().setSortIndicatorShown(False)
         self.header().setStretchLastSection(True)
 

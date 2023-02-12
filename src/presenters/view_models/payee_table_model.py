@@ -14,7 +14,7 @@ class PayeeTableModel(QAbstractTableModel):
     COLUMN_HEADERS = {
         PayeeTableColumns.COLUMN_NAME: "Name",
         PayeeTableColumns.COLUMN_TRANSACTIONS: "Transactions",
-        PayeeTableColumns.COLUMN_BALANCE: "Total balance",
+        PayeeTableColumns.COLUMN_BALANCE: "Balance",
     }
 
     def __init__(

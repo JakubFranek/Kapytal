@@ -1,7 +1,8 @@
 import typing
+import unicodedata
 from collections.abc import Sequence
 
-from PyQt6.QtCore import QAbstractItemModel, QModelIndex, Qt
+from PyQt6.QtCore import QAbstractItemModel, QModelIndex, QSortFilterProxyModel, Qt
 from PyQt6.QtWidgets import QTreeView
 
 from src.models.model_objects.attributes import Category
@@ -13,19 +14,21 @@ class CategoryTreeModel(QAbstractItemModel):
     COLUMN_HEADERS = {
         CategoryTreeColumns.COLUMN_NAME: "Name",
         CategoryTreeColumns.COLUMN_TRANSACTIONS: "Transactions",
-        CategoryTreeColumns.COLUMN_BALANCE: "Total balance",
+        CategoryTreeColumns.COLUMN_BALANCE: "Balance",
     }
 
     def __init__(
         self,
-        view: QTreeView,
+        tree_view: QTreeView,
         root_items: Sequence[Category],
         base_currency: Currency,
+        proxy: QSortFilterProxyModel,
     ) -> None:
         super().__init__()
-        self._tree = view
+        self._tree_view = tree_view
         self.root_categories = tuple(root_items)
         self.base_currency = base_currency
+        self._proxy = proxy
 
     def rowCount(self, index: QModelIndex = ...) -> int:
         if index.isValid():
@@ -74,15 +77,19 @@ class CategoryTreeModel(QAbstractItemModel):
         if not index.isValid():
             return None
         column = index.column()
-        node: Category = index.internalPointer()
+        category: Category = index.internalPointer()
         if role == Qt.ItemDataRole.DisplayRole:
             if column == CategoryTreeColumns.COLUMN_NAME:
-                return node.name
+                return category.name
             if column == CategoryTreeColumns.COLUMN_TRANSACTIONS:
                 return "0"
             if column == CategoryTreeColumns.COLUMN_BALANCE:
                 return "0"
-
+        if (
+            role == Qt.ItemDataRole.UserRole
+            and column == CategoryTreeColumns.COLUMN_NAME
+        ):
+            return unicodedata.normalize("NFD", category.name)
         if role == Qt.ItemDataRole.TextAlignmentRole:
             if column == CategoryTreeColumns.COLUMN_TRANSACTIONS:
                 return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
@@ -158,16 +165,18 @@ class CategoryTreeModel(QAbstractItemModel):
         self.endMoveRows()
 
     def get_selected_item_index(self) -> QModelIndex:
-        indexes = self._tree.selectedIndexes()
-        if len(indexes) == 0:
+        proxy_indexes = self._tree_view.selectedIndexes()
+        source_indexes = [self._proxy.mapToSource(index) for index in proxy_indexes]
+        if len(source_indexes) == 0:
             return QModelIndex()
-        return indexes[0]
+        return source_indexes[0]
 
     def get_selected_item(self) -> Category | None:
-        indexes = self._tree.selectedIndexes()
-        if len(indexes) == 0:
+        proxy_indexes = self._tree_view.selectedIndexes()
+        source_indexes = [self._proxy.mapToSource(index) for index in proxy_indexes]
+        if len(source_indexes) == 0:
             return None
-        return indexes[0].internalPointer()
+        return source_indexes[0].internalPointer()
 
     def get_index_from_item(self, item: Category | None) -> QModelIndex:
         if item is None:

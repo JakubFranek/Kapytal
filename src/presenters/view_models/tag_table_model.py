@@ -14,7 +14,7 @@ class TagTableModel(QAbstractTableModel):
     COLUMN_HEADERS = {
         TagTableColumns.COLUMN_NAME: "Name",
         TagTableColumns.COLUMN_TRANSACTIONS: "Transactions",
-        TagTableColumns.COLUMN_BALANCE: "Total balance",
+        TagTableColumns.COLUMN_BALANCE: "Balance",
     }
 
     def __init__(
