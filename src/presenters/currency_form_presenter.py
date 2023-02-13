@@ -12,8 +12,7 @@ from src.views.dialogs.add_exchange_rate_dialog import AddExchangeRateDialog
 from src.views.dialogs.currency_dialog import CurrencyDialog
 from src.views.dialogs.set_exchange_rate_dialog import SetExchangeRateDialog
 from src.views.forms.currency_form import CurrencyForm
-
-# TODO: add are you sure message box when removing ExchangeRates
+from src.views.utilities.message_box_functions import ask_yes_no_question
 
 
 class CurrencyFormPresenter:
@@ -196,6 +195,18 @@ class CurrencyFormPresenter:
     def remove_exchange_rate(self) -> None:
         exchange_rate = self._exchange_rate_table_model.get_selected_item()
         if exchange_rate is None:
+            return
+
+        logging.debug(
+            "ExchangeRate deletion requested, asking the user for confirmation"
+        )
+        proceed_with_delete = ask_yes_no_question(
+            self._view,
+            question=f"Do you want to delete the {str(exchange_rate)} exchange rate?",
+            title="Are you sure?",
+        )
+        if not proceed_with_delete:
+            logging.debug("User cancelled the ExchangeRate deletion")
             return
 
         logging.info(f"Removing {repr(exchange_rate)}")
