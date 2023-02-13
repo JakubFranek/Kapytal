@@ -1,15 +1,14 @@
 import typing
 import unicodedata
-from collections.abc import Sequence
+from collections.abc import Collection, Sequence
 
 from PyQt6.QtCore import QAbstractItemModel, QModelIndex, QSortFilterProxyModel, Qt
 from PyQt6.QtWidgets import QTreeView
 
 from src.models.model_objects.attributes import Category
 from src.models.model_objects.currency_objects import Currency
+from src.models.utilities.calculation import CategoryStats
 from src.views.constants import CategoryTreeColumns
-
-# TODO: add transaction/balance logic
 
 
 class CategoryTreeModel(QAbstractItemModel):
@@ -23,12 +22,14 @@ class CategoryTreeModel(QAbstractItemModel):
         self,
         tree_view: QTreeView,
         root_items: Sequence[Category],
+        category_stats: Collection[CategoryStats],
         base_currency: Currency,
         proxy: QSortFilterProxyModel,
     ) -> None:
         super().__init__()
         self._tree_view = tree_view
         self.root_categories = tuple(root_items)
+        self.category_stats = tuple(category_stats)
         self.base_currency = base_currency
         self._proxy = proxy
 
@@ -83,13 +84,16 @@ class CategoryTreeModel(QAbstractItemModel):
             return None
         column = index.column()
         category: Category = index.internalPointer()
+        stats = self._get_category_stats(category)
         if role == Qt.ItemDataRole.DisplayRole:
             if column == CategoryTreeColumns.COLUMN_NAME:
                 return category.name
             if column == CategoryTreeColumns.COLUMN_TRANSACTIONS:
-                return "0"
+                if len(category.children) == 0:
+                    return f"{stats.transactions_total}"
+                return f"{stats.transactions_total} ({stats.transactions_self})"
             if column == CategoryTreeColumns.COLUMN_BALANCE:
-                return "0"
+                return str(stats.balance.convert(self.base_currency))
         if (
             role == Qt.ItemDataRole.UserRole
             and column == CategoryTreeColumns.COLUMN_NAME
@@ -192,3 +196,9 @@ class CategoryTreeModel(QAbstractItemModel):
         else:
             row = parent.children.index(item)
         return QAbstractItemModel.createIndex(self, row, 0, item)
+
+    def _get_category_stats(self, category: Category) -> CategoryStats:
+        for stats in self.category_stats:
+            if stats.category == category:
+                return stats
+        raise ValueError("No CategoryStats found for given Category.")

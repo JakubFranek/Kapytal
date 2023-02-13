@@ -1,4 +1,5 @@
 import logging
+import operator
 import uuid
 from abc import ABC, abstractmethod
 from collections.abc import Collection
@@ -402,6 +403,46 @@ class CashTransaction(CashRelatedTransaction):
 
     def is_account_related(self, account: Account) -> bool:
         return self.account == account
+
+    def is_category_related(self, category: Category) -> bool:
+        direct_match = category in self.categories
+        indirect_match = any(
+            category.parent == category for category in self.categories
+        )
+        return direct_match or indirect_match
+
+    def get_amount_for_category(self, category: Category, total: bool) -> CashAmount:
+        running_sum = CashAmount(0, self.currency)
+
+        if not self.is_category_related(category):
+            return running_sum
+
+        func = (
+            operator.add if self.type_ == CashTransactionType.INCOME else operator.sub
+        )
+
+        for _category, _amount in self._category_amount_pairs:
+            if _category == category:
+                running_sum = func(running_sum, _amount)
+                continue
+            if total and _category.parent == category:
+                running_sum = func(running_sum, _amount)
+        return running_sum
+
+    def get_amount_for_tag(self, tag: Attribute) -> CashAmount:
+        running_sum = CashAmount(0, self.currency)
+
+        if tag not in self.tags:
+            return running_sum
+
+        func = (
+            operator.add if self.type_ == CashTransactionType.INCOME else operator.sub
+        )
+
+        for _tag, _amount in self._tag_amount_pairs:
+            if _tag == tag:
+                running_sum = func(running_sum, _amount)
+        return running_sum
 
     def prepare_for_deletion(self) -> None:
         if self.is_refunded:
@@ -1011,6 +1052,38 @@ class RefundTransaction(CashRelatedTransaction):
 
     def is_account_related(self, account: "Account") -> bool:
         return self.account == account
+
+    def is_category_related(self, category: Category) -> bool:
+        direct_match = category in self.categories
+        indirect_match = any(
+            category.parent == category for category in self.categories
+        )
+        return direct_match or indirect_match
+
+    def get_amount_for_category(self, category: Category, total: bool) -> CashAmount:
+        running_sum = CashAmount(0, self.currency)
+
+        if not self.is_category_related(category):
+            return running_sum
+
+        for _category, _amount in self._category_amount_pairs:
+            if _category == category:
+                running_sum += _amount
+                continue
+            if total and _category.parent == category:
+                running_sum += _amount
+        return running_sum
+
+    def get_amount_for_tag(self, tag: Attribute) -> CashAmount:
+        running_sum = CashAmount(0, self.currency)
+
+        if tag not in self.tags:
+            return running_sum
+
+        for _tag, _amount in self._tag_amount_pairs:
+            if _tag == tag:
+                running_sum += _amount
+        return running_sum
 
     def prepare_for_deletion(self) -> None:
         self._refunded_transaction.remove_refund(self)

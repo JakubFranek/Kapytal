@@ -5,6 +5,7 @@ from PyQt6.QtCore import QSortFilterProxyModel, Qt
 
 from src.models.model_objects.attributes import Category, CategoryType
 from src.models.record_keeper import RecordKeeper
+from src.models.utilities.calculation import CategoryStats, get_category_stats
 from src.presenters.utilities.event import Event
 from src.presenters.utilities.handle_exception import handle_exception
 from src.presenters.view_models.category_tree_model import CategoryTreeModel
@@ -24,9 +25,11 @@ class CategoryFormPresenter:
         self._model = CategoryTreeModel(
             tree_view=view.category_tree,
             root_items=record_keeper.root_income_categories,
+            category_stats=[],
             base_currency=record_keeper.base_currency,
             proxy=self._proxy_model,
         )
+
         self._proxy_model.setSourceModel(self._model)
         self._proxy_model.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
         self._proxy_model.setRecursiveFilteringEnabled(True)
@@ -36,6 +39,7 @@ class CategoryFormPresenter:
 
         self._setup_signals()
         self._view.finalize_setup()
+        self.update_model_data()
 
     def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
         self._record_keeper = record_keeper
@@ -52,6 +56,17 @@ class CategoryFormPresenter:
                 self._record_keeper.root_income_and_expense_categories
             )
         self._model.base_currency = self._record_keeper.base_currency
+
+        category_stats: list[CategoryStats] = []
+        for category in self._record_keeper.categories:
+            category_stats.append(
+                get_category_stats(
+                    category,
+                    self._record_keeper.transactions,
+                    self._record_keeper.base_currency,
+                )
+            )
+        self._model.category_stats = tuple(category_stats)
 
     def reset_model(self) -> None:
         self._model.pre_reset_model()
@@ -95,7 +110,7 @@ class CategoryFormPresenter:
             self._dialog.path = item.path
             self._dialog.current_path = item.path
             if item.parent is None:
-                index = self._model.root_categories.index(item)
+                index = self._model.category_stats.index(item)
             else:
                 index = item.parent.get_child_index(item)
             self._dialog.position = index + 1
@@ -204,13 +219,13 @@ class CategoryFormPresenter:
         if isinstance(item, Category):
             return len(item.children) + 1
         if item is None:
-            return len(self._model.root_categories) + 1
+            return len(self._model.category_stats) + 1
         raise ValueError("Invalid selection.")
 
     def _get_max_parent_position(self, item: Category) -> int:
         parent = item.parent
         if parent is None:
-            return len(self._model.root_categories)
+            return len(self._model.category_stats)
         return len(parent.children)
 
     def _get_current_index(self, item: Category | None) -> int:
@@ -218,7 +233,7 @@ class CategoryFormPresenter:
             raise NotImplementedError
         parent = item.parent
         if parent is None:
-            return self._model.root_categories.index(item)
+            return self._model.category_stats.index(item)
         return parent.children.index(item)
 
     def _setup_signals(self) -> None:
