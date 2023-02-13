@@ -20,7 +20,7 @@ class CategoryTree(QTreeView):
 
         self.setObjectName("categoryTree")
         self.header().setSortIndicatorShown(False)
-        self.header().setStretchLastSection(True)
+        self.header().setStretchLastSection(False)
 
         self.actionAdd_Category = QtGui.QAction(self)
         self.actionAdd_Category.setText("Add Category")
@@ -87,6 +87,10 @@ class CategoryTree(QTreeView):
         self.header().setSectionResizeMode(
             CategoryTreeColumns.COLUMN_TRANSACTIONS,
             QHeaderView.ResizeMode.ResizeToContents,
+        )
+        self.header().setSectionResizeMode(
+            CategoryTreeColumns.COLUMN_BALANCE,
+            QHeaderView.ResizeMode.Stretch,
         )
 
         self.selectionModel().selectionChanged.connect(

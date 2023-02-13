@@ -56,6 +56,7 @@ class CurrencyForm(QWidget, Ui_CurrencyForm):
         self.currencyTable.viewport().update()
 
     def finalize_setup(self) -> None:
+        self.exchangeRateTable.horizontalHeader().setStretchLastSection(False)
         self.exchangeRateTable.horizontalHeader().setSectionResizeMode(
             ExchangeRateTableColumns.COLUMN_CODE,
             QHeaderView.ResizeMode.ResizeToContents,
@@ -64,6 +65,23 @@ class CurrencyForm(QWidget, Ui_CurrencyForm):
             ExchangeRateTableColumns.COLUMN_RATE,
             QHeaderView.ResizeMode.ResizeToContents,
         )
+        self.exchangeRateTable.horizontalHeader().setSectionResizeMode(
+            ExchangeRateTableColumns.COLUMN_LAST_DATE,
+            QHeaderView.ResizeMode.Stretch,
+        )
+
+        style = self.style()
+        lastSectionText = self.exchangeRateTable.model().headerData(
+            ExchangeRateTableColumns.COLUMN_LAST_DATE,
+            Qt.Orientation.Horizontal,
+            Qt.ItemDataRole.DisplayRole,
+        )
+        self.exchangeRateTable.horizontalHeader().setMinimumSectionSize(
+            style.pixelMetric(style.PixelMetric.PM_HeaderMarkSize)
+            + style.pixelMetric(style.PixelMetric.PM_HeaderGripMargin) * 2
+            + self.fontMetrics().horizontalAdvance(lastSectionText)
+        )
+
         self.exchangeRateTable.selectionModel().selectionChanged.connect(
             self.signal_exchange_rate_selection_changed.emit
         )

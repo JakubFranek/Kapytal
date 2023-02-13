@@ -167,6 +167,7 @@ class Ui_MainWindow(object):
         self.menuFile.addAction(self.actionQuit)
         self.menuEdit.addAction(self.actionCurrencies_and_Exchange_Rates)
         self.menuEdit.addAction(self.actionSecurities)
+        self.menuEdit.addSeparator()
         self.menuEdit.addAction(self.actionPayees)
         self.menuEdit.addAction(self.actionCategories)
         self.menuEdit.addAction(self.actionTags)

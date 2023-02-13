@@ -66,6 +66,8 @@ class CurrencyTableModel(QAbstractTableModel):
             if orientation == Qt.Orientation.Horizontal:
                 return self.COLUMN_HEADERS[section]
             return str(section)
+        if role == Qt.ItemDataRole.TextAlignmentRole:
+            return Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
         return None
 
     def pre_add(self) -> None:

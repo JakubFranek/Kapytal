@@ -13,7 +13,7 @@ class Ui_SecurityForm(object):
     def setupUi(self, SecurityForm):
         SecurityForm.setObjectName("SecurityForm")
         SecurityForm.setWindowModality(QtCore.Qt.WindowModality.WindowModal)
-        SecurityForm.resize(700, 360)
+        SecurityForm.resize(725, 360)
         SecurityForm.setLocale(QtCore.QLocale(QtCore.QLocale.Language.English, QtCore.QLocale.Country.UnitedKingdom))
         self.horizontalLayout = QtWidgets.QHBoxLayout(SecurityForm)
         self.horizontalLayout.setObjectName("horizontalLayout")

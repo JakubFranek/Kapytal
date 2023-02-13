@@ -9,6 +9,8 @@ from src.models.model_objects.attributes import Category
 from src.models.model_objects.currency_objects import Currency
 from src.views.constants import CategoryTreeColumns
 
+# TODO: add transaction/balance logic
+
 
 class CategoryTreeModel(QAbstractItemModel):
     COLUMN_HEADERS = {
@@ -43,6 +45,9 @@ class CategoryTreeModel(QAbstractItemModel):
 
     def index(self, row: int, column: int, _parent: QModelIndex = ...) -> QModelIndex:
         if _parent.isValid() and _parent.column() != 0:
+            return QModelIndex()
+
+        if not QAbstractItemModel.hasIndex(self, row, column, _parent):
             return QModelIndex()
 
         if not _parent or not _parent.isValid():

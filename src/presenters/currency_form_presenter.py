@@ -13,6 +13,8 @@ from src.views.dialogs.currency_dialog import CurrencyDialog
 from src.views.dialogs.set_exchange_rate_dialog import SetExchangeRateDialog
 from src.views.forms.currency_form import CurrencyForm
 
+# TODO: add are you sure message box when removing ExchangeRates
+
 
 class CurrencyFormPresenter:
     event_data_changed = Event()

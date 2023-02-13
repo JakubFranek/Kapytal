@@ -142,6 +142,8 @@ class AccountTreePresenter:
             )
             self._dialog.signal_OK.connect(self.add_account_group)
 
+    # TODO: investigate why copying is not needed here
+    # adding AG to an AG should lead to wrong indexing in pre_add
     def add_account_group(self) -> None:
         path = self._dialog.path
         index = self._dialog.position - 1
@@ -154,8 +156,7 @@ class AccountTreePresenter:
             return
 
         item = self._model.get_selected_item()
-        parent = item.parent if item is not None else None
-        self._model.pre_add(parent)
+        self._model.pre_add(item)
         self.update_model_data()
         self._model.post_add()
         self._dialog.close()
@@ -238,8 +239,7 @@ class AccountTreePresenter:
             return
 
         item = self._model.get_selected_item()
-        parent = item.parent if item is not None else None
-        self._model.pre_add(parent)
+        self._model.pre_add(item)
         self.update_model_data()
         self._model.post_add()
         self._dialog.close()
@@ -333,8 +333,7 @@ class AccountTreePresenter:
             return
 
         item = self._model.get_selected_item()
-        parent = item.parent if item is not None else None
-        self._model.pre_add(parent)
+        self._model.pre_add(item)
         self.update_model_data()
         self._model.post_add()
         self._dialog.close()

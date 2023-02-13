@@ -11,6 +11,8 @@ from src.presenters.view_models.category_tree_model import CategoryTreeModel
 from src.views.dialogs.category_dialog import CategoryDialog
 from src.views.forms.category_form import CategoryForm
 
+# BUG: there is something broken when adding and/or moving Categories...
+
 
 class CategoryFormPresenter:
     event_data_changed = Event()
@@ -110,16 +112,21 @@ class CategoryFormPresenter:
         type_ = CategoryType(self._dialog.type_)
         index = self._dialog.position - 1
 
-        logging.info("Adding Category")
+        logging.info(f"Adding Category('{path}', {type_.name}, {index=})")
+        record_keeper_copy = copy.deepcopy(self._record_keeper)
         try:
-            self._record_keeper.add_category(path, type_, index)
+            logging.disable(logging.INFO)
+            record_keeper_copy.add_category(path, type_, index)
+            logging.disable(logging.NOTSET)
         except Exception:
             handle_exception()
             return
 
         item = self._model.get_selected_item()
-        parent = item.parent if item is not None else None
-        self._model.pre_add(parent)
+        self._model.pre_add(item)
+        logging.disable(logging.INFO)
+        self._record_keeper.add_category(path, type_, index)
+        logging.disable(logging.NOTSET)
         self.update_model_data()
         self._model.post_add()
         self._dialog.close()

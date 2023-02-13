@@ -62,6 +62,7 @@ class SecurityForm(QWidget, Ui_SecurityForm):
         self.selectButton.setEnabled(is_security_selected)
 
     def finalize_setup(self) -> None:
+        self.tableView.horizontalHeader().setStretchLastSection(False)
         self.tableView.horizontalHeader().setSectionResizeMode(
             SecurityTableColumns.COLUMN_NAME,
             QHeaderView.ResizeMode.ResizeToContents,
@@ -78,6 +79,23 @@ class SecurityForm(QWidget, Ui_SecurityForm):
             SecurityTableColumns.COLUMN_PRICE,
             QHeaderView.ResizeMode.ResizeToContents,
         )
+        self.tableView.horizontalHeader().setSectionResizeMode(
+            SecurityTableColumns.COLUMN_LAST_DATE,
+            QHeaderView.ResizeMode.Stretch,
+        )
+
+        style = self.style()
+        lastSectionText = self.tableView.model().headerData(
+            SecurityTableColumns.COLUMN_LAST_DATE,
+            Qt.Orientation.Horizontal,
+            Qt.ItemDataRole.DisplayRole,
+        )
+        self.tableView.horizontalHeader().setMinimumSectionSize(
+            style.pixelMetric(style.PixelMetric.PM_HeaderMarkSize)
+            + style.pixelMetric(style.PixelMetric.PM_HeaderGripMargin) * 2
+            + self.fontMetrics().horizontalAdvance(lastSectionText)
+        )
+
         self.tableView.selectionModel().selectionChanged.connect(
             self.signal_selection_changed.emit
         )

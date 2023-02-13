@@ -63,11 +63,11 @@ class TagTableModel(QAbstractTableModel):
                 return str(payee_stats.balance)
         if role == Qt.ItemDataRole.UserRole and column == TagTableColumns.COLUMN_NAME:
             return unicodedata.normalize("NFD", payee_stats.attribute.name)
-        if role == Qt.ItemDataRole.TextAlignmentRole:
-            if column == TagTableColumns.COLUMN_TRANSACTIONS:
-                return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
-            if column == TagTableColumns.COLUMN_BALANCE:
-                return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+        if role == Qt.ItemDataRole.TextAlignmentRole and (
+            column == TagTableColumns.COLUMN_TRANSACTIONS
+            or column == TagTableColumns.COLUMN_BALANCE
+        ):
+            return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
         return None
 
     def headerData(
@@ -77,6 +77,11 @@ class TagTableModel(QAbstractTableModel):
             if orientation == Qt.Orientation.Horizontal:
                 return self.COLUMN_HEADERS[section]
             return str(section)
+        if role == Qt.ItemDataRole.TextAlignmentRole and (
+            section == TagTableColumns.COLUMN_TRANSACTIONS
+            or section == TagTableColumns.COLUMN_BALANCE
+        ):
+            return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
         return None
 
     def pre_add(self) -> None:

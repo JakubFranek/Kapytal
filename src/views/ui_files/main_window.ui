@@ -235,6 +235,7 @@
     </property>
     <addaction name="actionCurrencies_and_Exchange_Rates"/>
     <addaction name="actionSecurities"/>
+    <addaction name="separator"/>
     <addaction name="actionPayees"/>
     <addaction name="actionCategories"/>
     <addaction name="actionTags"/>

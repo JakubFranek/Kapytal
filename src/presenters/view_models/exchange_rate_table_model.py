@@ -70,6 +70,11 @@ class ExchangeRateTableModel(QAbstractTableModel):
             if orientation == Qt.Orientation.Horizontal:
                 return self.COLUMN_HEADERS[section]
             return str(section)
+        if role == Qt.ItemDataRole.TextAlignmentRole and (
+            section == ExchangeRateTableColumns.COLUMN_LAST_DATE
+            or section == ExchangeRateTableColumns.COLUMN_CODE
+        ):
+            return Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
         return None
 
     def pre_add(self) -> None:

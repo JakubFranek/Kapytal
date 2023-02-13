@@ -64,6 +64,7 @@ class Category(NameMixin, JSONSerializableMixin):
 
         if not isinstance(type_, CategoryType):
             raise TypeError("Category.type_ must be a CategoryType.")
+        logging.info(f"Setting type_ to {type_.name}")
         self._type = type_
 
         self.parent = parent
@@ -114,7 +115,7 @@ class Category(NameMixin, JSONSerializableMixin):
         return self.parent.path + "/" + self.name
 
     def __repr__(self) -> str:
-        return f"Category(path='{self.path}', {self.type_.name})"
+        return f"Category('{self.path}', {self.type_.name})"
 
     def _add_child(self, child: Self) -> None:
         max_index = max(sorted(self._children.keys()), default=-1)

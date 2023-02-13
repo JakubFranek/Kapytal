@@ -58,6 +58,7 @@ class TagForm(QWidget, Ui_TagForm):
         self.selectButton.setEnabled(is_tag_selected)
 
     def finalize_setup(self) -> None:
+        self.tableView.horizontalHeader().setStretchLastSection(False)
         self.tableView.horizontalHeader().setSectionResizeMode(
             TagTableColumns.COLUMN_NAME,
             QHeaderView.ResizeMode.ResizeToContents,
@@ -66,6 +67,23 @@ class TagForm(QWidget, Ui_TagForm):
             TagTableColumns.COLUMN_TRANSACTIONS,
             QHeaderView.ResizeMode.ResizeToContents,
         )
+        self.tableView.horizontalHeader().setSectionResizeMode(
+            TagTableColumns.COLUMN_BALANCE,
+            QHeaderView.ResizeMode.Stretch,
+        )
+
+        style = self.style()
+        lastSectionText = self.tableView.model().headerData(
+            TagTableColumns.COLUMN_BALANCE,
+            Qt.Orientation.Horizontal,
+            Qt.ItemDataRole.DisplayRole,
+        )
+        self.tableView.horizontalHeader().setMinimumSectionSize(
+            style.pixelMetric(style.PixelMetric.PM_HeaderMarkSize)
+            + style.pixelMetric(style.PixelMetric.PM_HeaderGripMargin) * 2
+            + self.fontMetrics().horizontalAdvance(lastSectionText)
+        )
+
         self.tableView.selectionModel().selectionChanged.connect(
             self.signal_selection_changed.emit
         )
