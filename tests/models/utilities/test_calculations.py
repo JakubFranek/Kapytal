@@ -11,14 +11,22 @@ from src.models.model_objects.cash_objects import (
     CashAccount,
     CashTransaction,
     CashTransactionType,
+    RefundTransaction,
 )
 from src.models.model_objects.currency_objects import CashAmount, Currency
-from src.models.utilities.calculation import get_attribute_stats
+from src.models.utilities.calculation import (
+    get_category_stats,
+    get_payee_stats,
+    get_tag_stats,
+)
 
 payee = Attribute("Payee 1", AttributeType.PAYEE)
 payee_dummy = Attribute("Dummy", AttributeType.PAYEE)
-category_expense = Category("Cat 1", CategoryType.EXPENSE)
-category_income = Category("Cat 1", CategoryType.INCOME)
+category_expense = Category("Cat Income", CategoryType.EXPENSE)
+category_expense_child = Category(
+    "Expense child", CategoryType.EXPENSE, category_expense
+)
+category_income = Category("Cat Expense", CategoryType.INCOME)
 tag = Attribute("Tag 1", AttributeType.TAG)
 tag_dummy = Attribute("Dummy", AttributeType.TAG)
 currency = Currency("CZK", 2)
@@ -27,14 +35,14 @@ account = CashAccount("Account", currency, CashAmount(0, currency))
 
 def test_calculate_attribute_stats() -> None:
     transactions = get_transactions()
-    payee_stats = get_attribute_stats(
+    payee_stats = get_payee_stats(
         payee,
         transactions,
         currency,
         date_start=datetime.now(tzinfo).date() - timedelta(days=1),
         date_end=datetime.now(tzinfo).date() + timedelta(days=1),
     )
-    tag_stats = get_attribute_stats(
+    tag_stats = get_tag_stats(
         tag,
         transactions,
         currency,
@@ -42,11 +50,39 @@ def test_calculate_attribute_stats() -> None:
         date_end=datetime.now(tzinfo).date() + timedelta(days=1),
     )
     assert payee_stats.attribute == payee
-    assert payee_stats.no_of_transactions == 4
-    assert payee_stats.balance.value_rounded == -1 - 2 + 3 + 5
+    assert payee_stats.no_of_transactions == 5
+    assert payee_stats.balance.value_rounded == -1 - 2 + 3 + 5 + 1
     assert tag_stats.attribute == tag
-    assert tag_stats.no_of_transactions == 4
-    assert tag_stats.balance.value_rounded == -1 - 2 + 3 + 4
+    assert tag_stats.no_of_transactions == 5
+    assert tag_stats.balance.value_rounded == -1 - 2 + 3 - 4 + 1
+
+
+def test_calculate_category_stats() -> None:
+    transactions = get_transactions()
+    category_stats = get_category_stats(
+        category_expense,
+        transactions,
+        currency,
+        date_start=datetime.now(tzinfo).date() - timedelta(days=1),
+        date_end=datetime.now(tzinfo).date() + timedelta(days=1),
+    )
+    category_child_stats = get_category_stats(
+        category_expense_child,
+        transactions,
+        currency,
+        date_start=datetime.now(tzinfo).date() - timedelta(days=1),
+        date_end=datetime.now(tzinfo).date() + timedelta(days=1),
+    )
+
+    assert category_stats.category == category_expense
+    assert category_stats.transactions_self == 3
+    assert category_stats.transactions_total == 4
+    assert category_stats.balance.value_rounded == -1 - 2 - 4 - 4 + 1
+
+    assert category_child_stats.category == category_expense_child
+    assert category_child_stats.transactions_self == 2
+    assert category_child_stats.transactions_total == 2
+    assert category_child_stats.balance.value_rounded == -2 - 4
 
 
 def get_transactions() -> list[CashTransaction]:
@@ -69,7 +105,7 @@ def get_transactions() -> list[CashTransaction]:
             type_=CashTransactionType.EXPENSE,
             account=account,
             payee=payee,
-            category_amount_pairs=[(category_expense, CashAmount(2, currency))],
+            category_amount_pairs=[(category_expense_child, CashAmount(2, currency))],
             tag_amount_pairs=[(tag, CashAmount(2, currency))],
         )
     )
@@ -88,10 +124,13 @@ def get_transactions() -> list[CashTransaction]:
         CashTransaction(
             description="",
             datetime_=datetime.now(tzinfo),
-            type_=CashTransactionType.INCOME,
+            type_=CashTransactionType.EXPENSE,
             account=account,
             payee=payee_dummy,
-            category_amount_pairs=[(category_income, CashAmount(4, currency))],
+            category_amount_pairs=[
+                (category_expense, CashAmount(4, currency)),
+                (category_expense_child, CashAmount(4, currency)),
+            ],
             tag_amount_pairs=[(tag, CashAmount(4, currency))],
         )
     )
@@ -126,6 +165,17 @@ def get_transactions() -> list[CashTransaction]:
             payee=payee,
             category_amount_pairs=[(category_income, CashAmount(7, currency))],
             tag_amount_pairs=[(tag, CashAmount(7, currency))],
+        )
+    )
+    transactions.append(
+        RefundTransaction(
+            description="",
+            datetime_=datetime.now(tzinfo),
+            account=account,
+            refunded_transaction=transactions[0],
+            payee=payee,
+            category_amount_pairs=[(category_expense, CashAmount(1, currency))],
+            tag_amount_pairs=[(tag, CashAmount(1, currency))],
         )
     )
     return transactions

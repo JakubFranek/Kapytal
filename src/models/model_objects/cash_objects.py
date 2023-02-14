@@ -405,44 +405,13 @@ class CashTransaction(CashRelatedTransaction):
         return self.account == account
 
     def is_category_related(self, category: Category) -> bool:
-        direct_match = category in self.categories
-        indirect_match = any(
-            category.parent == category for category in self.categories
-        )
-        return direct_match or indirect_match
+        return _is_category_related(self, category)
 
     def get_amount_for_category(self, category: Category, total: bool) -> CashAmount:
-        running_sum = CashAmount(0, self.currency)
-
-        if not self.is_category_related(category):
-            return running_sum
-
-        func = (
-            operator.add if self.type_ == CashTransactionType.INCOME else operator.sub
-        )
-
-        for _category, _amount in self._category_amount_pairs:
-            if _category == category:
-                running_sum = func(running_sum, _amount)
-                continue
-            if total and _category.parent == category:
-                running_sum = func(running_sum, _amount)
-        return running_sum
+        return _get_amount_for_category(self, category, total)
 
     def get_amount_for_tag(self, tag: Attribute) -> CashAmount:
-        running_sum = CashAmount(0, self.currency)
-
-        if tag not in self.tags:
-            return running_sum
-
-        func = (
-            operator.add if self.type_ == CashTransactionType.INCOME else operator.sub
-        )
-
-        for _tag, _amount in self._tag_amount_pairs:
-            if _tag == tag:
-                running_sum = func(running_sum, _amount)
-        return running_sum
+        return _get_amount_for_tag(self, tag)
 
     def prepare_for_deletion(self) -> None:
         if self.is_refunded:
@@ -685,7 +654,7 @@ class CashTransaction(CashRelatedTransaction):
         max_tag_amount: CashAmount,
         currency: Currency,
     ) -> None:
-        validate_collection_of_tuple_pairs(
+        _validate_collection_of_tuple_pairs(
             collection=tag_amount_pairs,
             first_type=Attribute,
             second_type=CashAmount,
@@ -1054,36 +1023,13 @@ class RefundTransaction(CashRelatedTransaction):
         return self.account == account
 
     def is_category_related(self, category: Category) -> bool:
-        direct_match = category in self.categories
-        indirect_match = any(
-            category.parent == category for category in self.categories
-        )
-        return direct_match or indirect_match
+        return _is_category_related(self, category)
 
     def get_amount_for_category(self, category: Category, total: bool) -> CashAmount:
-        running_sum = CashAmount(0, self.currency)
-
-        if not self.is_category_related(category):
-            return running_sum
-
-        for _category, _amount in self._category_amount_pairs:
-            if _category == category:
-                running_sum += _amount
-                continue
-            if total and _category.parent == category:
-                running_sum += _amount
-        return running_sum
+        return _get_amount_for_category(self, category, total)
 
     def get_amount_for_tag(self, tag: Attribute) -> CashAmount:
-        running_sum = CashAmount(0, self.currency)
-
-        if tag not in self.tags:
-            return running_sum
-
-        for _tag, _amount in self._tag_amount_pairs:
-            if _tag == tag:
-                running_sum += _amount
-        return running_sum
+        return _get_amount_for_tag(self, tag)
 
     def prepare_for_deletion(self) -> None:
         self._refunded_transaction.remove_refund(self)
@@ -1315,7 +1261,7 @@ class RefundTransaction(CashRelatedTransaction):
         currency: Currency,
     ) -> None:
         no_of_categories = len(refunded_transaction.category_amount_pairs)
-        validate_collection_of_tuple_pairs(
+        _validate_collection_of_tuple_pairs(
             pairs, Category, CashAmount, no_of_categories
         )
         valid_categories = [
@@ -1361,7 +1307,7 @@ class RefundTransaction(CashRelatedTransaction):
     ) -> None:
         expected_tags = {tag for tag, _ in refunded_transaction.tag_amount_pairs}
         no_of_tags = len(expected_tags)
-        validate_collection_of_tuple_pairs(pairs, Attribute, CashAmount, no_of_tags)
+        _validate_collection_of_tuple_pairs(pairs, Attribute, CashAmount, no_of_tags)
 
         if not all(attribute.type_ == AttributeType.TAG for attribute, _ in pairs):
             raise InvalidAttributeError(
@@ -1414,7 +1360,7 @@ def _validate_payee(payee: Attribute) -> None:
         raise ValueError("The type_ of payee Attribute must be PAYEE.")
 
 
-def validate_collection_of_tuple_pairs(
+def _validate_collection_of_tuple_pairs(
     collection: Collection[tuple[Any, Any]],
     first_type: type,
     second_type: type,
@@ -1441,3 +1387,58 @@ def validate_collection_of_tuple_pairs(
             "Second element of 'collection' tuples must be of type "
             f"{second_type.__name__}."
         )
+
+
+def _is_category_related(
+    transaction: CashTransaction | RefundTransaction, category: Category
+) -> bool:
+    direct_match = category in transaction.categories
+    indirect_match = any(
+        _category.parent == category for _category in transaction.categories
+    )
+    return direct_match or indirect_match
+
+
+def _get_amount_for_category(
+    transaction: CashTransaction | RefundTransaction, category: Category, total: bool
+) -> CashAmount:
+    running_sum = CashAmount(0, transaction.currency)
+
+    if not transaction.is_category_related(category):
+        return running_sum
+
+    func = (
+        operator.add
+        if isinstance(transaction, RefundTransaction)
+        or transaction.type_ == CashTransactionType.INCOME
+        else operator.sub
+    )
+
+    for _category, _amount in transaction._category_amount_pairs:
+        if _category == category:
+            running_sum = func(running_sum, _amount)
+            continue
+        if total and _category.parent == category:
+            running_sum = func(running_sum, _amount)
+    return running_sum
+
+
+def _get_amount_for_tag(
+    transaction: CashTransaction | RefundTransaction, tag: Attribute
+) -> CashAmount:
+    running_sum = CashAmount(0, transaction.currency)
+
+    if tag not in transaction.tags:
+        return running_sum
+
+    func = (
+        operator.add
+        if isinstance(transaction, RefundTransaction)
+        or transaction.type_ == CashTransactionType.INCOME
+        else operator.sub
+    )
+
+    for _tag, _amount in transaction._tag_amount_pairs:
+        if _tag == tag:
+            running_sum = func(running_sum, _amount)
+    return running_sum

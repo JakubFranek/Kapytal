@@ -33,6 +33,7 @@ from tests.models.test_assets.composites import (
     cash_accounts,
     cash_amounts,
     cash_transactions,
+    categories,
     category_amount_pairs,
     currencies,
     everything_except,
@@ -593,3 +594,21 @@ def test_add_remove_tags(transaction: CashTransaction, tags: list[Attribute]) ->
         assert tag in transaction.tags
         transaction.remove_tags([tag])
         assert tag not in transaction.tags
+
+
+@given(transaction=cash_transactions(), category=categories(), total=st.booleans())
+def test_get_amount_for_category_not_related(
+    transaction: CashTransaction, category: Category, total: bool
+) -> None:
+    assume(category not in transaction.categories)
+    assert transaction.get_amount_for_category(category, total) == CashAmount(
+        0, transaction.currency
+    )
+
+
+@given(transaction=cash_transactions(), tag=attributes(type_=AttributeType.TAG))
+def test_get_amount_for_tag_not_related(
+    transaction: CashTransaction, tag: Attribute
+) -> None:
+    assume(tag not in transaction.tags)
+    assert transaction.get_amount_for_tag(tag) == CashAmount(0, transaction.currency)
