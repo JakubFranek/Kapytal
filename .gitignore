@@ -3,7 +3,6 @@
 build
 dist
 __pycache__
-main.spec
 *.log
 saved_data/**/*.json
 .pytest_cache
