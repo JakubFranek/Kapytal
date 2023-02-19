@@ -8,7 +8,7 @@ saved_data/**/*.json
 .pytest_cache
 .coverage
 coverage.xml
-installer
+*.exe
 .hypothesis
 coverage
 .mypy_cache
