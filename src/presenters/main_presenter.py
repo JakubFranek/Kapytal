@@ -174,6 +174,21 @@ class MainPresenter:
         except Exception:
             handle_exception()
 
+    def _close_file(self) -> None:
+        if self._check_for_unsaved_changes("Close File") is False:
+            return
+        logging.info("Closing File, resetting to clean state")
+        self._record_keeper = RecordKeeper()
+        self._load_record_keeper(self._record_keeper)
+        self.current_file_path = None
+        self._update_unsaved_changes(False)
+
+    def _quit(self) -> None:
+        if self._check_for_unsaved_changes("Quit") is False:
+            return
+        logging.info("Qutting")
+        self._app.quit()
+
     def _check_for_unsaved_changes(self, operation: str) -> bool:
         """True: proceed \n False: abort"""
 
@@ -197,21 +212,6 @@ class MainPresenter:
             return False
         # No unsaved changes, proceed
         return True
-
-    def _close_file(self) -> None:
-        if self._check_for_unsaved_changes("Close File") is False:
-            return
-        logging.info("Closing File, resetting to clean state")
-        self._record_keeper = RecordKeeper()
-        self._load_record_keeper(self._record_keeper)
-        self.current_file_path = None
-        self._update_unsaved_changes(False)
-
-    def _quit(self) -> None:
-        if self._check_for_unsaved_changes("Quit") is False:
-            return
-        logging.info("Qutting")
-        self._app.quit()
 
     def _update_unsaved_changes(self, unsaved_changes: bool) -> None:
         self._unsaved_changes = unsaved_changes
