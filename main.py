@@ -5,7 +5,6 @@ import sys
 
 from PyQt6.QtWidgets import QApplication
 
-from src.models.record_keeper import RecordKeeper
 from src.presenters.main_presenter import MainPresenter
 from src.utilities.logging import setup_logging
 from src.views.main_view import MainView
@@ -14,7 +13,6 @@ from src.views.utilities.handle_exception import handle_uncaught_exception
 VERSION = "0.0.0"
 
 if __name__ == "__main__":
-
     # The following three lines are needed to make sure task bar icon works on Windows
     if os.name == "nt":
         myappid = f"Jakub_Franek.Kapytal.v{VERSION}"  # arbitrary string
@@ -38,11 +36,8 @@ if __name__ == "__main__":
     logging.debug("Creating MainWindow")
     main_view = MainView()
 
-    logging.debug("Creating RecordKeeper")
-    record_keeper = RecordKeeper()
-
     logging.debug("Creating MainPresenter")
-    main_presenter = MainPresenter(main_view, record_keeper, app, app_root_dir)
+    main_presenter = MainPresenter(main_view, app, app_root_dir)
 
     logging.info("Executing QApplication, awaiting user input")
     app.exec()

@@ -26,39 +26,38 @@ class MainPresenter:
     def __init__(
         self,
         view: MainView,
-        record_keeper: RecordKeeper,
         app: QApplication,
         app_root_directory: str,
     ) -> None:
         self._view = view
-        self._record_keeper = record_keeper
+        self._record_keeper = RecordKeeper()
         self._app = app
 
         # Presenter initialization
         logging.debug("Creating AccountTreePresenter")
         self._account_tree_presenter = AccountTreePresenter(
-            view.account_tree, record_keeper
+            view.account_tree, self._record_keeper
         )
         logging.debug("Creating Currency Form and CurrencyFormPresenter")
         currency_form = CurrencyForm(parent=view)
         self._currency_form_presenter = CurrencyFormPresenter(
-            currency_form, record_keeper
+            currency_form, self._record_keeper
         )
         logging.debug("Creating SecurityForm and SecurityFormPresenter")
         security_form = SecurityForm(parent=view)
         self._security_form_presenter = SecurityFormPresenter(
-            security_form, record_keeper
+            security_form, self._record_keeper
         )
         logging.debug("Creating PayeeForm and PayeeFormPresenter")
         payee_form = PayeeForm(parent=view)
-        self._payee_form_presenter = PayeeFormPresenter(payee_form, record_keeper)
+        self._payee_form_presenter = PayeeFormPresenter(payee_form, self._record_keeper)
         logging.debug("Creating TagForm and TagFormPresenter")
         tag_form = TagForm(parent=view)
-        self._tag_form_presenter = TagFormPresenter(tag_form, record_keeper)
+        self._tag_form_presenter = TagFormPresenter(tag_form, self._record_keeper)
         logging.debug("Creating CategoryForm and CategoryFormPresenter")
         category_form = CategoryForm(parent=view)
         self._category_form_presenter = CategoryFormPresenter(
-            category_form, record_keeper
+            category_form, self._record_keeper
         )
 
         # Setting up Event observers
@@ -97,9 +96,10 @@ class MainPresenter:
         self._view.signal_open_category_form.connect(
             self._category_form_presenter.show_form
         )
-        self._view.signal_save.connect(lambda: self._save_to_file(save_as=False))
-        self._view.signal_save_as.connect(lambda: self._save_to_file(save_as=True))
-        self._view.signal_open.connect(self._load_from_file)
+        self._view.signal_save_file.connect(lambda: self._save_to_file(save_as=False))
+        self._view.signal_save_file_as.connect(lambda: self._save_to_file(save_as=True))
+        self._view.signal_open_file.connect(self._load_from_file)
+        self._view.signal_close_file.connect(self._close_file)
 
         # File path initialization
         self.current_file_path: str | None = None
@@ -174,29 +174,44 @@ class MainPresenter:
         except Exception:
             handle_exception()
 
-    def _quit(self) -> None:
-        if self._unsaved_changes is True:
+    def _check_for_unsaved_changes(self, operation: str) -> bool:
+        """True: proceed \n False: abort"""
+
+        if self._unsaved_changes:
             logging.info(
-                "Quit called with unsaved changes, asking the user for instructions"
+                f"Operation '{operation}' called with unsaved changes, asking the "
+                "user for instructions"
             )
-            reply = self._view.ask_save_before_quit()
+            reply = self._view.ask_save_before_close()
             if reply is True:
                 self._save_to_file(save_as=False)
-                if self._unsaved_changes is False:
-                    logging.info("Quitting after saving")
-                    self._app.quit()
-                else:
-                    logging.info("Quit cancelled")
-                    return
-            elif reply is False:
-                logging.info("Quit without saving")
-                self._app.quit()
-            else:
-                logging.info("Quit cancelled")
-                return
-        else:
-            logging.info("Quitting")
-            self._app.quit()
+                if not self._unsaved_changes:
+                    logging.info(f"Saved, proceeding with '{operation}'")
+                    return True
+                logging.info(f"Save cancelled, aborting operation '{operation}'")
+                return False
+            if reply is False:
+                logging.info(f"Save rejected, proceeding with operation '{operation}'")
+                return True
+            logging.info(f"Operation '{operation}' cancelled")
+            return False
+        # No unsaved changes, proceed
+        return True
+
+    def _close_file(self) -> None:
+        if self._check_for_unsaved_changes("Close File") is False:
+            return
+        logging.info("Closing File, resetting to clean state")
+        self._record_keeper = RecordKeeper()
+        self._load_record_keeper(self._record_keeper)
+        self.current_file_path = None
+        self._update_unsaved_changes(False)
+
+    def _quit(self) -> None:
+        if self._check_for_unsaved_changes("Quit") is False:
+            return
+        logging.info("Qutting")
+        self._app.quit()
 
     def _update_unsaved_changes(self, unsaved_changes: bool) -> None:
         self._unsaved_changes = unsaved_changes

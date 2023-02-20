@@ -27,9 +27,10 @@ class MainView(QMainWindow, Ui_MainWindow):
     signal_open_payee_form = pyqtSignal()
     signal_open_tag_form = pyqtSignal()
     signal_open_category_form = pyqtSignal()
-    signal_save = pyqtSignal()
-    signal_save_as = pyqtSignal()
-    signal_open = pyqtSignal()
+    signal_save_file = pyqtSignal()
+    signal_save_file_as = pyqtSignal()
+    signal_open_file = pyqtSignal()
+    signal_close_file = pyqtSignal()
 
     def __init__(self) -> None:
         super().__init__()
@@ -41,13 +42,15 @@ class MainView(QMainWindow, Ui_MainWindow):
     def get_open_path(self) -> str:
         return QFileDialog.getOpenFileName(self, filter="JSON file (*.json)")[0]
 
-    def ask_save_before_quit(self) -> bool | None:
+    def ask_save_before_close(self) -> bool | None:
+        """True: save & close \n False: close \n None: cancel"""
+
         message_box = QMessageBox(
             QMessageBox.Icon.Question,
-            "Save changes before quitting?",
+            "Save changes before closing?",
             (
                 "The data has been changed since the last save.\n"
-                "Do you want to save before quitting?"
+                "Do you want to save before closing?"
             ),
             (
                 QMessageBox.StandardButton.Yes
@@ -180,9 +183,10 @@ class MainView(QMainWindow, Ui_MainWindow):
         self.actionPayees.triggered.connect(self.signal_open_payee_form.emit)
         self.actionTags.triggered.connect(self.signal_open_tag_form.emit)
         self.actionCategories.triggered.connect(self.signal_open_category_form.emit)
-        self.actionSave.triggered.connect(self.signal_save.emit)
-        self.actionSave_As.triggered.connect(self.signal_save_as.emit)
-        self.actionOpen_File.triggered.connect(self.signal_open.emit)
+        self.actionSave.triggered.connect(self.signal_save_file.emit)
+        self.actionSave_As.triggered.connect(self.signal_save_file_as.emit)
+        self.actionOpen_File.triggered.connect(self.signal_open_file.emit)
+        self.actionClose_File.triggered.connect(self.signal_close_file.emit)
         self.actionQuit.triggered.connect(self.close)
         self.actionAbout.triggered.connect(self.show_about)
 

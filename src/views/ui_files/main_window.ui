@@ -226,6 +226,7 @@
     <addaction name="actionOpen_File"/>
     <addaction name="actionSave"/>
     <addaction name="actionSave_As"/>
+    <addaction name="actionClose_File"/>
     <addaction name="separator"/>
     <addaction name="actionQuit"/>
    </widget>
@@ -400,6 +401,11 @@
    </property>
    <property name="toolTip">
     <string>Security Transfer</string>
+   </property>
+  </action>
+  <action name="actionClose_File">
+   <property name="text">
+    <string>Close File</string>
    </property>
   </action>
  </widget>
