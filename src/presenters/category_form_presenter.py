@@ -12,8 +12,6 @@ from src.presenters.view_models.category_tree_model import CategoryTreeModel
 from src.views.dialogs.category_dialog import CategoryDialog
 from src.views.forms.category_form import CategoryForm
 
-# BUG: there is something broken when adding and/or moving Categories...
-
 
 class CategoryFormPresenter:
     event_data_changed = Event()
@@ -110,7 +108,7 @@ class CategoryFormPresenter:
             self._dialog.path = item.path
             self._dialog.current_path = item.path
             if item.parent is None:
-                index = self._model.category_stats.index(item)
+                index = self._model.root_categories.index(item)
             else:
                 index = item.parent.get_child_index(item)
             self._dialog.position = index + 1
@@ -219,7 +217,7 @@ class CategoryFormPresenter:
         if isinstance(item, Category):
             return len(item.children) + 1
         if item is None:
-            return len(self._model.category_stats) + 1
+            return len(self._model.root_categories) + 1
         raise ValueError("Invalid selection.")
 
     def _get_max_parent_position(self, item: Category) -> int:
@@ -233,7 +231,7 @@ class CategoryFormPresenter:
             raise NotImplementedError
         parent = item.parent
         if parent is None:
-            return self._model.category_stats.index(item)
+            return self._model.root_categories.index(item)
         return parent.children.index(item)
 
     def _setup_signals(self) -> None:
@@ -264,3 +262,4 @@ class CategoryFormPresenter:
         pattern = self._view.search_bar_text
         logging.debug(f"Filtering Categories: {pattern=}")
         self._proxy_model.setFilterWildcard(pattern)
+        self._view.category_tree.expand_all()
