@@ -47,13 +47,13 @@ class UserSettings(JSONSerializableMixin):
 
         logging.info(
             "Changing _Settings.logs_max_size_bytes from "
-            f"{self._logs_max_size_bytes} to {value}"
+            f"{self._logs_max_size_bytes:,} to {value:,}"
         )
         self._logs_max_size_bytes = value
 
     @property
     def backups_max_size_bytes(self) -> int:
-        return self._logs_max_size_bytes
+        return self._backups_max_size_bytes
 
     @backups_max_size_bytes.setter
     def backups_max_size_bytes(self, value: int) -> None:
@@ -117,9 +117,9 @@ class UserSettings(JSONSerializableMixin):
         backup_paths = [Path(string) for string in backup_path_strings]
 
         obj = UserSettings()
-        obj.time_zone = time_zone
-        obj.logs_max_size_bytes = logs_max_size_bytes
-        obj.backups_max_size_bytes = backups_max_size_bytes
-        obj.backup_paths = backup_paths
+        obj._time_zone = time_zone
+        obj._logs_max_size_bytes = logs_max_size_bytes
+        obj._backups_max_size_bytes = backups_max_size_bytes
+        obj._backup_paths = backup_paths
 
         return obj

@@ -33,7 +33,7 @@ class MainView(QMainWindow, Ui_MainWindow):
 
     def __init__(self) -> None:
         super().__init__()
-        self.initial_setup()
+        self._initial_setup()
 
     def get_save_path(self) -> str:
         return QFileDialog.getSaveFileName(self, filter="JSON file (*.json)")[0]
@@ -87,6 +87,9 @@ class MainView(QMainWindow, Ui_MainWindow):
             self.actionSave.setEnabled(True)
             self.setWindowTitle(f"Kapytal v{version} - " + current_file_path + star_str)
 
+    def show_status_message(self, message: str, msecs: int) -> None:
+        self.statusBar().showMessage(message, msecs)
+
     def closeEvent(self, event: QCloseEvent) -> None:
         self.signal_exit.emit()
         event.ignore()
@@ -127,7 +130,7 @@ class MainView(QMainWindow, Ui_MainWindow):
         message_box.exec()
         logging.debug("Closing About dialog")
 
-    def initial_setup(self) -> None:
+    def _initial_setup(self) -> None:
         QDir.addSearchPath(
             "icons_24",
             str(Path(QDir.currentPath() + "/resources/icons/icons-24")),

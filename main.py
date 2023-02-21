@@ -12,11 +12,9 @@ from src.utilities.logging import remove_old_logs, setup_logging
 from src.views.main_view import MainView
 from src.views.utilities.handle_exception import handle_uncaught_exception
 
-# REFACTOR: use pathlib instead of os.path
-
 VERSION = "0.0.0"
-SETTINGS_PATH_SUFFIX = "saved_data/settings.json"
-BACKUPS_PATH_SUFFIX = "saved_data/backups/"
+SETTINGS_PATH_SUFFIX = "saved_data/user_settings.json"
+BACKUPS_PATH_SUFFIX = "saved_data/backups"
 
 if __name__ == "__main__":
     # The following three lines are needed to make sure task bar icon works on Windows
@@ -53,7 +51,7 @@ if __name__ == "__main__":
     main_view = MainView()
 
     logging.debug("Creating MainPresenter")
-    main_presenter = MainPresenter(main_view, app, app_root_dir)
+    main_presenter = MainPresenter(main_view, app)
 
     logging.info("Executing QApplication, awaiting user input")
     app.exec()

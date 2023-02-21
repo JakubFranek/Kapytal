@@ -1,5 +1,6 @@
 import json
 import logging
+from pathlib import Path
 
 from PyQt6.QtWidgets import QApplication
 
@@ -27,7 +28,6 @@ class MainPresenter:
         self,
         view: MainView,
         app: QApplication,
-        app_root_directory: str,
     ) -> None:
         self._view = view
         self._record_keeper = RecordKeeper()
@@ -102,10 +102,7 @@ class MainPresenter:
         self._view.signal_close_file.connect(self._close_file)
 
         # File path initialization
-        self.current_file_path: str | None = None
-        self.backup_directories: list[str] = [
-            app_root_directory / "saved_data/backups/"
-        ]
+        self.current_file_path: Path | None = None
         self._update_unsaved_changes(False)
 
         logging.debug("Showing MainView")
@@ -117,21 +114,24 @@ class MainPresenter:
             if save_as is True or self.current_file_path is None:
                 logging.debug("Asking the user for destination path")
                 file_path = self._view.get_save_path()
-                if file_path != "":
-                    self.current_file_path = file_path
-
-            if not isinstance(self.current_file_path, str):
-                logging.info("Save to file cancelled: invalid or no file path received")
-                return
+                if file_path == "":
+                    logging.info(
+                        "Save to file cancelled: invalid or no file path received"
+                    )
+                    return
+                self.current_file_path = Path(file_path)
 
             with open(self.current_file_path, mode="w", encoding="UTF-8") as file:
-                logging.debug(f"Saving to file: {self.current_file_path}")
+                logging.debug(f"Saving to file: '{self.current_file_path}'")
                 json.dump(self._record_keeper, file, cls=CustomJSONEncoder)
+
                 self._update_unsaved_changes(False)
-                self._view.statusBar().showMessage(
+                self._view.show_status_message(
                     f"File saved: {self.current_file_path}", 3000
                 )
-                logging.info(f"File saved: {self.current_file_path}")
+
+                logging.info(f"File saved: '{self.current_file_path}'")
+                backup_json_file(self.current_file_path)
         except Exception:
             handle_exception()
 
@@ -145,19 +145,19 @@ class MainPresenter:
                 )
                 return
 
-            self.current_file_path = file_path
-            with open(file_path, mode="r", encoding="UTF-8") as file:
-                logging.debug(f"File path received: {file_path}")
-                backup_json_file(file_path, self.backup_directories)
+            self.current_file_path = Path(file_path)
+            with open(self.current_file_path, mode="r", encoding="UTF-8") as file:
+                logging.debug(f"File path received: '{self.current_file_path}'")
+                backup_json_file(self.current_file_path)
 
-                logging.debug(f"Loading file: {file_path}")
-                logging.disable(logging.INFO)
+                logging.debug(f"Loading file: '{self.current_file_path}'")
+                logging.disable(logging.INFO)  # suppress logging of object creation
                 record_keeper: RecordKeeper = json.load(file, cls=CustomJSONDecoder)
                 logging.disable(logging.NOTSET)
 
                 self._load_record_keeper(record_keeper)
 
-                self._view.statusBar().showMessage(
+                self._view.show_status_message(
                     f"File loaded: {self.current_file_path}", 3000
                 )
                 self._update_unsaved_changes(False)
@@ -170,7 +170,7 @@ class MainPresenter:
                 logging.debug(f"Categories: {len(record_keeper.categories)}")
                 logging.debug(f"Tags: {len(record_keeper.tags)}")
                 logging.debug(f"Payees: {len(record_keeper.tags)}")
-                logging.info(f"File loaded: {file_path}")
+                logging.info(f"File loaded: '{file_path}'")
         except Exception:
             handle_exception()
 
@@ -215,7 +215,7 @@ class MainPresenter:
 
     def _update_unsaved_changes(self, unsaved_changes: bool) -> None:
         self._unsaved_changes = unsaved_changes
-        self._view.set_save_status(self.current_file_path, self._unsaved_changes)
+        self._view.set_save_status(str(self.current_file_path), self._unsaved_changes)
 
     def _load_record_keeper(self, record_keeper: RecordKeeper) -> None:
         self._record_keeper = record_keeper

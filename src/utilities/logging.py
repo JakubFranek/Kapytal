@@ -6,8 +6,8 @@ from pathlib import Path
 import src.models.user_settings.user_settings as user_settings
 from src.models.constants import tzinfo
 
-dir_logs_info = ""
-dir_logs_debug = ""
+dir_logs_info = None
+dir_logs_debug = None
 
 
 class DuplicateFilter(logging.Filter):
@@ -27,10 +27,8 @@ def setup_logging(root_directory: Path) -> None:
 
     dir_logs_info = root_directory / "logs/info"
     dir_logs_debug = root_directory / "logs/debug"
-    if not os.path.exists(dir_logs_info):
-        os.makedirs(dir_logs_info)
-    if not os.path.exists(dir_logs_debug):
-        os.makedirs(dir_logs_debug)
+    dir_logs_info.mkdir(exist_ok=True, parents=True)
+    dir_logs_debug.mkdir(exist_ok=True, parents=True)
 
     dt_now = datetime.now(tzinfo)
     filename_info = dir_logs_info / (
@@ -104,7 +102,7 @@ def remove_old_logs() -> None:
 
         if total_size <= size_limit:
             logging.debug(
-                f"Logs size limit reached ({total_size:,} / {size_limit:,} bytes)"
+                f"Logs size limit satisfied ({total_size:,} / {size_limit:,} bytes)"
             )
             return  # logs are within size limit
 
@@ -112,32 +110,20 @@ def remove_old_logs() -> None:
         _remove_oldest_log(dir_logs_debug)
 
 
-def _remove_oldest_log(directory: str) -> None:
+def _remove_oldest_log(directory: Path) -> None:
     log_paths = _get_log_paths(directory)
     oldest_log = min(log_paths, key=os.path.getctime)
     logging.info(f"Removing log: '{oldest_log}'")
-    os.remove(oldest_log)
+    oldest_log.unlink()
 
 
-def _get_log_paths(directory: str) -> list[str]:
-    listdir = os.listdir(directory)
+def _get_log_paths(directory: Path) -> list[Path]:
     return [
-        os.path.join(directory, file_name)
-        for file_name in listdir
-        if os.path.isfile(os.path.join(directory, file_name))
-        and file_name != "README.md"
+        file_path
+        for file_path in directory.iterdir()
+        if file_path.is_file() and file_path.name != "README.md"
     ]
 
 
-def _get_directory_size(directory_path: str) -> int:
-    """Calculates directory size recursively."""
-
-    total_size = 0
-    for dir_path, _, file_names in os.walk(directory_path):
-        for file_name in file_names:
-            file_path = os.path.join(dir_path, file_name)
-            # skip if it is symbolic link
-            if not os.path.islink(file_path):
-                total_size += os.path.getsize(file_path)
-
-    return total_size
+def _get_directory_size(path: Path) -> int:
+    return sum(f.stat().st_size for f in path.glob("**/*") if f.is_file())
