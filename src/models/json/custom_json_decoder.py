@@ -6,6 +6,7 @@ from typing import Any
 from src.models.model_objects.attributes import Attribute
 from src.models.model_objects.currency_objects import Currency
 from src.models.record_keeper import RecordKeeper
+from src.models.user_settings.user_settings_class import UserSettings
 
 
 class CustomJSONDecoder(json.JSONDecoder):
@@ -25,6 +26,8 @@ class CustomJSONDecoder(json.JSONDecoder):
                     return Currency.deserialize(obj)
                 case "Attribute":
                     return Attribute.deserialize(obj)
+                case "UserSettings":
+                    return UserSettings.deserialize(obj)
                 case _:
                     return obj
         raise NotImplementedError
