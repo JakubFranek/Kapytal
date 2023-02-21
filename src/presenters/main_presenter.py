@@ -104,7 +104,7 @@ class MainPresenter:
         # File path initialization
         self.current_file_path: str | None = None
         self.backup_directories: list[str] = [
-            app_root_directory + "/saved_data/backups/"
+            app_root_directory / "saved_data/backups/"
         ]
         self._update_unsaved_changes(False)
 

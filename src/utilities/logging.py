@@ -1,6 +1,7 @@
 import logging
 import os
 from datetime import datetime
+from pathlib import Path
 
 import src.models.user_settings.user_settings as user_settings
 from src.models.constants import tzinfo
@@ -20,23 +21,23 @@ class DuplicateFilter(logging.Filter):
         return False
 
 
-def setup_logging(root_directory: str) -> None:
+def setup_logging(root_directory: Path) -> None:
     global dir_logs_info
     global dir_logs_debug
 
-    dir_logs_info = root_directory + r"\logs\info"
-    dir_logs_debug = root_directory + r"\logs\debug"
+    dir_logs_info = root_directory / "logs/info"
+    dir_logs_debug = root_directory / "logs/debug"
     if not os.path.exists(dir_logs_info):
         os.makedirs(dir_logs_info)
     if not os.path.exists(dir_logs_debug):
         os.makedirs(dir_logs_debug)
 
     dt_now = datetime.now(tzinfo)
-    filename_info = (
-        dir_logs_info + r"\info_" + dt_now.strftime("%Y_%m_%d_%Hh%Mm%Ss") + ".log"
+    filename_info = dir_logs_info / (
+        "info_" + dt_now.strftime("%Y_%m_%d_%Hh%Mm%Ss") + ".log"
     )
-    filename_debug = (
-        dir_logs_debug + r"\debug_" + dt_now.strftime("%Y_%m_%d_%Hh%Mm%Ss") + ".log"
+    filename_debug = dir_logs_debug / (
+        "debug_" + dt_now.strftime("%Y_%m_%d_%Hh%Mm%Ss") + ".log"
     )
     formatter = logging.Formatter(
         fmt=(

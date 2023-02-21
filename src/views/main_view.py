@@ -1,6 +1,6 @@
 import logging
-import os
 import sys
+from pathlib import Path
 
 from PyQt6.QtCore import PYQT_VERSION_STR, QT_VERSION_STR, QDir, QSize, Qt, pyqtSignal
 from PyQt6.QtGui import QAction, QCloseEvent, QIcon
@@ -130,15 +130,15 @@ class MainView(QMainWindow, Ui_MainWindow):
     def initial_setup(self) -> None:
         QDir.addSearchPath(
             "icons_24",
-            os.path.join(QDir.currentPath(), "resources/icons/icons-24"),
+            str(Path(QDir.currentPath() + "/resources/icons/icons-24")),
         )
         QDir.addSearchPath(
             "icons_16",
-            os.path.join(QDir.currentPath(), "resources/icons/icons-16"),
+            str(Path(QDir.currentPath() + "/resources/icons/icons-16")),
         )
         QDir.addSearchPath(
             "icons_custom",
-            os.path.join(QDir.currentPath(), "resources/icons/icons-custom"),
+            str(Path(QDir.currentPath() + "/resources/icons/icons-custom")),
         )
 
         self.setupUi(self)

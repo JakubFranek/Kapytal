@@ -2,6 +2,7 @@ import ctypes
 import logging
 import os
 import sys
+from pathlib import Path
 
 from PyQt6.QtWidgets import QApplication
 
@@ -11,8 +12,11 @@ from src.utilities.logging import remove_old_logs, setup_logging
 from src.views.main_view import MainView
 from src.views.utilities.handle_exception import handle_uncaught_exception
 
+# REFACTOR: use pathlib instead of os.path
+
 VERSION = "0.0.0"
-SETTINGS_PATH_SUFFIX = "/saved_data/settings.json"
+SETTINGS_PATH_SUFFIX = "saved_data/settings.json"
+BACKUPS_PATH_SUFFIX = "saved_data/backups/"
 
 if __name__ == "__main__":
     # The following three lines are needed to make sure task bar icon works on Windows
@@ -22,14 +26,15 @@ if __name__ == "__main__":
 
     sys.excepthook = handle_uncaught_exception
 
-    app_root_dir = os.path.dirname(os.path.realpath(__file__))  # get Kapytal root path
+    app_root_dir = Path(__file__).resolve().parent  # get Kapytal root path
 
     setup_logging(app_root_dir)  # setup logging
 
-    user_settings.set_path(app_root_dir + SETTINGS_PATH_SUFFIX)
-    if os.path.isfile(app_root_dir + SETTINGS_PATH_SUFFIX):
+    user_settings.set_path(app_root_dir / SETTINGS_PATH_SUFFIX)
+    if Path(app_root_dir / SETTINGS_PATH_SUFFIX).exists():
         user_settings.load()
     else:
+        user_settings.settings.backup_paths = [Path(app_root_dir / BACKUPS_PATH_SUFFIX)]
         user_settings.save()
 
     remove_old_logs()  # remove logs once settings are initialized

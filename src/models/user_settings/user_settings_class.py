@@ -1,6 +1,6 @@
 import logging
-import os
 from collections.abc import Collection
+from pathlib import Path
 from typing import Any, Self
 from zoneinfo import ZoneInfo
 
@@ -71,16 +71,18 @@ class UserSettings(JSONSerializableMixin):
         self._backups_max_size_bytes = value
 
     @property
-    def backup_paths(self) -> tuple[str]:
+    def backup_paths(self) -> tuple[Path]:
         return tuple(self._backup_paths)
 
     @backup_paths.setter
-    def backup_paths(self, values: Collection[str]) -> None:
-        if any(not isinstance(value, str) for value in values):
-            raise TypeError("_Settings.backup_paths must be a Collection of strings.")
+    def backup_paths(self, values: Collection[Path]) -> None:
+        if any(not isinstance(value, Path) for value in values):
+            raise TypeError("_Settings.backup_paths must be a Collection of Paths.")
         for value in values:
-            if not os.path.isdir(value):
-                raise ValueError(f"Path '{value}' is not an existing directory.")
+            if not value.is_dir():
+                raise ValueError(
+                    f"Path '{value}' does not point to an existing directory."
+                )
 
         new_values = [value for value in values if value not in self._backup_paths]
         deleted_values = [value for value in self._backup_paths if value not in values]
@@ -90,26 +92,29 @@ class UserSettings(JSONSerializableMixin):
         for deleted_value in deleted_values:
             logging.info(f"Removing backup path: '{deleted_value}'")
 
-        self._backup_paths = list(values)
+        self._backup_paths: list[Path] = list(values)
 
     def __repr__(self) -> str:
         return "UserSettings"
 
     def serialize(self) -> dict[str, Any]:
+        backup_paths = [str(path) for path in self._backup_paths]
         return {
             "datatype": "UserSettings",
             "time_zone": self._time_zone.key,
             "logs_max_size_bytes": self._logs_max_size_bytes,
             "backups_max_size_bytes": self._backups_max_size_bytes,
-            "backup_paths": self._backup_paths,
+            "backup_paths": backup_paths,
         }
 
     @staticmethod
     def deserialize(data: dict[str, Any]) -> Self:
         time_zone = ZoneInfo(data["time_zone"])
-        logs_max_size_bytes = data["logs_max_size_bytes"]
-        backups_max_size_bytes = data["backups_max_size_bytes"]
-        backup_paths = data["backup_paths"]
+        logs_max_size_bytes: int = data["logs_max_size_bytes"]
+        backups_max_size_bytes: int = data["backups_max_size_bytes"]
+
+        backup_path_strings: list[str] = data["backup_paths"]
+        backup_paths = [Path(string) for string in backup_path_strings]
 
         obj = UserSettings()
         obj.time_zone = time_zone

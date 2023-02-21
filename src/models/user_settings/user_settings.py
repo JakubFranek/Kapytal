@@ -1,16 +1,21 @@
 import json
 import logging
+from pathlib import Path
 
 from src.models.json.custom_json_decoder import CustomJSONDecoder
 from src.models.json.custom_json_encoder import CustomJSONEncoder
 from src.models.user_settings.user_settings_class import UserSettings
 
 settings: UserSettings = UserSettings()
-_settings_path: str = ""
+_settings_path: Path = None
 
 
-def set_path(path: str) -> None:
+def set_path(path: Path) -> None:
     global _settings_path
+
+    if not isinstance(path, Path):
+        raise TypeError("Parameter 'path' must be a Path.")
+
     _settings_path = path
 
 
