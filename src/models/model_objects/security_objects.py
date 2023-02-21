@@ -10,9 +10,9 @@ from decimal import Decimal
 from enum import Enum, auto
 from typing import Any
 
+import src.models.user_settings.user_settings as user_settings
 from src.models.base_classes.account import Account, UnrelatedAccountError
 from src.models.base_classes.transaction import Transaction
-from src.models.constants import tzinfo
 from src.models.custom_exceptions import InvalidCharacterError, TransferSameAccountError
 from src.models.mixins.copyable_mixin import CopyableMixin
 from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
@@ -200,7 +200,9 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
         date_price_pairs: list[tuple[str, str]] = data["date_price_pairs"]
         for date_, price in date_price_pairs:
             obj.set_price(
-                datetime.strptime(date_, "%Y-%m-%d").replace(tzinfo=tzinfo).date(),
+                datetime.strptime(date_, "%Y-%m-%d")
+                .replace(tzinfo=user_settings.settings.time_zone)
+                .date(),
                 CashAmount(price, obj.currency),
             )
 

@@ -9,11 +9,10 @@ from pathlib import Path
 from types import TracebackType
 
 import src.models.user_settings.user_settings as user_settings
-from src.models.constants import tzinfo
 
 
 def backup_json_file(file_path: Path) -> None:
-    dt_now = datetime.now(tzinfo)
+    dt_now = datetime.now(user_settings.settings.time_zone)
 
     file_stem = file_path.stem
     backup_name = file_stem + "_" + dt_now.strftime("%Y_%m_%d_%Hh%Mm%Ss") + ".json"

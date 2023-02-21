@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 
-from src.models.constants import tzinfo
+import src.models.user_settings.user_settings as user_settings
 from src.models.model_objects.attributes import (
     Attribute,
     AttributeType,
@@ -39,15 +39,19 @@ def test_calculate_attribute_stats() -> None:
         payee,
         transactions,
         currency,
-        date_start=datetime.now(tzinfo).date() - timedelta(days=1),
-        date_end=datetime.now(tzinfo).date() + timedelta(days=1),
+        date_start=datetime.now(user_settings.settings.time_zone).date()
+        - timedelta(days=1),
+        date_end=datetime.now(user_settings.settings.time_zone).date()
+        + timedelta(days=1),
     )
     tag_stats = get_tag_stats(
         tag,
         transactions,
         currency,
-        date_start=datetime.now(tzinfo).date() - timedelta(days=1),
-        date_end=datetime.now(tzinfo).date() + timedelta(days=1),
+        date_start=datetime.now(user_settings.settings.time_zone).date()
+        - timedelta(days=1),
+        date_end=datetime.now(user_settings.settings.time_zone).date()
+        + timedelta(days=1),
     )
     assert payee_stats.attribute == payee
     assert payee_stats.no_of_transactions == 5
@@ -63,15 +67,19 @@ def test_calculate_category_stats() -> None:
         category_expense,
         transactions,
         currency,
-        date_start=datetime.now(tzinfo).date() - timedelta(days=1),
-        date_end=datetime.now(tzinfo).date() + timedelta(days=1),
+        date_start=datetime.now(user_settings.settings.time_zone).date()
+        - timedelta(days=1),
+        date_end=datetime.now(user_settings.settings.time_zone).date()
+        + timedelta(days=1),
     )
     category_child_stats = get_category_stats(
         category_expense_child,
         transactions,
         currency,
-        date_start=datetime.now(tzinfo).date() - timedelta(days=1),
-        date_end=datetime.now(tzinfo).date() + timedelta(days=1),
+        date_start=datetime.now(user_settings.settings.time_zone).date()
+        - timedelta(days=1),
+        date_end=datetime.now(user_settings.settings.time_zone).date()
+        + timedelta(days=1),
     )
 
     assert category_stats.category == category_expense
@@ -90,7 +98,7 @@ def get_transactions() -> list[CashTransaction]:
     transactions.append(
         CashTransaction(
             description="",
-            datetime_=datetime.now(tzinfo),
+            datetime_=datetime.now(user_settings.settings.time_zone),
             type_=CashTransactionType.EXPENSE,
             account=account,
             payee=payee,
@@ -101,7 +109,7 @@ def get_transactions() -> list[CashTransaction]:
     transactions.append(
         CashTransaction(
             description="",
-            datetime_=datetime.now(tzinfo),
+            datetime_=datetime.now(user_settings.settings.time_zone),
             type_=CashTransactionType.EXPENSE,
             account=account,
             payee=payee,
@@ -112,7 +120,7 @@ def get_transactions() -> list[CashTransaction]:
     transactions.append(
         CashTransaction(
             description="",
-            datetime_=datetime.now(tzinfo),
+            datetime_=datetime.now(user_settings.settings.time_zone),
             type_=CashTransactionType.INCOME,
             account=account,
             payee=payee,
@@ -123,7 +131,7 @@ def get_transactions() -> list[CashTransaction]:
     transactions.append(
         CashTransaction(
             description="",
-            datetime_=datetime.now(tzinfo),
+            datetime_=datetime.now(user_settings.settings.time_zone),
             type_=CashTransactionType.EXPENSE,
             account=account,
             payee=payee_dummy,
@@ -137,7 +145,7 @@ def get_transactions() -> list[CashTransaction]:
     transactions.append(
         CashTransaction(
             description="",
-            datetime_=datetime.now(tzinfo),
+            datetime_=datetime.now(user_settings.settings.time_zone),
             type_=CashTransactionType.INCOME,
             account=account,
             payee=payee,
@@ -148,7 +156,8 @@ def get_transactions() -> list[CashTransaction]:
     transactions.append(
         CashTransaction(
             description="",
-            datetime_=datetime.now(tzinfo) - timedelta(days=365),
+            datetime_=datetime.now(user_settings.settings.time_zone)
+            - timedelta(days=365),
             type_=CashTransactionType.INCOME,
             account=account,
             payee=payee,
@@ -159,7 +168,8 @@ def get_transactions() -> list[CashTransaction]:
     transactions.append(
         CashTransaction(
             description="",
-            datetime_=datetime.now(tzinfo) + timedelta(days=365),
+            datetime_=datetime.now(user_settings.settings.time_zone)
+            + timedelta(days=365),
             type_=CashTransactionType.INCOME,
             account=account,
             payee=payee,
@@ -170,7 +180,7 @@ def get_transactions() -> list[CashTransaction]:
     transactions.append(
         RefundTransaction(
             description="",
-            datetime_=datetime.now(tzinfo),
+            datetime_=datetime.now(user_settings.settings.time_zone),
             account=account,
             refunded_transaction=transactions[0],
             payee=payee,

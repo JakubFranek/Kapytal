@@ -3,7 +3,7 @@ from datetime import datetime
 
 from PyQt6.QtCore import QSortFilterProxyModel, Qt
 
-from src.models.constants import tzinfo
+import src.models.user_settings.user_settings as user_settings
 from src.models.record_keeper import RecordKeeper
 from src.presenters.utilities.event import Event
 from src.presenters.utilities.handle_exception import handle_exception
@@ -156,7 +156,7 @@ class SecurityFormPresenter:
 
         last_value = security.price.value_normalized
         self._dialog = SetSecurityPriceDialog(
-            date_today=datetime.now(tzinfo).date(),
+            date_today=datetime.now(user_settings.settings.time_zone).date(),
             last_value=last_value,
             parent=self._view,
         )

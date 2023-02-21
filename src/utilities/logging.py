@@ -4,7 +4,6 @@ from datetime import datetime
 from pathlib import Path
 
 import src.models.user_settings.user_settings as user_settings
-from src.models.constants import tzinfo
 
 dir_logs_info = None
 dir_logs_debug = None
@@ -30,7 +29,7 @@ def setup_logging(root_directory: Path) -> None:
     dir_logs_info.mkdir(exist_ok=True, parents=True)
     dir_logs_debug.mkdir(exist_ok=True, parents=True)
 
-    dt_now = datetime.now(tzinfo)
+    dt_now = datetime.now(user_settings.settings.time_zone)
     filename_info = dir_logs_info / (
         "info_" + dt_now.strftime("%Y_%m_%d_%Hh%Mm%Ss") + ".log"
     )

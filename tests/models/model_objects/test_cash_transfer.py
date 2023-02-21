@@ -6,7 +6,7 @@ import pytest
 from hypothesis import assume, given
 from hypothesis import strategies as st
 
-from src.models.constants import tzinfo
+import src.models.user_settings.user_settings as user_settings
 from src.models.model_objects.cash_objects import (
     CashAccount,
     CashTransfer,
@@ -32,7 +32,9 @@ from tests.models.test_assets.constants import MIN_DATETIME
     description=st.text(min_size=0, max_size=256),
     account_sender=cash_accounts(),
     account_recipient=cash_accounts(),
-    datetime_=st.datetimes(min_value=MIN_DATETIME, timezones=st.just(tzinfo)),
+    datetime_=st.datetimes(
+        min_value=MIN_DATETIME, timezones=st.just(user_settings.settings.time_zone)
+    ),
     data=st.data(),
 )
 def test_creation(
@@ -49,7 +51,7 @@ def test_creation(
         cash_amounts(currency=account_recipient.currency, min_value="0.01"),
     )
 
-    dt_start = datetime.now(tzinfo)
+    dt_start = datetime.now(user_settings.settings.time_zone)
     transfer = CashTransfer(
         description,
         datetime_,

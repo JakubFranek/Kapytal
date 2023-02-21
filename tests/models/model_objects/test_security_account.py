@@ -6,8 +6,8 @@ import pytest
 from hypothesis import assume, given
 from hypothesis import strategies as st
 
+import src.models.user_settings.user_settings as user_settings
 from src.models.base_classes.account import UnrelatedAccountError
-from src.models.constants import tzinfo
 from src.models.model_objects.account_group import AccountGroup
 from src.models.model_objects.currency_objects import CashAmount, Currency, ExchangeRate
 from src.models.model_objects.security_objects import (
@@ -82,7 +82,7 @@ def test_get_balance(
     exchange_rate: Decimal,
 ) -> None:
     assume(currency_A != currency_B)
-    date_ = datetime.now(tzinfo).date()
+    date_ = datetime.now(user_settings.settings.time_zone).date()
     exchange_rate_obj = ExchangeRate(currency_A, currency_B)
     exchange_rate_obj.set_rate(date_, exchange_rate)
     account = SecurityAccount("Test")

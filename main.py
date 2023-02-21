@@ -7,6 +7,8 @@ from pathlib import Path
 from PyQt6.QtWidgets import QApplication
 
 import src.models.user_settings.user_settings as user_settings
+from src.models.json.custom_json_decoder import CustomJSONDecoder
+from src.models.json.custom_json_encoder import CustomJSONEncoder
 from src.presenters.main_presenter import MainPresenter
 from src.utilities.logging import remove_old_logs, setup_logging
 from src.views.main_view import MainView
@@ -29,6 +31,8 @@ if __name__ == "__main__":
     setup_logging(app_root_dir)  # setup logging
 
     user_settings.set_path(app_root_dir / SETTINGS_PATH_SUFFIX)
+    user_settings.set_json_decoder(CustomJSONDecoder)
+    user_settings.set_json_encoder(CustomJSONEncoder)
     if Path(app_root_dir / SETTINGS_PATH_SUFFIX).exists():
         user_settings.load()
     else:

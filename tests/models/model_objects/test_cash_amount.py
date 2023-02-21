@@ -6,7 +6,7 @@ import pytest
 from hypothesis import assume, given
 from hypothesis import strategies as st
 
-from src.models.constants import tzinfo
+import src.models.user_settings.user_settings as user_settings
 from src.models.model_objects.currency_objects import (
     CashAmount,
     ConversionFactorNotFoundError,
@@ -297,7 +297,7 @@ def test_convert_czk_to_btc() -> None:
 def test_convert_czk_to_btc_date() -> None:
     currencies = get_currencies()
     cash_amount = CashAmount(Decimal(1_000_000), currencies["CZK"])
-    date_ = datetime.now(tzinfo).date() - timedelta(days=1)
+    date_ = datetime.now(user_settings.settings.time_zone).date() - timedelta(days=1)
     result = cash_amount.convert(currencies["BTC"], date_)
     assert result == CashAmount(Decimal(1), currencies["BTC"])
 
@@ -321,8 +321,10 @@ def get_currencies() -> dict[str, Currency]:
     byn = Currency("BYN", 2)
     xxx = Currency("xxx", 2)
 
-    today = datetime.now(tzinfo).date()
-    yesterday = datetime.now(tzinfo).date() - timedelta(days=1)
+    today = datetime.now(user_settings.settings.time_zone).date()
+    yesterday = datetime.now(user_settings.settings.time_zone).date() - timedelta(
+        days=1
+    )
 
     exchange_eur_czk = ExchangeRate(eur, czk)
     exchange_eur_czk.set_rate(today, Decimal("25"))

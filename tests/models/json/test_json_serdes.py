@@ -6,7 +6,7 @@ import pytest
 from hypothesis import given
 from hypothesis import strategies as st
 
-from src.models.constants import tzinfo
+import src.models.user_settings.user_settings as user_settings
 from src.models.json.custom_json_decoder import CustomJSONDecoder
 from src.models.json.custom_json_encoder import CustomJSONEncoder
 from src.models.model_objects.account_group import AccountGroup
@@ -55,7 +55,7 @@ def test_decimal() -> None:
 
 
 def test_datetime() -> None:
-    dt = datetime.now(tzinfo)
+    dt = datetime.now(user_settings.settings.time_zone)
     serialized = json.dumps(dt, cls=CustomJSONEncoder)
     decoded = json.loads(serialized, cls=CustomJSONDecoder)
     assert decoded == dt
@@ -72,14 +72,14 @@ def test_exchange_rate() -> None:
     primary = Currency("EUR", 2)
     secondary = Currency("CZK", 2)
     exchange_rate = ExchangeRate(primary, secondary)
-    exchange_rate.set_rate(datetime.now(tzinfo).date(), 1)
+    exchange_rate.set_rate(datetime.now(user_settings.settings.time_zone).date(), 1)
     serialized = json.dumps(exchange_rate, cls=CustomJSONEncoder)
     decoded = json.loads(serialized, cls=CustomJSONDecoder)
     decoded = ExchangeRate.deserialize(decoded, [primary, secondary])
     assert isinstance(decoded, ExchangeRate)
     assert decoded.primary_currency == exchange_rate.primary_currency
     assert decoded.secondary_currency == exchange_rate.secondary_currency
-    assert decoded.latest_date == datetime.now(tzinfo).date()
+    assert decoded.latest_date == datetime.now(user_settings.settings.time_zone).date()
     assert decoded.latest_rate == 1
 
 
@@ -170,7 +170,10 @@ def test_security_account() -> None:
 def test_security() -> None:
     currency = Currency("CZK", 2)
     security = Security("Test Name", "SYMB.OL", "ETF", currency, 1)
-    security.set_price(datetime.now(tzinfo).date(), CashAmount("1.234567890", currency))
+    security.set_price(
+        datetime.now(user_settings.settings.time_zone).date(),
+        CashAmount("1.234567890", currency),
+    )
     serialized = json.dumps(security, cls=CustomJSONEncoder)
     decoded = json.loads(serialized, cls=CustomJSONDecoder)
     decoded = Security.deserialize(decoded, [currency])
@@ -442,7 +445,7 @@ def test_record_keeper_transactions() -> None:
     record_keeper.add_security_account("ČSOB penzijní účet 2", None)
     record_keeper.add_cash_transaction(
         "chili con carne ingredients",
-        datetime.now(tzinfo),
+        datetime.now(user_settings.settings.time_zone),
         CashTransactionType.EXPENSE,
         "Bank Accounts/Raiffeisen",
         [("Food/Groceries", 1000)],
@@ -451,7 +454,7 @@ def test_record_keeper_transactions() -> None:
     )
     record_keeper.add_cash_transaction(
         "some stupid electronic device",
-        datetime.now(tzinfo),
+        datetime.now(user_settings.settings.time_zone),
         CashTransactionType.EXPENSE,
         "Bank Accounts/Raiffeisen",
         [("Electronics", 10000)],
@@ -460,7 +463,7 @@ def test_record_keeper_transactions() -> None:
     )
     record_keeper.add_refund(
         "refunding stupid electronic device",
-        datetime.now(tzinfo) + timedelta(days=1),
+        datetime.now(user_settings.settings.time_zone) + timedelta(days=1),
         str(record_keeper.transactions[1].uuid),
         "Bank Accounts/Raiffeisen",
         [("Electronics", 10000)],
@@ -469,7 +472,7 @@ def test_record_keeper_transactions() -> None:
     )
     record_keeper.add_cash_transfer(
         "sending money to Moneta",
-        datetime.now(tzinfo),
+        datetime.now(user_settings.settings.time_zone),
         "Bank Accounts/Raiffeisen",
         "Bank Accounts/Moneta",
         1000,
@@ -477,7 +480,7 @@ def test_record_keeper_transactions() -> None:
     )
     record_keeper.add_security_transaction(
         "buying ČSOB DPS shares",
-        datetime.now(tzinfo),
+        datetime.now(user_settings.settings.time_zone),
         SecurityTransactionType.BUY,
         "ČSOB Dynamický penzijní fond",
         1000,
@@ -487,7 +490,7 @@ def test_record_keeper_transactions() -> None:
     )
     record_keeper.add_security_transfer(
         "transfering DPS shares",
-        datetime.now(tzinfo),
+        datetime.now(user_settings.settings.time_zone),
         "ČSOB Dynamický penzijní fond",
         10,
         "ČSOB penzijní účet",

@@ -2,7 +2,7 @@ import logging
 from datetime import datetime
 from decimal import Decimal
 
-from src.models.constants import tzinfo
+import src.models.user_settings.user_settings as user_settings
 from src.models.record_keeper import RecordKeeper
 from src.presenters.utilities.event import Event
 from src.presenters.utilities.handle_exception import handle_exception
@@ -166,7 +166,7 @@ class CurrencyFormPresenter:
         last_value = exchange_rate.latest_rate
         last_value = last_value if last_value.is_finite() else Decimal(1)
         self._dialog = SetExchangeRateDialog(
-            date_today=datetime.now(tzinfo).date(),
+            date_today=datetime.now(user_settings.settings.time_zone).date(),
             exchange_rate=exchange_rate_code,
             last_value=last_value,
             parent=self._view,

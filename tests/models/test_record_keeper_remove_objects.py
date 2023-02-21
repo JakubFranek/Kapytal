@@ -3,7 +3,7 @@ from decimal import Decimal
 
 import pytest
 
-from src.models.constants import tzinfo
+import src.models.user_settings.user_settings as user_settings
 from src.models.custom_exceptions import InvalidOperationError, NotFoundError
 from src.models.model_objects.attributes import Attribute, AttributeType, CategoryType
 from src.models.model_objects.cash_objects import (
@@ -65,7 +65,12 @@ def test_remove_account_has_children() -> None:
     sender_path = "PARENT/TEST SENDER"
     recipient_path = "PARENT/TEST RECIPIENT"
     record_keeper.add_security_transfer(
-        "", datetime.now(tzinfo), "NAME", Decimal(1), sender_path, recipient_path
+        "",
+        datetime.now(user_settings.settings.time_zone),
+        "NAME",
+        Decimal(1),
+        sender_path,
+        recipient_path,
     )
 
     with pytest.raises(InvalidOperationError):
@@ -203,7 +208,7 @@ def test_remove_currency_referenced_in_transaction() -> None:
     record_keeper.add_security("NAME", "SYMB", "ETF", "CZK", 1)
     record_keeper.add_security_transaction(
         "",
-        datetime.now(tzinfo),
+        datetime.now(user_settings.settings.time_zone),
         SecurityTransactionType.BUY,
         "NAME",
         1,
@@ -244,7 +249,7 @@ def test_remove_tag_in_transaction() -> None:
     record_keeper.add_cash_account("ACCOUNT", "CZK", 0, None)
     record_keeper.add_cash_transaction(
         "",
-        datetime.now(tzinfo),
+        datetime.now(user_settings.settings.time_zone),
         CashTransactionType.EXPENSE,
         "ACCOUNT",
         [("Category", Decimal(1))],
@@ -268,7 +273,7 @@ def test_remove_payee_in_transaction() -> None:
     record_keeper.add_cash_account("ACCOUNT", "CZK", 0, None)
     record_keeper.add_cash_transaction(
         "",
-        datetime.now(tzinfo),
+        datetime.now(user_settings.settings.time_zone),
         CashTransactionType.EXPENSE,
         "ACCOUNT",
         [("Category", Decimal(1))],
@@ -308,7 +313,7 @@ def test_remove_category_in_transaction() -> None:
     record_keeper.add_cash_account("ACCOUNT", "CZK", 0, None)
     record_keeper.add_cash_transaction(
         "",
-        datetime.now(tzinfo),
+        datetime.now(user_settings.settings.time_zone),
         CashTransactionType.EXPENSE,
         "ACCOUNT",
         [("Category", Decimal(1))],

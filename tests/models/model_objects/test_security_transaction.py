@@ -7,8 +7,8 @@ import pytest
 from hypothesis import assume, given
 from hypothesis import strategies as st
 
+import src.models.user_settings.user_settings as user_settings
 from src.models.base_classes.account import UnrelatedAccountError
-from src.models.constants import tzinfo
 from src.models.model_objects.cash_objects import CashAccount
 from src.models.model_objects.currency_objects import (
     CashAmount,
@@ -46,7 +46,6 @@ def test_buy(
     cash_account: CashAccount,
     data: st.DataObject,
 ) -> None:
-
     currency = cash_account.currency
     price_per_share = data.draw(cash_amounts(currency=currency, min_value=0))
     security = data.draw(securities(cash_account.currency))
@@ -55,7 +54,7 @@ def test_buy(
     )
     datetime_ = data.draw(
         st.datetimes(
-            timezones=st.just(tzinfo),
+            timezones=st.just(user_settings.settings.time_zone),
         )
     )
     transaction = SecurityTransaction(
@@ -102,7 +101,7 @@ def test_sell(data: st.DataObject) -> None:
 
     sell = SecurityTransaction(
         "A Sell transaction",
-        datetime.now(tzinfo),
+        datetime.now(user_settings.settings.time_zone),
         SecurityTransactionType.SELL,
         security,
         shares,
@@ -123,7 +122,7 @@ def test_sell(data: st.DataObject) -> None:
     security=securities(),
     security_account=security_accounts(),
     cash_account=cash_accounts(),
-    datetime_=st.datetimes(timezones=st.just(tzinfo)),
+    datetime_=st.datetimes(timezones=st.just(user_settings.settings.time_zone)),
     data=st.data(),
 )
 def test_invalid_type_type(
@@ -157,7 +156,7 @@ def test_invalid_type_type(
     security=everything_except((Security, NoneType)),
     security_account=security_accounts(),
     cash_account=cash_accounts(),
-    datetime_=st.datetimes(timezones=st.just(tzinfo)),
+    datetime_=st.datetimes(timezones=st.just(user_settings.settings.time_zone)),
 )
 def test_invalid_security_type(
     type_: SecurityTransactionType,
@@ -187,7 +186,7 @@ def test_invalid_security_type(
     shares=everything_except((Decimal, str, int, NoneType)),
     security_account=security_accounts(),
     cash_account=cash_accounts(),
-    datetime_=st.datetimes(timezones=st.just(tzinfo)),
+    datetime_=st.datetimes(timezones=st.just(user_settings.settings.time_zone)),
 )
 def test_invalid_shares_type(
     type_: SecurityTransactionType,
@@ -218,7 +217,7 @@ def test_invalid_shares_type(
     shares=st.text(),
     security_account=security_accounts(),
     cash_account=cash_accounts(),
-    datetime_=st.datetimes(timezones=st.just(tzinfo)),
+    datetime_=st.datetimes(timezones=st.just(user_settings.settings.time_zone)),
 )
 def test_invalid_shares_str_value(
     type_: SecurityTransactionType,
@@ -250,7 +249,7 @@ def test_invalid_shares_str_value(
     shares=st.decimals(max_value=0),
     security_account=security_accounts(),
     cash_account=cash_accounts(),
-    datetime_=st.datetimes(timezones=st.just(tzinfo)),
+    datetime_=st.datetimes(timezones=st.just(user_settings.settings.time_zone)),
 )
 def test_invalid_shares_value(
     type_: SecurityTransactionType,
@@ -281,7 +280,7 @@ def test_invalid_shares_value(
     security=securities(),
     security_account=security_accounts(),
     cash_account=cash_accounts(),
-    datetime_=st.datetimes(timezones=st.just(tzinfo)),
+    datetime_=st.datetimes(timezones=st.just(user_settings.settings.time_zone)),
     data=st.data(),
 )
 def test_invalid_shares_unit(
@@ -315,7 +314,7 @@ def test_invalid_shares_unit(
     type_=st.sampled_from(SecurityTransactionType),
     security=securities(),
     security_account=security_accounts(),
-    datetime_=st.datetimes(timezones=st.just(tzinfo)),
+    datetime_=st.datetimes(timezones=st.just(user_settings.settings.time_zone)),
     data=st.data(),
 )
 def test_valid_shares_unit_str(
@@ -349,7 +348,7 @@ def test_valid_shares_unit_str(
     type_=st.sampled_from(SecurityTransactionType),
     security_account=everything_except((SecurityAccount, NoneType)),
     cash_account=cash_accounts(),
-    datetime_=st.datetimes(timezones=st.just(tzinfo)),
+    datetime_=st.datetimes(timezones=st.just(user_settings.settings.time_zone)),
     data=st.data(),
 )
 def test_invalid_security_account_type(
@@ -569,7 +568,7 @@ def test_set_attributes_invalid_amount_currency(data: st.DataObject) -> None:
 def get_sell() -> SecurityTransaction:
     buy = get_buy()
     description = "A Sell transaction"
-    datetime_ = datetime.now(tzinfo)
+    datetime_ = datetime.now(user_settings.settings.time_zone)
     type_ = SecurityTransactionType.SELL
     security = buy.security
     shares = Decimal("10")
@@ -588,7 +587,7 @@ def get_sell() -> SecurityTransaction:
 
 def get_buy() -> SecurityTransaction:
     description = "A Buy transaction"
-    datetime_ = datetime.now(tzinfo)
+    datetime_ = datetime.now(user_settings.settings.time_zone)
     type_ = SecurityTransactionType.BUY
     security = get_security()
     shares = Decimal("10")

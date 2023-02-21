@@ -8,8 +8,8 @@ import pytest
 from hypothesis import assume, given
 from hypothesis import strategies as st
 
+import src.models.user_settings.user_settings as user_settings
 from src.models.base_classes.account import Account
-from src.models.constants import tzinfo
 from src.models.model_objects.attributes import AttributeType, CategoryType
 from src.models.model_objects.cash_objects import (
     CashAccount,
@@ -214,7 +214,8 @@ def test_add_cash_account(
 @given(
     description=st.text(min_size=0, max_size=256),
     datetime_=st.datetimes(
-        min_value=datetime.now() + timedelta(days=1), timezones=st.just(tzinfo)
+        min_value=datetime.now() + timedelta(days=1),
+        timezones=st.just(user_settings.settings.time_zone),
     ),
     transaction_type=st.sampled_from(CashTransactionType),
     payee_name=names(),
@@ -286,7 +287,8 @@ def test_add_cash_transaction(
 @given(
     description=st.text(min_size=0, max_size=256),
     datetime_=st.datetimes(
-        min_value=datetime.now() + timedelta(days=1), timezones=st.just(tzinfo)
+        min_value=datetime.now() + timedelta(days=1),
+        timezones=st.just(user_settings.settings.time_zone),
     ),
     amount_sent=valid_decimals(min_value=0.01),
     amount_received=valid_decimals(min_value=0.01),
@@ -537,7 +539,7 @@ def test_add_refund() -> RecordKeeper:
     refunded_transaction: CashTransaction = record_keeper.transactions[0]
     record_keeper.add_refund(
         "Refund!",
-        datetime.now(tzinfo),
+        datetime.now(user_settings.settings.time_zone),
         str(refunded_transaction.uuid),
         "Bank Accounts/Raiffeisen CZK",
         (("Food and Drink/Groceries", Decimal(1000)),),
@@ -555,7 +557,7 @@ def test_add_refund_wrong_uuid() -> RecordKeeper:
     with pytest.raises(ValueError, match="Transaction with UUID 'xxx' not found."):
         record_keeper.add_refund(
             description="Refund!",
-            datetime_=datetime.now(tzinfo),
+            datetime_=datetime.now(user_settings.settings.time_zone),
             refunded_transaction_uuid="xxx",
             refunded_account_path="Bank Accounts/Raiffeisen CZK",
             category_path_amount_pairs=(("Food and Drink/Groceries", Decimal(1000)),),
@@ -646,7 +648,7 @@ def test_get_security_by_uuid_does_not_exist(uuid: str) -> None:
     description=st.text(min_size=1, max_size=256),
     type_=st.sampled_from(SecurityTransactionType),
     price_per_share=valid_decimals(min_value=0.0),
-    datetime_=st.datetimes(timezones=st.just(tzinfo)),
+    datetime_=st.datetimes(timezones=st.just(user_settings.settings.time_zone)),
     data=st.data(),
 )
 def test_add_security_transaction(
@@ -694,7 +696,7 @@ def test_add_security_transaction(
 
 @given(
     description=st.text(min_size=1, max_size=256),
-    datetime_=st.datetimes(timezones=st.just(tzinfo)),
+    datetime_=st.datetimes(timezones=st.just(user_settings.settings.time_zone)),
     data=st.data(),
 )
 def test_add_security_transfer(
@@ -737,7 +739,9 @@ def test_add_security_transfer(
 
 def test_set_exchange() -> None:
     record_keeper = get_preloaded_record_keeper()
-    yesterday = datetime.now(tzinfo).date() - timedelta(days=1)
+    yesterday = datetime.now(user_settings.settings.time_zone).date() - timedelta(
+        days=1
+    )
     assert record_keeper.exchange_rates[0].latest_rate == Decimal(25)
     record_keeper.set_exchange_rate("EUR/CZK", Decimal(1), yesterday)
     assert record_keeper.exchange_rates[0].rate_history[yesterday] == Decimal(1)
@@ -750,14 +754,18 @@ def test_set_exchange_rate_invalid_type(exchange_rate_str: Any) -> None:
         TypeError, match="Parameter 'exchange_rate_str' must be a string."
     ):
         record_keeper.set_exchange_rate(
-            exchange_rate_str, Decimal(1), datetime.now(tzinfo).date()
+            exchange_rate_str,
+            Decimal(1),
+            datetime.now(user_settings.settings.time_zone).date(),
         )
 
 
 def test_set_exchange_rate_does_not_exist() -> None:
     record_keeper = RecordKeeper()
     with pytest.raises(NotFoundError):
-        record_keeper.set_exchange_rate("N/A", Decimal(1), datetime.now(tzinfo).date())
+        record_keeper.set_exchange_rate(
+            "N/A", Decimal(1), datetime.now(user_settings.settings.time_zone).date()
+        )
 
 
 def test_add_security_account_already_exists() -> None:
@@ -832,7 +840,7 @@ def get_preloaded_record_keeper_with_security_transactions() -> RecordKeeper:
     record_keeper = get_preloaded_record_keeper()
     record_keeper.add_security_transaction(
         description="Monthly buy of VWCE",
-        datetime_=datetime.now(tzinfo) - timedelta(days=1),
+        datetime_=datetime.now(user_settings.settings.time_zone) - timedelta(days=1),
         type_=SecurityTransactionType.BUY,
         security_name="Vanguard FTSE All-World",
         shares=Decimal(10),
@@ -842,7 +850,7 @@ def get_preloaded_record_keeper_with_security_transactions() -> RecordKeeper:
     )
     record_keeper.add_security_transaction(
         description="Monthly buy of VWCE",
-        datetime_=datetime.now(tzinfo) - timedelta(days=31),
+        datetime_=datetime.now(user_settings.settings.time_zone) - timedelta(days=31),
         type_=SecurityTransactionType.BUY,
         security_name="Vanguard FTSE All-World",
         shares=Decimal(10),
@@ -852,7 +860,7 @@ def get_preloaded_record_keeper_with_security_transactions() -> RecordKeeper:
     )
     record_keeper.add_security_transaction(
         description="Monthly buy of ČSOB DPS",
-        datetime_=datetime.now(tzinfo) - timedelta(days=1),
+        datetime_=datetime.now(user_settings.settings.time_zone) - timedelta(days=1),
         type_=SecurityTransactionType.BUY,
         security_name="ČSOB Dynamický penzijní fond",
         shares=Decimal(2750),
@@ -862,7 +870,7 @@ def get_preloaded_record_keeper_with_security_transactions() -> RecordKeeper:
     )
     record_keeper.add_security_transaction(
         description="Monthly buy of ČSOB DPS",
-        datetime_=datetime.now(tzinfo) - timedelta(days=31),
+        datetime_=datetime.now(user_settings.settings.time_zone) - timedelta(days=31),
         type_=SecurityTransactionType.BUY,
         security_name="ČSOB Dynamický penzijní fond",
         shares=Decimal(2850),
@@ -872,7 +880,7 @@ def get_preloaded_record_keeper_with_security_transactions() -> RecordKeeper:
     )
     record_keeper.add_security_transfer(
         description="Security transfer to Degiro",
-        datetime_=datetime.now(tzinfo),
+        datetime_=datetime.now(user_settings.settings.time_zone),
         security_name="Vanguard FTSE All-World",
         shares=Decimal(10),
         account_sender_path="Security Accounts/Interactive Brokers",
@@ -880,7 +888,7 @@ def get_preloaded_record_keeper_with_security_transactions() -> RecordKeeper:
     )
     record_keeper.add_security_transfer(
         description="Security transfer to Degiro",
-        datetime_=datetime.now(tzinfo) - timedelta(days=30),
+        datetime_=datetime.now(user_settings.settings.time_zone) - timedelta(days=30),
         security_name="Vanguard FTSE All-World",
         shares=Decimal(10),
         account_sender_path="Security Accounts/Interactive Brokers",
@@ -893,7 +901,7 @@ def get_preloaded_record_keeper_with_refunds() -> RecordKeeper:
     record_keeper = get_preloaded_record_keeper()
     record_keeper.add_cash_transaction(
         "Shopping for cooking",
-        datetime.now(tzinfo) - timedelta(days=2),
+        datetime.now(user_settings.settings.time_zone) - timedelta(days=2),
         CashTransactionType.EXPENSE,
         "Bank Accounts/Raiffeisen CZK",
         (("Food and Drink/Groceries", Decimal(1000)),),
@@ -902,7 +910,7 @@ def get_preloaded_record_keeper_with_refunds() -> RecordKeeper:
     )
     record_keeper.add_cash_transaction(
         "Electronic device",
-        datetime.now(tzinfo) - timedelta(days=2),
+        datetime.now(user_settings.settings.time_zone) - timedelta(days=2),
         CashTransactionType.EXPENSE,
         "Bank Accounts/Moneta EUR",
         (("Electronics", Decimal(400)),),
@@ -914,7 +922,7 @@ def get_preloaded_record_keeper_with_refunds() -> RecordKeeper:
 
     record_keeper.add_refund(
         description="An expense transaction",
-        datetime_=datetime.now(tzinfo),
+        datetime_=datetime.now(user_settings.settings.time_zone),
         refunded_transaction_uuid=str(transaction_cooking.uuid),
         refunded_account_path="Bank Accounts/Raiffeisen CZK",
         category_path_amount_pairs=(("Food and Drink/Groceries", Decimal(250)),),
@@ -923,7 +931,7 @@ def get_preloaded_record_keeper_with_refunds() -> RecordKeeper:
     )
     record_keeper.add_refund(
         description="An expense transaction",
-        datetime_=datetime.now(tzinfo),
+        datetime_=datetime.now(user_settings.settings.time_zone),
         refunded_transaction_uuid=str(transaction_cooking.uuid),
         refunded_account_path="Bank Accounts/Raiffeisen CZK",
         category_path_amount_pairs=(("Food and Drink/Groceries", Decimal(750)),),
@@ -932,7 +940,7 @@ def get_preloaded_record_keeper_with_refunds() -> RecordKeeper:
     )
     record_keeper.add_refund(
         description="An expense transaction",
-        datetime_=datetime.now(tzinfo),
+        datetime_=datetime.now(user_settings.settings.time_zone),
         refunded_transaction_uuid=str(transaction_electronics.uuid),
         refunded_account_path="Bank Accounts/Moneta EUR",
         category_path_amount_pairs=(("Electronics", Decimal(400)),),
@@ -946,7 +954,7 @@ def get_preloaded_record_keeper_with_expense() -> RecordKeeper:
     record_keeper = get_preloaded_record_keeper()
     record_keeper.add_cash_transaction(
         "An expense transaction",
-        datetime.now(tzinfo),
+        datetime.now(user_settings.settings.time_zone),
         CashTransactionType.EXPENSE,
         "Bank Accounts/Raiffeisen CZK",
         (("Food and Drink/Groceries", Decimal(1000)),),
@@ -960,7 +968,7 @@ def get_preloaded_record_keeper_with_cash_transactions() -> RecordKeeper:
     record_keeper = get_preloaded_record_keeper()
     record_keeper.add_cash_transaction(
         "Ingredients for cooking",
-        datetime.now(tzinfo),
+        datetime.now(user_settings.settings.time_zone),
         CashTransactionType.EXPENSE,
         "Bank Accounts/Raiffeisen CZK",
         (("Food and Drink/Groceries", Decimal(1000)),),
@@ -969,7 +977,7 @@ def get_preloaded_record_keeper_with_cash_transactions() -> RecordKeeper:
     )
     record_keeper.add_cash_transaction(
         "Pizza with GF",
-        datetime.now(tzinfo) - timedelta(days=1),
+        datetime.now(user_settings.settings.time_zone) - timedelta(days=1),
         CashTransactionType.EXPENSE,
         "Bank Accounts/Raiffeisen CZK",
         (("Food and Drink/Eating out", Decimal(500)),),
@@ -978,7 +986,7 @@ def get_preloaded_record_keeper_with_cash_transactions() -> RecordKeeper:
     )
     record_keeper.add_cash_transaction(
         "Salary",
-        datetime.now(tzinfo) - timedelta(days=7),
+        datetime.now(user_settings.settings.time_zone) - timedelta(days=7),
         CashTransactionType.INCOME,
         "Bank Accounts/Raiffeisen CZK",
         (("Salary", Decimal(50000)),),
@@ -987,7 +995,7 @@ def get_preloaded_record_keeper_with_cash_transactions() -> RecordKeeper:
     )
     record_keeper.add_cash_transaction(
         "Eating out on vacation",
-        datetime.now(tzinfo) - timedelta(days=180),
+        datetime.now(user_settings.settings.time_zone) - timedelta(days=180),
         CashTransactionType.EXPENSE,
         "Bank Accounts/Moneta EUR",
         (("Food and Drink/Eating out", Decimal(30)),),
@@ -1001,7 +1009,7 @@ def get_preloaded_record_keeper_with_cash_transfers() -> RecordKeeper:
     record_keeper = get_preloaded_record_keeper()
     record_keeper.add_cash_transfer(
         "Salary from Fio to RB",
-        datetime.now(tzinfo) - timedelta(days=7),
+        datetime.now(user_settings.settings.time_zone) - timedelta(days=7),
         "Bank Accounts/Fio CZK",
         "Bank Accounts/Raiffeisen CZK",
         50000,
@@ -1009,7 +1017,7 @@ def get_preloaded_record_keeper_with_cash_transfers() -> RecordKeeper:
     )
     record_keeper.add_cash_transfer(
         "Savings from Fio to Creditas",
-        datetime.now(tzinfo) - timedelta(days=37),
+        datetime.now(user_settings.settings.time_zone) - timedelta(days=37),
         "Bank Accounts/Fio CZK",
         "Bank Accounts/Creditas CZK",
         100000,
@@ -1017,7 +1025,7 @@ def get_preloaded_record_keeper_with_cash_transfers() -> RecordKeeper:
     )
     record_keeper.add_cash_transfer(
         "Conversion from RB to Moneta",
-        datetime.now(tzinfo) - timedelta(days=6),
+        datetime.now(user_settings.settings.time_zone) - timedelta(days=6),
         "Bank Accounts/Raiffeisen CZK",
         "Bank Accounts/Moneta EUR",
         25000,
@@ -1025,7 +1033,7 @@ def get_preloaded_record_keeper_with_cash_transfers() -> RecordKeeper:
     )
     record_keeper.add_cash_transfer(
         "Transfer from Moneta to Revolut",
-        datetime.now(tzinfo) - timedelta(days=5),
+        datetime.now(user_settings.settings.time_zone) - timedelta(days=5),
         "Bank Accounts/Moneta EUR",
         "Bank Accounts/Revolut EUR",
         1000,
@@ -1033,7 +1041,7 @@ def get_preloaded_record_keeper_with_cash_transfers() -> RecordKeeper:
     )
     record_keeper.add_cash_transfer(
         "Conversion from Revolut to Fio",
-        datetime.now(tzinfo) - timedelta(days=4),
+        datetime.now(user_settings.settings.time_zone) - timedelta(days=4),
         "Bank Accounts/Moneta EUR",
         "Bank Accounts/Fio CZK",
         1000,
@@ -1046,7 +1054,7 @@ def get_preloaded_record_keeper_with_various_transactions() -> RecordKeeper:
     record_keeper = get_preloaded_record_keeper()
     record_keeper.add_cash_transfer(
         "Salary from Fio to RB",
-        datetime.now(tzinfo) - timedelta(days=7),
+        datetime.now(user_settings.settings.time_zone) - timedelta(days=7),
         "Bank Accounts/Fio CZK",
         "Bank Accounts/Raiffeisen CZK",
         50000,
@@ -1054,7 +1062,7 @@ def get_preloaded_record_keeper_with_various_transactions() -> RecordKeeper:
     )
     record_keeper.add_cash_transaction(
         "Ingredients for cooking",
-        datetime.now(tzinfo),
+        datetime.now(user_settings.settings.time_zone),
         CashTransactionType.EXPENSE,
         "Bank Accounts/Raiffeisen CZK",
         (("Food and Drink/Groceries", Decimal(1000)),),
@@ -1063,7 +1071,7 @@ def get_preloaded_record_keeper_with_various_transactions() -> RecordKeeper:
     )
     record_keeper.add_cash_transaction(
         "Electronic device",
-        datetime.now(tzinfo) - timedelta(days=2),
+        datetime.now(user_settings.settings.time_zone) - timedelta(days=2),
         CashTransactionType.EXPENSE,
         "Bank Accounts/Moneta EUR",
         (("Electronics", Decimal(400)),),
@@ -1077,7 +1085,7 @@ def get_preloaded_record_keeper_with_various_transactions() -> RecordKeeper:
     )
     record_keeper.add_refund(
         description="An expense transaction",
-        datetime_=datetime.now(tzinfo),
+        datetime_=datetime.now(user_settings.settings.time_zone),
         refunded_transaction_uuid=str(transaction_electronics.uuid),
         refunded_account_path="Bank Accounts/Moneta EUR",
         category_path_amount_pairs=(("Electronics", Decimal(400)),),
@@ -1086,7 +1094,7 @@ def get_preloaded_record_keeper_with_various_transactions() -> RecordKeeper:
     )
     record_keeper.add_security_transaction(
         description="Monthly buy of ČSOB DPS",
-        datetime_=datetime.now(tzinfo) - timedelta(days=31),
+        datetime_=datetime.now(user_settings.settings.time_zone) - timedelta(days=31),
         type_=SecurityTransactionType.BUY,
         security_name="ČSOB Dynamický penzijní fond",
         shares=Decimal(2850),
@@ -1096,7 +1104,7 @@ def get_preloaded_record_keeper_with_various_transactions() -> RecordKeeper:
     )
     record_keeper.add_security_transfer(
         description="Security transfer to Degiro",
-        datetime_=datetime.now(tzinfo),
+        datetime_=datetime.now(user_settings.settings.time_zone),
         security_name="Vanguard FTSE All-World",
         shares=Decimal(10),
         account_sender_path="Security Accounts/Interactive Brokers",
@@ -1111,10 +1119,14 @@ def get_preloaded_record_keeper() -> RecordKeeper:
     record_keeper.add_currency("EUR", 2)
     record_keeper.add_currency("BTC", 8)
     record_keeper.add_exchange_rate("EUR", "CZK")
-    record_keeper.set_exchange_rate("EUR/CZK", Decimal(25), datetime.now(tzinfo).date())
+    record_keeper.set_exchange_rate(
+        "EUR/CZK", Decimal(25), datetime.now(user_settings.settings.time_zone).date()
+    )
     record_keeper.add_exchange_rate("BTC", "CZK")
     record_keeper.set_exchange_rate(
-        "BTC/CZK", Decimal("600000"), datetime.now(tzinfo).date()
+        "BTC/CZK",
+        Decimal("600000"),
+        datetime.now(user_settings.settings.time_zone).date(),
     )
     record_keeper.add_account_group("Bank Accounts")
     record_keeper.add_account_group("Security Accounts")
