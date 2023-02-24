@@ -10,12 +10,16 @@ from types import TracebackType
 
 import src.models.user_settings.user_settings as user_settings
 
+# TODO: copy README.md to backup paths if not already present
+
 
 def backup_json_file(file_path: Path) -> None:
     dt_now = datetime.now(user_settings.settings.time_zone)
+    size_limit = user_settings.settings.backups_max_size_bytes
 
     file_stem = file_path.stem
     backup_name = file_stem + "_" + dt_now.strftime("%Y_%m_%d_%Hh%Mm%Ss") + ".json"
+
     for backup_directory in user_settings.settings.backup_paths:
         backup_directory.mkdir(exist_ok=True, parents=True)
 
@@ -23,18 +27,34 @@ def backup_json_file(file_path: Path) -> None:
         shutil.copyfile(file_path, backup_path)
         logging.info(f"Backed up '{file_path}' to '{backup_path}'")
 
-        old_backup_paths = [
-            file_path
-            for file_path in backup_directory.iterdir()
-            if file_path.is_file() and file_path.name != "README.md"
-        ]
-        total_size = sum(
-            f.stat().st_size for f in backup_directory.glob("**/*") if f.is_file()
-        )  # size in bytes
-        if total_size > user_settings.settings.backups_max_size_bytes:
-            oldest_backup = min(old_backup_paths, key=os.path.getctime)
-            logging.info(f"Removing oldest backup: '{oldest_backup}'")
-            oldest_backup.unlink()
+        while True:
+            # Keep deleting backups until size limit is satisfied
+
+            old_backup_paths = [
+                file_path
+                for file_path in backup_directory.iterdir()
+                if file_path.is_file() and file_path.name != "README.md"
+            ]
+            total_size = sum(f.stat().st_size for f in old_backup_paths if f.is_file())
+
+            if len(old_backup_paths) == 1 and total_size > size_limit:
+                logging.warning(
+                    f"Only the latest backup is left, size limit of "
+                    f"{size_limit:,} bytes could not be reached: '{backup_directory}'"
+                )
+                return
+
+            if total_size <= size_limit:
+                logging.debug(
+                    f"Backup size limit satisfied ({total_size:,} / "
+                    f"{size_limit:,} bytes): '{backup_directory}'"
+                )
+                return
+
+            if total_size > size_limit:
+                oldest_backup = min(old_backup_paths, key=os.path.getctime)
+                logging.info(f"Removing oldest backup: '{oldest_backup}'")
+                oldest_backup.unlink()
 
 
 def get_exception_display_info() -> tuple[str, str] | None:

@@ -68,7 +68,7 @@ def remove_old_logs() -> None:
     size_limit = user_settings.settings.logs_max_size_bytes
 
     while True:
-        # Keep deleting logs until size limit is reached or all logs are deleted
+        # Keep deleting logs until size limit is reached or all old logs are deleted
 
         while True:
             # Ensure there is the same number of INFO and DEBUG logs
@@ -88,22 +88,22 @@ def remove_old_logs() -> None:
             elif logs_info_number < logs_debug_number:
                 _remove_oldest_log(dir_logs_debug)
 
-        if logs_info_number <= 1:
+        logs_info_size = _get_directory_size(dir_logs_info)
+        logs_debug_size = _get_directory_size(dir_logs_debug)
+        total_size = logs_info_size + logs_debug_size
+
+        if logs_info_number <= 1 and total_size >= size_limit:
             logging.warning(
                 f"All old logs deleted, size limit of {size_limit:,} bytes "
                 "could not be reached, continuing"
             )
-            return  # only the current log is left
-
-        logs_info_size = _get_directory_size(dir_logs_info)
-        logs_debug_size = _get_directory_size(dir_logs_debug)
-        total_size = logs_info_size + logs_debug_size
+            return
 
         if total_size <= size_limit:
             logging.debug(
                 f"Logs size limit satisfied ({total_size:,} / {size_limit:,} bytes)"
             )
-            return  # logs are within size limit
+            return
 
         _remove_oldest_log(dir_logs_info)
         _remove_oldest_log(dir_logs_debug)
