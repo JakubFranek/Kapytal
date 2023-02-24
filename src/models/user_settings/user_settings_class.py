@@ -8,7 +8,7 @@ from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
 
 
 class UserSettings(JSONSerializableMixin):
-    """This class is intended to be instantiated only once, within user_settings."""
+    """This class is intended to be instantiated only once, within userusersettings."""
 
     def __init__(self) -> None:
         self._time_zone = ZoneInfo("UTC")
@@ -24,11 +24,14 @@ class UserSettings(JSONSerializableMixin):
 
     @time_zone.setter
     def time_zone(self, time_zone: ZoneInfo) -> None:
+        if not isinstance(time_zone, ZoneInfo):
+            raise TypeError("UserSettings.time_zone must be a ZoneInfo.")
+
         if self._time_zone == time_zone:
             return
 
         logging.info(
-            f"Changing _Settings.time_zone from {self._time_zone} to {time_zone}"
+            f"Changing UserSettings.time_zone from {self._time_zone} to {time_zone}"
         )
         self._time_zone = time_zone
 
@@ -39,14 +42,14 @@ class UserSettings(JSONSerializableMixin):
     @logs_max_size_bytes.setter
     def logs_max_size_bytes(self, value: int) -> None:
         if not isinstance(value, int):
-            raise TypeError("_Settings.logs_max_size_bytes must be an int.")
+            raise TypeError("UserSettings.logs_max_size_bytes must be an int.")
         if value < 0:
-            raise ValueError("_Settings.logs_max_size_bytes must be positive.")
+            raise ValueError("UserSettings.logs_max_size_bytes must be positive.")
         if self._logs_max_size_bytes == value:
             return
 
         logging.info(
-            "Changing _Settings.logs_max_size_bytes from "
+            "Changing UserSettings.logs_max_size_bytes from "
             f"{self._logs_max_size_bytes:,} to {value:,}"
         )
         self._logs_max_size_bytes = value
@@ -58,14 +61,14 @@ class UserSettings(JSONSerializableMixin):
     @backups_max_size_bytes.setter
     def backups_max_size_bytes(self, value: int) -> None:
         if not isinstance(value, int):
-            raise TypeError("_Settings.backups_max_size_bytes must be an int.")
+            raise TypeError("UserSettings.backups_max_size_bytes must be an int.")
         if value < 0:
-            raise ValueError("_Settings.backups_max_size_bytes must be positive.")
+            raise ValueError("UserSettings.backups_max_size_bytes must be positive.")
         if self._backups_max_size_bytes == value:
             return
 
         logging.info(
-            "Changing _Settings.backups_max_size_bytes from "
+            "Changing UserSettings.backups_max_size_bytes from "
             f"{self._backups_max_size_bytes} to {value}"
         )
         self._backups_max_size_bytes = value
@@ -77,7 +80,14 @@ class UserSettings(JSONSerializableMixin):
     @backup_paths.setter
     def backup_paths(self, values: Collection[Path]) -> None:
         if any(not isinstance(value, Path) for value in values):
-            raise TypeError("_Settings.backup_paths must be a Collection of Paths.")
+            raise TypeError("UserSettings.backup_paths must be a Collection of Paths.")
+
+        values_set = set(values)
+        if len(values_set) < len(values):
+            raise ValueError(
+                "UserSettings.backup_paths must not contain duplicate Paths."
+            )
+
         for value in values:
             if not value.is_dir():
                 raise ValueError(

@@ -32,6 +32,7 @@ from src.models.model_objects.security_objects import (
     SecurityTransfer,
 )
 from src.models.record_keeper import RecordKeeper
+from src.models.user_settings.user_settings_class import UserSettings
 from tests.models.test_assets.composites import (
     attributes,
     cash_transactions,
@@ -517,3 +518,14 @@ def test_record_keeper_transactions_invalid_datatype() -> None:
         record_keeper._deserialize_transactions(
             [transaction_dict], None, None, None, None, None, None
         )
+
+
+def test_user_settings() -> None:
+    settings = UserSettings()
+    serialized = json.dumps(settings, cls=CustomJSONEncoder)
+    decoded = json.loads(serialized, cls=CustomJSONDecoder)
+    assert isinstance(decoded, UserSettings)
+    assert decoded.time_zone == settings.time_zone
+    assert decoded.backup_paths == settings.backup_paths
+    assert decoded.logs_max_size_bytes == settings.logs_max_size_bytes
+    assert decoded.backups_max_size_bytes == settings.backups_max_size_bytes
