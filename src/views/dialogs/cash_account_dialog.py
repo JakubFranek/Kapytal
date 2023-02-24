@@ -12,7 +12,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from src.views.ui_files.Ui_cash_account_dialog import Ui_CashAccountDialog
+from src.views.ui_files.dialogs.Ui_cash_account_dialog import Ui_CashAccountDialog
 
 
 class CashAccountDialog(QDialog, Ui_CashAccountDialog):

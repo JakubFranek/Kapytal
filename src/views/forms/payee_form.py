@@ -5,7 +5,7 @@ from PyQt6.QtGui import QCloseEvent, QIcon
 from PyQt6.QtWidgets import QHeaderView, QLineEdit, QWidget
 
 from src.views.constants import PayeeTableColumns
-from src.views.ui_files.Ui_payee_form import Ui_PayeeForm
+from src.views.ui_files.forms.Ui_payee_form import Ui_PayeeForm
 
 
 class PayeeForm(QWidget, Ui_PayeeForm):

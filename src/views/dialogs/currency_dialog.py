@@ -4,7 +4,7 @@ from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QAbstractButton, QDialog, QDialogButtonBox, QWidget
 
-from src.views.ui_files.Ui_currency_dialog import Ui_CurrencyDialog
+from src.views.ui_files.dialogs.Ui_currency_dialog import Ui_CurrencyDialog
 
 
 class CurrencyDialog(QDialog, Ui_CurrencyDialog):

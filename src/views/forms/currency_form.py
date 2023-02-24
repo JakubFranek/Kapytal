@@ -5,7 +5,7 @@ from PyQt6.QtGui import QCloseEvent, QIcon
 from PyQt6.QtWidgets import QHeaderView, QWidget
 
 from src.views.constants import ExchangeRateTableColumns
-from src.views.ui_files.Ui_currency_form import Ui_CurrencyForm
+from src.views.ui_files.forms.Ui_currency_form import Ui_CurrencyForm
 
 
 # TODO: add some way to view and edit exchange rate history

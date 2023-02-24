@@ -12,7 +12,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from src.views.ui_files.Ui_security_dialog import Ui_SecurityDialog
+from src.views.ui_files.dialogs.Ui_security_dialog import Ui_SecurityDialog
 
 
 class SecurityDialog(QDialog, Ui_SecurityDialog):

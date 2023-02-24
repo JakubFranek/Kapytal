@@ -5,7 +5,7 @@ from PyQt6.QtGui import QCloseEvent, QIcon
 from PyQt6.QtWidgets import QHeaderView, QLineEdit, QWidget
 
 from src.views.constants import TagTableColumns
-from src.views.ui_files.Ui_tag_form import Ui_TagForm
+from src.views.ui_files.forms.Ui_tag_form import Ui_TagForm
 
 
 class TagForm(QWidget, Ui_TagForm):
