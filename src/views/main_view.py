@@ -71,7 +71,7 @@ class MainView(QMainWindow, Ui_MainWindow):
         return None
 
     def set_save_status(
-        self, current_file_path: str | None, unsaved_changes: bool
+        self, current_file_path: Path | None, unsaved_changes: bool
     ) -> None:
         if unsaved_changes is True:
             self.actionSave.setIcon(QIcon("icons_16:disk--exclamation.png"))
@@ -88,7 +88,9 @@ class MainView(QMainWindow, Ui_MainWindow):
             self.setWindowTitle(f"Kapytal v{version}")
         else:
             self.actionSave.setEnabled(True)
-            self.setWindowTitle(f"Kapytal v{version} - " + current_file_path + star_str)
+            self.setWindowTitle(
+                f"Kapytal v{version} - " + str(current_file_path) + star_str
+            )
 
     def show_status_message(self, message: str, msecs: int) -> None:
         self.statusBar().showMessage(message, msecs)

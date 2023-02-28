@@ -223,7 +223,7 @@ class MainPresenter:
 
     def _update_unsaved_changes(self, unsaved_changes: bool) -> None:
         self._unsaved_changes = unsaved_changes
-        self._view.set_save_status(str(self.current_file_path), self._unsaved_changes)
+        self._view.set_save_status(self.current_file_path, self._unsaved_changes)
 
     def _load_record_keeper(self, record_keeper: RecordKeeper) -> None:
         self._record_keeper = record_keeper
