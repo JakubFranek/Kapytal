@@ -4,14 +4,18 @@ from pathlib import Path
 from typing import Any, Self
 from zoneinfo import ZoneInfo
 
+from tzlocal import get_localzone
+
 from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
+
+# IDEA: think about necessity of saving time zone info to JSON
 
 
 class UserSettings(JSONSerializableMixin):
-    """This class is intended to be instantiated only once, within userusersettings."""
+    """This class is intended to be instantiated only once, within user_settings."""
 
     def __init__(self) -> None:
-        self._time_zone = ZoneInfo("UTC")
+        self._time_zone = get_localzone()
 
         self._logs_max_size_bytes = 1_000_000
         self._backups_max_size_bytes = 10_000_000
@@ -91,16 +95,16 @@ class UserSettings(JSONSerializableMixin):
         for value in values:
             if not value.is_dir():
                 raise ValueError(
-                    f"Path '{value}' does not point to an existing directory."
+                    f"Path {value} does not point to an existing directory."
                 )
 
         new_values = [value for value in values if value not in self._backup_paths]
         deleted_values = [value for value in self._backup_paths if value not in values]
 
         for new_value in new_values:
-            logging.info(f"Adding backup path: '{new_value}'")
+            logging.info(f"Adding backup path: {new_value}")
         for deleted_value in deleted_values:
-            logging.info(f"Removing backup path: '{deleted_value}'")
+            logging.info(f"Removing backup path: {deleted_value}")
 
         self._backup_paths: list[Path] = list(values)
 

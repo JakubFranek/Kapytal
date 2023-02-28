@@ -1,5 +1,4 @@
 import logging
-import zoneinfo
 
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QCloseEvent, QIcon
@@ -25,23 +24,11 @@ class SettingsForm(QWidget, Ui_SettingsForm):
         self.setWindowFlag(Qt.WindowType.Window)
         self.setWindowIcon(QIcon("icons_16:gear.png"))
 
-        timezones = sorted(zoneinfo.available_timezones())
-        for timezone in timezones:
-            self.timeZoneComboBox.addItem(timezone)
-
         self.buttonBox.clicked.connect(self._handle_button_box_click)
         self.addBackupDirectoryButton.clicked.connect(self.signal_add_backup_path)
         self.removeBackupDirectoryButton.clicked.connect(self.signal_remove_backup_path)
         self.openBackupDirectoryButton.clicked.connect(self.signal_open_backup_path)
         self.openLogsDirectoryButton.clicked.connect(self.signal_open_logs)
-
-    @property
-    def time_zone(self) -> str:
-        return self.timeZoneComboBox.currentText()
-
-    @time_zone.setter
-    def time_zone(self, value: str) -> None:
-        self.timeZoneComboBox.setCurrentText(value)
 
     @property
     def backups_max_size_KB(self) -> int:

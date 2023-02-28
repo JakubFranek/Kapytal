@@ -28,23 +28,6 @@
      <property name="currentIndex">
       <number>0</number>
      </property>
-     <widget class="QWidget" name="generalTab">
-      <attribute name="title">
-       <string>General</string>
-      </attribute>
-      <layout class="QFormLayout" name="formLayout">
-       <item row="0" column="0">
-        <widget class="QLabel" name="timeZoneLabel">
-         <property name="text">
-          <string>Time zone</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="1">
-        <widget class="QComboBox" name="timeZoneComboBox"/>
-       </item>
-      </layout>
-     </widget>
      <widget class="QWidget" name="backupsTab">
       <attribute name="title">
        <string>Backups</string>
