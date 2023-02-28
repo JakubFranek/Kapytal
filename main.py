@@ -26,17 +26,19 @@ if __name__ == "__main__":
 
     sys.excepthook = handle_uncaught_exception
 
-    app_root_dir = Path(__file__).resolve().parent  # get Kapytal root path
+    app_root_path = Path(__file__).resolve().parent  # get Kapytal root path
 
-    setup_logging(app_root_dir)  # setup logging
+    setup_logging(app_root_path)
 
-    user_settings.set_path(app_root_dir / SETTINGS_PATH_SUFFIX)
+    user_settings.set_path(app_root_path / SETTINGS_PATH_SUFFIX)
     user_settings.set_json_decoder(CustomJSONDecoder)
     user_settings.set_json_encoder(CustomJSONEncoder)
-    if Path(app_root_dir / SETTINGS_PATH_SUFFIX).exists():
+    if Path(app_root_path / SETTINGS_PATH_SUFFIX).exists():
         user_settings.load()
     else:
-        user_settings.settings.backup_paths = [Path(app_root_dir / BACKUPS_PATH_SUFFIX)]
+        user_settings.settings.backup_paths = [
+            Path(app_root_path / BACKUPS_PATH_SUFFIX)
+        ]
         user_settings.save()
 
     remove_old_logs()  # remove logs once settings are initialized
@@ -55,7 +57,7 @@ if __name__ == "__main__":
     main_view = MainView()
 
     logging.debug("Creating MainPresenter")
-    main_presenter = MainPresenter(main_view, app)
+    main_presenter = MainPresenter(main_view, app, app_root_path)
 
     logging.info("Executing QApplication, awaiting user input")
     app.exec()

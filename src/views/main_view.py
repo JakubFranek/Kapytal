@@ -21,11 +21,14 @@ from src.views.ui_files.Ui_main_window import Ui_MainWindow
 
 class MainView(QMainWindow, Ui_MainWindow):
     signal_exit = pyqtSignal()
+
     signal_open_currency_form = pyqtSignal()
     signal_open_security_form = pyqtSignal()
     signal_open_payee_form = pyqtSignal()
     signal_open_tag_form = pyqtSignal()
     signal_open_category_form = pyqtSignal()
+    signal_open_settings_form = pyqtSignal()
+
     signal_save_file = pyqtSignal()
     signal_save_file_as = pyqtSignal()
     signal_open_file = pyqtSignal()
@@ -185,10 +188,13 @@ class MainView(QMainWindow, Ui_MainWindow):
         self.actionPayees.triggered.connect(self.signal_open_payee_form.emit)
         self.actionTags.triggered.connect(self.signal_open_tag_form.emit)
         self.actionCategories.triggered.connect(self.signal_open_category_form.emit)
+        self.actionSettings.triggered.connect(self.signal_open_settings_form.emit)
+
         self.actionSave.triggered.connect(self.signal_save_file.emit)
         self.actionSave_As.triggered.connect(self.signal_save_file_as.emit)
         self.actionOpen_File.triggered.connect(self.signal_open_file.emit)
         self.actionClose_File.triggered.connect(self.signal_close_file.emit)
+
         self.actionQuit.triggered.connect(self.close)
         self.actionAbout.triggered.connect(self.show_about)
 

@@ -6,6 +6,8 @@ from PyQt6.QtWidgets import QAbstractButton, QDialogButtonBox, QFileDialog, QWid
 
 from src.views.ui_files.forms.Ui_settings_form import Ui_SettingsForm
 
+# IDEA: link to documentation instead of notes?
+
 
 class SettingsForm(QWidget, Ui_SettingsForm):
     signal_OK = pyqtSignal()

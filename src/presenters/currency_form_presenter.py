@@ -3,6 +3,7 @@ from datetime import datetime
 from decimal import Decimal
 
 import src.models.user_settings.user_settings as user_settings
+from src.models.custom_exceptions import InvalidOperationError
 from src.models.record_keeper import RecordKeeper
 from src.presenters.utilities.event import Event
 from src.presenters.utilities.handle_exception import handle_exception
@@ -96,7 +97,7 @@ class CurrencyFormPresenter:
     def set_base_currency(self) -> None:
         currency = self._currency_table_model.get_selected_item()
         if currency is None:
-            return
+            raise InvalidOperationError("Cannot set an unselected Currency as base.")
 
         logging.info(f"Setting {currency.code} as base currency")
         try:
@@ -115,7 +116,7 @@ class CurrencyFormPresenter:
         previous_base_currency = self._record_keeper.base_currency
         currency = self._currency_table_model.get_selected_item()
         if currency is None:
-            return
+            raise InvalidOperationError("Cannot remove an unselected Currency.")
 
         logging.info(f"Removing {currency}")
         try:
@@ -195,7 +196,7 @@ class CurrencyFormPresenter:
     def remove_exchange_rate(self) -> None:
         exchange_rate = self._exchange_rate_table_model.get_selected_item()
         if exchange_rate is None:
-            return
+            raise InvalidOperationError("Cannot remove an unselected ExchangeRate.")
 
         logging.debug(
             "ExchangeRate deletion requested, asking the user for confirmation"

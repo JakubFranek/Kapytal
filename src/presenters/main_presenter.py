@@ -12,6 +12,7 @@ from src.presenters.category_form_presenter import CategoryFormPresenter
 from src.presenters.currency_form_presenter import CurrencyFormPresenter
 from src.presenters.payee_form_presenter import PayeeFormPresenter
 from src.presenters.security_form_presenter import SecurityFormPresenter
+from src.presenters.settings_form_presenter import SettingsFormPresenter
 from src.presenters.tag_form_presenter import TagFormPresenter
 from src.presenters.utilities.handle_exception import handle_exception
 from src.utilities.general import backup_json_file
@@ -19,19 +20,17 @@ from src.views.forms.category_form import CategoryForm
 from src.views.forms.currency_form import CurrencyForm
 from src.views.forms.payee_form import PayeeForm
 from src.views.forms.security_form import SecurityForm
+from src.views.forms.settings_form import SettingsForm
 from src.views.forms.tag_form import TagForm
 from src.views.main_view import MainView
 
 
 class MainPresenter:
-    def __init__(
-        self,
-        view: MainView,
-        app: QApplication,
-    ) -> None:
+    def __init__(self, view: MainView, app: QApplication, app_root_path: Path) -> None:
         self._view = view
         self._record_keeper = RecordKeeper()
         self._app = app
+        self._app_root_path = app_root_path
 
         # Presenter initialization
         logging.debug("Creating AccountTreePresenter")
@@ -58,6 +57,11 @@ class MainPresenter:
         category_form = CategoryForm(parent=view)
         self._category_form_presenter = CategoryFormPresenter(
             category_form, self._record_keeper
+        )
+        logging.debug("Creating SettingsForm and SettingsFormPresenter")
+        settings_form = SettingsForm(parent=view)
+        self._settings_form_presenter = SettingsFormPresenter(
+            settings_form, app_root_path
         )
 
         # Setting up Event observers
@@ -96,6 +100,10 @@ class MainPresenter:
         self._view.signal_open_category_form.connect(
             self._category_form_presenter.show_form
         )
+        self._view.signal_open_settings_form.connect(
+            self._settings_form_presenter.show_form
+        )
+
         self._view.signal_save_file.connect(lambda: self._save_to_file(save_as=False))
         self._view.signal_save_file_as.connect(lambda: self._save_to_file(save_as=True))
         self._view.signal_open_file.connect(self._load_from_file)
@@ -122,7 +130,7 @@ class MainPresenter:
                 self.current_file_path = Path(file_path)
 
             with open(self.current_file_path, mode="w", encoding="UTF-8") as file:
-                logging.debug(f"Saving to file: '{self.current_file_path}'")
+                logging.debug(f"Saving to file: {self.current_file_path}")
                 json.dump(self._record_keeper, file, cls=CustomJSONEncoder)
 
                 self._update_unsaved_changes(False)
@@ -130,8 +138,8 @@ class MainPresenter:
                     f"File saved: {self.current_file_path}", 3000
                 )
 
-                logging.info(f"File saved: '{self.current_file_path}'")
-                backup_json_file(self.current_file_path)
+                logging.info(f"File saved: {self.current_file_path}")
+            backup_json_file(self.current_file_path)
         except Exception:
             handle_exception()
 
@@ -139,7 +147,7 @@ class MainPresenter:
         logging.debug("Load from file initiated")
         try:
             file_path = self._view.get_open_path()
-            if file_path == "":
+            if not file_path:
                 logging.info(
                     "Load from file cancelled: invalid or no file path received"
                 )
@@ -147,10 +155,10 @@ class MainPresenter:
 
             self.current_file_path = Path(file_path)
             with open(self.current_file_path, mode="r", encoding="UTF-8") as file:
-                logging.debug(f"File path received: '{self.current_file_path}'")
+                logging.debug(f"File path received: {self.current_file_path}")
                 backup_json_file(self.current_file_path)
 
-                logging.debug(f"Loading file: '{self.current_file_path}'")
+                logging.debug(f"Loading file: {self.current_file_path}")
                 logging.disable(logging.INFO)  # suppress logging of object creation
                 record_keeper: RecordKeeper = json.load(file, cls=CustomJSONDecoder)
                 logging.disable(logging.NOTSET)
@@ -170,7 +178,7 @@ class MainPresenter:
                 logging.debug(f"Categories: {len(record_keeper.categories)}")
                 logging.debug(f"Tags: {len(record_keeper.tags)}")
                 logging.debug(f"Payees: {len(record_keeper.tags)}")
-                logging.info(f"File loaded: '{file_path}'")
+                logging.info(f"File loaded: {file_path}")
         except Exception:
             handle_exception()
 

@@ -25,7 +25,7 @@ def backup_json_file(file_path: Path) -> None:
 
         backup_path = backup_directory / backup_name
         shutil.copyfile(file_path, backup_path)
-        logging.info(f"Backed up '{file_path}' to '{backup_path}'")
+        logging.info(f"Backed up {file_path} to {backup_path}")
 
         while True:
             # Keep deleting backups until size limit is satisfied
@@ -40,20 +40,20 @@ def backup_json_file(file_path: Path) -> None:
             if len(old_backup_paths) == 1 and total_size > size_limit:
                 logging.warning(
                     f"Only the latest backup is left, size limit of "
-                    f"{size_limit:,} bytes could not be reached: '{backup_directory}'"
+                    f"{size_limit:,} bytes could not be reached: {backup_directory}"
                 )
-                return
+                break
 
             if total_size <= size_limit:
                 logging.debug(
                     f"Backup size limit satisfied ({total_size:,} / "
-                    f"{size_limit:,} bytes): '{backup_directory}'"
+                    f"{size_limit:,} bytes): {backup_directory}"
                 )
-                return
+                break
 
             if total_size > size_limit:
                 oldest_backup = min(old_backup_paths, key=os.path.getctime)
-                logging.info(f"Removing oldest backup: '{oldest_backup}'")
+                logging.info(f"Removing oldest backup: {oldest_backup}")
                 oldest_backup.unlink()
 
 

@@ -42,13 +42,13 @@ def load() -> None:
     global settings
 
     with open(_settings_path, mode="r", encoding="UTF-8") as file:
-        logging.debug(f"Loading UserSettings: '{_settings_path}'")
+        logging.debug(f"Loading UserSettings: {_settings_path}")
         settings = json.load(file, cls=_json_decoder)
-        logging.info(f"UserSettings loaded: '{_settings_path}'")
+        logging.info(f"UserSettings loaded: {_settings_path}")
 
 
 def save() -> None:
     with open(_settings_path, mode="w", encoding="UTF-8") as file:
-        logging.debug(f"Saving UserSettings: '{_settings_path}'")
+        logging.debug(f"Saving UserSettings: {_settings_path}")
         json.dump(settings, file, cls=_json_encoder)
-        logging.info(f"UserSettings saved: '{_settings_path}'")
+        logging.info(f"UserSettings saved: {_settings_path}")
