@@ -6,6 +6,7 @@ from zoneinfo import ZoneInfo, available_timezones
 import pytest
 from hypothesis import given
 from hypothesis import strategies as st
+from tzlocal import get_localzone_name
 
 from src.models.user_settings.user_settings_class import UserSettings
 from tests.models.test_assets.composites import everything_except
@@ -17,7 +18,7 @@ def test_user_settings_default_settings() -> None:
     settings = UserSettings()
 
     assert settings.__repr__() == "UserSettings"
-    assert settings.time_zone == ZoneInfo("UTC")
+    assert settings.time_zone == ZoneInfo(get_localzone_name())
     assert settings.backup_paths == ()
     assert settings.logs_max_size_bytes == 1_000_000
     assert settings.backups_max_size_bytes == 10_000_000

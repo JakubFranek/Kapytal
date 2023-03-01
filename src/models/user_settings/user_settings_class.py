@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Any, Self
 from zoneinfo import ZoneInfo
 
-from tzlocal import get_localzone
+from tzlocal import get_localzone_name
 
 from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
 
@@ -15,7 +15,7 @@ class UserSettings(JSONSerializableMixin):
     """This class is intended to be instantiated only once, within user_settings."""
 
     def __init__(self) -> None:
-        self._time_zone = get_localzone()
+        self._time_zone = ZoneInfo(get_localzone_name())
 
         self._logs_max_size_bytes = 1_000_000
         self._backups_max_size_bytes = 10_000_000
@@ -73,7 +73,7 @@ class UserSettings(JSONSerializableMixin):
 
         logging.info(
             "Changing UserSettings.backups_max_size_bytes from "
-            f"{self._backups_max_size_bytes} to {value}"
+            f"{self._backups_max_size_bytes:,} to {value:,}"
         )
         self._backups_max_size_bytes = value
 

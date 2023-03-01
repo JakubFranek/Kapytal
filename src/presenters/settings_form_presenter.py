@@ -25,12 +25,14 @@ class SettingsFormPresenter:
         self._view.signal_backup_path_selection_changed.connect(
             self._backup_path_selection_changed
         )
+        self._view.signal_data_changed.connect(lambda: self._set_unsaved_changes(True))
+
         self._view.signal_add_backup_path.connect(self.add_backup_path)
         self._view.signal_remove_backup_path.connect(self.remove_backup_path)
         self._view.signal_open_backup_path.connect(self.open_backup_path)
         self._view.signal_open_logs.connect(self.open_logs_path)
 
-        self._unsaved_changes = False
+        self._set_unsaved_changes(False)
 
         self._view.finalize_setup()
         self._backup_path_selection_changed()
@@ -64,7 +66,7 @@ class SettingsFormPresenter:
         self.update_model_data()
         self._backup_paths_list_model.post_add()
 
-        self._unsaved_changes = True
+        self._set_unsaved_changes(True)
 
     def remove_backup_path(self) -> None:
         path = self._backup_paths_list_model.get_selected_item()
@@ -82,7 +84,7 @@ class SettingsFormPresenter:
         self.update_model_data()
         self._backup_paths_list_model.post_remove_item()
 
-        self._unsaved_changes = True
+        self._set_unsaved_changes(True)
 
     def save(self, close: bool) -> None:
         if not self._unsaved_changes:
@@ -100,7 +102,7 @@ class SettingsFormPresenter:
         user_settings.settings.backup_paths = self._backup_paths
 
         user_settings.save()
-        self._unsaved_changes = False
+        self._set_unsaved_changes(False)
 
         if close:
             self._view.close()
@@ -121,3 +123,6 @@ class SettingsFormPresenter:
         item = self._backup_paths_list_model.get_selected_item()
         is_currency_selected = item is not None
         self._view.set_backup_path_buttons(is_currency_selected)
+
+    def _set_unsaved_changes(self, unsaved_changes: bool) -> None:
+        self._unsaved_changes = unsaved_changes

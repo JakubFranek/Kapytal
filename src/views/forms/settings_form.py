@@ -13,6 +13,8 @@ class SettingsForm(QWidget, Ui_SettingsForm):
     signal_OK = pyqtSignal()
     signal_apply = pyqtSignal()
 
+    signal_data_changed = pyqtSignal()
+
     signal_open_logs = pyqtSignal()
 
     signal_open_backup_path = pyqtSignal()
@@ -31,6 +33,9 @@ class SettingsForm(QWidget, Ui_SettingsForm):
         self.removeBackupDirectoryButton.clicked.connect(self.signal_remove_backup_path)
         self.openBackupDirectoryButton.clicked.connect(self.signal_open_backup_path)
         self.openLogsDirectoryButton.clicked.connect(self.signal_open_logs)
+
+        self.logsSizeLimitSpinBox.valueChanged.connect(self.signal_data_changed.emit)
+        self.backupsSizeLimitSpinBox.valueChanged.connect(self.signal_data_changed.emit)
 
     @property
     def backups_max_size_KB(self) -> int:
