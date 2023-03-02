@@ -1,9 +1,9 @@
 import logging
-import os
 from datetime import datetime
 from pathlib import Path
 
 import src.models.user_settings.user_settings as user_settings
+from src.utilities.general import get_datetime_from_file_path
 
 dir_logs_info = None
 dir_logs_debug = None
@@ -109,10 +109,9 @@ def remove_old_logs() -> None:
         _remove_oldest_log(dir_logs_debug)
 
 
-# TODO: remove oldest logs by timestamp
 def _remove_oldest_log(directory: Path) -> None:
     log_paths = _get_log_paths(directory)
-    oldest_log = min(log_paths, key=os.path.getctime)
+    oldest_log = min(log_paths, key=get_datetime_from_file_path)
     logging.info(f"Removing log: {oldest_log}")
     oldest_log.unlink()
 

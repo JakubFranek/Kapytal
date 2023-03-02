@@ -1,5 +1,4 @@
 import logging
-import os
 import shutil
 import sys
 import traceback
@@ -11,7 +10,9 @@ from types import TracebackType
 import src.models.user_settings.user_settings as user_settings
 
 # TODO: copy README.md to backup paths if not already present
-# TODO: remove oldest backups by timestamp
+
+timestamp_format = "%Y_%m_%d_%Hh%Mm%Ss"
+timestamp_example = "YYYY_mm_DD_HHhMMmSSs"
 
 
 def backup_json_file(file_path: Path) -> None:
@@ -19,7 +20,7 @@ def backup_json_file(file_path: Path) -> None:
     size_limit = user_settings.settings.backups_max_size_bytes
 
     file_stem = file_path.stem
-    backup_name = file_stem + "_" + dt_now.strftime("%Y_%m_%d_%Hh%Mm%Ss") + ".json"
+    backup_name = file_stem + "_" + dt_now.strftime(timestamp_format) + ".json"
 
     for backup_directory in user_settings.settings.backup_paths:
         backup_directory.mkdir(exist_ok=True, parents=True)
@@ -53,9 +54,17 @@ def backup_json_file(file_path: Path) -> None:
                 break
 
             if total_size > size_limit:
-                oldest_backup = min(old_backup_paths, key=os.path.getctime)
+                oldest_backup = min(old_backup_paths, key=get_datetime_from_file_path)
                 logging.info(f"Removing oldest backup: {oldest_backup}")
                 oldest_backup.unlink()
+
+
+def get_datetime_from_file_path(path: Path) -> datetime:
+    stem = path.stem
+    timestamp = stem[-len(timestamp_example) :]  # noqa: E203
+    return datetime.strptime(timestamp, timestamp_format).replace(
+        tzinfo=user_settings.settings.time_zone
+    )
 
 
 def get_exception_display_info() -> tuple[str, str] | None:
