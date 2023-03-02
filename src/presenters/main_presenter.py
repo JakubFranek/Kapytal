@@ -76,32 +76,25 @@ class MainPresenter:
         except Exception:
             handle_exception()
 
-    def _load_from_file(self) -> None:
+    def _load_from_file(self, path: str | Path | None = None) -> None:
         logging.debug("Load from file initiated")
         try:
-            file_path = self._view.get_open_path()
-            if not file_path:
-                logging.info(
-                    "Load from file cancelled: invalid or no file path received"
-                )
-                return
+            if path is None:
+                logging.debug("Asking user for file path")
+                path = self._view.get_open_path()
+                if not path:
+                    logging.info(
+                        "Load from file cancelled: invalid or no file path received"
+                    )
+                    return
 
-            self._current_file_path = Path(file_path)
-            self._open_file(self._current_file_path)
-        except Exception:
-            handle_exception()
-
-    def _open_recent_file(self, path_as_string: str) -> None:
-        logging.debug("Load recent file initiated")
-        try:
-            self._current_file_path = Path(path_as_string)
+            logging.debug(f"File path: {path}")
+            self._current_file_path = Path(path)
             self._open_file(self._current_file_path)
         except Exception:
             handle_exception()
 
     def _open_file(self, path: Path) -> None:
-        logging.debug(f"File path received: {self._current_file_path}")
-
         with open(path, mode="r", encoding="UTF-8") as file:
             backup_json_file(self._current_file_path)
 
@@ -258,7 +251,7 @@ class MainPresenter:
         self._view.signal_save_file_as.connect(lambda: self._save_to_file(save_as=True))
         self._view.signal_open_file.connect(self._load_from_file)
         self._view.signal_open_recent_file.connect(
-            lambda path: self._open_recent_file(path)
+            lambda path: self._load_from_file(path)
         )
         self._view.signal_clear_recent_files.connect(self._clear_recent_paths)
         self._view.signal_close_file.connect(self._close_file)
@@ -267,10 +260,11 @@ class MainPresenter:
         self._recent_paths_file = self._app_root_path / "saved_data/recent_files.json"
 
         if not self._recent_paths_file.exists():
+            logging.debug("Recent Files not found, initializing to empty list")
             self._recent_paths: list[Path] = []
         else:
             with open(self._recent_paths_file, mode="r", encoding="UTF-8") as file:
-                logging.debug(f"Loading recent paths: {self._recent_paths_file}")
+                logging.debug(f"Loading Recent Files: {self._recent_paths_file}")
                 paths_as_str: list[str] = json.load(file, cls=CustomJSONDecoder)
                 self._recent_paths = [Path(path) for path in paths_as_str]
 
@@ -279,10 +273,11 @@ class MainPresenter:
     def _save_recent_paths(self) -> None:
         recent_paths = [str(path) for path in self._recent_paths]
         with open(self._recent_paths_file, mode="w", encoding="UTF-8") as file:
-            logging.debug(f"Saving recent paths to file: {self._recent_paths_file}")
+            logging.debug(f"Saving Recent Files: {self._recent_paths_file}")
             json.dump(recent_paths, file, cls=CustomJSONEncoder)
 
     def _add_recent_paths(self, path: Path) -> None:
+        logging.debug(f"Adding a Recent File: {path}")
         if path in self._recent_paths:
             self._recent_paths.remove(path)
         self._recent_paths.insert(0, path)
@@ -291,10 +286,12 @@ class MainPresenter:
         self._update_recent_paths_menu()
 
     def _update_recent_paths_menu(self) -> None:
+        logging.debug("Updating Recent Files menu")
         recent_paths = [str(path) for path in self._recent_paths]
         self._view.set_recent_files_menu(recent_paths)
 
     def _clear_recent_paths(self) -> None:
+        logging.debug("Clearing Recent Files menu")
         self._recent_paths = []
         self._save_recent_paths()
         self._update_recent_paths_menu()
