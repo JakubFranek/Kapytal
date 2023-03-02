@@ -24,11 +24,6 @@ from src.views.forms.settings_form import SettingsForm
 from src.views.forms.tag_form import TagForm
 from src.views.main_view import MainView
 
-# TODO: implement recent file menu
-# save path to a collection whenever a file is opened
-# possible to clear
-# serialize to file upon any change
-
 
 class MainPresenter:
     def __init__(self, view: MainView, app: QApplication, app_root_path: Path) -> None:
