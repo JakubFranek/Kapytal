@@ -64,6 +64,13 @@
         </layout>
        </item>
        <item>
+        <widget class="QLabel" name="backupDirectoriesLabel">
+         <property name="text">
+          <string>Backup directories:</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QListView" name="backupsListView"/>
        </item>
        <item>
@@ -90,6 +97,13 @@
           </widget>
          </item>
         </layout>
+       </item>
+       <item>
+        <widget class="Line" name="backupsLine">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
        </item>
        <item>
         <widget class="QLabel" name="backupsDisclaimerLabel">
@@ -142,6 +156,13 @@
         <widget class="QPushButton" name="openLogsDirectoryButton">
          <property name="text">
           <string>Open logs directory in File Browser</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="Line" name="logsLine">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
          </property>
         </widget>
        </item>
