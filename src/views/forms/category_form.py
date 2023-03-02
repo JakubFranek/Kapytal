@@ -6,7 +6,7 @@ from PyQt6.QtWidgets import QLineEdit, QWidget
 
 from src.models.model_objects.attributes import CategoryType
 from src.views.category_tree import CategoryTree
-from src.views.ui_files.Ui_category_form import Ui_CategoryForm
+from src.views.ui_files.forms.Ui_category_form import Ui_CategoryForm
 
 
 class CategoryForm(QWidget, Ui_CategoryForm):

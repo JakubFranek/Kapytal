@@ -5,38 +5,56 @@ import sys
 import traceback
 from datetime import datetime
 from decimal import Decimal
+from pathlib import Path
 from types import TracebackType
 
-from src.models.constants import tzinfo
+import src.models.user_settings.user_settings as user_settings
+
+# TODO: copy README.md to backup paths if not already present
 
 
-def backup_json_file(file_path: str, backup_directories: list[str]) -> None:
-    dt_now = datetime.now(tzinfo)
-    file_name = os.path.basename(file_path).removesuffix(".json")
-    backup_name = (
-        file_name + "_backup_" + dt_now.strftime("%Y_%m_%d_%Hh%Mm%Ss") + ".json"
-    )
-    for backup_directory in backup_directories:
-        if not os.path.exists(backup_directory):
-            os.makedirs(backup_directory)
+def backup_json_file(file_path: Path) -> None:
+    dt_now = datetime.now(user_settings.settings.time_zone)
+    size_limit = user_settings.settings.backups_max_size_bytes
 
-        backup_path = os.path.join(backup_directory, backup_name)
+    file_stem = file_path.stem
+    backup_name = file_stem + "_" + dt_now.strftime("%Y_%m_%d_%Hh%Mm%Ss") + ".json"
+
+    for backup_directory in user_settings.settings.backup_paths:
+        backup_directory.mkdir(exist_ok=True, parents=True)
+
+        backup_path = backup_directory / backup_name
         shutil.copyfile(file_path, backup_path)
         logging.info(f"Backed up {file_path} to {backup_path}")
 
-        listdir = os.listdir(backup_directory)
-        old_backup_paths = [
-            os.path.join(backup_directory, file_name)
-            for file_name in listdir
-            if os.path.isfile(os.path.join(backup_directory, file_name))
-            and file_name != "README.md"
-        ]
-        no_of_backups = len(old_backup_paths)
-        _ = sum(os.path.getsize(backup) for backup in old_backup_paths)  # size in bytes
-        if no_of_backups > 10:  # NOTE: will be determined by size in release
-            oldest_backup = min(old_backup_paths, key=os.path.getctime)
-            logging.info(f"Removing oldest backup: {oldest_backup}")
-            os.remove(oldest_backup)
+        while True:
+            # Keep deleting backups until size limit is satisfied
+
+            old_backup_paths = [
+                file_path
+                for file_path in backup_directory.iterdir()
+                if file_path.is_file() and file_path.name != "README.md"
+            ]
+            total_size = sum(f.stat().st_size for f in old_backup_paths if f.is_file())
+
+            if len(old_backup_paths) == 1 and total_size > size_limit:
+                logging.warning(
+                    f"Only the latest backup is left, size limit of "
+                    f"{size_limit:,} bytes could not be reached: {backup_directory}"
+                )
+                break
+
+            if total_size <= size_limit:
+                logging.debug(
+                    f"Backup size limit satisfied ({total_size:,} / "
+                    f"{size_limit:,} bytes): {backup_directory}"
+                )
+                break
+
+            if total_size > size_limit:
+                oldest_backup = min(old_backup_paths, key=os.path.getctime)
+                logging.info(f"Removing oldest backup: {oldest_backup}")
+                oldest_backup.unlink()
 
 
 def get_exception_display_info() -> tuple[str, str] | None:
@@ -71,12 +89,12 @@ def get_exception_info(
     exc_traceback: TracebackType,
 ) -> tuple[str, str, str,]:
     stack_summary = traceback.extract_tb(exc_traceback)
-    filename, line, _, _ = stack_summary.pop()
+    file_name, line, _, _ = stack_summary.pop()
     exc_details_list = traceback.format_exception(exc_type, exc_value, exc_traceback)
     exc_details = "".join(exc_details_list)
-    filename = os.path.basename(filename)
+    file_name = Path(file_name).name
 
-    return filename, line, exc_details
+    return file_name, line, exc_details
 
 
 def normalize_decimal_to_min_places(value: Decimal, min_places: int) -> Decimal:

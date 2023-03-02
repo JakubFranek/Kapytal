@@ -6,7 +6,7 @@ import pytest
 from hypothesis import assume, given
 from hypothesis import strategies as st
 
-from src.models.constants import tzinfo
+import src.models.user_settings.user_settings as user_settings
 from src.models.custom_exceptions import NotFoundError
 from src.models.model_objects.account_group import AccountGroup
 from src.models.model_objects.currency_objects import CashAmount, Currency, ExchangeRate
@@ -101,7 +101,7 @@ def test_get_balance_multiple_currency(
 ) -> None:
     assume(currency_A != currency_B)
     exchange_rate = ExchangeRate(currency_A, currency_B)
-    exchange_rate.set_rate(datetime.now(tzinfo).date(), rate)
+    exchange_rate.set_rate(datetime.now(user_settings.settings.time_zone).date(), rate)
 
     account_A = data.draw(cash_accounts(currency=currency_A))
     account_B = data.draw(cash_accounts(currency=currency_B))

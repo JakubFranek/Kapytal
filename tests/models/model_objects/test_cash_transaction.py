@@ -8,7 +8,7 @@ import pytest
 from hypothesis import assume, given
 from hypothesis import strategies as st
 
-from src.models.constants import tzinfo
+import src.models.user_settings.user_settings as user_settings
 from src.models.model_objects.attributes import (
     Attribute,
     AttributeType,
@@ -44,7 +44,9 @@ from tests.models.test_assets.constants import MIN_DATETIME
 
 @given(
     description=st.text(min_size=0, max_size=256),
-    datetime_=st.datetimes(min_value=MIN_DATETIME, timezones=st.just(tzinfo)),
+    datetime_=st.datetimes(
+        min_value=MIN_DATETIME, timezones=st.just(user_settings.settings.time_zone)
+    ),
     type_=st.sampled_from(CashTransactionType),
     account=cash_accounts(),
     payee=attributes(AttributeType.PAYEE),
@@ -78,7 +80,7 @@ def test_creation(  # noqa: CFQ002,TMN001
         )
     )
     account_currency = account.currency
-    dt_start = datetime.now(tzinfo)
+    dt_start = datetime.now(user_settings.settings.time_zone)
     cash_transaction = CashTransaction(
         description,
         datetime_,
@@ -137,7 +139,7 @@ def test_type_invalid_type(  # noqa: CFQ002,TMN001
     ):
         CashTransaction(
             "description",
-            datetime.now(tzinfo),
+            datetime.now(user_settings.settings.time_zone),
             type_,
             account,
             payee,

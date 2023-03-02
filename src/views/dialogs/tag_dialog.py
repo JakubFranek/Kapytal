@@ -4,7 +4,7 @@ from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QAbstractButton, QDialog, QDialogButtonBox, QWidget
 
-from src.views.ui_files.Ui_tag_dialog import Ui_TagDialog
+from src.views.ui_files.dialogs.Ui_tag_dialog import Ui_TagDialog
 
 
 class TagDialog(QDialog, Ui_TagDialog):

@@ -1,5 +1,6 @@
 import json
 import logging
+from pathlib import Path
 
 from PyQt6.QtWidgets import QApplication
 
@@ -11,6 +12,7 @@ from src.presenters.category_form_presenter import CategoryFormPresenter
 from src.presenters.currency_form_presenter import CurrencyFormPresenter
 from src.presenters.payee_form_presenter import PayeeFormPresenter
 from src.presenters.security_form_presenter import SecurityFormPresenter
+from src.presenters.settings_form_presenter import SettingsFormPresenter
 from src.presenters.tag_form_presenter import TagFormPresenter
 from src.presenters.utilities.handle_exception import handle_exception
 from src.utilities.general import backup_json_file
@@ -18,20 +20,17 @@ from src.views.forms.category_form import CategoryForm
 from src.views.forms.currency_form import CurrencyForm
 from src.views.forms.payee_form import PayeeForm
 from src.views.forms.security_form import SecurityForm
+from src.views.forms.settings_form import SettingsForm
 from src.views.forms.tag_form import TagForm
 from src.views.main_view import MainView
 
 
 class MainPresenter:
-    def __init__(
-        self,
-        view: MainView,
-        app: QApplication,
-        app_root_directory: str,
-    ) -> None:
+    def __init__(self, view: MainView, app: QApplication, app_root_path: Path) -> None:
         self._view = view
         self._record_keeper = RecordKeeper()
         self._app = app
+        self._app_root_path = app_root_path
 
         # Presenter initialization
         logging.debug("Creating AccountTreePresenter")
@@ -58,6 +57,11 @@ class MainPresenter:
         category_form = CategoryForm(parent=view)
         self._category_form_presenter = CategoryFormPresenter(
             category_form, self._record_keeper
+        )
+        logging.debug("Creating SettingsForm and SettingsFormPresenter")
+        settings_form = SettingsForm(parent=view)
+        self._settings_form_presenter = SettingsFormPresenter(
+            settings_form, app_root_path
         )
 
         # Setting up Event observers
@@ -96,16 +100,17 @@ class MainPresenter:
         self._view.signal_open_category_form.connect(
             self._category_form_presenter.show_form
         )
+        self._view.signal_open_settings_form.connect(
+            self._settings_form_presenter.show_form
+        )
+
         self._view.signal_save_file.connect(lambda: self._save_to_file(save_as=False))
         self._view.signal_save_file_as.connect(lambda: self._save_to_file(save_as=True))
         self._view.signal_open_file.connect(self._load_from_file)
         self._view.signal_close_file.connect(self._close_file)
 
         # File path initialization
-        self.current_file_path: str | None = None
-        self.backup_directories: list[str] = [
-            app_root_directory + "/saved_data/backups/"
-        ]
+        self.current_file_path: Path | None = None
         self._update_unsaved_changes(False)
 
         logging.debug("Showing MainView")
@@ -117,21 +122,24 @@ class MainPresenter:
             if save_as is True or self.current_file_path is None:
                 logging.debug("Asking the user for destination path")
                 file_path = self._view.get_save_path()
-                if file_path != "":
-                    self.current_file_path = file_path
-
-            if not isinstance(self.current_file_path, str):
-                logging.info("Save to file cancelled: invalid or no file path received")
-                return
+                if file_path == "":
+                    logging.info(
+                        "Save to file cancelled: invalid or no file path received"
+                    )
+                    return
+                self.current_file_path = Path(file_path)
 
             with open(self.current_file_path, mode="w", encoding="UTF-8") as file:
                 logging.debug(f"Saving to file: {self.current_file_path}")
                 json.dump(self._record_keeper, file, cls=CustomJSONEncoder)
+
                 self._update_unsaved_changes(False)
-                self._view.statusBar().showMessage(
+                self._view.show_status_message(
                     f"File saved: {self.current_file_path}", 3000
                 )
+
                 logging.info(f"File saved: {self.current_file_path}")
+            backup_json_file(self.current_file_path)
         except Exception:
             handle_exception()
 
@@ -139,25 +147,25 @@ class MainPresenter:
         logging.debug("Load from file initiated")
         try:
             file_path = self._view.get_open_path()
-            if file_path == "":
+            if not file_path:
                 logging.info(
                     "Load from file cancelled: invalid or no file path received"
                 )
                 return
 
-            self.current_file_path = file_path
-            with open(file_path, mode="r", encoding="UTF-8") as file:
-                logging.debug(f"File path received: {file_path}")
-                backup_json_file(file_path, self.backup_directories)
+            self.current_file_path = Path(file_path)
+            with open(self.current_file_path, mode="r", encoding="UTF-8") as file:
+                logging.debug(f"File path received: {self.current_file_path}")
+                backup_json_file(self.current_file_path)
 
-                logging.debug(f"Loading file: {file_path}")
-                logging.disable(logging.INFO)
+                logging.debug(f"Loading file: {self.current_file_path}")
+                logging.disable(logging.INFO)  # suppress logging of object creation
                 record_keeper: RecordKeeper = json.load(file, cls=CustomJSONDecoder)
                 logging.disable(logging.NOTSET)
 
                 self._load_record_keeper(record_keeper)
 
-                self._view.statusBar().showMessage(
+                self._view.show_status_message(
                     f"File loaded: {self.current_file_path}", 3000
                 )
                 self._update_unsaved_changes(False)
@@ -173,6 +181,21 @@ class MainPresenter:
                 logging.info(f"File loaded: {file_path}")
         except Exception:
             handle_exception()
+
+    def _close_file(self) -> None:
+        if self._check_for_unsaved_changes("Close File") is False:
+            return
+        logging.info("Closing File, resetting to clean state")
+        self._record_keeper = RecordKeeper()
+        self._load_record_keeper(self._record_keeper)
+        self.current_file_path = None
+        self._update_unsaved_changes(False)
+
+    def _quit(self) -> None:
+        if self._check_for_unsaved_changes("Quit") is False:
+            return
+        logging.info("Qutting")
+        self._app.quit()
 
     def _check_for_unsaved_changes(self, operation: str) -> bool:
         """True: proceed \n False: abort"""
@@ -197,21 +220,6 @@ class MainPresenter:
             return False
         # No unsaved changes, proceed
         return True
-
-    def _close_file(self) -> None:
-        if self._check_for_unsaved_changes("Close File") is False:
-            return
-        logging.info("Closing File, resetting to clean state")
-        self._record_keeper = RecordKeeper()
-        self._load_record_keeper(self._record_keeper)
-        self.current_file_path = None
-        self._update_unsaved_changes(False)
-
-    def _quit(self) -> None:
-        if self._check_for_unsaved_changes("Quit") is False:
-            return
-        logging.info("Qutting")
-        self._app.quit()
 
     def _update_unsaved_changes(self, unsaved_changes: bool) -> None:
         self._unsaved_changes = unsaved_changes

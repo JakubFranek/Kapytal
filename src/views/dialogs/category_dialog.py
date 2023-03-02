@@ -11,7 +11,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from src.views.ui_files.Ui_category_dialog import Ui_CategoryDialog
+from src.views.ui_files.dialogs.Ui_category_dialog import Ui_CategoryDialog
 
 
 # IDEA: update position limits based on path state?

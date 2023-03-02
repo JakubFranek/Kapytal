@@ -5,7 +5,7 @@ import pytest
 from hypothesis import given
 from hypothesis import strategies as st
 
-from src.models.constants import tzinfo
+import src.models.user_settings.user_settings as user_settings
 from src.models.custom_exceptions import (
     AlreadyExistsError,
     InvalidOperationError,
@@ -292,7 +292,7 @@ def test_edit_cash_transactions_datetimes() -> None:
         if transaction.currency.code == "CZK"
     ]
     uuids = [str(transaction.uuid) for transaction in cash_transactions]
-    edit_datetime = datetime.now(tzinfo)
+    edit_datetime = datetime.now(user_settings.settings.time_zone)
     record_keeper.edit_cash_transactions(uuids, datetime_=edit_datetime)
     for transaction in cash_transactions:
         assert transaction.datetime_ == edit_datetime
@@ -434,7 +434,7 @@ def test_edit_cash_transactions_invalid_indexes() -> None:
     record_keeper = get_preloaded_record_keeper_with_cash_transactions()
     record_keeper.add_cash_transfer(
         "",
-        datetime.now(tzinfo),
+        datetime.now(user_settings.settings.time_zone),
         "Bank Accounts/Raiffeisen CZK",
         "Bank Accounts/Moneta EUR",
         1,
@@ -480,7 +480,7 @@ def test_edit_cash_transfer_datetime() -> None:
         if isinstance(transaction, CashTransfer)
     ]
     uuids = [str(transfer.uuid) for transfer in transfers]
-    edit_datetime = datetime.now(tzinfo)
+    edit_datetime = datetime.now(user_settings.settings.time_zone)
     record_keeper.edit_cash_transfers(uuids, datetime_=edit_datetime)
     for transfer in transfers:
         assert transfer.datetime_ == edit_datetime

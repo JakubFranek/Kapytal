@@ -5,7 +5,7 @@ from PyQt6.QtGui import QCloseEvent, QIcon
 from PyQt6.QtWidgets import QHeaderView, QLineEdit, QWidget
 
 from src.views.constants import SecurityTableColumns
-from src.views.ui_files.Ui_security_form import Ui_SecurityForm
+from src.views.ui_files.forms.Ui_security_form import Ui_SecurityForm
 
 
 # TODO: add some way to view and edit price history

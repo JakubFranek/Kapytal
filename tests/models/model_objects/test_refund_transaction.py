@@ -7,7 +7,7 @@ import pytest
 from hypothesis import assume, given
 from hypothesis import strategies as st
 
-from src.models.constants import tzinfo
+import src.models.user_settings.user_settings as user_settings
 from src.models.custom_exceptions import InvalidOperationError
 from src.models.model_objects.attributes import (
     Attribute,
@@ -56,7 +56,7 @@ def test_creation() -> None:
 
     description = "The Refund"
     datetime_ = datetime.strptime("07-01-2022 00:00:00", "%m-%d-%Y %H:%M:%S").replace(
-        tzinfo=tzinfo
+        tzinfo=user_settings.settings.time_zone
     )
     category_amount_pairs = get_valid_category_amount_pairs()
     tag_amount_pairs = get_valid_tag_amount_pairs()
@@ -116,7 +116,15 @@ def test_invalid_refunded_transaction_type(
     with pytest.raises(
         TypeError, match="Refunded transaction must be a CashTransaction."
     ):
-        RefundTransaction("", datetime.now(tzinfo), account, transaction, [], [], None)
+        RefundTransaction(
+            "",
+            datetime.now(user_settings.settings.time_zone),
+            account,
+            transaction,
+            [],
+            [],
+            None,
+        )
 
 
 @given(transaction=cash_transactions(), account=cash_accounts())
@@ -125,7 +133,15 @@ def test_invalid_refunded_transaction_type_enum(
 ) -> None:
     assume(transaction.type_ != CashTransactionType.EXPENSE)
     with pytest.raises(InvalidCashTransactionTypeError):
-        RefundTransaction("", datetime.now(tzinfo), account, transaction, [], [], None)
+        RefundTransaction(
+            "",
+            datetime.now(user_settings.settings.time_zone),
+            account,
+            transaction,
+            [],
+            [],
+            None,
+        )
 
 
 def test_invalid_datetime_value() -> None:
@@ -468,7 +484,7 @@ def test_multi_refund() -> None:
 
     description = "The Refund"
     datetime_ = datetime.strptime("07-01-2022 00:00:00", "%m-%d-%Y %H:%M:%S").replace(
-        tzinfo=tzinfo
+        tzinfo=user_settings.settings.time_zone
     )
     category_amount_pairs = get_valid_category_amount_pairs()
     tag_amount_pairs = get_valid_tag_amount_pairs()
@@ -542,7 +558,7 @@ def test_remove_refund() -> None:
 
     description = "The Refund"
     datetime_ = datetime.strptime("07-01-2022 00:00:00", "%m-%d-%Y %H:%M:%S").replace(
-        tzinfo=tzinfo
+        tzinfo=user_settings.settings.time_zone
     )
     category_amount_pairs = get_valid_category_amount_pairs()
     tag_amount_pairs = get_valid_tag_amount_pairs()
@@ -623,7 +639,7 @@ def get_preloaded_refund() -> RefundTransaction:
 
     description = "The Refund"
     datetime_ = datetime.strptime("07-01-2022 00:00:00", "%m-%d-%Y %H:%M:%S").replace(
-        tzinfo=tzinfo
+        tzinfo=user_settings.settings.time_zone
     )
     category_amount_pairs = get_valid_category_amount_pairs()
     tag_amount_pairs = (
@@ -650,7 +666,7 @@ def get_preloaded_expense() -> CashTransaction:
 
     description = "A transaction to be refunded."
     datetime_ = datetime.strptime("01-01-2022 00:00:00", "%m-%d-%Y %H:%M:%S").replace(
-        tzinfo=tzinfo
+        tzinfo=user_settings.settings.time_zone
     )
     payee = Attribute("Some payee", AttributeType.PAYEE)
     category_amount_pairs = (

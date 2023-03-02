@@ -6,7 +6,7 @@ import pytest
 from hypothesis import given
 from hypothesis import strategies as st
 
-from src.models.constants import tzinfo
+import src.models.user_settings.user_settings as user_settings
 from src.models.custom_exceptions import TransferSameAccountError
 from src.models.model_objects.security_objects import (
     Security,
@@ -25,7 +25,7 @@ from tests.models.test_assets.composites import (
 
 @given(
     description=st.text(min_size=1, max_size=256),
-    datetime_=st.datetimes(timezones=st.just(tzinfo)),
+    datetime_=st.datetimes(timezones=st.just(user_settings.settings.time_zone)),
     security=securities(),
     account_sender=security_accounts(),
     account_recipient=security_accounts(),
@@ -62,7 +62,7 @@ def test_creation(
 
 @given(
     description=st.text(min_size=1, max_size=256),
-    datetime_=st.datetimes(timezones=st.just(tzinfo)),
+    datetime_=st.datetimes(timezones=st.just(user_settings.settings.time_zone)),
     security=securities(),
     account_sender=everything_except((SecurityAccount, NoneType)),
     account_recipient=security_accounts(),
@@ -87,7 +87,7 @@ def test_invalid_account_sender_type(
 
 @given(
     description=st.text(min_size=1, max_size=256),
-    datetime_=st.datetimes(timezones=st.just(tzinfo)),
+    datetime_=st.datetimes(timezones=st.just(user_settings.settings.time_zone)),
     security=securities(),
     account_recipient=everything_except((SecurityAccount, NoneType)),
     account_sender=security_accounts(),

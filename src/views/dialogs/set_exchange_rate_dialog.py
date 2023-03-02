@@ -6,7 +6,9 @@ from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QAbstractButton, QDialog, QDialogButtonBox, QWidget
 
-from src.views.ui_files.Ui_set_exchange_rate_dialog import Ui_SetExchangeRateDialog
+from src.views.ui_files.dialogs.Ui_set_exchange_rate_dialog import (
+    Ui_SetExchangeRateDialog,
+)
 
 
 class SetExchangeRateDialog(QDialog, Ui_SetExchangeRateDialog):

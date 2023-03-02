@@ -1,13 +1,14 @@
 import uuid
+from collections.abc import Collection
 from datetime import datetime
 from types import NoneType
-from typing import Any, Collection
+from typing import Any
 
 import pytest
 from hypothesis import given
 from hypothesis import strategies as st
 
-from src.models.constants import tzinfo
+import src.models.user_settings.user_settings as user_settings
 from src.models.model_objects.attributes import (
     Attribute,
     AttributeType,
@@ -19,7 +20,7 @@ from tests.models.test_assets.concrete_abcs import ConcreteTransaction
 
 @given(description=st.text(min_size=0, max_size=256), datetime_=st.datetimes())
 def test_creation(description: str, datetime_: datetime) -> None:
-    dt_start = datetime.now(tzinfo)
+    dt_start = datetime.now(user_settings.settings.time_zone)
     transaction = ConcreteTransaction(description, datetime_)
 
     dt_created_diff = transaction.datetime_created - dt_start
@@ -70,7 +71,9 @@ def test_set_attributes_same_values(description: str, datetime_: datetime) -> No
 
 @given(tags=st.lists(attributes(AttributeType.TAG), min_size=1, max_size=5))
 def test_add_remove_tags(tags: list[Attribute]) -> None:
-    transaction = ConcreteTransaction("test", datetime.now(tzinfo))
+    transaction = ConcreteTransaction(
+        "test", datetime.now(user_settings.settings.time_zone)
+    )
     transaction.add_tags(tags)
     for tag in tags:
         assert tag in transaction.tags
@@ -80,14 +83,18 @@ def test_add_remove_tags(tags: list[Attribute]) -> None:
 
 @given(tags=everything_except(Collection))
 def test_validate_tags_invalid_type(tags: Any) -> None:
-    transaction = ConcreteTransaction("test", datetime.now(tzinfo))
+    transaction = ConcreteTransaction(
+        "test", datetime.now(user_settings.settings.time_zone)
+    )
     with pytest.raises(TypeError, match="Parameter 'tags' must be a Collection."):
         transaction._validate_tags(tags)
 
 
 @given(tags=st.lists(everything_except(Attribute), min_size=1, max_size=5))
 def test_validate_tags_invalid_member_types(tags: Any) -> None:
-    transaction = ConcreteTransaction("test", datetime.now(tzinfo))
+    transaction = ConcreteTransaction(
+        "test", datetime.now(user_settings.settings.time_zone)
+    )
     with pytest.raises(
         TypeError, match="Parameter 'tags' must be a Collection of Attributes."
     ):
@@ -96,6 +103,8 @@ def test_validate_tags_invalid_member_types(tags: Any) -> None:
 
 @given(tags=st.lists(attributes(AttributeType.PAYEE), min_size=1, max_size=5))
 def test_validate_tags_invalid_attribute_type(tags: Any) -> None:
-    transaction = ConcreteTransaction("test", datetime.now(tzinfo))
+    transaction = ConcreteTransaction(
+        "test", datetime.now(user_settings.settings.time_zone)
+    )
     with pytest.raises(InvalidAttributeError):
         transaction._validate_tags(tags)

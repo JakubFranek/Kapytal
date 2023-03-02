@@ -7,9 +7,9 @@ from datetime import datetime, timedelta
 from enum import Enum, auto
 from typing import Any
 
+import src.models.user_settings.user_settings as user_settings
 from src.models.base_classes.account import Account, UnrelatedAccountError
 from src.models.base_classes.transaction import Transaction
-from src.models.constants import tzinfo
 from src.models.custom_exceptions import (
     AlreadyExistsError,
     InvalidOperationError,
@@ -98,7 +98,9 @@ class CashAccount(Account):
             raise TypeError("CashAccount.currency must be a Currency.")
         self._currency = currency
 
-        self._balance_history = [(datetime.now(tzinfo), initial_balance)]
+        self._balance_history = [
+            (datetime.now(user_settings.settings.time_zone), initial_balance)
+        ]
         self._transactions: list[CashRelatedTransaction] = []
 
         self.initial_balance = initial_balance

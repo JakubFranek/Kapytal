@@ -11,7 +11,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from src.views.ui_files.Ui_account_group_dialog import Ui_AccountGroupDialog
+from src.views.ui_files.dialogs.Ui_account_group_dialog import Ui_AccountGroupDialog
 
 
 # IDEA: update position limits based on path state?

@@ -11,7 +11,9 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from src.views.ui_files.Ui_security_account_dialog import Ui_SecurityAccountDialog
+from src.views.ui_files.dialogs.Ui_security_account_dialog import (
+    Ui_SecurityAccountDialog,
+)
 
 
 class SecurityAccountDialog(QDialog, Ui_SecurityAccountDialog):

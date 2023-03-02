@@ -7,7 +7,7 @@ from decimal import Decimal
 from functools import total_ordering
 from typing import Any, Self
 
-from src.models.constants import tzinfo
+import src.models.user_settings.user_settings as user_settings
 from src.models.mixins.copyable_mixin import CopyableMixin
 from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
 from src.models.utilities.find_helpers import find_currency_by_code
@@ -270,7 +270,10 @@ class ExchangeRate(CopyableMixin, JSONSerializableMixin):
         obj = ExchangeRate(primary, secondary)
         for date_, rate in date_rate_pairs:
             obj.set_rate(
-                datetime.strptime(date_, "%Y-%m-%d").replace(tzinfo=tzinfo).date(), rate
+                datetime.strptime(date_, "%Y-%m-%d")
+                .replace(tzinfo=user_settings.settings.time_zone)
+                .date(),
+                rate,
             )
 
         return obj

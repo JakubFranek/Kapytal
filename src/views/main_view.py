@@ -1,6 +1,6 @@
 import logging
-import os
 import sys
+from pathlib import Path
 
 from PyQt6.QtCore import PYQT_VERSION_STR, QT_VERSION_STR, QDir, QSize, Qt, pyqtSignal
 from PyQt6.QtGui import QAction, QCloseEvent, QIcon
@@ -16,17 +16,19 @@ from src.views.account_tree import AccountTree
 from src.views.ui_files.Ui_main_window import Ui_MainWindow
 
 # IDEA: swap QToolButtons for QPushButtons (see how drop down menu works though)
-# TODO: open recent file
-# TODO: close file
+# TODO: open recent file (save in separate file)
 
 
 class MainView(QMainWindow, Ui_MainWindow):
     signal_exit = pyqtSignal()
+
     signal_open_currency_form = pyqtSignal()
     signal_open_security_form = pyqtSignal()
     signal_open_payee_form = pyqtSignal()
     signal_open_tag_form = pyqtSignal()
     signal_open_category_form = pyqtSignal()
+    signal_open_settings_form = pyqtSignal()
+
     signal_save_file = pyqtSignal()
     signal_save_file_as = pyqtSignal()
     signal_open_file = pyqtSignal()
@@ -34,7 +36,7 @@ class MainView(QMainWindow, Ui_MainWindow):
 
     def __init__(self) -> None:
         super().__init__()
-        self.initial_setup()
+        self._initial_setup()
 
     def get_save_path(self) -> str:
         return QFileDialog.getSaveFileName(self, filter="JSON file (*.json)")[0]
@@ -69,7 +71,7 @@ class MainView(QMainWindow, Ui_MainWindow):
         return None
 
     def set_save_status(
-        self, current_file_path: str | None, unsaved_changes: bool
+        self, current_file_path: Path | None, unsaved_changes: bool
     ) -> None:
         if unsaved_changes is True:
             self.actionSave.setIcon(QIcon("icons_16:disk--exclamation.png"))
@@ -86,7 +88,12 @@ class MainView(QMainWindow, Ui_MainWindow):
             self.setWindowTitle(f"Kapytal v{version}")
         else:
             self.actionSave.setEnabled(True)
-            self.setWindowTitle(f"Kapytal v{version} - " + current_file_path + star_str)
+            self.setWindowTitle(
+                f"Kapytal v{version} - " + str(current_file_path) + star_str
+            )
+
+    def show_status_message(self, message: str, msecs: int) -> None:
+        self.statusBar().showMessage(message, msecs)
 
     def closeEvent(self, event: QCloseEvent) -> None:
         self.signal_exit.emit()
@@ -128,18 +135,18 @@ class MainView(QMainWindow, Ui_MainWindow):
         message_box.exec()
         logging.debug("Closing About dialog")
 
-    def initial_setup(self) -> None:
+    def _initial_setup(self) -> None:
         QDir.addSearchPath(
             "icons_24",
-            os.path.join(QDir.currentPath(), "resources/icons/icons-24"),
+            str(Path(QDir.currentPath() + "/resources/icons/icons-24")),
         )
         QDir.addSearchPath(
             "icons_16",
-            os.path.join(QDir.currentPath(), "resources/icons/icons-16"),
+            str(Path(QDir.currentPath() + "/resources/icons/icons-16")),
         )
         QDir.addSearchPath(
             "icons_custom",
-            os.path.join(QDir.currentPath(), "resources/icons/icons-custom"),
+            str(Path(QDir.currentPath() + "/resources/icons/icons-custom")),
         )
 
         self.setupUi(self)
@@ -183,10 +190,13 @@ class MainView(QMainWindow, Ui_MainWindow):
         self.actionPayees.triggered.connect(self.signal_open_payee_form.emit)
         self.actionTags.triggered.connect(self.signal_open_tag_form.emit)
         self.actionCategories.triggered.connect(self.signal_open_category_form.emit)
+        self.actionSettings.triggered.connect(self.signal_open_settings_form.emit)
+
         self.actionSave.triggered.connect(self.signal_save_file.emit)
         self.actionSave_As.triggered.connect(self.signal_save_file_as.emit)
         self.actionOpen_File.triggered.connect(self.signal_open_file.emit)
         self.actionClose_File.triggered.connect(self.signal_close_file.emit)
+
         self.actionQuit.triggered.connect(self.close)
         self.actionAbout.triggered.connect(self.show_about)
 
