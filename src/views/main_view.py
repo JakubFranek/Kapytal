@@ -1,5 +1,6 @@
 import logging
 import sys
+from collections.abc import Collection
 from pathlib import Path
 
 from PyQt6.QtCore import PYQT_VERSION_STR, QT_VERSION_STR, QDir, QSize, Qt, pyqtSignal
@@ -32,6 +33,8 @@ class MainView(QMainWindow, Ui_MainWindow):
     signal_save_file = pyqtSignal()
     signal_save_file_as = pyqtSignal()
     signal_open_file = pyqtSignal()
+    signal_open_recent_file = pyqtSignal(str)
+    signal_clear_recent_files = pyqtSignal()
     signal_close_file = pyqtSignal()
 
     def __init__(self) -> None:
@@ -94,6 +97,31 @@ class MainView(QMainWindow, Ui_MainWindow):
 
     def show_status_message(self, message: str, msecs: int) -> None:
         self.statusBar().showMessage(message, msecs)
+
+    def set_recent_files_menu(self, recent_files: Collection[str]) -> None:
+        if len(recent_files) == 0:
+            self.menuRecent_Files.setEnabled(False)
+            return
+        self.menuRecent_Files.setEnabled(True)
+
+        # Clear actions
+        actions = self.menuRecent_Files.actions()
+        for action in actions:
+            if action.text() == "Clear Menu" or action.isSeparator():
+                continue
+            self.menuRecent_Files.removeAction(action)
+
+        # Add actions
+        for path in reversed(recent_files):
+            action = QAction(path, self)
+            action.triggered.connect(
+                lambda _, path=path: self.signal_open_recent_file.emit(  # noqa : U101
+                    path
+                )
+            )
+            actions = self.menuRecent_Files.actions()
+            before_action = actions[0] if actions else None
+            self.menuRecent_Files.insertAction(before_action, action)
 
     def closeEvent(self, event: QCloseEvent) -> None:
         self.signal_exit.emit()
@@ -195,6 +223,9 @@ class MainView(QMainWindow, Ui_MainWindow):
         self.actionSave.triggered.connect(self.signal_save_file.emit)
         self.actionSave_As.triggered.connect(self.signal_save_file_as.emit)
         self.actionOpen_File.triggered.connect(self.signal_open_file.emit)
+        self.actionClear_Recent_File_Menu.triggered.connect(
+            self.signal_clear_recent_files.emit
+        )
         self.actionClose_File.triggered.connect(self.signal_close_file.emit)
 
         self.actionQuit.triggered.connect(self.close)

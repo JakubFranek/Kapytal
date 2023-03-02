@@ -87,36 +87,48 @@ class MainPresenter:
                 return
 
             self._current_file_path = Path(file_path)
-            with open(self._current_file_path, mode="r", encoding="UTF-8") as file:
-                logging.debug(f"File path received: {self._current_file_path}")
-                backup_json_file(self._current_file_path)
-
-                logging.debug(f"Loading file: {self._current_file_path}")
-                logging.disable(logging.INFO)  # suppress logging of object creation
-                record_keeper: RecordKeeper = json.load(file, cls=CustomJSONDecoder)
-                logging.disable(logging.NOTSET)  # enable logging again
-
-                self._load_record_keeper(record_keeper)
-
-                self._view.show_status_message(
-                    f"File loaded: {self._current_file_path}", 3000
-                )
-                self._update_unsaved_changes(False)
-
-                self._update_recent_paths(self._current_file_path)
-
-                logging.debug(f"Currencies: {len(record_keeper.currencies)}")
-                logging.debug(f"Exchange Rates: {len(record_keeper.exchange_rates)}")
-                logging.debug(f"Securities: {len(record_keeper.securities)}")
-                logging.debug(f"AccountGroups: {len(record_keeper.account_groups)}")
-                logging.debug(f"Accounts: {len(record_keeper.accounts)}")
-                logging.debug(f"Transactions: {len(record_keeper.transactions)}")
-                logging.debug(f"Categories: {len(record_keeper.categories)}")
-                logging.debug(f"Tags: {len(record_keeper.tags)}")
-                logging.debug(f"Payees: {len(record_keeper.tags)}")
-                logging.info(f"File loaded: {file_path}")
+            self._open_file(self._current_file_path)
         except Exception:
             handle_exception()
+
+    def _open_recent_file(self, path_as_string: str) -> None:
+        logging.debug("Load recent file initiated")
+        try:
+            self._current_file_path = Path(path_as_string)
+            self._open_file(self._current_file_path)
+        except Exception:
+            handle_exception()
+
+    def _open_file(self, path: Path) -> None:
+        logging.debug(f"File path received: {self._current_file_path}")
+
+        with open(path, mode="r", encoding="UTF-8") as file:
+            backup_json_file(self._current_file_path)
+
+            logging.debug(f"Loading file: {self._current_file_path}")
+            logging.disable(logging.INFO)  # suppress logging of object creation
+            record_keeper: RecordKeeper = json.load(file, cls=CustomJSONDecoder)
+            logging.disable(logging.NOTSET)  # enable logging again
+
+            self._load_record_keeper(record_keeper)
+
+            self._view.show_status_message(
+                f"File loaded: {self._current_file_path}", 3000
+            )
+            self._update_unsaved_changes(False)
+
+            self._add_recent_paths(self._current_file_path)
+
+            logging.debug(f"Currencies: {len(record_keeper.currencies)}")
+            logging.debug(f"Exchange Rates: {len(record_keeper.exchange_rates)}")
+            logging.debug(f"Securities: {len(record_keeper.securities)}")
+            logging.debug(f"AccountGroups: {len(record_keeper.account_groups)}")
+            logging.debug(f"Accounts: {len(record_keeper.accounts)}")
+            logging.debug(f"Transactions: {len(record_keeper.transactions)}")
+            logging.debug(f"Categories: {len(record_keeper.categories)}")
+            logging.debug(f"Tags: {len(record_keeper.tags)}")
+            logging.debug(f"Payees: {len(record_keeper.tags)}")
+            logging.info(f"File loaded: {path}")
 
     def _close_file(self) -> None:
         if self._check_for_unsaved_changes("Close File") is False:
@@ -245,6 +257,10 @@ class MainPresenter:
         self._view.signal_save_file.connect(lambda: self._save_to_file(save_as=False))
         self._view.signal_save_file_as.connect(lambda: self._save_to_file(save_as=True))
         self._view.signal_open_file.connect(self._load_from_file)
+        self._view.signal_open_recent_file.connect(
+            lambda path: self._open_recent_file(path)
+        )
+        self._view.signal_clear_recent_files.connect(self._clear_recent_paths)
         self._view.signal_close_file.connect(self._close_file)
 
     def _initialize_recent_paths(self) -> None:
@@ -258,14 +274,27 @@ class MainPresenter:
                 paths_as_str: list[str] = json.load(file, cls=CustomJSONDecoder)
                 self._recent_paths = [Path(path) for path in paths_as_str]
 
-    def _update_recent_paths(self, new_path: Path) -> None:
-        if new_path in self._recent_paths:
-            self._recent_paths.remove(new_path)
-        self._recent_paths.insert(0, new_path)
+        self._update_recent_paths_menu()
 
+    def _save_recent_paths(self) -> None:
         recent_paths = [str(path) for path in self._recent_paths]
         with open(self._recent_paths_file, mode="w", encoding="UTF-8") as file:
             logging.debug(f"Saving recent paths to file: {self._recent_paths_file}")
             json.dump(recent_paths, file, cls=CustomJSONEncoder)
 
-        # update UI
+    def _add_recent_paths(self, path: Path) -> None:
+        if path in self._recent_paths:
+            self._recent_paths.remove(path)
+        self._recent_paths.insert(0, path)
+
+        self._save_recent_paths()
+        self._update_recent_paths_menu()
+
+    def _update_recent_paths_menu(self) -> None:
+        recent_paths = [str(path) for path in self._recent_paths]
+        self._view.set_recent_files_menu(recent_paths)
+
+    def _clear_recent_paths(self) -> None:
+        self._recent_paths = []
+        self._save_recent_paths()
+        self._update_recent_paths_menu()
