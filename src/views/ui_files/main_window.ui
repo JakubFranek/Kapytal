@@ -227,7 +227,8 @@
      <property name="title">
       <string>Recent Files</string>
      </property>
-     <addaction name="actionClear_Menu"/>
+     <addaction name="separator"/>
+     <addaction name="actionClear_Recent_File_Menu"/>
     </widget>
     <addaction name="actionOpen_File"/>
     <addaction name="menuRecent_Files"/>
@@ -417,7 +418,7 @@
     <string>Close File</string>
    </property>
   </action>
-  <action name="actionClear_Menu">
+  <action name="actionClear_Recent_File_Menu">
    <property name="text">
     <string>Clear Menu</string>
    </property>

@@ -109,6 +109,7 @@ def remove_old_logs() -> None:
         _remove_oldest_log(dir_logs_debug)
 
 
+# TODO: remove oldest logs by timestamp
 def _remove_oldest_log(directory: Path) -> None:
     log_paths = _get_log_paths(directory)
     oldest_log = min(log_paths, key=os.path.getctime)

@@ -11,6 +11,7 @@ from types import TracebackType
 import src.models.user_settings.user_settings as user_settings
 
 # TODO: copy README.md to backup paths if not already present
+# TODO: remove oldest backups by timestamp
 
 
 def backup_json_file(file_path: Path) -> None:
