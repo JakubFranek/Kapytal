@@ -42,9 +42,9 @@ class CategoryTree(QTreeView):
         self.actionEdit_Category.setIcon(QIcon("icons_16:pencil.png"))
         self.actionDelete_Category.setIcon(QIcon("icons_16:minus.png"))
 
-        self.actionExpand_All.triggered.connect(self.expand_all)
+        self.actionExpand_All.triggered.connect(self._expand_all)
         self.actionExpand_All_Below.triggered.connect(self.signal_expand_below.emit)
-        self.actionCollapse_All.triggered.connect(self.collapse_all)
+        self.actionCollapse_All.triggered.connect(self._collapse_all)
         self.actionDelete_Category.triggered.connect(self.signal_delete_category.emit)
         self.actionAdd_Category.triggered.connect(self.signal_add_category.emit)
         self.actionEdit_Category.triggered.connect(self.signal_edit_category.emit)
@@ -52,11 +52,9 @@ class CategoryTree(QTreeView):
         self.contextMenuEvent = self.create_context_menu
 
     def expand_all(self) -> None:
-        logging.debug("Expanding all CategoryTree nodes")
         self.expandAll()
 
     def collapse_all(self) -> None:
-        logging.debug("Collapsing all CategoryTree nodes")
         self.collapseAll()
 
     def enable_actions(
@@ -96,3 +94,11 @@ class CategoryTree(QTreeView):
         self.selectionModel().selectionChanged.connect(
             self.signal_selection_changed.emit
         )
+
+    def _expand_all(self) -> None:
+        logging.debug("Expanding all CategoryTree nodes")
+        self.expand_all()
+
+    def _collapse_all(self) -> None:
+        logging.debug("Collapsing all CategoryTree nodes")
+        self.collapse_all()

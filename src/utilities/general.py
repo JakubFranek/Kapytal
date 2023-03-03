@@ -60,6 +60,9 @@ def backup_json_file(file_path: Path) -> None:
 
 
 def get_datetime_from_file_path(path: Path) -> datetime:
+    """Return datetime from a Path containing a '%Y_%m_%d_%Hh%Mm%Ss' timestamp
+    at the end of the path.stem."""
+
     stem = path.stem
     timestamp = stem[-len(timestamp_example) :]  # noqa: E203
     return datetime.strptime(timestamp, timestamp_format).replace(
