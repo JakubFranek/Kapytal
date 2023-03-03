@@ -18,30 +18,6 @@ def test_user_settings_import() -> None:
     assert isinstance(user_settings.settings, user_settings_class.UserSettings)
     assert user_settings._json_decoder is None
     assert user_settings._json_encoder is None
-    assert user_settings._settings_path is None
-
-
-def test_user_settings_set_path() -> None:
-    import src.models.user_settings.user_settings as user_settings
-
-    this_dir = Path(__file__).resolve().parent
-    test_dir = this_dir / "Test Directory"
-    test_dir.mkdir(exist_ok=True)
-    settings_path = test_dir / "user_settings.json"
-
-    user_settings.set_path(settings_path)
-
-    assert user_settings._settings_path == settings_path
-
-    shutil.rmtree(test_dir)
-
-
-@given(path=everything_except(Path))
-def test_user_settings_set_path_invalid_type(path: Any) -> None:
-    import src.models.user_settings.user_settings as user_settings
-
-    with pytest.raises(TypeError, match="Path"):
-        user_settings.set_path(path)
 
 
 def test_user_settings_set_json_encoder() -> None:
@@ -78,13 +54,14 @@ def test_user_settings_set_json_decoder_invalid_type(decoder: Any) -> None:
 
 def test_user_settings_set_path_save_load() -> None:
     import src.models.user_settings.user_settings as user_settings
+    import src.utilities.constants as constants
 
     this_dir = Path(__file__).resolve().parent
     test_dir = this_dir / "Test Directory"
     test_dir.mkdir(exist_ok=True)
     settings_path = test_dir / "user_settings.json"
+    constants.settings_path = settings_path
 
-    user_settings.set_path(settings_path)
     user_settings.set_json_encoder(CustomJSONEncoder)
     user_settings.set_json_decoder(CustomJSONDecoder)
     user_settings.save()
