@@ -69,8 +69,13 @@ class TagTableModel(QAbstractTableModel):
                 return payee_stats.no_of_transactions
             if column == TagTableColumns.COLUMN_BALANCE:
                 return str(payee_stats.balance)
-        if role == Qt.ItemDataRole.UserRole and column == TagTableColumns.COLUMN_NAME:
-            return unicodedata.normalize("NFD", payee_stats.attribute.name)
+        if role == Qt.ItemDataRole.UserRole:
+            if column == TagTableColumns.COLUMN_NAME:
+                return unicodedata.normalize("NFD", payee_stats.attribute.name)
+            if column == TagTableColumns.COLUMN_TRANSACTIONS:
+                return payee_stats.no_of_transactions
+            if column == TagTableColumns.COLUMN_BALANCE:
+                return float(payee_stats.balance.value_normalized)
         if role == Qt.ItemDataRole.TextAlignmentRole and (
             column == TagTableColumns.COLUMN_TRANSACTIONS
             or column == TagTableColumns.COLUMN_BALANCE
