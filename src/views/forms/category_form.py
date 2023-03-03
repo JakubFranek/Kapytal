@@ -67,7 +67,7 @@ class CategoryForm(QWidget, Ui_CategoryForm):
         return self.searchLineEdit.text()
 
     @property
-    def checked_type_(self) -> CategoryType:
+    def checked_type(self) -> CategoryType:
         if self.incomeRadioButton.isChecked():
             return CategoryType.INCOME
         if self.expenseRadioButton.isChecked():

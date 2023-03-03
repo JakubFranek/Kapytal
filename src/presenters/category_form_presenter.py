@@ -44,7 +44,7 @@ class CategoryFormPresenter:
         self.reset_model()
 
     def update_model_data(self) -> None:
-        type_ = self._view.checked_type_
+        type_ = self._view.checked_type
         if type_ == CategoryType.INCOME:
             self._model.root_categories = self._record_keeper.root_income_categories
         elif type_ == CategoryType.EXPENSE:
@@ -67,7 +67,7 @@ class CategoryFormPresenter:
         self._model.category_stats = tuple(category_stats)
 
     def reset_model(self) -> None:
-        category_type_ = self._view.checked_type_.name
+        category_type_ = self._view.checked_type.name
         logging.debug(
             f"Resetting CategoryForm model: showing {category_type_} Categories"
         )
@@ -92,7 +92,7 @@ class CategoryFormPresenter:
 
     def run_dialog(self, edit: bool) -> None:
         item = self._model.get_selected_item()
-        type_ = self._view.checked_type_
+        type_ = self._view.checked_type
         paths = [category.path + "/" for category in self._record_keeper.categories]
         max_position = (
             self._get_max_child_position(item)
