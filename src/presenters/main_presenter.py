@@ -4,6 +4,7 @@ from pathlib import Path
 
 from PyQt6.QtWidgets import QApplication
 
+import src.utilities.constants as constants
 from src.models.json.custom_json_decoder import CustomJSONDecoder
 from src.models.json.custom_json_encoder import CustomJSONEncoder
 from src.models.record_keeper import RecordKeeper
@@ -26,11 +27,10 @@ from src.views.main_view import MainView
 
 
 class MainPresenter:
-    def __init__(self, view: MainView, app: QApplication, app_root_path: Path) -> None:
+    def __init__(self, view: MainView, app: QApplication) -> None:
         self._view = view
         self._record_keeper = RecordKeeper()
         self._app = app
-        self._app_root_path = app_root_path
 
         self._initialize_presenters()
         self._setup_event_observers()
@@ -198,9 +198,7 @@ class MainPresenter:
         )
         logging.debug("Creating SettingsForm and SettingsFormPresenter")
         settings_form = SettingsForm(parent=self._view)
-        self._settings_form_presenter = SettingsFormPresenter(
-            settings_form, self._app_root_path
-        )
+        self._settings_form_presenter = SettingsFormPresenter(settings_form)
 
     def _setup_event_observers(self) -> None:
         self._account_tree_presenter.event_data_changed.append(
@@ -252,24 +250,22 @@ class MainPresenter:
         self._view.signal_close_file.connect(self._close_file)
 
     def _initialize_recent_paths(self) -> None:
-        self._recent_paths_file = self._app_root_path / "saved_data/recent_files.json"
-
-        if not self._recent_paths_file.exists():
+        if not constants.recent_files_path.exists():
             logging.debug("Recent Files not found, initializing to empty list")
             self._recent_paths: list[Path] = []
         else:
-            with open(self._recent_paths_file, mode="r", encoding="UTF-8") as file:
-                logging.debug(f"Loading Recent Files: {self._recent_paths_file}")
+            with open(constants.recent_files_path, mode="r", encoding="UTF-8") as file:
+                logging.debug(f"Loading Recent Files: {constants.recent_files_path}")
                 paths_as_str: list[str] = json.load(file, cls=CustomJSONDecoder)
                 self._recent_paths = [Path(path) for path in paths_as_str]
 
         self._update_recent_paths_menu()
 
     def _save_recent_paths(self) -> None:
-        recent_paths = [str(path) for path in self._recent_paths]
-        with open(self._recent_paths_file, mode="w", encoding="UTF-8") as file:
-            logging.debug(f"Saving Recent Files: {self._recent_paths_file}")
-            json.dump(recent_paths, file, cls=CustomJSONEncoder)
+        paths_as_str = [str(path) for path in self._recent_paths]
+        with open(constants.recent_files_path, mode="w", encoding="UTF-8") as file:
+            logging.debug(f"Saving Recent Files: {constants.recent_files_path}")
+            json.dump(paths_as_str, file, cls=CustomJSONEncoder)
 
     def _add_recent_paths(self, path: Path) -> None:
         logging.debug(f"Adding a Recent File: {path}")

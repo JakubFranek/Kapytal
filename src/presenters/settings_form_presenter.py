@@ -3,15 +3,15 @@ import os
 from pathlib import Path
 
 import src.models.user_settings.user_settings as user_settings
+import src.utilities.constants as constants
 from src.presenters.utilities.handle_exception import handle_exception
 from src.presenters.view_models.backup_paths_list_model import BackupPathsListModel
 from src.views.forms.settings_form import SettingsForm
 
 
 class SettingsFormPresenter:
-    def __init__(self, view: SettingsForm, app_root_path: Path) -> None:
+    def __init__(self, view: SettingsForm) -> None:
         self._view = view
-        self._logs_path = app_root_path / "logs"
 
         self._backup_paths = list(user_settings.settings.backup_paths)
 
@@ -116,8 +116,10 @@ class SettingsFormPresenter:
         os.startfile(path)  # noqa: S606
 
     def open_logs_path(self) -> None:
-        logging.debug(f"Opening logs path in File Explorer: {self._logs_path}")
-        os.startfile(self._logs_path)  # noqa: S606
+        logging.debug(
+            f"Opening logs path in File Explorer: {constants.logs_folder_path}"
+        )
+        os.startfile(constants.logs_folder_path)  # noqa: S606
 
     def _backup_path_selection_changed(self) -> None:
         item = self._backup_paths_list_model.get_selected_item()

@@ -5,14 +5,9 @@ from pathlib import Path
 
 from PyQt6.QtCore import PYQT_VERSION_STR, QT_VERSION_STR, QDir, QSize, Qt, pyqtSignal
 from PyQt6.QtGui import QAction, QCloseEvent, QIcon
-from PyQt6.QtWidgets import (
-    QApplication,
-    QFileDialog,
-    QLineEdit,
-    QMainWindow,
-    QMessageBox,
-)
+from PyQt6.QtWidgets import QFileDialog, QLineEdit, QMainWindow, QMessageBox
 
+import src.utilities.constants as constants
 from src.views.account_tree import AccountTree
 from src.views.ui_files.Ui_main_window import Ui_MainWindow
 
@@ -82,16 +77,13 @@ class MainView(QMainWindow, Ui_MainWindow):
             self.actionSave.setIcon(QIcon("icons_16:disk.png"))
             star_str = ""
 
-        app = QApplication.instance()
-        version = app.applicationVersion()
-
         if current_file_path is None:
             self.actionSave.setEnabled(False)
-            self.setWindowTitle(f"Kapytal v{version}")
+            self.setWindowTitle(f"Kapytal v{constants.VERSION}")
         else:
             self.actionSave.setEnabled(True)
             self.setWindowTitle(
-                f"Kapytal v{version} - " + str(current_file_path) + star_str
+                f"Kapytal v{constants.VERSION} - " + str(current_file_path) + star_str
             )
 
     def show_status_message(self, message: str, msecs: int) -> None:
@@ -128,8 +120,6 @@ class MainView(QMainWindow, Ui_MainWindow):
 
     def show_about(self) -> None:
         logging.debug("Showing About dialog")
-        app = QApplication.instance()
-        version = app.applicationVersion()
         text = (
             "<html>"
             "<b>Kapytal</b> - <em>a tool for managing personal and "
@@ -141,7 +131,7 @@ class MainView(QMainWindow, Ui_MainWindow):
             "GNU General Public Licence v3.0</a>.<br/>"
             "<br/>"
             "<b>Version info</b><br/>"
-            f"Kapytal {version}<br/>"
+            f"Kapytal {constants.VERSION}<br/>"
             f"Python {sys.version}<br/>"
             f"Qt {QT_VERSION_STR}<br/>"
             f"PyQt {PYQT_VERSION_STR}<br/>"

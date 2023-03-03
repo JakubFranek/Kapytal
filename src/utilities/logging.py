@@ -3,10 +3,8 @@ from datetime import datetime
 from pathlib import Path
 
 import src.models.user_settings.user_settings as user_settings
+import src.utilities.constants as constants
 from src.utilities.general import contains_timestamp, get_datetime_from_file_path
-
-dir_logs_info = None
-dir_logs_debug = None
 
 
 class DuplicateFilter(logging.Filter):
@@ -20,21 +18,16 @@ class DuplicateFilter(logging.Filter):
         return False
 
 
-def setup_logging(root_directory: Path) -> None:
-    global dir_logs_info
-    global dir_logs_debug
-
-    dir_logs_info = root_directory / "logs/info"
-    dir_logs_debug = root_directory / "logs/debug"
-    dir_logs_info.mkdir(exist_ok=True, parents=True)
-    dir_logs_debug.mkdir(exist_ok=True, parents=True)
+def setup_logging() -> None:
+    constants.logs_info_path.mkdir(exist_ok=True, parents=True)
+    constants.logs_debug_path.mkdir(exist_ok=True, parents=True)
 
     dt_now = datetime.now(user_settings.settings.time_zone)
-    filename_info = dir_logs_info / (
-        "info_" + dt_now.strftime("%Y_%m_%d_%Hh%Mm%Ss") + ".log"
+    filename_info = constants.logs_info_path / (
+        "info_" + dt_now.strftime(constants.TIMESTAMP_FORMAT) + ".log"
     )
-    filename_debug = dir_logs_debug / (
-        "debug_" + dt_now.strftime("%Y_%m_%d_%Hh%Mm%Ss") + ".log"
+    filename_debug = constants.logs_debug_path / (
+        "debug_" + dt_now.strftime(constants.TIMESTAMP_FORMAT) + ".log"
     )
     formatter = logging.Formatter(
         fmt=(
@@ -73,8 +66,8 @@ def remove_old_logs() -> None:
         while True:
             # Ensure there is the same number of INFO and DEBUG logs
 
-            logs_info_number = len(_get_log_paths(dir_logs_info))
-            logs_debug_number = len(_get_log_paths(dir_logs_debug))
+            logs_info_number = len(_get_log_paths(constants.logs_info_path))
+            logs_debug_number = len(_get_log_paths(constants.logs_debug_path))
 
             if logs_info_number == logs_debug_number:
                 break
@@ -84,12 +77,12 @@ def remove_old_logs() -> None:
                 f"{logs_info_number} info logs != {logs_debug_number} debug logs"
             )
             if logs_info_number > logs_debug_number:
-                _remove_oldest_log(dir_logs_info)
+                _remove_oldest_log(constants.logs_info_path)
             elif logs_info_number < logs_debug_number:
-                _remove_oldest_log(dir_logs_debug)
+                _remove_oldest_log(constants.logs_debug_path)
 
-        logs_info_size = _get_directory_size(dir_logs_info)
-        logs_debug_size = _get_directory_size(dir_logs_debug)
+        logs_info_size = _get_directory_size(constants.logs_info_path)
+        logs_debug_size = _get_directory_size(constants.logs_debug_path)
         total_size = logs_info_size + logs_debug_size
 
         if logs_info_number <= 1 and total_size >= size_limit:
@@ -105,8 +98,8 @@ def remove_old_logs() -> None:
             )
             return
 
-        _remove_oldest_log(dir_logs_info)
-        _remove_oldest_log(dir_logs_debug)
+        _remove_oldest_log(constants.logs_info_path)
+        _remove_oldest_log(constants.logs_debug_path)
 
 
 def _remove_oldest_log(directory: Path) -> None:

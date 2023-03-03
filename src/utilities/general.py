@@ -8,22 +8,23 @@ from pathlib import Path
 from types import TracebackType
 
 import src.models.user_settings.user_settings as user_settings
-
-# TODO: copy README.md to backup paths if not already present
-
-timestamp_format = "%Y_%m_%d_%Hh%Mm%Ss"
-timestamp_example = "YYYY_mm_DD_HHhMMmSSs"
+import src.utilities.constants as constants
 
 
 def backup_json_file(file_path: Path) -> None:
     dt_now = datetime.now(user_settings.settings.time_zone)
     size_limit = user_settings.settings.backups_max_size_bytes
 
-    file_stem = file_path.stem
-    backup_name = file_stem + "_" + dt_now.strftime(timestamp_format) + ".json"
+    backup_name = (
+        file_path.stem + "_" + dt_now.strftime(constants.TIMESTAMP_FORMAT) + ".json"
+    )
 
     for backup_directory in user_settings.settings.backup_paths:
         backup_directory.mkdir(exist_ok=True, parents=True)
+        backup_directory_readme = backup_directory / "README.md"
+        if not backup_directory_readme.exists():
+            readme_path = constants.backups_folder_path / "README.md"
+            shutil.copyfile(readme_path, backup_directory_readme)
 
         backup_path = backup_directory / backup_name
         shutil.copyfile(file_path, backup_path)
@@ -66,9 +67,9 @@ def contains_timestamp(path: Path) -> bool:
     at the end of its stem."""
 
     stem = path.stem
-    timestamp = stem[-len(timestamp_example) :]  # noqa: E203
+    timestamp = stem[-len(constants.TIMESTAMP_EXAMPLE) :]  # noqa: E203
     try:
-        datetime.strptime(timestamp, timestamp_format)  # noqa: DTZ007
+        datetime.strptime(timestamp, constants.TIMESTAMP_FORMAT)  # noqa: DTZ007
         return True
     except ValueError:
         return False
@@ -79,8 +80,8 @@ def get_datetime_from_file_path(path: Path) -> datetime:
     at the end of the stem."""
 
     stem = path.stem
-    timestamp = stem[-len(timestamp_example) :]  # noqa: E203
-    return datetime.strptime(timestamp, timestamp_format).replace(
+    timestamp = stem[-len(constants.TIMESTAMP_EXAMPLE) :]  # noqa: E203
+    return datetime.strptime(timestamp, constants.TIMESTAMP_FORMAT).replace(
         tzinfo=user_settings.settings.time_zone
     )
 
