@@ -27,6 +27,7 @@ class AccountGroupDialog(QDialog, Ui_CashTransactionDialog):
         parent: QWidget,
         accounts: Collection[str],
         categories: Collection[str],
+        tags: Collection[str],
         edit: bool,
     ) -> None:
         super().__init__(parent=parent)
@@ -35,6 +36,10 @@ class AccountGroupDialog(QDialog, Ui_CashTransactionDialog):
         self.categories_completer = QCompleter(categories)
         self.categories_completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
         self.categoryLineEdit.setCompleter(self.categories_completer)
+
+        self.tags_completer = QCompleter(tags)
+        self.tags_completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+        self.tagsLineEdit.setCompleter(self.tags_completer)
 
         if edit:
             self.setWindowTitle("Edit Cash Transaction")
@@ -108,13 +113,14 @@ class AccountGroupDialog(QDialog, Ui_CashTransactionDialog):
 
     @property
     def tags(self) -> tuple[str]:
-        tags = self.tagsPlainTextEdit.toPlainText().split(";")
+        tags = self.tagsLineEdit.text().split(";")
+        tags = [tag.strip() for tag in tags]
         return tuple(tags)
 
     @tags.setter
     def tags(self, tags: Collection[str]) -> None:
         text = "; ".join(tags)
-        self.tagsPlainTextEdit.setPlainText(text)
+        self.tagsLineEdit.setText(text)
 
     def _handle_button_box_click(self, button: QAbstractButton) -> None:
         role = self.buttonBox.buttonRole(button)
