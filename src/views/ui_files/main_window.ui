@@ -23,185 +23,7 @@
      <verstretch>0</verstretch>
     </sizepolicy>
    </property>
-   <layout class="QHBoxLayout" name="horizontalLayout" stretch="0,1">
-    <item>
-     <layout class="QVBoxLayout" name="verticalLayoutTree">
-      <item>
-       <layout class="QHBoxLayout" name="treeControlsHorizontalLayout">
-        <property name="topMargin">
-         <number>2</number>
-        </property>
-        <property name="bottomMargin">
-         <number>0</number>
-        </property>
-        <item>
-         <widget class="QToolButton" name="expandAllToolButton">
-          <property name="text">
-           <string>...</string>
-          </property>
-          <property name="toolButtonStyle">
-           <enum>Qt::ToolButtonIconOnly</enum>
-          </property>
-          <property name="arrowType">
-           <enum>Qt::NoArrow</enum>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QToolButton" name="collapseAllToolButton">
-          <property name="text">
-           <string>...</string>
-          </property>
-          <property name="toolButtonStyle">
-           <enum>Qt::ToolButtonIconOnly</enum>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QToolButton" name="addAccountGroupToolButton">
-          <property name="text">
-           <string>...</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QToolButton" name="addCashAccountToolButton">
-          <property name="text">
-           <string>...</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QToolButton" name="addSecurityAccountToolButton">
-          <property name="text">
-           <string>...</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <spacer name="treeControlsHorizontalSpacer">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-       </layout>
-      </item>
-     </layout>
-    </item>
-    <item>
-     <layout class="QVBoxLayout" name="verticalLayoutTable">
-      <item>
-       <layout class="QHBoxLayout" name="tableControlsHorizontalLayout" stretch="0,0,0,0,0,1,0,0">
-        <item>
-         <widget class="QToolButton" name="incomeToolButton">
-          <property name="text">
-           <string>Income</string>
-          </property>
-          <property name="toolButtonStyle">
-           <enum>Qt::ToolButtonTextBesideIcon</enum>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QToolButton" name="expenseToolButton">
-          <property name="text">
-           <string>Expense</string>
-          </property>
-          <property name="toolButtonStyle">
-           <enum>Qt::ToolButtonTextBesideIcon</enum>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QToolButton" name="transferToolButton">
-          <property name="text">
-           <string>Transfer</string>
-          </property>
-          <property name="popupMode">
-           <enum>QToolButton::InstantPopup</enum>
-          </property>
-          <property name="toolButtonStyle">
-           <enum>Qt::ToolButtonTextBesideIcon</enum>
-          </property>
-          <property name="arrowType">
-           <enum>Qt::NoArrow</enum>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QToolButton" name="buyToolButton">
-          <property name="text">
-           <string>Buy</string>
-          </property>
-          <property name="toolButtonStyle">
-           <enum>Qt::ToolButtonTextBesideIcon</enum>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QToolButton" name="sellToolButton">
-          <property name="text">
-           <string>Sell</string>
-          </property>
-          <property name="toolButtonStyle">
-           <enum>Qt::ToolButtonTextBesideIcon</enum>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <spacer name="tableControlsHorizontalSpacer">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-        <item>
-         <widget class="QToolButton" name="filterToolButton">
-          <property name="text">
-           <string>Filter</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QLineEdit" name="searchLineEdit">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>155</width>
-            <height>16777215</height>
-           </size>
-          </property>
-          <property name="placeholderText">
-           <string>Search</string>
-          </property>
-          <property name="clearButtonEnabled">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-     </layout>
-    </item>
-   </layout>
+   <layout class="QHBoxLayout" name="horizontalLayout" stretch=""/>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
@@ -209,7 +31,7 @@
      <x>0</x>
      <y>0</y>
      <width>863</width>
-     <height>21</height>
+     <height>25</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -313,46 +135,6 @@
     <string>Ctrl+O</string>
    </property>
   </action>
-  <action name="actionExpense">
-   <property name="text">
-    <string>Expense</string>
-   </property>
-  </action>
-  <action name="actionIncome">
-   <property name="text">
-    <string>Income</string>
-   </property>
-  </action>
-  <action name="actionTransfer">
-   <property name="text">
-    <string>Transfer</string>
-   </property>
-  </action>
-  <action name="actionBuy">
-   <property name="text">
-    <string>Buy</string>
-   </property>
-  </action>
-  <action name="actionSell">
-   <property name="text">
-    <string>Sell</string>
-   </property>
-  </action>
-  <action name="actionRefund">
-   <property name="text">
-    <string>Refund</string>
-   </property>
-  </action>
-  <action name="actionDuplicate_Transaction">
-   <property name="text">
-    <string>Duplicate Transaction</string>
-   </property>
-  </action>
-  <action name="actionDelete_Transactions">
-   <property name="text">
-    <string>Delete Transaction(s)</string>
-   </property>
-  </action>
   <action name="actionCurrencies_and_Exchange_Rates">
    <property name="text">
     <string>Currencies and Exchange Rates</string>
@@ -391,19 +173,6 @@
   <action name="actionSettings">
    <property name="text">
     <string>Settings</string>
-   </property>
-  </action>
-  <action name="actionCashTransfer">
-   <property name="text">
-    <string>Cash Transfer</string>
-   </property>
-  </action>
-  <action name="actionSecurityTransfer">
-   <property name="text">
-    <string>Security Transfer</string>
-   </property>
-   <property name="toolTip">
-    <string>Security Transfer</string>
    </property>
   </action>
   <action name="actionClose_File">

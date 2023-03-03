@@ -10,10 +10,10 @@ from src.models.record_keeper import RecordKeeper
 from src.presenters.utilities.event import Event
 from src.presenters.utilities.handle_exception import handle_exception
 from src.presenters.view_models.account_tree_model import AccountTreeModel
-from src.views.account_tree import AccountTree
 from src.views.dialogs.account_group_dialog import AccountGroupDialog
 from src.views.dialogs.cash_account_dialog import CashAccountDialog
 from src.views.dialogs.security_account_dialog import SecurityAccountDialog
+from src.views.widgets.account_tree_widget import AccountTreeWidget
 
 
 class AccountTreePresenter:
@@ -22,15 +22,15 @@ class AccountTreePresenter:
 
     event_data_changed = Event()
 
-    def __init__(self, view: AccountTree, record_keeper: RecordKeeper) -> None:
+    def __init__(self, view: AccountTreeWidget, record_keeper: RecordKeeper) -> None:
         self._view = view
         self._record_keeper = record_keeper
         self._model = AccountTreeModel(
-            view=view,
+            view=view.treeView,
             root_items=record_keeper.root_account_items,
             base_currency=record_keeper.base_currency,
         )
-        self._view.setModel(self._model)
+        self._view.treeView.setModel(self._model)
 
         self._setup_signals()
         self._view.finalize_setup()
@@ -46,12 +46,12 @@ class AccountTreePresenter:
         self._model.base_currency = self._record_keeper.base_currency
 
     def expand_all_below(self) -> None:
-        indexes = self._view.selectedIndexes()
+        indexes = self._view.treeView.selectedIndexes()
         item = self._model.get_selected_item()
         logging.debug(f"Expanding all nodes below {item}")
         if len(indexes) == 0:
             raise ValueError("No index to expand recursively selected.")
-        self._view.expandRecursively(indexes[0])
+        self._view.treeView.expandRecursively(indexes[0])
 
     def edit_item(self) -> None:
         item = self._model.get_selected_item()

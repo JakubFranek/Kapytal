@@ -26,18 +26,10 @@ class TagForm(QWidget, Ui_TagForm):
         self.removeButton.clicked.connect(self.signal_remove_tag.emit)
         self.renameButton.clicked.connect(self.signal_rename_tag.emit)
         self.selectButton.clicked.connect(self.signal_select_tag.emit)
+        self.searchLineEdit.textChanged.connect(self.signal_search_text_changed.emit)
 
         self.searchLineEdit.addAction(
             QIcon("icons_16:magnifier.png"), QLineEdit.ActionPosition.LeadingPosition
-        )
-        self.searchLineEdit.textChanged.connect(self.signal_search_text_changed.emit)
-        self.searchLineEdit.setToolTip(
-            (
-                "Special characters:\n"
-                "* matches zero or more of any characters\n"
-                "? matches any single character\n"
-                "[...] matches any character within square brackets"
-            )
         )
 
     @property

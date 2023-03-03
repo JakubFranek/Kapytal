@@ -26,18 +26,10 @@ class PayeeForm(QWidget, Ui_PayeeForm):
         self.removeButton.clicked.connect(self.signal_remove_payee.emit)
         self.renameButton.clicked.connect(self.signal_rename_payee.emit)
         self.selectButton.clicked.connect(self.signal_select_payee.emit)
+        self.searchLineEdit.textChanged.connect(self.signal_search_text_changed.emit)
 
         self.searchLineEdit.addAction(
             QIcon("icons_16:magnifier.png"), QLineEdit.ActionPosition.LeadingPosition
-        )
-        self.searchLineEdit.textChanged.connect(self.signal_search_text_changed.emit)
-        self.searchLineEdit.setToolTip(
-            (
-                "Special characters:\n"
-                "* matches zero or more of any characters\n"
-                "? matches any single character\n"
-                "[...] matches any character within square brackets"
-            )
         )
 
     @property

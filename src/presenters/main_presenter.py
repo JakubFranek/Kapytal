@@ -173,7 +173,7 @@ class MainPresenter:
     def _initialize_presenters(self) -> None:
         logging.debug("Creating AccountTreePresenter")
         self._account_tree_presenter = AccountTreePresenter(
-            self._view.account_tree, self._record_keeper
+            self._view.account_tree_widget, self._record_keeper
         )
         logging.debug("Creating Currency Form and CurrencyFormPresenter")
         currency_form = CurrencyForm(parent=self._view)

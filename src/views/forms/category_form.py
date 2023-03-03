@@ -32,14 +32,6 @@ class CategoryForm(QWidget, Ui_CategoryForm):
             QIcon("icons_16:magnifier.png"), QLineEdit.ActionPosition.LeadingPosition
         )
         self.searchLineEdit.textChanged.connect(self.signal_search_text_changed.emit)
-        self.searchLineEdit.setToolTip(
-            (
-                "Special characters:\n"
-                "* matches zero or more of any characters\n"
-                "? matches any single character\n"
-                "[...] matches any character within square brackets"
-            )
-        )
         self.category_tree.signal_add_category.connect(self.signal_add_category.emit)
         self.category_tree.signal_edit_category.connect(self.signal_edit_category.emit)
         self.category_tree.signal_delete_category.connect(
