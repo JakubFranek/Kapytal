@@ -5,7 +5,7 @@ from pathlib import Path
 import src.models.user_settings.user_settings as user_settings
 import src.utilities.constants as constants
 from src.presenters.utilities.handle_exception import handle_exception
-from src.presenters.view_models.backup_paths_list_model import BackupPathsListModel
+from src.view_models.backup_paths_list_model import BackupPathsListModel
 from src.views.forms.settings_form import SettingsForm
 
 

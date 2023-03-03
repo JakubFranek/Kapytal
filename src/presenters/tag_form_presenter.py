@@ -7,7 +7,7 @@ from src.models.record_keeper import RecordKeeper
 from src.models.utilities.calculation import AttributeStats, get_tag_stats
 from src.presenters.utilities.event import Event
 from src.presenters.utilities.handle_exception import handle_exception
-from src.presenters.view_models.tag_table_model import TagTableModel
+from src.view_models.tag_table_model import TagTableModel
 from src.views.dialogs.tag_dialog import TagDialog
 from src.views.forms.tag_form import TagForm
 

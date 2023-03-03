@@ -9,7 +9,7 @@ from src.models.model_objects.security_objects import SecurityAccount
 from src.models.record_keeper import RecordKeeper
 from src.presenters.utilities.event import Event
 from src.presenters.utilities.handle_exception import handle_exception
-from src.presenters.view_models.account_tree_model import AccountTreeModel
+from src.view_models.account_tree_model import AccountTreeModel
 from src.views.dialogs.account_group_dialog import AccountGroupDialog
 from src.views.dialogs.cash_account_dialog import CashAccountDialog
 from src.views.dialogs.security_account_dialog import SecurityAccountDialog

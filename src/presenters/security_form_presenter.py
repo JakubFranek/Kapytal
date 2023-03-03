@@ -7,7 +7,7 @@ import src.models.user_settings.user_settings as user_settings
 from src.models.record_keeper import RecordKeeper
 from src.presenters.utilities.event import Event
 from src.presenters.utilities.handle_exception import handle_exception
-from src.presenters.view_models.security_table_model import SecurityTableModel
+from src.view_models.security_table_model import SecurityTableModel
 from src.views.dialogs.security_dialog import SecurityDialog
 from src.views.dialogs.set_security_price_dialog import SetSecurityPriceDialog
 from src.views.forms.security_form import SecurityForm

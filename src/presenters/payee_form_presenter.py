@@ -7,7 +7,7 @@ from src.models.record_keeper import RecordKeeper
 from src.models.utilities.calculation import AttributeStats, get_payee_stats
 from src.presenters.utilities.event import Event
 from src.presenters.utilities.handle_exception import handle_exception
-from src.presenters.view_models.payee_table_model import PayeeTableModel
+from src.view_models.payee_table_model import PayeeTableModel
 from src.views.dialogs.payee_dialog import PayeeDialog
 from src.views.forms.payee_form import PayeeForm
 

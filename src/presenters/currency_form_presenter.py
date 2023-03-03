@@ -7,8 +7,8 @@ from src.models.custom_exceptions import InvalidOperationError
 from src.models.record_keeper import RecordKeeper
 from src.presenters.utilities.event import Event
 from src.presenters.utilities.handle_exception import handle_exception
-from src.presenters.view_models.currency_table_model import CurrencyTableModel
-from src.presenters.view_models.exchange_rate_table_model import ExchangeRateTableModel
+from src.view_models.currency_table_model import CurrencyTableModel
+from src.view_models.exchange_rate_table_model import ExchangeRateTableModel
 from src.views.dialogs.add_exchange_rate_dialog import AddExchangeRateDialog
 from src.views.dialogs.currency_dialog import CurrencyDialog
 from src.views.dialogs.set_exchange_rate_dialog import SetExchangeRateDialog

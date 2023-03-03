@@ -8,7 +8,7 @@ from src.models.record_keeper import RecordKeeper
 from src.models.utilities.calculation import CategoryStats, get_category_stats
 from src.presenters.utilities.event import Event
 from src.presenters.utilities.handle_exception import handle_exception
-from src.presenters.view_models.category_tree_model import CategoryTreeModel
+from src.view_models.category_tree_model import CategoryTreeModel
 from src.views.dialogs.category_dialog import CategoryDialog
 from src.views.forms.category_form import CategoryForm
 
