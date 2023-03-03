@@ -1,5 +1,5 @@
 # Warning
 
-Files in this folder get automatically deleted by Kapytal over time.
-Do not put any files in here as they WILL be deleted eventually.
-If you wish to store any of the files in this directory, copy them elsewhere.
+This is a folder where Kapytal keeps its logs. Logs in this folder get automatically deleted by Kapytal over time once the folder size limit is exceeded, starting from the oldest log (based on the file name time stamp).
+Please do not place any files in here.
+If you wish to store any of the logs in this directory indefinitely, copy them elsewhere.

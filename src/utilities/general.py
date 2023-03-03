@@ -35,7 +35,9 @@ def backup_json_file(file_path: Path) -> None:
             old_backup_paths = [
                 file_path
                 for file_path in backup_directory.iterdir()
-                if file_path.is_file() and file_path.name != "README.md"
+                if file_path.is_file()
+                and file_path.suffix == ".json"
+                and contains_timestamp(file_path)
             ]
             total_size = sum(f.stat().st_size for f in old_backup_paths if f.is_file())
 
@@ -59,9 +61,22 @@ def backup_json_file(file_path: Path) -> None:
                 oldest_backup.unlink()
 
 
+def contains_timestamp(path: Path) -> bool:
+    """Return True if the Path contains a '%Y_%m_%d_%Hh%Mm%Ss' timestamp
+    at the end of its stem."""
+
+    stem = path.stem
+    timestamp = stem[-len(timestamp_example) :]  # noqa: E203
+    try:
+        datetime.strptime(timestamp, timestamp_format)  # noqa: DTZ007
+        return True
+    except ValueError:
+        return False
+
+
 def get_datetime_from_file_path(path: Path) -> datetime:
     """Return datetime from a Path containing a '%Y_%m_%d_%Hh%Mm%Ss' timestamp
-    at the end of the path.stem."""
+    at the end of the stem."""
 
     stem = path.stem
     timestamp = stem[-len(timestamp_example) :]  # noqa: E203

@@ -3,7 +3,7 @@ from datetime import datetime
 from pathlib import Path
 
 import src.models.user_settings.user_settings as user_settings
-from src.utilities.general import get_datetime_from_file_path
+from src.utilities.general import contains_timestamp, get_datetime_from_file_path
 
 dir_logs_info = None
 dir_logs_debug = None
@@ -120,7 +120,9 @@ def _get_log_paths(directory: Path) -> list[Path]:
     return [
         file_path
         for file_path in directory.iterdir()
-        if file_path.is_file() and file_path.name != "README.md"
+        if file_path.is_file()
+        and file_path.suffix == ".log"
+        and contains_timestamp(file_path)
     ]
 
 
