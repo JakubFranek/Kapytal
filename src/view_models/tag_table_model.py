@@ -1,6 +1,6 @@
 import typing
 import unicodedata
-from collections.abc import Sequence
+from collections.abc import Collection
 
 from PyQt6.QtCore import QAbstractTableModel, QModelIndex, QSortFilterProxyModel, Qt
 from PyQt6.QtWidgets import QTableView
@@ -20,13 +20,21 @@ class TagTableModel(QAbstractTableModel):
     def __init__(
         self,
         view: QTableView,
-        tag_stats: Sequence[AttributeStats],
+        tag_stats: Collection[AttributeStats],
         proxy: QSortFilterProxyModel,
     ) -> None:
         super().__init__()
         self._view = view
         self.tag_stats = tag_stats
         self._proxy = proxy
+
+    @property
+    def tag_stats(self) -> tuple[AttributeStats, ...]:
+        return self._tag_stats
+
+    @tag_stats.setter
+    def tag_stats(self, tag_stats: Collection[AttributeStats]) -> None:
+        self._tag_stats = tuple(tag_stats)
 
     def rowCount(self, index: QModelIndex = ...) -> int:
         if isinstance(index, QModelIndex) and index.isValid():

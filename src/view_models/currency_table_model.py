@@ -1,4 +1,5 @@
 import typing
+from collections.abc import Collection
 
 from PyQt6.QtCore import QAbstractTableModel, QModelIndex, Qt
 from PyQt6.QtGui import QIcon
@@ -24,6 +25,14 @@ class CurrencyTableModel(QAbstractTableModel):
         self._tree = view
         self.currencies = currencies
         self.base_currency = base_currency
+
+    @property
+    def currencies(self) -> tuple[Currency, ...]:
+        return self._currencies
+
+    @currencies.setter
+    def currencies(self, currencies: Collection[Currency]) -> None:
+        self._currencies = tuple(currencies)
 
     def rowCount(self, index: QModelIndex = ...) -> int:
         if isinstance(index, QModelIndex) and index.isValid():

@@ -5,45 +5,63 @@ from collections.abc import Collection
 from PyQt6.QtCore import QAbstractTableModel, QModelIndex, QSortFilterProxyModel, Qt
 from PyQt6.QtWidgets import QTableView
 
-from src.models.model_objects.security_objects import Security
-from src.views.constants import SecurityTableColumns
+from src.models.base_classes.transaction import Transaction
+from src.models.model_objects.cash_objects import (
+    CashTransaction,
+    CashTransfer,
+    RefundTransaction,
+)
+from src.models.model_objects.security_objects import (
+    SecurityTransaction,
+    SecurityTransfer,
+)
+from src.views.constants import TransactionTableColumns
 
 
-class SecurityTableModel(QAbstractTableModel):
+class TransactionTableModel(QAbstractTableModel):
     COLUMN_HEADERS = {
-        SecurityTableColumns.COLUMN_NAME: "Name",
-        SecurityTableColumns.COLUMN_SYMBOL: "Symbol",
-        SecurityTableColumns.COLUMN_TYPE: "Type",
-        SecurityTableColumns.COLUMN_PRICE: "Latest price",
-        SecurityTableColumns.COLUMN_LAST_DATE: "Latest date",
+        TransactionTableColumns.COLUMN_DATETIME: "Date & time",
+        TransactionTableColumns.COLUMN_DESCRIPTION: "Description",
+        TransactionTableColumns.COLUMN_TYPE: "Type",
+        TransactionTableColumns.COLUMN_ACCOUNT: "Account",
+        TransactionTableColumns.COLUMN_PAYEE: "Payee",
+        TransactionTableColumns.COLUMN_SENDER: "Sender",
+        TransactionTableColumns.COLUMN_RECIPIENT: "Recipient",
+        TransactionTableColumns.COLUMN_SECURITY: "Security",
+        TransactionTableColumns.COLUMN_AMOUNT: "Amount",
+        TransactionTableColumns.COLUMN_AMOUNT_BASE: "Base amount",
+        TransactionTableColumns.COLUMN_BALANCE: "Balance",
+        TransactionTableColumns.COLUMN_CATEGORY: "Category",
+        TransactionTableColumns.COLUMN_TAG: "Tags",
+        TransactionTableColumns.COLUMN_UUID: "UUID",
     }
 
     def __init__(
         self,
         view: QTableView,
-        securities: Collection[Security],
+        transactions: Collection[Transaction],
         proxy: QSortFilterProxyModel,
     ) -> None:
         super().__init__()
         self._view = view
-        self.securities = tuple(securities)
+        self.transactions = tuple(transactions)
         self._proxy = proxy
 
     @property
-    def securities(self) -> tuple[Security, ...]:
-        return self._securities
+    def transactions(self) -> tuple[Transaction, ...]:
+        return self._transactions
 
-    @securities.setter
-    def securities(self, securities: Collection[Security]) -> None:
-        self._securities = tuple(securities)
+    @transactions.setter
+    def transactions(self, transactions: Collection[Transaction]) -> None:
+        self._transactions = tuple(transactions)
 
     def rowCount(self, index: QModelIndex = ...) -> int:
         if isinstance(index, QModelIndex) and index.isValid():
             return 0
-        return len(self.securities)
+        return len(self.transactions)
 
     def columnCount(self, index: QModelIndex = ...) -> int:  # noqa: U100
-        return 5
+        return 14
 
     def index(
         self, row: int, column: int, parent: QModelIndex = ...  # noqa: U100
@@ -53,7 +71,7 @@ class SecurityTableModel(QAbstractTableModel):
         if not QAbstractTableModel.hasIndex(self, row, column, QModelIndex()):
             return QModelIndex()
 
-        item = self.securities[row]
+        item = self.transactions[row]
         return QAbstractTableModel.createIndex(self, row, column, item)
 
     def data(self, index: QModelIndex, role: Qt.ItemDataRole = ...) -> typing.Any:
@@ -61,32 +79,10 @@ class SecurityTableModel(QAbstractTableModel):
             return None
 
         column = index.column()
-        security = self.securities[index.row()]
+        transaction = self.transactions[index.row()]
 
         if role == Qt.ItemDataRole.DisplayRole:
-            if column == SecurityTableColumns.COLUMN_NAME:
-                return security.name
-            if column == SecurityTableColumns.COLUMN_SYMBOL:
-                return security.symbol
-            if column == SecurityTableColumns.COLUMN_TYPE:
-                return security.type_
-            if column == SecurityTableColumns.COLUMN_PRICE:
-                return security.price.convert(security.currency).to_str_normalized()
-            if column == SecurityTableColumns.COLUMN_LAST_DATE:
-                latest_date = security.latest_date
-                if latest_date is None:
-                    return "None"
-                return latest_date.strftime("%Y-%m-%d")
-        if (
-            role == Qt.ItemDataRole.UserRole
-            and column == SecurityTableColumns.COLUMN_NAME
-        ):
-            return unicodedata.normalize("NFD", security.name)
-        if (
-            role == Qt.ItemDataRole.TextAlignmentRole
-            and column == SecurityTableColumns.COLUMN_PRICE
-        ):
-            return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+            return "test"
         return None
 
     def headerData(
@@ -96,11 +92,6 @@ class SecurityTableModel(QAbstractTableModel):
             if orientation == Qt.Orientation.Horizontal:
                 return self.COLUMN_HEADERS[section]
             return str(section)
-        if (
-            role == Qt.ItemDataRole.TextAlignmentRole
-            and section == SecurityTableColumns.COLUMN_LAST_DATE
-        ):
-            return Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
         return None
 
     def pre_add(self) -> None:
@@ -121,7 +112,7 @@ class SecurityTableModel(QAbstractTableModel):
         self.endResetModel()
         self._view.setSortingEnabled(True)
 
-    def pre_remove_item(self, item: Security) -> None:
+    def pre_remove_item(self, item: Transaction) -> None:
         index = self.get_index_from_item(item)
         self.beginRemoveRows(QModelIndex(), index.row(), index.row())
 
@@ -135,15 +126,15 @@ class SecurityTableModel(QAbstractTableModel):
             return QModelIndex()
         return source_indexes[0]
 
-    def get_selected_item(self) -> Security | None:
+    def get_selected_item(self) -> Transaction | None:
         proxy_indexes = self._view.selectedIndexes()
         source_indexes = [self._proxy.mapToSource(index) for index in proxy_indexes]
         if len(source_indexes) == 0:
             return None
         return source_indexes[0].internalPointer()
 
-    def get_index_from_item(self, item: Security | None) -> QModelIndex:
+    def get_index_from_item(self, item: Transaction | None) -> QModelIndex:
         if item is None:
             return QModelIndex()
-        row = self.securities.index(item)
+        row = self.transactions.index(item)
         return QAbstractTableModel.createIndex(self, row, 0, item)

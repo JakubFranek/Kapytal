@@ -1,4 +1,5 @@
 import typing
+from collections.abc import Collection
 
 from PyQt6.QtCore import QAbstractTableModel, QModelIndex, Qt
 from PyQt6.QtWidgets import QTableView
@@ -20,6 +21,14 @@ class ExchangeRateTableModel(QAbstractTableModel):
         super().__init__()
         self._tree = view
         self.exchange_rates = exchange_rates
+
+    @property
+    def exchange_rates(self) -> tuple[ExchangeRate, ...]:
+        return self._exchange_rates
+
+    @exchange_rates.setter
+    def exchange_rates(self, exchange_rates: Collection[ExchangeRate]) -> None:
+        self._exchange_rates = tuple(exchange_rates)
 
     def rowCount(self, index: QModelIndex = ...) -> int:
         if isinstance(index, QModelIndex) and index.isValid():

@@ -35,6 +35,14 @@ class AccountTreeModel(QAbstractItemModel):
         self.root_items = root_items
         self.base_currency = base_currency
 
+    @property
+    def root_items(self) -> tuple[Account | AccountGroup, ...]:
+        return self._root_items
+
+    @root_items.setter
+    def root_items(self, root_items: Sequence[Account | AccountGroup]) -> None:
+        self._root_items = tuple(root_items)
+
     def rowCount(self, index: QModelIndex = ...) -> int:
         if index.isValid():
             if index.column() != 0:

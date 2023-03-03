@@ -1,6 +1,6 @@
 import typing
 import unicodedata
-from collections.abc import Sequence
+from collections.abc import Collection
 
 from PyQt6.QtCore import QAbstractTableModel, QModelIndex, QSortFilterProxyModel, Qt
 from PyQt6.QtWidgets import QTableView
@@ -20,13 +20,21 @@ class PayeeTableModel(QAbstractTableModel):
     def __init__(
         self,
         view: QTableView,
-        payee_stats: Sequence[AttributeStats],
+        payee_stats: Collection[AttributeStats],
         proxy: QSortFilterProxyModel,
     ) -> None:
         super().__init__()
         self._view = view
         self.payee_stats = payee_stats
         self._proxy = proxy
+
+    @property
+    def payee_stats(self) -> tuple[AttributeStats, ...]:
+        return self._payee_stats
+
+    @payee_stats.setter
+    def payee_stats(self, payee_stats: Collection[AttributeStats]) -> None:
+        self._payee_stats = tuple(payee_stats)
 
     def rowCount(self, index: QModelIndex = ...) -> int:
         if isinstance(index, QModelIndex) and index.isValid():

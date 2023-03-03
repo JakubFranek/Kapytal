@@ -15,6 +15,7 @@ from src.presenters.payee_form_presenter import PayeeFormPresenter
 from src.presenters.security_form_presenter import SecurityFormPresenter
 from src.presenters.settings_form_presenter import SettingsFormPresenter
 from src.presenters.tag_form_presenter import TagFormPresenter
+from src.presenters.transactions_presenter import TransactionsPresenter
 from src.presenters.utilities.handle_exception import handle_exception
 from src.utilities.general import backup_json_file
 from src.views.forms.category_form import CategoryForm
@@ -174,6 +175,10 @@ class MainPresenter:
         logging.debug("Creating AccountTreePresenter")
         self._account_tree_presenter = AccountTreePresenter(
             self._view.account_tree_widget, self._record_keeper
+        )
+        logging.debug("Creating TransactionsPresenter")
+        self._transactions_presenter = TransactionsPresenter(
+            self._view.transaction_table_widget, self._record_keeper
         )
         logging.debug("Creating Currency Form and CurrencyFormPresenter")
         currency_form = CurrencyForm(parent=self._view)

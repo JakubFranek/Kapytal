@@ -20,6 +20,10 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
             QIcon("icons_16:magnifier.png"), QLineEdit.ActionPosition.LeadingPosition
         )
 
+    @property
+    def search_bar_text(self) -> str:
+        return self.searchLineEdit.text()
+
     def _set_icons(self) -> None:
         self.actionFilterTransactions.setIcon(QIcon("icons_16:funnel.png"))
         self.actionIncome.setIcon(QIcon("icons_custom:coins-plus.png"))

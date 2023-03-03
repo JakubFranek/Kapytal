@@ -10,7 +10,7 @@ class BackupPathsListModel(QAbstractListModel):
     def __init__(self, view: QListView, paths: Collection[Path]) -> None:
         super().__init__()
         self._list = view
-        self.paths = tuple(paths)
+        self.paths = paths
 
     @property
     def paths(self) -> tuple[Path]:

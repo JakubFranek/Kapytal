@@ -21,17 +21,33 @@ class CategoryTreeModel(QAbstractItemModel):
     def __init__(
         self,
         tree_view: QTreeView,
-        root_items: Sequence[Category],
+        root_categories: Sequence[Category],
         category_stats: Collection[CategoryStats],
         base_currency: Currency,
         proxy: QSortFilterProxyModel,
     ) -> None:
         super().__init__()
         self._tree_view = tree_view
-        self.root_categories = tuple(root_items)
-        self.category_stats = tuple(category_stats)
+        self.root_categories = root_categories
+        self.category_stats = category_stats
         self.base_currency = base_currency
         self._proxy = proxy
+
+    @property
+    def root_items(self) -> tuple[Category, ...]:
+        return self._root_categories
+
+    @root_items.setter
+    def root_items(self, root_categories: Collection[Category]) -> None:
+        self._root_categories = tuple(root_categories)
+
+    @property
+    def category_stats(self) -> tuple[CategoryStats, ...]:
+        return self._category_stats
+
+    @category_stats.setter
+    def category_stats(self, category_stats: Collection[CategoryStats]) -> None:
+        self._category_stats = tuple(category_stats)
 
     def rowCount(self, index: QModelIndex = ...) -> int:
         if index.isValid():

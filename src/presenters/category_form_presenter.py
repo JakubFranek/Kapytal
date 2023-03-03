@@ -22,7 +22,7 @@ class CategoryFormPresenter:
         self._proxy_model = QSortFilterProxyModel(self._view.category_tree)
         self._model = CategoryTreeModel(
             tree_view=view.category_tree,
-            root_items=record_keeper.root_income_categories,
+            root_categories=record_keeper.root_income_categories,
             category_stats=[],
             base_currency=record_keeper.base_currency,
             proxy=self._proxy_model,
