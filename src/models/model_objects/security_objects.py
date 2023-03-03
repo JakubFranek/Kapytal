@@ -11,6 +11,7 @@ from enum import Enum, auto
 from typing import Any
 
 import src.models.user_settings.user_settings as user_settings
+import src.models.utilities.constants as constants
 from src.models.base_classes.account import Account, UnrelatedAccountError
 from src.models.base_classes.transaction import Transaction
 from src.models.custom_exceptions import InvalidCharacterError, TransferSameAccountError
@@ -406,10 +407,10 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
         return {
             "datatype": "SecurityTransaction",
             "description": self._description,
-            "datetime_": self._datetime,
+            "datetime": self._datetime,
             "type_": self._type.name,
             "security_uuid": str(self._security.uuid),
-            "shares": self._shares,
+            "shares": str(self._shares),
             "price_per_share": self._price_per_share,
             "security_account_uuid": str(self._security_account.uuid),
             "cash_account_uuid": str(self._cash_account.uuid),
@@ -425,9 +426,12 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
         securities: Collection[Security],
     ) -> "SecurityTransaction":
         description = data["description"]
-        datetime_ = data["datetime_"]
+        datetime_ = datetime.strptime(  # noqa: DTZ007
+            data["datetime"], constants.DATETIME_SERDES_FMT
+        )
+
         type_ = SecurityTransactionType[data["type_"]]
-        shares = data["shares"]
+        shares = Decimal(data["shares"])
         price_per_share = CashAmount.deserialize(data["price_per_share"], currencies)
 
         security_uuid = uuid.UUID(data["security_uuid"])
@@ -448,7 +452,9 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
             security_account=security_account,
             cash_account=cash_account,
         )
-        obj._datetime_created = data["datetime_created"]
+        obj._datetime_created = datetime.strptime(  # noqa: DTZ007
+            data["datetime_created"], constants.DATETIME_SERDES_FMT
+        )
         obj._uuid = uuid.UUID(data["uuid"])
         return obj
 
@@ -676,9 +682,9 @@ class SecurityTransfer(SecurityRelatedTransaction):
         return {
             "datatype": "SecurityTransfer",
             "description": self._description,
-            "datetime_": self._datetime,
+            "datetime": self._datetime,
             "security_uuid": str(self._security.uuid),
-            "shares": self._shares,
+            "shares": str(self._shares),
             "sender_uuid": str(self._sender.uuid),
             "recipient_uuid": str(self._recipient.uuid),
             "datetime_created": self._datetime_created,
@@ -692,8 +698,10 @@ class SecurityTransfer(SecurityRelatedTransaction):
         securities: Collection[Security],
     ) -> "SecurityTransfer":
         description = data["description"]
-        datetime_ = data["datetime_"]
-        shares = data["shares"]
+        datetime_ = datetime.strptime(  # noqa: DTZ007
+            data["datetime"], constants.DATETIME_SERDES_FMT
+        )
+        shares = Decimal(data["shares"])
 
         security_uuid = uuid.UUID(data["security_uuid"])
         security = find_security_by_uuid(security_uuid, securities)
@@ -711,7 +719,9 @@ class SecurityTransfer(SecurityRelatedTransaction):
             sender=sender,
             recipient=recipient,
         )
-        obj._datetime_created = data["datetime_created"]
+        obj._datetime_created = datetime.strptime(  # noqa: DTZ007
+            data["datetime_created"], constants.DATETIME_SERDES_FMT
+        )
         obj._uuid = uuid.UUID(data["uuid"])
         return obj
 
@@ -798,7 +808,7 @@ class SecurityTransfer(SecurityRelatedTransaction):
         self._description = description
         self._datetime = datetime_
         self._security = security
-        self._shares = shares
+        self._shares = Decimal(shares)
         self._set_accounts(sender, recipient)
 
     def _validate_accounts(

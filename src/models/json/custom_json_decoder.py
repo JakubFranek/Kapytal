@@ -1,5 +1,4 @@
 import json
-from datetime import datetime
 from decimal import Decimal
 from typing import Any
 
@@ -16,8 +15,6 @@ class CustomJSONDecoder(json.JSONDecoder):
     def object_hook(self, obj: Any) -> Any:
         if "datatype" in obj:
             match obj["datatype"]:
-                case "datetime":
-                    return datetime.fromisoformat(obj["datetime"])
                 case "Decimal":
                     return Decimal(obj["number"])
                 case "RecordKeeper":

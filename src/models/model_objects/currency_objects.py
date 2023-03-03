@@ -389,17 +389,13 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
         return CashAmount(self.value_normalized * factor, target_currency)
 
     def serialize(self) -> dict[str, Any]:
-        return {
-            "datatype": "CashAmount",
-            "value": self.value_normalized,
-            "currency_code": self.currency.code,
-        }
+        return self.__str__()
 
     @staticmethod
     def deserialize(
-        data: dict[str, Any], currencies: Collection[Currency]
+        cash_amount_string: str, currencies: Collection[Currency]
     ) -> "CashAmount":
-        value = data["value"]
-        currency_code = data["currency_code"]
+        value, _, currency_code = cash_amount_string.partition(" ")
+        value = value.replace(",", "")  # remove any thousands separators
         currency = find_currency_by_code(currency_code, currencies)
         return CashAmount(value, currency)

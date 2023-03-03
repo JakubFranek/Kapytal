@@ -8,6 +8,7 @@ from enum import Enum, auto
 from typing import Any
 
 import src.models.user_settings.user_settings as user_settings
+import src.models.utilities.constants as constants
 from src.models.base_classes.account import Account, UnrelatedAccountError
 from src.models.base_classes.transaction import Transaction
 from src.models.custom_exceptions import (
@@ -324,21 +325,23 @@ class CashTransaction(CashRelatedTransaction):
         )
 
     def serialize(self) -> dict[str, Any]:
-        tag_name_amount_pairs = [
-            (tag.name, amount) for tag, amount in self._tag_amount_pairs
+        tag_amount_pairs = [
+            (tag.name, amount.to_str_normalized())
+            for tag, amount in self._tag_amount_pairs
         ]
-        category_path_amount_pairs = [
-            (category.path, amount) for category, amount in self._category_amount_pairs
+        category_amount_pairs = [
+            (category.path, amount.to_str_normalized())
+            for category, amount in self._category_amount_pairs
         ]
         return {
             "datatype": "CashTransaction",
             "description": self._description,
-            "datetime_": self._datetime,
+            "datetime": self._datetime,
             "type_": self._type.name,
             "account_uuid": str(self._account.uuid),
             "payee_name": self._payee.name,
-            "category_path_amount_pairs": category_path_amount_pairs,
-            "tag_name_amount_pairs": tag_name_amount_pairs,
+            "category_amount_pairs": category_amount_pairs,
+            "tag_amount_pairs": tag_amount_pairs,
             "datetime_created": self._datetime_created,
             "uuid": str(self._uuid),
         }
@@ -353,7 +356,9 @@ class CashTransaction(CashRelatedTransaction):
         currencies: Collection[Currency],
     ) -> "CashTransaction":
         description = data["description"]
-        datetime_ = data["datetime_"]
+        datetime_ = datetime.strptime(  # noqa: DTZ007
+            data["datetime"], constants.DATETIME_SERDES_FMT
+        )
         type_ = CashTransactionType[data["type_"]]
 
         account_uuid = uuid.UUID(data["account_uuid"])
@@ -362,23 +367,19 @@ class CashTransaction(CashRelatedTransaction):
         payee_name = data["payee_name"]
         payee = find_attribute_by_name(payee_name, payees)
 
-        category_path_amount_pairs: list[list[str, dict[str, Any]]] = data[
-            "category_path_amount_pairs"
-        ]
-        decoded_category_amount_pairs = []
-        for category_path, amount_dict in category_path_amount_pairs:
+        category_path_amount_pairs: list[list[str, str]] = data["category_amount_pairs"]
+        decoded_category_amount_pairs: list[tuple[Category, CashAmount]] = []
+        for category_path, amount_str in category_path_amount_pairs:
             category = find_category_by_path(category_path, categories)
-            amount = CashAmount.deserialize(amount_dict, currencies)
+            amount = CashAmount.deserialize(amount_str, currencies)
             tup = (category, amount)
             decoded_category_amount_pairs.append(tup)
 
-        tag_name_amount_pairs: list[list[str, CashAmount]] = data[
-            "tag_name_amount_pairs"
-        ]
-        decoded_tag_amount_pairs = []
-        for tag_name, amount_dict in tag_name_amount_pairs:
+        tag_name_amount_pairs: list[list[str, str]] = data["tag_amount_pairs"]
+        decoded_tag_amount_pairs: list[tuple[Attribute, CashAmount]] = []
+        for tag_name, amount_str in tag_name_amount_pairs:
             tag = find_attribute_by_name(tag_name, tags)
-            amount = CashAmount.deserialize(amount_dict, currencies)
+            amount = CashAmount.deserialize(amount_str, currencies)
             tup = (tag, amount)
             decoded_tag_amount_pairs.append(tup)
 
@@ -391,7 +392,9 @@ class CashTransaction(CashRelatedTransaction):
             category_amount_pairs=decoded_category_amount_pairs,
             tag_amount_pairs=decoded_tag_amount_pairs,
         )
-        obj._datetime_created = data["datetime_created"]
+        obj._datetime_created = datetime.strptime(  # noqa: DTZ007
+            data["datetime_created"], constants.DATETIME_SERDES_FMT
+        )
         obj._uuid = uuid.UUID(data["uuid"])
         return obj
 
@@ -769,7 +772,7 @@ class CashTransfer(CashRelatedTransaction):
         return {
             "datatype": "CashTransfer",
             "description": self._description,
-            "datetime_": self._datetime,
+            "datetime": self._datetime,
             "sender_uuid": str(self._sender.uuid),
             "recipient_uuid": str(self._recipient.uuid),
             "amount_sent": self._amount_sent,
@@ -785,7 +788,9 @@ class CashTransfer(CashRelatedTransaction):
         currencies: Collection[Currency],
     ) -> "CashTransaction":
         description = data["description"]
-        datetime_ = data["datetime_"]
+        datetime_ = datetime.strptime(  # noqa: DTZ007
+            data["datetime"], constants.DATETIME_SERDES_FMT
+        )
 
         sender_uuid = uuid.UUID(data["sender_uuid"])
         recipient_uuid = uuid.UUID(data["recipient_uuid"])
@@ -803,7 +808,9 @@ class CashTransfer(CashRelatedTransaction):
             amount_sent=amount_sent,
             amount_received=amount_received,
         )
-        obj._datetime_created = data["datetime_created"]
+        obj._datetime_created = datetime.strptime(  # noqa: DTZ007
+            data["datetime_created"], constants.DATETIME_SERDES_FMT
+        )
         obj._uuid = uuid.UUID(data["uuid"])
         return obj
 
@@ -1038,21 +1045,21 @@ class RefundTransaction(CashRelatedTransaction):
         self._account.remove_transaction(self)
 
     def serialize(self) -> dict[str, Any]:
-        tag_name_amount_pairs = [
+        tag_amount_pairs = [
             (tag.name, amount) for tag, amount in self._tag_amount_pairs
         ]
-        category_path_amount_pairs = [
+        category_amount_pairs = [
             (category.path, amount) for category, amount in self._category_amount_pairs
         ]
         return {
             "datatype": "RefundTransaction",
             "description": self._description,
-            "datetime_": self._datetime,
+            "datetime": self._datetime,
             "account_uuid": str(self._account.uuid),
             "refunded_transaction_uuid": str(self._refunded_transaction.uuid),
             "payee_name": self._payee.name,
-            "category_path_amount_pairs": category_path_amount_pairs,
-            "tag_name_amount_pairs": tag_name_amount_pairs,
+            "category_amount_pairs": category_amount_pairs,
+            "tag_amount_pairs": tag_amount_pairs,
             "datetime_created": self._datetime_created,
             "uuid": str(self._uuid),
         }
@@ -1068,7 +1075,9 @@ class RefundTransaction(CashRelatedTransaction):
         currencies: Collection[Currency],
     ) -> "CashTransaction":
         description = data["description"]
-        datetime_ = data["datetime_"]
+        datetime_ = datetime.strptime(  # noqa: DTZ007
+            data["datetime"], constants.DATETIME_SERDES_FMT
+        )
 
         account_uuid = uuid.UUID(data["account_uuid"])
         cash_account = find_account_by_uuid(account_uuid, accounts)
@@ -1078,23 +1087,19 @@ class RefundTransaction(CashRelatedTransaction):
 
         payee = find_attribute_by_name(data["payee_name"], payees)
 
-        category_path_amount_pairs: list[list[str, dict[str, Any]]] = data[
-            "category_path_amount_pairs"
-        ]
-        decoded_category_amount_pairs = []
-        for category_path, amount_dict in category_path_amount_pairs:
+        category_path_amount_pairs: list[list[str, str]] = data["category_amount_pairs"]
+        decoded_category_amount_pairs: list[tuple[Category, CashAmount]] = []
+        for category_path, amount_str in category_path_amount_pairs:
             category = find_category_by_path(category_path, categories)
-            amount = CashAmount.deserialize(amount_dict, currencies)
+            amount = CashAmount.deserialize(amount_str, currencies)
             tup = (category, amount)
             decoded_category_amount_pairs.append(tup)
 
-        tag_name_amount_pairs: list[list[str, CashAmount]] = data[
-            "tag_name_amount_pairs"
-        ]
-        decoded_tag_amount_pairs = []
-        for tag_name, amount_dict in tag_name_amount_pairs:
+        tag_name_amount_pairs: list[list[str, str]] = data["tag_amount_pairs"]
+        decoded_tag_amount_pairs: list[tuple[Attribute, CashAmount]] = []
+        for tag_name, amount_str in tag_name_amount_pairs:
             tag = find_attribute_by_name(tag_name, tags)
-            amount = CashAmount.deserialize(amount_dict, currencies)
+            amount = CashAmount.deserialize(amount_str, currencies)
             tup = (tag, amount)
             decoded_tag_amount_pairs.append(tup)
 
@@ -1107,7 +1112,9 @@ class RefundTransaction(CashRelatedTransaction):
             category_amount_pairs=decoded_category_amount_pairs,
             tag_amount_pairs=decoded_tag_amount_pairs,
         )
-        obj._datetime_created = data["datetime_created"]
+        obj._datetime_created = datetime.strptime(  # noqa: DTZ007
+            data["datetime_created"], constants.DATETIME_SERDES_FMT
+        )
         obj._uuid = uuid.UUID(data["uuid"])
         return obj
 

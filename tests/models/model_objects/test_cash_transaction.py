@@ -80,7 +80,7 @@ def test_creation(  # noqa: CFQ002,TMN001
         )
     )
     account_currency = account.currency
-    dt_start = datetime.now(user_settings.settings.time_zone)
+    dt_start = datetime.now(user_settings.settings.time_zone).replace(microsecond=0)
     cash_transaction = CashTransaction(
         description,
         datetime_,

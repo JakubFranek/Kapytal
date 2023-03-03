@@ -20,7 +20,7 @@ from tests.models.test_assets.concrete_abcs import ConcreteTransaction
 
 @given(description=st.text(min_size=0, max_size=256), datetime_=st.datetimes())
 def test_creation(description: str, datetime_: datetime) -> None:
-    dt_start = datetime.now(user_settings.settings.time_zone)
+    dt_start = datetime.now(user_settings.settings.time_zone).replace(microsecond=0)
     transaction = ConcreteTransaction(description, datetime_)
 
     dt_created_diff = transaction.datetime_created - dt_start

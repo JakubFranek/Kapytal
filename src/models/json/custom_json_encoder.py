@@ -3,6 +3,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any
 
+import src.models.utilities.constants as constants
 from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
 
 
@@ -12,7 +13,7 @@ class CustomJSONEncoder(json.JSONEncoder):
 
     def default(self, arg: Any) -> Any:
         if isinstance(arg, datetime):
-            return {"datatype": "datetime", "datetime": arg.isoformat()}
+            return arg.strftime(constants.DATETIME_SERDES_FMT)
         if isinstance(arg, Decimal):
             return {"datatype": "Decimal", "number": str(arg)}
         if isinstance(arg, JSONSerializableMixin):

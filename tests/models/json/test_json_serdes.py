@@ -7,6 +7,7 @@ from hypothesis import given
 from hypothesis import strategies as st
 
 import src.models.user_settings.user_settings as user_settings
+import src.models.utilities.constants as constants
 from src.models.json.custom_json_decoder import CustomJSONDecoder
 from src.models.json.custom_json_encoder import CustomJSONEncoder
 from src.models.model_objects.account_group import AccountGroup
@@ -56,9 +57,11 @@ def test_decimal() -> None:
 
 
 def test_datetime() -> None:
-    dt = datetime.now(user_settings.settings.time_zone)
-    serialized = json.dumps(dt, cls=CustomJSONEncoder)
-    decoded = json.loads(serialized, cls=CustomJSONDecoder)
+    dt = datetime.now(user_settings.settings.time_zone).replace(microsecond=0)
+    serialized = json.dumps(dt, cls=CustomJSONEncoder).strip('"')
+    decoded = datetime.strptime(  # noqa: DTZ007
+        serialized, constants.DATETIME_SERDES_FMT
+    )
     assert decoded == dt
 
 
@@ -321,8 +324,10 @@ def test_cash_transaction(transaction: CashTransaction) -> None:
     assert isinstance(decoded, CashTransaction)
     assert decoded.uuid == transaction.uuid
     assert decoded.description == transaction.description
-    assert decoded.datetime_ == transaction.datetime_
-    assert decoded.datetime_created == transaction.datetime_created
+    assert decoded.datetime_ == transaction.datetime_.replace(microsecond=0)
+    assert decoded.datetime_created == transaction.datetime_created.replace(
+        microsecond=0
+    )
     assert decoded.type_ == transaction.type_
     assert decoded.account == transaction.account
     assert transaction.payee == transaction.payee
@@ -342,8 +347,10 @@ def test_cash_transfer(transaction: CashTransfer) -> None:
     assert isinstance(decoded, CashTransfer)
     assert decoded.uuid == transaction.uuid
     assert decoded.description == transaction.description
-    assert decoded.datetime_ == transaction.datetime_
-    assert decoded.datetime_created == transaction.datetime_created
+    assert decoded.datetime_ == transaction.datetime_.replace(microsecond=0)
+    assert decoded.datetime_created == transaction.datetime_created.replace(
+        microsecond=0
+    )
     assert decoded.sender == transaction.sender
     assert decoded.recipient == transaction.recipient
     assert decoded.amount_sent == transaction.amount_sent
@@ -381,8 +388,8 @@ def test_refund_transaction(transaction: CashTransaction) -> None:
     assert isinstance(decoded, RefundTransaction)
     assert decoded.uuid == refund.uuid
     assert decoded.description == refund.description
-    assert decoded.datetime_ == refund.datetime_
-    assert decoded.datetime_created == refund.datetime_created
+    assert decoded.datetime_ == refund.datetime_.replace(microsecond=0)
+    assert decoded.datetime_created == refund.datetime_created.replace(microsecond=0)
     assert decoded.account == refund.account
     assert decoded.refunded_transaction.uuid == transaction.uuid
     assert decoded.payee == refund.payee
@@ -403,8 +410,10 @@ def test_security_transaction(transaction: SecurityTransaction) -> None:
     assert isinstance(decoded, SecurityTransaction)
     assert decoded.uuid == transaction.uuid
     assert decoded.description == transaction.description
-    assert decoded.datetime_ == transaction.datetime_
-    assert decoded.datetime_created == transaction.datetime_created
+    assert decoded.datetime_ == transaction.datetime_.replace(microsecond=0)
+    assert decoded.datetime_created == transaction.datetime_created.replace(
+        microsecond=0
+    )
     assert decoded.type_ == transaction.type_
     assert decoded.security == transaction.security
     assert decoded.price_per_share == transaction.price_per_share
@@ -424,8 +433,10 @@ def test_security_transfer(transaction: SecurityTransfer) -> None:
     assert isinstance(decoded, SecurityTransfer)
     assert decoded.uuid == transaction.uuid
     assert decoded.description == transaction.description
-    assert decoded.datetime_ == transaction.datetime_
-    assert decoded.datetime_created == transaction.datetime_created
+    assert decoded.datetime_ == transaction.datetime_.replace(microsecond=0)
+    assert decoded.datetime_created == transaction.datetime_created.replace(
+        microsecond=0
+    )
     assert decoded.security == transaction.security
     assert decoded.sender == transaction.sender
     assert decoded.recipient == transaction.recipient
