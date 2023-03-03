@@ -449,8 +449,8 @@ def test_record_keeper_transactions() -> None:
         datetime.now(user_settings.settings.time_zone),
         CashTransactionType.EXPENSE,
         "Bank Accounts/Raiffeisen",
-        [("Food/Groceries", 1000)],
         "Albert",
+        [("Food/Groceries", 1000)],
         [("Split", 500)],
     )
     record_keeper.add_cash_transaction(
@@ -458,8 +458,8 @@ def test_record_keeper_transactions() -> None:
         datetime.now(user_settings.settings.time_zone),
         CashTransactionType.EXPENSE,
         "Bank Accounts/Raiffeisen",
-        [("Electronics", 10000)],
         "Alza",
+        [("Electronics", 10000)],
         [],
     )
     record_keeper.add_refund(
@@ -467,9 +467,9 @@ def test_record_keeper_transactions() -> None:
         datetime.now(user_settings.settings.time_zone) + timedelta(days=1),
         str(record_keeper.transactions[1].uuid),
         "Bank Accounts/Raiffeisen",
+        "Alza",
         [("Electronics", 10000)],
         [],
-        "Alza",
     )
     record_keeper.add_cash_transfer(
         "sending money to Moneta",

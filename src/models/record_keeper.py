@@ -254,8 +254,8 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         datetime_: datetime,
         transaction_type: CashTransactionType,
         account_path: str,
-        category_path_amount_pairs: Collection[tuple[str, Decimal]],
         payee_name: str,
+        category_path_amount_pairs: Collection[tuple[str, Decimal]],
         tag_name_amount_pairs: Collection[tuple[str, Decimal]],
     ) -> None:
         account = self.get_account(account_path, CashAccount)
@@ -312,9 +312,9 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         datetime_: datetime,
         refunded_transaction_uuid: str,
         refunded_account_path: str,
+        payee_name: str,
         category_path_amount_pairs: Collection[tuple[str, Decimal]],
         tag_name_amount_pairs: Collection[tuple[str, Decimal]],
-        payee_name: str,
     ) -> None:
         refunded_transactions = self._get_transactions(
             [refunded_transaction_uuid], CashTransaction

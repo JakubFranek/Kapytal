@@ -275,8 +275,8 @@ def test_add_cash_transaction(
         datetime_,
         transaction_type,
         account_path,
-        category_name_amount_pairs,
         payee_name,
+        category_name_amount_pairs,
         tag_name_amount_pairs,
     )
     transaction = record_keeper.transactions[0]
@@ -542,9 +542,9 @@ def test_add_refund() -> RecordKeeper:
         datetime.now(user_settings.settings.time_zone),
         str(refunded_transaction.uuid),
         "Bank Accounts/Raiffeisen CZK",
+        refunded_transaction.payee.name,
         (("Food and Drink/Groceries", Decimal(1000)),),
         (("Test Tag", Decimal(1000)),),
-        refunded_transaction.payee.name,
     )
     refunded_transaction = record_keeper.transactions[0]
     refund = record_keeper.transactions[1]
@@ -904,8 +904,8 @@ def get_preloaded_record_keeper_with_refunds() -> RecordKeeper:
         datetime.now(user_settings.settings.time_zone) - timedelta(days=2),
         CashTransactionType.EXPENSE,
         "Bank Accounts/Raiffeisen CZK",
-        (("Food and Drink/Groceries", Decimal(1000)),),
         "Albert",
+        (("Food and Drink/Groceries", Decimal(1000)),),
         (("Test Tag", Decimal(1000)),),
     )
     record_keeper.add_cash_transaction(
@@ -913,8 +913,8 @@ def get_preloaded_record_keeper_with_refunds() -> RecordKeeper:
         datetime.now(user_settings.settings.time_zone) - timedelta(days=2),
         CashTransactionType.EXPENSE,
         "Bank Accounts/Moneta EUR",
-        (("Electronics", Decimal(400)),),
         "Alza",
+        (("Electronics", Decimal(400)),),
         (("Test Tag", Decimal(400)),),
     )
     transaction_cooking = record_keeper.transactions[0]
@@ -957,8 +957,8 @@ def get_preloaded_record_keeper_with_expense() -> RecordKeeper:
         datetime.now(user_settings.settings.time_zone),
         CashTransactionType.EXPENSE,
         "Bank Accounts/Raiffeisen CZK",
-        (("Food and Drink/Groceries", Decimal(1000)),),
         "Albert",
+        (("Food and Drink/Groceries", Decimal(1000)),),
         (("Test Tag", Decimal(1000)),),
     )
     return record_keeper
@@ -971,8 +971,8 @@ def get_preloaded_record_keeper_with_cash_transactions() -> RecordKeeper:
         datetime.now(user_settings.settings.time_zone),
         CashTransactionType.EXPENSE,
         "Bank Accounts/Raiffeisen CZK",
-        (("Food and Drink/Groceries", Decimal(1000)),),
         "Albert",
+        (("Food and Drink/Groceries", Decimal(1000)),),
         (("Split with GF", Decimal(500)),),
     )
     record_keeper.add_cash_transaction(
@@ -980,8 +980,8 @@ def get_preloaded_record_keeper_with_cash_transactions() -> RecordKeeper:
         datetime.now(user_settings.settings.time_zone) - timedelta(days=1),
         CashTransactionType.EXPENSE,
         "Bank Accounts/Raiffeisen CZK",
-        (("Food and Drink/Eating out", Decimal(500)),),
         "Doe Boy",
+        (("Food and Drink/Eating out", Decimal(500)),),
         (("Split with GF", Decimal(250)),),
     )
     record_keeper.add_cash_transaction(
@@ -989,8 +989,8 @@ def get_preloaded_record_keeper_with_cash_transactions() -> RecordKeeper:
         datetime.now(user_settings.settings.time_zone) - timedelta(days=7),
         CashTransactionType.INCOME,
         "Bank Accounts/Raiffeisen CZK",
-        (("Salary", Decimal(50000)),),
         "Employer",
+        (("Salary", Decimal(50000)),),
         (),
     )
     record_keeper.add_cash_transaction(
@@ -998,8 +998,8 @@ def get_preloaded_record_keeper_with_cash_transactions() -> RecordKeeper:
         datetime.now(user_settings.settings.time_zone) - timedelta(days=180),
         CashTransactionType.EXPENSE,
         "Bank Accounts/Moneta EUR",
-        (("Food and Drink/Eating out", Decimal(30)),),
         "unknown payee",
+        (("Food and Drink/Eating out", Decimal(30)),),
         (("Split with GF", Decimal(15)),),
     )
     return record_keeper
@@ -1065,8 +1065,8 @@ def get_preloaded_record_keeper_with_various_transactions() -> RecordKeeper:
         datetime.now(user_settings.settings.time_zone),
         CashTransactionType.EXPENSE,
         "Bank Accounts/Raiffeisen CZK",
-        (("Food and Drink/Groceries", Decimal(1000)),),
         "Albert",
+        (("Food and Drink/Groceries", Decimal(1000)),),
         (("Split with GF", Decimal(500)),),
     )
     record_keeper.add_cash_transaction(
@@ -1074,8 +1074,8 @@ def get_preloaded_record_keeper_with_various_transactions() -> RecordKeeper:
         datetime.now(user_settings.settings.time_zone) - timedelta(days=2),
         CashTransactionType.EXPENSE,
         "Bank Accounts/Moneta EUR",
-        (("Electronics", Decimal(400)),),
         "Alza",
+        (("Electronics", Decimal(400)),),
         (("Test Tag", Decimal(400)),),
     )
     transaction_electronics = next(

@@ -252,8 +252,8 @@ def test_remove_tag_in_transaction() -> None:
         datetime.now(user_settings.settings.time_zone),
         CashTransactionType.EXPENSE,
         "ACCOUNT",
-        [("Category", Decimal(1))],
         "PAYEE",
+        [("Category", Decimal(1))],
         [(("TAG"), Decimal(1))],
     )
     with pytest.raises(InvalidOperationError):
@@ -276,8 +276,8 @@ def test_remove_payee_in_transaction() -> None:
         datetime.now(user_settings.settings.time_zone),
         CashTransactionType.EXPENSE,
         "ACCOUNT",
-        [("Category", Decimal(1))],
         "PAYEE",
+        [("Category", Decimal(1))],
         [(("TAG"), Decimal(1))],
     )
     with pytest.raises(InvalidOperationError):
@@ -316,8 +316,8 @@ def test_remove_category_in_transaction() -> None:
         datetime.now(user_settings.settings.time_zone),
         CashTransactionType.EXPENSE,
         "ACCOUNT",
-        [("Category", Decimal(1))],
         "PAYEE",
+        [("Category", Decimal(1))],
         [(("TAG"), Decimal(1))],
     )
     with pytest.raises(InvalidOperationError):
