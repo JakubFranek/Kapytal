@@ -27,6 +27,9 @@ class Account(
         super().__init__(name=name, allow_slash=False)
         self.parent = parent
 
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}('{self.path}')"
+
     @property
     def parent(self) -> AccountGroup | None:
         return self._parent

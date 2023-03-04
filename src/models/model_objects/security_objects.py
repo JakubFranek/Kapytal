@@ -228,9 +228,6 @@ class SecurityAccount(Account):
     def transactions(self) -> tuple["SecurityRelatedTransaction", ...]:
         return tuple(self._transactions)
 
-    def __repr__(self) -> str:
-        return f"SecurityAccount(path='{self.path}')"
-
     def get_balance(self, currency: Currency) -> CashAmount:
         return sum(
             (

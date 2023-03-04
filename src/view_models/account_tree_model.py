@@ -1,7 +1,15 @@
-from collections.abc import Sequence
+import logging
+from collections.abc import Callable, Sequence
 from typing import Any, Self
 
-from PyQt6.QtCore import QAbstractItemModel, QModelIndex, Qt
+from PyQt6.QtCore import (
+    QAbstractItemModel,
+    QModelIndex,
+    QObject,
+    Qt,
+    QTimer,
+    pyqtSignal,
+)
 from PyQt6.QtGui import QBrush, QColor, QIcon
 from PyQt6.QtWidgets import QTreeView
 
@@ -18,6 +26,28 @@ from src.views.constants import AccountTreeColumns
 
 def convert_bool_to_checkstate(checked: bool) -> Qt.CheckState:
     return Qt.CheckState.Checked if checked else Qt.CheckState.Unchecked
+
+
+class ClickTimer:
+    DELAY_MS = 250
+
+    def __init__(self, parent: QObject) -> None:
+        self.timer = QTimer(parent=parent)
+        self.timer.setInterval(ClickTimer.DELAY_MS)
+        self.timer.setSingleShot(True)
+        self.timer.timeout.connect(self._timeout)
+
+    def set_timeout_callable(self, timeout_callable: Callable[[], Any]) -> None:
+        self.timeout_callable = timeout_callable
+
+    def start(self) -> None:
+        self.timer.start()
+
+    def stop(self) -> None:
+        self.timer.stop()
+
+    def _timeout(self) -> None:
+        self.timeout_callable()
 
 
 class AccountTreeNode:
@@ -40,7 +70,8 @@ class AccountTreeNode:
 
         check_state = convert_bool_to_checkstate(visible)
         self._set_check_state(check_state)
-        self._update_visibility()
+        if self.parent is not None:
+            self.parent._update_visibility()
 
     def _set_check_state(self, visible: Qt.CheckState) -> None:
         self.check_state = visible
@@ -84,6 +115,7 @@ class AccountTreeModel(QAbstractItemModel):
         AccountTreeColumns.COLUMN_BALANCE_BASE: "Base balance",
         AccountTreeColumns.COLUMN_SHOW: "",
     }
+    signal_show_only_selection = pyqtSignal()
 
     def __init__(
         self,
@@ -95,6 +127,8 @@ class AccountTreeModel(QAbstractItemModel):
         self._tree = view
         self.root_items = root_items
         self.base_currency = base_currency
+
+        self.timer = ClickTimer(self)
 
         self._tree.clicked.connect(lambda index: self._tree_clicked(index))
         self._tree.doubleClicked.connect(lambda index: self._tree_double_clicked(index))
@@ -279,6 +313,10 @@ class AccountTreeModel(QAbstractItemModel):
             return QModelIndex()
         return indexes[0]
 
+    def get_selected_node(self) -> AccountTreeNode:
+        index = self.get_selected_item_index()
+        return index.internalPointer()
+
     def get_selected_item(self) -> Account | AccountGroup | None:
         index = self.get_selected_item_index()
         node: AccountTreeNode | None = index.internalPointer()
@@ -315,14 +353,17 @@ class AccountTreeModel(QAbstractItemModel):
                 return child_node
         return None
 
-    def _tree_clicked(self, index: QModelIndex) -> None:
-        pass
+    def _tree_clicked(self, index: QModelIndex) -> None:  # noqa: U100
+        self.timer.set_timeout_callable(self.toggle_visibility)
+        self.timer.start()
 
-    def _tree_double_clicked(self, index: QModelIndex) -> None:
-        pass
+    def _tree_double_clicked(self, index: QModelIndex) -> None:  # noqa: U100
+        self.timer.stop()
+        self.signal_show_only_selection.emit()
 
     def set_visibility_all(self, visible: bool) -> None:
         check_state = convert_bool_to_checkstate(visible)
+        logging.debug(f"Set all AccountTree item visibility: {check_state.name}")
         for node in self._root_nodes:
             AccountTreeModel._set_visibility_below(node, check_state)
 
@@ -332,6 +373,25 @@ class AccountTreeModel(QAbstractItemModel):
         for child in node.children:
             AccountTreeModel._set_visibility_below(child, visible)
 
-    def set_visibility(self, item: Account | AccountGroup, visible: bool) -> None:
-        node = self._get_node_from_item(item)
-        node.set_visible(visible)
+    def set_visibility(self, visible: bool, only: bool) -> None:
+        node = self.get_selected_node()
+        if only:
+            self.set_visibility_all(not visible)
+            node.set_visible(visible)
+            logging.debug(
+                f"Set exclusive visibility: {node.check_state.name}, item={node.item}"
+            )
+        else:
+            node.set_visible(visible)
+            logging.debug(f"Set visibility: {node.check_state.name}, item={node.item}")
+
+    def toggle_visibility(self) -> None:
+        node = self.get_selected_node()
+        if node.check_state == Qt.CheckState.Checked:
+            node.set_visible(False)
+        elif node.check_state == Qt.CheckState.Unchecked:
+            node.set_visible(True)
+        else:
+            node.set_visible(True)
+        self._tree.viewport().update()
+        logging.debug(f"Toggled visibility: {node.check_state.name}, item={node.item}")

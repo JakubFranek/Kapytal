@@ -139,9 +139,6 @@ class CashAccount(Account):
         self._transactions.sort(key=lambda transaction: transaction.datetime_)
         return tuple(self._transactions)
 
-    def __repr__(self) -> str:
-        return f"CashAccount(path='{self.path}', currency='{self.currency.code}')"
-
     def get_balance(self, currency: Currency) -> CashAmount:
         return self._balance_history[-1][1].convert(currency)
 

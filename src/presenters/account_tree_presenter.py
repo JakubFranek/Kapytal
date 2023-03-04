@@ -437,6 +437,8 @@ class AccountTreePresenter:
         self._view.signal_edit_item.connect(self.edit_item)
         self._view.signal_delete_item.connect(self.remove_item)
 
+        self._model.signal_show_only_selection.connect(self._set_visible_only)
+
         self._selection_changed()  # called to ensure context menu is OK at start of run
 
     def _selection_changed(self) -> None:
@@ -463,7 +465,5 @@ class AccountTreePresenter:
         self._view.refresh()
 
     def _set_visible_only(self) -> None:
-        item = self._model.get_selected_item()
-        self._model.set_visibility_all(False)
-        self._model.set_visibility(item, True)
+        self._model.set_visibility(visible=True, only=True)
         self._view.refresh()
