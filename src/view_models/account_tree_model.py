@@ -200,6 +200,14 @@ class AccountTreeModel(QAbstractItemModel):
         return super().flags(index)
 
     def setData(self, index: QModelIndex, value: Any, role: Qt.ItemDataRole) -> bool:
+        if (
+            index.column() == AccountTreeColumns.COLUMN_SHOW
+            and role == Qt.ItemDataRole.CheckStateRole
+        ):
+            node: AccountTreeNode = index.internalPointer()
+            node.visible = value
+            self.dataChanged.emit(index, index)
+            return True
         return super().setData(index, value, role)
 
     def pre_add(self, parent: AccountGroup | None) -> None:
