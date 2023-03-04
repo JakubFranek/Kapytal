@@ -63,3 +63,24 @@ class TransactionTableColumns(IntEnum):
     COLUMN_CATEGORY = 14
     COLUMN_TAG = 15
     COLUMN_UUID = 16
+
+
+TRANSACTION_TABLE_COLUMN_HEADERS = {
+    TransactionTableColumns.COLUMN_DATETIME: "Date & time",
+    TransactionTableColumns.COLUMN_DESCRIPTION: "Description",
+    TransactionTableColumns.COLUMN_TYPE: "Type",
+    TransactionTableColumns.COLUMN_ACCOUNT: "Account",
+    TransactionTableColumns.COLUMN_SENDER: "Sender",
+    TransactionTableColumns.COLUMN_RECIPIENT: "Recipient",
+    TransactionTableColumns.COLUMN_PAYEE: "Payee",
+    TransactionTableColumns.COLUMN_SECURITY: "Security",
+    TransactionTableColumns.COLUMN_SHARES: "Shares",
+    TransactionTableColumns.COLUMN_AMOUNT: "Amount",
+    TransactionTableColumns.COLUMN_AMOUNT_BASE: "Base amount",
+    TransactionTableColumns.COLUMN_AMOUNT_SENT: "Amount sent",
+    TransactionTableColumns.COLUMN_AMOUNT_RECEIVED: "Amount received",
+    TransactionTableColumns.COLUMN_BALANCE: "Balance",
+    TransactionTableColumns.COLUMN_CATEGORY: "Category",
+    TransactionTableColumns.COLUMN_TAG: "Tags",
+    TransactionTableColumns.COLUMN_UUID: "UUID",
+}
