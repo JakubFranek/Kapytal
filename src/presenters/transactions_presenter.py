@@ -33,7 +33,7 @@ class TransactionsPresenter:
         self._proxy_model.setFilterKeyColumn(-1)
 
         self._view.tableView.setModel(self._proxy_model)
-
+        self._view.resize_table_to_contents()
         self._view.signal_search_text_changed.connect(self._filter)
 
     def load_record_keeper(self, record_keeper: RecordKeeper) -> None:

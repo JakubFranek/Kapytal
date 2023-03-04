@@ -16,12 +16,16 @@ from src.models.model_objects.security_objects import SecurityAccount
 from src.views.constants import AccountTreeColumns
 
 
+def convert_bool_to_checkstate(checked: bool) -> Qt.CheckState:
+    return Qt.CheckState.Checked if checked else Qt.CheckState.Unchecked
+
+
 class AccountTreeNode:
     def __init__(self, item: Account | AccountGroup, parent: Self | None) -> None:
         self.item = item
         self.parent = parent
         self.children: list[Self] = []
-        self.visible: bool = True
+        self.check_state: Qt.CheckState = Qt.CheckState.Checked
 
     def __repr__(self) -> str:
         return f"AccountTreeNode({str(self.item)})"
@@ -30,6 +34,34 @@ class AccountTreeNode:
         if not isinstance(__o, AccountTreeNode):
             return False
         return self.item == __o.item
+
+    def set_visible(self, visible: bool) -> None:
+        """Sets visibility of this node and its children, and updates the parents."""
+
+        check_state = convert_bool_to_checkstate(visible)
+        self._set_check_state(check_state)
+        self._update_visibility()
+
+    def _set_check_state(self, visible: Qt.CheckState) -> None:
+        self.check_state = visible
+        self._set_children_visible(visible)
+
+    def _set_children_visible(self, visible: Qt.CheckState) -> None:
+        for child in self.children:
+            child._set_check_state(visible)
+
+    def _update_visibility(self) -> None:
+        if all(child.check_state == Qt.CheckState.Checked for child in self.children):
+            self.check_state = Qt.CheckState.Checked
+        elif all(
+            child.check_state == Qt.CheckState.Unchecked for child in self.children
+        ):
+            self.check_state = Qt.CheckState.Unchecked
+        else:
+            self.check_state = Qt.CheckState.PartiallyChecked
+
+        if self.parent is not None:
+            self.parent._update_visibility()
 
 
 def make_nodes(
@@ -50,7 +82,7 @@ class AccountTreeModel(QAbstractItemModel):
         AccountTreeColumns.COLUMN_NAME: "Name",
         AccountTreeColumns.COLUMN_BALANCE_NATIVE: "Native balance",
         AccountTreeColumns.COLUMN_BALANCE_BASE: "Base balance",
-        AccountTreeColumns.COLUMN_SHOW: "Show",
+        AccountTreeColumns.COLUMN_SHOW: "",
     }
 
     def __init__(
@@ -64,13 +96,15 @@ class AccountTreeModel(QAbstractItemModel):
         self.root_items = root_items
         self.base_currency = base_currency
 
+        self._tree.clicked.connect(lambda index: self._tree_clicked(index))
+        self._tree.doubleClicked.connect(lambda index: self._tree_double_clicked(index))
+
     @property
     def root_items(self) -> tuple[Account | AccountGroup, ...]:
-        return self._root_items
+        return tuple(node.item for node in self._root_nodes)
 
     @root_items.setter
     def root_items(self, root_items: Sequence[Account | AccountGroup]) -> None:
-        self._root_items = tuple(root_items)
         self._root_nodes = tuple(make_nodes(root_items, None))
 
     def rowCount(self, index: QModelIndex = ...) -> int:
@@ -136,20 +170,25 @@ class AccountTreeModel(QAbstractItemModel):
                     return item.get_balance(self.base_currency).to_str_rounded()
                 except ConversionFactorNotFoundError:
                     return "Error!"
-        elif (
-            role == Qt.ItemDataRole.DecorationRole
-            and column == AccountTreeColumns.COLUMN_NAME
-        ):
-            if isinstance(item, AccountGroup):
-                if self._tree.isExpanded(index):
-                    return QIcon("icons_16:folder-open.png")
-                return QIcon("icons_16:folder.png")
-            if isinstance(item, SecurityAccount):
-                return QIcon("icons_16:bank.png")
-            if isinstance(item, CashAccount):
-                if item.get_balance(item.currency).is_positive():
-                    return QIcon("icons_16:piggy-bank.png")
-                return QIcon("icons_16:piggy-bank-empty.png")
+        elif role == Qt.ItemDataRole.DecorationRole:
+            if column == AccountTreeColumns.COLUMN_NAME:
+                if isinstance(item, AccountGroup):
+                    if self._tree.isExpanded(index):
+                        return QIcon("icons_16:folder-open.png")
+                    return QIcon("icons_16:folder.png")
+                if isinstance(item, SecurityAccount):
+                    return QIcon("icons_16:bank.png")
+                if isinstance(item, CashAccount):
+                    if item.get_balance(item.currency).is_positive():
+                        return QIcon("icons_16:piggy-bank.png")
+                    return QIcon("icons_16:piggy-bank-empty.png")
+            if column == AccountTreeColumns.COLUMN_SHOW:
+                if node.check_state == Qt.CheckState.Checked:
+                    return QIcon("icons_16:eye.png")
+                if node.check_state == Qt.CheckState.PartiallyChecked:
+                    return QIcon("icons_16:eye-half.png")
+                return QIcon("icons_16:eye-close.png")
+
         elif role == Qt.ItemDataRole.TextAlignmentRole:
             if column == AccountTreeColumns.COLUMN_BALANCE_NATIVE:
                 return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
@@ -163,12 +202,6 @@ class AccountTreeModel(QAbstractItemModel):
                 return QBrush(QColor("red"))
             if item.get_balance(self.base_currency).value_normalized == 0:
                 return QBrush(QColor("gray"))
-        elif (
-            role == Qt.ItemDataRole.CheckStateRole
-            and column == AccountTreeColumns.COLUMN_SHOW
-        ):
-            return Qt.CheckState.Checked if node.visible else Qt.CheckState.Unchecked
-
         return None
 
     def headerData(
@@ -186,29 +219,6 @@ class AccountTreeModel(QAbstractItemModel):
                 return self.COLUMN_HEADERS[section]
             return str(section)
         return None
-
-    def flags(self, index: QModelIndex) -> Qt.ItemFlag:
-        if not index.isValid():
-            return Qt.ItemFlag.NoItemFlags
-
-        if index.column() == AccountTreeColumns.COLUMN_SHOW:
-            return (
-                Qt.ItemFlag.ItemIsEnabled
-                | Qt.ItemFlag.ItemIsSelectable
-                | Qt.ItemFlag.ItemIsUserCheckable
-            )
-        return super().flags(index)
-
-    def setData(self, index: QModelIndex, value: Any, role: Qt.ItemDataRole) -> bool:
-        if (
-            index.column() == AccountTreeColumns.COLUMN_SHOW
-            and role == Qt.ItemDataRole.CheckStateRole
-        ):
-            node: AccountTreeNode = index.internalPointer()
-            node.visible = value
-            self.dataChanged.emit(index, index)
-            return True
-        return super().setData(index, value, role)
 
     def pre_add(self, parent: AccountGroup | None) -> None:
         parent_index = self.get_index_from_item(parent)
@@ -288,19 +298,40 @@ class AccountTreeModel(QAbstractItemModel):
         return QAbstractItemModel.createIndex(self, row, 0, node)
 
     def _get_node_from_item(self, item: Account | AccountGroup) -> AccountTreeNode:
-        node = AccountTreeModel._walk_node_tree(self._root_nodes, item)
+        node = AccountTreeModel._find_node(self._root_nodes, item)
         if node is None:
             raise ValueError(f"Item {item} not present within AccountTreeModel data.")
         return node
 
     @staticmethod
-    def _walk_node_tree(
+    def _find_node(
         nodes: Sequence[AccountTreeNode], item: Account | AccountGroup
     ) -> AccountTreeNode | None:
         for node in nodes:
             if node.item == item:
                 return node
-            child_node = AccountTreeModel._walk_node_tree(node.children, item)
+            child_node = AccountTreeModel._find_node(node.children, item)
             if child_node is not None:
                 return child_node
         return None
+
+    def _tree_clicked(self, index: QModelIndex) -> None:
+        pass
+
+    def _tree_double_clicked(self, index: QModelIndex) -> None:
+        pass
+
+    def set_visibility_all(self, visible: bool) -> None:
+        check_state = convert_bool_to_checkstate(visible)
+        for node in self._root_nodes:
+            AccountTreeModel._set_visibility_below(node, check_state)
+
+    @staticmethod
+    def _set_visibility_below(node: AccountTreeNode, visible: Qt.CheckState) -> None:
+        node.check_state = visible
+        for child in node.children:
+            AccountTreeModel._set_visibility_below(child, visible)
+
+    def set_visibility(self, item: Account | AccountGroup, visible: bool) -> None:
+        node = self._get_node_from_item(item)
+        node.set_visible(visible)

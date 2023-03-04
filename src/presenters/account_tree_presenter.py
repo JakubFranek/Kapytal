@@ -413,7 +413,11 @@ class AccountTreePresenter:
     def _setup_signals(self) -> None:
         self._view.signal_selection_changed.connect(self._selection_changed)
         self._view.signal_expand_below.connect(self.expand_all_below)
-        self._view.signal_delete_item.connect(self.remove_item)
+
+        self._view.signal_show_all.connect(lambda: self._set_visibility_all(True))
+        self._view.signal_show_selection_only.connect(self._set_visible_only)
+        self._view.signal_hide_all.connect(lambda: self._set_visibility_all(False))
+
         self._view.signal_add_account_group.connect(
             lambda: self.run_add_dialog(
                 setup_dialog=self.setup_account_group_dialog,
@@ -429,7 +433,9 @@ class AccountTreePresenter:
                 setup_dialog=self.setup_cash_account_dialog,
             )
         )
+
         self._view.signal_edit_item.connect(self.edit_item)
+        self._view.signal_delete_item.connect(self.remove_item)
 
         self._selection_changed()  # called to ensure context menu is OK at start of run
 
@@ -451,3 +457,13 @@ class AccountTreePresenter:
             account_group.path + "/"
             for account_group in self._record_keeper.account_groups
         ]
+
+    def _set_visibility_all(self, visible: bool) -> None:
+        self._model.set_visibility_all(visible)
+        self._view.refresh()
+
+    def _set_visible_only(self) -> None:
+        item = self._model.get_selected_item()
+        self._model.set_visibility_all(False)
+        self._model.set_visibility(item, True)
+        self._view.refresh()
