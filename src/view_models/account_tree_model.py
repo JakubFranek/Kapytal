@@ -1,5 +1,5 @@
-import typing
 from collections.abc import Sequence
+from typing import Any
 
 from PyQt6.QtCore import QAbstractItemModel, QModelIndex, Qt
 from PyQt6.QtGui import QBrush, QColor, QIcon
@@ -14,6 +14,32 @@ from src.models.model_objects.currency_objects import (
 )
 from src.models.model_objects.security_objects import SecurityAccount
 from src.views.constants import AccountTreeColumns
+
+
+class AccountTreeNode:
+    def __init__(
+        self, item: Account | AccountGroup, parent: AccountGroup | None
+    ) -> None:
+        self.item = item
+        self.parent = parent
+        self.children = []
+        self.visible = True
+
+    def __repr__(self) -> str:
+        return f"AccountTreeNode({str(self.item)})"
+
+
+def make_nodes(
+    items: Sequence[Account | AccountGroup], parent: AccountGroup | None
+) -> Sequence[AccountTreeNode]:
+    nodes = []
+    for item in items:
+        node = AccountTreeNode(item, parent=None)
+        if isinstance(item, AccountGroup):
+            node.children = make_nodes(item.children, node)
+        nodes.append(node)
+
+    return nodes
 
 
 class AccountTreeModel(QAbstractItemModel):
@@ -42,6 +68,7 @@ class AccountTreeModel(QAbstractItemModel):
     @root_items.setter
     def root_items(self, root_items: Sequence[Account | AccountGroup]) -> None:
         self._root_items = tuple(root_items)
+        self.root_nodes = make_nodes(root_items, None)
 
     def rowCount(self, index: QModelIndex = ...) -> int:
         if index.isValid():
@@ -88,7 +115,7 @@ class AccountTreeModel(QAbstractItemModel):
             parent_row = grandparent.children.index(parent)
         return QAbstractItemModel.createIndex(self, parent_row, 0, parent)
 
-    def data(self, index: QModelIndex, role: Qt.ItemDataRole = ...) -> typing.Any:
+    def data(self, index: QModelIndex, role: Qt.ItemDataRole = ...) -> Any:
         if not index.isValid():
             return None
         column = index.column()
@@ -107,8 +134,6 @@ class AccountTreeModel(QAbstractItemModel):
                     return node.get_balance(self.base_currency).to_str_rounded()
                 except ConversionFactorNotFoundError:
                     return "Error!"
-            if column == AccountTreeColumns.COLUMN_SHOW:
-                return "xxx"
         elif (
             role == Qt.ItemDataRole.DecorationRole
             and column == AccountTreeColumns.COLUMN_NAME
@@ -128,8 +153,6 @@ class AccountTreeModel(QAbstractItemModel):
                 return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
             if column == AccountTreeColumns.COLUMN_BALANCE_BASE:
                 return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
-            if column == AccountTreeColumns.COLUMN_SHOW:
-                return Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignHCenter
         elif role == Qt.ItemDataRole.ForegroundRole and (
             column == AccountTreeColumns.COLUMN_BALANCE_NATIVE
             or column == AccountTreeColumns.COLUMN_BALANCE_BASE
@@ -138,6 +161,12 @@ class AccountTreeModel(QAbstractItemModel):
                 return QBrush(QColor("red"))
             if node.get_balance(self.base_currency).value_normalized == 0:
                 return QBrush(QColor("gray"))
+        elif (
+            role == Qt.ItemDataRole.CheckStateRole
+            and column == AccountTreeColumns.COLUMN_SHOW
+        ):
+            return Qt.CheckState.Checked
+
         return None
 
     def headerData(
@@ -155,6 +184,21 @@ class AccountTreeModel(QAbstractItemModel):
                 return self.COLUMN_HEADERS[section]
             return str(section)
         return None
+
+    def flags(self, index: QModelIndex) -> Qt.ItemFlag:
+        if not index.isValid():
+            return None
+
+        if index.column() == AccountTreeColumns.COLUMN_SHOW:
+            return (
+                Qt.ItemFlag.ItemIsEnabled
+                | Qt.ItemFlag.ItemIsSelectable
+                | Qt.ItemFlag.ItemIsUserCheckable
+            )
+        return super().flags(index)
+
+    def setData(self, index: QModelIndex, value: Any, role: Qt.ItemDataRole) -> bool:
+        return super().setData()
 
     def pre_add(self, parent: AccountGroup | None) -> None:
         parent_index = self.get_index_from_item(parent)
