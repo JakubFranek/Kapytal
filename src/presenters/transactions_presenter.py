@@ -38,6 +38,7 @@ class TransactionsPresenter:
         self._record_keeper = record_keeper
         self.update_model_data()
         self._model.post_reset_model()
+        self._view.resize_table_to_contents()
 
     def update_model_data(self) -> None:
         self._model.transactions = self._record_keeper.transactions

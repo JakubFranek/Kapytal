@@ -7,8 +7,10 @@ from PyQt6.QtWidgets import QHeaderView, QLineEdit, QWidget
 from src.views.constants import SecurityTableColumns
 from src.views.ui_files.forms.Ui_security_form import Ui_SecurityForm
 
-
 # TODO: add some way to view and edit price history
+# TODO: add way to see overview of owned securities (per account and total)
+
+
 class SecurityForm(QWidget, Ui_SecurityForm):
     signal_add_security = pyqtSignal()
     signal_edit_security = pyqtSignal()
@@ -34,14 +36,6 @@ class SecurityForm(QWidget, Ui_SecurityForm):
             QIcon("icons_16:magnifier.png"), QLineEdit.ActionPosition.LeadingPosition
         )
         self.searchLineEdit.textChanged.connect(self.signal_search_text_changed.emit)
-        self.searchLineEdit.setToolTip(
-            (
-                "Special characters:\n"
-                "* matches zero or more of any characters\n"
-                "? matches any single character\n"
-                "[...] matches any character within square brackets"
-            )
-        )
 
     @property
     def search_bar_text(self) -> str:

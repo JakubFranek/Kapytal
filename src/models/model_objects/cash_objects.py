@@ -769,6 +769,7 @@ class CashTransfer(CashRelatedTransaction):
         self._recipient.remove_transaction(self)
 
     def serialize(self) -> dict[str, Any]:
+        # TODO: account UUIDs in JSON are harder to read
         return {
             "datatype": "CashTransfer",
             "description": self._description,

@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'd:\Coding\Kapytal\src\views\ui_files\security_form.ui'
+# Form implementation generated from reading ui file 'd:\Coding\Kapytal\src\views\ui_files\forms\security_form.ui'
 #
 # Created by: PyQt6 UI code generator 6.4.0
 #
@@ -63,7 +63,8 @@ class Ui_SecurityForm(object):
     def retranslateUi(self, SecurityForm):
         _translate = QtCore.QCoreApplication.translate
         SecurityForm.setWindowTitle(_translate("SecurityForm", "Securities"))
-        self.searchLineEdit.setPlaceholderText(_translate("SecurityForm", "Search..."))
+        self.searchLineEdit.setToolTip(_translate("SecurityForm", "<html><head/><body><p>Special characters:<br/>* matches zero or more of any characters<br/>? matches any single character<br/>[...] matches any character within square brackets</p></body></html>"))
+        self.searchLineEdit.setPlaceholderText(_translate("SecurityForm", "Search Securities"))
         self.addButton.setText(_translate("SecurityForm", "Add"))
         self.editButton.setText(_translate("SecurityForm", "Edit"))
         self.setPriceButton.setText(_translate("SecurityForm", "Set price"))

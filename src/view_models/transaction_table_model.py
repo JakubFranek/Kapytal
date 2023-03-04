@@ -268,6 +268,8 @@ class TransactionTableModel(QAbstractTableModel):
     @staticmethod
     def _get_transaction_security(transaction: Transaction) -> str | None:
         if isinstance(transaction, SecurityRelatedTransaction):
+            if transaction.security.symbol:
+                return transaction.security.symbol
             return transaction.security.name
         return None
 
