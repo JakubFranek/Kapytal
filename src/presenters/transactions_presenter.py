@@ -28,6 +28,7 @@ class TransactionsPresenter:
         self._proxy_model.setSourceModel(self._model)
         self._proxy_model.setSortRole(Qt.ItemDataRole.UserRole)
         self._proxy_model.setSortCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+        self._proxy_model.sort(0, Qt.SortOrder.DescendingOrder)
         self._proxy_model.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
         self._proxy_model.setFilterKeyColumn(-1)
 

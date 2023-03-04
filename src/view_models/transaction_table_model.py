@@ -1,5 +1,6 @@
-import typing
+import unicodedata
 from collections.abc import Collection
+from typing import Any
 
 from PyQt6.QtCore import QAbstractTableModel, QModelIndex, QSortFilterProxyModel, Qt
 from PyQt6.QtGui import QBrush, QColor
@@ -66,7 +67,7 @@ class TransactionTableModel(QAbstractTableModel):
         item = self.transactions[row]
         return QAbstractTableModel.createIndex(self, row, column, item)
 
-    def data(self, index: QModelIndex, role: Qt.ItemDataRole = ...) -> typing.Any:
+    def data(self, index: QModelIndex, role: Qt.ItemDataRole = ...) -> Any:
         if not index.isValid():
             return None
 
@@ -79,6 +80,8 @@ class TransactionTableModel(QAbstractTableModel):
             return TransactionTableModel.get_text_alignment_data(column)
         if role == Qt.ItemDataRole.ForegroundRole:
             return TransactionTableModel.get_foreground_data(transaction, column)
+        if role == Qt.ItemDataRole.UserRole:
+            return self.get_user_role_data(transaction, column)
         return None
 
     def headerData(
@@ -159,13 +162,19 @@ class TransactionTableModel(QAbstractTableModel):
         if column == TransactionTableColumns.COLUMN_SHARES:
             return TransactionTableModel._get_transaction_shares(transaction)
         if column == TransactionTableColumns.COLUMN_AMOUNT:
-            return self._get_transaction_amount(transaction, base=False)
+            return self._get_transaction_amount_string(transaction, base=False)
         if column == TransactionTableColumns.COLUMN_AMOUNT_BASE:
-            return self._get_transaction_amount(transaction, base=True)
+            return self._get_transaction_amount_string(transaction, base=True)
         if column == TransactionTableColumns.COLUMN_AMOUNT_SENT:
-            return TransactionTableModel._get_transfer_amount(transaction, sent=True)
+            return TransactionTableModel._get_transfer_amount_string(
+                transaction, sent=True
+            )
         if column == TransactionTableColumns.COLUMN_AMOUNT_RECEIVED:
-            return TransactionTableModel._get_transfer_amount(transaction, sent=False)
+            return TransactionTableModel._get_transfer_amount_string(
+                transaction, sent=False
+            )
+        if column == TransactionTableColumns.COLUMN_BALANCE:
+            return ""
         if column == TransactionTableColumns.COLUMN_CATEGORY:
             return TransactionTableModel._get_transaction_category(transaction)
         if column == TransactionTableColumns.COLUMN_TAG:
@@ -173,6 +182,27 @@ class TransactionTableModel(QAbstractTableModel):
         if column == TransactionTableColumns.COLUMN_UUID:
             return str(transaction.uuid)
         return None
+
+    def get_user_role_data(self, transaction: Transaction, column: int) -> Any:
+        if column == TransactionTableColumns.COLUMN_DATETIME:
+            return transaction.datetime_.timestamp()
+        if column == TransactionTableColumns.COLUMN_SHARES:
+            return TransactionTableModel._get_transaction_shares(transaction)
+        if column == TransactionTableColumns.COLUMN_AMOUNT:
+            return self._get_transaction_amount_value(transaction, base=False)
+        if column == TransactionTableColumns.COLUMN_AMOUNT_BASE:
+            return self._get_transaction_amount_value(transaction, base=True)
+        if column == TransactionTableColumns.COLUMN_AMOUNT_SENT:
+            return TransactionTableModel._get_transfer_amount_value(
+                transaction, sent=True
+            )
+        if column == TransactionTableColumns.COLUMN_AMOUNT_RECEIVED:
+            return TransactionTableModel._get_transfer_amount_value(
+                transaction, sent=False
+            )
+        return unicodedata.normalize(
+            "NFD", self.get_display_role_data(transaction, column)
+        )
 
     @staticmethod
     def get_text_alignment_data(column: int) -> Qt.AlignmentFlag | None:
@@ -229,42 +259,44 @@ class TransactionTableModel(QAbstractTableModel):
         raise TypeError("Unexpected Transaction type.")
 
     @staticmethod
-    def _get_transaction_account(transaction: Transaction) -> str | None:
+    def _get_transaction_account(transaction: Transaction) -> str:
         if isinstance(transaction, (CashTransaction, RefundTransaction)):
             return transaction.account.path
-        return None
+        return ""
 
     @staticmethod
-    def _get_transfer_account(transaction: Transaction, sender: bool) -> str | None:
+    def _get_transfer_account(transaction: Transaction, sender: bool) -> str:
         if not isinstance(transaction, (CashTransfer, SecurityTransfer)):
-            return None
+            return ""
         if sender:
             return transaction.sender.path
         return transaction.recipient.path
 
     @staticmethod
-    def _get_transaction_payee(transaction: Transaction) -> str | None:
+    def _get_transaction_payee(transaction: Transaction) -> str:
         if isinstance(transaction, (CashTransaction, RefundTransaction)):
             return transaction.payee.name
-        return None
+        return ""
 
     @staticmethod
-    def _get_transaction_security(transaction: Transaction) -> str | None:
+    def _get_transaction_security(transaction: Transaction) -> str:
         if isinstance(transaction, SecurityRelatedTransaction):
             if transaction.security.symbol:
                 return transaction.security.symbol
             return transaction.security.name
-        return None
+        return ""
 
     @staticmethod
-    def _get_transaction_shares(transaction: Transaction) -> str | None:
-        if isinstance(transaction, SecurityRelatedTransaction):
-            return str(transaction.shares)
-        return None
+    def _get_transaction_shares(transaction: Transaction) -> str:
+        if isinstance(transaction, SecurityTransaction):
+            return str(transaction.get_shares(transaction.security_account))
+        if isinstance(transaction, SecurityTransfer):
+            return str(transaction.get_shares(transaction.recipient))
+        return ""
 
-    def _get_transaction_amount(
+    def _get_transaction_amount_string(
         self, transaction: Transaction, base: bool
-    ) -> str | None:
+    ) -> str:
         amount = None
         if isinstance(transaction, (CashTransaction, RefundTransaction)):
             amount = transaction.get_amount(transaction.account)
@@ -272,27 +304,52 @@ class TransactionTableModel(QAbstractTableModel):
             amount = transaction.get_amount(transaction.cash_account)
 
         if amount is None:
-            return None
+            return ""
 
         if base:
             return amount.convert(self.base_currency).to_str_rounded()
         return amount.to_str_rounded()
 
+    def _get_transaction_amount_value(
+        self, transaction: Transaction, base: bool
+    ) -> float:
+        amount = None
+        if isinstance(transaction, (CashTransaction, RefundTransaction)):
+            amount = transaction.get_amount(transaction.account)
+        if isinstance(transaction, SecurityTransaction):
+            amount = transaction.get_amount(transaction.cash_account)
+
+        if amount is None:
+            return float("-inf")
+
+        if base:
+            return float(amount.convert(self.base_currency).value_rounded)
+        return float(amount.value_rounded)
+
     @staticmethod
-    def _get_transfer_amount(transaction: Transaction, sent: bool) -> str | None:
+    def _get_transfer_amount_string(transaction: Transaction, sent: bool) -> str:
         if not isinstance(transaction, CashTransfer):
-            return None
+            return ""
 
         if sent:
             return transaction.get_amount(transaction.sender).to_str_rounded()
         return transaction.get_amount(transaction.recipient).to_str_rounded()
 
     @staticmethod
-    def _get_transaction_category(transaction: Transaction) -> str | None:
+    def _get_transfer_amount_value(transaction: Transaction, sent: bool) -> float:
+        if not isinstance(transaction, CashTransfer):
+            return float("-inf")
+
+        if sent:
+            return float(transaction.get_amount(transaction.sender).value_rounded)
+        return float(transaction.get_amount(transaction.recipient).value_rounded)
+
+    @staticmethod
+    def _get_transaction_category(transaction: Transaction) -> str:
         if isinstance(transaction, (CashTransaction, RefundTransaction)):
             category_paths = [category.path for category in transaction.categories]
             return ", ".join(category_paths)
-        return None
+        return ""
 
     @staticmethod
     def _get_transaction_tags(transaction: Transaction) -> str:
