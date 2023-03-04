@@ -2,7 +2,7 @@ import typing
 from collections.abc import Sequence
 
 from PyQt6.QtCore import QAbstractItemModel, QModelIndex, Qt
-from PyQt6.QtGui import QIcon
+from PyQt6.QtGui import QBrush, QColor, QIcon
 from PyQt6.QtWidgets import QTreeView
 
 from src.models.base_classes.account import Account
@@ -130,6 +130,14 @@ class AccountTreeModel(QAbstractItemModel):
                 return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
             if column == AccountTreeColumns.COLUMN_SHOW:
                 return Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignHCenter
+        elif role == Qt.ItemDataRole.ForegroundRole and (
+            column == AccountTreeColumns.COLUMN_BALANCE_NATIVE
+            or column == AccountTreeColumns.COLUMN_BALANCE_BASE
+        ):
+            if node.get_balance(self.base_currency).is_negative():
+                return QBrush(QColor("red"))
+            if node.get_balance(self.base_currency).value_normalized == 0:
+                return QBrush(QColor("gray"))
         return None
 
     def headerData(

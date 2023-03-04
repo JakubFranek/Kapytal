@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'd:\Coding\Kapytal\src\views\ui_files\tag_form.ui'
+# Form implementation generated from reading ui file 'd:\Coding\Kapytal\src\views\ui_files\forms\tag_form.ui'
 #
 # Created by: PyQt6 UI code generator 6.4.0
 #
@@ -60,7 +60,8 @@ class Ui_TagForm(object):
     def retranslateUi(self, TagForm):
         _translate = QtCore.QCoreApplication.translate
         TagForm.setWindowTitle(_translate("TagForm", "Tags"))
-        self.searchLineEdit.setPlaceholderText(_translate("TagForm", "Search..."))
+        self.searchLineEdit.setToolTip(_translate("TagForm", "<html><head/><body><p>Special characters:<br/>* matches zero or more of any characters<br/>? matches any single character<br/>[...] matches any character within square brackets</p></body></html>"))
+        self.searchLineEdit.setPlaceholderText(_translate("TagForm", "Search Tags"))
         self.addButton.setText(_translate("TagForm", "Add"))
         self.renameButton.setText(_translate("TagForm", "Rename"))
         self.removeButton.setText(_translate("TagForm", "Remove"))

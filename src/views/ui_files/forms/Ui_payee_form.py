@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'd:\Coding\Kapytal\src\views\ui_files\payee_form.ui'
+# Form implementation generated from reading ui file 'd:\Coding\Kapytal\src\views\ui_files\forms\payee_form.ui'
 #
 # Created by: PyQt6 UI code generator 6.4.0
 #
@@ -60,7 +60,8 @@ class Ui_PayeeForm(object):
     def retranslateUi(self, PayeeForm):
         _translate = QtCore.QCoreApplication.translate
         PayeeForm.setWindowTitle(_translate("PayeeForm", "Payees"))
-        self.searchLineEdit.setPlaceholderText(_translate("PayeeForm", "Search..."))
+        self.searchLineEdit.setToolTip(_translate("PayeeForm", "<html><head/><body><p>Special characters:<br/>* matches zero or more of any characters<br/>? matches any single character<br/>[...] matches any character within square brackets</p></body></html>"))
+        self.searchLineEdit.setPlaceholderText(_translate("PayeeForm", "Search Payees"))
         self.addButton.setText(_translate("PayeeForm", "Add"))
         self.renameButton.setText(_translate("PayeeForm", "Rename"))
         self.removeButton.setText(_translate("PayeeForm", "Remove"))

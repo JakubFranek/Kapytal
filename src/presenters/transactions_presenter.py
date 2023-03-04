@@ -18,13 +18,19 @@ class TransactionsPresenter:
         self._record_keeper = record_keeper
 
         self._proxy_model = QSortFilterProxyModel(self._view.tableView)
-        self._model = TransactionTableModel(self._view.tableView, [], self._proxy_model)
+        self._model = TransactionTableModel(
+            self._view.tableView,
+            [],
+            self._record_keeper.base_currency,
+            self._proxy_model,
+        )
         self.update_model_data()
         self._proxy_model.setSourceModel(self._model)
         self._proxy_model.setSortRole(Qt.ItemDataRole.UserRole)
         self._proxy_model.setSortCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
         self._proxy_model.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
         self._proxy_model.setFilterKeyColumn(-1)
+
         self._view.tableView.setModel(self._proxy_model)
 
     def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
@@ -35,6 +41,7 @@ class TransactionsPresenter:
 
     def update_model_data(self) -> None:
         self._model.transactions = self._record_keeper.transactions
+        self._model.base_currency = self._record_keeper.base_currency
 
     def _filter(self) -> None:
         pattern = self._view.search_bar_text
