@@ -1,5 +1,5 @@
 from collections.abc import Sequence
-from typing import Any
+from typing import Any, Self
 
 from PyQt6.QtCore import QAbstractItemModel, QModelIndex, Qt
 from PyQt6.QtGui import QBrush, QColor, QIcon
@@ -17,24 +17,27 @@ from src.views.constants import AccountTreeColumns
 
 
 class AccountTreeNode:
-    def __init__(
-        self, item: Account | AccountGroup, parent: AccountGroup | None
-    ) -> None:
+    def __init__(self, item: Account | AccountGroup, parent: Self | None) -> None:
         self.item = item
         self.parent = parent
-        self.children = []
-        self.visible = True
+        self.children: list[Self] = []
+        self.visible: bool = True
 
     def __repr__(self) -> str:
         return f"AccountTreeNode({str(self.item)})"
 
+    def __eq__(self, __o: object) -> bool:
+        if not isinstance(__o, AccountTreeNode):
+            return False
+        return self.item == __o.item
+
 
 def make_nodes(
-    items: Sequence[Account | AccountGroup], parent: AccountGroup | None
+    items: Sequence[Account | AccountGroup], parent: AccountTreeNode | None
 ) -> Sequence[AccountTreeNode]:
     nodes = []
     for item in items:
-        node = AccountTreeNode(item, parent=None)
+        node = AccountTreeNode(item, parent=parent)
         if isinstance(item, AccountGroup):
             node.children = make_nodes(item.children, node)
         nodes.append(node)
@@ -68,34 +71,32 @@ class AccountTreeModel(QAbstractItemModel):
     @root_items.setter
     def root_items(self, root_items: Sequence[Account | AccountGroup]) -> None:
         self._root_items = tuple(root_items)
-        self.root_nodes = make_nodes(root_items, None)
+        self._root_nodes = tuple(make_nodes(root_items, None))
 
     def rowCount(self, index: QModelIndex = ...) -> int:
         if index.isValid():
             if index.column() != 0:
                 return 0
-            node: Account | AccountGroup = index.internalPointer()
-            if isinstance(node, AccountGroup):
-                return len(node.children)
-            return 0
-        return len(self.root_items)
+            node: AccountTreeNode = index.internalPointer()
+            return len(node.children)
+        return len(self._root_nodes)
 
     def columnCount(self, index: QModelIndex = ...) -> int:  # noqa: U100
         return 4 if not index.isValid() or index.column() == 0 else 0
 
-    def index(self, row: int, column: int, _parent: QModelIndex = ...) -> QModelIndex:
-        if _parent.isValid() and _parent.column() != 0:
+    def index(self, row: int, column: int, parent: QModelIndex = ...) -> QModelIndex:
+        if parent.isValid() and parent.column() != 0:
             return QModelIndex()
 
-        if not _parent or not _parent.isValid():
-            parent = None
+        if not parent or not parent.isValid():
+            _parent = None
         else:
-            parent: AccountGroup = _parent.internalPointer()
+            _parent: AccountTreeNode = parent.internalPointer()
 
-        if parent is None:
-            child = self.root_items[row]
+        if _parent is None:
+            child = self._root_nodes[row]
         else:
-            child = parent.children[row]
+            child = _parent.children[row]
         if child:
             return QAbstractItemModel.createIndex(self, row, column, child)
         return QModelIndex()
@@ -104,13 +105,13 @@ class AccountTreeModel(QAbstractItemModel):
         if not index.isValid():
             return QModelIndex()
 
-        child: AccountGroup = index.internalPointer()
-        parent = child.parent
+        node: AccountTreeNode = index.internalPointer()
+        parent = node.parent
         if parent is None:
             return QModelIndex()
         grandparent = parent.parent
         if grandparent is None:
-            parent_row = self.root_items.index(parent)
+            parent_row = self._root_nodes.index(parent)
         else:
             parent_row = grandparent.children.index(parent)
         return QAbstractItemModel.createIndex(self, parent_row, 0, parent)
@@ -119,33 +120,34 @@ class AccountTreeModel(QAbstractItemModel):
         if not index.isValid():
             return None
         column = index.column()
-        node: Account | AccountGroup = index.internalPointer()
+        node: AccountTreeNode = index.internalPointer()
+        item = node.item
         if role == Qt.ItemDataRole.DisplayRole:
             if column == AccountTreeColumns.COLUMN_NAME:
-                return node.name
+                return item.name
             if column == AccountTreeColumns.COLUMN_BALANCE_NATIVE:
-                if isinstance(node, CashAccount):
-                    return str(node.get_balance(node.currency))
+                if isinstance(item, CashAccount):
+                    return str(item.get_balance(item.currency))
                 return ""
             if column == AccountTreeColumns.COLUMN_BALANCE_BASE:
                 try:
                     if self.base_currency is None:
                         return ""
-                    return node.get_balance(self.base_currency).to_str_rounded()
+                    return item.get_balance(self.base_currency).to_str_rounded()
                 except ConversionFactorNotFoundError:
                     return "Error!"
         elif (
             role == Qt.ItemDataRole.DecorationRole
             and column == AccountTreeColumns.COLUMN_NAME
         ):
-            if isinstance(node, AccountGroup):
+            if isinstance(item, AccountGroup):
                 if self._tree.isExpanded(index):
                     return QIcon("icons_16:folder-open.png")
                 return QIcon("icons_16:folder.png")
-            if isinstance(node, SecurityAccount):
+            if isinstance(item, SecurityAccount):
                 return QIcon("icons_16:bank.png")
-            if isinstance(node, CashAccount):
-                if node.get_balance(node.currency).is_positive():
+            if isinstance(item, CashAccount):
+                if item.get_balance(item.currency).is_positive():
                     return QIcon("icons_16:piggy-bank.png")
                 return QIcon("icons_16:piggy-bank-empty.png")
         elif role == Qt.ItemDataRole.TextAlignmentRole:
@@ -157,15 +159,15 @@ class AccountTreeModel(QAbstractItemModel):
             column == AccountTreeColumns.COLUMN_BALANCE_NATIVE
             or column == AccountTreeColumns.COLUMN_BALANCE_BASE
         ):
-            if node.get_balance(self.base_currency).is_negative():
+            if item.get_balance(self.base_currency).is_negative():
                 return QBrush(QColor("red"))
-            if node.get_balance(self.base_currency).value_normalized == 0:
+            if item.get_balance(self.base_currency).value_normalized == 0:
                 return QBrush(QColor("gray"))
         elif (
             role == Qt.ItemDataRole.CheckStateRole
             and column == AccountTreeColumns.COLUMN_SHOW
         ):
-            return Qt.CheckState.Checked
+            return Qt.CheckState.Checked if node.visible else Qt.CheckState.Unchecked
 
         return None
 
@@ -187,7 +189,7 @@ class AccountTreeModel(QAbstractItemModel):
 
     def flags(self, index: QModelIndex) -> Qt.ItemFlag:
         if not index.isValid():
-            return None
+            return Qt.ItemFlag.NoItemFlags
 
         if index.column() == AccountTreeColumns.COLUMN_SHOW:
             return (
@@ -198,12 +200,12 @@ class AccountTreeModel(QAbstractItemModel):
         return super().flags(index)
 
     def setData(self, index: QModelIndex, value: Any, role: Qt.ItemDataRole) -> bool:
-        return super().setData()
+        return super().setData(index, value, role)
 
     def pre_add(self, parent: AccountGroup | None) -> None:
         parent_index = self.get_index_from_item(parent)
         if parent is None:
-            row_index = len(self.root_items)
+            row_index = len(self._root_nodes)
         else:
             row_index = len(parent.children)
         self.beginInsertRows(parent_index, row_index, row_index)
@@ -235,8 +237,8 @@ class AccountTreeModel(QAbstractItemModel):
         new_parent_index = self.get_index_from_item(new_parent)
         # Index must be limited to valid indexes
         if new_parent is None:
-            if new_index > len(self.root_items):
-                new_index = len(self.root_items)
+            if new_index > len(self._root_nodes):
+                new_index = len(self._root_nodes)
         else:
             if new_index > len(new_parent.children):
                 new_index = len(new_parent.children)
@@ -260,17 +262,37 @@ class AccountTreeModel(QAbstractItemModel):
         return indexes[0]
 
     def get_selected_item(self) -> Account | AccountGroup | None:
-        indexes = self._tree.selectedIndexes()
-        if len(indexes) == 0:
+        index = self.get_selected_item_index()
+        node: AccountTreeNode | None = index.internalPointer()
+        if node is None:
             return None
-        return indexes[0].internalPointer()
+        return node.item
 
     def get_index_from_item(self, item: Account | AccountGroup | None) -> QModelIndex:
         if item is None:
             return QModelIndex()
-        parent = item.parent
+        node = self._get_node_from_item(item)
+        parent = node.parent
         if parent is None:
-            row = self.root_items.index(item)
+            row = self._root_nodes.index(node)
         else:
-            row = parent.children.index(item)
-        return QAbstractItemModel.createIndex(self, row, 0, item)
+            row = parent.children.index(node)
+        return QAbstractItemModel.createIndex(self, row, 0, node)
+
+    def _get_node_from_item(self, item: Account | AccountGroup) -> AccountTreeNode:
+        node = AccountTreeModel._walk_node_tree(self._root_nodes, item)
+        if node is None:
+            raise ValueError(f"Item {item} not present within AccountTreeModel data.")
+        return node
+
+    @staticmethod
+    def _walk_node_tree(
+        nodes: Sequence[AccountTreeNode], item: Account | AccountGroup
+    ) -> AccountTreeNode | None:
+        for node in nodes:
+            if node.item == item:
+                return node
+            child_node = AccountTreeModel._walk_node_tree(node.children, item)
+            if child_node is not None:
+                return child_node
+        return None
