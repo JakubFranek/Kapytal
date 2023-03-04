@@ -1,4 +1,4 @@
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QAction, QContextMenuEvent, QCursor, QIcon
 from PyQt6.QtWidgets import QLineEdit, QMenu, QWidget
 
@@ -9,15 +9,16 @@ from src.views.ui_files.widgets.Ui_transaction_table_widget import (
 
 
 class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
+    signal_search_text_changed = pyqtSignal()
+
     def __init__(self, parent: QWidget | None) -> None:
         super().__init__(parent)
         self.setupUi(self)
 
-        self.actionFilterTransactions = QAction(self)
-
         self._create_column_actions()
         self._set_icons()
         self._connect_actions()
+        self._connect_signals()
         self._setup_header_context_menu()
 
     @property
@@ -74,7 +75,8 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
         self.header_menu.popup(QCursor.pos())
 
     def _set_icons(self) -> None:
-        self.actionFilterTransactions.setIcon(QIcon("icons_16:funnel.png"))
+        self.actionFilter_Transactions = QAction(self)
+        self.actionFilter_Transactions.setIcon(QIcon("icons_16:funnel.png"))
         self.actionIncome.setIcon(QIcon("icons_custom:coins-plus.png"))
         self.actionExpense.setIcon(QIcon("icons_custom:coins-minus.png"))
         self.actionBuy.setIcon(QIcon("icons_custom:certificate-plus.png"))
@@ -92,7 +94,7 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
         )
 
     def _connect_actions(self) -> None:
-        self.filterToolButton.setDefaultAction(self.actionFilterTransactions)
+        self.filterToolButton.setDefaultAction(self.actionFilter_Transactions)
         self.buyToolButton.setDefaultAction(self.actionBuy)
         self.sellToolButton.setDefaultAction(self.actionSell)
         self.incomeToolButton.setDefaultAction(self.actionIncome)
@@ -100,6 +102,9 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
 
         self.transferToolButton.addAction(self.actionCash_Transfer)
         self.transferToolButton.addAction(self.actionSecurity_Transfer)
+
+    def _connect_signals(self) -> None:
+        self.searchLineEdit.textChanged.connect(self.signal_search_text_changed.emit)
 
     def _setup_header_context_menu(self) -> None:
         self.tableView.horizontalHeader().setContextMenuPolicy(
