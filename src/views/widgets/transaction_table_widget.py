@@ -19,7 +19,7 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
         self._set_icons()
         self._connect_actions()
         self._connect_signals()
-        self._setup_header_context_menu()
+        self._setup_header()
 
     @property
     def search_bar_text(self) -> str:
@@ -106,10 +106,8 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
     def _connect_signals(self) -> None:
         self.searchLineEdit.textChanged.connect(self.signal_search_text_changed.emit)
 
-    def _setup_header_context_menu(self) -> None:
-        self.tableView.horizontalHeader().setContextMenuPolicy(
-            Qt.ContextMenuPolicy.CustomContextMenu
-        )
-        self.tableView.horizontalHeader().customContextMenuRequested.connect(
-            self._create_header_context_menu
-        )
+    def _setup_header(self) -> None:
+        header = self.tableView.horizontalHeader()
+        header.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        header.customContextMenuRequested.connect(self._create_header_context_menu)
+        header.setSectionsMovable(True)
