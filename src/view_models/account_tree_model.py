@@ -372,12 +372,14 @@ class AccountTreeModel(QAbstractItemModel):
         return None
 
     def _tree_clicked(self, index: QModelIndex) -> None:  # noqa: U100
-        self.timer.set_timeout_callable(self.signal_toggle_visibility.emit)
-        self.timer.start()
+        if index.column() == AccountTreeColumns.COLUMN_SHOW:
+            self.timer.set_timeout_callable(self.signal_toggle_visibility.emit)
+            self.timer.start()
 
     def _tree_double_clicked(self, index: QModelIndex) -> None:  # noqa: U100
-        self.timer.stop()
-        self.signal_show_only_selection.emit()
+        if index.column() == AccountTreeColumns.COLUMN_SHOW:
+            self.timer.stop()
+            self.signal_show_only_selection.emit()
 
     def set_visibility_all(self, visible: bool) -> None:
         check_state = convert_bool_to_checkstate(visible)
