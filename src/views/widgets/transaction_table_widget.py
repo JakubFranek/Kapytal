@@ -30,12 +30,16 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
 
     def set_column_visibility(self, column: int, show: bool) -> None:
         columns = TRANSACTION_TABLE_COLUMN_HEADERS.keys()
-        if any(
-            not self.tableView.isColumnHidden(column_)
+        if all(
+            self.tableView.isColumnHidden(column_)
             for column_ in columns
             if column_ != column
         ):
-            self.tableView.setColumnHidden(column, not show)
+            return  # If all other columns are hidden, this column must stay shown
+
+        self.tableView.setColumnHidden(column, not show)
+        if show:
+            self.tableView.resizeColumnToContents(column)
 
     def show_all_columns(self) -> None:
         for column in TRANSACTION_TABLE_COLUMN_HEADERS.keys():
@@ -49,7 +53,7 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
             action.setText(text)
             action.setData(column)
             action.setCheckable(True)
-            action.toggled.connect(
+            action.triggered.connect(
                 lambda checked, column=column: self.set_column_visibility(
                     column=column, show=checked
                 )

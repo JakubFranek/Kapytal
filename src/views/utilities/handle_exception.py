@@ -29,9 +29,10 @@ def handle_uncaught_exception(
         "Uncaught exception", exc_info=(exc_type, exc_value, exc_traceback)
     )
 
+    # BUG: this sometimes does not quit the app!
     display_error_message(text=text, exc_details=exc_details, critical=True)
     app = QApplication.instance()
-    app.exit()
+    sys.exit(app.quit())  # app.quit or exit?
 
 
 def display_error_message(

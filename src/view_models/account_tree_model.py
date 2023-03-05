@@ -235,6 +235,7 @@ class AccountTreeModel(QAbstractItemModel):
                         return QIcon("icons_16:piggy-bank.png")
                     return QIcon("icons_16:piggy-bank-empty.png")
             if column == AccountTreeColumns.COLUMN_SHOW:
+                # TODO: change eye icon on mouse hover (blue)
                 if node.check_state == Qt.CheckState.Checked:
                     return QIcon("icons_16:eye.png")
                 if node.check_state == Qt.CheckState.PartiallyChecked:
@@ -254,6 +255,14 @@ class AccountTreeModel(QAbstractItemModel):
                 return QBrush(QColor("red"))
             if item.get_balance(self.base_currency).value_normalized == 0:
                 return QBrush(QColor("gray"))
+        elif (
+            role == Qt.ItemDataRole.ToolTipRole
+            and column == AccountTreeColumns.COLUMN_SHOW
+        ):
+            return (
+                "Single-click: toggle visibility\n"
+                "Double-click: set only this item visible"
+            )
         return None
 
     def headerData(
