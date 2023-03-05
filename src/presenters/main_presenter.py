@@ -258,6 +258,10 @@ class MainPresenter:
         self._view.signal_clear_recent_files.connect(self._clear_recent_paths)
         self._view.signal_close_file.connect(self._close_file)
 
+        self._view.signal_show_account_tree.connect(
+            lambda checked: self._account_tree_presenter.set_widget_visibility(checked)
+        )
+
     def _initialize_recent_paths(self) -> None:
         if not constants.recent_files_path.exists():
             logging.debug("Recent Files not found, initializing to empty list")

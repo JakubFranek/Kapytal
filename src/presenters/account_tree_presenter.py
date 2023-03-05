@@ -40,6 +40,12 @@ class AccountTreePresenter:
     def valid_accounts(self) -> tuple[Account, ...]:
         return self._model.visible_accounts
 
+    def set_widget_visibility(self, visible: bool) -> None:
+        if visible:
+            self._view.show()
+        else:
+            self._view.hide()
+
     def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
         self._model.pre_reset_model()
         self._record_keeper = record_keeper

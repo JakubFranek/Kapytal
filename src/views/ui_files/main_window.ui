@@ -23,7 +23,7 @@
      <verstretch>0</verstretch>
     </sizepolicy>
    </property>
-   <layout class="QHBoxLayout" name="horizontalLayout" stretch=""/>
+   <layout class="QHBoxLayout" name="horizontalLayout"/>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
@@ -31,7 +31,7 @@
      <x>0</x>
      <y>0</y>
      <width>863</width>
-     <height>25</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -107,6 +107,8 @@
    <addaction name="actionTags"/>
    <addaction name="separator"/>
    <addaction name="actionSettings"/>
+   <addaction name="separator"/>
+   <addaction name="actionShow_Hide_Account_Tree"/>
   </widget>
   <action name="actionSave">
    <property name="text">
@@ -183,6 +185,11 @@
   <action name="actionClear_Recent_File_Menu">
    <property name="text">
     <string>Clear Menu</string>
+   </property>
+  </action>
+  <action name="actionShow_Hide_Account_Tree">
+   <property name="text">
+    <string>Show/Hide Account Tree</string>
    </property>
   </action>
  </widget>

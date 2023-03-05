@@ -18,6 +18,8 @@ from src.views.widgets.transaction_table_widget import TransactionTableWidget
 class MainView(QMainWindow, Ui_MainWindow):
     signal_exit = pyqtSignal()
 
+    signal_show_account_tree = pyqtSignal(bool)
+
     signal_open_currency_form = pyqtSignal()
     signal_open_security_form = pyqtSignal()
     signal_open_payee_form = pyqtSignal()
@@ -181,6 +183,9 @@ class MainView(QMainWindow, Ui_MainWindow):
 
         self.actionFilterTransactions = QAction(self)
 
+        self.actionShow_Hide_Account_Tree.setCheckable(True)
+        self.actionShow_Hide_Account_Tree.setChecked(True)
+
         self.actionOpen_File.setIcon(QIcon("icons_16:folder-open-document.png"))
         self.actionSave.setIcon(QIcon("icons_16:disk.png"))
         self.actionSave_As.setIcon(QIcon("icons_16:disks.png"))
@@ -194,6 +199,7 @@ class MainView(QMainWindow, Ui_MainWindow):
         self.actionPayees.setIcon(QIcon("icons_16:user-silhouette.png"))
         self.actionSettings.setIcon(QIcon("icons_16:gear.png"))
         self.actionAbout.setIcon(QIcon("icons_16:information.png"))
+        self.actionShow_Hide_Account_Tree.setIcon(QIcon("icons_16:folder-tree.png"))
 
         self.actionCurrencies_and_Exchange_Rates.triggered.connect(
             self.signal_open_currency_form.emit
@@ -210,7 +216,10 @@ class MainView(QMainWindow, Ui_MainWindow):
         self.actionClear_Recent_File_Menu.triggered.connect(
             self.signal_clear_recent_files.emit
         )
-        self.actionClose_File.triggered.connect(self.signal_close_file.emit)
+        self.actionClose_File.checkableChanged.connect(self.signal_close_file.emit)
 
+        self.actionShow_Hide_Account_Tree.triggered.connect(
+            lambda checked: self.signal_show_account_tree.emit(checked)
+        )
         self.actionQuit.triggered.connect(self.close)
         self.actionAbout.triggered.connect(self.show_about)
