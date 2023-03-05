@@ -21,6 +21,7 @@ class AccountTreePresenter:
     SetupDialogCallable = Callable[[bool, AccountGroup | Account | None, int], None]
 
     event_data_changed = Event()
+    event_visibility_changed = Event()
 
     def __init__(self, view: AccountTreeWidget, record_keeper: RecordKeeper) -> None:
         self._view = view
@@ -34,6 +35,10 @@ class AccountTreePresenter:
 
         self._setup_signals()
         self._view.finalize_setup()
+
+    @property
+    def valid_accounts(self) -> tuple[Account, ...]:
+        return self._model.visible_accounts
 
     def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
         self._model.pre_reset_model()
@@ -438,6 +443,7 @@ class AccountTreePresenter:
         self._view.signal_delete_item.connect(self.remove_item)
 
         self._model.signal_show_only_selection.connect(self._set_visible_only)
+        self._model.signal_toggle_visibility.connect(self._toggle_visibility)
 
         self._selection_changed()  # called to ensure context menu is OK at start of run
 
@@ -463,7 +469,14 @@ class AccountTreePresenter:
     def _set_visibility_all(self, visible: bool) -> None:
         self._model.set_visibility_all(visible)
         self._view.refresh()
+        self.event_visibility_changed()
 
     def _set_visible_only(self) -> None:
         self._model.set_visibility(visible=True, only=True)
         self._view.refresh()
+        self.event_visibility_changed()
+
+    def _toggle_visibility(self) -> None:
+        self._model.toggle_visibility()
+        self._view.refresh()
+        self.event_visibility_changed()

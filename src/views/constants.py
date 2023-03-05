@@ -55,7 +55,7 @@ class TransactionTableColumns(IntEnum):
     COLUMN_PAYEE = 6
     COLUMN_SECURITY = 7
     COLUMN_SHARES = 8
-    COLUMN_AMOUNT = 9
+    COLUMN_AMOUNT_NATIVE = 9
     COLUMN_AMOUNT_BASE = 10
     COLUMN_AMOUNT_SENT = 11
     COLUMN_AMOUNT_RECEIVED = 12
@@ -75,7 +75,7 @@ TRANSACTION_TABLE_COLUMN_HEADERS = {
     TransactionTableColumns.COLUMN_PAYEE: "Payee",
     TransactionTableColumns.COLUMN_SECURITY: "Security",
     TransactionTableColumns.COLUMN_SHARES: "Shares",
-    TransactionTableColumns.COLUMN_AMOUNT: "Amount",
+    TransactionTableColumns.COLUMN_AMOUNT_NATIVE: "Native amount",
     TransactionTableColumns.COLUMN_AMOUNT_BASE: "Base amount",
     TransactionTableColumns.COLUMN_AMOUNT_SENT: "Amount sent",
     TransactionTableColumns.COLUMN_AMOUNT_RECEIVED: "Amount received",

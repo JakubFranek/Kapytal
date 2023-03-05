@@ -396,6 +396,9 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
     def is_account_related(self, account: Account) -> bool:
         return account == self._cash_account or account == self._security_account
 
+    def is_accounts_related(self, accounts: Collection[Account]) -> bool:
+        return self._security_account in accounts or self._cash_account in accounts
+
     def prepare_for_deletion(self) -> None:
         self._cash_account.remove_transaction(self)
         self._security_account.remove_transaction(self)
@@ -663,13 +666,16 @@ class SecurityTransfer(SecurityRelatedTransaction):
         return (
             f"SecurityTransfer(security='{self.security.symbol}', "
             f"shares={self.shares}, "
-            f"from='{self.sender.name}', "
-            f"to='{self.recipient.name}', "
+            f"from='{self._sender.name}', "
+            f"to='{self._recipient.name}', "
             f"{self.datetime_.strftime('%Y-%m-%d')})"
         )
 
     def is_account_related(self, account: Account) -> bool:
-        return account == self.sender or account == self.recipient
+        return account == self._sender or account == self._recipient
+
+    def is_accounts_related(self, accounts: Collection[Account]) -> bool:
+        return self._sender in accounts or self._recipient in accounts
 
     def prepare_for_deletion(self) -> None:
         self._sender.remove_transaction(self)

@@ -97,15 +97,28 @@ class AccountTreeNode:
 
 def make_nodes(
     items: Sequence[Account | AccountGroup], parent: AccountTreeNode | None
-) -> Sequence[AccountTreeNode]:
+) -> list[AccountTreeNode]:
     nodes = []
     for item in items:
         node = AccountTreeNode(item, parent=parent)
         if isinstance(item, AccountGroup):
             node.children = make_nodes(item.children, node)
         nodes.append(node)
-
     return nodes
+
+
+def get_visible_leaf_items(
+    nodes: Sequence[AccountTreeNode], visible_items: list[Account]
+) -> list[Account]:
+    for node in nodes:
+        if len(node.children) == 0 and node.check_state == Qt.CheckState.Checked:
+            visible_items.append(node.item)
+        if (
+            node.check_state == Qt.CheckState.Checked
+            or node.check_state == Qt.CheckState.PartiallyChecked
+        ):
+            visible_items = get_visible_leaf_items(node.children, visible_items)
+    return visible_items
 
 
 class AccountTreeModel(QAbstractItemModel):
@@ -116,6 +129,7 @@ class AccountTreeModel(QAbstractItemModel):
         AccountTreeColumns.COLUMN_SHOW: "",
     }
     signal_show_only_selection = pyqtSignal()
+    signal_toggle_visibility = pyqtSignal()
 
     def __init__(
         self,
@@ -136,6 +150,10 @@ class AccountTreeModel(QAbstractItemModel):
     @property
     def root_items(self) -> tuple[Account | AccountGroup, ...]:
         return tuple(node.item for node in self._root_nodes)
+
+    @property
+    def visible_accounts(self) -> tuple[Account, ...]:
+        return tuple(get_visible_leaf_items(self._root_nodes, []))
 
     @root_items.setter
     def root_items(self, root_items: Sequence[Account | AccountGroup]) -> None:
@@ -354,7 +372,7 @@ class AccountTreeModel(QAbstractItemModel):
         return None
 
     def _tree_clicked(self, index: QModelIndex) -> None:  # noqa: U100
-        self.timer.set_timeout_callable(self.toggle_visibility)
+        self.timer.set_timeout_callable(self.signal_toggle_visibility.emit)
         self.timer.start()
 
     def _tree_double_clicked(self, index: QModelIndex) -> None:  # noqa: U100
