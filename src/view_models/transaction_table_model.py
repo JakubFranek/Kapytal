@@ -54,7 +54,7 @@ class TransactionTableModel(QAbstractTableModel):
         return len(self.transactions)
 
     def columnCount(self, index: QModelIndex = ...) -> int:  # noqa: U100
-        return 17
+        return 15
 
     def index(
         self, row: int, column: int, parent: QModelIndex = ...  # noqa: U100
@@ -149,16 +149,32 @@ class TransactionTableModel(QAbstractTableModel):
             return transaction.description
         if column == TransactionTableColumns.COLUMN_TYPE:
             return TransactionTableModel._get_transaction_type(transaction)
-        if column == TransactionTableColumns.COLUMN_ACCOUNT:
-            return TransactionTableModel._get_transaction_account(transaction)
-        if column == TransactionTableColumns.COLUMN_SENDER:
-            return TransactionTableModel._get_transfer_account(transaction, sender=True)
-        if column == TransactionTableColumns.COLUMN_RECIPIENT:
-            return TransactionTableModel._get_transfer_account(
-                transaction, sender=False
-            )
-        if column == TransactionTableColumns.COLUMN_PAYEE:
-            return TransactionTableModel._get_transaction_payee(transaction)
+        if column == TransactionTableColumns.COLUMN_FROM:
+            if isinstance(transaction, CashTransaction):
+                if transaction.type_ == CashTransactionType.INCOME:
+                    return transaction.payee.name
+                return transaction.account.path
+            if isinstance(transaction, RefundTransaction):
+                return transaction.payee.name
+            if isinstance(transaction, SecurityTransaction):
+                if transaction.type_ == SecurityTransactionType.BUY:
+                    return transaction.cash_account.path
+                return transaction.security_account.path
+            if isinstance(transaction, (CashTransfer, SecurityTransfer)):
+                return transaction.sender.path
+        if column == TransactionTableColumns.COLUMN_TO:
+            if isinstance(transaction, CashTransaction):
+                if transaction.type_ == CashTransactionType.INCOME:
+                    return transaction.account.path
+                return transaction.payee.name
+            if isinstance(transaction, RefundTransaction):
+                return transaction.account.path
+            if isinstance(transaction, SecurityTransaction):
+                if transaction.type_ == SecurityTransactionType.BUY:
+                    return transaction.security_account.path
+                return transaction.cash_account.path
+            if isinstance(transaction, (CashTransfer, SecurityTransfer)):
+                return transaction.recipient.path
         if column == TransactionTableColumns.COLUMN_SECURITY:
             return TransactionTableModel._get_transaction_security(transaction)
         if column == TransactionTableColumns.COLUMN_SHARES:
@@ -203,6 +219,36 @@ class TransactionTableModel(QAbstractTableModel):
                 return QIcon("icons_custom:certificate-minus.png")
             if isinstance(transaction, SecurityTransfer):
                 return QIcon("icons_custom:certificate-arrow.png")
+        if column == TransactionTableColumns.COLUMN_FROM:
+            if isinstance(transaction, CashTransaction):
+                if transaction.type_ == CashTransactionType.INCOME:
+                    return QIcon("icons_16:user-silhouette.png")
+                return QIcon("icons_16:piggy-bank.png")
+            if isinstance(transaction, RefundTransaction):
+                return QIcon("icons_16:user-silhouette.png")
+            if isinstance(transaction, SecurityTransaction):
+                if transaction.type_ == SecurityTransactionType.BUY:
+                    return QIcon("icons_16:piggy-bank.png")
+                return QIcon("icons_16:bank.png")
+            if isinstance(transaction, CashTransfer):
+                return QIcon("icons_16:piggy-bank.png")
+            if isinstance(transaction, SecurityTransfer):
+                return QIcon("icons_16:bank.png")
+        if column == TransactionTableColumns.COLUMN_TO:
+            if isinstance(transaction, CashTransaction):
+                if transaction.type_ == CashTransactionType.INCOME:
+                    return QIcon("icons_16:piggy-bank.png")
+                return QIcon("icons_16:user-silhouette.png")
+            if isinstance(transaction, RefundTransaction):
+                return QIcon("icons_16:piggy-bank.png")
+            if isinstance(transaction, SecurityTransaction):
+                if transaction.type_ == SecurityTransactionType.BUY:
+                    return QIcon("icons_16:bank.png")
+                return QIcon("icons_16:piggy-bank.png")
+            if isinstance(transaction, CashTransfer):
+                return QIcon("icons_16:piggy-bank.png")
+            if isinstance(transaction, SecurityTransfer):
+                return QIcon("icons_16:bank.png")
         return None
 
     def get_user_role_data(self, transaction: Transaction, column: int) -> Any:

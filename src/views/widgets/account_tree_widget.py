@@ -8,6 +8,7 @@ from src.views.constants import AccountTreeColumns
 from src.views.ui_files.widgets.Ui_account_tree_widget import Ui_AccountTreeWidget
 
 
+# TODO: possibility to hide widget completely
 class AccountTreeWidget(QWidget, Ui_AccountTreeWidget):
     signal_selection_changed = pyqtSignal()
     signal_expand_below = pyqtSignal()

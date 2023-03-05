@@ -49,30 +49,26 @@ class TransactionTableColumns(IntEnum):
     COLUMN_DATETIME = 0
     COLUMN_DESCRIPTION = 1
     COLUMN_TYPE = 2
-    COLUMN_ACCOUNT = 3
-    COLUMN_SENDER = 4
-    COLUMN_RECIPIENT = 5
-    COLUMN_PAYEE = 6
-    COLUMN_SECURITY = 7
-    COLUMN_SHARES = 8
-    COLUMN_AMOUNT_NATIVE = 9
-    COLUMN_AMOUNT_BASE = 10
-    COLUMN_AMOUNT_SENT = 11
-    COLUMN_AMOUNT_RECEIVED = 12
-    COLUMN_BALANCE = 13
-    COLUMN_CATEGORY = 14
-    COLUMN_TAG = 15
-    COLUMN_UUID = 16
+    COLUMN_FROM = 3
+    COLUMN_TO = 4
+    COLUMN_SECURITY = 5
+    COLUMN_SHARES = 6
+    COLUMN_AMOUNT_NATIVE = 7
+    COLUMN_AMOUNT_BASE = 8
+    COLUMN_AMOUNT_SENT = 9
+    COLUMN_AMOUNT_RECEIVED = 10
+    COLUMN_BALANCE = 11
+    COLUMN_CATEGORY = 12
+    COLUMN_TAG = 13
+    COLUMN_UUID = 14
 
 
 TRANSACTION_TABLE_COLUMN_HEADERS = {
     TransactionTableColumns.COLUMN_DATETIME: "Date & time",
     TransactionTableColumns.COLUMN_DESCRIPTION: "Description",
     TransactionTableColumns.COLUMN_TYPE: "Type",
-    TransactionTableColumns.COLUMN_ACCOUNT: "Account",
-    TransactionTableColumns.COLUMN_SENDER: "Sender",
-    TransactionTableColumns.COLUMN_RECIPIENT: "Recipient",
-    TransactionTableColumns.COLUMN_PAYEE: "Payee",
+    TransactionTableColumns.COLUMN_FROM: "From",
+    TransactionTableColumns.COLUMN_TO: "To",
     TransactionTableColumns.COLUMN_SECURITY: "Security",
     TransactionTableColumns.COLUMN_SHARES: "Shares",
     TransactionTableColumns.COLUMN_AMOUNT_NATIVE: "Native amount",

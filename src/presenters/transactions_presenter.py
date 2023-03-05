@@ -9,6 +9,8 @@ from src.presenters.utilities.event import Event
 from src.view_models.transaction_table_model import TransactionTableModel
 from src.views.widgets.transaction_table_widget import TransactionTableWidget
 
+# TODO: show/hide columns based on selection
+
 
 class TransactionsPresenter:
     event_data_changed = Event()
