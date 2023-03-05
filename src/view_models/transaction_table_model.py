@@ -3,7 +3,7 @@ from collections.abc import Collection
 from typing import Any
 
 from PyQt6.QtCore import QAbstractTableModel, QModelIndex, QSortFilterProxyModel, Qt
-from PyQt6.QtGui import QBrush, QColor
+from PyQt6.QtGui import QBrush, QColor, QIcon
 from PyQt6.QtWidgets import QTableView
 
 from src.models.base_classes.transaction import Transaction
@@ -76,6 +76,8 @@ class TransactionTableModel(QAbstractTableModel):
 
         if role == Qt.ItemDataRole.DisplayRole:
             return self.get_display_role_data(transaction, column)
+        if role == Qt.ItemDataRole.DecorationRole:
+            return self.get_decoration_role_data(transaction, column)
         if role == Qt.ItemDataRole.TextAlignmentRole:
             return TransactionTableModel.get_text_alignment_data(column)
         if role == Qt.ItemDataRole.ForegroundRole:
@@ -181,6 +183,26 @@ class TransactionTableModel(QAbstractTableModel):
             return TransactionTableModel._get_transaction_tags(transaction)
         if column == TransactionTableColumns.COLUMN_UUID:
             return str(transaction.uuid)
+        return None
+
+    def get_decoration_role_data(
+        self, transaction: Transaction, column: int
+    ) -> QIcon | None:
+        if column == TransactionTableColumns.COLUMN_TYPE:
+            if isinstance(transaction, CashTransaction):
+                if transaction.type_ == CashTransactionType.INCOME:
+                    return QIcon("icons_custom:coins-plus.png")
+                return QIcon("icons_custom:coins-minus.png")
+            if isinstance(transaction, RefundTransaction):
+                return QIcon("icons_custom:coins-arrow-back.png")
+            if isinstance(transaction, CashTransfer):
+                return QIcon("icons_custom:coins-arrow.png")
+            if isinstance(transaction, SecurityTransaction):
+                if transaction.type_ == SecurityTransactionType.BUY:
+                    return QIcon("icons_custom:certificate-plus.png")
+                return QIcon("icons_custom:certificate-minus.png")
+            if isinstance(transaction, SecurityTransfer):
+                return QIcon("icons_custom:certificate-arrow.png")
         return None
 
     def get_user_role_data(self, transaction: Transaction, column: int) -> Any:
