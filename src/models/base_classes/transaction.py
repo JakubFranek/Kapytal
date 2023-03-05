@@ -101,5 +101,9 @@ class Transaction(
         raise NotImplementedError
 
     @abstractmethod
+    def is_accounts_related(self, accounts: Collection["Account"]) -> bool:
+        raise NotImplementedError
+
+    @abstractmethod
     def prepare_for_deletion(self) -> None:
         raise NotImplementedError

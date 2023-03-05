@@ -101,6 +101,7 @@ class Ui_TransactionTableWidget(object):
         self.filterToolButton.setText(_translate("TransactionTableWidget", "..."))
         self.searchLineEdit.setToolTip(_translate("TransactionTableWidget", "<html><head/><body><p>Special characters:<br/>* matches zero or more of any characters<br/>? matches any single character<br/>[...] matches any character within square brackets</p></body></html>"))
         self.searchLineEdit.setPlaceholderText(_translate("TransactionTableWidget", "Search Transactions"))
+        self.tableView.setStatusTip(_translate("TransactionTableWidget", "Transaction Table: right-click to open the context menu"))
         self.actionExpense.setText(_translate("TransactionTableWidget", "Expense"))
         self.actionExpense.setShortcut(_translate("TransactionTableWidget", "E"))
         self.actionIncome.setText(_translate("TransactionTableWidget", "Income"))

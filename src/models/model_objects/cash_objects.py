@@ -139,9 +139,6 @@ class CashAccount(Account):
         self._transactions.sort(key=lambda transaction: transaction.datetime_)
         return tuple(self._transactions)
 
-    def __repr__(self) -> str:
-        return f"CashAccount(path='{self.path}', currency='{self.currency.code}')"
-
     def get_balance(self, currency: Currency) -> CashAmount:
         return self._balance_history[-1][1].convert(currency)
 
@@ -318,7 +315,7 @@ class CashTransaction(CashRelatedTransaction):
     def __repr__(self) -> str:
         return (
             f"CashTransaction({self.type_.name}, "
-            f"account='{self.account.name}', "
+            f"account='{self._account.name}', "
             f"amount={self.amount}, "
             f"category={{{self.category_names}}}, "
             f"{self.datetime_.strftime('%Y-%m-%d')})"
@@ -407,7 +404,10 @@ class CashTransaction(CashRelatedTransaction):
         self._refunds.remove(refund)
 
     def is_account_related(self, account: Account) -> bool:
-        return self.account == account
+        return self._account == account
+
+    def is_accounts_related(self, accounts: Collection[Account]) -> bool:
+        return self._account in accounts
 
     def is_category_related(self, category: Category) -> bool:
         return _is_category_related(self, category)
@@ -755,14 +755,17 @@ class CashTransfer(CashRelatedTransaction):
     def __repr__(self) -> str:
         return (
             f"CashTransfer(sent={self.amount_sent}, "
-            f"sender='{self.sender.name}', "
+            f"sender='{self._sender.name}', "
             f"received={self.amount_received}, "
-            f"recipient='{self.recipient.name}', "
+            f"recipient='{self._recipient.name}', "
             f"{self.datetime_.strftime('%Y-%m-%d')})"
         )
 
     def is_account_related(self, account: Account) -> bool:
-        return self.sender == account or self.recipient == account
+        return self._sender == account or self._recipient == account
+
+    def is_accounts_related(self, accounts: Collection[Account]) -> bool:
+        return self._sender in accounts or self._recipient in accounts
 
     def prepare_for_deletion(self) -> None:
         self._sender.remove_transaction(self)
@@ -1023,14 +1026,17 @@ class RefundTransaction(CashRelatedTransaction):
 
     def __repr__(self) -> str:
         return (
-            f"RefundTransaction(account='{self.account.name}', "
+            f"RefundTransaction(account='{self._account.name}', "
             f"amount={self.amount}, "
             f"category={{{self.category_names}}}, "
             f"{self.datetime_.strftime('%Y-%m-%d')})"
         )
 
     def is_account_related(self, account: "Account") -> bool:
-        return self.account == account
+        return self._account == account
+
+    def is_accounts_related(self, accounts: Collection[Account]) -> bool:
+        return self._account in accounts
 
     def is_category_related(self, category: Category) -> bool:
         return _is_category_related(self, category)

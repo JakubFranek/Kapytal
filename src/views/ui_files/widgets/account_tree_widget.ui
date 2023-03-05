@@ -49,6 +49,34 @@
       </widget>
      </item>
      <item>
+      <widget class="Line" name="verticalLine_1">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QToolButton" name="showAllToolButton">
+       <property name="text">
+        <string>...</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QToolButton" name="hideAllToolButton">
+       <property name="text">
+        <string>...</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="Line" name="verticalLine_2">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QToolButton" name="addAccountGroupToolButton">
        <property name="text">
         <string>...</string>
@@ -92,11 +120,14 @@
        <verstretch>0</verstretch>
       </sizepolicy>
      </property>
+     <property name="statusTip">
+      <string>Account Tree: right-click to open the context menu</string>
+     </property>
      <property name="sizeAdjustPolicy">
       <enum>QAbstractScrollArea::AdjustToContents</enum>
      </property>
      <attribute name="headerMinimumSectionSize">
-      <number>35</number>
+      <number>20</number>
      </attribute>
      <attribute name="headerHighlightSections">
       <bool>true</bool>
@@ -145,6 +176,21 @@
   <action name="actionExpand_All_Below">
    <property name="text">
     <string>Expand All Below</string>
+   </property>
+  </action>
+  <action name="actionShow_All">
+   <property name="text">
+    <string>Show All</string>
+   </property>
+  </action>
+  <action name="actionHide_All">
+   <property name="text">
+    <string>Hide All</string>
+   </property>
+  </action>
+  <action name="actionShow_Selection_Only">
+   <property name="text">
+    <string>Show Selection Only</string>
    </property>
   </action>
  </widget>

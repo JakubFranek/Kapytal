@@ -161,7 +161,7 @@ class TransactionTableModel(QAbstractTableModel):
             return TransactionTableModel._get_transaction_security(transaction)
         if column == TransactionTableColumns.COLUMN_SHARES:
             return TransactionTableModel._get_transaction_shares(transaction)
-        if column == TransactionTableColumns.COLUMN_AMOUNT:
+        if column == TransactionTableColumns.COLUMN_AMOUNT_NATIVE:
             return self._get_transaction_amount_string(transaction, base=False)
         if column == TransactionTableColumns.COLUMN_AMOUNT_BASE:
             return self._get_transaction_amount_string(transaction, base=True)
@@ -188,7 +188,7 @@ class TransactionTableModel(QAbstractTableModel):
             return transaction.datetime_.timestamp()
         if column == TransactionTableColumns.COLUMN_SHARES:
             return TransactionTableModel._get_transaction_shares(transaction)
-        if column == TransactionTableColumns.COLUMN_AMOUNT:
+        if column == TransactionTableColumns.COLUMN_AMOUNT_NATIVE:
             return self._get_transaction_amount_value(transaction, base=False)
         if column == TransactionTableColumns.COLUMN_AMOUNT_BASE:
             return self._get_transaction_amount_value(transaction, base=True)
@@ -207,7 +207,7 @@ class TransactionTableModel(QAbstractTableModel):
     @staticmethod
     def get_text_alignment_data(column: int) -> Qt.AlignmentFlag | None:
         if (
-            column == TransactionTableColumns.COLUMN_AMOUNT
+            column == TransactionTableColumns.COLUMN_AMOUNT_NATIVE
             or column == TransactionTableColumns.COLUMN_AMOUNT_BASE
             or column == TransactionTableColumns.COLUMN_AMOUNT_SENT
             or column == TransactionTableColumns.COLUMN_AMOUNT_RECEIVED
@@ -219,7 +219,7 @@ class TransactionTableModel(QAbstractTableModel):
     @staticmethod
     def get_foreground_data(transaction: Transaction, column: int) -> QBrush | None:
         if (
-            column == TransactionTableColumns.COLUMN_AMOUNT
+            column == TransactionTableColumns.COLUMN_AMOUNT_NATIVE
             or column == TransactionTableColumns.COLUMN_AMOUNT_BASE
         ):
             if isinstance(transaction, CashTransaction):

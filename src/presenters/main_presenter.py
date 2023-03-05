@@ -106,7 +106,7 @@ class MainPresenter:
             )
             self._update_unsaved_changes(False)
 
-            self._add_recent_paths(self._current_file_path)
+            self._add_recent_path(self._current_file_path)
 
             logging.debug(f"Currencies: {len(record_keeper.currencies)}")
             logging.debug(f"Exchange Rates: {len(record_keeper.exchange_rates)}")
@@ -210,6 +210,9 @@ class MainPresenter:
         self._account_tree_presenter.event_data_changed.append(
             lambda: self._update_unsaved_changes(True)
         )
+        self._account_tree_presenter.event_visibility_changed.append(
+            self._update_valid_accounts
+        )
         self._currency_form_presenter.event_base_currency_changed.append(
             self._account_tree_presenter.update_model_data
         )
@@ -273,7 +276,7 @@ class MainPresenter:
             logging.debug(f"Saving Recent Files: {constants.recent_files_path}")
             json.dump(paths_as_str, file, cls=CustomJSONEncoder)
 
-    def _add_recent_paths(self, path: Path) -> None:
+    def _add_recent_path(self, path: Path) -> None:
         logging.debug(f"Adding a Recent File: {path}")
         if path in self._recent_paths:
             self._recent_paths.remove(path)
@@ -283,12 +286,16 @@ class MainPresenter:
         self._update_recent_paths_menu()
 
     def _update_recent_paths_menu(self) -> None:
-        logging.debug("Updating Recent Files menu")
         recent_paths = [str(path) for path in self._recent_paths]
         self._view.set_recent_files_menu(recent_paths)
 
     def _clear_recent_paths(self) -> None:
-        logging.debug("Clearing Recent Files menu")
+        logging.debug("Clearing Recent Files")
         self._recent_paths = []
         self._save_recent_paths()
         self._update_recent_paths_menu()
+
+    def _update_valid_accounts(self) -> None:
+        self._transactions_presenter.valid_accounts = (
+            self._account_tree_presenter.valid_accounts
+        )

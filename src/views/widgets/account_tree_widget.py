@@ -11,11 +11,16 @@ from src.views.ui_files.widgets.Ui_account_tree_widget import Ui_AccountTreeWidg
 class AccountTreeWidget(QWidget, Ui_AccountTreeWidget):
     signal_selection_changed = pyqtSignal()
     signal_expand_below = pyqtSignal()
-    signal_delete_item = pyqtSignal()
+    signal_show_all = pyqtSignal()
+    signal_hide_all = pyqtSignal()
+    signal_show_selection_only = pyqtSignal()
+
     signal_add_account_group = pyqtSignal()
     signal_add_security_account = pyqtSignal()
     signal_add_cash_account = pyqtSignal()
+
     signal_edit_item = pyqtSignal()
+    signal_delete_item = pyqtSignal()
 
     def __init__(self, parent: QWidget | None) -> None:
         super().__init__(parent)
@@ -25,8 +30,10 @@ class AccountTreeWidget(QWidget, Ui_AccountTreeWidget):
         self._set_action_icons()
         self._connect_actions()
 
-        self.treeView.setStatusTip("Account Tree: right click to open the context menu")
         self.treeView.contextMenuEvent = self._create_context_menu
+
+    def refresh(self) -> None:
+        self.treeView.viewport().update()
 
     def expand_all(self) -> None:
         logging.debug("Expanding all AccountTree nodes")
@@ -59,6 +66,7 @@ class AccountTreeWidget(QWidget, Ui_AccountTreeWidget):
         self.menu.addAction(self.actionDelete)
         self.menu.addSeparator()
         self.menu.addAction(self.actionExpand_All_Below)
+        self.menu.addAction(self.actionShow_Selection_Only)
         self.menu.popup(QCursor.pos())
 
     def finalize_setup(self) -> None:
@@ -87,9 +95,15 @@ class AccountTreeWidget(QWidget, Ui_AccountTreeWidget):
         self.actionExpand_All.setIcon(QIcon("icons_custom:arrow-out.png"))
         self.actionExpand_All_Below.setIcon(QIcon("icons_16:arrow-stop-270.png"))
         self.actionCollapse_All.setIcon(QIcon("icons_16:arrow-in.png"))
+
+        self.actionShow_All.setIcon(QIcon("icons_16:eye.png"))
+        self.actionHide_All.setIcon(QIcon("icons_16:eye-close.png"))
+        self.actionShow_Selection_Only.setIcon(QIcon("icons_16:eye-red.png"))
+
         self.actionAdd_Account_Group.setIcon(QIcon("icons_16:folder--plus.png"))
         self.actionAdd_Security_Account.setIcon(QIcon("icons_custom:bank-plus.png"))
         self.actionAdd_Cash_Account.setIcon(QIcon("icons_custom:piggy-bank-plus.png"))
+
         self.actionEdit.setIcon(QIcon("icons_16:pencil.png"))
         self.actionDelete.setIcon(QIcon("icons_16:minus.png"))
 
@@ -97,7 +111,13 @@ class AccountTreeWidget(QWidget, Ui_AccountTreeWidget):
         self.actionExpand_All.triggered.connect(self.expand_all)
         self.actionExpand_All_Below.triggered.connect(self.signal_expand_below.emit)
         self.actionCollapse_All.triggered.connect(self.collapse_all)
-        self.actionDelete.triggered.connect(self.signal_delete_item.emit)
+
+        self.actionShow_All.triggered.connect(self.signal_show_all.emit)
+        self.actionShow_Selection_Only.triggered.connect(
+            self.signal_show_selection_only.emit
+        )
+        self.actionHide_All.triggered.connect(self.signal_hide_all.emit)
+
         self.actionAdd_Account_Group.triggered.connect(
             self.signal_add_account_group.emit
         )
@@ -106,9 +126,14 @@ class AccountTreeWidget(QWidget, Ui_AccountTreeWidget):
         )
         self.actionAdd_Cash_Account.triggered.connect(self.signal_add_cash_account.emit)
         self.actionEdit.triggered.connect(self.signal_edit_item.emit)
+        self.actionDelete.triggered.connect(self.signal_delete_item.emit)
 
         self.expandAllToolButton.setDefaultAction(self.actionExpand_All)
         self.collapseAllToolButton.setDefaultAction(self.actionCollapse_All)
+
+        self.showAllToolButton.setDefaultAction(self.actionShow_All)
+        self.hideAllToolButton.setDefaultAction(self.actionHide_All)
+
         self.addAccountGroupToolButton.setDefaultAction(self.actionAdd_Account_Group)
         self.addCashAccountToolButton.setDefaultAction(self.actionAdd_Cash_Account)
         self.addSecurityAccountToolButton.setDefaultAction(

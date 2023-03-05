@@ -54,7 +54,7 @@ class AccountGroup(NameMixin, GetBalanceMixin, JSONSerializableMixin):
         return self.parent.path + "/" + self.name
 
     def __repr__(self) -> str:
-        return f"AccountGroup(path='{self.path}')"
+        return f"AccountGroup('{self.path}')"
 
     def _add_child(self, child: Self | "Account") -> None:
         max_index = max(sorted(self._children.keys()), default=-1)
