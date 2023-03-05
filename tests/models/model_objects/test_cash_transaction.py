@@ -614,3 +614,13 @@ def test_get_amount_for_tag_not_related(
 ) -> None:
     assume(tag not in transaction.tags)
     assert transaction.get_amount_for_tag(tag) == CashAmount(0, transaction.currency)
+
+
+@given(transaction=cash_transactions(), unrelated_account=cash_accounts())
+def test_is_accounts_related(
+    transaction: CashTransaction, unrelated_account: CashAccount
+) -> None:
+    related_accounts = (transaction.account, unrelated_account)
+    assert transaction.is_accounts_related(related_accounts)
+    unrelated_accounts = (unrelated_account,)
+    assert not transaction.is_accounts_related(unrelated_accounts)

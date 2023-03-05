@@ -633,6 +633,15 @@ def test_edit_refunded_transaction_fail() -> None:
         refunded_transaction.set_attributes()
 
 
+@given(unrelated_account=cash_accounts())
+def test_is_accounts_related(unrelated_account: CashAccount) -> None:
+    transaction = get_preloaded_refund()
+    related_accounts = (transaction.account, unrelated_account)
+    assert transaction.is_accounts_related(related_accounts)
+    unrelated_accounts = (unrelated_account,)
+    assert not transaction.is_accounts_related(unrelated_accounts)
+
+
 def get_preloaded_refund() -> RefundTransaction:
     refunded_transaction = get_preloaded_expense()
     refunded_account = get_refunded_account()

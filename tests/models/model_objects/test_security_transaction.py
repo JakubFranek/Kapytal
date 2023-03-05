@@ -565,6 +565,30 @@ def test_set_attributes_invalid_amount_currency(data: st.DataObject) -> None:
         transaction.set_attributes(price_per_share=amount)
 
 
+@given(
+    unrelated_cash_account=cash_accounts(),
+    unrelated_security_account=security_accounts(),
+)
+def test_is_accounts_related(
+    unrelated_cash_account: CashAccount, unrelated_security_account: SecurityAccount
+) -> None:
+    transaction = get_buy()
+    related_accounts = (
+        transaction.cash_account,
+        unrelated_cash_account,
+        unrelated_security_account,
+    )
+    assert transaction.is_accounts_related(related_accounts)
+    related_accounts = (
+        transaction.security_account,
+        unrelated_cash_account,
+        unrelated_security_account,
+    )
+    assert transaction.is_accounts_related(related_accounts)
+    unrelated_accounts = (unrelated_cash_account, unrelated_security_account)
+    assert not transaction.is_accounts_related(unrelated_accounts)
+
+
 def get_sell() -> SecurityTransaction:
     buy = get_buy()
     description = "A Sell transaction"

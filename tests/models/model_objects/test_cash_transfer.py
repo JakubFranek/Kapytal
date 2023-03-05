@@ -226,3 +226,17 @@ def test_set_attributes_same_values(transfer: CashTransfer) -> None:
     assert prev_recipient == transfer.recipient
     assert prev_amount_sent == transfer.amount_sent
     assert prev_amount_received == transfer.amount_received
+
+
+@given(transaction=cash_transfers(), unrelated_account=cash_accounts())
+def test_is_accounts_related(
+    transaction: CashTransfer, unrelated_account: CashAccount
+) -> None:
+    related_accounts = (transaction.sender, unrelated_account)
+    assert transaction.is_accounts_related(related_accounts)
+    related_accounts = (transaction.recipient, unrelated_account)
+    assert transaction.is_accounts_related(related_accounts)
+    related_accounts = (transaction.sender, transaction.recipient, unrelated_account)
+    assert transaction.is_accounts_related(related_accounts)
+    unrelated_accounts = (unrelated_account,)
+    assert not transaction.is_accounts_related(unrelated_accounts)

@@ -152,3 +152,17 @@ def test_set_attribues_same_values(transfer: SecurityTransfer) -> None:
 def test_set_attribues_same_accounts(transfer: SecurityTransfer) -> None:
     with pytest.raises(TransferSameAccountError):
         transfer.set_attributes(recipient=transfer.sender)
+
+
+@given(transaction=security_transfers(), unrelated_account=security_accounts())
+def test_is_accounts_related(
+    transaction: SecurityTransfer, unrelated_account: SecurityAccount
+) -> None:
+    related_accounts = (transaction.sender, unrelated_account)
+    assert transaction.is_accounts_related(related_accounts)
+    related_accounts = (transaction.recipient, unrelated_account)
+    assert transaction.is_accounts_related(related_accounts)
+    related_accounts = (transaction.sender, transaction.recipient, unrelated_account)
+    assert transaction.is_accounts_related(related_accounts)
+    unrelated_accounts = (unrelated_account,)
+    assert not transaction.is_accounts_related(unrelated_accounts)

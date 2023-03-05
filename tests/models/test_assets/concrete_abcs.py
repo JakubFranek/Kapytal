@@ -1,3 +1,4 @@
+from collections.abc import Collection
 from datetime import datetime
 from typing import Any, Self
 
@@ -13,6 +14,9 @@ class ConcreteTransaction(Transaction):
 
     def is_account_related(self, account: Account) -> bool:
         return super().is_account_related(account)
+
+    def is_accounts_related(self, accounts: Collection[Account]) -> bool:
+        return super().is_account_related(accounts)
 
     def prepare_for_deletion(self) -> None:
         return super().prepare_for_deletion()
