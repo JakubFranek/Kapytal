@@ -67,7 +67,23 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
 
     @property
     def accounts(self) -> tuple[Account, ...]:
-        return tuple(self._accounts)
+        _accounts = []
+        return tuple(
+            RecordKeeper._get_accounts_recursively(self._root_account_items, _accounts)
+        )
+
+    @staticmethod
+    def _get_accounts_recursively(
+        account_items: Collection[Account | AccountGroup], accounts_list: list[Account]
+    ) -> list[Account]:
+        for account_item in account_items:
+            if isinstance(account_item, Account):
+                accounts_list.append(account_item)
+            else:
+                accounts_list = RecordKeeper._get_accounts_recursively(
+                    account_item.children, accounts_list
+                )
+        return accounts_list
 
     @property
     def account_groups(self) -> tuple[AccountGroup, ...]:

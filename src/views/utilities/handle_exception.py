@@ -37,7 +37,7 @@ def handle_uncaught_exception(
 
 def display_error_message(
     text: str,
-    exc_details: str,
+    exc_details: str = "",
     critical: bool = False,
     title: str = "Error!",
 ) -> None:
@@ -50,5 +50,6 @@ def display_error_message(
         message_box.setWindowIcon(QIcon("icons_24:exclamation.png"))
     message_box.setWindowTitle(title)
     message_box.setText(text)
-    message_box.setDetailedText(exc_details)
+    if exc_details:
+        message_box.setDetailedText(exc_details)
     message_box.exec()

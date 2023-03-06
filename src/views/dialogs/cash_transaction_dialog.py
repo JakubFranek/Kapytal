@@ -13,26 +13,38 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from src.models.model_objects.cash_objects import CashTransactionType
+from src.models.base_classes.account import Account
+from src.models.model_objects.cash_objects import CashAccount, CashTransactionType
+from src.models.model_objects.security_objects import SecurityAccount
 from src.views.ui_files.dialogs.Ui_cash_transaction_dialog import (
     Ui_CashTransactionDialog,
 )
 
+# TODO: set max text lengths
 
-class AccountGroupDialog(QDialog, Ui_CashTransactionDialog):
+
+class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
     signal_create_and_close = pyqtSignal()
     signal_create_and_continue = pyqtSignal()
+
+    signal_account_changed = pyqtSignal()
 
     def __init__(
         self,
         parent: QWidget,
-        accounts: Collection[str],
+        accounts: Collection[Account],
+        payees: Collection[str],
         categories: Collection[str],
         tags: Collection[str],
+        type_: CashTransactionType,
         edit: bool,
     ) -> None:
         super().__init__(parent=parent)
         self.setupUi(self)
+
+        self.payees_completer = QCompleter(payees)
+        self.payees_completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+        self.payeeLineEdit.setCompleter(self.payees_completer)
 
         self.categories_completer = QCompleter(categories)
         self.categories_completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
@@ -50,7 +62,17 @@ class AccountGroupDialog(QDialog, Ui_CashTransactionDialog):
             self.setWindowIcon(QIcon("icons_custom:coins.png"))
 
         for account in accounts:
-            self.accountsComboBox.addItem(account)
+            if isinstance(account, CashAccount):
+                icon = QIcon("icons_16:piggy-bank.png")
+            elif isinstance(account, SecurityAccount):
+                icon = QIcon("icons_16:bank.png")
+            else:
+                raise TypeError("Unexpected Account type.")
+            self.accountsComboBox.addItem(icon, account.path)
+
+        self.accountsComboBox.currentTextChanged.connect(
+            self.signal_account_changed.emit
+        )
 
         self.buttonBox.clicked.connect(self._handle_button_box_click)
         self.buttonBox.addButton(
@@ -60,6 +82,8 @@ class AccountGroupDialog(QDialog, Ui_CashTransactionDialog):
             "Create && Close", QDialogButtonBox.ButtonRole.AcceptRole
         )
         self.buttonBox.addButton("Close", QDialogButtonBox.ButtonRole.RejectRole)
+
+        self.type_ = type_
 
     @property
     def type_(self) -> CashTransactionType:
@@ -88,6 +112,14 @@ class AccountGroupDialog(QDialog, Ui_CashTransactionDialog):
         self.accountsComboBox.setCurrentText(account)
 
     @property
+    def payee(self) -> str:
+        return self.payeeLineEdit.text()
+
+    @payee.setter
+    def payee(self, payee: str) -> None:
+        self.payeeLineEdit.setText(payee)
+
+    @property
     def datetime_(self) -> datetime:
         return self.dateTimeEdit.dateTime().toPyDateTime()
 
@@ -112,6 +144,22 @@ class AccountGroupDialog(QDialog, Ui_CashTransactionDialog):
         self.amountDoubleSpinBox.setValue(amount)
 
     @property
+    def currency_code(self) -> str:
+        self.amountDoubleSpinBox.suffix()
+
+    @currency_code.setter
+    def currency_code(self, code: str) -> None:
+        self.amountDoubleSpinBox.setSuffix(" " + code)
+
+    @property
+    def amount_decimals(self) -> int:
+        self.amountDoubleSpinBox.decimals()
+
+    @amount_decimals.setter
+    def amount_decimals(self, value: int) -> None:
+        self.amountDoubleSpinBox.setDecimals(value)
+
+    @property
     def category(self) -> str:
         return self.categoryLineEdit.text()
 
@@ -134,7 +182,7 @@ class AccountGroupDialog(QDialog, Ui_CashTransactionDialog):
         role = self.buttonBox.buttonRole(button)
         if role == QDialogButtonBox.ButtonRole.AcceptRole:
             self.signal_create_and_close.emit()
-        if role == QDialogButtonBox.ButtonRole.ApplyRole:
+        elif role == QDialogButtonBox.ButtonRole.ApplyRole:
             self.signal_create_and_continue.emit()
         elif role == QDialogButtonBox.ButtonRole.RejectRole:
             self.reject()

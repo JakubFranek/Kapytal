@@ -77,26 +77,37 @@
       </widget>
      </item>
      <item row="1" column="1">
-      <widget class="QComboBox" name="accountsComboBox"/>
+      <widget class="QComboBox" name="accountsComboBox">
+       <property name="editable">
+        <bool>false</bool>
+       </property>
+      </widget>
      </item>
-     <item row="3" column="0">
+     <item row="4" column="0">
       <widget class="QLabel" name="descriptionLabel">
        <property name="text">
         <string>Description</string>
        </property>
       </widget>
      </item>
-     <item row="3" column="1">
-      <widget class="QPlainTextEdit" name="descriptionPlainTextEdit"/>
+     <item row="4" column="1">
+      <widget class="QPlainTextEdit" name="descriptionPlainTextEdit">
+       <property name="tabChangesFocus">
+        <bool>true</bool>
+       </property>
+       <property name="placeholderText">
+        <string>Enter optional description</string>
+       </property>
+      </widget>
      </item>
-     <item row="4" column="0">
+     <item row="5" column="0">
       <widget class="QLabel" name="amountLabel">
        <property name="text">
         <string>Amount</string>
        </property>
       </widget>
      </item>
-     <item row="4" column="1">
+     <item row="5" column="1">
       <widget class="QDoubleSpinBox" name="amountDoubleSpinBox">
        <property name="alignment">
         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -106,31 +117,35 @@
        </property>
       </widget>
      </item>
-     <item row="5" column="0">
+     <item row="6" column="0">
       <widget class="QLabel" name="categoryLabel">
        <property name="text">
         <string>Category</string>
        </property>
       </widget>
      </item>
-     <item row="5" column="1">
-      <widget class="QLineEdit" name="categoryLineEdit"/>
+     <item row="6" column="1">
+      <widget class="QLineEdit" name="categoryLineEdit">
+       <property name="placeholderText">
+        <string>Enter Category path</string>
+       </property>
+      </widget>
      </item>
-     <item row="6" column="0">
+     <item row="7" column="0">
       <widget class="QLabel" name="tagsLabel">
        <property name="text">
         <string>Tags</string>
        </property>
       </widget>
      </item>
-     <item row="2" column="0">
+     <item row="3" column="0">
       <widget class="QLabel" name="dateTimeLabel">
        <property name="text">
         <string>Date &amp; Time</string>
        </property>
       </widget>
      </item>
-     <item row="2" column="1">
+     <item row="3" column="1">
       <widget class="QDateTimeEdit" name="dateTimeEdit">
        <property name="wrapping">
         <bool>false</bool>
@@ -152,8 +167,26 @@
        </property>
       </widget>
      </item>
-     <item row="6" column="1">
-      <widget class="QLineEdit" name="tagsLineEdit"/>
+     <item row="7" column="1">
+      <widget class="QLineEdit" name="tagsLineEdit">
+       <property name="placeholderText">
+        <string>Enter Tag names (separator &quot;,&quot; or &quot;;&quot;)</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="payeeLabel">
+       <property name="text">
+        <string>Payee</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="QLineEdit" name="payeeLineEdit">
+       <property name="placeholderText">
+        <string>Enter Payee name</string>
+       </property>
+      </widget>
      </item>
     </layout>
    </item>
@@ -166,6 +199,17 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>incomeRadioButton</tabstop>
+  <tabstop>expenseRadioButton</tabstop>
+  <tabstop>accountsComboBox</tabstop>
+  <tabstop>payeeLineEdit</tabstop>
+  <tabstop>dateTimeEdit</tabstop>
+  <tabstop>descriptionPlainTextEdit</tabstop>
+  <tabstop>amountDoubleSpinBox</tabstop>
+  <tabstop>categoryLineEdit</tabstop>
+  <tabstop>tagsLineEdit</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

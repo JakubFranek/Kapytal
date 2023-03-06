@@ -1,12 +1,15 @@
 import logging
 from collections.abc import Collection
+from datetime import datetime
 
 from PyQt6.QtCore import QSortFilterProxyModel, Qt
 
+import src.models.user_settings.user_settings as user_settings
 from src.models.base_classes.account import Account
 from src.models.model_objects.cash_objects import (
     CashAccount,
     CashTransaction,
+    CashTransactionType,
     CashTransfer,
     RefundTransaction,
 )
@@ -15,6 +18,8 @@ from src.models.record_keeper import RecordKeeper
 from src.presenters.utilities.event import Event
 from src.view_models.transaction_table_model import TransactionTableModel
 from src.views.constants import TransactionTableColumn
+from src.views.dialogs.cash_transaction_dialog import CashTransactionDialog
+from src.views.utilities.handle_exception import display_error_message
 from src.views.widgets.transaction_table_widget import TransactionTableWidget
 
 
@@ -28,26 +33,9 @@ class TransactionsPresenter:
         self._record_keeper = record_keeper
         self._valid_accounts = record_keeper.accounts
 
-        self._proxy_model = QSortFilterProxyModel(self._view.tableView)
-        self._model = TransactionTableModel(
-            self._view.tableView,
-            [],
-            self._record_keeper.base_currency,
-            self._proxy_model,
-        )
-        self.update_model_data()
-        self._proxy_model.setSourceModel(self._model)
-        self._proxy_model.setSortRole(Qt.ItemDataRole.UserRole)
-        self._proxy_model.setSortCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
-        self._proxy_model.sort(0, Qt.SortOrder.DescendingOrder)
-        self._proxy_model.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
-        self._proxy_model.setFilterKeyColumn(-1)
-
-        self._view.tableView.setModel(self._proxy_model)
-        self._view.resize_table_to_contents()
-        self._view.set_column_visibility(TransactionTableColumn.COLUMN_UUID, False)
-
-        self._view.signal_search_text_changed.connect(self._filter)
+        self._setup_model()
+        self._setup_view()
+        self._connect_signals()
 
     @property
     def valid_accounts(self) -> tuple[Account, ...]:
@@ -118,3 +106,69 @@ class TransactionsPresenter:
         pattern = self._view.search_bar_text
         logging.debug(f"Filtering Transaction: {pattern=}")
         self._proxy_model.setFilterWildcard(pattern)
+
+    def _setup_model(self) -> None:
+        self._proxy_model = QSortFilterProxyModel(self._view.tableView)
+        self._model = TransactionTableModel(
+            self._view.tableView,
+            [],
+            self._record_keeper.base_currency,
+            self._proxy_model,
+        )
+        self.update_model_data()
+        self._proxy_model.setSourceModel(self._model)
+        self._proxy_model.setSortRole(Qt.ItemDataRole.UserRole)
+        self._proxy_model.setSortCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+        self._proxy_model.sort(0, Qt.SortOrder.DescendingOrder)
+        self._proxy_model.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+        self._proxy_model.setFilterKeyColumn(-1)
+
+        self._view.tableView.setModel(self._proxy_model)
+
+    def _setup_view(self) -> None:
+        self._view.resize_table_to_contents()
+        self._view.set_column_visibility(TransactionTableColumn.COLUMN_UUID, False)
+
+    def _connect_signals(self) -> None:
+        self._view.signal_search_text_changed.connect(self._filter)
+
+        self._view.signal_income.connect(
+            lambda: self._add_cash_transaction(CashTransactionType.INCOME)
+        )
+        self._view.signal_expense.connect(
+            lambda: self._add_cash_transaction(CashTransactionType.EXPENSE)
+        )
+
+    def _add_cash_transaction(self, type_: CashTransactionType) -> None:
+        accounts = [
+            account
+            for account in self._record_keeper.accounts
+            if isinstance(account, CashAccount)
+        ]
+        if len(accounts) == 0:
+            display_error_message(
+                "Create at least one Cash Account first!", title="Warning"
+            )
+            return
+
+        payees = [payee.name for payee in self._record_keeper.payees]
+        categories = [category.path for category in self._record_keeper.categories]
+        tags = [tag.name for tag in self._record_keeper.tags]
+        self._dialog = CashTransactionDialog(
+            self._view, accounts, payees, categories, tags, type_, edit=False
+        )
+        self._dialog.datetime_ = datetime.now(user_settings.settings.time_zone)
+        self._dialog.signal_account_changed.connect(self._dialog_account_changed)
+        self._dialog_account_changed()
+        self._dialog.exec()
+
+    def _dialog_account_changed(self) -> None:
+        account_path = self._dialog.account
+        for account in self._record_keeper.accounts:
+            if account.path == account_path:
+                _account: CashAccount = account
+                break
+        else:
+            raise ValueError(f"Invalid Account path: {account_path}")
+        self._dialog.currency_code = _account.currency.code
+        self._dialog.amount_decimals = _account.currency.places
