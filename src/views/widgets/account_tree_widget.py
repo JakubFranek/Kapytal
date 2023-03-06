@@ -55,6 +55,7 @@ class AccountTreeWidget(QWidget, Ui_AccountTreeWidget):
         self.actionEdit.setEnabled(enable_modify_object)
         self.actionDelete.setEnabled(enable_modify_object)
         self.actionExpand_All_Below.setEnabled(enable_expand_below)
+        self.actionShow_Selection_Only.setEnabled(enable_modify_object)
 
     def _create_context_menu(self, event: QContextMenuEvent) -> None:  # noqa: U100
         self.menu = QMenu(self)

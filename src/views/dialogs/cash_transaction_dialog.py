@@ -42,17 +42,25 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
         super().__init__(parent=parent)
         self.setupUi(self)
 
-        self.payees_completer = QCompleter(payees)
-        self.payees_completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
-        self.payeeLineEdit.setCompleter(self.payees_completer)
+        self._payees_completer = QCompleter(payees)
+        self._payees_completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+        self._payees_completer.setFilterMode(Qt.MatchFlag.MatchContains)
+        self.payeeLineEdit.setCompleter(self._payees_completer)
 
-        self.categories_completer = QCompleter(categories)
-        self.categories_completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
-        self.categoryLineEdit.setCompleter(self.categories_completer)
+        self._categories_completer = QCompleter(categories)
+        self._categories_completer.setCaseSensitivity(
+            Qt.CaseSensitivity.CaseInsensitive
+        )
+        self._categories_completer.setFilterMode(Qt.MatchFlag.MatchContains)
+        self.categoryLineEdit.setCompleter(self._categories_completer)
 
-        self.tags_completer = QCompleter(tags)
-        self.tags_completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
-        self.tagsLineEdit.setCompleter(self.tags_completer)
+        self._tags_completer = QCompleter(tags)
+        self._tags_completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+        self._tags_completer.setFilterMode(Qt.MatchFlag.MatchContains)
+        self._tags_completer.setWidget(self.tagsLineEdit)
+        self._tags_completer.activated.connect(self._handle_tags_completion)
+        self.tagsLineEdit.textChanged.connect(self._handle_tags_text_changed)
+        self._tags_completing = False
 
         if edit:
             self.setWindowTitle("Edit Cash Transaction")
@@ -192,3 +200,24 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
     def reject(self) -> None:
         logging.debug(f"Closing {self.__class__.__name__}")
         return super().reject()
+
+    def _handle_tags_text_changed(self, text: str) -> None:
+        if not self._tags_completing:
+            found = False
+            prefix = text.rpartition(";")[-1].strip()
+            if len(prefix) > 0:
+                self._tags_completer.setCompletionPrefix(prefix)
+                if self._tags_completer.currentRow() >= 0:
+                    found = True
+            if found:
+                self._tags_completer.complete()
+            else:
+                self._tags_completer.popup().hide()
+
+    def _handle_tags_completion(self, text: str) -> None:
+        if not self._tags_completing:
+            self._tags_completing = True
+            prefix = self._tags_completer.completionPrefix()
+            final_text = self.tagsLineEdit.text()[: -len(prefix)] + text
+            self.tagsLineEdit.setText(final_text)
+            self._tags_completing = False

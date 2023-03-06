@@ -112,6 +112,9 @@
        <property name="alignment">
         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
        </property>
+       <property name="showGroupSeparator" stdset="0">
+        <bool>true</bool>
+       </property>
        <property name="maximum">
         <double>10000000000000000.000000000000000</double>
        </property>
@@ -170,7 +173,7 @@
      <item row="7" column="1">
       <widget class="QLineEdit" name="tagsLineEdit">
        <property name="placeholderText">
-        <string>Enter Tag names (separator &quot;,&quot; or &quot;;&quot;)</string>
+        <string>Enter Tag names (separator &quot;;&quot;)</string>
        </property>
       </widget>
      </item>
