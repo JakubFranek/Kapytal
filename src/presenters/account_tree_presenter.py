@@ -41,9 +41,11 @@ class AccountTreePresenter:
         return self._model.visible_accounts
 
     def set_widget_visibility(self, visible: bool) -> None:
-        if visible:
+        if visible and self._view.isHidden():
+            logging.debug("Showing AccountTreeWidget")
             self._view.show()
-        else:
+        elif not visible and not self._view.isHidden():
+            logging.debug("Hiding AccountTreeWidget")
             self._view.hide()
 
     def load_record_keeper(self, record_keeper: RecordKeeper) -> None:

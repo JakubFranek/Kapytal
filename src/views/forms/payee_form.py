@@ -4,7 +4,7 @@ from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QCloseEvent, QIcon
 from PyQt6.QtWidgets import QHeaderView, QLineEdit, QWidget
 
-from src.views.constants import PayeeTableColumns
+from src.views.constants import PayeeTableColumn
 from src.views.ui_files.forms.Ui_payee_form import Ui_PayeeForm
 
 
@@ -52,21 +52,21 @@ class PayeeForm(QWidget, Ui_PayeeForm):
     def finalize_setup(self) -> None:
         self.tableView.horizontalHeader().setStretchLastSection(False)
         self.tableView.horizontalHeader().setSectionResizeMode(
-            PayeeTableColumns.COLUMN_NAME,
+            PayeeTableColumn.COLUMN_NAME,
             QHeaderView.ResizeMode.ResizeToContents,
         )
         self.tableView.horizontalHeader().setSectionResizeMode(
-            PayeeTableColumns.COLUMN_TRANSACTIONS,
+            PayeeTableColumn.COLUMN_TRANSACTIONS,
             QHeaderView.ResizeMode.ResizeToContents,
         )
         self.tableView.horizontalHeader().setSectionResizeMode(
-            PayeeTableColumns.COLUMN_BALANCE,
+            PayeeTableColumn.COLUMN_BALANCE,
             QHeaderView.ResizeMode.Stretch,
         )
 
         style = self.style()
         lastSectionText = self.tableView.model().headerData(
-            PayeeTableColumns.COLUMN_BALANCE,
+            PayeeTableColumn.COLUMN_BALANCE,
             Qt.Orientation.Horizontal,
             Qt.ItemDataRole.DisplayRole,
         )

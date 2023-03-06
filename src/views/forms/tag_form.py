@@ -4,7 +4,7 @@ from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QCloseEvent, QIcon
 from PyQt6.QtWidgets import QHeaderView, QLineEdit, QWidget
 
-from src.views.constants import TagTableColumns
+from src.views.constants import TagTableColumn
 from src.views.ui_files.forms.Ui_tag_form import Ui_TagForm
 
 
@@ -52,21 +52,21 @@ class TagForm(QWidget, Ui_TagForm):
     def finalize_setup(self) -> None:
         self.tableView.horizontalHeader().setStretchLastSection(False)
         self.tableView.horizontalHeader().setSectionResizeMode(
-            TagTableColumns.COLUMN_NAME,
+            TagTableColumn.COLUMN_NAME,
             QHeaderView.ResizeMode.ResizeToContents,
         )
         self.tableView.horizontalHeader().setSectionResizeMode(
-            TagTableColumns.COLUMN_TRANSACTIONS,
+            TagTableColumn.COLUMN_TRANSACTIONS,
             QHeaderView.ResizeMode.ResizeToContents,
         )
         self.tableView.horizontalHeader().setSectionResizeMode(
-            TagTableColumns.COLUMN_BALANCE,
+            TagTableColumn.COLUMN_BALANCE,
             QHeaderView.ResizeMode.Stretch,
         )
 
         style = self.style()
         lastSectionText = self.tableView.model().headerData(
-            TagTableColumns.COLUMN_BALANCE,
+            TagTableColumn.COLUMN_BALANCE,
             Qt.Orientation.Horizontal,
             Qt.ItemDataRole.DisplayRole,
         )

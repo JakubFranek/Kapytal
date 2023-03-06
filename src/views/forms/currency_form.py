@@ -4,7 +4,7 @@ from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QCloseEvent, QIcon
 from PyQt6.QtWidgets import QHeaderView, QWidget
 
-from src.views.constants import ExchangeRateTableColumns
+from src.views.constants import ExchangeRateTableColumn
 from src.views.ui_files.forms.Ui_currency_form import Ui_CurrencyForm
 
 
@@ -58,21 +58,21 @@ class CurrencyForm(QWidget, Ui_CurrencyForm):
     def finalize_setup(self) -> None:
         self.exchangeRateTable.horizontalHeader().setStretchLastSection(False)
         self.exchangeRateTable.horizontalHeader().setSectionResizeMode(
-            ExchangeRateTableColumns.COLUMN_CODE,
+            ExchangeRateTableColumn.COLUMN_CODE,
             QHeaderView.ResizeMode.ResizeToContents,
         )
         self.exchangeRateTable.horizontalHeader().setSectionResizeMode(
-            ExchangeRateTableColumns.COLUMN_RATE,
+            ExchangeRateTableColumn.COLUMN_RATE,
             QHeaderView.ResizeMode.ResizeToContents,
         )
         self.exchangeRateTable.horizontalHeader().setSectionResizeMode(
-            ExchangeRateTableColumns.COLUMN_LAST_DATE,
+            ExchangeRateTableColumn.COLUMN_LAST_DATE,
             QHeaderView.ResizeMode.Stretch,
         )
 
         style = self.style()
         lastSectionText = self.exchangeRateTable.model().headerData(
-            ExchangeRateTableColumns.COLUMN_LAST_DATE,
+            ExchangeRateTableColumn.COLUMN_LAST_DATE,
             Qt.Orientation.Horizontal,
             Qt.ItemDataRole.DisplayRole,
         )

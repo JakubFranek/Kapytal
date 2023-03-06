@@ -5,7 +5,7 @@ from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtGui import QContextMenuEvent, QCursor, QIcon
 from PyQt6.QtWidgets import QHeaderView, QMenu, QTreeView, QWidget
 
-from src.views.constants import CategoryTreeColumns
+from src.views.constants import CategoryTreeColumn
 
 
 class CategoryTree(QTreeView):
@@ -79,15 +79,15 @@ class CategoryTree(QTreeView):
 
     def finalize_setup(self) -> None:
         self.header().setSectionResizeMode(
-            CategoryTreeColumns.COLUMN_NAME,
+            CategoryTreeColumn.COLUMN_NAME,
             QHeaderView.ResizeMode.ResizeToContents,
         )
         self.header().setSectionResizeMode(
-            CategoryTreeColumns.COLUMN_TRANSACTIONS,
+            CategoryTreeColumn.COLUMN_TRANSACTIONS,
             QHeaderView.ResizeMode.ResizeToContents,
         )
         self.header().setSectionResizeMode(
-            CategoryTreeColumns.COLUMN_BALANCE,
+            CategoryTreeColumn.COLUMN_BALANCE,
             QHeaderView.ResizeMode.Stretch,
         )
 

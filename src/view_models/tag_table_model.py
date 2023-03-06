@@ -7,14 +7,14 @@ from PyQt6.QtWidgets import QTableView
 
 from src.models.model_objects.attributes import Attribute
 from src.models.utilities.calculation import AttributeStats
-from src.views.constants import TagTableColumns
+from src.views.constants import TagTableColumn
 
 
 class TagTableModel(QAbstractTableModel):
     COLUMN_HEADERS = {
-        TagTableColumns.COLUMN_NAME: "Name",
-        TagTableColumns.COLUMN_TRANSACTIONS: "Transactions",
-        TagTableColumns.COLUMN_BALANCE: "Balance",
+        TagTableColumn.COLUMN_NAME: "Name",
+        TagTableColumn.COLUMN_TRANSACTIONS: "Transactions",
+        TagTableColumn.COLUMN_BALANCE: "Balance",
     }
 
     def __init__(
@@ -63,22 +63,22 @@ class TagTableModel(QAbstractTableModel):
         payee_stats = self.tag_stats[index.row()]
 
         if role == Qt.ItemDataRole.DisplayRole:
-            if column == TagTableColumns.COLUMN_NAME:
+            if column == TagTableColumn.COLUMN_NAME:
                 return payee_stats.attribute.name
-            if column == TagTableColumns.COLUMN_TRANSACTIONS:
+            if column == TagTableColumn.COLUMN_TRANSACTIONS:
                 return payee_stats.no_of_transactions
-            if column == TagTableColumns.COLUMN_BALANCE:
+            if column == TagTableColumn.COLUMN_BALANCE:
                 return str(payee_stats.balance)
         if role == Qt.ItemDataRole.UserRole:
-            if column == TagTableColumns.COLUMN_NAME:
+            if column == TagTableColumn.COLUMN_NAME:
                 return unicodedata.normalize("NFD", payee_stats.attribute.name)
-            if column == TagTableColumns.COLUMN_TRANSACTIONS:
+            if column == TagTableColumn.COLUMN_TRANSACTIONS:
                 return payee_stats.no_of_transactions
-            if column == TagTableColumns.COLUMN_BALANCE:
+            if column == TagTableColumn.COLUMN_BALANCE:
                 return float(payee_stats.balance.value_normalized)
         if role == Qt.ItemDataRole.TextAlignmentRole and (
-            column == TagTableColumns.COLUMN_TRANSACTIONS
-            or column == TagTableColumns.COLUMN_BALANCE
+            column == TagTableColumn.COLUMN_TRANSACTIONS
+            or column == TagTableColumn.COLUMN_BALANCE
         ):
             return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
         return None
@@ -91,8 +91,8 @@ class TagTableModel(QAbstractTableModel):
                 return self.COLUMN_HEADERS[section]
             return str(section)
         if role == Qt.ItemDataRole.TextAlignmentRole and (
-            section == TagTableColumns.COLUMN_TRANSACTIONS
-            or section == TagTableColumns.COLUMN_BALANCE
+            section == TagTableColumn.COLUMN_TRANSACTIONS
+            or section == TagTableColumn.COLUMN_BALANCE
         ):
             return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
         return None

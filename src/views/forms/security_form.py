@@ -4,7 +4,7 @@ from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QCloseEvent, QIcon
 from PyQt6.QtWidgets import QHeaderView, QLineEdit, QWidget
 
-from src.views.constants import SecurityTableColumns
+from src.views.constants import SecurityTableColumn
 from src.views.ui_files.forms.Ui_security_form import Ui_SecurityForm
 
 # TODO: add some way to view and edit price history
@@ -58,29 +58,29 @@ class SecurityForm(QWidget, Ui_SecurityForm):
     def finalize_setup(self) -> None:
         self.tableView.horizontalHeader().setStretchLastSection(False)
         self.tableView.horizontalHeader().setSectionResizeMode(
-            SecurityTableColumns.COLUMN_NAME,
+            SecurityTableColumn.COLUMN_NAME,
             QHeaderView.ResizeMode.ResizeToContents,
         )
         self.tableView.horizontalHeader().setSectionResizeMode(
-            SecurityTableColumns.COLUMN_SYMBOL,
+            SecurityTableColumn.COLUMN_SYMBOL,
             QHeaderView.ResizeMode.ResizeToContents,
         )
         self.tableView.horizontalHeader().setSectionResizeMode(
-            SecurityTableColumns.COLUMN_TYPE,
+            SecurityTableColumn.COLUMN_TYPE,
             QHeaderView.ResizeMode.ResizeToContents,
         )
         self.tableView.horizontalHeader().setSectionResizeMode(
-            SecurityTableColumns.COLUMN_PRICE,
+            SecurityTableColumn.COLUMN_PRICE,
             QHeaderView.ResizeMode.ResizeToContents,
         )
         self.tableView.horizontalHeader().setSectionResizeMode(
-            SecurityTableColumns.COLUMN_LAST_DATE,
+            SecurityTableColumn.COLUMN_LAST_DATE,
             QHeaderView.ResizeMode.Stretch,
         )
 
         style = self.style()
         lastSectionText = self.tableView.model().headerData(
-            SecurityTableColumns.COLUMN_LAST_DATE,
+            SecurityTableColumn.COLUMN_LAST_DATE,
             Qt.Orientation.Horizontal,
             Qt.ItemDataRole.DisplayRole,
         )

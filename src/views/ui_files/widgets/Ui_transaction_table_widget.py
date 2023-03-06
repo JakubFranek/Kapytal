@@ -62,6 +62,8 @@ class Ui_TransactionTableWidget(object):
         self.tableView.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)
         self.tableView.setObjectName("tableView")
         self.tableView.horizontalHeader().setHighlightSections(False)
+        self.tableView.horizontalHeader().setSortIndicatorShown(True)
+        self.tableView.horizontalHeader().setStretchLastSection(True)
         self.tableView.verticalHeader().setVisible(False)
         self.verticalLayout.addWidget(self.tableView)
         self.actionExpense = QtGui.QAction(TransactionTableWidget)

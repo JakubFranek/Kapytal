@@ -1,37 +1,37 @@
 from enum import IntEnum
 
 
-class AccountTreeColumns(IntEnum):
+class AccountTreeColumn(IntEnum):
     COLUMN_NAME = 0
     COLUMN_BALANCE_NATIVE = 1
     COLUMN_BALANCE_BASE = 2
     COLUMN_SHOW = 3
 
 
-class CurrencyTableColumns(IntEnum):
+class CurrencyTableColumn(IntEnum):
     COLUMN_CODE = 0
     COLUMN_PLACES = 1
 
 
-class ExchangeRateTableColumns(IntEnum):
+class ExchangeRateTableColumn(IntEnum):
     COLUMN_CODE = 0
     COLUMN_RATE = 1
     COLUMN_LAST_DATE = 2
 
 
-class PayeeTableColumns(IntEnum):
+class PayeeTableColumn(IntEnum):
     COLUMN_NAME = 0
     COLUMN_TRANSACTIONS = 1
     COLUMN_BALANCE = 2
 
 
-class TagTableColumns(IntEnum):
+class TagTableColumn(IntEnum):
     COLUMN_NAME = 0
     COLUMN_TRANSACTIONS = 1
     COLUMN_BALANCE = 2
 
 
-class SecurityTableColumns(IntEnum):
+class SecurityTableColumn(IntEnum):
     COLUMN_NAME = 0
     COLUMN_SYMBOL = 1
     COLUMN_TYPE = 2
@@ -39,13 +39,13 @@ class SecurityTableColumns(IntEnum):
     COLUMN_LAST_DATE = 4
 
 
-class CategoryTreeColumns(IntEnum):
+class CategoryTreeColumn(IntEnum):
     COLUMN_NAME = 0
     COLUMN_TRANSACTIONS = 1
     COLUMN_BALANCE = 2
 
 
-class TransactionTableColumns(IntEnum):
+class TransactionTableColumn(IntEnum):
     COLUMN_DATETIME = 0
     COLUMN_DESCRIPTION = 1
     COLUMN_TYPE = 2
@@ -64,19 +64,19 @@ class TransactionTableColumns(IntEnum):
 
 
 TRANSACTION_TABLE_COLUMN_HEADERS = {
-    TransactionTableColumns.COLUMN_DATETIME: "Date & time",
-    TransactionTableColumns.COLUMN_DESCRIPTION: "Description",
-    TransactionTableColumns.COLUMN_TYPE: "Type",
-    TransactionTableColumns.COLUMN_FROM: "From",
-    TransactionTableColumns.COLUMN_TO: "To",
-    TransactionTableColumns.COLUMN_SECURITY: "Security",
-    TransactionTableColumns.COLUMN_SHARES: "Shares",
-    TransactionTableColumns.COLUMN_AMOUNT_NATIVE: "Native amount",
-    TransactionTableColumns.COLUMN_AMOUNT_BASE: "Base amount",
-    TransactionTableColumns.COLUMN_AMOUNT_SENT: "Amount sent",
-    TransactionTableColumns.COLUMN_AMOUNT_RECEIVED: "Amount received",
-    TransactionTableColumns.COLUMN_BALANCE: "Balance",
-    TransactionTableColumns.COLUMN_CATEGORY: "Category",
-    TransactionTableColumns.COLUMN_TAG: "Tags",
-    TransactionTableColumns.COLUMN_UUID: "UUID",
+    TransactionTableColumn.COLUMN_DATETIME: "Date & time",
+    TransactionTableColumn.COLUMN_DESCRIPTION: "Description",
+    TransactionTableColumn.COLUMN_TYPE: "Type",
+    TransactionTableColumn.COLUMN_FROM: "From",
+    TransactionTableColumn.COLUMN_TO: "To",
+    TransactionTableColumn.COLUMN_SECURITY: "Security",
+    TransactionTableColumn.COLUMN_SHARES: "Shares",
+    TransactionTableColumn.COLUMN_AMOUNT_NATIVE: "Native amount",
+    TransactionTableColumn.COLUMN_AMOUNT_BASE: "Base amount",
+    TransactionTableColumn.COLUMN_AMOUNT_SENT: "Amount sent",
+    TransactionTableColumn.COLUMN_AMOUNT_RECEIVED: "Amount received",
+    TransactionTableColumn.COLUMN_BALANCE: "Balance",
+    TransactionTableColumn.COLUMN_CATEGORY: "Category",
+    TransactionTableColumn.COLUMN_TAG: "Tags",
+    TransactionTableColumn.COLUMN_UUID: "UUID",
 }

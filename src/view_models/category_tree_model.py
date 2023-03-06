@@ -8,14 +8,14 @@ from PyQt6.QtWidgets import QTreeView
 from src.models.model_objects.attributes import Category
 from src.models.model_objects.currency_objects import Currency
 from src.models.utilities.calculation import CategoryStats
-from src.views.constants import CategoryTreeColumns
+from src.views.constants import CategoryTreeColumn
 
 
 class CategoryTreeModel(QAbstractItemModel):
     COLUMN_HEADERS = {
-        CategoryTreeColumns.COLUMN_NAME: "Name",
-        CategoryTreeColumns.COLUMN_TRANSACTIONS: "Transactions",
-        CategoryTreeColumns.COLUMN_BALANCE: "Balance",
+        CategoryTreeColumn.COLUMN_NAME: "Name",
+        CategoryTreeColumn.COLUMN_TRANSACTIONS: "Transactions",
+        CategoryTreeColumn.COLUMN_BALANCE: "Balance",
     }
 
     def __init__(
@@ -102,23 +102,23 @@ class CategoryTreeModel(QAbstractItemModel):
         category: Category = index.internalPointer()
         stats = self._get_category_stats(category)
         if role == Qt.ItemDataRole.DisplayRole:
-            if column == CategoryTreeColumns.COLUMN_NAME:
+            if column == CategoryTreeColumn.COLUMN_NAME:
                 return category.name
-            if column == CategoryTreeColumns.COLUMN_TRANSACTIONS:
+            if column == CategoryTreeColumn.COLUMN_TRANSACTIONS:
                 if len(category.children) == 0:
                     return f"{stats.transactions_total}"
                 return f"{stats.transactions_total} ({stats.transactions_self})"
-            if column == CategoryTreeColumns.COLUMN_BALANCE:
+            if column == CategoryTreeColumn.COLUMN_BALANCE:
                 return str(stats.balance.convert(self.base_currency))
         if (
             role == Qt.ItemDataRole.UserRole
-            and column == CategoryTreeColumns.COLUMN_NAME
+            and column == CategoryTreeColumn.COLUMN_NAME
         ):
             return unicodedata.normalize("NFD", category.name)
         if role == Qt.ItemDataRole.TextAlignmentRole:
-            if column == CategoryTreeColumns.COLUMN_TRANSACTIONS:
+            if column == CategoryTreeColumn.COLUMN_TRANSACTIONS:
                 return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
-            if column == CategoryTreeColumns.COLUMN_BALANCE:
+            if column == CategoryTreeColumn.COLUMN_BALANCE:
                 return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
         return None
 
@@ -126,9 +126,9 @@ class CategoryTreeModel(QAbstractItemModel):
         self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole = ...
     ) -> str | int | None:
         if role == Qt.ItemDataRole.TextAlignmentRole:
-            if section == CategoryTreeColumns.COLUMN_TRANSACTIONS:
+            if section == CategoryTreeColumn.COLUMN_TRANSACTIONS:
                 return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
-            if section == CategoryTreeColumns.COLUMN_BALANCE:
+            if section == CategoryTreeColumn.COLUMN_BALANCE:
                 return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
         if role == Qt.ItemDataRole.DisplayRole:
             if orientation == Qt.Orientation.Horizontal:

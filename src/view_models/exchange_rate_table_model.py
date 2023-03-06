@@ -5,14 +5,14 @@ from PyQt6.QtCore import QAbstractTableModel, QModelIndex, Qt
 from PyQt6.QtWidgets import QTableView
 
 from src.models.model_objects.currency_objects import ExchangeRate
-from src.views.constants import ExchangeRateTableColumns
+from src.views.constants import ExchangeRateTableColumn
 
 
 class ExchangeRateTableModel(QAbstractTableModel):
     COLUMN_HEADERS = {
-        ExchangeRateTableColumns.COLUMN_CODE: "Exchange Rate",
-        ExchangeRateTableColumns.COLUMN_RATE: "Latest rate",
-        ExchangeRateTableColumns.COLUMN_LAST_DATE: "Latest date",
+        ExchangeRateTableColumn.COLUMN_CODE: "Exchange Rate",
+        ExchangeRateTableColumn.COLUMN_RATE: "Latest rate",
+        ExchangeRateTableColumn.COLUMN_LAST_DATE: "Latest date",
     }
 
     def __init__(
@@ -52,22 +52,22 @@ class ExchangeRateTableModel(QAbstractTableModel):
         column = index.column()
         exchange_rate = self.exchange_rates[index.row()]
         if role == Qt.ItemDataRole.DisplayRole:
-            if column == ExchangeRateTableColumns.COLUMN_CODE:
+            if column == ExchangeRateTableColumn.COLUMN_CODE:
                 return str(exchange_rate)
-            if column == ExchangeRateTableColumns.COLUMN_RATE:
+            if column == ExchangeRateTableColumn.COLUMN_RATE:
                 return (
                     f"1 {exchange_rate.primary_currency.code} = "
                     f"{str(exchange_rate.latest_rate)} "
                     f"{exchange_rate.secondary_currency.code}"
                 )
-            if column == ExchangeRateTableColumns.COLUMN_LAST_DATE:
+            if column == ExchangeRateTableColumn.COLUMN_LAST_DATE:
                 latest_date = exchange_rate.latest_date
                 if latest_date is None:
                     return "None"
                 return latest_date.strftime("%Y-%m-%d")
         if (
             role == Qt.ItemDataRole.TextAlignmentRole
-            and column == ExchangeRateTableColumns.COLUMN_RATE
+            and column == ExchangeRateTableColumn.COLUMN_RATE
         ):
             return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
         return None
@@ -80,8 +80,8 @@ class ExchangeRateTableModel(QAbstractTableModel):
                 return self.COLUMN_HEADERS[section]
             return str(section)
         if role == Qt.ItemDataRole.TextAlignmentRole and (
-            section == ExchangeRateTableColumns.COLUMN_LAST_DATE
-            or section == ExchangeRateTableColumns.COLUMN_CODE
+            section == ExchangeRateTableColumn.COLUMN_LAST_DATE
+            or section == ExchangeRateTableColumn.COLUMN_CODE
         ):
             return Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
         return None

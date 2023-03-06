@@ -21,7 +21,7 @@ from src.models.model_objects.currency_objects import (
     Currency,
 )
 from src.models.model_objects.security_objects import SecurityAccount
-from src.views.constants import AccountTreeColumns
+from src.views.constants import AccountTreeColumn
 
 
 def convert_bool_to_checkstate(checked: bool) -> Qt.CheckState:
@@ -123,10 +123,10 @@ def get_visible_leaf_items(
 
 class AccountTreeModel(QAbstractItemModel):
     COLUMN_HEADERS = {
-        AccountTreeColumns.COLUMN_NAME: "Name",
-        AccountTreeColumns.COLUMN_BALANCE_NATIVE: "Native balance",
-        AccountTreeColumns.COLUMN_BALANCE_BASE: "Base balance",
-        AccountTreeColumns.COLUMN_SHOW: "",
+        AccountTreeColumn.COLUMN_NAME: "Name",
+        AccountTreeColumn.COLUMN_BALANCE_NATIVE: "Native balance",
+        AccountTreeColumn.COLUMN_BALANCE_BASE: "Base balance",
+        AccountTreeColumn.COLUMN_SHOW: "",
     }
     signal_show_only_selection = pyqtSignal()
     signal_toggle_visibility = pyqtSignal()
@@ -209,13 +209,13 @@ class AccountTreeModel(QAbstractItemModel):
         node: AccountTreeNode = index.internalPointer()
         item = node.item
         if role == Qt.ItemDataRole.DisplayRole:
-            if column == AccountTreeColumns.COLUMN_NAME:
+            if column == AccountTreeColumn.COLUMN_NAME:
                 return item.name
-            if column == AccountTreeColumns.COLUMN_BALANCE_NATIVE:
+            if column == AccountTreeColumn.COLUMN_BALANCE_NATIVE:
                 if isinstance(item, CashAccount):
                     return str(item.get_balance(item.currency))
                 return ""
-            if column == AccountTreeColumns.COLUMN_BALANCE_BASE:
+            if column == AccountTreeColumn.COLUMN_BALANCE_BASE:
                 try:
                     if self.base_currency is None:
                         return ""
@@ -223,7 +223,7 @@ class AccountTreeModel(QAbstractItemModel):
                 except ConversionFactorNotFoundError:
                     return "Error!"
         elif role == Qt.ItemDataRole.DecorationRole:
-            if column == AccountTreeColumns.COLUMN_NAME:
+            if column == AccountTreeColumn.COLUMN_NAME:
                 if isinstance(item, AccountGroup):
                     if self._tree.isExpanded(index):
                         return QIcon("icons_16:folder-open.png")
@@ -234,8 +234,8 @@ class AccountTreeModel(QAbstractItemModel):
                     if item.get_balance(item.currency).is_positive():
                         return QIcon("icons_16:piggy-bank.png")
                     return QIcon("icons_16:piggy-bank-empty.png")
-            if column == AccountTreeColumns.COLUMN_SHOW:
-                # TODO: change eye icon on mouse hover (blue)
+            if column == AccountTreeColumn.COLUMN_SHOW:
+                # IDEA: change eye icon on mouse hover (blue)
                 if node.check_state == Qt.CheckState.Checked:
                     return QIcon("icons_16:eye.png")
                 if node.check_state == Qt.CheckState.PartiallyChecked:
@@ -243,13 +243,13 @@ class AccountTreeModel(QAbstractItemModel):
                 return QIcon("icons_16:eye-close.png")
 
         elif role == Qt.ItemDataRole.TextAlignmentRole:
-            if column == AccountTreeColumns.COLUMN_BALANCE_NATIVE:
+            if column == AccountTreeColumn.COLUMN_BALANCE_NATIVE:
                 return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
-            if column == AccountTreeColumns.COLUMN_BALANCE_BASE:
+            if column == AccountTreeColumn.COLUMN_BALANCE_BASE:
                 return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
         elif role == Qt.ItemDataRole.ForegroundRole and (
-            column == AccountTreeColumns.COLUMN_BALANCE_NATIVE
-            or column == AccountTreeColumns.COLUMN_BALANCE_BASE
+            column == AccountTreeColumn.COLUMN_BALANCE_NATIVE
+            or column == AccountTreeColumn.COLUMN_BALANCE_BASE
         ):
             if item.get_balance(self.base_currency).is_negative():
                 return QBrush(QColor("red"))
@@ -257,7 +257,7 @@ class AccountTreeModel(QAbstractItemModel):
                 return QBrush(QColor("gray"))
         elif (
             role == Qt.ItemDataRole.ToolTipRole
-            and column == AccountTreeColumns.COLUMN_SHOW
+            and column == AccountTreeColumn.COLUMN_SHOW
         ):
             return (
                 "Single-click: toggle visibility\n"
@@ -269,11 +269,11 @@ class AccountTreeModel(QAbstractItemModel):
         self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole = ...
     ) -> str | int | None:
         if role == Qt.ItemDataRole.TextAlignmentRole:
-            if section == AccountTreeColumns.COLUMN_BALANCE_NATIVE:
+            if section == AccountTreeColumn.COLUMN_BALANCE_NATIVE:
                 return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
-            if section == AccountTreeColumns.COLUMN_BALANCE_BASE:
+            if section == AccountTreeColumn.COLUMN_BALANCE_BASE:
                 return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
-            if section == AccountTreeColumns.COLUMN_SHOW:
+            if section == AccountTreeColumn.COLUMN_SHOW:
                 return Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignHCenter
         elif role == Qt.ItemDataRole.DisplayRole:
             if orientation == Qt.Orientation.Horizontal:
@@ -381,12 +381,12 @@ class AccountTreeModel(QAbstractItemModel):
         return None
 
     def _tree_clicked(self, index: QModelIndex) -> None:  # noqa: U100
-        if index.column() == AccountTreeColumns.COLUMN_SHOW:
+        if index.column() == AccountTreeColumn.COLUMN_SHOW:
             self.timer.set_timeout_callable(self.signal_toggle_visibility.emit)
             self.timer.start()
 
     def _tree_double_clicked(self, index: QModelIndex) -> None:  # noqa: U100
-        if index.column() == AccountTreeColumns.COLUMN_SHOW:
+        if index.column() == AccountTreeColumn.COLUMN_SHOW:
             self.timer.stop()
             self.signal_show_only_selection.emit()
 

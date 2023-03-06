@@ -6,13 +6,13 @@ from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QTableView
 
 from src.models.model_objects.currency_objects import Currency
-from src.views.constants import CurrencyTableColumns
+from src.views.constants import CurrencyTableColumn
 
 
 class CurrencyTableModel(QAbstractTableModel):
     COLUMN_HEADERS = {
-        CurrencyTableColumns.COLUMN_CODE: "Currency code",
-        CurrencyTableColumns.COLUMN_PLACES: "Decimal places",
+        CurrencyTableColumn.COLUMN_CODE: "Currency code",
+        CurrencyTableColumn.COLUMN_PLACES: "Decimal places",
     }
 
     def __init__(
@@ -56,13 +56,13 @@ class CurrencyTableModel(QAbstractTableModel):
         column = index.column()
         currency = self.currencies[index.row()]
         if role == Qt.ItemDataRole.DisplayRole:
-            if column == CurrencyTableColumns.COLUMN_CODE:
+            if column == CurrencyTableColumn.COLUMN_CODE:
                 return currency.code
-            if column == CurrencyTableColumns.COLUMN_PLACES:
+            if column == CurrencyTableColumn.COLUMN_PLACES:
                 return str(currency.places)
         if (
             role == Qt.ItemDataRole.DecorationRole
-            and column == CurrencyTableColumns.COLUMN_CODE
+            and column == CurrencyTableColumn.COLUMN_CODE
             and currency == self.base_currency
         ):
             return QIcon("icons_16:star.png")

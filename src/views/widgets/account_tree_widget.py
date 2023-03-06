@@ -4,7 +4,7 @@ from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtGui import QContextMenuEvent, QCursor, QIcon
 from PyQt6.QtWidgets import QHeaderView, QMenu, QWidget
 
-from src.views.constants import AccountTreeColumns
+from src.views.constants import AccountTreeColumn
 from src.views.ui_files.widgets.Ui_account_tree_widget import Ui_AccountTreeWidget
 
 
@@ -71,19 +71,19 @@ class AccountTreeWidget(QWidget, Ui_AccountTreeWidget):
 
     def finalize_setup(self) -> None:
         self.treeView.header().setSectionResizeMode(
-            AccountTreeColumns.COLUMN_NAME,
+            AccountTreeColumn.COLUMN_NAME,
             QHeaderView.ResizeMode.ResizeToContents,
         )
         self.treeView.header().setSectionResizeMode(
-            AccountTreeColumns.COLUMN_BALANCE_NATIVE,
+            AccountTreeColumn.COLUMN_BALANCE_NATIVE,
             QHeaderView.ResizeMode.ResizeToContents,
         )
         self.treeView.header().setSectionResizeMode(
-            AccountTreeColumns.COLUMN_BALANCE_BASE,
+            AccountTreeColumn.COLUMN_BALANCE_BASE,
             QHeaderView.ResizeMode.ResizeToContents,
         )
         self.treeView.header().setSectionResizeMode(
-            AccountTreeColumns.COLUMN_SHOW,
+            AccountTreeColumn.COLUMN_SHOW,
             QHeaderView.ResizeMode.ResizeToContents,
         )
 

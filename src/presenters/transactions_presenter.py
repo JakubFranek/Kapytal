@@ -14,10 +14,8 @@ from src.models.model_objects.security_objects import SecurityRelatedTransaction
 from src.models.record_keeper import RecordKeeper
 from src.presenters.utilities.event import Event
 from src.view_models.transaction_table_model import TransactionTableModel
-from src.views.constants import TransactionTableColumns
+from src.views.constants import TransactionTableColumn
 from src.views.widgets.transaction_table_widget import TransactionTableWidget
-
-# TODO: show/hide columns based on selection
 
 
 class TransactionsPresenter:
@@ -47,7 +45,7 @@ class TransactionsPresenter:
 
         self._view.tableView.setModel(self._proxy_model)
         self._view.resize_table_to_contents()
-        self._view.set_column_visibility(TransactionTableColumns.COLUMN_UUID, False)
+        self._view.set_column_visibility(TransactionTableColumn.COLUMN_UUID, False)
 
         self._view.signal_search_text_changed.connect(self._filter)
 
@@ -100,20 +98,20 @@ class TransactionsPresenter:
             self._valid_accounts[0], CashAccount
         )
 
-        for column in TransactionTableColumns:
+        for column in TransactionTableColumn:
             if (
-                column == TransactionTableColumns.COLUMN_SECURITY
-                or column == TransactionTableColumns.COLUMN_SHARES
+                column == TransactionTableColumn.COLUMN_SECURITY
+                or column == TransactionTableColumn.COLUMN_SHARES
             ):
                 self._view.set_column_visibility(column, any_security_related)
             if (
-                column == TransactionTableColumns.COLUMN_AMOUNT_RECEIVED
-                or column == TransactionTableColumns.COLUMN_AMOUNT_SENT
+                column == TransactionTableColumn.COLUMN_AMOUNT_RECEIVED
+                or column == TransactionTableColumn.COLUMN_AMOUNT_SENT
             ):
                 self._view.set_column_visibility(column, any_cash_transfers)
-            if column == TransactionTableColumns.COLUMN_CATEGORY:
+            if column == TransactionTableColumn.COLUMN_CATEGORY:
                 self._view.set_column_visibility(column, any_with_categories)
-            if column == TransactionTableColumns.COLUMN_BALANCE:
+            if column == TransactionTableColumn.COLUMN_BALANCE:
                 self._view.set_column_visibility(column, single_cash_account)
 
     def _filter(self) -> None:

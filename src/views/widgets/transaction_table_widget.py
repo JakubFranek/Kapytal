@@ -1,8 +1,10 @@
+import logging
+
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QAction, QContextMenuEvent, QCursor, QIcon
 from PyQt6.QtWidgets import QLineEdit, QMenu, QWidget
 
-from src.views.constants import TRANSACTION_TABLE_COLUMN_HEADERS
+from src.views.constants import TRANSACTION_TABLE_COLUMN_HEADERS, TransactionTableColumn
 from src.views.ui_files.widgets.Ui_transaction_table_widget import (
     Ui_TransactionTableWidget,
 )
@@ -26,9 +28,14 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
         return self.searchLineEdit.text()
 
     def resize_table_to_contents(self) -> None:
+        self.tableView.horizontalHeader().setStretchLastSection(False)
         self.tableView.resizeColumnsToContents()
+        self.tableView.horizontalHeader().setStretchLastSection(True)
 
-    def set_column_visibility(self, column: int, show: bool) -> None:
+    def set_column_visibility(self, column: TransactionTableColumn, show: bool) -> None:
+        if show != self.tableView.isColumnHidden(column):
+            return
+
         columns = TRANSACTION_TABLE_COLUMN_HEADERS.keys()
         if all(
             self.tableView.isColumnHidden(column_)
@@ -39,7 +46,10 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
 
         self.tableView.setColumnHidden(column, not show)
         if show:
+            logging.debug(f"Showing TransactionTable column {column.name}")
             self.tableView.resizeColumnToContents(column)
+        else:
+            logging.debug(f"Hiding TransactionTable column {column.name}")
 
     def show_all_columns(self) -> None:
         for column in TRANSACTION_TABLE_COLUMN_HEADERS.keys():

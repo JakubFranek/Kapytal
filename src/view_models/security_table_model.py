@@ -6,16 +6,16 @@ from PyQt6.QtCore import QAbstractTableModel, QModelIndex, QSortFilterProxyModel
 from PyQt6.QtWidgets import QTableView
 
 from src.models.model_objects.security_objects import Security
-from src.views.constants import SecurityTableColumns
+from src.views.constants import SecurityTableColumn
 
 
 class SecurityTableModel(QAbstractTableModel):
     COLUMN_HEADERS = {
-        SecurityTableColumns.COLUMN_NAME: "Name",
-        SecurityTableColumns.COLUMN_SYMBOL: "Symbol",
-        SecurityTableColumns.COLUMN_TYPE: "Type",
-        SecurityTableColumns.COLUMN_PRICE: "Latest price",
-        SecurityTableColumns.COLUMN_LAST_DATE: "Latest date",
+        SecurityTableColumn.COLUMN_NAME: "Name",
+        SecurityTableColumn.COLUMN_SYMBOL: "Symbol",
+        SecurityTableColumn.COLUMN_TYPE: "Type",
+        SecurityTableColumn.COLUMN_PRICE: "Latest price",
+        SecurityTableColumn.COLUMN_LAST_DATE: "Latest date",
     }
 
     def __init__(
@@ -64,27 +64,27 @@ class SecurityTableModel(QAbstractTableModel):
         security = self.securities[index.row()]
 
         if role == Qt.ItemDataRole.DisplayRole:
-            if column == SecurityTableColumns.COLUMN_NAME:
+            if column == SecurityTableColumn.COLUMN_NAME:
                 return security.name
-            if column == SecurityTableColumns.COLUMN_SYMBOL:
+            if column == SecurityTableColumn.COLUMN_SYMBOL:
                 return security.symbol
-            if column == SecurityTableColumns.COLUMN_TYPE:
+            if column == SecurityTableColumn.COLUMN_TYPE:
                 return security.type_
-            if column == SecurityTableColumns.COLUMN_PRICE:
+            if column == SecurityTableColumn.COLUMN_PRICE:
                 return security.price.convert(security.currency).to_str_normalized()
-            if column == SecurityTableColumns.COLUMN_LAST_DATE:
+            if column == SecurityTableColumn.COLUMN_LAST_DATE:
                 latest_date = security.latest_date
                 if latest_date is None:
                     return "None"
                 return latest_date.strftime("%Y-%m-%d")
         if (
             role == Qt.ItemDataRole.UserRole
-            and column == SecurityTableColumns.COLUMN_NAME
+            and column == SecurityTableColumn.COLUMN_NAME
         ):
             return unicodedata.normalize("NFD", security.name)
         if (
             role == Qt.ItemDataRole.TextAlignmentRole
-            and column == SecurityTableColumns.COLUMN_PRICE
+            and column == SecurityTableColumn.COLUMN_PRICE
         ):
             return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
         return None
@@ -98,7 +98,7 @@ class SecurityTableModel(QAbstractTableModel):
             return str(section)
         if (
             role == Qt.ItemDataRole.TextAlignmentRole
-            and section == SecurityTableColumns.COLUMN_LAST_DATE
+            and section == SecurityTableColumn.COLUMN_LAST_DATE
         ):
             return Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
         return None
