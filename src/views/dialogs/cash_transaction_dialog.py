@@ -20,8 +20,6 @@ from src.views.ui_files.dialogs.Ui_cash_transaction_dialog import (
     Ui_CashTransactionDialog,
 )
 
-# TODO: set max text lengths
-
 
 class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
     signal_create_and_close = pyqtSignal()

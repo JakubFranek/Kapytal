@@ -90,6 +90,7 @@ class Ui_CashTransactionDialog(object):
         self.payeeLabel.setObjectName("payeeLabel")
         self.formLayout.setWidget(2, QtWidgets.QFormLayout.ItemRole.LabelRole, self.payeeLabel)
         self.payeeLineEdit = QtWidgets.QLineEdit(CashTransactionDialog)
+        self.payeeLineEdit.setMaxLength(32)
         self.payeeLineEdit.setObjectName("payeeLineEdit")
         self.formLayout.setWidget(2, QtWidgets.QFormLayout.ItemRole.FieldRole, self.payeeLineEdit)
         self.verticalLayout.addLayout(self.formLayout)

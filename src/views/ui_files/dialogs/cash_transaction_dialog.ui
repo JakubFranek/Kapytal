@@ -186,6 +186,9 @@
      </item>
      <item row="2" column="1">
       <widget class="QLineEdit" name="payeeLineEdit">
+       <property name="maxLength">
+        <number>32</number>
+       </property>
        <property name="placeholderText">
         <string>Enter Payee name</string>
        </property>

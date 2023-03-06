@@ -8,8 +8,6 @@ from tzlocal import get_localzone_name
 
 from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
 
-# IDEA: think about necessity of saving time zone info to JSON
-
 
 class UserSettings(JSONSerializableMixin):
     """This class is intended to be instantiated only once, within user_settings."""
