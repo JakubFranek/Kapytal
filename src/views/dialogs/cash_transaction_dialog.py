@@ -20,7 +20,8 @@ from src.views.ui_files.dialogs.Ui_cash_transaction_dialog import (
 
 
 class AccountGroupDialog(QDialog, Ui_CashTransactionDialog):
-    signal_OK = pyqtSignal()
+    signal_create_and_close = pyqtSignal()
+    signal_create_and_continue = pyqtSignal()
 
     def __init__(
         self,
@@ -52,6 +53,13 @@ class AccountGroupDialog(QDialog, Ui_CashTransactionDialog):
             self.accountsComboBox.addItem(account)
 
         self.buttonBox.clicked.connect(self._handle_button_box_click)
+        self.buttonBox.addButton(
+            "Create && Continue", QDialogButtonBox.ButtonRole.ApplyRole
+        )
+        self.buttonBox.addButton(
+            "Create && Close", QDialogButtonBox.ButtonRole.AcceptRole
+        )
+        self.buttonBox.addButton("Close", QDialogButtonBox.ButtonRole.RejectRole)
 
     @property
     def type_(self) -> CashTransactionType:
@@ -125,7 +133,9 @@ class AccountGroupDialog(QDialog, Ui_CashTransactionDialog):
     def _handle_button_box_click(self, button: QAbstractButton) -> None:
         role = self.buttonBox.buttonRole(button)
         if role == QDialogButtonBox.ButtonRole.AcceptRole:
-            self.signal_OK.emit()
+            self.signal_create_and_close.emit()
+        if role == QDialogButtonBox.ButtonRole.ApplyRole:
+            self.signal_create_and_continue.emit()
         elif role == QDialogButtonBox.ButtonRole.RejectRole:
             self.reject()
         else:

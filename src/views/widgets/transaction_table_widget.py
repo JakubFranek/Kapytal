@@ -13,6 +13,18 @@ from src.views.ui_files.widgets.Ui_transaction_table_widget import (
 class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
     signal_search_text_changed = pyqtSignal()
 
+    signal_income = pyqtSignal()
+    signal_expense = pyqtSignal()
+    signal_refund = pyqtSignal()
+    signal_cash_transfer = pyqtSignal()
+    signal_buy = pyqtSignal()
+    signal_sell = pyqtSignal()
+    signal_security_transfer = pyqtSignal()
+
+    signal_delete = pyqtSignal()
+    signal_edit = pyqtSignal()
+    signal_duplicate = pyqtSignal()
+
     def __init__(self, parent: QWidget | None) -> None:
         super().__init__(parent)
         self.setupUi(self)
@@ -22,6 +34,7 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
         self._connect_actions()
         self._connect_signals()
         self._setup_header()
+        self._setup_table()
 
     @property
     def search_bar_text(self) -> str:
@@ -88,6 +101,15 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
         self.header_menu.addAction(self.actionShow_All_Columns)
         self.header_menu.popup(QCursor.pos())
 
+    def _create_table_context_menu(
+        self, event: QContextMenuEvent  # noqa: U100
+    ) -> None:
+        self.header_menu = QMenu(self)
+        self.header_menu.addAction(self.actionEdit)
+        self.header_menu.addAction(self.actionDuplicate)
+        self.header_menu.addAction(self.actionDelete)
+        self.header_menu.popup(QCursor.pos())
+
     def _set_icons(self) -> None:
         self.actionFilter_Transactions = QAction(self)
         self.actionFilter_Transactions.setIcon(QIcon("icons_16:funnel.png"))
@@ -100,6 +122,10 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
             QIcon("icons_custom:certificate-arrow.png")
         )
         self.actionRefund.setIcon(QIcon("icons_custom:coins-arrow-back.png"))
+
+        self.actionEdit.setIcon(QIcon("icons_16:pencil.png"))
+        self.actionDelete.setIcon(QIcon("icons_16:minus.png"))
+        self.actionDuplicate.setIcon(QIcon("icons_16:document-copy.png"))
 
         self.transferToolButton.setIcon(QIcon("icons_16:arrow-curve-000-left.png"))
 
@@ -118,6 +144,18 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
         self.transferToolButton.addAction(self.actionSecurity_Transfer)
 
     def _connect_signals(self) -> None:
+        self.actionIncome.triggered.connect(self.signal_income)
+        self.actionExpense.triggered.connect(self.signal_expense)
+        self.actionRefund.triggered.connect(self.signal_refund)
+        self.actionCash_Transfer.triggered.connect(self.signal_cash_transfer)
+        self.actionBuy.triggered.connect(self.signal_buy)
+        self.actionSell.triggered.connect(self.signal_sell)
+        self.actionSecurity_Transfer.triggered.connect(self.signal_security_transfer)
+
+        self.actionEdit.triggered.connect(self.signal_edit)
+        self.actionDuplicate.triggered.connect(self.signal_duplicate)
+        self.actionDelete.triggered.connect(self.signal_delete)
+
         self.searchLineEdit.textChanged.connect(self.signal_search_text_changed.emit)
 
     def _setup_header(self) -> None:
@@ -125,3 +163,9 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
         header.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         header.customContextMenuRequested.connect(self._create_header_context_menu)
         header.setSectionsMovable(True)
+
+    def _setup_table(self) -> None:
+        self.tableView.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.tableView.customContextMenuRequested.connect(
+            self._create_table_context_menu
+        )
