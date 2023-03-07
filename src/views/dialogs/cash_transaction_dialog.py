@@ -14,6 +14,7 @@ from PyQt6.QtWidgets import (
 )
 
 from src.models.base_classes.account import Account
+from src.models.model_objects.attributes import Category, CategoryType
 from src.models.model_objects.cash_objects import CashAccount, CashTransactionType
 from src.models.model_objects.security_objects import SecurityAccount
 from src.views.ui_files.dialogs.Ui_cash_transaction_dialog import (
@@ -22,8 +23,8 @@ from src.views.ui_files.dialogs.Ui_cash_transaction_dialog import (
 
 
 class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
-    signal_create_and_close = pyqtSignal()
-    signal_create_and_continue = pyqtSignal()
+    signal_do_and_close = pyqtSignal()
+    signal_do_and_continue = pyqtSignal()
 
     signal_account_changed = pyqtSignal()
 
@@ -32,7 +33,7 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
         parent: QWidget,
         accounts: Collection[Account],
         payees: Collection[str],
-        categories: Collection[str],
+        categories: Collection[Category],
         tags: Collection[str],
         type_: CashTransactionType,
         edit: bool,
@@ -40,17 +41,14 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
         super().__init__(parent=parent)
         self.setupUi(self)
 
+        self.type_ = type_
+        self._categories = categories
+        self._setup_categories_combobox()
+
         self._payees_completer = QCompleter(payees)
         self._payees_completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
         self._payees_completer.setFilterMode(Qt.MatchFlag.MatchContains)
         self.payeeLineEdit.setCompleter(self._payees_completer)
-
-        self._categories_completer = QCompleter(categories)
-        self._categories_completer.setCaseSensitivity(
-            Qt.CaseSensitivity.CaseInsensitive
-        )
-        self._categories_completer.setFilterMode(Qt.MatchFlag.MatchContains)
-        self.categoryLineEdit.setCompleter(self._categories_completer)
 
         self._tags_completer = QCompleter(tags)
         self._tags_completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
@@ -63,9 +61,16 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
         if edit:
             self.setWindowTitle("Edit Cash Transaction")
             self.setWindowIcon(QIcon("icons_custom:coins-pencil.png"))
+            self.buttonBox.addButton("OK", QDialogButtonBox.ButtonRole.AcceptRole)
         else:
             self.setWindowTitle("Add Cash Transaction")
             self.setWindowIcon(QIcon("icons_custom:coins.png"))
+            self.buttonBox.addButton(
+                "Create && Continue", QDialogButtonBox.ButtonRole.ApplyRole
+            )
+            self.buttonBox.addButton(
+                "Create && Close", QDialogButtonBox.ButtonRole.AcceptRole
+            )
 
         for account in accounts:
             if isinstance(account, CashAccount):
@@ -79,17 +84,11 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
         self.accountsComboBox.currentTextChanged.connect(
             self.signal_account_changed.emit
         )
+        self.incomeRadioButton.toggled.connect(self._setup_categories_combobox)
+        self.expenseRadioButton.toggled.connect(self._setup_categories_combobox)
 
         self.buttonBox.clicked.connect(self._handle_button_box_click)
-        self.buttonBox.addButton(
-            "Create && Continue", QDialogButtonBox.ButtonRole.ApplyRole
-        )
-        self.buttonBox.addButton(
-            "Create && Close", QDialogButtonBox.ButtonRole.AcceptRole
-        )
         self.buttonBox.addButton("Close", QDialogButtonBox.ButtonRole.RejectRole)
-
-        self.type_ = type_
 
     @property
     def type_(self) -> CashTransactionType:
@@ -127,11 +126,11 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
 
     @property
     def datetime_(self) -> datetime:
-        return self.dateTimeEdit.dateTime().toPyDateTime()
+        return self.dateEdit.dateTime().toPyDateTime()
 
     @datetime_.setter
     def datetime_(self, datetime_: datetime) -> None:
-        self.dateTimeEdit.setDateTime(datetime_)
+        self.dateEdit.setDateTime(datetime_)
 
     @property
     def description(self) -> str:
@@ -167,11 +166,11 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
 
     @property
     def category(self) -> str:
-        return self.categoryLineEdit.text()
+        return self.categoryComboBox.currentText()
 
     @category.setter
     def category(self, category: str) -> None:
-        self.categoryLineEdit.setText(category)
+        self.categoryComboBox.setCurrentText(category)
 
     @property
     def tags(self) -> tuple[str]:
@@ -187,9 +186,9 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
     def _handle_button_box_click(self, button: QAbstractButton) -> None:
         role = self.buttonBox.buttonRole(button)
         if role == QDialogButtonBox.ButtonRole.AcceptRole:
-            self.signal_create_and_close.emit()
+            self.signal_do_and_close.emit()
         elif role == QDialogButtonBox.ButtonRole.ApplyRole:
-            self.signal_create_and_continue.emit()
+            self.signal_do_and_continue.emit()
         elif role == QDialogButtonBox.ButtonRole.RejectRole:
             self.reject()
         else:
@@ -219,3 +218,15 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
             final_text = self.tagsLineEdit.text()[: -len(prefix)] + text
             self.tagsLineEdit.setText(final_text)
             self._tags_completing = False
+
+    def _setup_categories_combobox(self) -> None:
+        self.categoryComboBox.clear()
+        valid_category_types = (
+            CategoryType.INCOME
+            if self.type_ == CashTransactionType.INCOME
+            else CategoryType.EXPENSE,
+            CategoryType.INCOME_AND_EXPENSE,
+        )
+        for category in self._categories:
+            if category.type_ in valid_category_types:
+                self.categoryComboBox.addItem(category.path)

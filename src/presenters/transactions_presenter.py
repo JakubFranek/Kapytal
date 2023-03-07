@@ -133,13 +133,15 @@ class TransactionsPresenter:
         self._view.signal_search_text_changed.connect(self._filter)
 
         self._view.signal_income.connect(
-            lambda: self._add_cash_transaction(CashTransactionType.INCOME)
+            lambda: self._run_add_cash_transaction_dialog(CashTransactionType.INCOME)
         )
         self._view.signal_expense.connect(
-            lambda: self._add_cash_transaction(CashTransactionType.EXPENSE)
+            lambda: self._run_add_cash_transaction_dialog(CashTransactionType.EXPENSE)
         )
 
-    def _add_cash_transaction(self, type_: CashTransactionType) -> None:
+    # TODO: allow adding and editing of CashTransactions
+
+    def _run_add_cash_transaction_dialog(self, type_: CashTransactionType) -> None:
         accounts = [
             account
             for account in self._record_keeper.accounts
@@ -152,7 +154,7 @@ class TransactionsPresenter:
             return
 
         payees = [payee.name for payee in self._record_keeper.payees]
-        categories = [category.path for category in self._record_keeper.categories]
+        categories = self._record_keeper.categories
         tags = [tag.name for tag in self._record_keeper.tags]
         self._dialog = CashTransactionDialog(
             self._view, accounts, payees, categories, tags, type_, edit=False

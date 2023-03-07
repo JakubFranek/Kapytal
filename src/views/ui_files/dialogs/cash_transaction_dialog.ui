@@ -127,13 +127,6 @@
        </property>
       </widget>
      </item>
-     <item row="6" column="1">
-      <widget class="QLineEdit" name="categoryLineEdit">
-       <property name="placeholderText">
-        <string>Enter Category path</string>
-       </property>
-      </widget>
-     </item>
      <item row="7" column="0">
       <widget class="QLabel" name="tagsLabel">
        <property name="text">
@@ -142,31 +135,9 @@
       </widget>
      </item>
      <item row="3" column="0">
-      <widget class="QLabel" name="dateTimeLabel">
+      <widget class="QLabel" name="dateLabel">
        <property name="text">
-        <string>Date &amp; Time</string>
-       </property>
-      </widget>
-     </item>
-     <item row="3" column="1">
-      <widget class="QDateTimeEdit" name="dateTimeEdit">
-       <property name="wrapping">
-        <bool>false</bool>
-       </property>
-       <property name="readOnly">
-        <bool>false</bool>
-       </property>
-       <property name="buttonSymbols">
-        <enum>QAbstractSpinBox::UpDownArrows</enum>
-       </property>
-       <property name="showGroupSeparator" stdset="0">
-        <bool>false</bool>
-       </property>
-       <property name="calendarPopup">
-        <bool>true</bool>
-       </property>
-       <property name="timeSpec">
-        <enum>Qt::LocalTime</enum>
+        <string>Date</string>
        </property>
       </widget>
      </item>
@@ -194,6 +165,26 @@
        </property>
       </widget>
      </item>
+     <item row="6" column="1">
+      <widget class="QComboBox" name="categoryComboBox">
+       <property name="editable">
+        <bool>true</bool>
+       </property>
+       <property name="placeholderText">
+        <string>Enter Category path</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="1">
+      <widget class="QDateEdit" name="dateEdit">
+       <property name="calendarPopup">
+        <bool>true</bool>
+       </property>
+       <property name="timeSpec">
+        <enum>Qt::LocalTime</enum>
+       </property>
+      </widget>
+     </item>
     </layout>
    </item>
    <item>
@@ -210,10 +201,8 @@
   <tabstop>expenseRadioButton</tabstop>
   <tabstop>accountsComboBox</tabstop>
   <tabstop>payeeLineEdit</tabstop>
-  <tabstop>dateTimeEdit</tabstop>
   <tabstop>descriptionPlainTextEdit</tabstop>
   <tabstop>amountDoubleSpinBox</tabstop>
-  <tabstop>categoryLineEdit</tabstop>
   <tabstop>tagsLineEdit</tabstop>
  </tabstops>
  <resources/>

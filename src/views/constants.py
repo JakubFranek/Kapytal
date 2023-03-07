@@ -64,7 +64,7 @@ class TransactionTableColumn(IntEnum):
 
 
 TRANSACTION_TABLE_COLUMN_HEADERS = {
-    TransactionTableColumn.COLUMN_DATETIME: "Date & time",
+    TransactionTableColumn.COLUMN_DATETIME: "Date",
     TransactionTableColumn.COLUMN_DESCRIPTION: "Description",
     TransactionTableColumn.COLUMN_TYPE: "Type",
     TransactionTableColumn.COLUMN_FROM: "From",

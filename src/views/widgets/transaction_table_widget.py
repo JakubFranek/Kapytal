@@ -82,9 +82,6 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
                 )
             )
             self.column_actions.append(action)
-        self.actionShow_All_Columns = QAction(parent=self)
-        self.actionShow_All_Columns.setText("Show All")
-        self.actionShow_All_Columns.triggered.connect(self.show_all_columns)
 
     def _create_header_context_menu(
         self, event: QContextMenuEvent  # noqa: U100
@@ -99,6 +96,8 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
             self.header_menu.addAction(action)
         self.header_menu.addSeparator()
         self.header_menu.addAction(self.actionShow_All_Columns)
+        self.header_menu.addAction(self.actionResize_Columns_to_Fit)
+        self.header_menu.addAction(self.actionReset_Columns)
         self.header_menu.popup(QCursor.pos())
 
     def _create_table_context_menu(
@@ -143,6 +142,12 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
         self.transferToolButton.addAction(self.actionCash_Transfer)
         self.transferToolButton.addAction(self.actionSecurity_Transfer)
 
+        self.actionShow_All_Columns.triggered.connect(self.show_all_columns)
+        self.actionResize_Columns_to_Fit.triggered.connect(
+            self.resize_table_to_contents
+        )
+        self.actionReset_Columns.triggered.connect(self._reset_column_order)
+
     def _connect_signals(self) -> None:
         self.actionIncome.triggered.connect(self.signal_income)
         self.actionExpense.triggered.connect(self.signal_expense)
@@ -169,3 +174,10 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
         self.tableView.customContextMenuRequested.connect(
             self._create_table_context_menu
         )
+
+    def _reset_column_order(self) -> None:
+        header = self.tableView.horizontalHeader()
+        for column in TransactionTableColumn:
+            visual_index = header.visualIndex(column)
+            header.moveSection(visual_index, column)
+        self.resize_table_to_contents()

@@ -141,7 +141,7 @@ class TransactionTableModel(QAbstractTableModel):
         self, transaction: Transaction, column: int
     ) -> str | None:
         if column == TransactionTableColumn.COLUMN_DATETIME:
-            return transaction.datetime_.strftime("%d.%m.%Y %H:%M")
+            return transaction.datetime_.strftime("%d.%m.%Y")
         if column == TransactionTableColumn.COLUMN_DESCRIPTION:
             return transaction.description
         if column == TransactionTableColumn.COLUMN_TYPE:

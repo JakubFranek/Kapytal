@@ -233,6 +233,21 @@
     <string>Filter</string>
    </property>
   </action>
+  <action name="actionReset_Columns">
+   <property name="text">
+    <string>Reset Columns</string>
+   </property>
+  </action>
+  <action name="actionResize_Columns_to_Fit">
+   <property name="text">
+    <string>Resize Columns to Fit</string>
+   </property>
+  </action>
+  <action name="actionShow_All_Columns">
+   <property name="text">
+    <string>Show All Columns</string>
+   </property>
+  </action>
  </widget>
  <resources/>
  <connections/>
