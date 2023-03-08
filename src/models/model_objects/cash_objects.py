@@ -32,7 +32,7 @@ from src.models.model_objects.currency_objects import (
     CurrencyError,
 )
 from src.models.utilities.find_helpers import (
-    find_account_by_uuid,
+    find_account_by_path,
     find_account_group_by_path,
     find_attribute_by_name,
     find_category_by_path,
@@ -335,7 +335,7 @@ class CashTransaction(CashRelatedTransaction):
             "description": self._description,
             "datetime": self._datetime,
             "type_": self._type.name,
-            "account_uuid": str(self._account.uuid),
+            "account_path": self._account.path,
             "payee_name": self._payee.name,
             "category_amount_pairs": category_amount_pairs,
             "tag_amount_pairs": tag_amount_pairs,
@@ -358,8 +358,7 @@ class CashTransaction(CashRelatedTransaction):
         )
         type_ = CashTransactionType[data["type_"]]
 
-        account_uuid = uuid.UUID(data["account_uuid"])
-        cash_account = find_account_by_uuid(account_uuid, accounts)
+        cash_account = find_account_by_path(data["account_path"], accounts)
 
         payee_name = data["payee_name"]
         payee = find_attribute_by_name(payee_name, payees)
@@ -772,13 +771,12 @@ class CashTransfer(CashRelatedTransaction):
         self._recipient.remove_transaction(self)
 
     def serialize(self) -> dict[str, Any]:
-        # TODO: account UUIDs in JSON are harder to read
         return {
             "datatype": "CashTransfer",
             "description": self._description,
             "datetime": self._datetime,
-            "sender_uuid": str(self._sender.uuid),
-            "recipient_uuid": str(self._recipient.uuid),
+            "sender_path": self._sender.path,
+            "recipient_path": self._recipient.path,
             "amount_sent": self._amount_sent,
             "amount_received": self._amount_received,
             "datetime_created": self._datetime_created,
@@ -796,10 +794,8 @@ class CashTransfer(CashRelatedTransaction):
             data["datetime"], constants.DATETIME_SERDES_FMT
         )
 
-        sender_uuid = uuid.UUID(data["sender_uuid"])
-        recipient_uuid = uuid.UUID(data["recipient_uuid"])
-        sender = find_account_by_uuid(sender_uuid, accounts)
-        recipient = find_account_by_uuid(recipient_uuid, accounts)
+        sender = find_account_by_path(data["sender_path"], accounts)
+        recipient = find_account_by_path(data["recipient_path"], accounts)
 
         amount_sent = CashAmount.deserialize(data["amount_sent"], currencies)
         amount_received = CashAmount.deserialize(data["amount_received"], currencies)
@@ -1062,7 +1058,7 @@ class RefundTransaction(CashRelatedTransaction):
             "datatype": "RefundTransaction",
             "description": self._description,
             "datetime": self._datetime,
-            "account_uuid": str(self._account.uuid),
+            "account_path": self._account.path,
             "refunded_transaction_uuid": str(self._refunded_transaction.uuid),
             "payee_name": self._payee.name,
             "category_amount_pairs": category_amount_pairs,
@@ -1086,8 +1082,7 @@ class RefundTransaction(CashRelatedTransaction):
             data["datetime"], constants.DATETIME_SERDES_FMT
         )
 
-        account_uuid = uuid.UUID(data["account_uuid"])
-        cash_account = find_account_by_uuid(account_uuid, accounts)
+        cash_account = find_account_by_path(data["account_path"], accounts)
 
         transaction_uuid = uuid.UUID(data["refunded_transaction_uuid"])
         refunded_transaction = find_transaction_by_uuid(transaction_uuid, transactions)

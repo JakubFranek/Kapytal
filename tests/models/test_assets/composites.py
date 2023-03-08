@@ -4,6 +4,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any
 
+from hypothesis import assume
 from hypothesis import strategies as st
 
 import src.models.user_settings.user_settings as user_settings
@@ -174,6 +175,7 @@ def cash_transfers(
     description = draw(st.text(min_size=0, max_size=256))
     account_sender: CashAccount = draw(cash_accounts(currency=currency_sender))
     account_recipient: CashAccount = draw(cash_accounts(currency=currency_recipient))
+    assume(account_sender.path != account_recipient.path)
     datetime_ = draw(
         st.datetimes(
             min_value=min_datetime,
@@ -270,6 +272,13 @@ def security_transactions(
     min_datetime: datetime = MIN_DATETIME,
     max_datetime: datetime = datetime.max,
 ) -> SecurityTransaction:
+    cash_account = draw(cash_accounts())
+    security_account = draw(security_accounts())
+    assume(cash_account.path != security_account.path)
+
+    price_per_share = draw(cash_amounts(currency=cash_account.currency, min_value=0))
+    security = draw(securities(currency=cash_account.currency))
+
     description = draw(st.text(min_size=1, max_size=256))
     datetime_ = draw(
         st.datetimes(
@@ -279,11 +288,6 @@ def security_transactions(
         )
     )
     type_ = draw(st.sampled_from(SecurityTransactionType))
-
-    cash_account = draw(cash_accounts())
-    price_per_share = draw(cash_amounts(currency=cash_account.currency, min_value=0))
-    security = draw(securities(currency=cash_account.currency))
-    security_account = draw(security_accounts())
 
     shares = draw(share_decimals(shares_unit=security.shares_unit))
 
@@ -301,14 +305,17 @@ def security_transactions(
 
 @st.composite
 def security_transfers(draw: st.DrawFn) -> SecurityTransfer:
+    account_sender = draw(security_accounts())
+    account_recipient = draw(security_accounts())
+    assume(account_sender.path != account_recipient.path)
+
     description = draw(st.text(min_size=1, max_size=256))
     datetime_ = draw(st.datetimes(timezones=st.just(user_settings.settings.time_zone)))
     security = draw(securities())
     shares = draw(
         valid_decimals(min_value=1e-10).filter(lambda x: x % security.shares_unit == 0)
     )
-    account_sender = draw(security_accounts())
-    account_recipient = draw(security_accounts())
+
     return SecurityTransfer(
         description, datetime_, security, shares, account_sender, account_recipient
     )

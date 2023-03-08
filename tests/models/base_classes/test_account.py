@@ -18,6 +18,15 @@ def test_creation(name: str) -> None:
     assert account.path == name
 
 
+def test_eq() -> None:
+    account1 = ConcreteAccount("test")
+    account2 = ConcreteAccount("test")
+    assert account1.__eq__(account2) == (account1.uuid == account2.uuid)
+    account2._uuid = account1.uuid
+    assert account1.__eq__(account2) == (account1.uuid == account2.uuid)
+    assert account1.__eq__("anything else") is False
+
+
 @given(name=st.just(""))
 def test_name_too_short(name: str) -> None:
     with pytest.raises(NameLengthError):

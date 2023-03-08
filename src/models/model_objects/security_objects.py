@@ -27,10 +27,10 @@ from src.models.model_objects.currency_objects import (
     CurrencyError,
 )
 from src.models.utilities.find_helpers import (
-    find_account_by_uuid,
+    find_account_by_path,
     find_account_group_by_path,
     find_currency_by_code,
-    find_security_by_uuid,
+    find_security_by_name,
 )
 
 
@@ -409,11 +409,11 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
             "description": self._description,
             "datetime": self._datetime,
             "type_": self._type.name,
-            "security_uuid": str(self._security.uuid),
+            "security_name": self._security.name,
             "shares": str(self._shares),
             "price_per_share": self._price_per_share,
-            "security_account_uuid": str(self._security_account.uuid),
-            "cash_account_uuid": str(self._cash_account.uuid),
+            "security_account_path": self._security_account.path,
+            "cash_account_path": self._cash_account.path,
             "datetime_created": self._datetime_created,
             "uuid": str(self._uuid),
         }
@@ -434,13 +434,10 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
         shares = Decimal(data["shares"])
         price_per_share = CashAmount.deserialize(data["price_per_share"], currencies)
 
-        security_uuid = uuid.UUID(data["security_uuid"])
-        security = find_security_by_uuid(security_uuid, securities)
+        security = find_security_by_name(data["security_name"], securities)
 
-        cash_account_uuid = uuid.UUID(data["cash_account_uuid"])
-        security_account_uuid = uuid.UUID(data["security_account_uuid"])
-        cash_account = find_account_by_uuid(cash_account_uuid, accounts)
-        security_account = find_account_by_uuid(security_account_uuid, accounts)
+        cash_account = find_account_by_path(data["cash_account_path"], accounts)
+        security_account = find_account_by_path(data["security_account_path"], accounts)
 
         obj = SecurityTransaction(
             description=description,
@@ -686,10 +683,10 @@ class SecurityTransfer(SecurityRelatedTransaction):
             "datatype": "SecurityTransfer",
             "description": self._description,
             "datetime": self._datetime,
-            "security_uuid": str(self._security.uuid),
+            "security_name": self._security.name,
             "shares": str(self._shares),
-            "sender_uuid": str(self._sender.uuid),
-            "recipient_uuid": str(self._recipient.uuid),
+            "sender_path": self._sender.path,
+            "recipient_path": self._recipient.path,
             "datetime_created": self._datetime_created,
             "uuid": str(self._uuid),
         }
@@ -706,13 +703,10 @@ class SecurityTransfer(SecurityRelatedTransaction):
         )
         shares = Decimal(data["shares"])
 
-        security_uuid = uuid.UUID(data["security_uuid"])
-        security = find_security_by_uuid(security_uuid, securities)
+        security = find_security_by_name(data["security_name"], securities)
 
-        sender_uuid = uuid.UUID(data["sender_uuid"])
-        recipient_uuid = uuid.UUID(data["recipient_uuid"])
-        sender = find_account_by_uuid(sender_uuid, accounts)
-        recipient = find_account_by_uuid(recipient_uuid, accounts)
+        sender = find_account_by_path(data["sender_path"], accounts)
+        recipient = find_account_by_path(data["recipient_path"], accounts)
 
         obj = SecurityTransfer(
             description=description,

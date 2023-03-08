@@ -22,20 +22,18 @@ def find_account_group_by_path(
     raise NotFoundError(f"AccountGroup path='{path}' not found.")
 
 
-def find_account_by_uuid(uuid: uuid.UUID, accounts: Collection["Account"]) -> "Account":
+def find_account_by_path(path: str, accounts: Collection["Account"]) -> "Account":
     for account in accounts:
-        if account.uuid == uuid:
+        if account.path == path:
             return account
-    raise NotFoundError(f"Account uuid='{uuid}' not found.")
+    raise NotFoundError(f"Account path='{path}' not found.")
 
 
-def find_security_by_uuid(
-    uuid: uuid.UUID, securities: Collection["Security"]
-) -> "Security":
+def find_security_by_name(name: str, securities: Collection["Security"]) -> "Security":
     for security in securities:
-        if security.uuid == uuid:
+        if security.name == name:
             return security
-    raise NotFoundError(f"Security uuid='{uuid}' not found.")
+    raise NotFoundError(f"Security name='{name}' not found.")
 
 
 def find_transaction_by_uuid(
