@@ -27,6 +27,10 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
 
     signal_account_changed = pyqtSignal()
 
+    signal_open_tags = pyqtSignal()
+    signal_open_categories = pyqtSignal()
+    signal_open_payees = pyqtSignal()
+
     def __init__(
         self,
         parent: QWidget,
@@ -89,6 +93,18 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
         self.buttonBox.clicked.connect(self._handle_button_box_click)
         self.buttonBox.addButton("Close", QDialogButtonBox.ButtonRole.RejectRole)
 
+        self.actionOpen_Payees.setIcon(QIcon("icons_16:user-silhouette.png"))
+        self.actionOpen_Categories.setIcon(QIcon("icons_custom:category.png"))
+        self.actionOpen_Tags.setIcon(QIcon("icons_16:tag.png"))
+
+        self.actionOpen_Payees.triggered.connect(self.signal_open_payees)
+        self.actionOpen_Categories.triggered.connect(self.signal_open_categories)
+        self.actionOpen_Tags.triggered.connect(self.signal_open_tags)
+
+        self.payeeToolButton.setDefaultAction(self.actionOpen_Payees)
+        self.categoryToolButton.setDefaultAction(self.actionOpen_Categories)
+        self.tagsToolButton.setDefaultAction(self.actionOpen_Tags)
+
     @property
     def type_(self) -> CashTransactionType:
         if self.incomeRadioButton.isChecked():
@@ -117,11 +133,11 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
 
     @property
     def payee(self) -> str:
-        return self.payeeLineEdit.text()
+        return self.payeeComboBox.currentText()
 
     @payee.setter
     def payee(self, payee: str) -> None:
-        self.payeeLineEdit.setText(payee)
+        self.payeeComboBox.setCurrentText(payee)
 
     @property
     def datetime_(self) -> datetime:

@@ -260,6 +260,21 @@
     </widget>
    </item>
   </layout>
+  <action name="actionOpen_Payees">
+   <property name="text">
+    <string>Open Payees</string>
+   </property>
+  </action>
+  <action name="actionOpen_Categories">
+   <property name="text">
+    <string>Open Categories</string>
+   </property>
+  </action>
+  <action name="actionOpen_Tags">
+   <property name="text">
+    <string>Open Tags</string>
+   </property>
+  </action>
  </widget>
  <tabstops>
   <tabstop>incomeRadioButton</tabstop>

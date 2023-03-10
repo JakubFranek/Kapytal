@@ -1,10 +1,8 @@
 import logging
 from collections.abc import Collection
-from datetime import datetime
 
 from PyQt6.QtCore import QSortFilterProxyModel, Qt
 
-import src.models.user_settings.user_settings as user_settings
 from src.models.base_classes.account import Account
 from src.models.model_objects.cash_objects import (
     CashAccount,
@@ -15,11 +13,12 @@ from src.models.model_objects.cash_objects import (
 )
 from src.models.model_objects.security_objects import SecurityRelatedTransaction
 from src.models.record_keeper import RecordKeeper
+from src.presenters.cash_transaction_dialog_presenter import (
+    CashTransactionDialogPresenter,
+)
 from src.presenters.utilities.event import Event
 from src.view_models.transaction_table_model import TransactionTableModel
 from src.views.constants import TransactionTableColumn
-from src.views.dialogs.cash_transaction_dialog import CashTransactionDialog
-from src.views.utilities.handle_exception import display_error_message
 from src.views.widgets.transaction_table_widget import TransactionTableWidget
 
 
@@ -32,6 +31,10 @@ class TransactionsPresenter:
         self._view = view
         self._record_keeper = record_keeper
         self._valid_accounts = record_keeper.accounts
+
+        self._cash_transaction_dialog_presenter = CashTransactionDialogPresenter(
+            view, record_keeper
+        )
 
         self._setup_model()
         self._setup_view()
@@ -54,6 +57,7 @@ class TransactionsPresenter:
 
     def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
         self._record_keeper = record_keeper
+        self._cash_transaction_dialog_presenter.record_keeper = record_keeper
         self._valid_accounts = record_keeper.accounts
         self.reset_model()
         self._view.resize_table_to_contents()
@@ -133,60 +137,12 @@ class TransactionsPresenter:
         self._view.signal_search_text_changed.connect(self._filter)
 
         self._view.signal_income.connect(
-            lambda: self._run_add_cash_transaction_dialog(CashTransactionType.INCOME)
+            lambda: self._cash_transaction_dialog_presenter.run_add_dialog(
+                CashTransactionType.INCOME
+            )
         )
         self._view.signal_expense.connect(
-            lambda: self._run_add_cash_transaction_dialog(CashTransactionType.EXPENSE)
-        )
-
-    # TODO: allow adding and editing of CashTransactions
-
-    def _run_add_cash_transaction_dialog(self, type_: CashTransactionType) -> None:
-        accounts = [
-            account
-            for account in self._record_keeper.accounts
-            if isinstance(account, CashAccount)
-        ]
-        if len(accounts) == 0:
-            display_error_message(
-                "Create at least one Cash Account first!", title="Warning"
+            lambda: self._cash_transaction_dialog_presenter.run_add_dialog(
+                CashTransactionType.EXPENSE
             )
-            return
-
-        payees = [payee.name for payee in self._record_keeper.payees]
-        categories_income = (
-            self._record_keeper.income_categories
-            + self._record_keeper.income_and_expense_categories
         )
-        categories_expense = (
-            self._record_keeper.expense_categories
-            + self._record_keeper.income_and_expense_categories
-        )
-        category_income_paths = tuple(category.path for category in categories_income)
-        category_expense_paths = tuple(category.path for category in categories_expense)
-        tags = [tag.name for tag in self._record_keeper.tags]
-        self._dialog = CashTransactionDialog(
-            self._view,
-            accounts,
-            payees,
-            category_income_paths,
-            category_expense_paths,
-            tags,
-            type_,
-            edit=False,
-        )
-        self._dialog.datetime_ = datetime.now(user_settings.settings.time_zone)
-        self._dialog.signal_account_changed.connect(self._dialog_account_changed)
-        self._dialog_account_changed()
-        self._dialog.exec()
-
-    def _dialog_account_changed(self) -> None:
-        account_path = self._dialog.account
-        for account in self._record_keeper.accounts:
-            if account.path == account_path:
-                _account: CashAccount = account
-                break
-        else:
-            raise ValueError(f"Invalid Account path: {account_path}")
-        self._dialog.currency_code = _account.currency.code
-        self._dialog.amount_decimals = _account.currency.places
