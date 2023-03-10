@@ -190,5 +190,3 @@ class TransactionsPresenter:
             raise ValueError(f"Invalid Account path: {account_path}")
         self._dialog.currency_code = _account.currency.code
         self._dialog.amount_decimals = _account.currency.places
-
-    # TODO: add transaction table model test
