@@ -154,10 +154,26 @@ class TransactionsPresenter:
             return
 
         payees = [payee.name for payee in self._record_keeper.payees]
-        categories = self._record_keeper.categories
+        categories_income = (
+            self._record_keeper.income_categories
+            + self._record_keeper.income_and_expense_categories
+        )
+        categories_expense = (
+            self._record_keeper.expense_categories
+            + self._record_keeper.income_and_expense_categories
+        )
+        category_income_paths = tuple(category.path for category in categories_income)
+        category_expense_paths = tuple(category.path for category in categories_expense)
         tags = [tag.name for tag in self._record_keeper.tags]
         self._dialog = CashTransactionDialog(
-            self._view, accounts, payees, categories, tags, type_, edit=False
+            self._view,
+            accounts,
+            payees,
+            category_income_paths,
+            category_expense_paths,
+            tags,
+            type_,
+            edit=False,
         )
         self._dialog.datetime_ = datetime.now(user_settings.settings.time_zone)
         self._dialog.signal_account_changed.connect(self._dialog_account_changed)
@@ -174,3 +190,5 @@ class TransactionsPresenter:
             raise ValueError(f"Invalid Account path: {account_path}")
         self._dialog.currency_code = _account.currency.code
         self._dialog.amount_decimals = _account.currency.places
+
+    # TODO: add transaction table model test

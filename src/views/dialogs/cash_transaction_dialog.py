@@ -14,7 +14,6 @@ from PyQt6.QtWidgets import (
 )
 
 from src.models.base_classes.account import Account
-from src.models.model_objects.attributes import Category, CategoryType
 from src.models.model_objects.cash_objects import CashAccount, CashTransactionType
 from src.models.model_objects.security_objects import SecurityAccount
 from src.views.ui_files.dialogs.Ui_cash_transaction_dialog import (
@@ -33,7 +32,8 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
         parent: QWidget,
         accounts: Collection[Account],
         payees: Collection[str],
-        categories: Collection[Category],
+        categories_income: Collection[str],
+        categories_expense: Collection[str],
         tags: Collection[str],
         type_: CashTransactionType,
         edit: bool,
@@ -42,13 +42,12 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
         self.setupUi(self)
 
         self.type_ = type_
-        self._categories = categories
+        self._categories_income = categories_income
+        self._categories_expense = categories_expense
         self._setup_categories_combobox()
 
-        self._payees_completer = QCompleter(payees)
-        self._payees_completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
-        self._payees_completer.setFilterMode(Qt.MatchFlag.MatchContains)
-        self.payeeLineEdit.setCompleter(self._payees_completer)
+        for payee in payees:
+            self.payeeComboBox.addItem(payee)
 
         self._tags_completer = QCompleter(tags)
         self._tags_completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
@@ -221,12 +220,9 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
 
     def _setup_categories_combobox(self) -> None:
         self.categoryComboBox.clear()
-        valid_category_types = (
-            CategoryType.INCOME
-            if self.type_ == CashTransactionType.INCOME
-            else CategoryType.EXPENSE,
-            CategoryType.INCOME_AND_EXPENSE,
-        )
-        for category in self._categories:
-            if category.type_ in valid_category_types:
-                self.categoryComboBox.addItem(category.path)
+        if self.type_ == CashTransactionType.INCOME:
+            for category in self._categories_income:
+                self.categoryComboBox.addItem(category)
+        else:
+            for category in self._categories_expense:
+                self.categoryComboBox.addItem(category)

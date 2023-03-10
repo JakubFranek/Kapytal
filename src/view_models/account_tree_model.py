@@ -107,18 +107,17 @@ def make_nodes(
     return nodes
 
 
-def get_visible_leaf_items(
-    nodes: Sequence[AccountTreeNode], visible_items: list[Account]
-) -> list[Account]:
+def get_visible_leaf_items(nodes: Sequence[AccountTreeNode]) -> list[Account]:
+    resulting_list = []
     for node in nodes:
         if len(node.children) == 0 and node.check_state == Qt.CheckState.Checked:
-            visible_items.append(node.item)
-        if (
+            resulting_list.append(node.item)
+        elif (
             node.check_state == Qt.CheckState.Checked
             or node.check_state == Qt.CheckState.PartiallyChecked
         ):
-            visible_items = get_visible_leaf_items(node.children, visible_items)
-    return visible_items
+            resulting_list = resulting_list + get_visible_leaf_items(node.children)
+    return resulting_list
 
 
 class AccountTreeModel(QAbstractItemModel):
@@ -153,7 +152,7 @@ class AccountTreeModel(QAbstractItemModel):
 
     @property
     def visible_accounts(self) -> tuple[Account, ...]:
-        return tuple(get_visible_leaf_items(self._root_nodes, []))
+        return tuple(get_visible_leaf_items(self._root_nodes))
 
     @root_items.setter
     def root_items(self, root_items: Sequence[Account | AccountGroup]) -> None:

@@ -9,6 +9,7 @@ from src.views.ui_files.forms.Ui_security_form import Ui_SecurityForm
 
 # TODO: add some way to view and edit price history
 # TODO: add way to see overview of owned securities (per account and total)
+# TODO: double click security account to view its contents
 
 
 class SecurityForm(QWidget, Ui_SecurityForm):

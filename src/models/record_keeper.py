@@ -67,23 +67,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
 
     @property
     def accounts(self) -> tuple[Account, ...]:
-        _accounts = []
-        return tuple(
-            RecordKeeper._get_accounts_recursively(self._root_account_items, _accounts)
-        )
-
-    @staticmethod
-    def _get_accounts_recursively(
-        account_items: Collection[Account | AccountGroup], accounts_list: list[Account]
-    ) -> list[Account]:
-        for account_item in account_items:
-            if isinstance(account_item, Account):
-                accounts_list.append(account_item)
-            else:
-                accounts_list = RecordKeeper._get_accounts_recursively(
-                    account_item.children, accounts_list
-                )
-        return accounts_list
+        return tuple(RecordKeeper._flatten_accounts(self._root_account_items))
 
     @property
     def account_groups(self) -> tuple[AccountGroup, ...]:
@@ -111,6 +95,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
 
     @property
     def payees(self) -> tuple[Attribute, ...]:
+        self._payees.sort(key=lambda payee: payee.name)
         return tuple(self._payees)
 
     @property
@@ -128,6 +113,20 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
     @property
     def root_income_and_expense_categories(self) -> tuple[Category, ...]:
         return tuple(self._root_income_and_expense_categories)
+
+    @property
+    def income_categories(self) -> tuple[Category, ...]:
+        return tuple(RecordKeeper._flatten_categories(self._root_income_categories))
+
+    @property
+    def expense_categories(self) -> tuple[Category, ...]:
+        return tuple(RecordKeeper._flatten_categories(self._root_expense_categories))
+
+    @property
+    def income_and_expense_categories(self) -> tuple[Category, ...]:
+        return tuple(
+            RecordKeeper._flatten_categories(self._root_income_and_expense_categories)
+        )
 
     @property
     def tags(self) -> tuple[Attribute, ...]:
@@ -1534,3 +1533,28 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         if category.type_ == CategoryType.EXPENSE:
             return self._root_expense_categories
         return self._root_income_and_expense_categories
+
+    @staticmethod
+    def _flatten_accounts(
+        account_items: Collection[Account | AccountGroup],
+    ) -> list[Account]:
+        resulting_list = []
+        for account_item in account_items:
+            if isinstance(account_item, Account):
+                resulting_list.append(account_item)
+            else:
+                resulting_list = resulting_list + RecordKeeper._flatten_accounts(
+                    account_item.children
+                )
+        return resulting_list
+
+    @staticmethod
+    def _flatten_categories(categories: Collection[Category]) -> list[Category]:
+        resulting_list = []
+        for category in categories:
+            resulting_list.append(category)
+            if len(category.children) > 0:
+                resulting_list = resulting_list + RecordKeeper._flatten_categories(
+                    category.children
+                )
+        return resulting_list
