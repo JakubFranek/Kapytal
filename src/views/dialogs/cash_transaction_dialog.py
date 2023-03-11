@@ -49,66 +49,17 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
         self._categories_income = categories_income
         self._categories_expense = categories_expense
         self._setup_categories_combobox()
+        self.incomeRadioButton.toggled.connect(self._setup_categories_combobox)
+        self.expenseRadioButton.toggled.connect(self._setup_categories_combobox)
 
         for payee in payees:
             self.payeeComboBox.addItem(payee)
 
-        self._tags_completer = QCompleter(tags)
-        self._tags_completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
-        self._tags_completer.setFilterMode(Qt.MatchFlag.MatchContains)
-        self._tags_completer.setWidget(self.tagsLineEdit)
-        self._tags_completer.activated.connect(self._handle_tags_completion)
-        self.tagsLineEdit.textEdited.connect(self._handle_tags_text_changed)
-        self._tags_completing = False
-
-        if edit:
-            self.setWindowTitle("Edit Cash Transaction")
-            self.setWindowIcon(QIcon("icons_custom:coins-pencil.png"))
-            self.buttonBox.addButton("OK", QDialogButtonBox.ButtonRole.AcceptRole)
-        else:
-            self.setWindowTitle("Add Cash Transaction")
-            self.setWindowIcon(QIcon("icons_custom:coins.png"))
-            self.buttonBox.addButton(
-                "Create && Continue", QDialogButtonBox.ButtonRole.ApplyRole
-            )
-            self.buttonBox.addButton(
-                "Create && Close", QDialogButtonBox.ButtonRole.AcceptRole
-            )
-
-        for account in accounts:
-            if isinstance(account, CashAccount):
-                icon = QIcon("icons_16:piggy-bank.png")
-            elif isinstance(account, SecurityAccount):
-                icon = QIcon("icons_16:bank.png")
-            else:
-                raise TypeError("Unexpected Account type.")
-            self.accountsComboBox.addItem(icon, account.path)
-
-        self.accountsComboBox.currentTextChanged.connect(
-            self.signal_account_changed.emit
-        )
-        self.incomeRadioButton.toggled.connect(self._setup_categories_combobox)
-        self.expenseRadioButton.toggled.connect(self._setup_categories_combobox)
-
-        self.buttonBox.clicked.connect(self._handle_button_box_click)
-        self.buttonBox.addButton("Close", QDialogButtonBox.ButtonRole.RejectRole)
-
-        self.actionOpen_Payees.setIcon(QIcon("icons_16:user-silhouette.png"))
-        self.actionOpen_Categories.setIcon(QIcon("icons_custom:category.png"))
-        self.actionOpen_Tags.setIcon(QIcon("icons_16:tag.png"))
-
-        self.actionOpen_Payees.triggered.connect(self.signal_open_payees)
-        self.actionOpen_Categories.triggered.connect(self.signal_open_categories)
-        self.actionOpen_Tags.triggered.connect(self.signal_open_tags)
-
-        self.payeeToolButton.setDefaultAction(self.actionOpen_Payees)
-        self.categoryToolButton.setDefaultAction(self.actionOpen_Categories)
-        self.tagsToolButton.setDefaultAction(self.actionOpen_Tags)
-
-        self.payeeComboBox.lineEdit().setPlaceholderText("Enter Payee name")
-        self.categoryComboBox.lineEdit().setPlaceholderText("Enter Category path")
-        self.payeeComboBox.setCurrentIndex(-1)
-        self.categoryComboBox.setCurrentIndex(-1)
+        self._initialize_tags_completer(tags)
+        self._initialize_accounts_combobox(accounts)
+        self._initialize_window(edit)
+        self._initialize_actions()
+        self._initialize_combobox_placeholders()
 
     @property
     def type_(self) -> CashTransactionType:
@@ -217,6 +168,69 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
     def reject(self) -> None:
         logging.debug(f"Closing {self.__class__.__name__}")
         return super().reject()
+
+    def _initialize_window(self, edit: bool) -> None:
+        if edit:
+            self.setWindowTitle("Edit Cash Transaction")
+            self.setWindowIcon(QIcon("icons_custom:coins-pencil.png"))
+            self.buttonBox.addButton("OK", QDialogButtonBox.ButtonRole.AcceptRole)
+        else:
+            self.setWindowTitle("Add Cash Transaction")
+            self.setWindowIcon(QIcon("icons_custom:coins.png"))
+            self.buttonBox.addButton(
+                "Create && Continue", QDialogButtonBox.ButtonRole.ApplyRole
+            )
+            self.buttonBox.addButton(
+                "Create && Close", QDialogButtonBox.ButtonRole.AcceptRole
+            )
+        self.buttonBox.clicked.connect(self._handle_button_box_click)
+        self.buttonBox.addButton("Close", QDialogButtonBox.ButtonRole.RejectRole)
+
+    def _initialize_actions(self) -> None:
+        self.actionOpen_Payees.setIcon(QIcon("icons_16:user-silhouette.png"))
+        self.actionOpen_Categories.setIcon(QIcon("icons_custom:category.png"))
+        self.actionOpen_Tags.setIcon(QIcon("icons_16:tag.png"))
+        self.actionSplit_Categories.setIcon(QIcon("icons_16:arrow-split.png"))
+        self.actionSplit_Tags.setIcon(QIcon("icons_16:arrow-split.png"))
+
+        self.actionOpen_Payees.triggered.connect(self.signal_open_payees)
+        self.actionOpen_Categories.triggered.connect(self.signal_open_categories)
+        self.actionOpen_Tags.triggered.connect(self.signal_open_tags)
+
+        self.payeeToolButton.setDefaultAction(self.actionOpen_Payees)
+        self.categoryToolButton.setDefaultAction(self.actionOpen_Categories)
+        self.tagsToolButton.setDefaultAction(self.actionOpen_Tags)
+        self.splitCategoryToolButton.setDefaultAction(self.actionSplit_Categories)
+        self.splitTagsToolButton.setDefaultAction(self.actionSplit_Tags)
+
+    def _initialize_accounts_combobox(self, accounts: Collection[Account]) -> None:
+        for account in accounts:
+            if isinstance(account, CashAccount):
+                icon = QIcon("icons_16:piggy-bank.png")
+            elif isinstance(account, SecurityAccount):
+                icon = QIcon("icons_16:bank.png")
+            else:
+                raise TypeError("Unexpected Account type.")
+            self.accountsComboBox.addItem(icon, account.path)
+
+        self.accountsComboBox.currentTextChanged.connect(
+            self.signal_account_changed.emit
+        )
+
+    def _initialize_combobox_placeholders(self) -> None:
+        self.payeeComboBox.lineEdit().setPlaceholderText("Enter Payee name")
+        self.categoryComboBox.lineEdit().setPlaceholderText("Enter Category path")
+        self.payeeComboBox.setCurrentIndex(-1)
+        self.categoryComboBox.setCurrentIndex(-1)
+
+    def _initialize_tags_completer(self, tags: Collection[str]) -> None:
+        self._tags_completer = QCompleter(tags)
+        self._tags_completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+        self._tags_completer.setFilterMode(Qt.MatchFlag.MatchContains)
+        self._tags_completer.setWidget(self.tagsLineEdit)
+        self._tags_completer.activated.connect(self._handle_tags_completion)
+        self.tagsLineEdit.textEdited.connect(self._handle_tags_text_changed)
+        self._tags_completing = False
 
     def _handle_tags_text_changed(self, text: str) -> None:
         if not self._tags_completing:
