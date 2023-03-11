@@ -1,6 +1,6 @@
-import typing
 import unicodedata
 from collections.abc import Collection
+from typing import Any
 
 from PyQt6.QtCore import QAbstractTableModel, QModelIndex, QSortFilterProxyModel, Qt
 from PyQt6.QtWidgets import QTableView
@@ -55,7 +55,7 @@ class PayeeTableModel(QAbstractTableModel):
         item = self.payee_stats[row].attribute
         return QAbstractTableModel.createIndex(self, row, column, item)
 
-    def data(self, index: QModelIndex, role: Qt.ItemDataRole = ...) -> typing.Any:
+    def data(self, index: QModelIndex, role: Qt.ItemDataRole = ...) -> Any:
         if not index.isValid():
             return None
 

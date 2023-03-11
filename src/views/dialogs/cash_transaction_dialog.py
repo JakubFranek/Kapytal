@@ -58,7 +58,7 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
         self._tags_completer.setFilterMode(Qt.MatchFlag.MatchContains)
         self._tags_completer.setWidget(self.tagsLineEdit)
         self._tags_completer.activated.connect(self._handle_tags_completion)
-        self.tagsLineEdit.textChanged.connect(self._handle_tags_text_changed)
+        self.tagsLineEdit.textEdited.connect(self._handle_tags_text_changed)
         self._tags_completing = False
 
         if edit:
@@ -104,6 +104,11 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
         self.payeeToolButton.setDefaultAction(self.actionOpen_Payees)
         self.categoryToolButton.setDefaultAction(self.actionOpen_Categories)
         self.tagsToolButton.setDefaultAction(self.actionOpen_Tags)
+
+        self.payeeComboBox.lineEdit().setPlaceholderText("Enter Payee name")
+        self.categoryComboBox.lineEdit().setPlaceholderText("Enter Category path")
+        self.payeeComboBox.setCurrentIndex(-1)
+        self.categoryComboBox.setCurrentIndex(-1)
 
     @property
     def type_(self) -> CashTransactionType:
@@ -190,7 +195,7 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
     @property
     def tags(self) -> tuple[str]:
         tags = self.tagsLineEdit.text().split(";")
-        tags = [tag.strip() for tag in tags]
+        tags = [tag.strip() for tag in tags if tag.strip() != ""]
         return tuple(tags)
 
     @tags.setter

@@ -1,6 +1,6 @@
-import typing
 import unicodedata
 from collections.abc import Collection, Sequence
+from typing import Any
 
 from PyQt6.QtCore import QAbstractItemModel, QModelIndex, QSortFilterProxyModel, Qt
 from PyQt6.QtWidgets import QTreeView
@@ -95,7 +95,7 @@ class CategoryTreeModel(QAbstractItemModel):
             parent_row = grandparent.children.index(parent)
         return QAbstractItemModel.createIndex(self, parent_row, 0, parent)
 
-    def data(self, index: QModelIndex, role: Qt.ItemDataRole = ...) -> typing.Any:
+    def data(self, index: QModelIndex, role: Qt.ItemDataRole = ...) -> Any:
         if not index.isValid():
             return None
         column = index.column()

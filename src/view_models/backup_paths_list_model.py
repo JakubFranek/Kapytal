@@ -1,6 +1,6 @@
-import typing
 from collections.abc import Collection
 from pathlib import Path
+from typing import Any
 
 from PyQt6.QtCore import QAbstractListModel, QModelIndex, Qt
 from PyQt6.QtWidgets import QListView
@@ -35,7 +35,7 @@ class BackupPathsListModel(QAbstractListModel):
         item = self.paths[row]
         return QAbstractListModel.createIndex(self, row, 0, item)
 
-    def data(self, index: QModelIndex, role: Qt.ItemDataRole = ...) -> typing.Any:
+    def data(self, index: QModelIndex, role: Qt.ItemDataRole = ...) -> Any:
         if not index.isValid():
             return None
         path = self.paths[index.row()]

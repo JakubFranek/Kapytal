@@ -1,5 +1,5 @@
-import typing
 from collections.abc import Collection
+from typing import Any
 
 from PyQt6.QtCore import QAbstractTableModel, QModelIndex, Qt
 from PyQt6.QtWidgets import QTableView
@@ -46,7 +46,7 @@ class ExchangeRateTableModel(QAbstractTableModel):
         item = self.exchange_rates[row]
         return QAbstractTableModel.createIndex(self, row, column, item)
 
-    def data(self, index: QModelIndex, role: Qt.ItemDataRole = ...) -> typing.Any:
+    def data(self, index: QModelIndex, role: Qt.ItemDataRole = ...) -> Any:
         if not index.isValid():
             return None
         column = index.column()

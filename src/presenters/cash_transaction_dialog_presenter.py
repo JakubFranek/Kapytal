@@ -1,11 +1,13 @@
 from datetime import datetime
 
+from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QWidget
 
 import src.models.user_settings.user_settings as user_settings
 from src.models.model_objects.cash_objects import CashAccount, CashTransactionType
 from src.models.record_keeper import RecordKeeper
 from src.views.dialogs.cash_transaction_dialog import CashTransactionDialog
+from src.views.dialogs.select_item_dialog import ask_user_for_selection
 from src.views.utilities.handle_exception import display_error_message
 
 # TODO: allow adding and editing of CashTransactions
@@ -52,6 +54,9 @@ class CashTransactionDialogPresenter:
         )
         self._dialog.datetime_ = datetime.now(user_settings.settings.time_zone)
         self._dialog.signal_account_changed.connect(self._dialog_account_changed)
+        self._dialog.signal_open_payees.connect(self._get_payee)
+        self._dialog.signal_open_categories.connect(self._get_category)
+        self._dialog.signal_open_tags.connect(self._get_tag)
         self._dialog_account_changed()
         self._dialog.exec()
 
@@ -65,3 +70,43 @@ class CashTransactionDialogPresenter:
             raise ValueError(f"Invalid Account path: {account_path}")
         self._dialog.currency_code = _account.currency.code
         self._dialog.amount_decimals = _account.currency.places
+
+    def _get_payee(self) -> None:
+        payees = [payee.name for payee in self.record_keeper.payees]
+        payee = ask_user_for_selection(
+            self._dialog,
+            sorted(payees),
+            "Select Payee",
+            QIcon("icons_16:user-silhouette.png"),
+        )
+        self._dialog.payee = payee if payee != "" else self._dialog.payee
+
+    def _get_category(self) -> None:
+        if self._dialog.type_ == CashTransactionType.INCOME:
+            categories = [
+                category.path for category in self.record_keeper.income_categories
+            ]
+        else:
+            categories = [
+                category.path for category in self.record_keeper.expense_categories
+            ]
+        categories = categories + [
+            category.path
+            for category in self.record_keeper.income_and_expense_categories
+        ]
+        category = ask_user_for_selection(
+            self._dialog,
+            categories,
+            "Select Category",
+            QIcon("icons_custom:category.png"),
+        )
+        self._dialog.category = category if category != "" else self._dialog.category
+
+    def _get_tag(self) -> None:
+        tags = [tag.name for tag in self.record_keeper.tags]
+        tag = ask_user_for_selection(
+            self._dialog, sorted(tags), "Select Tag", QIcon("icons_16:tag.png")
+        )
+        current_tags = list(self._dialog.tags)
+        if tag not in current_tags:
+            self._dialog.tags = current_tags + [tag]
