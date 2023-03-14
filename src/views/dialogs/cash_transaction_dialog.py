@@ -4,12 +4,18 @@ from datetime import datetime
 from decimal import Decimal
 
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QIcon
+from PyQt6.QtGui import QAction, QIcon
 from PyQt6.QtWidgets import (
     QAbstractButton,
     QCompleter,
     QDialog,
     QDialogButtonBox,
+    QHBoxLayout,
+    QLabel,
+    QSizePolicy,
+    QSpacerItem,
+    QToolButton,
+    QVBoxLayout,
     QWidget,
 )
 
@@ -19,6 +25,9 @@ from src.models.model_objects.security_objects import SecurityAccount
 from src.views.ui_files.dialogs.Ui_cash_transaction_dialog import (
     Ui_CashTransactionDialog,
 )
+from src.views.widgets.add_attribute_row_widget import AddAttributeRowWidget
+from src.views.widgets.single_category_row_widget import SingleCategoryRowWidget
+from src.views.widgets.split_attribute_row_widget import ItemType, SplitItemRowWidget
 
 
 class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
@@ -27,9 +36,9 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
 
     signal_account_changed = pyqtSignal()
 
-    signal_open_tags = pyqtSignal()
-    signal_open_categories = pyqtSignal()
-    signal_open_payees = pyqtSignal()
+    signal_select_tag = pyqtSignal()
+    signal_select_category = pyqtSignal()
+    signal_select_payee = pyqtSignal()
 
     def __init__(
         self,
@@ -48,7 +57,8 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
         self.type_ = type_
         self._categories_income = categories_income
         self._categories_expense = categories_expense
-        self._setup_categories_combobox()
+
+        self._initialize_single_category()
         self.incomeRadioButton.toggled.connect(self._setup_categories_combobox)
         self.expenseRadioButton.toggled.connect(self._setup_categories_combobox)
 
@@ -187,20 +197,15 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
         self.buttonBox.addButton("Close", QDialogButtonBox.ButtonRole.RejectRole)
 
     def _initialize_actions(self) -> None:
-        self.actionOpen_Payees.setIcon(QIcon("icons_16:user-silhouette.png"))
-        self.actionOpen_Categories.setIcon(QIcon("icons_custom:category.png"))
-        self.actionOpen_Tags.setIcon(QIcon("icons_16:tag.png"))
-        self.actionSplit_Categories.setIcon(QIcon("icons_16:arrow-split.png"))
+        self.actionSelect_Payee.setIcon(QIcon("icons_16:user-silhouette.png"))
+        self.actionSelect_Tag.setIcon(QIcon("icons_16:tag.png"))
         self.actionSplit_Tags.setIcon(QIcon("icons_16:arrow-split.png"))
 
-        self.actionOpen_Payees.triggered.connect(self.signal_open_payees)
-        self.actionOpen_Categories.triggered.connect(self.signal_open_categories)
-        self.actionOpen_Tags.triggered.connect(self.signal_open_tags)
+        self.actionSelect_Payee.triggered.connect(self.signal_select_payee)
+        self.actionSelect_Tag.triggered.connect(self.signal_select_tag)
 
-        self.payeeToolButton.setDefaultAction(self.actionOpen_Payees)
-        self.categoryToolButton.setDefaultAction(self.actionOpen_Categories)
-        self.tagsToolButton.setDefaultAction(self.actionOpen_Tags)
-        self.splitCategoryToolButton.setDefaultAction(self.actionSplit_Categories)
+        self.payeeToolButton.setDefaultAction(self.actionSelect_Payee)
+        self.tagsToolButton.setDefaultAction(self.actionSelect_Tag)
         self.splitTagsToolButton.setDefaultAction(self.actionSplit_Tags)
 
     def _initialize_accounts_combobox(self, accounts: Collection[Account]) -> None:
@@ -219,9 +224,7 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
 
     def _initialize_combobox_placeholders(self) -> None:
         self.payeeComboBox.lineEdit().setPlaceholderText("Enter Payee name")
-        self.categoryComboBox.lineEdit().setPlaceholderText("Enter Category path")
         self.payeeComboBox.setCurrentIndex(-1)
-        self.categoryComboBox.setCurrentIndex(-1)
 
     def _initialize_tags_completer(self, tags: Collection[str]) -> None:
         self._tags_completer = QCompleter(tags)
@@ -254,10 +257,63 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
             self._tags_completing = False
 
     def _setup_categories_combobox(self) -> None:
-        self.categoryComboBox.clear()
-        if self.type_ == CashTransactionType.INCOME:
-            for category in self._categories_income:
-                self.categoryComboBox.addItem(category)
-        else:
-            for category in self._categories_expense:
-                self.categoryComboBox.addItem(category)
+        for row in self._category_rows:
+            if self.type_ == CashTransactionType.INCOME:
+                row.load_categories(self._categories_income)
+            else:
+                row.load_categories(self._categories_expense)
+
+    def _initialize_single_category(self) -> None:
+        self._single_category_row = SingleCategoryRowWidget(self)
+        self._category_rows = [self._single_category_row]
+        self.formLayout.insertRow(
+            6, QLabel("Category", self), self._single_category_row
+        )
+        self._setup_categories_combobox()
+        self._single_category_row.signal_split_categories.connect(
+            self._split_categories
+        )
+
+    def _split_categories(self) -> None:
+        current_category = self._single_category_row.category
+
+        self.formLayout.removeRow(6)
+        self.split_categories_vertical_layout = QVBoxLayout(None)
+        row1 = SplitItemRowWidget(ItemType.CATEGORY, self)
+        row2 = SplitItemRowWidget(ItemType.CATEGORY, self)
+        self._category_rows = [row1, row2]
+        self.split_categories_vertical_layout.addWidget(row1)
+        self.split_categories_vertical_layout.addWidget(row2)
+        self.formLayout.insertRow(
+            6, QLabel("Categories", self), self.split_categories_vertical_layout
+        )
+
+        self._setup_categories_combobox()
+        row1.category = current_category
+
+        for row in self._category_rows:
+            row.signal_remove_row.connect(self._remove_split_row)
+
+        self.add_row_widget = AddAttributeRowWidget(self)
+        self.add_row_widget.signal_add_row.connect(self._add_row)
+        self.split_categories_vertical_layout.addWidget(self.add_row_widget)
+
+    def _add_row(self) -> None:
+        row = SplitItemRowWidget(ItemType.CATEGORY, self)
+        self._category_rows.append(row)
+        index = self.split_categories_vertical_layout.count() - 1
+        self.split_categories_vertical_layout.insertWidget(index, row)
+
+    def _remove_split_row(self, removed_row: SplitItemRowWidget) -> None:
+        no_of_rows = self.split_categories_vertical_layout.count() - 1
+        if no_of_rows == 2:
+            self._category_rows.remove(removed_row)
+            remaining_category = self._category_rows[0].category
+            self.formLayout.removeRow(6)
+            self._initialize_single_category()
+            self._single_category_row.category = remaining_category
+            return
+        self.split_categories_vertical_layout.removeWidget(removed_row)
+        self._category_rows.remove(removed_row)
+        # FIXME: wrong row is deleted when a row has been added beforehand
+        # IDEA: "preferred" size for description? or something
