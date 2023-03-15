@@ -45,11 +45,15 @@ class SingleCategoryRowWidget(QWidget):
         self.combo_box.setCurrentText(value)
 
     def load_categories(self, items: Collection[str]) -> None:
+        current_text = self.category
         self._combo_box_items = items
         self.combo_box.clear()
         for item in items:
             self.combo_box.addItem(item)
-        self.combo_box.setCurrentIndex(-1)
+        if current_text in items:
+            self.combo_box.setCurrentText(current_text)
+        else:
+            self.combo_box.setCurrentIndex(-1)
 
     def _select_category(self) -> None:
         category = ask_user_for_selection(

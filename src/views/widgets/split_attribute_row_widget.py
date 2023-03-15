@@ -1,7 +1,8 @@
 from collections.abc import Collection
+from decimal import Decimal
 from enum import Enum, auto
 
-from PyQt6.QtCore import pyqtSignal
+from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QAction, QIcon
 from PyQt6.QtWidgets import QComboBox, QDoubleSpinBox, QHBoxLayout, QToolButton, QWidget
 
@@ -38,6 +39,10 @@ class SplitItemRowWidget(QWidget):
         self.select_tool_button.setDefaultAction(self.actionSelect_Item)
 
         self.double_spin_box = QDoubleSpinBox(self)
+        self.double_spin_box.setMaximum(1e16)
+        self.double_spin_box.setGroupSeparatorShown(True)
+        self.double_spin_box.setAlignment(Qt.AlignmentFlag.AlignRight)
+        self.double_spin_box.setMinimumWidth(125)
 
         self.remove_tool_button = QToolButton(self)
         self.actionRemove_Row = QAction("Remove", self)
@@ -54,6 +59,8 @@ class SplitItemRowWidget(QWidget):
         self.horizontal_layout.addWidget(self.remove_tool_button)
 
         self.layout().setContentsMargins(0, 0, 0, 0)
+        self.horizontal_layout.setStretchFactor(self.combo_box, 66)
+        self.horizontal_layout.setStretchFactor(self.double_spin_box, 34)
 
     @property
     def category(self) -> str:
@@ -63,12 +70,43 @@ class SplitItemRowWidget(QWidget):
     def category(self, value: str) -> None:
         self.combo_box.setCurrentText(value)
 
+    @property
+    def amount(self) -> Decimal:
+        return Decimal(self.double_spin_box.text())
+
+    @amount.setter
+    def amount(self, value: Decimal) -> None:
+        self.double_spin_box.setValue(value)
+
+    @property
+    def currency_code(self) -> str:
+        self.double_spin_box.suffix()
+
+    @currency_code.setter
+    def currency_code(self, code: str) -> None:
+        self.double_spin_box.setSuffix(" " + code)
+
+    @property
+    def amount_decimals(self) -> int:
+        self.double_spin_box.decimals()
+
+    @amount_decimals.setter
+    def amount_decimals(self, value: int) -> None:
+        self.double_spin_box.setDecimals(value)
+
+    def __repr__(self) -> str:
+        return f"SplitAttributeRowWidget('{self.category}')"
+
     def load_categories(self, items: Collection[str]) -> None:
+        current_text = self.category
         self._combo_box_items = items
         self.combo_box.clear()
         for item in items:
             self.combo_box.addItem(item)
-        self.combo_box.setCurrentIndex(-1)
+        if current_text in items:
+            self.combo_box.setCurrentText(current_text)
+        else:
+            self.combo_box.setCurrentIndex(-1)
 
     def _select_item(self) -> None:
         if self.type_ == ItemType.CATEGORY:

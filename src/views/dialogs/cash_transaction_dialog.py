@@ -4,17 +4,13 @@ from datetime import datetime
 from decimal import Decimal
 
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QAction, QIcon
+from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import (
     QAbstractButton,
     QCompleter,
     QDialog,
     QDialogButtonBox,
-    QHBoxLayout,
     QLabel,
-    QSizePolicy,
-    QSpacerItem,
-    QToolButton,
     QVBoxLayout,
     QWidget,
 )
@@ -135,7 +131,11 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
 
     @currency_code.setter
     def currency_code(self, code: str) -> None:
+        self._currency_code = code
         self.amountDoubleSpinBox.setSuffix(" " + code)
+        if len(self._category_rows) > 1:
+            for row in self._category_rows:
+                row.currency_code = code
 
     @property
     def amount_decimals(self) -> int:
@@ -143,15 +143,17 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
 
     @amount_decimals.setter
     def amount_decimals(self, value: int) -> None:
+        self._decimals = value
         self.amountDoubleSpinBox.setDecimals(value)
+        if len(self._category_rows) > 1:
+            for row in self._category_rows:
+                row.amount_decimals = value
 
     @property
-    def category(self) -> str:
-        return self.categoryComboBox.currentText()
-
-    @category.setter
-    def category(self, category: str) -> None:
-        self.categoryComboBox.setCurrentText(category)
+    def category_amount_pairs(self) -> tuple[tuple[str, Decimal]]:
+        if len(self._category_rows) == 1:
+            return ((self._category_rows[0], self.amount),)
+        return tuple((row.category, row.amount) for row in self._category_rows)
 
     @property
     def tags(self) -> tuple[str]:
@@ -164,6 +166,10 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
         text = "; ".join(tags)
         self.tagsLineEdit.setText(text)
 
+    def reject(self) -> None:
+        logging.debug(f"Closing {self.__class__.__name__}")
+        return super().reject()
+
     def _handle_button_box_click(self, button: QAbstractButton) -> None:
         role = self.buttonBox.buttonRole(button)
         if role == QDialogButtonBox.ButtonRole.AcceptRole:
@@ -174,10 +180,6 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
             self.reject()
         else:
             raise ValueError("Unknown role of the clicked button in the ButtonBox")
-
-    def reject(self) -> None:
-        logging.debug(f"Closing {self.__class__.__name__}")
-        return super().reject()
 
     def _initialize_window(self, edit: bool) -> None:
         if edit:
@@ -264,24 +266,25 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
                 row.load_categories(self._categories_expense)
 
     def _initialize_single_category(self) -> None:
-        self._single_category_row = SingleCategoryRowWidget(self)
-        self._category_rows = [self._single_category_row]
-        self.formLayout.insertRow(
-            6, QLabel("Category", self), self._single_category_row
-        )
+        row = SingleCategoryRowWidget(self)
+        self._category_rows = [row]
+        self.formLayout.insertRow(6, QLabel("Category", self), row)
         self._setup_categories_combobox()
-        self._single_category_row.signal_split_categories.connect(
-            self._split_categories
-        )
+        row.signal_split_categories.connect(self._split_categories)
 
     def _split_categories(self) -> None:
-        current_category = self._single_category_row.category
+        current_category = self._category_rows[0].category
 
         self.formLayout.removeRow(6)
         self.split_categories_vertical_layout = QVBoxLayout(None)
         row1 = SplitItemRowWidget(ItemType.CATEGORY, self)
         row2 = SplitItemRowWidget(ItemType.CATEGORY, self)
         self._category_rows = [row1, row2]
+        row1.amount_decimals = self._decimals
+        row2.amount_decimals = self._decimals
+        row1.currency_code = self._currency_code
+        row2.currency_code = self._currency_code
+
         self.split_categories_vertical_layout.addWidget(row1)
         self.split_categories_vertical_layout.addWidget(row2)
         self.formLayout.insertRow(
@@ -300,9 +303,13 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
 
     def _add_row(self) -> None:
         row = SplitItemRowWidget(ItemType.CATEGORY, self)
+        row.amount_decimals = self._decimals
+        row.currency_code = self._currency_code
         self._category_rows.append(row)
         index = self.split_categories_vertical_layout.count() - 1
         self.split_categories_vertical_layout.insertWidget(index, row)
+        self._setup_categories_combobox()
+        row.signal_remove_row.connect(self._remove_split_row)
 
     def _remove_split_row(self, removed_row: SplitItemRowWidget) -> None:
         no_of_rows = self.split_categories_vertical_layout.count() - 1
@@ -311,9 +318,9 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
             remaining_category = self._category_rows[0].category
             self.formLayout.removeRow(6)
             self._initialize_single_category()
-            self._single_category_row.category = remaining_category
+            self._category_rows[0].category = remaining_category
             return
         self.split_categories_vertical_layout.removeWidget(removed_row)
         self._category_rows.remove(removed_row)
-        # FIXME: wrong row is deleted when a row has been added beforehand
+        removed_row.deleteLater()
         # IDEA: "preferred" size for description? or something
