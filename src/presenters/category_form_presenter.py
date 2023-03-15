@@ -2,7 +2,6 @@ import copy
 import logging
 
 from PyQt6.QtCore import QSortFilterProxyModel, Qt
-
 from src.models.model_objects.attributes import Category, CategoryType
 from src.models.record_keeper import RecordKeeper
 from src.models.utilities.calculation import CategoryStats, get_category_stats
@@ -30,10 +29,10 @@ class CategoryFormPresenter:
 
         self._proxy_model.setSourceModel(self._model)
         self._proxy_model.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
-        self._proxy_model.setRecursiveFilteringEnabled(True)
+        self._proxy_model.setRecursiveFilteringEnabled(True)  # noqa: FBT003
         self._view.category_tree.setModel(self._proxy_model)
 
-        self._view.incomeRadioButton.setChecked(True)
+        self._view.incomeRadioButton.setChecked(True)  # noqa: FBT003
 
         self._setup_signals()
         self._view.finalize_setup()
@@ -90,7 +89,7 @@ class CategoryFormPresenter:
             raise ValueError("No index to expand recursively selected.")
         self._view.category_tree.expandRecursively(indexes[0])
 
-    def run_dialog(self, edit: bool) -> None:
+    def run_dialog(self, *, edit: bool) -> None:
         item = self._model.get_selected_item()
         type_ = self._view.checked_type
         paths = [category.path + "/" for category in self._record_keeper.categories]
@@ -110,7 +109,7 @@ class CategoryFormPresenter:
             item = self._model.get_selected_item()
             if item is None:
                 raise ValueError("Cannot edit an unselected item.")
-            self._dialog.signal_OK.connect(self.edit_category)
+            self._dialog.signal_ok.connect(self.edit_category)
             self._dialog.path = item.path
             self._dialog.current_path = item.path
             if item.parent is None:
@@ -122,7 +121,7 @@ class CategoryFormPresenter:
             if item is not None:
                 self._dialog.path = item.path + "/"
             self._dialog.position = self._dialog.positionSpinBox.maximum()
-            self._dialog.signal_OK.connect(self.add_category)
+            self._dialog.signal_ok.connect(self.add_category)
         logging.debug(f"Running CategoryDialog ({edit=})")
         self._dialog.exec()
 
@@ -137,7 +136,7 @@ class CategoryFormPresenter:
             logging.disable(logging.INFO)
             record_keeper_copy.add_category(path, type_, index)
             logging.disable(logging.NOTSET)
-        except Exception:
+        except Exception:  # noqa: BLE001
             handle_exception()
             return
 
@@ -172,7 +171,7 @@ class CategoryFormPresenter:
                 current_path=previous_path, new_path=new_path, index=new_index
             )
             logging.disable(logging.NOTSET)
-        except Exception:
+        except Exception:  # noqa: BLE001
             handle_exception()
             return
 
@@ -208,7 +207,7 @@ class CategoryFormPresenter:
         record_keeper_copy = copy.deepcopy(self._record_keeper)
         try:
             record_keeper_copy.remove_category(item.path)
-        except Exception:
+        except Exception:  # noqa: BLE001
             handle_exception()
             return
 

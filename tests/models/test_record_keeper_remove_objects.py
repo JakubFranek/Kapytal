@@ -1,9 +1,8 @@
 from datetime import datetime
 from decimal import Decimal
+from typing import TYPE_CHECKING
 
 import pytest
-
-import src.models.user_settings.user_settings as user_settings
 from src.models.custom_exceptions import InvalidOperationError, NotFoundError
 from src.models.model_objects.attributes import Attribute, AttributeType, CategoryType
 from src.models.model_objects.cash_objects import (
@@ -11,12 +10,15 @@ from src.models.model_objects.cash_objects import (
     CashTransactionType,
     RefundTransaction,
 )
-from src.models.model_objects.currency_objects import Currency
 from src.models.model_objects.security_objects import SecurityTransactionType
 from src.models.record_keeper import RecordKeeper
+from src.models.user_settings import user_settings
 from tests.models.test_record_keeper import (
     get_preloaded_record_keeper_with_various_transactions,
 )
+
+if TYPE_CHECKING:
+    from src.models.model_objects.currency_objects import Currency
 
 
 def test_remove_account() -> None:

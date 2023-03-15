@@ -1,7 +1,6 @@
 from types import NoneType
 
 import pytest
-
 from src.models.model_objects.cash_objects import _validate_collection_of_tuple_pairs
 
 

@@ -1,6 +1,6 @@
 import copy
 import logging
-from collections.abc import Callable
+from typing import Protocol
 
 from src.models.base_classes.account import Account
 from src.models.model_objects.account_group import AccountGroup
@@ -16,10 +16,16 @@ from src.views.dialogs.security_account_dialog import SecurityAccountDialog
 from src.views.widgets.account_tree_widget import AccountTreeWidget
 
 
-class AccountTreePresenter:
-    # Definition of custom Callable type for setting up dialogs
-    SetupDialogCallable = Callable[[bool, AccountGroup | Account | None, int], None]
+class SetupDialogCallable(Protocol):
+    """Definition of custom Callable type for setting up dialogs"""
 
+    def __call__(
+        self, item: Account | AccountGroup | None, max_position: int, *, edit: bool
+    ) -> None:
+        ...
+
+
+class AccountTreePresenter:
     event_data_changed = Event()
     event_visibility_changed = Event()
 
@@ -40,7 +46,7 @@ class AccountTreePresenter:
     def valid_accounts(self) -> tuple[Account, ...]:
         return self._model.visible_accounts
 
-    def set_widget_visibility(self, visible: bool) -> None:
+    def set_widget_visibility(self, *, visible: bool) -> None:
         if visible and self._view.isHidden():
             logging.debug("Showing AccountTreeWidget")
             self._view.show()
@@ -68,7 +74,7 @@ class AccountTreePresenter:
 
     def edit_item(self) -> None:
         item = self._model.get_selected_item()
-        setup_dialog: AccountTreePresenter.SetupDialogCallable
+        setup_dialog: SetupDialogCallable
         if isinstance(item, AccountGroup):
             setup_dialog = self.setup_account_group_dialog
         elif isinstance(item, SecurityAccount):
@@ -92,7 +98,8 @@ class AccountTreePresenter:
                 record_keeper_copy.remove_account_group(item.path)
             else:
                 record_keeper_copy.remove_account(item.path)
-        except Exception:
+        except Exception:  # noqa: BLE001
+            # TODO: pass exception to handle_exception method?
             handle_exception()
             return
 
@@ -109,7 +116,7 @@ class AccountTreePresenter:
     def run_add_dialog(self, setup_dialog: SetupDialogCallable) -> None:
         item = self._model.get_selected_item()
         max_position = self._get_max_child_position(item)
-        setup_dialog(False, item, max_position)
+        setup_dialog(item, max_position, edit=False)
         self._dialog.path = "" if item is None else item.path + "/"
         self._dialog.position = self._dialog.positionSpinBox.maximum()
         logging.debug(f"Running {self._dialog.__class__.__name__} (edit=False)")
@@ -123,7 +130,7 @@ class AccountTreePresenter:
         if item is None:
             raise ValueError("Cannot edit an unselected item.")
         max_position = self._get_max_parent_position(item)
-        setup_dialog(True, item, max_position)
+        setup_dialog(item, max_position, edit=True)
         self._dialog.current_path = item.path
         self._dialog.path = item.path
         if item.parent is None:
@@ -135,8 +142,13 @@ class AccountTreePresenter:
         self._dialog.exec()
 
     def setup_account_group_dialog(
-        self, edit: bool, item: AccountGroup, max_position: int  # noqa: U100
+        self,
+        item: AccountGroup,
+        max_position: int,
+        *,
+        edit: bool,
     ) -> None:
+        del item
         account_group_paths = self._get_account_group_paths()
         if edit:
             self._dialog = AccountGroupDialog(
@@ -145,7 +157,7 @@ class AccountTreePresenter:
                 paths=account_group_paths,
                 edit=edit,
             )
-            self._dialog.signal_OK.connect(self.edit_account_group)
+            self._dialog.signal_ok.connect(self.edit_account_group)
         else:
             self._dialog = AccountGroupDialog(
                 parent=self._view,
@@ -153,7 +165,7 @@ class AccountTreePresenter:
                 paths=account_group_paths,
                 edit=edit,
             )
-            self._dialog.signal_OK.connect(self.add_account_group)
+            self._dialog.signal_ok.connect(self.add_account_group)
 
     # TODO: investigate why copying is not needed here
     # adding AG to an AG should lead to wrong indexing in pre_add
@@ -162,14 +174,18 @@ class AccountTreePresenter:
         index = self._dialog.position - 1
 
         logging.info("Adding AccountGroup")
+        record_keeper_copy = copy.deepcopy(self._record_keeper)
         try:
-            self._record_keeper.add_account_group(path, index)
-        except Exception:
+            logging.disable(logging.INFO)
+            record_keeper_copy.add_account_group(path, index)
+            logging.disable(logging.NOTSET)
+        except Exception:  # noqa: BLE001
             handle_exception()
             return
 
         item = self._model.get_selected_item()
         self._model.pre_add(item)
+        self._record_keeper.add_account_group(path, index)
         self.update_model_data()
         self._model.post_add()
         self._dialog.close()
@@ -193,7 +209,7 @@ class AccountTreePresenter:
                 current_path=previous_path, new_path=new_path, index=new_index
             )
             logging.disable(logging.NOTSET)
-        except Exception:
+        except Exception:  # noqa: BLE001
             handle_exception()
             return
 
@@ -220,8 +236,13 @@ class AccountTreePresenter:
         self.event_data_changed()
 
     def setup_security_account_dialog(
-        self, edit: bool, item: SecurityAccount, max_position: int  # noqa: U100
+        self,
+        item: SecurityAccount,
+        max_position: int,
+        *,
+        edit: bool,
     ) -> None:
+        del item
         account_group_paths = self._get_account_group_paths()
         if edit:
             self._dialog = SecurityAccountDialog(
@@ -230,7 +251,7 @@ class AccountTreePresenter:
                 paths=account_group_paths,
                 edit=edit,
             )
-            self._dialog.signal_OK.connect(self.edit_security_account)
+            self._dialog.signal_ok.connect(self.edit_security_account)
         else:
             self._dialog = SecurityAccountDialog(
                 parent=self._view,
@@ -238,7 +259,7 @@ class AccountTreePresenter:
                 paths=account_group_paths,
                 edit=edit,
             )
-            self._dialog.signal_OK.connect(self.add_security_account)
+            self._dialog.signal_ok.connect(self.add_security_account)
 
     def add_security_account(self) -> None:
         path = self._dialog.path
@@ -247,7 +268,7 @@ class AccountTreePresenter:
         logging.info("Adding SecurityAccount")
         try:
             self._record_keeper.add_security_account(path, index)
-        except Exception:
+        except Exception:  # noqa: BLE001
             handle_exception()
             return
 
@@ -276,7 +297,7 @@ class AccountTreePresenter:
                 current_path=previous_path, new_path=new_path, index=previous_index
             )
             logging.disable(logging.NOTSET)
-        except Exception:
+        except Exception:  # noqa: BLE001
             handle_exception()
             return
 
@@ -302,7 +323,11 @@ class AccountTreePresenter:
         self.event_data_changed()
 
     def setup_cash_account_dialog(
-        self, edit: bool, item: CashAccount, max_position: int
+        self,
+        item: CashAccount,
+        max_position: int,
+        *,
+        edit: bool,
     ) -> None:
         account_group_paths = self._get_account_group_paths()
         if edit:
@@ -314,7 +339,7 @@ class AccountTreePresenter:
                 code_places_pairs=code_places_pairs,
                 edit=edit,
             )
-            self._dialog.signal_OK.connect(self.edit_cash_account)
+            self._dialog.signal_ok.connect(self.edit_cash_account)
             self._dialog.initial_balance = item.initial_balance.value_rounded
         else:
             code_places_pairs = [
@@ -328,7 +353,7 @@ class AccountTreePresenter:
                 code_places_pairs=code_places_pairs,
                 edit=edit,
             )
-            self._dialog.signal_OK.connect(self.add_cash_account)
+            self._dialog.signal_ok.connect(self.add_cash_account)
 
     def add_cash_account(self) -> None:
         path = self._dialog.path
@@ -341,7 +366,7 @@ class AccountTreePresenter:
             self._record_keeper.add_cash_account(
                 path, currency_code, initial_balance, index
             )
-        except Exception:
+        except Exception:  # noqa: BLE001
             handle_exception()
             return
 
@@ -374,7 +399,7 @@ class AccountTreePresenter:
                 index=new_index,
             )
             logging.disable(logging.NOTSET)
-        except Exception:
+        except Exception:  # noqa: BLE001
             handle_exception()
             return
 
@@ -427,9 +452,13 @@ class AccountTreePresenter:
         self._view.signal_selection_changed.connect(self._selection_changed)
         self._view.signal_expand_below.connect(self.expand_all_below)
 
-        self._view.signal_show_all.connect(lambda: self._set_visibility_all(True))
+        self._view.signal_show_all.connect(
+            lambda: self._set_visibility_all(visible=True)
+        )
         self._view.signal_show_selection_only.connect(self._set_visible_only)
-        self._view.signal_hide_all.connect(lambda: self._set_visibility_all(False))
+        self._view.signal_hide_all.connect(
+            lambda: self._set_visibility_all(visible=False)
+        )
 
         self._view.signal_add_account_group.connect(
             lambda: self.run_add_dialog(
@@ -474,7 +503,7 @@ class AccountTreePresenter:
             for account_group in self._record_keeper.account_groups
         ]
 
-    def _set_visibility_all(self, visible: bool) -> None:
+    def _set_visibility_all(self, *, visible: bool) -> None:
         self._model.set_visibility_all(visible)
         self._view.refresh()
         self.event_visibility_changed()

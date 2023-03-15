@@ -5,14 +5,13 @@ from decimal import Decimal
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QAbstractButton, QDialog, QDialogButtonBox, QWidget
-
 from src.views.ui_files.dialogs.Ui_set_exchange_rate_dialog import (
     Ui_SetExchangeRateDialog,
 )
 
 
 class SetExchangeRateDialog(QDialog, Ui_SetExchangeRateDialog):
-    signal_OK = pyqtSignal()
+    signal_ok = pyqtSignal()
 
     def __init__(
         self,
@@ -52,7 +51,7 @@ class SetExchangeRateDialog(QDialog, Ui_SetExchangeRateDialog):
     def _handle_button_box_click(self, button: QAbstractButton) -> None:
         role = self.buttonBox.buttonRole(button)
         if role == QDialogButtonBox.ButtonRole.AcceptRole:
-            self.signal_OK.emit()
+            self.signal_ok.emit()
         elif role == QDialogButtonBox.ButtonRole.RejectRole:
             self.reject()
         else:

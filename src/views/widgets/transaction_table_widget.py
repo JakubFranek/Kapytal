@@ -3,7 +3,6 @@ import logging
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QAction, QContextMenuEvent, QCursor, QIcon
 from PyQt6.QtWidgets import QLineEdit, QMenu, QWidget
-
 from src.views.constants import TRANSACTION_TABLE_COLUMN_HEADERS, TransactionTableColumn
 from src.views.ui_files.widgets.Ui_transaction_table_widget import (
     Ui_TransactionTableWidget,
@@ -45,7 +44,9 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
         self.tableView.resizeColumnsToContents()
         self.tableView.horizontalHeader().setStretchLastSection(True)
 
-    def set_column_visibility(self, column: TransactionTableColumn, show: bool) -> None:
+    def set_column_visibility(
+        self, column: TransactionTableColumn, *, show: bool
+    ) -> None:
         if show != self.tableView.isColumnHidden(column):
             return
 
@@ -65,15 +66,15 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
             logging.debug(f"Hiding TransactionTable column {column.name}")
 
     def show_all_columns(self) -> None:
-        for column in TRANSACTION_TABLE_COLUMN_HEADERS.keys():
+        for column in TRANSACTION_TABLE_COLUMN_HEADERS:
             self.set_column_visibility(column, True)
 
     def _create_column_actions(self) -> None:
         self.column_actions: list[QAction] = []
         for column, text in TRANSACTION_TABLE_COLUMN_HEADERS.items():
             action = QAction(parent=self)
-            text = text.replace("&", "&&")
-            action.setText(text)
+            _text = text.replace("&", "&&")
+            action.setText(_text)
             action.setData(column)
             action.setCheckable(True)
             action.triggered.connect(
@@ -83,9 +84,8 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
             )
             self.column_actions.append(action)
 
-    def _create_header_context_menu(
-        self, event: QContextMenuEvent  # noqa: U100
-    ) -> None:
+    def _create_header_context_menu(self, event: QContextMenuEvent) -> None:
+        del event
         self.header_menu = QMenu(self)
         for action in self.column_actions:
             column = action.data()
@@ -100,9 +100,8 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
         self.header_menu.addAction(self.actionReset_Columns)
         self.header_menu.popup(QCursor.pos())
 
-    def _create_table_context_menu(
-        self, event: QContextMenuEvent  # noqa: U100
-    ) -> None:
+    def _create_table_context_menu(self, event: QContextMenuEvent) -> None:
+        del event
         self.header_menu = QMenu(self)
         self.header_menu.addAction(self.actionEdit)
         self.header_menu.addAction(self.actionDuplicate)

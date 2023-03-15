@@ -6,6 +6,7 @@ __pycache__
 *.log
 saved_data/**/*.json
 .pytest_cache
+.ruff_cache
 .coverage
 coverage.xml
 *.exe

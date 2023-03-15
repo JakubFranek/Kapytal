@@ -7,8 +7,6 @@ from typing import Any
 import pytest
 from hypothesis import assume, given
 from hypothesis import strategies as st
-
-import src.models.user_settings.user_settings as user_settings
 from src.models.base_classes.account import Account
 from src.models.model_objects.attributes import AttributeType, CategoryType
 from src.models.model_objects.cash_objects import (
@@ -22,6 +20,7 @@ from src.models.model_objects.security_objects import (
     SecurityTransactionType,
 )
 from src.models.record_keeper import AlreadyExistsError, NotFoundError, RecordKeeper
+from src.models.user_settings import user_settings
 from tests.models.test_assets.composites import (
     currencies,
     everything_except,
@@ -72,38 +71,38 @@ def test_set_base_currency() -> None:
 
 
 @given(
-    currency_A=currencies(),
-    currency_B=currencies(),
+    currency_a=currencies(),
+    currency_b=currencies(),
     places=st.integers(min_value=0, max_value=8),
 )
 def test_add_exchange_rate(
-    currency_A: Currency, currency_B: Currency, places: int
+    currency_a: Currency, currency_b: Currency, places: int
 ) -> None:
-    assume(currency_A != currency_B)
+    assume(currency_a != currency_b)
     record_keeper = RecordKeeper()
-    record_keeper.add_currency(currency_A.code, places)
-    record_keeper.add_currency(currency_B.code, places)
-    record_keeper.add_exchange_rate(currency_A.code, currency_B.code)
+    record_keeper.add_currency(currency_a.code, places)
+    record_keeper.add_currency(currency_b.code, places)
+    record_keeper.add_exchange_rate(currency_a.code, currency_b.code)
     assert (
-        str(record_keeper.exchange_rates[0]) == f"{currency_A.code}/{currency_B.code}"
+        str(record_keeper.exchange_rates[0]) == f"{currency_a.code}/{currency_b.code}"
     )
 
 
 @given(
-    currency_A=currencies(),
-    currency_B=currencies(),
+    currency_a=currencies(),
+    currency_b=currencies(),
     places=st.integers(min_value=0, max_value=8),
 )
 def test_add_exchange_rate_already_exists(
-    currency_A: Currency, currency_B: Currency, places: int
+    currency_a: Currency, currency_b: Currency, places: int
 ) -> None:
-    assume(currency_A != currency_B)
+    assume(currency_a != currency_b)
     record_keeper = RecordKeeper()
-    record_keeper.add_currency(currency_A.code, places)
-    record_keeper.add_currency(currency_B.code, places)
-    record_keeper.add_exchange_rate(currency_A.code, currency_B.code)
+    record_keeper.add_currency(currency_a.code, places)
+    record_keeper.add_currency(currency_b.code, places)
+    record_keeper.add_exchange_rate(currency_a.code, currency_b.code)
     with pytest.raises(AlreadyExistsError):
-        record_keeper.add_exchange_rate(currency_A.code, currency_B.code)
+        record_keeper.add_exchange_rate(currency_a.code, currency_b.code)
 
 
 @given(
@@ -214,7 +213,7 @@ def test_add_cash_account(
 @given(
     description=st.text(min_size=0, max_size=256),
     datetime_=st.datetimes(
-        min_value=datetime.now() + timedelta(days=1),
+        min_value=datetime.now() + timedelta(days=1),  # noqa: DTZ005
         timezones=st.just(user_settings.settings.time_zone),
     ),
     transaction_type=st.sampled_from(CashTransactionType),
@@ -287,7 +286,7 @@ def test_add_cash_transaction(
 @given(
     description=st.text(min_size=0, max_size=256),
     datetime_=st.datetimes(
-        min_value=datetime.now() + timedelta(days=1),
+        min_value=datetime.now() + timedelta(days=1),  # noqa: DTZ005
         timezones=st.just(user_settings.settings.time_zone),
     ),
     amount_sent=valid_decimals(min_value=0.01),

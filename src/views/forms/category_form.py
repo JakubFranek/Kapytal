@@ -3,7 +3,6 @@ import logging
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QCloseEvent, QIcon
 from PyQt6.QtWidgets import QLineEdit, QWidget
-
 from src.models.model_objects.attributes import CategoryType
 from src.views.category_tree import CategoryTree
 from src.views.ui_files.forms.Ui_category_form import Ui_CategoryForm
@@ -44,9 +43,15 @@ class CategoryForm(QWidget, Ui_CategoryForm):
             self.signal_tree_selection_changed.emit
         )
 
-        self.incomeRadioButton.toggled.connect(self._radio_button_toggled)
-        self.expenseRadioButton.toggled.connect(self._radio_button_toggled)
-        self.incomeAndExpenseRadioButton.toggled.connect(self._radio_button_toggled)
+        self.incomeRadioButton.toggled.connect(
+            lambda checked: self._radio_button_toggled(checked=checked)
+        )
+        self.expenseRadioButton.toggled.connect(
+            lambda checked: self._radio_button_toggled(checked=checked)
+        )
+        self.incomeAndExpenseRadioButton.toggled.connect(
+            lambda checked: self._radio_button_toggled(checked=checked)
+        )
 
         self.expandAllToolButton.setDefaultAction(self.category_tree.actionExpand_All)
         self.collapseAllToolButton.setDefaultAction(
@@ -72,14 +77,14 @@ class CategoryForm(QWidget, Ui_CategoryForm):
         logging.debug(f"Showing {self.__class__.__name__}")
         self.show()
 
-    def closeEvent(self, a0: QCloseEvent) -> None:
+    def closeEvent(self, a0: QCloseEvent) -> None:  # noqa: N802
         logging.debug(f"Closing {self.__class__.__name__}")
         return super().closeEvent(a0)
 
     def finalize_setup(self) -> None:
         self.category_tree.finalize_setup()
 
-    def _radio_button_toggled(self, checked: bool) -> None:
+    def _radio_button_toggled(self, *, checked: bool) -> None:
         if not checked:
             return  # don't care about un-checking of radio button
         self.signal_type_selection_changed.emit()

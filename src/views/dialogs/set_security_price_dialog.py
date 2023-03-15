@@ -5,14 +5,13 @@ from decimal import Decimal
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QAbstractButton, QDialog, QDialogButtonBox, QWidget
-
 from src.views.ui_files.dialogs.Ui_set_security_price_dialog import (
     Ui_SetSecurityPriceDialog,
 )
 
 
 class SetSecurityPriceDialog(QDialog, Ui_SetSecurityPriceDialog):
-    signal_OK = pyqtSignal()
+    signal_ok = pyqtSignal()
 
     def __init__(
         self,
@@ -42,7 +41,7 @@ class SetSecurityPriceDialog(QDialog, Ui_SetSecurityPriceDialog):
     def _handle_button_box_click(self, button: QAbstractButton) -> None:
         role = self.buttonBox.buttonRole(button)
         if role == QDialogButtonBox.ButtonRole.AcceptRole:
-            self.signal_OK.emit()
+            self.signal_ok.emit()
         elif role == QDialogButtonBox.ButtonRole.RejectRole:
             self.reject()
         else:

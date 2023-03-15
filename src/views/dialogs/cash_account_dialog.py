@@ -11,12 +11,11 @@ from PyQt6.QtWidgets import (
     QDialogButtonBox,
     QWidget,
 )
-
 from src.views.ui_files.dialogs.Ui_cash_account_dialog import Ui_CashAccountDialog
 
 
 class CashAccountDialog(QDialog, Ui_CashAccountDialog):
-    signal_OK = pyqtSignal()
+    signal_ok = pyqtSignal()
 
     def __init__(
         self,
@@ -24,6 +23,7 @@ class CashAccountDialog(QDialog, Ui_CashAccountDialog):
         max_position: int,
         paths: Collection[str],
         code_places_pairs: Collection[tuple[str, int]],
+        *,
         edit: bool,
     ) -> None:
         super().__init__(parent=parent)
@@ -106,7 +106,7 @@ class CashAccountDialog(QDialog, Ui_CashAccountDialog):
     def _handle_button_box_click(self, button: QAbstractButton) -> None:
         role = self.buttonBox.buttonRole(button)
         if role == QDialogButtonBox.ButtonRole.AcceptRole:
-            self.signal_OK.emit()
+            self.signal_ok.emit()
         elif role == QDialogButtonBox.ButtonRole.RejectRole:
             self.reject()
         else:

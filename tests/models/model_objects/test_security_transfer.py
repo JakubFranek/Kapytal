@@ -5,14 +5,13 @@ from typing import Any
 import pytest
 from hypothesis import given
 from hypothesis import strategies as st
-
-import src.models.user_settings.user_settings as user_settings
 from src.models.custom_exceptions import TransferSameAccountError
 from src.models.model_objects.security_objects import (
     Security,
     SecurityAccount,
     SecurityTransfer,
 )
+from src.models.user_settings import user_settings
 from tests.models.test_assets.composites import (
     everything_except,
     securities,
@@ -31,7 +30,7 @@ from tests.models.test_assets.composites import (
     account_recipient=security_accounts(),
     data=st.data(),
 )
-def test_creation(
+def test_creation(  # noqa: PLR0913
     description: str,
     datetime_: datetime,
     security: Security,
@@ -68,7 +67,7 @@ def test_creation(
     account_recipient=security_accounts(),
     data=st.data(),
 )
-def test_invalid_account_sender_type(
+def test_invalid_account_sender_type(  # noqa: PLR0913
     description: str,
     datetime_: datetime,
     security: Security,
@@ -93,7 +92,7 @@ def test_invalid_account_sender_type(
     account_sender=security_accounts(),
     data=st.data(),
 )
-def test_invalid_account_recipient_type(
+def test_invalid_account_recipient_type(  # noqa: PLR0913
     description: str,
     datetime_: datetime,
     security: Security,

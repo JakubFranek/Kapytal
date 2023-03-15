@@ -1,6 +1,5 @@
 from datetime import datetime, timedelta
 
-import src.models.user_settings.user_settings as user_settings
 from src.models.model_objects.attributes import (
     Attribute,
     AttributeType,
@@ -14,6 +13,7 @@ from src.models.model_objects.cash_objects import (
     RefundTransaction,
 )
 from src.models.model_objects.currency_objects import CashAmount, Currency
+from src.models.user_settings import user_settings
 from src.models.utilities.calculation import (
     get_category_stats,
     get_payee_stats,
@@ -54,10 +54,10 @@ def test_calculate_attribute_stats() -> None:
         + timedelta(days=1),
     )
     assert payee_stats.attribute == payee
-    assert payee_stats.no_of_transactions == 5
+    assert payee_stats.no_of_transactions == 5  # noqa: PLR2004
     assert payee_stats.balance.value_rounded == -1 - 2 + 3 + 5 + 1
     assert tag_stats.attribute == tag
-    assert tag_stats.no_of_transactions == 5
+    assert tag_stats.no_of_transactions == 5  # noqa: PLR2004
     assert tag_stats.balance.value_rounded == -1 - 2 + 3 - 4 + 1
 
 
@@ -83,13 +83,13 @@ def test_calculate_category_stats() -> None:
     )
 
     assert category_stats.category == category_expense
-    assert category_stats.transactions_self == 3
-    assert category_stats.transactions_total == 4
+    assert category_stats.transactions_self == 3  # noqa: PLR2004
+    assert category_stats.transactions_total == 4  # noqa: PLR2004
     assert category_stats.balance.value_rounded == -1 - 2 - 4 - 4 + 1
 
     assert category_child_stats.category == category_expense_child
-    assert category_child_stats.transactions_self == 2
-    assert category_child_stats.transactions_total == 2
+    assert category_child_stats.transactions_self == 2  # noqa: PLR2004
+    assert category_child_stats.transactions_total == 2  # noqa: PLR2004
     assert category_child_stats.balance.value_rounded == -2 - 4
 
 

@@ -1,5 +1,4 @@
 from collections.abc import Collection
-from typing import Any
 
 from PyQt6.QtCore import QAbstractListModel, QModelIndex, QSortFilterProxyModel, Qt
 from PyQt6.QtWidgets import QListView
@@ -14,14 +13,13 @@ class SimpleListModel(QAbstractListModel):
         self._items: list[str] = items
         self._proxy = proxy
 
-    def rowCount(self, index: QModelIndex = ...) -> int:
+    def rowCount(self, index: QModelIndex = ...) -> int:  # noqa: N802
         if isinstance(index, QModelIndex) and index.isValid():
             return 0
         return len(self._items)
 
-    def index(
-        self, row: int, column: int, parent: QModelIndex = ...  # noqa: U100
-    ) -> QModelIndex:
+    def index(self, row: int, column: int, parent: QModelIndex = ...) -> QModelIndex:
+        del column
         if parent.isValid():
             return QModelIndex()
         if not QAbstractListModel.hasIndex(self, row, 0, QModelIndex()):
@@ -29,7 +27,7 @@ class SimpleListModel(QAbstractListModel):
         item = self._items[row]
         return QAbstractListModel.createIndex(self, row, 0, item)
 
-    def data(self, index: QModelIndex, role: Qt.ItemDataRole = ...) -> Any:
+    def data(self, index: QModelIndex, role: Qt.ItemDataRole = ...) -> str | None:
         if not index.isValid():
             return None
         if role == Qt.ItemDataRole.DisplayRole:

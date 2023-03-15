@@ -5,7 +5,6 @@ from typing import Any
 import pytest
 from hypothesis import assume, given
 from hypothesis import strategies as st
-
 from src.models.model_objects.currency_objects import (
     Currency,
     CurrencyError,

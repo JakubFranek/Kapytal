@@ -7,8 +7,6 @@ from typing import Any
 import pytest
 from hypothesis import assume, given
 from hypothesis import strategies as st
-
-import src.models.user_settings.user_settings as user_settings
 from src.models.model_objects.attributes import (
     Attribute,
     AttributeType,
@@ -28,6 +26,7 @@ from src.models.model_objects.currency_objects import (
     Currency,
     CurrencyError,
 )
+from src.models.user_settings import user_settings
 from tests.models.test_assets.composites import (
     attributes,
     cash_accounts,
@@ -52,7 +51,7 @@ from tests.models.test_assets.constants import MIN_DATETIME
     payee=attributes(AttributeType.PAYEE),
     data=st.data(),
 )
-def test_creation(  # noqa: CFQ002,TMN001
+def test_creation(  # noqa: PLR0913
     description: str,
     datetime_: datetime,
     type_: CashTransactionType,
@@ -120,7 +119,7 @@ def test_creation(  # noqa: CFQ002,TMN001
     account=cash_accounts(),
     type_=everything_except((CashTransactionType, NoneType)),
 )
-def test_type_invalid_type(  # noqa: CFQ002,TMN001
+def test_type_invalid_type(
     account: CashAccount,
     type_: Any,
 ) -> None:
@@ -600,7 +599,7 @@ def test_add_remove_tags(transaction: CashTransaction, tags: list[Attribute]) ->
 
 @given(transaction=cash_transactions(), category=categories(), total=st.booleans())
 def test_get_amount_for_category_not_related(
-    transaction: CashTransaction, category: Category, total: bool
+    transaction: CashTransaction, category: Category, total: bool  # noqa: FBT001
 ) -> None:
     assume(category not in transaction.categories)
     assert transaction.get_amount_for_category(category, total) == CashAmount(

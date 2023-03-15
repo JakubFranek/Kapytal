@@ -181,7 +181,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         exchange_rate = ExchangeRate(primary_currency, secondary_currency)
         self._exchange_rates.append(exchange_rate)
 
-    def add_security(
+    def add_security(  # noqa: PLR0913
         self,
         name: str,
         symbol: str,
@@ -263,7 +263,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         self._set_account_item_index(account, index)
         self._accounts.append(account)
 
-    def add_cash_transaction(  # noqa: CFQ002, TMN001
+    def add_cash_transaction(  # noqa: PLR0913
         self,
         description: str,
         datetime_: datetime,
@@ -299,7 +299,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         )
         self._transactions.append(transaction)
 
-    def add_cash_transfer(  # noqa: CFQ002, TMN001
+    def add_cash_transfer(  # noqa: PLR0913
         self,
         description: str,
         datetime_: datetime,
@@ -321,7 +321,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         )
         self._transactions.append(transfer)
 
-    def add_refund(
+    def add_refund(  # noqa: PLR0913
         self,
         description: str,
         datetime_: datetime,
@@ -364,7 +364,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         )
         self._transactions.append(refund)
 
-    def add_security_transaction(
+    def add_security_transaction(  # noqa: PLR0913
         self,
         description: str,
         datetime_: datetime,
@@ -391,7 +391,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         )
         self._transactions.append(transaction)
 
-    def add_security_transfer(
+    def add_security_transfer(  # noqa: PLR0913
         self,
         description: str,
         datetime_: datetime,
@@ -413,7 +413,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         )
         self._transactions.append(transaction)
 
-    def edit_cash_transactions(
+    def edit_cash_transactions(  # noqa: PLR0913
         self,
         transaction_uuids: Collection[str],
         description: str | None = None,
@@ -486,7 +486,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
                 payee=payee,
             )
 
-    def edit_cash_transfers(
+    def edit_cash_transfers(  # noqa: PLR0913
         self,
         transaction_uuids: Collection[str],
         description: str | None = None,
@@ -556,7 +556,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
                 recipient=recipient,
             )
 
-    def edit_refunds(
+    def edit_refunds(  # noqa: PLR0913
         self,
         transaction_uuids: Collection[str],
         description: str | None = None,
@@ -626,7 +626,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
                 payee=payee,
             )
 
-    def edit_security_transactions(
+    def edit_security_transactions(  # noqa: PLR0913
         self,
         transaction_uuids: Collection[str],
         description: str | None = None,
@@ -701,7 +701,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
                 security_account=security_account,
             )
 
-    def edit_security_transfers(
+    def edit_security_transfers(  # noqa: PLR0913
         self,
         transaction_uuids: Collection[str],
         description: str | None = None,
@@ -778,10 +778,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
     def edit_attribute(
         self, current_name: str, new_name: str, type_: AttributeType
     ) -> None:
-        if type_ == AttributeType.PAYEE:
-            attributes = self._payees
-        else:
-            attributes = self._tags
+        attributes = self._payees if type_ == AttributeType.PAYEE else self._tags
 
         for attribute in attributes:
             if attribute.name == current_name:
@@ -986,7 +983,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         if any(
             category in transaction.categories
             for transaction in self._transactions
-            if isinstance(transaction, (CashTransaction, RefundTransaction))
+            if isinstance(transaction, CashTransaction | RefundTransaction)
         ):
             raise InvalidOperationError(
                 "Cannot delete a Category referenced in any CashTransaction "
@@ -1014,7 +1011,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         if any(
             payee == transaction.payee
             for transaction in self._transactions
-            if isinstance(transaction, (CashTransaction, RefundTransaction))
+            if isinstance(transaction, CashTransaction | RefundTransaction)
         ):
             raise InvalidOperationError(
                 "Cannot delete a payee referenced in any CashTransaction "
@@ -1028,7 +1025,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         self._base_currency = currency
 
     def get_account_parent_or_none(self, path: str | None) -> AccountGroup | None:
-        if path == "" or path is None:
+        if not path or path is None:
             return None
         return self.get_account_parent(path)
 
@@ -1100,11 +1097,16 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         for category in self._categories:
             if category.path == path:
                 return category
-        # Category with path not found... searching for parents.
+
+        # Category with path not found... making it (along with any parents).
+        return self._make_category_leaf(path, type_)
+
+    def _make_category_leaf(self, path: str, type_: CategoryType) -> Category:
         current_path = path
         parent = None
         if "/" in current_path:
             while "/" in current_path:
+                # Searching for any existing parent in path.
                 current_path, _, _ = current_path.rpartition("/")
                 for category in self._categories:
                     if category.path == current_path:
@@ -1210,61 +1212,73 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
             "transactions": self._transactions,
         }
 
+    # TODO: do I need to use private setters in deserializers?
     @staticmethod
     def deserialize(data: dict[str, Any]) -> "RecordKeeper":
         obj = RecordKeeper()
-        obj._currencies = data["currencies"]
+        obj._currencies = data["currencies"]  # noqa: SLF001
         base_currency_code = data["base_currency_code"]
         if base_currency_code is not None:
             obj.set_base_currency(base_currency_code)
 
         exchange_rates_dicts = data["exchange_rates"]
-        obj._exchange_rates = RecordKeeper._deserialize_exchange_rates(
-            exchange_rates_dicts, obj._currencies
+        obj._exchange_rates = RecordKeeper._deserialize_exchange_rates(  # noqa: SLF001
+            exchange_rates_dicts, obj._currencies  # noqa: SLF001
         )
 
         security_dicts = data["securities"]
-        obj._securities = RecordKeeper._deserialize_securities(
-            security_dicts, obj._currencies
+        obj._securities = RecordKeeper._deserialize_securities(  # noqa: SLF001
+            security_dicts, obj._currencies  # noqa: SLF001
         )
 
-        obj._account_groups = RecordKeeper._deserialize_account_groups(
+        obj._account_groups = RecordKeeper._deserialize_account_groups(  # noqa: SLF001
             data["account_groups"]
         )
 
         account_dicts = data["accounts"]
-        obj._accounts = RecordKeeper._deserialize_accounts(
-            account_dicts, obj._account_groups, obj._currencies
+        obj._accounts = RecordKeeper._deserialize_accounts(  # noqa: SLF001
+            account_dicts, obj._account_groups, obj._currencies  # noqa: SLF001
         )
 
-        obj._root_account_items = RecordKeeper._deserialize_root_account_items(
-            data["root_account_items"], obj._account_groups, obj._accounts
-        )
-
-        obj._payees = data["payees"]
-        obj._tags = data["tags"]
-
-        obj._categories = RecordKeeper._deserialize_categories(data["categories"])
-        obj._root_income_categories = RecordKeeper._deserialize_root_categories(
-            data["root_income_categories"], obj._categories
-        )
-        obj._root_expense_categories = RecordKeeper._deserialize_root_categories(
-            data["root_expense_categories"], obj._categories
-        )
-        obj._root_income_and_expense_categories = (
-            RecordKeeper._deserialize_root_categories(
-                data["root_income_and_expense_categories"], obj._categories
+        obj._root_account_items = (  # noqa: SLF001
+            RecordKeeper._deserialize_root_account_items(
+                data["root_account_items"],
+                obj._account_groups,  # noqa: SLF001
+                obj._accounts,  # noqa: SLF001
             )
         )
 
-        obj._transactions = RecordKeeper._deserialize_transactions(
+        obj._payees = data["payees"]  # noqa: SLF001
+        obj._tags = data["tags"]  # noqa: SLF001
+
+        obj._categories = RecordKeeper._deserialize_categories(  # noqa: SLF001
+            data["categories"]
+        )
+        obj._root_income_categories = (  # noqa: SLF001
+            RecordKeeper._deserialize_root_categories(
+                data["root_income_categories"], obj._categories  # noqa: SLF001
+            )
+        )
+        obj._root_expense_categories = (  # noqa: SLF001
+            RecordKeeper._deserialize_root_categories(
+                data["root_expense_categories"], obj._categories  # noqa: SLF001
+            )
+        )
+        obj._root_income_and_expense_categories = (  # noqa: SLF001
+            RecordKeeper._deserialize_root_categories(
+                data["root_income_and_expense_categories"],
+                obj._categories,  # noqa: SLF001
+            )
+        )
+
+        obj._transactions = RecordKeeper._deserialize_transactions(  # noqa: SLF001
             data["transactions"],
-            obj._accounts,
-            obj._payees,
-            obj._tags,
-            obj._categories,
-            obj._currencies,
-            obj._securities,
+            obj._accounts,  # noqa: SLF001
+            obj._payees,  # noqa: SLF001
+            obj._tags,  # noqa: SLF001
+            obj._categories,  # noqa: SLF001
+            obj._currencies,  # noqa: SLF001
+            obj._securities,  # noqa: SLF001
         )
 
         return obj
@@ -1367,7 +1381,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         return root_categories
 
     @staticmethod
-    def _deserialize_transactions(
+    def _deserialize_transactions(  # noqa: PLR0913
         transaction_dicts: Collection[dict[str, Any]],
         accounts: Collection[Account],
         payees: Collection[Attribute],
@@ -1548,6 +1562,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
                 )
         return resulting_list
 
+    # TODO: test this
     @staticmethod
     def _flatten_categories(categories: Collection[Category]) -> list[Category]:
         resulting_list = []

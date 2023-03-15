@@ -1,10 +1,8 @@
 import unicodedata
 from collections.abc import Collection
-from typing import Any
 
 from PyQt6.QtCore import QAbstractTableModel, QModelIndex, QSortFilterProxyModel, Qt
 from PyQt6.QtWidgets import QTableView
-
 from src.models.model_objects.security_objects import Security
 from src.views.constants import SecurityTableColumn
 
@@ -37,17 +35,16 @@ class SecurityTableModel(QAbstractTableModel):
     def securities(self, securities: Collection[Security]) -> None:
         self._securities = tuple(securities)
 
-    def rowCount(self, index: QModelIndex = ...) -> int:
+    def rowCount(self, index: QModelIndex = ...) -> int:  # noqa: N802
         if isinstance(index, QModelIndex) and index.isValid():
             return 0
         return len(self.securities)
 
-    def columnCount(self, index: QModelIndex = ...) -> int:  # noqa: U100
+    def columnCount(self, index: QModelIndex = ...) -> int:  # noqa: N802
+        del index
         return 5
 
-    def index(
-        self, row: int, column: int, parent: QModelIndex = ...  # noqa: U100
-    ) -> QModelIndex:
+    def index(self, row: int, column: int, parent: QModelIndex = ...) -> QModelIndex:
         if parent.isValid():
             return QModelIndex()
         if not QAbstractTableModel.hasIndex(self, row, column, QModelIndex()):
@@ -56,7 +53,9 @@ class SecurityTableModel(QAbstractTableModel):
         item = self.securities[row]
         return QAbstractTableModel.createIndex(self, row, column, item)
 
-    def data(self, index: QModelIndex, role: Qt.ItemDataRole = ...) -> Any:
+    def data(
+        self, index: QModelIndex, role: Qt.ItemDataRole = ...
+    ) -> str | Qt.AlignmentFlag | None:
         if not index.isValid():
             return None
 
@@ -64,19 +63,7 @@ class SecurityTableModel(QAbstractTableModel):
         security = self.securities[index.row()]
 
         if role == Qt.ItemDataRole.DisplayRole:
-            if column == SecurityTableColumn.COLUMN_NAME:
-                return security.name
-            if column == SecurityTableColumn.COLUMN_SYMBOL:
-                return security.symbol
-            if column == SecurityTableColumn.COLUMN_TYPE:
-                return security.type_
-            if column == SecurityTableColumn.COLUMN_PRICE:
-                return security.price.convert(security.currency).to_str_normalized()
-            if column == SecurityTableColumn.COLUMN_LAST_DATE:
-                latest_date = security.latest_date
-                if latest_date is None:
-                    return "None"
-                return latest_date.strftime("%Y-%m-%d")
+            self._get_display_role_data(column, security)
         if (
             role == Qt.ItemDataRole.UserRole
             and column == SecurityTableColumn.COLUMN_NAME
@@ -89,7 +76,23 @@ class SecurityTableModel(QAbstractTableModel):
             return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
         return None
 
-    def headerData(
+    def _get_display_role_data(self, column: int, security: Security) -> None:
+        if column == SecurityTableColumn.COLUMN_NAME:
+            return security.name
+        if column == SecurityTableColumn.COLUMN_SYMBOL:
+            return security.symbol
+        if column == SecurityTableColumn.COLUMN_TYPE:
+            return security.type_
+        if column == SecurityTableColumn.COLUMN_PRICE:
+            return security.price.convert(security.currency).to_str_normalized()
+        if column == SecurityTableColumn.COLUMN_LAST_DATE:
+            latest_date = security.latest_date
+            return (
+                latest_date.strftime("%Y-%m-%d") if latest_date is not None else "None"
+            )
+        return None
+
+    def headerData(  # noqa: N802
         self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole = ...
     ) -> str | int | None:
         if role == Qt.ItemDataRole.DisplayRole:
@@ -104,22 +107,22 @@ class SecurityTableModel(QAbstractTableModel):
         return None
 
     def pre_add(self) -> None:
-        self._proxy.setDynamicSortFilter(False)
-        self._view.setSortingEnabled(False)
+        self._proxy.setDynamicSortFilter(False)  # noqa: FBT003
+        self._view.setSortingEnabled(False)  # noqa: FBT003
         self.beginInsertRows(QModelIndex(), self.rowCount(), self.rowCount())
 
     def post_add(self) -> None:
         self.endInsertRows()
-        self._view.setSortingEnabled(True)
-        self._proxy.setDynamicSortFilter(True)
+        self._view.setSortingEnabled(True)  # noqa: FBT003
+        self._proxy.setDynamicSortFilter(True)  # noqa: FBT003
 
     def pre_reset_model(self) -> None:
-        self._view.setSortingEnabled(False)
+        self._view.setSortingEnabled(False)  # noqa: FBT003
         self.beginResetModel()
 
     def post_reset_model(self) -> None:
         self.endResetModel()
-        self._view.setSortingEnabled(True)
+        self._view.setSortingEnabled(True)  # noqa: FBT003
 
     def pre_remove_item(self, item: Security) -> None:
         index = self.get_index_from_item(item)

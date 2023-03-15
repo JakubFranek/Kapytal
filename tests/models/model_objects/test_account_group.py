@@ -5,11 +5,10 @@ from typing import Any
 import pytest
 from hypothesis import assume, given
 from hypothesis import strategies as st
-
-import src.models.user_settings.user_settings as user_settings
 from src.models.custom_exceptions import NotFoundError
 from src.models.model_objects.account_group import AccountGroup
 from src.models.model_objects.currency_objects import CashAmount, Currency, ExchangeRate
+from src.models.user_settings import user_settings
 from tests.models.test_assets.composites import (
     account_groups,
     cash_accounts,
@@ -91,33 +90,33 @@ def test_get_balance_single_currency(currency: Currency, data: st.DataObject) ->
 
 
 @given(
-    currency_A=currencies(),
-    currency_B=currencies(),
+    currency_a=currencies(),
+    currency_b=currencies(),
     rate=valid_decimals(min_value=0.01, max_value=1e10),
     data=st.data(),
 )
 def test_get_balance_multiple_currency(
-    currency_A: Currency, currency_B: Currency, rate: Decimal, data: st.DataObject
+    currency_a: Currency, currency_b: Currency, rate: Decimal, data: st.DataObject
 ) -> None:
-    assume(currency_A != currency_B)
-    exchange_rate = ExchangeRate(currency_A, currency_B)
+    assume(currency_a != currency_b)
+    exchange_rate = ExchangeRate(currency_a, currency_b)
     exchange_rate.set_rate(datetime.now(user_settings.settings.time_zone).date(), rate)
 
-    account_A = data.draw(cash_accounts(currency=currency_A))
-    account_B = data.draw(cash_accounts(currency=currency_B))
+    account_a = data.draw(cash_accounts(currency=currency_a))
+    account_b = data.draw(cash_accounts(currency=currency_b))
 
     account_group = get_account_group()
-    account_A.parent = account_group
-    account_B.parent = account_group
+    account_a.parent = account_group
+    account_b.parent = account_group
 
-    expected_sum_A = account_A.get_balance(currency_A) + account_B.get_balance(
-        currency_A
+    expected_sum_a = account_a.get_balance(currency_a) + account_b.get_balance(
+        currency_a
     )
-    expected_sum_B = account_A.get_balance(currency_B) + account_B.get_balance(
-        currency_B
+    expected_sum_b = account_a.get_balance(currency_b) + account_b.get_balance(
+        currency_b
     )
-    assert account_group.get_balance(currency_A) == expected_sum_A
-    assert account_group.get_balance(currency_B) == expected_sum_B
+    assert account_group.get_balance(currency_a) == expected_sum_a
+    assert account_group.get_balance(currency_b) == expected_sum_b
 
 
 @given(data=st.data())

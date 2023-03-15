@@ -11,19 +11,19 @@ from PyQt6.QtWidgets import (
     QDialogButtonBox,
     QWidget,
 )
-
 from src.views.ui_files.dialogs.Ui_security_dialog import Ui_SecurityDialog
 
 
 class SecurityDialog(QDialog, Ui_SecurityDialog):
-    signal_OK = pyqtSignal()
+    signal_ok = pyqtSignal()
 
     def __init__(
         self,
         parent: QWidget,
         security_types: Collection[str],
         currency_codes: Collection[str],
-        edit: bool = False,
+        *,
+        edit: bool,
     ) -> None:
         super().__init__(parent=parent)
         self.setupUi(self)
@@ -93,7 +93,7 @@ class SecurityDialog(QDialog, Ui_SecurityDialog):
     def _handle_button_box_click(self, button: QAbstractButton) -> None:
         role = self.buttonBox.buttonRole(button)
         if role == QDialogButtonBox.ButtonRole.AcceptRole:
-            self.signal_OK.emit()
+            self.signal_ok.emit()
         elif role == QDialogButtonBox.ButtonRole.RejectRole:
             self.reject()
         else:

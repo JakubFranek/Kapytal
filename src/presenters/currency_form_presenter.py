@@ -2,9 +2,9 @@ import logging
 from datetime import datetime
 from decimal import Decimal
 
-import src.models.user_settings.user_settings as user_settings
 from src.models.custom_exceptions import InvalidOperationError
 from src.models.record_keeper import RecordKeeper
+from src.models.user_settings import user_settings
 from src.presenters.utilities.event import Event
 from src.presenters.utilities.handle_exception import handle_exception
 from src.view_models.currency_table_model import CurrencyTableModel
@@ -69,7 +69,7 @@ class CurrencyFormPresenter:
 
     def run_add_currency_dialog(self) -> None:
         self._dialog = CurrencyDialog(self._view)
-        self._dialog.signal_OK.connect(self.add_currency)
+        self._dialog.signal_ok.connect(self.add_currency)
         logging.debug("Running CurrencyDialog")
         self._dialog.exec()
 
@@ -81,7 +81,7 @@ class CurrencyFormPresenter:
         logging.info(f"Adding Currency(code='{code}', places='{places}')")
         try:
             self._record_keeper.add_currency(code, places)
-        except Exception:
+        except Exception:  # noqa: BLE001
             handle_exception()
             return
 
@@ -102,7 +102,7 @@ class CurrencyFormPresenter:
         logging.info(f"Setting {currency.code} as base currency")
         try:
             self._record_keeper.set_base_currency(currency.code)
-        except Exception:
+        except Exception:  # noqa: BLE001
             handle_exception()
             return
 
@@ -121,7 +121,7 @@ class CurrencyFormPresenter:
         logging.info(f"Removing {currency}")
         try:
             self._record_keeper.remove_currency(currency.code)
-        except Exception:
+        except Exception:  # noqa: BLE001
             handle_exception()
             return
 
@@ -136,7 +136,7 @@ class CurrencyFormPresenter:
     def run_add_exchange_rate_dialog(self) -> None:
         codes = [currency.code for currency in self._record_keeper.currencies]
         self._dialog = AddExchangeRateDialog(currency_codes=codes, parent=self._view)
-        self._dialog.signal_OK.connect(self.add_exchange_rate)
+        self._dialog.signal_ok.connect(self.add_exchange_rate)
         logging.debug("Running AddExchangeRateDialog")
         self._dialog.exec()
 
@@ -147,7 +147,7 @@ class CurrencyFormPresenter:
         logging.info(f"Adding ExchangeRate({primary_code}/{secondary_code})")
         try:
             self._record_keeper.add_exchange_rate(primary_code, secondary_code)
-        except Exception:
+        except Exception:  # noqa: BLE001
             handle_exception()
             return
 
@@ -172,7 +172,7 @@ class CurrencyFormPresenter:
             last_value=last_value,
             parent=self._view,
         )
-        self._dialog.signal_OK.connect(self.set_exchange_rate)
+        self._dialog.signal_ok.connect(self.set_exchange_rate)
         logging.debug("Running SetExchangeRateDialog")
         self._dialog.exec()
 
@@ -183,7 +183,7 @@ class CurrencyFormPresenter:
         logging.info(f"Setting ExchangeRate({exchange_rate_code}): {value} on {date_}")
         try:
             self._record_keeper.set_exchange_rate(exchange_rate_code, value, date_)
-        except Exception:
+        except Exception:  # noqa: BLE001
             handle_exception()
             return
 
@@ -213,7 +213,7 @@ class CurrencyFormPresenter:
         logging.info(f"Removing {repr(exchange_rate)}")
         try:
             self._record_keeper.remove_exchange_rate(str(exchange_rate))
-        except Exception:
+        except Exception:  # noqa: BLE001
             handle_exception()
             return
 
@@ -227,9 +227,11 @@ class CurrencyFormPresenter:
     def _exchange_rate_selection_changed(self) -> None:
         item = self._exchange_rate_table_model.get_selected_item()
         is_exchange_rate_selected = item is not None
-        self._view.set_exchange_rate_buttons(is_exchange_rate_selected)
+        self._view.set_exchange_rate_buttons(
+            is_exchange_rate_selected=is_exchange_rate_selected
+        )
 
     def _currency_selection_changed(self) -> None:
         item = self._currency_table_model.get_selected_item()
         is_currency_selected = item is not None
-        self._view.set_currency_buttons(is_currency_selected)
+        self._view.set_currency_buttons(is_currency_selected=is_currency_selected)

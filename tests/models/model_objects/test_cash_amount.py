@@ -5,8 +5,6 @@ from typing import Any
 import pytest
 from hypothesis import assume, given
 from hypothesis import strategies as st
-
-import src.models.user_settings.user_settings as user_settings
 from src.models.model_objects.currency_objects import (
     CashAmount,
     ConversionFactorNotFoundError,
@@ -14,6 +12,7 @@ from src.models.model_objects.currency_objects import (
     CurrencyError,
     ExchangeRate,
 )
+from src.models.user_settings import user_settings
 from src.utilities.general import normalize_decimal_to_min_places
 from tests.models.test_assets.composites import (
     cash_amounts,

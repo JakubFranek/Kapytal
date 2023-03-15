@@ -3,7 +3,6 @@ import logging
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QCloseEvent, QIcon
 from PyQt6.QtWidgets import QHeaderView, QLineEdit, QWidget
-
 from src.views.constants import PayeeTableColumn
 from src.views.ui_files.forms.Ui_payee_form import Ui_PayeeForm
 
@@ -40,11 +39,11 @@ class PayeeForm(QWidget, Ui_PayeeForm):
         logging.debug(f"Showing {self.__class__.__name__}")
         self.show()
 
-    def closeEvent(self, a0: QCloseEvent) -> None:
+    def closeEvent(self, a0: QCloseEvent) -> None:  # noqa: N802
         logging.debug(f"Closing {self.__class__.__name__}")
         return super().closeEvent(a0)
 
-    def set_buttons(self, is_payee_selected: bool) -> None:
+    def set_buttons(self, *, is_payee_selected: bool) -> None:
         self.removeButton.setEnabled(is_payee_selected)
         self.renameButton.setEnabled(is_payee_selected)
         self.selectButton.setEnabled(is_payee_selected)
@@ -65,7 +64,7 @@ class PayeeForm(QWidget, Ui_PayeeForm):
         )
 
         style = self.style()
-        lastSectionText = self.tableView.model().headerData(
+        last_section_text = self.tableView.model().headerData(
             PayeeTableColumn.COLUMN_BALANCE,
             Qt.Orientation.Horizontal,
             Qt.ItemDataRole.DisplayRole,
@@ -73,7 +72,7 @@ class PayeeForm(QWidget, Ui_PayeeForm):
         self.tableView.horizontalHeader().setMinimumSectionSize(
             style.pixelMetric(style.PixelMetric.PM_HeaderMarkSize)
             + style.pixelMetric(style.PixelMetric.PM_HeaderGripMargin) * 2
-            + self.fontMetrics().horizontalAdvance(lastSectionText)
+            + self.fontMetrics().horizontalAdvance(last_section_text)
         )
 
         self.tableView.selectionModel().selectionChanged.connect(

@@ -1,6 +1,5 @@
 from collections.abc import Collection
 from pathlib import Path
-from typing import Any
 
 from PyQt6.QtCore import QAbstractListModel, QModelIndex, Qt
 from PyQt6.QtWidgets import QListView
@@ -20,14 +19,13 @@ class BackupPathsListModel(QAbstractListModel):
     def paths(self, paths: Collection[Path]) -> None:
         self._paths = tuple(paths)
 
-    def rowCount(self, index: QModelIndex = ...) -> int:
+    def rowCount(self, index: QModelIndex = ...) -> int:  # noqa: N802
         if isinstance(index, QModelIndex) and index.isValid():
             return 0
         return len(self.paths)
 
-    def index(
-        self, row: int, column: int, parent: QModelIndex = ...  # noqa: U100
-    ) -> QModelIndex:
+    def index(self, row: int, column: int, parent: QModelIndex = ...) -> QModelIndex:
+        del column
         if parent.isValid():
             return QModelIndex()
         if not QAbstractListModel.hasIndex(self, row, 0, QModelIndex()):
@@ -35,7 +33,7 @@ class BackupPathsListModel(QAbstractListModel):
         item = self.paths[row]
         return QAbstractListModel.createIndex(self, row, 0, item)
 
-    def data(self, index: QModelIndex, role: Qt.ItemDataRole = ...) -> Any:
+    def data(self, index: QModelIndex, role: Qt.ItemDataRole = ...) -> str | None:
         if not index.isValid():
             return None
         path = self.paths[index.row()]

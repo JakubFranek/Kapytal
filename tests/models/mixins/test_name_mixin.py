@@ -2,7 +2,6 @@ from typing import Any
 
 import pytest
 from hypothesis import given
-
 from src.models.mixins.name_mixin import NameMixin
 from tests.models.test_assets.composites import everything_except
 

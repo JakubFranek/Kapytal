@@ -1,10 +1,8 @@
 import unicodedata
 from collections.abc import Collection, Sequence
-from typing import Any
 
 from PyQt6.QtCore import QAbstractItemModel, QModelIndex, QSortFilterProxyModel, Qt
 from PyQt6.QtWidgets import QTreeView
-
 from src.models.model_objects.attributes import Category
 from src.models.model_objects.currency_objects import Currency
 from src.models.utilities.calculation import CategoryStats
@@ -18,7 +16,7 @@ class CategoryTreeModel(QAbstractItemModel):
         CategoryTreeColumn.COLUMN_BALANCE: "Balance",
     }
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         tree_view: QTreeView,
         root_categories: Sequence[Category],
@@ -49,7 +47,7 @@ class CategoryTreeModel(QAbstractItemModel):
     def category_stats(self, category_stats: Collection[CategoryStats]) -> None:
         self._category_stats = tuple(category_stats)
 
-    def rowCount(self, index: QModelIndex = ...) -> int:
+    def rowCount(self, index: QModelIndex = ...) -> int:  # noqa: N802
         if index.isValid():
             if index.column() != 0:
                 return 0
@@ -57,7 +55,7 @@ class CategoryTreeModel(QAbstractItemModel):
             return len(node.children)
         return len(self.root_categories)
 
-    def columnCount(self, index: QModelIndex = ...) -> int:  # noqa: U100
+    def columnCount(self, index: QModelIndex = ...) -> int:  # noqa: N802
         return 3 if not index.isValid() or index.column() == 0 else 0
 
     def index(self, row: int, column: int, _parent: QModelIndex = ...) -> QModelIndex:
@@ -72,10 +70,7 @@ class CategoryTreeModel(QAbstractItemModel):
         else:
             parent: Category = _parent.internalPointer()
 
-        if parent is None:
-            child = self.root_categories[row]
-        else:
-            child = parent.children[row]
+        child = self.root_categories[row] if parent is None else parent.children[row]
         if child:
             return QAbstractItemModel.createIndex(self, row, column, child)
         return QModelIndex()
@@ -95,34 +90,42 @@ class CategoryTreeModel(QAbstractItemModel):
             parent_row = grandparent.children.index(parent)
         return QAbstractItemModel.createIndex(self, parent_row, 0, parent)
 
-    def data(self, index: QModelIndex, role: Qt.ItemDataRole = ...) -> Any:
+    def data(
+        self, index: QModelIndex, role: Qt.ItemDataRole = ...
+    ) -> str | Qt.AlignmentFlag | None:
         if not index.isValid():
             return None
         column = index.column()
         category: Category = index.internalPointer()
         stats = self._get_category_stats(category)
         if role == Qt.ItemDataRole.DisplayRole:
-            if column == CategoryTreeColumn.COLUMN_NAME:
-                return category.name
-            if column == CategoryTreeColumn.COLUMN_TRANSACTIONS:
-                if len(category.children) == 0:
-                    return f"{stats.transactions_total}"
-                return f"{stats.transactions_total} ({stats.transactions_self})"
-            if column == CategoryTreeColumn.COLUMN_BALANCE:
-                return str(stats.balance.convert(self.base_currency))
+            return self._get_display_role_data(column, category, stats)
         if (
             role == Qt.ItemDataRole.UserRole
             and column == CategoryTreeColumn.COLUMN_NAME
         ):
             return unicodedata.normalize("NFD", category.name)
-        if role == Qt.ItemDataRole.TextAlignmentRole:
-            if column == CategoryTreeColumn.COLUMN_TRANSACTIONS:
-                return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
-            if column == CategoryTreeColumn.COLUMN_BALANCE:
-                return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+        if role == Qt.ItemDataRole.TextAlignmentRole and (
+            column == CategoryTreeColumn.COLUMN_TRANSACTIONS
+            or column == CategoryTreeColumn.COLUMN_BALANCE
+        ):
+            return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
         return None
 
-    def headerData(
+    def _get_display_role_data(
+        self, column: int, category: Category, stats: CategoryStats
+    ) -> str | int | None:
+        if column == CategoryTreeColumn.COLUMN_NAME:
+            return category.name
+        if column == CategoryTreeColumn.COLUMN_TRANSACTIONS:
+            if len(category.children) == 0:
+                return stats.transactions_total
+            return f"{stats.transactions_total} ({stats.transactions_self})"
+        if column == CategoryTreeColumn.COLUMN_BALANCE:
+            return str(stats.balance.convert(self.base_currency))
+        return None
+
+    def headerData(  # noqa: N802
         self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole = ...
     ) -> str | int | None:
         if role == Qt.ItemDataRole.TextAlignmentRole:
@@ -173,9 +176,8 @@ class CategoryTreeModel(QAbstractItemModel):
         if new_parent is None:
             if new_index > len(self.root_categories):
                 new_index = len(self.root_categories)
-        else:
-            if new_index > len(new_parent.children):
-                new_index = len(new_parent.children)
+        elif new_index > len(new_parent.children):
+            new_index = len(new_parent.children)
         if previous_parent == new_parent and new_index > previous_index:
             new_index += 1
         self.beginMoveRows(

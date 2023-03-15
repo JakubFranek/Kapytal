@@ -1,7 +1,6 @@
 from PyQt6.QtWidgets import QWidget
 from pytestqt.modeltest import ModelTester
 from pytestqt.qtbot import QtBot
-
 from src.view_models.backup_paths_list_model import BackupPathsListModel
 from src.views.forms.settings_form import SettingsForm
 

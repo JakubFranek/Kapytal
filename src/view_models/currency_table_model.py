@@ -1,10 +1,8 @@
 from collections.abc import Collection
-from typing import Any
 
 from PyQt6.QtCore import QAbstractTableModel, QModelIndex, Qt
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QTableView
-
 from src.models.model_objects.currency_objects import Currency
 from src.views.constants import CurrencyTableColumn
 
@@ -34,12 +32,13 @@ class CurrencyTableModel(QAbstractTableModel):
     def currencies(self, currencies: Collection[Currency]) -> None:
         self._currencies = tuple(currencies)
 
-    def rowCount(self, index: QModelIndex = ...) -> int:
+    def rowCount(self, index: QModelIndex = ...) -> int:  # noqa: N802
         if isinstance(index, QModelIndex) and index.isValid():
             return 0
         return len(self.currencies)
 
-    def columnCount(self, index: QModelIndex = ...) -> int:  # noqa: U100
+    def columnCount(self, index: QModelIndex = ...) -> int:  # noqa: N802
+        del index
         return 2
 
     def index(self, row: int, column: int, parent: QModelIndex = ...) -> QModelIndex:
@@ -50,7 +49,9 @@ class CurrencyTableModel(QAbstractTableModel):
         item = self.currencies[row]
         return QAbstractTableModel.createIndex(self, row, column, item)
 
-    def data(self, index: QModelIndex, role: Qt.ItemDataRole = ...) -> Any:
+    def data(
+        self, index: QModelIndex, role: Qt.ItemDataRole = ...
+    ) -> str | QIcon | None:
         if not index.isValid():
             return None
         column = index.column()
@@ -68,7 +69,7 @@ class CurrencyTableModel(QAbstractTableModel):
             return QIcon("icons_16:star.png")
         return None
 
-    def headerData(
+    def headerData(  # noqa: N802
         self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole = ...
     ) -> str | int | None:
         if role == Qt.ItemDataRole.DisplayRole:

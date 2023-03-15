@@ -4,7 +4,6 @@ from types import TracebackType
 
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QApplication, QMessageBox
-
 from src.utilities.general import get_exception_info
 
 
@@ -20,7 +19,7 @@ def handle_uncaught_exception(
 
     filename, line, exc_details = get_exception_info(exc_type, exc_value, exc_traceback)
 
-    error = "%s: %s" % (exc_type.__name__, exc_value)
+    error = f"{exc_type.__name__}: {exc_value}"
     text = f"""<html>The following unexpected error has occured:<br/>
         <b>{error}</b><br/><br/>
         It occurred at <b>line {line}</b> of file <b>{filename}</b>.<br/><br/>
@@ -38,6 +37,7 @@ def handle_uncaught_exception(
 def display_error_message(
     text: str,
     exc_details: str = "",
+    *,
     critical: bool = False,
     title: str = "Error!",
 ) -> None:

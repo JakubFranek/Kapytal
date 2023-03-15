@@ -3,7 +3,6 @@ from typing import Any
 import pytest
 from hypothesis import given
 from hypothesis import strategies as st
-
 from src.models.custom_exceptions import InvalidCharacterError
 from src.models.mixins.name_mixin import NameLengthError
 from src.models.model_objects.account_group import AccountGroup

@@ -1,7 +1,6 @@
 from PyQt6.QtWidgets import QTableView, QWidget
 from pytestqt.modeltest import ModelTester
 from pytestqt.qtbot import QtBot
-
 from src.view_models.exchange_rate_table_model import ExchangeRateTableModel
 from tests.models.test_record_keeper import get_preloaded_record_keeper
 

@@ -2,15 +2,17 @@ import logging
 from datetime import datetime
 from pathlib import Path
 
-import src.models.user_settings.user_settings as user_settings
-import src.utilities.constants as constants
+from src.models.user_settings import user_settings
+from src.utilities import constants
 from src.utilities.general import contains_timestamp, get_datetime_from_file_path
 
 
 class MyFormatter(logging.Formatter):
     converter = datetime.fromtimestamp
 
-    def formatTime(self, record: logging.LogRecord, datefmt: str | None = None):
+    def formatTime(  # noqa: N802
+        self, record: logging.LogRecord, datefmt: str | None = None
+    ) -> str:
         dt: datetime = self.converter(record.created)
         if datefmt:
             return dt.strftime(datefmt)
@@ -20,6 +22,8 @@ class MyFormatter(logging.Formatter):
 
 class DuplicateFilter(logging.Filter):
     """Ignores subsequent identical logs, if time interval < 100 ms."""
+
+    DELAY_US = 100_000
 
     def __init__(self, formatter: logging.Formatter, name: str = "") -> None:
         super().__init__(name)
@@ -41,7 +45,7 @@ class DuplicateFilter(logging.Filter):
         if hasattr(self, "last_dt"):
             # Same record
             time_delta = current_dt - self.last_dt
-            if time_delta.microseconds > 100_000:
+            if time_delta.microseconds > DuplicateFilter.DELAY_US:
                 # Same record with at least 100 ms interval
                 self.last_log = current_log
                 self.last_dt = current_dt

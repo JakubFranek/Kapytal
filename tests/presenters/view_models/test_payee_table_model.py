@@ -1,7 +1,6 @@
 from PyQt6.QtWidgets import QWidget
 from pytestqt.modeltest import ModelTester
 from pytestqt.qtbot import QtBot
-
 from src.presenters.payee_form_presenter import PayeeFormPresenter
 from src.view_models.payee_table_model import PayeeTableModel
 from src.views.forms.payee_form import PayeeForm

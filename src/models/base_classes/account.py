@@ -50,10 +50,10 @@ class Account(
             if self._parent == parent:
                 return
             if self._parent is not None:
-                self._parent._remove_child(self)
+                self._parent._remove_child(self)  # noqa: SLF001
 
         if parent is not None:
-            parent._add_child(self)
+            parent._add_child(self)  # noqa: SLF001
 
         if hasattr(self, "_parent"):
             logging.info(f"Changing parent from {self._parent} to {parent}")

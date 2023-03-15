@@ -3,7 +3,6 @@ from collections.abc import Collection
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtGui import QAction, QIcon
 from PyQt6.QtWidgets import QComboBox, QHBoxLayout, QToolButton, QWidget
-
 from src.views.dialogs.select_item_dialog import ask_user_for_selection
 
 

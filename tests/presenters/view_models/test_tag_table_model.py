@@ -1,7 +1,6 @@
 from PyQt6.QtWidgets import QWidget
 from pytestqt.modeltest import ModelTester
 from pytestqt.qtbot import QtBot
-
 from src.presenters.tag_form_presenter import TagFormPresenter
 from src.view_models.tag_table_model import TagTableModel
 from src.views.forms.tag_form import TagForm

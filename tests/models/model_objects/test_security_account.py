@@ -5,8 +5,6 @@ from typing import Any
 import pytest
 from hypothesis import assume, given
 from hypothesis import strategies as st
-
-import src.models.user_settings.user_settings as user_settings
 from src.models.base_classes.account import UnrelatedAccountError
 from src.models.model_objects.account_group import AccountGroup
 from src.models.model_objects.currency_objects import CashAmount, Currency, ExchangeRate
@@ -15,6 +13,7 @@ from src.models.model_objects.security_objects import (
     SecurityAccount,
     SecurityRelatedTransaction,
 )
+from src.models.user_settings import user_settings
 from tests.models.test_assets.composites import (
     account_groups,
     currencies,
@@ -64,41 +63,41 @@ def test_validate_transaction_unrelated(
 
 
 @given(
-    currency_A=currencies(),
-    currency_B=currencies(),
-    price_A=valid_decimals(min_value=0, max_value=1e6),
-    price_B=valid_decimals(min_value=0, max_value=1e6),
-    shares_A=st.integers(min_value=1, max_value=1e6),
-    shares_B=st.integers(min_value=1, max_value=1e6),
+    currency_a=currencies(),
+    currency_b=currencies(),
+    price_a=valid_decimals(min_value=0, max_value=1e6),
+    price_b=valid_decimals(min_value=0, max_value=1e6),
+    shares_a=st.integers(min_value=1, max_value=1e6),
+    shares_b=st.integers(min_value=1, max_value=1e6),
     exchange_rate=valid_decimals(min_value=0.01, max_value=1e6),
 )
-def test_get_balance(
-    currency_A: Currency,
-    currency_B: Currency,
-    price_A: Decimal,
-    price_B: Decimal,
-    shares_A: int,
-    shares_B: int,
+def test_get_balance(  # noqa: PLR0913
+    currency_a: Currency,
+    currency_b: Currency,
+    price_a: Decimal,
+    price_b: Decimal,
+    shares_a: int,
+    shares_b: int,
     exchange_rate: Decimal,
 ) -> None:
-    assume(currency_A != currency_B)
+    assume(currency_a != currency_b)
     date_ = datetime.now(user_settings.settings.time_zone).date()
-    exchange_rate_obj = ExchangeRate(currency_A, currency_B)
+    exchange_rate_obj = ExchangeRate(currency_a, currency_b)
     exchange_rate_obj.set_rate(date_, exchange_rate)
     account = SecurityAccount("Test")
-    security_A = Security("A", "A", "ETF", currency_A, 1)
-    security_B = Security("B", "B", "ETF", currency_B, 1)
-    security_A.set_price(date_, CashAmount(price_A, currency_A))
-    security_B.set_price(date_, CashAmount(price_B, currency_B))
-    account._securities[security_A] += shares_A
-    account._securities[security_B] += shares_B
-    balance_A = account.get_balance(currency_A)
-    balance_B = account.get_balance(currency_B)
-    expected_A = shares_A * security_A.price + shares_B * security_B.price.convert(
-        currency_A
+    security_a = Security("A", "A", "ETF", currency_a, 1)
+    security_b = Security("B", "B", "ETF", currency_b, 1)
+    security_a.set_price(date_, CashAmount(price_a, currency_a))
+    security_b.set_price(date_, CashAmount(price_b, currency_b))
+    account._securities[security_a] += shares_a
+    account._securities[security_b] += shares_b
+    balance_a = account.get_balance(currency_a)
+    balance_b = account.get_balance(currency_b)
+    expected_a = shares_a * security_a.price + shares_b * security_b.price.convert(
+        currency_a
     )
-    expected_B = (
-        shares_A * security_A.price.convert(currency_B) + shares_B * security_B.price
+    expected_b = (
+        shares_a * security_a.price.convert(currency_b) + shares_b * security_b.price
     )
-    assert balance_A == expected_A
-    assert balance_B == expected_B
+    assert balance_a == expected_a
+    assert balance_b == expected_b

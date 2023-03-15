@@ -1,7 +1,6 @@
 from PyQt6.QtWidgets import QWidget
 from pytestqt.modeltest import ModelTester
 from pytestqt.qtbot import QtBot
-
 from src.presenters.transactions_presenter import TransactionsPresenter
 from src.view_models.transaction_table_model import TransactionTableModel
 from src.views.widgets.transaction_table_widget import TransactionTableWidget

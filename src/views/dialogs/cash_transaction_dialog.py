@@ -14,7 +14,6 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-
 from src.models.base_classes.account import Account
 from src.models.model_objects.cash_objects import CashAccount, CashTransactionType
 from src.models.model_objects.security_objects import SecurityAccount
@@ -36,7 +35,7 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
     signal_select_category = pyqtSignal()
     signal_select_payee = pyqtSignal()
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         parent: QWidget,
         accounts: Collection[Account],
@@ -45,6 +44,7 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
         categories_expense: Collection[str],
         tags: Collection[str],
         type_: CashTransactionType,
+        *,
         edit: bool,
     ) -> None:
         super().__init__(parent=parent)
@@ -63,7 +63,7 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
 
         self._initialize_tags_completer(tags)
         self._initialize_accounts_combobox(accounts)
-        self._initialize_window(edit)
+        self._initialize_window(edit=edit)
         self._initialize_actions()
         self._initialize_combobox_placeholders()
 
@@ -158,7 +158,7 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
     @property
     def tags(self) -> tuple[str]:
         tags = self.tagsLineEdit.text().split(";")
-        tags = [tag.strip() for tag in tags if tag.strip() != ""]
+        tags = [tag.strip() for tag in tags if tag.strip()]
         return tuple(tags)
 
     @tags.setter
@@ -181,7 +181,7 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
         else:
             raise ValueError("Unknown role of the clicked button in the ButtonBox")
 
-    def _initialize_window(self, edit: bool) -> None:
+    def _initialize_window(self, *, edit: bool) -> None:
         if edit:
             self.setWindowTitle("Edit Cash Transaction")
             self.setWindowIcon(QIcon("icons_custom:coins-pencil.png"))
@@ -313,7 +313,7 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
 
     def _remove_split_row(self, removed_row: SplitItemRowWidget) -> None:
         no_of_rows = self.split_categories_vertical_layout.count() - 1
-        if no_of_rows == 2:
+        if no_of_rows == 2:  # noqa: PLR2004
             self._category_rows.remove(removed_row)
             remaining_category = self._category_rows[0].category
             self.formLayout.removeRow(6)

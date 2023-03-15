@@ -7,9 +7,9 @@ from decimal import Decimal
 from functools import total_ordering
 from typing import Any, Self
 
-import src.models.user_settings.user_settings as user_settings
 from src.models.mixins.copyable_mixin import CopyableMixin
 from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
+from src.models.user_settings import user_settings
 from src.models.utilities.find_helpers import find_currency_by_code
 from src.utilities.general import normalize_decimal_to_min_places
 
@@ -24,12 +24,14 @@ class ConversionFactorNotFoundError(ValueError):
 
 
 class Currency(CopyableMixin, JSONSerializableMixin):
+    CODE_LENGTH = 3
+
     def __init__(self, code: str, places: int) -> None:
         super().__init__()
 
         if not isinstance(code, str):
             raise TypeError("Currency.code must be a string.")
-        if len(code) != 3 or not code.isalpha():
+        if len(code) != Currency.CODE_LENGTH or not code.isalpha():
             raise ValueError("Currency.code must be a three letter ISO-4217 code.")
         self._code = code.upper()
 
@@ -91,7 +93,9 @@ class Currency(CopyableMixin, JSONSerializableMixin):
     def get_conversion_factor(
         self, target_currency: Self, date_: date | None = None
     ) -> Decimal:
-        exchange_rates = Currency._get_exchange_rates(self, target_currency)
+        exchange_rates = Currency._get_exchange_rates(  # noqa: SLF001
+            self, target_currency
+        )
         if exchange_rates is None:
             logging.warning(
                 f"No path from {self.code} to {target_currency.code} found."
@@ -127,7 +131,7 @@ class Currency(CopyableMixin, JSONSerializableMixin):
 
         if target_currency in current_currency.convertible_to:
             # Direct ExchangeRate found!
-            return [current_currency._exchange_rates[target_currency]]
+            return [current_currency.exchange_rates[target_currency]]
 
         # Direct ExchangeRate not found...
         # Get unexplored currencies to iterate over.
@@ -139,14 +143,14 @@ class Currency(CopyableMixin, JSONSerializableMixin):
         # Ignore these currencies in future deeper searches (no need to go back).
         ignore_currencies = ignore_currencies | current_currency.convertible_to
         for loop_currency in iterable_currencies:
-            exchange_rates = Currency._get_exchange_rates(
+            exchange_rates = Currency._get_exchange_rates(  # noqa: SLF001
                 loop_currency, target_currency, ignore_currencies
             )
             if exchange_rates is None:
                 continue  # Reached a dead end.
             # ExchangeRate to target_currency found!
             # Append ExchangeRate needed get there from the current_currency.
-            exchange_rates.insert(0, current_currency._exchange_rates[loop_currency])
+            exchange_rates.insert(0, current_currency.exchange_rates[loop_currency])
             return exchange_rates
         return None  # Reached a dead-end.
 
@@ -223,7 +227,7 @@ class ExchangeRate(CopyableMixin, JSONSerializableMixin):
     def set_rate(self, date_: date, rate: Decimal | int | str) -> None:
         if not isinstance(date_, date):
             raise TypeError("Parameter 'date_' must be a date.")
-        if not isinstance(rate, (Decimal, int, str)):
+        if not isinstance(rate, Decimal | int | str):
             raise TypeError(
                 "Parameter 'rate' must be a Decimal, integer or a string "
                 "containing a number."
@@ -284,7 +288,7 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
     """An immutable object comprising of Decimal value and a Currency."""
 
     def __init__(self, value: Decimal | int | str, currency: Currency) -> None:
-        if not isinstance(value, (Decimal, int, str)):
+        if not isinstance(value, Decimal | int | str):
             raise TypeError(
                 "CashAmount.value must be a Decimal, integer or a string "
                 "containing a number."
@@ -363,7 +367,7 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
         return CashAmount(__o.value_normalized - self.value_normalized, self.currency)
 
     def __mul__(self, __o: object) -> Self:
-        if not isinstance(__o, (int, Decimal)):
+        if not isinstance(__o, int | Decimal):
             return NotImplemented
         return CashAmount(self.value_normalized * __o, self.currency)
 

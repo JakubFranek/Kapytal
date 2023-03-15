@@ -4,19 +4,21 @@ from pathlib import Path
 from typing import Any, Self
 from zoneinfo import ZoneInfo
 
-from tzlocal import get_localzone_name
-
 from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
+from tzlocal import get_localzone_name
 
 
 class UserSettings(JSONSerializableMixin):
     """This class is intended to be instantiated only once, within user_settings."""
 
+    LOGS_DEFAULT_MAX_SIZE = 1_000_000
+    BACKUPS_DEFAULT_MAX_SIZE = 10_000_000
+
     def __init__(self) -> None:
         self._time_zone = ZoneInfo(get_localzone_name())
 
-        self._logs_max_size_bytes = 1_000_000
-        self._backups_max_size_bytes = 10_000_000
+        self._logs_max_size_bytes = UserSettings.LOGS_DEFAULT_MAX_SIZE
+        self._backups_max_size_bytes = UserSettings.BACKUPS_DEFAULT_MAX_SIZE
 
         self._backup_paths = []
 
@@ -129,9 +131,9 @@ class UserSettings(JSONSerializableMixin):
         backup_paths = [Path(string) for string in backup_path_strings]
 
         obj = UserSettings()
-        obj._time_zone = time_zone
-        obj._logs_max_size_bytes = logs_max_size_bytes
-        obj._backups_max_size_bytes = backups_max_size_bytes
-        obj._backup_paths = backup_paths
+        obj._time_zone = time_zone  # noqa: SLF001
+        obj._logs_max_size_bytes = logs_max_size_bytes  # noqa: SLF001
+        obj._backups_max_size_bytes = backups_max_size_bytes  # noqa: SLF001
+        obj._backup_paths = backup_paths  # noqa: SLF001
 
         return obj

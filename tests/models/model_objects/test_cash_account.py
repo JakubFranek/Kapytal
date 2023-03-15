@@ -5,7 +5,6 @@ from typing import Any
 import pytest
 from hypothesis import assume, given
 from hypothesis import strategies as st
-
 from src.models.custom_exceptions import AlreadyExistsError
 from src.models.model_objects.cash_objects import (
     CashAccount,

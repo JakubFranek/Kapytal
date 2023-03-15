@@ -7,19 +7,18 @@ from src.models.model_objects.attributes import Attribute, Category
 from src.models.model_objects.cash_objects import CashTransaction, RefundTransaction
 from src.models.model_objects.currency_objects import CashAmount, Currency
 
-AttributeStats = NamedTuple(
-    "AttributeStats",
-    [("attribute", Attribute), ("no_of_transactions", int), ("balance", CashAmount)],
-)
-CategoryStats = NamedTuple(
-    "CategoryStats",
-    [
-        ("category", Category),
-        ("transactions_self", int),
-        ("transactions_total", int),
-        ("balance", CashAmount),
-    ],
-)
+
+class AttributeStats(NamedTuple):
+    attribute: Attribute
+    no_of_transactions: int
+    balance: CashAmount
+
+
+class CategoryStats(NamedTuple):
+    category: Category
+    transactions_self: int
+    transactions_total: int
+    balance: CashAmount
 
 
 def get_payee_stats(
@@ -34,7 +33,7 @@ def get_payee_stats(
     _transactions = [
         transaction
         for transaction in _transactions
-        if isinstance(transaction, (CashTransaction, RefundTransaction))
+        if isinstance(transaction, CashTransaction | RefundTransaction)
         and transaction.payee == payee
     ]
 
@@ -66,7 +65,7 @@ def get_tag_stats(
     _cash_amount_transactions = [
         transaction
         for transaction in _transactions
-        if isinstance(transaction, (CashTransaction, RefundTransaction))
+        if isinstance(transaction, CashTransaction | RefundTransaction)
     ]
 
     balance = sum(
@@ -91,13 +90,13 @@ def get_category_stats(
     _transactions_direct = [
         transaction
         for transaction in _transactions
-        if isinstance(transaction, (CashTransaction, RefundTransaction))
+        if isinstance(transaction, CashTransaction | RefundTransaction)
         and category in transaction.categories
     ]
     _transactions_all = [
         transaction
         for transaction in _transactions
-        if isinstance(transaction, (CashTransaction, RefundTransaction))
+        if isinstance(transaction, CashTransaction | RefundTransaction)
         and transaction.is_category_related(category)
     ]
 

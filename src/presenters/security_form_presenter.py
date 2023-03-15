@@ -2,9 +2,8 @@ import logging
 from datetime import datetime
 
 from PyQt6.QtCore import QSortFilterProxyModel, Qt
-
-import src.models.user_settings.user_settings as user_settings
 from src.models.record_keeper import RecordKeeper
+from src.models.user_settings import user_settings
 from src.presenters.utilities.event import Event
 from src.presenters.utilities.handle_exception import handle_exception
 from src.view_models.security_table_model import SecurityTableModel
@@ -37,7 +36,6 @@ class SecurityFormPresenter:
         self._view.signal_edit_security.connect(
             lambda: self.run_security_dialog(edit=True)
         )
-        self._view.signal_select_security.connect(self.select_security)
         self._view.signal_set_security_price.connect(self.run_set_price_dialog)
         self._view.signal_search_text_changed.connect(self._filter)
 
@@ -56,10 +54,10 @@ class SecurityFormPresenter:
 
     def show_form(self) -> None:
         self.update_model_data()
-        self._view.selectButton.setVisible(False)
+        self._view.selectButton.setVisible(False)  # noqa: FBT003
         self._view.show_form()
 
-    def run_security_dialog(self, edit: bool) -> None:
+    def run_security_dialog(self, *, edit: bool) -> None:
         security_types = {security.type_ for security in self._record_keeper.securities}
         currency_codes = [currency.code for currency in self._record_keeper.currencies]
         self._dialog = SecurityDialog(
@@ -72,12 +70,12 @@ class SecurityFormPresenter:
             security = self._model.get_selected_item()
             if security is None:
                 raise ValueError("Cannot edit an unselected item.")
-            self._dialog.signal_OK.connect(self.edit_security)
+            self._dialog.signal_ok.connect(self.edit_security)
             self._dialog.name = security.name
             self._dialog.symbol = security.symbol
             self._dialog.type_ = security.type_
         else:
-            self._dialog.signal_OK.connect(self.add_security)
+            self._dialog.signal_ok.connect(self.add_security)
         logging.debug(f"Running SecurityDialog ({edit=})")
         self._dialog.exec()
 
@@ -97,7 +95,7 @@ class SecurityFormPresenter:
                 currency_code=currency_code,
                 unit=unit,
             )
-        except Exception:
+        except Exception:  # noqa: BLE001
             handle_exception()
             return
 
@@ -122,7 +120,7 @@ class SecurityFormPresenter:
             self._record_keeper.edit_security(
                 uuid=uuid, name=name, symbol=symbol, type_=type_
             )
-        except Exception:
+        except Exception:  # noqa: BLE001
             handle_exception()
             return
 
@@ -140,7 +138,7 @@ class SecurityFormPresenter:
         logging.info(f"Removing {security}")
         try:
             self._record_keeper.remove_security(uuid)
-        except Exception:
+        except Exception:  # noqa: BLE001
             handle_exception()
             return
 
@@ -160,7 +158,7 @@ class SecurityFormPresenter:
             last_value=last_value,
             parent=self._view,
         )
-        self._dialog.signal_OK.connect(self.set_price)
+        self._dialog.signal_ok.connect(self.set_price)
         logging.debug("Running SetSecurityPriceDialog")
         self._dialog.exec()
 
@@ -175,7 +173,7 @@ class SecurityFormPresenter:
         logging.info(f"Setting {security} price: {value} on {date_}")
         try:
             self._record_keeper.set_security_price(uuid, value, date_)
-        except Exception:
+        except Exception:  # noqa: BLE001
             handle_exception()
             return
 
@@ -183,8 +181,6 @@ class SecurityFormPresenter:
         self._dialog.close()
         self.event_data_changed()
 
-    def select_security(self) -> None:
-        pass
 
     def _filter(self) -> None:
         pattern = self._view.search_bar_text
@@ -194,4 +190,4 @@ class SecurityFormPresenter:
     def _selection_changed(self) -> None:
         item = self._model.get_selected_item()
         is_security_selected = item is not None
-        self._view.set_buttons(is_security_selected)
+        self._view.set_buttons(is_security_selected=is_security_selected)

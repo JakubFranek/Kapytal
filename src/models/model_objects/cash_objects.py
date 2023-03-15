@@ -7,8 +7,6 @@ from datetime import datetime, timedelta
 from enum import Enum, auto
 from typing import Any
 
-import src.models.user_settings.user_settings as user_settings
-import src.models.utilities.constants as constants
 from src.models.base_classes.account import Account, UnrelatedAccountError
 from src.models.base_classes.transaction import Transaction
 from src.models.custom_exceptions import (
@@ -31,6 +29,8 @@ from src.models.model_objects.currency_objects import (
     Currency,
     CurrencyError,
 )
+from src.models.user_settings import user_settings
+from src.models.utilities import constants
 from src.models.utilities.find_helpers import (
     find_account_by_path,
     find_account_group_by_path,
@@ -185,11 +185,13 @@ class CashAccount(Account):
         initial_balance = CashAmount(initial_balance_value, currency)
 
         obj = CashAccount(name, currency, initial_balance)
-        obj._uuid = uuid.UUID(data["uuid"])
+        obj._uuid = uuid.UUID(data["uuid"])  # noqa: SLF001
 
-        if parent_path != "":
-            obj._parent = find_account_group_by_path(parent_path, account_groups)
-            obj._parent._children[index] = obj
+        if parent_path:
+            obj._parent = find_account_group_by_path(  # noqa: SLF001
+                parent_path, account_groups
+            )
+            obj._parent._children[index] = obj  # noqa: SLF001
         return obj
 
     def _update_balance(self) -> None:
@@ -227,7 +229,7 @@ class CashAccount(Account):
 
 
 class CashTransaction(CashRelatedTransaction):
-    def __init__(  # noqa: CFQ002, TMN001
+    def __init__(  # noqa: PLR0913
         self,
         description: str,
         datetime_: datetime,
@@ -344,7 +346,7 @@ class CashTransaction(CashRelatedTransaction):
         }
 
     @staticmethod
-    def deserialize(
+    def deserialize(  # noqa: PLR0913
         data: dict[str, Any],
         accounts: Collection[Account],
         payees: Collection[Attribute],
@@ -388,10 +390,10 @@ class CashTransaction(CashRelatedTransaction):
             category_amount_pairs=decoded_category_amount_pairs,
             tag_amount_pairs=decoded_tag_amount_pairs,
         )
-        obj._datetime_created = datetime.strptime(  # noqa: DTZ007
+        obj._datetime_created = datetime.strptime(  # noqa: DTZ007, SLF001
             data["datetime_created"], constants.DATETIME_SERDES_FMT
         )
-        obj._uuid = uuid.UUID(data["uuid"])
+        obj._uuid = uuid.UUID(data["uuid"])  # noqa: SLF001
         return obj
 
     def add_refund(self, refund: "RefundTransaction") -> None:
@@ -411,8 +413,8 @@ class CashTransaction(CashRelatedTransaction):
     def is_category_related(self, category: Category) -> bool:
         return _is_category_related(self, category)
 
-    def get_amount_for_category(self, category: Category, total: bool) -> CashAmount:
-        return _get_amount_for_category(self, category, total)
+    def get_amount_for_category(self, category: Category, *, total: bool) -> CashAmount:
+        return _get_amount_for_category(self, category, total=total)
 
     def get_amount_for_tag(self, tag: Attribute) -> CashAmount:
         return _get_amount_for_tag(self, tag)
@@ -705,14 +707,15 @@ class CashTransaction(CashRelatedTransaction):
             return (CategoryType.INCOME, CategoryType.INCOME_AND_EXPENSE)
         return (CategoryType.EXPENSE, CategoryType.INCOME_AND_EXPENSE)
 
-    def _get_amount(self, account: CashAccount) -> CashAmount:  # noqa: U100
+    def _get_amount(self, account: CashAccount) -> CashAmount:
+        del account
         if self.type_ == CashTransactionType.INCOME:
             return self.amount
         return -self.amount
 
 
 class CashTransfer(CashRelatedTransaction):
-    def __init__(  # noqa: TMN001, CFQ002
+    def __init__(  # noqa: PLR0913
         self,
         description: str,
         datetime_: datetime,
@@ -808,10 +811,10 @@ class CashTransfer(CashRelatedTransaction):
             amount_sent=amount_sent,
             amount_received=amount_received,
         )
-        obj._datetime_created = datetime.strptime(  # noqa: DTZ007
+        obj._datetime_created = datetime.strptime(  # noqa: DTZ007, SLF001
             data["datetime_created"], constants.DATETIME_SERDES_FMT
         )
-        obj._uuid = uuid.UUID(data["uuid"])
+        obj._uuid = uuid.UUID(data["uuid"])  # noqa: SLF001
         return obj
 
     def set_attributes(
@@ -951,7 +954,7 @@ class CashTransfer(CashRelatedTransaction):
 class RefundTransaction(CashRelatedTransaction):
     """A refund which attaches itself to an expense CashTransaction"""
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         description: str,
         datetime_: datetime,
@@ -1037,8 +1040,8 @@ class RefundTransaction(CashRelatedTransaction):
     def is_category_related(self, category: Category) -> bool:
         return _is_category_related(self, category)
 
-    def get_amount_for_category(self, category: Category, total: bool) -> CashAmount:
-        return _get_amount_for_category(self, category, total)
+    def get_amount_for_category(self, category: Category, *, total: bool) -> CashAmount:
+        return _get_amount_for_category(self, category, total=total)
 
     def get_amount_for_tag(self, tag: Attribute) -> CashAmount:
         return _get_amount_for_tag(self, tag)
@@ -1068,7 +1071,7 @@ class RefundTransaction(CashRelatedTransaction):
         }
 
     @staticmethod
-    def deserialize(
+    def deserialize(  # noqa: PLR0913
         data: dict[str, Any],
         accounts: Collection[Account],
         transactions: Collection[Transaction],
@@ -1114,16 +1117,18 @@ class RefundTransaction(CashRelatedTransaction):
             category_amount_pairs=decoded_category_amount_pairs,
             tag_amount_pairs=decoded_tag_amount_pairs,
         )
-        obj._datetime_created = datetime.strptime(  # noqa: DTZ007
+        obj._datetime_created = datetime.strptime(  # noqa: DTZ007, SLF001
             data["datetime_created"], constants.DATETIME_SERDES_FMT
         )
-        obj._uuid = uuid.UUID(data["uuid"])
+        obj._uuid = uuid.UUID(data["uuid"])  # noqa: SLF001
         return obj
 
-    def add_tags(self, tags: Collection[Attribute]) -> None:  # noqa: U100
+    def add_tags(self, tags: Collection[Attribute]) -> None:
+        del tags
         raise InvalidOperationError("Adding tags to RefundTransaction is forbidden.")
 
-    def remove_tags(self, tags: Collection[Attribute]) -> None:  # noqa: U100
+    def remove_tags(self, tags: Collection[Attribute]) -> None:
+        del tags
         raise InvalidOperationError(
             "Removing tags from RefundTransaction is forbidden."
         )
@@ -1360,7 +1365,8 @@ class RefundTransaction(CashRelatedTransaction):
                     f"{min_values[tag]} and {max_values[tag]}."
                 )
 
-    def _get_amount(self, account: CashAccount) -> CashAmount:  # noqa: U100
+    def _get_amount(self, account: CashAccount) -> CashAmount:
+        del account
         return self.amount
 
 
@@ -1411,7 +1417,7 @@ def _is_category_related(
 
 
 def _get_amount_for_category(
-    transaction: CashTransaction | RefundTransaction, category: Category, total: bool
+    transaction: CashTransaction | RefundTransaction, category: Category, *, total: bool
 ) -> CashAmount:
     running_sum = CashAmount(0, transaction.currency)
 
@@ -1425,7 +1431,7 @@ def _get_amount_for_category(
         else operator.sub
     )
 
-    for _category, _amount in transaction._category_amount_pairs:
+    for _category, _amount in transaction.category_amount_pairs:
         if _category == category:
             running_sum = func(running_sum, _amount)
             continue
@@ -1449,7 +1455,7 @@ def _get_amount_for_tag(
         else operator.sub
     )
 
-    for _tag, _amount in transaction._tag_amount_pairs:
+    for _tag, _amount in transaction.tag_amount_pairs:
         if _tag == tag:
             running_sum = func(running_sum, _amount)
     return running_sum

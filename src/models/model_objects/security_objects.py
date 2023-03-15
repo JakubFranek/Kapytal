@@ -10,8 +10,6 @@ from decimal import Decimal
 from enum import Enum, auto
 from typing import Any
 
-import src.models.user_settings.user_settings as user_settings
-import src.models.utilities.constants as constants
 from src.models.base_classes.account import Account, UnrelatedAccountError
 from src.models.base_classes.transaction import Transaction
 from src.models.custom_exceptions import InvalidCharacterError, TransferSameAccountError
@@ -26,6 +24,8 @@ from src.models.model_objects.currency_objects import (
     Currency,
     CurrencyError,
 )
+from src.models.user_settings import user_settings
+from src.models.utilities import constants
 from src.models.utilities.find_helpers import (
     find_account_by_path,
     find_account_group_by_path,
@@ -52,7 +52,7 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
     SYMBOL_MAX_LENGTH = 8
     SYMBOL_ALLOWED_CHARS = string.ascii_letters + string.digits + "."
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         name: str,
         symbol: str,
@@ -68,7 +68,7 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
             raise TypeError("Security.currency must be a Currency.")
         self._currency = currency
 
-        if not isinstance(shares_unit, (Decimal, int, str)):
+        if not isinstance(shares_unit, Decimal | int | str):
             raise TypeError(
                 "Security.shares_unit must be a Decimal, integer or a string "
                 "containing a number."
@@ -207,7 +207,7 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
                 CashAmount(price, obj.currency),
             )
 
-        obj._uuid = uuid.UUID(data["uuid"])
+        obj._uuid = uuid.UUID(data["uuid"])  # noqa: SLF001
         return obj
 
 
@@ -265,11 +265,13 @@ class SecurityAccount(Account):
         parent_path, _, name = path.rpartition("/")
 
         obj = SecurityAccount(name)
-        obj._uuid = uuid.UUID(data["uuid"])
+        obj._uuid = uuid.UUID(data["uuid"])  # noqa: SLF001
 
-        if parent_path != "":
-            obj._parent = find_account_group_by_path(parent_path, account_groups)
-            obj._parent._children[index] = obj
+        if parent_path:
+            obj._parent = find_account_group_by_path(  # noqa: SLF001
+                parent_path, account_groups
+            )
+            obj._parent._children[index] = obj  # noqa: SLF001
         return obj
 
     def _validate_transaction(self, transaction: "SecurityRelatedTransaction") -> None:
@@ -316,7 +318,7 @@ class SecurityRelatedTransaction(Transaction, ABC):
     def _validate_shares(
         self, value: Decimal | int | str, shares_unit: Decimal
     ) -> None:
-        if not isinstance(value, (Decimal, int, str)):
+        if not isinstance(value, Decimal | int | str):
             raise TypeError(
                 f"{self.__class__.__name__}.shares must be a Decimal, integer "
                 "or a string containing a number."
@@ -338,7 +340,7 @@ class SecurityRelatedTransaction(Transaction, ABC):
 
 
 class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         description: str,
         datetime_: datetime,
@@ -449,10 +451,10 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
             security_account=security_account,
             cash_account=cash_account,
         )
-        obj._datetime_created = datetime.strptime(  # noqa: DTZ007
+        obj._datetime_created = datetime.strptime(  # noqa: DTZ007, SLF001
             data["datetime_created"], constants.DATETIME_SERDES_FMT
         )
-        obj._uuid = uuid.UUID(data["uuid"])
+        obj._uuid = uuid.UUID(data["uuid"])  # noqa: SLF001
         return obj
 
     def set_attributes(
@@ -620,19 +622,21 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
         if amount.currency != currency:
             raise CurrencyError("Invalid CashAmount currency.")
 
-    def _get_amount(self, account: CashAccount) -> CashAmount:  # noqa: U100
+    def _get_amount(self, account: CashAccount) -> CashAmount:
+        del account
         if self.type_ == SecurityTransactionType.BUY:
             return -self._shares * self.price_per_share
         return self._shares * self.price_per_share
 
-    def _get_shares(self, account: SecurityAccount) -> Decimal:  # noqa: U100
+    def _get_shares(self, account: SecurityAccount) -> Decimal:
+        del account
         if self.type_ == SecurityTransactionType.BUY:
             return self.shares
         return -self.shares
 
 
 class SecurityTransfer(SecurityRelatedTransaction):
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         description: str,
         datetime_: datetime,
@@ -716,10 +720,10 @@ class SecurityTransfer(SecurityRelatedTransaction):
             sender=sender,
             recipient=recipient,
         )
-        obj._datetime_created = datetime.strptime(  # noqa: DTZ007
+        obj._datetime_created = datetime.strptime(  # noqa: DTZ007, SLF001
             data["datetime_created"], constants.DATETIME_SERDES_FMT
         )
-        obj._uuid = uuid.UUID(data["uuid"])
+        obj._uuid = uuid.UUID(data["uuid"])  # noqa: SLF001
         return obj
 
     def set_attributes(

@@ -4,8 +4,6 @@ from decimal import Decimal
 import pytest
 from hypothesis import given
 from hypothesis import strategies as st
-
-import src.models.user_settings.user_settings as user_settings
 from src.models.custom_exceptions import (
     AlreadyExistsError,
     InvalidOperationError,
@@ -32,6 +30,7 @@ from src.models.model_objects.security_objects import (
     SecurityTransfer,
 )
 from src.models.record_keeper import RecordKeeper
+from src.models.user_settings import user_settings
 from tests.models.test_assets.composites import attributes
 from tests.models.test_record_keeper import (
     get_preloaded_record_keeper_with_cash_transactions,
@@ -217,7 +216,7 @@ def test_edit_security_account_group_from_root_to_children() -> None:
     record_keeper = RecordKeeper()
     record_keeper.add_account_group("TEST")
     record_keeper.add_account_group("DUMMY PARENT")
-    assert len(record_keeper.root_account_items) == 2
+    assert len(record_keeper.root_account_items) == 2  # noqa: PLR2004
     record_keeper.edit_account_group("TEST", "DUMMY PARENT/TEST")
     assert len(record_keeper.root_account_items) == 1
 
@@ -228,7 +227,7 @@ def test_edit_security_account_group_from_child_to_root() -> None:
     record_keeper.add_account_group("DUMMY PARENT/TEST")
     assert len(record_keeper.root_account_items) == 1
     record_keeper.edit_account_group("DUMMY PARENT/TEST", "TEST")
-    assert len(record_keeper.root_account_items) == 2
+    assert len(record_keeper.root_account_items) == 2  # noqa: PLR2004
 
 
 def test_edit_security_account_group_already_exists() -> None:

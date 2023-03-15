@@ -2,10 +2,9 @@ from datetime import datetime
 
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QWidget
-
-import src.models.user_settings.user_settings as user_settings
 from src.models.model_objects.cash_objects import CashAccount, CashTransactionType
 from src.models.record_keeper import RecordKeeper
+from src.models.user_settings import user_settings
 from src.views.dialogs.cash_transaction_dialog import CashTransactionDialog
 from src.views.dialogs.select_item_dialog import ask_user_for_selection
 from src.views.utilities.handle_exception import display_error_message
@@ -78,7 +77,7 @@ class CashTransactionDialogPresenter:
             "Select Payee",
             QIcon("icons_16:user-silhouette.png"),
         )
-        self._dialog.payee = payee if payee != "" else self._dialog.payee
+        self._dialog.payee = payee if payee else self._dialog.payee
 
     def _get_tag(self) -> None:
         tags = [tag.name for tag in self.record_keeper.tags]
@@ -87,4 +86,4 @@ class CashTransactionDialogPresenter:
         )
         current_tags = list(self._dialog.tags)
         if tag not in current_tags:
-            self._dialog.tags = current_tags + [tag]
+            self._dialog.tags = [*current_tags, tag]

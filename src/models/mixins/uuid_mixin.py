@@ -3,7 +3,7 @@ from typing import Any
 
 
 class UUIDMixin:
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:  # noqa: ANN401
         super().__init__(*args, **kwargs)
         self._uuid = uuid.uuid4()
 

@@ -6,8 +6,7 @@ from pathlib import Path
 from PyQt6.QtCore import PYQT_VERSION_STR, QT_VERSION_STR, QDir, QSize, Qt, pyqtSignal
 from PyQt6.QtGui import QAction, QCloseEvent, QIcon
 from PyQt6.QtWidgets import QFileDialog, QMainWindow, QMessageBox
-
-import src.utilities.constants as constants
+from src.utilities import constants
 from src.views.ui_files.Ui_main_window import Ui_MainWindow
 from src.views.widgets.account_tree_widget import AccountTreeWidget
 from src.views.widgets.transaction_table_widget import TransactionTableWidget
@@ -68,10 +67,8 @@ class MainView(QMainWindow, Ui_MainWindow):
             return False
         return None
 
-    def set_save_status(
-        self, current_file_path: Path | None, unsaved_changes: bool
-    ) -> None:
-        if unsaved_changes is True:
+    def set_save_status(self, current_file_path: Path | None, *, unsaved: bool) -> None:
+        if unsaved is True:
             self.actionSave.setIcon(QIcon("icons_16:disk--exclamation.png"))
             star_str = "*"
         else:
@@ -107,15 +104,13 @@ class MainView(QMainWindow, Ui_MainWindow):
         for path in reversed(recent_files):
             action = QAction(path, self)
             action.triggered.connect(
-                lambda _, path=path: self.signal_open_recent_file.emit(  # noqa : U101
-                    path
-                )
+                lambda _, path=path: self.signal_open_recent_file.emit(path)
             )
             actions = self.menuRecent_Files.actions()
             before_action = actions[0] if actions else None
             self.menuRecent_Files.insertAction(before_action, action)
 
-    def closeEvent(self, event: QCloseEvent) -> None:
+    def closeEvent(self, event: QCloseEvent) -> None:  # noqa: N802
         self.signal_exit.emit()
         event.ignore()
 
@@ -214,7 +209,7 @@ class MainView(QMainWindow, Ui_MainWindow):
         self.actionClear_Recent_File_Menu.triggered.connect(
             self.signal_clear_recent_files.emit
         )
-        self.actionClose_File.checkableChanged.connect(self.signal_close_file.emit)
+        self.actionClose_File.triggered.connect(self.signal_close_file.emit)
 
         self.actionShow_Hide_Account_Tree.triggered.connect(
             lambda checked: self.signal_show_account_tree.emit(checked)

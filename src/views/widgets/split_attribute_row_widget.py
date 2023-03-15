@@ -5,7 +5,6 @@ from enum import Enum, auto
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QAction, QIcon
 from PyQt6.QtWidgets import QComboBox, QDoubleSpinBox, QHBoxLayout, QToolButton, QWidget
-
 from src.views.dialogs.select_item_dialog import ask_user_for_selection
 
 

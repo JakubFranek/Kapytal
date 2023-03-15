@@ -10,16 +10,15 @@ from PyQt6.QtWidgets import (
     QDialogButtonBox,
     QWidget,
 )
-
 from src.views.ui_files.dialogs.Ui_account_group_dialog import Ui_AccountGroupDialog
 
 
 # IDEA: update position limits based on path state?
 class AccountGroupDialog(QDialog, Ui_AccountGroupDialog):
-    signal_OK = pyqtSignal()
+    signal_ok = pyqtSignal()
 
     def __init__(
-        self, parent: QWidget, max_position: int, paths: Collection[str], edit: bool
+        self, parent: QWidget, max_position: int, paths: Collection[str], *, edit: bool
     ) -> None:
         super().__init__(parent=parent)
         self.setupUi(self)
@@ -69,7 +68,7 @@ class AccountGroupDialog(QDialog, Ui_AccountGroupDialog):
     def _handle_button_box_click(self, button: QAbstractButton) -> None:
         role = self.buttonBox.buttonRole(button)
         if role == QDialogButtonBox.ButtonRole.AcceptRole:
-            self.signal_OK.emit()
+            self.signal_ok.emit()
         elif role == QDialogButtonBox.ButtonRole.RejectRole:
             self.reject()
         else:

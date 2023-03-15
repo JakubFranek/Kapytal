@@ -6,8 +6,6 @@ from typing import Any
 import pytest
 from hypothesis import assume, given
 from hypothesis import strategies as st
-
-import src.models.user_settings.user_settings as user_settings
 from src.models.custom_exceptions import InvalidOperationError
 from src.models.model_objects.attributes import (
     Attribute,
@@ -32,6 +30,7 @@ from src.models.model_objects.currency_objects import (
     Currency,
     CurrencyError,
 )
+from src.models.user_settings import user_settings
 from tests.models.test_assets.composites import (
     cash_accounts,
     cash_transactions,
@@ -432,7 +431,7 @@ def test_invalid_pair_type() -> None:
             refunded_account,
             refunded_transaction,
             payee,
-            category_amount_pairs,  # type: ignore
+            category_amount_pairs,
             tag_amount_pairs,
         )
 

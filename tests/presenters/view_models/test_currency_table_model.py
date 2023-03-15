@@ -1,7 +1,6 @@
 from PyQt6.QtWidgets import QTableView, QWidget
 from pytestqt.modeltest import ModelTester
 from pytestqt.qtbot import QtBot
-
 from src.view_models.currency_table_model import CurrencyTableModel
 from tests.models.test_record_keeper import get_preloaded_record_keeper
 

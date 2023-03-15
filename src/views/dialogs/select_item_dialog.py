@@ -9,7 +9,6 @@ from PyQt6.QtWidgets import (
     QLineEdit,
     QWidget,
 )
-
 from src.view_models.simple_list_model import SimpleListModel
 from src.views.ui_files.dialogs.Ui_select_item_dialog import Ui_SelectItemDialog
 
@@ -74,4 +73,4 @@ def ask_user_for_selection(
     dialog.exec()
     selection = dialog.selection
     dialog.deleteLater()
-    return selection  # noqa: R504
+    return selection

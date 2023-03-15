@@ -1,7 +1,6 @@
 import uuid
 
 import pytest
-
 from src.models.custom_exceptions import NotFoundError
 from src.models.utilities.find_helpers import (
     find_account_by_path,

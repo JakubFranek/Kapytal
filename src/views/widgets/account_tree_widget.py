@@ -3,7 +3,6 @@ import logging
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtGui import QContextMenuEvent, QCursor, QIcon
 from PyQt6.QtWidgets import QHeaderView, QMenu, QWidget
-
 from src.views.constants import AccountTreeColumn
 from src.views.ui_files.widgets.Ui_account_tree_widget import Ui_AccountTreeWidget
 
@@ -45,6 +44,7 @@ class AccountTreeWidget(QWidget, Ui_AccountTreeWidget):
 
     def enable_actions(
         self,
+        *,
         enable_add_objects: bool,
         enable_modify_object: bool,
         enable_expand_below: bool,
@@ -57,7 +57,8 @@ class AccountTreeWidget(QWidget, Ui_AccountTreeWidget):
         self.actionExpand_All_Below.setEnabled(enable_expand_below)
         self.actionShow_Selection_Only.setEnabled(enable_modify_object)
 
-    def _create_context_menu(self, event: QContextMenuEvent) -> None:  # noqa: U100
+    def _create_context_menu(self, event: QContextMenuEvent) -> None:
+        del event
         self.menu = QMenu(self)
         self.menu.addAction(self.actionAdd_Account_Group)
         self.menu.addAction(self.actionAdd_Cash_Account)

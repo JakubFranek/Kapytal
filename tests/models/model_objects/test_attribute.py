@@ -3,7 +3,6 @@ from typing import Any
 import pytest
 from hypothesis import given
 from hypothesis import strategies as st
-
 from src.models.mixins.name_mixin import NameLengthError
 from src.models.model_objects.attributes import Attribute, AttributeType
 from tests.models.test_assets.composites import everything_except, names

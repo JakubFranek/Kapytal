@@ -1,7 +1,6 @@
 import logging
 
 from PyQt6.QtCore import QSortFilterProxyModel, Qt
-
 from src.models.model_objects.attributes import AttributeType
 from src.models.record_keeper import RecordKeeper
 from src.models.utilities.calculation import AttributeStats, get_tag_stats
@@ -31,7 +30,6 @@ class TagFormPresenter:
         self._view.signal_add_tag.connect(lambda: self.run_tag_dialog(edit=False))
         self._view.signal_remove_tag.connect(self.remove_tag)
         self._view.signal_rename_tag.connect(lambda: self.run_tag_dialog(edit=True))
-        self._view.signal_select_tag.connect(self.select_tag)
         self._view.signal_search_text_changed.connect(self._filter)
 
         self._view.finalize_setup()
@@ -58,19 +56,19 @@ class TagFormPresenter:
 
     def show_form(self) -> None:
         self.update_model_data()
-        self._view.selectButton.setVisible(False)
+        self._view.selectButton.setVisible(False)  # noqa: FBT003
         self._view.show_form()
 
-    def run_tag_dialog(self, edit: bool) -> None:
-        self._dialog = TagDialog(self._view, edit)
+    def run_tag_dialog(self, *, edit: bool) -> None:
+        self._dialog = TagDialog(self._view, edit=edit)
         if edit:
             item = self._model.get_selected_item()
             if item is None:
                 raise ValueError("Cannot edit an unselected item.")
-            self._dialog.signal_OK.connect(self.rename_tag)
+            self._dialog.signal_ok.connect(self.rename_tag)
             self._dialog.name = item.name
         else:
-            self._dialog.signal_OK.connect(self.add_tag)
+            self._dialog.signal_ok.connect(self.add_tag)
         logging.debug(f"Running TagDialog ({edit=})")
         self._dialog.exec()
 
@@ -80,7 +78,7 @@ class TagFormPresenter:
         logging.info("Adding Tag")
         try:
             self._record_keeper.add_tag(name)
-        except Exception:
+        except Exception:  # noqa: BLE001
             handle_exception()
             return
 
@@ -102,7 +100,7 @@ class TagFormPresenter:
             self._record_keeper.edit_attribute(
                 current_name, new_name, AttributeType.TAG
             )
-        except Exception:
+        except Exception:  # noqa: BLE001
             handle_exception()
             return
 
@@ -118,7 +116,7 @@ class TagFormPresenter:
         logging.info(f"Removing {tag}")
         try:
             self._record_keeper.remove_tag(tag.name)
-        except Exception:
+        except Exception:  # noqa: BLE001
             handle_exception()
             return
 
@@ -126,9 +124,6 @@ class TagFormPresenter:
         self.update_model_data()
         self._model.post_remove_item()
         self.event_data_changed()
-
-    def select_tag(self) -> None:
-        pass
 
     def _filter(self) -> None:
         pattern = self._view.search_bar_text
@@ -138,4 +133,4 @@ class TagFormPresenter:
     def _selection_changed(self) -> None:
         item = self._model.get_selected_item()
         is_tag_selected = item is not None
-        self._view.set_buttons(is_tag_selected)
+        self._view.set_buttons(is_tag_selected=is_tag_selected)

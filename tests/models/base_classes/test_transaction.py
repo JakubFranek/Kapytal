@@ -7,13 +7,12 @@ from typing import Any
 import pytest
 from hypothesis import given
 from hypothesis import strategies as st
-
-import src.models.user_settings.user_settings as user_settings
 from src.models.model_objects.attributes import (
     Attribute,
     AttributeType,
     InvalidAttributeError,
 )
+from src.models.user_settings import user_settings
 from tests.models.test_assets.composites import attributes, everything_except
 from tests.models.test_assets.concrete_abcs import ConcreteTransaction
 

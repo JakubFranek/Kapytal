@@ -5,12 +5,11 @@ import sys
 from pathlib import Path
 
 from PyQt6.QtWidgets import QApplication
-
-import src.models.user_settings.user_settings as user_settings
-import src.utilities.constants as constants
 from src.models.json.custom_json_decoder import CustomJSONDecoder
 from src.models.json.custom_json_encoder import CustomJSONEncoder
+from src.models.user_settings import user_settings
 from src.presenters.main_presenter import MainPresenter
+from src.utilities import constants
 from src.utilities.logging import remove_old_logs, setup_logging
 from src.views.main_view import MainView
 from src.views.utilities.handle_exception import handle_uncaught_exception

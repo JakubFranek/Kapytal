@@ -29,7 +29,7 @@ class Event(list):
 
     """
 
-    def __call__(self, *args: Any, **kwargs: Any) -> None:
+    def __call__(self, *args: Any, **kwargs: Any) -> None:  # noqa: ANN401
         for func in self:
             func(*args, **kwargs)
 

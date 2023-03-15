@@ -3,15 +3,18 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any
 
-import src.models.utilities.constants as constants
 from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
+from src.models.utilities import constants
 
 
 class CustomJSONEncoder(json.JSONEncoder):
-    def __init__(self, *args: Any, **kwargs: Any) -> None:  # noqa: U100
-        super().__init__(indent=2, separators=(", ", ": "))
+    def __init__(self, **kwargs: Any) -> None:  # noqa: ANN401
+        """Arguments indent and separators are overriden!"""
+        kwargs.setdefault("indent", 2)
+        kwargs.setdefault("separators", (", ", ": "))
+        super().__init__(**kwargs)
 
-    def default(self, arg: Any) -> Any:
+    def default(self, arg: Any) -> Any:  # noqa: ANN401
         if isinstance(arg, datetime):
             return arg.strftime(constants.DATETIME_SERDES_FMT)
         if isinstance(arg, Decimal):

@@ -89,10 +89,10 @@ class Category(NameMixin, JSONSerializableMixin):
             if self._parent == parent:
                 return
             if self._parent is not None:
-                self._parent._remove_child(self)
+                self._parent._remove_child(self)  # noqa: SLF001
 
         if parent is not None:
-            parent._add_child(self)
+            parent._add_child(self)  # noqa: SLF001
 
         if hasattr(self, "_parent"):
             logging.info(f"Changing parent from {self._parent} to {parent}")
@@ -173,7 +173,7 @@ class Category(NameMixin, JSONSerializableMixin):
         type_ = CategoryType[data["type_"]]
         index: int | None = data["index"]
         obj = Category(name, type_)
-        if parent_path != "":
-            obj._parent = find_category_by_path(parent_path, categories)
-            obj._parent._children[index] = obj
+        if parent_path:
+            obj._parent = find_category_by_path(parent_path, categories)  # noqa: SLF001
+            obj._parent._children[index] = obj  # noqa: SLF001
         return obj

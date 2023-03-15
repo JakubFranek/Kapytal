@@ -2,7 +2,6 @@ import logging
 from collections.abc import Collection
 
 from PyQt6.QtCore import QSortFilterProxyModel, Qt
-
 from src.models.base_classes.account import Account
 from src.models.model_objects.cash_objects import (
     CashAccount,
@@ -83,7 +82,7 @@ class TransactionsPresenter:
             for transaction in self._model.transactions
         )
         any_with_categories = any(
-            isinstance(transaction, (CashTransaction, RefundTransaction))
+            isinstance(transaction, CashTransaction | RefundTransaction)
             for transaction in self._model.transactions
         )
         single_cash_account = len(self._valid_accounts) == 1 and isinstance(
@@ -95,16 +94,16 @@ class TransactionsPresenter:
                 column == TransactionTableColumn.COLUMN_SECURITY
                 or column == TransactionTableColumn.COLUMN_SHARES
             ):
-                self._view.set_column_visibility(column, any_security_related)
+                self._view.set_column_visibility(column, show=any_security_related)
             if (
                 column == TransactionTableColumn.COLUMN_AMOUNT_RECEIVED
                 or column == TransactionTableColumn.COLUMN_AMOUNT_SENT
             ):
-                self._view.set_column_visibility(column, any_cash_transfers)
+                self._view.set_column_visibility(column, show=any_cash_transfers)
             if column == TransactionTableColumn.COLUMN_CATEGORY:
-                self._view.set_column_visibility(column, any_with_categories)
+                self._view.set_column_visibility(column, show=any_with_categories)
             if column == TransactionTableColumn.COLUMN_BALANCE:
-                self._view.set_column_visibility(column, single_cash_account)
+                self._view.set_column_visibility(column, show=single_cash_account)
 
     def _filter(self) -> None:
         pattern = self._view.search_bar_text
@@ -131,7 +130,7 @@ class TransactionsPresenter:
 
     def _setup_view(self) -> None:
         self._view.resize_table_to_contents()
-        self._view.set_column_visibility(TransactionTableColumn.COLUMN_UUID, False)
+        self._view.set_column_visibility(TransactionTableColumn.COLUMN_UUID, show=False)
 
     def _connect_signals(self) -> None:
         self._view.signal_search_text_changed.connect(self._filter)

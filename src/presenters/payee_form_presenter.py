@@ -1,7 +1,6 @@
 import logging
 
 from PyQt6.QtCore import QSortFilterProxyModel, Qt
-
 from src.models.model_objects.attributes import AttributeType
 from src.models.record_keeper import RecordKeeper
 from src.models.utilities.calculation import AttributeStats, get_payee_stats
@@ -31,7 +30,6 @@ class PayeeFormPresenter:
         self._view.signal_add_payee.connect(lambda: self.run_payee_dialog(edit=False))
         self._view.signal_remove_payee.connect(self.remove_payee)
         self._view.signal_rename_payee.connect(lambda: self.run_payee_dialog(edit=True))
-        self._view.signal_select_payee.connect(self.select_payee)
         self._view.signal_search_text_changed.connect(self._filter)
 
         self._view.finalize_setup()
@@ -58,19 +56,19 @@ class PayeeFormPresenter:
 
     def show_form(self) -> None:
         self.update_model_data()
-        self._view.selectButton.setVisible(False)
+        self._view.selectButton.setVisible(False)  # noqa: FBT003
         self._view.show_form()
 
-    def run_payee_dialog(self, edit: bool) -> None:
-        self._dialog = PayeeDialog(self._view, edit)
+    def run_payee_dialog(self, *, edit: bool) -> None:
+        self._dialog = PayeeDialog(self._view, edit=edit)
         if edit:
             item = self._model.get_selected_item()
             if item is None:
                 raise ValueError("Cannot edit an unselected item.")
-            self._dialog.signal_OK.connect(self.rename_payee)
+            self._dialog.signal_ok.connect(self.rename_payee)
             self._dialog.name = item.name
         else:
-            self._dialog.signal_OK.connect(self.add_payee)
+            self._dialog.signal_ok.connect(self.add_payee)
         logging.debug(f"Running PayeeDialog ({edit=})")
         self._dialog.exec()
 
@@ -80,7 +78,7 @@ class PayeeFormPresenter:
         logging.info("Adding Payee")
         try:
             self._record_keeper.add_payee(name)
-        except Exception:
+        except Exception:  # noqa: BLE001
             handle_exception()
             return
 
@@ -102,7 +100,7 @@ class PayeeFormPresenter:
             self._record_keeper.edit_attribute(
                 current_name, new_name, AttributeType.PAYEE
             )
-        except Exception:
+        except Exception:  # noqa: BLE001
             handle_exception()
             return
 
@@ -118,7 +116,7 @@ class PayeeFormPresenter:
         logging.info(f"Removing {payee}")
         try:
             self._record_keeper.remove_payee(payee.name)
-        except Exception:
+        except Exception:  # noqa: BLE001
             handle_exception()
             return
 
@@ -126,9 +124,6 @@ class PayeeFormPresenter:
         self.update_model_data()
         self._model.post_remove_item()
         self.event_data_changed()
-
-    def select_payee(self) -> None:
-        pass
 
     def _filter(self) -> None:
         pattern = self._view.search_bar_text
@@ -138,4 +133,4 @@ class PayeeFormPresenter:
     def _selection_changed(self) -> None:
         item = self._model.get_selected_item()
         is_payee_selected = item is not None
-        self._view.set_buttons(is_payee_selected)
+        self._view.set_buttons(is_payee_selected=is_payee_selected)

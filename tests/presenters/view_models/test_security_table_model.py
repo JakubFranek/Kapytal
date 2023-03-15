@@ -1,7 +1,6 @@
 from PyQt6.QtWidgets import QWidget
 from pytestqt.modeltest import ModelTester
 from pytestqt.qtbot import QtBot
-
 from src.presenters.security_form_presenter import SecurityFormPresenter
 from src.view_models.security_table_model import SecurityTableModel
 from src.views.forms.security_form import SecurityForm

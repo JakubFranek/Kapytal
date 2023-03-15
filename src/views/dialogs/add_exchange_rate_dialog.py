@@ -3,14 +3,13 @@ import logging
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QAbstractButton, QDialog, QDialogButtonBox, QWidget
-
 from src.views.ui_files.dialogs.Ui_add_exchange_rate_dialog import (
     Ui_AddExchangeRateDialog,
 )
 
 
 class AddExchangeRateDialog(QDialog, Ui_AddExchangeRateDialog):
-    signal_OK = pyqtSignal()
+    signal_ok = pyqtSignal()
 
     def __init__(
         self,
@@ -41,7 +40,7 @@ class AddExchangeRateDialog(QDialog, Ui_AddExchangeRateDialog):
     def _handle_button_box_click(self, button: QAbstractButton) -> None:
         role = self.buttonBox.buttonRole(button)
         if role == QDialogButtonBox.ButtonRole.AcceptRole:
-            self.signal_OK.emit()
+            self.signal_ok.emit()
         elif role == QDialogButtonBox.ButtonRole.RejectRole:
             self.reject()
         else:

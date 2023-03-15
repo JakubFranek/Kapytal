@@ -4,7 +4,6 @@ from PyQt6 import QtGui
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtGui import QContextMenuEvent, QCursor, QIcon
 from PyQt6.QtWidgets import QHeaderView, QMenu, QTreeView, QWidget
-
 from src.views.constants import CategoryTreeColumn
 
 
@@ -59,6 +58,7 @@ class CategoryTree(QTreeView):
 
     def enable_actions(
         self,
+        *,
         enable_add_objects: bool,
         enable_modify_object: bool,
         enable_expand_below: bool,
@@ -68,7 +68,8 @@ class CategoryTree(QTreeView):
         self.actionDelete_Category.setEnabled(enable_modify_object)
         self.actionExpand_All_Below.setEnabled(enable_expand_below)
 
-    def create_context_menu(self, event: QContextMenuEvent) -> None:  # noqa: U100
+    def create_context_menu(self, event: QContextMenuEvent) -> None:
+        del event
         self.menu = QMenu(self)
         self.menu.addAction(self.actionAdd_Category)
         self.menu.addAction(self.actionEdit_Category)

@@ -1,7 +1,6 @@
 from PyQt6.QtWidgets import QWidget
 from pytestqt.modeltest import ModelTester
 from pytestqt.qtbot import QtBot
-
 from src.presenters.category_form_presenter import CategoryFormPresenter
 from src.view_models.category_tree_model import CategoryTreeModel
 from src.views.forms.category_form import CategoryForm

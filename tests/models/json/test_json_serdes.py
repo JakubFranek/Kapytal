@@ -5,9 +5,6 @@ from decimal import Decimal
 import pytest
 from hypothesis import given
 from hypothesis import strategies as st
-
-import src.models.user_settings.user_settings as user_settings
-import src.models.utilities.constants as constants
 from src.models.json.custom_json_decoder import CustomJSONDecoder
 from src.models.json.custom_json_encoder import CustomJSONEncoder
 from src.models.model_objects.account_group import AccountGroup
@@ -33,7 +30,9 @@ from src.models.model_objects.security_objects import (
     SecurityTransfer,
 )
 from src.models.record_keeper import RecordKeeper
+from src.models.user_settings import user_settings
 from src.models.user_settings.user_settings_class import UserSettings
+from src.models.utilities import constants
 from tests.models.test_assets.composites import (
     attributes,
     cash_transactions,

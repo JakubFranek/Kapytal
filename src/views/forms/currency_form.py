@@ -3,7 +3,6 @@ import logging
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QCloseEvent, QIcon
 from PyQt6.QtWidgets import QHeaderView, QWidget
-
 from src.views.constants import ExchangeRateTableColumn
 from src.views.ui_files.forms.Ui_currency_form import Ui_CurrencyForm
 
@@ -40,15 +39,15 @@ class CurrencyForm(QWidget, Ui_CurrencyForm):
         logging.debug(f"Showing {self.__class__.__name__}")
         self.show()
 
-    def closeEvent(self, a0: QCloseEvent) -> None:
+    def closeEvent(self, a0: QCloseEvent) -> None:  # noqa: N802
         logging.debug(f"Closing {self.__class__.__name__}")
         return super().closeEvent(a0)
 
-    def set_currency_buttons(self, is_currency_selected: bool) -> None:
+    def set_currency_buttons(self, *, is_currency_selected: bool) -> None:
         self.setBaseCurrencyButton.setEnabled(is_currency_selected)
         self.removeCurrencyButton.setEnabled(is_currency_selected)
 
-    def set_exchange_rate_buttons(self, is_exchange_rate_selected: bool) -> None:
+    def set_exchange_rate_buttons(self, *, is_exchange_rate_selected: bool) -> None:
         self.setExchangeRateButton.setEnabled(is_exchange_rate_selected)
         self.removeExchangeRateButton.setEnabled(is_exchange_rate_selected)
 
@@ -71,7 +70,7 @@ class CurrencyForm(QWidget, Ui_CurrencyForm):
         )
 
         style = self.style()
-        lastSectionText = self.exchangeRateTable.model().headerData(
+        last_section_text = self.exchangeRateTable.model().headerData(
             ExchangeRateTableColumn.COLUMN_LAST_DATE,
             Qt.Orientation.Horizontal,
             Qt.ItemDataRole.DisplayRole,
@@ -79,7 +78,7 @@ class CurrencyForm(QWidget, Ui_CurrencyForm):
         self.exchangeRateTable.horizontalHeader().setMinimumSectionSize(
             style.pixelMetric(style.PixelMetric.PM_HeaderMarkSize)
             + style.pixelMetric(style.PixelMetric.PM_HeaderGripMargin) * 2
-            + self.fontMetrics().horizontalAdvance(lastSectionText)
+            + self.fontMetrics().horizontalAdvance(last_section_text)
         )
 
         self.exchangeRateTable.selectionModel().selectionChanged.connect(
