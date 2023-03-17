@@ -73,6 +73,8 @@ class MainPresenter:
 
     def _load_from_file(self, path: str | Path | None = None) -> None:
         logging.debug("Load from file initiated")
+        if self._check_for_unsaved_changes("Load File") is False:
+            return
         try:
             if path is None:
                 logging.debug("Asking user for file path")
