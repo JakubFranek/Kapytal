@@ -120,16 +120,26 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
 
     @property
     def income_categories(self) -> tuple[Category, ...]:
-        return tuple(RecordKeeper._flatten_categories(self._root_income_categories))
+        return tuple(
+            category
+            for category in self._categories
+            if category.type_ == CategoryType.INCOME
+        )
 
     @property
     def expense_categories(self) -> tuple[Category, ...]:
-        return tuple(RecordKeeper._flatten_categories(self._root_expense_categories))
+        return tuple(
+            category
+            for category in self._categories
+            if category.type_ == CategoryType.EXPENSE
+        )
 
     @property
     def income_and_expense_categories(self) -> tuple[Category, ...]:
         return tuple(
-            RecordKeeper._flatten_categories(self._root_income_and_expense_categories)
+            category
+            for category in self._categories
+            if category.type_ == CategoryType.INCOME_AND_EXPENSE
         )
 
     @property
@@ -1576,17 +1586,5 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
             if isinstance(account_item, AccountGroup):
                 resulting_list = resulting_list + RecordKeeper._flatten_account_items(
                     account_item.children
-                )
-        return resulting_list
-
-    # TODO: test this
-    @staticmethod
-    def _flatten_categories(categories: Collection[Category]) -> list[Category]:
-        resulting_list = []
-        for category in categories:
-            resulting_list.append(category)
-            if len(category.children) > 0:
-                resulting_list = resulting_list + RecordKeeper._flatten_categories(
-                    category.children
                 )
         return resulting_list

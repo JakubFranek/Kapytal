@@ -37,6 +37,9 @@ def test_creation() -> None:
     assert record_keeper.transactions == ()
     assert record_keeper.tags == ()
     assert record_keeper.categories == ()
+    assert record_keeper.income_categories == ()
+    assert record_keeper.expense_categories == ()
+    assert record_keeper.income_and_expense_categories == ()
     assert record_keeper.root_income_categories == ()
     assert record_keeper.root_expense_categories == ()
     assert record_keeper.root_income_and_expense_categories == ()
@@ -833,6 +836,12 @@ def test_record_keeper_set_security_price(value: Decimal, date_: date) -> None:
     security = record_keeper.get_security_by_name("NAME")
     record_keeper.set_security_price(uuid=str(security.uuid), value=value, date_=date_)
     assert security.price.value_normalized == value
+
+
+def test_record_keeper_account_items() -> None:
+    record_keeper = get_preloaded_record_keeper()
+    items = record_keeper.account_items
+    assert len(items) == len(record_keeper.account_groups) + len(record_keeper.accounts)
 
 
 def get_preloaded_record_keeper_with_security_transactions() -> RecordKeeper:

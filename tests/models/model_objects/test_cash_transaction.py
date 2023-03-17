@@ -602,7 +602,7 @@ def test_get_amount_for_category_not_related(
     transaction: CashTransaction, category: Category, total: bool  # noqa: FBT001
 ) -> None:
     assume(category not in transaction.categories)
-    assert transaction.get_amount_for_category(category, total) == CashAmount(
+    assert transaction.get_amount_for_category(category, total=total) == CashAmount(
         0, transaction.currency
     )
 
