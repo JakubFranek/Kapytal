@@ -1,7 +1,7 @@
 from collections.abc import Collection
 from decimal import Decimal
 
-from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtCore import QSignalBlocker, Qt, pyqtSignal
 from PyQt6.QtGui import QAction, QIcon
 from PyQt6.QtWidgets import QComboBox, QDoubleSpinBox, QHBoxLayout, QToolButton, QWidget
 from src.views.dialogs.select_item_dialog import ask_user_for_selection
@@ -9,6 +9,7 @@ from src.views.dialogs.select_item_dialog import ask_user_for_selection
 
 class SplitCategoryRowWidget(QWidget):
     signal_remove_row = pyqtSignal(QWidget)
+    signal_amount_changed = pyqtSignal(QWidget)
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -27,6 +28,9 @@ class SplitCategoryRowWidget(QWidget):
         self.double_spin_box.setGroupSeparatorShown(True)
         self.double_spin_box.setAlignment(Qt.AlignmentFlag.AlignRight)
         self.double_spin_box.setMinimumWidth(125)
+        self.double_spin_box.valueChanged.connect(
+            lambda: self.signal_amount_changed.emit(self)
+        )
 
         self.remove_tool_button = QToolButton(self)
         self.actionRemove_Row = QAction("Remove", self)
@@ -63,7 +67,8 @@ class SplitCategoryRowWidget(QWidget):
 
     @amount.setter
     def amount(self, value: Decimal) -> None:
-        self.double_spin_box.setValue(value)
+        with QSignalBlocker(self.double_spin_box):
+            self.double_spin_box.setValue(value)
 
     @property
     def currency_code(self) -> str:
@@ -81,6 +86,14 @@ class SplitCategoryRowWidget(QWidget):
     @amount_decimals.setter
     def amount_decimals(self, value: int) -> None:
         self.double_spin_box.setDecimals(value)
+
+    @property
+    def maximum_amount(self) -> Decimal:
+        return Decimal(self.double_spin_box.maximum())
+
+    @maximum_amount.setter
+    def maximum_amount(self, maximum: Decimal) -> None:
+        self.double_spin_box.setMaximum(maximum)
 
     def __repr__(self) -> str:
         return f"SplitCategoryRowWidget('{self.category}')"

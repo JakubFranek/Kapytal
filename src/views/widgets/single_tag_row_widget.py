@@ -15,7 +15,7 @@ class SingleTagRowWidget(QWidget):
         self._tags = tuple(tags)
 
         self.line_edit = QLineEdit(self)
-        self.line_edit.setPlaceholderText("Enter Tag names (separator = ;)")
+        self.line_edit.setPlaceholderText("Enter Tag names (separated by ';')")
         self._initialize_tags_completer()
 
         self.select_tool_button = QToolButton(self)

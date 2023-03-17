@@ -68,6 +68,9 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
         self._initialize_actions()
         self._initialize_combobox_placeholders()
 
+        self.amountDoubleSpinBox.valueChanged.connect(self._amount_changed)
+        self._set_maximum_amounts(0)
+
     @property
     def type_(self) -> CashTransactionType:
         if self.incomeRadioButton.isChecked():
@@ -249,6 +252,8 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
         self._category_rows = [row1, row2]
         row1.amount_decimals = self._decimals
         row2.amount_decimals = self._decimals
+        row1.maximum_amount = self.amount
+        row2.maximum_amount = self.amount
         row1.currency_code = self._currency_code
         row2.currency_code = self._currency_code
 
@@ -263,20 +268,27 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
 
         for row in self._category_rows:
             row.signal_remove_row.connect(self._remove_split_category_row)
+            row.signal_amount_changed.connect(self._split_category_amount_changed)
 
         self.add_row_widget = AddAttributeRowWidget(self)
-        self.add_row_widget.signal_add_row.connect(self._add_category_row)
+        self.add_row_widget.signal_add_row.connect(self._add_split_category_row)
         self.split_categories_vertical_layout.addWidget(self.add_row_widget)
 
-    def _add_category_row(self) -> None:
+        self._fixed_split_category_rows: list[SplitCategoryRowWidget] = []
+        self._equalize_split_category_amounts()
+
+    def _add_split_category_row(self) -> None:
         row = SplitCategoryRowWidget(self)
         row.amount_decimals = self._decimals
+        row.maximum_amount = self.amount
         row.currency_code = self._currency_code
         self._category_rows.append(row)
         index = self.split_categories_vertical_layout.count() - 1
         self.split_categories_vertical_layout.insertWidget(index, row)
         self._setup_categories_combobox()
         row.signal_remove_row.connect(self._remove_split_category_row)
+        row.signal_amount_changed.connect(self._split_category_amount_changed)
+        self._equalize_split_category_amounts()
 
     def _remove_split_category_row(self, removed_row: SplitCategoryRowWidget) -> None:
         no_of_rows = self.split_categories_vertical_layout.count() - 1
@@ -289,7 +301,10 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
             return
         self.split_categories_vertical_layout.removeWidget(removed_row)
         self._category_rows.remove(removed_row)
+        if removed_row in self._fixed_split_category_rows:
+            self._fixed_split_category_rows.remove(removed_row)
         removed_row.deleteLater()
+        self._equalize_split_category_amounts()
         # IDEA: "preferred" size for description? or something
 
     def _initialize_single_tag_row(self) -> None:
@@ -307,6 +322,7 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
         for tag in current_tags:
             row = SplitTagRowWidget(self, self._tags)
             row.amount_decimals = self._decimals
+            row.maximum_amount = self.amount
             row.currency_code = self._currency_code
             row.tag = tag
             self._tag_rows.append(row)
@@ -320,13 +336,14 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
             row.signal_remove_row.connect(self._remove_split_tag_row)
 
         self.add_row_widget = AddAttributeRowWidget(self)
-        self.add_row_widget.signal_add_row.connect(self._add_tag_row)
+        self.add_row_widget.signal_add_row.connect(self._add_split_tag_row)
         self.split_tags_vertical_layout.addWidget(self.add_row_widget)
 
-    def _add_tag_row(self) -> None:
+    def _add_split_tag_row(self) -> None:
         row = SplitTagRowWidget(self, self._tags)
         row.amount_decimals = self._decimals
         row.currency_code = self._currency_code
+        row.maximum_amount = self.amount
         self._tag_rows.append(row)
         index = self.split_tags_vertical_layout.count() - 1
         self.split_tags_vertical_layout.insertWidget(index, row)
@@ -353,3 +370,62 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
             QIcon("icons_16:user-silhouette.png"),
         )
         self.payee = payee if payee else self.payee
+
+    def _set_maximum_amounts(self, max_amount: Decimal) -> None:
+        split_category_rows = [
+            row
+            for row in self._category_rows
+            if isinstance(row, SplitCategoryRowWidget)
+        ]
+        for row in split_category_rows:
+            row.maximum_amount = max_amount
+
+        split_tag_rows = [
+            row for row in self._tag_rows if isinstance(row, SplitTagRowWidget)
+        ]
+        for row in split_tag_rows:
+            row.maximum_amount = max_amount
+
+    def _equalize_split_category_amounts(self) -> None:
+        no_of_rows = len(self._category_rows)
+        portion = self.amount / no_of_rows
+        for row in self._category_rows:
+            row.amount = portion
+
+        row_sum = sum(row.amount for row in self._category_rows)
+        difference = self.amount - row_sum
+        self._category_rows[0].amount += difference
+
+    def _amount_changed(self) -> None:
+        new_amount = self.amount
+
+        self._set_maximum_amounts(new_amount)
+        self._equalize_split_category_amounts()
+
+    def _split_category_amount_changed(self, row: SplitCategoryRowWidget) -> None:
+        no_of_rows = len(self._category_rows)
+
+        if row not in self._fixed_split_category_rows:
+            self._fixed_split_category_rows.append(row)
+        if len(self._fixed_split_category_rows) == no_of_rows:
+            self._fixed_split_category_rows.pop(0)
+
+        no_of_fixed_rows = len(self._fixed_split_category_rows)
+        no_of_adjusted_rows = no_of_rows - no_of_fixed_rows
+
+        remaining_amount = self.amount - sum(
+            row.amount for row in self._fixed_split_category_rows
+        )
+        adjust_amounts = remaining_amount / no_of_adjusted_rows
+
+        adjustable_rows = [
+            row
+            for row in self._category_rows
+            if row not in self._fixed_split_category_rows
+        ]
+        for row in adjustable_rows:
+            row.amount = adjust_amounts
+
+        row_sum = sum(row.amount for row in self._category_rows)
+        difference = self.amount - row_sum
+        adjustable_rows[0].amount += difference

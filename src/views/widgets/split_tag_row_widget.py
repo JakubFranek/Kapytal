@@ -88,6 +88,14 @@ class SplitTagRowWidget(QWidget):
     def amount_decimals(self, value: int) -> None:
         self.double_spin_box.setDecimals(value)
 
+    @property
+    def maximum_amount(self) -> Decimal:
+        return Decimal(self.double_spin_box.maximum())
+
+    @maximum_amount.setter
+    def maximum_amount(self, maximum: Decimal) -> None:
+        self.double_spin_box.setMaximum(maximum)
+
     def __repr__(self) -> str:
         return f"SplitTagRowWidget('{self.tag}')"
 
