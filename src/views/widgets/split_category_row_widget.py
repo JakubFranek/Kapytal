@@ -1,6 +1,5 @@
 from collections.abc import Collection
 from decimal import Decimal
-from enum import Enum, auto
 
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QAction, QIcon
@@ -8,32 +7,18 @@ from PyQt6.QtWidgets import QComboBox, QDoubleSpinBox, QHBoxLayout, QToolButton,
 from src.views.dialogs.select_item_dialog import ask_user_for_selection
 
 
-class ItemType(Enum):
-    CATEGORY = auto()
-    TAG = auto()
-
-
-class SplitItemRowWidget(QWidget):
+class SplitCategoryRowWidget(QWidget):
     signal_remove_row = pyqtSignal(QWidget)
 
-    def __init__(self, type_: ItemType, parent: QWidget | None = None) -> None:
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
-        self.type_ = type_
 
         self.combo_box = QComboBox(self)
         self.combo_box.setEditable(True)
-        if type_ == ItemType.CATEGORY:
-            self.combo_box.lineEdit().setPlaceholderText("Enter Category path")
-        else:
-            self.combo_box.lineEdit().setPlaceholderText("Enter Tag path")
-
+        self.combo_box.lineEdit().setPlaceholderText("Enter Category path")
         self.select_tool_button = QToolButton(self)
-        if type_ == ItemType.CATEGORY:
-            self.actionSelect_Item = QAction("Select Category", self)
-            self.actionSelect_Item.setIcon(QIcon("icons_custom:category.png"))
-        else:
-            self.actionSelect_Item = QAction("Select Tag", self)
-            self.actionSelect_Item.setIcon(QIcon("icons_16:tag.png"))
+        self.actionSelect_Item = QAction("Select Category", self)
+        self.actionSelect_Item.setIcon(QIcon("icons_custom:category.png"))
         self.actionSelect_Item.triggered.connect(self._select_item)
         self.select_tool_button.setDefaultAction(self.actionSelect_Item)
 
@@ -71,7 +56,10 @@ class SplitItemRowWidget(QWidget):
 
     @property
     def amount(self) -> Decimal:
-        return Decimal(self.double_spin_box.text())
+        text = self.double_spin_box.text()
+        text = text.removesuffix(" " + self._currency_code)
+        text = text.replace(",", "")
+        return Decimal(text)
 
     @amount.setter
     def amount(self, value: Decimal) -> None:
@@ -79,46 +67,40 @@ class SplitItemRowWidget(QWidget):
 
     @property
     def currency_code(self) -> str:
-        self.double_spin_box.suffix()
+        return self._currency_code
 
     @currency_code.setter
     def currency_code(self, code: str) -> None:
+        self._currency_code = code
         self.double_spin_box.setSuffix(" " + code)
 
     @property
     def amount_decimals(self) -> int:
-        self.double_spin_box.decimals()
+        return self.double_spin_box.decimals()
 
     @amount_decimals.setter
     def amount_decimals(self, value: int) -> None:
         self.double_spin_box.setDecimals(value)
 
     def __repr__(self) -> str:
-        return f"SplitAttributeRowWidget('{self.category}')"
+        return f"SplitCategoryRowWidget('{self.category}')"
 
-    def load_categories(self, items: Collection[str]) -> None:
+    def load_categories(self, categories: Collection[str]) -> None:
         current_text = self.category
-        self._combo_box_items = items
+        self._categories = categories
         self.combo_box.clear()
-        for item in items:
+        for item in categories:
             self.combo_box.addItem(item)
-        if current_text in items:
+        if current_text in categories:
             self.combo_box.setCurrentText(current_text)
         else:
             self.combo_box.setCurrentIndex(-1)
 
     def _select_item(self) -> None:
-        if self.type_ == ItemType.CATEGORY:
-            text = "Select Category"
-            icon = QIcon("icons_custom:category.png")
-        else:
-            text = "Select Tag"
-            icon = QIcon("icons_custom:category.png")
-
         item = ask_user_for_selection(
             self,
-            self._combo_box_items,
-            text,
-            icon,
+            self._categories,
+            "Select Category",
+            QIcon("icons_custom:category.png"),
         )
         self.combo_box.setCurrentText(item)

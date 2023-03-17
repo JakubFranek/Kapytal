@@ -1,12 +1,10 @@
 from datetime import datetime
 
-from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QWidget
 from src.models.model_objects.cash_objects import CashAccount, CashTransactionType
 from src.models.record_keeper import RecordKeeper
 from src.models.user_settings import user_settings
 from src.views.dialogs.cash_transaction_dialog import CashTransactionDialog
-from src.views.dialogs.select_item_dialog import ask_user_for_selection
 from src.views.utilities.handle_exception import display_error_message
 
 # TODO: allow adding and editing of CashTransactions
@@ -40,21 +38,25 @@ class CashTransactionDialogPresenter:
         )
         category_income_paths = tuple(category.path for category in categories_income)
         category_expense_paths = tuple(category.path for category in categories_expense)
-        tags = [tag.name for tag in self.record_keeper.tags]
+        tag_names = sorted(tag.name for tag in self.record_keeper.tags)
         self._dialog = CashTransactionDialog(
             self._parent_view,
             accounts,
             payees,
             category_income_paths,
             category_expense_paths,
-            tags,
+            tag_names,
             type_,
             edit=False,
         )
         self._dialog.datetime_ = datetime.now(user_settings.settings.time_zone)
         self._dialog.signal_account_changed.connect(self._dialog_account_changed)
-        self._dialog.signal_select_payee.connect(self._get_payee)
-        self._dialog.signal_select_tag.connect(self._get_tag)
+        self._dialog.signal_do_and_close.connect(
+            lambda: self._add_cash_transaction(close=True)
+        )
+        self._dialog.signal_do_and_continue.connect(
+            lambda: self._add_cash_transaction(close=False)
+        )
         self._dialog_account_changed()
         self._dialog.exec()
 
@@ -69,21 +71,12 @@ class CashTransactionDialogPresenter:
         self._dialog.currency_code = _account.currency.code
         self._dialog.amount_decimals = _account.currency.places
 
-    def _get_payee(self) -> None:
-        payees = [payee.name for payee in self.record_keeper.payees]
-        payee = ask_user_for_selection(
-            self._dialog,
-            sorted(payees),
-            "Select Payee",
-            QIcon("icons_16:user-silhouette.png"),
-        )
-        self._dialog.payee = payee if payee else self._dialog.payee
-
-    def _get_tag(self) -> None:
-        tags = [tag.name for tag in self.record_keeper.tags]
-        tag = ask_user_for_selection(
-            self._dialog, sorted(tags), "Select Tag", QIcon("icons_16:tag.png")
-        )
-        current_tags = list(self._dialog.tags)
-        if tag not in current_tags:
-            self._dialog.tags = [*current_tags, tag]
+    def _add_cash_transaction(self, *, close: bool) -> None:
+        type_ = self._dialog.type_
+        account = self._dialog.account
+        payee = self._dialog.payee
+        datetime_ = self._dialog.datetime_
+        description = self._dialog.description
+        category_amount_pairs = self._dialog.category_amount_pairs
+        tag_amount_pairs = self._dialog.tag_amount_pairs
+        pass

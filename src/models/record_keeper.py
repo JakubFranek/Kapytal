@@ -1226,7 +1226,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
             "transactions": self._transactions,
         }
 
-    # TODO: do I need to use private setters in deserializers?
+    # IDEA: do I need to use private setters in deserializers?
     @staticmethod
     def deserialize(data: dict[str, Any]) -> "RecordKeeper":
         obj = RecordKeeper()
