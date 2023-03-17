@@ -87,11 +87,13 @@ def get_datetime_from_file_path(path: Path) -> datetime:
     )
 
 
-def get_exception_display_info() -> tuple[str, str] | None:
-    exc_type, exc_value, exc_traceback = sys.exc_info()
+def get_exception_display_info(exception: Exception) -> tuple[str, str]:
+    exc_traceback = exception.__traceback__
+    exc_type = type(exception)
+    exc_value = exception
 
-    if exc_type is None or exc_value is None or exc_traceback is None:
-        return None
+    if exc_traceback is None:
+        raise ValueError("Exception traceback is None.")
 
     # Ignore KeyboardInterrupt (special case)
     if issubclass(exc_type, KeyboardInterrupt):

@@ -78,8 +78,8 @@ class SettingsFormPresenter:
         logging.debug(f"Removing backup path from staging list: {path}")
         try:
             self._backup_paths.remove(path)
-        except Exception:  # noqa: BLE001
-            handle_exception()
+        except Exception as exception:  # noqa: BLE001
+            handle_exception(exception)
             return
 
         self._backup_paths_list_model.pre_remove_item(path)
@@ -126,7 +126,9 @@ class SettingsFormPresenter:
     def _backup_path_selection_changed(self) -> None:
         item = self._backup_paths_list_model.get_selected_item()
         is_backup_path_selected = item is not None
-        self._view.set_backup_path_buttons(is_backup_path_selected=is_backup_path_selected)
+        self._view.set_backup_path_buttons(
+            is_backup_path_selected=is_backup_path_selected
+        )
 
     def _set_unsaved_changes(self, *, unsaved: bool) -> None:
         self._unsaved_changes = unsaved

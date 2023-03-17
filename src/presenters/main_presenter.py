@@ -68,8 +68,8 @@ class MainPresenter:
 
                 logging.info(f"File saved: {self._current_file_path}")
             backup_json_file(self._current_file_path)
-        except Exception:  # noqa: BLE001
-            handle_exception()
+        except Exception as exception:  # noqa: BLE001
+            handle_exception(exception)
 
     def _load_from_file(self, path: str | Path | None = None) -> None:
         logging.debug("Load from file initiated")
@@ -88,8 +88,8 @@ class MainPresenter:
             logging.debug(f"File path: {path}")
             self._current_file_path = Path(path)
             self._open_file(self._current_file_path)
-        except Exception:  # noqa: BLE001
-            handle_exception()
+        except Exception as exception:  # noqa: BLE001
+            handle_exception(exception)
 
     def _open_file(self, path: Path) -> None:
         with path.open(mode="r", encoding="UTF-8") as file:

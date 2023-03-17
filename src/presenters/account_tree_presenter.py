@@ -98,9 +98,8 @@ class AccountTreePresenter:
                 record_keeper_copy.remove_account_group(item.path)
             else:
                 record_keeper_copy.remove_account(item.path)
-        except Exception:  # noqa: BLE001
-            # TODO: pass exception to handle_exception method?
-            handle_exception()
+        except Exception as exception:  # noqa: BLE001
+            handle_exception(exception)
             return
 
         # Perform the deletion on the "real" RecordKeeper if it went fine
@@ -177,8 +176,8 @@ class AccountTreePresenter:
             logging.disable(logging.INFO)
             record_keeper_copy.add_account_group(path, index)
             logging.disable(logging.NOTSET)
-        except Exception:  # noqa: BLE001
-            handle_exception()
+        except Exception as exception:  # noqa: BLE001
+            handle_exception(exception)
             return
 
         item = self._model.get_selected_item()
@@ -198,8 +197,8 @@ class AccountTreePresenter:
         new_parent_path, _, _ = new_path.rpartition("/")
         try:
             new_parent = self._record_keeper.get_account_parent_or_none(new_parent_path)
-        except Exception:  # noqa: BLE001
-            handle_exception()
+        except Exception as exception:  # noqa: BLE001
+            handle_exception(exception)
             return
         new_index = self._dialog.position - 1
 
@@ -211,8 +210,8 @@ class AccountTreePresenter:
                 current_path=previous_path, new_path=new_path, index=new_index
             )
             logging.disable(logging.NOTSET)
-        except Exception:  # noqa: BLE001
-            handle_exception()
+        except Exception as exception:  # noqa: BLE001
+            handle_exception(exception)
             return
 
         if new_parent == previous_parent and new_index == previous_index:
@@ -270,8 +269,8 @@ class AccountTreePresenter:
         logging.info("Adding SecurityAccount")
         try:
             self._record_keeper.add_security_account(path, index)
-        except Exception:  # noqa: BLE001
-            handle_exception()
+        except Exception as exception:  # noqa: BLE001
+            handle_exception(exception)
             return
 
         item = self._model.get_selected_item()
@@ -290,8 +289,8 @@ class AccountTreePresenter:
         new_parent_path, _, _ = new_path.rpartition("/")
         try:
             new_parent = self._record_keeper.get_account_parent_or_none(new_parent_path)
-        except Exception:  # noqa: BLE001
-            handle_exception()
+        except Exception as exception:  # noqa: BLE001
+            handle_exception(exception)
             return
         new_index = self._dialog.position - 1
 
@@ -303,8 +302,8 @@ class AccountTreePresenter:
                 current_path=previous_path, new_path=new_path, index=previous_index
             )
             logging.disable(logging.NOTSET)
-        except Exception:  # noqa: BLE001
-            handle_exception()
+        except Exception as exception:  # noqa: BLE001
+            handle_exception(exception)
             return
 
         if new_parent == previous_parent and new_index == previous_index:
@@ -372,8 +371,8 @@ class AccountTreePresenter:
             self._record_keeper.add_cash_account(
                 path, currency_code, initial_balance, index
             )
-        except Exception:  # noqa: BLE001
-            handle_exception()
+        except Exception as exception:  # noqa: BLE001
+            handle_exception(exception)
             return
 
         item = self._model.get_selected_item()
@@ -392,8 +391,8 @@ class AccountTreePresenter:
         new_parent_path, _, _ = new_path.rpartition("/")
         try:
             new_parent = self._record_keeper.get_account_parent_or_none(new_parent_path)
-        except Exception:  # noqa: BLE001
-            handle_exception()
+        except Exception as exception:  # noqa: BLE001
+            handle_exception(exception)
             return
         new_index = self._dialog.position - 1
         initial_balance = self._dialog.initial_balance
@@ -409,8 +408,8 @@ class AccountTreePresenter:
                 index=new_index,
             )
             logging.disable(logging.NOTSET)
-        except Exception:  # noqa: BLE001
-            handle_exception()
+        except Exception as exception:  # noqa: BLE001
+            handle_exception(exception)
             return
 
         if new_parent == previous_parent and new_index == previous_index:

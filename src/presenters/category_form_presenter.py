@@ -136,8 +136,8 @@ class CategoryFormPresenter:
             logging.disable(logging.INFO)
             record_keeper_copy.add_category(path, type_, index)
             logging.disable(logging.NOTSET)
-        except Exception:  # noqa: BLE001
-            handle_exception()
+        except Exception as exception:  # noqa: BLE001
+            handle_exception(exception)
             return
 
         item = self._model.get_selected_item()
@@ -171,8 +171,8 @@ class CategoryFormPresenter:
                 current_path=previous_path, new_path=new_path, index=new_index
             )
             logging.disable(logging.NOTSET)
-        except Exception:  # noqa: BLE001
-            handle_exception()
+        except Exception as exception:  # noqa: BLE001
+            handle_exception(exception)
             return
 
         if new_parent == previous_parent and new_index == previous_index:
@@ -207,8 +207,8 @@ class CategoryFormPresenter:
         record_keeper_copy = copy.deepcopy(self._record_keeper)
         try:
             record_keeper_copy.remove_category(item.path)
-        except Exception:  # noqa: BLE001
-            handle_exception()
+        except Exception as exception:  # noqa: BLE001
+            handle_exception(exception)
             return
 
         # Perform the deletion on the "real" RecordKeeper if it went fine
