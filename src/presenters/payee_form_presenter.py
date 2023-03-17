@@ -78,8 +78,8 @@ class PayeeFormPresenter:
         logging.info("Adding Payee")
         try:
             self._record_keeper.add_payee(name)
-        except Exception:  # noqa: BLE001
-            handle_exception()
+        except Exception as exception:  # noqa: BLE001
+            handle_exception(exception)
             return
 
         self._model.pre_add()
@@ -100,8 +100,8 @@ class PayeeFormPresenter:
             self._record_keeper.edit_attribute(
                 current_name, new_name, AttributeType.PAYEE
             )
-        except Exception:  # noqa: BLE001
-            handle_exception()
+        except Exception as exception:  # noqa: BLE001
+            handle_exception(exception)
             return
 
         self.update_model_data()
@@ -116,8 +116,8 @@ class PayeeFormPresenter:
         logging.info(f"Removing {payee}")
         try:
             self._record_keeper.remove_payee(payee.name)
-        except Exception:  # noqa: BLE001
-            handle_exception()
+        except Exception as exception:  # noqa: BLE001
+            handle_exception(exception)
             return
 
         self._model.pre_remove_item(payee)

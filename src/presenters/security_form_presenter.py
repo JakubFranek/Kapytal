@@ -95,8 +95,8 @@ class SecurityFormPresenter:
                 currency_code=currency_code,
                 unit=unit,
             )
-        except Exception:  # noqa: BLE001
-            handle_exception()
+        except Exception as exception:  # noqa: BLE001
+            handle_exception(exception)
             return
 
         self._model.pre_add()
@@ -120,8 +120,8 @@ class SecurityFormPresenter:
             self._record_keeper.edit_security(
                 uuid=uuid, name=name, symbol=symbol, type_=type_
             )
-        except Exception:  # noqa: BLE001
-            handle_exception()
+        except Exception as exception:  # noqa: BLE001
+            handle_exception(exception)
             return
 
         self.update_model_data()
@@ -138,8 +138,8 @@ class SecurityFormPresenter:
         logging.info(f"Removing {security}")
         try:
             self._record_keeper.remove_security(uuid)
-        except Exception:  # noqa: BLE001
-            handle_exception()
+        except Exception as exception:  # noqa: BLE001
+            handle_exception(exception)
             return
 
         self._model.pre_remove_item(security)
@@ -173,14 +173,13 @@ class SecurityFormPresenter:
         logging.info(f"Setting {security} price: {value} on {date_}")
         try:
             self._record_keeper.set_security_price(uuid, value, date_)
-        except Exception:  # noqa: BLE001
-            handle_exception()
+        except Exception as exception:  # noqa: BLE001
+            handle_exception(exception)
             return
 
         self.update_model_data()
         self._dialog.close()
         self.event_data_changed()
-
 
     def _filter(self) -> None:
         pattern = self._view.search_bar_text

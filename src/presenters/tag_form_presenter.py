@@ -78,8 +78,8 @@ class TagFormPresenter:
         logging.info("Adding Tag")
         try:
             self._record_keeper.add_tag(name)
-        except Exception:  # noqa: BLE001
-            handle_exception()
+        except Exception as exception:  # noqa: BLE001
+            handle_exception(exception)
             return
 
         self._model.pre_add()
@@ -100,8 +100,8 @@ class TagFormPresenter:
             self._record_keeper.edit_attribute(
                 current_name, new_name, AttributeType.TAG
             )
-        except Exception:  # noqa: BLE001
-            handle_exception()
+        except Exception as exception:  # noqa: BLE001
+            handle_exception(exception)
             return
 
         self.update_model_data()
@@ -116,8 +116,8 @@ class TagFormPresenter:
         logging.info(f"Removing {tag}")
         try:
             self._record_keeper.remove_tag(tag.name)
-        except Exception:  # noqa: BLE001
-            handle_exception()
+        except Exception as exception:  # noqa: BLE001
+            handle_exception(exception)
             return
 
         self._model.pre_remove_item(tag)

@@ -81,8 +81,8 @@ class CurrencyFormPresenter:
         logging.info(f"Adding Currency(code='{code}', places='{places}')")
         try:
             self._record_keeper.add_currency(code, places)
-        except Exception:  # noqa: BLE001
-            handle_exception()
+        except Exception as exception:  # noqa: BLE001
+            handle_exception(exception)
             return
 
         self._currency_table_model.pre_add()
@@ -102,8 +102,8 @@ class CurrencyFormPresenter:
         logging.info(f"Setting {currency.code} as base currency")
         try:
             self._record_keeper.set_base_currency(currency.code)
-        except Exception:  # noqa: BLE001
-            handle_exception()
+        except Exception as exception:  # noqa: BLE001
+            handle_exception(exception)
             return
 
         self._currency_table_model.currencies = self._record_keeper.currencies
@@ -121,8 +121,8 @@ class CurrencyFormPresenter:
         logging.info(f"Removing {currency}")
         try:
             self._record_keeper.remove_currency(currency.code)
-        except Exception:  # noqa: BLE001
-            handle_exception()
+        except Exception as exception:  # noqa: BLE001
+            handle_exception(exception)
             return
 
         self._currency_table_model.pre_remove_item(currency)
@@ -147,8 +147,8 @@ class CurrencyFormPresenter:
         logging.info(f"Adding ExchangeRate({primary_code}/{secondary_code})")
         try:
             self._record_keeper.add_exchange_rate(primary_code, secondary_code)
-        except Exception:  # noqa: BLE001
-            handle_exception()
+        except Exception as exception:  # noqa: BLE001
+            handle_exception(exception)
             return
 
         self._exchange_rate_table_model.pre_add()
@@ -183,8 +183,8 @@ class CurrencyFormPresenter:
         logging.info(f"Setting ExchangeRate({exchange_rate_code}): {value} on {date_}")
         try:
             self._record_keeper.set_exchange_rate(exchange_rate_code, value, date_)
-        except Exception:  # noqa: BLE001
-            handle_exception()
+        except Exception as exception:  # noqa: BLE001
+            handle_exception(exception)
             return
 
         self._exchange_rate_table_model.exchange_rates = (
@@ -213,8 +213,8 @@ class CurrencyFormPresenter:
         logging.info(f"Removing {repr(exchange_rate)}")
         try:
             self._record_keeper.remove_exchange_rate(str(exchange_rate))
-        except Exception:  # noqa: BLE001
-            handle_exception()
+        except Exception as exception:  # noqa: BLE001
+            handle_exception(exception)
             return
 
         self._exchange_rate_table_model.pre_remove_item(exchange_rate)
