@@ -1,4 +1,5 @@
 import logging
+import uuid
 from typing import TYPE_CHECKING, Any, Self
 
 from src.models.custom_exceptions import NotFoundError
@@ -9,11 +10,12 @@ if TYPE_CHECKING:
 from src.models.mixins.get_balance_mixin import GetBalanceMixin
 from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
 from src.models.mixins.name_mixin import NameMixin
+from src.models.mixins.uuid_mixin import UUIDMixin
 from src.models.model_objects.currency_objects import CashAmount, Currency
 from src.models.utilities.find_helpers import find_account_group_by_path
 
 
-class AccountGroup(NameMixin, GetBalanceMixin, JSONSerializableMixin):
+class AccountGroup(NameMixin, GetBalanceMixin, JSONSerializableMixin, UUIDMixin):
     def __init__(self, name: str, parent: Self | None = None) -> None:
         super().__init__(name=name, allow_slash=False)
         self.parent = parent
@@ -110,6 +112,7 @@ class AccountGroup(NameMixin, GetBalanceMixin, JSONSerializableMixin):
             "datatype": "AccountGroup",
             "path": self.path,
             "index": index,
+            "uuid": str(self.uuid),
         }
 
     @staticmethod
@@ -120,6 +123,7 @@ class AccountGroup(NameMixin, GetBalanceMixin, JSONSerializableMixin):
         index: int | None = data["index"]
         parent_path, _, name = path.rpartition("/")
         obj = AccountGroup(name)
+        obj._uuid = uuid.UUID(data["uuid"])  # noqa: SLF001
         if parent_path:
             obj._parent = find_account_group_by_path(  # noqa: SLF001
                 parent_path, account_groups

@@ -1,6 +1,8 @@
 import logging
 from collections.abc import Callable, Sequence
+from copy import copy
 from typing import Any, Self
+from uuid import UUID
 
 from PyQt6.QtCore import (
     QAbstractItemModel,
@@ -56,6 +58,10 @@ class AccountTreeNode:
         self.children: list[Self] = []
         self.check_state: Qt.CheckState = Qt.CheckState.Checked
 
+    @property
+    def uuid(self) -> UUID:
+        return self.item.uuid
+
     def __repr__(self) -> str:
         return f"AccountTreeNode({str(self.item)})"
 
@@ -67,7 +73,7 @@ class AccountTreeNode:
     def set_visible(self, *, visible: bool) -> None:
         """Sets visibility of this node and its children, and updates the parents."""
 
-        check_state = convert_bool_to_checkstate(visible)
+        check_state = convert_bool_to_checkstate(checked=visible)
         self._set_check_state(check_state)
         if self.parent is not None:
             self.parent.update_visibility()
@@ -94,16 +100,43 @@ class AccountTreeNode:
             self.parent.update_visibility()
 
 
-def make_nodes(
-    items: Sequence[Account | AccountGroup], parent: AccountTreeNode | None
-) -> list[AccountTreeNode]:
-    nodes = []
+# BUG: there is a bug here somewhere when deleting account item (maybe only CashAccount)
+# can't reproduce it anymore...
+def sync_nodes(
+    items: Sequence[Account | AccountGroup], nodes: Sequence[AccountTreeNode]
+) -> Sequence[AccountTreeNode]:
+    """Accepts flat lists of items and nodes. Returns new flat nodes."""
+
+    nodes_copy = list(copy(nodes))
+    new_nodes: list[AccountTreeNode] = []
+
     for item in items:
-        node = AccountTreeNode(item, parent=parent)
-        if isinstance(item, AccountGroup):
-            node.children = make_nodes(item.children, node)
-        nodes.append(node)
-    return nodes
+        node = get_node(item, nodes_copy)
+        parent_node = (
+            get_node(item.parent, nodes_copy) if item.parent is not None else None
+        )
+        if node is None:
+            node = AccountTreeNode(item, None)
+        else:
+            node.item = item
+        node.parent = parent_node
+        node.children = []
+        if parent_node is not None:
+            parent_node.children.append(node)
+        if node not in nodes_copy:
+            nodes_copy.append(node)
+        new_nodes.append(node)
+
+    return new_nodes
+
+
+def get_node(
+    item: Account | AccountGroup, nodes: Sequence[AccountTreeNode]
+) -> AccountTreeNode | None:
+    for node in nodes:
+        if node.uuid == item.uuid:
+            return node
+    return None
 
 
 def get_visible_leaf_items(nodes: Sequence[AccountTreeNode]) -> list[Account]:
@@ -132,12 +165,14 @@ class AccountTreeModel(QAbstractItemModel):
     def __init__(
         self,
         view: QTreeView,
-        root_items: Sequence[Account | AccountGroup],
+        flat_items: Sequence[Account | AccountGroup],
         base_currency: Currency,
     ) -> None:
         super().__init__()
         self._tree = view
-        self.root_items = root_items
+        self._root_nodes = []
+        self._flat_nodes = []
+        self.flat_items = flat_items
         self.base_currency = base_currency
 
         self.timer = ClickTimer(self)
@@ -146,16 +181,24 @@ class AccountTreeModel(QAbstractItemModel):
         self._tree.doubleClicked.connect(lambda index: self._tree_double_clicked(index))
 
     @property
+    def flat_items(self) -> tuple[Account | AccountGroup, ...]:
+        return tuple(self._flat_items)
+
+    @flat_items.setter
+    def flat_items(self, items: Sequence[Account | AccountGroup]) -> None:
+        self._flat_items = list(items)
+        self._flat_nodes = tuple(sync_nodes(items, self._flat_nodes))
+        self._root_nodes = tuple(
+            node for node in self._flat_nodes if node.parent is None
+        )
+
+    @property
     def root_items(self) -> tuple[Account | AccountGroup, ...]:
         return tuple(node.item for node in self._root_nodes)
 
     @property
     def visible_accounts(self) -> tuple[Account, ...]:
         return tuple(get_visible_leaf_items(self._root_nodes))
-
-    @root_items.setter
-    def root_items(self, root_items: Sequence[Account | AccountGroup]) -> None:
-        self._root_nodes = tuple(make_nodes(root_items, None))
 
     def rowCount(self, index: QModelIndex = ...) -> int:  # noqa: N802
         if index.isValid():
@@ -410,7 +453,7 @@ class AccountTreeModel(QAbstractItemModel):
             self.signal_show_only_selection.emit()
 
     def set_visibility_all(self, *, visible: bool) -> None:
-        check_state = convert_bool_to_checkstate(visible)
+        check_state = convert_bool_to_checkstate(checked=visible)
         logging.debug(f"Set all AccountTree item visibility: {check_state.name}")
         for node in self._root_nodes:
             AccountTreeModel._set_visibility_below(node, check_state)

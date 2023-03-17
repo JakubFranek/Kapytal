@@ -74,6 +74,10 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         return tuple(self._account_groups)
 
     @property
+    def account_items(self) -> tuple[Account | AccountGroup, ...]:
+        return tuple(RecordKeeper._flatten_account_items(self._root_account_items))
+
+    @property
     def root_account_items(self) -> tuple[Account | AccountGroup, ...]:
         return tuple(self._root_account_items)
 
@@ -1025,7 +1029,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         self._base_currency = currency
 
     def get_account_parent_or_none(self, path: str | None) -> AccountGroup | None:
-        if not path or path is None:
+        if not path:
             return None
         return self.get_account_parent(path)
 
@@ -1558,6 +1562,19 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
                 resulting_list.append(account_item)
             else:
                 resulting_list = resulting_list + RecordKeeper._flatten_accounts(
+                    account_item.children
+                )
+        return resulting_list
+
+    @staticmethod
+    def _flatten_account_items(
+        account_items: Collection[Account | AccountGroup],
+    ) -> list[Account | AccountGroup]:
+        resulting_list: list[Account | AccountGroup] = []
+        for account_item in account_items:
+            resulting_list.append(account_item)
+            if isinstance(account_item, AccountGroup):
+                resulting_list = resulting_list + RecordKeeper._flatten_account_items(
                     account_item.children
                 )
         return resulting_list

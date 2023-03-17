@@ -10,8 +10,11 @@ from src.models.utilities import constants
 class CustomJSONEncoder(json.JSONEncoder):
     def __init__(self, **kwargs: Any) -> None:  # noqa: ANN401
         """Arguments indent and separators are overriden!"""
-        kwargs.setdefault("indent", 2)
-        kwargs.setdefault("separators", (", ", ": "))
+
+        if kwargs.get("indent") is None:
+            kwargs["indent"] = 2
+        if kwargs.get("separators") is None:
+            kwargs["separators"] = (", ", ": ")
         super().__init__(**kwargs)
 
     def default(self, arg: Any) -> Any:  # noqa: ANN401

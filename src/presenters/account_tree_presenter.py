@@ -34,7 +34,7 @@ class AccountTreePresenter:
         self._record_keeper = record_keeper
         self._model = AccountTreeModel(
             view=view.treeView,
-            root_items=record_keeper.root_account_items,
+            flat_items=record_keeper.root_account_items,
             base_currency=record_keeper.base_currency,
         )
         self._view.treeView.setModel(self._model)
@@ -61,7 +61,7 @@ class AccountTreePresenter:
         self._model.post_reset_model()
 
     def update_model_data(self) -> None:
-        self._model.root_items = self._record_keeper.root_account_items
+        self._model.flat_items = self._record_keeper.account_items
         self._model.base_currency = self._record_keeper.base_currency
 
     def expand_all_below(self) -> None:
@@ -167,8 +167,6 @@ class AccountTreePresenter:
             )
             self._dialog.signal_ok.connect(self.add_account_group)
 
-    # TODO: investigate why copying is not needed here
-    # adding AG to an AG should lead to wrong indexing in pre_add
     def add_account_group(self) -> None:
         path = self._dialog.path
         index = self._dialog.position - 1
@@ -198,7 +196,11 @@ class AccountTreePresenter:
         previous_index = self._get_current_index(item)
         new_path = self._dialog.path
         new_parent_path, _, _ = new_path.rpartition("/")
-        new_parent = self._record_keeper.get_account_parent_or_none(new_parent_path)
+        try:
+            new_parent = self._record_keeper.get_account_parent_or_none(new_parent_path)
+        except Exception:  # noqa: BLE001
+            handle_exception()
+            return
         new_index = self._dialog.position - 1
 
         logging.info(f"Editing AccountGroup at path='{item.path}'")
@@ -286,7 +288,11 @@ class AccountTreePresenter:
         previous_index = self._get_current_index(item)
         new_path = self._dialog.path
         new_parent_path, _, _ = new_path.rpartition("/")
-        new_parent = self._record_keeper.get_account_parent_or_none(new_parent_path)
+        try:
+            new_parent = self._record_keeper.get_account_parent_or_none(new_parent_path)
+        except Exception:  # noqa: BLE001
+            handle_exception()
+            return
         new_index = self._dialog.position - 1
 
         logging.info(f"Editing SecurityAccount at path='{item.path}'")
@@ -384,7 +390,11 @@ class AccountTreePresenter:
         previous_index = self._get_current_index(item)
         new_path = self._dialog.path
         new_parent_path, _, _ = new_path.rpartition("/")
-        new_parent = self._record_keeper.get_account_parent_or_none(new_parent_path)
+        try:
+            new_parent = self._record_keeper.get_account_parent_or_none(new_parent_path)
+        except Exception:  # noqa: BLE001
+            handle_exception()
+            return
         new_index = self._dialog.position - 1
         initial_balance = self._dialog.initial_balance
 
@@ -504,7 +514,7 @@ class AccountTreePresenter:
         ]
 
     def _set_visibility_all(self, *, visible: bool) -> None:
-        self._model.set_visibility_all(visible)
+        self._model.set_visibility_all(visible=visible)
         self._view.refresh()
         self.event_visibility_changed()
 

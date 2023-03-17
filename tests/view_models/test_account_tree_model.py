@@ -13,7 +13,7 @@ def test_account_tree_model(qtbot: QtBot, qtmodeltester: ModelTester) -> None:
     record_keeper = get_preloaded_record_keeper()
     model = AccountTreeModel(
         view=tree_view,
-        root_items=record_keeper.root_account_items,
+        flat_items=record_keeper.root_account_items,
         base_currency=record_keeper.base_currency,
     )
 
