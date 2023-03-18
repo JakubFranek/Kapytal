@@ -8,7 +8,12 @@ a = Analysis(
     ["main.py"],
     pathex=[],
     binaries=[],
-    datas=[("resources/icons", "resources/icons")],
+    datas=[
+        ("resources/icons", "resources/icons"),
+        ("logs/README.md", "logs/."),
+        ("saved_data/README.md", "saved_data/."),
+        ("saved_data/backups/README.md", "saved_data/backups/."),
+    ],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},

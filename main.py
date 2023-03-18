@@ -32,6 +32,7 @@ if __name__ == "__main__":
     if constants.settings_path.exists():
         user_settings.load()
     else:
+        Path.mkdir(constants.backups_folder_path, parents=True, exist_ok=True)
         user_settings.settings.backup_paths = [constants.backups_folder_path]
         user_settings.save()
 
