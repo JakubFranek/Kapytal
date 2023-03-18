@@ -40,7 +40,8 @@ class SingleTagRowWidget(QWidget):
     @property
     def tags(self) -> tuple[str, ...]:
         text = self.line_edit.text()
-        return tuple(text.split(";"))
+        tag_names = text.split(";")
+        return tuple(tag_name.strip() for tag_name in tag_names)
 
     @tags.setter
     def tags(self, values: Collection[str]) -> None:
@@ -54,7 +55,10 @@ class SingleTagRowWidget(QWidget):
             "Select Tag",
             QIcon("icons_16:tag.png"),
         )
-        self.tags = [*self.tags, tag]
+        if self.tags != ("",):
+            self.tags = [*self.tags, tag]
+        else:
+            self.tags = [tag]
 
     def _initialize_tags_completer(self) -> None:
         self._tags_completer = QCompleter(self._tags)
@@ -82,6 +86,10 @@ class SingleTagRowWidget(QWidget):
         if not self._tags_completing:
             self._tags_completing = True
             prefix = self._tags_completer.completionPrefix()
-            final_text = self.line_edit.text()[: -len(prefix)] + text
+            current_text = self.line_edit.text()
+            completed_text = current_text[: -len(prefix)] + text
+            tag_names = completed_text.split(";")
+            tag_names = [tag_name.strip() for tag_name in tag_names]
+            final_text = "; ".join(tag_names)
             self.line_edit.setText(final_text)
             self._tags_completing = False

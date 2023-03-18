@@ -234,6 +234,9 @@ class MainPresenter:
         self._category_form_presenter.event_data_changed.append(
             lambda: self._update_unsaved_changes(unsaved_changes=True)
         )
+        self._transactions_presenter.event_data_changed.append(
+            lambda: self._update_unsaved_changes(unsaved_changes=True)
+        )
 
     def _connect_view_signals(self) -> None:
         self._view.signal_exit.connect(self._quit)

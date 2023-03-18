@@ -31,11 +31,12 @@ class TransactionsPresenter:
         self._record_keeper = record_keeper
         self._valid_accounts = record_keeper.accounts
 
+        self._setup_model()
+
         self._cash_transaction_dialog_presenter = CashTransactionDialogPresenter(
-            view, record_keeper
+            view, record_keeper, self._model
         )
 
-        self._setup_model()
         self._setup_view()
         self._connect_signals()
 
@@ -56,7 +57,7 @@ class TransactionsPresenter:
 
     def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
         self._record_keeper = record_keeper
-        self._cash_transaction_dialog_presenter.record_keeper = record_keeper
+        self._cash_transaction_dialog_presenter.load_record_keeper(record_keeper)
         self._valid_accounts = record_keeper.accounts
         self.reset_model()
         self._view.resize_table_to_contents()
@@ -107,7 +108,7 @@ class TransactionsPresenter:
 
     def _filter(self) -> None:
         pattern = self._view.search_bar_text
-        logging.debug(f"Filtering Transaction: {pattern=}")
+        logging.debug(f"Filtering Transactions: {pattern=}")
         self._proxy_model.setFilterWildcard(pattern)
 
     def _setup_model(self) -> None:
@@ -137,11 +138,18 @@ class TransactionsPresenter:
 
         self._view.signal_income.connect(
             lambda: self._cash_transaction_dialog_presenter.run_add_dialog(
-                CashTransactionType.INCOME
+                CashTransactionType.INCOME, self.valid_accounts
             )
         )
         self._view.signal_expense.connect(
             lambda: self._cash_transaction_dialog_presenter.run_add_dialog(
-                CashTransactionType.EXPENSE
+                CashTransactionType.EXPENSE, self.valid_accounts
             )
+        )
+
+        self._cash_transaction_dialog_presenter.event_update_model.append(
+            self.update_model_data
+        )
+        self._cash_transaction_dialog_presenter.event_data_changed.append(
+            self.event_data_changed
         )

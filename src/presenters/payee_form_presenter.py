@@ -55,7 +55,9 @@ class PayeeFormPresenter:
         self._model.payee_stats = payee_stats
 
     def show_form(self) -> None:
+        self._model.pre_reset_model()
         self.update_model_data()
+        self._model.post_reset_model()
         self._view.selectButton.setVisible(False)  # noqa: FBT003
         self._view.show_form()
 

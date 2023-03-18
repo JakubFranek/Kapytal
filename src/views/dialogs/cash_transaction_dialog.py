@@ -26,6 +26,9 @@ from src.views.widgets.single_tag_row_widget import SingleTagRowWidget
 from src.views.widgets.split_category_row_widget import SplitCategoryRowWidget
 from src.views.widgets.split_tag_row_widget import SplitTagRowWidget
 
+# TODO: fix tab order
+# TODO: add tooltips
+
 
 class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
     signal_do_and_close = pyqtSignal()
@@ -159,7 +162,7 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
     @property
     def category_amount_pairs(self) -> tuple[tuple[str, Decimal]]:
         if len(self._category_rows) == 1:
-            return (self._category_rows[0].category, self.amount)
+            return ((self._category_rows[0].category, self.amount),)
         return tuple(
             (row.category, row.amount) for row in self._category_rows if row.category
         )
