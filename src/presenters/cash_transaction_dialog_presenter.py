@@ -104,18 +104,30 @@ class CashTransactionDialogPresenter:
         type_ = self._dialog.type_
         account = self._dialog.account
         payee = self._dialog.payee
+        if not payee:
+            display_error_message(
+                "Payee name must be at least 1 character long.", title="Warning"
+            )
+            return
         datetime_ = self._dialog.datetime_
         description = self._dialog.description
+        total_amount = self._dialog.amount
+        if total_amount <= 0:
+            display_error_message(
+                "Transaction amount must be positive.", title="Warning"
+            )
+            return
         category_amount_pairs = self._dialog.category_amount_pairs
         tag_amount_pairs = self._dialog.tag_amount_pairs
+        if any(amount <= 0 for _, amount in tag_amount_pairs):
+            display_error_message("Tag amounts must be positive.", title="Warning")
+            return
 
-        total_amount = self._dialog.amount
         categories = [category for category, _ in category_amount_pairs]
-        tags = [tag for tag, _ in tag_amount_pairs]
-
         if any(not category for category in categories):
             display_error_message("Empty Category paths are invalid.", title="Warning")
             return
+        tags = [tag for tag, _ in tag_amount_pairs]
         if any(not tag for tag in tags):
             display_error_message("Empty Tag names are invalid.", title="Warning")
             return

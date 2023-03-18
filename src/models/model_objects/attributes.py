@@ -37,6 +37,7 @@ class Attribute(NameMixin, JSONSerializableMixin):
 
         if not isinstance(type_, AttributeType):
             raise TypeError("Attribute.type_ must be an AttributeType.")
+        logging.info(f"Setting type_ to {type_.name}")
         self._type = type_
 
     @property

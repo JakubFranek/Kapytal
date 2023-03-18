@@ -27,7 +27,6 @@ from src.views.widgets.single_tag_row_widget import SingleTagRowWidget
 from src.views.widgets.split_category_row_widget import SplitCategoryRowWidget
 from src.views.widgets.split_tag_row_widget import SplitTagRowWidget
 
-# TODO: add tooltips
 # IDEA: "preferred" size for description? or something
 
 

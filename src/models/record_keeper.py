@@ -1,5 +1,6 @@
 # FIXME: this file belongs somewhere else...
 
+import logging
 from collections.abc import Collection
 from datetime import date, datetime
 from decimal import Decimal
@@ -1122,12 +1123,14 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
                 if parent is None:
                     # No parent Category found - we need to make one.
                     root_name = path.split("/")[0]
+                    logging.info("Creating Category")
                     parent = Category(root_name, type_)
                     self._save_category(parent)
             remainder_name = path.removeprefix(parent.path)[1:]
             while "/" in remainder_name:
                 # As long as multiple categories remain...
                 new_name = remainder_name.split("/")[0]
+                logging.info("Creating Category")
                 new_category = Category(new_name, type_, parent)
                 self._save_category(new_category)
                 parent = new_category
@@ -1135,6 +1138,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         else:
             remainder_name = path
         # Reached the end - just one more category left
+        logging.info("Creating Category")
         final_category = Category(remainder_name, type_, parent)
         self._save_category(final_category)
         return final_category
@@ -1149,6 +1153,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
             if attribute.name == name:
                 return attribute
         # Attribute not found! Making a new one.
+        logging.info("Creating Attribute")
         attribute = Attribute(name, type_)
         attributes.append(attribute)
         return attribute
