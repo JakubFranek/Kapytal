@@ -8,7 +8,7 @@ import pytest
 from hypothesis import assume, given
 from hypothesis import strategies as st
 from src.models.base_classes.account import Account
-from src.models.model_objects.attributes import AttributeType, CategoryType
+from src.models.model_objects.attributes import AttributeType, Category, CategoryType
 from src.models.model_objects.cash_objects import (
     CashAccount,
     CashTransaction,
@@ -795,7 +795,7 @@ def test_record_keeper_deep_copy() -> None:
 
 
 @given(name=names())
-def test_record_keeper_add_payee(name: str) -> None:
+def test_add_payee(name: str) -> None:
     record_keeper = RecordKeeper()
     record_keeper.add_payee(name)
     payee = record_keeper.get_attribute(name, AttributeType.PAYEE)
@@ -804,7 +804,7 @@ def test_record_keeper_add_payee(name: str) -> None:
 
 
 @given(name=names())
-def test_record_keeper_add_payee_already_exists(name: str) -> None:
+def test_add_payee_already_exists(name: str) -> None:
     record_keeper = RecordKeeper()
     record_keeper.add_payee(name)
     with pytest.raises(AlreadyExistsError):
@@ -812,7 +812,7 @@ def test_record_keeper_add_payee_already_exists(name: str) -> None:
 
 
 @given(name=names())
-def test_record_keeper_add_tag(name: str) -> None:
+def test_add_tag(name: str) -> None:
     record_keeper = RecordKeeper()
     record_keeper.add_tag(name)
     tag = record_keeper.get_attribute(name, AttributeType.TAG)
@@ -821,7 +821,7 @@ def test_record_keeper_add_tag(name: str) -> None:
 
 
 @given(name=names())
-def test_record_keeper_add_tag_already_exists(name: str) -> None:
+def test_add_tag_already_exists(name: str) -> None:
     record_keeper = RecordKeeper()
     record_keeper.add_tag(name)
     with pytest.raises(AlreadyExistsError):
@@ -829,7 +829,7 @@ def test_record_keeper_add_tag_already_exists(name: str) -> None:
 
 
 @given(value=valid_decimals(), date_=st.dates())
-def test_record_keeper_set_security_price(value: Decimal, date_: date) -> None:
+def test_set_security_price(value: Decimal, date_: date) -> None:
     record_keeper = RecordKeeper()
     record_keeper.add_currency("EUR", 2)
     record_keeper.add_security("NAME", "SYMBOL", "TYPE", "EUR", 1)
@@ -838,10 +838,40 @@ def test_record_keeper_set_security_price(value: Decimal, date_: date) -> None:
     assert security.price.value_normalized == value
 
 
-def test_record_keeper_account_items() -> None:
+def test_account_items() -> None:
     record_keeper = get_preloaded_record_keeper()
     items = record_keeper.account_items
     assert len(items) == len(record_keeper.account_groups) + len(record_keeper.accounts)
+
+
+def test_save_category() -> None:
+    category = Category("Test", CategoryType.INCOME_AND_EXPENSE)
+    record_keeper = RecordKeeper()
+    record_keeper._save_category(category)
+    assert category in record_keeper.categories
+    assert category in record_keeper.root_income_and_expense_categories
+
+
+def test_flatten_categories() -> None:
+    cat_1 = Category("1", CategoryType.INCOME)
+    cat_1_1 = Category("1.1", CategoryType.INCOME, cat_1)
+    cat_1_2 = Category("1.2", CategoryType.INCOME, cat_1)
+    cat_1_1_1 = Category("1.1.1", CategoryType.INCOME, cat_1_1)
+    cat_2 = Category("2", CategoryType.INCOME)
+    cat_2_1 = Category("1.1", CategoryType.INCOME, cat_2)
+    cat_2_1_1 = Category("1.1", CategoryType.INCOME, cat_2_1)
+
+    root_categories = [cat_1, cat_2]
+    flat_categories = RecordKeeper._flatten_categories(root_categories)
+    assert flat_categories == [
+        cat_1,
+        cat_1_1,
+        cat_1_1_1,
+        cat_1_2,
+        cat_2,
+        cat_2_1,
+        cat_2_1_1,
+    ]
 
 
 def get_preloaded_record_keeper_with_security_transactions() -> RecordKeeper:

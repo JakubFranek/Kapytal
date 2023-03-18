@@ -1123,20 +1123,20 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
                     # No parent Category found - we need to make one.
                     root_name = path.split("/")[0]
                     parent = Category(root_name, type_)
-                    self._categories.append(parent)
+                    self._save_category(parent)
             remainder_name = path.removeprefix(parent.path)[1:]
             while "/" in remainder_name:
                 # As long as multiple categories remain...
                 new_name = remainder_name.split("/")[0]
                 new_category = Category(new_name, type_, parent)
-                self._categories.append(new_category)
+                self._save_category(new_category)
                 parent = new_category
                 remainder_name = remainder_name.removeprefix(new_name)[1:]
         else:
             remainder_name = path
         # Reached the end - just one more category left
         final_category = Category(remainder_name, type_, parent)
-        self._categories.append(final_category)
+        self._save_category(final_category)
         return final_category
 
     def get_attribute(self, name: str, type_: AttributeType) -> Attribute:
@@ -1581,13 +1581,33 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
 
     # TODO: test this function
     @staticmethod
-    def _flatten_categories(categories: Collection[Category]) -> list[Category]:
+    def _flatten_categories(root_categories: Collection[Category]) -> list[Category]:
         """Used to flatten the Category tree, preserving the order."""
         resulting_list = []
-        for category in categories:
+        for category in root_categories:
             resulting_list.append(category)
             if len(category.children) > 0:
                 resulting_list = resulting_list + RecordKeeper._flatten_categories(
                     category.children
                 )
         return resulting_list
+
+    def _save_category(self, category: Category) -> None:
+        if category not in self._categories:
+            self._categories.append(category)
+
+        if category.parent is not None:
+            return
+
+        if (
+            category.type_ == CategoryType.INCOME
+            and category not in self._root_income_categories
+        ):
+            self._root_income_categories.append(category)
+        elif (
+            category.type_ == CategoryType.EXPENSE
+            and category not in self._root_income_categories
+        ):
+            self._root_expense_categories.append(category)
+        else:
+            self._root_income_and_expense_categories.append(category)
