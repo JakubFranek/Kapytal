@@ -16,6 +16,7 @@ from PyQt6.QtWidgets import (
 from src.models.base_classes.account import Account
 from src.models.model_objects.cash_objects import CashAccount, CashTransactionType
 from src.models.model_objects.security_objects import SecurityAccount
+from src.models.user_settings import user_settings
 from src.views.dialogs.select_item_dialog import ask_user_for_selection
 from src.views.ui_files.dialogs.Ui_cash_transaction_dialog import (
     Ui_CashTransactionDialog,
@@ -44,7 +45,6 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
         categories_income: Collection[str],
         categories_expense: Collection[str],
         tags: Collection[str],
-        type_: CashTransactionType,
         *,
         edit: bool,
     ) -> None:
@@ -53,7 +53,9 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
 
         self._tags = tags
 
-        self.type_ = type_
+        self._type = CashTransactionType.INCOME
+        self.incomeRadioButton.setChecked(True)
+
         self._categories_income = categories_income
         self._categories_expense = categories_expense
 
@@ -110,7 +112,11 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
 
     @property
     def datetime_(self) -> datetime:
-        return self.dateEdit.dateTime().toPyDateTime()
+        return (
+            self.dateEdit.dateTime()
+            .toPyDateTime()
+            .replace(tzinfo=user_settings.settings.time_zone)
+        )
 
     @datetime_.setter
     def datetime_(self, datetime_: datetime) -> None:
@@ -167,6 +173,26 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
             (row.category, row.amount) for row in self._category_rows if row.category
         )
 
+    @category_amount_pairs.setter
+    def category_amount_pairs(self, pairs: Collection[tuple[str, Decimal]]) -> None:
+        if len(pairs) == 1:
+            category, amount = pairs[0]
+            self._initialize_single_category_row()
+            row = self._category_rows[0]
+            row.category = category
+            self.amount = amount
+        else:
+            no_of_pairs = len(pairs)
+            total_amount = sum(amount for _, amount in pairs)
+            self.amount = total_amount
+            self._split_categories()
+            remaining_rows = no_of_pairs - 2
+            for _ in range(remaining_rows):
+                self._add_split_category_row()
+            for index in range(no_of_pairs):
+                self._category_rows[index].category = pairs[index][0]
+                self._category_rows[index].amount = pairs[index][1]
+
     @property
     def tag_amount_pairs(self) -> tuple[tuple[str, Decimal]]:
         if len(self._tag_rows) == 1:
@@ -175,6 +201,22 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
                 return tuple((tag, self.amount) for tag in row.tags if tag)
             return (row.tag, row.amount)
         return tuple((row.tag, row.amount) for row in self._tag_rows if row.tag)
+
+    @tag_amount_pairs.setter
+    def tag_amount_pairs(self, pairs: Collection[tuple[str, Decimal]]) -> None:
+        single_row = all(amount == self.amount for _, amount in pairs)
+        tags = [tag for tag, _ in pairs]
+        if single_row:
+            self._initialize_single_tag_row()
+            self._tag_rows[0].tags = tags
+        else:
+            self._split_tags()
+            remaining_rows = len(tags) - 1
+            for _ in range(remaining_rows):
+                self._add_split_tag_row()
+            for index in range(len(tags)):
+                self._tag_rows[index].tag = pairs[index][0]
+                self._tag_rows[index].amount = pairs[index][1]
 
     def reject(self) -> None:
         logging.debug(f"Closing {self.__class__.__name__}")
@@ -239,6 +281,9 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
                 row.load_categories(self._categories_expense)
 
     def _initialize_single_category_row(self) -> None:
+        if hasattr(self, "_category_rows") and len(self._category_rows) == 1:
+            return
+
         row = SingleCategoryRowWidget(self)
         self._category_rows = [row]
         self.formLayout.insertRow(6, QLabel("Category", self), row)
@@ -246,6 +291,9 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
         row.signal_split_categories.connect(self._split_categories)
 
     def _split_categories(self) -> None:
+        if hasattr(self, "_category_rows") and len(self._category_rows) > 1:
+            return
+
         current_category = self._category_rows[0].category
 
         self.formLayout.removeRow(6)
@@ -299,6 +347,7 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
             self._category_rows.remove(removed_row)
             remaining_category = self._category_rows[0].category
             self.formLayout.removeRow(6)
+            self._category_rows = []
             self._initialize_single_category_row()
             self._category_rows[0].category = remaining_category
             return
@@ -311,12 +360,18 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
         # IDEA: "preferred" size for description? or something
 
     def _initialize_single_tag_row(self) -> None:
+        if hasattr(self, "_tag_rows") and len(self._tag_rows) == 1:
+            return
+
         row = SingleTagRowWidget(self, self._tags)
         self._tag_rows: list[SingleTagRowWidget | SplitTagRowWidget] = [row]
         self.formLayout.insertRow(7, QLabel("Tags", self), row)
         row.signal_split_tags.connect(self._split_tags)
 
     def _split_tags(self) -> None:
+        if hasattr(self, "_tag_rows") and len(self._tag_rows) > 1:
+            return
+
         current_tags = self._tag_rows[0].tags
 
         self.formLayout.removeRow(7)

@@ -179,11 +179,13 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
         )
 
     def _set_actions(self) -> None:
-        selected_items = self.tableView.selectionModel().selectedIndexes()
-        is_selected = len(selected_items) > 0
-        self.actionEdit.setEnabled(is_selected)
-        self.actionDuplicate.setEnabled(is_selected)
-        self.actionDelete.setEnabled(is_selected)
+        selected_indexes = self.tableView.selectionModel().selectedIndexes()
+        selected_rows = [index for index in selected_indexes if index.column() == 0]
+        is_any_selected = len(selected_rows) > 0
+        is_one_selected = len(selected_rows) == 1
+        self.actionEdit.setEnabled(is_any_selected)
+        self.actionDuplicate.setEnabled(is_one_selected)
+        self.actionDelete.setEnabled(is_any_selected)
 
     def _reset_column_order(self) -> None:
         header = self.tableView.horizontalHeader()

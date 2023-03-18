@@ -55,9 +55,9 @@ class SingleTagRowWidget(QWidget):
             "Select Tag",
             QIcon("icons_16:tag.png"),
         )
-        if self.tags != ("",):
+        if tag and self.tags != ("",):
             self.tags = [*self.tags, tag]
-        else:
+        elif tag:
             self.tags = [tag]
 
     def _initialize_tags_completer(self) -> None:

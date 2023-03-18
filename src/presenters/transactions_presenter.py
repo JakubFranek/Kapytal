@@ -150,6 +150,7 @@ class TransactionsPresenter:
             )
         )
         self._view.signal_delete.connect(self._delete_transactions)
+        self._view.signal_duplicate.connect(self._duplicate_transaction)
 
         self._cash_transaction_dialog_presenter.event_update_model.append(
             self.update_model_data
@@ -182,3 +183,12 @@ class TransactionsPresenter:
                 if any_deleted:
                     self.event_data_changed()
                     self.event_refresh_account_tree()
+
+    def _duplicate_transaction(self) -> None:
+        transactions = self._model.get_selected_items()
+        if len(transactions) > 1:
+            raise ValueError("Cannot duplicate more than one Transaction!")
+
+        transaction = transactions[0]
+        if isinstance(transaction, CashTransaction):
+            self._cash_transaction_dialog_presenter.run_duplicate_dialog(transaction)

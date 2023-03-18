@@ -106,4 +106,5 @@ class SplitTagRowWidget(QWidget):
             "Select Tag",
             QIcon("icons_custom:category.png"),
         )
-        self.combo_box.setCurrentText(item)
+        if item:
+            self.combo_box.setCurrentText(item)

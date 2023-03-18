@@ -61,4 +61,5 @@ class SingleCategoryRowWidget(QWidget):
             "Select Category",
             QIcon("icons_custom:category.png"),
         )
-        self.combo_box.setCurrentText(category)
+        if category:
+            self.combo_box.setCurrentText(category)
