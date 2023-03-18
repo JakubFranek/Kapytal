@@ -103,7 +103,11 @@ class CashTransactionDialogPresenter:
         category_amount_pairs = self._dialog.category_amount_pairs
         tag_amount_pairs = self._dialog.tag_amount_pairs
 
-        logging.info("Adding CashTransaction")
+        total_amount = self._dialog.amount
+        categories = [category for category, _ in category_amount_pairs]
+        tags = [tag for tag, _ in tag_amount_pairs]
+
+        logging.debug("Adding CashTransaction")
         try:
             self._record_keeper.add_cash_transaction(
                 description,
@@ -113,6 +117,12 @@ class CashTransactionDialogPresenter:
                 payee,
                 category_amount_pairs,
                 tag_amount_pairs,
+            )
+            logging.info(
+                f"Added CashTransaction: {datetime_.strftime('%Y-%m-%d')}, "
+                f"{description=}, type={type_.name}, {account=}, {payee=}, "
+                f"amount={str(total_amount)} {self._dialog.currency_code}, "
+                f"{categories=}, {tags=}"
             )
         except Exception as exception:  # noqa: BLE001
             handle_exception(exception)

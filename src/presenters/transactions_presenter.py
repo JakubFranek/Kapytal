@@ -16,6 +16,7 @@ from src.presenters.cash_transaction_dialog_presenter import (
     CashTransactionDialogPresenter,
 )
 from src.presenters.utilities.event import Event
+from src.presenters.utilities.handle_exception import handle_exception
 from src.view_models.transaction_table_model import TransactionTableModel
 from src.views.constants import TransactionTableColumn
 from src.views.widgets.transaction_table_widget import TransactionTableWidget
@@ -23,6 +24,7 @@ from src.views.widgets.transaction_table_widget import TransactionTableWidget
 
 class TransactionsPresenter:
     event_data_changed = Event()
+    event_refresh_account_tree = Event()
 
     def __init__(
         self, view: TransactionTableWidget, record_keeper: RecordKeeper
@@ -146,6 +148,7 @@ class TransactionsPresenter:
                 CashTransactionType.EXPENSE, self.valid_accounts
             )
         )
+        self._view.signal_delete.connect(self._delete_transactions)
 
         self._cash_transaction_dialog_presenter.event_update_model.append(
             self.update_model_data
@@ -153,3 +156,28 @@ class TransactionsPresenter:
         self._cash_transaction_dialog_presenter.event_data_changed.append(
             self.event_data_changed
         )
+
+    def _delete_transactions(self) -> None:
+        transactions = self._model.get_selected_items()
+        if len(transactions) == 0:
+            raise ValueError("Cannot delete unselected Transaction.")
+
+        any_deleted = False
+
+        for transaction in transactions:
+            try:
+                self._record_keeper.remove_transactions(str(transaction.uuid))
+                logging.info(
+                    f"Removed {transaction.__class__.__name__}: "
+                    f"uuid={str(transaction.uuid)}"
+                )
+                self._model.pre_remove_item(transaction)
+                self.update_model_data()
+                self._model.post_remove_item()
+                any_deleted = True
+            except Exception as exception:  # noqa: BLE001
+                handle_exception(exception)
+            finally:
+                if any_deleted:
+                    self.event_data_changed()
+                    self.event_refresh_account_tree()

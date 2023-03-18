@@ -58,7 +58,7 @@ class Ui_TransactionTableWidget(object):
         self.controlsHorizontalLayout.addWidget(self.searchLineEdit)
         self.verticalLayout.addLayout(self.controlsHorizontalLayout)
         self.tableView = QtWidgets.QTableView(TransactionTableWidget)
-        self.tableView.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.SingleSelection)
+        self.tableView.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.ExtendedSelection)
         self.tableView.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)
         self.tableView.setObjectName("tableView")
         self.tableView.horizontalHeader().setHighlightSections(False)

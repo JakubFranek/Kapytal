@@ -237,6 +237,9 @@ class MainPresenter:
         self._transactions_presenter.event_data_changed.append(
             lambda: self._update_unsaved_changes(unsaved_changes=True)
         )
+        self._transactions_presenter.event_refresh_account_tree.append(
+            self._account_tree_presenter.refresh_view
+        )
 
     def _connect_view_signals(self) -> None:
         self._view.signal_exit.connect(self._quit)

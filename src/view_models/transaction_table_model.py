@@ -116,19 +116,16 @@ class TransactionTableModel(QAbstractTableModel):
     def post_remove_item(self) -> None:
         self.endRemoveRows()
 
-    def get_selected_item_index(self) -> QModelIndex:
+    def get_selected_item_indexes(self) -> list[QModelIndex]:
         proxy_indexes = self._view.selectedIndexes()
-        source_indexes = [self._proxy.mapToSource(index) for index in proxy_indexes]
-        if len(source_indexes) == 0:
-            return QModelIndex()
-        return source_indexes[0]
+        return [self._proxy.mapToSource(index) for index in proxy_indexes]
 
-    def get_selected_item(self) -> Transaction | None:
+    def get_selected_items(self) -> list[Transaction]:
         proxy_indexes = self._view.selectedIndexes()
         source_indexes = [self._proxy.mapToSource(index) for index in proxy_indexes]
-        if len(source_indexes) == 0:
-            return None
-        return source_indexes[0].internalPointer()
+        return [
+            index.internalPointer() for index in source_indexes if index.column() == 0
+        ]
 
     def get_index_from_item(self, item: Transaction | None) -> QModelIndex:
         if item is None:
