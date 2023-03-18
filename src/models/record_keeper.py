@@ -1207,8 +1207,8 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
             "account_groups": sorted_account_groups,
             "accounts": self._accounts,
             "root_account_items": root_item_references,
-            "payees": self._payees,
-            "tags": self._tags,
+            "payees": [payee.name for payee in self._payees],
+            "tags": [tag.name for tag in self._tags],
             "categories": sorted_categories,
             "root_income_categories": root_income_category_refs,
             "root_expense_categories": root_expense_category_refs,
@@ -1252,8 +1252,14 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
             )
         )
 
-        obj._payees = data["payees"]  # noqa: SLF001
-        obj._tags = data["tags"]  # noqa: SLF001
+        payee_names = data["payees"]
+        obj._payees = [  # noqa: SLF001
+            Attribute(name, AttributeType.PAYEE) for name in payee_names
+        ]
+        tag_names = data["tags"]
+        obj._tags = [  # noqa: SLF001
+            Attribute(name, AttributeType.TAG) for name in tag_names
+        ]
 
         obj._categories = RecordKeeper._deserialize_categories(  # noqa: SLF001
             data["categories"]

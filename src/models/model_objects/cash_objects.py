@@ -336,7 +336,7 @@ class CashTransaction(CashRelatedTransaction):
             "datatype": "CashTransaction",
             "description": self._description,
             "datetime": self._datetime,
-            "type_": self._type.name,
+            "type": self._type.name,
             "account_path": self._account.path,
             "payee_name": self._payee.name,
             "category_amount_pairs": category_amount_pairs,
@@ -358,7 +358,7 @@ class CashTransaction(CashRelatedTransaction):
         datetime_ = datetime.strptime(  # noqa: DTZ007
             data["datetime"], constants.DATETIME_SERDES_FMT
         )
-        type_ = CashTransactionType[data["type_"]]
+        type_ = CashTransactionType[data["type"]]
 
         cash_account = find_account_by_path(data["account_path"], accounts)
 

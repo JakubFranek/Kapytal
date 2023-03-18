@@ -176,7 +176,7 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
             "datatype": "Security",
             "name": self._name,
             "symbol": self._symbol,
-            "type_": self._type,
+            "type": self._type,
             "currency_code": self._currency.code,
             "shares_unit": str(self._shares_unit.normalize()),
             "uuid": str(self._uuid),
@@ -189,7 +189,7 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
     ) -> "Security":
         name = data["name"]
         symbol = data["symbol"]
-        type_ = data["type_"]
+        type_ = data["type"]
 
         currency_code = data["currency_code"]
         security_currency = find_currency_by_code(currency_code, currencies)
@@ -410,7 +410,7 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
             "datatype": "SecurityTransaction",
             "description": self._description,
             "datetime": self._datetime,
-            "type_": self._type.name,
+            "type": self._type.name,
             "security_name": self._security.name,
             "shares": str(self._shares),
             "price_per_share": self._price_per_share,
@@ -432,7 +432,7 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
             data["datetime"], constants.DATETIME_SERDES_FMT
         )
 
-        type_ = SecurityTransactionType[data["type_"]]
+        type_ = SecurityTransactionType[data["type"]]
         shares = Decimal(data["shares"])
         price_per_share = CashAmount.deserialize(data["price_per_share"], currencies)
 

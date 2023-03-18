@@ -47,12 +47,12 @@ class Attribute(NameMixin, JSONSerializableMixin):
         return f"Attribute('{self.name}', {self.type_.name})"
 
     def serialize(self) -> dict[str, Any]:
-        return {"datatype": "Attribute", "name": self._name, "type_": self._type.name}
+        return {"datatype": "Attribute", "name": self._name, "type": self._type.name}
 
     @staticmethod
     def deserialize(data: dict[str, Any]) -> Self:
         name = data["name"]
-        type_ = AttributeType[data["type_"]]
+        type_ = AttributeType[data["type"]]
         return Attribute(name, type_)
 
 
@@ -162,7 +162,7 @@ class Category(NameMixin, JSONSerializableMixin):
         return {
             "datatype": "Category",
             "path": self.path,
-            "type_": self._type.name,
+            "type": self._type.name,
             "index": index,
         }
 
@@ -170,7 +170,7 @@ class Category(NameMixin, JSONSerializableMixin):
     def deserialize(data: dict[str, Any], categories: list["Category"]) -> "Category":
         path: str = data["path"]
         parent_path, _, name = path.rpartition("/")
-        type_ = CategoryType[data["type_"]]
+        type_ = CategoryType[data["type"]]
         index: int | None = data["index"]
         obj = Category(name, type_)
         if parent_path:
