@@ -9,7 +9,6 @@ from PyQt6.QtWidgets import (
     QAbstractButton,
     QDialog,
     QDialogButtonBox,
-    QLabel,
     QVBoxLayout,
     QWidget,
 )
@@ -22,6 +21,7 @@ from src.views.ui_files.dialogs.Ui_cash_transaction_dialog import (
     Ui_CashTransactionDialog,
 )
 from src.views.widgets.add_attribute_row_widget import AddAttributeRowWidget
+from src.views.widgets.label_widget import LabelWidget
 from src.views.widgets.single_category_row_widget import SingleCategoryRowWidget
 from src.views.widgets.single_tag_row_widget import SingleTagRowWidget
 from src.views.widgets.split_category_row_widget import SplitCategoryRowWidget
@@ -287,7 +287,7 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
 
         row = SingleCategoryRowWidget(self)
         self._category_rows = [row]
-        self.formLayout.insertRow(6, QLabel("Category", self), row)
+        self.formLayout.insertRow(6, LabelWidget(self, "Category"), row)
         self._setup_categories_combobox()
         row.signal_split_categories.connect(self._split_categories)
         self._set_tab_order()
@@ -313,7 +313,7 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
         self.split_categories_vertical_layout.addWidget(row1)
         self.split_categories_vertical_layout.addWidget(row2)
         self.formLayout.insertRow(
-            6, QLabel("Categories", self), self.split_categories_vertical_layout
+            6, LabelWidget(self, "Categories"), self.split_categories_vertical_layout
         )
 
         self._setup_categories_combobox()
@@ -379,7 +379,7 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
 
         row = SingleTagRowWidget(self, self._tags)
         self._tag_rows: list[SingleTagRowWidget | SplitTagRowWidget] = [row]
-        self.formLayout.insertRow(7, QLabel("Tags", self), row)
+        self.formLayout.insertRow(7, LabelWidget(self, "Tags"), row)
         row.signal_split_tags.connect(self._split_tags)
         self._set_tab_order()
 
@@ -404,7 +404,7 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
             self.split_tags_vertical_layout.addWidget(row)
 
         self.formLayout.insertRow(
-            7, QLabel("Tags", self), self.split_tags_vertical_layout
+            7, LabelWidget(self, "Tags"), self.split_tags_vertical_layout
         )
 
         for row in self._tag_rows:
@@ -417,7 +417,7 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
 
     def _add_split_tag_row(self) -> None:
         if self.split_tags_vertical_layout is None:
-            raise ValueError("Vertical split Categories Layout is None.")
+            raise ValueError("Vertical split Tags Layout is None.")
 
         row = SplitTagRowWidget(self, self._tags)
         row.amount_decimals = self._decimals
@@ -431,7 +431,7 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
 
     def _remove_split_tag_row(self, removed_row: SplitTagRowWidget) -> None:
         if self.split_tags_vertical_layout is None:
-            raise ValueError("Vertical split Categories Layout is None.")
+            raise ValueError("Vertical split Tags Layout is None.")
 
         no_of_rows = self.split_tags_vertical_layout.count() - 1
         if no_of_rows == 1:
