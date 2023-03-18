@@ -27,8 +27,8 @@ from src.views.widgets.single_tag_row_widget import SingleTagRowWidget
 from src.views.widgets.split_category_row_widget import SplitCategoryRowWidget
 from src.views.widgets.split_tag_row_widget import SplitTagRowWidget
 
-# TODO: fix tab order
 # TODO: add tooltips
+# IDEA: "preferred" size for description? or something
 
 
 class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
@@ -50,6 +50,8 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
     ) -> None:
         super().__init__(parent=parent)
         self.setupUi(self)
+        self.split_categories_vertical_layout = None
+        self.split_tags_vertical_layout = None
 
         self._tags = tags
 
@@ -59,8 +61,9 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
         self._categories_income = categories_income
         self._categories_expense = categories_expense
 
-        self._initialize_single_tag_row()
         self._initialize_single_category_row()
+        self._initialize_single_tag_row()
+
         self.incomeRadioButton.toggled.connect(self._setup_categories_combobox)
         self.expenseRadioButton.toggled.connect(self._setup_categories_combobox)
 
@@ -75,6 +78,7 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
 
         self.amountDoubleSpinBox.valueChanged.connect(self._amount_changed)
         self._set_maximum_amounts(0)
+        self._set_tab_order()
 
     @property
     def type_(self) -> CashTransactionType:
@@ -289,6 +293,7 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
         self.formLayout.insertRow(6, QLabel("Category", self), row)
         self._setup_categories_combobox()
         row.signal_split_categories.connect(self._split_categories)
+        self._set_tab_order()
 
     def _split_categories(self) -> None:
         if hasattr(self, "_category_rows") and len(self._category_rows) > 1:
@@ -327,8 +332,12 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
 
         self._fixed_split_category_rows: list[SplitCategoryRowWidget] = []
         self._equalize_split_category_amounts()
+        self._set_tab_order()
 
     def _add_split_category_row(self) -> None:
+        if self.split_categories_vertical_layout is None:
+            raise ValueError("Vertical split Categories Layout is None.")
+
         row = SplitCategoryRowWidget(self)
         row.amount_decimals = self._decimals
         row.maximum_amount = self.amount
@@ -340,24 +349,32 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
         row.signal_remove_row.connect(self._remove_split_category_row)
         row.signal_amount_changed.connect(self._split_category_amount_changed)
         self._equalize_split_category_amounts()
+        self._set_tab_order()
 
     def _remove_split_category_row(self, removed_row: SplitCategoryRowWidget) -> None:
+        if self.split_categories_vertical_layout is None:
+            raise ValueError("Vertical split Categories Layout is None.")
+
         no_of_rows = self.split_categories_vertical_layout.count() - 1
         if no_of_rows == 2:  # noqa: PLR2004
             self._category_rows.remove(removed_row)
             remaining_category = self._category_rows[0].category
             self.formLayout.removeRow(6)
-            self._category_rows = []
+            self.split_categories_vertical_layout = None
+            self._category_rows: list[
+                SplitCategoryRowWidget | SingleCategoryRowWidget
+            ] = []
             self._initialize_single_category_row()
             self._category_rows[0].category = remaining_category
             return
+
         self.split_categories_vertical_layout.removeWidget(removed_row)
         self._category_rows.remove(removed_row)
         if removed_row in self._fixed_split_category_rows:
             self._fixed_split_category_rows.remove(removed_row)
         removed_row.deleteLater()
         self._equalize_split_category_amounts()
-        # IDEA: "preferred" size for description? or something
+        self._set_tab_order()
 
     def _initialize_single_tag_row(self) -> None:
         if hasattr(self, "_tag_rows") and len(self._tag_rows) == 1:
@@ -367,6 +384,7 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
         self._tag_rows: list[SingleTagRowWidget | SplitTagRowWidget] = [row]
         self.formLayout.insertRow(7, QLabel("Tags", self), row)
         row.signal_split_tags.connect(self._split_tags)
+        self._set_tab_order()
 
     def _split_tags(self) -> None:
         if hasattr(self, "_tag_rows") and len(self._tag_rows) > 1:
@@ -396,8 +414,12 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
         self.add_row_widget = AddAttributeRowWidget(self)
         self.add_row_widget.signal_add_row.connect(self._add_split_tag_row)
         self.split_tags_vertical_layout.addWidget(self.add_row_widget)
+        self._set_tab_order()
 
     def _add_split_tag_row(self) -> None:
+        if self.split_tags_vertical_layout is None:
+            raise ValueError("Vertical split Categories Layout is None.")
+
         row = SplitTagRowWidget(self, self._tags)
         row.amount_decimals = self._decimals
         row.currency_code = self._currency_code
@@ -406,19 +428,26 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
         index = self.split_tags_vertical_layout.count() - 1
         self.split_tags_vertical_layout.insertWidget(index, row)
         row.signal_remove_row.connect(self._remove_split_tag_row)
+        self._set_tab_order()
 
     def _remove_split_tag_row(self, removed_row: SplitTagRowWidget) -> None:
+        if self.split_tags_vertical_layout is None:
+            raise ValueError("Vertical split Categories Layout is None.")
+
         no_of_rows = self.split_tags_vertical_layout.count() - 1
         if no_of_rows == 1:
             remaining_tag = self._tag_rows[0].tag
             self._tag_rows.remove(removed_row)
             self.formLayout.removeRow(7)
+            self.split_tags_vertical_layout = None
             self._initialize_single_tag_row()
             self._tag_rows[0].tags = [remaining_tag]
             return
+
         self.split_tags_vertical_layout.removeWidget(removed_row)
         self._tag_rows.remove(removed_row)
         removed_row.deleteLater()
+        self._set_tab_order()
 
     def _get_payee(self) -> None:
         payee = ask_user_for_selection(
@@ -487,3 +516,53 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
         row_sum = sum(row.amount for row in self._category_rows)
         difference = self.amount - row_sum
         adjustable_rows[0].amount += difference
+
+    def _set_tab_order(self) -> None:
+        self.setTabOrder(self.incomeRadioButton, self.expenseRadioButton)
+        self.setTabOrder(self.expenseRadioButton, self.accountsComboBox)
+        self.setTabOrder(self.accountsComboBox, self.payeeComboBox)
+        self.setTabOrder(self.payeeComboBox, self.payeeToolButton)
+        self.setTabOrder(self.payeeToolButton, self.dateEdit)
+        self.setTabOrder(self.dateEdit, self.descriptionPlainTextEdit)
+        self.setTabOrder(self.descriptionPlainTextEdit, self.amountDoubleSpinBox)
+
+        if hasattr(self, "_category_rows"):
+            self.setTabOrder(self.amountDoubleSpinBox, self._category_rows[0])
+
+            if len(self._category_rows) > 1:
+                if self.split_categories_vertical_layout is None:
+                    raise ValueError("Vertical split Categories Layout is None.")
+
+                index = 0
+
+                while index + 1 < len(self._category_rows):
+                    self.setTabOrder(
+                        self._category_rows[index], self._category_rows[index + 1]
+                    )
+                    index += 1
+
+                vertical_layout_count = self.split_categories_vertical_layout.count()
+                last_widget = self.split_categories_vertical_layout.itemAt(
+                    vertical_layout_count - 1
+                ).widget()
+                self.setTabOrder(self._category_rows[index], last_widget)
+            else:
+                last_widget = self._category_rows[0]
+        else:
+            last_widget = self.amountDoubleSpinBox
+
+        if hasattr(self, "_tag_rows"):
+            self.setTabOrder(last_widget, self._tag_rows[0])
+
+            if self.split_tags_vertical_layout is not None:
+                index = 0
+
+                while index + 1 < len(self._tag_rows):
+                    self.setTabOrder(self._tag_rows[index], self._tag_rows[index + 1])
+                    index += 1
+
+                vertical_layout_count = self.split_tags_vertical_layout.count()
+                last_widget = self.split_tags_vertical_layout.itemAt(
+                    vertical_layout_count - 1
+                ).widget()
+                self.setTabOrder(self._tag_rows[index], last_widget)

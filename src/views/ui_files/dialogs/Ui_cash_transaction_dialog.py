@@ -120,7 +120,10 @@ class Ui_CashTransactionDialog(object):
         QtCore.QMetaObject.connectSlotsByName(CashTransactionDialog)
         CashTransactionDialog.setTabOrder(self.incomeRadioButton, self.expenseRadioButton)
         CashTransactionDialog.setTabOrder(self.expenseRadioButton, self.accountsComboBox)
-        CashTransactionDialog.setTabOrder(self.accountsComboBox, self.descriptionPlainTextEdit)
+        CashTransactionDialog.setTabOrder(self.accountsComboBox, self.payeeComboBox)
+        CashTransactionDialog.setTabOrder(self.payeeComboBox, self.payeeToolButton)
+        CashTransactionDialog.setTabOrder(self.payeeToolButton, self.dateEdit)
+        CashTransactionDialog.setTabOrder(self.dateEdit, self.descriptionPlainTextEdit)
         CashTransactionDialog.setTabOrder(self.descriptionPlainTextEdit, self.amountDoubleSpinBox)
 
     def retranslateUi(self, CashTransactionDialog):

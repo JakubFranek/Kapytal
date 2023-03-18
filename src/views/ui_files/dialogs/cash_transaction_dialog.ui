@@ -249,6 +249,9 @@
   <tabstop>incomeRadioButton</tabstop>
   <tabstop>expenseRadioButton</tabstop>
   <tabstop>accountsComboBox</tabstop>
+  <tabstop>payeeComboBox</tabstop>
+  <tabstop>payeeToolButton</tabstop>
+  <tabstop>dateEdit</tabstop>
   <tabstop>descriptionPlainTextEdit</tabstop>
   <tabstop>amountDoubleSpinBox</tabstop>
  </tabstops>

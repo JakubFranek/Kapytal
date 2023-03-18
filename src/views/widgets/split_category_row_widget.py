@@ -50,6 +50,9 @@ class SplitCategoryRowWidget(QWidget):
         self.horizontal_layout.setStretchFactor(self.combo_box, 66)
         self.horizontal_layout.setStretchFactor(self.double_spin_box, 34)
 
+        self.setFocusPolicy(Qt.FocusPolicy.TabFocus)
+        self.setFocusProxy(self.combo_box)
+
     @property
     def category(self) -> str:
         return self.combo_box.currentText()

@@ -15,7 +15,7 @@ class SingleTagRowWidget(QWidget):
         self._tags = tuple(tags)
 
         self.line_edit = QLineEdit(self)
-        self.line_edit.setPlaceholderText("Enter Tag names (separated by ';')")
+        self.line_edit.setPlaceholderText("Enter optional Tag names (separated by ';')")
         self._initialize_tags_completer()
 
         self.select_tool_button = QToolButton(self)
@@ -36,6 +36,9 @@ class SingleTagRowWidget(QWidget):
         self.horizontal_layout.addWidget(self.split_tool_button)
 
         self.layout().setContentsMargins(0, 0, 0, 0)
+
+        self.setFocusPolicy(Qt.FocusPolicy.TabFocus)
+        self.setFocusProxy(self.line_edit)
 
     @property
     def tags(self) -> tuple[str, ...]:

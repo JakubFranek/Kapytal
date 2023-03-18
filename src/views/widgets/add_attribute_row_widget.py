@@ -1,4 +1,4 @@
-from PyQt6.QtCore import pyqtSignal
+from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QAction, QIcon
 from PyQt6.QtWidgets import QHBoxLayout, QSizePolicy, QSpacerItem, QToolButton, QWidget
 
@@ -28,3 +28,6 @@ class AddAttributeRowWidget(QWidget):
         self.horizontal_layout.addSpacerItem(self.spacer2)
 
         self.layout().setContentsMargins(0, 0, 0, 0)
+
+        self.setFocusPolicy(Qt.FocusPolicy.TabFocus)
+        self.setFocusProxy(self.tool_button)

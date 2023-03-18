@@ -1,6 +1,6 @@
 from collections.abc import Collection
 
-from PyQt6.QtCore import pyqtSignal
+from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QAction, QIcon
 from PyQt6.QtWidgets import QComboBox, QHBoxLayout, QToolButton, QWidget
 from src.views.dialogs.select_item_dialog import ask_user_for_selection
@@ -34,6 +34,9 @@ class SingleCategoryRowWidget(QWidget):
         self.horizontal_layout.addWidget(self.split_tool_button)
 
         self.layout().setContentsMargins(0, 0, 0, 0)
+
+        self.setFocusPolicy(Qt.FocusPolicy.TabFocus)
+        self.setFocusProxy(self.combo_box)
 
     @property
     def category(self) -> str:
