@@ -41,6 +41,7 @@ class TransactionsPresenter:
 
         self._setup_view()
         self._connect_signals()
+        self._view.finalize_setup()
 
     @property
     def valid_accounts(self) -> tuple[Account, ...]:

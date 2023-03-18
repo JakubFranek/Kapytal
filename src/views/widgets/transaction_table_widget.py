@@ -39,6 +39,10 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
     def search_bar_text(self) -> str:
         return self.searchLineEdit.text()
 
+    def finalize_setup(self) -> None:
+        self.tableView.selectionModel().selectionChanged.connect(self._set_actions)
+        self._set_actions()
+
     def resize_table_to_contents(self) -> None:
         self.tableView.horizontalHeader().setStretchLastSection(False)
         self.tableView.resizeColumnsToContents()
@@ -173,6 +177,13 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
         self.tableView.customContextMenuRequested.connect(
             self._create_table_context_menu
         )
+
+    def _set_actions(self) -> None:
+        selected_items = self.tableView.selectionModel().selectedIndexes()
+        is_selected = len(selected_items) > 0
+        self.actionEdit.setEnabled(is_selected)
+        self.actionDuplicate.setEnabled(is_selected)
+        self.actionDelete.setEnabled(is_selected)
 
     def _reset_column_order(self) -> None:
         header = self.tableView.horizontalHeader()
