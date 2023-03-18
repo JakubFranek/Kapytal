@@ -173,9 +173,7 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
     def category_amount_pairs(self) -> tuple[tuple[str, Decimal]]:
         if len(self._category_rows) == 1:
             return ((self._category_rows[0].category, self.amount),)
-        return tuple(
-            (row.category, row.amount) for row in self._category_rows if row.category
-        )
+        return tuple((row.category, row.amount) for row in self._category_rows)
 
     @category_amount_pairs.setter
     def category_amount_pairs(self, pairs: Collection[tuple[str, Decimal]]) -> None:
@@ -202,9 +200,9 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
         if len(self._tag_rows) == 1:
             row = self._tag_rows[0]
             if isinstance(row, SingleTagRowWidget):
-                return tuple((tag, self.amount) for tag in row.tags if tag)
-            return (row.tag, row.amount)
-        return tuple((row.tag, row.amount) for row in self._tag_rows if row.tag)
+                return tuple((tag, self.amount) for tag in row.tags)
+            return ((row.tag, row.amount),)
+        return tuple((row.tag, row.amount) for row in self._tag_rows)
 
     @tag_amount_pairs.setter
     def tag_amount_pairs(self, pairs: Collection[tuple[str, Decimal]]) -> None:
@@ -391,6 +389,8 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
             return
 
         current_tags = self._tag_rows[0].tags
+        if len(current_tags) == 0:
+            current_tags = [""]
 
         self.formLayout.removeRow(7)
         self.split_tags_vertical_layout = QVBoxLayout(None)

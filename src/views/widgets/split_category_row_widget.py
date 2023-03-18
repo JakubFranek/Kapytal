@@ -17,6 +17,8 @@ class SplitCategoryRowWidget(QWidget):
         self.combo_box = QComboBox(self)
         self.combo_box.setEditable(True)
         self.combo_box.lineEdit().setPlaceholderText("Enter Category path")
+        self.combo_box.setToolTip("Both existing or new Category paths are valid")
+
         self.select_tool_button = QToolButton(self)
         self.actionSelect_Item = QAction("Select Category", self)
         self.actionSelect_Item.setIcon(QIcon("icons_custom:category.png"))

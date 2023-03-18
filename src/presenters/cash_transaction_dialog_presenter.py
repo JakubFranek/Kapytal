@@ -113,6 +113,13 @@ class CashTransactionDialogPresenter:
         categories = [category for category, _ in category_amount_pairs]
         tags = [tag for tag, _ in tag_amount_pairs]
 
+        if any(not category for category in categories):
+            display_error_message("Empty Category paths are invalid.", title="Warning")
+            return
+        if any(not tag for tag in tags):
+            display_error_message("Empty Tag names are invalid.", title="Warning")
+            return
+
         logging.debug("Adding CashTransaction")
         try:
             self._record_keeper.add_cash_transaction(
@@ -149,7 +156,8 @@ class CashTransactionDialogPresenter:
         ]
         if len(accounts) == 0:
             display_error_message(
-                "Create at least one Cash Account first!", title="Warning"
+                "Create at least one Cash Account before creating a transaction.",
+                title="Warning",
             )
             return False
 

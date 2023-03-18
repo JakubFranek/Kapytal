@@ -16,6 +16,7 @@ class SingleTagRowWidget(QWidget):
 
         self.line_edit = QLineEdit(self)
         self.line_edit.setPlaceholderText("Enter optional Tag names (separated by ';')")
+        self.line_edit.setToolTip("Both existing or new Tag names are valid")
         self._initialize_tags_completer()
 
         self.select_tool_button = QToolButton(self)
@@ -44,7 +45,7 @@ class SingleTagRowWidget(QWidget):
     def tags(self) -> tuple[str, ...]:
         text = self.line_edit.text()
         tag_names = text.split(";")
-        return tuple(tag_name.strip() for tag_name in tag_names)
+        return tuple(tag_name.strip() for tag_name in tag_names if tag_name)
 
     @tags.setter
     def tags(self, values: Collection[str]) -> None:

@@ -21,6 +21,7 @@ class SplitTagRowWidget(QWidget):
         for tag in tags:
             self.combo_box.addItem(tag)
         self.combo_box.setCurrentIndex(-1)
+        self.combo_box.setToolTip("Both existing or new Tag names are valid")
 
         self.select_tool_button = QToolButton(self)
         self.actionSelect_Item = QAction("Select Tag", self)
@@ -33,6 +34,9 @@ class SplitTagRowWidget(QWidget):
         self.double_spin_box.setGroupSeparatorShown(True)
         self.double_spin_box.setAlignment(Qt.AlignmentFlag.AlignRight)
         self.double_spin_box.setMinimumWidth(125)
+        self.double_spin_box.setToolTip(
+            "Max amount assignable to a Tag is the total transaction amount."
+        )
 
         self.remove_tool_button = QToolButton(self)
         self.actionRemove_Row = QAction("Remove", self)
