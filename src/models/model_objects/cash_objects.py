@@ -5,6 +5,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Collection
 from datetime import datetime, timedelta
 from enum import Enum, auto
+from types import NoneType
 from typing import Any
 
 from src.models.base_classes.account import Account, UnrelatedAccountError
@@ -126,7 +127,7 @@ class CashAccount(Account):
             )
         logging.info(f"Setting initial_balance={amount}")
         self._initial_balance = amount
-        self._update_balance()
+        self.update_balance()
 
     @property
     def balance_history(self) -> tuple[tuple[datetime, CashAmount], ...]:
@@ -150,12 +151,12 @@ class CashAccount(Account):
                 "CashAccount.transactions."
             )
         self._transactions.append(transaction)
-        self._update_balance()
+        self.update_balance()
 
     def remove_transaction(self, transaction: CashRelatedTransaction) -> None:
         self._validate_transaction(transaction)
         self._transactions.remove(transaction)
-        self._update_balance()
+        self.update_balance()
 
     def serialize(self) -> dict[str, Any]:
         index = self.parent.children.index(self) if self.parent is not None else None
@@ -194,7 +195,7 @@ class CashAccount(Account):
             obj._parent._children[index] = obj  # noqa: SLF001
         return obj
 
-    def _update_balance(self) -> None:
+    def update_balance(self) -> None:
         logging.debug(f"Updating balance of CashAccount at path='{self.path}'")
         if len(self.transactions) > 0:
             oldest_datetime = min(
@@ -225,7 +226,6 @@ class CashAccount(Account):
                 "This CashAccount is not related to the provided "
                 "CashRelatedTransaction."
             )
-        return
 
 
 class CashTransaction(CashRelatedTransaction):
@@ -507,7 +507,7 @@ class CashTransaction(CashRelatedTransaction):
         account: CashAccount | None = None,
         category_amount_pairs: Collection[tuple[Category, CashAmount | None]]
         | None = None,
-        tag_amount_pairs: Collection[tuple[Attribute, CashAmount]] | None = None,
+        tag_amount_pairs: Collection[tuple[Attribute, CashAmount | None]] | None = None,
         payee: Attribute | None = None,
     ) -> Collection[tuple[Category, CashAmount]]:
         if type_ is None:
@@ -568,6 +568,7 @@ class CashTransaction(CashRelatedTransaction):
         self._category_amount_pairs = list(category_amount_pairs)
         self._tag_amount_pairs = list(tag_amount_pairs)
         self._set_account(account)
+        self._account.update_balance()
 
     # IDEA: looks very similar to its Security counterpart
     def _set_account(self, account: CashAccount) -> None:
@@ -656,15 +657,12 @@ class CashTransaction(CashRelatedTransaction):
 
     def _validate_tag_amount_pairs(
         self,
-        tag_amount_pairs: Collection[tuple[Attribute, CashAmount]],
+        tag_amount_pairs: Collection[tuple[Attribute, CashAmount | None]],
         max_tag_amount: CashAmount,
         currency: Currency,
     ) -> None:
         _validate_collection_of_tuple_pairs(
-            collection=tag_amount_pairs,
-            first_type=Attribute,
-            second_type=CashAmount,
-            min_length=0,
+            tag_amount_pairs, Attribute, (CashAmount, NoneType), 0
         )
 
         if not all(
@@ -674,14 +672,21 @@ class CashTransaction(CashRelatedTransaction):
                 "The type_ of CashTransaction.tag_amount_pairs Attributes must be TAG."
             )
 
-        if not all(amount.currency == currency for _, amount in tag_amount_pairs):
+        _tag_amount_pairs: list[tuple[Attribute, CashAmount]] = []
+        for tag, amount in tag_amount_pairs:
+            if amount is None:
+                _tag_amount_pairs.append((tag, self.amount))
+            else:
+                _tag_amount_pairs.append((tag, amount))
+
+        if not all(amount.currency == currency for _, amount in _tag_amount_pairs):
             raise CurrencyError(
                 "Currency of CashAmounts in tag_amount_pairs must match the "
                 "currency of the CashAccount."
             )
         if not all(
             amount.is_positive() and amount <= max_tag_amount
-            for _, amount in tag_amount_pairs
+            for _, amount in _tag_amount_pairs
         ):
             raise ValueError(
                 "Second member of CashTransaction.tag_amount_pairs "
@@ -1379,8 +1384,8 @@ def _validate_payee(payee: Attribute) -> None:
 
 def _validate_collection_of_tuple_pairs(
     collection: Collection[tuple[Any, Any]],
-    first_type: type,
-    second_type: type,
+    first_type: type | tuple[type, ...],
+    second_type: type | tuple[type, ...],
     min_length: int,
 ) -> None:
     if not isinstance(collection, Collection):
@@ -1401,8 +1406,7 @@ def _validate_collection_of_tuple_pairs(
         isinstance(second_member, second_type) for _, second_member in collection
     ):
         raise TypeError(
-            "Second element of 'collection' tuples must be of type "
-            f"{second_type.__name__}."
+            f"Second element of 'collection' tuples must be of type {second_type}."
         )
 
 

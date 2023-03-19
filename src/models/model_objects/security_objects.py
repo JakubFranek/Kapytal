@@ -284,7 +284,6 @@ class SecurityAccount(Account):
                 "This SecurityAccount is not related to the provided "
                 "SecurityRelatedTransaction."
             )
-        return
 
 
 class SecurityRelatedTransaction(Transaction, ABC):

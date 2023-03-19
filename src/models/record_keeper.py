@@ -425,18 +425,12 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         datetime_: datetime | None = None,
         transaction_type: CashTransactionType | None = None,
         account_path: str | None = None,
+        payee_name: str | None = None,
         category_path_amount_pairs: Collection[tuple[str, Decimal | None]]
         | None = None,
-        payee_name: str | None = None,
-        tag_name_amount_pairs: Collection[tuple[str, Decimal]] | None = None,
+        tag_name_amount_pairs: Collection[tuple[str, Decimal | None]] | None = None,
     ) -> None:
         transactions = self._get_transactions(transaction_uuids, CashTransaction)
-
-        if not all(
-            transaction.currency == transactions[0].currency
-            for transaction in transactions
-        ):
-            raise CurrencyError("Edited CashTransactions must have the same currency.")
 
         if account_path is not None:
             account = self.get_account(account_path, CashAccount)
@@ -448,7 +442,16 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         else:
             payee = None
 
-        currency = account.currency if account is not None else transactions[0].currency
+        # TODO: allow different currencies, but only if all amounts are None
+        if not all(
+            transaction.currency == transactions[0].currency
+            for transaction in transactions
+        ):
+            currency = None
+        else:
+            currency = (
+                account.currency if account is not None else transactions[0].currency
+            )
 
         if category_path_amount_pairs is not None:
             category_type = (
@@ -1447,7 +1450,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         self,
         category_path_amount_pairs: Collection[tuple[str, Decimal | None]],
         category_type: CategoryType,
-        currency: Currency,
+        currency: Currency | None,
     ) -> list[tuple[Category, CashAmount | None]]:
         category_amount_pairs = []
         for category_path, amount in category_path_amount_pairs:
@@ -1590,7 +1593,6 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
                 )
         return resulting_list
 
-    # TODO: test this function
     @staticmethod
     def _flatten_categories(root_categories: Collection[Category]) -> list[Category]:
         """Used to flatten the Category tree, preserving the order."""

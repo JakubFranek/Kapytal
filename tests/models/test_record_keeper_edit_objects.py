@@ -397,18 +397,6 @@ def test_edit_cash_transactions_type() -> None:
         assert transaction.category_amount_pairs[0][0].name == edit_category
 
 
-def test_edit_cash_transactions_currency_not_same() -> None:
-    record_keeper = get_preloaded_record_keeper_with_cash_transactions()
-    cash_transactions = [
-        transaction
-        for transaction in record_keeper.transactions
-        if isinstance(transaction, CashTransaction)
-    ]
-    uuids = [str(transaction.uuid) for transaction in cash_transactions]
-    with pytest.raises(CurrencyError):
-        record_keeper.edit_cash_transactions(uuids)
-
-
 def test_edit_cash_transactions_account_pass() -> None:
     record_keeper = get_preloaded_record_keeper_with_cash_transactions()
     cash_transactions = [

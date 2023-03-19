@@ -18,8 +18,8 @@ class UnrelatedAccountError(ValueError):
     not relate to it."""
 
 
-# IDEA: create base for Account and AccountGroup
-# getbalance, parent, children, transactions
+# IDEA: create base for Account and AccountGroup (AccountTreeItem)
+# getbalance, parent, transactions
 class Account(
     CopyableMixin, NameMixin, UUIDMixin, GetBalanceMixin, JSONSerializableMixin, ABC
 ):

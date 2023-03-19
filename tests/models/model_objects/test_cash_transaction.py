@@ -211,7 +211,10 @@ def test_tags_invalid_second_member_type(
     transaction: CashTransaction, data: st.DataObject
 ) -> None:
     new_tags = [
-        (Attribute("Test", AttributeType.TAG), data.draw(everything_except(CashAmount)))
+        (
+            Attribute("Test", AttributeType.TAG),
+            data.draw(everything_except((CashAmount, NoneType))),
+        )
     ]
     with pytest.raises(
         TypeError,
