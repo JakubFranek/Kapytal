@@ -40,6 +40,7 @@ class SingleTagRowWidget(QWidget):
 
         self.setFocusPolicy(Qt.FocusPolicy.TabFocus)
         self.setFocusProxy(self.line_edit)
+        self.enable_split(enable=True)
 
     @property
     def tags(self) -> tuple[str, ...]:
@@ -51,6 +52,10 @@ class SingleTagRowWidget(QWidget):
     def tags(self, values: Collection[str]) -> None:
         text = "; ".join(values)
         self.line_edit.setText(text)
+
+    def enable_split(self, *, enable: bool) -> None:
+        self._split_enabled = enable
+        self.actionSplit_Tags.setEnabled(enable)
 
     def _select_tag(self) -> None:
         tag = ask_user_for_selection(

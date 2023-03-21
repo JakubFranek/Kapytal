@@ -9,12 +9,13 @@ from src.views.dialogs.select_item_dialog import ask_user_for_selection
 class SingleCategoryRowWidget(QWidget):
     signal_split_categories = pyqtSignal()
 
-    def __init__(self, parent: QWidget | None = None) -> None:
+    def __init__(self, parent: QWidget | None, *, edit: bool) -> None:
         super().__init__(parent)
+        self._edit = edit
 
         self.combo_box = QComboBox(self)
         self.combo_box.setEditable(True)
-        self.combo_box.lineEdit().setPlaceholderText("Enter Category path")
+        self.require_category(required=not edit)
         self.combo_box.setToolTip("Both existing or new Category paths are valid")
 
         self.select_tool_button = QToolButton(self)
@@ -38,14 +39,28 @@ class SingleCategoryRowWidget(QWidget):
 
         self.setFocusPolicy(Qt.FocusPolicy.TabFocus)
         self.setFocusProxy(self.combo_box)
+        self.enable_split(enable=True)
 
     @property
-    def category(self) -> str:
-        return self.combo_box.currentText()
+    def category(self) -> str | None:
+        text = self.combo_box.currentText()
+        return text if text or not self._edit else None
 
     @category.setter
     def category(self, value: str) -> None:
         self.combo_box.setCurrentText(value)
+
+    def enable_split(self, *, enable: bool) -> None:
+        self._split_enabled = enable
+        self.actionSplit_Categories.setEnabled(enable)
+
+    def require_category(self, *, required: bool) -> None:
+        if not required:
+            self.combo_box.lineEdit().setPlaceholderText(
+                "Leave empty to keep current values"
+            )
+        else:
+            self.combo_box.lineEdit().setPlaceholderText("Enter Category path")
 
     def load_categories(self, categories: Collection[str]) -> None:
         current_text = self.category

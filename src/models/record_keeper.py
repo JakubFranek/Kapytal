@@ -432,8 +432,16 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
     ) -> None:
         transactions = self._get_transactions(transaction_uuids, CashTransaction)
 
-        if len(transactions) > 1 and transaction_type is not None:
-            raise InvalidOperationError("Cannot set type of multiple CashTransactions.")
+        if (
+            len(transactions) > 1
+            and transaction_type is not None
+            and not all(
+                transaction.type_ == transaction_type for transaction in transactions
+            )
+        ):
+            raise InvalidOperationError(
+                "Cannot change type of multiple CashTransactions."
+            )
 
         if account_path is not None:
             account = self.get_account(account_path, CashAccount)

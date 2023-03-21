@@ -272,7 +272,7 @@ def test_edit_cash_transactions_descriptions() -> None:
         transaction
         for transaction in record_keeper.transactions
         if isinstance(transaction, CashTransaction)
-        if transaction.currency.code == "CZK"
+        and transaction.currency.code == "CZK"
     ]
     uuids = [str(transaction.uuid) for transaction in cash_transactions]
     edit_string = "TEST EDIT"
@@ -287,7 +287,7 @@ def test_edit_cash_transactions_datetimes() -> None:
         transaction
         for transaction in record_keeper.transactions
         if isinstance(transaction, CashTransaction)
-        if transaction.currency.code == "CZK"
+        and transaction.currency.code == "CZK"
     ]
     uuids = [str(transaction.uuid) for transaction in cash_transactions]
     edit_datetime = datetime.now(user_settings.settings.time_zone)
@@ -302,7 +302,7 @@ def test_edit_cash_transactions_payees() -> None:
         transaction
         for transaction in record_keeper.transactions
         if isinstance(transaction, CashTransaction)
-        if transaction.currency.code == "CZK"
+        and transaction.currency.code == "CZK"
     ]
     uuids = [str(transaction.uuid) for transaction in cash_transactions]
     edit_payee = "TEST PAYEE"
@@ -317,7 +317,7 @@ def test_edit_cash_transactions_categories() -> None:
         transaction
         for transaction in record_keeper.transactions
         if isinstance(transaction, CashTransaction)
-        if transaction.currency.code == "CZK"
+        and transaction.currency.code == "CZK"
         and transaction.type_ == CashTransactionType.EXPENSE
     ]
     uuids = [str(transaction.uuid) for transaction in cash_transactions]
@@ -343,7 +343,7 @@ def test_edit_cash_transactions_tags() -> None:
         transaction
         for transaction in record_keeper.transactions
         if isinstance(transaction, CashTransaction)
-        if transaction.currency.code == "CZK"
+        and transaction.currency.code == "CZK"
         and transaction.type_ == CashTransactionType.EXPENSE
     ]
     uuids = [str(transaction.uuid) for transaction in cash_transactions]
@@ -362,7 +362,7 @@ def test_edit_cash_transactions_account() -> None:
         transaction
         for transaction in record_keeper.transactions
         if isinstance(transaction, CashTransaction)
-        if transaction.currency.code == "CZK"
+        and transaction.currency.code == "CZK"
     ]
     uuids = [str(transaction.uuid) for transaction in cash_transactions]
     edit_account = "Test Account CZK"

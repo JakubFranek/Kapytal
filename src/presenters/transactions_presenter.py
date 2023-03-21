@@ -19,6 +19,7 @@ from src.presenters.utilities.event import Event
 from src.presenters.utilities.handle_exception import handle_exception
 from src.view_models.transaction_table_model import TransactionTableModel
 from src.views.constants import TransactionTableColumn
+from src.views.utilities.handle_exception import display_error_message
 from src.views.widgets.transaction_table_widget import TransactionTableWidget
 
 
@@ -151,6 +152,7 @@ class TransactionsPresenter:
         )
         self._view.signal_delete.connect(self._delete_transactions)
         self._view.signal_duplicate.connect(self._duplicate_transaction)
+        self._view.signal_edit.connect(self._edit_transactions)
 
         self._cash_transaction_dialog_presenter.event_update_model.append(
             self.update_model_data
@@ -186,9 +188,24 @@ class TransactionsPresenter:
 
     def _duplicate_transaction(self) -> None:
         transactions = self._model.get_selected_items()
-        if len(transactions) > 1:
-            raise ValueError("Cannot duplicate more than one Transaction!")
+        if len(transactions) != 1:
+            raise ValueError("Only a single Transaction can be duplicated.")
 
         transaction = transactions[0]
         if isinstance(transaction, CashTransaction):
             self._cash_transaction_dialog_presenter.run_duplicate_dialog(transaction)
+
+    def _edit_transactions(self) -> None:
+        transactions = self._model.get_selected_items()
+        if len(transactions) == 0:
+            raise ValueError("Cannot edit zero Transactions.")
+
+        if all(
+            isinstance(transaction, CashTransaction) for transaction in transactions
+        ):
+            self._cash_transaction_dialog_presenter.run_edit_dialog(transactions)
+            return
+
+        display_error_message(
+            "All edited Transactions must be of the same type.", title="Warning"
+        )
