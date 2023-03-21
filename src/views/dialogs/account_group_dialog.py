@@ -13,7 +13,7 @@ from PyQt6.QtWidgets import (
 from src.views.ui_files.dialogs.Ui_account_group_dialog import Ui_AccountGroupDialog
 
 
-# IDEA: update position limits based on path state?
+# TODO: update position limits based on path state?
 class AccountGroupDialog(QDialog, Ui_AccountGroupDialog):
     signal_ok = pyqtSignal()
 

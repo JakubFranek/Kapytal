@@ -66,10 +66,6 @@ class CategoryFormPresenter:
         self._model.category_stats = tuple(category_stats)
 
     def reset_model(self) -> None:
-        category_type_ = self._view.checked_type.name
-        logging.debug(
-            f"Resetting CategoryForm model: showing {category_type_} Categories"
-        )
         self._model.pre_reset_model()
         self.update_model_data()
         self._model.post_reset_model()
@@ -247,7 +243,7 @@ class CategoryFormPresenter:
         self._view.signal_add_category.connect(lambda: self.run_dialog(edit=False))
         self._view.signal_edit_category.connect(lambda: self.run_dialog(edit=True))
         self._view.signal_delete_category.connect(self.delete_category)
-        self._view.signal_type_selection_changed.connect(self.reset_model)
+        self._view.signal_type_selection_changed.connect(self._type_changed)
         self._view.signal_search_text_changed.connect(self._filter)
 
         self._tree_selection_changed()  # called to ensure context menu is OK at start
@@ -270,3 +266,8 @@ class CategoryFormPresenter:
         logging.debug(f"Filtering Categories: {pattern=}")
         self._proxy_model.setFilterWildcard(pattern)
         self._view.category_tree.expand_all()
+
+    def _type_changed(self) -> None:
+        type_ = self._view.checked_type.name
+        logging.debug(f"CategoryType selection changed: {type_}")
+        self.reset_model()

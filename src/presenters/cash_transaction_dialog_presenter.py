@@ -20,6 +20,8 @@ from src.views.utilities.handle_exception import display_error_message
 if TYPE_CHECKING:
     from src.models.model_objects.attributes import Category
 
+# TODO: allow changing types of multiple transactions of same type
+
 
 class CashTransactionDialogPresenter:
     event_update_model = Event()
@@ -261,8 +263,11 @@ class CashTransactionDialogPresenter:
         self.event_data_changed()
 
     def _edit_cash_transactions(self) -> None:
-        transactions = self._model.get_selected_items()
+        transactions: list[CashTransaction] = self._model.get_selected_items()
         uuids = [str(transaction.uuid) for transaction in transactions]
+        change_type = any(
+            transaction.type_ != transactions[0].type_ for transaction in transactions
+        )
 
         type_ = self._dialog.type_
         account = self._dialog.account
@@ -281,7 +286,25 @@ class CashTransactionDialogPresenter:
                     )
                     return
 
-        logging.debug(f"Editing {len(transactions)} CashTransaction")
+        log = []
+        if description is not None:
+            log.append(f"{description=}")
+        if datetime_ is not None:
+            log.append(f"datetime={datetime_.strftime('%Y-%m-%d')}")
+        if change_type:
+            log.append(f"type='{type_.name}'")
+        if account is not None:
+            log.append(f"{account=}")
+        if payee is not None:
+            log.append(f"{payee=}")
+        if category_amount_pairs is not None:
+            log.append(f"{category_amount_pairs=}")
+        if tag_amount_pairs is not None:
+            log.append(f"{tag_amount_pairs=}")
+        logging.info(
+            f"Editing {len(transactions)} CashTransaction(s): {', '.join(log)}, "
+            f"uuids={uuids}"
+        )
         try:
             self._record_keeper.edit_cash_transactions(
                 uuids,
@@ -293,7 +316,6 @@ class CashTransactionDialogPresenter:
                 category_amount_pairs,
                 tag_amount_pairs,
             )
-            logging.info(f"Edited {len(transactions)} CashTransaction(s): {uuids}")
         except Exception as exception:  # noqa: BLE001
             handle_exception(exception)
             return

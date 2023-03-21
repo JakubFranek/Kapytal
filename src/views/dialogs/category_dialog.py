@@ -13,7 +13,7 @@ from PyQt6.QtWidgets import (
 from src.views.ui_files.dialogs.Ui_category_dialog import Ui_CategoryDialog
 
 
-# IDEA: update position limits based on path state?
+# TODO: update position limits based on path state?
 class CategoryDialog(QDialog, Ui_CategoryDialog):
     signal_ok = pyqtSignal()
 

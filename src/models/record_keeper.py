@@ -875,7 +875,6 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
             item=edited_account, new_parent=new_parent, index=index
         )
 
-    # REFACTOR: this method should be simplified somehow (similar to edit_account)
     def edit_account_group(
         self, current_path: str, new_path: str, index: int | None = None
     ) -> None:

@@ -2,9 +2,6 @@ import logging
 from collections.abc import Collection
 from datetime import date, datetime
 from decimal import Decimal
-
-# IDEA: "preferred" size for description? or something
-# TODO: delete dialogs on close?
 from enum import Enum, auto
 
 from PyQt6.QtCore import pyqtSignal
@@ -39,6 +36,9 @@ class EditMode(Enum):
     EDIT_MULTIPLE_MIXED_CURRENCY = auto()
 
 
+# IDEA: "preferred" size for description? or something
+# TODO: delete dialogs on close?
+# REFACTOR: refactor this dialog (messy code)
 class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
     KEEP_CURRENT_VALUES = "Keep current values"
 
@@ -284,7 +284,6 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
         logging.debug(f"Closing {self.__class__.__name__}")
         return super().reject()
 
-
     def _handle_button_box_click(self, button: QAbstractButton) -> None:
         role = self.buttonBox.buttonRole(button)
         if role == QDialogButtonBox.ButtonRole.AcceptRole:
@@ -385,24 +384,22 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
 
         self.formLayout.removeRow(6)
         self.split_categories_vertical_layout = QVBoxLayout(None)
-        row1 = SplitCategoryRowWidget(self)
-        row2 = SplitCategoryRowWidget(self)
-        self._category_rows = [row1, row2]
-        row1.amount_decimals = self._decimals
-        row2.amount_decimals = self._decimals
-        row1.maximum_amount = self.amount
-        row2.maximum_amount = self.amount
-        row1.currency_code = self._currency_code
-        row2.currency_code = self._currency_code
 
-        self.split_categories_vertical_layout.addWidget(row1)
-        self.split_categories_vertical_layout.addWidget(row2)
+        self._category_rows = []
+        for _ in range(2):
+            row = SplitCategoryRowWidget(self)
+            row.amount_decimals = self._decimals
+            row.maximum_amount = self.amount
+            row.currency_code = self._currency_code
+            self._category_rows.append(row)
+            self.split_categories_vertical_layout.addWidget(row)
+
         self.formLayout.insertRow(
             6, LabelWidget(self, "Categories"), self.split_categories_vertical_layout
         )
 
         self._setup_categories_combobox()
-        row1.category = current_category
+        self._category_rows[0].category = current_category
 
         for row in self._category_rows:
             row.signal_remove_row.connect(self._remove_split_category_row)

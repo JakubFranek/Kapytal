@@ -211,7 +211,7 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
         return obj
 
 
-# IDEA: maybe add shares / balance history
+# IDEA: maybe add shares / balance history (calculated)
 class SecurityAccount(Account):
     def __init__(self, name: str, parent: AccountGroup | None = None) -> None:
         super().__init__(name, parent)
