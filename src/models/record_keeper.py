@@ -432,6 +432,9 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
     ) -> None:
         transactions = self._get_transactions(transaction_uuids, CashTransaction)
 
+        if len(transactions) > 1 and transaction_type is not None:
+            raise InvalidOperationError("Cannot set type of multiple CashTransactions.")
+
         if account_path is not None:
             account = self.get_account(account_path, CashAccount)
         else:
@@ -442,12 +445,30 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         else:
             payee = None
 
-        # TODO: allow different currencies, but only if all amounts are None
         if not all(
             transaction.currency == transactions[0].currency
             for transaction in transactions
         ):
             currency = None
+            if category_path_amount_pairs is not None and not all(
+                amount is None for _, amount in category_path_amount_pairs
+            ):
+                raise ValueError(
+                    "If CashTransaction of various Currencies are edited, "
+                    "all Category amounts must be None."
+                )
+            if tag_name_amount_pairs is not None and not all(
+                amount is None for _, amount in tag_name_amount_pairs
+            ):
+                raise ValueError(
+                    "If CashTransaction of various Currencies are edited, "
+                    "all Tag amounts must be None."
+                )
+            if account is not None:
+                raise ValueError(
+                    "If CashTransaction of various Currencies are edited, "
+                    "'account_path' must be None."
+                )
         else:
             currency = (
                 account.currency if account is not None else transactions[0].currency
@@ -1462,17 +1483,14 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
 
     def _create_tag_amount_pairs(
         self,
-        tag_name_amount_pairs: Collection[tuple[str, Decimal]],
+        tag_name_amount_pairs: Collection[tuple[str, Decimal | None]],
         currency: Currency,
-    ) -> list[tuple[Attribute, CashAmount]]:
+    ) -> list[tuple[Attribute, CashAmount | None]]:
         tag_amount_pairs: list[tuple[Attribute, CashAmount]] = []
         for tag_name, amount in tag_name_amount_pairs:
-            tag_amount_pairs.append(
-                (
-                    self.get_attribute(tag_name, AttributeType.TAG),
-                    CashAmount(amount, currency),
-                )
-            )
+            _tag = self.get_attribute(tag_name, AttributeType.TAG)
+            _amount = CashAmount(amount, currency) if amount is not None else None
+            tag_amount_pairs.append((_tag, _amount))
         return tag_amount_pairs
 
     TransactionType = TypeVar("TransactionType", bound=Transaction)

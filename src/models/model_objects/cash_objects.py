@@ -478,7 +478,7 @@ class CashTransaction(CashRelatedTransaction):
         if datetime_ is None:
             datetime_ = self._datetime
 
-        valid_category_amount_pairs = self.validate_attributes(
+        valid_category_amount_pairs, valid_tag_amount_pairs = self.validate_attributes(
             description=description,
             datetime_=datetime_,
             type_=type_,
@@ -494,7 +494,7 @@ class CashTransaction(CashRelatedTransaction):
             type_=type_,
             account=account,
             category_amount_pairs=valid_category_amount_pairs,
-            tag_amount_pairs=tag_amount_pairs,
+            tag_amount_pairs=valid_tag_amount_pairs,
             payee=payee,
         )
 
@@ -509,7 +509,7 @@ class CashTransaction(CashRelatedTransaction):
         | None = None,
         tag_amount_pairs: Collection[tuple[Attribute, CashAmount | None]] | None = None,
         payee: Attribute | None = None,
-    ) -> Collection[tuple[Category, CashAmount]]:
+    ) -> tuple[tuple[tuple[Category, CashAmount]], tuple[tuple[Attribute, CashAmount]]]:
         if type_ is None:
             type_ = self._type
         if account is None:
@@ -543,12 +543,12 @@ class CashTransaction(CashRelatedTransaction):
             (amount for _, amount in valid_category_amount_pairs),
             start=CashAmount(0, currency),
         )
-        self._validate_tag_amount_pairs(
+        valid_tag_amount_pairs = self._validate_tag_amount_pairs(
             tag_amount_pairs=tag_amount_pairs,
             max_tag_amount=max_tag_amount,
             currency=currency,
         )
-        return valid_category_amount_pairs
+        return valid_category_amount_pairs, valid_tag_amount_pairs
 
     def _set_attributes(
         self,
@@ -660,7 +660,7 @@ class CashTransaction(CashRelatedTransaction):
         tag_amount_pairs: Collection[tuple[Attribute, CashAmount | None]],
         max_tag_amount: CashAmount,
         currency: Currency,
-    ) -> None:
+    ) -> tuple[tuple[Attribute, CashAmount]]:
         _validate_collection_of_tuple_pairs(
             tag_amount_pairs, Attribute, (CashAmount, NoneType), 0
         )
@@ -674,8 +674,15 @@ class CashTransaction(CashRelatedTransaction):
 
         _tag_amount_pairs: list[tuple[Attribute, CashAmount]] = []
         for tag, amount in tag_amount_pairs:
-            if amount is None:
-                _tag_amount_pairs.append((tag, self.amount))
+            if amount is None:  # Tag amount unspecified
+                for _tag, _amount in self.tag_amount_pairs:
+                    if tag == _tag:
+                        # If the Tag already exists, preserve amount
+                        _tag_amount_pairs.append((tag, _amount))
+                        break
+                else:
+                    # If the Tag is new, use the maximum amount
+                    _tag_amount_pairs.append((tag, self.amount))
             else:
                 _tag_amount_pairs.append((tag, amount))
 
@@ -693,6 +700,7 @@ class CashTransaction(CashRelatedTransaction):
                 "tuples must be a positive CashAmount which "
                 "does not exceed CashTransaction.amount."
             )
+        return _tag_amount_pairs
 
     def _validate_refund(self, refund: "RefundTransaction") -> None:
         if not isinstance(refund, RefundTransaction):

@@ -15,7 +15,6 @@ from src.models.model_objects.attributes import (
     AttributeType,
     Category,
     CategoryType,
-    InvalidCategoryTypeError,
 )
 from src.models.model_objects.cash_objects import (
     CashAccount,
@@ -345,6 +344,7 @@ def test_edit_cash_transactions_tags() -> None:
         for transaction in record_keeper.transactions
         if isinstance(transaction, CashTransaction)
         if transaction.currency.code == "CZK"
+        and transaction.type_ == CashTransactionType.EXPENSE
     ]
     uuids = [str(transaction.uuid) for transaction in cash_transactions]
     edit_tag = "TEST TAG"
@@ -356,48 +356,7 @@ def test_edit_cash_transactions_tags() -> None:
         assert transaction.tag_amount_pairs[0][0].name == edit_tag
 
 
-def test_edit_cash_transactions_type_wrong_category() -> None:
-    """This test attempts to set all CashTransaction types to Expense, although
-    there is one income CashTransaction with Income type Category, which fails."""
-
-    record_keeper = get_preloaded_record_keeper_with_cash_transactions()
-    cash_transactions = [
-        transaction
-        for transaction in record_keeper.transactions
-        if isinstance(transaction, CashTransaction)
-        if transaction.currency.code == "CZK"
-    ]
-    uuids = [str(transaction.uuid) for transaction in cash_transactions]
-    edit_type = CashTransactionType.EXPENSE
-    with pytest.raises(InvalidCategoryTypeError):
-        record_keeper.edit_cash_transactions(
-            uuids,
-            transaction_type=edit_type,
-        )
-
-
-def test_edit_cash_transactions_type() -> None:
-    record_keeper = get_preloaded_record_keeper_with_cash_transactions()
-    cash_transactions = [
-        transaction
-        for transaction in record_keeper.transactions
-        if isinstance(transaction, CashTransaction)
-        if transaction.currency.code == "CZK"
-    ]
-    uuids = [str(transaction.uuid) for transaction in cash_transactions]
-    edit_type = CashTransactionType.EXPENSE
-    edit_category = "TEST EXPENSE CAT"
-    edit_category_amount_pair = [(edit_category, None)]
-    record_keeper.edit_cash_transactions(
-        uuids,
-        category_path_amount_pairs=edit_category_amount_pair,
-        transaction_type=edit_type,
-    )
-    for transaction in cash_transactions:
-        assert transaction.category_amount_pairs[0][0].name == edit_category
-
-
-def test_edit_cash_transactions_account_pass() -> None:
+def test_edit_cash_transactions_account() -> None:
     record_keeper = get_preloaded_record_keeper_with_cash_transactions()
     cash_transactions = [
         transaction
@@ -431,6 +390,96 @@ def test_edit_cash_transactions_invalid_indexes() -> None:
     uuids = [str(transaction.uuid) for transaction in transactions]
     with pytest.raises(TypeError, match="Type of Transaction"):
         record_keeper.edit_cash_transactions(uuids)
+
+
+def test_edit_cash_transactions_multiple_currencies() -> None:
+    record_keeper = get_preloaded_record_keeper_with_cash_transactions()
+    record_keeper.add_tag("test tag")
+    cash_transactions = [
+        transaction
+        for transaction in record_keeper.transactions
+        if isinstance(transaction, CashTransaction)
+        and transaction.type_ == CashTransactionType.EXPENSE
+    ]
+    uuids = [str(transaction.uuid) for transaction in cash_transactions]
+    edit_description = "test description"
+    edit_payee = record_keeper.payees[0].name
+    edit_category_pair = ((record_keeper.categories[0].path, None),)
+    edit_tag_pair = ((record_keeper.tags[1].name, None),)
+    edit_datetime = datetime.now(user_settings.settings.time_zone)
+    record_keeper.edit_cash_transactions(
+        uuids,
+        description=edit_description,
+        payee_name=edit_payee,
+        datetime_=edit_datetime,
+        category_path_amount_pairs=edit_category_pair,
+        tag_name_amount_pairs=edit_tag_pair,
+    )
+    for transaction in cash_transactions:
+        assert transaction.description == edit_description
+        assert transaction.payee.name == edit_payee
+        assert transaction.datetime_ == edit_datetime
+        assert record_keeper.categories[0] in transaction.categories
+        assert record_keeper.tags[1] in transaction.tags
+
+
+def test_edit_cash_transactions_multiple_currencies_invalid_account() -> None:
+    record_keeper = get_preloaded_record_keeper_with_cash_transactions()
+    cash_transactions = [
+        transaction
+        for transaction in record_keeper.transactions
+        if isinstance(transaction, CashTransaction)
+        and transaction.type_ == CashTransactionType.EXPENSE
+    ]
+    uuids = [str(transaction.uuid) for transaction in cash_transactions]
+    with pytest.raises(ValueError, match="'account_path' must be None"):
+        record_keeper.edit_cash_transactions(
+            uuids, account_path=cash_transactions[0].account.path
+        )
+
+
+def test_edit_cash_transactions_multiple_currencies_invalid_category_amounts() -> None:
+    record_keeper = get_preloaded_record_keeper_with_cash_transactions()
+    cash_transactions = [
+        transaction
+        for transaction in record_keeper.transactions
+        if isinstance(transaction, CashTransaction)
+        and transaction.type_ == CashTransactionType.EXPENSE
+    ]
+    uuids = [str(transaction.uuid) for transaction in cash_transactions]
+    with pytest.raises(ValueError, match="Category amounts must be None"):
+        record_keeper.edit_cash_transactions(
+            uuids, category_path_amount_pairs=cash_transactions[0].category_amount_pairs
+        )
+
+
+def test_edit_cash_transactions_multiple_currencies_invalid_tag_amounts() -> None:
+    record_keeper = get_preloaded_record_keeper_with_cash_transactions()
+    cash_transactions = [
+        transaction
+        for transaction in record_keeper.transactions
+        if isinstance(transaction, CashTransaction)
+        and transaction.type_ == CashTransactionType.EXPENSE
+    ]
+    uuids = [str(transaction.uuid) for transaction in cash_transactions]
+    with pytest.raises(ValueError, match="Tag amounts must be None"):
+        record_keeper.edit_cash_transactions(
+            uuids, tag_name_amount_pairs=cash_transactions[0].tag_amount_pairs
+        )
+
+
+def test_edit_cash_transactions_multiple_types() -> None:
+    record_keeper = get_preloaded_record_keeper_with_cash_transactions()
+    cash_transactions = [
+        transaction
+        for transaction in record_keeper.transactions
+        if isinstance(transaction, CashTransaction)
+    ]
+    uuids = [str(transaction.uuid) for transaction in cash_transactions]
+    with pytest.raises(InvalidOperationError):
+        record_keeper.edit_cash_transactions(
+            uuids, transaction_type=CashTransactionType.INCOME
+        )
 
 
 def test_edit_cash_transfer_invalid_types() -> None:

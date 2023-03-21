@@ -299,6 +299,38 @@ def test_tag_amount_pairs_not_unique(
         transaction.set_attributes(tag_amount_pairs=tup)
 
 
+@given(
+    transaction=cash_transactions(),
+    data=st.data(),
+)
+def test_tag_amount_pairs_none_amount(
+    transaction: CashTransaction, data: st.DataObject
+) -> None:
+    max_value = transaction.amount.value_rounded
+    tag = data.draw(attributes(type_=AttributeType.TAG))
+    amount = data.draw(cash_amounts(transaction.currency, "0.01", max_value))
+    tup = ((tag, amount),)
+    transaction.set_attributes(tag_amount_pairs=tup)
+    assert transaction.tag_amount_pairs == tup
+
+    tup_none = ((tag, None),)
+    transaction.set_attributes(tag_amount_pairs=tup_none)
+    assert transaction.tag_amount_pairs == tup
+
+
+@given(
+    transaction=cash_transactions(),
+    data=st.data(),
+)
+def test_tag_amount_pairs_none_amount_new_tag(
+    transaction: CashTransaction, data: st.DataObject
+) -> None:
+    tag = data.draw(attributes(type_=AttributeType.TAG))
+    tup = ((tag, None),)
+    transaction.set_attributes(tag_amount_pairs=tup)
+    assert transaction.tag_amount_pairs == ((tag, transaction.amount),)
+
+
 @given(transaction=cash_transactions(), data=st.data())
 def test_change_account(transaction: CashTransaction, data: st.DataObject) -> None:
     new_account = data.draw(cash_accounts(currency=transaction.currency))
