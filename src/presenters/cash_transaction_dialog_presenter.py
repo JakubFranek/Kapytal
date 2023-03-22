@@ -43,6 +43,7 @@ class CashTransactionDialogPresenter:
     def run_add_dialog(
         self, type_: CashTransactionType, valid_accounts: Collection[CashAccount]
     ) -> None:
+        logging.debug("Running CashTransactionDialog (edit_mode=ADD)")
         if len(valid_accounts) == 0:
             display_error_message(
                 "Create at least one Cash Account before creating a transaction.",
@@ -64,9 +65,11 @@ class CashTransactionDialogPresenter:
             lambda: self._add_cash_transaction(close=False)
         )
         self._dialog_account_changed()
+
         self._dialog.exec()
 
     def run_duplicate_dialog(self, transaction: CashTransaction) -> None:
+        logging.debug("Running duplicate CashTransactionDialog (edit_mode=ADD)")
         self._prepare_dialog(edit_mode=EditMode.ADD)
 
         self._dialog.type_ = transaction.type_
@@ -99,15 +102,6 @@ class CashTransactionDialogPresenter:
         self._dialog.exec()
 
     def run_edit_dialog(self, transactions: Sequence[CashTransaction]) -> None:
-        if not all(
-            transaction.type_ == transactions[0].type_ for transaction in transactions
-        ):
-            display_error_message(
-                "All edited Cash Transactions must be of the same type.",
-                title="Warning",
-            )
-            return
-
         if len(transactions) == 1:
             edit_mode = EditMode.EDIT_SINGLE
         elif all(
@@ -117,6 +111,16 @@ class CashTransactionDialogPresenter:
             edit_mode = EditMode.EDIT_MULTIPLE
         else:
             edit_mode = EditMode.EDIT_MULTIPLE_MIXED_CURRENCY
+
+        logging.debug(f"Running CashTransactionDialog (edit_mode={edit_mode.name})")
+        if not all(
+            transaction.type_ == transactions[0].type_ for transaction in transactions
+        ):
+            display_error_message(
+                "All edited Cash Transactions must be of the same type.",
+                title="Warning",
+            )
+            return
 
         self._prepare_dialog(edit_mode=edit_mode)
 
@@ -234,7 +238,12 @@ class CashTransactionDialogPresenter:
             display_error_message("Empty Tag names are invalid.", title="Warning")
             return
 
-        logging.debug("Adding CashTransaction")
+        logging.info(
+            f"Adding CashTransaction: {datetime_.strftime('%Y-%m-%d')}, "
+            f"{description=}, type={type_.name}, {account=}, {payee=}, "
+            f"amount={str(total_amount)} {self._dialog.currency_code}, "
+            f"{categories=}, {tags=}"
+        )
         try:
             self._record_keeper.add_cash_transaction(
                 description,
@@ -244,12 +253,6 @@ class CashTransactionDialogPresenter:
                 payee,
                 category_amount_pairs,
                 tag_amount_pairs,
-            )
-            logging.info(
-                f"Added CashTransaction: {datetime_.strftime('%Y-%m-%d')}, "
-                f"{description=}, type={type_.name}, {account=}, {payee=}, "
-                f"amount={str(total_amount)} {self._dialog.currency_code}, "
-                f"{categories=}, {tags=}"
             )
         except Exception as exception:  # noqa: BLE001
             handle_exception(exception)

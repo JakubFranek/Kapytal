@@ -373,12 +373,15 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
         self._category_rows = [row]
         self.formLayout.insertRow(6, LabelWidget(self, "Category"), row)
         self._setup_categories_combobox()
-        row.signal_split_categories.connect(self._split_categories)
+        row.signal_split_categories.connect(lambda: self._split_categories(user=True))
         self._set_tab_order()
 
-    def _split_categories(self) -> None:
+    def _split_categories(self, *, user: bool) -> None:
         if hasattr(self, "_category_rows") and len(self._category_rows) > 1:
             return
+
+        if user:
+            logging.debug("Splitting Category rows")
 
         current_category = self._category_rows[0].category
 
@@ -414,6 +417,8 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
         self._set_tab_order()
 
     def _add_split_category_row(self) -> None:
+        logging.debug("Adding split Category row")
+
         if self.split_categories_vertical_layout is None:
             raise ValueError("Vertical split Categories Layout is None.")
 
@@ -431,6 +436,8 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
         self._set_tab_order()
 
     def _remove_split_category_row(self, removed_row: SplitCategoryRowWidget) -> None:
+        logging.debug("Removing single Category row")
+
         if self.split_categories_vertical_layout is None:
             raise ValueError("Vertical split Categories Layout is None.")
 
@@ -438,6 +445,7 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
         if no_of_rows == 2:  # noqa: PLR2004
             self._category_rows.remove(removed_row)
             remaining_category = self._category_rows[0].category
+            logging.debug("Resetting Category rows, initializing single row")
             self._reset_category_rows()
             self._initialize_single_category_row()
             self._category_rows[0].category = remaining_category
@@ -467,12 +475,15 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
         row = SingleTagRowWidget(self, self._tags)
         self._tag_rows: list[SingleTagRowWidget | SplitTagRowWidget] = [row]
         self.formLayout.insertRow(7, LabelWidget(self, "Tags"), row)
-        row.signal_split_tags.connect(self._split_tags)
+        row.signal_split_tags.connect(lambda: self._split_tags(user=True))
         self._set_tab_order()
 
-    def _split_tags(self) -> None:
+    def _split_tags(self, *, user: bool) -> None:
         if hasattr(self, "_tag_rows") and len(self._tag_rows) > 1:
             return
+
+        if user:
+            logging.debug("Splitting Tag rows")
 
         current_tags = self._tag_rows[0].tags
         if len(current_tags) == 0:
@@ -503,6 +514,8 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
         self._set_tab_order()
 
     def _add_split_tag_row(self) -> None:
+        logging.debug("Adding split Tag row")
+
         if self.split_tags_vertical_layout is None:
             raise ValueError("Vertical split Tags Layout is None.")
 
@@ -517,12 +530,15 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
         self._set_tab_order()
 
     def _remove_split_tag_row(self, removed_row: SplitTagRowWidget) -> None:
+        logging.debug("Removing split Tag row")
+
         if self.split_tags_vertical_layout is None:
             raise ValueError("Vertical split Tags Layout is None.")
 
         no_of_rows = self.split_tags_vertical_layout.count() - 1
         if no_of_rows == 1:
             remaining_tag = self._tag_rows[0].tag
+            logging.debug("Resetting split Tag rows, initializing single row")
             self._reset_tag_rows()
             self._initialize_single_tag_row()
             self._tag_rows[0].tags = [remaining_tag]

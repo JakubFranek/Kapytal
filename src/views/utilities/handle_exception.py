@@ -39,7 +39,8 @@ def display_error_message(
     exc_details: str = "",
     *,
     critical: bool = False,
-    title: str = "Error!",
+    title: str = "Error",
+    log: bool = True,
 ) -> None:
     message_box = QMessageBox()
     if critical is True:
@@ -52,4 +53,8 @@ def display_error_message(
     message_box.setText(text)
     if exc_details:
         message_box.setDetailedText(exc_details)
+
+    if log:
+        logging.warning(f"Displaying {title}: {text}")
+
     message_box.exec()

@@ -107,8 +107,6 @@ def get_exception_display_info(exception: Exception) -> tuple[str, str]:
         <b>{error}</b><br/><br/>
         It occurred at <b>line {line}</b> of file <b>{filename}</b>.<br/></html>"""
 
-    logging.error("Handled exception", exc_info=(exc_type, exc_value, exc_traceback))
-
     return display_text, exc_details
 
 
