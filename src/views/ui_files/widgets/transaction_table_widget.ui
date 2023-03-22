@@ -248,6 +248,16 @@
     <string>Show All Columns</string>
    </property>
   </action>
+  <action name="actionAdd_Tags">
+   <property name="text">
+    <string>Add Tags</string>
+   </property>
+  </action>
+  <action name="actionRemove_Tags">
+   <property name="text">
+    <string>Remove Tags</string>
+   </property>
+  </action>
  </widget>
  <resources/>
  <connections/>

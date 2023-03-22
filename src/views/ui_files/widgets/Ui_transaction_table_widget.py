@@ -94,6 +94,10 @@ class Ui_TransactionTableWidget(object):
         self.actionResize_Columns_to_Fit.setObjectName("actionResize_Columns_to_Fit")
         self.actionShow_All_Columns = QtGui.QAction(TransactionTableWidget)
         self.actionShow_All_Columns.setObjectName("actionShow_All_Columns")
+        self.actionAdd_Tags = QtGui.QAction(TransactionTableWidget)
+        self.actionAdd_Tags.setObjectName("actionAdd_Tags")
+        self.actionRemove_Tags = QtGui.QAction(TransactionTableWidget)
+        self.actionRemove_Tags.setObjectName("actionRemove_Tags")
 
         self.retranslateUi(TransactionTableWidget)
         QtCore.QMetaObject.connectSlotsByName(TransactionTableWidget)
@@ -128,3 +132,5 @@ class Ui_TransactionTableWidget(object):
         self.actionReset_Columns.setText(_translate("TransactionTableWidget", "Reset Columns"))
         self.actionResize_Columns_to_Fit.setText(_translate("TransactionTableWidget", "Resize Columns to Fit"))
         self.actionShow_All_Columns.setText(_translate("TransactionTableWidget", "Show All Columns"))
+        self.actionAdd_Tags.setText(_translate("TransactionTableWidget", "Add Tags"))
+        self.actionRemove_Tags.setText(_translate("TransactionTableWidget", "Remove Tags"))

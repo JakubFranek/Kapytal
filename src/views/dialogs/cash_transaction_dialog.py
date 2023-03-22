@@ -247,7 +247,7 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
             no_of_pairs = len(pairs)
             total_amount = sum(amount for _, amount in pairs)
             self.amount = total_amount
-            self._split_categories()
+            self._split_categories(user=False)
             remaining_rows = no_of_pairs - 2
             for _ in range(remaining_rows):
                 self._add_split_category_row()
@@ -272,7 +272,7 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
             self._initialize_single_tag_row()
             self._tag_rows[0].tags = tags
         else:
-            self._split_tags()
+            self._split_tags(user=False)
             remaining_rows = len(tags) - 1
             for _ in range(remaining_rows):
                 self._add_split_tag_row()

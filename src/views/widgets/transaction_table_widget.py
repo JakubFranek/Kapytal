@@ -26,6 +26,9 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
     signal_edit = pyqtSignal()
     signal_duplicate = pyqtSignal()
 
+    signal_add_tags = pyqtSignal()
+    signal_remove_tags = pyqtSignal()
+
     def __init__(self, parent: QWidget | None) -> None:
         super().__init__(parent)
         self.setupUi(self)
@@ -112,6 +115,9 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
         self.header_menu.addAction(self.actionEdit)
         self.header_menu.addAction(self.actionDuplicate)
         self.header_menu.addAction(self.actionDelete)
+        self.header_menu.addSeparator()
+        self.header_menu.addAction(self.actionAdd_Tags)
+        self.header_menu.addAction(self.actionRemove_Tags)
         self.header_menu.popup(QCursor.pos())
 
     def _set_icons(self) -> None:
@@ -130,6 +136,9 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
         self.actionEdit.setIcon(QIcon("icons_16:pencil.png"))
         self.actionDelete.setIcon(QIcon("icons_16:minus.png"))
         self.actionDuplicate.setIcon(QIcon("icons_16:document-copy.png"))
+
+        self.actionAdd_Tags.setIcon(QIcon("icons_16:tag--plus.png"))
+        self.actionRemove_Tags.setIcon(QIcon("icons_16:tag--minus.png"))
 
         self.transferToolButton.setIcon(QIcon("icons_16:arrow-curve-000-left.png"))
 
@@ -154,17 +163,22 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
         self.actionReset_Columns.triggered.connect(self._reset_column_order)
 
     def _connect_signals(self) -> None:
-        self.actionIncome.triggered.connect(self.signal_income)
-        self.actionExpense.triggered.connect(self.signal_expense)
-        self.actionRefund.triggered.connect(self.signal_refund)
-        self.actionCash_Transfer.triggered.connect(self.signal_cash_transfer)
-        self.actionBuy.triggered.connect(self.signal_buy)
-        self.actionSell.triggered.connect(self.signal_sell)
-        self.actionSecurity_Transfer.triggered.connect(self.signal_security_transfer)
+        self.actionIncome.triggered.connect(self.signal_income.emit)
+        self.actionExpense.triggered.connect(self.signal_expense.emit)
+        self.actionRefund.triggered.connect(self.signal_refund.emit)
+        self.actionCash_Transfer.triggered.connect(self.signal_cash_transfer.emit)
+        self.actionBuy.triggered.connect(self.signal_buy.emit)
+        self.actionSell.triggered.connect(self.signal_sell.emit)
+        self.actionSecurity_Transfer.triggered.connect(
+            self.signal_security_transfer.emit
+        )
 
-        self.actionEdit.triggered.connect(self.signal_edit)
-        self.actionDuplicate.triggered.connect(self.signal_duplicate)
-        self.actionDelete.triggered.connect(self.signal_delete)
+        self.actionEdit.triggered.connect(self.signal_edit.emit)
+        self.actionDuplicate.triggered.connect(self.signal_duplicate.emit)
+        self.actionDelete.triggered.connect(self.signal_delete.emit)
+
+        self.actionAdd_Tags.triggered.connect(self.signal_add_tags.emit)
+        self.actionRemove_Tags.triggered.connect(self.signal_remove_tags.emit)
 
         self.searchLineEdit.textChanged.connect(self.signal_search_text_changed.emit)
 
@@ -183,11 +197,15 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
     def _set_actions(self) -> None:
         selected_indexes = self.tableView.selectionModel().selectedIndexes()
         selected_rows = [index for index in selected_indexes if index.column() == 0]
+
         is_any_selected = len(selected_rows) > 0
         is_one_selected = len(selected_rows) == 1
+
         self.actionEdit.setEnabled(is_any_selected)
         self.actionDuplicate.setEnabled(is_one_selected)
         self.actionDelete.setEnabled(is_any_selected)
+        self.actionAdd_Tags.setEnabled(is_any_selected)
+        self.actionRemove_Tags.setEnabled(is_any_selected)
 
     def _reset_column_order(self) -> None:
         header = self.tableView.horizontalHeader()
