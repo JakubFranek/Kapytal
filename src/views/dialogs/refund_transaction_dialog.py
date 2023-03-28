@@ -18,8 +18,8 @@ from src.models.model_objects.cash_objects import CashAccount, CashTransactionTy
 from src.models.model_objects.security_objects import SecurityAccount
 from src.models.user_settings import user_settings
 from src.views.dialogs.select_item_dialog import ask_user_for_selection
-from src.views.ui_files.dialogs.Ui_cash_transaction_dialog import (
-    Ui_CashTransactionDialog,
+from src.views.ui_files.dialogs.Ui_refund_transaction_dialog import (
+    Ui_RefundTransactionDialog,
 )
 from src.views.widgets.add_attribute_row_widget import AddAttributeRowWidget
 from src.views.widgets.label_widget import LabelWidget
@@ -32,18 +32,12 @@ from src.views.widgets.split_tag_row_widget import SplitTagRowWidget
 class EditMode(Enum):
     ADD = auto()
     EDIT_SINGLE = auto()
-    EDIT_MULTIPLE = auto()
-    EDIT_MULTIPLE_MIXED_CURRENCY = auto()
 
 
-# IDEA: "preferred" size for description? or something
-# TODO: delete dialogs on close?
-# REFACTOR: refactor this dialog (messy code)
-class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
+class RefundTransactionDialog(QDialog, Ui_RefundTransactionDialog):
     KEEP_CURRENT_VALUES = "Keep current values"
 
     signal_do_and_close = pyqtSignal()
-    signal_do_and_continue = pyqtSignal()
 
     signal_account_changed = pyqtSignal()
 
@@ -67,16 +61,12 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
         self._tags = tags
 
         self._type = CashTransactionType.INCOME
-        self.incomeRadioButton.setChecked(True)
 
         self._categories_income = categories_income
         self._categories_expense = categories_expense
 
         self._initialize_single_category_row()
         self._initialize_single_tag_row()
-
-        self.incomeRadioButton.toggled.connect(self._setup_categories_combobox)
-        self.expenseRadioButton.toggled.connect(self._setup_categories_combobox)
 
         if edit_mode != EditMode.ADD:
             self.dateEdit.setSpecialValueText(self.KEEP_CURRENT_VALUES)
@@ -92,39 +82,10 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
         self._initialize_actions()
         self._initialize_placeholders()
 
-        if edit_mode == EditMode.EDIT_MULTIPLE:
-            self._disable_type()
-            pass
-        elif edit_mode == EditMode.EDIT_MULTIPLE_MIXED_CURRENCY:
-            self._disable_type()
-            self._disable_account()
-            self._disable_amount()
-            self._category_rows[0].enable_split(enable=False)
-            self._tag_rows[0].enable_split(enable=False)
-            pass
-
         self.amountDoubleSpinBox.valueChanged.connect(self._amount_changed)
         self._amount_changed()
         self._set_maximum_amounts(0)
         self._set_tab_order()
-
-    @property
-    def type_(self) -> CashTransactionType:
-        if self.incomeRadioButton.isChecked():
-            return CashTransactionType.INCOME
-        if self.expenseRadioButton.isChecked():
-            return CashTransactionType.EXPENSE
-        raise ValueError("No radio button checked.")
-
-    @type_.setter
-    def type_(self, type_: CashTransactionType) -> None:
-        if type_ == CashTransactionType.INCOME:
-            self.incomeRadioButton.setChecked(True)
-            return
-        if type_ == CashTransactionType.EXPENSE:
-            self.expenseRadioButton.setChecked(True)
-            return
-        raise ValueError("Invalid type_ value.")
 
     @property
     def account(self) -> str | None:
@@ -288,16 +249,11 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
         role = self.buttonBox.buttonRole(button)
         if role == QDialogButtonBox.ButtonRole.AcceptRole:
             self.signal_do_and_close.emit()
-        elif role == QDialogButtonBox.ButtonRole.ApplyRole:
-            self.signal_do_and_continue.emit()
         elif role == QDialogButtonBox.ButtonRole.RejectRole:
             self.reject()
         else:
             raise ValueError("Unknown role of the clicked button in the ButtonBox")
 
-    def _disable_type(self) -> None:
-        self.incomeRadioButton.setEnabled(False)
-        self.expenseRadioButton.setEnabled(False)
 
     def _disable_account(self) -> None:
         self.accountsComboBox.setCurrentText(self.KEEP_CURRENT_VALUES)
@@ -593,22 +549,6 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
     def _amount_changed(self) -> None:
         new_amount = self.amount
 
-        if self._edit_mode == EditMode.EDIT_MULTIPLE:
-            if new_amount is None and len(self._category_rows) > 1:
-                self._reset_category_rows()
-                self._initialize_single_category_row()
-            if new_amount is None and not isinstance(
-                self._tag_rows[0], SingleTagRowWidget
-            ):
-                self._reset_tag_rows()
-                self._initialize_single_tag_row()
-            is_amount_none = new_amount is None
-            if len(self._category_rows) == 1:
-                self._category_rows[0].enable_split(enable=not is_amount_none)
-                self._category_rows[0].require_category(required=not is_amount_none)
-            if len(self._tag_rows) == 1:
-                self._tag_rows[0].enable_split(enable=not is_amount_none)
-
         if new_amount is not None:
             self._set_maximum_amounts(new_amount)
         if len(self._category_rows) > 1:
@@ -643,8 +583,6 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
         adjustable_rows[0].amount += difference
 
     def _set_tab_order(self) -> None:
-        self.setTabOrder(self.incomeRadioButton, self.expenseRadioButton)
-        self.setTabOrder(self.expenseRadioButton, self.accountsComboBox)
         self.setTabOrder(self.accountsComboBox, self.payeeComboBox)
         self.setTabOrder(self.payeeComboBox, self.payeeToolButton)
         self.setTabOrder(self.payeeToolButton, self.dateEdit)

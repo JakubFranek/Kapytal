@@ -113,8 +113,6 @@ class Ui_CashTransactionDialog(object):
         self.actionSelect_Payee.setObjectName("actionSelect_Payee")
         self.actionSelect_Tag = QtGui.QAction(CashTransactionDialog)
         self.actionSelect_Tag.setObjectName("actionSelect_Tag")
-        self.actionSplit_Tags = QtGui.QAction(CashTransactionDialog)
-        self.actionSplit_Tags.setObjectName("actionSplit_Tags")
 
         self.retranslateUi(CashTransactionDialog)
         QtCore.QMetaObject.connectSlotsByName(CashTransactionDialog)
@@ -141,4 +139,3 @@ class Ui_CashTransactionDialog(object):
         self.amountLabel.setText(_translate("CashTransactionDialog", "Amount"))
         self.actionSelect_Payee.setText(_translate("CashTransactionDialog", "Select Payee"))
         self.actionSelect_Tag.setText(_translate("CashTransactionDialog", "Select Tag"))
-        self.actionSplit_Tags.setText(_translate("CashTransactionDialog", "Split Tags"))

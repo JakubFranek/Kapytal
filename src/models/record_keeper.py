@@ -598,11 +598,10 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         transaction_uuids: Collection[str],
         description: str | None = None,
         datetime_: datetime | None = None,
-        transaction_type: CashTransactionType | None = None,
         account_path: str | None = None,
+        payee_name: str | None = None,
         category_path_amount_pairs: Collection[tuple[str, Decimal | None]]
         | None = None,
-        payee_name: str | None = None,
         tag_name_amount_pairs: Collection[tuple[str, Decimal]] | None = None,
     ) -> None:
         refunds = self._get_transactions(transaction_uuids, RefundTransaction)
@@ -625,13 +624,8 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         currency = account.currency if account is not None else refunds[0].currency
 
         if category_path_amount_pairs is not None:
-            category_type = (
-                CategoryType.INCOME
-                if transaction_type == CashTransactionType.INCOME
-                else CategoryType.EXPENSE
-            )
             category_amount_pairs = self._create_category_amount_pairs(
-                category_path_amount_pairs, category_type, currency
+                category_path_amount_pairs, CategoryType.EXPENSE, currency
             )
         else:
             category_amount_pairs = None
