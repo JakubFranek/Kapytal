@@ -8,8 +8,6 @@ from src.views.ui_files.widgets.Ui_transaction_table_widget import (
     Ui_TransactionTableWidget,
 )
 
-# TODO: add Add Tags / Remove Tags actions
-
 
 class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
     signal_search_text_changed = pyqtSignal()
