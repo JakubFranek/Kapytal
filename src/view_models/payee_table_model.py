@@ -80,7 +80,7 @@ class PayeeTableModel(QAbstractTableModel):
         if column == PayeeTableColumn.COLUMN_TRANSACTIONS:
             return payee_stats.no_of_transactions
         if column == PayeeTableColumn.COLUMN_BALANCE:
-            return str(payee_stats.balance)
+            return payee_stats.balance.to_str_rounded()
         return None
 
     def _get_user_role_data(

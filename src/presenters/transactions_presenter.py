@@ -15,11 +15,15 @@ from src.models.record_keeper import RecordKeeper
 from src.presenters.cash_transaction_dialog_presenter import (
     CashTransactionDialogPresenter,
 )
+from src.presenters.transaction_tags_dialog_presenter import (
+    TransactionTagsDialogPresenter,
+)
 from src.presenters.utilities.event import Event
 from src.presenters.utilities.handle_exception import handle_exception
 from src.view_models.transaction_table_model import TransactionTableModel
 from src.views.constants import TransactionTableColumn
 from src.views.utilities.handle_exception import display_error_message
+from src.views.utilities.message_box_functions import ask_yes_no_question
 from src.views.widgets.transaction_table_widget import TransactionTableWidget
 
 
@@ -38,6 +42,9 @@ class TransactionsPresenter:
 
         self._cash_transaction_dialog_presenter = CashTransactionDialogPresenter(
             view, record_keeper, self._model
+        )
+        self._transaction_tags_dialog_presenter = TransactionTagsDialogPresenter(
+            view, record_keeper
         )
 
         self._setup_view()
@@ -62,6 +69,7 @@ class TransactionsPresenter:
     def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
         self._record_keeper = record_keeper
         self._cash_transaction_dialog_presenter.load_record_keeper(record_keeper)
+        self._transaction_tags_dialog_presenter.load_record_keeper(record_keeper)
         self._valid_accounts = record_keeper.accounts
         self.reset_model()
         self._view.resize_table_to_contents()
@@ -154,8 +162,8 @@ class TransactionsPresenter:
         self._view.signal_duplicate.connect(self._duplicate_transaction)
         self._view.signal_edit.connect(self._edit_transactions)
 
-        # TODO: add and remove tags: separate presenter/dialog or just dialog?
-        # self._view.signal_add_tags.connect()
+        self._view.signal_add_tags.connect(self._add_tags)
+        self._view.signal_remove_tags.connect(self._remove_tags)
 
         self._cash_transaction_dialog_presenter.event_update_model.append(
             self.update_model_data
@@ -164,10 +172,26 @@ class TransactionsPresenter:
             self.event_data_changed
         )
 
+        self._transaction_tags_dialog_presenter.event_data_changed.append(
+            self.event_data_changed
+        )
+
     def _delete_transactions(self) -> None:
         transactions = self._model.get_selected_items()
-        if len(transactions) == 0:
+        no_of_transactions = len(transactions)
+        if no_of_transactions == 0:
             raise ValueError("Cannot delete unselected Transaction.")
+
+        logging.debug(
+            f"Asking user to confirm deletion of {no_of_transactions} Transaction(s)"
+        )
+        if not ask_yes_no_question(
+            self._view,
+            f"Are you sure you want to delete {no_of_transactions} Transaction(s)?",
+            "Remove Transactions?",
+        ):
+            logging.debug("User cancelled Transaction(s) deletion")
+            return
 
         any_deleted = False
 
@@ -212,3 +236,29 @@ class TransactionsPresenter:
         display_error_message(
             "All edited Transactions must be of the same type.", title="Warning"
         )
+
+    def _add_tags(self) -> None:
+        transactions = self._model.get_selected_items()
+        if len(transactions) == 0:
+            raise ValueError("Cannot add Tags to zero Transactions.")
+
+        if any(
+            isinstance(transaction, RefundTransaction) for transaction in transactions
+        ):
+            display_error_message("Cannot add Tags to a Refund.", title="Warning")
+            return
+
+        self._transaction_tags_dialog_presenter.run_add_dialog(transactions)
+
+    def _remove_tags(self) -> None:
+        transactions = self._model.get_selected_items()
+        if len(transactions) == 0:
+            raise ValueError("Cannot remove Tags from zero Transactions.")
+
+        if any(
+            isinstance(transaction, RefundTransaction) for transaction in transactions
+        ):
+            display_error_message("Cannot remove Tags from a Refund.", title="Warning")
+            return
+
+        self._transaction_tags_dialog_presenter.run_remove_dialog(transactions)

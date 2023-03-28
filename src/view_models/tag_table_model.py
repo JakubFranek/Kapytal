@@ -80,7 +80,7 @@ class TagTableModel(QAbstractTableModel):
         if column == TagTableColumn.COLUMN_TRANSACTIONS:
             return tag_stats.no_of_transactions
         if column == TagTableColumn.COLUMN_BALANCE:
-            return str(tag_stats.balance)
+            return tag_stats.balance.to_str_rounded()
         return None
 
     def _get_user_role_data(
