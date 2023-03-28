@@ -404,6 +404,91 @@ class CashTransaction(CashRelatedTransaction):
         self._validate_refund(refund)
         self._refunds.remove(refund)
 
+    def get_max_refundable_for_category(
+        self, category: Category, ignore_refund: "RefundTransaction|None"
+    ) -> CashAmount:
+        if category not in self.categories:
+            raise ValueError(
+                f"Category {category} not in this CashTransaction's categories."
+            )
+
+        max_amount = CashAmount(0, self.currency)
+        for _category, _amount in self._category_amount_pairs:
+            if _category != category:
+                continue
+            max_amount = _amount
+
+        if len(self._refunds) == 0:
+            return max_amount
+
+        refunds = [refund for refund in self._refunds if refund != ignore_refund]
+        for refund in refunds:
+            for _category, _amount in refund.category_amount_pairs:
+                if _category != category:
+                    continue
+                max_amount -= _amount
+
+        return max_amount
+
+    def get_max_refundable_for_tag(
+        self,
+        tag: Attribute,
+        ignore_refund: "RefundTransaction|None",
+        refund_amount: CashAmount | None,
+    ) -> CashAmount:
+        if tag not in self.tags:
+            raise ValueError(f"Tag {tag} not in this CashTransaction's tags.")
+
+        max_amount = self.amount
+
+        if len(self._refunds) == 0:
+            if refund_amount is not None:
+                return min(max_amount, refund_amount)
+            return max_amount
+
+        other_refunds = [refund for refund in self._refunds if refund != ignore_refund]
+        for refund in other_refunds:
+            for _tag, _amount in refund.tag_amount_pairs:
+                if _tag != tag:
+                    continue
+                max_amount -= _amount
+
+        return min(max_amount, refund_amount)
+
+    def get_min_refundable_for_tag(
+        self,
+        tag: Attribute,
+        ignore_refund: "RefundTransaction|None",
+        refund_amount: CashAmount,
+    ) -> CashAmount:
+        if tag not in self.tags:
+            raise ValueError(f"Tag {tag} not in this CashTransaction's tags.")
+
+        min_amount = CashAmount(0, self.currency)
+        for _tag, _amount in self._tag_amount_pairs:
+            if _tag != tag:
+                continue
+            min_amount = _amount
+
+        if len(self._refunds) == 0:
+            return min_amount
+
+        other_refunds = [refund for refund in self._refunds if refund != ignore_refund]
+        remaining_amount = self.amount - sum(
+            (refund.amount for refund in other_refunds),
+            start=CashAmount(0, self.currency),
+        )
+        for refund in other_refunds:
+            for _tag, _amount in refund.tag_amount_pairs:
+                if _tag != tag:
+                    continue
+                min_amount -= _amount
+
+        return max(
+            min_amount - (remaining_amount - refund_amount),
+            CashAmount(0, self.currency),
+        )
+
     def is_account_related(self, account: Account) -> bool:
         return self._account == account
 
@@ -1222,7 +1307,7 @@ class RefundTransaction(CashRelatedTransaction):
             start=CashAmount(0, currency),
         )
         self._validate_tag_amount_pairs(
-            tag_amount_pairs, self._refunded_transaction, currency, max_tag_amount
+            tag_amount_pairs, self._refunded_transaction, max_tag_amount
         )
         _validate_payee(payee)
 
@@ -1311,27 +1396,20 @@ class RefundTransaction(CashRelatedTransaction):
         if not refund_amount.value_rounded > 0:
             raise ValueError("Total refunded amount must be positive.")
 
-        max_values = {}
-        for category, amount in refunded_transaction.category_amount_pairs:
-            max_values[category] = amount
-        other_refunds = [
-            refund for refund in refunded_transaction.refunds if refund != self
-        ]
-        for other_refund in other_refunds:
-            for category, amount in other_refund.category_amount_pairs:
-                max_values[category] -= amount
         for category, amount in pairs:
-            if amount > max_values[category]:
+            max_amount = refunded_transaction.get_max_refundable_for_category(
+                category, ignore_refund=self
+            )
+            if amount > max_amount:
                 raise ValueError(
                     f"Refunded amount for category '{category.path}' must not exceed "
-                    f"{max_values[category]}."
+                    f"{max_amount}."
                 )
 
     def _validate_tag_amount_pairs(
         self,
         pairs: Collection[tuple[Attribute, CashAmount]],
         refunded_transaction: CashTransaction,
-        currency: Currency,
         refund_amount: CashAmount,
     ) -> None:
         expected_tags = {tag for tag, _ in refunded_transaction.tag_amount_pairs}
@@ -1352,30 +1430,17 @@ class RefundTransaction(CashRelatedTransaction):
                 "tuples must be a non-negative CashAmount."
             )
 
-        max_values: dict[Attribute, CashAmount] = {}
-        min_values: dict[Attribute, CashAmount] = {}
-        for tag, amount in refunded_transaction.tag_amount_pairs:
-            max_values[tag] = refunded_transaction.amount
-            min_values[tag] = amount
-        other_refunds = [
-            refund for refund in refunded_transaction.refunds if refund != self
-        ]
-        remaining_amount = refunded_transaction.amount - sum(
-            (refund.amount for refund in other_refunds),
-            start=CashAmount(0, currency=currency),
-        )
-        for other_refund in other_refunds:
-            for tag, amount in other_refund.tag_amount_pairs:
-                max_values[tag] -= amount
-                min_values[tag] -= amount
-
         for tag, amount in pairs:
-            min_expected = min_values[tag] - (remaining_amount - refund_amount)
-            min_values[tag] = max(min_expected, CashAmount(0, currency))
-            if amount > max_values[tag] or amount < min_values[tag]:
+            max_value = refunded_transaction.get_max_refundable_for_tag(
+                tag, ignore_refund=self, refund_amount=refund_amount
+            )
+            min_value = refunded_transaction.get_min_refundable_for_tag(
+                tag, ignore_refund=self, refund_amount=refund_amount
+            )
+            if amount > max_value or amount < min_value:
                 raise ValueError(
                     f"Refunded amount for tag '{tag.name}' must be within "
-                    f"{min_values[tag]} and {max_values[tag]}."
+                    f"{min_value} and {max_value}."
                 )
 
     def _get_amount(self, account: CashAccount) -> CashAmount:
