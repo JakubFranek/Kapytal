@@ -155,7 +155,7 @@ class TransactionsPresenter:
         self._view.signal_edit.connect(self._edit_transactions)
 
         # TODO: add and remove tags: separate presenter/dialog or just dialog?
-        self._view.signal_add_tags.connect()
+        # self._view.signal_add_tags.connect()
 
         self._cash_transaction_dialog_presenter.event_update_model.append(
             self.update_model_data
