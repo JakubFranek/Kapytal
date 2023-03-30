@@ -292,6 +292,10 @@ class CashTransaction(CashRelatedTransaction):
         return ", ".join(category_paths)
 
     @property
+    def are_categories_split(self) -> bool:
+        return len(self._category_amount_pairs) > 1
+
+    @property
     def tag_amount_pairs(self) -> tuple[tuple[Attribute, CashAmount], ...]:
         return tuple(self._tag_amount_pairs)
 
@@ -303,6 +307,10 @@ class CashTransaction(CashRelatedTransaction):
     def tag_names(self) -> str:
         tag_names = [tag.name for tag, _ in self._tag_amount_pairs]
         return ", ".join(tag_names)
+
+    @property
+    def are_tags_split(self) -> bool:
+        return any(amount != self.amount for _, amount in self._tag_amount_pairs)
 
     @property
     def refunds(self) -> tuple["RefundTransaction", ...]:
@@ -407,19 +415,14 @@ class CashTransaction(CashRelatedTransaction):
     def get_max_refundable_for_category(
         self, category: Category, ignore_refund: "RefundTransaction|None"
     ) -> CashAmount:
-        if category not in self.categories:
+        for _category, amount in self._category_amount_pairs:
+            if _category == category:
+                max_amount = amount
+                break
+        else:
             raise ValueError(
                 f"Category {category} not in this CashTransaction's categories."
             )
-
-        max_amount = CashAmount(0, self.currency)
-        for _category, _amount in self._category_amount_pairs:
-            if _category != category:
-                continue
-            max_amount = _amount
-
-        if len(self._refunds) == 0:
-            return max_amount
 
         refunds = [refund for refund in self._refunds if refund != ignore_refund]
         for refund in refunds:
@@ -436,15 +439,12 @@ class CashTransaction(CashRelatedTransaction):
         ignore_refund: "RefundTransaction|None",
         refund_amount: CashAmount | None,
     ) -> CashAmount:
-        if tag not in self.tags:
+        for _tag, amount in self._tag_amount_pairs:
+            if _tag == tag:
+                max_amount = amount
+                break
+        else:
             raise ValueError(f"Tag {tag} not in this CashTransaction's tags.")
-
-        max_amount = self.amount
-
-        if len(self._refunds) == 0:
-            if refund_amount is not None:
-                return min(max_amount, refund_amount)
-            return max_amount
 
         other_refunds = [refund for refund in self._refunds if refund != ignore_refund]
         for refund in other_refunds:
@@ -453,25 +453,22 @@ class CashTransaction(CashRelatedTransaction):
                     continue
                 max_amount -= _amount
 
-        return min(max_amount, refund_amount)
+        if refund_amount is not None:
+            return min(max_amount, refund_amount)
+        return max_amount
 
     def get_min_refundable_for_tag(
         self,
         tag: Attribute,
         ignore_refund: "RefundTransaction|None",
-        refund_amount: CashAmount,
+        refund_amount: CashAmount | None,
     ) -> CashAmount:
-        if tag not in self.tags:
+        for _tag, amount in self._tag_amount_pairs:
+            if _tag == tag:
+                max_amount = amount
+                break
+        else:
             raise ValueError(f"Tag {tag} not in this CashTransaction's tags.")
-
-        min_amount = CashAmount(0, self.currency)
-        for _tag, _amount in self._tag_amount_pairs:
-            if _tag != tag:
-                continue
-            min_amount = _amount
-
-        if len(self._refunds) == 0:
-            return min_amount
 
         other_refunds = [refund for refund in self._refunds if refund != ignore_refund]
         remaining_amount = self.amount - sum(
@@ -482,12 +479,18 @@ class CashTransaction(CashRelatedTransaction):
             for _tag, _amount in refund.tag_amount_pairs:
                 if _tag != tag:
                     continue
-                min_amount -= _amount
+                max_amount -= _amount
 
-        return max(
-            min_amount - (remaining_amount - refund_amount),
-            CashAmount(0, self.currency),
-        )
+        if refund_amount is not None:
+            return max(
+                max_amount - (remaining_amount - refund_amount),
+                CashAmount(0, self.currency),
+            )
+
+        min_amount = max_amount - remaining_amount
+        if not min_amount.is_negative():
+            return min_amount
+        return CashAmount(0, self.currency)
 
     def is_account_related(self, account: Account) -> bool:
         return self._account == account

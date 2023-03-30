@@ -732,8 +732,8 @@ def test_get_min_refundable_for_tag_no_refunds(
     transaction: CashTransaction,
 ) -> None:
     transaction.add_tags((Attribute("test_tag", AttributeType.TAG),))
-    tag, expected_amount = transaction.tag_amount_pairs[0]
+    tag, _ = transaction.tag_amount_pairs[0]
     amount = transaction.get_min_refundable_for_tag(
         tag, ignore_refund=None, refund_amount=None
     )
-    assert amount == expected_amount
+    assert amount == CashAmount(0, transaction.currency)

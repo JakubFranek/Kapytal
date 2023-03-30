@@ -242,6 +242,18 @@ class TransactionTableModel(QAbstractTableModel):
                 return QIcon("icons_16:piggy-bank.png")
             if isinstance(transaction, SecurityTransfer):
                 return QIcon("icons_16:bank.png")
+        if (
+            column == TransactionTableColumn.COLUMN_CATEGORY
+            and isinstance(transaction, CashTransaction)
+            and transaction.are_categories_split
+        ):
+            return QIcon("icons_16:arrow-split.png")
+        if (
+            column == TransactionTableColumn.COLUMN_TAG
+            and isinstance(transaction, CashTransaction)
+            and transaction.are_tags_split
+        ):
+            return QIcon("icons_16:arrow-split.png")
         return None
 
     def _get_user_role_data(  # noqa: PLR0911

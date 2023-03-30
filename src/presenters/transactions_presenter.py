@@ -15,6 +15,9 @@ from src.models.record_keeper import RecordKeeper
 from src.presenters.cash_transaction_dialog_presenter import (
     CashTransactionDialogPresenter,
 )
+from src.presenters.refund_transaction_dialog_presenter import (
+    RefundTransactionDialogPresenter,
+)
 from src.presenters.transaction_tags_dialog_presenter import (
     TransactionTagsDialogPresenter,
 )
@@ -46,6 +49,9 @@ class TransactionsPresenter:
         self._transaction_tags_dialog_presenter = TransactionTagsDialogPresenter(
             view, record_keeper
         )
+        self._refund_transaction_dialog_presenter = RefundTransactionDialogPresenter(
+            view, record_keeper, self._model
+        )
 
         self._setup_view()
         self._connect_signals()
@@ -70,6 +76,7 @@ class TransactionsPresenter:
         self._record_keeper = record_keeper
         self._cash_transaction_dialog_presenter.load_record_keeper(record_keeper)
         self._transaction_tags_dialog_presenter.load_record_keeper(record_keeper)
+        self._refund_transaction_dialog_presenter.load_record_keeper(record_keeper)
         self._valid_accounts = record_keeper.accounts
         self.reset_model()
         self._view.resize_table_to_contents()
@@ -165,6 +172,9 @@ class TransactionsPresenter:
         self._view.signal_add_tags.connect(self._add_tags)
         self._view.signal_remove_tags.connect(self._remove_tags)
 
+        self._view.signal_selection_changed.connect(self._selection_changed)
+        self._view.signal_refund.connect(self._refund_transaction)
+
         self._cash_transaction_dialog_presenter.event_update_model.append(
             self.update_model_data
         )
@@ -237,6 +247,9 @@ class TransactionsPresenter:
             "All edited Transactions must be of the same type.", title="Warning"
         )
 
+    def _refund_transaction(self) -> None:
+        self._refund_transaction_dialog_presenter.run_add_dialog(self._valid_accounts)
+
     def _add_tags(self) -> None:
         transactions = self._model.get_selected_items()
         if len(transactions) == 0:
@@ -262,3 +275,17 @@ class TransactionsPresenter:
             return
 
         self._transaction_tags_dialog_presenter.run_remove_dialog(transactions)
+
+    def _selection_changed(self) -> None:
+        transactions = self._model.get_selected_items()
+
+        enable_refund = False
+        if len(transactions) == 1:
+            transaction = transactions[0]
+            if (
+                isinstance(transaction, CashTransaction)
+                and transaction.type_ == CashTransactionType.EXPENSE
+            ):
+                enable_refund = True
+
+        self._view.set_actions(enable_refund=enable_refund)
