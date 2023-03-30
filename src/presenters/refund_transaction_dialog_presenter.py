@@ -1,7 +1,6 @@
 import logging
 from collections.abc import Collection
 from datetime import datetime
-from typing import TYPE_CHECKING
 
 from PyQt6.QtWidgets import QWidget
 from src.models.model_objects.cash_objects import (
@@ -39,24 +38,35 @@ class RefundTransactionDialogPresenter:
         self,
         valid_accounts: Collection[CashAccount],
     ) -> None:
-        logging.debug("Running RefundTransactionDialog (mode=ADD)")
+        logging.debug("Running RefundTransactionDialog (adding)")
         transactions = self._model.get_selected_items()
         if len(transactions) > 1:
             raise ValueError("Cannot refund multiple transactions.")
 
         refunded_transaction = transactions.pop()
-
         self._prepare_dialog(refunded_transaction, edited_refund=None)
 
         self._dialog.account = tuple(valid_accounts)[0].path
         self._dialog.datetime_ = datetime.now(user_settings.settings.time_zone)
 
-        self._dialog.signal_do_and_close.connect(lambda: self._add_refund(close=True))
-
+        self._dialog.signal_do_and_close.connect(self._add_refund)
         self._dialog.exec()
 
-    def _add_refund(self, *, close: bool) -> None:
-        type_ = self._dialog.type_
+    def run_edit_dialog(self) -> None:
+        logging.debug("Running RefundTransactionDialog (editing)")
+        transactions = self._model.get_selected_items()
+        if len(transactions) > 1:
+            display_error_message("Cannot edit multiple Refunds.", title="Warning")
+            return
+
+        refund: RefundTransaction = transactions.pop()
+        self._prepare_dialog(refund.refunded_transaction, edited_refund=refund)
+        self._dialog.signal_do_and_close.connect(self._edit_refund)
+        self._dialog.exec()
+
+    def _add_refund(
+        self,
+    ) -> None:
         account = self._dialog.account
         payee = self._dialog.payee
         if not payee:
@@ -69,8 +79,6 @@ class RefundTransactionDialogPresenter:
             raise ValueError("Expected datetime_, received None.")
         description = self._dialog.description
         total_amount = self._dialog.amount
-        if total_amount is None:
-            raise ValueError("Expected Decimal, received None.")
         if total_amount <= 0:
             display_error_message(
                 "Transaction amount must be positive.", title="Warning"
@@ -78,36 +86,28 @@ class RefundTransactionDialogPresenter:
             return
         category_amount_pairs = self._dialog.category_amount_pairs
         tag_amount_pairs = self._dialog.tag_amount_pairs
-        if any(amount <= 0 for _, amount in tag_amount_pairs):
-            display_error_message("Tag amounts must be positive.", title="Warning")
-            return
 
-        if category_amount_pairs is None:
-            raise ValueError("Expected ((str, Decimal),...), received None.")
         categories = [category for category, _ in category_amount_pairs]
-        if any(not category for category in categories):
-            display_error_message("Empty Category paths are invalid.", title="Warning")
-            return
         tags = [tag for tag, _ in tag_amount_pairs]
-        if any(not tag for tag in tags):
-            display_error_message("Empty Tag names are invalid.", title="Warning")
-            return
+
+        # REFACTOR: refactor RecordKeeper to accept UUID objects instead of strs?
+        refunded_transaction_uuid = str(self._dialog.refunded_transaction.uuid)
 
         logging.info(
-            f"Adding CashTransaction: {datetime_.strftime('%Y-%m-%d')}, "
-            f"{description=}, type={type_.name}, {account=}, {payee=}, "
+            f"Adding RefundTransaction: {datetime_.strftime('%Y-%m-%d')}, "
+            f"{description=}, {account=}, {payee=}, "
             f"amount={str(total_amount)} {self._dialog.currency_code}, "
             f"{categories=}, {tags=}"
         )
         try:
-            self._record_keeper.add_cash_transaction(
-                description,
-                datetime_,
-                type_,
-                account,
-                payee,
-                category_amount_pairs,
-                tag_amount_pairs,
+            self._record_keeper.add_refund(
+                description=description,
+                datetime_=datetime_,
+                refunded_transaction_uuid=refunded_transaction_uuid,
+                refunded_account_path=account,
+                payee_name=payee,
+                category_path_amount_pairs=category_amount_pairs,
+                tag_name_amount_pairs=tag_amount_pairs,
             )
         except Exception as exception:  # noqa: BLE001
             handle_exception(exception)
@@ -116,9 +116,63 @@ class RefundTransactionDialogPresenter:
         self._model.pre_add()
         self.event_update_model()
         self._model.post_add()
-        if close:
-            self._dialog.close()
         self.event_data_changed()
+        self._dialog.close()
+
+    def _edit_refund(
+        self,
+    ) -> None:
+        account = self._dialog.account
+        payee = self._dialog.payee
+        if not payee:
+            display_error_message(
+                "Payee name must be at least 1 character long.", title="Warning"
+            )
+            return
+        datetime_ = self._dialog.datetime_
+        if datetime_ is None:
+            raise ValueError("Expected datetime_, received None.")
+        description = self._dialog.description
+        total_amount = self._dialog.amount
+        if total_amount <= 0:
+            display_error_message(
+                "Transaction amount must be positive.", title="Warning"
+            )
+            return
+        category_amount_pairs = self._dialog.category_amount_pairs
+        tag_amount_pairs = self._dialog.tag_amount_pairs
+
+        categories = [category for category, _ in category_amount_pairs]
+        tags = [tag for tag, _ in tag_amount_pairs]
+
+        refund = self._dialog.edited_refund
+        if refund is None:
+            raise ValueError("Expected RefundTransaction, received None.")
+        refund_uuid = str(refund.uuid)
+
+        logging.info(
+            f"Editing RefundTransaction: {datetime_.strftime('%Y-%m-%d')}, "
+            f"{description=}, {account=}, {payee=}, "
+            f"amount={str(total_amount)} {self._dialog.currency_code}, "
+            f"{categories=}, {tags=}"
+        )
+        try:
+            self._record_keeper.edit_refunds(
+                transaction_uuids=[refund_uuid],
+                description=description,
+                datetime_=datetime_,
+                account_path=account,
+                payee_name=payee,
+                category_path_amount_pairs=category_amount_pairs,
+                tag_name_amount_pairs=tag_amount_pairs,
+            )
+        except Exception as exception:  # noqa: BLE001
+            handle_exception(exception)
+            return
+
+        self.event_update_model()
+        self.event_data_changed()
+        self._dialog.close()
 
     def _prepare_dialog(
         self,

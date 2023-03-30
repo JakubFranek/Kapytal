@@ -186,6 +186,13 @@ class TransactionsPresenter:
             self.event_data_changed
         )
 
+        self._refund_transaction_dialog_presenter.event_update_model.append(
+            self.update_model_data
+        )
+        self._refund_transaction_dialog_presenter.event_data_changed.append(
+            self.event_data_changed
+        )
+
     def _delete_transactions(self) -> None:
         transactions = self._model.get_selected_items()
         no_of_transactions = len(transactions)
@@ -241,6 +248,11 @@ class TransactionsPresenter:
             isinstance(transaction, CashTransaction) for transaction in transactions
         ):
             self._cash_transaction_dialog_presenter.run_edit_dialog(transactions)
+            return
+        if all(
+            isinstance(transaction, RefundTransaction) for transaction in transactions
+        ):
+            self._refund_transaction_dialog_presenter.run_edit_dialog()
             return
 
         display_error_message(

@@ -61,6 +61,9 @@ class RefundTransactionDialog(QDialog, Ui_RefundTransactionDialog):
         self._initialize_actions()
         self._initialize_placeholders()
 
+        if edited_refund is not None:
+            self._initialize_values()
+
         self._set_tab_order()
 
     @property
@@ -104,6 +107,10 @@ class RefundTransactionDialog(QDialog, Ui_RefundTransactionDialog):
     def description(self) -> str:
         return self.descriptionPlainTextEdit.toPlainText()
 
+    @description.setter
+    def description(self, value: str) -> None:
+        self.descriptionPlainTextEdit.setPlainText(value)
+
     @property
     def amount(self) -> Decimal:
         text = self.amountDoubleSpinBox.text()
@@ -125,12 +132,20 @@ class RefundTransactionDialog(QDialog, Ui_RefundTransactionDialog):
         self.amountDoubleSpinBox.decimals()
 
     @property
-    def category_amount_pairs(self) -> tuple[tuple[str | None, Decimal | None]] | None:
+    def category_amount_pairs(self) -> tuple[tuple[str, Decimal]]:
         return tuple((row.text, row.amount) for row in self._category_rows)
 
     @property
     def tag_amount_pairs(self) -> tuple[tuple[str, Decimal]]:
         return tuple((row.text, row.amount) for row in self._tag_rows)
+
+    @property
+    def refunded_transaction(self) -> CashTransaction:
+        return self._refunded_transaction
+
+    @property
+    def edited_refund(self) -> RefundTransaction | None:
+        return self._edited_refund
 
     def reject(self) -> None:
         logging.debug(f"Closing {self.__class__.__name__}")
@@ -173,15 +188,7 @@ class RefundTransactionDialog(QDialog, Ui_RefundTransactionDialog):
             self.accountsComboBox.addItem(icon, account.path)
 
     def _initialize_placeholders(self) -> None:
-        if self._edited_refund is not None:
-            self.descriptionPlainTextEdit.setPlaceholderText(
-                "Leave empty to keep current values"
-            )
-            self.payeeComboBox.lineEdit().setPlaceholderText(
-                "Leave empty to keep current values"
-            )
-        else:
-            self.payeeComboBox.lineEdit().setPlaceholderText("Enter Payee name")
+        self.payeeComboBox.lineEdit().setPlaceholderText("Enter Payee name")
         self.payeeComboBox.setCurrentIndex(-1)
 
     def _initialize_category_rows(self) -> None:
@@ -191,11 +198,11 @@ class RefundTransactionDialog(QDialog, Ui_RefundTransactionDialog):
         for category, amount in self._refunded_transaction.category_amount_pairs:
             row = RefundRowWidget(self, category.path, self.currency_code)
             row.set_min(0)
-            row.set_max(
-                self._refunded_transaction.get_max_refundable_for_category(
-                    category, self._edited_refund
-                ).value_rounded
-            )
+            max_amount = self._refunded_transaction.get_max_refundable_for_category(
+                category, self._edited_refund
+            ).value_rounded
+            row.set_max(max_amount)
+            row.set_spinbox_enabled(enable=max_amount != 0)
             row.amount = amount.value_rounded
             self._category_rows.append(row)
             self.category_rows_vertical_layout.addWidget(row)
@@ -286,3 +293,31 @@ class RefundTransactionDialog(QDialog, Ui_RefundTransactionDialog):
         while index + 1 < len(self._tag_rows):
             self.setTabOrder(self._tag_rows[index], self._tag_rows[index + 1])
             index += 1
+
+    def _initialize_values(self) -> None:
+        if self._edited_refund is None:
+            raise ValueError("Expected RefundTransaction, received None.")
+        self.account = self._edited_refund.account.path
+        self.payee = self._edited_refund.payee.name
+        self.datetime_ = self._edited_refund.datetime_
+        self.description = self._edited_refund.description
+
+        for category, amount in self._edited_refund.category_amount_pairs:
+            for _row in self._category_rows:
+                if _row.text == category.path:
+                    row = _row
+                    break
+            else:
+                raise ValueError(
+                    f"RefundRowWidget for Category '{category.path}' not found."
+                )
+            row.amount = amount.value_rounded
+
+        for tag, amount in self._edited_refund.tag_amount_pairs:
+            for _row in self._tag_rows:
+                if _row.text == tag.name:
+                    row = _row
+                    break
+            else:
+                raise ValueError(f"RefundRowWidget for Tag '{tag.name}' not found.")
+            row.amount = amount.value_rounded
