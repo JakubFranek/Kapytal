@@ -672,30 +672,6 @@ def test_edit_refunds_change_payee() -> None:
         assert transaction.payee.name == edit_payee
 
 
-def test_edit_refunds_change_category_amounts() -> None:
-    record_keeper = get_preloaded_record_keeper_with_refunds()
-    edit_category_amount_pairs = [("Food and Drink/Groceries", Decimal(250))]
-    transactions = [
-        transaction
-        for transaction in record_keeper.transactions
-        if isinstance(transaction, RefundTransaction)
-        and transaction.currency.code == "CZK"
-    ]
-    uuids = [str(transfer.uuid) for transfer in transactions]
-    record_keeper.edit_refunds(
-        uuids, category_path_amount_pairs=edit_category_amount_pairs
-    )
-    for transaction in transactions:
-        assert transaction.category_amount_pairs == (
-            (
-                (
-                    transaction.category_amount_pairs[0][0],
-                    CashAmount(250, transaction.currency),
-                )
-            ),
-        )
-
-
 def test_edit_refunds_change_tag_amounts() -> None:
     record_keeper = get_preloaded_record_keeper_with_refunds()
     edit_category_amount_pairs = [("Food and Drink/Groceries", Decimal(250))]

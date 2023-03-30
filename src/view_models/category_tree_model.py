@@ -122,7 +122,7 @@ class CategoryTreeModel(QAbstractItemModel):
                 return stats.transactions_total
             return f"{stats.transactions_total} ({stats.transactions_self})"
         if column == CategoryTreeColumn.COLUMN_BALANCE:
-            return str(stats.balance.convert(self.base_currency))
+            return stats.balance.convert(self.base_currency).to_str_rounded()
         return None
 
     def headerData(  # noqa: N802

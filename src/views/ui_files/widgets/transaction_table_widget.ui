@@ -202,6 +202,9 @@
    <property name="text">
     <string>Refund</string>
    </property>
+   <property name="toolTip">
+    <string>Only Expense Cash Transactions can be refunded</string>
+   </property>
   </action>
   <action name="actionCash_Transfer">
    <property name="text">
@@ -221,6 +224,9 @@
   <action name="actionEdit">
    <property name="text">
     <string>Edit</string>
+   </property>
+   <property name="toolTip">
+    <string>Only Transactions of same type can be edited</string>
    </property>
   </action>
   <action name="actionDuplicate">

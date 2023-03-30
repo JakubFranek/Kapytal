@@ -26,6 +26,7 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
 
     signal_add_tags = pyqtSignal()
     signal_remove_tags = pyqtSignal()
+    signal_selection_changed = pyqtSignal()
 
     def __init__(self, parent: QWidget | None) -> None:
         super().__init__(parent)
@@ -43,8 +44,10 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
         return self.searchLineEdit.text()
 
     def finalize_setup(self) -> None:
-        self.tableView.selectionModel().selectionChanged.connect(self._set_actions)
-        self._set_actions()
+        self.tableView.selectionModel().selectionChanged.connect(
+            self.signal_selection_changed.emit
+        )
+        self.signal_selection_changed.emit()
 
     def resize_table_to_contents(self) -> None:
         self.tableView.horizontalHeader().setStretchLastSection(False)
@@ -110,12 +113,15 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
     def _create_table_context_menu(self, event: QContextMenuEvent) -> None:
         del event
         self.header_menu = QMenu(self)
+        self.header_menu.setToolTipsVisible(True)
         self.header_menu.addAction(self.actionEdit)
         self.header_menu.addAction(self.actionDuplicate)
         self.header_menu.addAction(self.actionDelete)
         self.header_menu.addSeparator()
         self.header_menu.addAction(self.actionAdd_Tags)
         self.header_menu.addAction(self.actionRemove_Tags)
+        self.header_menu.addSeparator()
+        self.header_menu.addAction(self.actionRefund)
         self.header_menu.popup(QCursor.pos())
 
     def _set_icons(self) -> None:
@@ -192,7 +198,7 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
             self._create_table_context_menu
         )
 
-    def _set_actions(self) -> None:
+    def set_actions(self, *, enable_refund: bool) -> None:
         selected_indexes = self.tableView.selectionModel().selectedIndexes()
         selected_rows = [index for index in selected_indexes if index.column() == 0]
 
@@ -204,6 +210,7 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
         self.actionDelete.setEnabled(is_any_selected)
         self.actionAdd_Tags.setEnabled(is_any_selected)
         self.actionRemove_Tags.setEnabled(is_any_selected)
+        self.actionRefund.setEnabled(enable_refund)
 
     def _reset_column_order(self) -> None:
         header = self.tableView.horizontalHeader()

@@ -594,16 +594,20 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
         new_amount = self.amount
 
         if self._edit_mode == EditMode.EDIT_MULTIPLE:
-            if len(self._category_rows) > 1:
+            if new_amount is None and len(self._category_rows) > 1:
                 self._reset_category_rows()
                 self._initialize_single_category_row()
-            if not isinstance(self._tag_rows[0], SingleTagRowWidget):
+            if new_amount is None and not isinstance(
+                self._tag_rows[0], SingleTagRowWidget
+            ):
                 self._reset_tag_rows()
                 self._initialize_single_tag_row()
             is_amount_none = new_amount is None
-            self._category_rows[0].enable_split(enable=not is_amount_none)
-            self._category_rows[0].require_category(required=not is_amount_none)
-            self._tag_rows[0].enable_split(enable=not is_amount_none)
+            if len(self._category_rows) == 1:
+                self._category_rows[0].enable_split(enable=not is_amount_none)
+                self._category_rows[0].require_category(required=not is_amount_none)
+            if len(self._tag_rows) == 1:
+                self._tag_rows[0].enable_split(enable=not is_amount_none)
 
         if new_amount is not None:
             self._set_maximum_amounts(new_amount)

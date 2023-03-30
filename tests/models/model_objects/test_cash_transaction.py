@@ -658,3 +658,82 @@ def test_is_accounts_related(
     assert transaction.is_accounts_related(related_accounts)
     unrelated_accounts = (unrelated_account,)
     assert not transaction.is_accounts_related(unrelated_accounts)
+
+
+@given(transaction=cash_transactions())
+def test_get_max_refundable_for_category_invalid_category(
+    transaction: CashTransaction,
+) -> None:
+    category = Category("test", CategoryType.INCOME)
+
+    with pytest.raises(ValueError, match="not in this CashTransaction's categories"):
+        transaction.get_max_refundable_for_category(category, ignore_refund=None)
+
+
+@given(transaction=cash_transactions())
+def test_get_max_refundable_for_category_no_refunds(
+    transaction: CashTransaction,
+) -> None:
+    category, expected_amount = transaction.category_amount_pairs[0]
+    amount = transaction.get_max_refundable_for_category(category, ignore_refund=None)
+    assert amount == expected_amount
+
+
+@given(transaction=cash_transactions())
+def test_get_max_refundable_for_tag_invalid_tag(
+    transaction: CashTransaction,
+) -> None:
+    tag = Attribute("test tag", AttributeType.TAG)
+
+    with pytest.raises(ValueError, match="not in this CashTransaction's tags"):
+        transaction.get_max_refundable_for_tag(
+            tag, ignore_refund=None, refund_amount=None
+        )
+
+
+@given(transaction=cash_transactions())
+def test_get_max_refundable_for_tag_no_refunds(
+    transaction: CashTransaction,
+) -> None:
+    transaction.add_tags((Attribute("test_tag", AttributeType.TAG),))
+    tag, _ = transaction.tag_amount_pairs[0]
+    amount = transaction.get_max_refundable_for_tag(
+        tag, ignore_refund=None, refund_amount=None
+    )
+    assert amount == transaction.amount
+
+
+@given(transaction=cash_transactions())
+def test_get_max_refundable_for_tag_no_refunds_w_amount(
+    transaction: CashTransaction,
+) -> None:
+    transaction.add_tags((Attribute("test_tag", AttributeType.TAG),))
+    tag, _ = transaction.tag_amount_pairs[0]
+    amount = transaction.get_max_refundable_for_tag(
+        tag, ignore_refund=None, refund_amount=CashAmount(0, transaction.currency)
+    )
+    assert amount == CashAmount(0, transaction.currency)
+
+
+@given(transaction=cash_transactions())
+def test_get_min_refundable_for_tag_invalid_tag(
+    transaction: CashTransaction,
+) -> None:
+    tag = Attribute("test tag", AttributeType.TAG)
+
+    with pytest.raises(ValueError, match="not in this CashTransaction's tags"):
+        transaction.get_min_refundable_for_tag(
+            tag, ignore_refund=None, refund_amount=None
+        )
+
+
+@given(transaction=cash_transactions())
+def test_get_min_refundable_for_tag_no_refunds(
+    transaction: CashTransaction,
+) -> None:
+    transaction.add_tags((Attribute("test_tag", AttributeType.TAG),))
+    tag, _ = transaction.tag_amount_pairs[0]
+    amount = transaction.get_min_refundable_for_tag(
+        tag, ignore_refund=None, refund_amount=None
+    )
+    assert amount == CashAmount(0, transaction.currency)
