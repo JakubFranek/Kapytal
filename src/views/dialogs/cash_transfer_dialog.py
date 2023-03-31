@@ -262,7 +262,7 @@ class CashTransferDialog(QDialog, Ui_CashTransferDialog):
         self._set_spinboxes_currencies()
 
     def _initialize_placeholders(self) -> None:
-        if self._edit_mode != EditMode.ADD:
+        if self._edit_mode in EditMode.get_multiple_edit_values():
             self.descriptionPlainTextEdit.setPlaceholderText(
                 "Leave empty to keep current values"
             )

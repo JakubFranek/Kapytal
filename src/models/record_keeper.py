@@ -538,7 +538,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         recipient_path: str | None = None,
         amount_sent: Decimal | None = None,
         amount_received: Decimal | None = None,
-        tag_names: Collection[str] = (),
+        tag_names: Collection[str] | None = None,
     ) -> None:
         transfers = self._get_transactions(transaction_uuids, CashTransfer)
 
@@ -580,10 +580,6 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         else:
             _amount_received = None
 
-        tags = [
-            self.get_attribute(tag_name, AttributeType.TAG) for tag_name in tag_names
-        ]
-
         for transfer in transfers:
             transfer.validate_attributes(
                 description=description,
@@ -604,9 +600,14 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
                 recipient=recipient,
             )
 
-        for transfer in transfers:
-            transfer.clear_tags()
-            transfer.add_tags(tags)
+        if tag_names is not None:
+            tags = [
+                self.get_attribute(tag_name, AttributeType.TAG)
+                for tag_name in tag_names
+            ]
+            for transfer in transfers:
+                transfer.clear_tags()
+                transfer.add_tags(tags)
 
     def edit_refunds(  # noqa: PLR0913
         self,
