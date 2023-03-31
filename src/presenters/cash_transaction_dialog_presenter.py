@@ -54,17 +54,15 @@ class CashTransactionDialogPresenter:
         self._prepare_dialog(edit_mode=EditMode.ADD)
 
         self._dialog.type_ = type_
-        self._dialog.account = tuple(valid_accounts)[0].path
+        self._dialog.account_path = tuple(valid_accounts)[0].path
         self._dialog.datetime_ = datetime.now(user_settings.settings.time_zone)
 
-        self._dialog.signal_account_changed.connect(self._dialog_account_changed)
         self._dialog.signal_do_and_close.connect(
             lambda: self._add_cash_transaction(close=True)
         )
         self._dialog.signal_do_and_continue.connect(
             lambda: self._add_cash_transaction(close=False)
         )
-        self._dialog_account_changed()
 
         self._dialog.exec()
 
@@ -73,7 +71,7 @@ class CashTransactionDialogPresenter:
         self._prepare_dialog(edit_mode=EditMode.ADD)
 
         self._dialog.type_ = transaction.type_
-        self._dialog.account = transaction.account.path
+        self._dialog.account_path = transaction.account.path
         self._dialog.amount_decimals = transaction.account.currency.places
         self._dialog.currency_code = transaction.account.currency.code
         self._dialog.payee = transaction.payee.name
@@ -91,14 +89,12 @@ class CashTransactionDialogPresenter:
         ]
         self._dialog.tag_amount_pairs = tag_amount_pairs
 
-        self._dialog.signal_account_changed.connect(self._dialog_account_changed)
         self._dialog.signal_do_and_close.connect(
             lambda: self._add_cash_transaction(close=True)
         )
         self._dialog.signal_do_and_continue.connect(
             lambda: self._add_cash_transaction(close=False)
         )
-        self._dialog_account_changed()
         self._dialog.exec()
 
     def run_edit_dialog(self, transactions: Sequence[CashTransaction]) -> None:
@@ -127,7 +123,7 @@ class CashTransactionDialogPresenter:
         self._dialog.type_ = transactions[0].type_
 
         accounts = {transaction.account.path for transaction in transactions}
-        self._dialog.account = accounts.pop() if len(accounts) == 1 else ""
+        self._dialog.account_path = accounts.pop() if len(accounts) == 1 else ""
 
         currencies = {transaction.currency for transaction in transactions}
         first_currency = currencies.pop()
@@ -182,27 +178,12 @@ class CashTransactionDialogPresenter:
             tag_amount_pairs = ()
         self._dialog.tag_amount_pairs = tag_amount_pairs
 
-        self._dialog.signal_account_changed.connect(self._dialog_account_changed)
         self._dialog.signal_do_and_close.connect(self._edit_cash_transactions)
-        self._dialog_account_changed()
         self._dialog.exec()
-
-    def _dialog_account_changed(self) -> None:
-        account_path = self._dialog.account
-        if account_path is None:
-            return
-        for account in self._record_keeper.accounts:
-            if account.path == account_path:
-                _account: CashAccount = account
-                break
-        else:
-            raise ValueError(f"Invalid Account path: {account_path}")
-        self._dialog.currency_code = _account.currency.code
-        self._dialog.amount_decimals = _account.currency.places
 
     def _add_cash_transaction(self, *, close: bool) -> None:
         type_ = self._dialog.type_
-        account = self._dialog.account
+        account = self._dialog.account_path
         payee = self._dialog.payee
         if not payee:
             display_error_message(
@@ -273,7 +254,7 @@ class CashTransactionDialogPresenter:
         )
 
         type_ = self._dialog.type_
-        account = self._dialog.account
+        account = self._dialog.account_path
         payee = self._dialog.payee
         datetime_ = self._dialog.datetime_
         description = self._dialog.description

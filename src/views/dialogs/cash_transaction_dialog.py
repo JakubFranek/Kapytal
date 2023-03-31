@@ -13,7 +13,6 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-from src.models.base_classes.account import Account
 from src.models.model_objects.cash_objects import CashAccount, CashTransactionType
 from src.models.model_objects.security_objects import SecurityAccount
 from src.models.user_settings import user_settings
@@ -45,12 +44,10 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
     signal_do_and_close = pyqtSignal()
     signal_do_and_continue = pyqtSignal()
 
-    signal_account_changed = pyqtSignal()
-
     def __init__(  # noqa: PLR0913
         self,
         parent: QWidget,
-        accounts: Collection[Account],
+        accounts: Collection[CashAccount],
         payees: Collection[str],
         categories_income: Collection[str],
         categories_expense: Collection[str],
@@ -65,6 +62,7 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
 
         self._edit_mode = edit_mode
         self._tags = tags
+        self._accounts = accounts
 
         self._type = CashTransactionType.INCOME
         self.incomeRadioButton.setChecked(True)
@@ -105,6 +103,7 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
 
         self.amountDoubleSpinBox.valueChanged.connect(self._amount_changed)
         self._amount_changed()
+
         self._set_maximum_amounts(0)
         self._set_tab_order()
 
@@ -127,14 +126,14 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
         raise ValueError("Invalid type_ value.")
 
     @property
-    def account(self) -> str | None:
+    def account_path(self) -> str | None:
         text = self.accountsComboBox.currentText()
         if text == self.KEEP_CURRENT_VALUES:
             return None
         return text
 
-    @account.setter
-    def account(self, account: str) -> None:
+    @account_path.setter
+    def account_path(self, account: str) -> None:
         self.accountsComboBox.setCurrentText(account)
 
     @property
@@ -329,7 +328,7 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
         self.actionSelect_Payee.triggered.connect(self._get_payee)
         self.payeeToolButton.setDefaultAction(self.actionSelect_Payee)
 
-    def _initialize_accounts_combobox(self, accounts: Collection[Account]) -> None:
+    def _initialize_accounts_combobox(self, accounts: Collection[CashAccount]) -> None:
         if self._edit_mode != EditMode.ADD:
             self.accountsComboBox.addItem(self.KEEP_CURRENT_VALUES)
         for account in accounts:
@@ -341,9 +340,8 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
                 raise TypeError("Unexpected Account type.")
             self.accountsComboBox.addItem(icon, account.path)
 
-        self.accountsComboBox.currentTextChanged.connect(
-            self.signal_account_changed.emit
-        )
+        self.accountsComboBox.currentTextChanged.connect(self._account_changed)
+        self._account_changed()
 
     def _initialize_placeholders(self) -> None:
         if self._edit_mode != EditMode.ADD:
@@ -691,3 +689,17 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
                     vertical_layout_count - 1
                 ).widget()
                 self.setTabOrder(self._tag_rows[index], last_widget)
+
+    def _account_changed(self) -> None:
+        account_path = self.account_path
+        if account_path is None:
+            return
+
+        for account in self._accounts:
+            if account.path == account_path:
+                _account = account
+                break
+        else:
+            raise ValueError(f"Invalid Account path: {account_path}")
+        self.currency_code = _account.currency.code
+        self.amount_decimals = _account.currency.places
