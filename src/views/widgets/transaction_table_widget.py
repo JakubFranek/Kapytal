@@ -77,7 +77,7 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
 
     def show_all_columns(self) -> None:
         for column in TRANSACTION_TABLE_COLUMN_HEADERS:
-            self.set_column_visibility(column, True)
+            self.set_column_visibility(column, show=True)
 
     def _create_column_actions(self) -> None:
         self.column_actions: list[QAction] = []

@@ -515,6 +515,10 @@ class CashTransaction(CashRelatedTransaction):
         self._account.remove_transaction(self)
 
     def add_tags(self, tags: Collection[Attribute]) -> None:
+        if self.is_refunded:
+            raise InvalidOperationError(
+                "Cannot add Tags to a refunded CashTransaction."
+            )
         self._validate_tags(tags)
         new_tags = tuple(tag for tag in tags if tag not in self.tags)
         tag_amount_pairs = list(self._tag_amount_pairs)
@@ -525,6 +529,10 @@ class CashTransaction(CashRelatedTransaction):
         self._tag_amount_pairs = tag_amount_pairs
 
     def remove_tags(self, tags: Collection[Attribute]) -> None:
+        if self.is_refunded:
+            raise InvalidOperationError(
+                "Cannot remove Tags from a refunded CashTransaction."
+            )
         self._validate_tags(tags)
         tags_to_remove = tuple(tag for tag in tags if tag in self.tags)
         tag_amount_pairs = [

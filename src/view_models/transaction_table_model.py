@@ -20,6 +20,8 @@ from src.models.model_objects.security_objects import (
 )
 from src.views.constants import TRANSACTION_TABLE_COLUMN_HEADERS, TransactionTableColumn
 
+# TODO: look into overriding "multidata" method to improve performance
+
 
 class TransactionTableModel(QAbstractTableModel):
     def __init__(
@@ -325,7 +327,14 @@ class TransactionTableModel(QAbstractTableModel):
 
     @staticmethod
     def _get_transaction_type(transaction: Transaction) -> str:
-        if isinstance(transaction, CashTransaction | SecurityTransaction):
+        if isinstance(transaction, CashTransaction):
+            if (
+                transaction.type_ == CashTransactionType.EXPENSE
+                and transaction.is_refunded
+            ):
+                return transaction.type_.name.capitalize() + " (Refunded)"
+            return transaction.type_.name.capitalize()
+        if isinstance(transaction, SecurityTransaction):
             return transaction.type_.name.capitalize()
         if isinstance(transaction, CashTransfer):
             return "Cash Transfer"

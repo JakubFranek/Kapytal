@@ -31,6 +31,7 @@
 
 1. encryption
 1. web scraping option for pension funds
+1. transaction table pagination?
 
 ## Nice to haves
 

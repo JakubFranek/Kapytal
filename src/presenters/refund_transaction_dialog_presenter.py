@@ -17,6 +17,7 @@ from src.views.dialogs.refund_transaction_dialog import RefundTransactionDialog
 from src.views.utilities.handle_exception import display_error_message
 
 # TODO: add are you sure question when datetime is in the future in presenters
+# TODO: add a way to find Refunds of refunded CashTransactions in TransactionTable
 
 
 class RefundTransactionDialogPresenter:
