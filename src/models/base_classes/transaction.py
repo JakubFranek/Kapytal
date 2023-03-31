@@ -52,7 +52,7 @@ class Transaction(
         return self._datetime
 
     @property
-    def tags(self) -> tuple[Attribute]:
+    def tags(self) -> tuple[Attribute, ...]:
         return tuple(self._tags)
 
     def _validate_datetime(self, value: datetime) -> None:

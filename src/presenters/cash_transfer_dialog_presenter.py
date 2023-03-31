@@ -3,7 +3,7 @@ from collections.abc import Collection
 from datetime import datetime
 
 from PyQt6.QtWidgets import QWidget
-from src.models.model_objects.cash_objects import CashAccount
+from src.models.model_objects.cash_objects import CashAccount, CashTransfer
 from src.models.record_keeper import RecordKeeper
 from src.models.user_settings import user_settings
 from src.presenters.utilities.event import Event
@@ -52,6 +52,26 @@ class CashTransferDialogPresenter:
             lambda: self._add_cash_transfer(close=False)
         )
 
+        self._dialog.exec()
+
+    def run_duplicate_dialog(self, transfer: CashTransfer) -> None:
+        logging.debug("Running duplicate CashTransferDialog (edit_mode=ADD)")
+        self._prepare_dialog(edit_mode=EditMode.ADD)
+
+        self._dialog.sender_path = transfer.sender.path
+        self._dialog.recipient_path = transfer.recipient.path
+        self._dialog.amount_sent = transfer.amount_sent.value_rounded
+        self._dialog.amount_received = transfer.amount_received.value_rounded
+        self._dialog.datetime_ = transfer.datetime_
+        self._dialog.description = transfer.description
+        self._dialog.tags = transfer.tags
+
+        self._dialog.signal_do_and_close.connect(
+            lambda: self._add_cash_transfer(close=True)
+        )
+        self._dialog.signal_do_and_continue.connect(
+            lambda: self._add_cash_transfer(close=False)
+        )
         self._dialog.exec()
 
     def _add_cash_transfer(self, *, close: bool) -> None:

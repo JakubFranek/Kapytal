@@ -255,6 +255,8 @@ class TransactionsPresenter:
         transaction = transactions[0]
         if isinstance(transaction, CashTransaction):
             self._cash_transaction_dialog_presenter.run_duplicate_dialog(transaction)
+        if isinstance(transaction, CashTransfer):
+            self._cash_transfer_dialog_presenter.run_duplicate_dialog(transaction)
 
     def _edit_transactions(self) -> None:
         transactions = self._model.get_selected_items()
