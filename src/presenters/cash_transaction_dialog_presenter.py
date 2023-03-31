@@ -293,7 +293,7 @@ class CashTransactionDialogPresenter:
         if description is not None:
             log.append(f"{description=}")
         if datetime_ is not None:
-            log.append(f"datetime={datetime_.strftime('%Y-%m-%d')}")
+            log.append(f"date={datetime_.strftime('%Y-%m-%d')}")
         if change_type:
             log.append(f"type='{type_.name}'")
         if account is not None:

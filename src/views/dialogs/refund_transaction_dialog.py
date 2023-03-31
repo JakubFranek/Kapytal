@@ -75,16 +75,15 @@ class RefundTransactionDialog(QDialog, Ui_RefundTransactionDialog):
         self.accountsComboBox.setCurrentText(value)
 
     @property
-    def payee(self) -> str | None:
-        text = self.payeeComboBox.currentText()
-        return text if text else None
+    def payee(self) -> str:
+        return self.payeeComboBox.currentText()
 
     @payee.setter
     def payee(self, value: str) -> None:
         self.payeeComboBox.setCurrentText(value)
 
     @property
-    def datetime_(self) -> datetime | None:
+    def datetime_(self) -> datetime:
         return (
             self.dateEdit.dateTime()
             .toPyDateTime()
@@ -132,11 +131,11 @@ class RefundTransactionDialog(QDialog, Ui_RefundTransactionDialog):
         self.amountDoubleSpinBox.decimals()
 
     @property
-    def category_amount_pairs(self) -> tuple[tuple[str, Decimal]]:
+    def category_amount_pairs(self) -> tuple[tuple[str, Decimal], ...]:
         return tuple((row.text, row.amount) for row in self._category_rows)
 
     @property
-    def tag_amount_pairs(self) -> tuple[tuple[str, Decimal]]:
+    def tag_amount_pairs(self) -> tuple[tuple[str, Decimal], ...]:
         return tuple((row.text, row.amount) for row in self._tag_rows)
 
     @property

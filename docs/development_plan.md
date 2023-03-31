@@ -2,9 +2,6 @@
 
 ## Must haves
 
-1. editing CashTransactions
-1. adding / removing Tags to / from Transactions
-1. refunds
 1. CashTransfers
 1. SecurityTransactions
 1. SecurityTransfers
@@ -27,6 +24,8 @@
 1. reports
     - cashflow
     - pie charts
+1. recurrent / scheduled transactions
+1. documentation
 
 ## Should haves
 
@@ -34,3 +33,6 @@
 1. web scraping option for pension funds
 
 ## Nice to haves
+
+1. budgets
+1. envelopes

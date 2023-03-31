@@ -16,6 +16,8 @@ from src.view_models.transaction_table_model import TransactionTableModel
 from src.views.dialogs.refund_transaction_dialog import RefundTransactionDialog
 from src.views.utilities.handle_exception import display_error_message
 
+# TODO: add are you sure question when datetime is in the future in presenters
+
 
 class RefundTransactionDialogPresenter:
     event_update_model = Event()
@@ -130,8 +132,6 @@ class RefundTransactionDialogPresenter:
             )
             return
         datetime_ = self._dialog.datetime_
-        if datetime_ is None:
-            raise ValueError("Expected datetime_, received None.")
         description = self._dialog.description
         total_amount = self._dialog.amount
         if total_amount <= 0:
@@ -142,20 +142,33 @@ class RefundTransactionDialogPresenter:
         category_amount_pairs = self._dialog.category_amount_pairs
         tag_amount_pairs = self._dialog.tag_amount_pairs
 
-        categories = [category for category, _ in category_amount_pairs]
-        tags = [tag for tag, _ in tag_amount_pairs]
-
         refund = self._dialog.edited_refund
         if refund is None:
             raise ValueError("Expected RefundTransaction, received None.")
         refund_uuid = str(refund.uuid)
 
-        logging.info(
-            f"Editing RefundTransaction: {datetime_.strftime('%Y-%m-%d')}, "
-            f"{description=}, {account=}, {payee=}, "
-            f"amount={str(total_amount)} {self._dialog.currency_code}, "
-            f"{categories=}, {tags=}"
+        log = []
+        if description != refund.description:
+            log.append(f"{description=}")
+        if datetime_ != refund.datetime_:
+            log.append(f"date={datetime_.strftime('%Y-%m-%d')}")
+        if account != refund.account.path:
+            log.append(f"{account=}")
+        if payee != refund.payee.name:
+            log.append(f"{payee=}")
+        original_category_amount_pairs = tuple(
+            (category.path, amount.value_rounded)
+            for category, amount in refund.category_amount_pairs
         )
+        if category_amount_pairs != original_category_amount_pairs:
+            log.append(f"{category_amount_pairs=}")
+
+        original_tag_amount_pairs = tuple(
+            (tag.name, amount.value_rounded) for tag, amount in refund.tag_amount_pairs
+        )
+        if tag_amount_pairs != original_tag_amount_pairs:
+            log.append(f"{tag_amount_pairs=}")
+        logging.info(f"Editing RefundTransaction: {', '.join(log)}, uuid={refund_uuid}")
         try:
             self._record_keeper.edit_refunds(
                 transaction_uuids=[refund_uuid],
