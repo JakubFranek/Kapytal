@@ -119,7 +119,7 @@ class CashTransferDialog(QDialog, Ui_CashTransferDialog):
         self.sentDoubleSpinBox.setValue(amount)
 
     @property
-    def amount_recieved(self) -> Decimal | None:
+    def amount_received(self) -> Decimal | None:
         text = self.receivedDoubleSpinBox.text()
         if text == self.KEEP_CURRENT_VALUES:
             return None
@@ -130,8 +130,8 @@ class CashTransferDialog(QDialog, Ui_CashTransferDialog):
             text = text.replace(",", "")
         return Decimal(text)
 
-    @amount_recieved.setter
-    def amount_recieved(self, amount: Decimal) -> None:
+    @amount_received.setter
+    def amount_received(self, amount: Decimal) -> None:
         self.receivedDoubleSpinBox.setValue(amount)
 
     @property
@@ -174,8 +174,8 @@ class CashTransferDialog(QDialog, Ui_CashTransferDialog):
             return
 
         try:
-            rate_primary = self.amount_recieved / self.amount_sent
-            rate_secondary = self.amount_sent / self.amount_recieved
+            rate_primary = self.amount_received / self.amount_sent
+            rate_secondary = self.amount_sent / self.amount_received
             rate_primary = round(rate_primary, 2 * recipient.currency.places)
             rate_secondary = round(rate_secondary, 2 * sender.currency.places)
         except (InvalidOperation, DivisionByZero):

@@ -1,9 +1,9 @@
 import logging
-from collections.abc import Collection, Sequence
+from collections.abc import Collection
 from datetime import datetime
 
 from PyQt6.QtWidgets import QWidget
-from src.models.model_objects.cash_objects import CashAccount, CashTransfer
+from src.models.model_objects.cash_objects import CashAccount
 from src.models.record_keeper import RecordKeeper
 from src.models.user_settings import user_settings
 from src.presenters.utilities.event import Event
@@ -45,7 +45,62 @@ class CashTransferDialogPresenter:
         self._dialog.recipient_path = tuple(valid_accounts)[0].path
         self._dialog.datetime_ = datetime.now(user_settings.settings.time_zone)
 
+        self._dialog.signal_do_and_close.connect(
+            lambda: self._add_cash_transfer(close=True)
+        )
+        self._dialog.signal_do_and_continue.connect(
+            lambda: self._add_cash_transfer(close=False)
+        )
+
         self._dialog.exec()
+
+    def _add_cash_transfer(self, *, close: bool) -> None:
+        sender_path = self._dialog.sender_path
+        recipient_path = self._dialog.recipient_path
+        datetime_ = self._dialog.datetime_
+        if datetime_ is None:
+            raise ValueError("Expected datetime_, received None.")
+        description = (
+            self._dialog.description if self._dialog.description is not None else ""
+        )
+        amount_sent = self._dialog.amount_sent
+        if amount_sent is None:
+            raise ValueError("Expected Decimal, received None.")
+        amount_received = self._dialog.amount_received
+        if amount_received is None:
+            raise ValueError("Expected Decimal, received None.")
+        if amount_sent <= 0 or amount_received <= 0:
+            display_error_message(
+                "Sent and received amounts must be positive.", title="Warning"
+            )
+            return
+        tags = self._dialog.tags
+
+        logging.info(
+            f"Adding CashTransfer: {datetime_.strftime('%Y-%m-%d')}, "
+            f"{description=}, sender={sender_path}, sent={amount_sent}, "
+            f"recipient={recipient_path}, received={amount_received},{tags=}"
+        )
+        try:
+            self._record_keeper.add_cash_transfer(
+                description,
+                datetime_,
+                sender_path,
+                recipient_path,
+                amount_sent,
+                amount_received,
+                tags,
+            )
+        except Exception as exception:  # noqa: BLE001
+            handle_exception(exception)
+            return
+
+        self._model.pre_add()
+        self.event_update_model()
+        self._model.post_add()
+        if close:
+            self._dialog.close()
+        self.event_data_changed()
 
     def _prepare_dialog(self, edit_mode: EditMode) -> bool:
         accounts = [
