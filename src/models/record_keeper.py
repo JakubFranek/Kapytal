@@ -538,6 +538,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         recipient_path: str | None = None,
         amount_sent: Decimal | None = None,
         amount_received: Decimal | None = None,
+        tag_names: Collection[str] = (),
     ) -> None:
         transfers = self._get_transactions(transaction_uuids, CashTransfer)
 
@@ -552,32 +553,36 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
             recipient = None
 
         if amount_sent is not None:
-            if not all(
-                transfer.sender.currency == transfers[0].sender.currency
-                for transfer in transfers
-            ):
-                raise CurrencyError(
-                    "If amount_sent is to be changed, all sender CashAccounts "
-                    "must be of same Currency."
-                )
-            _amount_sent = CashAmount(amount_sent, transfers[0].sender.currency)
+            if sender is not None:
+                _amount_sent = CashAmount(amount_sent, sender.currency)
+            else:
+                if len({transfer.sender.currency for transfer in transfers}) != 1:
+                    raise CurrencyError(
+                        "If amount_sent is to be changed, all sender CashAccounts "
+                        "must be of same Currency."
+                    )
+                _amount_sent = CashAmount(amount_sent, transfers[0].sender.currency)
         else:
             _amount_sent = None
 
         if amount_received is not None:
-            if not all(
-                transfer.recipient.currency == transfers[0].recipient.currency
-                for transfer in transfers
-            ):
-                raise CurrencyError(
-                    "If amount_received is to be changed, all recipient CashAccounts "
-                    "must be of same Currency."
+            if recipient is not None:
+                _amount_received = CashAmount(amount_received, recipient.currency)
+            else:
+                if len({transfer.recipient.currency for transfer in transfers}) != 1:
+                    raise CurrencyError(
+                        "If amount_received is to be changed, all recipient CashAccounts "
+                        "must be of same Currency."
+                    )
+                _amount_received = CashAmount(
+                    amount_received, transfers[0].recipient.currency
                 )
-            _amount_received = CashAmount(
-                amount_received, transfers[0].recipient.currency
-            )
         else:
             _amount_received = None
+
+        tags = [
+            self.get_attribute(tag_name, AttributeType.TAG) for tag_name in tag_names
+        ]
 
         for transfer in transfers:
             transfer.validate_attributes(
@@ -598,6 +603,10 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
                 sender=sender,
                 recipient=recipient,
             )
+
+        for transfer in transfers:
+            transfer.clear_tags()
+            transfer.add_tags(tags)
 
     def edit_refunds(  # noqa: PLR0913
         self,

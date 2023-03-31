@@ -86,6 +86,9 @@ class Transaction(
             if tag in self._tags:
                 self._tags.remove(tag)
 
+    def clear_tags(self) -> None:
+        self._tags.clear()
+
     def _validate_tags(self, tags: Collection[Attribute]) -> None:
         if not isinstance(tags, Collection):
             raise TypeError("Parameter 'tags' must be a Collection.")

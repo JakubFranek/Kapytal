@@ -45,6 +45,9 @@ class MultipleTagsSelectorWidget(QWidget):
         text = "; ".join(values)
         self.line_edit.setText(text)
 
+    def set_placeholder_text(self, text: str) -> None:
+        self.line_edit.setPlaceholderText(text)
+
     def _select_tag(self) -> None:
         tag = ask_user_for_selection(
             self,

@@ -1,5 +1,5 @@
 import logging
-from collections.abc import Collection
+from collections.abc import Collection, Sequence
 from datetime import datetime
 
 from PyQt6.QtWidgets import QWidget
@@ -74,6 +74,53 @@ class CashTransferDialogPresenter:
         )
         self._dialog.exec()
 
+    def run_edit_dialog(self, transfers: Sequence[CashTransfer]) -> None:
+        sender_paths = {transfer.sender.path for transfer in transfers}
+        recipient_paths = {transfer.recipient.path for transfer in transfers}
+
+        sender_currencies = {transfer.sender.currency for transfer in transfers}
+        recipient_currencies = {transfer.recipient.currency for transfer in transfers}
+
+        if len(transfers) == 1:
+            edit_mode = EditMode.EDIT_SINGLE
+        elif len(sender_paths) > 1 and len(recipient_paths) > 1:
+            edit_mode = EditMode.EDIT_MULTIPLE_MIXED_CURRENCY
+        elif len(sender_currencies) > 1:
+            edit_mode = EditMode.EDIT_MULTIPLE_SENDER_MIXED_CURRENCY
+        elif len(recipient_currencies) > 1:
+            edit_mode = EditMode.EDIT_MULTIPLE_RECIPIENT_MIXED_CURRENCY
+        else:
+            edit_mode = EditMode.EDIT_MULTIPLE
+
+        logging.debug(f"Running CashTransactionDialog (edit_mode={edit_mode.name})")
+
+        self._prepare_dialog(edit_mode=edit_mode)
+
+        self._dialog.sender_path = sender_paths.pop() if len(sender_paths) == 1 else ""
+        self._dialog.recipient_path = (
+            recipient_paths.pop() if len(recipient_paths) == 1 else ""
+        )
+
+        datetimes = {transfer.datetime_ for transfer in transfers}
+        self._dialog.datetime_ = (
+            datetimes.pop() if len(datetimes) == 1 else self._dialog.min_datetime
+        )
+
+        descriptions = {transfer.description for transfer in transfers}
+        self._dialog.description = descriptions.pop() if len(descriptions) == 1 else ""
+
+        amounts_sent = {transfer.amount_sent.value_rounded for transfer in transfers}
+        amounts_received = {
+            transfer.amount_received.value_rounded for transfer in transfers
+        }
+        self._dialog.amount_sent = amounts_sent.pop() if len(amounts_sent) == 1 else 0
+        self._dialog.amount_received = (
+            amounts_received.pop() if len(amounts_received) == 1 else 0
+        )
+
+        self._dialog.signal_do_and_close.connect(self._edit_cash_transfers)
+        self._dialog.exec()
+
     def _add_cash_transfer(self, *, close: bool) -> None:
         sender_path = self._dialog.sender_path
         recipient_path = self._dialog.recipient_path
@@ -120,6 +167,56 @@ class CashTransferDialogPresenter:
         self._model.post_add()
         if close:
             self._dialog.close()
+        self.event_data_changed()
+
+    def _edit_cash_transfers(self) -> None:
+        transactions: list[CashTransfer] = self._model.get_selected_items()
+        uuids = [str(transaction.uuid) for transaction in transactions]
+
+        sender_path = self._dialog.sender_path
+        recipient_path = self._dialog.recipient_path
+        amount_sent = self._dialog.amount_sent
+        amount_received = self._dialog.amount_received
+        datetime_ = self._dialog.datetime_
+        description = self._dialog.description
+        tags = self._dialog.tags
+
+        log = []
+        if description is not None:
+            log.append(f"{description=}")
+        if datetime_ is not None:
+            log.append(f"date={datetime_.strftime('%Y-%m-%d')}")
+        if sender_path is not None:
+            log.append(f"sender='{sender_path}'")
+        if recipient_path is not None:
+            log.append(f"recipient='{recipient_path}'")
+        if amount_sent is not None:
+            log.append(f"sent={amount_sent}")
+        if amount_received is not None:
+            log.append(f"received={amount_received}")
+        if tags is not None:
+            log.append(f"tags={tags}")
+        logging.info(
+            f"Editing {len(transactions)} CashTransaction(s): {', '.join(log)}, "
+            f"uuids={uuids}"
+        )
+        try:
+            self._record_keeper.edit_cash_transfers(
+                uuids,
+                description,
+                datetime_,
+                sender_path,
+                recipient_path,
+                amount_sent,
+                amount_received,
+                tags,
+            )
+        except Exception as exception:  # noqa: BLE001
+            handle_exception(exception)
+            return
+
+        self._dialog.close()
+        self.event_update_model()
         self.event_data_changed()
 
     def _prepare_dialog(self, edit_mode: EditMode) -> bool:

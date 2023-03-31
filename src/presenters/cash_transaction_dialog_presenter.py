@@ -118,6 +118,16 @@ class CashTransactionDialogPresenter:
             )
             return
 
+        if any(transaction.is_refunded for transaction in transactions):
+            display_error_message(
+                (
+                    "Cannot edit Cash Transactions that have been refunded. "
+                    "Remove the corresponding Refunds first."
+                ),
+                title="Warning",
+            )
+            return
+
         self._prepare_dialog(edit_mode=edit_mode)
 
         self._dialog.type_ = transactions[0].type_
@@ -204,6 +214,8 @@ class CashTransactionDialogPresenter:
             return
         category_amount_pairs = self._dialog.category_amount_pairs
         tag_amount_pairs = self._dialog.tag_amount_pairs
+        if tag_amount_pairs is None:
+            raise ValueError("Expected ((str, Decimal),...), received None.")
         if any(amount <= 0 for _, amount in tag_amount_pairs):
             display_error_message("Tag amounts must be positive.", title="Warning")
             return

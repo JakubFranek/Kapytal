@@ -597,6 +597,32 @@ def test_edit_cash_transfer_amount_sent_currency_not_same() -> None:
         record_keeper.edit_cash_transfers(uuids, amount_sent=edit_amount_sent)
 
 
+def test_edit_cash_transfer_amounts_currencies_not_same() -> None:
+    record_keeper = get_preloaded_record_keeper_with_cash_transfers()
+    edit_sender = record_keeper.accounts[0]
+    edit_recipient = record_keeper.accounts[1]
+    edit_amount_sent = Decimal(1)
+    edit_amount_received = Decimal(1)
+    transfers = [
+        transaction
+        for transaction in record_keeper.transactions
+        if isinstance(transaction, CashTransfer)
+    ]
+    uuids = [str(transfer.uuid) for transfer in transfers]
+    record_keeper.edit_cash_transfers(
+        uuids,
+        amount_sent=edit_amount_sent,
+        amount_received=edit_amount_received,
+        sender_path=edit_sender.path,
+        recipient_path=edit_recipient.path,
+    )
+    for transfer in transfers:
+        assert transfer.amount_sent.value_normalized == edit_amount_sent
+        assert transfer.amount_received.value_normalized == edit_amount_received
+        assert transfer.sender == edit_sender
+        assert transfer.recipient == edit_recipient
+
+
 def test_edit_cash_transfer_amount_received_currency_not_same() -> None:
     record_keeper = get_preloaded_record_keeper_with_cash_transfers()
     edit_amount_received = Decimal(1)

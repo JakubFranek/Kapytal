@@ -268,6 +268,9 @@ class TransactionsPresenter:
         ):
             self._cash_transaction_dialog_presenter.run_edit_dialog(transactions)
             return
+        if all(isinstance(transaction, CashTransfer) for transaction in transactions):
+            self._cash_transfer_dialog_presenter.run_edit_dialog(transactions)
+            return
         if all(
             isinstance(transaction, RefundTransaction) for transaction in transactions
         ):

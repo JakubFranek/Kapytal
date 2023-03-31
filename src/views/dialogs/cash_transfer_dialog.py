@@ -1,5 +1,5 @@
 from collections.abc import Collection
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal, DivisionByZero, InvalidOperation
 from enum import Enum, auto
 
@@ -24,6 +24,18 @@ class EditMode(Enum):
     ADD = auto()
     EDIT_SINGLE = auto()
     EDIT_MULTIPLE = auto()
+    EDIT_MULTIPLE_SENDER_MIXED_CURRENCY = auto()
+    EDIT_MULTIPLE_RECIPIENT_MIXED_CURRENCY = auto()
+    EDIT_MULTIPLE_MIXED_CURRENCY = auto()
+
+    @staticmethod
+    def get_multiple_edit_values() -> tuple["EditMode", ...]:
+        return (
+            EditMode.EDIT_MULTIPLE,
+            EditMode.EDIT_MULTIPLE_SENDER_MIXED_CURRENCY,
+            EditMode.EDIT_MULTIPLE_RECIPIENT_MIXED_CURRENCY,
+            EditMode.EDIT_MULTIPLE_MIXED_CURRENCY,
+        )
 
 
 class CashTransferDialog(QDialog, Ui_CashTransferDialog):
@@ -55,6 +67,7 @@ class CashTransferDialog(QDialog, Ui_CashTransferDialog):
         self._initialize_accounts_comboboxes(accounts)
         self._initialize_window()
         self._initialize_placeholders()
+        self._set_spinbox_states()
         self._connect_signals()
 
     @property
@@ -70,6 +83,14 @@ class CashTransferDialog(QDialog, Ui_CashTransferDialog):
     @datetime_.setter
     def datetime_(self, datetime_: datetime) -> None:
         self.dateEdit.setDateTime(datetime_)
+
+    @property
+    def min_datetime(self) -> datetime:
+        return (
+            self.dateEdit.minimumDateTime()
+            .toPyDateTime()
+            .replace(tzinfo=user_settings.settings.time_zone)
+        )
 
     @property
     def sender_path(self) -> str | None:
@@ -135,8 +156,11 @@ class CashTransferDialog(QDialog, Ui_CashTransferDialog):
         self.receivedDoubleSpinBox.setValue(amount)
 
     @property
-    def tags(self) -> tuple[str, ...]:
-        return self.tags_widget.tags
+    def tags(self) -> tuple[str, ...] | None:
+        _tags = self.tags_widget.tags
+        if len(_tags) == 0 and self._edit_mode in EditMode.get_multiple_edit_values():
+            return None
+        return _tags
 
     @tags.setter
     def tags(self, values: Collection[str]) -> None:
@@ -154,18 +178,24 @@ class CashTransferDialog(QDialog, Ui_CashTransferDialog):
             return
 
         account = self._get_account(account_path)
+        if account is None:
+            return
         spinbox.setSuffix(" " + account.currency.code)
         spinbox.setDecimals(account.currency.places)
 
-    def _get_account(self, account_path: str) -> CashAccount:
+    def _get_account(self, account_path: str) -> CashAccount | None:
         for account in self._accounts:
             if account.path == account_path:
                 return account
-        raise ValueError(f"Invalid Account path: {account_path}")
+        if self._edit_mode not in EditMode.get_multiple_edit_values():
+            raise ValueError(f"Invalid Account path: {account_path}")
+        return None
 
     def _set_exchange_rate(self) -> None:
         sender = self._get_account(self.sender_path)
         recipient = self._get_account(self.recipient_path)
+        if sender is None or recipient is None:
+            return
 
         self.exchangeRateLabel.setVisible(sender.currency != recipient.currency)
         self.exchangeRateLineEdit.setVisible(sender.currency != recipient.currency)
@@ -178,7 +208,7 @@ class CashTransferDialog(QDialog, Ui_CashTransferDialog):
             rate_secondary = self.amount_sent / self.amount_received
             rate_primary = round(rate_primary, 2 * recipient.currency.places)
             rate_secondary = round(rate_secondary, 2 * sender.currency.places)
-        except (InvalidOperation, DivisionByZero):
+        except (InvalidOperation, DivisionByZero, TypeError):
             self.exchangeRateLineEdit.setText("Undefined")
             return
 
@@ -217,7 +247,7 @@ class CashTransferDialog(QDialog, Ui_CashTransferDialog):
     def _initialize_accounts_comboboxes(
         self, accounts: Collection[CashAccount]
     ) -> None:
-        if self._edit_mode != EditMode.ADD:
+        if self._edit_mode in EditMode.get_multiple_edit_values():
             self.senderComboBox.addItem(self.KEEP_CURRENT_VALUES)
             self.recipientComboBox.addItem(self.KEEP_CURRENT_VALUES)
         icon = QIcon("icons_16:piggy-bank.png")
@@ -236,6 +266,28 @@ class CashTransferDialog(QDialog, Ui_CashTransferDialog):
             self.descriptionPlainTextEdit.setPlaceholderText(
                 "Leave empty to keep current values"
             )
+            self.dateEdit.setSpecialValueText(self.KEEP_CURRENT_VALUES)
+            self.dateEdit.setMinimumDate(date(1900, 1, 1))
+            self.sentDoubleSpinBox.setSpecialValueText(self.KEEP_CURRENT_VALUES)
+            self.receivedDoubleSpinBox.setSpecialValueText(self.KEEP_CURRENT_VALUES)
+            self.tags_widget.set_placeholder_text("Leave empty to keep current values")
+
+    def _set_spinbox_states(self) -> None:
+        sender_specified = self.sender_path is not None
+        recipient_specified = self.recipient_path is not None
+
+        if self._edit_mode == EditMode.EDIT_MULTIPLE_SENDER_MIXED_CURRENCY:
+            self.sentDoubleSpinBox.setEnabled(sender_specified)
+        elif self._edit_mode == EditMode.EDIT_MULTIPLE_RECIPIENT_MIXED_CURRENCY:
+            self.receivedDoubleSpinBox.setEnabled(recipient_specified)
+        elif self._edit_mode == EditMode.EDIT_MULTIPLE_MIXED_CURRENCY:
+            self.sentDoubleSpinBox.setEnabled(sender_specified)
+            self.receivedDoubleSpinBox.setEnabled(recipient_specified)
+
+        if not sender_specified:
+            self.sentDoubleSpinBox.setValue(0)
+        if not recipient_specified:
+            self.receivedDoubleSpinBox.setValue(0)
 
     def _handle_button_box_click(self, button: QAbstractButton) -> None:
         role = self.buttonBox.buttonRole(button)
@@ -251,3 +303,5 @@ class CashTransferDialog(QDialog, Ui_CashTransferDialog):
     def _connect_signals(self) -> None:
         self.sentDoubleSpinBox.valueChanged.connect(self._set_exchange_rate)
         self.receivedDoubleSpinBox.valueChanged.connect(self._set_exchange_rate)
+        self.senderComboBox.currentTextChanged.connect(self._set_spinbox_states)
+        self.recipientComboBox.currentTextChanged.connect(self._set_spinbox_states)

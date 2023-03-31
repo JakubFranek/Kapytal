@@ -43,3 +43,6 @@ class SingleTagRowWidget(QWidget):
     def enable_split(self, *, enable: bool) -> None:
         self._split_enabled = enable
         self.actionSplit_Tags.setEnabled(enable)
+
+    def set_placeholder_text(self, text: str) -> None:
+        self.tags_widget.set_placeholder_text(text)
