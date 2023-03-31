@@ -88,6 +88,7 @@ class Ui_RefundTransactionDialog(object):
         self.amountDoubleSpinBox.setEnabled(False)
         self.amountDoubleSpinBox.setAlignment(QtCore.Qt.AlignmentFlag.AlignLeading|QtCore.Qt.AlignmentFlag.AlignLeft|QtCore.Qt.AlignmentFlag.AlignVCenter)
         self.amountDoubleSpinBox.setReadOnly(False)
+        self.amountDoubleSpinBox.setButtonSymbols(QtWidgets.QAbstractSpinBox.ButtonSymbols.NoButtons)
         self.amountDoubleSpinBox.setProperty("showGroupSeparator", True)
         self.amountDoubleSpinBox.setMaximum(1e+16)
         self.amountDoubleSpinBox.setObjectName("amountDoubleSpinBox")

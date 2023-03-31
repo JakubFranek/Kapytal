@@ -14,7 +14,6 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 from src.models.model_objects.cash_objects import CashAccount, CashTransactionType
-from src.models.model_objects.security_objects import SecurityAccount
 from src.models.user_settings import user_settings
 from src.views.dialogs.select_item_dialog import ask_user_for_selection
 from src.views.ui_files.dialogs.Ui_cash_transaction_dialog import (
@@ -331,13 +330,8 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
     def _initialize_accounts_combobox(self, accounts: Collection[CashAccount]) -> None:
         if self._edit_mode != EditMode.ADD:
             self.accountsComboBox.addItem(self.KEEP_CURRENT_VALUES)
+        icon = QIcon("icons_16:piggy-bank.png")
         for account in accounts:
-            if isinstance(account, CashAccount):
-                icon = QIcon("icons_16:piggy-bank.png")
-            elif isinstance(account, SecurityAccount):
-                icon = QIcon("icons_16:bank.png")
-            else:
-                raise TypeError("Unexpected Account type.")
             self.accountsComboBox.addItem(icon, account.path)
 
         self.accountsComboBox.currentTextChanged.connect(self._account_changed)
