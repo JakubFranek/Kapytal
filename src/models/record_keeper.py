@@ -312,6 +312,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         account_recipient_path: str,
         amount_sent: Decimal | int | str,
         amount_received: Decimal | int | str,
+        tag_names: Collection[str] = (),
     ) -> None:
         account_sender = self.get_account(account_sender_path, CashAccount)
         account_recipient = self.get_account(account_recipient_path, CashAccount)
@@ -325,6 +326,11 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
             amount_received=CashAmount(amount_received, account_recipient.currency),
         )
         self._transactions.append(transfer)
+
+        tags = [
+            self.get_attribute(tag_name, AttributeType.TAG) for tag_name in tag_names
+        ]
+        transfer.add_tags(tags)
 
     def add_refund(  # noqa: PLR0913
         self,
