@@ -195,6 +195,7 @@ class TransactionsPresenter:
 
         self._view.signal_selection_changed.connect(self._selection_changed)
         self._view.signal_refund.connect(self._refund_transaction)
+        self._view.signal_find_refunds.connect(self._find_refunds)
 
         self._cash_transaction_dialog_presenter.event_update_model.append(
             self.update_model_data
@@ -325,6 +326,7 @@ class TransactionsPresenter:
         transactions = self._model.get_selected_items()
 
         enable_refund = False
+        is_refunded = False
         if len(transactions) == 1:
             transaction = transactions[0]
             if (
@@ -332,5 +334,19 @@ class TransactionsPresenter:
                 and transaction.type_ == CashTransactionType.EXPENSE
             ):
                 enable_refund = True
+                is_refunded = transaction.is_refunded
 
-        self._view.set_actions(enable_refund=enable_refund)
+        self._view.set_actions(enable_refund=enable_refund, is_refunded=is_refunded)
+
+    def _find_refunds(self) -> None:
+        transactions = self._model.get_selected_items()
+        if len(transactions) > 1:
+            raise ValueError("Cannot find Refunds for more than one Transaction.")
+        transaction = transactions[0]
+        if not isinstance(transaction, CashTransaction):
+            raise TypeError("Cannot find Refunds for a non-Cash Transaction.")
+
+        refunds = transaction.refunds
+        uuids = [str(refund.uuid) for refund in refunds]
+        pattern = "|".join(uuids)
+        self._view.search_bar_text = pattern

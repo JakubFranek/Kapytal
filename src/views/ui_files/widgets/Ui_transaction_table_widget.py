@@ -98,6 +98,8 @@ class Ui_TransactionTableWidget(object):
         self.actionAdd_Tags.setObjectName("actionAdd_Tags")
         self.actionRemove_Tags = QtGui.QAction(TransactionTableWidget)
         self.actionRemove_Tags.setObjectName("actionRemove_Tags")
+        self.actionFind_Refunds = QtGui.QAction(TransactionTableWidget)
+        self.actionFind_Refunds.setObjectName("actionFind_Refunds")
 
         self.retranslateUi(TransactionTableWidget)
         QtCore.QMetaObject.connectSlotsByName(TransactionTableWidget)
@@ -123,7 +125,7 @@ class Ui_TransactionTableWidget(object):
         self.actionSell.setText(_translate("TransactionTableWidget", "Sell"))
         self.actionSell.setShortcut(_translate("TransactionTableWidget", "S"))
         self.actionRefund.setText(_translate("TransactionTableWidget", "Refund"))
-        self.actionRefund.setToolTip(_translate("TransactionTableWidget", "Only Expense Cash Transactions can be refunded"))
+        self.actionRefund.setToolTip(_translate("TransactionTableWidget", "Only Expenses can be refunded"))
         self.actionCash_Transfer.setText(_translate("TransactionTableWidget", "Cash Transfer"))
         self.actionSecurity_Transfer.setText(_translate("TransactionTableWidget", "Security Transfer"))
         self.actionDelete.setText(_translate("TransactionTableWidget", "Delete"))
@@ -136,3 +138,5 @@ class Ui_TransactionTableWidget(object):
         self.actionShow_All_Columns.setText(_translate("TransactionTableWidget", "Show All Columns"))
         self.actionAdd_Tags.setText(_translate("TransactionTableWidget", "Add Tags"))
         self.actionRemove_Tags.setText(_translate("TransactionTableWidget", "Remove Tags"))
+        self.actionFind_Refunds.setText(_translate("TransactionTableWidget", "Find Refunds"))
+        self.actionFind_Refunds.setToolTip(_translate("TransactionTableWidget", "Find Refunds of a refunded Expense"))

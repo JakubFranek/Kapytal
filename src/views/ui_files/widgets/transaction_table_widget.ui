@@ -203,7 +203,7 @@
     <string>Refund</string>
    </property>
    <property name="toolTip">
-    <string>Only Expense Cash Transactions can be refunded</string>
+    <string>Only Expenses can be refunded</string>
    </property>
   </action>
   <action name="actionCash_Transfer">
@@ -262,6 +262,14 @@
   <action name="actionRemove_Tags">
    <property name="text">
     <string>Remove Tags</string>
+   </property>
+  </action>
+  <action name="actionFind_Refunds">
+   <property name="text">
+    <string>Find Refunds</string>
+   </property>
+   <property name="toolTip">
+    <string>Find Refunds of a refunded Expense</string>
    </property>
   </action>
  </widget>
