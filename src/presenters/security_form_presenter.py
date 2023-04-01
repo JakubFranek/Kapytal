@@ -118,7 +118,7 @@ class SecurityFormPresenter:
         logging.info(f"Editing Security '{security.name}'")
         try:
             self._record_keeper.edit_security(
-                uuid=uuid, name=name, symbol=symbol, type_=type_
+                uuid_=uuid, name=name, symbol=symbol, type_=type_
             )
         except Exception as exception:  # noqa: BLE001
             handle_exception(exception)

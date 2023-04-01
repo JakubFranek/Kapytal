@@ -542,7 +542,7 @@ def test_add_refund() -> RecordKeeper:
     record_keeper.add_refund(
         "Refund!",
         datetime.now(user_settings.settings.time_zone),
-        str(refunded_transaction.uuid),
+        refunded_transaction.uuid,
         "Bank Accounts/Raiffeisen CZK",
         refunded_transaction.payee.name,
         (("Food and Drink/Groceries", Decimal(1000)),),
@@ -834,7 +834,7 @@ def test_set_security_price(value: Decimal, date_: date) -> None:
     record_keeper.add_currency("EUR", 2)
     record_keeper.add_security("NAME", "SYMBOL", "TYPE", "EUR", 1)
     security = record_keeper.get_security_by_name("NAME")
-    record_keeper.set_security_price(uuid=str(security.uuid), value=value, date_=date_)
+    record_keeper.set_security_price(uuid=security.uuid, value=value, date_=date_)
     assert security.price.value_normalized == value
 
 
@@ -961,7 +961,7 @@ def get_preloaded_record_keeper_with_refunds() -> RecordKeeper:
     record_keeper.add_refund(
         description="An expense transaction",
         datetime_=datetime.now(user_settings.settings.time_zone),
-        refunded_transaction_uuid=str(transaction_cooking.uuid),
+        refunded_transaction_uuid=transaction_cooking.uuid,
         refunded_account_path="Bank Accounts/Raiffeisen CZK",
         category_path_amount_pairs=(("Food and Drink/Groceries", Decimal(250)),),
         payee_name="Albert",
@@ -970,7 +970,7 @@ def get_preloaded_record_keeper_with_refunds() -> RecordKeeper:
     record_keeper.add_refund(
         description="An expense transaction",
         datetime_=datetime.now(user_settings.settings.time_zone),
-        refunded_transaction_uuid=str(transaction_cooking.uuid),
+        refunded_transaction_uuid=transaction_cooking.uuid,
         refunded_account_path="Bank Accounts/Raiffeisen CZK",
         category_path_amount_pairs=(("Food and Drink/Groceries", Decimal(750)),),
         payee_name="Albert",
@@ -979,7 +979,7 @@ def get_preloaded_record_keeper_with_refunds() -> RecordKeeper:
     record_keeper.add_refund(
         description="An expense transaction",
         datetime_=datetime.now(user_settings.settings.time_zone),
-        refunded_transaction_uuid=str(transaction_electronics.uuid),
+        refunded_transaction_uuid=transaction_electronics.uuid,
         refunded_account_path="Bank Accounts/Moneta EUR",
         category_path_amount_pairs=(("Electronics", Decimal(400)),),
         payee_name="Alza",
@@ -1124,7 +1124,7 @@ def get_preloaded_record_keeper_with_various_transactions() -> RecordKeeper:
     record_keeper.add_refund(
         description="An expense transaction",
         datetime_=datetime.now(user_settings.settings.time_zone),
-        refunded_transaction_uuid=str(transaction_electronics.uuid),
+        refunded_transaction_uuid=transaction_electronics.uuid,
         refunded_account_path="Bank Accounts/Moneta EUR",
         category_path_amount_pairs=(("Electronics", Decimal(400)),),
         payee_name="Alza",
