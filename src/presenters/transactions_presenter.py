@@ -1,4 +1,5 @@
 import logging
+import re
 from collections.abc import Collection
 
 from PyQt6.QtCore import QSortFilterProxyModel, Qt
@@ -132,8 +133,18 @@ class TransactionsPresenter:
 
     def _filter(self) -> None:
         pattern = self._view.search_bar_text
+        if self._validate_regex(pattern) is False:
+            return
         logging.debug(f"Filtering Transactions: {pattern=}")
-        self._proxy_model.setFilterWildcard(pattern)
+        self._proxy_model.setFilterRegularExpression(pattern)
+
+    def _validate_regex(self, pattern: str) -> bool:
+        try:
+            re.compile(pattern)
+        except re.error:
+            return False
+        else:
+            return True
 
     def _setup_model(self) -> None:
         self._proxy_model = QSortFilterProxyModel(self._view.tableView)

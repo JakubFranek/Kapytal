@@ -131,7 +131,7 @@
         </size>
        </property>
        <property name="toolTip">
-        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Special characters:&lt;br/&gt;* matches zero or more of any characters&lt;br/&gt;? matches any single character&lt;br/&gt;[...] matches any character within square brackets&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Special regex characters:&lt;/p&gt;&lt;p&gt;* matches zero or more of preceding token&lt;br/&gt;. matches any character&lt;br/&gt;? matches zero or one of preceding token&lt;br/&gt;+ matches one or more of the preceding token&lt;br/&gt;[...] matches any character within square brackets&lt;br/&gt;(...) groups tokens together&lt;br/&gt;^ matches the beginning of a string&lt;br/&gt;$ matches the end of a string&lt;br/&gt;| matches the expression to the right or left&lt;br/&gt;\ escapes a special character&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
        <property name="placeholderText">
         <string>Search Transactions</string>

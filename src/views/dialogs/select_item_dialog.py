@@ -1,3 +1,4 @@
+import logging
 from collections.abc import Collection
 
 from PyQt6.QtCore import QSortFilterProxyModel, Qt
@@ -43,6 +44,9 @@ class SelectItemDialog(QDialog, Ui_SelectItemDialog):
 
     def _filter(self) -> None:
         pattern = self.searchLineEdit.text()
+        if ("[" in pattern and "]" not in pattern) or "[]" in pattern:
+            return
+        logging.debug(f"Filtering items: {pattern=}")
         self._proxy.setFilterWildcard(pattern)
 
     def _handle_button_box_click(self, button: QAbstractButton) -> None:
@@ -70,7 +74,9 @@ def ask_user_for_selection(
     parent: QWidget, item_names: Collection[str], title: str, icon: QIcon
 ) -> str:
     dialog = SelectItemDialog(parent, item_names, title, icon)
+    logging.debug(f"Running SelectItemDialog ({title=})")
     dialog.exec()
     selection = dialog.selection
+    logging.debug(f"SelectItemDialog {selection=}")
     dialog.deleteLater()
     return selection

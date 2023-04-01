@@ -263,6 +263,8 @@ class CategoryFormPresenter:
 
     def _filter(self) -> None:
         pattern = self._view.search_bar_text
+        if ("[" in pattern and "]" not in pattern) or "[]" in pattern:
+            return
         logging.debug(f"Filtering Categories: {pattern=}")
         self._proxy_model.setFilterWildcard(pattern)
         self._view.category_tree.expand_all()
