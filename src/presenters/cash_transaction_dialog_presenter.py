@@ -13,11 +13,10 @@ from src.models.record_keeper import RecordKeeper
 from src.models.user_settings import user_settings
 from src.presenters.utilities.event import Event
 from src.presenters.utilities.handle_exception import handle_exception
+from src.presenters.utilities.validate_inputs import validate_datetime
 from src.view_models.transaction_table_model import TransactionTableModel
 from src.views.dialogs.cash_transaction_dialog import CashTransactionDialog, EditMode
 from src.views.utilities.handle_exception import display_error_message
-
-from presenters.utilities.validate_inputs import validate_datetime
 
 if TYPE_CHECKING:
     from src.models.model_objects.attributes import Category
