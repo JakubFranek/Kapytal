@@ -17,6 +17,8 @@ from src.view_models.transaction_table_model import TransactionTableModel
 from src.views.dialogs.cash_transaction_dialog import CashTransactionDialog, EditMode
 from src.views.utilities.handle_exception import display_error_message
 
+from presenters.utilities.validate_inputs import validate_datetime
+
 if TYPE_CHECKING:
     from src.models.model_objects.attributes import Category
 
@@ -203,6 +205,8 @@ class CashTransactionDialogPresenter:
         datetime_ = self._dialog.datetime_
         if datetime_ is None:
             raise ValueError("Expected datetime_, received None.")
+        if not validate_datetime(datetime_, self._dialog):
+            return
         description = self._dialog.description
         total_amount = self._dialog.amount
         if total_amount is None:
@@ -269,6 +273,8 @@ class CashTransactionDialogPresenter:
         account = self._dialog.account_path
         payee = self._dialog.payee
         datetime_ = self._dialog.datetime_
+        if datetime_ is not None and not validate_datetime(datetime_, self._dialog):
+            return
         description = self._dialog.description
         category_amount_pairs = self._dialog.category_amount_pairs
         tag_amount_pairs = self._dialog.tag_amount_pairs

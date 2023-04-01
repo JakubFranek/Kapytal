@@ -8,6 +8,7 @@ from src.models.record_keeper import RecordKeeper
 from src.models.user_settings import user_settings
 from src.presenters.utilities.event import Event
 from src.presenters.utilities.handle_exception import handle_exception
+from src.presenters.utilities.validate_inputs import validate_datetime
 from src.view_models.transaction_table_model import TransactionTableModel
 from src.views.dialogs.cash_transfer_dialog import CashTransferDialog, EditMode
 from src.views.utilities.handle_exception import display_error_message
@@ -127,6 +128,8 @@ class CashTransferDialogPresenter:
         datetime_ = self._dialog.datetime_
         if datetime_ is None:
             raise ValueError("Expected datetime_, received None.")
+        if not validate_datetime(datetime_, self._dialog):
+            return
         description = (
             self._dialog.description if self._dialog.description is not None else ""
         )
@@ -178,6 +181,8 @@ class CashTransferDialogPresenter:
         amount_sent = self._dialog.amount_sent
         amount_received = self._dialog.amount_received
         datetime_ = self._dialog.datetime_
+        if datetime_ is not None and not validate_datetime(datetime_, self._dialog):
+            return
         description = self._dialog.description
         tags = self._dialog.tags
 

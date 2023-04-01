@@ -12,6 +12,7 @@ from src.models.record_keeper import RecordKeeper
 from src.models.user_settings import user_settings
 from src.presenters.utilities.event import Event
 from src.presenters.utilities.handle_exception import handle_exception
+from src.presenters.utilities.validate_inputs import validate_datetime
 from src.view_models.transaction_table_model import TransactionTableModel
 from src.views.dialogs.refund_transaction_dialog import RefundTransactionDialog
 from src.views.utilities.handle_exception import display_error_message
@@ -79,6 +80,8 @@ class RefundTransactionDialogPresenter:
         datetime_ = self._dialog.datetime_
         if datetime_ is None:
             raise ValueError("Expected datetime_, received None.")
+        if not validate_datetime(datetime_, self._dialog):
+            return
         description = self._dialog.description
         total_amount = self._dialog.amount
         if total_amount <= 0:
@@ -132,6 +135,8 @@ class RefundTransactionDialogPresenter:
             )
             return
         datetime_ = self._dialog.datetime_
+        if datetime_ is not None and not validate_datetime(datetime_, self._dialog):
+            return
         description = self._dialog.description
         total_amount = self._dialog.amount
         if total_amount <= 0:
