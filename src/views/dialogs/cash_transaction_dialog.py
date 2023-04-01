@@ -14,7 +14,6 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 from src.models.model_objects.cash_objects import CashAccount, CashTransactionType
-from src.models.model_objects.security_objects import SecurityAccount
 from src.models.user_settings import user_settings
 from src.views.dialogs.select_item_dialog import ask_user_for_selection
 from src.views.ui_files.dialogs.Ui_cash_transaction_dialog import (
@@ -33,6 +32,10 @@ class EditMode(Enum):
     EDIT_SINGLE = auto()
     EDIT_MULTIPLE = auto()
     EDIT_MULTIPLE_MIXED_CURRENCY = auto()
+
+    @staticmethod
+    def get_multiple_edit_values() -> tuple["EditMode", ...]:
+        return (EditMode.EDIT_MULTIPLE, EditMode.EDIT_MULTIPLE_MIXED_CURRENCY)
 
 
 # IDEA: "preferred" size for description? or something
@@ -220,7 +223,9 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
                 row.amount_decimals = value
 
     @property
-    def category_amount_pairs(self) -> tuple[tuple[str | None, Decimal | None]] | None:
+    def category_amount_pairs(
+        self,
+    ) -> tuple[tuple[str | None, Decimal | None], ...] | None:
         if len(self._category_rows) == 1:
             if self._category_rows[0].category is None:
                 if self.amount is not None:
@@ -255,10 +260,12 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
                 self._category_rows[index].amount = pairs[index][1]
 
     @property
-    def tag_amount_pairs(self) -> tuple[tuple[str, Decimal]]:
+    def tag_amount_pairs(self) -> tuple[tuple[str, Decimal], ...] | None:
         if len(self._tag_rows) == 1:
             row = self._tag_rows[0]
             if isinstance(row, SingleTagRowWidget):
+                if self._edit_mode in EditMode.get_multiple_edit_values():
+                    return None
                 return tuple((tag, self.amount) for tag in row.tags)
             return ((row.tag, row.amount),)
         return tuple((row.tag, row.amount) for row in self._tag_rows)
@@ -329,15 +336,13 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
         self.payeeToolButton.setDefaultAction(self.actionSelect_Payee)
 
     def _initialize_accounts_combobox(self, accounts: Collection[CashAccount]) -> None:
-        if self._edit_mode != EditMode.ADD:
+        if (
+            self._edit_mode == EditMode.EDIT_MULTIPLE
+            or self._edit_mode == EditMode.EDIT_MULTIPLE_MIXED_CURRENCY
+        ):
             self.accountsComboBox.addItem(self.KEEP_CURRENT_VALUES)
+        icon = QIcon("icons_16:piggy-bank.png")
         for account in accounts:
-            if isinstance(account, CashAccount):
-                icon = QIcon("icons_16:piggy-bank.png")
-            elif isinstance(account, SecurityAccount):
-                icon = QIcon("icons_16:bank.png")
-            else:
-                raise TypeError("Unexpected Account type.")
             self.accountsComboBox.addItem(icon, account.path)
 
         self.accountsComboBox.currentTextChanged.connect(self._account_changed)
@@ -351,6 +356,13 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
             self.payeeComboBox.lineEdit().setPlaceholderText(
                 "Leave empty to keep current values"
             )
+            if (
+                self._edit_mode in EditMode.get_multiple_edit_values()
+                and len(self._tag_rows) == 1
+            ):
+                self._tag_rows[0].set_placeholder_text(
+                    "Leave empty to keep current values"
+                )
         else:
             self.payeeComboBox.lineEdit().setPlaceholderText("Enter Payee name")
         self.payeeComboBox.setCurrentIndex(-1)

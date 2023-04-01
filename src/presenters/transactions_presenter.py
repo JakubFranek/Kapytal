@@ -15,6 +15,7 @@ from src.models.record_keeper import RecordKeeper
 from src.presenters.cash_transaction_dialog_presenter import (
     CashTransactionDialogPresenter,
 )
+from src.presenters.cash_transfer_dialog_presenter import CashTransferDialogPresenter
 from src.presenters.refund_transaction_dialog_presenter import (
     RefundTransactionDialogPresenter,
 )
@@ -46,11 +47,14 @@ class TransactionsPresenter:
         self._cash_transaction_dialog_presenter = CashTransactionDialogPresenter(
             view, record_keeper, self._model
         )
-        self._transaction_tags_dialog_presenter = TransactionTagsDialogPresenter(
-            view, record_keeper
+        self._cash_transfer_dialog_presenter = CashTransferDialogPresenter(
+            view, record_keeper, self._model
         )
         self._refund_transaction_dialog_presenter = RefundTransactionDialogPresenter(
             view, record_keeper, self._model
+        )
+        self._transaction_tags_dialog_presenter = TransactionTagsDialogPresenter(
+            view, record_keeper
         )
 
         self._setup_view()
@@ -75,6 +79,7 @@ class TransactionsPresenter:
     def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
         self._record_keeper = record_keeper
         self._cash_transaction_dialog_presenter.load_record_keeper(record_keeper)
+        self._cash_transfer_dialog_presenter.load_record_keeper(record_keeper)
         self._transaction_tags_dialog_presenter.load_record_keeper(record_keeper)
         self._refund_transaction_dialog_presenter.load_record_keeper(record_keeper)
         self._valid_accounts = record_keeper.accounts
@@ -165,6 +170,11 @@ class TransactionsPresenter:
                 CashTransactionType.EXPENSE, self.valid_accounts
             )
         )
+        self._view.signal_cash_transfer.connect(
+            lambda: self._cash_transfer_dialog_presenter.run_add_dialog(
+                self.valid_accounts
+            )
+        )
         self._view.signal_delete.connect(self._delete_transactions)
         self._view.signal_duplicate.connect(self._duplicate_transaction)
         self._view.signal_edit.connect(self._edit_transactions)
@@ -179,6 +189,13 @@ class TransactionsPresenter:
             self.update_model_data
         )
         self._cash_transaction_dialog_presenter.event_data_changed.append(
+            self.event_data_changed
+        )
+
+        self._cash_transfer_dialog_presenter.event_update_model.append(
+            self.update_model_data
+        )
+        self._cash_transfer_dialog_presenter.event_data_changed.append(
             self.event_data_changed
         )
 
@@ -238,6 +255,8 @@ class TransactionsPresenter:
         transaction = transactions[0]
         if isinstance(transaction, CashTransaction):
             self._cash_transaction_dialog_presenter.run_duplicate_dialog(transaction)
+        if isinstance(transaction, CashTransfer):
+            self._cash_transfer_dialog_presenter.run_duplicate_dialog(transaction)
 
     def _edit_transactions(self) -> None:
         transactions = self._model.get_selected_items()
@@ -248,6 +267,9 @@ class TransactionsPresenter:
             isinstance(transaction, CashTransaction) for transaction in transactions
         ):
             self._cash_transaction_dialog_presenter.run_edit_dialog(transactions)
+            return
+        if all(isinstance(transaction, CashTransfer) for transaction in transactions):
+            self._cash_transfer_dialog_presenter.run_edit_dialog(transactions)
             return
         if all(
             isinstance(transaction, RefundTransaction) for transaction in transactions

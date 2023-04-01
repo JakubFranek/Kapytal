@@ -179,6 +179,9 @@
        <property name="readOnly">
         <bool>false</bool>
        </property>
+       <property name="buttonSymbols">
+        <enum>QAbstractSpinBox::NoButtons</enum>
+       </property>
        <property name="showGroupSeparator" stdset="0">
         <bool>true</bool>
        </property>

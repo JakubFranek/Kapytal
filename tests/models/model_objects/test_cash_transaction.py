@@ -7,6 +7,7 @@ from typing import Any
 import pytest
 from hypothesis import assume, given
 from hypothesis import strategies as st
+from src.models.custom_exceptions import InvalidOperationError
 from src.models.model_objects.attributes import (
     Attribute,
     AttributeType,
@@ -111,6 +112,12 @@ def test_creation(  # noqa: PLR0913
         f"amount={cash_transaction.amount}, "
         f"category={{{cash_transaction.category_names}}}, "
         f"{cash_transaction.datetime_.strftime('%Y-%m-%d')})"
+    )
+    assert cash_transaction.are_categories_split is (
+        len(category_amount_collection) > 1
+    )
+    assert cash_transaction.are_tags_split is any(
+        amount != cash_transaction.amount for _, amount in tag_amount_collection
     )
     assert dt_created_diff.seconds < 1
 
@@ -632,6 +639,25 @@ def test_add_remove_tags(transaction: CashTransaction, tags: list[Attribute]) ->
         assert tag not in transaction.tags
 
 
+@given(
+    transaction=cash_transactions(),
+    tags=st.lists(attributes(AttributeType.TAG), min_size=1, max_size=5),
+)
+def test_add_remove_tags_refunded(
+    transaction: CashTransaction, tags: list[Attribute]
+) -> None:
+    transaction._refunds = ["test"]
+    with pytest.raises(
+        InvalidOperationError, match="Cannot add Tags to a refunded CashTransaction."
+    ):
+        transaction.add_tags(tags)
+    with pytest.raises(
+        InvalidOperationError,
+        match="Cannot remove Tags from a refunded CashTransaction.",
+    ):
+        transaction.remove_tags(tags)
+
+
 @given(transaction=cash_transactions(), category=categories(), total=st.booleans())
 def test_get_amount_for_category_not_related(
     transaction: CashTransaction, category: Category, total: bool  # noqa: FBT001
@@ -696,11 +722,11 @@ def test_get_max_refundable_for_tag_no_refunds(
     transaction: CashTransaction,
 ) -> None:
     transaction.add_tags((Attribute("test_tag", AttributeType.TAG),))
-    tag, _ = transaction.tag_amount_pairs[0]
+    tag, expected_amount = transaction.tag_amount_pairs[0]
     amount = transaction.get_max_refundable_for_tag(
         tag, ignore_refund=None, refund_amount=None
     )
-    assert amount == transaction.amount
+    assert amount == expected_amount
 
 
 @given(transaction=cash_transactions())
