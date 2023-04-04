@@ -110,7 +110,7 @@ class SecurityFormPresenter:
         if security is None:
             raise ValueError("Cannot edit an unselected item.")
 
-        uuid = str(security.uuid)
+        uuid = security.uuid
         name = self._dialog.name
         symbol = self._dialog.symbol
         type_ = self._dialog.type_
@@ -118,7 +118,7 @@ class SecurityFormPresenter:
         logging.info(f"Editing Security '{security.name}'")
         try:
             self._record_keeper.edit_security(
-                uuid=uuid, name=name, symbol=symbol, type_=type_
+                uuid_=uuid, name=name, symbol=symbol, type_=type_
             )
         except Exception as exception:  # noqa: BLE001
             handle_exception(exception)
@@ -133,7 +133,7 @@ class SecurityFormPresenter:
         if security is None:
             return
 
-        uuid = str(security.uuid)
+        uuid = security.uuid
 
         logging.info(f"Removing {security}")
         try:
@@ -167,7 +167,7 @@ class SecurityFormPresenter:
         if security is None:
             raise ValueError("A Security must be selected to set its price.")
 
-        uuid = str(security.uuid)
+        uuid = security.uuid
         value = self._dialog.value.normalize()
         date_ = self._dialog.date_
         logging.info(f"Setting {security} price: {value} on {date_}")

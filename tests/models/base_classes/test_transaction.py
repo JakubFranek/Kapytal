@@ -107,3 +107,13 @@ def test_validate_tags_invalid_attribute_type(tags: Any) -> None:
     )
     with pytest.raises(InvalidAttributeError):
         transaction._validate_tags(tags)
+
+
+def test_clear_tags() -> None:
+    transaction = ConcreteTransaction(
+        "test", datetime.now(user_settings.settings.time_zone)
+    )
+    transaction._tags = ["TEST TAG"]
+    assert transaction.tags == ("TEST TAG",)
+    transaction.clear_tags()
+    assert transaction.tags == ()

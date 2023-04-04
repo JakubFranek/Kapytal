@@ -243,10 +243,10 @@ class TransactionsPresenter:
 
         for transaction in transactions:
             try:
-                self._record_keeper.remove_transactions(str(transaction.uuid))
+                self._record_keeper.remove_transactions((transaction.uuid,))
                 logging.info(
                     f"Removed {transaction.__class__.__name__}: "
-                    f"uuid={str(transaction.uuid)}"
+                    f"uuid={transaction.uuid}"
                 )
                 self._model.pre_remove_item(transaction)
                 self.update_model_data()
@@ -347,6 +347,6 @@ class TransactionsPresenter:
             raise TypeError("Cannot find Refunds for a non-Cash Transaction.")
 
         refunds = transaction.refunds
-        uuids = [str(refund.uuid) for refund in refunds]
+        uuids = [refund.uuid for refund in refunds]
         pattern = "|".join(uuids)
         self._view.search_bar_text = pattern

@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime
 from decimal import Decimal
 
@@ -134,7 +135,7 @@ def test_edit_security() -> None:
     record_keeper.add_security("TEST NAME", "SMBL", "ETF", "CZK", 1)
     security = record_keeper.get_security_by_name("TEST NAME")
     record_keeper.edit_security(
-        uuid=str(security.uuid), name="NEW NAME", symbol="NEWSYMB", type_="NEW TYPE"
+        uuid_=security.uuid, name="NEW NAME", symbol="NEWSYMB", type_="NEW TYPE"
     )
     security = record_keeper.securities[0]
     assert security.symbol == "NEWSYMB"
@@ -145,7 +146,7 @@ def test_edit_security() -> None:
 def test_edit_security_does_not_exist() -> None:
     record_keeper = RecordKeeper()
     with pytest.raises(NotFoundError):
-        record_keeper.edit_security("SMBL", "SYMB", "NEW NAME")
+        record_keeper.edit_security(uuid.uuid4(), "SMBL", "SYMB", "NEW NAME")
 
 
 def test_edit_security_account() -> None:
@@ -274,7 +275,7 @@ def test_edit_cash_transactions_descriptions() -> None:
         if isinstance(transaction, CashTransaction)
         and transaction.currency.code == "CZK"
     ]
-    uuids = [str(transaction.uuid) for transaction in cash_transactions]
+    uuids = [transaction.uuid for transaction in cash_transactions]
     edit_string = "TEST EDIT"
     record_keeper.edit_cash_transactions(uuids, description=edit_string)
     for transaction in cash_transactions:
@@ -289,7 +290,7 @@ def test_edit_cash_transactions_datetimes() -> None:
         if isinstance(transaction, CashTransaction)
         and transaction.currency.code == "CZK"
     ]
-    uuids = [str(transaction.uuid) for transaction in cash_transactions]
+    uuids = [transaction.uuid for transaction in cash_transactions]
     edit_datetime = datetime.now(user_settings.settings.time_zone)
     record_keeper.edit_cash_transactions(uuids, datetime_=edit_datetime)
     for transaction in cash_transactions:
@@ -304,7 +305,7 @@ def test_edit_cash_transactions_payees() -> None:
         if isinstance(transaction, CashTransaction)
         and transaction.currency.code == "CZK"
     ]
-    uuids = [str(transaction.uuid) for transaction in cash_transactions]
+    uuids = [transaction.uuid for transaction in cash_transactions]
     edit_payee = "TEST PAYEE"
     record_keeper.edit_cash_transactions(uuids, payee_name=edit_payee)
     for transaction in cash_transactions:
@@ -320,7 +321,7 @@ def test_edit_cash_transactions_categories() -> None:
         and transaction.currency.code == "CZK"
         and transaction.type_ == CashTransactionType.EXPENSE
     ]
-    uuids = [str(transaction.uuid) for transaction in cash_transactions]
+    uuids = [transaction.uuid for transaction in cash_transactions]
     edit_category = "TEST CATEGORY"
     edit_category_amount_pair = [(edit_category, None)]
     record_keeper.edit_cash_transactions(
@@ -346,7 +347,7 @@ def test_edit_cash_transactions_tags() -> None:
         and transaction.currency.code == "CZK"
         and transaction.type_ == CashTransactionType.EXPENSE
     ]
-    uuids = [str(transaction.uuid) for transaction in cash_transactions]
+    uuids = [transaction.uuid for transaction in cash_transactions]
     edit_tag = "TEST TAG"
     edit_tag_amount_pair = [(edit_tag, Decimal(1))]
     record_keeper.edit_cash_transactions(
@@ -364,7 +365,7 @@ def test_edit_cash_transactions_account() -> None:
         if isinstance(transaction, CashTransaction)
         and transaction.currency.code == "CZK"
     ]
-    uuids = [str(transaction.uuid) for transaction in cash_transactions]
+    uuids = [transaction.uuid for transaction in cash_transactions]
     edit_account = "Test Account CZK"
     record_keeper.add_cash_account(
         path="Test Account CZK",
@@ -387,7 +388,7 @@ def test_edit_cash_transactions_invalid_indexes() -> None:
         1,
     )
     transactions = list(record_keeper.transactions)
-    uuids = [str(transaction.uuid) for transaction in transactions]
+    uuids = [transaction.uuid for transaction in transactions]
     with pytest.raises(TypeError, match="Type of Transaction"):
         record_keeper.edit_cash_transactions(uuids)
 
@@ -401,7 +402,7 @@ def test_edit_cash_transactions_multiple_currencies() -> None:
         if isinstance(transaction, CashTransaction)
         and transaction.type_ == CashTransactionType.EXPENSE
     ]
-    uuids = [str(transaction.uuid) for transaction in cash_transactions]
+    uuids = [transaction.uuid for transaction in cash_transactions]
     edit_description = "test description"
     edit_payee = record_keeper.payees[0].name
     edit_category_pair = ((record_keeper.categories[0].path, None),)
@@ -431,7 +432,7 @@ def test_edit_cash_transactions_multiple_currencies_invalid_account() -> None:
         if isinstance(transaction, CashTransaction)
         and transaction.type_ == CashTransactionType.EXPENSE
     ]
-    uuids = [str(transaction.uuid) for transaction in cash_transactions]
+    uuids = [transaction.uuid for transaction in cash_transactions]
     with pytest.raises(ValueError, match="'account_path' must be None"):
         record_keeper.edit_cash_transactions(
             uuids, account_path=cash_transactions[0].account.path
@@ -446,7 +447,7 @@ def test_edit_cash_transactions_multiple_currencies_invalid_category_amounts() -
         if isinstance(transaction, CashTransaction)
         and transaction.type_ == CashTransactionType.EXPENSE
     ]
-    uuids = [str(transaction.uuid) for transaction in cash_transactions]
+    uuids = [transaction.uuid for transaction in cash_transactions]
     with pytest.raises(ValueError, match="Category amounts must be None"):
         record_keeper.edit_cash_transactions(
             uuids, category_path_amount_pairs=cash_transactions[0].category_amount_pairs
@@ -461,7 +462,7 @@ def test_edit_cash_transactions_multiple_currencies_invalid_tag_amounts() -> Non
         if isinstance(transaction, CashTransaction)
         and transaction.type_ == CashTransactionType.EXPENSE
     ]
-    uuids = [str(transaction.uuid) for transaction in cash_transactions]
+    uuids = [transaction.uuid for transaction in cash_transactions]
     with pytest.raises(ValueError, match="Tag amounts must be None"):
         record_keeper.edit_cash_transactions(
             uuids, tag_name_amount_pairs=cash_transactions[0].tag_amount_pairs
@@ -475,7 +476,7 @@ def test_edit_cash_transactions_multiple_types() -> None:
         for transaction in record_keeper.transactions
         if isinstance(transaction, CashTransaction)
     ]
-    uuids = [str(transaction.uuid) for transaction in cash_transactions]
+    uuids = [transaction.uuid for transaction in cash_transactions]
     with pytest.raises(InvalidOperationError):
         record_keeper.edit_cash_transactions(
             uuids, transaction_type=CashTransactionType.INCOME
@@ -489,7 +490,7 @@ def test_edit_cash_transfer_invalid_types() -> None:
         for transaction in record_keeper.transactions
         if not isinstance(transaction, CashTransfer)
     ]
-    uuids = [str(transfer.uuid) for transfer in transactions]
+    uuids = [transfer.uuid for transfer in transactions]
     with pytest.raises(TypeError, match="Type of Transaction"):
         record_keeper.edit_cash_transfers(uuids)
 
@@ -501,7 +502,7 @@ def test_edit_cash_transfer_description() -> None:
         for transaction in record_keeper.transactions
         if isinstance(transaction, CashTransfer)
     ]
-    uuids = [str(transfer.uuid) for transfer in transfers]
+    uuids = [transfer.uuid for transfer in transfers]
     edit_string = "TEST EDIT"
     record_keeper.edit_cash_transfers(uuids, description=edit_string)
     for transfer in transfers:
@@ -515,7 +516,7 @@ def test_edit_cash_transfer_datetime() -> None:
         for transaction in record_keeper.transactions
         if isinstance(transaction, CashTransfer)
     ]
-    uuids = [str(transfer.uuid) for transfer in transfers]
+    uuids = [transfer.uuid for transfer in transfers]
     edit_datetime = datetime.now(user_settings.settings.time_zone)
     record_keeper.edit_cash_transfers(uuids, datetime_=edit_datetime)
     for transfer in transfers:
@@ -532,7 +533,7 @@ def test_edit_cash_transfer_sender() -> None:
         and transaction.recipient.path != edit_sender
         and transaction.sender.currency.code == "CZK"
     ]
-    uuids = [str(transfer.uuid) for transfer in transfers]
+    uuids = [transfer.uuid for transfer in transfers]
     record_keeper.edit_cash_transfers(uuids, sender_path=edit_sender)
     for transfer in transfers:
         assert transfer.sender.path == edit_sender
@@ -548,7 +549,7 @@ def test_edit_cash_transfer_recipient() -> None:
         and transaction.sender.path != edit_recipient
         and transaction.recipient.currency.code == "CZK"
     ]
-    uuids = [str(transfer.uuid) for transfer in transfers]
+    uuids = [transfer.uuid for transfer in transfers]
     record_keeper.edit_cash_transfers(uuids, recipient_path=edit_recipient)
     for transfer in transfers:
         assert transfer.recipient.path == edit_recipient
@@ -563,7 +564,7 @@ def test_edit_cash_transfer_amount_sent() -> None:
         if isinstance(transaction, CashTransfer)
         and transaction.sender.currency.code == "CZK"
     ]
-    uuids = [str(transfer.uuid) for transfer in transfers]
+    uuids = [transfer.uuid for transfer in transfers]
     record_keeper.edit_cash_transfers(uuids, amount_sent=edit_amount_sent)
     for transfer in transfers:
         assert transfer.amount_sent.value_rounded == edit_amount_sent
@@ -578,7 +579,7 @@ def test_edit_cash_transfer_amount_received() -> None:
         if isinstance(transaction, CashTransfer)
         and transaction.recipient.currency.code == "CZK"
     ]
-    uuids = [str(transfer.uuid) for transfer in transfers]
+    uuids = [transfer.uuid for transfer in transfers]
     record_keeper.edit_cash_transfers(uuids, amount_received=edit_amount_received)
     for transfer in transfers:
         assert transfer.amount_received.value_rounded == edit_amount_received
@@ -592,7 +593,7 @@ def test_edit_cash_transfer_amount_sent_currency_not_same() -> None:
         for transaction in record_keeper.transactions
         if isinstance(transaction, CashTransfer)
     ]
-    uuids = [str(transfer.uuid) for transfer in transfers]
+    uuids = [transfer.uuid for transfer in transfers]
     with pytest.raises(CurrencyError):
         record_keeper.edit_cash_transfers(uuids, amount_sent=edit_amount_sent)
 
@@ -608,7 +609,7 @@ def test_edit_cash_transfer_amounts_currencies_not_same() -> None:
         for transaction in record_keeper.transactions
         if isinstance(transaction, CashTransfer)
     ]
-    uuids = [str(transfer.uuid) for transfer in transfers]
+    uuids = [transfer.uuid for transfer in transfers]
     record_keeper.edit_cash_transfers(
         uuids,
         amount_sent=edit_amount_sent,
@@ -631,9 +632,26 @@ def test_edit_cash_transfer_amount_received_currency_not_same() -> None:
         for transaction in record_keeper.transactions
         if isinstance(transaction, CashTransfer)
     ]
-    uuids = [str(transfer.uuid) for transfer in transfers]
+    uuids = [transfer.uuid for transfer in transfers]
     with pytest.raises(CurrencyError):
         record_keeper.edit_cash_transfers(uuids, amount_received=edit_amount_received)
+
+
+def test_edit_cash_transfer_tags() -> None:
+    record_keeper = get_preloaded_record_keeper_with_cash_transfers()
+    record_keeper.add_tag("tag1")
+    record_keeper.add_tag("tag2")
+    transfers = [
+        transaction
+        for transaction in record_keeper.transactions
+        if isinstance(transaction, CashTransfer)
+    ]
+    uuids = [transfer.uuid for transfer in transfers]
+    tags = (record_keeper.tags[0], record_keeper.tags[1])
+    tag_names = [tag.name for tag in tags]
+    record_keeper.edit_cash_transfers(uuids, tag_names=tag_names)
+    for transfer in transfers:
+        assert transfer.tags == tags
 
 
 def test_edit_refunds_same_values() -> None:
@@ -644,14 +662,14 @@ def test_edit_refunds_same_values() -> None:
         if isinstance(transaction, RefundTransaction)
         and transaction.currency.code == "CZK"
     ]
-    uuids = [str(transfer.uuid) for transfer in refunds]
+    uuids = [refund.uuid for refund in refunds]
     record_keeper.edit_refunds(uuids)
 
 
 def test_edit_refunds_invalid_transaction_types() -> None:
     record_keeper = get_preloaded_record_keeper_with_cash_transactions()
     transactions = record_keeper.transactions
-    uuids = [str(transfer.uuid) for transfer in transactions]
+    uuids = [transfer.uuid for transfer in transactions]
     with pytest.raises(TypeError, match="Type of Transaction"):
         record_keeper.edit_refunds(uuids)
 
@@ -663,7 +681,7 @@ def test_edit_refunds_currency_not_same() -> None:
         for transaction in record_keeper.transactions
         if isinstance(transaction, RefundTransaction)
     ]
-    uuids = [str(transfer.uuid) for transfer in transactions]
+    uuids = [transaction.uuid for transaction in transactions]
     with pytest.raises(CurrencyError):
         record_keeper.edit_refunds(uuids)
 
@@ -677,7 +695,7 @@ def test_edit_refunds_change_account() -> None:
         if isinstance(transaction, RefundTransaction)
         and transaction.currency.code == "CZK"
     ]
-    uuids = [str(transfer.uuid) for transfer in transactions]
+    uuids = [transaction.uuid for transaction in transactions]
     record_keeper.edit_refunds(uuids, account_path=edit_account_path)
     for transaction in transactions:
         assert transaction.account.path == edit_account_path
@@ -692,7 +710,7 @@ def test_edit_refunds_change_payee() -> None:
         if isinstance(transaction, RefundTransaction)
         and transaction.currency.code == "CZK"
     ]
-    uuids = [str(transfer.uuid) for transfer in transactions]
+    uuids = [transaction.uuid for transaction in transactions]
     record_keeper.edit_refunds(uuids, payee_name=edit_payee)
     for transaction in transactions:
         assert transaction.payee.name == edit_payee
@@ -708,7 +726,7 @@ def test_edit_refunds_change_tag_amounts() -> None:
         if isinstance(transaction, RefundTransaction)
         and transaction.currency.code == "CZK"
     ]
-    uuids = [str(transfer.uuid) for transfer in transactions]
+    uuids = [transaction.uuid for transaction in transactions]
     record_keeper.edit_refunds(
         uuids,
         category_path_amount_pairs=edit_category_amount_pairs,
@@ -733,14 +751,14 @@ def test_edit_security_transactions_same_values() -> None:
         if isinstance(transaction, SecurityTransaction)
         and transaction.currency.code == "EUR"
     ]
-    uuids = [str(transfer.uuid) for transfer in transactions]
+    uuids = [transfer.uuid for transfer in transactions]
     record_keeper.edit_security_transactions(uuids)
 
 
 def test_edit_security_transactions_invalid_transaction_types() -> None:
     record_keeper = get_preloaded_record_keeper_with_cash_transactions()
     transactions = record_keeper.transactions
-    uuids = [str(transfer.uuid) for transfer in transactions]
+    uuids = [transfer.uuid for transfer in transactions]
     with pytest.raises(TypeError, match="Type of Transaction"):
         record_keeper.edit_security_transactions(uuids)
 
@@ -752,7 +770,7 @@ def test_edit_security_transactions_currency_not_same() -> None:
         for transaction in record_keeper.transactions
         if isinstance(transaction, SecurityTransaction)
     ]
-    uuids = [str(transfer.uuid) for transfer in transactions]
+    uuids = [transfer.uuid for transfer in transactions]
     with pytest.raises(CurrencyError):
         record_keeper.edit_security_transactions(uuids)
 
@@ -766,7 +784,7 @@ def test_edit_security_transactions_change_symbol() -> None:
         if isinstance(transaction, SecurityTransaction)
         and transaction.security.symbol == "VWCE.DE"
     ]
-    uuids = [str(transfer.uuid) for transfer in transactions]
+    uuids = [transfer.uuid for transfer in transactions]
     security = record_keeper.get_security_by_name(edit_name)
     record_keeper.edit_security_transactions(uuids, security_name=security.name)
     for transaction in transactions:
@@ -782,7 +800,7 @@ def test_edit_security_transactions_change_cash_account() -> None:
         if isinstance(transaction, SecurityTransaction)
         and transaction.security.symbol == "VWCE.DE"
     ]
-    uuids = [str(transfer.uuid) for transfer in transactions]
+    uuids = [transfer.uuid for transfer in transactions]
     record_keeper.edit_security_transactions(uuids, cash_account_path=edit_cash_account)
     for transaction in transactions:
         assert transaction.cash_account.path == edit_cash_account
@@ -797,7 +815,7 @@ def test_edit_security_transactions_change_security_account() -> None:
         if isinstance(transaction, SecurityTransaction)
         and transaction.security.symbol == "VWCE.DE"
     ]
-    uuids = [str(transfer.uuid) for transfer in transactions]
+    uuids = [transfer.uuid for transfer in transactions]
     record_keeper.edit_security_transactions(
         uuids, security_account_path=edit_security_account
     )
@@ -814,7 +832,7 @@ def test_edit_security_transactions_change_price_per_share() -> None:
         if isinstance(transaction, SecurityTransaction)
         and transaction.security.symbol == "VWCE.DE"
     ]
-    uuids = [str(transfer.uuid) for transfer in transactions]
+    uuids = [transfer.uuid for transfer in transactions]
     record_keeper.edit_security_transactions(uuids, price_per_share=edit_price)
     for transaction in transactions:
         assert transaction.price_per_share.value_rounded == edit_price
@@ -829,7 +847,7 @@ def test_edit_security_transactions_change_shares() -> None:
         if isinstance(transaction, SecurityTransaction)
         and transaction.security.symbol == "VWCE.DE"
     ]
-    uuids = [str(transfer.uuid) for transfer in transactions]
+    uuids = [transfer.uuid for transfer in transactions]
     record_keeper.edit_security_transactions(uuids, shares=edit_shares)
     for transaction in transactions:
         assert transaction.shares == edit_shares
@@ -842,14 +860,14 @@ def test_edit_security_transfers_same_values() -> None:
         for transaction in record_keeper.transactions
         if isinstance(transaction, SecurityTransfer)
     ]
-    uuids = [str(transfer.uuid) for transfer in tansfers]
+    uuids = [transfer.uuid for transfer in tansfers]
     record_keeper.edit_security_transfers(uuids)
 
 
 def test_edit_security_transfers_invalid_transaction_types() -> None:
     record_keeper = get_preloaded_record_keeper_with_cash_transactions()
     transactions = record_keeper.transactions
-    uuids = [str(transfer.uuid) for transfer in transactions]
+    uuids = [transfer.uuid for transfer in transactions]
     with pytest.raises(TypeError, match="Type of Transaction"):
         record_keeper.edit_security_transfers(uuids)
 
@@ -863,7 +881,7 @@ def test_edit_security_transfers_change_symbol() -> None:
         if isinstance(transaction, SecurityTransfer)
         and transaction.security.symbol == "VWCE.DE"
     ]
-    uuids = [str(transfer.uuid) for transfer in transactions]
+    uuids = [transfer.uuid for transfer in transactions]
     record_keeper.edit_security_transfers(uuids, security_name=edit_name)
     for transaction in transactions:
         assert transaction.security.name == edit_name
@@ -879,7 +897,7 @@ def test_edit_security_transactions_change_security_accounts() -> None:
         if isinstance(transaction, SecurityTransfer)
         and transaction.security.symbol == "VWCE.DE"
     ]
-    uuids = [str(transfer.uuid) for transfer in transactions]
+    uuids = [transfer.uuid for transfer in transactions]
     record_keeper.edit_security_transfers(
         uuids, sender_path=edit_sender, recipient_path=edit_recipient
     )
@@ -905,7 +923,7 @@ def test_add_and_remove_tags_to_transactions(tags: list[Attribute]) -> None:
         for transaction in record_keeper.transactions
         if not isinstance(transaction, RefundTransaction)
     ]
-    uuids = [str(transfer.uuid) for transfer in transactions]
+    uuids = [transfer.uuid for transfer in transactions]
     record_keeper.add_tags_to_transactions(uuids, tag_names)
     for transaction in transactions:
         for tag in valid_tags:

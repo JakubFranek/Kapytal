@@ -93,8 +93,7 @@ class RefundTransactionDialogPresenter:
         categories = [category for category, _ in category_amount_pairs]
         tags = [tag for tag, _ in tag_amount_pairs]
 
-        # REFACTOR: refactor RecordKeeper to accept UUID objects instead of strs?
-        refunded_transaction_uuid = str(self._dialog.refunded_transaction.uuid)
+        refunded_transaction_uuid = self._dialog.refunded_transaction.uuid
 
         logging.info(
             f"Adding RefundTransaction: {datetime_.strftime('%Y-%m-%d')}, "
@@ -148,7 +147,7 @@ class RefundTransactionDialogPresenter:
         refund = self._dialog.edited_refund
         if refund is None:
             raise ValueError("Expected RefundTransaction, received None.")
-        refund_uuid = str(refund.uuid)
+        refund_uuid = refund.uuid
 
         log = []
         if description != refund.description:

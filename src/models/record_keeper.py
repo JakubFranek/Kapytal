@@ -1,6 +1,7 @@
 # FIXME: this file belongs somewhere else...
 
 import logging
+import uuid
 from collections.abc import Collection
 from datetime import date, datetime
 from decimal import Decimal
@@ -336,7 +337,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         self,
         description: str,
         datetime_: datetime,
-        refunded_transaction_uuid: str,
+        refunded_transaction_uuid: uuid.UUID,
         refunded_account_path: str,
         payee_name: str,
         category_path_amount_pairs: Collection[tuple[str, Decimal]],
@@ -347,7 +348,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         )
         if len(refunded_transactions) == 0:
             raise ValueError(
-                f"Transaction with UUID '{refunded_transaction_uuid}' not found."
+                f"Transaction uuid='{str(refunded_transaction_uuid)}' not found."
             )
         refunded_transaction = refunded_transactions[0]
 
@@ -426,7 +427,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
 
     def edit_cash_transactions(  # noqa: PLR0913
         self,
-        transaction_uuids: Collection[str],
+        transaction_uuids: Collection[uuid.UUID],
         description: str | None = None,
         datetime_: datetime | None = None,
         transaction_type: CashTransactionType | None = None,
@@ -531,7 +532,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
 
     def edit_cash_transfers(  # noqa: PLR0913
         self,
-        transaction_uuids: Collection[str],
+        transaction_uuids: Collection[uuid.UUID],
         description: str | None = None,
         datetime_: datetime | None = None,
         sender_path: str | None = None,
@@ -611,7 +612,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
 
     def edit_refunds(  # noqa: PLR0913
         self,
-        transaction_uuids: Collection[str],
+        transaction_uuids: Collection[uuid.UUID],
         description: str | None = None,
         datetime_: datetime | None = None,
         account_path: str | None = None,
@@ -675,7 +676,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
 
     def edit_security_transactions(  # noqa: PLR0913
         self,
-        transaction_uuids: Collection[str],
+        transaction_uuids: Collection[uuid.UUID],
         description: str | None = None,
         datetime_: datetime | None = None,
         transaction_type: SecurityTransactionType | None = None,
@@ -750,7 +751,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
 
     def edit_security_transfers(  # noqa: PLR0913
         self,
-        transaction_uuids: Collection[str],
+        transaction_uuids: Collection[uuid.UUID],
         description: str | None = None,
         datetime_: datetime | None = None,
         security_name: str | None = None,
@@ -839,12 +840,12 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
 
     def edit_security(
         self,
-        uuid: str,
+        uuid_: uuid.UUID,
         name: str | None = None,
         symbol: str | None = None,
         type_: str | None = None,
     ) -> None:
-        edited_security = self.get_security_by_uuid(uuid)
+        edited_security = self.get_security_by_uuid(uuid_)
         if name is not None:
             edited_security.name = name
         if symbol is not None:
@@ -1101,13 +1102,13 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
                 return account
         raise NotFoundError(f"An Account with path='{path}' does not exist.")
 
-    def get_security_by_uuid(self, uuid: str) -> Security:
-        if not isinstance(uuid, str):
-            raise TypeError("Parameter 'uuid' must be a string.")
+    def get_security_by_uuid(self, uuid_: uuid.UUID) -> Security:
+        if not isinstance(uuid_, uuid.UUID):
+            raise TypeError("Parameter 'uuid' must be a UUID.")
         for security in self._securities:
-            if str(security.uuid) == uuid:
+            if security.uuid == uuid_:
                 return security
-        raise NotFoundError(f"A Security with uuid='{uuid}' does not exist.")
+        raise NotFoundError(f"A Security with uuid='{str(uuid_)}' does not exist.")
 
     def get_security_by_name(self, name: str) -> Security:
         if not isinstance(name, str):
@@ -1513,15 +1514,19 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
     TransactionType = TypeVar("TransactionType", bound=Transaction)
 
     def _get_transactions(
-        self, uuid_strings: Collection[str], type_: type[TransactionType]
+        self, uuids: Collection[uuid.UUID], type_: type[TransactionType]
     ) -> list[TransactionType]:
         transactions: list[RecordKeeper.TransactionType] = []
+        if any(not isinstance(uuid_, uuid.UUID) for uuid_ in uuids):
+            raise TypeError(
+                "Parameter 'uuids' must be a collection of uuid.UUID objects."
+            )
         for transaction in self._transactions:
-            uuid = str(transaction.uuid)
-            if uuid in uuid_strings:
+            if transaction.uuid in uuids:
                 if not isinstance(transaction, type_):
                     raise TypeError(
-                        f"Type of Transaction at uuid='{uuid}' is not {type_.__name__}."
+                        f"Type of Transaction at uuid='{str(transaction.uuid)}' "
+                        f"is not {type_.__name__}."
                     )
                 transactions.append(transaction)
         return transactions

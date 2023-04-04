@@ -263,7 +263,7 @@ class CashTransactionDialogPresenter:
 
     def _edit_cash_transactions(self) -> None:
         transactions: list[CashTransaction] = self._model.get_selected_items()
-        uuids = [str(transaction.uuid) for transaction in transactions]
+        uuids = [transaction.uuid for transaction in transactions]
         change_type = any(
             transaction.type_ != transactions[0].type_ for transaction in transactions
         )

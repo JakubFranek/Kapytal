@@ -475,7 +475,7 @@ def test_record_keeper_transactions() -> None:
     record_keeper.add_refund(
         "refunding stupid electronic device",
         datetime.now(user_settings.settings.time_zone) + timedelta(days=1),
-        str(record_keeper.transactions[1].uuid),
+        record_keeper.transactions[1].uuid,
         "Bank Accounts/Raiffeisen",
         "Alza",
         [("Electronics", 10000)],

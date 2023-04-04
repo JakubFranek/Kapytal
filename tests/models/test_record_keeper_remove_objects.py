@@ -129,7 +129,7 @@ def test_remove_transactions() -> None:
     record_keeper = get_preloaded_record_keeper_with_various_transactions()
     assert record_keeper.transactions != ()
     refund_uuids = [
-        str(transaction.uuid)
+        transaction.uuid
         for transaction in record_keeper.transactions
         if isinstance(transaction, RefundTransaction)
     ]
@@ -140,7 +140,7 @@ def test_remove_transactions() -> None:
         if isinstance(transaction, RefundTransaction)
     ]
     assert refunds == []
-    other_uuids = [str(transaction.uuid) for transaction in record_keeper.transactions]
+    other_uuids = [transaction.uuid for transaction in record_keeper.transactions]
     record_keeper.remove_transactions(other_uuids)
     assert record_keeper.transactions == ()
 
@@ -149,7 +149,7 @@ def test_remove_transactions_is_refunded() -> None:
     record_keeper = get_preloaded_record_keeper_with_various_transactions()
     assert record_keeper.transactions != ()
     refunded_transaction_uuids = [
-        str(transaction.uuid)
+        transaction.uuid
         for transaction in record_keeper.transactions
         if isinstance(transaction, CashTransaction) and transaction.is_refunded
     ]
@@ -163,7 +163,7 @@ def test_remove_security() -> None:
     record_keeper.add_security("NAME", "SYMB", "ETF", "CZK", 1)
     security = record_keeper.get_security_by_name("NAME")
     assert len(record_keeper.securities) == 1
-    record_keeper.remove_security(str(security.uuid))
+    record_keeper.remove_security(security.uuid)
     assert record_keeper.securities == ()
 
 
@@ -171,7 +171,7 @@ def test_remove_security_referenced_in_transaction() -> None:
     record_keeper = get_preloaded_record_keeper_with_various_transactions()
     security = record_keeper.securities[0]
     with pytest.raises(InvalidOperationError):
-        record_keeper.remove_security(str(security.uuid))
+        record_keeper.remove_security(security.uuid)
 
 
 def test_remove_currency() -> None:
