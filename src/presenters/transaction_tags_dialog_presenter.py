@@ -47,7 +47,7 @@ class TransactionTagsDialogPresenter:
 
     def _add_tags(self) -> None:
         tag_names = self._dialog.tags
-        uuids = [str(transaction.uuid) for transaction in self._transactions]
+        uuids = [transaction.uuid for transaction in self._transactions]
         try:
             self._record_keeper.add_tags_to_transactions(uuids, tag_names)
             logging.info(f"Added Tags {tag_names} to Transactions: {uuids}")
@@ -58,7 +58,7 @@ class TransactionTagsDialogPresenter:
 
     def _remove_tags(self) -> None:
         tag_names = self._dialog.tags
-        uuids = [str(transaction.uuid) for transaction in self._transactions]
+        uuids = [transaction.uuid for transaction in self._transactions]
         try:
             self._record_keeper.remove_tags_from_transactions(uuids, tag_names)
             logging.info(f"Removed Tags {tag_names} from Transactions: {uuids}")

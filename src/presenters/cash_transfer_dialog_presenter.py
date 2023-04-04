@@ -174,7 +174,7 @@ class CashTransferDialogPresenter:
 
     def _edit_cash_transfers(self) -> None:
         transactions: list[CashTransfer] = self._model.get_selected_items()
-        uuids = [str(transaction.uuid) for transaction in transactions]
+        uuids = [transaction.uuid for transaction in transactions]
 
         sender_path = self._dialog.sender_path
         recipient_path = self._dialog.recipient_path
