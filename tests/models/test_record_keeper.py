@@ -1,5 +1,6 @@
 import copy
 import string
+import uuid
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 from typing import Any
@@ -553,14 +554,31 @@ def test_add_refund() -> RecordKeeper:
     assert refund in refunded_transaction.refunds
 
 
-def test_add_refund_wrong_uuid() -> RecordKeeper:
+def test_add_refund_invalid_uuid_type() -> RecordKeeper:
     record_keeper = get_preloaded_record_keeper_with_expense()
     refunded_transaction: CashTransaction = record_keeper.transactions[0]
-    with pytest.raises(ValueError, match="Transaction with UUID 'xxx' not found."):
+    with pytest.raises(
+        TypeError, match="Parameter 'uuids' must be a collection of uuid.UUID objects"
+    ):
         record_keeper.add_refund(
             description="Refund!",
             datetime_=datetime.now(user_settings.settings.time_zone),
             refunded_transaction_uuid="xxx",
+            refunded_account_path="Bank Accounts/Raiffeisen CZK",
+            category_path_amount_pairs=(("Food and Drink/Groceries", Decimal(1000)),),
+            tag_name_amount_pairs=(("Test Tag", Decimal(1000)),),
+            payee_name=refunded_transaction.payee.name,
+        )
+
+
+def test_add_refund_uuid_not_found() -> RecordKeeper:
+    record_keeper = get_preloaded_record_keeper_with_expense()
+    refunded_transaction: CashTransaction = record_keeper.transactions[0]
+    with pytest.raises(ValueError, match="not found"):
+        record_keeper.add_refund(
+            description="Refund!",
+            datetime_=datetime.now(user_settings.settings.time_zone),
+            refunded_transaction_uuid=uuid.uuid4(),
             refunded_account_path="Bank Accounts/Raiffeisen CZK",
             category_path_amount_pairs=(("Food and Drink/Groceries", Decimal(1000)),),
             tag_name_amount_pairs=(("Test Tag", Decimal(1000)),),
@@ -632,18 +650,17 @@ def test_get_security_by_name_does_not_exist(name: str) -> None:
         record_keeper.get_security_by_name(name)
 
 
-@given(uuid=everything_except(str))
+@given(uuid=everything_except(uuid.UUID))
 def test_get_security_by_uuid_invalid_type(uuid: Any) -> None:
     record_keeper = RecordKeeper()
-    with pytest.raises(TypeError, match="Parameter 'uuid' must be a string."):
+    with pytest.raises(TypeError, match="Parameter 'uuid' must be a UUID."):
         record_keeper.get_security_by_uuid(uuid)
 
 
-@given(uuid=st.text(min_size=1, max_size=32))
-def test_get_security_by_uuid_does_not_exist(uuid: str) -> None:
+def test_get_security_by_uuid_does_not_exist() -> None:
     record_keeper = RecordKeeper()
     with pytest.raises(NotFoundError):
-        record_keeper.get_security_by_uuid(uuid)
+        record_keeper.get_security_by_uuid(uuid.uuid4())
 
 
 @given(

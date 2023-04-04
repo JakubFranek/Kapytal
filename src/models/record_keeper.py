@@ -1517,6 +1517,10 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         self, uuids: Collection[uuid.UUID], type_: type[TransactionType]
     ) -> list[TransactionType]:
         transactions: list[RecordKeeper.TransactionType] = []
+        if any(not isinstance(uuid_, uuid.UUID) for uuid_ in uuids):
+            raise TypeError(
+                "Parameter 'uuids' must be a collection of uuid.UUID objects."
+            )
         for transaction in self._transactions:
             if transaction.uuid in uuids:
                 if not isinstance(transaction, type_):

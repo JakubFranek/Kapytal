@@ -637,6 +637,23 @@ def test_edit_cash_transfer_amount_received_currency_not_same() -> None:
         record_keeper.edit_cash_transfers(uuids, amount_received=edit_amount_received)
 
 
+def test_edit_cash_transfer_tags() -> None:
+    record_keeper = get_preloaded_record_keeper_with_cash_transfers()
+    record_keeper.add_tag("tag1")
+    record_keeper.add_tag("tag2")
+    transfers = [
+        transaction
+        for transaction in record_keeper.transactions
+        if isinstance(transaction, CashTransfer)
+    ]
+    uuids = [transfer.uuid for transfer in transfers]
+    tags = (record_keeper.tags[0], record_keeper.tags[1])
+    tag_names = [tag.name for tag in tags]
+    record_keeper.edit_cash_transfers(uuids, tag_names=tag_names)
+    for transfer in transfers:
+        assert transfer.tags == tags
+
+
 def test_edit_refunds_same_values() -> None:
     record_keeper = get_preloaded_record_keeper_with_refunds()
     refunds = [

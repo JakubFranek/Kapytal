@@ -308,9 +308,7 @@ def security_transfers(draw: st.DrawFn) -> SecurityTransfer:
     description = draw(st.text(min_size=1, max_size=256))
     datetime_ = draw(st.datetimes(timezones=st.just(user_settings.settings.time_zone)))
     security = draw(securities())
-    shares = draw(
-        valid_decimals(min_value=1e-10).filter(lambda x: x % security.shares_unit == 0)
-    )
+    shares = draw(share_decimals(security.shares_unit))
 
     return SecurityTransfer(
         description, datetime_, security, shares, account_sender, account_recipient
