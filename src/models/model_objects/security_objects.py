@@ -76,6 +76,8 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
         _shares_unit = Decimal(shares_unit)
         if not _shares_unit.is_finite() or _shares_unit <= 0:
             raise ValueError("Security.shares_unit must be finite and positive.")
+        if _shares_unit.log10() % 1 != 0:
+            raise ValueError("Security.shares_unit must be a power of 10.")
         self._shares_unit = _shares_unit
 
         self._price_history: dict[date, CashAmount] = {}

@@ -572,8 +572,8 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
             else:
                 if len({transfer.recipient.currency for transfer in transfers}) != 1:
                     raise CurrencyError(
-                        "If amount_received is to be changed, all recipient CashAccounts "
-                        "must be of same Currency."
+                        "If amount_received is to be changed, "
+                        "all recipient CashAccounts must be of same Currency."
                     )
                 _amount_received = CashAmount(
                     amount_received, transfers[0].recipient.currency

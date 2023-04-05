@@ -14,6 +14,7 @@ from src.models.model_objects.currency_objects import (
 from src.models.model_objects.security_objects import InvalidCharacterError, Security
 from tests.models.test_assets.composites import (
     currencies,
+    decimal_powers_of_10,
     everything_except,
     names,
     securities,
@@ -26,7 +27,7 @@ from tests.models.test_assets.composites import (
     symbol=st.text(alphabet=Security.SYMBOL_ALLOWED_CHARS, min_size=1, max_size=8),
     type_=names(min_size=1, max_size=32),
     currency=currencies(),
-    shares_unit=valid_decimals(min_value=1e-10, max_value=1),
+    shares_unit=decimal_powers_of_10(),
 )
 def test_creation(
     name: str,
@@ -219,6 +220,26 @@ def test_shares_unit_invalid_value(
     with pytest.raises(
         ValueError, match="Security.shares_unit must be finite and positive."
     ):
+        Security(name, symbol, type_, currency, shares_unit)
+
+
+@given(
+    data=st.data(),
+    name=names(min_size=1, max_size=64),
+    symbol=st.text(alphabet=Security.SYMBOL_ALLOWED_CHARS, min_size=1, max_size=8),
+    type_=names(min_size=1, max_size=32),
+    currency=currencies(),
+)
+def test_shares_unit_not_power_of_10(
+    data: st.DataObject,
+    name: str,
+    symbol: str,
+    type_: str,
+    currency: Currency,
+) -> None:
+    shares_unit = data.draw(valid_decimals(min_value=1e-10))
+    assume(shares_unit.log10() % 1 != 0)
+    with pytest.raises(ValueError, match="Security.shares_unit must be a power of 10."):
         Security(name, symbol, type_, currency, shares_unit)
 
 

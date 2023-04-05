@@ -63,6 +63,12 @@ def valid_decimals(
 
 
 @st.composite
+def decimal_powers_of_10(draw: st.DrawFn) -> Decimal:
+    exponent = draw(st.integers(min_value=-10, max_value=10))
+    return Decimal("10") ** exponent
+
+
+@st.composite
 def account_groups(draw: st.DrawFn) -> AccountGroup:
     name = draw(names())
     return AccountGroup(name)
@@ -245,7 +251,7 @@ def securities(draw: st.DrawFn, currency: Currency | None = None) -> Security:
     type_ = draw(names(min_size=1, max_size=32))
     if currency is None:
         currency = draw(currencies())
-    shares_unit = draw(valid_decimals(min_value=1e-10, max_value=1))
+    shares_unit = draw(decimal_powers_of_10())
     return Security(
         name,
         symbol,
@@ -272,7 +278,9 @@ def security_transactions(
     security_account = draw(security_accounts())
     assume(cash_account.path != security_account.path)
 
-    price_per_share = draw(cash_amounts(currency=cash_account.currency, min_value=0))
+    price_per_share = draw(
+        cash_amounts(currency=cash_account.currency, min_value=0, max_value=1e10)
+    )
     security = draw(securities(currency=cash_account.currency))
 
     description = draw(st.text(min_size=1, max_size=256))
@@ -285,7 +293,15 @@ def security_transactions(
     )
     type_ = draw(st.sampled_from(SecurityTransactionType))
 
-    shares = draw(share_decimals(shares_unit=security.shares_unit))
+    if price_per_share.value_normalized != 0:
+        max_shares = Decimal("1e9") // price_per_share.value_normalized
+    else:
+        max_shares = Decimal("1e9")
+    if max_shares == 0:
+        max_shares = 1
+    shares = draw(
+        share_decimals(shares_unit=security.shares_unit, max_value=max_shares)
+    )
 
     return SecurityTransaction(
         description,
@@ -316,8 +332,10 @@ def security_transfers(draw: st.DrawFn) -> SecurityTransfer:
 
 
 @st.composite
-def share_decimals(draw: st.DrawFn, shares_unit: Decimal) -> Decimal:
-    integer = draw(st.integers(min_value=1, max_value=1e6))
+def share_decimals(
+    draw: st.DrawFn, shares_unit: Decimal, max_value: int = 1e6
+) -> Decimal:
+    integer = draw(st.integers(min_value=1, max_value=max_value))
     return shares_unit * integer
 
 
