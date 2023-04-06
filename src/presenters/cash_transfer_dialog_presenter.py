@@ -152,7 +152,7 @@ class CashTransferDialogPresenter:
         logging.info(
             f"Adding CashTransfer: {datetime_.strftime('%Y-%m-%d')}, "
             f"{description=}, sender={sender_path}, sent={amount_sent}, "
-            f"recipient={recipient_path}, received={amount_received},{tags=}"
+            f"recipient={recipient_path}, received={amount_received}, {tags=}"
         )
         try:
             self._record_keeper.add_cash_transfer(

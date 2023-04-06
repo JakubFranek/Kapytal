@@ -3,7 +3,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum, auto
 
-from PyQt6.QtCore import pyqtSignal
+from PyQt6.QtCore import QSignalBlocker, pyqtSignal
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import (
     QAbstractButton,
@@ -54,6 +54,7 @@ class SecurityTransactionDialog(QDialog, Ui_SecurityTransactionDialog):
         self._edit_mode = edit_mode
 
         self._cash_accounts = cash_accounts
+        self._security_accounts = security_accounts
         self._securities = securities
 
         self.tags_widget = MultipleTagsSelectorWidget(self, tags)
@@ -61,9 +62,10 @@ class SecurityTransactionDialog(QDialog, Ui_SecurityTransactionDialog):
         self.formLayout.addRow(self.tags_label, self.tags_widget)
 
         self._initialize_window()
-        self._initialize_security_combobox(securities)
-        self._initialize_accounts_comboboxes(cash_accounts, security_accounts)
         self._initialize_signals()
+        self._initialize_security_combobox(securities)
+        self._setup_security_account_combobox()
+        self._setup_cash_account_combobox()
 
     @property
     def type_(self) -> SecurityTransactionType:
@@ -221,8 +223,8 @@ class SecurityTransactionDialog(QDialog, Ui_SecurityTransactionDialog):
             text = SecurityTransactionDialog._get_security_text(security)
             self.securityComboBox.addItem(icon, text, security)
 
-        self.securityComboBox.currentTextChanged.connect(self._set_shares_unit)
-        self._set_shares_unit()
+        self.securityComboBox.currentTextChanged.connect(self._security_changed)
+        self._security_changed()
 
     @staticmethod
     def _get_security_text(security: Security) -> str:
@@ -230,29 +232,41 @@ class SecurityTransactionDialog(QDialog, Ui_SecurityTransactionDialog):
             f"{security.name} [{security.symbol}]" if security.symbol else security.name
         )
 
-    def _initialize_accounts_comboboxes(
+    def _setup_security_account_combobox(
         self,
-        cash_accounts: Collection[CashAccount],
-        security_accounts: Collection[SecurityAccount],
     ) -> None:
         if self._edit_mode == EditMode.EDIT_MULTIPLE:
-            self.cashAccountComboBox.addItem(self.KEEP_CURRENT_VALUES)
             self.securityAccountComboBox.addItem(self.KEEP_CURRENT_VALUES)
-        icon_cash_account = QIcon("icons_16:piggy-bank.png")
         icon_security_account = QIcon("icons_16:bank.png")
-        for cash_account in cash_accounts:
-            self.cashAccountComboBox.addItem(icon_cash_account, cash_account.path)
-        for security_account in security_accounts:
+        for security_account in self._security_accounts:
             self.securityAccountComboBox.addItem(
                 icon_security_account, security_account.path
             )
 
+    def _setup_cash_account_combobox(self) -> None:
+        with QSignalBlocker(self.cashAccountComboBox):
+            security = self._get_security(self.security_name)
+            cash_account_path = self.cash_account_path
+            self.cashAccountComboBox.clear()
+            icon_cash_account = QIcon("icons_16:piggy-bank.png")
+
+            if self._edit_mode == EditMode.EDIT_MULTIPLE:
+                self.cashAccountComboBox.addItem(self.KEEP_CURRENT_VALUES)
+
+            for cash_account in self._cash_accounts:
+                if security is not None and cash_account.currency == security.currency:
+                    self.cashAccountComboBox.addItem(
+                        icon_cash_account, cash_account.path
+                    )
+
+            self.cash_account_path = cash_account_path
+
+            self._set_spinboxes_currencies()
+
+    def _initialize_signals(self) -> None:
         self.cashAccountComboBox.currentTextChanged.connect(
             self._set_spinboxes_currencies
         )
-        self._set_spinboxes_currencies()
-
-    def _initialize_signals(self) -> None:
         self.sharesDoubleSpinBox.valueChanged.connect(self._update_total)
         self.priceDoubleSpinBox.valueChanged.connect(self._update_total)
 
@@ -303,7 +317,7 @@ class SecurityTransactionDialog(QDialog, Ui_SecurityTransactionDialog):
         else:
             raise ValueError("Unknown role of the clicked button in the ButtonBox")
 
-    def _set_shares_unit(self) -> None:
+    def _security_changed(self) -> None:
         security = self._get_security(self.security_name)
         if security is None:
             return
@@ -311,3 +325,4 @@ class SecurityTransactionDialog(QDialog, Ui_SecurityTransactionDialog):
         decimals = -exponent if exponent < 0 else 0
         self.sharesDoubleSpinBox.setDecimals(decimals)
         self.sharesDoubleSpinBox.setSingleStep(10**exponent)
+        self._setup_cash_account_combobox()

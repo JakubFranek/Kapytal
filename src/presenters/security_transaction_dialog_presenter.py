@@ -6,6 +6,7 @@ from PyQt6.QtWidgets import QWidget
 from src.models.model_objects.cash_objects import CashAccount
 from src.models.model_objects.security_objects import (
     SecurityAccount,
+    SecurityTransaction,
     SecurityTransactionType,
 )
 from src.models.record_keeper import RecordKeeper
@@ -67,14 +68,86 @@ class SecurityTransactionDialogPresenter:
         self._dialog.security_account_path = valid_security_accounts[0].path
         self._dialog.datetime_ = datetime.now(user_settings.settings.time_zone)
 
-        # self._dialog.signal_do_and_close.connect(
-        #     lambda: self._add_cash_transaction(close=True)
-        # )
-        # self._dialog.signal_do_and_continue.connect(
-        #     lambda: self._add_cash_transaction(close=False)
-        # )
+        self._dialog.signal_do_and_close.connect(
+            lambda: self._add_security_transaction(close=True)
+        )
+        self._dialog.signal_do_and_continue.connect(
+            lambda: self._add_security_transaction(close=False)
+        )
 
         self._dialog.exec()
+
+    # def run_edit_dialog(self, transactions: Sequence[SecurityTransaction]) -> None:
+    #     if len(transactions) == 1:
+    #         edit_mode = EditMode.EDIT_SINGLE
+    #     else:
+    #         edit_mode = EditMode.EDIT_MULTIPLE
+
+    #     logging.debug(f"Running SecurityTransactionDialog (edit_mode={edit_mode.name})")
+
+    #     self._prepare_dialog(edit_mode=edit_mode)
+
+    #     datetimes = {
+    #         transfer.datetime_.replace(hour=0, minute=0, second=0, microsecond=0)
+    #         for transfer in transactions
+    #     }
+    #     self._dialog.datetime_ = (
+    #         datetimes.pop() if len(datetimes) == 1 else self._dialog.min_datetime
+    #     )
+
+    #     descriptions = {transfer.description for transfer in transactions}
+    #     self._dialog.description = descriptions.pop() if len(descriptions) == 1 else ""
+
+    #     self._dialog.signal_do_and_close.connect(self._edit_cash_transfers)
+    #     self._dialog.exec()
+
+    def _add_security_transaction(self, *, close: bool) -> None:
+        datetime_ = self._dialog.datetime_
+        if datetime_ is None:
+            raise ValueError("Expected datetime_, received None.")
+        if not validate_datetime(datetime_, self._dialog):
+            return
+        description = (
+            self._dialog.description if self._dialog.description is not None else ""
+        )
+        security_name = self._dialog.security_name
+        type_ = self._dialog.type_
+        shares = self._dialog.shares
+        price_per_share = self._dialog.price_per_share
+        security_account_path = self._dialog.security_account_path
+        cash_account_path = self._dialog.cash_account_path
+        tags = self._dialog.tags
+
+        cash_account = self._record_keeper.get_account(cash_account_path, CashAccount)
+
+        logging.info(
+            f"Adding SecurityTransaction: {datetime_.strftime('%Y-%m-%d')}, "
+            f"{description=}, type={type_.name}, security='{security_name}', "
+            f"cash_account='{cash_account_path}', "
+            f"security_account_path='{security_account_path}', shares={shares}, "
+            f"price_per_share={price_per_share} {cash_account.currency.code}, {tags=}"
+        )
+        try:
+            self._record_keeper.add_security_transaction(
+                description,
+                datetime_,
+                type_,
+                security_name,
+                shares,
+                price_per_share,
+                security_account_path,
+                cash_account_path,
+            )
+        except Exception as exception:  # noqa: BLE001
+            handle_exception(exception)
+            return
+
+        self._model.pre_add()
+        self.event_update_model()
+        self._model.post_add()
+        if close:
+            self._dialog.close()
+        self.event_data_changed()
 
     def _prepare_dialog(self, edit_mode: EditMode) -> bool:
         securities = self._record_keeper.securities
