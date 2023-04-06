@@ -11,7 +11,10 @@ from src.models.model_objects.cash_objects import (
     CashTransfer,
     RefundTransaction,
 )
-from src.models.model_objects.security_objects import SecurityRelatedTransaction
+from src.models.model_objects.security_objects import (
+    SecurityRelatedTransaction,
+    SecurityTransactionType,
+)
 from src.models.record_keeper import RecordKeeper
 from src.presenters.cash_transaction_dialog_presenter import (
     CashTransactionDialogPresenter,
@@ -19,6 +22,9 @@ from src.presenters.cash_transaction_dialog_presenter import (
 from src.presenters.cash_transfer_dialog_presenter import CashTransferDialogPresenter
 from src.presenters.refund_transaction_dialog_presenter import (
     RefundTransactionDialogPresenter,
+)
+from src.presenters.security_transaction_dialog_presenter import (
+    SecurityTransactionDialogPresenter,
 )
 from src.presenters.transaction_tags_dialog_presenter import (
     TransactionTagsDialogPresenter,
@@ -51,6 +57,9 @@ class TransactionsPresenter:
         self._cash_transfer_dialog_presenter = CashTransferDialogPresenter(
             view, record_keeper, self._model
         )
+        self._security_transaction_dialog_presenter = (
+            SecurityTransactionDialogPresenter(view, record_keeper, self._model)
+        )
         self._refund_transaction_dialog_presenter = RefundTransactionDialogPresenter(
             view, record_keeper, self._model
         )
@@ -60,6 +69,7 @@ class TransactionsPresenter:
 
         self._setup_view()
         self._connect_signals()
+        self._connect_events()
         self._view.finalize_setup()
 
     @property
@@ -81,8 +91,9 @@ class TransactionsPresenter:
         self._record_keeper = record_keeper
         self._cash_transaction_dialog_presenter.load_record_keeper(record_keeper)
         self._cash_transfer_dialog_presenter.load_record_keeper(record_keeper)
-        self._transaction_tags_dialog_presenter.load_record_keeper(record_keeper)
+        self._security_transaction_dialog_presenter.load_record_keeper(record_keeper)
         self._refund_transaction_dialog_presenter.load_record_keeper(record_keeper)
+        self._transaction_tags_dialog_presenter.load_record_keeper(record_keeper)
         self._valid_accounts = record_keeper.accounts
         self.reset_model()
         self._view.resize_table_to_contents()
@@ -186,6 +197,17 @@ class TransactionsPresenter:
                 self.valid_accounts
             )
         )
+        self._view.signal_buy.connect(
+            lambda: self._security_transaction_dialog_presenter.run_add_dialog(
+                SecurityTransactionType.BUY, self.valid_accounts
+            )
+        )
+        self._view.signal_sell.connect(
+            lambda: self._security_transaction_dialog_presenter.run_add_dialog(
+                SecurityTransactionType.SELL, self.valid_accounts
+            )
+        )
+
         self._view.signal_delete.connect(self._delete_transactions)
         self._view.signal_duplicate.connect(self._duplicate_transaction)
         self._view.signal_edit.connect(self._edit_transactions)
@@ -197,6 +219,7 @@ class TransactionsPresenter:
         self._view.signal_refund.connect(self._refund_transaction)
         self._view.signal_find_refunds.connect(self._find_refunds)
 
+    def _connect_events(self) -> None:
         self._cash_transaction_dialog_presenter.event_update_model.append(
             self.update_model_data
         )
@@ -208,6 +231,13 @@ class TransactionsPresenter:
             self.update_model_data
         )
         self._cash_transfer_dialog_presenter.event_data_changed.append(
+            self.event_data_changed
+        )
+
+        self._security_transaction_dialog_presenter.event_update_model.append(
+            self.update_model_data
+        )
+        self._security_transaction_dialog_presenter.event_data_changed.append(
             self.event_data_changed
         )
 

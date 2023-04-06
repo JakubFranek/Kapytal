@@ -327,7 +327,7 @@ class CashTransactionDialogPresenter:
 
     def _prepare_dialog(self, edit_mode: EditMode) -> bool:
         accounts = [
-            account
+            account.path
             for account in self._record_keeper.accounts
             if isinstance(account, CashAccount)
         ]

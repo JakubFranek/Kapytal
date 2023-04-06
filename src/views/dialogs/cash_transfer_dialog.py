@@ -44,20 +44,18 @@ class CashTransferDialog(QDialog, Ui_CashTransferDialog):
     signal_do_and_close = pyqtSignal()
     signal_do_and_continue = pyqtSignal()
 
-    signal_account_changed = pyqtSignal()
-
     def __init__(
         self,
         parent: QWidget,
         accounts: Collection[CashAccount],
-        tags: Collection[str],
+        tag_names: Collection[str],
         *,
         edit_mode: EditMode,
     ) -> None:
         super().__init__(parent)
         self.setupUi(self)
 
-        self.tags_widget = MultipleTagsSelectorWidget(self, tags)
+        self.tags_widget = MultipleTagsSelectorWidget(self, tag_names)
         self.tags_label = QLabel("Tags", self)
         self.formLayout.addRow(self.tags_label, self.tags_widget)
 
