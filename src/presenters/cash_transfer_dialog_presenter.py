@@ -102,7 +102,10 @@ class CashTransferDialogPresenter:
             recipient_paths.pop() if len(recipient_paths) == 1 else ""
         )
 
-        datetimes = {transfer.datetime_ for transfer in transfers}
+        datetimes = {
+            transfer.datetime_.replace(hour=0, minute=0, second=0, microsecond=0)
+            for transfer in transfers
+        }
         self._dialog.datetime_ = (
             datetimes.pop() if len(datetimes) == 1 else self._dialog.min_datetime
         )

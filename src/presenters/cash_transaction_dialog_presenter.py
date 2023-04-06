@@ -144,7 +144,10 @@ class CashTransactionDialogPresenter:
         payees = {transaction.payee.name for transaction in transactions}
         self._dialog.payee = payees.pop() if len(payees) == 1 else ""
 
-        datetimes = {transaction.datetime_ for transaction in transactions}
+        datetimes = {
+            transaction.datetime_.replace(hour=0, minute=0, second=0, microsecond=0)
+            for transaction in transactions
+        }
         self._dialog.datetime_ = (
             datetimes.pop() if len(datetimes) == 1 else self._dialog.min_datetime
         )
@@ -327,7 +330,7 @@ class CashTransactionDialogPresenter:
 
     def _prepare_dialog(self, edit_mode: EditMode) -> bool:
         accounts = [
-            account.path
+            account
             for account in self._record_keeper.accounts
             if isinstance(account, CashAccount)
         ]

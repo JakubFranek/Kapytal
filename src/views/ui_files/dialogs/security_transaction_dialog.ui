@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>239</width>
-    <height>305</height>
+    <height>296</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -174,7 +174,11 @@
       </widget>
      </item>
      <item row="6" column="1">
-      <widget class="QDoubleSpinBox" name="sharesDoubleSpinBox"/>
+      <widget class="QDoubleSpinBox" name="sharesDoubleSpinBox">
+       <property name="maximum">
+        <double>10000000000000000.000000000000000</double>
+       </property>
+      </widget>
      </item>
      <item row="7" column="0">
       <widget class="QLabel" name="priceLabel">
@@ -203,16 +207,6 @@
        </property>
       </widget>
      </item>
-     <item row="8" column="1">
-      <widget class="QDoubleSpinBox" name="totalDoubleSpinBox">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-       <property name="buttonSymbols">
-        <enum>QAbstractSpinBox::NoButtons</enum>
-       </property>
-      </widget>
-     </item>
      <item row="5" column="1">
       <widget class="QPlainTextEdit" name="descriptionPlainTextEdit">
        <property name="sizePolicy">
@@ -232,6 +226,25 @@
        </property>
        <property name="placeholderText">
         <string>Enter optional description</string>
+       </property>
+      </widget>
+     </item>
+     <item row="8" column="1">
+      <widget class="QDoubleSpinBox" name="totalDoubleSpinBox">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">background-color:rgb(240,240,240);</string>
+       </property>
+       <property name="readOnly">
+        <bool>true</bool>
+       </property>
+       <property name="buttonSymbols">
+        <enum>QAbstractSpinBox::NoButtons</enum>
+       </property>
+       <property name="maximum">
+        <double>10000000000000000.000000000000000</double>
        </property>
       </widget>
      </item>

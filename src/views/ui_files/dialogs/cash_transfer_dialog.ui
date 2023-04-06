@@ -182,7 +182,13 @@
    <item row="4" column="1">
     <widget class="QLineEdit" name="exchangeRateLineEdit">
      <property name="enabled">
-      <bool>false</bool>
+      <bool>true</bool>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">background-color:rgb(240,240,240);</string>
+     </property>
+     <property name="readOnly">
+      <bool>true</bool>
      </property>
     </widget>
    </item>

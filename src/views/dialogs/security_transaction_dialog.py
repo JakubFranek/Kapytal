@@ -54,6 +54,7 @@ class SecurityTransactionDialog(QDialog, Ui_SecurityTransactionDialog):
         self._edit_mode = edit_mode
 
         self._cash_accounts = cash_accounts
+        self._securities = securities
 
         self.tags_widget = MultipleTagsSelectorWidget(self, tags)
         self.tags_label = QLabel("Tags", self)
@@ -62,6 +63,7 @@ class SecurityTransactionDialog(QDialog, Ui_SecurityTransactionDialog):
         self._initialize_window()
         self._initialize_security_combobox(securities)
         self._initialize_accounts_comboboxes(cash_accounts, security_accounts)
+        self._initialize_signals()
 
     @property
     def type_(self) -> SecurityTransactionType:
@@ -85,11 +87,16 @@ class SecurityTransactionDialog(QDialog, Ui_SecurityTransactionDialog):
         text = self.securityComboBox.currentText()
         if text == self.KEEP_CURRENT_VALUES:
             return None
-        return text
+        security: Security = self.securityComboBox.currentData()
+        return security.name
 
     @security_name.setter
     def security_name(self, value: str) -> None:
-        self.securityAccountComboBox.setCurrentText(value)
+        security = self._get_security(value)
+        if security is None:
+            raise ValueError(f"Security {value} not found.")
+        text = SecurityTransactionDialog._get_security_text(security)
+        self.securityAccountComboBox.setCurrentText(text)
 
     @property
     def cash_account_path(self) -> str | None:
@@ -174,7 +181,7 @@ class SecurityTransactionDialog(QDialog, Ui_SecurityTransactionDialog):
         self.tags_widget.tags = tags
 
     def _initialize_window(self) -> None:
-        self.setWindowIcon(QIcon("icons_custom:certificate.png"))
+        self.setWindowIcon(QIcon("icons_16:certificate.png"))
         self.buttonBox = QDialogButtonBox(self)
         if self._edit_mode != EditMode.ADD:
             self.setWindowTitle("Edit Security Transaction")
@@ -211,12 +218,17 @@ class SecurityTransactionDialog(QDialog, Ui_SecurityTransactionDialog):
             self.securityComboBox.addItem(self.KEEP_CURRENT_VALUES)
         icon = QIcon("icons_16:certificate.png")
         for security in securities:
-            text = (
-                f"{security.name} [{security.symbol}]"
-                if security.symbol
-                else security.name
-            )
-            self.securityComboBox.addItem(icon, text)
+            text = SecurityTransactionDialog._get_security_text(security)
+            self.securityComboBox.addItem(icon, text, security)
+
+        self.securityComboBox.currentTextChanged.connect(self._set_shares_unit)
+        self._set_shares_unit()
+
+    @staticmethod
+    def _get_security_text(security: Security) -> str:
+        return (
+            f"{security.name} [{security.symbol}]" if security.symbol else security.name
+        )
 
     def _initialize_accounts_comboboxes(
         self,
@@ -239,6 +251,14 @@ class SecurityTransactionDialog(QDialog, Ui_SecurityTransactionDialog):
             self._set_spinboxes_currencies
         )
         self._set_spinboxes_currencies()
+
+    def _initialize_signals(self) -> None:
+        self.sharesDoubleSpinBox.valueChanged.connect(self._update_total)
+        self.priceDoubleSpinBox.valueChanged.connect(self._update_total)
+
+    def _update_total(self) -> None:
+        total = self.shares * self.price_per_share
+        self.totalDoubleSpinBox.setValue(total)
 
     def _set_spinboxes_currencies(self) -> None:
         self._set_spinbox_currency(self.cash_account_path, self.priceDoubleSpinBox)
@@ -264,6 +284,14 @@ class SecurityTransactionDialog(QDialog, Ui_SecurityTransactionDialog):
             raise ValueError(f"Invalid Account path: {account_path}")
         return None
 
+    def _get_security(self, security_name: str) -> Security | None:
+        for security in self._securities:
+            if security.name == security_name:
+                return security
+        if self._edit_mode != EditMode.EDIT_MULTIPLE:
+            raise ValueError(f"Invalid Security name: {security_name}")
+        return None
+
     def _handle_button_box_click(self, button: QAbstractButton) -> None:
         role = self.buttonBox.buttonRole(button)
         if role == QDialogButtonBox.ButtonRole.AcceptRole:
@@ -274,3 +302,12 @@ class SecurityTransactionDialog(QDialog, Ui_SecurityTransactionDialog):
             self.reject()
         else:
             raise ValueError("Unknown role of the clicked button in the ButtonBox")
+
+    def _set_shares_unit(self) -> None:
+        security = self._get_security(self.security_name)
+        if security is None:
+            return
+        exponent = security.shares_unit.as_tuple().exponent
+        decimals = -exponent if exponent < 0 else 0
+        self.sharesDoubleSpinBox.setDecimals(decimals)
+        self.sharesDoubleSpinBox.setSingleStep(10**exponent)
