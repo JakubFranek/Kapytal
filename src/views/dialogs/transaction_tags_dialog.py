@@ -48,11 +48,11 @@ class TransactionTagsDialog(QDialog):
 
     @property
     def tags(self) -> tuple[str]:
-        return self.tags_widget.tags
+        return self.tags_widget.tag_names
 
     @tags.setter
     def tags(self, values: Collection[str]) -> None:
-        self.tags_widget.tags = values
+        self.tags_widget.tag_names = values
 
     def reject(self) -> None:
         logging.debug(f"Closing {self.__class__.__name__}")

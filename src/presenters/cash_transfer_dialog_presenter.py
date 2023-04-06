@@ -65,7 +65,7 @@ class CashTransferDialogPresenter:
         self._dialog.amount_received = transfer.amount_received.value_rounded
         self._dialog.datetime_ = transfer.datetime_
         self._dialog.description = transfer.description
-        self._dialog.tags = transfer.tags
+        self._dialog.tag_names = [tag.name for tag in transfer.tags]
 
         self._dialog.signal_do_and_close.connect(
             lambda: self._add_cash_transfer(close=True)
@@ -147,7 +147,7 @@ class CashTransferDialogPresenter:
                 "Sent and received amounts must be positive.", title="Warning"
             )
             return
-        tags = self._dialog.tags
+        tags = self._dialog.tag_names
 
         logging.info(
             f"Adding CashTransfer: {datetime_.strftime('%Y-%m-%d')}, "
@@ -187,7 +187,7 @@ class CashTransferDialogPresenter:
         if datetime_ is not None and not validate_datetime(datetime_, self._dialog):
             return
         description = self._dialog.description
-        tags = self._dialog.tags
+        tags = self._dialog.tag_names
 
         log = []
         if description is not None:

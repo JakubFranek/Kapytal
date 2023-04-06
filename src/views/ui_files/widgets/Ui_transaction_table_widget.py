@@ -98,8 +98,8 @@ class Ui_TransactionTableWidget(object):
         self.actionAdd_Tags.setObjectName("actionAdd_Tags")
         self.actionRemove_Tags = QtGui.QAction(TransactionTableWidget)
         self.actionRemove_Tags.setObjectName("actionRemove_Tags")
-        self.actionFind_Refunds = QtGui.QAction(TransactionTableWidget)
-        self.actionFind_Refunds.setObjectName("actionFind_Refunds")
+        self.actionFind_Related = QtGui.QAction(TransactionTableWidget)
+        self.actionFind_Related.setObjectName("actionFind_Related")
 
         self.retranslateUi(TransactionTableWidget)
         QtCore.QMetaObject.connectSlotsByName(TransactionTableWidget)
@@ -138,5 +138,5 @@ class Ui_TransactionTableWidget(object):
         self.actionShow_All_Columns.setText(_translate("TransactionTableWidget", "Show All Columns"))
         self.actionAdd_Tags.setText(_translate("TransactionTableWidget", "Add Tags"))
         self.actionRemove_Tags.setText(_translate("TransactionTableWidget", "Remove Tags"))
-        self.actionFind_Refunds.setText(_translate("TransactionTableWidget", "Find Refunds"))
-        self.actionFind_Refunds.setToolTip(_translate("TransactionTableWidget", "Find Refunds of a refunded Expense"))
+        self.actionFind_Related.setText(_translate("TransactionTableWidget", "Find related"))
+        self.actionFind_Related.setToolTip(_translate("TransactionTableWidget", "Show refunded Expense and its Refunds"))

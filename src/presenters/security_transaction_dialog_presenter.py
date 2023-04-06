@@ -77,6 +77,28 @@ class SecurityTransactionDialogPresenter:
 
         self._dialog.exec()
 
+    def run_duplicate_dialog(self, transaction: SecurityTransaction) -> None:
+        logging.debug("Running duplicate SecurityTransferDialog (edit_mode=ADD)")
+        self._prepare_dialog(edit_mode=EditMode.ADD)
+
+        self._dialog.type_ = transaction.type_
+        self._dialog.security_name = transaction.security.name
+        self._dialog.cash_account_path = transaction.cash_account.path
+        self._dialog.security_account_path = transaction.security_account.path
+        self._dialog.shares = transaction.shares
+        self._dialog.price_per_share = transaction.price_per_share.value_rounded
+        self._dialog.datetime_ = transaction.datetime_
+        self._dialog.description = transaction.description
+        self._dialog.tag_names = [tag.name for tag in transaction.tags]
+
+        self._dialog.signal_do_and_close.connect(
+            lambda: self._add_security_transaction(close=True)
+        )
+        self._dialog.signal_do_and_continue.connect(
+            lambda: self._add_security_transaction(close=False)
+        )
+        self._dialog.exec()
+
     # def run_edit_dialog(self, transactions: Sequence[SecurityTransaction]) -> None:
     #     if len(transactions) == 1:
     #         edit_mode = EditMode.EDIT_SINGLE
@@ -116,7 +138,7 @@ class SecurityTransactionDialogPresenter:
         price_per_share = self._dialog.price_per_share
         security_account_path = self._dialog.security_account_path
         cash_account_path = self._dialog.cash_account_path
-        tags = self._dialog.tags
+        tag_names = self._dialog.tag_names
 
         cash_account = self._record_keeper.get_account(cash_account_path, CashAccount)
 
@@ -125,7 +147,7 @@ class SecurityTransactionDialogPresenter:
             f"{description=}, type={type_.name}, security='{security_name}', "
             f"cash_account='{cash_account_path}', "
             f"security_account_path='{security_account_path}', shares={shares}, "
-            f"price_per_share={price_per_share} {cash_account.currency.code}, {tags=}"
+            f"price_per_share={price_per_share} {cash_account.currency.code}, {tag_names=}"
         )
         try:
             self._record_keeper.add_security_transaction(
@@ -137,6 +159,7 @@ class SecurityTransactionDialogPresenter:
                 price_per_share,
                 security_account_path,
                 cash_account_path,
+                tag_names,
             )
         except Exception as exception:  # noqa: BLE001
             handle_exception(exception)

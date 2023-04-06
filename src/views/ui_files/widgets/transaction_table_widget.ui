@@ -264,12 +264,12 @@
     <string>Remove Tags</string>
    </property>
   </action>
-  <action name="actionFind_Refunds">
+  <action name="actionFind_Related">
    <property name="text">
-    <string>Find Refunds</string>
+    <string>Find related</string>
    </property>
    <property name="toolTip">
-    <string>Find Refunds of a refunded Expense</string>
+    <string>Show refunded Expense and its Refunds</string>
    </property>
   </action>
  </widget>

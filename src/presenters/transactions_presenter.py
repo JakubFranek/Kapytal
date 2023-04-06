@@ -13,6 +13,7 @@ from src.models.model_objects.cash_objects import (
 )
 from src.models.model_objects.security_objects import (
     SecurityRelatedTransaction,
+    SecurityTransaction,
     SecurityTransactionType,
 )
 from src.models.record_keeper import RecordKeeper
@@ -217,7 +218,7 @@ class TransactionsPresenter:
 
         self._view.signal_selection_changed.connect(self._selection_changed)
         self._view.signal_refund.connect(self._refund_transaction)
-        self._view.signal_find_refunds.connect(self._find_refunds)
+        self._view.signal_find_related.connect(self._find_related)
 
     def _connect_events(self) -> None:
         self._cash_transaction_dialog_presenter.event_update_model.append(
@@ -299,6 +300,10 @@ class TransactionsPresenter:
             self._cash_transaction_dialog_presenter.run_duplicate_dialog(transaction)
         if isinstance(transaction, CashTransfer):
             self._cash_transfer_dialog_presenter.run_duplicate_dialog(transaction)
+        if isinstance(transaction, SecurityTransaction):
+            self._security_transaction_dialog_presenter.run_duplicate_dialog(
+                transaction
+            )
 
     def _edit_transactions(self) -> None:
         transactions = self._model.get_selected_items()
@@ -356,7 +361,8 @@ class TransactionsPresenter:
         transactions = self._model.get_selected_items()
 
         enable_refund = False
-        is_refunded = False
+        enable_find_related = False
+        enable_duplicate = True
         if len(transactions) == 1:
             transaction = transactions[0]
             if (
@@ -364,19 +370,41 @@ class TransactionsPresenter:
                 and transaction.type_ == CashTransactionType.EXPENSE
             ):
                 enable_refund = True
-                is_refunded = transaction.is_refunded
+                enable_find_related = transaction.is_refunded
+            if isinstance(transaction, RefundTransaction):
+                enable_duplicate = False
+                enable_find_related = True
 
-        self._view.set_actions(enable_refund=enable_refund, is_refunded=is_refunded)
+        self._view.set_actions(
+            enable_refund=enable_refund,
+            enable_find_related=enable_find_related,
+            enable_duplicate=enable_duplicate,
+        )
 
-    def _find_refunds(self) -> None:
+    def _find_related(self) -> None:
         transactions = self._model.get_selected_items()
         if len(transactions) > 1:
-            raise ValueError("Cannot find Refunds for more than one Transaction.")
-        transaction = transactions[0]
-        if not isinstance(transaction, CashTransaction):
-            raise TypeError("Cannot find Refunds for a non-Cash Transaction.")
+            raise ValueError(
+                "Cannot find related Transactions for more than one Transaction."
+            )
 
-        refunds = transaction.refunds
-        uuids = [refund.uuid for refund in refunds]
+        transaction = transactions[0]
+        if not isinstance(transaction, CashTransaction) and not isinstance(
+            transaction, RefundTransaction
+        ):
+            raise TypeError(
+                "Cannot find related Transactions for a Transaction which is not a "
+                "CashTransaction nor a RefundTransaction."
+            )
+
+        if isinstance(transaction, RefundTransaction):
+            refunded_transaction = transaction.refunded_transaction
+        else:
+            refunded_transaction = transaction
+
+        refunds = refunded_transaction.refunds
+        uuids = [str(refund.uuid) for refund in refunds] + [
+            str(refunded_transaction.uuid)
+        ]
         pattern = "|".join(uuids)
         self._view.search_bar_text = pattern

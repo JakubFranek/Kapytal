@@ -195,6 +195,9 @@
        <property name="showGroupSeparator" stdset="0">
         <bool>true</bool>
        </property>
+       <property name="decimals">
+        <number>9</number>
+       </property>
        <property name="maximum">
         <double>10000000000000000.000000000000000</double>
        </property>
@@ -242,6 +245,12 @@
        </property>
        <property name="buttonSymbols">
         <enum>QAbstractSpinBox::NoButtons</enum>
+       </property>
+       <property name="showGroupSeparator" stdset="0">
+        <bool>true</bool>
+       </property>
+       <property name="decimals">
+        <number>9</number>
        </property>
        <property name="maximum">
         <double>10000000000000000.000000000000000</double>

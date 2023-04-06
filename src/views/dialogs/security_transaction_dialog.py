@@ -175,12 +175,12 @@ class SecurityTransactionDialog(QDialog, Ui_SecurityTransactionDialog):
         self.priceDoubleSpinBox.setValue(price_per_share)
 
     @property
-    def tags(self) -> Collection[str]:
-        return self.tags_widget.tags
+    def tag_names(self) -> Collection[str]:
+        return self.tags_widget.tag_names
 
-    @tags.setter
-    def tags(self, tags: Collection[str]) -> None:
-        self.tags_widget.tags = tags
+    @tag_names.setter
+    def tag_names(self, tags: Collection[str]) -> None:
+        self.tags_widget.tag_names = tags
 
     def _initialize_window(self) -> None:
         self.setWindowIcon(QIcon("icons_16:certificate.png"))
@@ -288,7 +288,6 @@ class SecurityTransactionDialog(QDialog, Ui_SecurityTransactionDialog):
         if account is None:
             return
         spinbox.setSuffix(" " + account.currency.code)
-        spinbox.setDecimals(account.currency.places)
 
     def _get_cash_account(self, account_path: str) -> CashAccount | None:
         for account in self._cash_accounts:

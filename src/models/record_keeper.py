@@ -386,6 +386,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         price_per_share: Decimal | int | str,
         security_account_path: str,
         cash_account_path: str,
+        tag_names: Collection[str] = (),
     ) -> None:
         security = self.get_security_by_name(security_name)
         cash_account = self.get_account(cash_account_path, CashAccount)
@@ -402,6 +403,11 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
             cash_account=cash_account,
         )
         self._transactions.append(transaction)
+
+        tags = [
+            self.get_attribute(tag_name, AttributeType.TAG) for tag_name in tag_names
+        ]
+        transaction.add_tags(tags)
 
     def add_security_transfer(  # noqa: PLR0913
         self,
