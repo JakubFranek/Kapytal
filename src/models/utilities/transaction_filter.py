@@ -102,12 +102,10 @@ class TypeFilter(FilterModeMixin):
     def __hash__(self) -> int:
         return hash(self.members)
 
-    def __eq__(self, __value: object) -> bool:
-        if not isinstance(__value, TypeFilter):
+    def __eq__(self, __o: object) -> bool:
+        if not isinstance(__o, TypeFilter):
             return False
-        self_members = self.members
-        other_members = __value.members
-        return self_members == other_members
+        return self.members == __o.members
 
     def filter_transactions(
         self, transactions: Collection[Transaction]
@@ -173,10 +171,10 @@ class DateTimeFilter(FilterModeMixin):
     def __hash__(self) -> int:
         return hash(self.members)
 
-    def __eq__(self, __value: object) -> bool:
-        if not isinstance(__value, DateTimeFilter):
+    def __eq__(self, __o: object) -> bool:
+        if not isinstance(__o, DateTimeFilter):
             return False
-        return self.members == __value.members
+        return self.members == __o.members
 
     def filter_transactions(
         self, transactions: Collection[Transaction]
@@ -217,10 +215,10 @@ class DescriptionFilter(FilterModeMixin):
     def __hash__(self) -> int:
         return hash(self.members)
 
-    def __eq__(self, __value: object) -> bool:
-        if not isinstance(__value, DescriptionFilter):
+    def __eq__(self, __o: object) -> bool:
+        if not isinstance(__o, DescriptionFilter):
             return False
-        return self.members == __value.members
+        return self.members == __o.members
 
     def filter_transactions(
         self, transactions: Collection[Transaction]
@@ -261,10 +259,10 @@ class AccountFilter(FilterModeMixin):
     def __hash__(self) -> int:
         return hash(self.members)
 
-    def __eq__(self, __value: object) -> bool:
-        if not isinstance(__value, AccountFilter):
+    def __eq__(self, __o: object) -> bool:
+        if not isinstance(__o, AccountFilter):
             return False
-        return self.members == __value.members
+        return self.members == __o.members
 
     def filter_transactions(
         self, transactions: Collection[Transaction]
@@ -323,10 +321,10 @@ class TransactionFilter:
     def __hash__(self) -> int:
         return hash(self.members)
 
-    def __eq__(self, __value: object) -> bool:
-        if not isinstance(__value, TransactionFilter):
+    def __eq__(self, __o: object) -> bool:
+        if not isinstance(__o, TransactionFilter):
             return False
-        return self.members == __value.members
+        return self.members == __o.members
 
     def filter_transactions(
         self, transactions: Collection[Transaction]
@@ -345,9 +343,9 @@ class TransactionFilter:
                 CashTransactionType.EXPENSE,
                 RefundTransaction,
                 CashTransfer,
+                SecurityTransfer,
                 SecurityTransactionType.BUY,
                 SecurityTransactionType.SELL,
-                SecurityTransfer,
             ),
             mode=FilterMode.KEEP,
         )
