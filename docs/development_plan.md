@@ -2,8 +2,6 @@
 
 ## Must haves
 
-1. SecurityTransactions
-1. SecurityTransfers
 1. Transaction filtering options
     - create filter class object to be passed as argument
     - date ranges
@@ -17,6 +15,7 @@
     - securities
     - currencies
     - include / exclude options
+1. balance column
 1. SecurityAccount contents view
     - launched from AccountTree right click
     - option to create Security transactions from this view

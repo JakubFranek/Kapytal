@@ -100,9 +100,9 @@ class CashAccount(Account):
             raise TypeError("CashAccount.currency must be a Currency.")
         self._currency = currency
 
-        self._balance_history = [
-            (datetime.now(user_settings.settings.time_zone), initial_balance)
-        ]
+        self._balance_history: list[
+            tuple[datetime, CashAmount, CashRelatedTransaction | None]
+        ] = [(datetime.now(user_settings.settings.time_zone), initial_balance, None)]
         self._transactions: list[CashRelatedTransaction] = []
 
         self.initial_balance = initial_balance
@@ -130,7 +130,9 @@ class CashAccount(Account):
         self.update_balance()
 
     @property
-    def balance_history(self) -> tuple[tuple[datetime, CashAmount], ...]:
+    def balance_history(
+        self,
+    ) -> tuple[tuple[datetime, CashAmount, CashRelatedTransaction | None], ...]:
         return tuple(self._balance_history)
 
     @property
@@ -142,6 +144,17 @@ class CashAccount(Account):
 
     def get_balance(self, currency: Currency) -> CashAmount:
         return self._balance_history[-1][1].convert(currency)
+
+    def get_balance_after_transaction(
+        self, currency: Currency, transaction: CashRelatedTransaction
+    ) -> CashAmount:
+        self._validate_transaction(transaction)
+        for _, balance, _transaction in self._balance_history:
+            if _transaction == transaction:
+                return balance.convert(currency)
+        raise ValueError(  # pragma: no cover
+            "Provided CashRelatedTransaction not found."
+        )
 
     def add_transaction(self, transaction: CashRelatedTransaction) -> None:
         self._validate_transaction(transaction)
@@ -203,13 +216,15 @@ class CashAccount(Account):
             )
         else:
             oldest_datetime = self.balance_history[0][0] + timedelta(days=1)
-        datetime_balance_history = [
-            (oldest_datetime - timedelta(days=1), self.initial_balance)
-        ]
+        datetime_balance_history: list[
+            tuple[datetime, CashAmount, CashRelatedTransaction | None]
+        ] = [(oldest_datetime - timedelta(days=1), self.initial_balance, None)]
         for transaction in self.transactions:
             last_balance = datetime_balance_history[-1][1]
             next_balance = last_balance + transaction.get_amount(self)
-            datetime_balance_history.append((transaction.datetime_, next_balance))
+            datetime_balance_history.append(
+                (transaction.datetime_, next_balance, transaction)
+            )
         self._balance_history = datetime_balance_history
 
     def _validate_transaction(
