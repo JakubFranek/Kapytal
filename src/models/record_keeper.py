@@ -417,6 +417,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         shares: Decimal | int | str,
         account_sender_path: str,
         account_recipient_path: str,
+        tag_names: Collection[str] = (),
     ) -> None:
         security = self.get_security_by_name(security_name)
         account_sender = self.get_account(account_sender_path, SecurityAccount)
@@ -430,6 +431,11 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
             recipient=account_recipient,
         )
         self._transactions.append(transaction)
+
+        tags = [
+            self.get_attribute(tag_name, AttributeType.TAG) for tag_name in tag_names
+        ]
+        transaction.add_tags(tags)
 
     def edit_cash_transactions(  # noqa: PLR0913
         self,
@@ -787,6 +793,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         shares: Decimal | None = None,
         sender_path: str | None = None,
         recipient_path: str | None = None,
+        tag_names: Collection[str] | None = None,
     ) -> None:
         transactions = self._get_transactions(transaction_uuids, SecurityTransfer)
 
@@ -824,6 +831,15 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
                 shares=shares,
                 security=security,
             )
+
+        if tag_names is not None:
+            tags = [
+                self.get_attribute(tag_name, AttributeType.TAG)
+                for tag_name in tag_names
+            ]
+            for transaction in transactions:
+                transaction.clear_tags()
+                transaction.add_tags(tags)
 
     def edit_category(
         self, current_path: str, new_path: str, index: int | None = None

@@ -187,6 +187,7 @@ class TransactionTableModel(QAbstractTableModel):
                 transaction, sent=False
             )
         if column == TransactionTableColumn.COLUMN_BALANCE:
+            # TODO: implement the balance column
             return ""
         if column == TransactionTableColumn.COLUMN_CATEGORY:
             return TransactionTableModel._get_transaction_category(transaction)

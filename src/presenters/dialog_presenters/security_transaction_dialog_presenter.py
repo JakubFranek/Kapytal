@@ -45,7 +45,7 @@ class SecurityTransactionDialogPresenter:
         type_: SecurityTransactionType,
         valid_accounts: Collection[Account],
     ) -> None:
-        logging.debug("Running CashTransactionDialog (edit_mode=ADD)")
+        logging.debug("Running SecurityTransactionDialog (edit_mode=ADD)")
         valid_cash_accounts = [
             account for account in valid_accounts if isinstance(account, CashAccount)
         ]
@@ -204,7 +204,7 @@ class SecurityTransactionDialogPresenter:
             f"cash_account='{cash_account_path}', "
             f"security_account_path='{security_account_path}', shares={shares}, "
             f"price_per_share={price_per_share} {cash_account.currency.code}, "
-            f"{tag_names=}"
+            f"tags={tag_names}"
         )
         try:
             self._record_keeper.add_security_transaction(

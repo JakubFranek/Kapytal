@@ -4,11 +4,7 @@ from datetime import datetime
 
 from PyQt6.QtWidgets import QWidget
 from src.models.base_classes.account import Account
-from src.models.model_objects.security_objects import (
-    SecurityAccount,
-    SecurityTransaction,
-    SecurityTransactionType,
-)
+from src.models.model_objects.security_objects import SecurityAccount, SecurityTransfer
 from src.models.record_keeper import RecordKeeper
 from src.models.user_settings import user_settings
 from src.presenters.utilities.event import Event
@@ -19,7 +15,7 @@ from src.views.dialogs.security_transfer_dialog import EditMode, SecurityTransfe
 from src.views.utilities.handle_exception import display_error_message
 
 
-class SecurityTransactionDialogPresenter:
+class SecurityTransferDialogPresenter:
     event_update_model = Event()
     event_data_changed = Event()
 
@@ -38,10 +34,9 @@ class SecurityTransactionDialogPresenter:
 
     def run_add_dialog(
         self,
-        type_: SecurityTransactionType,
         valid_accounts: Collection[Account],
     ) -> None:
-        logging.debug("Running CashTransactionDialog (edit_mode=ADD)")
+        logging.debug("Running SecurityTransferDialog (edit_mode=ADD)")
         valid_security_accounts = [
             account
             for account in valid_accounts
@@ -58,108 +53,81 @@ class SecurityTransactionDialogPresenter:
         self._prepare_dialog(edit_mode=EditMode.ADD)
 
         self._dialog.sender_path = valid_security_accounts[0].path
+        self._dialog.recipient_path = valid_security_accounts[1].path
         self._dialog.datetime_ = datetime.now(user_settings.settings.time_zone)
 
         self._dialog.signal_do_and_close.connect(
-            lambda: self._add_security_transaction(close=True)
+            lambda: self._add_security_transfer(close=True)
         )
         self._dialog.signal_do_and_continue.connect(
-            lambda: self._add_security_transaction(close=False)
+            lambda: self._add_security_transfer(close=False)
         )
 
         self._dialog.exec()
 
-    def run_duplicate_dialog(self, transaction: SecurityTransaction) -> None:
+    def run_duplicate_dialog(self, transaction: SecurityTransfer) -> None:
         logging.debug("Running duplicate SecurityTransactionDialog (edit_mode=ADD)")
         self._prepare_dialog(edit_mode=EditMode.ADD)
 
-        self._dialog.type_ = transaction.type_
         self._dialog.security_name = transaction.security.name
-        self._dialog.cash_account_path = transaction.cash_account.path
-        self._dialog.security_account_path = transaction.security_account.path
+        self._dialog.sender_path = transaction.sender.path
+        self._dialog.recipient_path = transaction.recipient.path
         self._dialog.shares = transaction.shares
-        self._dialog.price_per_share = transaction.price_per_share.value_rounded
         self._dialog.datetime_ = transaction.datetime_
         self._dialog.description = transaction.description
         self._dialog.tag_names = [tag.name for tag in transaction.tags]
 
         self._dialog.signal_do_and_close.connect(
-            lambda: self._add_security_transaction(close=True)
+            lambda: self._add_security_transfer(close=True)
         )
         self._dialog.signal_do_and_continue.connect(
-            lambda: self._add_security_transaction(close=False)
+            lambda: self._add_security_transfer(close=False)
         )
         self._dialog.exec()
 
-    def run_edit_dialog(self, transactions: Sequence[SecurityTransaction]) -> None:
-        if len(transactions) == 1:
+    def run_edit_dialog(self, transfers: Sequence[SecurityTransfer]) -> None:
+        if len(transfers) == 1:
             edit_mode = EditMode.EDIT_SINGLE
-        elif len(transactions) > 1:
-            currencies = {transaction.currency for transaction in transactions}
-            if len(currencies) == 1:
-                edit_mode = EditMode.EDIT_MULTIPLE
-            else:
-                edit_mode = EditMode.EDIT_MULTIPLE_MIXED_CURRENCY
+        elif len(transfers) > 1:
+            edit_mode = EditMode.EDIT_MULTIPLE
         else:
             raise ValueError(
-                "Expected 'transactions' to be a non-empty Sequence of "
-                "SecurityTransactions."
+                "Expected 'transfers' to be a non-empty Sequence of SecurityTransfers."
             )
 
-        logging.debug(f"Running SecurityTransactionDialog (edit_mode={edit_mode.name})")
-
-        types = {transaction.type_ for transaction in transactions}
-        if len(types) > 1:
-            display_error_message(
-                "Cannot edit multiple Security Transactions with different types.",
-                title="Error",
-            )
-            return
+        logging.debug(f"Running SecurityTransferDialog (edit_mode={edit_mode.name})")
 
         self._prepare_dialog(edit_mode=edit_mode)
 
         datetimes = {
             transaction.datetime_.replace(hour=0, minute=0, second=0, microsecond=0)
-            for transaction in transactions
+            for transaction in transfers
         }
         self._dialog.datetime_ = (
             datetimes.pop() if len(datetimes) == 1 else self._dialog.min_datetime
         )
 
-        descriptions = {transaction.description for transaction in transactions}
+        descriptions = {transaction.description for transaction in transfers}
         self._dialog.description = descriptions.pop() if len(descriptions) == 1 else ""
 
-        self._dialog.type_ = types.pop()
-
-        security_names = {transaction.security.name for transaction in transactions}
+        security_names = {transaction.security.name for transaction in transfers}
         self._dialog.security_name = (
             security_names.pop() if len(security_names) == 1 else ""
         )
 
-        cash_account_paths = {
-            transaction.cash_account.path for transaction in transactions
-        }
-        self._dialog.cash_account_path = (
-            cash_account_paths.pop() if len(cash_account_paths) == 1 else ""
+        sender_paths = {transfer.sender.path for transfer in transfers}
+        self._dialog.sender_path = sender_paths.pop() if len(sender_paths) == 1 else ""
+
+        recipient_paths = {transfer.recipient.path for transfer in transfers}
+        self._dialog.recipient_path = (
+            recipient_paths.pop() if len(recipient_paths) == 1 else ""
         )
 
-        security_account_paths = {
-            transaction.security_account.path for transaction in transactions
-        }
-        self._dialog.security_account_path = (
-            security_account_paths.pop() if len(security_account_paths) == 1 else ""
-        )
-
-        shares = {transaction.shares for transaction in transactions}
+        shares = {transaction.shares for transaction in transfers}
         self._dialog.shares = shares.pop() if len(shares) == 1 else 0
 
-        prices = {transaction.price_per_share for transaction in transactions}
-        self._dialog.price_per_share = (
-            prices.pop().value_rounded if len(prices) == 1 else 0
-        )
-
         tag_names_frozensets = set()
-        for transaction in transactions:
+        for transaction in transfers:
             tag_names_frozenset = frozenset(tag.name for tag in transaction.tags)
             tag_names_frozensets.add(tag_names_frozenset)
 
@@ -167,10 +135,10 @@ class SecurityTransactionDialogPresenter:
             sorted(tag_names_frozensets.pop()) if len(tag_names_frozensets) == 1 else ()
         )
 
-        self._dialog.signal_do_and_close.connect(self._edit_security_transactions)
+        self._dialog.signal_do_and_close.connect(self._edit_security_transfers)
         self._dialog.exec()
 
-    def _add_security_transaction(self, *, close: bool) -> None:
+    def _add_security_transfer(self, *, close: bool) -> None:
         datetime_ = self._dialog.datetime_
         if datetime_ is None:
             raise ValueError("Expected datetime_, received None.")
@@ -180,33 +148,24 @@ class SecurityTransactionDialogPresenter:
             self._dialog.description if self._dialog.description is not None else ""
         )
         security_name = self._dialog.security_name
-        type_ = self._dialog.type_
         shares = self._dialog.shares
-        price_per_share = self._dialog.price_per_share
-        security_account_path = self._dialog.security_account_path
-        cash_account_path = self._dialog.cash_account_path
+        sender_path = self._dialog.sender_path
+        recipient_path = self._dialog.recipient_path
         tag_names = self._dialog.tag_names
 
-        cash_account = self._record_keeper.get_account(cash_account_path, CashAccount)
-
         logging.info(
-            f"Adding SecurityTransaction: {datetime_.strftime('%Y-%m-%d')}, "
-            f"{description=}, type={type_.name}, security='{security_name}', "
-            f"cash_account='{cash_account_path}', "
-            f"security_account_path='{security_account_path}', shares={shares}, "
-            f"price_per_share={price_per_share} {cash_account.currency.code}, "
-            f"{tag_names=}"
+            f"Adding SecurityTransfer: {datetime_.strftime('%Y-%m-%d')}, "
+            f"{description=}, security='{security_name}', sender='{sender_path}', "
+            f"recipient='{recipient_path}', shares={shares}, tags={tag_names}"
         )
         try:
-            self._record_keeper.add_security_transaction(
+            self._record_keeper.add_security_transfer(
                 description,
                 datetime_,
-                type_,
                 security_name,
                 shares,
-                price_per_share,
-                security_account_path,
-                cash_account_path,
+                sender_path,
+                recipient_path,
                 tag_names,
             )
         except Exception as exception:  # noqa: BLE001
@@ -220,8 +179,8 @@ class SecurityTransactionDialogPresenter:
             self._dialog.close()
         self.event_data_changed()
 
-    def _edit_security_transactions(self) -> None:
-        transactions: list[SecurityTransaction] = self._model.get_selected_items()
+    def _edit_security_transfers(self) -> None:
+        transactions: list[SecurityTransfer] = self._model.get_selected_items()
         uuids = [transaction.uuid for transaction in transactions]
 
         datetime_ = self._dialog.datetime_
@@ -229,12 +188,10 @@ class SecurityTransactionDialogPresenter:
             return
         description = self._dialog.description
 
-        type_ = self._dialog.type_
         security_name = self._dialog.security_name
-        cash_account_path = self._dialog.cash_account_path
-        security_account_path = self._dialog.security_account_path
+        sender_path = self._dialog.sender_path
+        recipient_path = self._dialog.recipient_path
         shares = self._dialog.shares
-        price_per_share = self._dialog.price_per_share
         tag_names = self._dialog.tag_names
 
         log = []
@@ -242,37 +199,29 @@ class SecurityTransactionDialogPresenter:
             log.append(f"{description=}")
         if datetime_ is not None:
             log.append(f"date={datetime_.strftime('%Y-%m-%d')}")
-        if type_ is not None:
-            log.append(f"type={type_.name}")
         if security_name is not None:
             log.append(f"security='{security_name}'")
-        if cash_account_path is not None:
-            log.append(f"cash_account='{cash_account_path}'")
-        if security_account_path is not None:
-            log.append(f"security_account='{security_account_path}'")
+        if sender_path is not None:
+            log.append(f"sender='{sender_path}'")
+        if recipient_path is not None:
+            log.append(f"recipient='{recipient_path}'")
         if shares is not None:
             log.append(f"shares={shares}")
-        if price_per_share is not None:
-            log.append(
-                f"price_per_share={price_per_share} {self._dialog.currency_code}"
-            )
         if tag_names is not None:
             log.append(f"tags={tag_names}")
         logging.info(
-            f"Editing {len(transactions)} SecurityTransaction(s): {', '.join(log)}, "
+            f"Editing {len(transactions)} SecurityTransfer(s): {', '.join(log)}, "
             f"uuids={[str(uuid) for uuid in uuids]}"
         )
         try:
-            self._record_keeper.edit_security_transactions(
+            self._record_keeper.edit_security_transfers(
                 uuids,
                 description,
                 datetime_,
-                type_,
                 security_name,
-                cash_account_path,
-                security_account_path,
-                price_per_share,
                 shares,
+                sender_path,
+                recipient_path,
                 tag_names,
             )
         except Exception as exception:  # noqa: BLE001

@@ -59,7 +59,7 @@ class SecurityTransferDialog(QDialog, Ui_SecurityTransferDialog):
         self._initialize_window()
         self._initialize_placeholders()
         self._initialize_security_combobox(securities)
-        self._setup_security_account_comboboxes()
+        self._initialize_security_account_comboboxes()
 
     @property
     def security_name(self) -> str | None:
@@ -213,7 +213,7 @@ class SecurityTransferDialog(QDialog, Ui_SecurityTransferDialog):
             f"{security.name} [{security.symbol}]" if security.symbol else security.name
         )
 
-    def _setup_security_account_comboboxes(
+    def _initialize_security_account_comboboxes(
         self,
     ) -> None:
         if self._edit_mode == EditMode.EDIT_MULTIPLE:
