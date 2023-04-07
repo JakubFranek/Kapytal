@@ -315,7 +315,10 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
 
     def _initialize_window(self) -> None:
         if self._edit_mode != EditMode.ADD:
-            self.setWindowTitle("Edit Cash Transaction")
+            if self._edit_mode in EditMode.get_multiple_edit_values():
+                self.setWindowTitle("Edit Cash Transactions")
+            else:
+                self.setWindowTitle("Edit Cash Transaction")
             self.setWindowIcon(QIcon("icons_custom:coins-pencil.png"))
             self.buttonBox.addButton("OK", QDialogButtonBox.ButtonRole.AcceptRole)
         else:
