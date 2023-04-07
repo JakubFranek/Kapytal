@@ -11,6 +11,7 @@ from src.views.ui_files.widgets.Ui_transaction_table_widget import (
 
 class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
     signal_search_text_changed = pyqtSignal()
+    signal_filter_transactions = pyqtSignal()
 
     signal_income = pyqtSignal()
     signal_expense = pyqtSignal()
@@ -193,6 +194,9 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
 
         self.actionAdd_Tags.triggered.connect(self.signal_add_tags.emit)
         self.actionRemove_Tags.triggered.connect(self.signal_remove_tags.emit)
+        self.actionFilter_Transactions.triggered.connect(
+            self.signal_filter_transactions.emit
+        )
 
         self.searchLineEdit.textChanged.connect(self.signal_search_text_changed.emit)
 

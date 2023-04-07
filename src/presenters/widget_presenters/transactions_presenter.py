@@ -37,6 +37,9 @@ from src.presenters.dialog_presenters.security_transfer_dialog_presenter import 
 from src.presenters.dialog_presenters.transaction_tags_dialog_presenter import (
     TransactionTagsDialogPresenter,
 )
+from src.presenters.form_presenters.transaction_filter_form_presenter import (
+    TransactionFilterFormPresenter,
+)
 from src.presenters.utilities.event import Event
 from src.presenters.utilities.handle_exception import handle_exception
 from src.view_models.transaction_table_model import TransactionTableModel
@@ -77,6 +80,9 @@ class TransactionsPresenter:
         self._transaction_tags_dialog_presenter = TransactionTagsDialogPresenter(
             view, record_keeper
         )
+        self._transaction_filter_form_presenter = TransactionFilterFormPresenter(
+            view, record_keeper
+        )
 
         self._setup_view()
         self._connect_signals()
@@ -107,6 +113,7 @@ class TransactionsPresenter:
         self._security_transfer_dialog_presenter.load_record_keeper(record_keeper)
         self._refund_transaction_dialog_presenter.load_record_keeper(record_keeper)
         self._transaction_tags_dialog_presenter.load_record_keeper(record_keeper)
+        self._transaction_filter_form_presenter.load_record_keeper(record_keeper)
         self._valid_accounts = record_keeper.accounts
         self.reset_model()
         self._view.resize_table_to_contents()
@@ -155,7 +162,7 @@ class TransactionsPresenter:
             if column == TransactionTableColumn.COLUMN_BALANCE:
                 self._view.set_column_visibility(column, show=single_cash_account)
 
-    def _filter(self) -> None:
+    def _search_filter(self) -> None:
         pattern = self._view.search_bar_text
         if self._validate_regex(pattern) is False:
             return
@@ -194,7 +201,7 @@ class TransactionsPresenter:
         self._view.set_column_visibility(TransactionTableColumn.COLUMN_UUID, show=False)
 
     def _connect_signals(self) -> None:
-        self._view.signal_search_text_changed.connect(self._filter)
+        self._view.signal_search_text_changed.connect(self._search_filter)
 
         self._view.signal_income.connect(
             lambda: self._cash_transaction_dialog_presenter.run_add_dialog(
@@ -230,6 +237,8 @@ class TransactionsPresenter:
         self._view.signal_delete.connect(self._delete_transactions)
         self._view.signal_duplicate.connect(self._duplicate_transaction)
         self._view.signal_edit.connect(self._edit_transactions)
+
+        self._view.signal_filter_transactions.connect(self._filter_transactions)
 
         self._view.signal_add_tags.connect(self._add_tags)
         self._view.signal_remove_tags.connect(self._remove_tags)
@@ -447,3 +456,6 @@ class TransactionsPresenter:
         ]
         pattern = "|".join(uuids)
         self._view.search_bar_text = pattern
+
+    def _filter_transactions(self) -> None:
+        self._transaction_filter_form_presenter.show_form()
