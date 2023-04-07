@@ -113,7 +113,7 @@ class Ui_TransactionTableWidget(object):
         self.buyToolButton.setText(_translate("TransactionTableWidget", "..."))
         self.sellToolButton.setText(_translate("TransactionTableWidget", "..."))
         self.filterToolButton.setText(_translate("TransactionTableWidget", "..."))
-        self.searchLineEdit.setToolTip(_translate("TransactionTableWidget", "<html><head/><body><p>Special regex characters:</p><p>* matches zero or more of preceding token<br/>. matches any character<br/>? matches zero or one of preceding token<br/>+ matches one or more of the preceding token<br/>[...] matches any character within square brackets<br/>(...) groups tokens together<br/>^ matches the beginning of a string<br/>$ matches the end of a string<br/>| matches the expression to the right or left<br/>\\ escapes a special character</p></body></html>"))
+        self.searchLineEdit.setToolTip(_translate("TransactionTableWidget", "<html><head/><body><p>Special regex characters:</p><p>. matches any character<br/>* matches zero or more of preceding token<br/>? matches zero or one of preceding token<br/>+ matches one or more of the preceding token<br/>^ matches the beginning of a string<br/>$ matches the end of a string<br/>| matches the expression to the right or left<br/>[...] matches any character within square brackets<br/>(...) groups tokens together<br/>\\ escapes a special character</p></body></html>"))
         self.searchLineEdit.setPlaceholderText(_translate("TransactionTableWidget", "Search Transactions"))
         self.tableView.setStatusTip(_translate("TransactionTableWidget", "Transaction Table: right-click to open the context menu"))
         self.actionExpense.setText(_translate("TransactionTableWidget", "Expense"))

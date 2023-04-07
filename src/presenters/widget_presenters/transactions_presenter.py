@@ -4,6 +4,7 @@ from collections.abc import Collection
 
 from PyQt6.QtCore import QSortFilterProxyModel, Qt
 from src.models.base_classes.account import Account
+from src.models.custom_exceptions import InvalidOperationError
 from src.models.model_objects.cash_objects import (
     CashAccount,
     CashTransaction,
@@ -15,19 +16,25 @@ from src.models.model_objects.security_objects import (
     SecurityRelatedTransaction,
     SecurityTransaction,
     SecurityTransactionType,
+    SecurityTransfer,
 )
 from src.models.record_keeper import RecordKeeper
-from src.presenters.cash_transaction_dialog_presenter import (
+from src.presenters.dialog_presenters.cash_transaction_dialog_presenter import (
     CashTransactionDialogPresenter,
 )
-from src.presenters.cash_transfer_dialog_presenter import CashTransferDialogPresenter
-from src.presenters.refund_transaction_dialog_presenter import (
+from src.presenters.dialog_presenters.cash_transfer_dialog_presenter import (
+    CashTransferDialogPresenter,
+)
+from src.presenters.dialog_presenters.refund_transaction_dialog_presenter import (
     RefundTransactionDialogPresenter,
 )
-from src.presenters.security_transaction_dialog_presenter import (
+from src.presenters.dialog_presenters.security_transaction_dialog_presenter import (
     SecurityTransactionDialogPresenter,
 )
-from src.presenters.transaction_tags_dialog_presenter import (
+from src.presenters.dialog_presenters.security_transfer_dialog_presenter import (
+    SecurityTransferDialogPresenter,
+)
+from src.presenters.dialog_presenters.transaction_tags_dialog_presenter import (
     TransactionTagsDialogPresenter,
 )
 from src.presenters.utilities.event import Event
@@ -61,6 +68,9 @@ class TransactionsPresenter:
         self._security_transaction_dialog_presenter = (
             SecurityTransactionDialogPresenter(view, record_keeper, self._model)
         )
+        self._security_transfer_dialog_presenter = SecurityTransferDialogPresenter(
+            view, record_keeper, self._model
+        )
         self._refund_transaction_dialog_presenter = RefundTransactionDialogPresenter(
             view, record_keeper, self._model
         )
@@ -93,6 +103,7 @@ class TransactionsPresenter:
         self._cash_transaction_dialog_presenter.load_record_keeper(record_keeper)
         self._cash_transfer_dialog_presenter.load_record_keeper(record_keeper)
         self._security_transaction_dialog_presenter.load_record_keeper(record_keeper)
+        self._security_transfer_dialog_presenter.load_record_keeper(record_keeper)
         self._refund_transaction_dialog_presenter.load_record_keeper(record_keeper)
         self._transaction_tags_dialog_presenter.load_record_keeper(record_keeper)
         self._valid_accounts = record_keeper.accounts
@@ -208,6 +219,11 @@ class TransactionsPresenter:
                 SecurityTransactionType.SELL, self.valid_accounts
             )
         )
+        self._view.signal_security_transfer.connect(
+            lambda: self._security_transfer_dialog_presenter.run_add_dialog(
+                self.valid_accounts
+            )
+        )
 
         self._view.signal_delete.connect(self._delete_transactions)
         self._view.signal_duplicate.connect(self._duplicate_transaction)
@@ -239,6 +255,13 @@ class TransactionsPresenter:
             self.update_model_data
         )
         self._security_transaction_dialog_presenter.event_data_changed.append(
+            self.event_data_changed
+        )
+
+        self._security_transfer_dialog_presenter.event_update_model.append(
+            self.update_model_data
+        )
+        self._security_transfer_dialog_presenter.event_data_changed.append(
             self.event_data_changed
         )
 
@@ -293,7 +316,7 @@ class TransactionsPresenter:
     def _duplicate_transaction(self) -> None:
         transactions = self._model.get_selected_items()
         if len(transactions) != 1:
-            raise ValueError("Only a single Transaction can be duplicated.")
+            raise InvalidOperationError("Only a single Transaction can be duplicated.")
 
         transaction = transactions[0]
         if isinstance(transaction, CashTransaction):
@@ -304,11 +327,15 @@ class TransactionsPresenter:
             self._security_transaction_dialog_presenter.run_duplicate_dialog(
                 transaction
             )
+        if isinstance(transaction, SecurityTransfer):
+            self._security_transfer_dialog_presenter.run_duplicate_dialog(transaction)
+        if isinstance(transaction, RefundTransaction):
+            raise InvalidOperationError("Cannot duplicate RefundTransaction.")
 
     def _edit_transactions(self) -> None:
         transactions = self._model.get_selected_items()
         if len(transactions) == 0:
-            raise ValueError("Cannot edit zero Transactions.")
+            raise InvalidOperationError("Cannot edit zero Transactions.")
 
         if all(
             isinstance(transaction, CashTransaction) for transaction in transactions
@@ -328,6 +355,11 @@ class TransactionsPresenter:
         ):
             self._security_transaction_dialog_presenter.run_edit_dialog(transactions)
             return
+        if all(
+            isinstance(transaction, SecurityTransfer) for transaction in transactions
+        ):
+            self._security_transfer_dialog_presenter.run_edit_dialog(transactions)
+            return
 
         display_error_message(
             "All edited Transactions must be of the same type.", title="Warning"
@@ -339,7 +371,7 @@ class TransactionsPresenter:
     def _add_tags(self) -> None:
         transactions = self._model.get_selected_items()
         if len(transactions) == 0:
-            raise ValueError("Cannot add Tags to zero Transactions.")
+            raise InvalidOperationError("Cannot add Tags to zero Transactions.")
 
         if any(
             isinstance(transaction, RefundTransaction) for transaction in transactions
@@ -352,7 +384,7 @@ class TransactionsPresenter:
     def _remove_tags(self) -> None:
         transactions = self._model.get_selected_items()
         if len(transactions) == 0:
-            raise ValueError("Cannot remove Tags from zero Transactions.")
+            raise InvalidOperationError("Cannot remove Tags from zero Transactions.")
 
         if any(
             isinstance(transaction, RefundTransaction) for transaction in transactions

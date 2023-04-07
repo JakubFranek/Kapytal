@@ -9,12 +9,12 @@ from src.views.widgets.multiple_tags_selector_widget import MultipleTagsSelector
 class SingleTagRowWidget(QWidget):
     signal_split_tags = pyqtSignal()
 
-    def __init__(self, parent: QWidget | None, tags: Collection[str]) -> None:
+    def __init__(self, parent: QWidget | None, tag_names: Collection[str]) -> None:
         super().__init__(parent)
 
-        self._tags = tuple(tags)
+        self._tag_names = tuple(tag_names)
 
-        self.tags_widget = MultipleTagsSelectorWidget(self, tags)
+        self.tags_widget = MultipleTagsSelectorWidget(self, tag_names)
 
         self.split_tool_button = QToolButton(self)
         self.actionSplit_Tags = QAction("Split Tags", self)

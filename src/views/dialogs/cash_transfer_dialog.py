@@ -224,7 +224,10 @@ class CashTransferDialog(QDialog, Ui_CashTransferDialog):
         self.setWindowIcon(QIcon("icons_custom:coins-arrow.png"))
         self.buttonBox = QDialogButtonBox(self)
         if self._edit_mode != EditMode.ADD:
-            self.setWindowTitle("Edit Cash Transfer")
+            if self._edit_mode in EditMode.get_multiple_edit_values():
+                self.setWindowTitle("Edit Cash Transfers")
+            else:
+                self.setWindowTitle("Edit Cash Transfer")
             self.buttonBox.addButton("OK", QDialogButtonBox.ButtonRole.AcceptRole)
         else:
             self.setWindowTitle("Add Cash Transfer")

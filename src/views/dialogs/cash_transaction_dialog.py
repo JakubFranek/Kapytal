@@ -54,7 +54,7 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
         payees: Collection[str],
         categories_income: Collection[str],
         categories_expense: Collection[str],
-        tags: Collection[str],
+        tag_names: Collection[str],
         *,
         edit_mode: EditMode,
     ) -> None:
@@ -64,7 +64,7 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
         self.split_tags_vertical_layout = None
 
         self._edit_mode = edit_mode
-        self._tags = tags
+        self._tag_names = tag_names
         self._accounts = accounts
 
         self._type = CashTransactionType.INCOME
@@ -315,7 +315,10 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
 
     def _initialize_window(self) -> None:
         if self._edit_mode != EditMode.ADD:
-            self.setWindowTitle("Edit Cash Transaction")
+            if self._edit_mode in EditMode.get_multiple_edit_values():
+                self.setWindowTitle("Edit Cash Transactions")
+            else:
+                self.setWindowTitle("Edit Cash Transaction")
             self.setWindowIcon(QIcon("icons_custom:coins-pencil.png"))
             self.buttonBox.addButton("OK", QDialogButtonBox.ButtonRole.AcceptRole)
         else:
@@ -482,7 +485,7 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
         ):
             return
 
-        row = SingleTagRowWidget(self, self._tags)
+        row = SingleTagRowWidget(self, self._tag_names)
         self._tag_rows: list[SingleTagRowWidget | SplitTagRowWidget] = [row]
         self.formLayout.insertRow(7, LabelWidget(self, "Tags"), row)
         row.signal_split_tags.connect(lambda: self._split_tags(user=True))
@@ -503,7 +506,7 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
         self.split_tags_vertical_layout = QVBoxLayout(None)
         self._tag_rows: list[SingleTagRowWidget | SplitTagRowWidget] = []
         for tag in current_tags:
-            row = SplitTagRowWidget(self, self._tags)
+            row = SplitTagRowWidget(self, self._tag_names)
             row.amount_decimals = self._decimals
             row.maximum_amount = self.amount
             row.currency_code = self._currency_code
@@ -529,7 +532,7 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
         if self.split_tags_vertical_layout is None:
             raise ValueError("Vertical split Tags Layout is None.")
 
-        row = SplitTagRowWidget(self, self._tags)
+        row = SplitTagRowWidget(self, self._tag_names)
         row.amount_decimals = self._decimals
         row.currency_code = self._currency_code
         row.maximum_amount = self.amount

@@ -895,6 +895,25 @@ def test_edit_security_transactions_tags() -> None:
         assert transaction.tags == tags
 
 
+def test_edit_security_transactions_change_security_accounts() -> None:
+    edit_sender = "Security Accounts/Degiro"
+    edit_recipient = "Security Accounts/Interactive Brokers"
+    record_keeper = get_preloaded_record_keeper_with_security_transactions()
+    transactions = [
+        transaction
+        for transaction in record_keeper.transactions
+        if isinstance(transaction, SecurityTransfer)
+        and transaction.security.symbol == "VWCE.DE"
+    ]
+    uuids = [transfer.uuid for transfer in transactions]
+    record_keeper.edit_security_transfers(
+        uuids, sender_path=edit_sender, recipient_path=edit_recipient
+    )
+    for transaction in transactions:
+        assert transaction.sender.path == edit_sender
+        assert transaction.recipient.path == edit_recipient
+
+
 def test_edit_security_transfers_same_values() -> None:
     record_keeper = get_preloaded_record_keeper_with_security_transactions()
     tansfers = [
@@ -929,23 +948,21 @@ def test_edit_security_transfers_change_symbol() -> None:
         assert transaction.security.name == edit_name
 
 
-def test_edit_security_transactions_change_security_accounts() -> None:
-    edit_sender = "Security Accounts/Degiro"
-    edit_recipient = "Security Accounts/Interactive Brokers"
+def test_edit_security_transfer_tags() -> None:
     record_keeper = get_preloaded_record_keeper_with_security_transactions()
-    transactions = [
+    record_keeper.add_tag("tag1")
+    record_keeper.add_tag("tag2")
+    transfers = [
         transaction
         for transaction in record_keeper.transactions
         if isinstance(transaction, SecurityTransfer)
-        and transaction.security.symbol == "VWCE.DE"
     ]
-    uuids = [transfer.uuid for transfer in transactions]
-    record_keeper.edit_security_transfers(
-        uuids, sender_path=edit_sender, recipient_path=edit_recipient
-    )
-    for transaction in transactions:
-        assert transaction.sender.path == edit_sender
-        assert transaction.recipient.path == edit_recipient
+    uuids = [transfer.uuid for transfer in transfers]
+    tags = (record_keeper.tags[0], record_keeper.tags[1])
+    tag_names = [tag.name for tag in tags]
+    record_keeper.edit_security_transfers(uuids, tag_names=tag_names)
+    for transfer in transfers:
+        assert transfer.tags == tags
 
 
 @given(tags=st.lists(attributes(AttributeType.TAG), min_size=1, max_size=5))
