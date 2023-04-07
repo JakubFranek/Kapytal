@@ -47,7 +47,7 @@ class CashTransactionDialogPresenter:
         logging.debug("Running CashTransactionDialog (edit_mode=ADD)")
         if len(valid_accounts) == 0:
             display_error_message(
-                "Create at least one Cash Account before creating a transaction.",
+                "Create at least one Cash Account before creating a Cash Transaction.",
                 title="Warning",
             )
             return
