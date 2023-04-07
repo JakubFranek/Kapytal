@@ -53,7 +53,7 @@ class SecurityTransactionDialog(QDialog, Ui_SecurityTransactionDialog):
         securities: Collection[Security],
         cash_accounts: Collection[CashAccount],
         security_accounts: Collection[SecurityAccount],
-        tags: Collection[str],
+        tag_names: Collection[str],
         *,
         edit_mode: EditMode,
     ) -> None:
@@ -65,7 +65,7 @@ class SecurityTransactionDialog(QDialog, Ui_SecurityTransactionDialog):
         self._security_accounts = security_accounts
         self._securities = securities
 
-        self.tags_widget = MultipleTagsSelectorWidget(self, tags)
+        self.tags_widget = MultipleTagsSelectorWidget(self, tag_names)
         self.tags_label = QLabel("Tags", self)
         self.formLayout.addRow(self.tags_label, self.tags_widget)
 
@@ -213,8 +213,8 @@ class SecurityTransactionDialog(QDialog, Ui_SecurityTransactionDialog):
         return ()
 
     @tag_names.setter
-    def tag_names(self, tags: Collection[str]) -> None:
-        self.tags_widget.tag_names = tags
+    def tag_names(self, tag_names: Collection[str]) -> None:
+        self.tags_widget.tag_names = tag_names
 
     def _initialize_window(self) -> None:
         self.setWindowIcon(QIcon("icons_16:certificate.png"))

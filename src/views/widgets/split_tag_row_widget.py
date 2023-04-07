@@ -10,15 +10,15 @@ from src.views.dialogs.select_item_dialog import ask_user_for_selection
 class SplitTagRowWidget(QWidget):
     signal_remove_row = pyqtSignal(QWidget)
 
-    def __init__(self, parent: QWidget | None, tags: Collection[str]) -> None:
+    def __init__(self, parent: QWidget | None, tag_names: Collection[str]) -> None:
         super().__init__(parent)
 
-        self._tags = tuple(tags)
+        self._tag_names = tuple(tag_names)
 
         self.combo_box = QComboBox(self)
         self.combo_box.setEditable(True)
         self.combo_box.lineEdit().setPlaceholderText("Enter Tag name")
-        for tag in tags:
+        for tag in tag_names:
             self.combo_box.addItem(tag)
         self.combo_box.setCurrentIndex(-1)
         self.combo_box.setToolTip("Both existing or new Tag names are valid")
@@ -109,7 +109,7 @@ class SplitTagRowWidget(QWidget):
     def _select_item(self) -> None:
         item = ask_user_for_selection(
             self,
-            self._tags,
+            self._tag_names,
             "Select Tag",
             QIcon("icons_custom:category.png"),
         )

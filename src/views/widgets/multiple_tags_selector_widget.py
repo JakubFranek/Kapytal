@@ -9,10 +9,10 @@ from src.views.dialogs.select_item_dialog import ask_user_for_selection
 class MultipleTagsSelectorWidget(QWidget):
     signal_split_tags = pyqtSignal()
 
-    def __init__(self, parent: QWidget | None, tags: Collection[str]) -> None:
+    def __init__(self, parent: QWidget | None, tag_names: Collection[str]) -> None:
         super().__init__(parent)
 
-        self._tags = tuple(tags)
+        self._tag_names = tuple(tag_names)
 
         self.line_edit = QLineEdit(self)
         self.line_edit.setPlaceholderText("Enter optional Tag names (separated by ';')")
@@ -51,7 +51,7 @@ class MultipleTagsSelectorWidget(QWidget):
     def _select_tag(self) -> None:
         tag = ask_user_for_selection(
             self,
-            self._tags,
+            self._tag_names,
             "Select Tag",
             QIcon("icons_16:tag.png"),
         )
@@ -61,7 +61,7 @@ class MultipleTagsSelectorWidget(QWidget):
             self.tag_names = [tag]
 
     def _initialize_tags_completer(self) -> None:
-        self._tags_completer = QCompleter(self._tags)
+        self._tags_completer = QCompleter(self._tag_names)
         self._tags_completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
         self._tags_completer.setFilterMode(Qt.MatchFlag.MatchContains)
         self._tags_completer.setWidget(self.line_edit)
