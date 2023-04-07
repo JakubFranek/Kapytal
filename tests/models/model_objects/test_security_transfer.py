@@ -18,7 +18,6 @@ from tests.models.test_assets.composites import (
     security_accounts,
     security_transfers,
     share_decimals,
-    valid_decimals,
 )
 
 
@@ -38,9 +37,7 @@ def test_creation(  # noqa: PLR0913
     account_recipient: SecurityAccount,
     data: st.DataObject,
 ) -> None:
-    shares = data.draw(
-        valid_decimals(min_value=1e-10).filter(lambda x: x % security.shares_unit == 0)
-    )
+    shares = data.draw(share_decimals(security.shares_unit))
     transfer = SecurityTransfer(
         description, datetime_, security, shares, account_sender, account_recipient
     )

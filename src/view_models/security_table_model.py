@@ -63,7 +63,7 @@ class SecurityTableModel(QAbstractTableModel):
         security = self.securities[index.row()]
 
         if role == Qt.ItemDataRole.DisplayRole:
-            self._get_display_role_data(column, security)
+            return self._get_display_role_data(column, security)
         if (
             role == Qt.ItemDataRole.UserRole
             and column == SecurityTableColumn.COLUMN_NAME
@@ -76,7 +76,7 @@ class SecurityTableModel(QAbstractTableModel):
             return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
         return None
 
-    def _get_display_role_data(self, column: int, security: Security) -> None:
+    def _get_display_role_data(self, column: int, security: Security) -> str | None:
         if column == SecurityTableColumn.COLUMN_NAME:
             return security.name
         if column == SecurityTableColumn.COLUMN_SYMBOL:

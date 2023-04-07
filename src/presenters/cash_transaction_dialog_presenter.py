@@ -144,7 +144,10 @@ class CashTransactionDialogPresenter:
         payees = {transaction.payee.name for transaction in transactions}
         self._dialog.payee = payees.pop() if len(payees) == 1 else ""
 
-        datetimes = {transaction.datetime_ for transaction in transactions}
+        datetimes = {
+            transaction.datetime_.replace(hour=0, minute=0, second=0, microsecond=0)
+            for transaction in transactions
+        }
         self._dialog.datetime_ = (
             datetimes.pop() if len(datetimes) == 1 else self._dialog.min_datetime
         )
@@ -304,7 +307,7 @@ class CashTransactionDialogPresenter:
             log.append(f"{tag_amount_pairs=}")
         logging.info(
             f"Editing {len(transactions)} CashTransaction(s): {', '.join(log)}, "
-            f"uuids={uuids}"
+            f"uuids={[str(uuid) for uuid in uuids]}"
         )
         try:
             self._record_keeper.edit_cash_transactions(

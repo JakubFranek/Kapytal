@@ -65,7 +65,7 @@ class CashTransferDialogPresenter:
         self._dialog.amount_received = transfer.amount_received.value_rounded
         self._dialog.datetime_ = transfer.datetime_
         self._dialog.description = transfer.description
-        self._dialog.tags = transfer.tags
+        self._dialog.tag_names = [tag.name for tag in transfer.tags]
 
         self._dialog.signal_do_and_close.connect(
             lambda: self._add_cash_transfer(close=True)
@@ -102,7 +102,10 @@ class CashTransferDialogPresenter:
             recipient_paths.pop() if len(recipient_paths) == 1 else ""
         )
 
-        datetimes = {transfer.datetime_ for transfer in transfers}
+        datetimes = {
+            transfer.datetime_.replace(hour=0, minute=0, second=0, microsecond=0)
+            for transfer in transfers
+        }
         self._dialog.datetime_ = (
             datetimes.pop() if len(datetimes) == 1 else self._dialog.min_datetime
         )
@@ -117,6 +120,15 @@ class CashTransferDialogPresenter:
         self._dialog.amount_sent = amounts_sent.pop() if len(amounts_sent) == 1 else 0
         self._dialog.amount_received = (
             amounts_received.pop() if len(amounts_received) == 1 else 0
+        )
+
+        tag_names_frozensets = set()
+        for transfer in transfers:
+            tag_names_frozenset = frozenset(tag.name for tag in transfer.tags)
+            tag_names_frozensets.add(tag_names_frozenset)
+
+        self._dialog.tag_names = (
+            sorted(tag_names_frozensets.pop()) if len(tag_names_frozensets) == 1 else ()
         )
 
         self._dialog.signal_do_and_close.connect(self._edit_cash_transfers)
@@ -144,12 +156,12 @@ class CashTransferDialogPresenter:
                 "Sent and received amounts must be positive.", title="Warning"
             )
             return
-        tags = self._dialog.tags
+        tags = self._dialog.tag_names
 
         logging.info(
             f"Adding CashTransfer: {datetime_.strftime('%Y-%m-%d')}, "
             f"{description=}, sender={sender_path}, sent={amount_sent}, "
-            f"recipient={recipient_path}, received={amount_received},{tags=}"
+            f"recipient={recipient_path}, received={amount_received}, {tags=}"
         )
         try:
             self._record_keeper.add_cash_transfer(
@@ -184,7 +196,7 @@ class CashTransferDialogPresenter:
         if datetime_ is not None and not validate_datetime(datetime_, self._dialog):
             return
         description = self._dialog.description
-        tags = self._dialog.tags
+        tags = self._dialog.tag_names
 
         log = []
         if description is not None:
@@ -203,7 +215,7 @@ class CashTransferDialogPresenter:
             log.append(f"tags={tags}")
         logging.info(
             f"Editing {len(transactions)} CashTransaction(s): {', '.join(log)}, "
-            f"uuids={uuids}"
+            f"uuids={[str(uuid) for uuid in uuids]}"
         )
         try:
             self._record_keeper.edit_cash_transfers(

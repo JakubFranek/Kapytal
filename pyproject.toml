@@ -1,5 +1,3 @@
-
-
 [tool.pytest.ini_options]
 pythonpath = "."
 
@@ -16,9 +14,9 @@ exclude_lines = [
   ]
 
 [tool.ruff]
-src=["src/**","tests/**","tests"]
+src=["src/**","tests/**","tests","main.py"]
 line-length = 88
-extend-exclude = ["src/views/ui_files/*"]
+extend-exclude = ["src/views/ui_files/*","main.spec"]
 select = ["ALL"]
 ignore = ["D", "COM","G"]
 extend-ignore = ["ANN101","TRY003","EM101","EM102"]

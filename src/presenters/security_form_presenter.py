@@ -10,6 +10,7 @@ from src.view_models.security_table_model import SecurityTableModel
 from src.views.dialogs.security_dialog import SecurityDialog
 from src.views.dialogs.set_security_price_dialog import SetSecurityPriceDialog
 from src.views.forms.security_form import SecurityForm
+from src.views.utilities.message_box_functions import ask_yes_no_question
 
 
 class SecurityFormPresenter:
@@ -134,6 +135,15 @@ class SecurityFormPresenter:
             return
 
         uuid = security.uuid
+
+        logging.debug("Security deletion requested, asking the user for confirmation")
+        if not ask_yes_no_question(
+            self._view,
+            f"Do you want to remove {security.name}?",
+            "Are you sure?",
+        ):
+            logging.debug("User cancelled the Security deletion")
+            return
 
         logging.info(f"Removing {security}")
         try:

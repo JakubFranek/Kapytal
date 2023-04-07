@@ -2,10 +2,10 @@
 
 ## Must haves
 
-1. CashTransfers
 1. SecurityTransactions
 1. SecurityTransfers
 1. Transaction filtering options
+    - create filter class object to be passed as argument
     - date ranges
     - transaction types
     - accounts
@@ -18,12 +18,14 @@
     - currencies
     - include / exclude options
 1. SecurityAccount contents view
+    - launched from AccountTree right click
     - option to create Security transactions from this view
 1. automatic exchange rate / price updates
-1. way to show / edit exchange rate / price history
+1. way to show / edit exchange rate / security price history
 1. reports
     - cashflow
     - pie charts
+    - way to show transactions that passed the filters
 1. recurrent / scheduled transactions
 1. documentation
 

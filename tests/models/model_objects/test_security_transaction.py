@@ -46,11 +46,11 @@ def test_buy(
     data: st.DataObject,
 ) -> None:
     currency = cash_account.currency
-    price_per_share = data.draw(cash_amounts(currency=currency, min_value=0))
-    security = data.draw(securities(cash_account.currency))
-    shares = data.draw(
-        valid_decimals(min_value=1e-10).filter(lambda x: x % security.shares_unit == 0)
+    price_per_share = data.draw(
+        cash_amounts(currency=currency, min_value=0, max_value=1e6)
     )
+    security = data.draw(securities(cash_account.currency))
+    shares = data.draw(share_decimals(shares_unit=security.shares_unit))
     datetime_ = data.draw(
         st.datetimes(
             timezones=st.just(user_settings.settings.time_zone),
@@ -92,7 +92,7 @@ def test_buy(
 def test_sell(data: st.DataObject) -> None:
     buy = get_buy()
     security = buy.security
-    shares = data.draw(st.integers(min_value=1, max_value=1e10))
+    shares = data.draw(share_decimals(shares_unit=security.shares_unit))
     currency = security.currency
     price_per_share = data.draw(cash_amounts(currency=currency, min_value=0))
     security_account = buy.security_account
@@ -132,9 +132,8 @@ def test_invalid_type_type(  # noqa: PLR0913
     datetime_: datetime,
     data: st.DataObject,
 ) -> None:
-    shares = data.draw(
-        valid_decimals(min_value=1e-10).filter(lambda x: x % security.shares_unit == 0)
-    )
+    shares = data.draw(share_decimals(shares_unit=security.shares_unit))
+
     with pytest.raises(
         TypeError, match="SecurityTransaction.type_ must be a SecurityTransactionType."
     ):
@@ -324,13 +323,7 @@ def test_valid_shares_unit_str(
     data: st.DataObject,
 ) -> None:
     cash_account = data.draw(cash_accounts(currency=security.currency))
-    shares = str(
-        data.draw(
-            valid_decimals(min_value=1e-10).filter(
-                lambda x: x % security.shares_unit == 0
-            )
-        )
-    )
+    shares = data.draw(share_decimals(shares_unit=security.shares_unit))
     SecurityTransaction(
         "Test description",
         datetime_,
@@ -359,9 +352,7 @@ def test_invalid_security_account_type(
 ) -> None:
     currency = cash_account.currency
     security = data.draw(securities(currency=currency))
-    shares = data.draw(
-        valid_decimals(min_value=1e-10).filter(lambda x: x % security.shares_unit == 0)
-    )
+    shares = data.draw(share_decimals(shares_unit=security.shares_unit))
     with pytest.raises(
         TypeError,
         match="SecurityTransaction.security_account must be a SecurityAccount.",

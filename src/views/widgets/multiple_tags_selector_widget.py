@@ -35,13 +35,13 @@ class MultipleTagsSelectorWidget(QWidget):
         self.setFocusProxy(self.line_edit)
 
     @property
-    def tags(self) -> tuple[str, ...]:
+    def tag_names(self) -> tuple[str, ...]:
         text = self.line_edit.text()
         tag_names = text.split(";")
         return tuple(tag_name.strip() for tag_name in tag_names if tag_name)
 
-    @tags.setter
-    def tags(self, values: Collection[str]) -> None:
+    @tag_names.setter
+    def tag_names(self, values: Collection[str]) -> None:
         text = "; ".join(values)
         self.line_edit.setText(text)
 
@@ -55,10 +55,10 @@ class MultipleTagsSelectorWidget(QWidget):
             "Select Tag",
             QIcon("icons_16:tag.png"),
         )
-        if tag and self.tags != ("",):
-            self.tags = [*self.tags, tag]
+        if tag and self.tag_names != ("",):
+            self.tag_names = [*self.tag_names, tag]
         elif tag:
-            self.tags = [tag]
+            self.tag_names = [tag]
 
     def _initialize_tags_completer(self) -> None:
         self._tags_completer = QCompleter(self._tags)

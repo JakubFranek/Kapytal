@@ -11,7 +11,11 @@ from src.models.model_objects.cash_objects import (
     CashTransfer,
     RefundTransaction,
 )
-from src.models.model_objects.security_objects import SecurityRelatedTransaction
+from src.models.model_objects.security_objects import (
+    SecurityRelatedTransaction,
+    SecurityTransaction,
+    SecurityTransactionType,
+)
 from src.models.record_keeper import RecordKeeper
 from src.presenters.cash_transaction_dialog_presenter import (
     CashTransactionDialogPresenter,
@@ -19,6 +23,9 @@ from src.presenters.cash_transaction_dialog_presenter import (
 from src.presenters.cash_transfer_dialog_presenter import CashTransferDialogPresenter
 from src.presenters.refund_transaction_dialog_presenter import (
     RefundTransactionDialogPresenter,
+)
+from src.presenters.security_transaction_dialog_presenter import (
+    SecurityTransactionDialogPresenter,
 )
 from src.presenters.transaction_tags_dialog_presenter import (
     TransactionTagsDialogPresenter,
@@ -51,6 +58,9 @@ class TransactionsPresenter:
         self._cash_transfer_dialog_presenter = CashTransferDialogPresenter(
             view, record_keeper, self._model
         )
+        self._security_transaction_dialog_presenter = (
+            SecurityTransactionDialogPresenter(view, record_keeper, self._model)
+        )
         self._refund_transaction_dialog_presenter = RefundTransactionDialogPresenter(
             view, record_keeper, self._model
         )
@@ -60,6 +70,7 @@ class TransactionsPresenter:
 
         self._setup_view()
         self._connect_signals()
+        self._connect_events()
         self._view.finalize_setup()
 
     @property
@@ -81,8 +92,9 @@ class TransactionsPresenter:
         self._record_keeper = record_keeper
         self._cash_transaction_dialog_presenter.load_record_keeper(record_keeper)
         self._cash_transfer_dialog_presenter.load_record_keeper(record_keeper)
-        self._transaction_tags_dialog_presenter.load_record_keeper(record_keeper)
+        self._security_transaction_dialog_presenter.load_record_keeper(record_keeper)
         self._refund_transaction_dialog_presenter.load_record_keeper(record_keeper)
+        self._transaction_tags_dialog_presenter.load_record_keeper(record_keeper)
         self._valid_accounts = record_keeper.accounts
         self.reset_model()
         self._view.resize_table_to_contents()
@@ -186,6 +198,17 @@ class TransactionsPresenter:
                 self.valid_accounts
             )
         )
+        self._view.signal_buy.connect(
+            lambda: self._security_transaction_dialog_presenter.run_add_dialog(
+                SecurityTransactionType.BUY, self.valid_accounts
+            )
+        )
+        self._view.signal_sell.connect(
+            lambda: self._security_transaction_dialog_presenter.run_add_dialog(
+                SecurityTransactionType.SELL, self.valid_accounts
+            )
+        )
+
         self._view.signal_delete.connect(self._delete_transactions)
         self._view.signal_duplicate.connect(self._duplicate_transaction)
         self._view.signal_edit.connect(self._edit_transactions)
@@ -195,8 +218,9 @@ class TransactionsPresenter:
 
         self._view.signal_selection_changed.connect(self._selection_changed)
         self._view.signal_refund.connect(self._refund_transaction)
-        self._view.signal_find_refunds.connect(self._find_refunds)
+        self._view.signal_find_related.connect(self._find_related)
 
+    def _connect_events(self) -> None:
         self._cash_transaction_dialog_presenter.event_update_model.append(
             self.update_model_data
         )
@@ -208,6 +232,13 @@ class TransactionsPresenter:
             self.update_model_data
         )
         self._cash_transfer_dialog_presenter.event_data_changed.append(
+            self.event_data_changed
+        )
+
+        self._security_transaction_dialog_presenter.event_update_model.append(
+            self.update_model_data
+        )
+        self._security_transaction_dialog_presenter.event_data_changed.append(
             self.event_data_changed
         )
 
@@ -246,7 +277,7 @@ class TransactionsPresenter:
                 self._record_keeper.remove_transactions((transaction.uuid,))
                 logging.info(
                     f"Removed {transaction.__class__.__name__}: "
-                    f"uuid={transaction.uuid}"
+                    f"uuid={str(transaction.uuid)}"
                 )
                 self._model.pre_remove_item(transaction)
                 self.update_model_data()
@@ -269,6 +300,10 @@ class TransactionsPresenter:
             self._cash_transaction_dialog_presenter.run_duplicate_dialog(transaction)
         if isinstance(transaction, CashTransfer):
             self._cash_transfer_dialog_presenter.run_duplicate_dialog(transaction)
+        if isinstance(transaction, SecurityTransaction):
+            self._security_transaction_dialog_presenter.run_duplicate_dialog(
+                transaction
+            )
 
     def _edit_transactions(self) -> None:
         transactions = self._model.get_selected_items()
@@ -287,6 +322,11 @@ class TransactionsPresenter:
             isinstance(transaction, RefundTransaction) for transaction in transactions
         ):
             self._refund_transaction_dialog_presenter.run_edit_dialog()
+            return
+        if all(
+            isinstance(transaction, SecurityTransaction) for transaction in transactions
+        ):
+            self._security_transaction_dialog_presenter.run_edit_dialog(transactions)
             return
 
         display_error_message(
@@ -326,7 +366,8 @@ class TransactionsPresenter:
         transactions = self._model.get_selected_items()
 
         enable_refund = False
-        is_refunded = False
+        enable_find_related = False
+        enable_duplicate = True
         if len(transactions) == 1:
             transaction = transactions[0]
             if (
@@ -334,19 +375,41 @@ class TransactionsPresenter:
                 and transaction.type_ == CashTransactionType.EXPENSE
             ):
                 enable_refund = True
-                is_refunded = transaction.is_refunded
+                enable_find_related = transaction.is_refunded
+            if isinstance(transaction, RefundTransaction):
+                enable_duplicate = False
+                enable_find_related = True
 
-        self._view.set_actions(enable_refund=enable_refund, is_refunded=is_refunded)
+        self._view.set_actions(
+            enable_refund=enable_refund,
+            enable_find_related=enable_find_related,
+            enable_duplicate=enable_duplicate,
+        )
 
-    def _find_refunds(self) -> None:
+    def _find_related(self) -> None:
         transactions = self._model.get_selected_items()
         if len(transactions) > 1:
-            raise ValueError("Cannot find Refunds for more than one Transaction.")
-        transaction = transactions[0]
-        if not isinstance(transaction, CashTransaction):
-            raise TypeError("Cannot find Refunds for a non-Cash Transaction.")
+            raise ValueError(
+                "Cannot find related Transactions for more than one Transaction."
+            )
 
-        refunds = transaction.refunds
-        uuids = [refund.uuid for refund in refunds]
+        transaction = transactions[0]
+        if not isinstance(transaction, CashTransaction) and not isinstance(
+            transaction, RefundTransaction
+        ):
+            raise TypeError(
+                "Cannot find related Transactions for a Transaction which is not a "
+                "CashTransaction nor a RefundTransaction."
+            )
+
+        if isinstance(transaction, RefundTransaction):
+            refunded_transaction = transaction.refunded_transaction
+        else:
+            refunded_transaction = transaction
+
+        refunds = refunded_transaction.refunds
+        uuids = [str(refund.uuid) for refund in refunds] + [
+            str(refunded_transaction.uuid)
+        ]
         pattern = "|".join(uuids)
         self._view.search_bar_text = pattern

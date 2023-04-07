@@ -44,20 +44,18 @@ class CashTransferDialog(QDialog, Ui_CashTransferDialog):
     signal_do_and_close = pyqtSignal()
     signal_do_and_continue = pyqtSignal()
 
-    signal_account_changed = pyqtSignal()
-
     def __init__(
         self,
         parent: QWidget,
         accounts: Collection[CashAccount],
-        tags: Collection[str],
+        tag_names: Collection[str],
         *,
         edit_mode: EditMode,
     ) -> None:
         super().__init__(parent)
         self.setupUi(self)
 
-        self.tags_widget = MultipleTagsSelectorWidget(self, tags)
+        self.tags_widget = MultipleTagsSelectorWidget(self, tag_names)
         self.tags_label = QLabel("Tags", self)
         self.formLayout.addRow(self.tags_label, self.tags_widget)
 
@@ -156,15 +154,15 @@ class CashTransferDialog(QDialog, Ui_CashTransferDialog):
         self.receivedDoubleSpinBox.setValue(amount)
 
     @property
-    def tags(self) -> tuple[str, ...] | None:
-        _tags = self.tags_widget.tags
+    def tag_names(self) -> tuple[str, ...] | None:
+        _tags = self.tags_widget.tag_names
         if len(_tags) == 0 and self._edit_mode in EditMode.get_multiple_edit_values():
             return None
         return _tags
 
-    @tags.setter
-    def tags(self, values: Collection[str]) -> None:
-        self.tags_widget.tags = values
+    @tag_names.setter
+    def tag_names(self, values: Collection[str]) -> None:
+        self.tags_widget.tag_names = values
 
     def _set_spinboxes_currencies(self) -> None:
         self._set_spinbox_currency(self.sender_path, self.sentDoubleSpinBox)
