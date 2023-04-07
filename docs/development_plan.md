@@ -4,18 +4,19 @@
 
 1. Transaction filtering options
     - create filter class object to be passed as argument
-    - date ranges
-    - transaction types
-    - accounts
-    - categories
-    - tags
-    - payees
-    - split categories
-    - split tags
-    - securities
-    - currencies
-    - include / exclude options
-1. balance column
+    - IMPLEMENTED
+        - date ranges
+        - transaction types
+        - accounts
+        - description
+    - NOT IMPLEMENTED
+        - categories
+        - tags
+        - payees
+        - split categories
+        - split tags
+        - securities
+        - currencies
 1. SecurityAccount contents view
     - launched from AccountTree right click
     - option to create Security transactions from this view
