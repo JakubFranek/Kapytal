@@ -4,8 +4,11 @@ from collections.abc import Collection
 from PyQt6.QtCore import QAbstractTableModel, QModelIndex, QSortFilterProxyModel, Qt
 from PyQt6.QtGui import QBrush, QColor, QIcon
 from PyQt6.QtWidgets import QTableView
+from src.models.base_classes.account import Account
 from src.models.base_classes.transaction import Transaction
 from src.models.model_objects.cash_objects import (
+    CashAccount,
+    CashRelatedTransaction,
     CashTransaction,
     CashTransactionType,
     CashTransfer,
@@ -24,17 +27,19 @@ from src.views.constants import TRANSACTION_TABLE_COLUMN_HEADERS, TransactionTab
 
 
 class TransactionTableModel(QAbstractTableModel):
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         view: QTableView,
         transactions: Collection[Transaction],
         base_currency: Currency,
+        valid_accounts: Collection[Account],
         proxy: QSortFilterProxyModel,
     ) -> None:
         super().__init__()
         self._view = view
         self.transactions = transactions
         self.base_currency = base_currency
+        self.valid_accounts = valid_accounts
         self._proxy = proxy
 
     @property
@@ -44,6 +49,14 @@ class TransactionTableModel(QAbstractTableModel):
     @transactions.setter
     def transactions(self, transactions: Collection[Transaction]) -> None:
         self._transactions = tuple(transactions)
+
+    @property
+    def valid_accounts(self) -> tuple[Account]:
+        return self._valid_accounts
+
+    @valid_accounts.setter
+    def valid_accounts(self, accounts: Collection[Account]) -> None:
+        self._valid_accounts = tuple(accounts)
 
     def rowCount(self, index: QModelIndex = ...) -> int:  # noqa: N802
         if isinstance(index, QModelIndex) and index.isValid():
@@ -187,8 +200,7 @@ class TransactionTableModel(QAbstractTableModel):
                 transaction, sent=False
             )
         if column == TransactionTableColumn.COLUMN_BALANCE:
-            # TODO: implement the balance column
-            return ""
+            return self._get_account_balance(transaction)
         if column == TransactionTableColumn.COLUMN_CATEGORY:
             return TransactionTableModel._get_transaction_category(transaction)
         if column == TransactionTableColumn.COLUMN_TAG:
@@ -290,6 +302,7 @@ class TransactionTableModel(QAbstractTableModel):
             or column == TransactionTableColumn.COLUMN_AMOUNT_SENT
             or column == TransactionTableColumn.COLUMN_AMOUNT_RECEIVED
             or column == TransactionTableColumn.COLUMN_SHARES
+            or column == TransactionTableColumn.COLUMN_BALANCE
         ):
             return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
         return None
@@ -442,3 +455,17 @@ class TransactionTableModel(QAbstractTableModel):
     def _get_transaction_tags(transaction: Transaction) -> str:
         tag_names = [tag.name for tag in transaction.tags]
         return ", ".join(tag_names)
+
+    def _get_account_balance(self, transaction: Transaction) -> str:
+        if (
+            isinstance(transaction, CashRelatedTransaction)
+            and len(self.valid_accounts) == 1
+        ):
+            account = self.valid_accounts[0]
+            if not isinstance(account, CashAccount):
+                raise TypeError(f"Expected CashAccount, got {type(account)}.")
+            balance = account.get_balance_after_transaction(
+                account.currency, transaction
+            )
+            return balance.to_str_rounded()
+        return ""

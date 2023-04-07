@@ -90,6 +90,7 @@ class TransactionsPresenter:
     @valid_accounts.setter
     def valid_accounts(self, accounts: Collection[Account]) -> None:
         self._valid_accounts = tuple(accounts)
+        self._model.valid_accounts = accounts
         self.reset_model()
 
     def reset_model(self) -> None:
@@ -175,6 +176,7 @@ class TransactionsPresenter:
             self._view.tableView,
             [],
             self._record_keeper.base_currency,
+            self._valid_accounts,
             self._proxy_model,
         )
         self.update_model_data()
