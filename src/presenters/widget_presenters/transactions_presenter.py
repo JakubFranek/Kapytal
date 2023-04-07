@@ -17,17 +17,19 @@ from src.models.model_objects.security_objects import (
     SecurityTransactionType,
 )
 from src.models.record_keeper import RecordKeeper
-from src.presenters.cash_transaction_dialog_presenter import (
+from src.presenters.dialog_presenters.cash_transaction_dialog_presenter import (
     CashTransactionDialogPresenter,
 )
-from src.presenters.cash_transfer_dialog_presenter import CashTransferDialogPresenter
-from src.presenters.refund_transaction_dialog_presenter import (
+from src.presenters.dialog_presenters.cash_transfer_dialog_presenter import (
+    CashTransferDialogPresenter,
+)
+from src.presenters.dialog_presenters.refund_transaction_dialog_presenter import (
     RefundTransactionDialogPresenter,
 )
-from src.presenters.security_transaction_dialog_presenter import (
+from src.presenters.dialog_presenters.security_transaction_dialog_presenter import (
     SecurityTransactionDialogPresenter,
 )
-from src.presenters.transaction_tags_dialog_presenter import (
+from src.presenters.dialog_presenters.transaction_tags_dialog_presenter import (
     TransactionTagsDialogPresenter,
 )
 from src.presenters.utilities.event import Event
