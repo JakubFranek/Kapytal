@@ -122,6 +122,15 @@ class CashTransferDialogPresenter:
             amounts_received.pop() if len(amounts_received) == 1 else 0
         )
 
+        tag_names_frozensets = set()
+        for transfer in transfers:
+            tag_names_frozenset = frozenset(tag.name for tag in transfer.tags)
+            tag_names_frozensets.add(tag_names_frozenset)
+
+        self._dialog.tag_names = (
+            sorted(tag_names_frozensets.pop()) if len(tag_names_frozensets) == 1 else ()
+        )
+
         self._dialog.signal_do_and_close.connect(self._edit_cash_transfers)
         self._dialog.exec()
 
@@ -206,7 +215,7 @@ class CashTransferDialogPresenter:
             log.append(f"tags={tags}")
         logging.info(
             f"Editing {len(transactions)} CashTransaction(s): {', '.join(log)}, "
-            f"uuids={uuids}"
+            f"uuids={[str(uuid) for uuid in uuids]}"
         )
         try:
             self._record_keeper.edit_cash_transfers(

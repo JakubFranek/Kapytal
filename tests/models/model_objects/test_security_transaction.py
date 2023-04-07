@@ -46,7 +46,9 @@ def test_buy(
     data: st.DataObject,
 ) -> None:
     currency = cash_account.currency
-    price_per_share = data.draw(cash_amounts(currency=currency, min_value=0))
+    price_per_share = data.draw(
+        cash_amounts(currency=currency, min_value=0, max_value=1e6)
+    )
     security = data.draw(securities(cash_account.currency))
     shares = data.draw(share_decimals(shares_unit=security.shares_unit))
     datetime_ = data.draw(

@@ -118,6 +118,15 @@ class CurrencyFormPresenter:
         if currency is None:
             raise InvalidOperationError("Cannot remove an unselected Currency.")
 
+        logging.debug("Currency deletion requested, asking the user for confirmation")
+        if not ask_yes_no_question(
+            self._view,
+            question=f"Do you want to delete the {str(currency.code)} currency?",
+            title="Are you sure?",
+        ):
+            logging.debug("User cancelled the Currency deletion")
+            return
+
         logging.info(f"Removing {currency}")
         try:
             self._record_keeper.remove_currency(currency.code)
@@ -201,12 +210,11 @@ class CurrencyFormPresenter:
         logging.debug(
             "ExchangeRate deletion requested, asking the user for confirmation"
         )
-        proceed_with_delete = ask_yes_no_question(
+        if not ask_yes_no_question(
             self._view,
             question=f"Do you want to delete the {str(exchange_rate)} exchange rate?",
             title="Are you sure?",
-        )
-        if not proceed_with_delete:
+        ):
             logging.debug("User cancelled the ExchangeRate deletion")
             return
 

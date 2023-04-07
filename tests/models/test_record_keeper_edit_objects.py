@@ -763,7 +763,7 @@ def test_edit_security_transactions_invalid_transaction_types() -> None:
         record_keeper.edit_security_transactions(uuids)
 
 
-def test_edit_security_transactions_currency_not_same() -> None:
+def test_edit_security_transactions_mixed_currency_keep_security_invalid_args() -> None:
     record_keeper = get_preloaded_record_keeper_with_security_transactions()
     transactions = [
         transaction
@@ -771,8 +771,33 @@ def test_edit_security_transactions_currency_not_same() -> None:
         if isinstance(transaction, SecurityTransaction)
     ]
     uuids = [transfer.uuid for transfer in transactions]
-    with pytest.raises(CurrencyError):
-        record_keeper.edit_security_transactions(uuids)
+    cash_account_path = "test"
+    price_per_share = "test"
+    with pytest.raises(
+        ValueError,
+        match="security_name is None",
+    ):
+        record_keeper.edit_security_transactions(
+            uuids, cash_account_path=cash_account_path, price_per_share=price_per_share
+        )
+
+
+def test_edit_security_transactions_mixed_currency_change_security_invalid_args() -> (
+    None
+):
+    record_keeper = get_preloaded_record_keeper_with_security_transactions()
+    transactions = [
+        transaction
+        for transaction in record_keeper.transactions
+        if isinstance(transaction, SecurityTransaction)
+    ]
+    uuids = [transfer.uuid for transfer in transactions]
+    security_name = "test"
+    with pytest.raises(
+        ValueError,
+        match="security_name is not None",
+    ):
+        record_keeper.edit_security_transactions(uuids, security_name=security_name)
 
 
 def test_edit_security_transactions_change_symbol() -> None:
@@ -851,6 +876,23 @@ def test_edit_security_transactions_change_shares() -> None:
     record_keeper.edit_security_transactions(uuids, shares=edit_shares)
     for transaction in transactions:
         assert transaction.shares == edit_shares
+
+
+def test_edit_security_transactions_tags() -> None:
+    record_keeper = get_preloaded_record_keeper_with_security_transactions()
+    record_keeper.add_tag("tag1")
+    record_keeper.add_tag("tag2")
+    transactions = [
+        transaction
+        for transaction in record_keeper.transactions
+        if isinstance(transaction, SecurityTransaction)
+    ]
+    uuids = [transaction.uuid for transaction in transactions]
+    tags = (record_keeper.tags[0], record_keeper.tags[1])
+    tag_names = [tag.name for tag in tags]
+    record_keeper.edit_security_transactions(uuids, tag_names=tag_names)
+    for transaction in transactions:
+        assert transaction.tags == tags
 
 
 def test_edit_security_transfers_same_values() -> None:

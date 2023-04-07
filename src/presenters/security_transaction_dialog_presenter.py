@@ -78,7 +78,7 @@ class SecurityTransactionDialogPresenter:
         self._dialog.exec()
 
     def run_duplicate_dialog(self, transaction: SecurityTransaction) -> None:
-        logging.debug("Running duplicate SecurityTransferDialog (edit_mode=ADD)")
+        logging.debug("Running duplicate SecurityTransactionDialog (edit_mode=ADD)")
         self._prepare_dialog(edit_mode=EditMode.ADD)
 
         self._dialog.type_ = transaction.type_
@@ -99,29 +99,84 @@ class SecurityTransactionDialogPresenter:
         )
         self._dialog.exec()
 
-    # def run_edit_dialog(self, transactions: Sequence[SecurityTransaction]) -> None:
-    #     if len(transactions) == 1:
-    #         edit_mode = EditMode.EDIT_SINGLE
-    #     else:
-    #         edit_mode = EditMode.EDIT_MULTIPLE
+    def run_edit_dialog(self, transactions: Sequence[SecurityTransaction]) -> None:
+        if len(transactions) == 1:
+            edit_mode = EditMode.EDIT_SINGLE
+        elif len(transactions) > 1:
+            currencies = {transaction.currency for transaction in transactions}
+            if len(currencies) == 1:
+                edit_mode = EditMode.EDIT_MULTIPLE
+            else:
+                edit_mode = EditMode.EDIT_MULTIPLE_MIXED_CURRENCY
+        else:
+            raise ValueError(
+                "Expected 'transactions' to be a non-empty Sequence of "
+                "SecurityTransactions."
+            )
 
-    #     logging.debug(f"Running SecurityTransactionDialog (edit_mode={edit_mode.name})")
+        logging.debug(f"Running SecurityTransactionDialog (edit_mode={edit_mode.name})")
 
-    #     self._prepare_dialog(edit_mode=edit_mode)
+        types = {transaction.type_ for transaction in transactions}
+        if len(types) > 1:
+            display_error_message(
+                "Cannot edit multiple Security Transactions with different types.",
+                title="Error",
+            )
+            return
 
-    #     datetimes = {
-    #         transfer.datetime_.replace(hour=0, minute=0, second=0, microsecond=0)
-    #         for transfer in transactions
-    #     }
-    #     self._dialog.datetime_ = (
-    #         datetimes.pop() if len(datetimes) == 1 else self._dialog.min_datetime
-    #     )
+        self._prepare_dialog(edit_mode=edit_mode)
 
-    #     descriptions = {transfer.description for transfer in transactions}
-    #     self._dialog.description = descriptions.pop() if len(descriptions) == 1 else ""
+        datetimes = {
+            transaction.datetime_.replace(hour=0, minute=0, second=0, microsecond=0)
+            for transaction in transactions
+        }
+        self._dialog.datetime_ = (
+            datetimes.pop() if len(datetimes) == 1 else self._dialog.min_datetime
+        )
 
-    #     self._dialog.signal_do_and_close.connect(self._edit_cash_transfers)
-    #     self._dialog.exec()
+        descriptions = {transaction.description for transaction in transactions}
+        self._dialog.description = descriptions.pop() if len(descriptions) == 1 else ""
+
+        self._dialog.type_ = types.pop()
+
+        security_names = {transaction.security.name for transaction in transactions}
+        self._dialog.security_name = (
+            security_names.pop() if len(security_names) == 1 else ""
+        )
+
+        cash_account_paths = {
+            transaction.cash_account.path for transaction in transactions
+        }
+        self._dialog.cash_account_path = (
+            cash_account_paths.pop() if len(cash_account_paths) == 1 else ""
+        )
+
+        security_account_paths = {
+            transaction.security_account.path for transaction in transactions
+        }
+        self._dialog.security_account_path = (
+            security_account_paths.pop() if len(security_account_paths) == 1 else ""
+        )
+
+        shares = {transaction.shares for transaction in transactions}
+        self._dialog.shares = shares.pop() if len(shares) == 1 else 0
+
+        prices = {transaction.price_per_share for transaction in transactions}
+        self._dialog.price_per_share = (
+            prices.pop().value_rounded if len(prices) == 1 else 0
+        )
+
+        tag_names_frozensets = set()
+        for transaction in transactions:
+            tag_names_frozenset = frozenset(tag.name for tag in transaction.tags)
+            tag_names_frozensets.add(tag_names_frozenset)
+
+        self._dialog.tag_names = (
+            sorted(tag_names_frozensets.pop()) if len(tag_names_frozensets) == 1 else ()
+        )
+
+        self._dialog.signal_do_and_close.connect(self._edit_security_transactions)
+        self._dialog.exec()
 
     def _add_security_transaction(self, *, close: bool) -> None:
         datetime_ = self._dialog.datetime_
@@ -147,7 +202,8 @@ class SecurityTransactionDialogPresenter:
             f"{description=}, type={type_.name}, security='{security_name}', "
             f"cash_account='{cash_account_path}', "
             f"security_account_path='{security_account_path}', shares={shares}, "
-            f"price_per_share={price_per_share} {cash_account.currency.code}, {tag_names=}"
+            f"price_per_share={price_per_share} {cash_account.currency.code}, "
+            f"{tag_names=}"
         )
         try:
             self._record_keeper.add_security_transaction(
@@ -170,6 +226,69 @@ class SecurityTransactionDialogPresenter:
         self._model.post_add()
         if close:
             self._dialog.close()
+        self.event_data_changed()
+
+    def _edit_security_transactions(self) -> None:
+        transactions: list[SecurityTransaction] = self._model.get_selected_items()
+        uuids = [transaction.uuid for transaction in transactions]
+
+        datetime_ = self._dialog.datetime_
+        if datetime_ is not None and not validate_datetime(datetime_, self._dialog):
+            return
+        description = self._dialog.description
+
+        type_ = self._dialog.type_
+        security_name = self._dialog.security_name
+        cash_account_path = self._dialog.cash_account_path
+        security_account_path = self._dialog.security_account_path
+        shares = self._dialog.shares
+        price_per_share = self._dialog.price_per_share
+        tag_names = self._dialog.tag_names
+
+        log = []
+        if description is not None:
+            log.append(f"{description=}")
+        if datetime_ is not None:
+            log.append(f"date={datetime_.strftime('%Y-%m-%d')}")
+        if type_ is not None:
+            log.append(f"type={type_.name}")
+        if security_name is not None:
+            log.append(f"security='{security_name}'")
+        if cash_account_path is not None:
+            log.append(f"cash_account='{cash_account_path}'")
+        if security_account_path is not None:
+            log.append(f"security_account='{security_account_path}'")
+        if shares is not None:
+            log.append(f"shares={shares}")
+        if price_per_share is not None:
+            log.append(
+                f"price_per_share={price_per_share} {self._dialog.currency_code}"
+            )
+        if tag_names is not None:
+            log.append(f"tags={tag_names}")
+        logging.info(
+            f"Editing {len(transactions)} SecurityTransaction(s): {', '.join(log)}, "
+            f"uuids={[str(uuid) for uuid in uuids]}"
+        )
+        try:
+            self._record_keeper.edit_security_transactions(
+                uuids,
+                description,
+                datetime_,
+                type_,
+                security_name,
+                cash_account_path,
+                security_account_path,
+                price_per_share,
+                shares,
+                tag_names,
+            )
+        except Exception as exception:  # noqa: BLE001
+            handle_exception(exception)
+            return
+
+        self._dialog.close()
+        self.event_update_model()
         self.event_data_changed()
 
     def _prepare_dialog(self, edit_mode: EditMode) -> bool:

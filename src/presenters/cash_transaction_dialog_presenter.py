@@ -307,7 +307,7 @@ class CashTransactionDialogPresenter:
             log.append(f"{tag_amount_pairs=}")
         logging.info(
             f"Editing {len(transactions)} CashTransaction(s): {', '.join(log)}, "
-            f"uuids={uuids}"
+            f"uuids={[str(uuid) for uuid in uuids]}"
         )
         try:
             self._record_keeper.edit_cash_transactions(

@@ -97,7 +97,10 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
             )
 
         if hasattr(self, "_type"):
-            logging.info(f"Changing Security.type_ from '{self._type}' to '{value}'")
+            if self._type != value:
+                logging.info(
+                    f"Changing Security.type_ from '{self._type}' to '{value}'"
+                )
         else:
             logging.info(f"Setting Security.type_='{value}'")
         self._type = value
@@ -124,11 +127,17 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
                 "Security.symbol can contain only ASCII letters, digits or a period."
             )
 
+        value_capitalized = value.upper()
+
         if hasattr(self, "_symbol"):
-            logging.info(f"Changing Security.symbol from '{self._symbol}' to '{value}'")
+            if self._symbol != value_capitalized:
+                logging.info(
+                    f"Changing Security.symbol from '{self._symbol}' "
+                    f"to '{value_capitalized}'"
+                )
         else:
-            logging.info(f"Setting Security.symbol='{value}'")
-        self._symbol = value.upper()
+            logging.info(f"Setting Security.symbol='{value_capitalized}'")
+        self._symbol = value_capitalized
 
     @property
     def price(self) -> CashAmount:
@@ -241,13 +250,16 @@ class SecurityAccount(Account):
 
     def add_transaction(self, transaction: "SecurityRelatedTransaction") -> None:
         self._validate_transaction(transaction)
-        self._securities[transaction.security] += transaction.get_shares(self)
         self._transactions.append(transaction)
 
     def remove_transaction(self, transaction: "SecurityRelatedTransaction") -> None:
         self._validate_transaction(transaction)
-        self._securities[transaction.security] -= transaction.get_shares(self)
         self._transactions.remove(transaction)
+
+    def update_securities(self) -> None:
+        self._securities.clear()
+        for transaction in self._transactions:
+            self._securities[transaction.security] += transaction.get_shares(self)
 
     def serialize(self) -> dict[str, Any]:
         index = self.parent.children.index(self) if self.parent is not None else None
@@ -576,6 +588,7 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
         if hasattr(self, "_security_account"):
             if self._security_account != security_account:
                 self._security_account.remove_transaction(self)
+                self._security_account.update_securities()
             else:
                 add_security_account = False
         if hasattr(self, "_cash_account"):
@@ -592,6 +605,8 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
         if add_cash_account:
             self._cash_account.add_transaction(self)
 
+        self._security_account.update_securities()
+
     def _validate_type(self, type_: SecurityTransactionType) -> None:
         if not isinstance(type_, SecurityTransactionType):
             raise TypeError(
@@ -604,12 +619,10 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
                 "SecurityTransaction.security_account must be a SecurityAccount."
             )
 
-    def _validate_cash_account(
-        self, new_account: CashAccount, currency: Currency
-    ) -> None:
-        if not isinstance(new_account, CashAccount):
+    def _validate_cash_account(self, account: CashAccount, currency: Currency) -> None:
+        if not isinstance(account, CashAccount):
             raise TypeError("SecurityTransaction.cash_account must be a CashAccount.")
-        if new_account.currency != currency:
+        if account.currency != currency:
             raise CurrencyError(
                 "The currencies of SecurityTransaction.security and "
                 "SecurityTransaction.cash_account must match."
@@ -835,11 +848,13 @@ class SecurityTransfer(SecurityRelatedTransaction):
         if hasattr(self, "_sender"):
             if self._sender != sender:
                 self._sender.remove_transaction(self)
+                self._sender.update_securities()
             else:
                 add_sender = False
         if hasattr(self, "_recipient"):
             if self._recipient != recipient:
                 self._recipient.remove_transaction(self)
+                self._recipient.update_securities()
             else:
                 add_recipient = False
 
@@ -850,6 +865,9 @@ class SecurityTransfer(SecurityRelatedTransaction):
             self._sender.add_transaction(self)
         if add_recipient:
             self._recipient.add_transaction(self)
+
+        self._sender.update_securities()
+        self._recipient.update_securities()
 
     def _get_shares(self, account: SecurityAccount) -> Decimal:
         if account == self._sender:

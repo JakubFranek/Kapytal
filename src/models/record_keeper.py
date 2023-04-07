@@ -691,16 +691,30 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         security_account_path: str | None = None,
         price_per_share: Decimal | int | str | None = None,
         shares: Decimal | int | str | None = None,
+        tag_names: Collection[str] | None = None,
     ) -> None:
         transactions = self._get_transactions(transaction_uuids, SecurityTransaction)
 
-        if not all(
-            transaction.currency == transactions[0].currency
+        if any(
+            transaction.currency != transactions[0].currency
             for transaction in transactions
         ):
-            raise CurrencyError(
-                "Edited SecurityTransactions must have the same currency."
-            )
+            if security_name is None and (
+                cash_account_path is not None or price_per_share is not None
+            ):
+                raise ValueError(
+                    "If mixed currency SecurityTransactions are edited and "
+                    "security_name is None, cash_account_path and price_per_share must "
+                    "be None too."
+                )
+            if security_name is not None and (
+                cash_account_path is None or price_per_share is None
+            ):
+                raise ValueError(
+                    "If mixed currency SecurityTransactions are edited and "
+                    "security_name is not None, cash_account_path and price_per_share "
+                    "must not be None too."
+                )
 
         if security_name is not None:
             security = self.get_security_by_name(security_name)
@@ -754,6 +768,15 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
                 cash_account=cash_account,
                 security_account=security_account,
             )
+
+        if tag_names is not None:
+            tags = [
+                self.get_attribute(tag_name, AttributeType.TAG)
+                for tag_name in tag_names
+            ]
+            for transaction in transactions:
+                transaction.clear_tags()
+                transaction.add_tags(tags)
 
     def edit_security_transfers(  # noqa: PLR0913
         self,

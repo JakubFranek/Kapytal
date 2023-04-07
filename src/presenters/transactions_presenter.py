@@ -277,7 +277,7 @@ class TransactionsPresenter:
                 self._record_keeper.remove_transactions((transaction.uuid,))
                 logging.info(
                     f"Removed {transaction.__class__.__name__}: "
-                    f"uuid={transaction.uuid}"
+                    f"uuid={str(transaction.uuid)}"
                 )
                 self._model.pre_remove_item(transaction)
                 self.update_model_data()
@@ -322,6 +322,11 @@ class TransactionsPresenter:
             isinstance(transaction, RefundTransaction) for transaction in transactions
         ):
             self._refund_transaction_dialog_presenter.run_edit_dialog()
+            return
+        if all(
+            isinstance(transaction, SecurityTransaction) for transaction in transactions
+        ):
+            self._security_transaction_dialog_presenter.run_edit_dialog(transactions)
             return
 
         display_error_message(
