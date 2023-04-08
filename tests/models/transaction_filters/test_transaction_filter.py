@@ -141,7 +141,7 @@ def test_set_specific_tag_filter(
 ) -> None:
     filter_ = TransactionFilter()
     filter_.set_specific_tags_filter(tags, mode)
-    assert filter_.specific_tags_filter.tags == tuple(tags)
+    assert filter_.specific_tags_filter.tags == frozenset(tags)
     assert filter_.specific_tags_filter.mode == mode
 
 

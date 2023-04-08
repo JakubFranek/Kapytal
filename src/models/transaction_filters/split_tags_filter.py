@@ -31,14 +31,20 @@ class SplitTagsFilter(FilterModeMixin):
             return tuple(
                 transaction
                 for transaction in transactions
-                if isinstance(transaction, CashTransaction)
-                and transaction.are_tags_split
+                if (
+                    isinstance(transaction, CashTransaction)
+                    and transaction.are_tags_split
+                )
+                or not isinstance(transaction, CashTransaction)
             )
         if self._mode == FilterMode.DISCARD:
             return tuple(
                 transaction
                 for transaction in transactions
-                if isinstance(transaction, CashTransaction)
-                and not transaction.are_tags_split
+                if (
+                    isinstance(transaction, CashTransaction)
+                    and not transaction.are_tags_split
+                )
+                or not isinstance(transaction, CashTransaction)
             )
         raise ValueError("Invalid FilterMode value.")  # pragma: no cover

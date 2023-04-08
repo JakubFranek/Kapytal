@@ -19,7 +19,11 @@ def check_transaction(filter_: SplitTagsFilter, transaction: Transaction) -> boo
         return True
     if not isinstance(transaction, CashTransaction):
         return True
-    return transaction.are_tags_split
+    return (
+        transaction.are_tags_split
+        if filter_.mode == FilterMode.KEEP
+        else not transaction.are_tags_split
+    )
 
 
 @given(mode=st.sampled_from(FilterMode))
@@ -66,7 +70,7 @@ def test_filter_discard(
     assert filtered == tuple(
         transaction
         for transaction in transactions
-        if not check_transaction(filter_, transaction)
+        if check_transaction(filter_, transaction)
     )
 
 
@@ -95,5 +99,5 @@ def test_filter_discard_premade_transactions(filter_: SplitTagsFilter) -> None:
     assert filtered == tuple(
         transaction
         for transaction in transaction_list
-        if not check_transaction(filter_, transaction)
+        if check_transaction(filter_, transaction)
     )

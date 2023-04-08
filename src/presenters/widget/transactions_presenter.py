@@ -288,7 +288,7 @@ class TransactionsPresenter:
         )
 
         self._transaction_filter_form_presenter.event_filter_changed.append(
-            self.reset_model
+            self._filter_changed
         )
 
     def _delete_transactions(self) -> None:
@@ -465,3 +465,9 @@ class TransactionsPresenter:
 
     def _filter_transactions(self) -> None:
         self._transaction_filter_form_presenter.show_form()
+
+    def _filter_changed(self) -> None:
+        self.reset_model()
+        self._view.set_filter_active(
+            active=self._transaction_filter_form_presenter.filter_active
+        )

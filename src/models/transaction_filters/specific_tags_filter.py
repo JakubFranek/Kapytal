@@ -25,18 +25,18 @@ class SpecificTagsFilter(FilterModeMixin):
             raise InvalidAttributeError(
                 "Parameter 'tags' must contain only Attributes with type_=TAG."
             )
-        self._tags = tuple(tags)
+        self._tags = frozenset(tags)
 
     @property
-    def tags(self) -> tuple[Attribute, ...]:
+    def tags(self) -> frozenset[Attribute]:
         return self._tags
 
     @property
-    def members(self) -> tuple[tuple[Attribute, ...], FilterMode]:
+    def members(self) -> tuple[frozenset[Attribute], FilterMode]:
         return (self._tags, self._mode)
 
     def __repr__(self) -> str:
-        return f"TagFilter(tags={self._tags}, mode={self._mode.name})"
+        return f"SpecificTagsFilter(tags={self._tags}, mode={self._mode.name})"
 
     def __hash__(self) -> int:
         return hash(self.members)

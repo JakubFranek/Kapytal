@@ -23,15 +23,26 @@ from tests.models.test_assets.transaction_list import transaction_list
 def check_transaction(filter_: SpecificTagsFilter, transaction: Transaction) -> bool:
     if filter_.mode == FilterMode.OFF:
         return True
-    return any(tag in transaction.tags for tag in filter_.tags)
+    if filter_.mode == FilterMode.KEEP:
+        return (
+            any(tag in filter_.tags for tag in transaction.tags)
+            or len(transaction.tags) == 0
+        )
+    return (
+        not any(tag in transaction.tags for tag in filter_.tags)
+        or len(transaction.tags) == 0
+    )
 
 
 @given(tags=st.lists(attributes(AttributeType.TAG)), mode=st.sampled_from(FilterMode))
 def test_creation(tags: list[Attribute], mode: FilterMode) -> None:
     filter_ = SpecificTagsFilter(tags, mode)
-    assert filter_.tags == tuple(tags)
+    assert filter_.tags == frozenset(tags)
     assert filter_.mode == mode
-    assert filter_.__repr__() == f"TagFilter(tags={tuple(tags)}, mode={mode.name})"
+    assert (
+        filter_.__repr__()
+        == f"SpecificTagsFilter(tags={frozenset(tags)}, mode={mode.name})"
+    )
 
 
 @given(
@@ -95,7 +106,7 @@ def test_filter_discard(
     assert filtered == tuple(
         transaction
         for transaction in transactions
-        if not check_transaction(filter_, transaction)
+        if check_transaction(filter_, transaction)
     )
 
 
@@ -124,5 +135,5 @@ def test_filter_discard_premade_transactions(filter_: SpecificTagsFilter) -> Non
     assert filtered == tuple(
         transaction
         for transaction in transaction_list
-        if not check_transaction(filter_, transaction)
+        if check_transaction(filter_, transaction)
     )

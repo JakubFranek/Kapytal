@@ -86,6 +86,54 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
         for column in TRANSACTION_TABLE_COLUMN_HEADERS:
             self.set_column_visibility(column, show=True)
 
+    def set_actions(
+        self, *, enable_duplicate: bool, enable_refund: bool, enable_find_related: bool
+    ) -> None:
+        selected_indexes = self.tableView.selectionModel().selectedIndexes()
+        selected_rows = [index for index in selected_indexes if index.column() == 0]
+
+        is_any_selected = len(selected_rows) > 0
+        is_one_selected = len(selected_rows) == 1
+
+        self.actionEdit.setEnabled(is_any_selected)
+        self.actionDuplicate.setEnabled(is_one_selected and enable_duplicate)
+        self.actionDelete.setEnabled(is_any_selected)
+        self.actionAdd_Tags.setEnabled(is_any_selected)
+        self.actionRemove_Tags.setEnabled(is_any_selected)
+        self.actionRefund.setEnabled(enable_refund)
+        self.actionFind_Related.setEnabled(enable_find_related)
+
+    def set_filter_active(self, *, active: bool) -> None:
+        if not active:
+            self.actionFilter_Transactions.setIcon(QIcon("icons_16:funnel.png"))
+            self.filterToolButton.setToolButtonStyle(
+                Qt.ToolButtonStyle.ToolButtonIconOnly
+            )
+            self.filterToolButton.setStyleSheet("")
+        else:
+            self.actionFilter_Transactions.setIcon(
+                QIcon("icons_16:funnel--exclamation.png")
+            )
+            self.filterToolButton.setToolButtonStyle(
+                Qt.ToolButtonStyle.ToolButtonTextBesideIcon
+            )
+            self.filterToolButton.setText("Filter active")
+            self.filterToolButton.setStyleSheet(
+                """QToolButton {
+                    background-color: rgb(255, 255, 0);
+                    border-style: solid;
+                    border-width: 1px;
+                    border-color: rgb(173, 173, 173);
+                }
+                QToolButton:hover {
+                    background-color: rgb(245, 245, 0);
+                    border-color: rgb(0,120,215);
+                }
+                QToolButton:pressed {
+                    background-color: rgb(215, 215, 0);
+                }"""
+            )
+
     def _create_column_actions(self) -> None:
         self.column_actions: list[QAction] = []
         for column, text in TRANSACTION_TABLE_COLUMN_HEADERS.items():
@@ -211,23 +259,6 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
         self.tableView.customContextMenuRequested.connect(
             self._create_table_context_menu
         )
-
-    def set_actions(
-        self, *, enable_duplicate: bool, enable_refund: bool, enable_find_related: bool
-    ) -> None:
-        selected_indexes = self.tableView.selectionModel().selectedIndexes()
-        selected_rows = [index for index in selected_indexes if index.column() == 0]
-
-        is_any_selected = len(selected_rows) > 0
-        is_one_selected = len(selected_rows) == 1
-
-        self.actionEdit.setEnabled(is_any_selected)
-        self.actionDuplicate.setEnabled(is_one_selected and enable_duplicate)
-        self.actionDelete.setEnabled(is_any_selected)
-        self.actionAdd_Tags.setEnabled(is_any_selected)
-        self.actionRemove_Tags.setEnabled(is_any_selected)
-        self.actionRefund.setEnabled(enable_refund)
-        self.actionFind_Related.setEnabled(enable_find_related)
 
     def _reset_column_order(self) -> None:
         header = self.tableView.horizontalHeader()
