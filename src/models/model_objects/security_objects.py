@@ -169,6 +169,9 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
     def __repr__(self) -> str:
         return f"Security('{self.name}')"
 
+    def __str__(self) -> str:
+        return self._name
+
     def set_price(self, date_: date, price: CashAmount) -> None:
         if not isinstance(date_, date):
             raise TypeError("Parameter 'date_' must be a date.")

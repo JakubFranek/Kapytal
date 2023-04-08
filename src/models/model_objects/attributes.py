@@ -47,6 +47,9 @@ class Attribute(NameMixin, JSONSerializableMixin):
     def __repr__(self) -> str:
         return f"Attribute('{self.name}', {self.type_.name})"
 
+    def __str__(self) -> str:
+        return self.name
+
     def serialize(self) -> dict[str, Any]:
         return {"datatype": "Attribute", "name": self._name, "type": self._type.name}
 

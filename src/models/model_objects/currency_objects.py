@@ -62,6 +62,9 @@ class Currency(CopyableMixin, JSONSerializableMixin):
     def __repr__(self) -> str:
         return f"Currency({self._code})"
 
+    def __str__(self) -> str:
+        return self._code
+
     def __hash__(self) -> int:
         return hash(self._code)
 
