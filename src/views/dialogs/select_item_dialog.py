@@ -26,8 +26,11 @@ class SelectItemDialog(QDialog, Ui_SelectItemDialog):
         self._proxy = QSortFilterProxyModel(self)
         self._model = SimpleListModel(self.listView, items, self._proxy)
         self._proxy.setSourceModel(self._model)
+        self._proxy.setSortCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+        self._proxy.setSortRole(Qt.ItemDataRole.UserRole)
         self._proxy.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
         self.listView.setModel(self._proxy)
+        self._proxy.sort(0, Qt.SortOrder.AscendingOrder)
 
         self.buttonBox.clicked.connect(self._handle_button_box_click)
 
