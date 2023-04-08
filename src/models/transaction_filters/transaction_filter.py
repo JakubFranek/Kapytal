@@ -3,6 +3,7 @@ from datetime import datetime, time
 
 from src.models.base_classes.account import Account
 from src.models.base_classes.transaction import Transaction
+from src.models.model_objects.attributes import Attribute
 from src.models.model_objects.cash_objects import (
     CashTransactionType,
     CashTransfer,
@@ -16,6 +17,7 @@ from src.models.transaction_filters.account_filter import AccountFilter
 from src.models.transaction_filters.datetime_filter import DatetimeFilter
 from src.models.transaction_filters.description_filter import DescriptionFilter
 from src.models.transaction_filters.filter_mode_mixin import FilterMode
+from src.models.transaction_filters.tag_filter import TagFilter
 from src.models.transaction_filters.type_filter import TypeFilter
 from src.models.user_settings import user_settings
 
@@ -61,6 +63,10 @@ class TransactionFilter:
         return self._account_filter
 
     @property
+    def tags_filter(self) -> TagFilter:
+        return self._tags_filter
+
+    @property
     def members(
         self,
     ) -> tuple[TypeFilter, DatetimeFilter, DescriptionFilter, AccountFilter]:
@@ -90,6 +96,7 @@ class TransactionFilter:
         _transactions = self._datetime_filter.filter_transactions(_transactions)
         _transactions = self._description_filter.filter_transactions(_transactions)
         _transactions = self._account_filter.filter_transactions(_transactions)
+        _transactions = self._tags_filter.filter_transactions(_transactions)
         return tuple(_transactions)
 
     def restore_defaults(self) -> None:
@@ -114,6 +121,7 @@ class TransactionFilter:
             regex_pattern="", mode=FilterMode.OFF
         )
         self._account_filter = AccountFilter(accounts=(), mode=FilterMode.OFF)
+        self._tags_filter = TagFilter(tags=(), mode=FilterMode.OFF)
 
     def set_type_filter(
         self, types: Collection[type[Transaction]], mode: FilterMode
@@ -132,3 +140,6 @@ class TransactionFilter:
 
     def set_description_filter(self, regex_pattern: str, mode: FilterMode) -> None:
         self._description_filter = DescriptionFilter(regex_pattern, mode)
+
+    def set_tag_filter(self, tags: Collection[Attribute], mode: FilterMode) -> None:
+        self._tags_filter = TagFilter(tags, mode)

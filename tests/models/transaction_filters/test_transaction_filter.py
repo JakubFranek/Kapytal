@@ -6,6 +6,7 @@ from hypothesis import assume, given
 from hypothesis import strategies as st
 from src.models.base_classes.account import Account
 from src.models.base_classes.transaction import Transaction
+from src.models.model_objects.attributes import Attribute, AttributeType
 from src.models.model_objects.cash_objects import (
     CashTransactionType,
     CashTransfer,
@@ -19,6 +20,7 @@ from src.models.transaction_filters.filter_mode_mixin import FilterMode
 from src.models.transaction_filters.transaction_filter import TransactionFilter
 from src.models.user_settings import user_settings
 from tests.models.test_assets.composites import (
+    attributes,
     cash_accounts,
     everything_except,
     security_accounts,
@@ -127,6 +129,20 @@ def test_set_account_filter(
     filter_.set_account_filter(accounts, mode)
     assert filter_.account_filter.accounts == tuple(accounts)
     assert filter_.account_filter.mode == mode
+
+
+@given(
+    tags=st.lists(attributes(AttributeType.TAG)),
+    mode=st.sampled_from(FilterMode),
+)
+def test_set_tag_filter(
+    tags: list[Attribute],
+    mode: FilterMode,
+) -> None:
+    filter_ = TransactionFilter()
+    filter_.set_tag_filter(tags, mode)
+    assert filter_.tags_filter.tags == tuple(tags)
+    assert filter_.tags_filter.mode == mode
 
 
 @given(transactions=transactions())

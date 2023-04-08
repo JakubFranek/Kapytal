@@ -1,33 +1,42 @@
 from collections.abc import Collection
 
-from src.models.base_classes.account import Account
 from src.models.base_classes.transaction import Transaction
+from src.models.model_objects.attributes import (
+    Attribute,
+    AttributeType,
+    InvalidAttributeError,
+)
 from src.models.transaction_filters.filter_mode_mixin import FilterMode, FilterModeMixin
 
 
-class AccountFilter(FilterModeMixin):
-    def __init__(self, accounts: Collection[Account], mode: FilterMode) -> None:
+class TagFilter(FilterModeMixin):
+    def __init__(self, tags: Collection[Attribute], mode: FilterMode) -> None:
         super().__init__(mode=mode)
-        if any(not isinstance(account, Account) for account in accounts):
-            raise TypeError("Parameter 'accounts' must be a collection of Accounts.")
-        self._accounts = tuple(accounts)
+
+        if any(not isinstance(tag, Attribute) for tag in tags):
+            raise TypeError("Parameter 'tags' must be a collection of Attributes.")
+        if any(tag.type_ != AttributeType.TAG for tag in tags):
+            raise InvalidAttributeError(
+                "Parameter 'tags' must contain only Attributes with type_=TAG."
+            )
+        self._tags = tuple(tags)
 
     @property
-    def accounts(self) -> tuple[Account, ...]:
-        return self._accounts
+    def tags(self) -> tuple[Attribute, ...]:
+        return self._tags
 
     @property
-    def members(self) -> tuple[tuple[Account, ...], FilterMode]:
-        return (self._accounts, self._mode)
+    def members(self) -> tuple[tuple[Attribute, ...], FilterMode]:
+        return (self._tags, self._mode)
 
     def __repr__(self) -> str:
-        return f"AccountFilter(accounts={self._accounts}, mode={self._mode.name})"
+        return f"TagFilter(tags={self._tags}, mode={self._mode.name})"
 
     def __hash__(self) -> int:
         return hash(self.members)
 
     def __eq__(self, __o: object) -> bool:
-        if not isinstance(__o, AccountFilter):
+        if not isinstance(__o, TagFilter):
             return False
         return self.members == __o.members
 
@@ -40,12 +49,12 @@ class AccountFilter(FilterModeMixin):
             return tuple(
                 transaction
                 for transaction in transactions
-                if transaction.is_accounts_related(self._accounts)
+                if any(tag in self._tags for tag in transaction.tags)
             )
         if self._mode == FilterMode.DISCARD:
             return tuple(
                 transaction
                 for transaction in transactions
-                if not transaction.is_accounts_related(self._accounts)
+                if not any(tag in self._tags for tag in transaction.tags)
             )
         raise ValueError("Invalid FilterMode value.")  # pragma: no cover

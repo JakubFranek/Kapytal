@@ -33,6 +33,7 @@ from src.models.model_objects.security_objects import (
 from src.models.transaction_filters.account_filter import AccountFilter
 from src.models.transaction_filters.datetime_filter import DatetimeFilter
 from src.models.transaction_filters.description_filter import DescriptionFilter
+from src.models.transaction_filters.tag_filter import TagFilter
 from src.models.transaction_filters.transaction_filter import FilterMode, TypeFilter
 from src.models.user_settings import user_settings
 from tests.models.test_assets.constants import MIN_DATETIME
@@ -422,6 +423,13 @@ def tag_amount_pairs(
         cash_amounts(currency=currency, min_value=min_value, max_value=max_value)
     )
     return (attribute, amount)
+
+
+@st.composite
+def tag_filters(draw: st.DrawFn) -> TagFilter:
+    mode = draw(st.sampled_from(FilterMode))
+    tags = draw(st.lists(attributes(type_=AttributeType.TAG)))
+    return TagFilter(tags, mode)
 
 
 @st.composite
