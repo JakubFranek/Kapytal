@@ -13,6 +13,7 @@ def test_creation(name: str, type_: AttributeType) -> None:
     attribute = Attribute(name, type_)
 
     assert attribute.name == name
+    assert attribute.__str__() == name
     assert attribute.__repr__() == f"Attribute('{name}', {type_.name})"
 
 

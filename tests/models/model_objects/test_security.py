@@ -45,6 +45,7 @@ def test_creation(
     assert security.latest_date is None
     assert security.price_history == {}
     assert security.__repr__() == f"Security('{security.name}')"
+    assert security.__str__() == security.name
     assert isinstance(security.__hash__(), int)
     assert security.shares_unit == shares_unit
 
