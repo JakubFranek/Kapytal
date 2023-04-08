@@ -8,6 +8,7 @@ from PyQt6.QtWidgets import (
     QAbstractButton,
     QComboBox,
     QDialogButtonBox,
+    QLineEdit,
     QListView,
     QWidget,
 )
@@ -40,6 +41,7 @@ class TransactionFilterForm(QWidget, Ui_TransactionFilterForm):
         self.setupUi(self)
 
         self._initialize_window()
+        self._initialize_search_boxes()
         self._initialize_signals()
         self._initialize_mode_comboboxes()
 
@@ -189,6 +191,14 @@ class TransactionFilterForm(QWidget, Ui_TransactionFilterForm):
         self.setWindowFlag(Qt.WindowType.Window)
         self.setWindowTitle("Filter Transaction Table")
         self.setWindowIcon(QIcon("icons_16:funnel.png"))
+
+    def _initialize_search_boxes(self) -> None:
+        self.tagsSearchLineEdit.addAction(
+            QIcon("icons_16:magnifier.png"), QLineEdit.ActionPosition.LeadingPosition
+        )
+        self.payeesSearchLineEdit.addAction(
+            QIcon("icons_16:magnifier.png"), QLineEdit.ActionPosition.LeadingPosition
+        )
 
     def _initialize_mode_comboboxes(self) -> None:
         self._initialize_mode_combobox(self.dateFilterModeComboBox)

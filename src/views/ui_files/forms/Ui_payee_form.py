@@ -60,7 +60,7 @@ class Ui_PayeeForm(object):
     def retranslateUi(self, PayeeForm):
         _translate = QtCore.QCoreApplication.translate
         PayeeForm.setWindowTitle(_translate("PayeeForm", "Payees"))
-        self.searchLineEdit.setToolTip(_translate("PayeeForm", "<html><head/><body><p>Special characters:<br/>* matches zero or more of any characters<br/>? matches any single character<br/>[...] matches any character within square brackets</p></body></html>"))
+        self.searchLineEdit.setToolTip(_translate("PayeeForm", "<html><head/><body><p>Special characters:</p><p>* matches zero or more of any characters<br/>? matches any single character<br/>[...] matches any character within square brackets</p></body></html>"))
         self.searchLineEdit.setPlaceholderText(_translate("PayeeForm", "Search Payees"))
         self.addButton.setText(_translate("PayeeForm", "Add"))
         self.renameButton.setText(_translate("PayeeForm", "Rename"))

@@ -304,6 +304,9 @@
          <layout class="QVBoxLayout" name="verticalLayout_14">
           <item>
            <widget class="QLineEdit" name="tagsSearchLineEdit">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Special characters:&lt;/p&gt;&lt;p&gt;* matches zero or more of any characters&lt;br/&gt;? matches any single character&lt;br/&gt;[...] matches any character within square brackets&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
             <property name="placeholderText">
              <string>Search Tags</string>
             </property>
@@ -363,7 +366,14 @@
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_7">
        <item>
-        <widget class="QLineEdit" name="payeesSearchLineEdit"/>
+        <widget class="QLineEdit" name="payeesSearchLineEdit">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Special characters:&lt;/p&gt;&lt;p&gt;* matches zero or more of any characters&lt;br/&gt;? matches any single character&lt;br/&gt;[...] matches any character within square brackets&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="placeholderText">
+          <string>Search Payees</string>
+         </property>
+        </widget>
        </item>
        <item>
         <widget class="QListView" name="payeesListView"/>

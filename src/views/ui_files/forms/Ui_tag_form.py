@@ -60,7 +60,7 @@ class Ui_TagForm(object):
     def retranslateUi(self, TagForm):
         _translate = QtCore.QCoreApplication.translate
         TagForm.setWindowTitle(_translate("TagForm", "Tags"))
-        self.searchLineEdit.setToolTip(_translate("TagForm", "<html><head/><body><p>Special characters:<br/>* matches zero or more of any characters<br/>? matches any single character<br/>[...] matches any character within square brackets</p></body></html>"))
+        self.searchLineEdit.setToolTip(_translate("TagForm", "<html><head/><body><p>Special characters:</p><p>* matches zero or more of any characters<br/>? matches any single character<br/>[...] matches any character within square brackets</p></body></html>"))
         self.searchLineEdit.setPlaceholderText(_translate("TagForm", "Search Tags"))
         self.addButton.setText(_translate("TagForm", "Add"))
         self.renameButton.setText(_translate("TagForm", "Rename"))
