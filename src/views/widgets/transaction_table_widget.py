@@ -38,7 +38,7 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
         self._create_column_actions()
         self._set_icons()
         self._connect_actions()
-        self._connect_signals()
+        self._initialize_signals()
         self._setup_header()
         self._setup_table()
 
@@ -175,7 +175,7 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
         )
         self.actionReset_Columns.triggered.connect(self._reset_column_order)
 
-    def _connect_signals(self) -> None:
+    def _initialize_signals(self) -> None:
         self.actionIncome.triggered.connect(self.signal_income.emit)
         self.actionExpense.triggered.connect(self.signal_expense.emit)
         self.actionRefund.triggered.connect(self.signal_refund.emit)

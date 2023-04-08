@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>475</width>
-    <height>539</height>
+    <height>491</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -534,14 +534,14 @@
             <item>
              <widget class="QPushButton" name="currencyFilterSelectAllPushButton">
               <property name="text">
-               <string>PushButton</string>
+               <string>Select All</string>
               </property>
              </widget>
             </item>
             <item>
              <widget class="QPushButton" name="currencyFilterUnselectAllPushButton">
               <property name="text">
-               <string>PushButton</string>
+               <string>Unselect All</string>
               </property>
              </widget>
             </item>
@@ -564,14 +564,14 @@
             <item>
              <widget class="QPushButton" name="securityFilterSelectAllPushButton">
               <property name="text">
-               <string>PushButton</string>
+               <string>Select All</string>
               </property>
              </widget>
             </item>
             <item>
              <widget class="QPushButton" name="securityFilterUnselectAllPushButton">
               <property name="text">
-               <string>PushButton</string>
+               <string>Unselect All</string>
               </property>
              </widget>
             </item>

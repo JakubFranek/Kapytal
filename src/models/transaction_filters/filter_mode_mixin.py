@@ -3,9 +3,9 @@ from typing import Any
 
 
 class FilterMode(Enum):
-    OFF = "Keep all transactions (filter is disabled)"
-    KEEP = "Keep transactions matching the filter criteria"
-    DISCARD = "Discard transactions matching the filter criteria"
+    OFF = "No filter applied"
+    KEEP = "Keep only transactions matching the filter criteria"
+    DISCARD = "Discard all transactions matching the filter criteria"
 
 
 class FilterModeMixin:

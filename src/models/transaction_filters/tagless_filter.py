@@ -5,6 +5,11 @@ from src.models.transaction_filters.filter_mode_mixin import FilterMode, FilterM
 
 
 class TaglessFilter(FilterModeMixin):
+    """Filters Transactions which have no Tags.
+
+    KEEP: Keeps only Tag-less Transactions.
+    DISCARD: Discards Tag-less Transactions."""
+
     def __init__(self, mode: FilterMode) -> None:
         super().__init__(mode=mode)
 

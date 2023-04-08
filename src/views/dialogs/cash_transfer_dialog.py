@@ -66,7 +66,7 @@ class CashTransferDialog(QDialog, Ui_CashTransferDialog):
         self._initialize_window()
         self._initialize_placeholders()
         self._set_spinbox_states()
-        self._connect_signals()
+        self._initialize_signals()
 
     @property
     def datetime_(self) -> datetime | None:
@@ -301,7 +301,7 @@ class CashTransferDialog(QDialog, Ui_CashTransferDialog):
         else:
             raise ValueError("Unknown role of the clicked button in the ButtonBox")
 
-    def _connect_signals(self) -> None:
+    def _initialize_signals(self) -> None:
         self.sentDoubleSpinBox.valueChanged.connect(self._set_exchange_rate)
         self.receivedDoubleSpinBox.valueChanged.connect(self._set_exchange_rate)
         self.senderComboBox.currentTextChanged.connect(self._set_spinbox_states)

@@ -10,6 +10,12 @@ from src.models.transaction_filters.filter_mode_mixin import FilterMode, FilterM
 
 
 class SpecificTagsFilter(FilterModeMixin):
+    """Filters transactions based on whether they have specific tags.
+    Leaves Tag-less transactions alone.
+
+    KEEP: Keeps only Transactions with the specified Tags (or no Tags).
+    DISCARD: Discards Transactions with the specified Tags."""
+
     def __init__(self, tags: Collection[Attribute], mode: FilterMode) -> None:
         super().__init__(mode=mode)
 
@@ -50,11 +56,13 @@ class SpecificTagsFilter(FilterModeMixin):
                 transaction
                 for transaction in transactions
                 if any(tag in self._tags for tag in transaction.tags)
+                or len(transaction.tags) == 0
             )
         if self._mode == FilterMode.DISCARD:
             return tuple(
                 transaction
                 for transaction in transactions
                 if not any(tag in self._tags for tag in transaction.tags)
+                or len(transaction.tags) == 0
             )
         raise ValueError("Invalid FilterMode value.")  # pragma: no cover

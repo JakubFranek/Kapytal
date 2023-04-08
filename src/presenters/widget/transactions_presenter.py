@@ -63,7 +63,7 @@ class TransactionsPresenter:
         self._initialize_model()
         self._initialize_presenters()
         self._initialize_view()
-        self._connect_signals()
+        self._connect_to_signals()
         self._connect_events()
         self.update_model_data()
         self._view.finalize_setup()
@@ -200,7 +200,7 @@ class TransactionsPresenter:
         self._view.resize_table_to_contents()
         self._view.set_column_visibility(TransactionTableColumn.COLUMN_UUID, show=False)
 
-    def _connect_signals(self) -> None:
+    def _connect_to_signals(self) -> None:
         self._view.signal_search_text_changed.connect(self._search_filter)
 
         self._view.signal_income.connect(

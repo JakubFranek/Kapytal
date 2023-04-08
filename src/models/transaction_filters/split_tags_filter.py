@@ -6,6 +6,8 @@ from src.models.transaction_filters.filter_mode_mixin import FilterMode, FilterM
 
 
 class SplitTagsFilter(FilterModeMixin):
+    """Filters CashTransactions which have split Tags. Ignores other Transactions."""
+
     def __init__(self, mode: FilterMode) -> None:
         super().__init__(mode=mode)
 

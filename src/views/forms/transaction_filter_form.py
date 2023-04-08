@@ -36,6 +36,12 @@ class TransactionFilterForm(QWidget, Ui_TransactionFilterForm):
     signal_ok = pyqtSignal()
     signal_restore_defaults = pyqtSignal()
 
+    signal_tags_search_text_changed = pyqtSignal(str)
+    signal_payees_search_text_changed = pyqtSignal(str)
+
+    signal_tags_select_all = pyqtSignal()
+    signal_tags_unselect_all = pyqtSignal()
+
     def __init__(self, parent: QWidget) -> None:
         super().__init__(parent=parent)
         self.setupUi(self)
@@ -166,6 +172,26 @@ class TransactionFilterForm(QWidget, Ui_TransactionFilterForm):
         else:
             self.accountsFilterSelectionRadioButton.setChecked(True)
 
+    @property
+    def tagless_filter_mode(self) -> FilterMode:
+        return TransactionFilterForm._get_filter_mode_from_combobox(
+            self.tagLessFilterModeComboBox
+        )
+
+    @tagless_filter_mode.setter
+    def tagless_filter_mode(self, mode: FilterMode) -> None:
+        self.tagLessFilterModeComboBox.setCurrentText(mode.name)
+
+    @property
+    def split_tags_filter_mode(self) -> FilterMode:
+        return TransactionFilterForm._get_filter_mode_from_combobox(
+            self.splitTagsFilterModeComboBox
+        )
+
+    @split_tags_filter_mode.setter
+    def split_tags_filter_mode(self, mode: FilterMode) -> None:
+        self.splitTagsFilterModeComboBox.setCurrentText(mode.name)
+
     def show_form(self) -> None:
         logging.debug(f"Showing {self.__class__.__name__}")
         self.show()
@@ -187,6 +213,26 @@ class TransactionFilterForm(QWidget, Ui_TransactionFilterForm):
         )
         self.buttonBox.clicked.connect(self._handle_button_box_click)
 
+        self.tagsSearchLineEdit.textChanged.connect(
+            lambda: self.signal_tags_search_text_changed.emit(
+                self.tagsSearchLineEdit.text()
+            )
+        )
+        self.payeesSearchLineEdit.textChanged.connect(
+            lambda: self.signal_payees_search_text_changed.emit(
+                self.payeesSearchLineEdit.text()
+            )
+        )
+
+        self.tagsSelectAllPushButton.clicked.connect(self.signal_tags_select_all.emit)
+        self.tagsUnselectAllPushButton.clicked.connect(
+            self.signal_tags_unselect_all.emit
+        )
+
+        self.tagLessFilterModeComboBox.currentTextChanged.connect(
+            self._tagless_filter_mode_changed
+        )
+
     def _initialize_window(self) -> None:
         self.setWindowFlag(Qt.WindowType.Window)
         self.setWindowTitle("Filter Transaction Table")
@@ -203,15 +249,18 @@ class TransactionFilterForm(QWidget, Ui_TransactionFilterForm):
     def _initialize_mode_comboboxes(self) -> None:
         self._initialize_mode_combobox(self.dateFilterModeComboBox)
         self._initialize_mode_combobox(self.descriptionFilterModeComboBox)
+        self._initialize_mode_combobox(self.tagLessFilterModeComboBox)
+        self._initialize_mode_combobox(self.splitTagsFilterModeComboBox)
+        self._initialize_mode_combobox(self.splitCategoriesFilterModeComboBox)
 
     @staticmethod
     def _initialize_mode_combobox(combobox: QComboBox) -> None:
         for mode in FilterMode:
             combobox.addItem(mode.name)
         combobox.setToolTip(
-            f"{FilterMode.OFF.name} - {FilterMode.OFF.value}\n"
-            f"{FilterMode.KEEP.name} - {FilterMode.KEEP.value}\n"
-            f"{FilterMode.DISCARD.name} - {FilterMode.DISCARD.value}"
+            f"{FilterMode.OFF.name}: {FilterMode.OFF.value}\n"
+            f"{FilterMode.KEEP.name}: {FilterMode.KEEP.value}\n"
+            f"{FilterMode.DISCARD.name}: {FilterMode.DISCARD.value}"
         )
 
     def _date_filter_mode_changed(self) -> None:
@@ -233,3 +282,10 @@ class TransactionFilterForm(QWidget, Ui_TransactionFilterForm):
             self.close()
         else:
             raise ValueError("Unknown role of the clicked button in the ButtonBox")
+
+    def _tagless_filter_mode_changed(self) -> None:
+        mode = self.tagless_filter_mode
+        self.specificTagsFilterGroupBox.setEnabled(mode != FilterMode.KEEP)
+        if mode == FilterMode.KEEP:
+            self.splitTagsFilterModeComboBox.setCurrentText(FilterMode.OFF.name)
+        self.splitTagsFilterModeComboBox.setEnabled(mode != FilterMode.KEEP)
