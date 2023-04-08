@@ -17,7 +17,9 @@ from src.models.transaction_filters.account_filter import AccountFilter
 from src.models.transaction_filters.datetime_filter import DatetimeFilter
 from src.models.transaction_filters.description_filter import DescriptionFilter
 from src.models.transaction_filters.filter_mode_mixin import FilterMode
-from src.models.transaction_filters.tag_filter import TagFilter
+from src.models.transaction_filters.specific_tags_filter import SpecificTagsFilter
+from src.models.transaction_filters.split_tags_filter import SplitTagsFilter
+from src.models.transaction_filters.tagless_filter import TaglessFilter
 from src.models.transaction_filters.type_filter import TypeFilter
 from src.models.user_settings import user_settings
 
@@ -63,8 +65,16 @@ class TransactionFilter:
         return self._account_filter
 
     @property
-    def tags_filter(self) -> TagFilter:
-        return self._tags_filter
+    def specific_tags_filter(self) -> SpecificTagsFilter:
+        return self._specific_tags_filter
+
+    @property
+    def tagless_filter(self) -> TaglessFilter:
+        return self._tagless_filter
+
+    @property
+    def split_tags_filter(self) -> SplitTagsFilter:
+        return self._split_tags_filter
 
     @property
     def members(
@@ -75,6 +85,9 @@ class TransactionFilter:
             self._datetime_filter,
             self._description_filter,
             self._account_filter,
+            self._specific_tags_filter,
+            self._tagless_filter,
+            self._split_tags_filter,
         )
 
     def __repr__(self) -> str:
@@ -96,7 +109,9 @@ class TransactionFilter:
         _transactions = self._datetime_filter.filter_transactions(_transactions)
         _transactions = self._description_filter.filter_transactions(_transactions)
         _transactions = self._account_filter.filter_transactions(_transactions)
-        _transactions = self._tags_filter.filter_transactions(_transactions)
+        _transactions = self._specific_tags_filter.filter_transactions(_transactions)
+        _transactions = self._tagless_filter.filter_transactions(_transactions)
+        _transactions = self._split_tags_filter.filter_transactions(_transactions)
         return tuple(_transactions)
 
     def restore_defaults(self) -> None:
@@ -121,7 +136,9 @@ class TransactionFilter:
             regex_pattern="", mode=FilterMode.OFF
         )
         self._account_filter = AccountFilter(accounts=(), mode=FilterMode.OFF)
-        self._tags_filter = TagFilter(tags=(), mode=FilterMode.OFF)
+        self._specific_tags_filter = SpecificTagsFilter(tags=(), mode=FilterMode.OFF)
+        self._tagless_filter = TaglessFilter(mode=FilterMode.OFF)
+        self._split_tags_filter = SplitTagsFilter(mode=FilterMode.OFF)
 
     def set_type_filter(
         self, types: Collection[type[Transaction]], mode: FilterMode
@@ -141,5 +158,13 @@ class TransactionFilter:
     def set_description_filter(self, regex_pattern: str, mode: FilterMode) -> None:
         self._description_filter = DescriptionFilter(regex_pattern, mode)
 
-    def set_tag_filter(self, tags: Collection[Attribute], mode: FilterMode) -> None:
-        self._tags_filter = TagFilter(tags, mode)
+    def set_specific_tags_filter(
+        self, tags: Collection[Attribute], mode: FilterMode
+    ) -> None:
+        self._specific_tags_filter = SpecificTagsFilter(tags, mode)
+
+    def set_tagless_filter(self, mode: FilterMode) -> None:
+        self._tagless_filter = TaglessFilter(mode)
+
+    def set_split_tags_filter(self, mode: FilterMode) -> None:
+        self._split_tags_filter = SplitTagsFilter(mode)

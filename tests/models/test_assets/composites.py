@@ -33,7 +33,9 @@ from src.models.model_objects.security_objects import (
 from src.models.transaction_filters.account_filter import AccountFilter
 from src.models.transaction_filters.datetime_filter import DatetimeFilter
 from src.models.transaction_filters.description_filter import DescriptionFilter
-from src.models.transaction_filters.tag_filter import TagFilter
+from src.models.transaction_filters.specific_tags_filter import SpecificTagsFilter
+from src.models.transaction_filters.split_tags_filter import SplitTagsFilter
+from src.models.transaction_filters.tagless_filter import TaglessFilter
 from src.models.transaction_filters.transaction_filter import FilterMode, TypeFilter
 from src.models.user_settings import user_settings
 from tests.models.test_assets.constants import MIN_DATETIME
@@ -410,6 +412,19 @@ def share_decimals(
 
 
 @st.composite
+def specific_tag_filters(draw: st.DrawFn) -> SpecificTagsFilter:
+    mode = draw(st.sampled_from(FilterMode))
+    tags = draw(st.lists(attributes(type_=AttributeType.TAG)))
+    return SpecificTagsFilter(tags, mode)
+
+
+@st.composite
+def split_tags_filters(draw: st.DrawFn) -> SplitTagsFilter:
+    mode = draw(st.sampled_from(FilterMode))
+    return SplitTagsFilter(mode)
+
+
+@st.composite
 def tag_amount_pairs(
     draw: st.DrawFn,
     currency: Currency,
@@ -426,10 +441,9 @@ def tag_amount_pairs(
 
 
 @st.composite
-def tag_filters(draw: st.DrawFn) -> TagFilter:
+def tagless_filters(draw: st.DrawFn) -> TaglessFilter:
     mode = draw(st.sampled_from(FilterMode))
-    tags = draw(st.lists(attributes(type_=AttributeType.TAG)))
-    return TagFilter(tags, mode)
+    return TaglessFilter(mode)
 
 
 @st.composite

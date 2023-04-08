@@ -9,7 +9,7 @@ from src.models.model_objects.attributes import (
 from src.models.transaction_filters.filter_mode_mixin import FilterMode, FilterModeMixin
 
 
-class TagFilter(FilterModeMixin):
+class SpecificTagsFilter(FilterModeMixin):
     def __init__(self, tags: Collection[Attribute], mode: FilterMode) -> None:
         super().__init__(mode=mode)
 
@@ -36,7 +36,7 @@ class TagFilter(FilterModeMixin):
         return hash(self.members)
 
     def __eq__(self, __o: object) -> bool:
-        if not isinstance(__o, TagFilter):
+        if not isinstance(__o, SpecificTagsFilter):
             return False
         return self.members == __o.members
 

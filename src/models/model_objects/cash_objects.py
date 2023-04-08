@@ -333,6 +333,8 @@ class CashTransaction(CashRelatedTransaction):
             return tuple(self._refunds)
         return ()
 
+    # TODO: indicate fully and partically refunded CashTransactions
+
     @property
     def is_refunded(self) -> bool:
         return len(self.refunds) > 0

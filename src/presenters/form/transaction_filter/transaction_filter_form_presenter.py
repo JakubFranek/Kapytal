@@ -7,6 +7,9 @@ from src.models.base_classes.account import Account
 from src.models.record_keeper import RecordKeeper
 from src.models.transaction_filters.filter_mode_mixin import FilterMode
 from src.models.transaction_filters.transaction_filter import TransactionFilter
+from src.presenters.form.transaction_filter.tag_filter_presenter import (
+    TagFilterPresenter,
+)
 from src.presenters.utilities.event import Event
 from src.views.forms.transaction_filter_form import (
     AccountFilterMode,
@@ -28,6 +31,8 @@ class TransactionFilterFormPresenter:
 
         self._form = TransactionFilterForm(parent_view)
         self._transaction_filter = TransactionFilter()
+
+        self._tag_filter_presenter = TagFilterPresenter(self._form, record_keeper)
 
         self._form.signal_ok.connect(self._form_accepted)
         self._form.signal_restore_defaults.connect(self._restore_defaults)
@@ -55,6 +60,7 @@ class TransactionFilterFormPresenter:
 
     def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
         self._record_keeper = record_keeper
+        self._tag_filter_presenter.load_record_keeper(record_keeper)
 
     def show_form(self) -> None:
         self._form.show_form()
@@ -83,6 +89,10 @@ class TransactionFilterFormPresenter:
             # get selected Accounts
             # set AccountFilter
             raise NotImplementedError
+
+        transaction_filter.set_specific_tags_filter(
+            self._tag_filter_presenter.checked_tags, FilterMode.KEEP
+        )
 
         return transaction_filter
 
@@ -129,6 +139,9 @@ class TransactionFilterFormPresenter:
         )
         self._form.description_filter_pattern = (
             self._transaction_filter.description_filter.regex_pattern
+        )
+        self._tag_filter_presenter.load_from_tag_filter(
+            self._transaction_filter.specific_tags_filter
         )
 
     def _restore_defaults(self) -> None:

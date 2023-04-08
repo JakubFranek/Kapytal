@@ -6,15 +6,15 @@ from PyQt6.QtWidgets import QApplication
 from src.models.json.custom_json_decoder import CustomJSONDecoder
 from src.models.json.custom_json_encoder import CustomJSONEncoder
 from src.models.record_keeper import RecordKeeper
-from src.presenters.form_presenters.category_form_presenter import CategoryFormPresenter
-from src.presenters.form_presenters.currency_form_presenter import CurrencyFormPresenter
-from src.presenters.form_presenters.payee_form_presenter import PayeeFormPresenter
-from src.presenters.form_presenters.security_form_presenter import SecurityFormPresenter
-from src.presenters.form_presenters.settings_form_presenter import SettingsFormPresenter
-from src.presenters.form_presenters.tag_form_presenter import TagFormPresenter
+from src.presenters.form.category_form_presenter import CategoryFormPresenter
+from src.presenters.form.currency_form_presenter import CurrencyFormPresenter
+from src.presenters.form.payee_form_presenter import PayeeFormPresenter
+from src.presenters.form.security_form_presenter import SecurityFormPresenter
+from src.presenters.form.settings_form_presenter import SettingsFormPresenter
+from src.presenters.form.tag_form_presenter import TagFormPresenter
 from src.presenters.utilities.handle_exception import handle_exception
-from src.presenters.widget_presenters.account_tree_presenter import AccountTreePresenter
-from src.presenters.widget_presenters.transactions_presenter import (
+from src.presenters.widget.account_tree_presenter import AccountTreePresenter
+from src.presenters.widget.transactions_presenter import (
     TransactionsPresenter,
 )
 from src.utilities import constants

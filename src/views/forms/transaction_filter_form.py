@@ -4,7 +4,13 @@ from enum import Enum, auto
 
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QCloseEvent, QIcon
-from PyQt6.QtWidgets import QAbstractButton, QComboBox, QDialogButtonBox, QWidget
+from PyQt6.QtWidgets import (
+    QAbstractButton,
+    QComboBox,
+    QDialogButtonBox,
+    QListView,
+    QWidget,
+)
 from src.models.base_classes.transaction import Transaction
 from src.models.model_objects.cash_objects import (
     CashTransactionType,
@@ -36,6 +42,10 @@ class TransactionFilterForm(QWidget, Ui_TransactionFilterForm):
         self._initialize_window()
         self._initialize_signals()
         self._initialize_mode_comboboxes()
+
+    @property
+    def tags_list_view(self) -> QListView:
+        return self.tagsListView
 
     @property
     def types(

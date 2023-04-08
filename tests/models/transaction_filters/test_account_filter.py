@@ -59,7 +59,7 @@ def test_eq_different_type(filter_1: AccountFilter, filter_2: Any) -> None:
 
 
 @given(transactions=transactions(), filter_=account_filters())
-def test_filter(transactions: list[Transaction], filter_: AccountFilter) -> None:
+def test_filter_off(transactions: list[Transaction], filter_: AccountFilter) -> None:
     filter_._mode = FilterMode.OFF
     filtered = filter_.filter_transactions(transactions)
     assert filtered == tuple(transactions)

@@ -135,14 +135,36 @@ def test_set_account_filter(
     tags=st.lists(attributes(AttributeType.TAG)),
     mode=st.sampled_from(FilterMode),
 )
-def test_set_tag_filter(
+def test_set_specific_tag_filter(
     tags: list[Attribute],
     mode: FilterMode,
 ) -> None:
     filter_ = TransactionFilter()
-    filter_.set_tag_filter(tags, mode)
-    assert filter_.tags_filter.tags == tuple(tags)
-    assert filter_.tags_filter.mode == mode
+    filter_.set_specific_tags_filter(tags, mode)
+    assert filter_.specific_tags_filter.tags == tuple(tags)
+    assert filter_.specific_tags_filter.mode == mode
+
+
+@given(
+    mode=st.sampled_from(FilterMode),
+)
+def test_set_tagless_filter(
+    mode: FilterMode,
+) -> None:
+    filter_ = TransactionFilter()
+    filter_.set_tagless_filter(mode)
+    assert filter_.tagless_filter.mode == mode
+
+
+@given(
+    mode=st.sampled_from(FilterMode),
+)
+def test_set_split_tags_filter(
+    mode: FilterMode,
+) -> None:
+    filter_ = TransactionFilter()
+    filter_.set_split_tags_filter(mode)
+    assert filter_.split_tags_filter.mode == mode
 
 
 @given(transactions=transactions())
