@@ -313,6 +313,6 @@ class MainPresenter:
         self._update_recent_paths_menu()
 
     def _update_valid_accounts(self) -> None:
-        self._transactions_presenter.valid_accounts = (
+        self._transactions_presenter.account_tree_shown_accounts = (
             self._account_tree_presenter.valid_accounts
         )

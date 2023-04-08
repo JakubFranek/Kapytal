@@ -126,6 +126,7 @@ class Ui_TransactionFilterForm(object):
         self.verticalLayout_4 = QtWidgets.QVBoxLayout(self.accountsFilterModeGroupBox)
         self.verticalLayout_4.setObjectName("verticalLayout_4")
         self.accountsFilterTreeRadioButton = QtWidgets.QRadioButton(self.accountsFilterModeGroupBox)
+        self.accountsFilterTreeRadioButton.setChecked(True)
         self.accountsFilterTreeRadioButton.setObjectName("accountsFilterTreeRadioButton")
         self.verticalLayout_4.addWidget(self.accountsFilterTreeRadioButton)
         self.accountsFilterSelectionRadioButton = QtWidgets.QRadioButton(self.accountsFilterModeGroupBox)

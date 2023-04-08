@@ -84,7 +84,7 @@ class TransactionFilter:
 
     def filter_transactions(
         self, transactions: Collection[Transaction]
-    ) -> tuple[Transaction]:
+    ) -> tuple[Transaction, ...]:
         _transactions = tuple(transactions)
         _transactions = self._type_filter.filter_transactions(_transactions)
         _transactions = self._datetime_filter.filter_transactions(_transactions)

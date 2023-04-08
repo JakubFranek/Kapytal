@@ -248,6 +248,9 @@
             <property name="text">
              <string>Filter based on Account Tree &quot;Show&quot; column</string>
             </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
            </widget>
           </item>
           <item>

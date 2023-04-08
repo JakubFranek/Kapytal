@@ -58,45 +58,25 @@ class TransactionsPresenter:
     ) -> None:
         self._view = view
         self._record_keeper = record_keeper
-        self._valid_accounts = record_keeper.accounts
+        self._account_tree_shown_accounts = record_keeper.accounts
 
-        self._setup_model()
-
-        self._cash_transaction_dialog_presenter = CashTransactionDialogPresenter(
-            view, record_keeper, self._model
-        )
-        self._cash_transfer_dialog_presenter = CashTransferDialogPresenter(
-            view, record_keeper, self._model
-        )
-        self._security_transaction_dialog_presenter = (
-            SecurityTransactionDialogPresenter(view, record_keeper, self._model)
-        )
-        self._security_transfer_dialog_presenter = SecurityTransferDialogPresenter(
-            view, record_keeper, self._model
-        )
-        self._refund_transaction_dialog_presenter = RefundTransactionDialogPresenter(
-            view, record_keeper, self._model
-        )
-        self._transaction_tags_dialog_presenter = TransactionTagsDialogPresenter(
-            view, record_keeper
-        )
-        self._transaction_filter_form_presenter = TransactionFilterFormPresenter(
-            view, record_keeper
-        )
-
-        self._setup_view()
+        self._initialize_model()
+        self._initialize_presenters()
+        self._initialize_view()
         self._connect_signals()
         self._connect_events()
+        self.update_model_data()
         self._view.finalize_setup()
 
     @property
-    def valid_accounts(self) -> tuple[Account, ...]:
-        return self._valid_accounts
+    def account_tree_shown_accounts(self) -> tuple[Account, ...]:
+        return self._account_tree_shown_accounts
 
-    @valid_accounts.setter
-    def valid_accounts(self, accounts: Collection[Account]) -> None:
-        self._valid_accounts = tuple(accounts)
+    @account_tree_shown_accounts.setter
+    def account_tree_shown_accounts(self, accounts: Collection[Account]) -> None:
+        self._account_tree_shown_accounts = tuple(accounts)
         self._model.valid_accounts = accounts
+        self._transaction_filter_form_presenter.account_tree_shown_accounts = accounts
         self.reset_model()
 
     def reset_model(self) -> None:
@@ -114,19 +94,15 @@ class TransactionsPresenter:
         self._refund_transaction_dialog_presenter.load_record_keeper(record_keeper)
         self._transaction_tags_dialog_presenter.load_record_keeper(record_keeper)
         self._transaction_filter_form_presenter.load_record_keeper(record_keeper)
-        self._valid_accounts = record_keeper.accounts
+        self._account_tree_shown_accounts = record_keeper.accounts
         self.reset_model()
         self._view.resize_table_to_contents()
 
     def update_model_data(self) -> None:
-        if len(self._valid_accounts) == 0:
-            self._model.transactions = ()
-        else:
-            self._model.transactions = [
-                transaction
-                for transaction in self._record_keeper.transactions
-                if transaction.is_accounts_related(self._valid_accounts)
-            ]
+        filter_ = self._transaction_filter_form_presenter.transaction_filter
+        self._model.transactions = filter_.filter_transactions(
+            self._record_keeper.transactions
+        )
         self._model.base_currency = self._record_keeper.base_currency
 
     def _update_table_columns(self) -> None:
@@ -142,9 +118,9 @@ class TransactionsPresenter:
             isinstance(transaction, CashTransaction | RefundTransaction)
             for transaction in self._model.transactions
         )
-        single_cash_account = len(self._valid_accounts) == 1 and isinstance(
-            self._valid_accounts[0], CashAccount
-        )
+        single_cash_account = len(
+            self._account_tree_shown_accounts
+        ) == 1 and isinstance(self._account_tree_shown_accounts[0], CashAccount)
 
         for column in TransactionTableColumn:
             if (
@@ -177,16 +153,15 @@ class TransactionsPresenter:
         else:
             return True
 
-    def _setup_model(self) -> None:
+    def _initialize_model(self) -> None:
         self._proxy_model = QSortFilterProxyModel(self._view.tableView)
         self._model = TransactionTableModel(
             self._view.tableView,
             [],
             self._record_keeper.base_currency,
-            self._valid_accounts,
+            self._account_tree_shown_accounts,
             self._proxy_model,
         )
-        self.update_model_data()
         self._proxy_model.setSourceModel(self._model)
         self._proxy_model.setSortRole(Qt.ItemDataRole.UserRole)
         self._proxy_model.setSortCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
@@ -196,7 +171,32 @@ class TransactionsPresenter:
 
         self._view.tableView.setModel(self._proxy_model)
 
-    def _setup_view(self) -> None:
+    def _initialize_presenters(self) -> None:
+        self._cash_transaction_dialog_presenter = CashTransactionDialogPresenter(
+            self._view, self._record_keeper, self._model
+        )
+        self._cash_transfer_dialog_presenter = CashTransferDialogPresenter(
+            self._view, self._record_keeper, self._model
+        )
+        self._security_transaction_dialog_presenter = (
+            SecurityTransactionDialogPresenter(
+                self._view, self._record_keeper, self._model
+            )
+        )
+        self._security_transfer_dialog_presenter = SecurityTransferDialogPresenter(
+            self._view, self._record_keeper, self._model
+        )
+        self._refund_transaction_dialog_presenter = RefundTransactionDialogPresenter(
+            self._view, self._record_keeper, self._model
+        )
+        self._transaction_tags_dialog_presenter = TransactionTagsDialogPresenter(
+            self._view, self._record_keeper
+        )
+        self._transaction_filter_form_presenter = TransactionFilterFormPresenter(
+            self._view, self._record_keeper, self._account_tree_shown_accounts
+        )
+
+    def _initialize_view(self) -> None:
         self._view.resize_table_to_contents()
         self._view.set_column_visibility(TransactionTableColumn.COLUMN_UUID, show=False)
 
@@ -205,32 +205,32 @@ class TransactionsPresenter:
 
         self._view.signal_income.connect(
             lambda: self._cash_transaction_dialog_presenter.run_add_dialog(
-                CashTransactionType.INCOME, self.valid_accounts
+                CashTransactionType.INCOME, self.account_tree_shown_accounts
             )
         )
         self._view.signal_expense.connect(
             lambda: self._cash_transaction_dialog_presenter.run_add_dialog(
-                CashTransactionType.EXPENSE, self.valid_accounts
+                CashTransactionType.EXPENSE, self.account_tree_shown_accounts
             )
         )
         self._view.signal_cash_transfer.connect(
             lambda: self._cash_transfer_dialog_presenter.run_add_dialog(
-                self.valid_accounts
+                self.account_tree_shown_accounts
             )
         )
         self._view.signal_buy.connect(
             lambda: self._security_transaction_dialog_presenter.run_add_dialog(
-                SecurityTransactionType.BUY, self.valid_accounts
+                SecurityTransactionType.BUY, self.account_tree_shown_accounts
             )
         )
         self._view.signal_sell.connect(
             lambda: self._security_transaction_dialog_presenter.run_add_dialog(
-                SecurityTransactionType.SELL, self.valid_accounts
+                SecurityTransactionType.SELL, self.account_tree_shown_accounts
             )
         )
         self._view.signal_security_transfer.connect(
             lambda: self._security_transfer_dialog_presenter.run_add_dialog(
-                self.valid_accounts
+                self.account_tree_shown_accounts
             )
         )
 
@@ -285,6 +285,10 @@ class TransactionsPresenter:
         )
         self._refund_transaction_dialog_presenter.event_data_changed.append(
             self.event_data_changed
+        )
+
+        self._transaction_filter_form_presenter.event_filter_changed.append(
+            self.reset_model
         )
 
     def _delete_transactions(self) -> None:
@@ -377,7 +381,9 @@ class TransactionsPresenter:
         )
 
     def _refund_transaction(self) -> None:
-        self._refund_transaction_dialog_presenter.run_add_dialog(self._valid_accounts)
+        self._refund_transaction_dialog_presenter.run_add_dialog(
+            self._account_tree_shown_accounts
+        )
 
     def _add_tags(self) -> None:
         transactions = self._model.get_selected_items()

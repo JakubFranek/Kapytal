@@ -1,5 +1,6 @@
 import logging
 from datetime import datetime, time
+from enum import Enum, auto
 
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QCloseEvent, QIcon
@@ -17,6 +18,11 @@ from src.models.model_objects.security_objects import (
 from src.models.transaction_filters.filter_mode_mixin import FilterMode
 from src.models.user_settings import user_settings
 from src.views.ui_files.forms.Ui_transaction_filter_form import Ui_TransactionFilterForm
+
+
+class AccountFilterMode(Enum):
+    ACCOUNT_TREE = auto()
+    SELECTION = auto()
 
 
 class TransactionFilterForm(QWidget, Ui_TransactionFilterForm):
@@ -134,6 +140,19 @@ class TransactionFilterForm(QWidget, Ui_TransactionFilterForm):
     @description_filter_pattern.setter
     def description_filter_pattern(self, pattern: str) -> None:
         self.descriptionFilterPatternLineEdit.setText(pattern)
+
+    @property
+    def account_filter_mode(self) -> AccountFilterMode:
+        if self.accountsFilterTreeRadioButton.isChecked():
+            return AccountFilterMode.ACCOUNT_TREE
+        return AccountFilterMode.SELECTION
+
+    @account_filter_mode.setter
+    def account_filter_mode(self, mode: AccountFilterMode) -> None:
+        if mode == AccountFilterMode.ACCOUNT_TREE:
+            self.accountsFilterTreeRadioButton.setChecked(True)
+        else:
+            self.accountsFilterSelectionRadioButton.setChecked(True)
 
     def show_form(self) -> None:
         logging.debug(f"Showing {self.__class__.__name__}")

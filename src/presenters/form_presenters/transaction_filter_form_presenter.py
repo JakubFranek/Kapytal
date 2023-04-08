@@ -1,27 +1,36 @@
 import logging
+from collections.abc import Collection
 from enum import Enum
 
 from PyQt6.QtWidgets import QWidget
+from src.models.base_classes.account import Account
 from src.models.record_keeper import RecordKeeper
 from src.models.transaction_filters.filter_mode_mixin import FilterMode
 from src.models.transaction_filters.transaction_filter import TransactionFilter
 from src.presenters.utilities.event import Event
-from src.views.forms.transaction_filter_form import TransactionFilterForm
+from src.views.forms.transaction_filter_form import (
+    AccountFilterMode,
+    TransactionFilterForm,
+)
 
 
 class TransactionFilterFormPresenter:
     event_filter_changed = Event()
 
-    def __init__(self, parent_view: QWidget, record_keeper: RecordKeeper) -> None:
+    def __init__(
+        self,
+        parent_view: QWidget,
+        record_keeper: RecordKeeper,
+        account_tree_shown_accounts: Collection[Account],
+    ) -> None:
         self._parent_view = parent_view
+        self._account_tree_shown_accounts = tuple(account_tree_shown_accounts)
 
         self._form = TransactionFilterForm(parent_view)
         self._transaction_filter = TransactionFilter()
 
         self._form.signal_ok.connect(self._form_accepted)
-        self._form.signal_restore_defaults.connect(
-            self._transaction_filter.restore_defaults
-        )
+        self._form.signal_restore_defaults.connect(self._restore_defaults)
         self.load_record_keeper(record_keeper)
         self._update_form_from_transaction_filter()
 
@@ -33,6 +42,16 @@ class TransactionFilterFormPresenter:
     def transaction_filter(self, transaction_filter: TransactionFilter) -> None:
         self._transaction_filter = transaction_filter
         self._update_form_from_transaction_filter()
+
+    @property
+    def account_tree_shown_accounts(self) -> tuple[Account]:
+        return self._account_tree_shown_accounts
+
+    @account_tree_shown_accounts.setter
+    def account_tree_shown_accounts(self, accounts: Collection[Account]) -> None:
+        self._account_tree_shown_accounts = tuple(accounts)
+        if self._form.account_filter_mode == AccountFilterMode.ACCOUNT_TREE:
+            self._transaction_filter.set_account_filter(accounts, FilterMode.KEEP)
 
     def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
         self._record_keeper = record_keeper
@@ -59,6 +78,12 @@ class TransactionFilterFormPresenter:
         transaction_filter.set_description_filter(
             self._form.description_filter_pattern, self._form.description_filter_mode
         )
+
+        if self._form.account_filter_mode != AccountFilterMode.ACCOUNT_TREE:
+            # get selected Accounts
+            # set AccountFilter
+            raise NotImplementedError
+
         return transaction_filter
 
     def _log_filter_differences(self, new_filter: TransactionFilter) -> None:
@@ -105,3 +130,7 @@ class TransactionFilterFormPresenter:
         self._form.description_filter_pattern = (
             self._transaction_filter.description_filter.regex_pattern
         )
+
+    def _restore_defaults(self) -> None:
+        self._transaction_filter.restore_defaults()
+        self._update_form_from_transaction_filter()

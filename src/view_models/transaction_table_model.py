@@ -464,8 +464,10 @@ class TransactionTableModel(QAbstractTableModel):
             account = self.valid_accounts[0]
             if not isinstance(account, CashAccount):
                 raise TypeError(f"Expected CashAccount, got {type(account)}.")
-            balance = account.get_balance_after_transaction(
-                account.currency, transaction
-            )
-            return balance.to_str_rounded()
+            if transaction.is_account_related(account):
+                balance = account.get_balance_after_transaction(
+                    account.currency, transaction
+                )
+                return balance.to_str_rounded()
+            return ""
         return ""
