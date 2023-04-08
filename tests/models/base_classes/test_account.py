@@ -21,8 +21,10 @@ def test_eq() -> None:
     account1 = ConcreteAccount("test")
     account2 = ConcreteAccount("test")
     assert account1.__eq__(account2) == (account1.uuid == account2.uuid)
+    assert account1.__hash__() != account2.__hash__()
     account2._uuid = account1.uuid
     assert account1.__eq__(account2) == (account1.uuid == account2.uuid)
+    assert account1.__hash__() == account2.__hash__()
     assert account1.__eq__("anything else") is False
 
 

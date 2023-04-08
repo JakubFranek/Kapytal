@@ -3,7 +3,8 @@ from enum import Enum
 
 from PyQt6.QtWidgets import QWidget
 from src.models.record_keeper import RecordKeeper
-from src.models.utilities.transaction_filter import FilterMode, TransactionFilter
+from src.models.transaction_filters.filter_mode_mixin import FilterMode
+from src.models.transaction_filters.transaction_filter import TransactionFilter
 from src.presenters.utilities.event import Event
 from src.views.forms.transaction_filter_form import TransactionFilterForm
 

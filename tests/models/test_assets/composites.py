@@ -1,11 +1,12 @@
 import numbers
 import string
-from datetime import datetime
+from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import Any
 
 from hypothesis import assume
 from hypothesis import strategies as st
+from src.models.base_classes.transaction import Transaction
 from src.models.model_objects.account_group import AccountGroup
 from src.models.model_objects.attributes import (
     Attribute,
@@ -18,6 +19,7 @@ from src.models.model_objects.cash_objects import (
     CashTransaction,
     CashTransactionType,
     CashTransfer,
+    RefundTransaction,
 )
 from src.models.model_objects.currency_objects import CashAmount, Currency
 from src.models.model_objects.security_objects import (
@@ -27,8 +29,8 @@ from src.models.model_objects.security_objects import (
     SecurityTransactionType,
     SecurityTransfer,
 )
+from src.models.transaction_filters.transaction_filter import FilterMode, TypeFilter
 from src.models.user_settings import user_settings
-from tests.models.test_assets.concrete_abcs import ConcreteTransaction
 from tests.models.test_assets.constants import MIN_DATETIME
 
 # IDEA: check if optional params for some composites can help optimize tests
@@ -243,6 +245,52 @@ def currencies(draw: st.DrawFn, min_places: int = 2, max_places: int = 8) -> Cur
 
 
 @st.composite
+def names(
+    draw: st.DrawFn, min_size: int | None = None, max_size: int | None = None
+) -> str:
+    if min_size is None:
+        min_size = 1
+        if max_size is None:
+            max_size = 32
+    return draw(
+        st.text(
+            alphabet=st.characters(blacklist_characters=("/")),
+            min_size=min_size,
+            max_size=max_size,
+        )
+    )
+
+
+@st.composite
+def refunds(
+    draw: st.DrawFn, refunded_transaction: CashTransaction
+) -> RefundTransaction:
+    if refunded_transaction.type_ != CashTransactionType.EXPENSE:
+        raise ValueError("Can only refund expense CashTransactions.")
+
+    description = draw(st.text(min_size=0, max_size=256))
+    datetime_ = draw(
+        st.datetimes(
+            min_value=refunded_transaction.datetime_.replace(tzinfo=None)
+            + timedelta(days=1)
+        )
+    ).replace(tzinfo=user_settings.settings.time_zone)
+    account = draw(cash_accounts(currency=refunded_transaction.account.currency))
+    payee = draw(attributes(AttributeType.PAYEE))
+    category_amount_pairs_ = refunded_transaction.category_amount_pairs
+    tag_amount_pairs_ = refunded_transaction.tag_amount_pairs
+    return RefundTransaction(
+        description,
+        datetime_,
+        account,
+        refunded_transaction,
+        payee,
+        category_amount_pairs_,
+        tag_amount_pairs_,
+    )
+
+
+@st.composite
 def securities(draw: st.DrawFn, currency: Currency | None = None) -> Security:
     name = draw(names())
     symbol = draw(
@@ -356,24 +404,54 @@ def tag_amount_pairs(
 
 
 @st.composite
-def transactions(draw: st.DrawFn) -> ConcreteTransaction:
-    description = draw(st.text(min_size=0, max_size=256))
-    datetime_ = draw(st.datetimes(timezones=st.just(user_settings.settings.time_zone)))
-    return ConcreteTransaction(description, datetime_)
+def transactions(draw: st.DrawFn) -> tuple[Transaction]:
+    transactions = draw(
+        st.lists(
+            st.one_of(
+                cash_transactions(),
+                cash_transfers(),
+                security_transactions(),
+                security_transfers(),
+            ),
+            unique=True,
+            min_size=0,
+            max_size=10,
+        )
+    )
+    if draw(st.booleans()):
+        expense = next(
+            (
+                t
+                for t in transactions
+                if isinstance(t, CashTransaction)
+                and t.type_ == CashTransactionType.EXPENSE
+            ),
+            None,
+        )
+        if expense is not None:
+            refund = draw(refunds(expense))
+            transactions.append(refund)
+    return tuple(transactions)
 
 
 @st.composite
-def names(
-    draw: st.DrawFn, min_size: int | None = None, max_size: int | None = None
-) -> str:
-    if min_size is None:
-        min_size = 1
-        if max_size is None:
-            max_size = 32
-    return draw(
-        st.text(
-            alphabet=st.characters(blacklist_characters=("/")),
-            min_size=min_size,
-            max_size=max_size,
+def type_filters(draw: st.DrawFn) -> TypeFilter:
+    mode = draw(st.sampled_from(FilterMode))
+    types = draw(
+        st.lists(
+            st.sampled_from(
+                (
+                    CashTransactionType.INCOME,
+                    CashTransactionType.EXPENSE,
+                    RefundTransaction,
+                    CashTransfer,
+                    SecurityTransfer,
+                    SecurityTransactionType.BUY,
+                    SecurityTransactionType.SELL,
+                )
+            ),
+            min_size=0,
+            unique=True,
         )
     )
+    return TypeFilter(types, mode)
