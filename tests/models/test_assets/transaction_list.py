@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from src.models.base_classes.transaction import Transaction
 from src.models.model_objects.attributes import (
     Attribute,
     AttributeType,
@@ -44,7 +45,7 @@ payee_tesco = Attribute("Tesco", AttributeType.PAYEE)
 payee_alza = Attribute("Alza", AttributeType.PAYEE)
 
 
-transaction_list = []
+transaction_list: list[Transaction] = []
 transaction_list.append(
     CashTransaction(
         "Groceries",
@@ -136,3 +137,6 @@ transaction_list.append(
         security_account_2,
     )
 )
+
+earliest_datetime = min([t.datetime_ for t in transaction_list])
+latest_datetime = max([t.datetime_ for t in transaction_list])

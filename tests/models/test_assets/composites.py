@@ -30,6 +30,7 @@ from src.models.model_objects.security_objects import (
     SecurityTransactionType,
     SecurityTransfer,
 )
+from src.models.transaction_filters.account_filter import AccountFilter
 from src.models.transaction_filters.datetime_filter import DatetimeFilter
 from src.models.transaction_filters.description_filter import DescriptionFilter
 from src.models.transaction_filters.transaction_filter import FilterMode, TypeFilter
@@ -45,6 +46,17 @@ def everything_except(excluded_types: type | tuple[type, ...]) -> Any:
         .flatmap(st.from_type)
         .filter(lambda x: not isinstance(x, excluded_types))
     )
+
+
+@st.composite
+def account_filters(draw: st.DrawFn) -> AccountFilter:
+    mode = draw(st.sampled_from(FilterMode))
+    accounts = draw(
+        st.lists(
+            st.one_of(cash_accounts(), security_accounts()), min_size=0, max_size=10
+        )
+    )
+    return AccountFilter(accounts, mode)
 
 
 @st.composite

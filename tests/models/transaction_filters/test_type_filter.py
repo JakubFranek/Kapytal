@@ -176,3 +176,16 @@ def test_filter_discard_premade_transactions(filter_: TypeFilter) -> None:
         for transaction in transaction_list
         if not check_transaction(filter_, transaction)
     )
+
+
+def test_filter_type_names_custom() -> None:
+    filter_ = TypeFilter(valid_types, FilterMode.KEEP)
+
+    type_names = []
+    for type_ in valid_types:
+        if isinstance(type_, Enum):
+            type_names.append(type_.name)
+        else:
+            type_names.append(type_.__name__)
+
+    assert filter_.type_names == frozenset(type_names)

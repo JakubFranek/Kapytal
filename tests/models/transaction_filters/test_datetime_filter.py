@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any
 
 import pytest
@@ -13,7 +13,11 @@ from tests.models.test_assets.composites import (
     everything_except,
     transactions,
 )
-from tests.models.test_assets.transaction_list import transaction_list
+from tests.models.test_assets.transaction_list import (
+    earliest_datetime,
+    latest_datetime,
+    transaction_list,
+)
 
 
 def check_transaction(filter_: DatetimeFilter, transaction: Transaction) -> bool:
@@ -74,12 +78,12 @@ def test_creation_end_precedes_start(
 
 
 @given(filter_1=datetime_filters(), filter_2=datetime_filters())
-def test_eq_hash(filter_1: datetime, filter_2: datetime) -> None:
+def test_eq_hash(filter_1: DatetimeFilter, filter_2: DatetimeFilter) -> None:
     assert filter_1.__eq__(filter_2) == (filter_1.__hash__() == filter_2.__hash__())
 
 
 @given(filter_1=datetime_filters(), filter_2=everything_except(DatetimeFilter))
-def test_eq_different_type(filter_1: datetime, filter_2: Any) -> None:
+def test_eq_different_type(filter_1: DatetimeFilter, filter_2: Any) -> None:
     assert filter_1.__eq__(filter_2) is False
 
 
@@ -140,4 +144,19 @@ def test_filter_discard_premade_transactions(filter_: DatetimeFilter) -> None:
         transaction
         for transaction in transaction_list
         if not check_transaction(filter_, transaction)
+    )
+
+
+def test_filter_keep_premade_transactions_custom() -> None:
+    filter_ = DatetimeFilter(
+        start=earliest_datetime + timedelta(days=1),
+        end=latest_datetime - timedelta(days=1),
+        mode=FilterMode.KEEP,
+    )
+    filter_._mode = FilterMode.KEEP
+    filtered = filter_.filter_transactions(transaction_list)
+    assert filtered == tuple(
+        transaction
+        for transaction in transaction_list
+        if check_transaction(filter_, transaction)
     )

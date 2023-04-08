@@ -8,6 +8,8 @@ from src.models.transaction_filters.filter_mode_mixin import FilterMode, FilterM
 class AccountFilter(FilterModeMixin):
     def __init__(self, accounts: Collection[Account], mode: FilterMode) -> None:
         super().__init__(mode=mode)
+        if any(not isinstance(account, Account) for account in accounts):
+            raise TypeError("Parameter 'accounts' must be a collection of Accounts.")
         self._accounts = tuple(accounts)
 
     @property
@@ -46,4 +48,4 @@ class AccountFilter(FilterModeMixin):
                 for transaction in transactions
                 if not transaction.is_accounts_related(self._accounts)
             )
-        raise ValueError("Invalid FilterMode value.")
+        raise ValueError("Invalid FilterMode value.")  # pragma: no cover
