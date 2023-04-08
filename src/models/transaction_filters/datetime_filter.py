@@ -12,8 +12,6 @@ class DatetimeFilter(FilterModeMixin):
             raise TypeError("Parameter 'start' must be a datetime.")
         if not isinstance(end, datetime):
             raise TypeError("Parameter 'end' must be a datetime.")
-        if not isinstance(mode, FilterMode):
-            raise TypeError("Parameter 'mode' must be a FilterMode.")
 
         if start > end:
             raise ValueError(
@@ -37,7 +35,7 @@ class DatetimeFilter(FilterModeMixin):
 
     def __repr__(self) -> str:
         return (
-            f"DateTimeFilter(start={self._start.strftime('%Y-%m-%d %H:%M:%S')}, "
+            f"DatetimeFilter(start={self._start.strftime('%Y-%m-%d %H:%M:%S')}, "
             f"end={self._end.strftime('%Y-%m-%d %H:%M:%S')}, mode={self._mode.name})"
         )
 

@@ -40,7 +40,7 @@ def test_invalid_description_type(description: str, datetime_: datetime) -> None
 
 
 @given(
-    description=st.text(min_size=257, max_size=1000),
+    description=st.text(min_size=257, max_size=500),
     datetime_=st.datetimes(),
 )
 def test_invalid_description_value(description: str, datetime_: datetime) -> None:

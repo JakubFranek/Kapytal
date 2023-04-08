@@ -1,4 +1,5 @@
 import numbers
+import re
 import string
 from datetime import datetime, timedelta
 from decimal import Decimal
@@ -29,6 +30,8 @@ from src.models.model_objects.security_objects import (
     SecurityTransactionType,
     SecurityTransfer,
 )
+from src.models.transaction_filters.datetime_filter import DatetimeFilter
+from src.models.transaction_filters.description_filter import DescriptionFilter
 from src.models.transaction_filters.transaction_filter import FilterMode, TypeFilter
 from src.models.user_settings import user_settings
 from tests.models.test_assets.constants import MIN_DATETIME
@@ -42,32 +45,6 @@ def everything_except(excluded_types: type | tuple[type, ...]) -> Any:
         .flatmap(st.from_type)
         .filter(lambda x: not isinstance(x, excluded_types))
     )
-
-
-@st.composite
-def valid_decimals(
-    draw: st.DrawFn,
-    min_value: numbers.Real | str | None = None,
-    max_value: numbers.Real | str | None = None,
-    places: int | None = None,
-) -> Decimal:
-    if min_value is None:
-        min_value = -1e12
-    if max_value is None:
-        max_value = 1e12
-    if places is None:
-        places = 10
-    return draw(
-        st.decimals(
-            min_value, max_value, places=places, allow_infinity=False, allow_nan=False
-        )
-    )
-
-
-@st.composite
-def decimal_powers_of_10(draw: st.DrawFn) -> Decimal:
-    exponent = draw(st.integers(min_value=-10, max_value=10))
-    return Decimal("10") ** exponent
 
 
 @st.composite
@@ -242,6 +219,38 @@ def currencies(draw: st.DrawFn, min_places: int = 2, max_places: int = 8) -> Cur
     code = draw(st.text(alphabet=string.ascii_letters, min_size=3, max_size=3))
     places = draw(st.integers(min_value=min_places, max_value=max_places))
     return Currency(code, places)
+
+
+@st.composite
+def datetime_filters(draw: st.DrawFn) -> DatetimeFilter:
+    mode = draw(st.sampled_from(FilterMode))
+    start = draw(st.datetimes(timezones=st.just(user_settings.settings.time_zone)))
+    end = draw(
+        st.datetimes(
+            min_value=start.replace(tzinfo=None),
+            timezones=st.just(user_settings.settings.time_zone),
+        )
+    )
+    return DatetimeFilter(start, end, mode)
+
+
+@st.composite
+def decimal_powers_of_10(draw: st.DrawFn) -> Decimal:
+    exponent = draw(st.integers(min_value=-10, max_value=10))
+    return Decimal("10") ** exponent
+
+
+@st.composite
+def description_filters(draw: st.DrawFn) -> DescriptionFilter:
+    mode = draw(st.sampled_from(FilterMode))
+    pattern = draw(st.text())
+    try:
+        re.compile(pattern)
+        is_pattern_valid = True
+    except re.error:
+        is_pattern_valid = False
+    assume(is_pattern_valid)
+    return DescriptionFilter(pattern, mode)
 
 
 @st.composite
@@ -455,3 +464,23 @@ def type_filters(draw: st.DrawFn) -> TypeFilter:
         )
     )
     return TypeFilter(types, mode)
+
+
+@st.composite
+def valid_decimals(
+    draw: st.DrawFn,
+    min_value: numbers.Real | str | None = None,
+    max_value: numbers.Real | str | None = None,
+    places: int | None = None,
+) -> Decimal:
+    if min_value is None:
+        min_value = -1e12
+    if max_value is None:
+        max_value = 1e12
+    if places is None:
+        places = 10
+    return draw(
+        st.decimals(
+            min_value, max_value, places=places, allow_infinity=False, allow_nan=False
+        )
+    )

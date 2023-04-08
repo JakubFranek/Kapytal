@@ -8,6 +8,7 @@ from src.models.transaction_filters.filter_mode_mixin import FilterMode, FilterM
 class DescriptionFilter(FilterModeMixin):
     def __init__(self, regex_pattern: str, mode: FilterMode) -> None:
         super().__init__(mode=mode)
+        re.compile(regex_pattern)  # Raises re.error if pattern is invalid
         self._regex_pattern = regex_pattern
 
     @property
@@ -49,4 +50,4 @@ class DescriptionFilter(FilterModeMixin):
                 for transaction in transactions
                 if not re.search(self._regex_pattern, transaction.description)
             )
-        raise ValueError("Invalid FilterMode value.")
+        raise ValueError("Invalid FilterMode value.")  # pragma: no cover

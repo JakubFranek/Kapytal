@@ -23,6 +23,7 @@ from tests.models.test_assets.composites import (
     transactions,
     type_filters,
 )
+from tests.models.test_assets.transaction_list import transaction_list
 
 valid_types = (
     CashTransactionType.INCOME,
@@ -114,19 +115,64 @@ def test_eq_different_type(filter_1: TypeFilter, filter_2: Any) -> None:
     transactions=transactions(),
     filter_=type_filters(),
 )
-def test_filtering(transactions: list[Transaction], filter_: TypeFilter) -> None:
+def test_filter_off(transactions: list[Transaction], filter_: TypeFilter) -> None:
+    filter_._mode = FilterMode.OFF
     filtered = filter_.filter_transactions(transactions)
-    if filter_.mode == FilterMode.OFF:
-        assert filtered == tuple(transactions)
-    elif filter_.mode == FilterMode.KEEP:
-        assert filtered == tuple(
-            transaction
-            for transaction in transactions
-            if check_transaction(filter_, transaction)
-        )
-    else:
-        assert filtered == tuple(
-            transaction
-            for transaction in transactions
-            if not check_transaction(filter_, transaction)
-        )
+    assert filtered == tuple(transactions)
+
+
+@given(
+    transactions=transactions(),
+    filter_=type_filters(),
+)
+def test_filter_keep(transactions: list[Transaction], filter_: TypeFilter) -> None:
+    filter_._mode = FilterMode.KEEP
+    filtered = filter_.filter_transactions(transactions)
+    assert filtered == tuple(
+        transaction
+        for transaction in transactions
+        if check_transaction(filter_, transaction)
+    )
+
+
+@given(
+    transactions=transactions(),
+    filter_=type_filters(),
+)
+def test_filter_discard(transactions: list[Transaction], filter_: TypeFilter) -> None:
+    filter_._mode = FilterMode.DISCARD
+    filtered = filter_.filter_transactions(transactions)
+    assert filtered == tuple(
+        transaction
+        for transaction in transactions
+        if not check_transaction(filter_, transaction)
+    )
+
+
+@given(filter_=type_filters())
+def test_filter_off_premade_transactions(filter_: TypeFilter) -> None:
+    filter_._mode = FilterMode.OFF
+    filtered = filter_.filter_transactions(transaction_list)
+    assert filtered == tuple(transaction_list)
+
+
+@given(filter_=type_filters())
+def test_filter_keep_premade_transactions(filter_: TypeFilter) -> None:
+    filter_._mode = FilterMode.KEEP
+    filtered = filter_.filter_transactions(transaction_list)
+    assert filtered == tuple(
+        transaction
+        for transaction in transaction_list
+        if check_transaction(filter_, transaction)
+    )
+
+
+@given(filter_=type_filters())
+def test_filter_discard_premade_transactions(filter_: TypeFilter) -> None:
+    filter_._mode = FilterMode.DISCARD
+    filtered = filter_.filter_transactions(transaction_list)
+    assert filtered == tuple(
+        transaction
+        for transaction in transaction_list
+        if not check_transaction(filter_, transaction)
+    )

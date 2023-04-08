@@ -17,6 +17,7 @@
         - split tags
         - securities
         - currencies
+        - amounts?
 1. SecurityAccount contents view
     - launched from AccountTree right click
     - option to create Security transactions from this view
