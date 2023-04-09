@@ -58,29 +58,29 @@ class SecurityForm(QWidget, Ui_SecurityForm):
     def finalize_setup(self) -> None:
         self.tableView.horizontalHeader().setStretchLastSection(False)
         self.tableView.horizontalHeader().setSectionResizeMode(
-            SecurityTableColumn.COLUMN_NAME,
+            SecurityTableColumn.NAME,
             QHeaderView.ResizeMode.ResizeToContents,
         )
         self.tableView.horizontalHeader().setSectionResizeMode(
-            SecurityTableColumn.COLUMN_SYMBOL,
+            SecurityTableColumn.SYMBOL,
             QHeaderView.ResizeMode.ResizeToContents,
         )
         self.tableView.horizontalHeader().setSectionResizeMode(
-            SecurityTableColumn.COLUMN_TYPE,
+            SecurityTableColumn.TYPE,
             QHeaderView.ResizeMode.ResizeToContents,
         )
         self.tableView.horizontalHeader().setSectionResizeMode(
-            SecurityTableColumn.COLUMN_PRICE,
+            SecurityTableColumn.PRICE,
             QHeaderView.ResizeMode.ResizeToContents,
         )
         self.tableView.horizontalHeader().setSectionResizeMode(
-            SecurityTableColumn.COLUMN_LAST_DATE,
+            SecurityTableColumn.LAST_DATE,
             QHeaderView.ResizeMode.Stretch,
         )
 
         style = self.style()
         last_section_text = self.tableView.model().headerData(
-            SecurityTableColumn.COLUMN_LAST_DATE,
+            SecurityTableColumn.LAST_DATE,
             Qt.Orientation.Horizontal,
             Qt.ItemDataRole.DisplayRole,
         )

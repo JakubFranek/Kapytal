@@ -51,21 +51,21 @@ class TagForm(QWidget, Ui_TagForm):
     def finalize_setup(self) -> None:
         self.tableView.horizontalHeader().setStretchLastSection(False)
         self.tableView.horizontalHeader().setSectionResizeMode(
-            TagTableColumn.COLUMN_NAME,
+            TagTableColumn.NAME,
             QHeaderView.ResizeMode.ResizeToContents,
         )
         self.tableView.horizontalHeader().setSectionResizeMode(
-            TagTableColumn.COLUMN_TRANSACTIONS,
+            TagTableColumn.TRANSACTIONS,
             QHeaderView.ResizeMode.ResizeToContents,
         )
         self.tableView.horizontalHeader().setSectionResizeMode(
-            TagTableColumn.COLUMN_BALANCE,
+            TagTableColumn.BALANCE,
             QHeaderView.ResizeMode.Stretch,
         )
 
         style = self.style()
         last_section_text = self.tableView.model().headerData(
-            TagTableColumn.COLUMN_BALANCE,
+            TagTableColumn.BALANCE,
             Qt.Orientation.Horizontal,
             Qt.ItemDataRole.DisplayRole,
         )

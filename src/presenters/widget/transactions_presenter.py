@@ -124,18 +124,18 @@ class TransactionsPresenter:
 
         for column in TransactionTableColumn:
             if (
-                column == TransactionTableColumn.COLUMN_SECURITY
-                or column == TransactionTableColumn.COLUMN_SHARES
+                column == TransactionTableColumn.SECURITY
+                or column == TransactionTableColumn.SHARES
             ):
                 self._view.set_column_visibility(column, show=any_security_related)
             if (
-                column == TransactionTableColumn.COLUMN_AMOUNT_RECEIVED
-                or column == TransactionTableColumn.COLUMN_AMOUNT_SENT
+                column == TransactionTableColumn.AMOUNT_RECEIVED
+                or column == TransactionTableColumn.AMOUNT_SENT
             ):
                 self._view.set_column_visibility(column, show=any_cash_transfers)
-            if column == TransactionTableColumn.COLUMN_CATEGORY:
+            if column == TransactionTableColumn.CATEGORY:
                 self._view.set_column_visibility(column, show=any_with_categories)
-            if column == TransactionTableColumn.COLUMN_BALANCE:
+            if column == TransactionTableColumn.BALANCE:
                 self._view.set_column_visibility(column, show=single_cash_account)
 
     def _search_filter(self) -> None:
@@ -198,7 +198,7 @@ class TransactionsPresenter:
 
     def _initialize_view(self) -> None:
         self._view.resize_table_to_contents()
-        self._view.set_column_visibility(TransactionTableColumn.COLUMN_UUID, show=False)
+        self._view.set_column_visibility(TransactionTableColumn.UUID, show=False)
 
     def _connect_to_signals(self) -> None:
         self._view.signal_search_text_changed.connect(self._search_filter)

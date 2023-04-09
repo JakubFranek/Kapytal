@@ -151,13 +151,13 @@ class TransactionTableModel(QAbstractTableModel):
     def _get_display_role_data(  # noqa: PLR0911, PLR0912, C901
         self, transaction: Transaction, column: int
     ) -> str | None:
-        if column == TransactionTableColumn.COLUMN_DATETIME:
+        if column == TransactionTableColumn.DATETIME:
             return transaction.datetime_.strftime("%d.%m.%Y")
-        if column == TransactionTableColumn.COLUMN_DESCRIPTION:
+        if column == TransactionTableColumn.DESCRIPTION:
             return transaction.description
-        if column == TransactionTableColumn.COLUMN_TYPE:
+        if column == TransactionTableColumn.TYPE:
             return TransactionTableModel._get_transaction_type(transaction)
-        if column == TransactionTableColumn.COLUMN_FROM:
+        if column == TransactionTableColumn.FROM:
             if isinstance(transaction, CashTransaction):
                 if transaction.type_ == CashTransactionType.INCOME:
                     return transaction.payee.name
@@ -170,7 +170,7 @@ class TransactionTableModel(QAbstractTableModel):
                 return transaction.security_account.path
             if isinstance(transaction, CashTransfer | SecurityTransfer):
                 return transaction.sender.path
-        if column == TransactionTableColumn.COLUMN_TO:
+        if column == TransactionTableColumn.TO:
             if isinstance(transaction, CashTransaction):
                 if transaction.type_ == CashTransactionType.INCOME:
                     return transaction.account.path
@@ -183,36 +183,36 @@ class TransactionTableModel(QAbstractTableModel):
                 return transaction.cash_account.path
             if isinstance(transaction, CashTransfer | SecurityTransfer):
                 return transaction.recipient.path
-        if column == TransactionTableColumn.COLUMN_SECURITY:
+        if column == TransactionTableColumn.SECURITY:
             return TransactionTableModel._get_transaction_security(transaction)
-        if column == TransactionTableColumn.COLUMN_SHARES:
+        if column == TransactionTableColumn.SHARES:
             return TransactionTableModel._get_transaction_shares(transaction)
-        if column == TransactionTableColumn.COLUMN_AMOUNT_NATIVE:
+        if column == TransactionTableColumn.AMOUNT_NATIVE:
             return self._get_transaction_amount_string(transaction, base=False)
-        if column == TransactionTableColumn.COLUMN_AMOUNT_BASE:
+        if column == TransactionTableColumn.AMOUNT_BASE:
             return self._get_transaction_amount_string(transaction, base=True)
-        if column == TransactionTableColumn.COLUMN_AMOUNT_SENT:
+        if column == TransactionTableColumn.AMOUNT_SENT:
             return TransactionTableModel._get_transfer_amount_string(
                 transaction, sent=True
             )
-        if column == TransactionTableColumn.COLUMN_AMOUNT_RECEIVED:
+        if column == TransactionTableColumn.AMOUNT_RECEIVED:
             return TransactionTableModel._get_transfer_amount_string(
                 transaction, sent=False
             )
-        if column == TransactionTableColumn.COLUMN_BALANCE:
+        if column == TransactionTableColumn.BALANCE:
             return self._get_account_balance(transaction)
-        if column == TransactionTableColumn.COLUMN_CATEGORY:
+        if column == TransactionTableColumn.CATEGORY:
             return TransactionTableModel._get_transaction_category(transaction)
-        if column == TransactionTableColumn.COLUMN_TAG:
+        if column == TransactionTableColumn.TAG:
             return TransactionTableModel._get_transaction_tags(transaction)
-        if column == TransactionTableColumn.COLUMN_UUID:
+        if column == TransactionTableColumn.UUID:
             return str(transaction.uuid)
         return None
 
     def _get_decoration_role_data(  # noqa: PLR0911, PLR0912, C901
         self, transaction: Transaction, column: int
     ) -> QIcon | None:
-        if column == TransactionTableColumn.COLUMN_TYPE:
+        if column == TransactionTableColumn.TYPE:
             if isinstance(transaction, CashTransaction):
                 if transaction.type_ == CashTransactionType.INCOME:
                     return QIcon("icons_custom:coins-plus.png")
@@ -227,7 +227,7 @@ class TransactionTableModel(QAbstractTableModel):
                 return QIcon("icons_custom:certificate-minus.png")
             if isinstance(transaction, SecurityTransfer):
                 return QIcon("icons_custom:certificate-arrow.png")
-        if column == TransactionTableColumn.COLUMN_FROM:
+        if column == TransactionTableColumn.FROM:
             if isinstance(transaction, CashTransaction):
                 if transaction.type_ == CashTransactionType.INCOME:
                     return QIcon("icons_16:user-silhouette.png")
@@ -242,7 +242,7 @@ class TransactionTableModel(QAbstractTableModel):
                 return QIcon("icons_16:piggy-bank.png")
             if isinstance(transaction, SecurityTransfer):
                 return QIcon("icons_16:bank.png")
-        if column == TransactionTableColumn.COLUMN_TO:
+        if column == TransactionTableColumn.TO:
             if isinstance(transaction, CashTransaction):
                 if transaction.type_ == CashTransactionType.INCOME:
                     return QIcon("icons_16:piggy-bank.png")
@@ -258,13 +258,13 @@ class TransactionTableModel(QAbstractTableModel):
             if isinstance(transaction, SecurityTransfer):
                 return QIcon("icons_16:bank.png")
         if (
-            column == TransactionTableColumn.COLUMN_CATEGORY
+            column == TransactionTableColumn.CATEGORY
             and isinstance(transaction, CashTransaction)
             and transaction.are_categories_split
         ):
             return QIcon("icons_16:arrow-split.png")
         if (
-            column == TransactionTableColumn.COLUMN_TAG
+            column == TransactionTableColumn.TAG
             and isinstance(transaction, CashTransaction)
             and transaction.are_tags_split
         ):
@@ -274,19 +274,19 @@ class TransactionTableModel(QAbstractTableModel):
     def _get_user_role_data(  # noqa: PLR0911
         self, transaction: Transaction, column: int
     ) -> float | str:
-        if column == TransactionTableColumn.COLUMN_DATETIME:
+        if column == TransactionTableColumn.DATETIME:
             return transaction.datetime_.timestamp()
-        if column == TransactionTableColumn.COLUMN_SHARES:
+        if column == TransactionTableColumn.SHARES:
             return TransactionTableModel._get_transaction_shares(transaction)
-        if column == TransactionTableColumn.COLUMN_AMOUNT_NATIVE:
+        if column == TransactionTableColumn.AMOUNT_NATIVE:
             return self._get_transaction_amount_value(transaction, base=False)
-        if column == TransactionTableColumn.COLUMN_AMOUNT_BASE:
+        if column == TransactionTableColumn.AMOUNT_BASE:
             return self._get_transaction_amount_value(transaction, base=True)
-        if column == TransactionTableColumn.COLUMN_AMOUNT_SENT:
+        if column == TransactionTableColumn.AMOUNT_SENT:
             return TransactionTableModel._get_transfer_amount_value(
                 transaction, sent=True
             )
-        if column == TransactionTableColumn.COLUMN_AMOUNT_RECEIVED:
+        if column == TransactionTableColumn.AMOUNT_RECEIVED:
             return TransactionTableModel._get_transfer_amount_value(
                 transaction, sent=False
             )
@@ -297,12 +297,12 @@ class TransactionTableModel(QAbstractTableModel):
     @staticmethod
     def get_text_alignment_data(column: int) -> Qt.AlignmentFlag | None:
         if (
-            column == TransactionTableColumn.COLUMN_AMOUNT_NATIVE
-            or column == TransactionTableColumn.COLUMN_AMOUNT_BASE
-            or column == TransactionTableColumn.COLUMN_AMOUNT_SENT
-            or column == TransactionTableColumn.COLUMN_AMOUNT_RECEIVED
-            or column == TransactionTableColumn.COLUMN_SHARES
-            or column == TransactionTableColumn.COLUMN_BALANCE
+            column == TransactionTableColumn.AMOUNT_NATIVE
+            or column == TransactionTableColumn.AMOUNT_BASE
+            or column == TransactionTableColumn.AMOUNT_SENT
+            or column == TransactionTableColumn.AMOUNT_RECEIVED
+            or column == TransactionTableColumn.SHARES
+            or column == TransactionTableColumn.BALANCE
         ):
             return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
         return None
@@ -312,8 +312,8 @@ class TransactionTableModel(QAbstractTableModel):
         transaction: Transaction, column: int
     ) -> QBrush | None:
         if (
-            column == TransactionTableColumn.COLUMN_AMOUNT_NATIVE
-            or column == TransactionTableColumn.COLUMN_AMOUNT_BASE
+            column == TransactionTableColumn.AMOUNT_NATIVE
+            or column == TransactionTableColumn.AMOUNT_BASE
         ):
             if isinstance(transaction, CashTransaction):
                 if transaction.type_ == CashTransactionType.INCOME:
@@ -326,11 +326,11 @@ class TransactionTableModel(QAbstractTableModel):
                     return QBrush(QColor("red"))
                 return QBrush(QColor("green"))
         if (
-            column == TransactionTableColumn.COLUMN_AMOUNT_SENT
-            or column == TransactionTableColumn.COLUMN_AMOUNT_RECEIVED
+            column == TransactionTableColumn.AMOUNT_SENT
+            or column == TransactionTableColumn.AMOUNT_RECEIVED
         ):
             return QBrush(QColor("blue"))
-        if column == TransactionTableColumn.COLUMN_SHARES:
+        if column == TransactionTableColumn.SHARES:
             if isinstance(transaction, SecurityTransaction):
                 if transaction.type_ == SecurityTransactionType.BUY:
                     return QBrush(QColor("green"))

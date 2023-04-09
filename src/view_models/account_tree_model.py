@@ -154,10 +154,10 @@ def get_visible_leaf_items(nodes: Sequence[AccountTreeNode]) -> list[Account]:
 
 class AccountTreeModel(QAbstractItemModel):
     COLUMN_HEADERS = {
-        AccountTreeColumn.COLUMN_NAME: "Name",
-        AccountTreeColumn.COLUMN_BALANCE_NATIVE: "Native balance",
-        AccountTreeColumn.COLUMN_BALANCE_BASE: "Base balance",
-        AccountTreeColumn.COLUMN_SHOW: "",
+        AccountTreeColumn.NAME: "Name",
+        AccountTreeColumn.BALANCE_NATIVE: "Native balance",
+        AccountTreeColumn.BALANCE_BASE: "Base balance",
+        AccountTreeColumn.SHOW: "",
     }
     signal_show_only_selection = pyqtSignal()
     signal_toggle_visibility = pyqtSignal()
@@ -255,19 +255,16 @@ class AccountTreeModel(QAbstractItemModel):
         if role == Qt.ItemDataRole.DecorationRole:
             return self._get_decoration_role_data(column, item, index, node)
         if role == Qt.ItemDataRole.TextAlignmentRole and (
-            column == AccountTreeColumn.COLUMN_BALANCE_NATIVE
-            or column == AccountTreeColumn.COLUMN_BALANCE_BASE
+            column == AccountTreeColumn.BALANCE_NATIVE
+            or column == AccountTreeColumn.BALANCE_BASE
         ):
             return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
         if role == Qt.ItemDataRole.ForegroundRole and (
-            column == AccountTreeColumn.COLUMN_BALANCE_NATIVE
-            or column == AccountTreeColumn.COLUMN_BALANCE_BASE
+            column == AccountTreeColumn.BALANCE_NATIVE
+            or column == AccountTreeColumn.BALANCE_BASE
         ):
             return self._get_foreground_role_data(item)
-        if (
-            role == Qt.ItemDataRole.ToolTipRole
-            and column == AccountTreeColumn.COLUMN_SHOW
-        ):
+        if role == Qt.ItemDataRole.ToolTipRole and column == AccountTreeColumn.SHOW:
             return (
                 "Single-click: toggle visibility\n"
                 "Double-click: set only this item visible"
@@ -277,16 +274,11 @@ class AccountTreeModel(QAbstractItemModel):
     def _get_display_role_data(
         self, column: int, item: Account | AccountGroup
     ) -> str | None:
-        if column == AccountTreeColumn.COLUMN_NAME:
+        if column == AccountTreeColumn.NAME:
             return item.name
-        if column == AccountTreeColumn.COLUMN_BALANCE_NATIVE and isinstance(
-            item, CashAccount
-        ):
+        if column == AccountTreeColumn.BALANCE_NATIVE and isinstance(item, CashAccount):
             return str(item.get_balance(item.currency))
-        if (
-            column == AccountTreeColumn.COLUMN_BALANCE_BASE
-            and self.base_currency is not None
-        ):
+        if column == AccountTreeColumn.BALANCE_BASE and self.base_currency is not None:
             try:
                 balance = item.get_balance(self.base_currency)
             except ConversionFactorNotFoundError:
@@ -302,7 +294,7 @@ class AccountTreeModel(QAbstractItemModel):
         index: QModelIndex,
         node: AccountTreeNode,
     ) -> QIcon | None:
-        if column == AccountTreeColumn.COLUMN_NAME:
+        if column == AccountTreeColumn.NAME:
             if isinstance(item, AccountGroup):
                 if self._tree.isExpanded(index):
                     return QIcon("icons_16:folder-open.png")
@@ -313,7 +305,7 @@ class AccountTreeModel(QAbstractItemModel):
                 if item.get_balance(item.currency).is_positive():
                     return QIcon("icons_16:piggy-bank.png")
                 return QIcon("icons_16:piggy-bank-empty.png")
-        if column == AccountTreeColumn.COLUMN_SHOW:
+        if column == AccountTreeColumn.SHOW:
             # IDEA: change eye icon on mouse hover (blue)
             if node.check_state == Qt.CheckState.Checked:
                 return QIcon("icons_16:eye.png")
@@ -335,11 +327,11 @@ class AccountTreeModel(QAbstractItemModel):
         self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole = ...
     ) -> str | int | None:
         if role == Qt.ItemDataRole.TextAlignmentRole:
-            if section == AccountTreeColumn.COLUMN_BALANCE_NATIVE:
+            if section == AccountTreeColumn.BALANCE_NATIVE:
                 return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
-            if section == AccountTreeColumn.COLUMN_BALANCE_BASE:
+            if section == AccountTreeColumn.BALANCE_BASE:
                 return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
-            if section == AccountTreeColumn.COLUMN_SHOW:
+            if section == AccountTreeColumn.SHOW:
                 return Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignHCenter
         elif role == Qt.ItemDataRole.DisplayRole:
             if orientation == Qt.Orientation.Horizontal:
@@ -443,12 +435,12 @@ class AccountTreeModel(QAbstractItemModel):
         return None
 
     def _tree_clicked(self, index: QModelIndex) -> None:
-        if index.column() == AccountTreeColumn.COLUMN_SHOW:
+        if index.column() == AccountTreeColumn.SHOW:
             self.timer.set_timeout_callable(self.signal_toggle_visibility.emit)
             self.timer.start()
 
     def _tree_double_clicked(self, index: QModelIndex) -> None:
-        if index.column() == AccountTreeColumn.COLUMN_SHOW:
+        if index.column() == AccountTreeColumn.SHOW:
             self.timer.stop()
             self.signal_show_only_selection.emit()
 

@@ -80,15 +80,15 @@ class CategoryTree(QTreeView):
 
     def finalize_setup(self) -> None:
         self.header().setSectionResizeMode(
-            CategoryTreeColumn.COLUMN_NAME,
+            CategoryTreeColumn.NAME,
             QHeaderView.ResizeMode.ResizeToContents,
         )
         self.header().setSectionResizeMode(
-            CategoryTreeColumn.COLUMN_TRANSACTIONS,
+            CategoryTreeColumn.TRANSACTIONS,
             QHeaderView.ResizeMode.ResizeToContents,
         )
         self.header().setSectionResizeMode(
-            CategoryTreeColumn.COLUMN_BALANCE,
+            CategoryTreeColumn.BALANCE,
             QHeaderView.ResizeMode.Stretch,
         )
 

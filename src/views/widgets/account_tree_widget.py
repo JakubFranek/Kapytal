@@ -73,19 +73,19 @@ class AccountTreeWidget(QWidget, Ui_AccountTreeWidget):
 
     def finalize_setup(self) -> None:
         self.treeView.header().setSectionResizeMode(
-            AccountTreeColumn.COLUMN_NAME,
+            AccountTreeColumn.NAME,
             QHeaderView.ResizeMode.ResizeToContents,
         )
         self.treeView.header().setSectionResizeMode(
-            AccountTreeColumn.COLUMN_BALANCE_NATIVE,
+            AccountTreeColumn.BALANCE_NATIVE,
             QHeaderView.ResizeMode.ResizeToContents,
         )
         self.treeView.header().setSectionResizeMode(
-            AccountTreeColumn.COLUMN_BALANCE_BASE,
+            AccountTreeColumn.BALANCE_BASE,
             QHeaderView.ResizeMode.ResizeToContents,
         )
         self.treeView.header().setSectionResizeMode(
-            AccountTreeColumn.COLUMN_SHOW,
+            AccountTreeColumn.SHOW,
             QHeaderView.ResizeMode.ResizeToContents,
         )
 

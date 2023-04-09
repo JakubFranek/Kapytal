@@ -9,8 +9,8 @@ from src.views.constants import CurrencyTableColumn
 
 class CurrencyTableModel(QAbstractTableModel):
     COLUMN_HEADERS = {
-        CurrencyTableColumn.COLUMN_CODE: "Currency code",
-        CurrencyTableColumn.COLUMN_PLACES: "Decimal places",
+        CurrencyTableColumn.CODE: "Currency code",
+        CurrencyTableColumn.PLACES: "Decimal places",
     }
 
     def __init__(
@@ -57,13 +57,13 @@ class CurrencyTableModel(QAbstractTableModel):
         column = index.column()
         currency = self.currencies[index.row()]
         if role == Qt.ItemDataRole.DisplayRole:
-            if column == CurrencyTableColumn.COLUMN_CODE:
+            if column == CurrencyTableColumn.CODE:
                 return currency.code
-            if column == CurrencyTableColumn.COLUMN_PLACES:
+            if column == CurrencyTableColumn.PLACES:
                 return str(currency.places)
         if (
             role == Qt.ItemDataRole.DecorationRole
-            and column == CurrencyTableColumn.COLUMN_CODE
+            and column == CurrencyTableColumn.CODE
             and currency == self.base_currency
         ):
             return QIcon("icons_16:star.png")

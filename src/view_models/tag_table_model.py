@@ -10,9 +10,9 @@ from src.views.constants import TagTableColumn
 
 class TagTableModel(QAbstractTableModel):
     COLUMN_HEADERS = {
-        TagTableColumn.COLUMN_NAME: "Name",
-        TagTableColumn.COLUMN_TRANSACTIONS: "Transactions",
-        TagTableColumn.COLUMN_BALANCE: "Balance",
+        TagTableColumn.NAME: "Name",
+        TagTableColumn.TRANSACTIONS: "Transactions",
+        TagTableColumn.BALANCE: "Balance",
     }
 
     def __init__(
@@ -66,8 +66,7 @@ class TagTableModel(QAbstractTableModel):
         if role == Qt.ItemDataRole.UserRole:
             return self._get_user_role_data(column, tag_stats)
         if role == Qt.ItemDataRole.TextAlignmentRole and (
-            column == TagTableColumn.COLUMN_TRANSACTIONS
-            or column == TagTableColumn.COLUMN_BALANCE
+            column == TagTableColumn.TRANSACTIONS or column == TagTableColumn.BALANCE
         ):
             return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
         return None
@@ -75,22 +74,22 @@ class TagTableModel(QAbstractTableModel):
     def _get_display_role_data(
         self, column: int, tag_stats: AttributeStats
     ) -> str | int | None:
-        if column == TagTableColumn.COLUMN_NAME:
+        if column == TagTableColumn.NAME:
             return tag_stats.attribute.name
-        if column == TagTableColumn.COLUMN_TRANSACTIONS:
+        if column == TagTableColumn.TRANSACTIONS:
             return tag_stats.no_of_transactions
-        if column == TagTableColumn.COLUMN_BALANCE:
+        if column == TagTableColumn.BALANCE:
             return tag_stats.balance.to_str_rounded()
         return None
 
     def _get_user_role_data(
         self, column: int, tag_stats: AttributeStats
     ) -> str | int | float | None:
-        if column == TagTableColumn.COLUMN_NAME:
+        if column == TagTableColumn.NAME:
             return unicodedata.normalize("NFD", tag_stats.attribute.name)
-        if column == TagTableColumn.COLUMN_TRANSACTIONS:
+        if column == TagTableColumn.TRANSACTIONS:
             return tag_stats.no_of_transactions
-        if column == TagTableColumn.COLUMN_BALANCE:
+        if column == TagTableColumn.BALANCE:
             return float(tag_stats.balance.value_normalized)
         return None
 
@@ -102,8 +101,7 @@ class TagTableModel(QAbstractTableModel):
                 return self.COLUMN_HEADERS[section]
             return str(section)
         if role == Qt.ItemDataRole.TextAlignmentRole and (
-            section == TagTableColumn.COLUMN_TRANSACTIONS
-            or section == TagTableColumn.COLUMN_BALANCE
+            section == TagTableColumn.TRANSACTIONS or section == TagTableColumn.BALANCE
         ):
             return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
         return None

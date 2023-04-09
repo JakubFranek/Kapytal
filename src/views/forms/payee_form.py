@@ -51,21 +51,21 @@ class PayeeForm(QWidget, Ui_PayeeForm):
     def finalize_setup(self) -> None:
         self.tableView.horizontalHeader().setStretchLastSection(False)
         self.tableView.horizontalHeader().setSectionResizeMode(
-            PayeeTableColumn.COLUMN_NAME,
+            PayeeTableColumn.NAME,
             QHeaderView.ResizeMode.ResizeToContents,
         )
         self.tableView.horizontalHeader().setSectionResizeMode(
-            PayeeTableColumn.COLUMN_TRANSACTIONS,
+            PayeeTableColumn.TRANSACTIONS,
             QHeaderView.ResizeMode.ResizeToContents,
         )
         self.tableView.horizontalHeader().setSectionResizeMode(
-            PayeeTableColumn.COLUMN_BALANCE,
+            PayeeTableColumn.BALANCE,
             QHeaderView.ResizeMode.Stretch,
         )
 
         style = self.style()
         last_section_text = self.tableView.model().headerData(
-            PayeeTableColumn.COLUMN_BALANCE,
+            PayeeTableColumn.BALANCE,
             Qt.Orientation.Horizontal,
             Qt.ItemDataRole.DisplayRole,
         )
