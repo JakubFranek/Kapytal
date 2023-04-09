@@ -396,6 +396,10 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
         return self._price_per_share
 
     @property
+    def amount(self) -> CashAmount:
+        return self._price_per_share * self._shares
+
+    @property
     def currency(self) -> Currency:
         return self._cash_account.currency
 

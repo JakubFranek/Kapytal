@@ -10,7 +10,7 @@ from src.models.model_objects.cash_objects import (
     CashTransfer,
     RefundTransaction,
 )
-from src.models.model_objects.currency_objects import Currency
+from src.models.model_objects.currency_objects import CashAmount, Currency
 from src.models.model_objects.security_objects import (
     Security,
     SecurityTransactionType,
@@ -18,6 +18,7 @@ from src.models.model_objects.security_objects import (
 )
 from src.models.transaction_filters.account_filter import AccountFilter
 from src.models.transaction_filters.base_transaction_filter import FilterMode
+from src.models.transaction_filters.cash_amount_filter import CashAmountFilter
 from src.models.transaction_filters.currency_filter import CurrencyFilter
 from src.models.transaction_filters.datetime_filter import DatetimeFilter
 from src.models.transaction_filters.description_filter import DescriptionFilter
@@ -95,6 +96,10 @@ class TransactionFilter:
         return self._security_filter
 
     @property
+    def cash_amount_filter(self) -> CashAmountFilter | None:
+        return self._cash_amount_filter
+
+    @property
     def members(
         self,
     ) -> tuple[TypeFilter, DatetimeFilter, DescriptionFilter, AccountFilter]:
@@ -109,6 +114,7 @@ class TransactionFilter:
             self._payee_filter,
             self._currency_filter,
             self._security_filter,
+            self._cash_amount_filter,
         )
 
     def __repr__(self) -> str:
@@ -123,7 +129,7 @@ class TransactionFilter:
         return self.members == __o.members
 
     def accept_transaction(self, transaction: Transaction) -> bool:
-        return all(
+        result = all(
             (
                 self._type_filter.accept_transaction(transaction),
                 self._datetime_filter.accept_transaction(transaction),
@@ -137,6 +143,9 @@ class TransactionFilter:
                 self._security_filter.accept_transaction(transaction),
             )
         )
+        if self._cash_amount_filter is not None:
+            return result and self._cash_amount_filter.accept_transaction(transaction)
+        return result
 
     def filter_transactions(
         self, transactions: Collection[Transaction]
@@ -153,6 +162,8 @@ class TransactionFilter:
         _transactions = self._split_tags_filter.filter_transactions(_transactions)
         _transactions = self._payee_filter.filter_transactions(_transactions)
         _transactions = self._security_filter.filter_transactions(_transactions)
+        if self._cash_amount_filter is not None:
+            _transactions = self._cash_amount_filter.filter_transactions(_transactions)
         logging.debug(f"Kept {len(_transactions)}/{len(transactions)} transactions")
         return tuple(_transactions)
 
@@ -184,6 +195,7 @@ class TransactionFilter:
         self._payee_filter = PayeeFilter(payees=(), mode=FilterMode.OFF)
         self._currency_filter = CurrencyFilter(currencies=(), mode=FilterMode.OFF)
         self._security_filter = SecurityFilter(securities=(), mode=FilterMode.OFF)
+        self._cash_amount_filter = None
 
     def set_type_filter(
         self, types: Collection[type[Transaction]], mode: FilterMode
@@ -226,3 +238,8 @@ class TransactionFilter:
         self, securities: Collection[Security], mode: FilterMode
     ) -> None:
         self._security_filter = SecurityFilter(securities, mode)
+
+    def set_cash_amount_filter(
+        self, minimum: CashAmount, maximum: CashAmount, mode: FilterMode
+    ) -> None:
+        self._cash_amount_filter = CashAmountFilter(minimum, maximum, mode)

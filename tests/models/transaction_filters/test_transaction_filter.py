@@ -24,6 +24,7 @@ from src.models.user_settings import user_settings
 from tests.models.test_assets.composites import (
     attributes,
     cash_accounts,
+    cash_amounts,
     currencies,
     everything_except,
     securities,
@@ -213,6 +214,29 @@ def test_set_security_filter(
     filter_.set_security_filter(securities, mode)
     assert filter_.security_filter.securities == frozenset(securities)
     assert filter_.security_filter.mode == mode
+
+
+@given(
+    data=st.data(),
+    mode=st.sampled_from(FilterMode),
+)
+def test_set_cash_amount_filter(
+    data: st.DataObject,
+    mode: FilterMode,
+) -> None:
+    currency = data.draw(currencies())
+    minimum = data.draw(cash_amounts(currency, min_value=0))
+    maximum = data.draw(cash_amounts(currency, min_value=minimum.value_normalized))
+    filter_ = TransactionFilter()
+    filter_.set_cash_amount_filter(minimum, maximum, mode)
+
+    assert filter_.cash_amount_filter is not None
+    assert filter_.cash_amount_filter.minimum == minimum
+    assert filter_.cash_amount_filter.maximum == maximum
+    assert filter_.cash_amount_filter.mode == mode
+
+    filter_.filter_transactions(transaction_list)
+    filter_.accept_transaction(transaction_list[0])
 
 
 @given(transactions=transactions())

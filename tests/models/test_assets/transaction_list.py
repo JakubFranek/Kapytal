@@ -1,4 +1,5 @@
 from datetime import datetime
+from decimal import Decimal
 
 from src.models.base_classes.transaction import Transaction
 from src.models.model_objects.attributes import (
@@ -14,7 +15,7 @@ from src.models.model_objects.cash_objects import (
     CashTransfer,
     RefundTransaction,
 )
-from src.models.model_objects.currency_objects import CashAmount, Currency
+from src.models.model_objects.currency_objects import CashAmount, Currency, ExchangeRate
 from src.models.model_objects.security_objects import (
     Security,
     SecurityAccount,
@@ -26,6 +27,12 @@ from src.models.user_settings import user_settings
 
 CZK = Currency("CZK", 2)
 USD = Currency("USD", 2)
+czk_usd_exchange_rate = ExchangeRate(CZK, USD)
+czk_usd_exchange_rate.set_rate(
+    date_=datetime(2023, 1, 1, tzinfo=user_settings.settings.time_zone).date(),
+    rate=Decimal("0.04"),
+)
+USD.add_exchange_rate(czk_usd_exchange_rate)
 
 security = Security("Apple", "AAPL", "Stock", USD, 1)
 

@@ -31,6 +31,7 @@ from src.models.model_objects.security_objects import (
     SecurityTransfer,
 )
 from src.models.transaction_filters.account_filter import AccountFilter
+from src.models.transaction_filters.cash_amount_filter import CashAmountFilter
 from src.models.transaction_filters.currency_filter import CurrencyFilter
 from src.models.transaction_filters.datetime_filter import DatetimeFilter
 from src.models.transaction_filters.description_filter import DescriptionFilter
@@ -91,6 +92,15 @@ def cash_amounts(
         valid_decimals(min_value=min_value, max_value=max_value, places=currency.places)
     )
     return CashAmount(value, currency)
+
+
+@st.composite
+def cash_amount_filters(draw: st.DrawFn) -> CashAmountFilter:
+    mode = draw(st.sampled_from(FilterMode))
+    currency = draw(currencies())
+    minimum = draw(cash_amounts(currency=currency, min_value=0))
+    maximum = draw(cash_amounts(currency=currency, min_value=minimum.value_normalized))
+    return CashAmountFilter(minimum, maximum, mode)
 
 
 @st.composite
