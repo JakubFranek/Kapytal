@@ -1,8 +1,9 @@
 import logging
 from datetime import datetime, time
+from decimal import Decimal
 from enum import Enum, auto
 
-from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtCore import QSignalBlocker, Qt, pyqtSignal
 from PyQt6.QtGui import QCloseEvent, QIcon
 from PyQt6.QtWidgets import (
     QAbstractButton,
@@ -14,17 +15,26 @@ from PyQt6.QtWidgets import (
 )
 from src.models.base_classes.transaction import Transaction
 from src.models.model_objects.cash_objects import (
+    CashTransaction,
     CashTransactionType,
     CashTransfer,
     RefundTransaction,
 )
 from src.models.model_objects.security_objects import (
+    SecurityTransaction,
     SecurityTransactionType,
     SecurityTransfer,
 )
 from src.models.transaction_filters.base_transaction_filter import FilterMode
 from src.models.user_settings import user_settings
 from src.views.ui_files.forms.Ui_transaction_filter_form import Ui_TransactionFilterForm
+
+CASH_RELATED_TRANSACTION_TYPES = (
+    CashTransaction,
+    CashTransfer,
+    RefundTransaction,
+    SecurityTransaction,
+)
 
 
 class AccountFilterMode(Enum):
@@ -51,7 +61,11 @@ class TransactionFilterForm(QWidget, Ui_TransactionFilterForm):
     signal_securities_select_all = pyqtSignal()
     signal_securities_unselect_all = pyqtSignal()
 
-    def __init__(self, parent: QWidget) -> None:
+    def __init__(
+        self,
+        parent: QWidget,
+        base_currency_code: str,
+    ) -> None:
         super().__init__(parent=parent)
         self.setupUi(self)
         self.resize(475, 400)
@@ -60,6 +74,7 @@ class TransactionFilterForm(QWidget, Ui_TransactionFilterForm):
         self._initialize_search_boxes()
         self._initialize_signals()
         self._initialize_mode_comboboxes()
+        self.base_currency_code = base_currency_code
 
     @property
     def tags_list_view(self) -> QListView:
@@ -214,6 +229,55 @@ class TransactionFilterForm(QWidget, Ui_TransactionFilterForm):
     def split_tags_filter_mode(self, mode: FilterMode) -> None:
         self.splitTagsFilterModeComboBox.setCurrentText(mode.name)
 
+    @property
+    def base_currency_code(self) -> str:
+        return self._base_currency_code
+
+    @base_currency_code.setter
+    def base_currency_code(self, base_currency_code: str) -> None:
+        self._base_currency_code = base_currency_code
+        self.cashAmountFilterMaximumDoubleSpinBox.setSuffix(" " + base_currency_code)
+        self.cashAmountFilterMinimumDoubleSpinBox.setSuffix(" " + base_currency_code)
+        self._update_cash_amount_filter_state()
+
+    @property
+    def cash_amount_filter_mode(self) -> FilterMode:
+        return TransactionFilterForm._get_filter_mode_from_combobox(
+            self.cashAmountFilterModeComboBox
+        )
+
+    @cash_amount_filter_mode.setter
+    def cash_amount_filter_mode(self, mode: FilterMode) -> None:
+        self.cashAmountFilterModeComboBox.setCurrentText(mode.name)
+
+    @property
+    def cash_amount_filter_minimum(self) -> Decimal:
+        text = self.cashAmountFilterMinimumDoubleSpinBox.text()
+        suffix = self.cashAmountFilterMinimumDoubleSpinBox.suffix()
+        if suffix in text:
+            text = text.removesuffix(suffix)
+        if "," in text:
+            text = text.replace(",", "")
+        return Decimal(text)
+
+    @cash_amount_filter_minimum.setter
+    def cash_amount_filter_minimum(self, amount: Decimal) -> None:
+        self.cashAmountFilterMinimumDoubleSpinBox.setValue(amount)
+
+    @property
+    def cash_amount_filter_maximum(self) -> Decimal:
+        text = self.cashAmountFilterMaximumDoubleSpinBox.text()
+        suffix = self.cashAmountFilterMaximumDoubleSpinBox.suffix()
+        if suffix in text:
+            text = text.removesuffix(suffix)
+        if "," in text:
+            text = text.replace(",", "")
+        return Decimal(text)
+
+    @cash_amount_filter_maximum.setter
+    def cash_amount_filter_maximum(self, amount: Decimal) -> None:
+        self.cashAmountFilterMaximumDoubleSpinBox.setValue(amount)
+
     def show_form(self) -> None:
         logging.debug(f"Showing {self.__class__.__name__}")
         self.show()
@@ -221,6 +285,22 @@ class TransactionFilterForm(QWidget, Ui_TransactionFilterForm):
     def closeEvent(self, a0: QCloseEvent) -> None:  # noqa: N802
         logging.debug(f"Closing {self.__class__.__name__}")
         return super().closeEvent(a0)
+
+    def _update_cash_amount_filter_state(self) -> None:
+        if self._base_currency_code:
+            any_cash_related = any(
+                type_ in CASH_RELATED_TRANSACTION_TYPES for type_ in self.types
+            )
+            self.cashAmountGroupBox.setEnabled(any_cash_related)
+            self.cashAmountFilterMinimumDoubleSpinBox.setEnabled(
+                self.cash_amount_filter_mode != FilterMode.OFF
+            )
+            self.cashAmountFilterMaximumDoubleSpinBox.setEnabled(
+                self.cash_amount_filter_mode != FilterMode.OFF
+            )
+        else:
+            self.cashAmountGroupBox.setEnabled(False)
+            self.cashAmountFilterModeComboBox.setCurrentText(FilterMode.OFF.name)
 
     @staticmethod
     def _get_filter_mode_from_combobox(combobox: QComboBox) -> FilterMode:
@@ -276,6 +356,20 @@ class TransactionFilterForm(QWidget, Ui_TransactionFilterForm):
             self._tagless_filter_mode_changed
         )
 
+        self.cashAmountFilterModeComboBox.currentTextChanged.connect(
+            self._update_cash_amount_filter_state
+        )
+
+        self.incomeCheckBox.toggled.connect(self._update_cash_amount_filter_state)
+        self.expenseCheckBox.toggled.connect(self._update_cash_amount_filter_state)
+        self.refundCheckBox.toggled.connect(self._update_cash_amount_filter_state)
+        self.cashTransferCheckBox.toggled.connect(self._update_cash_amount_filter_state)
+        self.securityTransferCheckBox.toggled.connect(
+            self._update_cash_amount_filter_state
+        )
+        self.buyCheckBox.toggled.connect(self._update_cash_amount_filter_state)
+        self.sellCheckBox.toggled.connect(self._update_cash_amount_filter_state)
+
     def _initialize_window(self) -> None:
         self.setWindowFlag(Qt.WindowType.Window)
         self.setWindowTitle("Filter Transaction Table")
@@ -295,16 +389,18 @@ class TransactionFilterForm(QWidget, Ui_TransactionFilterForm):
         self._initialize_mode_combobox(self.tagLessFilterModeComboBox)
         self._initialize_mode_combobox(self.splitTagsFilterModeComboBox)
         self._initialize_mode_combobox(self.splitCategoriesFilterModeComboBox)
+        self._initialize_mode_combobox(self.cashAmountFilterModeComboBox)
 
     @staticmethod
     def _initialize_mode_combobox(combobox: QComboBox) -> None:
-        for mode in FilterMode:
-            combobox.addItem(mode.name)
-        combobox.setToolTip(
-            f"{FilterMode.OFF.name}: {FilterMode.OFF.value}\n"
-            f"{FilterMode.KEEP.name}: {FilterMode.KEEP.value}\n"
-            f"{FilterMode.DISCARD.name}: {FilterMode.DISCARD.value}"
-        )
+        with QSignalBlocker(combobox):
+            for mode in FilterMode:
+                combobox.addItem(mode.name)
+            combobox.setToolTip(
+                f"{FilterMode.OFF.name}: {FilterMode.OFF.value}\n"
+                f"{FilterMode.KEEP.name}: {FilterMode.KEEP.value}\n"
+                f"{FilterMode.DISCARD.name}: {FilterMode.DISCARD.value}"
+            )
 
     def _date_filter_mode_changed(self) -> None:
         mode = self.date_filter_mode

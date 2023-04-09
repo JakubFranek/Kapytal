@@ -581,7 +581,7 @@
              </widget>
             </item>
             <item row="0" column="1">
-             <widget class="QComboBox" name="cashAmountFilterComboBox"/>
+             <widget class="QComboBox" name="cashAmountFilterModeComboBox"/>
             </item>
             <item row="1" column="0">
              <widget class="QLabel" name="cashAmountFilterMinimumLabel">
@@ -598,10 +598,36 @@
              </widget>
             </item>
             <item row="1" column="1">
-             <widget class="QDoubleSpinBox" name="cashAmountFilterMinimumDoubleSpinBox"/>
+             <widget class="QDoubleSpinBox" name="cashAmountFilterMinimumDoubleSpinBox">
+              <property name="minimumSize">
+               <size>
+                <width>150</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="showGroupSeparator" stdset="0">
+               <bool>true</bool>
+              </property>
+              <property name="maximum">
+               <double>10000000000000000.000000000000000</double>
+              </property>
+             </widget>
             </item>
             <item row="2" column="1">
-             <widget class="QDoubleSpinBox" name="cashAmountFilterMaximumDoubleSpinBox"/>
+             <widget class="QDoubleSpinBox" name="cashAmountFilterMaximumDoubleSpinBox">
+              <property name="minimumSize">
+               <size>
+                <width>150</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="showGroupSeparator" stdset="0">
+               <bool>true</bool>
+              </property>
+              <property name="maximum">
+               <double>10000000000000000.000000000000000</double>
+              </property>
+             </widget>
             </item>
            </layout>
           </widget>

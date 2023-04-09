@@ -8,6 +8,7 @@ from src.models.model_objects.cash_objects import (
 from src.models.model_objects.currency_objects import (
     CashAmount,
     ConversionFactorNotFoundError,
+    Currency,
     CurrencyError,
 )
 from src.models.model_objects.security_objects import SecurityTransaction
@@ -61,6 +62,10 @@ class CashAmountFilter(BaseTransactionFilter):
     @property
     def maximum(self) -> CashAmount:
         return self._maximum
+
+    @property
+    def currency(self) -> Currency:
+        return self._currency
 
     @property
     def members(self) -> tuple[CashAmount, CashAmount, FilterMode]:

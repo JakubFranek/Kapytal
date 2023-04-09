@@ -67,6 +67,7 @@ def test_creation(currency: Currency, mode: FilterMode, data: st.DataObject) -> 
     assert filter_.minimum == minimum
     assert filter_.maximum == maximum
     assert filter_.mode == mode
+    assert filter_.currency == currency
     assert filter_.__repr__() == (
         f"CashAmountFilter(min={minimum.to_str_rounded()}, "
         f"max={maximum.to_str_rounded()}, mode={mode.name})"

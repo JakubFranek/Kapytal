@@ -3,6 +3,7 @@ from collections.abc import Collection
 
 from PyQt6.QtWidgets import QWidget
 from src.models.base_classes.account import Account
+from src.models.model_objects.currency_objects import CashAmount
 from src.models.record_keeper import RecordKeeper
 from src.models.transaction_filters.base_transaction_filter import FilterMode
 from src.models.transaction_filters.transaction_filter import TransactionFilter
@@ -38,7 +39,12 @@ class TransactionFilterFormPresenter:
 
         self._account_tree_shown_accounts = tuple(account_tree_shown_accounts)
 
-        self._form = TransactionFilterForm(parent_view)
+        base_currency_code = (
+            record_keeper.base_currency.code
+            if record_keeper.base_currency is not None
+            else ""
+        )
+        self._form = TransactionFilterForm(parent_view, base_currency_code)
 
         self._tag_filter_presenter = TagFilterPresenter(self._form, record_keeper)
         self._payee_filter_presenter = PayeeFilterPresenter(self._form, record_keeper)
@@ -134,6 +140,19 @@ class TransactionFilterFormPresenter:
             self._security_filter_presenter.checked_securities, FilterMode.KEEP
         )
 
+        if self._record_keeper.base_currency is not None:
+            minimum_cash_amount = CashAmount(
+                self._form.cash_amount_filter_minimum, self._record_keeper.base_currency
+            )
+            maximum_cash_amount = CashAmount(
+                self._form.cash_amount_filter_maximum, self._record_keeper.base_currency
+            )
+            filter_.set_cash_amount_filter(
+                minimum_cash_amount,
+                maximum_cash_amount,
+                self._form.cash_amount_filter_mode,
+            )
+
         return filter_
 
     def _update_form_from_filter(self, filter_: TransactionFilter) -> None:
@@ -155,6 +174,17 @@ class TransactionFilterFormPresenter:
         self._security_filter_presenter.load_from_security_filter(
             filter_.security_filter
         )
+        if filter_.cash_amount_filter is not None:
+            self._form.base_currency_code = filter_.cash_amount_filter.currency.code
+            self._form.cash_amount_filter_mode = filter_.cash_amount_filter.mode
+            self._form.cash_amount_filter_minimum = (
+                filter_.cash_amount_filter.minimum.value_rounded
+            )
+            self._form.cash_amount_filter_maximum = (
+                filter_.cash_amount_filter.maximum.value_rounded
+            )
+        else:
+            self._form.base_currency_code = ""
 
     def _restore_defaults(self) -> None:
         logging.info("Restoring TransactionFilterForm to default")
@@ -169,6 +199,12 @@ class TransactionFilterFormPresenter:
         filter_.set_payee_filter(self._record_keeper.payees, FilterMode.KEEP)
         filter_.set_currency_filter(self._record_keeper.currencies, FilterMode.KEEP)
         filter_.set_security_filter(self._record_keeper.securities, FilterMode.KEEP)
+        if self._record_keeper.base_currency is not None:
+            filter_.set_cash_amount_filter(
+                CashAmount(0, self._record_keeper.base_currency),
+                CashAmount(0, self._record_keeper.base_currency),
+                FilterMode.OFF,
+            )
         return filter_
 
     def _log_filter_differences(  # noqa: C901
@@ -235,3 +271,13 @@ class TransactionFilterFormPresenter:
                 f"mode={new_filter.security_filter.mode.name}, "
                 f"securities={new_filter.security_filter.security_names}"
             )
+        if old_filter.cash_amount_filter != new_filter.cash_amount_filter:
+            if new_filter.cash_amount_filter is None:
+                logging.info("CashAmountFilter changed: mode=OFF")
+            else:
+                logging.info(
+                    "CashAmountFilter changed: "
+                    f"mode={new_filter.cash_amount_filter.mode.name}, "
+                    f"min={new_filter.cash_amount_filter.minimum.to_str_rounded()}, "
+                    f"max={new_filter.cash_amount_filter.maximum.to_str_rounded()}"
+                )
