@@ -1,6 +1,5 @@
 import logging
 from collections.abc import Collection
-from enum import Enum
 
 from PyQt6.QtWidgets import QWidget
 from src.models.base_classes.account import Account
@@ -67,6 +66,7 @@ class TransactionFilterFormPresenter:
         self._record_keeper = record_keeper
         self._tag_filter_presenter.load_record_keeper(record_keeper)
         self._setup_default_filter()
+        self._transaction_filter = self._get_default_filter()
 
     def show_form(self) -> None:
         self._form.show_form()
@@ -113,19 +113,13 @@ class TransactionFilterFormPresenter:
         old_filter = self._transaction_filter
 
         if old_filter.type_filter != new_filter.type_filter:
-            types = []
-            for type_ in new_filter.type_filter.types:
-                if isinstance(type_, Enum):
-                    types.append(type_.name)
-                else:
-                    types.append(type_.__name__)
             logging.info(
                 f"TypeFilter changed: mode={new_filter.type_filter.mode.name}, "
-                f"types={types}"
+                f"types={new_filter.type_filter.type_names}"
             )
         if old_filter.datetime_filter != new_filter.datetime_filter:
             logging.info(
-                f"DateTimeFilter changed: mode={new_filter.datetime_filter.mode.name}, "
+                f"DatetimeFilter changed: mode={new_filter.datetime_filter.mode.name}, "
                 f"start={new_filter.datetime_filter.start.strftime('%Y-%m-%d')}, "
                 f"end={new_filter.datetime_filter.end.strftime('%Y-%m-%d')}"
             )
@@ -139,6 +133,21 @@ class TransactionFilterFormPresenter:
             logging.info(
                 f"AccountFilter changed: mode={new_filter.account_filter.mode.name}, "
                 f"accounts={new_filter.account_filter.accounts}"
+            )
+        if old_filter.specific_tags_filter != new_filter.specific_tags_filter:
+            logging.info(
+                "SpecificTagsFilter changed: "
+                f"mode={new_filter.specific_tags_filter.mode.name}, "
+                f"tags={new_filter.specific_tags_filter.tags}"
+            )
+        if old_filter.tagless_filter != new_filter.tagless_filter:
+            logging.info(
+                f"TaglessFilter changed: mode={new_filter.tagless_filter.mode.name}"
+            )
+        if old_filter.split_tags_filter != new_filter.split_tags_filter:
+            logging.info(
+                "SplitTagsFilter changed: "
+                f"mode={new_filter.split_tags_filter.mode.name}"
             )
 
     def _update_form_from_transaction_filter(self) -> None:

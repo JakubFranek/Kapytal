@@ -1,3 +1,4 @@
+import logging
 from collections.abc import Collection
 
 from src.models.base_classes.transaction import Transaction
@@ -27,8 +28,10 @@ class SplitTagsFilter(FilterModeMixin):
     ) -> tuple[Transaction]:
         if self._mode == FilterMode.OFF:
             return tuple(transactions)
+
+        input_len = len(transactions)
         if self._mode == FilterMode.KEEP:
-            return tuple(
+            output = tuple(
                 transaction
                 for transaction in transactions
                 if (
@@ -37,8 +40,8 @@ class SplitTagsFilter(FilterModeMixin):
                 )
                 or not isinstance(transaction, CashTransaction)
             )
-        if self._mode == FilterMode.DISCARD:
-            return tuple(
+        else:
+            output = tuple(
                 transaction
                 for transaction in transactions
                 if (
@@ -47,4 +50,9 @@ class SplitTagsFilter(FilterModeMixin):
                 )
                 or not isinstance(transaction, CashTransaction)
             )
-        raise ValueError("Invalid FilterMode value.")  # pragma: no cover
+        if len(output) != input_len:
+            logging.debug(
+                f"SplitTagsFilter: mode={self._mode.name}, "
+                f"removed={input_len - len(output)}"
+            )
+        return output

@@ -3,6 +3,8 @@ from typing import Any
 
 
 class FilterMode(Enum):
+    """Three possible filter modes: OFF, KEEP, DISCARD."""
+
     OFF = "No filter applied"
     KEEP = "Keep only transactions matching the filter criteria"
     DISCARD = "Discard all transactions matching the filter criteria"

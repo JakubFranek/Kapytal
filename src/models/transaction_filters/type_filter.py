@@ -1,3 +1,4 @@
+import logging
 from collections.abc import Collection
 
 from src.models.base_classes.transaction import Transaction
@@ -39,14 +40,14 @@ class TypeFilter(FilterModeMixin):
         return self._types
 
     @property
-    def type_names(self) -> frozenset[str]:
+    def type_names(self) -> tuple[str]:
         type_names_ = []
         for type_ in self._types:
             if isinstance(type_, CashTransactionType | SecurityTransactionType):
                 type_names_.append(type_.name)
             else:
                 type_names_.append(type_.__name__)
-        return frozenset(type_names_)
+        return tuple(sorted(type_names_))
 
     @property
     def transaction_types(self) -> tuple[type[Transaction], ...]:
@@ -85,21 +86,27 @@ class TypeFilter(FilterModeMixin):
     def filter_transactions(
         self, transactions: Collection[Transaction]
     ) -> tuple[Transaction]:
-        if self.mode == FilterMode.OFF:
+        if self._mode == FilterMode.OFF:
             return tuple(transactions)
-        if self.mode == FilterMode.KEEP:
-            return tuple(
+
+        input_len = len(transactions)
+        if self._mode == FilterMode.KEEP:
+            output = tuple(
                 transaction
                 for transaction in transactions
                 if self._check_transaction(transaction)
             )
-        if self.mode == FilterMode.DISCARD:
-            return tuple(
+        else:
+            output = tuple(
                 transaction
                 for transaction in transactions
                 if not self._check_transaction(transaction)
             )
-        raise ValueError("Invalid FilterMode value.")  # pragma: no cover
+        if len(output) != input_len:
+            logging.debug(
+                f"TypeFilter: mode={self._mode.name}, removed={input_len - len(output)}"
+            )
+        return output
 
     def _check_transaction(self, transaction: Transaction) -> bool:
         if isinstance(transaction, CashTransaction | SecurityTransaction):

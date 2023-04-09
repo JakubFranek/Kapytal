@@ -1,3 +1,4 @@
+import logging
 from collections.abc import Collection
 from datetime import datetime
 
@@ -53,12 +54,23 @@ class DatetimeFilter(FilterModeMixin):
         if self._mode == FilterMode.OFF:
             return tuple(transactions)
 
-        filtered_transactions = []
-        for transaction in transactions:
-            if self._start <= transaction.datetime_ <= self._end:
-                if self._mode == FilterMode.KEEP:
-                    filtered_transactions.append(transaction)
-            elif self._mode == FilterMode.DISCARD:
-                filtered_transactions.append(transaction)
-
-        return tuple(filtered_transactions)
+        input_len = len(transactions)
+        if self._mode == FilterMode.KEEP:
+            output = tuple(
+                transaction
+                for transaction in transactions
+                if self._start <= transaction.datetime_ <= self._end
+            )
+        else:
+            output = tuple(
+                transaction
+                for transaction in transactions
+                if transaction.datetime_ < self._start
+                or transaction.datetime_ > self._end
+            )
+        if len(output) != input_len:
+            logging.debug(
+                f"DatetimeFilter: mode={self._mode.name}, "
+                f"removed={input_len - len(output)}"
+            )
+        return output

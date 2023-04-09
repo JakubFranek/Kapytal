@@ -1,3 +1,4 @@
+import logging
 import re
 from collections.abc import Collection
 
@@ -38,16 +39,23 @@ class DescriptionFilter(FilterModeMixin):
     ) -> tuple[Transaction]:
         if self._mode == FilterMode.OFF:
             return tuple(transactions)
+
+        input_len = len(transactions)
         if self._mode == FilterMode.KEEP:
-            return tuple(
+            output = tuple(
                 transaction
                 for transaction in transactions
                 if re.search(self._regex_pattern, transaction.description)
             )
-        if self._mode == FilterMode.DISCARD:
-            return tuple(
+        else:
+            output = tuple(
                 transaction
                 for transaction in transactions
                 if not re.search(self._regex_pattern, transaction.description)
             )
-        raise ValueError("Invalid FilterMode value.")  # pragma: no cover
+        if len(output) != input_len:
+            logging.debug(
+                f"DescriptionFilter: mode={self._mode.name}, "
+                f"removed={input_len - len(output)}"
+            )
+        return output

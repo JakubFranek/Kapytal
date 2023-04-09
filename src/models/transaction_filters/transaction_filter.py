@@ -1,3 +1,4 @@
+import logging
 from collections.abc import Collection
 from datetime import datetime, time
 
@@ -104,6 +105,7 @@ class TransactionFilter:
     def filter_transactions(
         self, transactions: Collection[Transaction]
     ) -> tuple[Transaction, ...]:
+        logging.debug(f"Filtering {len(transactions)} transactions")
         _transactions = tuple(transactions)
         _transactions = self._type_filter.filter_transactions(_transactions)
         _transactions = self._datetime_filter.filter_transactions(_transactions)
@@ -112,6 +114,7 @@ class TransactionFilter:
         _transactions = self._specific_tags_filter.filter_transactions(_transactions)
         _transactions = self._tagless_filter.filter_transactions(_transactions)
         _transactions = self._split_tags_filter.filter_transactions(_transactions)
+        logging.debug(f"Kept {len(_transactions)}/{len(transactions)} transactions")
         return tuple(_transactions)
 
     def restore_defaults(self) -> None:
