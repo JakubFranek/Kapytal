@@ -224,3 +224,16 @@ def test_filter_transactions(transactions: list[Transaction]) -> None:
 def test_filter_premade_transactions() -> None:
     filter_ = TransactionFilter()
     assert filter_.filter_transactions(transaction_list) == tuple(transaction_list)
+
+
+@given(transactions=transactions())
+def test_accept_transactions(transactions: list[Transaction]) -> None:
+    filter_ = TransactionFilter()
+    for transaction in transactions:
+        assert filter_.accept_transaction(transaction) is True
+
+
+def test_accept_premade_transactions() -> None:
+    filter_ = TransactionFilter()
+    for transaction in transaction_list:
+        assert filter_.accept_transaction(transaction) is True

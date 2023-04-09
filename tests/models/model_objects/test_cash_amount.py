@@ -39,7 +39,7 @@ def test_creation(value: Decimal, currency: Currency) -> None:
     )
     assert (
         cash_amount.to_str_rounded()
-        == f"{round(value,currency.places):,} {currency.code}"
+        == f"{round(value,currency.places):,.{currency.places}f} {currency.code}"
     )
 
 

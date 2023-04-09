@@ -122,6 +122,22 @@ class TransactionFilter:
             return False
         return self.members == __o.members
 
+    def accept_transaction(self, transaction: Transaction) -> bool:
+        return all(
+            (
+                self._type_filter.accept_transaction(transaction),
+                self._datetime_filter.accept_transaction(transaction),
+                self._description_filter.accept_transaction(transaction),
+                self._account_filter.accept_transaction(transaction),
+                self._currency_filter.accept_transaction(transaction),
+                self._specific_tags_filter.accept_transaction(transaction),
+                self._tagless_filter.accept_transaction(transaction),
+                self._split_tags_filter.accept_transaction(transaction),
+                self._payee_filter.accept_transaction(transaction),
+                self._security_filter.accept_transaction(transaction),
+            )
+        )
+
     def filter_transactions(
         self, transactions: Collection[Transaction]
     ) -> tuple[Transaction, ...]:
@@ -131,11 +147,11 @@ class TransactionFilter:
         _transactions = self._datetime_filter.filter_transactions(_transactions)
         _transactions = self._description_filter.filter_transactions(_transactions)
         _transactions = self._account_filter.filter_transactions(_transactions)
+        _transactions = self._currency_filter.filter_transactions(_transactions)
         _transactions = self._specific_tags_filter.filter_transactions(_transactions)
         _transactions = self._tagless_filter.filter_transactions(_transactions)
         _transactions = self._split_tags_filter.filter_transactions(_transactions)
         _transactions = self._payee_filter.filter_transactions(_transactions)
-        _transactions = self._currency_filter.filter_transactions(_transactions)
         _transactions = self._security_filter.filter_transactions(_transactions)
         logging.debug(f"Kept {len(_transactions)}/{len(transactions)} transactions")
         return tuple(_transactions)

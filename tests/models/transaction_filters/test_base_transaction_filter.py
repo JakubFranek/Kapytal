@@ -7,7 +7,7 @@ from src.models.transaction_filters.base_transaction_filter import (
     BaseTransactionFilter,
     FilterMode,
 )
-from tests.models.test_assets.composites import everything_except
+from tests.models.test_assets.composites import everything_except, transactions
 
 
 class ConcreteTransactionFilter(BaseTransactionFilter):
@@ -19,13 +19,36 @@ class ConcreteTransactionFilter(BaseTransactionFilter):
         return super().members
 
     def _keep_in_keep_mode(self, transaction: Transaction) -> bool:
-        return super()._keep_in_keep_mode(transaction)
+        del transaction
+        return None
 
     def _keep_in_discard_mode(self, transaction: Transaction) -> bool:
-        return super()._keep_in_discard_mode(transaction)
+        del transaction
+        return False
 
 
 @given(mode=everything_except(FilterMode))
 def test_invalid_mode_type(mode: Any) -> None:
     with pytest.raises(TypeError, match="Parameter 'mode' must be a FilterMode."):
         ConcreteTransactionFilter(mode)
+
+
+@given(transactions_=transactions())
+def test_accept_transaction_off(transactions_: tuple[Transaction]) -> None:
+    filter_ = ConcreteTransactionFilter(mode=FilterMode.OFF)
+    for transaction in transactions_:
+        assert filter_.accept_transaction(transaction) is True
+
+
+@given(transactions_=transactions())
+def test_accept_transaction_keep(transactions_: tuple[Transaction]) -> None:
+    filter_ = ConcreteTransactionFilter(mode=FilterMode.KEEP)
+    for transaction in transactions_:
+        assert filter_.accept_transaction(transaction) is None
+
+
+@given(transactions_=transactions())
+def test_accept_transaction_discard(transactions_: tuple[Transaction]) -> None:
+    filter_ = ConcreteTransactionFilter(mode=FilterMode.DISCARD)
+    for transaction in transactions_:
+        assert filter_.accept_transaction(transaction) is False

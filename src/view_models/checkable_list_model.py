@@ -80,7 +80,8 @@ class CheckableListModel(QAbstractListModel):
         return None
 
     def flags(self, index: QModelIndex) -> Qt.ItemFlag:
-        del index
+        if not index.isValid():
+            return Qt.ItemFlag.NoItemFlags
         return (
             Qt.ItemFlag.ItemIsSelectable
             | Qt.ItemFlag.ItemIsEnabled
