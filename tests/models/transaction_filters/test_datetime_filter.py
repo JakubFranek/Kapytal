@@ -5,8 +5,8 @@ import pytest
 from hypothesis import assume, given
 from hypothesis import strategies as st
 from src.models.base_classes.transaction import Transaction
+from src.models.transaction_filters.base_transaction_filter import FilterMode
 from src.models.transaction_filters.datetime_filter import DatetimeFilter
-from src.models.transaction_filters.filter_mode_mixin import FilterMode
 from src.models.user_settings import user_settings
 from tests.models.test_assets.composites import (
     datetime_filters,

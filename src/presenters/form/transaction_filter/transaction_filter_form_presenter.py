@@ -4,7 +4,7 @@ from collections.abc import Collection
 from PyQt6.QtWidgets import QWidget
 from src.models.base_classes.account import Account
 from src.models.record_keeper import RecordKeeper
-from src.models.transaction_filters.filter_mode_mixin import FilterMode
+from src.models.transaction_filters.base_transaction_filter import FilterMode
 from src.models.transaction_filters.transaction_filter import TransactionFilter
 from src.presenters.form.transaction_filter.tag_filter_presenter import (
     TagFilterPresenter,

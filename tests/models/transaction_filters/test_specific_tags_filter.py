@@ -9,7 +9,7 @@ from src.models.model_objects.attributes import (
     AttributeType,
     InvalidAttributeError,
 )
-from src.models.transaction_filters.filter_mode_mixin import FilterMode
+from src.models.transaction_filters.base_transaction_filter import FilterMode
 from src.models.transaction_filters.specific_tags_filter import SpecificTagsFilter
 from tests.models.test_assets.composites import (
     attributes,

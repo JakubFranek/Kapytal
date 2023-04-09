@@ -16,7 +16,7 @@ from src.models.model_objects.security_objects import (
     SecurityTransactionType,
     SecurityTransfer,
 )
-from src.models.transaction_filters.filter_mode_mixin import FilterMode
+from src.models.transaction_filters.base_transaction_filter import FilterMode
 from src.models.transaction_filters.transaction_filter import TransactionFilter
 from src.models.user_settings import user_settings
 from tests.models.test_assets.composites import (

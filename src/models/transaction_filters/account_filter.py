@@ -1,12 +1,14 @@
-import logging
 from collections.abc import Collection
 
 from src.models.base_classes.account import Account
 from src.models.base_classes.transaction import Transaction
-from src.models.transaction_filters.filter_mode_mixin import FilterMode, FilterModeMixin
+from src.models.transaction_filters.base_transaction_filter import (
+    BaseTransactionFilter,
+    FilterMode,
+)
 
 
-class AccountFilter(FilterModeMixin):
+class AccountFilter(BaseTransactionFilter):
     def __init__(self, accounts: Collection[Account], mode: FilterMode) -> None:
         super().__init__(mode=mode)
         if any(not isinstance(account, Account) for account in accounts):
@@ -24,36 +26,8 @@ class AccountFilter(FilterModeMixin):
     def __repr__(self) -> str:
         return f"AccountFilter(accounts={self._accounts}, mode={self._mode.name})"
 
-    def __hash__(self) -> int:
-        return hash(self.members)
+    def _keep_in_keep_mode(self, transaction: Transaction) -> bool:
+        return transaction.is_accounts_related(self._accounts)
 
-    def __eq__(self, __o: object) -> bool:
-        if not isinstance(__o, AccountFilter):
-            return False
-        return self.members == __o.members
-
-    def filter_transactions(
-        self, transactions: Collection[Transaction]
-    ) -> tuple[Transaction]:
-        if self._mode == FilterMode.OFF:
-            return tuple(transactions)
-
-        input_len = len(transactions)
-        if self._mode == FilterMode.KEEP:
-            output = tuple(
-                transaction
-                for transaction in transactions
-                if transaction.is_accounts_related(self._accounts)
-            )
-        else:
-            output = tuple(
-                transaction
-                for transaction in transactions
-                if not transaction.is_accounts_related(self._accounts)
-            )
-        if len(output) != input_len:
-            logging.debug(
-                f"AccountFilter: mode={self._mode.name}, "
-                f"removed={input_len - len(output)}"
-            )
-        return output
+    def _keep_in_discard_mode(self, transaction: Transaction) -> bool:
+        return not self._keep_in_keep_mode(transaction)

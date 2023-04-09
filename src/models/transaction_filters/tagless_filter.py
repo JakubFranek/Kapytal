@@ -1,11 +1,11 @@
-import logging
-from collections.abc import Collection
-
 from src.models.base_classes.transaction import Transaction
-from src.models.transaction_filters.filter_mode_mixin import FilterMode, FilterModeMixin
+from src.models.transaction_filters.base_transaction_filter import (
+    BaseTransactionFilter,
+    FilterMode,
+)
 
 
-class TaglessFilter(FilterModeMixin):
+class TaglessFilter(BaseTransactionFilter):
     """Filters Transactions which have no Tags.
 
     KEEP: Keeps only Tag-less Transactions.
@@ -17,34 +17,12 @@ class TaglessFilter(FilterModeMixin):
     def __repr__(self) -> str:
         return f"TaglessFilter(mode={self._mode.name})"
 
-    def __hash__(self) -> int:
-        return hash(self._mode)
+    @property
+    def members(self) -> tuple[FilterMode]:
+        return (self._mode,)
 
-    def __eq__(self, __o: object) -> bool:
-        if not isinstance(__o, TaglessFilter):
-            return False
-        return self.mode == __o.mode
+    def _keep_in_keep_mode(self, transaction: Transaction) -> bool:
+        return len(transaction.tags) == 0
 
-    def filter_transactions(
-        self, transactions: Collection[Transaction]
-    ) -> tuple[Transaction]:
-        if self._mode == FilterMode.OFF:
-            return tuple(transactions)
-
-        input_len = len(transactions)
-        if self._mode == FilterMode.KEEP:
-            output = tuple(
-                transaction
-                for transaction in transactions
-                if len(transaction.tags) == 0
-            )
-        else:
-            output = tuple(
-                transaction for transaction in transactions if len(transaction.tags) > 0
-            )
-        if len(output) != input_len:
-            logging.debug(
-                f"TaglessFilter: mode={self._mode.name}, "
-                f"removed={input_len - len(output)}"
-            )
-        return output
+    def _keep_in_discard_mode(self, transaction: Transaction) -> bool:
+        return not self._keep_in_keep_mode(transaction)

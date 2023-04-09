@@ -4,7 +4,7 @@ from hypothesis import given
 from hypothesis import strategies as st
 from src.models.base_classes.transaction import Transaction
 from src.models.model_objects.cash_objects import CashTransaction
-from src.models.transaction_filters.filter_mode_mixin import FilterMode
+from src.models.transaction_filters.base_transaction_filter import FilterMode
 from src.models.transaction_filters.split_tags_filter import SplitTagsFilter
 from tests.models.test_assets.composites import (
     everything_except,

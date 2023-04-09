@@ -1,12 +1,13 @@
-import logging
-from collections.abc import Collection
 from datetime import datetime
 
 from src.models.base_classes.transaction import Transaction
-from src.models.transaction_filters.filter_mode_mixin import FilterMode, FilterModeMixin
+from src.models.transaction_filters.base_transaction_filter import (
+    BaseTransactionFilter,
+    FilterMode,
+)
 
 
-class DatetimeFilter(FilterModeMixin):
+class DatetimeFilter(BaseTransactionFilter):
     def __init__(self, start: datetime, end: datetime, mode: FilterMode) -> None:
         super().__init__(mode=mode)
         if not isinstance(start, datetime):
@@ -40,37 +41,8 @@ class DatetimeFilter(FilterModeMixin):
             f"end={self._end.strftime('%Y-%m-%d %H:%M:%S')}, mode={self._mode.name})"
         )
 
-    def __hash__(self) -> int:
-        return hash(self.members)
+    def _keep_in_keep_mode(self, transaction: Transaction) -> bool:
+        return self._start <= transaction.datetime_ <= self._end
 
-    def __eq__(self, __o: object) -> bool:
-        if not isinstance(__o, DatetimeFilter):
-            return False
-        return self.members == __o.members
-
-    def filter_transactions(
-        self, transactions: Collection[Transaction]
-    ) -> tuple[Transaction]:
-        if self._mode == FilterMode.OFF:
-            return tuple(transactions)
-
-        input_len = len(transactions)
-        if self._mode == FilterMode.KEEP:
-            output = tuple(
-                transaction
-                for transaction in transactions
-                if self._start <= transaction.datetime_ <= self._end
-            )
-        else:
-            output = tuple(
-                transaction
-                for transaction in transactions
-                if transaction.datetime_ < self._start
-                or transaction.datetime_ > self._end
-            )
-        if len(output) != input_len:
-            logging.debug(
-                f"DatetimeFilter: mode={self._mode.name}, "
-                f"removed={input_len - len(output)}"
-            )
-        return output
+    def _keep_in_discard_mode(self, transaction: Transaction) -> bool:
+        return not self._keep_in_keep_mode(transaction)

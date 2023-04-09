@@ -6,7 +6,7 @@ from hypothesis import strategies as st
 from src.models.base_classes.account import Account
 from src.models.base_classes.transaction import Transaction
 from src.models.transaction_filters.account_filter import AccountFilter
-from src.models.transaction_filters.filter_mode_mixin import FilterMode
+from src.models.transaction_filters.base_transaction_filter import FilterMode
 from tests.models.test_assets.composites import (
     account_filters,
     cash_accounts,

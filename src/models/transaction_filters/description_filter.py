@@ -1,12 +1,13 @@
-import logging
 import re
-from collections.abc import Collection
 
 from src.models.base_classes.transaction import Transaction
-from src.models.transaction_filters.filter_mode_mixin import FilterMode, FilterModeMixin
+from src.models.transaction_filters.base_transaction_filter import (
+    BaseTransactionFilter,
+    FilterMode,
+)
 
 
-class DescriptionFilter(FilterModeMixin):
+class DescriptionFilter(BaseTransactionFilter):
     def __init__(self, regex_pattern: str, mode: FilterMode) -> None:
         super().__init__(mode=mode)
         re.compile(regex_pattern)  # Raises re.error if pattern is invalid
@@ -26,36 +27,8 @@ class DescriptionFilter(FilterModeMixin):
             f"mode={self._mode.name})"
         )
 
-    def __hash__(self) -> int:
-        return hash(self.members)
+    def _keep_in_keep_mode(self, transaction: Transaction) -> bool:
+        return re.search(self._regex_pattern, transaction.description)
 
-    def __eq__(self, __o: object) -> bool:
-        if not isinstance(__o, DescriptionFilter):
-            return False
-        return self.members == __o.members
-
-    def filter_transactions(
-        self, transactions: Collection[Transaction]
-    ) -> tuple[Transaction]:
-        if self._mode == FilterMode.OFF:
-            return tuple(transactions)
-
-        input_len = len(transactions)
-        if self._mode == FilterMode.KEEP:
-            output = tuple(
-                transaction
-                for transaction in transactions
-                if re.search(self._regex_pattern, transaction.description)
-            )
-        else:
-            output = tuple(
-                transaction
-                for transaction in transactions
-                if not re.search(self._regex_pattern, transaction.description)
-            )
-        if len(output) != input_len:
-            logging.debug(
-                f"DescriptionFilter: mode={self._mode.name}, "
-                f"removed={input_len - len(output)}"
-            )
-        return output
+    def _keep_in_discard_mode(self, transaction: Transaction) -> bool:
+        return not self._keep_in_keep_mode(transaction)

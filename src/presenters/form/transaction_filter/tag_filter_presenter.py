@@ -3,7 +3,7 @@ import logging
 from PyQt6.QtCore import QSortFilterProxyModel, Qt
 from src.models.model_objects.attributes import Attribute
 from src.models.record_keeper import RecordKeeper
-from src.models.transaction_filters.filter_mode_mixin import FilterMode
+from src.models.transaction_filters.base_transaction_filter import FilterMode
 from src.models.transaction_filters.specific_tags_filter import SpecificTagsFilter
 from src.models.transaction_filters.split_tags_filter import SplitTagsFilter
 from src.models.transaction_filters.tagless_filter import TaglessFilter

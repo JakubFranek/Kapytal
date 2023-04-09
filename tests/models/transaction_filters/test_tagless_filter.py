@@ -3,7 +3,7 @@ from typing import Any
 from hypothesis import given
 from hypothesis import strategies as st
 from src.models.base_classes.transaction import Transaction
-from src.models.transaction_filters.filter_mode_mixin import FilterMode
+from src.models.transaction_filters.base_transaction_filter import FilterMode
 from src.models.transaction_filters.tagless_filter import TaglessFilter
 from tests.models.test_assets.composites import (
     everything_except,

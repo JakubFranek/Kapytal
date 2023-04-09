@@ -1,4 +1,3 @@
-import logging
 from collections.abc import Collection
 
 from src.models.base_classes.transaction import Transaction
@@ -10,10 +9,13 @@ from src.models.model_objects.security_objects import (
     SecurityTransaction,
     SecurityTransactionType,
 )
-from src.models.transaction_filters.filter_mode_mixin import FilterMode, FilterModeMixin
+from src.models.transaction_filters.base_transaction_filter import (
+    BaseTransactionFilter,
+    FilterMode,
+)
 
 
-class TypeFilter(FilterModeMixin):
+class TypeFilter(BaseTransactionFilter):
     def __init__(
         self,
         types: Collection[
@@ -22,6 +24,7 @@ class TypeFilter(FilterModeMixin):
         mode: FilterMode,
     ) -> None:
         super().__init__(mode=mode)
+
         for type_ in types:
             if isinstance(
                 type_, type(Transaction) | CashTransactionType | SecurityTransactionType
@@ -75,40 +78,10 @@ class TypeFilter(FilterModeMixin):
     def __repr__(self) -> str:
         return f"TypeFilter(types={self.type_names}, mode={self._mode.name})"
 
-    def __hash__(self) -> int:
-        return hash(self.members)
-
-    def __eq__(self, __o: object) -> bool:
-        if not isinstance(__o, TypeFilter):
-            return False
-        return self.members == __o.members
-
-    def filter_transactions(
-        self, transactions: Collection[Transaction]
-    ) -> tuple[Transaction]:
-        if self._mode == FilterMode.OFF:
-            return tuple(transactions)
-
-        input_len = len(transactions)
-        if self._mode == FilterMode.KEEP:
-            output = tuple(
-                transaction
-                for transaction in transactions
-                if self._check_transaction(transaction)
-            )
-        else:
-            output = tuple(
-                transaction
-                for transaction in transactions
-                if not self._check_transaction(transaction)
-            )
-        if len(output) != input_len:
-            logging.debug(
-                f"TypeFilter: mode={self._mode.name}, removed={input_len - len(output)}"
-            )
-        return output
-
-    def _check_transaction(self, transaction: Transaction) -> bool:
+    def _keep_in_keep_mode(self, transaction: Transaction) -> bool:
         if isinstance(transaction, CashTransaction | SecurityTransaction):
             return transaction.type_ in self.enum_types
         return isinstance(transaction, self.transaction_types)
+
+    def _keep_in_discard_mode(self, transaction: Transaction) -> bool:
+        return not self._keep_in_keep_mode(transaction)
