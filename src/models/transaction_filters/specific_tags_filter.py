@@ -13,8 +13,8 @@ from src.models.transaction_filters.base_transaction_filter import (
 
 
 class SpecificTagsFilter(BaseTransactionFilter):
-    """Filters transactions based on whether they have specific tags.
-    Leaves Tag-less transactions alone.
+    """Filters transactions based on whether they have specific Tags.
+    Ignores Tag-less transactions.
 
     KEEP: Keeps only Transactions with the specified Tags (or no Tags).
     DISCARD: Discards Transactions with the specified Tags."""

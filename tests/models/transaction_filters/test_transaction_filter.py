@@ -47,10 +47,12 @@ def test_creation() -> None:
 def test_eq_hash() -> None:
     filter_1 = TransactionFilter()
     filter_2 = TransactionFilter()
-    assert filter_1.__eq__(filter_2) == (filter_1.__hash__() == filter_2.__hash__())
+    assert filter_1.__eq__(filter_2) is True
+    assert filter_1.__hash__() == filter_2.__hash__()
 
-    filter_1.set_description_filter("test pattern", FilterMode.OFF)
-    assert filter_1.__eq__(filter_2) == (filter_1.__hash__() == filter_2.__hash__())
+    filter_1.set_description_filter("test pattern", FilterMode.KEEP)
+    assert filter_1.__eq__(filter_2) is False
+    assert filter_1.__hash__() != filter_2.__hash__()
 
 
 @given(other=everything_except(TransactionFilter))

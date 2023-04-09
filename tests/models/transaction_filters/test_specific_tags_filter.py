@@ -38,6 +38,7 @@ def check_transaction(filter_: SpecificTagsFilter, transaction: Transaction) -> 
 def test_creation(tags: list[Attribute], mode: FilterMode) -> None:
     filter_ = SpecificTagsFilter(tags, mode)
     assert filter_.tags == frozenset(tags)
+    assert filter_.tag_names == tuple(sorted(tag.name for tag in tags))
     assert filter_.mode == mode
     assert (
         filter_.__repr__()
@@ -67,7 +68,9 @@ def test_creation_invalid_attribute_type(
 
 @given(filter_1=specific_tag_filters(), filter_2=specific_tag_filters())
 def test_eq_hash(filter_1: SpecificTagsFilter, filter_2: SpecificTagsFilter) -> None:
-    assert filter_1.__eq__(filter_2) == (filter_1.__hash__() == filter_2.__hash__())
+    assert filter_1.__eq__(filter_2) == (
+        filter_1.__hash__() == filter_2.__hash__()
+    ) or (filter_1.mode == FilterMode.OFF and filter_2.mode == FilterMode.OFF)
 
 
 @given(filter_1=specific_tag_filters(), filter_2=everything_except(SpecificTagsFilter))

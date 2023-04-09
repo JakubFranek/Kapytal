@@ -33,6 +33,7 @@ from src.models.model_objects.security_objects import (
 from src.models.transaction_filters.account_filter import AccountFilter
 from src.models.transaction_filters.datetime_filter import DatetimeFilter
 from src.models.transaction_filters.description_filter import DescriptionFilter
+from src.models.transaction_filters.payee_filter import PayeeFilter
 from src.models.transaction_filters.specific_tags_filter import SpecificTagsFilter
 from src.models.transaction_filters.split_tags_filter import SplitTagsFilter
 from src.models.transaction_filters.tagless_filter import TaglessFilter
@@ -283,6 +284,13 @@ def names(
             max_size=max_size,
         )
     )
+
+
+@st.composite
+def payee_filters(draw: st.DrawFn) -> PayeeFilter:
+    mode = draw(st.sampled_from(FilterMode))
+    payees = draw(st.lists(attributes(type_=AttributeType.PAYEE)))
+    return PayeeFilter(payees, mode)
 
 
 @st.composite

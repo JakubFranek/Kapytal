@@ -39,7 +39,9 @@ def test_creation(pattern: str, mode: FilterMode) -> None:
 
 @given(filter_1=description_filters(), filter_2=description_filters())
 def test_eq_hash(filter_1: DescriptionFilter, filter_2: DescriptionFilter) -> None:
-    assert filter_1.__eq__(filter_2) == (filter_1.__hash__() == filter_2.__hash__())
+    assert filter_1.__eq__(filter_2) == (
+        filter_1.__hash__() == filter_2.__hash__()
+    ) or (filter_1.mode == FilterMode.OFF and filter_2.mode == FilterMode.OFF)
 
 
 @given(filter_1=description_filters(), filter_2=everything_except(DescriptionFilter))

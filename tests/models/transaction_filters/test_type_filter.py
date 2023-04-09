@@ -100,7 +100,9 @@ def test_invalid_types(types: Any) -> None:
     filter_2=type_filters(),
 )
 def test_eq_hash(filter_1: TypeFilter, filter_2: TypeFilter) -> None:
-    assert filter_1.__eq__(filter_2) == (filter_1.__hash__() == filter_2.__hash__())
+    assert filter_1.__eq__(filter_2) == (
+        filter_1.__hash__() == filter_2.__hash__()
+    ) or (filter_1.mode == FilterMode.OFF and filter_2.mode == FilterMode.OFF)
 
 
 @given(

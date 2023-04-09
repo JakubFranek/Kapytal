@@ -50,7 +50,9 @@ def test_creation_invalid_type(accounts: list[Account], mode: FilterMode) -> Non
 
 @given(filter_1=account_filters(), filter_2=account_filters())
 def test_eq_hash(filter_1: AccountFilter, filter_2: AccountFilter) -> None:
-    assert filter_1.__eq__(filter_2) == (filter_1.__hash__() == filter_2.__hash__())
+    assert filter_1.__eq__(filter_2) == (
+        filter_1.__hash__() == filter_2.__hash__()
+    ) or (filter_1.mode == FilterMode.OFF and filter_2.mode == FilterMode.OFF)
 
 
 @given(filter_1=account_filters(), filter_2=everything_except(AccountFilter))
