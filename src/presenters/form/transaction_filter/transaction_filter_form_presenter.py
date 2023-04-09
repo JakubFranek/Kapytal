@@ -6,6 +6,9 @@ from src.models.base_classes.account import Account
 from src.models.record_keeper import RecordKeeper
 from src.models.transaction_filters.base_transaction_filter import FilterMode
 from src.models.transaction_filters.transaction_filter import TransactionFilter
+from src.presenters.form.transaction_filter.payee_filter_presenter import (
+    PayeeFilterPresenter,
+)
 from src.presenters.form.transaction_filter.tag_filter_presenter import (
     TagFilterPresenter,
 )
@@ -32,6 +35,7 @@ class TransactionFilterFormPresenter:
         self._form = TransactionFilterForm(parent_view)
 
         self._tag_filter_presenter = TagFilterPresenter(self._form, record_keeper)
+        self._payee_filter_presenter = PayeeFilterPresenter(self._form, record_keeper)
         self.load_record_keeper(record_keeper)
         self._transaction_filter = self._get_default_filter()
 
@@ -65,6 +69,7 @@ class TransactionFilterFormPresenter:
     def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
         self._record_keeper = record_keeper
         self._tag_filter_presenter.load_record_keeper(record_keeper)
+        self._payee_filter_presenter.load_record_keeper(record_keeper)
         self._setup_default_filter()
         self._transaction_filter = self._get_default_filter()
         self._update_form_from_filter(self._transaction_filter)
@@ -104,6 +109,9 @@ class TransactionFilterFormPresenter:
         )
         filter_.set_tagless_filter(self._tag_filter_presenter.tagless_filter_mode)
         filter_.set_split_tags_filter(self._tag_filter_presenter.split_tags_filter_mode)
+        filter_.set_payee_filter(
+            self._payee_filter_presenter.checked_payees, FilterMode.KEEP
+        )
 
         return filter_
 
@@ -140,7 +148,7 @@ class TransactionFilterFormPresenter:
             logging.info(
                 "SpecificTagsFilter changed: "
                 f"mode={new_filter.specific_tags_filter.mode.name}, "
-                f"tags={new_filter.specific_tags_filter.tags}"
+                f"tags={new_filter.specific_tags_filter.tag_names}"
             )
         if old_filter.tagless_filter != new_filter.tagless_filter:
             logging.info(
@@ -150,6 +158,12 @@ class TransactionFilterFormPresenter:
             logging.info(
                 "SplitTagsFilter changed: "
                 f"mode={new_filter.split_tags_filter.mode.name}"
+            )
+        if old_filter.payee_filter != new_filter.payee_filter:
+            logging.info(
+                "PayeeFilter changed: "
+                f"mode={new_filter.payee_filter.mode.name}, "
+                f"payees={new_filter.payee_filter.payee_names}"
             )
 
     def _update_form_from_filter(self, filter_: TransactionFilter) -> None:
@@ -164,6 +178,7 @@ class TransactionFilterFormPresenter:
             filter_.tagless_filter,
             filter_.split_tags_filter,
         )
+        self._payee_filter_presenter.load_from_payee_filter(filter_.payee_filter)
 
     def _restore_defaults(self) -> None:
         logging.info("Restoring TransactionFilterForm to default")
@@ -175,4 +190,5 @@ class TransactionFilterFormPresenter:
     def _get_default_filter(self) -> TransactionFilter:
         filter_ = TransactionFilter()
         filter_.set_specific_tags_filter(self._record_keeper.tags, FilterMode.KEEP)
+        filter_.set_payee_filter(self._record_keeper.payees, FilterMode.KEEP)
         return filter_
