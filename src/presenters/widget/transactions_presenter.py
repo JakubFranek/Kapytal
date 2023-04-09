@@ -117,6 +117,11 @@ class TransactionsPresenter:
 
     def _update_table_columns(self) -> None:
         visible_transactions = self._model.get_visible_items()
+        logging.debug(
+            "Visible transactions: "
+            f"{len(visible_transactions)}/{len(self._model.transactions)}"
+        )
+
         any_security_related = any(
             isinstance(transaction, SecurityRelatedTransaction)
             for transaction in visible_transactions
@@ -155,6 +160,7 @@ class TransactionsPresenter:
             return
         logging.debug(f"Filtering Transactions: {pattern=}")
         self._proxy_regex_sort_filter.setFilterRegularExpression(pattern)
+        self._update_table_columns()
 
     def _validate_regex(self, pattern: str) -> bool:
         try:
