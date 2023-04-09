@@ -36,14 +36,16 @@ class TransactionTableModel(QAbstractTableModel):
         transactions: Collection[Transaction],
         base_currency: Currency,
         valid_accounts: Collection[Account],
-        proxy: QSortFilterProxyModel,
+        proxy_viewside: QSortFilterProxyModel,
+        proxy_sourceside: QSortFilterProxyModel,
     ) -> None:
         super().__init__()
         self._view = view
         self.transactions = transactions
         self.base_currency = base_currency
         self.valid_accounts = valid_accounts
-        self._proxy = proxy
+        self._proxy_view = proxy_viewside
+        self._proxy_source = proxy_sourceside
 
     @property
     def transactions(self) -> tuple[Transaction, ...]:
@@ -110,14 +112,14 @@ class TransactionTableModel(QAbstractTableModel):
         return None
 
     def pre_add(self) -> None:
-        self._proxy.setDynamicSortFilter(False)  # noqa: FBT003
+        self._proxy_view.setDynamicSortFilter(False)  # noqa: FBT003
         self._view.setSortingEnabled(False)  # noqa: FBT003
         self.beginInsertRows(QModelIndex(), self.rowCount(), self.rowCount())
 
     def post_add(self) -> None:
         self.endInsertRows()
         self._view.setSortingEnabled(True)  # noqa: FBT003
-        self._proxy.setDynamicSortFilter(True)  # noqa: FBT003
+        self._proxy_view.setDynamicSortFilter(True)  # noqa: FBT003
 
     def pre_reset_model(self) -> None:
         self._view.setSortingEnabled(False)  # noqa: FBT003
@@ -134,13 +136,14 @@ class TransactionTableModel(QAbstractTableModel):
     def post_remove_item(self) -> None:
         self.endRemoveRows()
 
-    def get_selected_item_indexes(self) -> list[QModelIndex]:
-        proxy_indexes = self._view.selectedIndexes()
-        return [self._proxy.mapToSource(index) for index in proxy_indexes]
-
     def get_selected_items(self) -> list[Transaction]:
-        proxy_indexes = self._view.selectedIndexes()
-        source_indexes = [self._proxy.mapToSource(index) for index in proxy_indexes]
+        proxy_viewside_indexes = self._view.selectedIndexes()
+        proxy_sourceside_indexes = [
+            self._proxy_view.mapToSource(index) for index in proxy_viewside_indexes
+        ]
+        source_indexes = [
+            self._proxy_source.mapToSource(index) for index in proxy_sourceside_indexes
+        ]
         return [
             index.internalPointer() for index in source_indexes if index.column() == 0
         ]
