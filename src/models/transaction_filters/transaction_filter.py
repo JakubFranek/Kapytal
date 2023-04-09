@@ -12,6 +12,7 @@ from src.models.model_objects.cash_objects import (
 )
 from src.models.model_objects.currency_objects import Currency
 from src.models.model_objects.security_objects import (
+    Security,
     SecurityTransactionType,
     SecurityTransfer,
 )
@@ -21,6 +22,7 @@ from src.models.transaction_filters.currency_filter import CurrencyFilter
 from src.models.transaction_filters.datetime_filter import DatetimeFilter
 from src.models.transaction_filters.description_filter import DescriptionFilter
 from src.models.transaction_filters.payee_filter import PayeeFilter
+from src.models.transaction_filters.security_filter import SecurityFilter
 from src.models.transaction_filters.specific_tags_filter import SpecificTagsFilter
 from src.models.transaction_filters.split_tags_filter import SplitTagsFilter
 from src.models.transaction_filters.tagless_filter import TaglessFilter
@@ -89,6 +91,10 @@ class TransactionFilter:
         return self._currency_filter
 
     @property
+    def security_filter(self) -> SecurityFilter:
+        return self._security_filter
+
+    @property
     def members(
         self,
     ) -> tuple[TypeFilter, DatetimeFilter, DescriptionFilter, AccountFilter]:
@@ -102,6 +108,7 @@ class TransactionFilter:
             self._split_tags_filter,
             self._payee_filter,
             self._currency_filter,
+            self._security_filter,
         )
 
     def __repr__(self) -> str:
@@ -129,6 +136,7 @@ class TransactionFilter:
         _transactions = self._split_tags_filter.filter_transactions(_transactions)
         _transactions = self._payee_filter.filter_transactions(_transactions)
         _transactions = self._currency_filter.filter_transactions(_transactions)
+        _transactions = self._security_filter.filter_transactions(_transactions)
         logging.debug(f"Kept {len(_transactions)}/{len(transactions)} transactions")
         return tuple(_transactions)
 
@@ -159,6 +167,7 @@ class TransactionFilter:
         self._split_tags_filter = SplitTagsFilter(mode=FilterMode.OFF)
         self._payee_filter = PayeeFilter(payees=(), mode=FilterMode.OFF)
         self._currency_filter = CurrencyFilter(currencies=(), mode=FilterMode.OFF)
+        self._security_filter = SecurityFilter(securities=(), mode=FilterMode.OFF)
 
     def set_type_filter(
         self, types: Collection[type[Transaction]], mode: FilterMode
@@ -196,3 +205,8 @@ class TransactionFilter:
         self, currencies: Collection[Currency], mode: FilterMode
     ) -> None:
         self._currency_filter = CurrencyFilter(currencies, mode)
+
+    def set_security_filter(
+        self, securities: Collection[Security], mode: FilterMode
+    ) -> None:
+        self._security_filter = SecurityFilter(securities, mode)

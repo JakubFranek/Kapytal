@@ -14,6 +14,7 @@ from src.models.model_objects.cash_objects import (
 )
 from src.models.model_objects.currency_objects import Currency
 from src.models.model_objects.security_objects import (
+    Security,
     SecurityTransactionType,
     SecurityTransfer,
 )
@@ -25,6 +26,7 @@ from tests.models.test_assets.composites import (
     cash_accounts,
     currencies,
     everything_except,
+    securities,
     security_accounts,
     transactions,
 )
@@ -197,6 +199,20 @@ def test_set_currency_filter(
     filter_.set_currency_filter(currencies, mode)
     assert filter_.currency_filter.currencies == frozenset(currencies)
     assert filter_.currency_filter.mode == mode
+
+
+@given(
+    securities=st.lists(securities()),
+    mode=st.sampled_from(FilterMode),
+)
+def test_set_security_filter(
+    securities: list[Security],
+    mode: FilterMode,
+) -> None:
+    filter_ = TransactionFilter()
+    filter_.set_security_filter(securities, mode)
+    assert filter_.security_filter.securities == frozenset(securities)
+    assert filter_.security_filter.mode == mode
 
 
 @given(transactions=transactions())

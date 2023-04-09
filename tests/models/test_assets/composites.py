@@ -35,6 +35,7 @@ from src.models.transaction_filters.currency_filter import CurrencyFilter
 from src.models.transaction_filters.datetime_filter import DatetimeFilter
 from src.models.transaction_filters.description_filter import DescriptionFilter
 from src.models.transaction_filters.payee_filter import PayeeFilter
+from src.models.transaction_filters.security_filter import SecurityFilter
 from src.models.transaction_filters.specific_tags_filter import SpecificTagsFilter
 from src.models.transaction_filters.split_tags_filter import SplitTagsFilter
 from src.models.transaction_filters.tagless_filter import TaglessFilter
@@ -347,6 +348,13 @@ def securities(draw: st.DrawFn, currency: Currency | None = None) -> Security:
         currency,
         shares_unit,
     )
+
+
+@st.composite
+def security_filters(draw: st.DrawFn) -> SecurityFilter:
+    mode = draw(st.sampled_from(FilterMode))
+    securities_ = draw(st.lists(securities(), min_size=0, max_size=5))
+    return SecurityFilter(securities_, mode)
 
 
 @st.composite
