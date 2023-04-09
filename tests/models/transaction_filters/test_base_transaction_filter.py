@@ -2,7 +2,6 @@ from typing import Any
 
 import pytest
 from hypothesis import given
-from hypothesis import strategies as st
 from src.models.base_classes.transaction import Transaction
 from src.models.transaction_filters.base_transaction_filter import (
     BaseTransactionFilter,
