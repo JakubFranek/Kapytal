@@ -259,11 +259,8 @@ class AccountTreeModel(QAbstractItemModel):
             or column == AccountTreeColumn.BALANCE_BASE
         ):
             return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
-        if role == Qt.ItemDataRole.ForegroundRole and (
-            column == AccountTreeColumn.BALANCE_NATIVE
-            or column == AccountTreeColumn.BALANCE_BASE
-        ):
-            return self._get_foreground_role_data(item)
+        if role == Qt.ItemDataRole.ForegroundRole:
+            return self._get_foreground_role_data(column, item)
         if role == Qt.ItemDataRole.ToolTipRole and column == AccountTreeColumn.SHOW:
             return (
                 "Single-click: toggle visibility\n"
@@ -314,12 +311,31 @@ class AccountTreeModel(QAbstractItemModel):
             return QIcon("icons_16:eye-close.png")
         return None
 
-    def _get_foreground_role_data(self, item: Account | AccountGroup) -> None:
+    def _get_foreground_role_data(  # noqa: PLR0911
+        self, column: int, item: Account | AccountGroup
+    ) -> QBrush | None:
         if self.base_currency is None:
             return None
-        if item.get_balance(self.base_currency).is_negative():
+
+        if (
+            column != AccountTreeColumn.BALANCE_BASE
+            and column != AccountTreeColumn.BALANCE_NATIVE
+        ):
+            return None
+
+        if column == AccountTreeColumn.BALANCE_BASE:
+            try:
+                amount = item.get_balance(self.base_currency)
+            except ConversionFactorNotFoundError:
+                return QBrush(QColor("red"))
+        elif isinstance(item, CashAccount):
+            amount = item.get_balance(item.currency)
+        else:
+            return None
+
+        if amount.is_negative():
             return QBrush(QColor("red"))
-        if item.get_balance(self.base_currency).value_normalized == 0:
+        if amount.value_normalized == 0:
             return QBrush(QColor("gray"))
         return None
 

@@ -14,7 +14,10 @@ from src.models.model_objects.cash_objects import (
     CashTransfer,
     RefundTransaction,
 )
-from src.models.model_objects.currency_objects import Currency
+from src.models.model_objects.currency_objects import (
+    ConversionFactorNotFoundError,
+    Currency,
+)
 from src.models.model_objects.security_objects import (
     SecurityRelatedTransaction,
     SecurityTransaction,
@@ -407,7 +410,10 @@ class TransactionTableModel(QAbstractTableModel):
             return ""
 
         if base:
-            return amount.convert(self.base_currency).to_str_rounded()
+            try:
+                return amount.convert(self.base_currency).to_str_rounded()
+            except ConversionFactorNotFoundError:
+                return "Error!"
         return amount.to_str_rounded()
 
     def _get_transaction_amount_value(

@@ -7,16 +7,17 @@
     - IMPLEMENTED
         - date ranges
         - transaction types
-        - accounts
+        - accounts (logic)
         - description
         - tags
         - payees
         - split categories
         - split tags
-    - NOT IMPLEMENTED
-        - categories  
         - securities
         - currencies
+    - NOT IMPLEMENTED
+        - categories  
+        - accounts (view)
         - amounts?
 1. SecurityAccount contents view
     - launched from AccountTree right click

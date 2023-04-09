@@ -45,6 +45,12 @@ class TransactionFilterForm(QWidget, Ui_TransactionFilterForm):
     signal_payees_select_all = pyqtSignal()
     signal_payees_unselect_all = pyqtSignal()
 
+    signal_currencies_select_all = pyqtSignal()
+    signal_currencies_unselect_all = pyqtSignal()
+
+    signal_securities_select_all = pyqtSignal()
+    signal_securities_unselect_all = pyqtSignal()
+
     def __init__(self, parent: QWidget) -> None:
         super().__init__(parent=parent)
         self.setupUi(self)
@@ -62,6 +68,14 @@ class TransactionFilterForm(QWidget, Ui_TransactionFilterForm):
     @property
     def payee_list_view(self) -> QListView:
         return self.payeesListView
+
+    @property
+    def currency_list_view(self) -> QListView:
+        return self.currencyListView
+
+    @property
+    def security_list_view(self) -> QListView:
+        return self.securityListView
 
     @property
     def types(
@@ -242,6 +256,20 @@ class TransactionFilterForm(QWidget, Ui_TransactionFilterForm):
         )
         self.payeesUnselectAllPushButton.clicked.connect(
             self.signal_payees_unselect_all.emit
+        )
+
+        self.currencyFilterSelectAllPushButton.clicked.connect(
+            self.signal_currencies_select_all.emit
+        )
+        self.currencyFilterUnselectAllPushButton.clicked.connect(
+            self.signal_currencies_unselect_all.emit
+        )
+
+        self.securityFilterSelectAllPushButton.clicked.connect(
+            self.signal_securities_select_all.emit
+        )
+        self.securityFilterUnselectAllPushButton.clicked.connect(
+            self.signal_securities_unselect_all.emit
         )
 
         self.tagLessFilterModeComboBox.currentTextChanged.connect(

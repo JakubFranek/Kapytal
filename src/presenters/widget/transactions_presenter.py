@@ -103,7 +103,16 @@ class TransactionsPresenter:
         self._model.transactions = filter_.filter_transactions(
             self._record_keeper.transactions
         )
+        self.update_base_currency()
+
+    def update_base_currency(self) -> None:
         self._model.base_currency = self._record_keeper.base_currency
+
+    def refresh_view(self) -> None:
+        self._view.tableView.viewport().update()
+
+    def resize_table_to_contents(self) -> None:
+        self._view.resize_table_to_contents()
 
     def _update_table_columns(self) -> None:
         any_security_related = any(
@@ -252,39 +261,39 @@ class TransactionsPresenter:
             self.update_model_data
         )
         self._cash_transaction_dialog_presenter.event_data_changed.append(
-            self.event_data_changed
+            self._data_changed
         )
 
         self._cash_transfer_dialog_presenter.event_update_model.append(
             self.update_model_data
         )
         self._cash_transfer_dialog_presenter.event_data_changed.append(
-            self.event_data_changed
+            self._data_changed
         )
 
         self._security_transaction_dialog_presenter.event_update_model.append(
             self.update_model_data
         )
         self._security_transaction_dialog_presenter.event_data_changed.append(
-            self.event_data_changed
+            self._data_changed
         )
 
         self._security_transfer_dialog_presenter.event_update_model.append(
             self.update_model_data
         )
         self._security_transfer_dialog_presenter.event_data_changed.append(
-            self.event_data_changed
+            self._data_changed
         )
 
         self._transaction_tags_dialog_presenter.event_data_changed.append(
-            self.event_data_changed
+            self._data_changed
         )
 
         self._refund_transaction_dialog_presenter.event_update_model.append(
             self.update_model_data
         )
         self._refund_transaction_dialog_presenter.event_data_changed.append(
-            self.event_data_changed
+            self._data_changed
         )
 
         self._transaction_filter_form_presenter.event_filter_changed.append(
@@ -471,3 +480,8 @@ class TransactionsPresenter:
         self._view.set_filter_active(
             active=self._transaction_filter_form_presenter.filter_active
         )
+
+    def _data_changed(self) -> None:
+        self.refresh_view()
+        self.resize_table_to_contents()
+        self.event_data_changed.emit()

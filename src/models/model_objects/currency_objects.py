@@ -384,7 +384,7 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
         return self.value_normalized < 0
 
     def to_str_rounded(self) -> str:
-        return f"{self.value_rounded:,} {self.currency.code}"
+        return f"{self.value_rounded:,.{self.currency.places}f} {self.currency.code}"
 
     def to_str_normalized(self) -> str:
         return f"{self.value_normalized:,} {self.currency.code}"

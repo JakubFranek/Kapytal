@@ -63,6 +63,9 @@ class AccountTreePresenter:
     def refresh_view(self) -> None:
         self._view.refresh()
 
+    def update_geometries(self) -> None:
+        self._view.treeView.updateGeometries()
+
     def update_model_data(self) -> None:
         self._model.flat_items = self._record_keeper.account_items
         self._model.base_currency = self._record_keeper.base_currency
