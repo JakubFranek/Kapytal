@@ -37,7 +37,7 @@ class TransactionFilterFormPresenter:
 
         self._form.signal_ok.connect(self._form_accepted)
         self._form.signal_restore_defaults.connect(self._restore_defaults)
-        self._update_form_from_transaction_filter()
+        self._update_form_from_filter(self._transaction_filter)
 
     @property
     def transaction_filter(self) -> TransactionFilter:
@@ -46,7 +46,7 @@ class TransactionFilterFormPresenter:
     @transaction_filter.setter
     def transaction_filter(self, transaction_filter: TransactionFilter) -> None:
         self._transaction_filter = transaction_filter
-        self._update_form_from_transaction_filter()
+        self._update_form_from_filter(self._transaction_filter)
 
     @property
     def account_tree_shown_accounts(self) -> tuple[Account]:
@@ -67,6 +67,9 @@ class TransactionFilterFormPresenter:
         self._tag_filter_presenter.load_record_keeper(record_keeper)
         self._setup_default_filter()
         self._transaction_filter = self._get_default_filter()
+        self._update_form_from_filter(self._transaction_filter)
+        logging.debug("TransactionFilter reverted to default")
+        self.event_filter_changed()
 
     def show_form(self) -> None:
         self._form.show_form()
@@ -74,12 +77,8 @@ class TransactionFilterFormPresenter:
     def _form_accepted(self) -> None:
         new_filter = self._get_transaction_filter_from_form()
         if self.transaction_filter != new_filter:
-            if new_filter == self._default_filter:
-                logging.info("TransactionFilter reverted to default")
-                self._transaction_filter = new_filter
-            else:
-                self._log_filter_differences(new_filter)
-                self._transaction_filter = new_filter
+            self._log_filter_differences(new_filter)
+            self._transaction_filter = new_filter
             self.event_filter_changed()
         self._form.close()
 
@@ -109,8 +108,11 @@ class TransactionFilterFormPresenter:
         return filter_
 
     def _log_filter_differences(self, new_filter: TransactionFilter) -> None:
-        logging.info("TransactionFilter changed, see log records below")
         old_filter = self._transaction_filter
+
+        if new_filter == self._default_filter:
+            logging.info("TransactionFilter reverted to default")
+            return
 
         if old_filter.type_filter != new_filter.type_filter:
             logging.info(
@@ -150,27 +152,22 @@ class TransactionFilterFormPresenter:
                 f"mode={new_filter.split_tags_filter.mode.name}"
             )
 
-    def _update_form_from_transaction_filter(self) -> None:
-        self._form.types = self._transaction_filter.type_filter.types
-        self._form.date_filter_mode = self._transaction_filter.datetime_filter.mode
-        self._form.date_filter_start = self._transaction_filter.datetime_filter.start
-        self._form.date_filter_end = self._transaction_filter.datetime_filter.end
-        self._form.description_filter_mode = (
-            self._transaction_filter.description_filter.mode
-        )
-        self._form.description_filter_pattern = (
-            self._transaction_filter.description_filter.regex_pattern
-        )
+    def _update_form_from_filter(self, filter_: TransactionFilter) -> None:
+        self._form.types = filter_.type_filter.types
+        self._form.date_filter_mode = filter_.datetime_filter.mode
+        self._form.date_filter_start = filter_.datetime_filter.start
+        self._form.date_filter_end = filter_.datetime_filter.end
+        self._form.description_filter_mode = filter_.description_filter.mode
+        self._form.description_filter_pattern = filter_.description_filter.regex_pattern
         self._tag_filter_presenter.load_from_tag_filters(
-            self._transaction_filter.specific_tags_filter,
-            self._transaction_filter.tagless_filter,
-            self._transaction_filter.split_tags_filter,
+            filter_.specific_tags_filter,
+            filter_.tagless_filter,
+            filter_.split_tags_filter,
         )
 
     def _restore_defaults(self) -> None:
-        logging.info("Restoring TransactionFilter to default")
-        self._transaction_filter.restore_defaults()
-        self._update_form_from_transaction_filter()
+        logging.info("Restoring TransactionFilterForm to default")
+        self._update_form_from_filter(self._default_filter)
 
     def _setup_default_filter(self) -> None:
         self._default_filter = self._get_default_filter()

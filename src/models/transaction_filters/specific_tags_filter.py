@@ -35,6 +35,10 @@ class SpecificTagsFilter(BaseTransactionFilter):
         return self._tags
 
     @property
+    def tag_names(self) -> tuple[str]:
+        return tuple(sorted(tag.name for tag in self._tags))
+
+    @property
     def members(self) -> tuple[frozenset[Attribute], FilterMode]:
         return (self._tags, self._mode)
 
