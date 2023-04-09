@@ -12,6 +12,7 @@ from src.models.model_objects.cash_objects import (
     CashTransfer,
     RefundTransaction,
 )
+from src.models.model_objects.currency_objects import Currency
 from src.models.model_objects.security_objects import (
     SecurityTransactionType,
     SecurityTransfer,
@@ -22,6 +23,7 @@ from src.models.user_settings import user_settings
 from tests.models.test_assets.composites import (
     attributes,
     cash_accounts,
+    currencies,
     everything_except,
     security_accounts,
     transactions,
@@ -181,6 +183,20 @@ def test_set_payee_filter(
     filter_.set_payee_filter(payees, mode)
     assert filter_.payee_filter.payees == frozenset(payees)
     assert filter_.payee_filter.mode == mode
+
+
+@given(
+    currencies=st.lists(currencies()),
+    mode=st.sampled_from(FilterMode),
+)
+def test_set_currency_filter(
+    currencies: list[Currency],
+    mode: FilterMode,
+) -> None:
+    filter_ = TransactionFilter()
+    filter_.set_currency_filter(currencies, mode)
+    assert filter_.currency_filter.currencies == frozenset(currencies)
+    assert filter_.currency_filter.mode == mode
 
 
 @given(transactions=transactions())

@@ -9,12 +9,12 @@
         - transaction types
         - accounts
         - description
-    - NOT IMPLEMENTED
-        - categories
         - tags
         - payees
         - split categories
         - split tags
+    - NOT IMPLEMENTED
+        - categories  
         - securities
         - currencies
         - amounts?
