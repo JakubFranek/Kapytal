@@ -18,6 +18,7 @@ from src.models.transaction_filters.account_filter import AccountFilter
 from src.models.transaction_filters.base_transaction_filter import FilterMode
 from src.models.transaction_filters.datetime_filter import DatetimeFilter
 from src.models.transaction_filters.description_filter import DescriptionFilter
+from src.models.transaction_filters.payee_filter import PayeeFilter
 from src.models.transaction_filters.specific_tags_filter import SpecificTagsFilter
 from src.models.transaction_filters.split_tags_filter import SplitTagsFilter
 from src.models.transaction_filters.tagless_filter import TaglessFilter
@@ -78,6 +79,10 @@ class TransactionFilter:
         return self._split_tags_filter
 
     @property
+    def payee_filter(self) -> PayeeFilter:
+        return self._payee_filter
+
+    @property
     def members(
         self,
     ) -> tuple[TypeFilter, DatetimeFilter, DescriptionFilter, AccountFilter]:
@@ -89,6 +94,7 @@ class TransactionFilter:
             self._specific_tags_filter,
             self._tagless_filter,
             self._split_tags_filter,
+            self._payee_filter,
         )
 
     def __repr__(self) -> str:
@@ -114,6 +120,7 @@ class TransactionFilter:
         _transactions = self._specific_tags_filter.filter_transactions(_transactions)
         _transactions = self._tagless_filter.filter_transactions(_transactions)
         _transactions = self._split_tags_filter.filter_transactions(_transactions)
+        _transactions = self._payee_filter.filter_transactions(_transactions)
         logging.debug(f"Kept {len(_transactions)}/{len(transactions)} transactions")
         return tuple(_transactions)
 
@@ -142,6 +149,7 @@ class TransactionFilter:
         self._specific_tags_filter = SpecificTagsFilter(tags=(), mode=FilterMode.OFF)
         self._tagless_filter = TaglessFilter(mode=FilterMode.OFF)
         self._split_tags_filter = SplitTagsFilter(mode=FilterMode.OFF)
+        self._payee_filter = PayeeFilter(payees=(), mode=FilterMode.OFF)
 
     def set_type_filter(
         self, types: Collection[type[Transaction]], mode: FilterMode
@@ -171,3 +179,6 @@ class TransactionFilter:
 
     def set_split_tags_filter(self, mode: FilterMode) -> None:
         self._split_tags_filter = SplitTagsFilter(mode)
+
+    def set_payee_filter(self, payees: Collection[Attribute], mode: FilterMode) -> None:
+        self._payee_filter = PayeeFilter(payees, mode)

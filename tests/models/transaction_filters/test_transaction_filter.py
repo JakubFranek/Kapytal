@@ -169,6 +169,20 @@ def test_set_split_tags_filter(
     assert filter_.split_tags_filter.mode == mode
 
 
+@given(
+    payees=st.lists(attributes(AttributeType.PAYEE)),
+    mode=st.sampled_from(FilterMode),
+)
+def test_set_payee_filter(
+    payees: list[Attribute],
+    mode: FilterMode,
+) -> None:
+    filter_ = TransactionFilter()
+    filter_.set_payee_filter(payees, mode)
+    assert filter_.payee_filter.payees == frozenset(payees)
+    assert filter_.payee_filter.mode == mode
+
+
 @given(transactions=transactions())
 def test_filter_transactions(transactions: list[Transaction]) -> None:
     filter_ = TransactionFilter()
