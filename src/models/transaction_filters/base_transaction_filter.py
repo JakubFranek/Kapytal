@@ -47,6 +47,13 @@ class BaseTransactionFilter(ABC):
             return True
         return self.members == __o.members
 
+    def accept_transaction(self, transaction: Transaction) -> bool:
+        if self._mode == FilterMode.OFF:
+            return True
+        if self._mode == FilterMode.KEEP:
+            return self._keep_in_keep_mode(transaction)
+        return self._keep_in_discard_mode(transaction)
+
     def filter_transactions(
         self, transactions: Collection[Transaction]
     ) -> tuple[Transaction]:

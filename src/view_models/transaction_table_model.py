@@ -44,8 +44,8 @@ class TransactionTableModel(QAbstractTableModel):
         self.transactions = transactions
         self.base_currency = base_currency
         self.valid_accounts = valid_accounts
-        self._proxy_view = proxy_viewside
-        self._proxy_source = proxy_sourceside
+        self._proxy_viewside = proxy_viewside
+        self._proxy_sourceside = proxy_sourceside
 
     @property
     def transactions(self) -> tuple[Transaction, ...]:
@@ -112,14 +112,14 @@ class TransactionTableModel(QAbstractTableModel):
         return None
 
     def pre_add(self) -> None:
-        self._proxy_view.setDynamicSortFilter(False)  # noqa: FBT003
+        self._proxy_viewside.setDynamicSortFilter(False)  # noqa: FBT003
         self._view.setSortingEnabled(False)  # noqa: FBT003
         self.beginInsertRows(QModelIndex(), self.rowCount(), self.rowCount())
 
     def post_add(self) -> None:
         self.endInsertRows()
         self._view.setSortingEnabled(True)  # noqa: FBT003
-        self._proxy_view.setDynamicSortFilter(True)  # noqa: FBT003
+        self._proxy_viewside.setDynamicSortFilter(True)  # noqa: FBT003
 
     def pre_reset_model(self) -> None:
         self._view.setSortingEnabled(False)  # noqa: FBT003
@@ -136,17 +136,32 @@ class TransactionTableModel(QAbstractTableModel):
     def post_remove_item(self) -> None:
         self.endRemoveRows()
 
-    def get_selected_items(self) -> list[Transaction]:
+    def get_selected_items(self) -> tuple[Transaction, ...]:
         proxy_viewside_indexes = self._view.selectedIndexes()
         proxy_sourceside_indexes = [
-            self._proxy_view.mapToSource(index) for index in proxy_viewside_indexes
+            self._proxy_viewside.mapToSource(index) for index in proxy_viewside_indexes
         ]
         source_indexes = [
-            self._proxy_source.mapToSource(index) for index in proxy_sourceside_indexes
+            self._proxy_sourceside.mapToSource(index)
+            for index in proxy_sourceside_indexes
         ]
-        return [
+        return tuple(
             index.internalPointer() for index in source_indexes if index.column() == 0
+        )
+
+    def get_visible_items(self) -> tuple[Transaction, ...]:
+        viewside_rows = self._proxy_viewside.rowCount()
+        proxy_viewside_indexes = [
+            self._proxy_viewside.index(row, 0) for row in range(viewside_rows)
         ]
+        proxy_sourceside_indexes = [
+            self._proxy_viewside.mapToSource(index) for index in proxy_viewside_indexes
+        ]
+        source_indexes = [
+            self._proxy_sourceside.mapToSource(index)
+            for index in proxy_sourceside_indexes
+        ]
+        return tuple(index.internalPointer() for index in source_indexes)
 
     def get_index_from_item(self, item: Transaction | None) -> QModelIndex:
         if item is None:

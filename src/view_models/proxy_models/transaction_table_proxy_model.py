@@ -27,5 +27,5 @@ class TransactionTableProxyModel(QSortFilterProxyModel):
         del source_parent
         source_model: TransactionTableModel = self.sourceModel()
         transaction = source_model.transactions[source_row]
-        filtered = self._transaction_filter.filter_transactions((transaction,))
-        return len(filtered) > 0
+
+        return self._transaction_filter.accept_transaction(transaction)

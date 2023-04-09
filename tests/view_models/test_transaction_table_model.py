@@ -22,7 +22,8 @@ def test_transaction_table_model(qtbot: QtBot, qtmodeltester: ModelTester) -> No
         transactions=record_keeper.transactions,
         base_currency=record_keeper.base_currency,
         valid_accounts=presenter.account_tree_shown_accounts,
-        proxy=presenter._proxy_model,
+        proxy_viewside=presenter._proxy_regex_sort_filter,
+        proxy_sourceside=presenter._proxy_transaction_filter,
     )
 
     qtmodeltester.check(model)

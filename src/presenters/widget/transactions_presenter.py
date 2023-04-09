@@ -116,17 +116,18 @@ class TransactionsPresenter:
         self._view.resize_table_to_contents()
 
     def _update_table_columns(self) -> None:
+        visible_transactions = self._model.get_visible_items()
         any_security_related = any(
             isinstance(transaction, SecurityRelatedTransaction)
-            for transaction in self._model.transactions
+            for transaction in visible_transactions
         )
         any_cash_transfers = any(
             isinstance(transaction, CashTransfer)
-            for transaction in self._model.transactions
+            for transaction in visible_transactions
         )
         any_with_categories = any(
             isinstance(transaction, CashTransaction | RefundTransaction)
-            for transaction in self._model.transactions
+            for transaction in visible_transactions
         )
         single_cash_account = len(
             self._account_tree_shown_accounts
@@ -153,7 +154,7 @@ class TransactionsPresenter:
         if self._validate_regex(pattern) is False:
             return
         logging.debug(f"Filtering Transactions: {pattern=}")
-        self._regex_proxy_model.setFilterRegularExpression(pattern)
+        self._proxy_regex_sort_filter.setFilterRegularExpression(pattern)
 
     def _validate_regex(self, pattern: str) -> bool:
         try:
@@ -164,31 +165,33 @@ class TransactionsPresenter:
             return True
 
     def _initialize_model(self) -> None:
-        self._proxy_model = TransactionTableProxyModel(self._view, TransactionFilter())
-        self._regex_proxy_model = QSortFilterProxyModel(self._view)
+        self._proxy_transaction_filter = TransactionTableProxyModel(
+            self._view, TransactionFilter()
+        )
+        self._proxy_regex_sort_filter = QSortFilterProxyModel(self._view)
 
         self._model = TransactionTableModel(
             self._view.tableView,
             [],
             self._record_keeper.base_currency,
             self._account_tree_shown_accounts,
-            self._regex_proxy_model,
-            self._proxy_model,
+            self._proxy_regex_sort_filter,
+            self._proxy_transaction_filter,
         )
-        self._proxy_model.setSourceModel(self._model)
+        self._proxy_transaction_filter.setSourceModel(self._model)
 
-        self._regex_proxy_model.setSourceModel(self._proxy_model)
-        self._regex_proxy_model.setFilterCaseSensitivity(
+        self._proxy_regex_sort_filter.setSourceModel(self._proxy_transaction_filter)
+        self._proxy_regex_sort_filter.setFilterCaseSensitivity(
             Qt.CaseSensitivity.CaseInsensitive
         )
-        self._regex_proxy_model.setFilterKeyColumn(-1)
-        self._regex_proxy_model.setSortRole(Qt.ItemDataRole.UserRole)
-        self._regex_proxy_model.setSortCaseSensitivity(
+        self._proxy_regex_sort_filter.setFilterKeyColumn(-1)
+        self._proxy_regex_sort_filter.setSortRole(Qt.ItemDataRole.UserRole)
+        self._proxy_regex_sort_filter.setSortCaseSensitivity(
             Qt.CaseSensitivity.CaseInsensitive
         )
-        self._regex_proxy_model.sort(0, Qt.SortOrder.DescendingOrder)
+        self._proxy_regex_sort_filter.sort(0, Qt.SortOrder.DescendingOrder)
 
-        self._view.tableView.setModel(self._regex_proxy_model)
+        self._view.tableView.setModel(self._proxy_regex_sort_filter)
 
     def _initialize_presenters(self) -> None:
         self._cash_transaction_dialog_presenter = CashTransactionDialogPresenter(
@@ -486,12 +489,14 @@ class TransactionsPresenter:
         self._transaction_filter_form_presenter.show_form()
 
     def _filter_changed(self) -> None:
-        self._proxy_model.transaction_filter = (
+        self._proxy_transaction_filter.transaction_filter = (
             self._transaction_filter_form_presenter.transaction_filter
         )
         self._view.set_filter_active(
             active=self._transaction_filter_form_presenter.filter_active
         )
+        self.resize_table_to_contents()
+        self._update_table_columns()
 
     def _data_changed(self) -> None:
         self.refresh_view()
