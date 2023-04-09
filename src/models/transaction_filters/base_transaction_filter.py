@@ -38,8 +38,13 @@ class BaseTransactionFilter(ABC):
         return hash(self.members)
 
     def __eq__(self, __o: object) -> bool:
+        """Two filters are considered equal if they are of the same type and
+        both are OFF or their members are equal."""
+
         if not isinstance(__o, type(self)):
             return False
+        if self._mode == FilterMode.OFF and __o.mode == FilterMode.OFF:
+            return True
         return self.members == __o.members
 
     def filter_transactions(
