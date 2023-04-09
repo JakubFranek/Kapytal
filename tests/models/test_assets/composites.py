@@ -31,6 +31,7 @@ from src.models.model_objects.security_objects import (
     SecurityTransfer,
 )
 from src.models.transaction_filters.account_filter import AccountFilter
+from src.models.transaction_filters.currency_filter import CurrencyFilter
 from src.models.transaction_filters.datetime_filter import DatetimeFilter
 from src.models.transaction_filters.description_filter import DescriptionFilter
 from src.models.transaction_filters.payee_filter import PayeeFilter
@@ -235,6 +236,13 @@ def currencies(draw: st.DrawFn, min_places: int = 2, max_places: int = 8) -> Cur
     code = draw(st.text(alphabet=string.ascii_letters, min_size=3, max_size=3))
     places = draw(st.integers(min_value=min_places, max_value=max_places))
     return Currency(code, places)
+
+
+@st.composite
+def currency_filters(draw: st.DrawFn) -> CurrencyFilter:
+    mode = draw(st.sampled_from(FilterMode))
+    currencies_ = draw(st.lists(currencies(), min_size=0, max_size=5))
+    return CurrencyFilter(currencies_, mode)
 
 
 @st.composite

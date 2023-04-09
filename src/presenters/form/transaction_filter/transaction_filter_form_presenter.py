@@ -77,6 +77,7 @@ class TransactionFilterFormPresenter:
         self.event_filter_changed()
 
     def show_form(self) -> None:
+        self._update_form_from_filter(self._transaction_filter)
         self._form.show_form()
 
     def _form_accepted(self) -> None:

@@ -50,7 +50,7 @@ def test_creation(payees: list[Attribute], mode: FilterMode) -> None:
     mode=st.sampled_from(FilterMode),
 )
 def test_creation_invalid_type(payees: list[Any], mode: FilterMode) -> None:
-    with pytest.raises(TypeError, match="must be a collection of Attributes"):
+    with pytest.raises(TypeError, match="must be a Collection ofAttributes"):
         PayeeFilter(payees, mode)
 
 

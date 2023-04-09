@@ -31,7 +31,7 @@ class TypeFilter(BaseTransactionFilter):
             ):
                 continue
             raise TypeError(
-                "Parameter 'types' must be a collection of Transaction "
+                "Parameter 'types' must be a Collection ofTransaction "
                 "types, CashTransactionType or SecurityTransactionType."
             )
         self._types = frozenset(types)

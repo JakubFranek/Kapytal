@@ -23,7 +23,7 @@ class SpecificTagsFilter(BaseTransactionFilter):
         super().__init__(mode=mode)
 
         if any(not isinstance(tag, Attribute) for tag in tags):
-            raise TypeError("Parameter 'tags' must be a collection of Attributes.")
+            raise TypeError("Parameter 'tags' must be a Collection ofAttributes.")
         if any(tag.type_ != AttributeType.TAG for tag in tags):
             raise InvalidAttributeError(
                 "Parameter 'tags' must contain only Attributes with type_=TAG."

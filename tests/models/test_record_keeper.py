@@ -558,7 +558,7 @@ def test_add_refund_invalid_uuid_type() -> RecordKeeper:
     record_keeper = get_preloaded_record_keeper_with_expense()
     refunded_transaction: CashTransaction = record_keeper.transactions[0]
     with pytest.raises(
-        TypeError, match="Parameter 'uuids' must be a collection of uuid.UUID objects"
+        TypeError, match="Parameter 'uuids' must be a Collection ofuuid.UUID objects"
     ):
         record_keeper.add_refund(
             description="Refund!",

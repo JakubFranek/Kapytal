@@ -21,7 +21,7 @@ class PayeeFilter(BaseTransactionFilter):
         super().__init__(mode=mode)
 
         if any(not isinstance(payee, Attribute) for payee in payees):
-            raise TypeError("Parameter 'payees' must be a collection of Attributes.")
+            raise TypeError("Parameter 'payees' must be a Collection ofAttributes.")
         if any(tag.type_ != AttributeType.PAYEE for tag in payees):
             raise InvalidAttributeError(
                 "Parameter 'payees' must contain only Attributes with type_=PAYEE."
