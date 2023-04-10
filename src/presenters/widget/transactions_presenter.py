@@ -108,6 +108,7 @@ class TransactionsPresenter:
 
     def update_base_currency(self) -> None:
         self._model.base_currency = self._record_keeper.base_currency
+        self._transaction_filter_form_presenter.update_base_currency()
 
     def refresh_view(self) -> None:
         self._view.tableView.viewport().update()

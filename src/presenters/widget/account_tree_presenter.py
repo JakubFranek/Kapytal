@@ -15,9 +15,12 @@ from src.views.dialogs.cash_account_dialog import CashAccountDialog
 from src.views.dialogs.security_account_dialog import SecurityAccountDialog
 from src.views.widgets.account_tree_widget import AccountTreeWidget
 
+# TODO: add warning message when CashAccount creation without a Currency is attempted
+# REFACTOR: possibly split dialog presenters into separate classes?
+
 
 class SetupDialogCallable(Protocol):
-    """Definition of custom Callable type for setting up dialogs"""
+    """Custom Callable type for setting up dialogs"""
 
     def __call__(
         self, item: Account | AccountGroup | None, max_position: int, *, edit: bool

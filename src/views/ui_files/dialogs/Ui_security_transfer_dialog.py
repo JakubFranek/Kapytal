@@ -53,6 +53,7 @@ class Ui_SecurityTransferDialog(object):
         self.sharesLabel.setObjectName("sharesLabel")
         self.formLayout.setWidget(3, QtWidgets.QFormLayout.ItemRole.LabelRole, self.sharesLabel)
         self.sharesDoubleSpinBox = QtWidgets.QDoubleSpinBox(SecurityTransferDialog)
+        self.sharesDoubleSpinBox.setProperty("showGroupSeparator", True)
         self.sharesDoubleSpinBox.setMaximum(1e+16)
         self.sharesDoubleSpinBox.setObjectName("sharesDoubleSpinBox")
         self.formLayout.setWidget(3, QtWidgets.QFormLayout.ItemRole.FieldRole, self.sharesDoubleSpinBox)

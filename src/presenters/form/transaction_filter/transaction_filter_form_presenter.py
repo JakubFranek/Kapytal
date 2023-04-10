@@ -25,6 +25,9 @@ from src.views.forms.transaction_filter_form import (
     TransactionFilterForm,
 )
 
+# BUG: sometimes DatetimeFilter and DescriptionFilter widgets are not disabled when OFF
+# can't seem to reproduce it though
+
 
 class TransactionFilterFormPresenter:
     event_filter_changed = Event()
@@ -90,6 +93,13 @@ class TransactionFilterFormPresenter:
         self._payee_filter_presenter.load_record_keeper(record_keeper)
         self._currency_filter_presenter.load_record_keeper(record_keeper)
         self._security_filter_presenter.load_record_keeper(record_keeper)
+        self._setup_default_filter()
+        self._transaction_filter = self._get_default_filter()
+        self._update_form_from_filter(self._transaction_filter)
+        logging.debug("TransactionFilter reverted to default")
+        self.event_filter_changed()
+
+    def update_base_currency(self) -> None:
         self._setup_default_filter()
         self._transaction_filter = self._get_default_filter()
         self._update_form_from_filter(self._transaction_filter)
