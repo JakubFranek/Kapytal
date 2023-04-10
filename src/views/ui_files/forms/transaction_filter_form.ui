@@ -9,7 +9,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>460</width>
+    <width>475</width>
     <height>528</height>
    </rect>
   </property>
@@ -429,10 +429,28 @@
           </attribute>
           <layout class="QVBoxLayout" name="verticalLayout_11">
            <item>
-            <widget class="QTreeView" name="incomeCategoriesTreeView"/>
+            <widget class="QTreeView" name="incomeCategoriesTreeView">
+             <attribute name="headerVisible">
+              <bool>false</bool>
+             </attribute>
+            </widget>
            </item>
            <item>
             <layout class="QHBoxLayout" name="incomeCategoriesButtonHorizontalLayout">
+             <item>
+              <widget class="QToolButton" name="incomeCategoriesExpandAllToolButton">
+               <property name="text">
+                <string>...</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QToolButton" name="incomeCategoriesCollapseAllToolButton">
+               <property name="text">
+                <string>...</string>
+               </property>
+              </widget>
+             </item>
              <item>
               <widget class="QPushButton" name="incomeCategoriesSelectAllPushButton">
                <property name="text">
@@ -457,10 +475,28 @@
           </attribute>
           <layout class="QVBoxLayout" name="verticalLayout_12">
            <item>
-            <widget class="QTreeView" name="expenseCategoriesTreeView"/>
+            <widget class="QTreeView" name="expenseCategoriesTreeView">
+             <attribute name="headerVisible">
+              <bool>false</bool>
+             </attribute>
+            </widget>
            </item>
            <item>
             <layout class="QHBoxLayout" name="expenseCategoriesButtonHorizontalLayout">
+             <item>
+              <widget class="QToolButton" name="expenseCategoriesExpandAllToolButton">
+               <property name="text">
+                <string>...</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QToolButton" name="expenseCategoriesCollapseAllToolButton">
+               <property name="text">
+                <string>...</string>
+               </property>
+              </widget>
+             </item>
              <item>
               <widget class="QPushButton" name="expenseCategoriesSelectAllPushButton">
                <property name="text">
@@ -485,10 +521,28 @@
           </attribute>
           <layout class="QVBoxLayout" name="verticalLayout_13">
            <item>
-            <widget class="QTreeView" name="incomeAndExpenseCategoriesTreeView"/>
+            <widget class="QTreeView" name="incomeAndExpenseCategoriesTreeView">
+             <attribute name="headerVisible">
+              <bool>false</bool>
+             </attribute>
+            </widget>
            </item>
            <item>
             <layout class="QHBoxLayout" name="incomeAndExpenseCategoriesButtonHorizontalLayout">
+             <item>
+              <widget class="QToolButton" name="incomeAndExpenseCategoriesExpandAllToolButton">
+               <property name="text">
+                <string>...</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QToolButton" name="incomeAndExpenseCategoriesCollapseAllToolButton">
+               <property name="text">
+                <string>...</string>
+               </property>
+              </widget>
+             </item>
              <item>
               <widget class="QPushButton" name="incomeAndExpenseCategoriesUnselectAllPushButton">
                <property name="text">

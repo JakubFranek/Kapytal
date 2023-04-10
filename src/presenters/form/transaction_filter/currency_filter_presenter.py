@@ -3,14 +3,11 @@ from src.models.model_objects.currency_objects import Currency
 from src.models.record_keeper import RecordKeeper
 from src.models.transaction_filters.base_transaction_filter import FilterMode
 from src.models.transaction_filters.currency_filter import CurrencyFilter
-from src.presenters.utilities.event import Event
 from src.view_models.checkable_list_model import CheckableListModel
 from src.views.forms.transaction_filter_form import TransactionFilterForm
 
 
 class CurrencyFilterPresenter:
-    event_filter_changed = Event()
-
     def __init__(
         self, form: TransactionFilterForm, record_keeper: RecordKeeper
     ) -> None:

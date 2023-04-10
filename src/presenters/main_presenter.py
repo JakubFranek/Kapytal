@@ -304,6 +304,7 @@ class MainPresenter:
         )
 
     def _data_changed(self) -> None:
+        self._transactions_presenter.update_filter_models()
         self._transactions_presenter.refresh_view()
         self._refresh_account_tree()
         self._update_unsaved_changes(unsaved_changes=True)

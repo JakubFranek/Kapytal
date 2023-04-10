@@ -4,13 +4,14 @@ from decimal import Decimal
 from enum import Enum, auto
 
 from PyQt6.QtCore import QSignalBlocker, Qt, pyqtSignal
-from PyQt6.QtGui import QCloseEvent, QIcon
+from PyQt6.QtGui import QAction, QCloseEvent, QIcon
 from PyQt6.QtWidgets import (
     QAbstractButton,
     QComboBox,
     QDialogButtonBox,
     QLineEdit,
     QListView,
+    QTreeView,
     QWidget,
 )
 from src.models.base_classes.transaction import Transaction
@@ -72,6 +73,7 @@ class TransactionFilterForm(QWidget, Ui_TransactionFilterForm):
 
         self._initialize_window()
         self._initialize_search_boxes()
+        self._initialize_tool_buttons()
         self._initialize_signals()
         self._initialize_mode_comboboxes()
         self.base_currency_code = base_currency_code
@@ -83,6 +85,18 @@ class TransactionFilterForm(QWidget, Ui_TransactionFilterForm):
     @property
     def payee_list_view(self) -> QListView:
         return self.payeesListView
+
+    @property
+    def income_category_tree_view(self) -> QTreeView:
+        return self.incomeCategoriesTreeView
+
+    @property
+    def expense_category_tree_view(self) -> QTreeView:
+        return self.expenseCategoriesTreeView
+
+    @property
+    def income_and_expense_category_tree_view(self) -> QTreeView:
+        return self.incomeAndExpenseCategoriesTreeView
 
     @property
     def currency_list_view(self) -> QListView:
@@ -401,6 +415,67 @@ class TransactionFilterForm(QWidget, Ui_TransactionFilterForm):
                 f"{FilterMode.KEEP.name}: {FilterMode.KEEP.value}\n"
                 f"{FilterMode.DISCARD.name}: {FilterMode.DISCARD.value}"
             )
+
+    def _initialize_tool_buttons(self) -> None:
+        self.actionExpandAllIncomeCategories = QAction("Expand All", self)
+        self.actionExpandAllExpenseCategories = QAction("Expand All", self)
+        self.actionExpandAllIncomeAndExpenseCategories = QAction("Expand All", self)
+        self.actionCollapseAllIncomeCategories = QAction("Collapse All", self)
+        self.actionCollapseAllExpenseCategories = QAction("Collapse All", self)
+        self.actionCollapseAllIncomeAndExpenseCategories = QAction("Collapse All", self)
+
+        self.actionExpandAllIncomeCategories.setIcon(
+            QIcon("icons_custom:arrow-out.png")
+        )
+        self.actionExpandAllExpenseCategories.setIcon(
+            QIcon("icons_custom:arrow-out.png")
+        )
+        self.actionExpandAllIncomeAndExpenseCategories.setIcon(
+            QIcon("icons_custom:arrow-out.png")
+        )
+        self.actionCollapseAllIncomeCategories.setIcon(QIcon("icons_16:arrow-in.png"))
+        self.actionCollapseAllExpenseCategories.setIcon(QIcon("icons_16:arrow-in.png"))
+        self.actionCollapseAllIncomeAndExpenseCategories.setIcon(
+            QIcon("icons_16:arrow-in.png")
+        )
+
+        self.actionExpandAllIncomeCategories.triggered.connect(
+            self.incomeCategoriesTreeView.expandAll
+        )
+        self.actionExpandAllExpenseCategories.triggered.connect(
+            self.expenseCategoriesTreeView.expandAll
+        )
+        self.actionExpandAllIncomeAndExpenseCategories.triggered.connect(
+            self.incomeAndExpenseCategoriesTreeView.expandAll
+        )
+        self.actionCollapseAllIncomeCategories.triggered.connect(
+            self.incomeCategoriesTreeView.collapseAll
+        )
+        self.actionCollapseAllExpenseCategories.triggered.connect(
+            self.expenseCategoriesTreeView.collapseAll
+        )
+        self.actionCollapseAllIncomeAndExpenseCategories.triggered.connect(
+            self.incomeAndExpenseCategoriesTreeView.collapseAll
+        )
+
+        self.incomeCategoriesExpandAllToolButton.setDefaultAction(
+            self.actionExpandAllIncomeCategories
+        )
+        self.expenseCategoriesExpandAllToolButton.setDefaultAction(
+            self.actionExpandAllExpenseCategories
+        )
+        self.incomeAndExpenseCategoriesExpandAllToolButton.setDefaultAction(
+            self.actionExpandAllIncomeAndExpenseCategories
+        )
+        self.incomeCategoriesCollapseAllToolButton.setDefaultAction(
+            self.actionCollapseAllIncomeCategories
+        )
+        self.expenseCategoriesCollapseAllToolButton.setDefaultAction(
+            self.actionCollapseAllExpenseCategories
+        )
+        self.incomeAndExpenseCategoriesCollapseAllToolButton.setDefaultAction(
+            self.actionCollapseAllIncomeAndExpenseCategories
+        )
 
     def _date_filter_mode_changed(self) -> None:
         mode = self.date_filter_mode

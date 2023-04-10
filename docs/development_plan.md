@@ -3,21 +3,9 @@
 ## Must haves
 
 1. Transaction filtering options
-    - IMPLEMENTED
-        - date ranges
-        - transaction types
-        - accounts (logic)
-        - description
-        - tags
-        - payees
-        - split categories
-        - split tags
-        - securities
-        - currencies
-        - amounts
-    - NOT IMPLEMENTED
-        - categories  
-        - accounts (view)
+    - categories  
+    - split categories
+    - accounts (view)
 1. SecurityAccount contents view
     - launched from AccountTree right click
     - option to create Security transactions from this view
@@ -26,8 +14,8 @@
 1. reports
     - cashflow
     - pie charts
-    - way to show transactions that passed the filters
-1. recurrent / scheduled transactions
+    - way to show transactions that passed the filters (SimpleTransactionTableWidget/Presenter?)
+1. scheduled transactions
 1. documentation
 
 ## Should haves

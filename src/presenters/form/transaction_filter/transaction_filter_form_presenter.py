@@ -7,6 +7,9 @@ from src.models.model_objects.currency_objects import CashAmount
 from src.models.record_keeper import RecordKeeper
 from src.models.transaction_filters.base_transaction_filter import FilterMode
 from src.models.transaction_filters.transaction_filter import TransactionFilter
+from src.presenters.form.transaction_filter.category_filter_presenter import (
+    CategoryFilterPresenter,
+)
 from src.presenters.form.transaction_filter.currency_filter_presenter import (
     CurrencyFilterPresenter,
 )
@@ -51,6 +54,9 @@ class TransactionFilterFormPresenter:
 
         self._tag_filter_presenter = TagFilterPresenter(self._form, record_keeper)
         self._payee_filter_presenter = PayeeFilterPresenter(self._form, record_keeper)
+        self._category_filter_presenter = CategoryFilterPresenter(
+            self._form, record_keeper
+        )
         self._currency_filter_presenter = CurrencyFilterPresenter(
             self._form, record_keeper
         )
@@ -91,6 +97,7 @@ class TransactionFilterFormPresenter:
         self._record_keeper = record_keeper
         self._tag_filter_presenter.load_record_keeper(record_keeper)
         self._payee_filter_presenter.load_record_keeper(record_keeper)
+        self._category_filter_presenter.load_record_keeper(record_keeper)
         self._currency_filter_presenter.load_record_keeper(record_keeper)
         self._security_filter_presenter.load_record_keeper(record_keeper)
         self._setup_default_filter()
@@ -98,6 +105,7 @@ class TransactionFilterFormPresenter:
         self._update_form_from_filter(self._transaction_filter)
         logging.debug("TransactionFilter reverted to default")
         self.event_filter_changed()
+
 
     def update_base_currency(self) -> None:
         self._setup_default_filter()
