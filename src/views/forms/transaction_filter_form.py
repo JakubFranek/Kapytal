@@ -16,13 +16,11 @@ from PyQt6.QtWidgets import (
 )
 from src.models.base_classes.transaction import Transaction
 from src.models.model_objects.cash_objects import (
-    CashTransaction,
     CashTransactionType,
     CashTransfer,
     RefundTransaction,
 )
 from src.models.model_objects.security_objects import (
-    SecurityTransaction,
     SecurityTransactionType,
     SecurityTransfer,
 )
@@ -31,10 +29,12 @@ from src.models.user_settings import user_settings
 from src.views.ui_files.forms.Ui_transaction_filter_form import Ui_TransactionFilterForm
 
 CASH_RELATED_TRANSACTION_TYPES = (
-    CashTransaction,
+    CashTransactionType.INCOME,
+    CashTransactionType.EXPENSE,
     CashTransfer,
     RefundTransaction,
-    SecurityTransaction,
+    SecurityTransactionType.BUY,
+    SecurityTransactionType.SELL,
 )
 
 
@@ -77,6 +77,9 @@ class TransactionFilterForm(QWidget, Ui_TransactionFilterForm):
         self._initialize_signals()
         self._initialize_mode_comboboxes()
         self.base_currency_code = base_currency_code
+        self._description_filter_mode_changed()
+        self._date_filter_mode_changed()
+        self._tagless_filter_mode_changed()
 
     @property
     def tags_list_view(self) -> QListView:

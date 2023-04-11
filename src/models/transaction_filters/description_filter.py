@@ -28,7 +28,7 @@ class DescriptionFilter(BaseTransactionFilter):
         )
 
     def _keep_in_keep_mode(self, transaction: Transaction) -> bool:
-        return re.search(self._regex_pattern, transaction.description)
+        return re.search(self._regex_pattern, transaction.description, re.IGNORECASE)
 
     def _keep_in_discard_mode(self, transaction: Transaction) -> bool:
         return not self._keep_in_keep_mode(transaction)

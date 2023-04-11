@@ -274,7 +274,7 @@ class AccountTreeModel(QAbstractItemModel):
         if column == AccountTreeColumn.NAME:
             return item.name
         if column == AccountTreeColumn.BALANCE_NATIVE and isinstance(item, CashAccount):
-            return str(item.get_balance(item.currency))
+            return item.get_balance(item.currency).to_str_rounded()
         if column == AccountTreeColumn.BALANCE_BASE and self.base_currency is not None:
             try:
                 balance = item.get_balance(self.base_currency)

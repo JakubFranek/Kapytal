@@ -106,6 +106,10 @@ class TransactionsPresenter:
         self._model.transactions = self._record_keeper.transactions
         self.update_base_currency()
 
+    def _update_model_data(self) -> None:
+        self._model.transactions = self._record_keeper.transactions
+        self._model.base_currency = self._record_keeper.base_currency
+
     def update_base_currency(self) -> None:
         self._model.base_currency = self._record_keeper.base_currency
         self._transaction_filter_form_presenter.update_base_currency()
@@ -350,7 +354,7 @@ class TransactionsPresenter:
                     f"uuid={str(transaction.uuid)}"
                 )
                 self._model.pre_remove_item(transaction)
-                self.update_model_data()
+                self._update_model_data()
                 self._model.post_remove_item()
                 any_deleted = True
             except Exception as exception:  # noqa: BLE001

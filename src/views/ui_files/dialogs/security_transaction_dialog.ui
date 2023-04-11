@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>239</width>
-    <height>296</height>
+    <width>248</width>
+    <height>304</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -271,10 +271,14 @@
  <tabstops>
   <tabstop>buyRadioButton</tabstop>
   <tabstop>sellRadioButton</tabstop>
+  <tabstop>securityComboBox</tabstop>
   <tabstop>cashAccountComboBox</tabstop>
+  <tabstop>securityAccountComboBox</tabstop>
   <tabstop>dateEdit</tabstop>
   <tabstop>descriptionPlainTextEdit</tabstop>
+  <tabstop>sharesDoubleSpinBox</tabstop>
   <tabstop>priceDoubleSpinBox</tabstop>
+  <tabstop>totalDoubleSpinBox</tabstop>
  </tabstops>
  <resources/>
  <connections/>
