@@ -109,7 +109,6 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
             self.filterToolButton.setToolButtonStyle(
                 Qt.ToolButtonStyle.ToolButtonIconOnly
             )
-            self.filterToolButton.setStyleSheet("")
         else:
             self.actionFilter_Transactions.setIcon(
                 QIcon("icons_16:funnel--exclamation.png")
@@ -118,21 +117,6 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
                 Qt.ToolButtonStyle.ToolButtonTextBesideIcon
             )
             self.filterToolButton.setText("Filter active")
-            self.filterToolButton.setStyleSheet(
-                """QToolButton {
-                    background-color: rgb(255, 255, 0);
-                    border-style: solid;
-                    border-width: 1px;
-                    border-color: rgb(173, 173, 173);
-                }
-                QToolButton:hover {
-                    background-color: rgb(245, 245, 0);
-                    border-color: rgb(0,120,215);
-                }
-                QToolButton:pressed {
-                    background-color: rgb(215, 215, 0);
-                }"""
-            )
 
     def _create_column_actions(self) -> None:
         self.column_actions: list[QAction] = []

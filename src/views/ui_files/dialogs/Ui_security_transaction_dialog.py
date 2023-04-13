@@ -13,7 +13,7 @@ class Ui_SecurityTransactionDialog(object):
     def setupUi(self, SecurityTransactionDialog):
         SecurityTransactionDialog.setObjectName("SecurityTransactionDialog")
         SecurityTransactionDialog.setWindowModality(QtCore.Qt.WindowModality.WindowModal)
-        SecurityTransactionDialog.resize(248, 304)
+        SecurityTransactionDialog.resize(248, 305)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Preferred, QtWidgets.QSizePolicy.Policy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -112,8 +112,7 @@ class Ui_SecurityTransactionDialog(object):
         self.descriptionPlainTextEdit.setObjectName("descriptionPlainTextEdit")
         self.formLayout.setWidget(5, QtWidgets.QFormLayout.ItemRole.FieldRole, self.descriptionPlainTextEdit)
         self.totalDoubleSpinBox = QtWidgets.QDoubleSpinBox(SecurityTransactionDialog)
-        self.totalDoubleSpinBox.setEnabled(True)
-        self.totalDoubleSpinBox.setStyleSheet("background-color:rgb(240,240,240);")
+        self.totalDoubleSpinBox.setEnabled(False)
         self.totalDoubleSpinBox.setReadOnly(True)
         self.totalDoubleSpinBox.setButtonSymbols(QtWidgets.QAbstractSpinBox.ButtonSymbols.NoButtons)
         self.totalDoubleSpinBox.setProperty("showGroupSeparator", True)

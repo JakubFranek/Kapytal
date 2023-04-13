@@ -15,10 +15,10 @@ class PayeeDialog(QDialog, Ui_PayeeDialog):
         self.resize(270, 80)
         if edit:
             self.setWindowTitle("Rename Payee")
-            self.setWindowIcon(QIcon("icons_custom:user-silhouette-pencil.png"))
+            self.setWindowIcon(QIcon("icons_custom:user-business-pencil.png"))
         else:
             self.setWindowTitle("Add Payee")
-            self.setWindowIcon(QIcon("icons_custom:user-silhouette-plus.png"))
+            self.setWindowIcon(QIcon("icons_custom:user-business-plus.png"))
 
         self.buttonBox.clicked.connect(self._handle_button_box_click)
 

@@ -19,7 +19,7 @@ class PayeeForm(QWidget, Ui_PayeeForm):
         super().__init__(parent=parent)
         self.setupUi(self)
         self.setWindowFlag(Qt.WindowType.Window)
-        self.setWindowIcon(QIcon("icons_16:user-silhouette.png"))
+        self.setWindowIcon(QIcon("icons_16:user-business.png"))
 
         self.addButton.clicked.connect(self.signal_add_payee.emit)
         self.removeButton.clicked.connect(self.signal_remove_payee.emit)

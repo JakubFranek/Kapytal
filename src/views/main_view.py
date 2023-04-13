@@ -189,7 +189,7 @@ class MainView(QMainWindow, Ui_MainWindow):
         self.actionSecurities.setIcon(QIcon("icons_16:certificate.png"))
         self.actionCategories.setIcon(QIcon("icons_custom:category.png"))
         self.actionTags.setIcon(QIcon("icons_16:tag.png"))
-        self.actionPayees.setIcon(QIcon("icons_16:user-silhouette.png"))
+        self.actionPayees.setIcon(QIcon("icons_16:user-business.png"))
         self.actionSettings.setIcon(QIcon("icons_16:gear.png"))
         self.actionAbout.setIcon(QIcon("icons_16:information.png"))
         self.actionShow_Hide_Account_Tree.setIcon(QIcon("icons_16:folder-tree.png"))

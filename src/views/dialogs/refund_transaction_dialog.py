@@ -172,7 +172,7 @@ class RefundTransactionDialog(QDialog, Ui_RefundTransactionDialog):
         self.buttonBox.addButton("Close", QDialogButtonBox.ButtonRole.RejectRole)
 
     def _initialize_actions(self) -> None:
-        self.actionSelect_Payee.setIcon(QIcon("icons_16:user-silhouette.png"))
+        self.actionSelect_Payee.setIcon(QIcon("icons_16:user-business.png"))
         self.actionSelect_Payee.triggered.connect(self._get_payee)
         self.payeeToolButton.setDefaultAction(self.actionSelect_Payee)
 
@@ -264,7 +264,7 @@ class RefundTransactionDialog(QDialog, Ui_RefundTransactionDialog):
             self,
             self._payees,
             "Select Payee",
-            QIcon("icons_16:user-silhouette.png"),
+            QIcon("icons_16:user-business.png"),
         )
         self.payee = payee if payee else self.payee
 

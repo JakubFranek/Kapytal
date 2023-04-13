@@ -251,10 +251,10 @@ class TransactionTableModel(QAbstractTableModel):
         if column == TransactionTableColumn.FROM:
             if isinstance(transaction, CashTransaction):
                 if transaction.type_ == CashTransactionType.INCOME:
-                    return QIcon("icons_16:user-silhouette.png")
+                    return QIcon("icons_16:user-business.png")
                 return QIcon("icons_16:piggy-bank.png")
             if isinstance(transaction, RefundTransaction):
-                return QIcon("icons_16:user-silhouette.png")
+                return QIcon("icons_16:user-business.png")
             if isinstance(transaction, SecurityTransaction):
                 if transaction.type_ == SecurityTransactionType.BUY:
                     return QIcon("icons_16:piggy-bank.png")
@@ -267,7 +267,7 @@ class TransactionTableModel(QAbstractTableModel):
             if isinstance(transaction, CashTransaction):
                 if transaction.type_ == CashTransactionType.INCOME:
                     return QIcon("icons_16:piggy-bank.png")
-                return QIcon("icons_16:user-silhouette.png")
+                return QIcon("icons_16:user-business.png")
             if isinstance(transaction, RefundTransaction):
                 return QIcon("icons_16:piggy-bank.png")
             if isinstance(transaction, SecurityTransaction):

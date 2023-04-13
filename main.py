@@ -4,7 +4,7 @@ import os
 import sys
 from pathlib import Path
 
-from PyQt6.QtWidgets import QApplication
+from PyQt6.QtWidgets import QApplication, QStyleFactory
 from src.models.json.custom_json_decoder import CustomJSONDecoder
 from src.models.json.custom_json_encoder import CustomJSONEncoder
 from src.models.user_settings import user_settings
@@ -53,6 +53,8 @@ if __name__ == "__main__":
 
     logging.debug("Creating MainPresenter")
     main_presenter = MainPresenter(main_view, app)
+
+    app.setStyle(QStyleFactory.create("Fusion"))
 
     logging.info("Executing QApplication, awaiting user input")
     app.exec()
