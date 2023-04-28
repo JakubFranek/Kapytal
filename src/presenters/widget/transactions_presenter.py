@@ -85,8 +85,9 @@ class TransactionsPresenter:
 
     def reset_model(self) -> None:
         self._model.pre_reset_model()
-        self.update_model_data()
+        self._update_model_data()
         self._model.post_reset_model()
+        self._transaction_filter_form_presenter.reset_filter_to_default()
         self._update_table_columns()
 
     def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
@@ -106,13 +107,9 @@ class TransactionsPresenter:
         self._model.transactions = self._record_keeper.transactions
         self.update_base_currency()
 
-    def _update_model_data(self) -> None:
-        self._model.transactions = self._record_keeper.transactions
-        self._model.base_currency = self._record_keeper.base_currency
-
     def update_base_currency(self) -> None:
         self._model.base_currency = self._record_keeper.base_currency
-        self._transaction_filter_form_presenter.update_base_currency()
+        self._transaction_filter_form_presenter.reset_filter_to_default()
 
     def update_filter_models(self) -> None:
         self._transaction_filter_form_presenter.load_record_keeper(self._record_keeper)
@@ -122,6 +119,10 @@ class TransactionsPresenter:
 
     def resize_table_to_contents(self) -> None:
         self._view.resize_table_to_contents()
+
+    def _update_model_data(self) -> None:
+        self._model.transactions = self._record_keeper.transactions
+        self._model.base_currency = self._record_keeper.base_currency
 
     def _update_table_columns(self) -> None:
         visible_transactions = self._model.get_visible_items()

@@ -284,6 +284,7 @@ class AccountTreeModel(QAbstractItemModel):
                 return balance.to_str_rounded()
         return None
 
+    # TODO: create icon instances only once in view constants
     def _get_decoration_role_data(  # noqa: PLR0911
         self,
         column: int,

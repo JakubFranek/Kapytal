@@ -230,6 +230,7 @@ class TransactionTableModel(QAbstractTableModel):
             return str(transaction.uuid)
         return None
 
+    # TODO: create icon instances only once in view constants
     def _get_decoration_role_data(  # noqa: PLR0911, PLR0912, C901
         self, transaction: Transaction, column: int
     ) -> QIcon | None:

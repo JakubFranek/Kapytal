@@ -100,18 +100,13 @@ class TransactionFilterFormPresenter:
         self._category_filter_presenter.load_record_keeper(record_keeper)
         self._currency_filter_presenter.load_record_keeper(record_keeper)
         self._security_filter_presenter.load_record_keeper(record_keeper)
+        self.reset_filter_to_default()
+
+    def reset_filter_to_default(self) -> None:
         self._setup_default_filter()
         self._transaction_filter = self._get_default_filter()
         self._update_form_from_filter(self._transaction_filter)
-        logging.debug("TransactionFilter reverted to default")
-        self.event_filter_changed()
-
-
-    def update_base_currency(self) -> None:
-        self._setup_default_filter()
-        self._transaction_filter = self._get_default_filter()
-        self._update_form_from_filter(self._transaction_filter)
-        logging.debug("TransactionFilter reverted to default")
+        logging.debug("TransactionFilter reset to default")
         self.event_filter_changed()
 
     def show_form(self) -> None:

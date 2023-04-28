@@ -14,7 +14,8 @@ from src.utilities.logging import remove_old_logs, setup_logging
 from src.views.main_view import MainView
 from src.views.utilities.handle_exception import handle_uncaught_exception
 
-if __name__ == "__main__":
+
+def main() -> None:
     # The following three lines are needed to make sure task bar icon works on Windows
     if os.name == "nt":
         myappid = f"Jakub_Franek.Kapytal.v{constants.VERSION}"  # arbitrary string
@@ -52,9 +53,16 @@ if __name__ == "__main__":
     main_view = MainView()
 
     logging.debug("Creating MainPresenter")
-    main_presenter = MainPresenter(main_view, app)
+    main_presenter = MainPresenter(main_view, app)  # noqa: F841
 
+    logging.debug("Setting Fusion style")
     app.setStyle(QStyleFactory.create("Fusion"))
+
+    logging.debug(f"QApplication color scheme: '{app.styleHints().colorScheme().name}'")
 
     logging.info("Executing QApplication, awaiting user input")
     app.exec()
+
+
+if __name__ == "__main__":
+    main()
