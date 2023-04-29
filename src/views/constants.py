@@ -1,5 +1,9 @@
 from enum import IntEnum
 
+from PyQt6.QtGui import QFont
+
+monospace_font = QFont("Consolas")
+
 
 class AccountTreeColumn(IntEnum):
     NAME = 0

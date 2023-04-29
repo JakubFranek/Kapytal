@@ -25,7 +25,11 @@ from src.models.model_objects.security_objects import (
     SecurityTransfer,
 )
 from src.views import colors, icons
-from src.views.constants import TRANSACTION_TABLE_COLUMN_HEADERS, TransactionTableColumn
+from src.views.constants import (
+    TRANSACTION_TABLE_COLUMN_HEADERS,
+    TransactionTableColumn,
+    monospace_font,
+)
 
 # TODO: look into overriding "multidata" method to improve performance
 
@@ -99,6 +103,8 @@ class TransactionTableModel(QAbstractTableModel):
             return TransactionTableModel.get_text_alignment_data(column)
         if role == Qt.ItemDataRole.ForegroundRole:
             return TransactionTableModel._get_foreground_data(transaction, column)
+        if role == Qt.ItemDataRole.FontRole and column == TransactionTableColumn.UUID:
+            return monospace_font
         if role == Qt.ItemDataRole.UserRole:
             return self._get_user_role_data(transaction, column)
         return None

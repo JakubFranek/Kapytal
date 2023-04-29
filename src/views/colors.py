@@ -17,7 +17,5 @@ def get_green_brush() -> QBrush:
 
 
 def get_red_brush() -> QBrush:
-    color = (
-        QColor("orangered") if color_scheme == Qt.ColorScheme.Dark else QColor("red")
-    )
+    color = QColor("deeppink") if color_scheme == Qt.ColorScheme.Dark else QColor("red")
     return QBrush(color)
