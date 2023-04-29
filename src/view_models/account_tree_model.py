@@ -22,7 +22,7 @@ from src.models.model_objects.currency_objects import (
     Currency,
 )
 from src.models.model_objects.security_objects import SecurityAccount
-from src.views import icons
+from src.views import colors, icons
 from src.views.constants import AccountTreeColumn
 
 
@@ -319,23 +319,24 @@ class AccountTreeModel(QAbstractItemModel):
             return None
 
         if (
-            column != AccountTreeColumn.BALANCE_BASE
-            and column != AccountTreeColumn.BALANCE_NATIVE
+            column == AccountTreeColumn.NAME
+            and item.get_balance(self.base_currency).value_normalized == 0
         ):
-            return None
-
+            return QBrush(QColor("gray"))
         if column == AccountTreeColumn.BALANCE_BASE:
             try:
                 amount = item.get_balance(self.base_currency)
             except ConversionFactorNotFoundError:
-                return QBrush(QColor("red"))
-        elif isinstance(item, CashAccount):
+                return colors.get_red_brush()
+        elif column == AccountTreeColumn.BALANCE_NATIVE and isinstance(
+            item, CashAccount
+        ):
             amount = item.get_balance(item.currency)
         else:
             return None
 
         if amount.is_negative():
-            return QBrush(QColor("red"))
+            return colors.get_red_brush()
         if amount.value_normalized == 0:
             return QBrush(QColor("gray"))
         return None

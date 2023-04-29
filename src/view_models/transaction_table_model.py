@@ -2,7 +2,7 @@ import unicodedata
 from collections.abc import Collection
 
 from PyQt6.QtCore import QAbstractTableModel, QModelIndex, QSortFilterProxyModel, Qt
-from PyQt6.QtGui import QBrush, QColor, QIcon
+from PyQt6.QtGui import QBrush, QIcon
 from PyQt6.QtWidgets import QTableView
 from src.models.base_classes.account import Account
 from src.models.base_classes.transaction import Transaction
@@ -24,7 +24,7 @@ from src.models.model_objects.security_objects import (
     SecurityTransactionType,
     SecurityTransfer,
 )
-from src.views import icons
+from src.views import colors, icons
 from src.views.constants import TRANSACTION_TABLE_COLUMN_HEADERS, TransactionTableColumn
 
 # TODO: look into overriding "multidata" method to improve performance
@@ -339,26 +339,26 @@ class TransactionTableModel(QAbstractTableModel):
         ):
             if isinstance(transaction, CashTransaction):
                 if transaction.type_ == CashTransactionType.INCOME:
-                    return QBrush(QColor("green"))
-                return QBrush(QColor("red"))
+                    return colors.get_green_brush()
+                return colors.get_red_brush()
             if isinstance(transaction, RefundTransaction):
-                return QBrush(QColor("green"))
+                return colors.get_green_brush()
             if isinstance(transaction, SecurityTransaction):
                 if transaction.type_ == SecurityTransactionType.BUY:
-                    return QBrush(QColor("red"))
-                return QBrush(QColor("green"))
+                    return colors.get_red_brush()
+                return colors.get_green_brush()
         if (
             column == TransactionTableColumn.AMOUNT_SENT
             or column == TransactionTableColumn.AMOUNT_RECEIVED
         ):
-            return QBrush(QColor("blue"))
+            return colors.get_blue_brush()
         if column == TransactionTableColumn.SHARES:
             if isinstance(transaction, SecurityTransaction):
                 if transaction.type_ == SecurityTransactionType.BUY:
-                    return QBrush(QColor("green"))
-                return QBrush(QColor("red"))
+                    return colors.get_green_brush()
+                return colors.get_red_brush()
             if isinstance(transaction, SecurityTransfer):
-                return QBrush(QColor("blue"))
+                return colors.get_blue_brush()
         return None
 
     @staticmethod

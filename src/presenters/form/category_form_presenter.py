@@ -253,7 +253,7 @@ class CategoryFormPresenter:
 
         enable_modify_object = item is not None
         enable_add_objects = True
-        enable_expand_below = isinstance(item, Category)
+        enable_expand_below = isinstance(item, Category) and len(item.children) > 0
 
         self._view.category_tree.enable_actions(
             enable_add_objects=enable_add_objects,

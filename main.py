@@ -11,6 +11,7 @@ from src.models.user_settings import user_settings
 from src.presenters.main_presenter import MainPresenter
 from src.utilities import constants
 from src.utilities.logging import remove_old_logs, setup_logging
+from src.views import colors
 from src.views.main_view import MainView
 from src.views.utilities.handle_exception import handle_uncaught_exception
 
@@ -58,7 +59,9 @@ def main() -> None:
     logging.debug("Setting Fusion style")
     app.setStyle(QStyleFactory.create("Fusion"))
 
-    logging.debug(f"QApplication color scheme: '{app.styleHints().colorScheme().name}'")
+    color_scheme = app.styleHints().colorScheme()
+    colors.color_scheme = color_scheme
+    logging.debug(f"QApplication color scheme: '{color_scheme.name}'")
 
     logging.info("Executing QApplication, awaiting user input")
     app.exec()

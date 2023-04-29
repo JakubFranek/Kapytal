@@ -67,7 +67,6 @@ class CategoryTree(QTreeView):
         self.actionAdd_Category.setEnabled(enable_add_objects)
         self.actionEdit_Category.setEnabled(enable_modify_object)
         self.actionDelete_Category.setEnabled(enable_modify_object)
-        # FIXME: expand all below allowed even for children
         self.actionExpand_All_Below.setEnabled(enable_expand_below)
 
     def create_context_menu(self, event: QContextMenuEvent) -> None:
