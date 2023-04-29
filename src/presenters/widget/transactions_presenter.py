@@ -69,7 +69,7 @@ class TransactionsPresenter:
         self._initialize_view()
         self._connect_to_signals()
         self._connect_events()
-        self.update_model_data()
+        self._update_model_data()
         self._view.finalize_setup()
 
     @property
@@ -84,9 +84,8 @@ class TransactionsPresenter:
         self.reset_model()
 
     def reset_model(self) -> None:
-        self._model.pre_reset_model()
-        self._update_model_data()
-        self._model.post_reset_model()
+        """Resets TransactionTableModel and TransactionFilter, and updates columns."""
+        self._reset_model()
         self._transaction_filter_form_presenter.reset_filter_to_default()
         self._update_table_columns()
 
@@ -100,7 +99,8 @@ class TransactionsPresenter:
         self._transaction_tags_dialog_presenter.load_record_keeper(record_keeper)
         self._transaction_filter_form_presenter.load_record_keeper(record_keeper)
         self._account_tree_shown_accounts = record_keeper.accounts
-        self.reset_model()
+        self._reset_model()
+        self._update_table_columns()
         self._view.resize_table_to_contents()
 
     def update_model_data(self) -> None:
@@ -119,6 +119,12 @@ class TransactionsPresenter:
 
     def resize_table_to_contents(self) -> None:
         self._view.resize_table_to_contents()
+
+    def _reset_model(self) -> None:
+        """Resets the TransactionTableModel only."""
+        self._model.pre_reset_model()
+        self._update_model_data()
+        self._model.post_reset_model()
 
     def _update_model_data(self) -> None:
         self._model.transactions = self._record_keeper.transactions

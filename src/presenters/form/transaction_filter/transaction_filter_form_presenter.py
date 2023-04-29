@@ -217,7 +217,7 @@ class TransactionFilterFormPresenter:
             )
         return filter_
 
-    def _log_filter_differences(  # noqa: C901
+    def _log_filter_differences(  # noqa: C901, PLR0912
         self, new_filter: TransactionFilter
     ) -> None:
         old_filter = self._transaction_filter
