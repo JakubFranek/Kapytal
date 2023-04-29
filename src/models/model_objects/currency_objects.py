@@ -57,7 +57,7 @@ class Currency(CopyableMixin, JSONSerializableMixin):
 
     @property
     def exchange_rates(self) -> dict[Self, "ExchangeRate"]:
-        return copy.deepcopy(self._exchange_rates)
+        return self._exchange_rates
 
     def __repr__(self) -> str:
         return f"Currency({self._code})"
@@ -152,7 +152,7 @@ class Currency(CopyableMixin, JSONSerializableMixin):
             if exchange_rates is None:
                 continue  # Reached a dead end.
             # ExchangeRate to target_currency found!
-            # Append ExchangeRate needed get there from the current_currency.
+            # Append ExchangeRate needed to get there from the current_currency.
             exchange_rates.insert(0, current_currency.exchange_rates[loop_currency])
             return exchange_rates
         return None  # Reached a dead-end.
@@ -197,7 +197,7 @@ class ExchangeRate(CopyableMixin, JSONSerializableMixin):
 
     @property
     def rate_history(self) -> dict[date, Decimal]:
-        return copy.deepcopy(self._rate_history)
+        return self._rate_history
 
     @property
     def rate_history_pairs(self) -> tuple[tuple[date, Decimal]]:

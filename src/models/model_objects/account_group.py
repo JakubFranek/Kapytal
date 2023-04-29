@@ -19,7 +19,8 @@ class AccountGroup(NameMixin, GetBalanceMixin, JSONSerializableMixin, UUIDMixin)
     def __init__(self, name: str, parent: Self | None = None) -> None:
         super().__init__(name=name, allow_slash=False)
         self.parent = parent
-        self._children: dict[int, Self | Account] = {}
+        self._children_dict: dict[int, Self | Account] = {}
+        self._children_tuple: tuple[Self | Account, ...] = ()
 
     @property
     def parent(self) -> Self | None:
@@ -47,7 +48,7 @@ class AccountGroup(NameMixin, GetBalanceMixin, JSONSerializableMixin, UUIDMixin)
 
     @property
     def children(self) -> tuple["Account" | Self, ...]:
-        return tuple(self._children[key] for key in sorted(self._children.keys()))
+        return self._children_tuple
 
     @property
     def path(self) -> str:
@@ -58,21 +59,28 @@ class AccountGroup(NameMixin, GetBalanceMixin, JSONSerializableMixin, UUIDMixin)
     def __repr__(self) -> str:
         return f"AccountGroup('{self.path}')"
 
+    def _update_children_tuple(self) -> None:
+        self._children_tuple = tuple(
+            self._children_dict[key] for key in sorted(self._children_dict.keys())
+        )
+
     def _add_child(self, child: Self | "Account") -> None:
-        max_index = max(sorted(self._children.keys()), default=-1)
-        self._children[max_index + 1] = child
+        max_index = max(sorted(self._children_dict.keys()), default=-1)
+        self._children_dict[max_index + 1] = child
+        self._update_children_tuple()
 
     def _remove_child(self, child: Self | "Account") -> None:
         index = self.get_child_index(child)
         aux_dict: dict[int, AccountGroup | Account] = {}
-        for key, value in self._children.items():
+        for key, value in self._children_dict.items():
             if key >= index:
-                aux_dict[key] = self._children.get(key + 1, None)
+                aux_dict[key] = self._children_dict.get(key + 1, None)
             else:
                 aux_dict[key] = value
         max_index = max(sorted(aux_dict.keys()), default=0)
         del aux_dict[max_index]
-        self._children = aux_dict
+        self._children_dict = aux_dict
+        self._update_children_tuple()
 
     def set_child_index(self, child: "Account" | Self, index: int) -> None:
         if index < 0:
@@ -88,17 +96,20 @@ class AccountGroup(NameMixin, GetBalanceMixin, JSONSerializableMixin, UUIDMixin)
 
         self._remove_child(child)
         aux_dict: dict[int, AccountGroup | Account] = {}
-        for key, value in self._children.items():
+        for key, value in self._children_dict.items():
             if key >= index:
                 aux_dict[key + 1] = value
             else:
                 aux_dict[key] = value
         aux_dict[index] = child
-        self._children = aux_dict
+        self._children_dict = aux_dict
+        self._update_children_tuple()
         logging.info(f"Changing index from {current_index} to {index}")
 
     def get_child_index(self, child: "Account" | Self) -> int:
-        return list(self._children.keys())[list(self._children.values()).index(child)]
+        return list(self._children_dict.keys())[
+            list(self._children_dict.values()).index(child)
+        ]
 
     def get_balance(self, currency: Currency) -> CashAmount:
         return sum(
@@ -128,5 +139,6 @@ class AccountGroup(NameMixin, GetBalanceMixin, JSONSerializableMixin, UUIDMixin)
             obj._parent = find_account_group_by_path(  # noqa: SLF001
                 parent_path, account_groups
             )
-            obj._parent._children[index] = obj  # noqa: SLF001
+            obj._parent._children_dict[index] = obj  # noqa: SLF001
+            obj._parent._update_children_tuple()  # noqa: SLF001
         return obj

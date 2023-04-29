@@ -154,7 +154,7 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
 
     @property
     def price_history(self) -> dict[date, CashAmount]:
-        return copy.deepcopy(self._price_history)
+        return self._price_history
 
     @property
     def price_history_pairs(self) -> tuple[tuple[date, CashAmount]]:
@@ -236,7 +236,7 @@ class SecurityAccount(Account):
 
     @property
     def securities(self) -> dict[Security, Decimal]:
-        return copy.deepcopy(self._securities)
+        return self._securities
 
     @property
     def transactions(self) -> tuple["SecurityRelatedTransaction", ...]:
@@ -288,7 +288,8 @@ class SecurityAccount(Account):
             obj._parent = find_account_group_by_path(  # noqa: SLF001
                 parent_path, account_groups
             )
-            obj._parent._children[index] = obj  # noqa: SLF001
+            obj._parent._children_dict[index] = obj  # noqa: SLF001
+            obj._parent._update_children_tuple()  # noqa: SLF001
         return obj
 
     def _validate_transaction(self, transaction: "SecurityRelatedTransaction") -> None:

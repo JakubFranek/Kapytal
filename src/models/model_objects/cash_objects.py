@@ -205,7 +205,8 @@ class CashAccount(Account):
             obj._parent = find_account_group_by_path(  # noqa: SLF001
                 parent_path, account_groups
             )
-            obj._parent._children[index] = obj  # noqa: SLF001
+            obj._parent._children_dict[index] = obj  # noqa: SLF001
+            obj._parent._update_children_tuple()  # noqa: SLF001
         return obj
 
     def update_balance(self) -> None:

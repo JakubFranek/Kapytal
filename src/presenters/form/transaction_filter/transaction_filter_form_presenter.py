@@ -28,9 +28,6 @@ from src.views.forms.transaction_filter_form import (
     TransactionFilterForm,
 )
 
-# BUG: sometimes DatetimeFilter and DescriptionFilter widgets are not disabled when OFF
-# can't seem to reproduce it though
-
 
 class TransactionFilterFormPresenter:
     event_filter_changed = Event()
