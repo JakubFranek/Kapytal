@@ -4,6 +4,7 @@ from copy import copy
 from typing import Any, Self
 from uuid import UUID
 
+import src.views.icons as icons
 from PyQt6.QtCore import (
     QAbstractItemModel,
     QModelIndex,
@@ -284,7 +285,6 @@ class AccountTreeModel(QAbstractItemModel):
                 return balance.to_str_rounded()
         return None
 
-    # TODO: create icon instances only once in view constants
     def _get_decoration_role_data(  # noqa: PLR0911
         self,
         column: int,
@@ -295,21 +295,21 @@ class AccountTreeModel(QAbstractItemModel):
         if column == AccountTreeColumn.NAME:
             if isinstance(item, AccountGroup):
                 if self._tree.isExpanded(index):
-                    return QIcon("icons_16:folder-open.png")
-                return QIcon("icons_16:folder.png")
+                    return icons.folder_open
+                return icons.folder_closed
             if isinstance(item, SecurityAccount):
-                return QIcon("icons_16:bank.png")
+                return icons.security_account
             if isinstance(item, CashAccount):
                 if item.get_balance(item.currency).is_positive():
-                    return QIcon("icons_16:piggy-bank.png")
-                return QIcon("icons_16:piggy-bank-empty.png")
+                    return icons.cash_account
+                return icons.cash_account_empty
         if column == AccountTreeColumn.SHOW:
             # IDEA: change eye icon on mouse hover (blue)
             if node.check_state == Qt.CheckState.Checked:
-                return QIcon("icons_16:eye.png")
+                return icons.eye_open
             if node.check_state == Qt.CheckState.PartiallyChecked:
-                return QIcon("icons_16:eye-half.png")
-            return QIcon("icons_16:eye-close.png")
+                return icons.eye_partial
+            return icons.eye_closed
         return None
 
     def _get_foreground_role_data(  # noqa: PLR0911

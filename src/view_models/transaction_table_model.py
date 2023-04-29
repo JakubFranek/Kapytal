@@ -24,6 +24,7 @@ from src.models.model_objects.security_objects import (
     SecurityTransactionType,
     SecurityTransfer,
 )
+from src.views import icons
 from src.views.constants import TRANSACTION_TABLE_COLUMN_HEADERS, TransactionTableColumn
 
 # TODO: look into overriding "multidata" method to improve performance
@@ -230,67 +231,66 @@ class TransactionTableModel(QAbstractTableModel):
             return str(transaction.uuid)
         return None
 
-    # TODO: create icon instances only once in view constants
     def _get_decoration_role_data(  # noqa: PLR0911, PLR0912, C901
         self, transaction: Transaction, column: int
     ) -> QIcon | None:
         if column == TransactionTableColumn.TYPE:
             if isinstance(transaction, CashTransaction):
                 if transaction.type_ == CashTransactionType.INCOME:
-                    return QIcon("icons_custom:coins-plus.png")
-                return QIcon("icons_custom:coins-minus.png")
+                    return icons.income
+                return icons.expense
             if isinstance(transaction, RefundTransaction):
-                return QIcon("icons_custom:coins-arrow-back.png")
+                return icons.refund
             if isinstance(transaction, CashTransfer):
-                return QIcon("icons_custom:coins-arrow.png")
+                return icons.cash_transfer
             if isinstance(transaction, SecurityTransaction):
                 if transaction.type_ == SecurityTransactionType.BUY:
-                    return QIcon("icons_custom:certificate-plus.png")
-                return QIcon("icons_custom:certificate-minus.png")
+                    return icons.buy
+                return icons.sell
             if isinstance(transaction, SecurityTransfer):
-                return QIcon("icons_custom:certificate-arrow.png")
+                return icons.security_transfer
         if column == TransactionTableColumn.FROM:
             if isinstance(transaction, CashTransaction):
                 if transaction.type_ == CashTransactionType.INCOME:
-                    return QIcon("icons_16:user-business.png")
-                return QIcon("icons_16:piggy-bank.png")
+                    return icons.payee
+                return icons.cash_account
             if isinstance(transaction, RefundTransaction):
-                return QIcon("icons_16:user-business.png")
+                return icons.payee
             if isinstance(transaction, SecurityTransaction):
                 if transaction.type_ == SecurityTransactionType.BUY:
-                    return QIcon("icons_16:piggy-bank.png")
-                return QIcon("icons_16:bank.png")
+                    return icons.cash_account
+                return icons.security_account
             if isinstance(transaction, CashTransfer):
-                return QIcon("icons_16:piggy-bank.png")
+                return icons.cash_account
             if isinstance(transaction, SecurityTransfer):
-                return QIcon("icons_16:bank.png")
+                return icons.security_account
         if column == TransactionTableColumn.TO:
             if isinstance(transaction, CashTransaction):
                 if transaction.type_ == CashTransactionType.INCOME:
-                    return QIcon("icons_16:piggy-bank.png")
-                return QIcon("icons_16:user-business.png")
+                    return icons.cash_account
+                return icons.payee
             if isinstance(transaction, RefundTransaction):
-                return QIcon("icons_16:piggy-bank.png")
+                return icons.cash_account
             if isinstance(transaction, SecurityTransaction):
                 if transaction.type_ == SecurityTransactionType.BUY:
-                    return QIcon("icons_16:bank.png")
-                return QIcon("icons_16:piggy-bank.png")
+                    return icons.security_account
+                return icons.cash_account
             if isinstance(transaction, CashTransfer):
-                return QIcon("icons_16:piggy-bank.png")
+                return icons.cash_account
             if isinstance(transaction, SecurityTransfer):
-                return QIcon("icons_16:bank.png")
+                return icons.security_account
         if (
             column == TransactionTableColumn.CATEGORY
             and isinstance(transaction, CashTransaction)
             and transaction.are_categories_split
         ):
-            return QIcon("icons_16:arrow-split.png")
+            return icons.split_attribute
         if (
             column == TransactionTableColumn.TAG
             and isinstance(transaction, CashTransaction)
             and transaction.are_tags_split
         ):
-            return QIcon("icons_16:arrow-split.png")
+            return icons.split_attribute
         return None
 
     def _get_user_role_data(  # noqa: PLR0911
