@@ -1,8 +1,9 @@
 import logging
 
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QAction, QContextMenuEvent, QCursor, QIcon
+from PyQt6.QtGui import QAction, QContextMenuEvent, QCursor
 from PyQt6.QtWidgets import QLineEdit, QMenu, QWidget
+from src.views import icons
 from src.views.constants import TRANSACTION_TABLE_COLUMN_HEADERS, TransactionTableColumn
 from src.views.ui_files.widgets.Ui_transaction_table_widget import (
     Ui_TransactionTableWidget,
@@ -105,14 +106,12 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
 
     def set_filter_active(self, *, active: bool) -> None:
         if not active:
-            self.actionFilter_Transactions.setIcon(QIcon("icons_16:funnel.png"))
+            self.actionFilter_Transactions.setIcon(icons.filter_)
             self.filterToolButton.setToolButtonStyle(
                 Qt.ToolButtonStyle.ToolButtonIconOnly
             )
         else:
-            self.actionFilter_Transactions.setIcon(
-                QIcon("icons_16:funnel--exclamation.png")
-            )
+            self.actionFilter_Transactions.setIcon(icons.filter_warning)
             self.filterToolButton.setToolButtonStyle(
                 Qt.ToolButtonStyle.ToolButtonTextBesideIcon
             )
@@ -166,29 +165,27 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
 
     def _set_icons(self) -> None:
         self.actionFilter_Transactions = QAction(self)
-        self.actionFilter_Transactions.setIcon(QIcon("icons_16:funnel.png"))
-        self.actionIncome.setIcon(QIcon("icons_custom:coins-plus.png"))
-        self.actionExpense.setIcon(QIcon("icons_custom:coins-minus.png"))
-        self.actionBuy.setIcon(QIcon("icons_custom:certificate-plus.png"))
-        self.actionSell.setIcon(QIcon("icons_custom:certificate-minus.png"))
-        self.actionCash_Transfer.setIcon(QIcon("icons_custom:coins-arrow.png"))
-        self.actionSecurity_Transfer.setIcon(
-            QIcon("icons_custom:certificate-arrow.png")
-        )
-        self.actionRefund.setIcon(QIcon("icons_custom:coins-arrow-back.png"))
-        self.actionFind_Related.setIcon(QIcon("icons_16:magnifier.png"))
+        self.actionFilter_Transactions.setIcon(icons.filter_)
+        self.actionIncome.setIcon(icons.income)
+        self.actionExpense.setIcon(icons.expense)
+        self.actionBuy.setIcon(icons.buy)
+        self.actionSell.setIcon(icons.sell)
+        self.actionCash_Transfer.setIcon(icons.cash_transfer)
+        self.actionSecurity_Transfer.setIcon(icons.security_transfer)
+        self.actionRefund.setIcon(icons.refund)
+        self.actionFind_Related.setIcon(icons.magnifier)
 
-        self.actionEdit.setIcon(QIcon("icons_16:pencil.png"))
-        self.actionDelete.setIcon(QIcon("icons_16:minus.png"))
-        self.actionDuplicate.setIcon(QIcon("icons_16:document-copy.png"))
+        self.actionEdit.setIcon(icons.edit)
+        self.actionDelete.setIcon(icons.remove)
+        self.actionDuplicate.setIcon(icons.duplicate)
 
-        self.actionAdd_Tags.setIcon(QIcon("icons_16:tag--plus.png"))
-        self.actionRemove_Tags.setIcon(QIcon("icons_16:tag--minus.png"))
+        self.actionAdd_Tags.setIcon(icons.add_tag)
+        self.actionRemove_Tags.setIcon(icons.remove_tag)
 
-        self.transferToolButton.setIcon(QIcon("icons_16:arrow-curve-000-left.png"))
+        self.transferToolButton.setIcon(icons.transfer)
 
         self.searchLineEdit.addAction(
-            QIcon("icons_16:magnifier.png"), QLineEdit.ActionPosition.LeadingPosition
+            icons.magnifier, QLineEdit.ActionPosition.LeadingPosition
         )
 
     def _connect_actions(self) -> None:

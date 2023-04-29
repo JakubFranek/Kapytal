@@ -1,8 +1,9 @@
 import logging
 
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QCloseEvent, QIcon
+from PyQt6.QtGui import QCloseEvent
 from PyQt6.QtWidgets import QHeaderView, QWidget
+from src.views import icons
 from src.views.constants import ExchangeRateTableColumn
 from src.views.ui_files.forms.Ui_currency_form import Ui_CurrencyForm
 
@@ -22,9 +23,9 @@ class CurrencyForm(QWidget, Ui_CurrencyForm):
         super().__init__(parent=parent)
         self.setupUi(self)
         self.setWindowFlag(Qt.WindowType.Window)
-        self.setWindowIcon(QIcon("icons_custom:currency.png"))
+        self.setWindowIcon(icons.currency)
 
-        self.setBaseCurrencyButton.setIcon(QIcon("icons_16:star.png"))
+        self.setBaseCurrencyButton.setIcon(icons.base_currency)
 
         self.addCurrencyButton.clicked.connect(self.signal_add_currency.emit)
         self.setBaseCurrencyButton.clicked.connect(self.signal_set_base_currency.emit)

@@ -11,6 +11,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 from src.view_models.simple_list_model import SimpleListModel
+from src.views import icons
 from src.views.ui_files.dialogs.Ui_select_item_dialog import Ui_SelectItemDialog
 
 
@@ -36,7 +37,7 @@ class SelectItemDialog(QDialog, Ui_SelectItemDialog):
 
         self.searchLineEdit.textChanged.connect(self._filter)
         self.searchLineEdit.addAction(
-            QIcon("icons_16:magnifier.png"), QLineEdit.ActionPosition.LeadingPosition
+            icons.magnifier, QLineEdit.ActionPosition.LeadingPosition
         )
 
         self.listView.selectionModel().selectionChanged.connect(self._selection_changed)

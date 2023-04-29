@@ -4,7 +4,6 @@ from decimal import Decimal
 from enum import Enum, auto
 
 from PyQt6.QtCore import QSignalBlocker, pyqtSignal
-from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import (
     QAbstractButton,
     QDialog,
@@ -21,6 +20,7 @@ from src.models.model_objects.security_objects import (
     SecurityTransactionType,
 )
 from src.models.user_settings import user_settings
+from src.views import icons
 from src.views.ui_files.dialogs.Ui_security_transaction_dialog import (
     Ui_SecurityTransactionDialog,
 )
@@ -217,7 +217,7 @@ class SecurityTransactionDialog(QDialog, Ui_SecurityTransactionDialog):
         self.tags_widget.tag_names = tag_names
 
     def _initialize_window(self) -> None:
-        self.setWindowIcon(QIcon("icons_16:certificate.png"))
+        self.setWindowIcon(icons.security)
         self.buttonBox = QDialogButtonBox(self)
         if self._edit_mode != EditMode.ADD:
             if self._edit_mode in EditMode.get_multiple_edit_values():
@@ -256,10 +256,9 @@ class SecurityTransactionDialog(QDialog, Ui_SecurityTransactionDialog):
     def _initialize_security_combobox(self, securities: Collection[Security]) -> None:
         if self._edit_mode in EditMode.get_multiple_edit_values():
             self.securityComboBox.addItem(self.KEEP_CURRENT_VALUES)
-        icon = QIcon("icons_16:certificate.png")
         for security in securities:
             text = SecurityTransactionDialog._get_security_text(security)
-            self.securityComboBox.addItem(icon, text, security)
+            self.securityComboBox.addItem(icons.security, text, security)
 
         self.securityComboBox.currentTextChanged.connect(self._security_changed)
         self._security_changed()
@@ -275,10 +274,9 @@ class SecurityTransactionDialog(QDialog, Ui_SecurityTransactionDialog):
     ) -> None:
         if self._edit_mode in EditMode.get_multiple_edit_values():
             self.securityAccountComboBox.addItem(self.KEEP_CURRENT_VALUES)
-        icon_security_account = QIcon("icons_16:bank.png")
         for security_account in self._security_accounts:
             self.securityAccountComboBox.addItem(
-                icon_security_account, security_account.path
+                icons.security_account, security_account.path
             )
 
     def _setup_cash_account_combobox(self) -> None:
@@ -286,7 +284,6 @@ class SecurityTransactionDialog(QDialog, Ui_SecurityTransactionDialog):
             security = self._get_security(self.security_name)
             cash_account_path = self.cash_account_path
             self.cashAccountComboBox.clear()
-            icon_cash_account = QIcon("icons_16:piggy-bank.png")
 
             if self._edit_mode == EditMode.EDIT_MULTIPLE or (
                 self._edit_mode == EditMode.EDIT_MULTIPLE_MIXED_CURRENCY
@@ -297,7 +294,7 @@ class SecurityTransactionDialog(QDialog, Ui_SecurityTransactionDialog):
             for cash_account in self._cash_accounts:
                 if security is not None and cash_account.currency == security.currency:
                     self.cashAccountComboBox.addItem(
-                        icon_cash_account, cash_account.path
+                        icons.cash_account, cash_account.path
                     )
 
             self.cash_account_path = cash_account_path

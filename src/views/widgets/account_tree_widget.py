@@ -1,8 +1,9 @@
 import logging
 
 from PyQt6.QtCore import pyqtSignal
-from PyQt6.QtGui import QContextMenuEvent, QCursor, QIcon
+from PyQt6.QtGui import QContextMenuEvent, QCursor
 from PyQt6.QtWidgets import QHeaderView, QMenu, QWidget
+from src.views import icons
 from src.views.constants import AccountTreeColumn
 from src.views.ui_files.widgets.Ui_account_tree_widget import Ui_AccountTreeWidget
 
@@ -94,20 +95,20 @@ class AccountTreeWidget(QWidget, Ui_AccountTreeWidget):
         )
 
     def _set_action_icons(self) -> None:
-        self.actionExpand_All.setIcon(QIcon("icons_custom:arrow-out.png"))
-        self.actionExpand_All_Below.setIcon(QIcon("icons_16:arrow-stop-270.png"))
-        self.actionCollapse_All.setIcon(QIcon("icons_16:arrow-in.png"))
+        self.actionExpand_All.setIcon(icons.expand)
+        self.actionExpand_All_Below.setIcon(icons.expand_below)
+        self.actionCollapse_All.setIcon(icons.collapse)
 
-        self.actionShow_All.setIcon(QIcon("icons_16:eye.png"))
-        self.actionHide_All.setIcon(QIcon("icons_16:eye-close.png"))
-        self.actionShow_Selection_Only.setIcon(QIcon("icons_16:eye-red.png"))
+        self.actionShow_All.setIcon(icons.eye_open)
+        self.actionHide_All.setIcon(icons.eye_closed)
+        self.actionShow_Selection_Only.setIcon(icons.eye_red)
 
-        self.actionAdd_Account_Group.setIcon(QIcon("icons_16:folder--plus.png"))
-        self.actionAdd_Security_Account.setIcon(QIcon("icons_custom:bank-plus.png"))
-        self.actionAdd_Cash_Account.setIcon(QIcon("icons_custom:piggy-bank-plus.png"))
+        self.actionAdd_Account_Group.setIcon(icons.add_account_group)
+        self.actionAdd_Security_Account.setIcon(icons.add_security_account)
+        self.actionAdd_Cash_Account.setIcon(icons.add_cash_account)
 
-        self.actionEdit.setIcon(QIcon("icons_16:pencil.png"))
-        self.actionDelete.setIcon(QIcon("icons_16:minus.png"))
+        self.actionEdit.setIcon(icons.edit)
+        self.actionDelete.setIcon(icons.remove)
 
     def _connect_actions(self) -> None:
         self.actionExpand_All.triggered.connect(self.expand_all)

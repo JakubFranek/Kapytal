@@ -59,7 +59,7 @@ class MainView(QMainWindow, Ui_MainWindow):
             ),
             self,
         )
-        message_box.setWindowIcon(QIcon("icons_16:question.png"))
+        message_box.setWindowIcon(icons.question)
         message_box.setDefaultButton(QMessageBox.StandardButton.Cancel)
         reply = message_box.exec()
         if reply == QMessageBox.StandardButton.Yes:
@@ -70,10 +70,10 @@ class MainView(QMainWindow, Ui_MainWindow):
 
     def set_save_status(self, current_file_path: Path | None, *, unsaved: bool) -> None:
         if unsaved is True:
-            self.actionSave.setIcon(QIcon("icons_16:disk--exclamation.png"))
+            self.actionSave.setIcon(icons.disk_warning)
             star_str = "*"
         else:
-            self.actionSave.setIcon(QIcon("icons_16:disk.png"))
+            self.actionSave.setIcon(icons.disk)
             star_str = ""
 
         if current_file_path is None:
@@ -182,20 +182,18 @@ class MainView(QMainWindow, Ui_MainWindow):
         self.actionShow_Hide_Account_Tree.setCheckable(True)
         self.actionShow_Hide_Account_Tree.setChecked(True)
 
-        self.actionOpen_File.setIcon(QIcon("icons_16:folder-open-document.png"))
-        self.actionSave.setIcon(QIcon("icons_16:disk.png"))
-        self.actionSave_As.setIcon(QIcon("icons_16:disks.png"))
-        self.actionCurrencies_and_Exchange_Rates.setIcon(
-            QIcon("icons_custom:currency.png")
-        )
-        self.actionQuit.setIcon(QIcon("icons_16:door-open-out.png"))
-        self.actionSecurities.setIcon(QIcon("icons_16:certificate.png"))
-        self.actionCategories.setIcon(QIcon("icons_custom:category.png"))
-        self.actionTags.setIcon(QIcon("icons_16:tag.png"))
-        self.actionPayees.setIcon(QIcon("icons_16:user-business.png"))
-        self.actionSettings.setIcon(QIcon("icons_16:gear.png"))
-        self.actionAbout.setIcon(QIcon("icons_16:information.png"))
-        self.actionShow_Hide_Account_Tree.setIcon(QIcon("icons_16:folder-tree.png"))
+        self.actionOpen_File.setIcon(icons.open_file)
+        self.actionSave.setIcon(icons.disk)
+        self.actionSave_As.setIcon(icons.disks)
+        self.actionCurrencies_and_Exchange_Rates.setIcon(icons.currency)
+        self.actionQuit.setIcon(icons.quit_)
+        self.actionSecurities.setIcon(icons.security)
+        self.actionCategories.setIcon(icons.category)
+        self.actionTags.setIcon(icons.tag)
+        self.actionPayees.setIcon(icons.payee)
+        self.actionSettings.setIcon(icons.settings)
+        self.actionAbout.setIcon(icons.about)
+        self.actionShow_Hide_Account_Tree.setIcon(icons.account_tree)
 
         self.actionCurrencies_and_Exchange_Rates.triggered.connect(
             self.signal_open_currency_form.emit

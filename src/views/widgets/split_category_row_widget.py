@@ -2,8 +2,9 @@ from collections.abc import Collection
 from decimal import Decimal
 
 from PyQt6.QtCore import QSignalBlocker, Qt, pyqtSignal
-from PyQt6.QtGui import QAction, QIcon
+from PyQt6.QtGui import QAction
 from PyQt6.QtWidgets import QComboBox, QDoubleSpinBox, QHBoxLayout, QToolButton, QWidget
+from src.views import icons
 from src.views.dialogs.select_item_dialog import ask_user_for_selection
 
 
@@ -21,7 +22,7 @@ class SplitCategoryRowWidget(QWidget):
 
         self.select_tool_button = QToolButton(self)
         self.actionSelect_Item = QAction("Select Category", self)
-        self.actionSelect_Item.setIcon(QIcon("icons_custom:category.png"))
+        self.actionSelect_Item.setIcon(icons.category)
         self.actionSelect_Item.triggered.connect(self._select_item)
         self.select_tool_button.setDefaultAction(self.actionSelect_Item)
 
@@ -36,7 +37,7 @@ class SplitCategoryRowWidget(QWidget):
 
         self.remove_tool_button = QToolButton(self)
         self.actionRemove_Row = QAction("Remove", self)
-        self.actionRemove_Row.setIcon(QIcon("icons_16:minus.png"))
+        self.actionRemove_Row.setIcon(icons.remove)
         self.actionRemove_Row.triggered.connect(
             lambda: self.signal_remove_row.emit(self)
         )
@@ -119,7 +120,7 @@ class SplitCategoryRowWidget(QWidget):
             self,
             self._categories,
             "Select Category",
-            QIcon("icons_custom:category.png"),
+            icons.category,
         )
         if item:
             self.combo_box.setCurrentText(item)

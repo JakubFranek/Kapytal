@@ -1,9 +1,10 @@
 import logging
 
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QCloseEvent, QIcon
+from PyQt6.QtGui import QCloseEvent
 from PyQt6.QtWidgets import QLineEdit, QWidget
 from src.models.model_objects.attributes import CategoryType
+from src.views import icons
 from src.views.ui_files.forms.Ui_category_form import Ui_CategoryForm
 from src.views.widgets.category_tree import CategoryTree
 
@@ -25,10 +26,10 @@ class CategoryForm(QWidget, Ui_CategoryForm):
         self.verticalLayout.addWidget(self.category_tree)
 
         self.setWindowFlag(Qt.WindowType.Window)
-        self.setWindowIcon(QIcon("icons_custom:category.png"))
+        self.setWindowIcon(icons.category)
 
         self.searchLineEdit.addAction(
-            QIcon("icons_16:magnifier.png"), QLineEdit.ActionPosition.LeadingPosition
+            icons.magnifier, QLineEdit.ActionPosition.LeadingPosition
         )
         self.searchLineEdit.textChanged.connect(self.signal_search_text_changed.emit)
         self.category_tree.signal_add_category.connect(self.signal_add_category.emit)

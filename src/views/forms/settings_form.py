@@ -1,8 +1,9 @@
 import logging
 
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QCloseEvent, QIcon
+from PyQt6.QtGui import QCloseEvent
 from PyQt6.QtWidgets import QAbstractButton, QDialogButtonBox, QFileDialog, QWidget
+from src.views import icons
 from src.views.ui_files.forms.Ui_settings_form import Ui_SettingsForm
 
 # IDEA: link to documentation instead of notes?
@@ -25,7 +26,7 @@ class SettingsForm(QWidget, Ui_SettingsForm):
         super().__init__(parent=parent)
         self.setupUi(self)
         self.setWindowFlag(Qt.WindowType.Window)
-        self.setWindowIcon(QIcon("icons_16:gear.png"))
+        self.setWindowIcon(icons.settings)
 
         self.buttonBox.clicked.connect(self._handle_button_box_click)
         self.addBackupDirectoryButton.clicked.connect(self.signal_add_backup_path)

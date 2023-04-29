@@ -5,7 +5,6 @@ from decimal import Decimal
 from enum import Enum, auto
 
 from PyQt6.QtCore import pyqtSignal
-from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import (
     QAbstractButton,
     QDialog,
@@ -15,6 +14,7 @@ from PyQt6.QtWidgets import (
 )
 from src.models.model_objects.cash_objects import CashAccount, CashTransactionType
 from src.models.user_settings import user_settings
+from src.views import icons
 from src.views.dialogs.select_item_dialog import ask_user_for_selection
 from src.views.ui_files.dialogs.Ui_cash_transaction_dialog import (
     Ui_CashTransactionDialog,
@@ -319,11 +319,11 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
                 self.setWindowTitle("Edit Cash Transactions")
             else:
                 self.setWindowTitle("Edit Cash Transaction")
-            self.setWindowIcon(QIcon("icons_custom:coins-pencil.png"))
+            self.setWindowIcon(icons.edit_cash_transaction)
             self.buttonBox.addButton("OK", QDialogButtonBox.ButtonRole.AcceptRole)
         else:
             self.setWindowTitle("Add Cash Transaction")
-            self.setWindowIcon(QIcon("icons_custom:coins.png"))
+            self.setWindowIcon(icons.add_cash_transaction)
             self.buttonBox.addButton(
                 "Create && Continue", QDialogButtonBox.ButtonRole.ApplyRole
             )
@@ -334,7 +334,7 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
         self.buttonBox.addButton("Close", QDialogButtonBox.ButtonRole.RejectRole)
 
     def _initialize_actions(self) -> None:
-        self.actionSelect_Payee.setIcon(QIcon("icons_16:user-business.png"))
+        self.actionSelect_Payee.setIcon(icons.payee)
         self.actionSelect_Payee.triggered.connect(self._get_payee)
         self.payeeToolButton.setDefaultAction(self.actionSelect_Payee)
 
@@ -344,9 +344,8 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
             or self._edit_mode == EditMode.EDIT_MULTIPLE_MIXED_CURRENCY
         ):
             self.accountsComboBox.addItem(self.KEEP_CURRENT_VALUES)
-        icon = QIcon("icons_16:piggy-bank.png")
         for account in accounts:
-            self.accountsComboBox.addItem(icon, account.path)
+            self.accountsComboBox.addItem(icons.cash_account, account.path)
 
         self.accountsComboBox.currentTextChanged.connect(self._account_changed)
         self._account_changed()
@@ -572,7 +571,7 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
             self,
             self._payees,
             "Select Payee",
-            QIcon("icons_16:user-business.png"),
+            icons.payee,
         )
         self.payee = payee if payee else self.payee
 

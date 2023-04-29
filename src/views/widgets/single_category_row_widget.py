@@ -1,8 +1,9 @@
 from collections.abc import Collection
 
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QAction, QIcon
+from PyQt6.QtGui import QAction
 from PyQt6.QtWidgets import QComboBox, QHBoxLayout, QToolButton, QWidget
+from src.views import icons
 from src.views.dialogs.select_item_dialog import ask_user_for_selection
 
 
@@ -20,13 +21,13 @@ class SingleCategoryRowWidget(QWidget):
 
         self.select_tool_button = QToolButton(self)
         self.actionSelect_Category = QAction("Select Category", self)
-        self.actionSelect_Category.setIcon(QIcon("icons_custom:category.png"))
+        self.actionSelect_Category.setIcon(icons.category)
         self.actionSelect_Category.triggered.connect(self._select_category)
         self.select_tool_button.setDefaultAction(self.actionSelect_Category)
 
         self.split_tool_button = QToolButton(self)
         self.actionSplit_Categories = QAction("Split Categories", self)
-        self.actionSplit_Categories.setIcon(QIcon("icons_16:arrow-split.png"))
+        self.actionSplit_Categories.setIcon(icons.split_attribute)
         self.actionSplit_Categories.triggered.connect(self.signal_split_categories.emit)
         self.split_tool_button.setDefaultAction(self.actionSplit_Categories)
 
@@ -78,7 +79,7 @@ class SingleCategoryRowWidget(QWidget):
             self,
             self._combo_box_items,
             "Select Category",
-            QIcon("icons_custom:category.png"),
+            icons.category,
         )
         if category:
             self.combo_box.setCurrentText(category)

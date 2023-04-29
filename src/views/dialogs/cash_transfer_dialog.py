@@ -4,7 +4,6 @@ from decimal import Decimal, DivisionByZero, InvalidOperation
 from enum import Enum, auto
 
 from PyQt6.QtCore import pyqtSignal
-from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import (
     QAbstractButton,
     QDialog,
@@ -16,6 +15,7 @@ from PyQt6.QtWidgets import (
 )
 from src.models.model_objects.cash_objects import CashAccount
 from src.models.user_settings import user_settings
+from src.views import icons
 from src.views.ui_files.dialogs.Ui_cash_transfer_dialog import Ui_CashTransferDialog
 from src.views.widgets.multiple_tags_selector_widget import MultipleTagsSelectorWidget
 
@@ -221,7 +221,7 @@ class CashTransferDialog(QDialog, Ui_CashTransferDialog):
         self.exchangeRateLineEdit.setText(text_overall)
 
     def _initialize_window(self) -> None:
-        self.setWindowIcon(QIcon("icons_custom:coins-arrow.png"))
+        self.setWindowIcon(icons.cash_transfer)
         self.buttonBox = QDialogButtonBox(self)
         if self._edit_mode != EditMode.ADD:
             if self._edit_mode in EditMode.get_multiple_edit_values():
@@ -251,10 +251,9 @@ class CashTransferDialog(QDialog, Ui_CashTransferDialog):
         if self._edit_mode in EditMode.get_multiple_edit_values():
             self.senderComboBox.addItem(self.KEEP_CURRENT_VALUES)
             self.recipientComboBox.addItem(self.KEEP_CURRENT_VALUES)
-        icon = QIcon("icons_16:piggy-bank.png")
         for account in accounts:
-            self.senderComboBox.addItem(icon, account.path)
-            self.recipientComboBox.addItem(icon, account.path)
+            self.senderComboBox.addItem(icons.cash_account, account.path)
+            self.recipientComboBox.addItem(icons.cash_account, account.path)
 
         self.senderComboBox.currentTextChanged.connect(self._set_spinboxes_currencies)
         self.recipientComboBox.currentTextChanged.connect(

@@ -1,8 +1,9 @@
 from collections.abc import Collection
 
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QAction, QIcon
+from PyQt6.QtGui import QAction
 from PyQt6.QtWidgets import QCompleter, QHBoxLayout, QLineEdit, QToolButton, QWidget
+from src.views import icons
 from src.views.dialogs.select_item_dialog import ask_user_for_selection
 
 
@@ -21,7 +22,7 @@ class MultipleTagsSelectorWidget(QWidget):
 
         self.select_tool_button = QToolButton(self)
         self.actionSelect_Tag = QAction("Select Tag", self)
-        self.actionSelect_Tag.setIcon(QIcon("icons_16:tag.png"))
+        self.actionSelect_Tag.setIcon(icons.tag)
         self.actionSelect_Tag.triggered.connect(self._select_tag)
         self.select_tool_button.setDefaultAction(self.actionSelect_Tag)
 
@@ -53,7 +54,7 @@ class MultipleTagsSelectorWidget(QWidget):
             self,
             self._tag_names,
             "Select Tag",
-            QIcon("icons_16:tag.png"),
+            icons.tag,
         )
         if tag and self.tag_names != ("",):
             self.tag_names = [*self.tag_names, tag]

@@ -4,7 +4,6 @@ from copy import copy
 from typing import Any, Self
 from uuid import UUID
 
-import src.views.icons as icons
 from PyQt6.QtCore import (
     QAbstractItemModel,
     QModelIndex,
@@ -23,6 +22,7 @@ from src.models.model_objects.currency_objects import (
     Currency,
 )
 from src.models.model_objects.security_objects import SecurityAccount
+from src.views import icons
 from src.views.constants import AccountTreeColumn
 
 

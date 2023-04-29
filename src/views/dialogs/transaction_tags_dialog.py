@@ -2,7 +2,6 @@ import logging
 from collections.abc import Collection
 
 from PyQt6.QtCore import pyqtSignal
-from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import (
     QAbstractButton,
     QDialog,
@@ -11,6 +10,7 @@ from PyQt6.QtWidgets import (
     QLabel,
     QWidget,
 )
+from src.views import icons
 from src.views.widgets.multiple_tags_selector_widget import MultipleTagsSelectorWidget
 
 
@@ -21,6 +21,7 @@ class TransactionTagsDialog(QDialog):
         self, parent: QWidget, tag_names: Collection[str], *, add: bool
     ) -> None:
         super().__init__(parent=parent)
+        self.resize(350, 60)
 
         self._tags = tuple(tag_names)
         self.tags_widget = MultipleTagsSelectorWidget(self, self._tags)
@@ -32,10 +33,10 @@ class TransactionTagsDialog(QDialog):
 
         if add:
             self.setWindowTitle("Add Tags")
-            self.setWindowIcon(QIcon("icons_16:tag--plus.png"))
+            self.setWindowIcon(icons.add_tag)
         else:
             self.setWindowTitle("Remove Tags")
-            self.setWindowIcon(QIcon("icons_16:tag--minus.png"))
+            self.setWindowIcon(icons.remove_tag)
 
         self.buttonBox = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel,

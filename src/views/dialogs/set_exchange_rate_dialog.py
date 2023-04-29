@@ -3,8 +3,8 @@ from datetime import date
 from decimal import Decimal
 
 from PyQt6.QtCore import pyqtSignal
-from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QAbstractButton, QDialog, QDialogButtonBox, QWidget
+from src.views import icons
 from src.views.ui_files.dialogs.Ui_set_exchange_rate_dialog import (
     Ui_SetExchangeRateDialog,
 )
@@ -22,7 +22,7 @@ class SetExchangeRateDialog(QDialog, Ui_SetExchangeRateDialog):
     ) -> None:
         super().__init__(parent)
         self.setupUi(self)
-        self.setWindowIcon(QIcon("icons_custom:currency-arrow.png"))
+        self.setWindowIcon(icons.exchange_rate)
 
         primary_code, _, secondary_code = exchange_rate.partition("/")
 

@@ -4,6 +4,7 @@ from PyQt6.QtCore import QAbstractTableModel, QModelIndex, Qt
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QTableView
 from src.models.model_objects.currency_objects import Currency
+from src.views import icons
 from src.views.constants import CurrencyTableColumn
 
 
@@ -66,7 +67,7 @@ class CurrencyTableModel(QAbstractTableModel):
             and column == CurrencyTableColumn.CODE
             and currency == self.base_currency
         ):
-            return QIcon("icons_16:star.png")
+            return icons.base_currency
         return None
 
     def headerData(  # noqa: N802

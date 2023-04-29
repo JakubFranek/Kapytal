@@ -4,7 +4,7 @@ from decimal import Decimal
 from enum import Enum, auto
 
 from PyQt6.QtCore import QSignalBlocker, Qt, pyqtSignal
-from PyQt6.QtGui import QAction, QCloseEvent, QIcon
+from PyQt6.QtGui import QAction, QCloseEvent
 from PyQt6.QtWidgets import (
     QAbstractButton,
     QComboBox,
@@ -26,6 +26,7 @@ from src.models.model_objects.security_objects import (
 )
 from src.models.transaction_filters.base_transaction_filter import FilterMode
 from src.models.user_settings import user_settings
+from src.views import icons
 from src.views.ui_files.forms.Ui_transaction_filter_form import Ui_TransactionFilterForm
 
 CASH_RELATED_TRANSACTION_TYPES = (
@@ -390,14 +391,14 @@ class TransactionFilterForm(QWidget, Ui_TransactionFilterForm):
     def _initialize_window(self) -> None:
         self.setWindowFlag(Qt.WindowType.Window)
         self.setWindowTitle("Filter Transaction Table")
-        self.setWindowIcon(QIcon("icons_16:funnel.png"))
+        self.setWindowIcon(icons.filter_)
 
     def _initialize_search_boxes(self) -> None:
         self.tagsSearchLineEdit.addAction(
-            QIcon("icons_16:magnifier.png"), QLineEdit.ActionPosition.LeadingPosition
+            icons.magnifier, QLineEdit.ActionPosition.LeadingPosition
         )
         self.payeesSearchLineEdit.addAction(
-            QIcon("icons_16:magnifier.png"), QLineEdit.ActionPosition.LeadingPosition
+            icons.magnifier, QLineEdit.ActionPosition.LeadingPosition
         )
 
     def _initialize_mode_comboboxes(self) -> None:
@@ -427,20 +428,12 @@ class TransactionFilterForm(QWidget, Ui_TransactionFilterForm):
         self.actionCollapseAllExpenseCategories = QAction("Collapse All", self)
         self.actionCollapseAllIncomeAndExpenseCategories = QAction("Collapse All", self)
 
-        self.actionExpandAllIncomeCategories.setIcon(
-            QIcon("icons_custom:arrow-out.png")
-        )
-        self.actionExpandAllExpenseCategories.setIcon(
-            QIcon("icons_custom:arrow-out.png")
-        )
-        self.actionExpandAllIncomeAndExpenseCategories.setIcon(
-            QIcon("icons_custom:arrow-out.png")
-        )
-        self.actionCollapseAllIncomeCategories.setIcon(QIcon("icons_16:arrow-in.png"))
-        self.actionCollapseAllExpenseCategories.setIcon(QIcon("icons_16:arrow-in.png"))
-        self.actionCollapseAllIncomeAndExpenseCategories.setIcon(
-            QIcon("icons_16:arrow-in.png")
-        )
+        self.actionExpandAllIncomeCategories.setIcon(icons.expand)
+        self.actionExpandAllExpenseCategories.setIcon(icons.expand)
+        self.actionExpandAllIncomeAndExpenseCategories.setIcon(icons.expand)
+        self.actionCollapseAllIncomeCategories.setIcon(icons.collapse)
+        self.actionCollapseAllExpenseCategories.setIcon(icons.collapse)
+        self.actionCollapseAllIncomeAndExpenseCategories.setIcon(icons.collapse)
 
         self.actionExpandAllIncomeCategories.triggered.connect(
             self.incomeCategoriesTreeView.expandAll

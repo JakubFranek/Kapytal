@@ -1,8 +1,9 @@
 import logging
 
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QCloseEvent, QIcon
+from PyQt6.QtGui import QCloseEvent
 from PyQt6.QtWidgets import QHeaderView, QLineEdit, QWidget
+from src.views import icons
 from src.views.constants import TagTableColumn
 from src.views.ui_files.forms.Ui_tag_form import Ui_TagForm
 
@@ -19,7 +20,7 @@ class TagForm(QWidget, Ui_TagForm):
         super().__init__(parent=parent)
         self.setupUi(self)
         self.setWindowFlag(Qt.WindowType.Window)
-        self.setWindowIcon(QIcon("icons_16:tag.png"))
+        self.setWindowIcon(icons.tag)
 
         self.addButton.clicked.connect(self.signal_add_tag.emit)
         self.removeButton.clicked.connect(self.signal_remove_tag.emit)
@@ -28,7 +29,7 @@ class TagForm(QWidget, Ui_TagForm):
         self.searchLineEdit.textChanged.connect(self.signal_search_text_changed.emit)
 
         self.searchLineEdit.addAction(
-            QIcon("icons_16:magnifier.png"), QLineEdit.ActionPosition.LeadingPosition
+            icons.magnifier, QLineEdit.ActionPosition.LeadingPosition
         )
 
     @property
