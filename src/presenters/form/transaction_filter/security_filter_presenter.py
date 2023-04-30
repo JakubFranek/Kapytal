@@ -20,6 +20,10 @@ class SecurityFilterPresenter:
         self._connect_to_signals()
 
     @property
+    def security_filter_mode(self) -> FilterMode:
+        return FilterMode.KEEP if self._form.security_filter_active else FilterMode.OFF
+
+    @property
     def checked_securities(self) -> tuple[Security, ...]:
         return self._security_list_model.checked_items
 
@@ -35,10 +39,10 @@ class SecurityFilterPresenter:
         security_filter: SecurityFilter,
     ) -> None:
         self._security_list_model.pre_reset_model()
-        if security_filter.mode == FilterMode.KEEP:
+        if security_filter.mode == FilterMode.OFF:
+            self._form.security_filter_active = False
+        elif security_filter.mode == FilterMode.KEEP:
             self._security_list_model.checked_items = security_filter.securities
-        elif security_filter.mode == FilterMode.OFF:
-            self._security_list_model.checked_items = self._record_keeper.securities
         else:
             self._security_list_model.checked_items = [
                 security

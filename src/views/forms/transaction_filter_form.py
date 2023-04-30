@@ -1,4 +1,5 @@
 import logging
+from collections.abc import Collection
 from datetime import datetime, time
 from decimal import Decimal
 from enum import Enum, auto
@@ -113,14 +114,6 @@ class TransactionFilterForm(QWidget, Ui_TransactionFilterForm):
         return self.securityListView
 
     @property
-    def tag_filters_active(self) -> bool:
-        return self.tagFiltersGroupBox.isChecked()
-
-    @tag_filters_active.setter
-    def tag_filters_active(self, value: bool) -> None:
-        self.tagFiltersGroupBox.setChecked(value)
-
-    @property
     def payee_filter_active(self) -> bool:
         return self.payeeFilterGroupBox.isChecked()
 
@@ -155,31 +148,31 @@ class TransactionFilterForm(QWidget, Ui_TransactionFilterForm):
     @property
     def types(
         self,
-    ) -> tuple[type[Transaction | CashTransactionType | SecurityTransactionType], ...]:
-        _types: list[
+    ) -> set[type[Transaction | CashTransactionType | SecurityTransactionType]]:
+        _types: set[
             type[Transaction] | CashTransactionType | SecurityTransactionType
-        ] = []
+        ] = set()
         if self.incomeCheckBox.isChecked():
-            _types.append(CashTransactionType.INCOME)
+            _types.add(CashTransactionType.INCOME)
         if self.expenseCheckBox.isChecked():
-            _types.append(CashTransactionType.EXPENSE)
+            _types.add(CashTransactionType.EXPENSE)
         if self.refundCheckBox.isChecked():
-            _types.append(RefundTransaction)
+            _types.add(RefundTransaction)
         if self.cashTransferCheckBox.isChecked():
-            _types.append(CashTransfer)
+            _types.add(CashTransfer)
         if self.securityTransferCheckBox.isChecked():
-            _types.append(SecurityTransfer)
+            _types.add(SecurityTransfer)
         if self.buyCheckBox.isChecked():
-            _types.append(SecurityTransactionType.BUY)
+            _types.add(SecurityTransactionType.BUY)
         if self.sellCheckBox.isChecked():
-            _types.append(SecurityTransactionType.SELL)
-        return tuple(_types)
+            _types.add(SecurityTransactionType.SELL)
+        return _types
 
     @types.setter
     def types(
         self,
-        types: tuple[
-            type[Transaction | CashTransactionType | SecurityTransactionType], ...
+        types: Collection[
+            type[Transaction | CashTransactionType | SecurityTransactionType]
         ],
     ) -> None:
         self.incomeCheckBox.setChecked(CashTransactionType.INCOME in types)

@@ -24,12 +24,16 @@ class TagFilterPresenter:
         self._connect_to_signals()
 
     @property
-    def checked_tags(self) -> tuple[Attribute, ...]:
-        return self._tags_list_model.checked_items
-
-    @property
     def tagless_filter_mode(self) -> FilterMode:
         return self._form.tagless_filter_mode
+
+    @property
+    def specific_tag_filter_mode(self) -> FilterMode:
+        return FilterMode.KEEP
+
+    @property
+    def checked_tags(self) -> tuple[Attribute, ...]:
+        return self._tags_list_model.checked_items
 
     @property
     def split_tags_filter_mode(self) -> FilterMode:
@@ -49,10 +53,10 @@ class TagFilterPresenter:
         split_tags_filter: SplitTagsFilter,
     ) -> None:
         self._tags_list_model.pre_reset_model()
-        if specific_tag_filter.mode == FilterMode.KEEP:
-            self._tags_list_model.checked_items = specific_tag_filter.tags
-        elif specific_tag_filter.mode == FilterMode.OFF:
+        if specific_tag_filter.mode == FilterMode.OFF:
             self._tags_list_model.checked_items = self._record_keeper.tags
+        elif specific_tag_filter.mode == FilterMode.KEEP:
+            self._tags_list_model.checked_items = specific_tag_filter.tags
         else:
             self._tags_list_model.checked_items = [
                 tag

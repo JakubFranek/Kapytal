@@ -22,6 +22,10 @@ class PayeeFilterPresenter:
         self._connect_to_signals()
 
     @property
+    def payee_filter_mode(self) -> FilterMode:
+        return FilterMode.KEEP if self._form.payee_filter_active else FilterMode.OFF
+
+    @property
     def checked_payees(self) -> tuple[Attribute, ...]:
         return self._payee_list_model.checked_items
 
@@ -37,10 +41,10 @@ class PayeeFilterPresenter:
         payee_filter: PayeeFilter,
     ) -> None:
         self._payee_list_model.pre_reset_model()
-        if payee_filter.mode == FilterMode.KEEP:
+        if payee_filter.mode == FilterMode.OFF:
+            self._form.payee_filter_active = False
+        elif payee_filter.mode == FilterMode.KEEP:
             self._payee_list_model.checked_items = payee_filter.payees
-        elif payee_filter.mode == FilterMode.OFF:
-            self._payee_list_model.checked_items = self._record_keeper.payees
         else:
             self._payee_list_model.checked_items = [
                 payee

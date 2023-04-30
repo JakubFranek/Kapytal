@@ -323,97 +323,88 @@
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_5">
        <item>
-        <widget class="QGroupBox" name="tagFiltersGroupBox">
+        <widget class="QGroupBox" name="tagLessFilterGroupBox">
          <property name="title">
-          <string>Tag Filters</string>
+          <string>Tag-less Transaction Filter</string>
+         </property>
+         <layout class="QFormLayout" name="formLayout_5">
+          <item row="0" column="0">
+           <widget class="QLabel" name="tagLessFilterModeLabel">
+            <property name="text">
+             <string>Mode</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QComboBox" name="tagLessFilterModeComboBox"/>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="specificTagsFilterGroupBox">
+         <property name="title">
+          <string>Specific Tags Filter</string>
          </property>
          <property name="checkable">
-          <bool>true</bool>
+          <bool>false</bool>
          </property>
          <property name="checked">
           <bool>false</bool>
          </property>
-         <layout class="QVBoxLayout" name="verticalLayout_16">
+         <layout class="QVBoxLayout" name="verticalLayout_14">
           <item>
-           <widget class="QGroupBox" name="tagLessFilterGroupBox">
-            <property name="title">
-             <string>Tag-less Transaction Filter</string>
-            </property>
-            <layout class="QFormLayout" name="formLayout_5">
-             <item row="0" column="0">
-              <widget class="QLabel" name="tagLessFilterModeLabel">
-               <property name="text">
-                <string>Mode</string>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="1">
-              <widget class="QComboBox" name="tagLessFilterModeComboBox"/>
-             </item>
-            </layout>
-           </widget>
-          </item>
-          <item>
-           <widget class="QGroupBox" name="specificTagsFilterGroupBox">
-            <property name="title">
-             <string>Specific Tags Filter</string>
-            </property>
-            <layout class="QVBoxLayout" name="verticalLayout_14">
-             <item>
-              <widget class="QLineEdit" name="tagsSearchLineEdit">
-               <property name="toolTip">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Special characters:&lt;/p&gt;&lt;p&gt;* matches zero or more of any characters&lt;br/&gt;? matches any single character&lt;br/&gt;[...] matches any character within square brackets&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-               </property>
-               <property name="placeholderText">
-                <string>Search Tags</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QListView" name="tagsListView"/>
-             </item>
-             <item>
-              <layout class="QHBoxLayout" name="tagsButtonsHorizontalLayout">
-               <item>
-                <widget class="QPushButton" name="tagsSelectAllPushButton">
-                 <property name="text">
-                  <string>Select All</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QPushButton" name="tagsUnselectAllPushButton">
-                 <property name="text">
-                  <string>Unselect All</string>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </item>
-            </layout>
-           </widget>
-          </item>
-          <item>
-           <widget class="QGroupBox" name="splitTagsFilterGroupBox">
+           <widget class="QLineEdit" name="tagsSearchLineEdit">
             <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Cash Transactions with Split Tags are transactions, where at least one of the Tag amounts is not equal to the total Cash Transaction amount&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Special characters:&lt;/p&gt;&lt;p&gt;* matches zero or more of any characters&lt;br/&gt;? matches any single character&lt;br/&gt;[...] matches any character within square brackets&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
-            <property name="title">
-             <string>Split Tags Filter</string>
+            <property name="placeholderText">
+             <string>Search Tags</string>
             </property>
-            <layout class="QFormLayout" name="formLayout_4">
-             <item row="0" column="0">
-              <widget class="QLabel" name="splitTagsFilterModeLabel">
-               <property name="text">
-                <string>Mode</string>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="1">
-              <widget class="QComboBox" name="splitTagsFilterModeComboBox"/>
-             </item>
-            </layout>
            </widget>
+          </item>
+          <item>
+           <widget class="QListView" name="tagsListView"/>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="tagsButtonsHorizontalLayout">
+            <item>
+             <widget class="QPushButton" name="tagsSelectAllPushButton">
+              <property name="text">
+               <string>Select All</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="tagsUnselectAllPushButton">
+              <property name="text">
+               <string>Unselect All</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="splitTagsFilterGroupBox">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Cash Transactions with Split Tags are transactions, where at least one of the Tag amounts is not equal to the total Cash Transaction amount&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="title">
+          <string>Split Tags Filter</string>
+         </property>
+         <layout class="QFormLayout" name="formLayout_4">
+          <item row="0" column="0">
+           <widget class="QLabel" name="splitTagsFilterModeLabel">
+            <property name="text">
+             <string>Mode</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QComboBox" name="splitTagsFilterModeComboBox"/>
           </item>
          </layout>
         </widget>

@@ -17,6 +17,10 @@ class CurrencyFilterPresenter:
         self._connect_to_signals()
 
     @property
+    def currency_filter_mode(self) -> FilterMode:
+        return FilterMode.KEEP if self._form.currency_filter_active else FilterMode.OFF
+
+    @property
     def checked_currencies(self) -> tuple[Currency, ...]:
         return self._currency_list_model.checked_items
 
@@ -32,10 +36,11 @@ class CurrencyFilterPresenter:
         currency_filter: CurrencyFilter,
     ) -> None:
         self._currency_list_model.pre_reset_model()
-        if currency_filter.mode == FilterMode.KEEP:
+        if currency_filter.mode == FilterMode.OFF:
+            self._form.currency_filter_active = False
+        elif currency_filter.mode == FilterMode.KEEP:
+            self._form.currency_filter_active = True
             self._currency_list_model.checked_items = currency_filter.currencies
-        elif currency_filter.mode == FilterMode.OFF:
-            self._currency_list_model.checked_items = self._record_keeper.currencies
         else:
             self._currency_list_model.checked_items = [
                 currency

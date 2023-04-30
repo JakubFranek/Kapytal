@@ -3,7 +3,17 @@ from collections.abc import Collection
 
 from PyQt6.QtWidgets import QWidget
 from src.models.base_classes.account import Account
+from src.models.base_classes.transaction import Transaction
+from src.models.model_objects.cash_objects import (
+    CashTransactionType,
+    CashTransfer,
+    RefundTransaction,
+)
 from src.models.model_objects.currency_objects import CashAmount
+from src.models.model_objects.security_objects import (
+    SecurityTransactionType,
+    SecurityTransfer,
+)
 from src.models.record_keeper import RecordKeeper
 from src.models.transaction_filters.base_transaction_filter import FilterMode
 from src.models.transaction_filters.transaction_filter import TransactionFilter
@@ -27,6 +37,71 @@ from src.views.forms.transaction_filter_form import (
     AccountFilterMode,
     TransactionFilterForm,
 )
+from src.views.utilities.handle_exception import display_error_message
+from src.views.utilities.message_box_functions import ask_yes_no_question
+
+currency_related_types = {
+    CashTransactionType.EXPENSE,
+    CashTransactionType.INCOME,
+    RefundTransaction,
+    CashTransfer,
+    SecurityTransactionType.BUY,
+    SecurityTransactionType.SELL,
+}
+payee_related_types = {
+    CashTransactionType.EXPENSE,
+    CashTransactionType.INCOME,
+    RefundTransaction,
+}
+security_related_types = {
+    SecurityTransactionType.BUY,
+    SecurityTransactionType.SELL,
+    SecurityTransfer,
+}
+category_related_types = {
+    CashTransactionType.EXPENSE,
+    CashTransactionType.INCOME,
+    RefundTransaction,
+}
+
+ordered_types = (
+    CashTransactionType.INCOME,
+    CashTransactionType.EXPENSE,
+    RefundTransaction,
+    CashTransfer,
+    SecurityTransfer,
+    SecurityTransactionType.BUY,
+    SecurityTransactionType.SELL,
+)
+
+
+def get_type_names(
+    types: Collection[
+        type[Transaction] | CashTransactionType | SecurityTransactionType
+    ],
+) -> tuple[str]:
+    type_names_: list[str] = []
+    ordered_types_: list[
+        type[Transaction] | CashTransactionType | SecurityTransactionType
+    ] = order_subset(ordered_types, types)
+
+    for type_ in ordered_types_:
+        if isinstance(type_, CashTransactionType | SecurityTransactionType):
+            type_names_.append(type_.name.capitalize())
+        else:
+            name = type_.__name__
+            # insert space in front of each capital letter (except for the first one)
+            for i in range(1, len(name)):
+                if name[i].isupper():
+                    name = name[:i] + " " + name[i:]
+            type_names_.append(name)
+
+    return tuple(type_names_)
+
+
+def order_subset(reference_list: list, subset_list: list) -> list:
+    index_dict = {item: index for index, item in enumerate(reference_list)}
+    return sorted(subset_list, key=lambda x: index_dict[x])
 
 
 class TransactionFilterFormPresenter:
@@ -111,6 +186,8 @@ class TransactionFilterFormPresenter:
         self._form.show_form()
 
     def _form_accepted(self) -> None:
+        if self._check_filter_form_sanity() is False:
+            return
         new_filter = self._get_transaction_filter_from_form()
         if self.transaction_filter != new_filter:
             self._log_filter_differences(new_filter)
@@ -130,24 +207,28 @@ class TransactionFilterFormPresenter:
             self._form.description_filter_pattern, self._form.description_filter_mode
         )
 
-        if self._form.account_filter_mode != AccountFilterMode.ACCOUNT_TREE:
+        if self._form.account_filter_mode == AccountFilterMode.SELECTION:
             # get selected Accounts
             # set AccountFilter
             raise NotImplementedError
 
         filter_.set_specific_tags_filter(
-            self._tag_filter_presenter.checked_tags, FilterMode.KEEP
+            self._tag_filter_presenter.checked_tags,
+            self._tag_filter_presenter.specific_tag_filter_mode,
         )
         filter_.set_tagless_filter(self._tag_filter_presenter.tagless_filter_mode)
         filter_.set_split_tags_filter(self._tag_filter_presenter.split_tags_filter_mode)
         filter_.set_payee_filter(
-            self._payee_filter_presenter.checked_payees, FilterMode.KEEP
+            self._payee_filter_presenter.checked_payees,
+            self._payee_filter_presenter.payee_filter_mode,
         )
         filter_.set_currency_filter(
-            self._currency_filter_presenter.checked_currencies, FilterMode.KEEP
+            self._currency_filter_presenter.checked_currencies,
+            self._currency_filter_presenter.currency_filter_mode,
         )
         filter_.set_security_filter(
-            self._security_filter_presenter.checked_securities, FilterMode.KEEP
+            self._security_filter_presenter.checked_securities,
+            self._security_filter_presenter.security_filter_mode,
         )
 
         if self._record_keeper.base_currency is not None:
@@ -206,9 +287,6 @@ class TransactionFilterFormPresenter:
     def _get_default_filter(self) -> TransactionFilter:
         filter_ = TransactionFilter()
         filter_.set_specific_tags_filter(self._record_keeper.tags, FilterMode.KEEP)
-        filter_.set_payee_filter(self._record_keeper.payees, FilterMode.KEEP)
-        filter_.set_currency_filter(self._record_keeper.currencies, FilterMode.KEEP)
-        filter_.set_security_filter(self._record_keeper.securities, FilterMode.KEEP)
         if self._record_keeper.base_currency is not None:
             filter_.set_cash_amount_filter(
                 CashAmount(0, self._record_keeper.base_currency),
@@ -291,3 +369,59 @@ class TransactionFilterFormPresenter:
                     f"min={new_filter.cash_amount_filter.minimum.to_str_rounded()}, "
                     f"max={new_filter.cash_amount_filter.maximum.to_str_rounded()}"
                 )
+
+    def _check_filter_form_sanity(self) -> None:
+        types = self._form.types
+        if not types:
+            display_error_message(
+                (
+                    "No Transaction types selected in Type Filter, "
+                    "all Transactions will be discarded."
+                ),
+                title="Warning",
+            )
+
+        if self._form.currency_filter_active:
+            self._check_filter_related_types("Currency Filter", currency_related_types)
+        if self._form.security_filter_active:
+            self._check_filter_related_types("Security Filter", security_related_types)
+        if self._form.payee_filter_active:
+            self._check_filter_related_types("Payee Filter", payee_related_types)
+        if self._form.category_filters_active:
+            self._check_filter_related_types("Category Filters", category_related_types)
+
+    def _check_filter_related_types(
+        self,
+        filter_name: str,
+        related_types: set[
+            type[Transaction] | CashTransactionType | SecurityTransactionType
+        ],
+    ) -> None:
+        types = self._form.types
+        field_name = filter_name.removesuffix(" Filter")
+        unrelated_types = types.difference(related_types)
+        if unrelated_types:
+            unrelated_type_names = ", ".join(get_type_names(unrelated_types))
+            question = (
+                f"<html>{filter_name} has been activated but the following "
+                f"Transaction types selected in the Type Filter are not {field_name} "
+                "related:<br/>"
+                f"<b><i>{unrelated_type_names}</i></b><br/><br/>"
+                "Do you want to unselect these Transaction types in the "
+                "Type Filter?</html>"
+            )
+            title = "Unselect unrelated Transaction types?"
+            answer = ask_yes_no_question(self._form, question, title, warning=True)
+            if answer:
+                self._form.types = types - unrelated_types
+                types = self._form.types
+        related_types = types.intersection(related_types)
+        if not related_types:
+            display_error_message(
+                (
+                    f"{filter_name} has been activated but none of the "
+                    "Transaction types selected in the Type Filter are "
+                    f"{field_name} related."
+                ),
+                title="Warning",
+            )
