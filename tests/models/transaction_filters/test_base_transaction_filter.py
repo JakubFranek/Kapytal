@@ -37,18 +37,18 @@ def test_invalid_mode_type(mode: Any) -> None:
 def test_accept_transaction_off(transactions_: tuple[Transaction]) -> None:
     filter_ = ConcreteTransactionFilter(mode=FilterMode.OFF)
     for transaction in transactions_:
-        assert filter_.accept_transaction(transaction) is True
+        assert filter_.validate_transaction(transaction) is True
 
 
 @given(transactions_=transactions())
 def test_accept_transaction_keep(transactions_: tuple[Transaction]) -> None:
     filter_ = ConcreteTransactionFilter(mode=FilterMode.KEEP)
     for transaction in transactions_:
-        assert filter_.accept_transaction(transaction) is None
+        assert filter_.validate_transaction(transaction) is None
 
 
 @given(transactions_=transactions())
 def test_accept_transaction_discard(transactions_: tuple[Transaction]) -> None:
     filter_ = ConcreteTransactionFilter(mode=FilterMode.DISCARD)
     for transaction in transactions_:
-        assert filter_.accept_transaction(transaction) is False
+        assert filter_.validate_transaction(transaction) is False

@@ -236,7 +236,7 @@ def test_set_cash_amount_filter(
     assert filter_.cash_amount_filter.mode == mode
 
     filter_.filter_transactions(transaction_list)
-    filter_.accept_transaction(transaction_list[0])
+    filter_.validate_transaction(transaction_list[0])
 
 
 @given(transactions=transactions())
@@ -254,10 +254,10 @@ def test_filter_premade_transactions() -> None:
 def test_accept_transactions(transactions: list[Transaction]) -> None:
     filter_ = TransactionFilter()
     for transaction in transactions:
-        assert filter_.accept_transaction(transaction) is True
+        assert filter_.validate_transaction(transaction) is True
 
 
 def test_accept_premade_transactions() -> None:
     filter_ = TransactionFilter()
     for transaction in transaction_list:
-        assert filter_.accept_transaction(transaction) is True
+        assert filter_.validate_transaction(transaction) is True

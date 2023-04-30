@@ -38,7 +38,7 @@ class BaseTransactionFilter(ABC):
         return hash(self.members)
 
     def __eq__(self, __o: object) -> bool:
-        """Two filters are considered equal if they are of the same type and
+        """Filters are considered equal if they are of the same type and
         both are OFF or their members are equal."""
 
         if not isinstance(__o, type(self)):
@@ -47,7 +47,7 @@ class BaseTransactionFilter(ABC):
             return True
         return self.members == __o.members
 
-    def accept_transaction(self, transaction: Transaction) -> bool:
+    def validate_transaction(self, transaction: Transaction) -> bool:
         if self._mode == FilterMode.OFF:
             return True
         if self._mode == FilterMode.KEEP:
@@ -76,7 +76,7 @@ class BaseTransactionFilter(ABC):
         if len(output) != input_len:
             logging.debug(
                 f"{self.__class__.__name__}: mode={self._mode.name}, "
-                f"removed={input_len - len(output)}"
+                f"discarded={input_len - len(output)}"
             )
         return output
 

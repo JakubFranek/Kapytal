@@ -128,23 +128,23 @@ class TransactionFilter:
             return False
         return self.members == __o.members
 
-    def accept_transaction(self, transaction: Transaction) -> bool:
+    def validate_transaction(self, transaction: Transaction) -> bool:
         result = all(
             (
-                self._type_filter.accept_transaction(transaction),
-                self._datetime_filter.accept_transaction(transaction),
-                self._description_filter.accept_transaction(transaction),
-                self._account_filter.accept_transaction(transaction),
-                self._currency_filter.accept_transaction(transaction),
-                self._specific_tags_filter.accept_transaction(transaction),
-                self._tagless_filter.accept_transaction(transaction),
-                self._split_tags_filter.accept_transaction(transaction),
-                self._payee_filter.accept_transaction(transaction),
-                self._security_filter.accept_transaction(transaction),
+                self._type_filter.validate_transaction(transaction),
+                self._datetime_filter.validate_transaction(transaction),
+                self._description_filter.validate_transaction(transaction),
+                self._account_filter.validate_transaction(transaction),
+                self._currency_filter.validate_transaction(transaction),
+                self._specific_tags_filter.validate_transaction(transaction),
+                self._tagless_filter.validate_transaction(transaction),
+                self._split_tags_filter.validate_transaction(transaction),
+                self._payee_filter.validate_transaction(transaction),
+                self._security_filter.validate_transaction(transaction),
             )
         )
         if self._cash_amount_filter is not None:
-            return result and self._cash_amount_filter.accept_transaction(transaction)
+            return result and self._cash_amount_filter.validate_transaction(transaction)
         return result
 
     def filter_transactions(

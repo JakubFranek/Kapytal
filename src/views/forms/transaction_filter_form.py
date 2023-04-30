@@ -7,6 +7,7 @@ from PyQt6.QtCore import QSignalBlocker, Qt, pyqtSignal
 from PyQt6.QtGui import QAction, QCloseEvent
 from PyQt6.QtWidgets import (
     QAbstractButton,
+    QButtonGroup,
     QComboBox,
     QDialogButtonBox,
     QLineEdit,
@@ -80,6 +81,7 @@ class TransactionFilterForm(QWidget, Ui_TransactionFilterForm):
         self.base_currency_code = base_currency_code
         self._description_filter_mode_changed()
         self._date_filter_mode_changed()
+        self._account_filter_mode_changed()
         self._tagless_filter_mode_changed()
 
     @property
@@ -109,6 +111,46 @@ class TransactionFilterForm(QWidget, Ui_TransactionFilterForm):
     @property
     def security_list_view(self) -> QListView:
         return self.securityListView
+
+    @property
+    def tag_filters_active(self) -> bool:
+        return self.tagFiltersGroupBox.isChecked()
+
+    @tag_filters_active.setter
+    def tag_filters_active(self, value: bool) -> None:
+        self.tagFiltersGroupBox.setChecked(value)
+
+    @property
+    def payee_filter_active(self) -> bool:
+        return self.payeeFilterGroupBox.isChecked()
+
+    @payee_filter_active.setter
+    def payee_filter_active(self, value: bool) -> None:
+        self.payeeFilterGroupBox.setChecked(value)
+
+    @property
+    def category_filters_active(self) -> bool:
+        return self.categoryFiltersGroupBox.isChecked()
+
+    @category_filters_active.setter
+    def category_filters_active(self, value: bool) -> None:
+        self.categoryFiltersGroupBox.setChecked(value)
+
+    @property
+    def currency_filter_active(self) -> bool:
+        return self.currencyFilterGroupBox.isChecked()
+
+    @currency_filter_active.setter
+    def currency_filter_active(self, value: bool) -> None:
+        self.currencyFilterGroupBox.setChecked(value)
+
+    @property
+    def security_filter_active(self) -> bool:
+        return self.securityFilterGroupBox.isChecked()
+
+    @security_filter_active.setter
+    def security_filter_active(self, value: bool) -> None:
+        self.securityFilterGroupBox.setChecked(value)
 
     @property
     def types(
@@ -331,6 +373,17 @@ class TransactionFilterForm(QWidget, Ui_TransactionFilterForm):
         self.descriptionFilterModeComboBox.currentTextChanged.connect(
             self._description_filter_mode_changed
         )
+        self.accountsFilterRadioButtonGroup = QButtonGroup()
+        self.accountsFilterRadioButtonGroup.addButton(
+            self.accountsFilterTreeRadioButton
+        )
+        self.accountsFilterRadioButtonGroup.addButton(
+            self.accountsFilterSelectionRadioButton
+        )
+        self.accountsFilterRadioButtonGroup.buttonClicked.connect(
+            self._account_filter_mode_changed
+        )
+
         self.buttonBox.clicked.connect(self._handle_button_box_click)
 
         self.tagsSearchLineEdit.textChanged.connect(
@@ -473,15 +526,6 @@ class TransactionFilterForm(QWidget, Ui_TransactionFilterForm):
             self.actionCollapseAllIncomeAndExpenseCategories
         )
 
-    def _date_filter_mode_changed(self) -> None:
-        mode = self.date_filter_mode
-        self.dateFilterStartDateEdit.setEnabled(mode != FilterMode.OFF)
-        self.dateFilterEndDateEdit.setEnabled(mode != FilterMode.OFF)
-
-    def _description_filter_mode_changed(self) -> None:
-        mode = self.description_filter_mode
-        self.descriptionFilterPatternLineEdit.setEnabled(mode != FilterMode.OFF)
-
     def _handle_button_box_click(self, button: QAbstractButton) -> None:
         role = self.buttonBox.buttonRole(button)
         if role == QDialogButtonBox.ButtonRole.AcceptRole:
@@ -492,6 +536,19 @@ class TransactionFilterForm(QWidget, Ui_TransactionFilterForm):
             self.close()
         else:
             raise ValueError("Unknown role of the clicked button in the ButtonBox")
+
+    def _date_filter_mode_changed(self) -> None:
+        mode = self.date_filter_mode
+        self.dateFilterStartDateEdit.setEnabled(mode != FilterMode.OFF)
+        self.dateFilterEndDateEdit.setEnabled(mode != FilterMode.OFF)
+
+    def _description_filter_mode_changed(self) -> None:
+        mode = self.description_filter_mode
+        self.descriptionFilterPatternLineEdit.setEnabled(mode != FilterMode.OFF)
+
+    def _account_filter_mode_changed(self) -> None:
+        mode = self.account_filter_mode
+        self.accountsFilterGroupBox.setEnabled(mode == AccountFilterMode.SELECTION)
 
     def _tagless_filter_mode_changed(self) -> None:
         mode = self.tagless_filter_mode

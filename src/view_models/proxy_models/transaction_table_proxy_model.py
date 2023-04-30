@@ -28,4 +28,4 @@ class TransactionTableProxyModel(QSortFilterProxyModel):
         source_model: TransactionTableModel = self.sourceModel()
         transaction = source_model.transactions[source_row]
 
-        return self._transaction_filter.accept_transaction(transaction)
+        return self._transaction_filter.validate_transaction(transaction)
