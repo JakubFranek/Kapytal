@@ -1038,12 +1038,12 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
                 "Cannot delete a Currency referenced in any ExchangeRate."
             )
         if any(
-            currency in transaction.currencies
-            for transaction in self._transactions
-            if isinstance(transaction, CashRelatedTransaction)
+            account.currency == currency
+            for account in self._accounts
+            if isinstance(account, CashAccount)
         ):
             raise InvalidOperationError(
-                "Cannot delete a Currency referenced in any CashRelatedTransaction."
+                "Cannot delete a Currency referenced in any CashAccount."
             )
         if any(currency == security.currency for security in self._securities):
             raise InvalidOperationError(

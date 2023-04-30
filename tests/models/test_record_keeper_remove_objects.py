@@ -10,7 +10,6 @@ from src.models.model_objects.cash_objects import (
     CashTransactionType,
     RefundTransaction,
 )
-from src.models.model_objects.security_objects import SecurityTransactionType
 from src.models.record_keeper import RecordKeeper
 from src.models.user_settings import user_settings
 from tests.models.test_record_keeper import (
@@ -193,31 +192,19 @@ def test_remove_currency_referenced_in_security() -> None:
         record_keeper.remove_currency("CZK")
 
 
+def test_remove_currency_referenced_in_account() -> None:
+    record_keeper = RecordKeeper()
+    record_keeper.add_currency("CZK", 2)
+    record_keeper.add_cash_account("PATH", "CZK", 0)
+    with pytest.raises(InvalidOperationError):
+        record_keeper.remove_currency("CZK")
+
+
 def test_remove_currency_referenced_in_exchange_rate() -> None:
     record_keeper = RecordKeeper()
     record_keeper.add_currency("CZK", 2)
     record_keeper.add_currency("EUR", 2)
     record_keeper.add_exchange_rate("CZK", "EUR")
-    with pytest.raises(InvalidOperationError):
-        record_keeper.remove_currency("CZK")
-
-
-def test_remove_currency_referenced_in_transaction() -> None:
-    record_keeper = RecordKeeper()
-    record_keeper.add_currency("CZK", 2)
-    record_keeper.add_security_account("SECURITY ACC", None)
-    record_keeper.add_cash_account("CASH ACC", "CZK", 0, None)
-    record_keeper.add_security("NAME", "SYMB", "ETF", "CZK", 1)
-    record_keeper.add_security_transaction(
-        "",
-        datetime.now(user_settings.settings.time_zone),
-        SecurityTransactionType.BUY,
-        "NAME",
-        1,
-        1,
-        "SECURITY ACC",
-        "CASH ACC",
-    )
     with pytest.raises(InvalidOperationError):
         record_keeper.remove_currency("CZK")
 

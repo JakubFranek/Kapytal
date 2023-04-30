@@ -13,9 +13,9 @@ from src.view_models.account_tree_model import AccountTreeModel
 from src.views.dialogs.account_group_dialog import AccountGroupDialog
 from src.views.dialogs.cash_account_dialog import CashAccountDialog
 from src.views.dialogs.security_account_dialog import SecurityAccountDialog
+from src.views.utilities.handle_exception import display_error_message
 from src.views.widgets.account_tree_widget import AccountTreeWidget
 
-# TODO: add warning message when CashAccount creation without a Currency is attempted
 # REFACTOR: possibly split dialog presenters into separate classes?
 
 
@@ -24,7 +24,7 @@ class SetupDialogCallable(Protocol):
 
     def __call__(
         self, item: Account | AccountGroup | None, max_position: int, *, edit: bool
-    ) -> None:
+    ) -> bool:
         ...
 
 
@@ -124,7 +124,9 @@ class AccountTreePresenter:
     def run_add_dialog(self, setup_dialog: SetupDialogCallable) -> None:
         item = self._model.get_selected_item()
         max_position = self._get_max_child_position(item)
-        setup_dialog(item, max_position, edit=False)
+        setup_ok = setup_dialog(item, max_position, edit=False)
+        if not setup_ok:
+            return
         self._dialog.path = "" if item is None else item.path + "/"
         self._dialog.position = self._dialog.positionSpinBox.maximum()
         logging.debug(f"Running {self._dialog.__class__.__name__} (edit=False)")
@@ -155,7 +157,7 @@ class AccountTreePresenter:
         max_position: int,
         *,
         edit: bool,
-    ) -> None:
+    ) -> bool:
         del item
         account_group_paths = self._get_account_group_paths()
         if edit:
@@ -174,6 +176,7 @@ class AccountTreePresenter:
                 edit=edit,
             )
             self._dialog.signal_ok.connect(self.add_account_group)
+        return True
 
     def add_account_group(self) -> None:
         path = self._dialog.path
@@ -270,6 +273,7 @@ class AccountTreePresenter:
                 edit=edit,
             )
             self._dialog.signal_ok.connect(self.add_security_account)
+        return True
 
     def add_security_account(self) -> None:
         path = self._dialog.path
@@ -338,13 +342,22 @@ class AccountTreePresenter:
 
     def setup_cash_account_dialog(
         self,
-        item: CashAccount,
+        item: CashAccount | None,
         max_position: int,
         *,
         edit: bool,
     ) -> None:
+        if len(self._record_keeper.currencies) == 0:
+            display_error_message(
+                "Create at least one Currency before creating a CashAccount.",
+                title="Warning",
+            )
+            return False
+
         account_group_paths = self._get_account_group_paths()
         if edit:
+            if not isinstance(item, CashAccount):
+                raise TypeError(f"Expected CashAccount, received {type(item)}")
             code_places_pairs = [(item.currency.code, item.currency.places)]
             self._dialog = CashAccountDialog(
                 parent=self._view,
@@ -368,6 +381,7 @@ class AccountTreePresenter:
                 edit=edit,
             )
             self._dialog.signal_ok.connect(self.add_cash_account)
+        return True
 
     def add_cash_account(self) -> None:
         path = self._dialog.path
