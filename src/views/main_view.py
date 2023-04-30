@@ -3,7 +3,7 @@ import sys
 from collections.abc import Collection
 from pathlib import Path
 
-from PyQt6.QtCore import PYQT_VERSION_STR, QT_VERSION_STR, QDir, QSize, Qt, pyqtSignal
+from PyQt6.QtCore import PYQT_VERSION_STR, QT_VERSION_STR, QSize, Qt, pyqtSignal
 from PyQt6.QtGui import QAction, QCloseEvent, QIcon
 from PyQt6.QtWidgets import QFileDialog, QMainWindow, QMessageBox
 from src.utilities import constants
@@ -150,19 +150,6 @@ class MainView(QMainWindow, Ui_MainWindow):
         logging.debug("Closing About dialog")
 
     def _initial_setup(self) -> None:
-        QDir.addSearchPath(
-            "icons_24",
-            str(Path(QDir.currentPath() + "/resources/icons/icons-24")),
-        )
-        QDir.addSearchPath(
-            "icons_16",
-            str(Path(QDir.currentPath() + "/resources/icons/icons-16")),
-        )
-        QDir.addSearchPath(
-            "icons_custom",
-            str(Path(QDir.currentPath() + "/resources/icons/icons-custom")),
-        )
-
         icons.setup()
 
         self.setupUi(self)

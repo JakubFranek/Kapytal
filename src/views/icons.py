@@ -1,5 +1,8 @@
 # REFACTOR: refactor the icons module
 
+from pathlib import Path
+
+from PyQt6.QtCore import QDir
 from PyQt6.QtGui import QIcon
 
 folder_open: QIcon | None = None
@@ -90,6 +93,19 @@ def setup() -> None:  # noqa: PLR0915
     global critical, warning  # noqa: PLW0603
     global add, edit, remove, duplicate  # noqa: PLW0603
     global transfer  # noqa: PLW0603
+
+    QDir.addSearchPath(
+        "icons_24",
+        str(Path(QDir.currentPath() + "/resources/icons/icons-24")),
+    )
+    QDir.addSearchPath(
+        "icons_16",
+        str(Path(QDir.currentPath() + "/resources/icons/icons-16")),
+    )
+    QDir.addSearchPath(
+        "icons_custom",
+        str(Path(QDir.currentPath() + "/resources/icons/icons-custom")),
+    )
 
     folder_open = QIcon("icons_16:folder-open.png")
     folder_closed = QIcon("icons_16:folder.png")

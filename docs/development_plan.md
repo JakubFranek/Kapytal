@@ -2,6 +2,8 @@
 
 ## Must haves
 
+1. update TransactionFilterForm logic with groupbox checkboxes
+    - also add warnings for weird filter / type combinations
 1. Transaction filtering options
     - categories  
     - split categories
@@ -14,7 +16,6 @@
 1. reports
     - cashflow
     - pie charts
-    - way to show transactions that passed the filters (SimpleTransactionTableWidget/Presenter?)
 1. scheduled transactions
 1. documentation
 

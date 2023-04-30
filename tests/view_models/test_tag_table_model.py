@@ -3,11 +3,14 @@ from pytestqt.modeltest import ModelTester
 from pytestqt.qtbot import QtBot
 from src.presenters.form.tag_form_presenter import TagFormPresenter
 from src.view_models.tag_table_model import TagTableModel
+from src.views import icons
 from src.views.forms.tag_form import TagForm
 from tests.models.test_record_keeper import get_preloaded_record_keeper
 
 
 def test_tag_table_model(qtbot: QtBot, qtmodeltester: ModelTester) -> None:
+    icons.setup()
+
     parent = QWidget()
     qtbot.add_widget(parent)
     tag_form = TagForm(parent)

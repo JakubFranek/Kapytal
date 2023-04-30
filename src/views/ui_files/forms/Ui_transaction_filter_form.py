@@ -364,7 +364,7 @@ class Ui_TransactionFilterForm(object):
         self.verticalLayout_8.addLayout(self.currencyFilterButtonHorizontalLayout)
         self.currencyAndCashAmountFiltersHorizontalLayout.addWidget(self.currencyFilterGroupBox)
         self.cashAmountGroupBox = QtWidgets.QGroupBox(self.miscellaneousTab)
-        self.cashAmountGroupBox.setCheckable(True)
+        self.cashAmountGroupBox.setCheckable(False)
         self.cashAmountGroupBox.setChecked(False)
         self.cashAmountGroupBox.setObjectName("cashAmountGroupBox")
         self.formLayout_6 = QtWidgets.QFormLayout(self.cashAmountGroupBox)
