@@ -81,7 +81,8 @@ class TransactionsPresenter:
         self._account_tree_shown_accounts = tuple(accounts)
         self._model.valid_accounts = accounts
         self._transaction_filter_form_presenter.account_tree_shown_accounts = accounts
-        self.reset_model()
+        self._reset_model()
+        self._update_table_columns()
 
     def reset_model(self) -> None:
         """Resets TransactionTableModel and TransactionFilter, and updates columns."""

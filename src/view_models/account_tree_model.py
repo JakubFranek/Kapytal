@@ -344,17 +344,12 @@ class AccountTreeModel(QAbstractItemModel):
     def headerData(  # noqa: N802
         self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole = ...
     ) -> str | int | None:
-        if role == Qt.ItemDataRole.TextAlignmentRole:
-            if section == AccountTreeColumn.BALANCE_NATIVE:
-                return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
-            if section == AccountTreeColumn.BALANCE_BASE:
-                return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
-            if section == AccountTreeColumn.SHOW:
-                return Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignHCenter
-        elif role == Qt.ItemDataRole.DisplayRole:
+        if role == Qt.ItemDataRole.DisplayRole:
             if orientation == Qt.Orientation.Horizontal:
                 return self.COLUMN_HEADERS[section]
             return str(section)
+        if role == Qt.ItemDataRole.TextAlignmentRole:
+            return Qt.AlignmentFlag.AlignCenter
         return None
 
     def pre_add(self, parent: AccountGroup | None) -> None:
