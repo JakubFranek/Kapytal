@@ -374,8 +374,11 @@ class TransactionTableModel(QAbstractTableModel):
                 transaction.type_ == CashTransactionType.EXPENSE
                 and transaction.is_refunded
             ):
-                # TODO: add refunded percentage
-                return transaction.type_.name.capitalize() + " (Refunded)"
+                refunded_ratio = transaction.refunded_ratio
+                return (
+                    transaction.type_.name.capitalize()
+                    + f" ({refunded_ratio*100:.0f}% Refunded)"
+                )
             return transaction.type_.name.capitalize()
         if isinstance(transaction, SecurityTransaction):
             return transaction.type_.name.capitalize()

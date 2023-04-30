@@ -4,6 +4,7 @@ import uuid
 from abc import ABC, abstractmethod
 from collections.abc import Collection
 from datetime import datetime, timedelta
+from decimal import Decimal
 from enum import Enum, auto
 from types import NoneType
 from typing import Any
@@ -334,7 +335,17 @@ class CashTransaction(CashRelatedTransaction):
             return tuple(self._refunds)
         return ()
 
-    # TODO: indicate fully and partically refunded CashTransactions
+    @property
+    def refunded_ratio(self) -> Decimal:
+        if self.is_refunded:
+            return (
+                sum(
+                    (refund.amount for refund in self.refunds),
+                    start=CashAmount(0, self.currency),
+                )
+                / self.amount
+            )
+        return 0
 
     @property
     def is_refunded(self) -> bool:

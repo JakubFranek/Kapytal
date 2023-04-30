@@ -1,4 +1,3 @@
-import copy
 import logging
 import operator
 from collections.abc import Collection
@@ -376,6 +375,20 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
 
     def __rmul__(self, __o: object) -> Self:
         return self.__mul__(__o)
+
+    def __truediv__(self, __o: object) -> Decimal:
+        if not isinstance(__o, CashAmount):
+            return NotImplemented
+        if self.currency != __o.currency:
+            raise CurrencyError("CashAmount.currency of operands must match.")
+        return self.value_normalized / __o.value_normalized
+
+    def __rtruediv__(self, __o: object) -> Decimal:
+        if not isinstance(__o, CashAmount):
+            return NotImplemented
+        if self.currency != __o.currency:
+            raise CurrencyError("CashAmount.currency of operands must match.")
+        return __o.value_normalized / self.value_normalized
 
     def is_positive(self) -> bool:
         return self.value_normalized > 0
