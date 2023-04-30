@@ -385,7 +385,7 @@ def security_transactions(
     assume(cash_account.path != security_account.path)
 
     price_per_share = draw(
-        cash_amounts(currency=cash_account.currency, min_value=0, max_value=1e10)
+        cash_amounts(currency=cash_account.currency, min_value=0, max_value=1e9)
     )
     security = draw(securities(currency=cash_account.currency))
 

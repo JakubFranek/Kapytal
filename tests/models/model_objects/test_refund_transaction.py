@@ -97,6 +97,14 @@ def test_creation() -> None:
         f"category={{{refund.category_names}}}, "
         f"{refund.datetime_.strftime('%Y-%m-%d')})"
     )
+    assert (
+        refunded_transaction.refunded_ratio
+        == sum(
+            (refund.amount for refund in refunded_transaction.refunds),
+            start=CashAmount(0, currency),
+        )
+        / refunded_transaction.amount
+    )
 
 
 def test_unrelated_refund_transaction() -> None:

@@ -95,11 +95,12 @@ def test_filter_off_premade_transactions(filter_: DescriptionFilter) -> None:
 def test_filter_keep_premade_transactions(filter_: DescriptionFilter) -> None:
     filter_._mode = FilterMode.KEEP
     filtered = filter_.filter_transactions(transaction_list)
-    assert filtered == tuple(
+    checked = tuple(
         transaction
         for transaction in transaction_list
         if check_transaction(filter_, transaction)
     )
+    assert filtered == checked
 
 
 @given(filter_=description_filters())

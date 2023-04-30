@@ -276,6 +276,38 @@ def test_mul_rmul_invalid_type(cash_amount: CashAmount, number: Any) -> None:
     assert result == NotImplemented
 
 
+@given(
+    data=st.data(),
+)
+def test_truediv_rtruediv(data: st.DataObject) -> None:
+    currency = data.draw(currencies())
+    amount_1 = data.draw(cash_amounts(currency=currency, min_value=1e-6))
+    amount_2 = data.draw(cash_amounts(currency=currency, min_value=1e-6))
+    expected_truediv = amount_1.value_normalized / amount_2.value_normalized
+    expected_rtruediv = amount_2.value_normalized / amount_1.value_normalized
+    assert amount_1.__truediv__(amount_2) == expected_truediv
+    assert amount_1.__rtruediv__(amount_2) == expected_rtruediv
+
+
+@given(cash_amount_1=cash_amounts(), cash_amount_2=cash_amounts())
+def test_truediv_rtruediv_different_currencies(
+    cash_amount_1: CashAmount, cash_amount_2: CashAmount
+) -> None:
+    assume(cash_amount_1.currency != cash_amount_2.currency)
+    with pytest.raises(CurrencyError):
+        cash_amount_1.__truediv__(cash_amount_2)
+    with pytest.raises(CurrencyError):
+        cash_amount_1.__rtruediv__(cash_amount_2)
+
+
+@given(amount_1=cash_amounts(), amount_2=everything_except(CashAmount))
+def test_truediv_rtruediv_invalid_type(amount_1: CashAmount, amount_2: Any) -> None:
+    result = amount_1.__truediv__(amount_2)
+    assert result == NotImplemented
+    result = amount_1.__rtruediv__(amount_2)
+    assert result == NotImplemented
+
+
 @given(cash_amount=cash_amounts())
 def test_is_positive(cash_amount: CashAmount) -> None:
     assert (cash_amount.value_rounded > 0) == cash_amount.is_positive()
