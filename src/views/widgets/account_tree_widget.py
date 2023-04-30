@@ -1,7 +1,7 @@
 import logging
 
-from PyQt6.QtCore import pyqtSignal
-from PyQt6.QtGui import QContextMenuEvent, QCursor
+from PyQt6.QtCore import QEvent, QObject, Qt, pyqtSignal
+from PyQt6.QtGui import QContextMenuEvent, QCursor, QKeyEvent, QMouseEvent
 from PyQt6.QtWidgets import QHeaderView, QMenu, QWidget
 from src.views import icons
 from src.views.constants import AccountTreeColumn
@@ -31,6 +31,23 @@ class AccountTreeWidget(QWidget, Ui_AccountTreeWidget):
         self._connect_actions()
 
         self.treeView.contextMenuEvent = self._create_context_menu
+
+        self.treeView.installEventFilter(self)
+        self.treeView.viewport().installEventFilter(self)
+
+    def eventFilter(self, source: QObject, event: QEvent) -> bool:  # noqa: N802
+        if (
+            source is self.treeView
+            and isinstance(event, QKeyEvent)
+            and event.key() == Qt.Key.Key_Escape
+            and event.modifiers() == Qt.KeyboardModifier.NoModifier
+        ) or (
+            source is self.treeView.viewport()
+            and isinstance(event, QMouseEvent)
+            and not self.treeView.indexAt(event.pos()).isValid()
+        ):
+            self.treeView.selectionModel().clear()
+        return super().eventFilter(source, event)
 
     def refresh(self) -> None:
         self.treeView.viewport().update()
