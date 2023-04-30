@@ -682,12 +682,12 @@ class CashTransaction(CashRelatedTransaction):
         self._category_amount_pairs = list(category_amount_pairs)
         self._tag_amount_pairs = list(tag_amount_pairs)
         self._set_account(account)
-        self._account.update_balance()
 
     # IDEA: looks very similar to its Security counterpart
     def _set_account(self, account: CashAccount) -> None:
         if hasattr(self, "_account"):
             if self._account == account:
+                self._account.update_balance()
                 return
             self._account.remove_transaction(self)
         self._account = account

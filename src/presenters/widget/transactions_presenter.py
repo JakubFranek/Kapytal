@@ -106,7 +106,7 @@ class TransactionsPresenter:
 
     def update_model_data(self) -> None:
         self._model.transactions = self._record_keeper.transactions
-        self.update_base_currency()
+        self._model.base_currency = self._record_keeper.base_currency
 
     def update_base_currency(self) -> None:
         self._model.base_currency = self._record_keeper.base_currency

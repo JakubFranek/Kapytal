@@ -318,11 +318,12 @@ class AccountTreeModel(QAbstractItemModel):
         if self.base_currency is None:
             return None
 
-        if (
-            column == AccountTreeColumn.NAME
-            and item.get_balance(self.base_currency).value_normalized == 0
-        ):
-            return QBrush(QColor("gray"))
+        if column == AccountTreeColumn.NAME:
+            try:
+                if item.get_balance(self.base_currency).value_normalized == 0:
+                    return QBrush(QColor("gray"))
+            except ConversionFactorNotFoundError:
+                return None
         if column == AccountTreeColumn.BALANCE_BASE:
             try:
                 amount = item.get_balance(self.base_currency)
