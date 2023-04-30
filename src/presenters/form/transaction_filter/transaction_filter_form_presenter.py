@@ -388,7 +388,7 @@ class TransactionFilterFormPresenter:
         if self._form.payee_filter_active:
             self._check_filter_related_types("Payee Filter", payee_related_types)
         if self._form.category_filters_active:
-            self._check_filter_related_types("Category Filters", category_related_types)
+            self._check_filter_related_types("Category Filter", category_related_types)
 
     def _check_filter_related_types(
         self,
@@ -411,10 +411,17 @@ class TransactionFilterFormPresenter:
                 "Type Filter?</html>"
             )
             title = "Unselect unrelated Transaction types?"
+            logging.info(
+                f"{filter_name} activated with unrelated types, "
+                "asking user to unselect them"
+            )
             answer = ask_yes_no_question(self._form, question, title, warning=True)
             if answer:
+                logging.info("User chose to unselect unrelated types in Type Filter")
                 self._form.types = types - unrelated_types
                 types = self._form.types
+            else:
+                logging.info("User chose to keep unrelated types in Type Filter")
         related_types = types.intersection(related_types)
         if not related_types:
             display_error_message(
