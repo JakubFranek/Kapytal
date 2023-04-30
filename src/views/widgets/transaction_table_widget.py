@@ -9,8 +9,6 @@ from src.views.ui_files.widgets.Ui_transaction_table_widget import (
     Ui_TransactionTableWidget,
 )
 
-# TODO: double click on transaction to edit it
-
 
 class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
     signal_search_text_changed = pyqtSignal()
@@ -207,6 +205,8 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
         self.actionReset_Columns.triggered.connect(self._reset_column_order)
 
     def _initialize_signals(self) -> None:
+        self.tableView.doubleClicked.connect(self.signal_edit.emit)
+
         self.actionIncome.triggered.connect(self.signal_income.emit)
         self.actionExpense.triggered.connect(self.signal_expense.emit)
         self.actionRefund.triggered.connect(self.signal_refund.emit)
