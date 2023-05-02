@@ -17,7 +17,7 @@ class ExchangeRateTableModel(QAbstractTableModel):
         self, view: QTableView, exchange_rates: tuple[ExchangeRate, ...]
     ) -> None:
         super().__init__()
-        self._tree = view
+        self._view = view
         self.exchange_rates = exchange_rates
 
     @property
@@ -113,13 +113,13 @@ class ExchangeRateTableModel(QAbstractTableModel):
         self.endRemoveRows()
 
     def get_selected_item_index(self) -> QModelIndex:
-        indexes = self._tree.selectedIndexes()
+        indexes = self._view.selectedIndexes()
         if len(indexes) == 0:
             return QModelIndex()
         return indexes[0]
 
     def get_selected_item(self) -> ExchangeRate | None:
-        indexes = self._tree.selectedIndexes()
+        indexes = self._view.selectedIndexes()
         if len(indexes) == 0:
             return None
         return indexes[0].internalPointer()

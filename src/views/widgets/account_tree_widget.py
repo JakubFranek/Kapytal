@@ -11,6 +11,8 @@ from src.views.ui_files.widgets.Ui_account_tree_widget import Ui_AccountTreeWidg
 class AccountTreeWidget(QWidget, Ui_AccountTreeWidget):
     signal_selection_changed = pyqtSignal()
     signal_expand_below = pyqtSignal()
+    signal_reset_sort_order = pyqtSignal()
+    signal_sort = pyqtSignal(int)
     signal_show_all = pyqtSignal()
     signal_hide_all = pyqtSignal()
     signal_show_selection_only = pyqtSignal()
@@ -34,6 +36,26 @@ class AccountTreeWidget(QWidget, Ui_AccountTreeWidget):
 
         self.treeView.installEventFilter(self)
         self.treeView.viewport().installEventFilter(self)
+        self.treeView.header().setSectionsClickable(True)
+        self.treeView.header().sectionClicked.connect(
+            lambda index: self._header_clicked(index)
+        )
+
+    @property
+    def sort_order(self) -> Qt.SortOrder:
+        return self.treeView.header().sortIndicatorOrder()
+
+    def _header_clicked(self, index: int) -> None:
+        header = self.treeView.header()
+        if not header.isSortIndicatorShown():
+            header.setSortIndicatorShown(True)
+            header.setSortIndicator(index, Qt.SortOrder.AscendingOrder)
+        # BUG: this below seems like a bug but it works
+        elif header.sortIndicatorOrder() == Qt.SortOrder.DescendingOrder:
+            header.setSortIndicator(index, Qt.SortOrder.DescendingOrder)
+        else:
+            header.setSortIndicator(index, Qt.SortOrder.AscendingOrder)
+        self.signal_sort.emit(index)
 
     def eventFilter(self, source: QObject, event: QEvent) -> bool:  # noqa: N802
         if (
@@ -44,6 +66,10 @@ class AccountTreeWidget(QWidget, Ui_AccountTreeWidget):
         ) or (
             source is self.treeView.viewport()
             and isinstance(event, QMouseEvent)
+            and (
+                event.button() == Qt.MouseButton.LeftButton
+                or event.button() == Qt.MouseButton.RightButton
+            )
             and not self.treeView.indexAt(event.pos()).isValid()
         ):
             self.treeView.selectionModel().clear()
@@ -116,6 +142,8 @@ class AccountTreeWidget(QWidget, Ui_AccountTreeWidget):
         self.actionExpand_All_Below.setIcon(icons.expand_below)
         self.actionCollapse_All.setIcon(icons.collapse)
 
+        self.actionReset_Sort_Order.setIcon(icons.reset_sort_order)
+
         self.actionShow_All.setIcon(icons.eye_open)
         self.actionHide_All.setIcon(icons.eye_closed)
         self.actionShow_Selection_Only.setIcon(icons.eye_red)
@@ -131,6 +159,8 @@ class AccountTreeWidget(QWidget, Ui_AccountTreeWidget):
         self.actionExpand_All.triggered.connect(self.expand_all)
         self.actionExpand_All_Below.triggered.connect(self.signal_expand_below.emit)
         self.actionCollapse_All.triggered.connect(self.collapse_all)
+
+        self.actionReset_Sort_Order.triggered.connect(self.signal_reset_sort_order.emit)
 
         self.actionShow_All.triggered.connect(self.signal_show_all.emit)
         self.actionShow_Selection_Only.triggered.connect(
@@ -150,6 +180,8 @@ class AccountTreeWidget(QWidget, Ui_AccountTreeWidget):
 
         self.expandAllToolButton.setDefaultAction(self.actionExpand_All)
         self.collapseAllToolButton.setDefaultAction(self.actionCollapse_All)
+
+        self.resetSortOrderToolButton.setDefaultAction(self.actionReset_Sort_Order)
 
         self.showAllToolButton.setDefaultAction(self.actionShow_All)
         self.hideAllToolButton.setDefaultAction(self.actionHide_All)

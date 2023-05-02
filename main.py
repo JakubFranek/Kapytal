@@ -50,6 +50,10 @@ def main() -> None:
     font.setPointSize(10)
     app.setFont(font)
 
+    color_scheme = app.styleHints().colorScheme()
+    colors.color_scheme = color_scheme
+    logging.debug(f"QApplication color scheme: '{color_scheme.name}'")
+
     logging.debug("Creating MainWindow")
     main_view = MainView()
 
@@ -58,10 +62,6 @@ def main() -> None:
 
     logging.debug("Setting Fusion style")
     app.setStyle(QStyleFactory.create("Fusion"))
-
-    color_scheme = app.styleHints().colorScheme()
-    colors.color_scheme = color_scheme
-    logging.debug(f"QApplication color scheme: '{color_scheme.name}'")
 
     logging.info("Executing QApplication, awaiting user input")
     app.exec()

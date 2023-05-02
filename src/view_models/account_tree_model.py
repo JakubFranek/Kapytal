@@ -1,6 +1,8 @@
 import logging
+import unicodedata
 from collections.abc import Callable, Sequence
 from copy import copy
+from decimal import Decimal
 from typing import Any, Self
 from uuid import UUID
 
@@ -8,6 +10,7 @@ from PyQt6.QtCore import (
     QAbstractItemModel,
     QModelIndex,
     QObject,
+    QSortFilterProxyModel,
     Qt,
     QTimer,
     pyqtSignal,
@@ -166,11 +169,13 @@ class AccountTreeModel(QAbstractItemModel):
     def __init__(
         self,
         view: QTreeView,
+        proxy: QSortFilterProxyModel,
         flat_items: Sequence[Account | AccountGroup],
         base_currency: Currency,
     ) -> None:
         super().__init__()
         self._tree = view
+        self._proxy = proxy
         self._root_nodes = []
         self._flat_nodes = []
         self.flat_items = flat_items
@@ -243,6 +248,17 @@ class AccountTreeModel(QAbstractItemModel):
             parent_row = grandparent.children.index(parent)
         return QAbstractItemModel.createIndex(self, parent_row, 0, parent)
 
+    def headerData(  # noqa: N802
+        self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole = ...
+    ) -> str | int | None:
+        if role == Qt.ItemDataRole.DisplayRole:
+            if orientation == Qt.Orientation.Horizontal:
+                return self.COLUMN_HEADERS[section]
+            return str(section)
+        if role == Qt.ItemDataRole.TextAlignmentRole:
+            return Qt.AlignmentFlag.AlignCenter
+        return None
+
     def data(  # noqa: PLR0911
         self, index: QModelIndex, role: Qt.ItemDataRole = ...
     ) -> str | QIcon | QBrush | Qt.AlignmentFlag | None:
@@ -267,6 +283,8 @@ class AccountTreeModel(QAbstractItemModel):
                 "Single-click: toggle visibility\n"
                 "Double-click: set only this item visible"
             )
+        if role == Qt.ItemDataRole.UserRole:
+            return self._get_user_role_data(column, item)
         return None
 
     def _get_display_role_data(
@@ -342,24 +360,31 @@ class AccountTreeModel(QAbstractItemModel):
             return QBrush(QColor("gray"))
         return None
 
-    def headerData(  # noqa: N802
-        self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole = ...
-    ) -> str | int | None:
-        if role == Qt.ItemDataRole.DisplayRole:
-            if orientation == Qt.Orientation.Horizontal:
-                return self.COLUMN_HEADERS[section]
-            return str(section)
-        if role == Qt.ItemDataRole.TextAlignmentRole:
-            return Qt.AlignmentFlag.AlignCenter
+    def _get_user_role_data(
+        self, column: int, item: Account | AccountGroup
+    ) -> Decimal | str | None:
+        if column == AccountTreeColumn.NAME:
+            return unicodedata.normalize(
+                "NFD", self._get_display_role_data(column, item)
+            )
+        if column == AccountTreeColumn.BALANCE_NATIVE and isinstance(item, CashAccount):
+            return float(item.get_balance(item.currency).value_normalized)
+        if column == AccountTreeColumn.BALANCE_BASE and self.base_currency is not None:
+            try:
+                return float(item.get_balance(self.base_currency).value_normalized)
+            except ConversionFactorNotFoundError:
+                return None
         return None
 
     def pre_add(self, parent: AccountGroup | None) -> None:
+        self._proxy.setDynamicSortFilter(False)  # noqa: FBT003
         parent_index = self.get_index_from_item(parent)
         row_index = len(self._root_nodes) if parent is None else len(parent.children)
         self.beginInsertRows(parent_index, row_index, row_index)
 
     def post_add(self) -> None:
         self.endInsertRows()
+        self._proxy.setDynamicSortFilter(True)  # noqa: FBT003
 
     def pre_reset_model(self) -> None:
         self.beginResetModel()
@@ -381,6 +406,7 @@ class AccountTreeModel(QAbstractItemModel):
         new_parent: AccountGroup | None,
         new_index: int,
     ) -> None:
+        self._proxy.setDynamicSortFilter(False)  # noqa: FBT003
         previous_parent_index = self.get_index_from_item(previous_parent)
         new_parent_index = self.get_index_from_item(new_parent)
         # Index must be limited to valid indexes
@@ -401,9 +427,11 @@ class AccountTreeModel(QAbstractItemModel):
 
     def post_move_item(self) -> None:
         self.endMoveRows()
+        self._proxy.setDynamicSortFilter(True)  # noqa: FBT003
 
     def get_selected_item_index(self) -> QModelIndex:
         indexes = self._tree.selectedIndexes()
+        indexes = [self._proxy.mapToSource(index) for index in indexes]
         if len(indexes) == 0:
             return QModelIndex()
         return indexes[0]

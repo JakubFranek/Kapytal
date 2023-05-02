@@ -21,7 +21,7 @@ class CurrencyTableModel(QAbstractTableModel):
         base_currency: Currency,
     ) -> None:
         super().__init__()
-        self._tree = view
+        self._view = view
         self.currencies = currencies
         self.base_currency = base_currency
 
@@ -101,13 +101,13 @@ class CurrencyTableModel(QAbstractTableModel):
         self.endRemoveRows()
 
     def get_selected_item_index(self) -> QModelIndex:
-        indexes = self._tree.selectedIndexes()
+        indexes = self._view.selectedIndexes()
         if len(indexes) == 0:
             return QModelIndex()
         return indexes[0]
 
     def get_selected_item(self) -> Currency | None:
-        indexes = self._tree.selectedIndexes()
+        indexes = self._view.selectedIndexes()
         if len(indexes) == 0:
             return None
         return indexes[0].internalPointer()

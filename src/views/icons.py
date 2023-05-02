@@ -2,8 +2,9 @@
 
 from pathlib import Path
 
-from PyQt6.QtCore import QDir
+from PyQt6.QtCore import QDir, Qt
 from PyQt6.QtGui import QIcon
+from src.views import colors
 
 folder_open: QIcon | None = None
 folder_closed: QIcon | None = None
@@ -69,6 +70,7 @@ edit: QIcon | None = None
 remove: QIcon | None = None
 duplicate: QIcon | None = None
 transfer: QIcon | None = None
+reset_sort_order: QIcon | None = None
 
 
 def setup() -> None:  # noqa: PLR0915
@@ -93,6 +95,7 @@ def setup() -> None:  # noqa: PLR0915
     global critical, warning  # noqa: PLW0603
     global add, edit, remove, duplicate  # noqa: PLW0603
     global transfer  # noqa: PLW0603
+    global reset_sort_order  # noqa: PLW0603
 
     QDir.addSearchPath(
         "icons_24",
@@ -171,3 +174,8 @@ def setup() -> None:  # noqa: PLR0915
     remove = QIcon("icons_16:minus.png")
     duplicate = QIcon("icons_16:document-copy.png")
     transfer = QIcon("icons_16:arrow-curve-000-left.png")
+    reset_sort_order = (
+        QIcon("icons_custom:edit-list-order-white.png")
+        if colors.color_scheme == Qt.ColorScheme.Dark
+        else QIcon("icons_custom:edit-list-order.png")
+    )

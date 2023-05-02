@@ -2,6 +2,7 @@ import copy
 import logging
 from typing import Protocol
 
+from PyQt6.QtCore import QSortFilterProxyModel, Qt
 from src.models.base_classes.account import Account
 from src.models.model_objects.account_group import AccountGroup
 from src.models.model_objects.cash_objects import CashAccount
@@ -10,6 +11,7 @@ from src.models.record_keeper import RecordKeeper
 from src.presenters.utilities.event import Event
 from src.presenters.utilities.handle_exception import handle_exception
 from src.view_models.account_tree_model import AccountTreeModel
+from src.views.constants import AccountTreeColumn
 from src.views.dialogs.account_group_dialog import AccountGroupDialog
 from src.views.dialogs.cash_account_dialog import CashAccountDialog
 from src.views.dialogs.security_account_dialog import SecurityAccountDialog
@@ -17,6 +19,9 @@ from src.views.utilities.handle_exception import display_error_message
 from src.views.widgets.account_tree_widget import AccountTreeWidget
 
 # REFACTOR: split dialog presenters into separate classes?
+# REFACTOR: remove RecordKeeper deepcopying somehow
+# possibilities:
+# 1. add RecordKeeper validation method to run before adding?
 
 
 class SetupDialogCallable(Protocol):
@@ -35,15 +40,22 @@ class AccountTreePresenter:
     def __init__(self, view: AccountTreeWidget, record_keeper: RecordKeeper) -> None:
         self._view = view
         self._record_keeper = record_keeper
+
+        self._proxy = QSortFilterProxyModel(self._view)
+        self._proxy.setSortRole(Qt.ItemDataRole.UserRole)
+        self._proxy.setSortCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
         self._model = AccountTreeModel(
             view=view.treeView,
+            proxy=self._proxy,
             flat_items=record_keeper.root_account_items,
             base_currency=record_keeper.base_currency,
         )
-        self._view.treeView.setModel(self._model)
+        self._proxy.setSourceModel(self._model)
+        self._view.treeView.setModel(self._proxy)
 
         self._setup_signals()
         self._view.finalize_setup()
+        self._reset_sort_order()
 
     @property
     def valid_accounts(self) -> tuple[Account, ...]:
@@ -79,7 +91,7 @@ class AccountTreePresenter:
         logging.debug(f"Expanding all nodes below {item}")
         if len(indexes) == 0:
             raise ValueError("No index to expand recursively selected.")
-        self._view.treeView.expandRecursively(indexes[0])
+        self._view.treeView.expandRecursively(indexes[0])  # view index required here
 
     def edit_item(self) -> None:
         item = self._model.get_selected_item()
@@ -280,14 +292,18 @@ class AccountTreePresenter:
         index = self._dialog.position - 1
 
         logging.info("Adding SecurityAccount")
+        record_keeper_copy = copy.deepcopy(self._record_keeper)
         try:
-            self._record_keeper.add_security_account(path, index)
+            logging.disable(logging.INFO)
+            record_keeper_copy.add_security_account(path, index)
+            logging.disable(logging.NOTSET)
         except Exception as exception:  # noqa: BLE001
             handle_exception(exception)
             return
 
         item = self._model.get_selected_item()
         self._model.pre_add(item)
+        self._record_keeper.add_security_account(path, index)
         self.update_model_data()
         self._model.post_add()
         self._dialog.close()
@@ -390,16 +406,22 @@ class AccountTreePresenter:
         initial_balance = self._dialog.initial_balance
 
         logging.info("Adding CashAccount")
+        record_keeper_copy = copy.deepcopy(self._record_keeper)
         try:
-            self._record_keeper.add_cash_account(
+            logging.disable(logging.INFO)
+            record_keeper_copy.add_cash_account(
                 path, currency_code, initial_balance, index
             )
+            logging.disable(logging.NOTSET)
         except Exception as exception:  # noqa: BLE001
             handle_exception(exception)
             return
 
         item = self._model.get_selected_item()
         self._model.pre_add(item)
+        self._record_keeper.add_cash_account(
+            path, currency_code, initial_balance, index
+        )
         self.update_model_data()
         self._model.post_add()
         self._dialog.close()
@@ -484,6 +506,9 @@ class AccountTreePresenter:
         self._view.signal_selection_changed.connect(self._selection_changed)
         self._view.signal_expand_below.connect(self.expand_all_below)
 
+        self._view.signal_reset_sort_order.connect(self._reset_sort_order)
+        self._view.signal_sort.connect(lambda index: self._sort(index))
+
         self._view.signal_show_all.connect(
             lambda: self._set_visibility_all(visible=True)
         )
@@ -549,3 +574,16 @@ class AccountTreePresenter:
         self._model.toggle_visibility()
         self._view.refresh()
         self.event_visibility_changed()
+
+    def _sort(self, index: int) -> None:
+        sort_order = self._view.sort_order
+        logging.debug(
+            f"Sorting AccountTree: column={AccountTreeColumn(index).name}, "
+            f"order={sort_order.name}"
+        )
+        self._proxy.sort(index, sort_order)
+
+    def _reset_sort_order(self) -> None:
+        logging.debug("Resetting AccountTree sort order")
+        self._proxy.sort(-1)
+        self._view.treeView.header().setSortIndicatorShown(False)  # noqa: FBT003
