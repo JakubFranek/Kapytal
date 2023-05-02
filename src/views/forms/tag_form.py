@@ -8,6 +8,7 @@ from src.views.constants import TagTableColumn
 from src.views.ui_files.forms.Ui_tag_form import Ui_TagForm
 
 
+# TODO: change visual style from side buttons to tool buttons and context menu
 class TagForm(QWidget, Ui_TagForm):
     signal_add_tag = pyqtSignal()
     signal_rename_tag = pyqtSignal()

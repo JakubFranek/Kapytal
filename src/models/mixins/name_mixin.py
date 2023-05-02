@@ -50,6 +50,7 @@ class NameMixin:
                 f"Slashes in {self.__class__.__name__}.name are forbidden."
             )
 
+        # FIXME: get rid of this stupid logging method
         if hasattr(self, "_name"):
             logging.info(
                 f"Renaming {self.__class__.__name__} from '{self._name}' to '{name}'"

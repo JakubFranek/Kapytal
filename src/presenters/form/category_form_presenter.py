@@ -11,6 +11,8 @@ from src.view_models.category_tree_model import CategoryTreeModel
 from src.views.dialogs.category_dialog import CategoryDialog
 from src.views.forms.category_form import CategoryForm
 
+# TODO: Have 3 separate treeviews and models?
+
 
 class CategoryFormPresenter:
     event_data_changed = Event()

@@ -7,6 +7,8 @@ from src.views import icons
 from src.views.constants import PayeeTableColumn
 from src.views.ui_files.forms.Ui_payee_form import Ui_PayeeForm
 
+# TODO: change visual style from side buttons to tool buttons and context menu
+
 
 class PayeeForm(QWidget, Ui_PayeeForm):
     signal_add_payee = pyqtSignal()

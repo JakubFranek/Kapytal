@@ -15,10 +15,10 @@ class TagDialog(QDialog, Ui_TagDialog):
         self.resize(270, 80)
         if edit:
             self.setWindowTitle("Rename Tag")
-            self.setWindowIcon(icons.add_tag)
+            self.setWindowIcon(icons.edit_tag)
         else:
             self.setWindowTitle("Add Tag")
-            self.setWindowIcon(icons.edit_tag)
+            self.setWindowIcon(icons.add_tag)
 
         self.buttonBox.clicked.connect(self._handle_button_box_click)
 
