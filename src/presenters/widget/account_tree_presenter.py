@@ -16,7 +16,7 @@ from src.views.dialogs.security_account_dialog import SecurityAccountDialog
 from src.views.utilities.handle_exception import display_error_message
 from src.views.widgets.account_tree_widget import AccountTreeWidget
 
-# REFACTOR: possibly split dialog presenters into separate classes?
+# REFACTOR: split dialog presenters into separate classes?
 
 
 class SetupDialogCallable(Protocol):

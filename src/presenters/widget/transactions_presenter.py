@@ -243,6 +243,9 @@ class TransactionsPresenter:
     def _initialize_view(self) -> None:
         self._view.resize_table_to_contents()
         self._view.set_column_visibility(TransactionTableColumn.UUID, show=False)
+        self._view.set_column_visibility(
+            TransactionTableColumn.DATETIME_CREATED, show=False
+        )
 
     def _connect_to_signals(self) -> None:
         self._view.signal_search_text_changed.connect(self._search_filter)

@@ -65,6 +65,7 @@ class TransactionTableColumn(IntEnum):
     CATEGORY = 12
     TAG = 13
     UUID = 14
+    DATETIME_CREATED = 15
 
 
 TRANSACTION_TABLE_COLUMN_HEADERS = {
@@ -83,4 +84,5 @@ TRANSACTION_TABLE_COLUMN_HEADERS = {
     TransactionTableColumn.CATEGORY: "Category",
     TransactionTableColumn.TAG: "Tags",
     TransactionTableColumn.UUID: "UUID",
+    TransactionTableColumn.DATETIME_CREATED: "Date & time created",
 }

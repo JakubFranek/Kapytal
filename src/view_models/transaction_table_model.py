@@ -75,7 +75,7 @@ class TransactionTableModel(QAbstractTableModel):
 
     def columnCount(self, index: QModelIndex = ...) -> int:  # noqa: N802
         del index
-        return 15
+        return len(TransactionTableColumn)
 
     def index(self, row: int, column: int, parent: QModelIndex = ...) -> QModelIndex:
         if parent.isValid():
@@ -235,6 +235,8 @@ class TransactionTableModel(QAbstractTableModel):
             return TransactionTableModel._get_transaction_tags(transaction)
         if column == TransactionTableColumn.UUID:
             return str(transaction.uuid)
+        if column == TransactionTableColumn.DATETIME_CREATED:
+            return transaction.datetime_created.strftime("%d.%m.%Y %H:%M:%S")
         return None
 
     def _get_decoration_role_data(  # noqa: PLR0911, PLR0912, C901
@@ -318,6 +320,8 @@ class TransactionTableModel(QAbstractTableModel):
             return TransactionTableModel._get_transfer_amount_value(
                 transaction, sent=False
             )
+        if column == TransactionTableColumn.DATETIME_CREATED:
+            return transaction.datetime_created.timestamp()
         return unicodedata.normalize(
             "NFD", self._get_display_role_data(transaction, column)
         )

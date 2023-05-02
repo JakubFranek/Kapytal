@@ -137,8 +137,9 @@ class MainView(QMainWindow, Ui_MainWindow):
             "<a href=https://p.yusukekamiyamane.com>Fugue Icons set</a> by "
             "Yusuke Kamiyamane.<br/>"
             "Custom icons located in <tt>Kapytal/resources/icons/icons-custom</tt> "
-            "are modifications of existing Fugue Icons.<br/>"
-            "</html"
+            "are modifications of existing Fugue Icons.<br/><br/>"
+            "<em>Dedicated to my wife Soňa</em>"
+            "</html>"
         )
         message_box = QMessageBox(self)
         message_box.setWindowTitle("About Kapytal")
