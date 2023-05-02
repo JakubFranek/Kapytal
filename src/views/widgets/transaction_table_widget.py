@@ -164,7 +164,6 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
         self.header_menu.popup(QCursor.pos())
 
     def _set_icons(self) -> None:
-        self.actionFilter_Transactions = QAction(self)
         self.actionFilter_Transactions.setIcon(icons.filter_)
         self.actionIncome.setIcon(icons.income)
         self.actionExpense.setIcon(icons.expense)

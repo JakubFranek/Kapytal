@@ -131,7 +131,7 @@
         </size>
        </property>
        <property name="toolTip">
-        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Special regex characters:&lt;/p&gt;&lt;p&gt;. matches any character&lt;br/&gt;* matches zero or more of preceding token&lt;br/&gt;? matches zero or one of preceding token&lt;br/&gt;+ matches one or more of the preceding token&lt;br/&gt;^ matches the beginning of a string&lt;br/&gt;$ matches the end of a string&lt;br/&gt;| matches the expression to the right or left&lt;br/&gt;[...] matches any character within square brackets&lt;br/&gt;(...) groups tokens together&lt;br/&gt;\ escapes a special character&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Search text in all table columns (including hidden columns)&lt;br/&gt;For advanced filtering, use the Filter button to the left&lt;br/&gt;&lt;br/&gt;Special regex characters:&lt;br/&gt;. matches any character&lt;br/&gt;* matches zero or more of preceding token&lt;br/&gt;? matches zero or one of preceding token&lt;br/&gt;+ matches one or more of the preceding token&lt;br/&gt;^ matches the beginning of a string&lt;br/&gt;$ matches the end of a string&lt;br/&gt;| matches the expression to the right or left&lt;br/&gt;[...] matches any character within square brackets&lt;br/&gt;(...) groups tokens together&lt;br/&gt;\ escapes a special character&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
        <property name="placeholderText">
         <string>Search Transactions</string>
@@ -234,9 +234,12 @@
     <string>Duplicate</string>
    </property>
   </action>
-  <action name="actionFilter">
+  <action name="actionFilter_Transactions">
    <property name="text">
-    <string>Filter</string>
+    <string>Filter Transactions</string>
+   </property>
+   <property name="toolTip">
+    <string>Filter Transactions</string>
    </property>
   </action>
   <action name="actionReset_Columns">
