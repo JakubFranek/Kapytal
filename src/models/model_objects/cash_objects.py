@@ -1161,6 +1161,10 @@ class RefundTransaction(CashRelatedTransaction):
     def payee(self) -> Attribute:
         return self._payee
 
+    @property
+    def refund_ratio(self) -> Decimal:
+        return Decimal(self.amount / self.refunded_transaction.amount)
+
     def __repr__(self) -> str:
         return (
             f"RefundTransaction(account='{self._account.name}', "

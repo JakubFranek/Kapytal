@@ -379,17 +379,14 @@ class TransactionTableModel(QAbstractTableModel):
                 and transaction.is_refunded
             ):
                 refunded_ratio = transaction.refunded_ratio
-                return (
-                    transaction.type_.name.capitalize()
-                    + f" ({refunded_ratio*100:.0f}% Refunded)"
-                )
+                return f"Expense ({refunded_ratio*100:.0f}% Refunded)"
             return transaction.type_.name.capitalize()
         if isinstance(transaction, SecurityTransaction):
             return transaction.type_.name.capitalize()
         if isinstance(transaction, CashTransfer):
             return "Cash Transfer"
         if isinstance(transaction, RefundTransaction):
-            return "Refund"
+            return f"Refund ({transaction.refund_ratio*100:.0f}%)"
         if isinstance(transaction, SecurityTransfer):
             return "Security Transfer"
         raise TypeError("Unexpected Transaction type.")

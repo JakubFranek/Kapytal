@@ -105,6 +105,7 @@ def test_creation() -> None:
         )
         / refunded_transaction.amount
     )
+    assert refund.refund_ratio == Decimal(refund.amount / refunded_transaction.amount)
 
 
 def test_unrelated_refund_transaction() -> None:
