@@ -201,3 +201,30 @@ def test_filter_discard_premade_transactions(data: st.DataObject) -> None:
         for transaction in transaction_list
         if check_transaction(filter_, transaction)
     )
+
+
+@given(data=st.data())
+def test_filter_keep_premade_transactions_conversion_factor_not_found(
+    data: st.DataObject,
+) -> None:
+    mode = FilterMode.KEEP
+    currency = data.draw(currencies())
+    minimum = data.draw(cash_amounts(currency, min_value=0))
+    maximum = data.draw(cash_amounts(currency, min_value=minimum.value_normalized))
+    filter_ = CashAmountFilter(minimum, maximum, mode)
+    filter_._mode = FilterMode.KEEP
+    filtered = filter_.filter_transactions(transaction_list)
+    assert filtered == tuple(transaction_list)
+
+
+@given(data=st.data())
+def test_filter_discard_premade_transactions_conversion_factor_not_found(
+    data: st.DataObject,
+) -> None:
+    mode = FilterMode.DISCARD
+    currency = data.draw(currencies())
+    minimum = data.draw(cash_amounts(currency, min_value=0))
+    maximum = data.draw(cash_amounts(currency, min_value=minimum.value_normalized))
+    filter_ = CashAmountFilter(minimum, maximum, mode)
+    filtered = filter_.filter_transactions(transaction_list)
+    assert filtered == tuple(transaction_list)

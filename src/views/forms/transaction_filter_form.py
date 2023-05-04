@@ -48,6 +48,7 @@ class AccountFilterMode(Enum):
 
 
 # TODO: print Filter summary button?
+# TODO: improve Type Filter selection (list view?)
 
 
 class TransactionFilterForm(QWidget, Ui_TransactionFilterForm):
@@ -536,7 +537,7 @@ class TransactionFilterForm(QWidget, Ui_TransactionFilterForm):
         self._initialize_mode_combobox(self.descriptionFilterModeComboBox)
         self._initialize_mode_combobox(self.tagLessFilterModeComboBox)
         self._initialize_mode_combobox(self.splitTagsFilterModeComboBox)
-        self._initialize_mode_combobox(self.splitCategoriesFilterModeComboBox)
+        self._initialize_mode_combobox(self.multipleCategoriesFilterModeComboBox)
         self._initialize_mode_combobox(self.cashAmountFilterModeComboBox)
 
     @staticmethod

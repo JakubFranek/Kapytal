@@ -22,13 +22,29 @@ from src.models.transaction_filters.cash_amount_filter import CashAmountFilter
 from src.models.transaction_filters.currency_filter import CurrencyFilter
 from src.models.transaction_filters.datetime_filter import DatetimeFilter
 from src.models.transaction_filters.description_filter import DescriptionFilter
+from src.models.transaction_filters.multiple_categories_filter import (
+    MultipleCategoriesFilter,
+)
 from src.models.transaction_filters.payee_filter import PayeeFilter
 from src.models.transaction_filters.security_filter import SecurityFilter
+from src.models.transaction_filters.specific_categories_filter import (
+    SpecificCategoriesFilter,
+)
 from src.models.transaction_filters.specific_tags_filter import SpecificTagsFilter
 from src.models.transaction_filters.split_tags_filter import SplitTagsFilter
 from src.models.transaction_filters.tagless_filter import TaglessFilter
 from src.models.transaction_filters.type_filter import TypeFilter
 from src.models.user_settings import user_settings
+
+all_transaction_types = (
+    CashTransactionType.INCOME,
+    CashTransactionType.EXPENSE,
+    RefundTransaction,
+    CashTransfer,
+    SecurityTransfer,
+    SecurityTransactionType.BUY,
+    SecurityTransactionType.SELL,
+)
 
 
 def set_minimum_time(datetime_: datetime) -> datetime:
@@ -88,6 +104,14 @@ class TransactionFilter:
         return self._payee_filter
 
     @property
+    def specific_categories_filter(self) -> SpecificCategoriesFilter:
+        return self._specific_categories_filter
+
+    @property
+    def multiple_categories_filter(self) -> MultipleCategoriesFilter:
+        return self._multiple_categories_filter
+
+    @property
     def currency_filter(self) -> CurrencyFilter:
         return self._currency_filter
 
@@ -112,6 +136,8 @@ class TransactionFilter:
             self._tagless_filter,
             self._split_tags_filter,
             self._payee_filter,
+            self._specific_categories_filter,
+            self._multiple_categories_filter,
             self._currency_filter,
             self._security_filter,
             self._cash_amount_filter,
@@ -140,6 +166,8 @@ class TransactionFilter:
                 self._tagless_filter.validate_transaction(transaction),
                 self._split_tags_filter.validate_transaction(transaction),
                 self._payee_filter.validate_transaction(transaction),
+                self._specific_categories_filter.validate_transaction(transaction),
+                self._multiple_categories_filter.validate_transaction(transaction),
                 self._security_filter.validate_transaction(transaction),
             )
         )
@@ -150,7 +178,6 @@ class TransactionFilter:
     def filter_transactions(
         self, transactions: Collection[Transaction]
     ) -> tuple[Transaction, ...]:
-        logging.debug(f"Filtering {len(transactions)} transactions")
         _transactions = tuple(transactions)
         _transactions = self._type_filter.filter_transactions(_transactions)
         _transactions = self._datetime_filter.filter_transactions(_transactions)
@@ -161,24 +188,21 @@ class TransactionFilter:
         _transactions = self._tagless_filter.filter_transactions(_transactions)
         _transactions = self._split_tags_filter.filter_transactions(_transactions)
         _transactions = self._payee_filter.filter_transactions(_transactions)
+        _transactions = self._specific_categories_filter.filter_transactions(
+            _transactions
+        )
+        _transactions = self._multiple_categories_filter.filter_transactions(
+            _transactions
+        )
         _transactions = self._security_filter.filter_transactions(_transactions)
         if self._cash_amount_filter is not None:
             _transactions = self._cash_amount_filter.filter_transactions(_transactions)
         logging.debug(f"Kept {len(_transactions)}/{len(transactions)} transactions")
-        return tuple(_transactions)
+        return _transactions
 
     def restore_defaults(self) -> None:
         self._type_filter = TypeFilter(
-            types=(
-                CashTransactionType.INCOME,
-                CashTransactionType.EXPENSE,
-                RefundTransaction,
-                CashTransfer,
-                SecurityTransfer,
-                SecurityTransactionType.BUY,
-                SecurityTransactionType.SELL,
-            ),
-            mode=FilterMode.KEEP,
+            types=all_transaction_types, mode=FilterMode.KEEP
         )
         self._datetime_filter = DatetimeFilter(
             start=set_minimum_time(datetime.now(user_settings.settings.time_zone)),
@@ -193,6 +217,10 @@ class TransactionFilter:
         self._tagless_filter = TaglessFilter(mode=FilterMode.OFF)
         self._split_tags_filter = SplitTagsFilter(mode=FilterMode.OFF)
         self._payee_filter = PayeeFilter(payees=(), mode=FilterMode.OFF)
+        self._specific_categories_filter = SpecificCategoriesFilter(
+            categories=(), mode=FilterMode.OFF
+        )
+        self._multiple_categories_filter = MultipleCategoriesFilter(mode=FilterMode.OFF)
         self._currency_filter = CurrencyFilter(currencies=(), mode=FilterMode.OFF)
         self._security_filter = SecurityFilter(securities=(), mode=FilterMode.OFF)
         self._cash_amount_filter = None
@@ -228,6 +256,14 @@ class TransactionFilter:
 
     def set_payee_filter(self, payees: Collection[Attribute], mode: FilterMode) -> None:
         self._payee_filter = PayeeFilter(payees, mode)
+
+    def set_specific_categories_filter(
+        self, categories: Collection[Attribute], mode: FilterMode
+    ) -> None:
+        self._specific_categories_filter = SpecificCategoriesFilter(categories, mode)
+
+    def set_multiple_categories_filter(self, mode: FilterMode) -> None:
+        self._multiple_categories_filter = MultipleCategoriesFilter(mode)
 
     def set_currency_filter(
         self, currencies: Collection[Currency], mode: FilterMode

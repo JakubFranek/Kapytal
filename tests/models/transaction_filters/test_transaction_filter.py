@@ -6,7 +6,7 @@ from hypothesis import assume, given
 from hypothesis import strategies as st
 from src.models.base_classes.account import Account
 from src.models.base_classes.transaction import Transaction
-from src.models.model_objects.attributes import Attribute, AttributeType
+from src.models.model_objects.attributes import Attribute, AttributeType, Category
 from src.models.model_objects.cash_objects import (
     CashTransactionType,
     CashTransfer,
@@ -25,6 +25,7 @@ from tests.models.test_assets.composites import (
     attributes,
     cash_accounts,
     cash_amounts,
+    categories,
     currencies,
     everything_except,
     securities,
@@ -186,6 +187,31 @@ def test_set_payee_filter(
     filter_.set_payee_filter(payees, mode)
     assert filter_.payee_filter.payees == frozenset(payees)
     assert filter_.payee_filter.mode == mode
+
+
+@given(
+    mode=st.sampled_from(FilterMode),
+)
+def test_set_multiple_categories_filter(
+    mode: FilterMode,
+) -> None:
+    filter_ = TransactionFilter()
+    filter_.set_multiple_categories_filter(mode)
+    assert filter_.multiple_categories_filter.mode == mode
+
+
+@given(
+    categories_=st.lists(categories()),
+    mode=st.sampled_from(FilterMode),
+)
+def test_set_specific_categories_filter(
+    categories_: list[Category],
+    mode: FilterMode,
+) -> None:
+    filter_ = TransactionFilter()
+    filter_.set_specific_categories_filter(categories_, mode)
+    assert filter_.specific_categories_filter.categories == frozenset(categories_)
+    assert filter_.specific_categories_filter.mode == mode
 
 
 @given(

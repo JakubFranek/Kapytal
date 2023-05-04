@@ -45,8 +45,10 @@ cash_account_3 = CashAccount("DEGIRO USD", USD, CashAmount(0, USD))
 
 category_food = Category("Food", CategoryType.EXPENSE)
 category_household = Category("Household", CategoryType.EXPENSE)
+category_gift = Category("Gift", CategoryType.EXPENSE)
 
-tag = Attribute("Tag", AttributeType.TAG)
+tag_1 = Attribute("Tag 1", AttributeType.TAG)
+tag_2 = Attribute("Tag 2", AttributeType.TAG)
 
 payee_tesco = Attribute("Tesco", AttributeType.PAYEE)
 payee_alza = Attribute("Alza", AttributeType.PAYEE)
@@ -61,7 +63,7 @@ transaction_list.append(
         cash_account_1,
         payee_tesco,
         ((category_food, CashAmount(100, CZK)),),
-        ((tag, CashAmount(100, CZK)),),
+        ((tag_1, CashAmount(100, CZK)),),
     )
 )
 transaction_list.append(
@@ -72,7 +74,7 @@ transaction_list.append(
         cash_account_1,
         payee_alza,
         ((category_food, CashAmount(15000, CZK)),),
-        ((tag, CashAmount(15000, CZK)),),
+        ((tag_1, CashAmount(15000, CZK)),),
     )
 )
 transaction_list.append(
@@ -86,7 +88,18 @@ transaction_list.append(
             (category_food, CashAmount(1000, CZK)),
             (category_household, CashAmount(500, CZK)),
         ),
-        ((tag, CashAmount(1000, CZK)),),
+        ((tag_1, CashAmount(1000, CZK)),),
+    )
+)
+transaction_list.append(
+    CashTransaction(
+        "Gift",
+        datetime(2023, 2, 2, tzinfo=user_settings.settings.time_zone),
+        CashTransactionType.EXPENSE,
+        cash_account_1,
+        payee_tesco,
+        ((category_gift, CashAmount(1000, CZK)),),
+        ((tag_1, CashAmount(500, CZK)), (tag_2, CashAmount(500, CZK))),
     )
 )
 transaction_list.append(
@@ -97,7 +110,7 @@ transaction_list.append(
         transaction_list[1],
         payee_alza,
         ((category_food, CashAmount(15000, CZK)),),
-        ((tag, CashAmount(15000, CZK)),),
+        ((tag_1, CashAmount(15000, CZK)),),
     )
 )
 transaction_list.append(

@@ -716,23 +716,23 @@
            </widget>
           </item>
           <item>
-           <widget class="QGroupBox" name="splitCategoriesFilterGroupBox">
+           <widget class="QGroupBox" name="multipleCategoriesFilterGroupBox">
             <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Filter Incomes, Expenses and Refunds with Split Categories (i.e. multiple Categories). Other Transaction types are unaffected by this Filter.&lt;/p&gt;&lt;p&gt;KEEP: Only Transactions with Split Categories are kept&lt;/p&gt;&lt;p&gt;DISCARD: Transactions with Split Categories are discarded&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Filter Incomes, Expenses and Refunds with multiple Categories. Other Transaction types are unaffected by this Filter.&lt;/p&gt;&lt;p&gt;KEEP: Only Transactions with multiple Categories are kept&lt;/p&gt;&lt;p&gt;DISCARD: Transactions with multiple Categories are discarded&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
             <property name="title">
-             <string>Split Categories Filter</string>
+             <string>Multiple Categories Filter</string>
             </property>
             <layout class="QFormLayout" name="formLayout_3">
              <item row="0" column="0">
-              <widget class="QLabel" name="splitCategoriesFilterModeLabel">
+              <widget class="QLabel" name="multipleCategoriesFilterModeLabel">
                <property name="text">
                 <string>Mode</string>
                </property>
               </widget>
              </item>
              <item row="0" column="1">
-              <widget class="QComboBox" name="splitCategoriesFilterModeComboBox"/>
+              <widget class="QComboBox" name="multipleCategoriesFilterModeComboBox"/>
              </item>
             </layout>
            </widget>

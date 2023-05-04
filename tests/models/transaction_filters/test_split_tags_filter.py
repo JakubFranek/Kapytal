@@ -50,9 +50,9 @@ def test_filter_off(transactions: list[Transaction], filter_: SplitTagsFilter) -
     assert filtered == tuple(transactions)
 
 
-@given(transactions=transactions(), filter_=split_tags_filters())
-def test_filter_keep(transactions: list[Transaction], filter_: SplitTagsFilter) -> None:
-    filter_._mode = FilterMode.KEEP
+@given(transactions=transactions())
+def test_filter_keep(transactions: list[Transaction]) -> None:
+    filter_ = SplitTagsFilter(FilterMode.KEEP)
     filtered = filter_.filter_transactions(transactions)
     assert filtered == tuple(
         transaction
@@ -61,11 +61,11 @@ def test_filter_keep(transactions: list[Transaction], filter_: SplitTagsFilter) 
     )
 
 
-@given(transactions=transactions(), filter_=split_tags_filters())
+@given(transactions=transactions())
 def test_filter_discard(
-    transactions: list[Transaction], filter_: SplitTagsFilter
+    transactions: list[Transaction],
 ) -> None:
-    filter_._mode = FilterMode.DISCARD
+    filter_ = SplitTagsFilter(FilterMode.DISCARD)
     filtered = filter_.filter_transactions(transactions)
     assert filtered == tuple(
         transaction
@@ -74,16 +74,14 @@ def test_filter_discard(
     )
 
 
-@given(filter_=split_tags_filters())
-def test_filter_off_premade_transactions(filter_: SplitTagsFilter) -> None:
-    filter_._mode = FilterMode.OFF
+def test_filter_off_premade_transactions() -> None:
+    filter_ = SplitTagsFilter(FilterMode.OFF)
     filtered = filter_.filter_transactions(transaction_list)
     assert filtered == tuple(transaction_list)
 
 
-@given(filter_=split_tags_filters())
-def test_filter_keep_premade_transactions(filter_: SplitTagsFilter) -> None:
-    filter_._mode = FilterMode.KEEP
+def test_filter_keep_premade_transactions() -> None:
+    filter_ = SplitTagsFilter(FilterMode.KEEP)
     filtered = filter_.filter_transactions(transaction_list)
     assert filtered == tuple(
         transaction
@@ -92,9 +90,8 @@ def test_filter_keep_premade_transactions(filter_: SplitTagsFilter) -> None:
     )
 
 
-@given(filter_=split_tags_filters())
-def test_filter_discard_premade_transactions(filter_: SplitTagsFilter) -> None:
-    filter_._mode = FilterMode.DISCARD
+def test_filter_discard_premade_transactions() -> None:
+    filter_ = SplitTagsFilter(FilterMode.DISCARD)
     filtered = filter_.filter_transactions(transaction_list)
     assert filtered == tuple(
         transaction

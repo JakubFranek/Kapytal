@@ -35,8 +35,14 @@ from src.models.transaction_filters.cash_amount_filter import CashAmountFilter
 from src.models.transaction_filters.currency_filter import CurrencyFilter
 from src.models.transaction_filters.datetime_filter import DatetimeFilter
 from src.models.transaction_filters.description_filter import DescriptionFilter
+from src.models.transaction_filters.multiple_categories_filter import (
+    MultipleCategoriesFilter,
+)
 from src.models.transaction_filters.payee_filter import PayeeFilter
 from src.models.transaction_filters.security_filter import SecurityFilter
+from src.models.transaction_filters.specific_categories_filter import (
+    SpecificCategoriesFilter,
+)
 from src.models.transaction_filters.specific_tags_filter import SpecificTagsFilter
 from src.models.transaction_filters.split_tags_filter import SplitTagsFilter
 from src.models.transaction_filters.tagless_filter import TaglessFilter
@@ -446,10 +452,23 @@ def share_decimals(
 
 
 @st.composite
+def specific_categories_filters(draw: st.DrawFn) -> SpecificCategoriesFilter:
+    mode = draw(st.sampled_from(FilterMode))
+    categories_ = draw(st.lists(categories()))
+    return SpecificCategoriesFilter(categories_, mode)
+
+
+@st.composite
 def specific_tag_filters(draw: st.DrawFn) -> SpecificTagsFilter:
     mode = draw(st.sampled_from(FilterMode))
     tags = draw(st.lists(attributes(type_=AttributeType.TAG)))
     return SpecificTagsFilter(tags, mode)
+
+
+@st.composite
+def multiple_categories_filters(draw: st.DrawFn) -> MultipleCategoriesFilter:
+    mode = draw(st.sampled_from(FilterMode))
+    return MultipleCategoriesFilter(mode)
 
 
 @st.composite
