@@ -25,7 +25,6 @@ from src.models.model_objects.attributes import (
 )
 from src.models.model_objects.cash_objects import (
     CashAccount,
-    CashRelatedTransaction,
     CashTransaction,
     CashTransactionType,
     CashTransfer,

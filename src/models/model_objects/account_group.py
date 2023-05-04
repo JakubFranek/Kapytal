@@ -59,6 +59,11 @@ class AccountGroup(NameMixin, GetBalanceMixin, JSONSerializableMixin, UUIDMixin)
     def __repr__(self) -> str:
         return f"AccountGroup('{self.path}')"
 
+    def __eq__(self, __o: object) -> bool:
+        if not isinstance(__o, AccountGroup):
+            return NotImplemented
+        return self._uuid == __o._uuid  # noqa: SLF001
+
     def _update_children_tuple(self) -> None:
         self._children_tuple = tuple(
             self._children_dict[key] for key in sorted(self._children_dict.keys())

@@ -28,6 +28,7 @@ from src.models.model_objects.security_objects import (
 )
 from src.models.transaction_filters.base_transaction_filter import FilterMode
 from src.models.user_settings import user_settings
+from src.view_models.checkable_category_tree_model import CategorySelectionMode
 from src.views import icons
 from src.views.ui_files.forms.Ui_transaction_filter_form import Ui_TransactionFilterForm
 
@@ -46,18 +47,32 @@ class AccountFilterMode(Enum):
     SELECTION = auto()
 
 
+# TODO: print Filter summary button?
+
+
 class TransactionFilterForm(QWidget, Ui_TransactionFilterForm):
     signal_ok = pyqtSignal()
     signal_restore_defaults = pyqtSignal()
 
     signal_tags_search_text_changed = pyqtSignal(str)
     signal_payees_search_text_changed = pyqtSignal(str)
+    signal_income_categories_search_text_changed = pyqtSignal(str)
+    signal_expense_categories_search_text_changed = pyqtSignal(str)
+    signal_income_and_expense_categories_search_text_changed = pyqtSignal(str)
 
     signal_tags_select_all = pyqtSignal()
     signal_tags_unselect_all = pyqtSignal()
 
     signal_payees_select_all = pyqtSignal()
     signal_payees_unselect_all = pyqtSignal()
+
+    signal_category_selection_mode_changed = pyqtSignal()
+    signal_income_categories_select_all = pyqtSignal()
+    signal_income_categories_unselect_all = pyqtSignal()
+    signal_expense_categories_select_all = pyqtSignal()
+    signal_expense_categories_unselect_all = pyqtSignal()
+    signal_income_and_expense_categories_select_all = pyqtSignal()
+    signal_income_and_expense_categories_unselect_all = pyqtSignal()
 
     signal_currencies_select_all = pyqtSignal()
     signal_currencies_unselect_all = pyqtSignal()
@@ -331,6 +346,21 @@ class TransactionFilterForm(QWidget, Ui_TransactionFilterForm):
     def cash_amount_filter_maximum(self, amount: Decimal) -> None:
         self.cashAmountFilterMaximumDoubleSpinBox.setValue(amount)
 
+    @property
+    def category_selection_mode(self) -> CategorySelectionMode:
+        if self.hierarchicalSelectionModeRadioButton.isChecked():
+            return CategorySelectionMode.HIERARCHICAL
+        if self.individualSelectionModeRadioButton.isChecked():
+            return CategorySelectionMode.INDIVIDUAL
+        raise ValueError("Unknown selection mode")
+
+    @category_selection_mode.setter
+    def category_selection_mode(self, mode: CategorySelectionMode) -> None:
+        if mode == CategorySelectionMode.HIERARCHICAL:
+            self.hierarchicalSelectionModeRadioButton.setChecked(True)
+        else:
+            self.individualSelectionModeRadioButton.setChecked(True)
+
     def show_form(self) -> None:
         logging.debug(f"Showing {self.__class__.__name__}")
         self.show()
@@ -389,6 +419,21 @@ class TransactionFilterForm(QWidget, Ui_TransactionFilterForm):
                 self.payeesSearchLineEdit.text()
             )
         )
+        self.incomeCategoriesSearchLineEdit.textChanged.connect(
+            lambda: self.signal_income_categories_search_text_changed.emit(
+                self.incomeCategoriesSearchLineEdit.text()
+            )
+        )
+        self.expenseCategoriesSearchLineEdit.textChanged.connect(
+            lambda: self.signal_expense_categories_search_text_changed.emit(
+                self.expenseCategoriesSearchLineEdit.text()
+            )
+        )
+        self.incomeAndExpenseCategoriesSearchLineEdit.textChanged.connect(
+            lambda: self.signal_income_and_expense_categories_search_text_changed.emit(
+                self.incomeAndExpenseCategoriesSearchLineEdit.text()
+            )
+        )
 
         self.tagsSelectAllPushButton.clicked.connect(self.signal_tags_select_all.emit)
         self.tagsUnselectAllPushButton.clicked.connect(
@@ -400,6 +445,36 @@ class TransactionFilterForm(QWidget, Ui_TransactionFilterForm):
         )
         self.payeesUnselectAllPushButton.clicked.connect(
             self.signal_payees_unselect_all.emit
+        )
+
+        self.specificCategoryFilterSelectionModeRadioButtonGroup = QButtonGroup()
+        self.specificCategoryFilterSelectionModeRadioButtonGroup.addButton(
+            self.hierarchicalSelectionModeRadioButton
+        )
+        self.specificCategoryFilterSelectionModeRadioButtonGroup.addButton(
+            self.individualSelectionModeRadioButton
+        )
+        self.specificCategoryFilterSelectionModeRadioButtonGroup.buttonClicked.connect(
+            self.signal_category_selection_mode_changed.emit
+        )
+
+        self.incomeCategoriesSelectAllPushButton.clicked.connect(
+            self.signal_income_categories_select_all.emit
+        )
+        self.incomeCategoriesUnselectAllPushButton.clicked.connect(
+            self.signal_income_categories_unselect_all.emit
+        )
+        self.expenseCategoriesSelectAllPushButton.clicked.connect(
+            self.signal_expense_categories_select_all.emit
+        )
+        self.expenseCategoriesUnselectAllPushButton.clicked.connect(
+            self.signal_expense_categories_unselect_all.emit
+        )
+        self.incomeAndExpenseCategoriesSelectAllPushButton.clicked.connect(
+            self.signal_income_and_expense_categories_select_all.emit
+        )
+        self.incomeAndExpenseCategoriesUnselectAllPushButton.clicked.connect(
+            self.signal_income_and_expense_categories_unselect_all.emit
         )
 
         self.currencyFilterSelectAllPushButton.clicked.connect(
@@ -446,6 +521,15 @@ class TransactionFilterForm(QWidget, Ui_TransactionFilterForm):
         self.payeesSearchLineEdit.addAction(
             icons.magnifier, QLineEdit.ActionPosition.LeadingPosition
         )
+        self.incomeCategoriesSearchLineEdit.addAction(
+            icons.magnifier, QLineEdit.ActionPosition.LeadingPosition
+        )
+        self.expenseCategoriesSearchLineEdit.addAction(
+            icons.magnifier, QLineEdit.ActionPosition.LeadingPosition
+        )
+        self.incomeAndExpenseCategoriesSearchLineEdit.addAction(
+            icons.magnifier, QLineEdit.ActionPosition.LeadingPosition
+        )
 
     def _initialize_mode_comboboxes(self) -> None:
         self._initialize_mode_combobox(self.dateFilterModeComboBox)
@@ -460,11 +544,6 @@ class TransactionFilterForm(QWidget, Ui_TransactionFilterForm):
         with QSignalBlocker(combobox):
             for mode in FilterMode:
                 combobox.addItem(mode.name)
-            combobox.setToolTip(
-                f"{FilterMode.OFF.name}: {FilterMode.OFF.value}\n"
-                f"{FilterMode.KEEP.name}: {FilterMode.KEEP.value}\n"
-                f"{FilterMode.DISCARD.name}: {FilterMode.DISCARD.value}"
-            )
 
     def _initialize_tool_buttons(self) -> None:
         self.actionExpandAllIncomeCategories = QAction("Expand All", self)

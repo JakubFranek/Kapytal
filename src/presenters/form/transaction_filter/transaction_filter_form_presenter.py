@@ -114,6 +114,7 @@ class TransactionFilterFormPresenter:
         account_tree_shown_accounts: Collection[Account],
     ) -> None:
         self._parent_view = parent_view
+        self._record_keeper = record_keeper
 
         self._account_tree_shown_accounts = tuple(account_tree_shown_accounts)
 
@@ -135,7 +136,6 @@ class TransactionFilterFormPresenter:
         self._security_filter_presenter = SecurityFilterPresenter(
             self._form, record_keeper
         )
-        self.load_record_keeper(record_keeper)
         self._transaction_filter = self._get_default_filter()
 
         self._form.signal_ok.connect(self._form_accepted)

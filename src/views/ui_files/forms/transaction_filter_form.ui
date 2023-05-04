@@ -511,7 +511,7 @@
           <item>
            <widget class="QGroupBox" name="specificCategoryFilterGroupBox">
             <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Filter Income, Expense and Refund Transactions based on specific Categories.&lt;/p&gt;&lt;p&gt;Other Transaction types are unaffected by this Filter.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Filter Income, Expense and Refund Transactions based on specific Categories. Other Transaction types are unaffected by this Filter.&lt;/p&gt;&lt;p&gt;If a Transaction contains multiple Categories, this Filter keeps it if at least one of its Categories is checked.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
             <property name="title">
              <string>Specific Category Filter</string>
@@ -527,6 +527,13 @@
                  <string>Income</string>
                 </attribute>
                 <layout class="QVBoxLayout" name="verticalLayout_11">
+                 <item>
+                  <widget class="QLineEdit" name="incomeCategoriesSearchLineEdit">
+                   <property name="placeholderText">
+                    <string>Search Categories</string>
+                   </property>
+                  </widget>
+                 </item>
                  <item>
                   <widget class="QTreeView" name="incomeCategoriesTreeView">
                    <attribute name="headerVisible">
@@ -574,6 +581,13 @@
                 </attribute>
                 <layout class="QVBoxLayout" name="verticalLayout_12">
                  <item>
+                  <widget class="QLineEdit" name="expenseCategoriesSearchLineEdit">
+                   <property name="placeholderText">
+                    <string>Search Categories</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
                   <widget class="QTreeView" name="expenseCategoriesTreeView">
                    <attribute name="headerVisible">
                     <bool>false</bool>
@@ -620,6 +634,13 @@
                 </attribute>
                 <layout class="QVBoxLayout" name="verticalLayout_13">
                  <item>
+                  <widget class="QLineEdit" name="incomeAndExpenseCategoriesSearchLineEdit">
+                   <property name="placeholderText">
+                    <string>Search Categories</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
                   <widget class="QTreeView" name="incomeAndExpenseCategoriesTreeView">
                    <attribute name="headerVisible">
                     <bool>false</bool>
@@ -660,6 +681,35 @@
                  </item>
                 </layout>
                </widget>
+              </widget>
+             </item>
+             <item>
+              <widget class="QGroupBox" name="selectionModeRadioButtonGroupBox">
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Hierarchical: checking or unchecking a Category automatically checks or unchecks all its sub-Categories&lt;/p&gt;&lt;p&gt;Individual: checking a Category does not change the state of its sub-Categories&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <property name="title">
+                <string>Selection Mode</string>
+               </property>
+               <layout class="QVBoxLayout" name="verticalLayout_19">
+                <item>
+                 <widget class="QRadioButton" name="hierarchicalSelectionModeRadioButton">
+                  <property name="text">
+                   <string>Hierarchical</string>
+                  </property>
+                  <property name="checked">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QRadioButton" name="individualSelectionModeRadioButton">
+                  <property name="text">
+                   <string>Individual</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
               </widget>
              </item>
             </layout>

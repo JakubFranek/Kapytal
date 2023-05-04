@@ -72,7 +72,7 @@ class AccountTreeNode:
     def __eq__(self, __o: object) -> bool:
         if not isinstance(__o, AccountTreeNode):
             return False
-        return self.item == __o.item
+        return self.uuid == __o.uuid
 
     def set_visible(self, *, visible: bool) -> None:
         """Sets visibility of this node and its children, and updates the parents."""
@@ -108,8 +108,8 @@ class AccountTreeNode:
 # can't reproduce it anymore...
 def sync_nodes(
     items: Sequence[Account | AccountGroup], nodes: Sequence[AccountTreeNode]
-) -> Sequence[AccountTreeNode]:
-    """Accepts flat lists of items and nodes. Returns new flat nodes."""
+) -> list[AccountTreeNode]:
+    """Accepts flat sequences of items and nodes. Returns new flat nodes."""
 
     nodes_copy = list(copy(nodes))
     new_nodes: list[AccountTreeNode] = []
@@ -176,8 +176,8 @@ class AccountTreeModel(QAbstractItemModel):
         super().__init__()
         self._tree = view
         self._proxy = proxy
-        self._root_nodes = []
-        self._flat_nodes = []
+        self._root_nodes = ()
+        self._flat_nodes = ()
         self.flat_items = flat_items
         self.base_currency = base_currency
 

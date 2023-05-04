@@ -22,6 +22,7 @@ if TYPE_CHECKING:
     from src.models.model_objects.attributes import Category
 
 # TODO: allow changing types of multiple transactions of same type
+# TODO: add confirmation dialog for new Category creation
 
 
 class CashTransactionDialogPresenter:
