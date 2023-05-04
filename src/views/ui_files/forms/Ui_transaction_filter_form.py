@@ -487,7 +487,7 @@ class Ui_TransactionFilterForm(object):
         self.tagsSearchLineEdit.setPlaceholderText(_translate("TransactionFilterForm", "Search Tags"))
         self.tagsSelectAllPushButton.setText(_translate("TransactionFilterForm", "Select All"))
         self.tagsUnselectAllPushButton.setText(_translate("TransactionFilterForm", "Unselect All"))
-        self.splitTagsFilterGroupBox.setToolTip(_translate("TransactionFilterForm", "<html><head/><body><p>Filter Transactions with &quot;Split Tags&quot;. </p><p>Transactions with Split Tags are Transactions, where at least one of the Tag amounts is not equal to the total Transaction amount.</p><p>Only Incomes, Expenses and Refunds can have &quot;Split Tags&quot;. Other Transaction types are unaffected by this filter. </p></body></html>"))
+        self.splitTagsFilterGroupBox.setToolTip(_translate("TransactionFilterForm", "<html><head/><body><p>Filter Transactions with &quot;Split Tags&quot;. </p><p>Transactions with Split Tags are Transactions, where at least one of the Tag amounts is not equal to the total Transaction amount.</p><p>Only Incomes and Expenses can have &quot;Split Tags&quot;. Other Transaction types are unaffected by this filter. </p></body></html>"))
         self.splitTagsFilterGroupBox.setTitle(_translate("TransactionFilterForm", "Split Tags Filter"))
         self.splitTagsFilterModeLabel.setText(_translate("TransactionFilterForm", "Mode"))
         self.mainTabWidget.setTabText(self.mainTabWidget.indexOf(self.tagsTab), _translate("TransactionFilterForm", "Tags"))

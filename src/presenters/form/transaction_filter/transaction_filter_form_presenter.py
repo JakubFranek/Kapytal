@@ -222,6 +222,13 @@ class TransactionFilterFormPresenter:
             self._payee_filter_presenter.checked_payees,
             self._payee_filter_presenter.payee_filter_mode,
         )
+        filter_.set_specific_categories_filter(
+            self._category_filter_presenter.checked_categories,
+            self._category_filter_presenter.specific_categories_filter_mode,
+        )
+        filter_.set_multiple_categories_filter(
+            self._category_filter_presenter.multiple_categories_filter_mode
+        )
         filter_.set_currency_filter(
             self._currency_filter_presenter.checked_currencies,
             self._currency_filter_presenter.currency_filter_mode,
@@ -259,6 +266,9 @@ class TransactionFilterFormPresenter:
             filter_.split_tags_filter,
         )
         self._payee_filter_presenter.load_from_payee_filter(filter_.payee_filter)
+        self._category_filter_presenter.load_from_category_filters(
+            filter_.specific_categories_filter, filter_.multiple_categories_filter
+        )
         self._currency_filter_presenter.load_from_currency_filter(
             filter_.currency_filter
         )
@@ -346,6 +356,23 @@ class TransactionFilterFormPresenter:
                 "PayeeFilter changed: "
                 f"mode={new_filter.payee_filter.mode.name}, "
                 f"payees={new_filter.payee_filter.payee_names}"
+            )
+        if (
+            old_filter.specific_categories_filter
+            != new_filter.specific_categories_filter
+        ):
+            logging.info(
+                "SpecificCategoriesFilter changed: "
+                f"mode={new_filter.specific_categories_filter.mode.name}, "
+                f"category_paths={new_filter.specific_categories_filter.category_paths}"
+            )
+        if (
+            old_filter.multiple_categories_filter
+            != new_filter.multiple_categories_filter
+        ):
+            logging.info(
+                "MultipleCategoriesFilter changed: "
+                f"mode={new_filter.multiple_categories_filter.mode.name}"
             )
         if old_filter.currency_filter != new_filter.currency_filter:
             logging.info(

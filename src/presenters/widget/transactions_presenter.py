@@ -285,7 +285,9 @@ class TransactionsPresenter:
         self._view.signal_duplicate.connect(self._duplicate_transaction)
         self._view.signal_edit.connect(self._edit_transactions)
 
-        self._view.signal_filter_transactions.connect(self._filter_transactions)
+        self._view.signal_filter_transactions.connect(
+            self._show_filter_transactions_form
+        )
 
         self._view.signal_add_tags.connect(self._add_tags)
         self._view.signal_remove_tags.connect(self._remove_tags)
@@ -510,7 +512,7 @@ class TransactionsPresenter:
         pattern = "|".join(uuids)
         self._view.search_bar_text = pattern
 
-    def _filter_transactions(self) -> None:
+    def _show_filter_transactions_form(self) -> None:
         self._transaction_filter_form_presenter.show_form()
 
     def _filter_changed(self) -> None:

@@ -41,9 +41,8 @@ class PayeeFilterPresenter:
         payee_filter: PayeeFilter,
     ) -> None:
         self._payee_list_model.pre_reset_model()
-        if payee_filter.mode == FilterMode.OFF:
-            self._form.payee_filter_active = False
-        elif payee_filter.mode == FilterMode.KEEP:
+        self._form.payee_filter_active = payee_filter.mode != FilterMode.OFF
+        if payee_filter.mode == FilterMode.KEEP:
             self._payee_list_model.checked_items = payee_filter.payees
         else:
             self._payee_list_model.checked_items = [

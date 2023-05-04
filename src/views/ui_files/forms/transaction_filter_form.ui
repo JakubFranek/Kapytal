@@ -408,7 +408,7 @@
        <item>
         <widget class="QGroupBox" name="splitTagsFilterGroupBox">
          <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Filter Transactions with &amp;quot;Split Tags&amp;quot;. &lt;/p&gt;&lt;p&gt;Transactions with Split Tags are Transactions, where at least one of the Tag amounts is not equal to the total Transaction amount.&lt;/p&gt;&lt;p&gt;Only Incomes, Expenses and Refunds can have &amp;quot;Split Tags&amp;quot;. Other Transaction types are unaffected by this filter. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Filter Transactions with &amp;quot;Split Tags&amp;quot;. &lt;/p&gt;&lt;p&gt;Transactions with Split Tags are Transactions, where at least one of the Tag amounts is not equal to the total Transaction amount.&lt;/p&gt;&lt;p&gt;Only Incomes and Expenses can have &amp;quot;Split Tags&amp;quot;. Other Transaction types are unaffected by this filter. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
          <property name="title">
           <string>Split Tags Filter</string>

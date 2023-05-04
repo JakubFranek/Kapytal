@@ -4,7 +4,7 @@ import pytest
 from hypothesis import given
 from hypothesis import strategies as st
 from src.models.base_classes.transaction import Transaction
-from src.models.model_objects.attributes import Category
+from src.models.model_objects.attributes import Category, CategoryType
 from src.models.model_objects.cash_objects import CashTransaction, RefundTransaction
 from src.models.transaction_filters.base_transaction_filter import FilterMode
 from src.models.transaction_filters.specific_categories_filter import (
@@ -30,16 +30,29 @@ def check_transaction(
         return any(
             category in filter_.categories for category in transaction.categories
         )
-    else:
-        return not any(
-            category in filter_.categories for category in transaction.categories
-        )
+    return not any(
+        category in filter_.categories for category in transaction.categories
+    )
 
 
 @given(categories=st.lists(categories()), mode=st.sampled_from(FilterMode))
 def test_creation(categories: list[Category], mode: FilterMode) -> None:
     filter_ = SpecificCategoriesFilter(categories, mode)
+    income_categories = frozenset(
+        category for category in categories if category.type_ == CategoryType.INCOME
+    )
+    expense_categories = frozenset(
+        category for category in categories if category.type_ == CategoryType.EXPENSE
+    )
+    income_and_expense_categories = frozenset(
+        category
+        for category in categories
+        if category.type_ == CategoryType.INCOME_AND_EXPENSE
+    )
     assert filter_.categories == frozenset(categories)
+    assert filter_.income_categories == income_categories
+    assert filter_.expense_categories == expense_categories
+    assert filter_.income_and_expense_categories == income_and_expense_categories
     assert filter_.category_paths == tuple(
         sorted(category.path for category in categories)
     )

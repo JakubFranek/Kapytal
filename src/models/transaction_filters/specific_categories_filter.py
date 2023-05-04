@@ -3,6 +3,7 @@ from collections.abc import Collection
 from src.models.base_classes.transaction import Transaction
 from src.models.model_objects.attributes import (
     Category,
+    CategoryType,
 )
 from src.models.model_objects.cash_objects import CashTransaction, RefundTransaction
 from src.models.transaction_filters.base_transaction_filter import (
@@ -30,6 +31,30 @@ class SpecificCategoriesFilter(BaseTransactionFilter):
     @property
     def categories(self) -> frozenset[Category]:
         return self._categories
+
+    @property
+    def income_categories(self) -> frozenset[Category]:
+        return frozenset(
+            category
+            for category in self._categories
+            if category.type_ == CategoryType.INCOME
+        )
+
+    @property
+    def expense_categories(self) -> frozenset[Category]:
+        return frozenset(
+            category
+            for category in self._categories
+            if category.type_ == CategoryType.EXPENSE
+        )
+
+    @property
+    def income_and_expense_categories(self) -> frozenset[Category]:
+        return frozenset(
+            category
+            for category in self._categories
+            if category.type_ == CategoryType.INCOME_AND_EXPENSE
+        )
 
     @property
     def category_paths(self) -> tuple[str]:

@@ -362,6 +362,16 @@ class TransactionFilterForm(QWidget, Ui_TransactionFilterForm):
         else:
             self.individualSelectionModeRadioButton.setChecked(True)
 
+    @property
+    def multiple_categories_filter_mode(self) -> FilterMode:
+        return TransactionFilterForm._get_filter_mode_from_combobox(
+            self.multipleCategoriesFilterModeComboBox
+        )
+
+    @multiple_categories_filter_mode.setter
+    def multiple_categories_filter_mode(self, mode: FilterMode) -> None:
+        self.multipleCategoriesFilterModeComboBox.setCurrentText(mode.name)
+
     def show_form(self) -> None:
         logging.debug(f"Showing {self.__class__.__name__}")
         self.show()

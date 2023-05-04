@@ -177,6 +177,17 @@ class CheckableCategoryTreeModel(QAbstractItemModel):
             if node.check_state == Qt.CheckState.Checked
         )
 
+    @checked_categories.setter
+    def checked_categories(self, checked_categories: Collection[Category]) -> None:
+        for node in self._flat_nodes:
+            node.check_state = (
+                Qt.CheckState.Checked
+                if node.item in checked_categories
+                else Qt.CheckState.Unchecked
+            )
+        for node in self._flat_nodes:
+            node.update_are_children_mixed_check_state()
+
     @property
     def selection_mode(self) -> CategorySelectionMode:
         return self._selection_mode

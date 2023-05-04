@@ -4,7 +4,12 @@ from PyQt6.QtCore import QSortFilterProxyModel, Qt
 from src.models.model_objects.attributes import Category
 from src.models.record_keeper import RecordKeeper
 from src.models.transaction_filters.base_transaction_filter import FilterMode
-from src.models.transaction_filters.currency_filter import CurrencyFilter
+from src.models.transaction_filters.multiple_categories_filter import (
+    MultipleCategoriesFilter,
+)
+from src.models.transaction_filters.specific_categories_filter import (
+    SpecificCategoriesFilter,
+)
 from src.view_models.checkable_category_tree_model import CheckableCategoryTreeModel
 from src.views.forms.transaction_filter_form import TransactionFilterForm
 
@@ -17,6 +22,18 @@ class CategoryFilterPresenter:
         self._record_keeper = record_keeper
         self._initialize_models()
         self._connect_to_signals()
+
+    @property
+    def specific_categories_filter_mode(self) -> FilterMode:
+        return FilterMode.KEEP if self._form.category_filters_active else FilterMode.OFF
+
+    @property
+    def multiple_categories_filter_mode(self) -> FilterMode:
+        return (
+            self._form.multiple_categories_filter_mode
+            if self._form.category_filters_active
+            else FilterMode.OFF
+        )
 
     @property
     def checked_categories(self) -> tuple[Category, ...]:
@@ -42,11 +59,51 @@ class CategoryFilterPresenter:
         self._expense_categories_model.post_reset_model()
         self._income_and_expense_categories_model.post_reset_model()
 
-    # def load_from_category_filter(
-    #     self,
-    #     category_filter: CategoryFilter,
-    # ) -> None:
-    #     pass
+    def load_from_category_filters(
+        self,
+        specific_categories_filter: SpecificCategoriesFilter,
+        multiple_categories_filter: MultipleCategoriesFilter,
+    ) -> None:
+        self._income_categories_model.pre_reset_model()
+        self._expense_categories_model.pre_reset_model()
+        self._income_and_expense_categories_model.pre_reset_model()
+
+        self._form.category_filters_active = (
+            specific_categories_filter.mode != FilterMode.OFF
+            or multiple_categories_filter.mode != FilterMode.OFF
+        )
+        if specific_categories_filter.mode == FilterMode.KEEP:
+            self._income_categories_model.checked_categories = (
+                specific_categories_filter.income_categories
+            )
+            self._expense_categories_model.checked_categories = (
+                specific_categories_filter.expense_categories
+            )
+            self._income_and_expense_categories_model.checked_categories = (
+                specific_categories_filter.income_and_expense_categories
+            )
+        else:
+            self._income_categories_model.checked_categories = [
+                category
+                for category in self._record_keeper.income_categories
+                if category not in specific_categories_filter.income_categories
+            ]
+            self._expense_categories_model.checked_categories = [
+                category
+                for category in self._record_keeper.expense_categories
+                if category not in specific_categories_filter.expense_categories
+            ]
+            self._income_and_expense_categories_model.checked_categories = [
+                category
+                for category in self._record_keeper.income_and_expense_categories
+                if category
+                not in specific_categories_filter.income_and_expense_categories
+            ]
+        self._income_categories_model.post_reset_model()
+        self._expense_categories_model.post_reset_model()
+        self._income_and_expense_categories_model.post_reset_model()
+
+        self._form.multiple_categories_filter_mode = multiple_categories_filter.mode
 
     def _filter(self, pattern: str, proxy: QSortFilterProxyModel) -> None:
         if ("[" in pattern and "]" not in pattern) or "[]" in pattern:
