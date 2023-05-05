@@ -1,54 +1,42 @@
 from collections.abc import Collection, Sequence
 from copy import copy
-from enum import Enum, auto
 from typing import Any, Self
 
-from PyQt6.QtCore import QAbstractItemModel, QModelIndex, Qt
-from PyQt6.QtGui import QFont
+from PyQt6.QtCore import QAbstractItemModel, QModelIndex, QSortFilterProxyModel, Qt
 from PyQt6.QtWidgets import QTreeView
-from src.models.model_objects.attributes import Category
+from src.models.base_classes.account import Account
+from src.models.model_objects.account_group import AccountGroup
+from src.models.model_objects.cash_objects import CashAccount
+from src.models.model_objects.security_objects import SecurityAccount
 from src.presenters.utilities.event import Event
-
-bold_font = QFont()
-bold_font.setBold(True)  # noqa: FBT003
-
-
-class CategorySelectionMode(Enum):
-    HIERARCHICAL = auto()
-    INDIVIDUAL = auto()
+from src.views import icons
 
 
 def convert_bool_to_checkstate(*, checked: bool) -> Qt.CheckState:
     return Qt.CheckState.Checked if checked else Qt.CheckState.Unchecked
 
 
-class CategoryTreeNode:
-    def __init__(self, item: Category, parent: Self | None) -> None:
+class AccountTreeNode:
+    def __init__(self, item: Account | AccountGroup, parent: Self | None) -> None:
         self.item = item
         self.parent = parent
         self.children: list[Self] = []
         self.check_state: Qt.CheckState = Qt.CheckState.Checked
-        self._are_children_check_states_mixed: bool = False
         self.event_signal_changed = Event()
 
     def __repr__(self) -> str:
-        return f"CategoryTreeNode({str(self.item)}, {self.check_state.name})"
+        return f"AccountTreeNode({str(self.item)}, {self.check_state.name})"
 
-    @property
-    def are_children_check_states_mixed(self) -> bool:
-        return self._are_children_check_states_mixed
-
-    def set_check_state(self, *, checked: bool, mode: CategorySelectionMode) -> None:
+    def set_check_state(
+        self,
+        *,
+        checked: bool,
+    ) -> None:
         """Sets check state of this node and its children, and updates the parents."""
-
         check_state = convert_bool_to_checkstate(checked=checked)
-        if mode == CategorySelectionMode.HIERARCHICAL:
-            self._set_check_state_recursive(check_state)
-            if self.parent is not None:
-                self.parent.update_check_state()
-        else:
-            self._set_check_state(check_state)
-        self.update_are_children_mixed_check_state()
+        self._set_check_state_recursive(check_state)
+        if self.parent is not None:
+            self.parent.update_check_state()
 
     def _set_check_state(self, check_state: Qt.CheckState) -> None:
         if check_state != self.check_state:
@@ -68,39 +56,20 @@ class CategoryTreeNode:
             child.check_state == Qt.CheckState.Unchecked for child in self.children
         ):
             self._set_check_state(Qt.CheckState.Unchecked)
+        else:
+            self._set_check_state(Qt.CheckState.PartiallyChecked)
 
         if self.parent is not None:
             self.parent.update_check_state()
 
-    def update_are_children_mixed_check_state(self) -> None:
-        """Updates are_children_check_states_mixed of this node and its parents."""
-        if not self._are_children_check_states_mixed and (
-            any(child.are_children_check_states_mixed for child in self.children)
-            or any(child.check_state != self.check_state for child in self.children)
-        ):
-            self._are_children_check_states_mixed = True
-            self.event_signal_changed(self.item.path)
-        elif (
-            self._are_children_check_states_mixed
-            and all(
-                not child.are_children_check_states_mixed for child in self.children
-            )
-            and all(child.check_state == self.check_state for child in self.children)
-        ):
-            self._are_children_check_states_mixed = False
-            self.event_signal_changed(self.item.path)
-
-        if self.parent is not None:
-            self.parent.update_are_children_mixed_check_state()
-
 
 def sync_nodes(
-    items: Sequence[Category], nodes: Sequence[CategoryTreeNode]
-) -> list[CategoryTreeNode]:
+    items: Sequence[Account | AccountGroup], nodes: Sequence[AccountTreeNode]
+) -> list[AccountTreeNode]:
     """Accepts flat sequences of items and nodes. Returns new flat nodes."""
 
     nodes_copy = list(copy(nodes))
-    new_nodes: list[CategoryTreeNode] = []
+    new_nodes: list[AccountTreeNode] = []
 
     for item in items:
         node = get_node(item, nodes_copy)
@@ -108,7 +77,7 @@ def sync_nodes(
             get_node(item.parent, nodes_copy) if item.parent is not None else None
         )
         if node is None:
-            node = CategoryTreeNode(item, None)
+            node = AccountTreeNode(item, None)
         else:
             node.item = item
         node.parent = parent_node
@@ -123,8 +92,8 @@ def sync_nodes(
 
 
 def get_node(
-    item: Category, nodes: Sequence[CategoryTreeNode]
-) -> CategoryTreeNode | None:
+    item: Account | AccountGroup, nodes: Sequence[AccountTreeNode]
+) -> AccountTreeNode | None:
     for node in nodes:
         if node.item == item:
             return node
@@ -132,34 +101,40 @@ def get_node(
 
 
 def get_node_by_item_path(
-    item_path: str, nodes: Sequence[CategoryTreeNode]
-) -> CategoryTreeNode | None:
+    item_path: str, nodes: Sequence[AccountTreeNode]
+) -> AccountTreeNode | None:
     for node in nodes:
         if node.item.path == item_path:
             return node
     return None
 
 
-class CheckableCategoryTreeModel(QAbstractItemModel):
+# TODO: check root/branch nodes based on leaf state
+
+
+class CheckableAccountTreeModel(QAbstractItemModel):
     def __init__(
         self,
         tree_view: QTreeView,
-        flat_categories: Sequence[Category],
+        proxy: QSortFilterProxyModel,
+        flat_account_items: Sequence[Account | AccountGroup],
     ) -> None:
         super().__init__()
         self._tree_view = tree_view
-        self._flat_nodes: tuple[CategoryTreeNode] = ()
-        self._root_nodes: tuple[CategoryTreeNode] = ()
-        self.flat_categories = flat_categories
-        self._selection_mode = CategorySelectionMode.HIERARCHICAL
+        self._proxy = proxy
+        self._flat_nodes: tuple[AccountTreeNode] = ()
+        self._root_nodes: tuple[AccountTreeNode] = ()
+        self.flat_account_items = flat_account_items
 
     @property
-    def flat_categories(self) -> tuple[Category, ...]:
+    def flat_account_items(self) -> tuple[Account | AccountGroup, ...]:
         return tuple(node.item for node in self._flat_nodes)
 
-    @flat_categories.setter
-    def flat_categories(self, flat_categories: Collection[Category]) -> None:
-        self._flat_nodes = tuple(sync_nodes(flat_categories, self._flat_nodes))
+    @flat_account_items.setter
+    def flat_account_items(
+        self, flat_account_items: Collection[Account | AccountGroup]
+    ) -> None:
+        self._flat_nodes = tuple(sync_nodes(flat_account_items, self._flat_nodes))
         self._root_nodes = tuple(
             node for node in self._flat_nodes if node.parent is None
         )
@@ -170,41 +145,32 @@ class CheckableCategoryTreeModel(QAbstractItemModel):
             )
 
     @property
-    def checked_categories(self) -> tuple[Category, ...]:
+    def checked_accounts(self) -> tuple[Account, ...]:
         return tuple(
             node.item
             for node in self._flat_nodes
             if node.check_state == Qt.CheckState.Checked
+            and isinstance(node.item, Account)
         )
 
-    @checked_categories.setter
-    def checked_categories(self, checked_categories: Collection[Category]) -> None:
+    @checked_accounts.setter
+    def checked_accounts(self, checked_accounts: Collection[Account]) -> None:
         for node in self._flat_nodes:
             node.check_state = (
                 Qt.CheckState.Checked
-                if node.item in checked_categories
+                if node.item in checked_accounts
                 else Qt.CheckState.Unchecked
             )
         for node in self._flat_nodes:
-            node.update_are_children_mixed_check_state()
-
-    @property
-    def selection_mode(self) -> CategorySelectionMode:
-        return self._selection_mode
-
-    @selection_mode.setter
-    def selection_mode(self, selection_mode: CategorySelectionMode) -> None:
-        if not isinstance(selection_mode, CategorySelectionMode):
-            raise TypeError(
-                "CheckableCategoryTreeModel.selection_mode must be a SelectionMode."
-            )
-        self._selection_mode = selection_mode
+            if len(node.children) == 0 and node.parent is not None:
+                # start updates at leaf nodes and propagate up
+                node.parent.update_check_state()
 
     def rowCount(self, index: QModelIndex = ...) -> int:  # noqa: N802
         if index.isValid():
             if index.column() != 0:
                 return 0
-            node: CategoryTreeNode = index.internalPointer()
+            node: AccountTreeNode = index.internalPointer()
             return len(node.children)
         return len(self._root_nodes)
 
@@ -221,7 +187,7 @@ class CheckableCategoryTreeModel(QAbstractItemModel):
         if not _parent or not _parent.isValid():
             parent = None
         else:
-            parent: CategoryTreeNode = _parent.internalPointer()
+            parent: AccountTreeNode = _parent.internalPointer()
 
         child = self._root_nodes[row] if parent is None else parent.children[row]
         if child:
@@ -232,7 +198,7 @@ class CheckableCategoryTreeModel(QAbstractItemModel):
         if not index.isValid():
             return QModelIndex()
 
-        child: CategoryTreeNode = index.internalPointer()
+        child: AccountTreeNode = index.internalPointer()
         parent = child.parent
         if parent is None:
             return QModelIndex()
@@ -243,27 +209,38 @@ class CheckableCategoryTreeModel(QAbstractItemModel):
             parent_row = grandparent.children.index(parent)
         return QAbstractItemModel.createIndex(self, parent_row, 0, parent)
 
-    def data(
+    def data(  # noqa: PLR0911
         self, index: QModelIndex, role: Qt.ItemDataRole = ...
     ) -> str | Qt.AlignmentFlag | None:
         if not index.isValid():
             return None
-        node: CategoryTreeNode = index.internalPointer()
+        node: AccountTreeNode = index.internalPointer()
+        item = node.item
         if role == Qt.ItemDataRole.DisplayRole:
-            return node.item.name
+            return item.name
         if role == Qt.ItemDataRole.CheckStateRole:
             return node.check_state
-        if role == Qt.ItemDataRole.FontRole and node.are_children_check_states_mixed:
-            return bold_font
+        if role == Qt.ItemDataRole.DecorationRole:
+            if isinstance(item, AccountGroup):
+                # TODO: map index to proxy
+                if self._tree_view.isExpanded(self._proxy.mapFromSource(index)):
+                    return icons.folder_open
+                return icons.folder_closed
+            if isinstance(item, CashAccount):
+                if item.get_balance(item.currency).is_positive():
+                    return icons.cash_account
+                return icons.cash_account_empty
+            if isinstance(item, SecurityAccount):
+                return icons.security_account
         return None
 
     def setData(  # noqa: N802
         self, index: QModelIndex, value: Any, role: int = ...  # noqa: ANN401
     ) -> bool | None:
         if role == Qt.ItemDataRole.CheckStateRole:
-            item: CategoryTreeNode = index.internalPointer()
+            item: AccountTreeNode = index.internalPointer()
             checked = value == Qt.CheckState.Checked.value
-            item.set_check_state(checked=checked, mode=self._selection_mode)
+            item.set_check_state(checked=checked)
             return True
         return None
 
@@ -284,15 +261,15 @@ class CheckableCategoryTreeModel(QAbstractItemModel):
 
     def select_all(self) -> None:
         for node in self._root_nodes:
-            node.set_check_state(checked=True, mode=CategorySelectionMode.HIERARCHICAL)
-        for node in self._flat_nodes:
-            node.update_are_children_mixed_check_state()
+            node.set_check_state(
+                checked=True,
+            )
 
     def unselect_all(self) -> None:
         for node in self._root_nodes:
-            node.set_check_state(checked=False, mode=CategorySelectionMode.HIERARCHICAL)
-        for node in self._flat_nodes:
-            node.update_are_children_mixed_check_state()
+            node.set_check_state(
+                checked=False,
+            )
 
     def _node_check_state_changed(self, item_path: str) -> None:
         node = get_node_by_item_path(item_path, self._flat_nodes)

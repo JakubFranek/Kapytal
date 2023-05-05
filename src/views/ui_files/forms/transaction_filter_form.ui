@@ -300,14 +300,41 @@
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_18">
           <item>
+           <widget class="QLineEdit" name="accountsSearchLineEdit">
+            <property name="toolTip">
+             <string/>
+            </property>
+            <property name="placeholderText">
+             <string>Search Accounts</string>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QTreeView" name="accountsTreeView">
             <property name="enabled">
+             <bool>true</bool>
+            </property>
+            <property name="headerHidden">
              <bool>true</bool>
             </property>
            </widget>
           </item>
           <item>
            <layout class="QHBoxLayout" name="accountsFilterButtonHorizontalLayout">
+            <item>
+             <widget class="QToolButton" name="accountsFilterExpandAllToolButton">
+              <property name="text">
+               <string>...</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QToolButton" name="accountsFilterCollapseAllToolButton">
+              <property name="text">
+               <string>...</string>
+              </property>
+             </widget>
+            </item>
             <item>
              <widget class="QPushButton" name="accountsFilterSelectAllPushButton">
               <property name="text">

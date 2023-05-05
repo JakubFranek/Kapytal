@@ -7,6 +7,8 @@ from src.views import icons
 from src.views.constants import AccountTreeColumn
 from src.views.ui_files.widgets.Ui_account_tree_widget import Ui_AccountTreeWidget
 
+# TODO: add search bar
+
 
 class AccountTreeWidget(QWidget, Ui_AccountTreeWidget):
     signal_selection_changed = pyqtSignal()

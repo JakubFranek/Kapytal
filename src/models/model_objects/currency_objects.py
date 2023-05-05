@@ -405,6 +405,8 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
     def convert(self, target_currency: Currency, date_: date | None = None) -> Self:
         if target_currency == self.currency:
             return self
+        if self.value_normalized == 0:
+            return CashAmount(0, target_currency)
         factor = self.currency.get_conversion_factor(target_currency, date_)
         return CashAmount(self.value_normalized * factor, target_currency)
 

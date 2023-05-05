@@ -17,6 +17,9 @@ from src.models.model_objects.security_objects import (
 from src.models.record_keeper import RecordKeeper
 from src.models.transaction_filters.base_transaction_filter import FilterMode
 from src.models.transaction_filters.transaction_filter import TransactionFilter
+from src.presenters.form.transaction_filter.account_filter_presenter import (
+    AccountFilterPresenter,
+)
 from src.presenters.form.transaction_filter.category_filter_presenter import (
     CategoryFilterPresenter,
 )
@@ -125,6 +128,9 @@ class TransactionFilterFormPresenter:
         )
         self._form = TransactionFilterForm(parent_view, base_currency_code)
 
+        self._account_filter_presenter = AccountFilterPresenter(
+            self._form, record_keeper
+        )
         self._tag_filter_presenter = TagFilterPresenter(self._form, record_keeper)
         self._payee_filter_presenter = PayeeFilterPresenter(self._form, record_keeper)
         self._category_filter_presenter = CategoryFilterPresenter(
@@ -167,6 +173,7 @@ class TransactionFilterFormPresenter:
 
     def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
         self._record_keeper = record_keeper
+        self._account_filter_presenter.load_record_keeper(record_keeper)
         self._tag_filter_presenter.load_record_keeper(record_keeper)
         self._payee_filter_presenter.load_record_keeper(record_keeper)
         self._category_filter_presenter.load_record_keeper(record_keeper)
@@ -208,9 +215,9 @@ class TransactionFilterFormPresenter:
         )
 
         if self._form.account_filter_mode == AccountFilterMode.SELECTION:
-            # get selected Accounts
-            # set AccountFilter
-            raise NotImplementedError
+            filter_.set_account_filter(
+                self._account_filter_presenter.checked_accounts, FilterMode.KEEP
+            )
 
         filter_.set_specific_tags_filter(
             self._tag_filter_presenter.checked_tags,
@@ -260,6 +267,7 @@ class TransactionFilterFormPresenter:
         self._form.date_filter_end = filter_.datetime_filter.end
         self._form.description_filter_mode = filter_.description_filter.mode
         self._form.description_filter_pattern = filter_.description_filter.regex_pattern
+        self._account_filter_presenter.load_from_account_filter(filter_.account_filter)
         self._tag_filter_presenter.load_from_tag_filters(
             filter_.specific_tags_filter,
             filter_.tagless_filter,

@@ -105,6 +105,8 @@ class CategoryFilterPresenter:
 
         self._form.multiple_categories_filter_mode = multiple_categories_filter.mode
 
+    # FIXME: weird filtering: typing "Transport" does not show its children...
+    # potential solution: filter based on user role returning full path
     def _filter(self, pattern: str, proxy: QSortFilterProxyModel) -> None:
         if ("[" in pattern and "]" not in pattern) or "[]" in pattern:
             return

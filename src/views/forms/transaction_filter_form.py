@@ -55,6 +55,7 @@ class TransactionFilterForm(QWidget, Ui_TransactionFilterForm):
     signal_ok = pyqtSignal()
     signal_restore_defaults = pyqtSignal()
 
+    signal_accounts_search_text_changed = pyqtSignal(str)
     signal_tags_search_text_changed = pyqtSignal(str)
     signal_payees_search_text_changed = pyqtSignal(str)
     signal_income_categories_search_text_changed = pyqtSignal(str)
@@ -100,6 +101,10 @@ class TransactionFilterForm(QWidget, Ui_TransactionFilterForm):
         self._date_filter_mode_changed()
         self._account_filter_mode_changed()
         self._tagless_filter_mode_changed()
+
+    @property
+    def account_tree_view(self) -> QTreeView:
+        return self.accountsTreeView
 
     @property
     def tags_list_view(self) -> QListView:
@@ -420,6 +425,11 @@ class TransactionFilterForm(QWidget, Ui_TransactionFilterForm):
 
         self.buttonBox.clicked.connect(self._handle_button_box_click)
 
+        self.accountsSearchLineEdit.textChanged.connect(
+            lambda: self.signal_accounts_search_text_changed.emit(
+                self.accountsSearchLineEdit.text()
+            )
+        )
         self.tagsSearchLineEdit.textChanged.connect(
             lambda: self.signal_tags_search_text_changed.emit(
                 self.tagsSearchLineEdit.text()
@@ -526,6 +536,9 @@ class TransactionFilterForm(QWidget, Ui_TransactionFilterForm):
         self.setWindowIcon(icons.filter_)
 
     def _initialize_search_boxes(self) -> None:
+        self.accountsSearchLineEdit.addAction(
+            icons.magnifier, QLineEdit.ActionPosition.LeadingPosition
+        )
         self.tagsSearchLineEdit.addAction(
             icons.magnifier, QLineEdit.ActionPosition.LeadingPosition
         )
@@ -557,20 +570,25 @@ class TransactionFilterForm(QWidget, Ui_TransactionFilterForm):
                 combobox.addItem(mode.name)
 
     def _initialize_tool_buttons(self) -> None:
+        self.actionExpandAllAccounts = QAction("Expand All", self)
         self.actionExpandAllIncomeCategories = QAction("Expand All", self)
         self.actionExpandAllExpenseCategories = QAction("Expand All", self)
         self.actionExpandAllIncomeAndExpenseCategories = QAction("Expand All", self)
+        self.actionCollapseAllAccounts = QAction("Collapse All", self)
         self.actionCollapseAllIncomeCategories = QAction("Collapse All", self)
         self.actionCollapseAllExpenseCategories = QAction("Collapse All", self)
         self.actionCollapseAllIncomeAndExpenseCategories = QAction("Collapse All", self)
 
+        self.actionExpandAllAccounts.setIcon(icons.expand)
         self.actionExpandAllIncomeCategories.setIcon(icons.expand)
         self.actionExpandAllExpenseCategories.setIcon(icons.expand)
         self.actionExpandAllIncomeAndExpenseCategories.setIcon(icons.expand)
+        self.actionCollapseAllAccounts.setIcon(icons.collapse)
         self.actionCollapseAllIncomeCategories.setIcon(icons.collapse)
         self.actionCollapseAllExpenseCategories.setIcon(icons.collapse)
         self.actionCollapseAllIncomeAndExpenseCategories.setIcon(icons.collapse)
 
+        self.actionExpandAllAccounts.triggered.connect(self.accountsTreeView.expandAll)
         self.actionExpandAllIncomeCategories.triggered.connect(
             self.incomeCategoriesTreeView.expandAll
         )
@@ -579,6 +597,9 @@ class TransactionFilterForm(QWidget, Ui_TransactionFilterForm):
         )
         self.actionExpandAllIncomeAndExpenseCategories.triggered.connect(
             self.incomeAndExpenseCategoriesTreeView.expandAll
+        )
+        self.actionCollapseAllAccounts.triggered.connect(
+            self.accountsTreeView.collapseAll
         )
         self.actionCollapseAllIncomeCategories.triggered.connect(
             self.incomeCategoriesTreeView.collapseAll
@@ -590,6 +611,9 @@ class TransactionFilterForm(QWidget, Ui_TransactionFilterForm):
             self.incomeAndExpenseCategoriesTreeView.collapseAll
         )
 
+        self.accountsFilterExpandAllToolButton.setDefaultAction(
+            self.actionExpandAllAccounts
+        )
         self.incomeCategoriesExpandAllToolButton.setDefaultAction(
             self.actionExpandAllIncomeCategories
         )
@@ -598,6 +622,9 @@ class TransactionFilterForm(QWidget, Ui_TransactionFilterForm):
         )
         self.incomeAndExpenseCategoriesExpandAllToolButton.setDefaultAction(
             self.actionExpandAllIncomeAndExpenseCategories
+        )
+        self.accountsFilterCollapseAllToolButton.setDefaultAction(
+            self.actionCollapseAllAccounts
         )
         self.incomeCategoriesCollapseAllToolButton.setDefaultAction(
             self.actionCollapseAllIncomeCategories
