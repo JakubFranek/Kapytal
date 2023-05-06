@@ -58,7 +58,7 @@ def test_creation(categories: list[Category], mode: FilterMode) -> None:
     )
     assert filter_.mode == mode
     assert filter_.__repr__() == (
-        f"SpecificCategoriesFilter(categories={frozenset(categories)}, "
+        f"SpecificCategoriesFilter(categories={filter_.category_paths}, "
         f"mode={mode.name})"
     )
 

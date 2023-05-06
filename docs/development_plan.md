@@ -2,8 +2,6 @@
 
 ## Must haves
 
-1. Transaction filtering options
-    - accounts (view)
 1. SecurityAccount contents view
     - launched from AccountTree right click
     - option to create Security transactions from this view

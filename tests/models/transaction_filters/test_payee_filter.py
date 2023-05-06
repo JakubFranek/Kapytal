@@ -41,7 +41,7 @@ def test_creation(payees: list[Attribute], mode: FilterMode) -> None:
     assert filter_.mode == mode
     assert (
         filter_.__repr__()
-        == f"PayeeFilter(payees={frozenset(payees)}, mode={mode.name})"
+        == f"PayeeFilter(payees={filter_.payee_names}, mode={mode.name})"
     )
 
 

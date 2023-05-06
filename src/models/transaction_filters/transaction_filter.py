@@ -17,7 +17,10 @@ from src.models.model_objects.security_objects import (
     SecurityTransfer,
 )
 from src.models.transaction_filters.account_filter import AccountFilter
-from src.models.transaction_filters.base_transaction_filter import FilterMode
+from src.models.transaction_filters.base_transaction_filter import (
+    BaseTransactionFilter,
+    FilterMode,
+)
 from src.models.transaction_filters.cash_amount_filter import CashAmountFilter
 from src.models.transaction_filters.currency_filter import CurrencyFilter
 from src.models.transaction_filters.datetime_filter import DatetimeFilter
@@ -126,7 +129,7 @@ class TransactionFilter:
     @property
     def members(
         self,
-    ) -> tuple[TypeFilter, DatetimeFilter, DescriptionFilter, AccountFilter]:
+    ) -> tuple[BaseTransactionFilter, ...]:
         return (
             self._type_filter,
             self._datetime_filter,

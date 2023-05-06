@@ -1,3 +1,4 @@
+import unicodedata
 from collections.abc import Collection
 
 from src.models.base_classes.transaction import Transaction
@@ -36,14 +37,19 @@ class SpecificTagsFilter(BaseTransactionFilter):
 
     @property
     def tag_names(self) -> tuple[str]:
-        return tuple(sorted(tag.name for tag in self._tags))
+        return tuple(
+            sorted(
+                (tag.name for tag in self._tags),
+                key=lambda name: unicodedata.normalize("NFD", name.lower()),
+            )
+        )
 
     @property
     def members(self) -> tuple[frozenset[Attribute], FilterMode]:
         return (self._tags, self._mode)
 
     def __repr__(self) -> str:
-        return f"SpecificTagsFilter(tags={self._tags}, mode={self._mode.name})"
+        return f"SpecificTagsFilter(tags={self.tag_names}, mode={self._mode.name})"
 
     def _keep_in_keep_mode(self, transaction: Transaction) -> bool:
         return len(transaction.tags) == 0 or any(

@@ -45,9 +45,6 @@ class AccountFilterMode(Enum):
     SELECTION = auto()
 
 
-# TODO: print Filter summary button?
-
-
 class TransactionFilterForm(QWidget, Ui_TransactionFilterForm):
     signal_ok = pyqtSignal()
     signal_restore_defaults = pyqtSignal()
@@ -87,6 +84,8 @@ class TransactionFilterForm(QWidget, Ui_TransactionFilterForm):
 
     signal_securities_select_all = pyqtSignal()
     signal_securities_unselect_all = pyqtSignal()
+
+    signal_help = pyqtSignal()
 
     def __init__(
         self,
@@ -611,6 +610,8 @@ class TransactionFilterForm(QWidget, Ui_TransactionFilterForm):
             self.signal_restore_defaults.emit()
         elif role == QDialogButtonBox.ButtonRole.RejectRole:
             self.close()
+        elif role == QDialogButtonBox.ButtonRole.HelpRole:
+            self.signal_help.emit()
         else:
             raise ValueError("Unknown role of the clicked button in the ButtonBox")
 

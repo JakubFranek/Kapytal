@@ -17,7 +17,7 @@ from src.models.model_objects.security_objects import (
     SecurityTransfer,
 )
 from src.models.transaction_filters.base_transaction_filter import FilterMode
-from src.models.transaction_filters.type_filter import TypeFilter
+from src.models.transaction_filters.type_filter import TYPE_NAME_DICT, TypeFilter
 from tests.models.test_assets.composites import (
     everything_except,
     transactions,
@@ -65,7 +65,7 @@ def test_creation(
 
     assert filter_.mode == filter_mode
     assert filter_.types == frozenset(types)
-    assert filter_.type_names == tuple(sorted(type_names))
+    assert filter_.type_names == tuple(TYPE_NAME_DICT[type_] for type_ in types)
     assert frozenset(filter_.transaction_types) == frozenset(
         type_ for type_ in types if isinstance(type_, type(Transaction))
     )
@@ -190,4 +190,4 @@ def test_filter_type_names_custom() -> None:
         else:
             type_names.append(type_.__name__)
 
-    assert filter_.type_names == tuple(sorted(type_names))
+    assert filter_.type_names == tuple(TYPE_NAME_DICT[type_] for type_ in filter_.types)

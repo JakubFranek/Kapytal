@@ -1,3 +1,4 @@
+import unicodedata
 from collections.abc import Collection
 
 from src.models.base_classes.transaction import Transaction
@@ -34,14 +35,19 @@ class PayeeFilter(BaseTransactionFilter):
 
     @property
     def payee_names(self) -> tuple[str]:
-        return tuple(sorted(tag.name for tag in self._payees))
+        return tuple(
+            sorted(
+                (payee.name for payee in self._payees),
+                key=lambda name: unicodedata.normalize("NFD", name.lower()),
+            )
+        )
 
     @property
     def members(self) -> tuple[frozenset[Attribute], FilterMode]:
         return (self._payees, self._mode)
 
     def __repr__(self) -> str:
-        return f"PayeeFilter(payees={self._payees}, mode={self._mode.name})"
+        return f"PayeeFilter(payees={self.payee_names}, mode={self._mode.name})"
 
     def _keep_in_keep_mode(self, transaction: Transaction) -> bool:
         if not isinstance(transaction, CashTransaction | RefundTransaction):

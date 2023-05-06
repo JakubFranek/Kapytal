@@ -1,3 +1,4 @@
+import unicodedata
 from collections.abc import Collection
 
 from src.models.base_classes.transaction import Transaction
@@ -58,7 +59,12 @@ class SpecificCategoriesFilter(BaseTransactionFilter):
 
     @property
     def category_paths(self) -> tuple[str]:
-        return tuple(sorted(category.path for category in self._categories))
+        return tuple(
+            sorted(
+                (category.path for category in self._categories),
+                key=lambda path: unicodedata.normalize("NFD", path.lower()),
+            )
+        )
 
     @property
     def members(self) -> tuple[frozenset[Category], FilterMode]:
@@ -66,7 +72,7 @@ class SpecificCategoriesFilter(BaseTransactionFilter):
 
     def __repr__(self) -> str:
         return (
-            f"SpecificCategoriesFilter(categories={self._categories}, "
+            f"SpecificCategoriesFilter(categories={self.category_paths}, "
             f"mode={self._mode.name})"
         )
 

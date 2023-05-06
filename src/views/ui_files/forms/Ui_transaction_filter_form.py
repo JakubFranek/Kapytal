@@ -423,7 +423,7 @@ class Ui_TransactionFilterForm(object):
         self.mainTabWidget.addTab(self.miscellaneousTab, "")
         self.verticalLayout.addWidget(self.mainTabWidget)
         self.buttonBox = QtWidgets.QDialogButtonBox(TransactionFilterForm)
-        self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.StandardButton.Cancel|QtWidgets.QDialogButtonBox.StandardButton.Ok|QtWidgets.QDialogButtonBox.StandardButton.RestoreDefaults)
+        self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.StandardButton.Cancel|QtWidgets.QDialogButtonBox.StandardButton.Help|QtWidgets.QDialogButtonBox.StandardButton.Ok|QtWidgets.QDialogButtonBox.StandardButton.RestoreDefaults)
         self.buttonBox.setObjectName("buttonBox")
         self.verticalLayout.addWidget(self.buttonBox)
 

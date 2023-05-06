@@ -42,7 +42,7 @@ def test_creation(tags: list[Attribute], mode: FilterMode) -> None:
     assert filter_.mode == mode
     assert (
         filter_.__repr__()
-        == f"SpecificTagsFilter(tags={frozenset(tags)}, mode={mode.name})"
+        == f"SpecificTagsFilter(tags={filter_.tag_names}, mode={mode.name})"
     )
 
 

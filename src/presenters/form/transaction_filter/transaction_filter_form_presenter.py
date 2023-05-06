@@ -1,7 +1,7 @@
 import logging
 from collections.abc import Collection, Iterable
 
-from PyQt6.QtWidgets import QWidget
+from PyQt6.QtWidgets import QMessageBox, QWidget
 from src.models.base_classes.account import Account
 from src.models.base_classes.transaction import Transaction
 from src.models.model_objects.cash_objects import (
@@ -136,10 +136,12 @@ class TransactionFilterFormPresenter:
         self._security_filter_presenter = SecurityFilterPresenter(
             self._form, record_keeper
         )
+        self._setup_default_filter()
         self._transaction_filter = self._get_default_filter()
 
         self._form.signal_ok.connect(self._form_accepted)
         self._form.signal_restore_defaults.connect(self._restore_defaults)
+        self._form.signal_help.connect(self._show_help)
         self._update_form_from_filter(self._transaction_filter)
 
     @property
@@ -290,6 +292,7 @@ class TransactionFilterFormPresenter:
         else:
             self._form.base_currency_code = ""
 
+    # TODO: review the default functions
     def _restore_defaults(self) -> None:
         logging.info("Restoring TransactionFilterForm to default")
         self._update_form_from_filter(self._default_filter)
@@ -475,3 +478,36 @@ class TransactionFilterFormPresenter:
                 ),
                 title="Warning",
             )
+
+    def _show_help(self) -> None:
+        filter_ = self._get_transaction_filter_from_form()
+        default_filter = self._default_filter
+        non_default_filters = []
+        for i in range(len(filter_.members)):
+            if filter_.members[i] != default_filter.members[i]:
+                non_default_filters.append(filter_.members[i])
+        if not non_default_filters:
+            QMessageBox.information(
+                self._form, "Filter Help", "All filters are set to default."
+            )
+            return
+
+        text = "The following filters differ from default settings:\n"
+        detailed_text = ""
+        for filter_member in non_default_filters:
+            text += f"- {filter_member.__class__.__name__}\n"
+            detailed_text += f"{filter_member}\n\n"
+        text += (
+            "\nDetailed summary of the filter settings is available via "
+            "the Show Details button.\n"
+            "For better reading experience, copy paste the details into a text editor."
+        )
+        message_box = QMessageBox(
+            QMessageBox.Icon.Information,
+            "Filter Help",
+            text,
+            QMessageBox.StandardButton.Ok,
+            self._form,
+        )
+        message_box.setDetailedText(detailed_text)
+        message_box.exec()
