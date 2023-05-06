@@ -99,7 +99,7 @@ class AccountFilterPresenter:
         account_group = self._model.get_selected_item()
         if not isinstance(account_group, AccountGroup):
             raise TypeError(f"Selected item is not an AccountGroup: {account_group}")
-        logging.debug(f"Selecting all cash accounts below path='{account_group.path}'")
+        logging.debug(f"Selecting all Cash Accounts below path='{account_group.path}'")
         self._model.select_all_cash_accounts_below(account_group)
 
     def _select_all_security_accounts_below(self) -> None:
@@ -107,7 +107,7 @@ class AccountFilterPresenter:
         if not isinstance(account_group, AccountGroup):
             raise TypeError(f"Selected item is not an AccountGroup: {account_group}")
         logging.debug(
-            f"Selecting all security accounts below path='{account_group.path}'"
+            f"Selecting all Security Accounts below path='{account_group.path}'"
         )
         self._model.select_all_security_accounts_below(account_group)
 

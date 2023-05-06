@@ -208,14 +208,13 @@ class ExchangeRate(CopyableMixin, JSONSerializableMixin):
     def latest_rate(self) -> Decimal:
         if len(self._rate_history) == 0:
             return Decimal("NaN")
-        latest_date = max(date_ for date_ in self._rate_history)
-        return self._rate_history[latest_date]
+        return self._latest_rate
 
     @property
     def latest_date(self) -> date | None:
         if len(self._rate_history) == 0:
             return None
-        return max(date_ for date_ in self._rate_history)
+        return self._latest_date
 
     def __repr__(self) -> str:
         return (
@@ -238,6 +237,10 @@ class ExchangeRate(CopyableMixin, JSONSerializableMixin):
         if not _rate.is_finite() or _rate <= 0:
             raise ValueError("Parameter 'rate' must be finite and positive.")
         self._rate_history[date_] = _rate.normalize()
+        self._latest_date = max(date_ for date_ in self._rate_history)
+        self._latest_rate = self._rate_history[self._latest_date]
+
+    # TODO: add delete_rate method
 
     def prepare_for_deletion(self) -> None:
         self.primary_currency.remove_exchange_rate(self)
@@ -306,11 +309,17 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
 
     @property
     def value_rounded(self) -> Decimal:
-        return round(self._raw_value, self.currency.places)
+        if not hasattr(self, "_value_rounded"):
+            self._value_rounded = round(self._raw_value, self.currency.places)
+        return self._value_rounded
 
     @property
     def value_normalized(self) -> Decimal:
-        return normalize_decimal_to_min_places(self._raw_value, self.currency.places)
+        if not hasattr(self, "_value_normalized"):
+            self._value_normalized = normalize_decimal_to_min_places(
+                self._raw_value, self.currency.places
+            )
+        return self._value_normalized
 
     @property
     def currency(self) -> Currency:
@@ -403,7 +412,7 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
         return f"{self.value_normalized:,} {self.currency.code}"
 
     def convert(self, target_currency: Currency, date_: date | None = None) -> Self:
-        if target_currency == self.currency:
+        if target_currency == self._currency:
             return self
         if self.value_normalized == 0:
             return CashAmount(0, target_currency)

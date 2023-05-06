@@ -44,7 +44,7 @@ def test_creation(accounts: list[Account], mode: FilterMode) -> None:
     mode=st.sampled_from(FilterMode),
 )
 def test_creation_invalid_type(accounts: list[Account], mode: FilterMode) -> None:
-    with pytest.raises(TypeError, match="must be a Collection ofAccounts"):
+    with pytest.raises(TypeError, match="must be a Collection of Accounts"):
         AccountFilter(accounts, mode)
 
 

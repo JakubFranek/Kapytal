@@ -1,4 +1,3 @@
-import copy
 import logging
 import string
 import uuid
@@ -244,12 +243,20 @@ class SecurityAccount(Account):
 
     def get_balance(self, currency: Currency) -> CashAmount:
         return sum(
-            (
-                security.price.convert(currency) * shares
-                for security, shares in self._securities.items()
-            ),
-            start=CashAmount(0, currency),
+            (balance.convert(currency) for balance in self._balances),
+            CashAmount(0, currency),
         )
+
+    def _update_balances(self) -> None:
+        balances: dict[Currency, CashAmount] = {}
+        for security, shares in self._securities.items():
+            security_amount = security.price * shares
+            if security_amount.currency in balances:
+                balances[security_amount.currency] += security_amount
+            else:
+                balances[security_amount.currency] = security_amount
+        self._balances = tuple(balances.values())
+        self.event_balance_updated()
 
     def add_transaction(self, transaction: "SecurityRelatedTransaction") -> None:
         self._validate_transaction(transaction)
@@ -263,6 +270,7 @@ class SecurityAccount(Account):
         self._securities.clear()
         for transaction in self._transactions:
             self._securities[transaction.security] += transaction.get_shares(self)
+        self._update_balances()
 
     def serialize(self) -> dict[str, Any]:
         index = self.parent.children.index(self) if self.parent is not None else None
@@ -290,6 +298,9 @@ class SecurityAccount(Account):
             )
             obj._parent._children_dict[index] = obj  # noqa: SLF001
             obj._parent._update_children_tuple()  # noqa: SLF001
+            obj.event_balance_updated.append(
+                obj._parent._update_balances  # noqa: SLF001
+            )
         return obj
 
     def _validate_transaction(self, transaction: "SecurityRelatedTransaction") -> None:

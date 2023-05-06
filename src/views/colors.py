@@ -9,6 +9,7 @@ _green_light_mode = QBrush(QColor("green"))
 _green_dark_mode = QBrush(QColor("lime"))
 _red_light_mode = QBrush(QColor("red"))
 _red_dark_mode = QBrush(QColor("deeppink"))
+_gray = QBrush(QColor("gray"))
 
 
 def get_blue_brush() -> QBrush:
@@ -23,3 +24,7 @@ def get_green_brush() -> QBrush:
 
 def get_red_brush() -> QBrush:
     return _red_dark_mode if color_scheme == Qt.ColorScheme.Dark else _red_light_mode
+
+
+def get_gray_brush() -> QBrush:
+    return _gray

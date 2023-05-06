@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
 from src.models.mixins.copyable_mixin import CopyableMixin
-from src.models.mixins.get_balance_mixin import GetBalanceMixin
+from src.models.mixins.get_balance_mixin import BalanceMixin
 from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
 from src.models.mixins.name_mixin import NameMixin
 from src.models.mixins.uuid_mixin import UUIDMixin
@@ -21,7 +21,7 @@ class UnrelatedAccountError(ValueError):
 # IDEA: create base for Account and AccountGroup (AccountTreeItem)
 # getbalance, parent, transactions
 class Account(
-    CopyableMixin, NameMixin, UUIDMixin, GetBalanceMixin, JSONSerializableMixin, ABC
+    CopyableMixin, NameMixin, UUIDMixin, BalanceMixin, JSONSerializableMixin, ABC
 ):
     def __init__(self, name: str, parent: AccountGroup | None = None) -> None:
         super().__init__(name=name, allow_slash=False)

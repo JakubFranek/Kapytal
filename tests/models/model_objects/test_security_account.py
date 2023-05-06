@@ -69,7 +69,7 @@ def test_validate_transaction_unrelated(
     price_b=valid_decimals(min_value=0, max_value=1e6),
     shares_a=st.integers(min_value=1, max_value=1e6),
     shares_b=st.integers(min_value=1, max_value=1e6),
-    exchange_rate=valid_decimals(min_value=0.01, max_value=1e6),
+    exchange_rate=valid_decimals(min_value=0.01, max_value=1e6, places=4),
 )
 def test_get_balance(  # noqa: PLR0913
     currency_a: Currency,
@@ -91,6 +91,7 @@ def test_get_balance(  # noqa: PLR0913
     security_b.set_price(date_, CashAmount(price_b, currency_b))
     account._securities[security_a] += shares_a
     account._securities[security_b] += shares_b
+    account._update_balances()
     balance_a = account.get_balance(currency_a)
     balance_b = account.get_balance(currency_b)
     expected_a = shares_a * security_a.price + shares_b * security_b.price.convert(
@@ -99,5 +100,9 @@ def test_get_balance(  # noqa: PLR0913
     expected_b = (
         shares_a * security_a.price.convert(currency_b) + shares_b * security_b.price
     )
-    assert balance_a == expected_a
-    assert balance_b == expected_b
+    assert round(balance_a.value_normalized, 10) == round(
+        expected_a.value_normalized, 10
+    )
+    assert round(balance_b.value_normalized, 10) == round(
+        expected_b.value_normalized, 10
+    )

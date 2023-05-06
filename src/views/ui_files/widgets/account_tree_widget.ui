@@ -63,7 +63,7 @@
       </widget>
      </item>
      <item>
-      <widget class="Line" name="line">
+      <widget class="Line" name="verticalLine_2">
        <property name="orientation">
         <enum>Qt::Vertical</enum>
        </property>
@@ -84,45 +84,21 @@
       </widget>
      </item>
      <item>
-      <widget class="Line" name="verticalLine_2">
+      <widget class="Line" name="verticalLine_3">
        <property name="orientation">
         <enum>Qt::Vertical</enum>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QToolButton" name="addAccountGroupToolButton">
-       <property name="text">
-        <string>...</string>
+      <widget class="QLineEdit" name="searchLineEdit">
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Special characters:&lt;/p&gt;&lt;p&gt;* matches zero or more of any characters&lt;br/&gt;? matches any single character&lt;br/&gt;[...] matches any character within square brackets&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="placeholderText">
+        <string>Search Accounts</string>
        </property>
       </widget>
-     </item>
-     <item>
-      <widget class="QToolButton" name="addCashAccountToolButton">
-       <property name="text">
-        <string>...</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QToolButton" name="addSecurityAccountToolButton">
-       <property name="text">
-        <string>...</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <spacer name="horizontalSpacer">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
      </item>
     </layout>
    </item>
@@ -203,17 +179,26 @@
   </action>
   <action name="actionShow_All">
    <property name="text">
-    <string>Show All</string>
+    <string>Select All</string>
+   </property>
+   <property name="toolTip">
+    <string>Select All</string>
    </property>
   </action>
   <action name="actionHide_All">
    <property name="text">
-    <string>Hide All</string>
+    <string>Unselect All</string>
+   </property>
+   <property name="toolTip">
+    <string>Unselect All</string>
    </property>
   </action>
   <action name="actionShow_Selection_Only">
    <property name="text">
-    <string>Show Selection Only</string>
+    <string>Select Only This Item</string>
+   </property>
+   <property name="toolTip">
+    <string>Select Only This Item</string>
    </property>
   </action>
   <action name="actionReset_Sort_Order">
@@ -222,6 +207,16 @@
    </property>
    <property name="toolTip">
     <string>Reset Sort Order</string>
+   </property>
+  </action>
+  <action name="actionSelect_All_Cash_Accounts_Below">
+   <property name="text">
+    <string>Select All Cash Accounts Below</string>
+   </property>
+  </action>
+  <action name="actionSelect_All_Security_Accounts_Below">
+   <property name="text">
+    <string>Select All Security Accounts Below</string>
    </property>
   </action>
  </widget>

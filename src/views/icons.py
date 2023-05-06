@@ -11,10 +11,11 @@ folder_closed: QIcon | None = None
 security_account: QIcon | None = None
 cash_account: QIcon | None = None
 cash_account_empty: QIcon | None = None
-eye_open: QIcon | None = None
-eye_partial: QIcon | None = None
-eye_closed: QIcon | None = None
-eye_red: QIcon | None = None
+select_all: QIcon | None = None
+unselect_all: QIcon | None = None
+select_cash_accounts: QIcon | None = None
+select_security_accounts: QIcon | None = None
+select_this: QIcon | None = None
 income: QIcon | None = None
 expense: QIcon | None = None
 refund: QIcon | None = None
@@ -76,7 +77,8 @@ reset_sort_order: QIcon | None = None
 def setup() -> None:  # noqa: PLR0915
     global folder_open, folder_closed, security_account  # noqa: PLW0603
     global cash_account, cash_account_empty  # noqa: PLW0603
-    global eye_open, eye_partial, eye_closed, eye_red  # noqa: PLW0603
+    global select_all, unselect_all  # noqa: PLW0603
+    global select_cash_accounts, select_security_accounts, select_this  # noqa: PLW0603
     global income, expense, refund, cash_transfer, buy, sell  # noqa: PLW0603
     global security_transfer, payee, split_attribute  # noqa: PLW0603
     global base_currency, question, disk, disk_warning, disks  # noqa: PLW0603
@@ -115,10 +117,11 @@ def setup() -> None:  # noqa: PLR0915
     security_account = QIcon("icons_16:bank.png")
     cash_account = QIcon("icons_16:piggy-bank.png")
     cash_account_empty = QIcon("icons_16:piggy-bank-empty.png")
-    eye_open = QIcon("icons_16:eye.png")
-    eye_partial = QIcon("icons_16:eye-half.png")
-    eye_closed = QIcon("icons_16:eye-close.png")
-    eye_red = QIcon("icons_16:eye-red.png")
+    select_all = QIcon("icons_custom:ui-check-boxes-checked.png")
+    unselect_all = QIcon("icons_custom:ui-check-boxes-unchecked.png")
+    select_cash_accounts = QIcon("icons_custom:piggy-bank-check.png")
+    select_security_accounts = QIcon("icons_custom:bank-check.png")
+    select_this = QIcon("icons_16:ui-check-box.png")
     income = QIcon("icons_custom:coins-plus.png")
     expense = QIcon("icons_custom:coins-minus.png")
     refund = QIcon("icons_custom:coins-arrow-back.png")

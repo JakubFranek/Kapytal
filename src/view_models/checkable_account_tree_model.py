@@ -109,9 +109,6 @@ def get_node_by_item_path(
     return None
 
 
-# TODO: check root/branch nodes based on leaf state
-
-
 class CheckableAccountTreeModel(QAbstractItemModel):
     def __init__(
         self,
@@ -214,7 +211,6 @@ class CheckableAccountTreeModel(QAbstractItemModel):
             return node.check_state
         if role == Qt.ItemDataRole.DecorationRole:
             if isinstance(item, AccountGroup):
-                # TODO: map index to proxy
                 if self._tree_view.isExpanded(self._proxy.mapFromSource(index)):
                     return icons.folder_open
                 return icons.folder_closed
@@ -286,7 +282,7 @@ class CheckableAccountTreeModel(QAbstractItemModel):
     def select_all_security_accounts_below(self, account_group: AccountGroup) -> None:
         parent_node = get_node(account_group, self._flat_nodes)
         if parent_node is None:
-            raise ValueError(f"Node with path='{account_group.path}' not found")
+            raise ValueError(f"Node with path='{account_group.path}' not found.")
         for node in self._flat_nodes:
             if parent_node.item.path in node.item.path and isinstance(
                 node.item, SecurityAccount
@@ -296,10 +292,10 @@ class CheckableAccountTreeModel(QAbstractItemModel):
     def _node_check_state_changed(self, item_path: str) -> None:
         node = get_node_by_item_path(item_path, self._flat_nodes)
         if node is None:
-            raise ValueError(f"Node with path='{item_path}' not found")
+            raise ValueError(f"Node with path='{item_path}' not found.")
         if node.parent is None:
             row = self._root_nodes.index(node)
         else:
             row = node.parent.children.index(node)
         index = QAbstractItemModel.createIndex(self, row, 0, node)
-        self.dataChanged.emit(index, index)
+        self.dataChanged.emit(index, index, [Qt.ItemDataRole.CheckStateRole])

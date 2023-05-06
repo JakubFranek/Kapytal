@@ -213,7 +213,7 @@ class MainPresenter:
 
     def _setup_event_observers(self) -> None:
         self._account_tree_presenter.event_data_changed.append(self._data_changed)
-        self._account_tree_presenter.event_visibility_changed.append(
+        self._account_tree_presenter.event_check_state_changed.append(
             self._update_valid_accounts
         )
         self._currency_form_presenter.event_base_currency_changed.append(
