@@ -1,4 +1,5 @@
 import logging
+import numbers
 import operator
 from collections.abc import Collection
 from datetime import date, datetime
@@ -92,6 +93,8 @@ class Currency(CopyableMixin, JSONSerializableMixin):
         other_currency = exchange_rate.currencies - {self}
         del self._exchange_rates[other_currency.pop()]
 
+    # TODO: add memoization of conversion factors,
+    # reset the cache when related exchange rates are updated
     def get_conversion_factor(
         self, target_currency: Self, date_: date | None = None
     ) -> Decimal:
@@ -292,6 +295,8 @@ class ExchangeRate(CopyableMixin, JSONSerializableMixin):
 class CashAmount(CopyableMixin, JSONSerializableMixin):
     """An immutable object comprising of Decimal value and a Currency."""
 
+    __slots__ = ("_raw_value", "_currency", "_value_rounded", "_value_normalized")
+
     def __init__(self, value: Decimal | int | str, currency: Currency) -> None:
         if not isinstance(value, Decimal | int | str):
             raise TypeError(
@@ -307,17 +312,20 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
             raise TypeError("CashAmount.currency must be a Currency.")
         self._currency = currency
 
+        self._value_normalized = None
+        self._value_rounded = None
+
     @property
     def value_rounded(self) -> Decimal:
-        if not hasattr(self, "_value_rounded"):
-            self._value_rounded = round(self._raw_value, self.currency.places)
+        if self._value_rounded is None:
+            self._value_rounded = round(self._raw_value, self._currency.places)
         return self._value_rounded
 
     @property
     def value_normalized(self) -> Decimal:
-        if not hasattr(self, "_value_normalized"):
+        if self._value_normalized is None:
             self._value_normalized = normalize_decimal_to_min_places(
-                self._raw_value, self.currency.places
+                self._raw_value, self._currency.places
             )
         return self._value_normalized
 
@@ -326,18 +334,18 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
         return self._currency
 
     def __repr__(self) -> str:
-        return f"CashAmount({self.value_normalized} {self._currency.code})"
+        return f"CashAmount({self._value_normalized} {self._currency.code})"
 
     def __str__(self) -> str:
         return self.to_str_normalized()
 
     def __hash__(self) -> int:
-        return hash((self.value_normalized, self.currency))
+        return hash((self._value_normalized, self._currency))
 
     def __eq__(self, __o: object) -> bool:
         if not isinstance(__o, CashAmount):
             return NotImplemented
-        if self.currency != __o.currency:
+        if self._currency != __o._currency:  # noqa: SLF001
             if self.value_normalized == 0 and __o.value_normalized == 0:
                 return True  # If values are zero, amounts are always equal
             raise CurrencyError("CashAmount.currency of operands must match.")
@@ -346,19 +354,19 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
     def __lt__(self, __o: object) -> bool:
         if not isinstance(__o, CashAmount):
             return NotImplemented
-        if self.currency != __o.currency:
+        if self._currency != __o._currency:  # noqa: SLF001
             raise CurrencyError("CashAmount.currency of operands must match.")
         return self.value_normalized < __o.value_normalized
 
     def __neg__(self) -> Self:
-        return CashAmount(-self.value_normalized, self.currency)
+        return CashAmount(-self.value_normalized, self._currency)
 
     def __add__(self, __o: object) -> Self:
         if not isinstance(__o, CashAmount):
             return NotImplemented
-        if self.currency != __o.currency:
+        if self._currency != __o._currency:  # noqa: SLF001
             raise CurrencyError("CashAmount.currency of operands must match.")
-        return CashAmount(self.value_normalized + __o.value_normalized, self.currency)
+        return CashAmount(self.value_normalized + __o.value_normalized, self._currency)
 
     def __radd__(self, __o: object) -> Self:
         return self.__add__(__o)
@@ -366,21 +374,21 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
     def __sub__(self, __o: object) -> Self:
         if not isinstance(__o, CashAmount):
             return NotImplemented
-        if self.currency != __o.currency:
+        if self._currency != __o._currency:  # noqa: SLF001
             raise CurrencyError("CashAmount.currency of operands must match.")
-        return CashAmount(self.value_normalized - __o.value_normalized, self.currency)
+        return CashAmount(self.value_normalized - __o.value_normalized, self._currency)
 
     def __rsub__(self, __o: object) -> Self:
         if not isinstance(__o, CashAmount):
             return NotImplemented
-        if self.currency != __o.currency:
+        if self._currency != __o._currency:  # noqa: SLF001
             raise CurrencyError("CashAmount.currency of operands must match.")
-        return CashAmount(__o.value_normalized - self.value_normalized, self.currency)
+        return CashAmount(__o.value_normalized - self.value_normalized, self._currency)
 
     def __mul__(self, __o: object) -> Self:
         if not isinstance(__o, int | Decimal):
             return NotImplemented
-        return CashAmount(self.value_normalized * __o, self.currency)
+        return CashAmount(self.value_normalized * __o, self._currency)
 
     def __rmul__(self, __o: object) -> Self:
         return self.__mul__(__o)
@@ -388,14 +396,14 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
     def __truediv__(self, __o: object) -> Decimal:
         if not isinstance(__o, CashAmount):
             return NotImplemented
-        if self.currency != __o.currency:
+        if self._currency != __o._currency:  # noqa: SLF001
             raise CurrencyError("CashAmount.currency of operands must match.")
         return self.value_normalized / __o.value_normalized
 
     def __rtruediv__(self, __o: object) -> Decimal:
         if not isinstance(__o, CashAmount):
             return NotImplemented
-        if self.currency != __o.currency:
+        if self._currency != __o._currency:  # noqa: SLF001
             raise CurrencyError("CashAmount.currency of operands must match.")
         return __o.value_normalized / self.value_normalized
 
@@ -406,17 +414,17 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
         return self.value_normalized < 0
 
     def to_str_rounded(self) -> str:
-        return f"{self.value_rounded:,.{self.currency.places}f} {self.currency.code}"
+        return f"{self.value_rounded:,.{self._currency.places}f} {self._currency.code}"
 
     def to_str_normalized(self) -> str:
-        return f"{self.value_normalized:,} {self.currency.code}"
+        return f"{self.value_normalized:,} {self._currency.code}"
 
     def convert(self, target_currency: Currency, date_: date | None = None) -> Self:
         if target_currency == self._currency:
             return self
         if self.value_normalized == 0:
             return CashAmount(0, target_currency)
-        factor = self.currency.get_conversion_factor(target_currency, date_)
+        factor = self._currency.get_conversion_factor(target_currency, date_)
         return CashAmount(self.value_normalized * factor, target_currency)
 
     def serialize(self) -> dict[str, Any]:

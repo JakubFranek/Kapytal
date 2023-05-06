@@ -124,12 +124,21 @@ def get_exception_info(
     return file_name, line, exc_details
 
 
+quantizers = {}
+for i in range(0, 12):
+    quantizers[i] = Decimal(f"1e-{i}")
+
+
 def normalize_decimal_to_min_places(value: Decimal, min_places: int) -> Decimal:
     """Returns a Decimal which has at least 'min_places' decimal places,
     but has no trailing zeroes beyond that limit."""
 
     normalized = value.normalize()
     _, _, exponent = normalized.as_tuple()
-    if isinstance(exponent, int) and -exponent < min_places:
-        return normalized.quantize(Decimal(f"1e-{min_places}"))
-    return normalized
+    try:
+        if -exponent < min_places:
+            return normalized.quantize(quantizers[min_places])
+    except TypeError:
+        return normalized
+    else:
+        return normalized

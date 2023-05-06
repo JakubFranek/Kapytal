@@ -50,6 +50,7 @@ class AccountGroup(NameMixin, BalanceMixin, JSONSerializableMixin, UUIDMixin):
     def children(self) -> tuple["Account" | Self, ...]:
         return self._children_tuple
 
+    # TODO: this could be optimized
     @property
     def path(self) -> str:
         if self.parent is None:

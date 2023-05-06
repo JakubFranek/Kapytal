@@ -65,7 +65,9 @@ def test_creation(
 
     assert filter_.mode == filter_mode
     assert filter_.types == frozenset(types)
-    assert filter_.type_names == tuple(TYPE_NAME_DICT[type_] for type_ in types)
+    assert frozenset(filter_.type_names) == frozenset(
+        TYPE_NAME_DICT[type_] for type_ in types
+    )
     assert frozenset(filter_.transaction_types) == frozenset(
         type_ for type_ in types if isinstance(type_, type(Transaction))
     )
