@@ -146,6 +146,10 @@ class CashAccount(Account):
     def get_balance(self, currency: Currency) -> CashAmount:
         return self._balance_history[-1][1].convert(currency)
 
+    @property
+    def balances(self) -> tuple[CashAmount, ...]:
+        return (self._balance_history[-1][1],)
+
     def get_balance_after_transaction(
         self, currency: Currency, transaction: CashRelatedTransaction
     ) -> CashAmount:
@@ -208,6 +212,10 @@ class CashAccount(Account):
             )
             obj._parent._children_dict[index] = obj  # noqa: SLF001
             obj._parent._update_children_tuple()  # noqa: SLF001
+            obj.event_balance_updated.append(
+                obj._parent._update_balances  # noqa: SLF001
+            )
+            obj.event_balance_updated()
         return obj
 
     def update_balance(self) -> None:
@@ -228,6 +236,7 @@ class CashAccount(Account):
                 (transaction.datetime_, next_balance, transaction)
             )
         self._balance_history = datetime_balance_history
+        self.event_balance_updated()
 
     def _validate_transaction(
         self,

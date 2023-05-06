@@ -86,6 +86,7 @@ def test_get_balance_single_currency(currency: Currency, data: st.DataObject) ->
         (account.get_balance(currency) for account in accounts),
         start=CashAmount(0, currency),
     )
+    account_group._update_balances()
     assert account_group.get_balance(currency) == expected_sum
 
 
@@ -115,6 +116,7 @@ def test_get_balance_multiple_currency(
     expected_sum_b = account_a.get_balance(currency_b) + account_b.get_balance(
         currency_b
     )
+    account_group._update_balances()
     assert account_group.get_balance(currency_a) == expected_sum_a
     assert account_group.get_balance(currency_b) == expected_sum_b
 

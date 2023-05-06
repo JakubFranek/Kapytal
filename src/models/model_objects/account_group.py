@@ -7,7 +7,7 @@ from src.models.custom_exceptions import NotFoundError
 if TYPE_CHECKING:
     from src.models.base_classes.account import Account
 
-from src.models.mixins.get_balance_mixin import GetBalanceMixin
+from src.models.mixins.get_balance_mixin import BalanceMixin
 from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
 from src.models.mixins.name_mixin import NameMixin
 from src.models.mixins.uuid_mixin import UUIDMixin
@@ -15,7 +15,7 @@ from src.models.model_objects.currency_objects import CashAmount, Currency
 from src.models.utilities.find_helpers import find_account_group_by_path
 
 
-class AccountGroup(NameMixin, GetBalanceMixin, JSONSerializableMixin, UUIDMixin):
+class AccountGroup(NameMixin, BalanceMixin, JSONSerializableMixin, UUIDMixin):
     def __init__(self, name: str, parent: Self | None = None) -> None:
         super().__init__(name=name, allow_slash=False)
         self.parent = parent
@@ -73,6 +73,7 @@ class AccountGroup(NameMixin, GetBalanceMixin, JSONSerializableMixin, UUIDMixin)
         max_index = max(sorted(self._children_dict.keys()), default=-1)
         self._children_dict[max_index + 1] = child
         self._update_children_tuple()
+        child.event_balance_updated.append(self._update_balances)
 
     def _remove_child(self, child: Self | "Account") -> None:
         index = self.get_child_index(child)
@@ -86,11 +87,12 @@ class AccountGroup(NameMixin, GetBalanceMixin, JSONSerializableMixin, UUIDMixin)
         del aux_dict[max_index]
         self._children_dict = aux_dict
         self._update_children_tuple()
+        child.event_balance_updated.remove(self._update_balances)
 
     def set_child_index(self, child: "Account" | Self, index: int) -> None:
         if index < 0:
             raise ValueError("Parameter 'index' must not be negative.")
-        if child not in self.children:
+        if child not in self._children_tuple:
             raise NotFoundError(
                 "Parameter 'child' not in this AccountGroup's children."
             )
@@ -118,9 +120,20 @@ class AccountGroup(NameMixin, GetBalanceMixin, JSONSerializableMixin, UUIDMixin)
 
     def get_balance(self, currency: Currency) -> CashAmount:
         return sum(
-            (child.get_balance(currency) for child in self.children),
-            start=CashAmount(0, currency),
+            (balance.convert(currency) for balance in self._balances),
+            CashAmount(0, currency),
         )
+
+    def _update_balances(self) -> None:
+        balances: dict[Currency, CashAmount] = {}
+        for child in self._children_tuple:
+            for balance in child.balances:
+                if balance.currency in balances:
+                    balances[balance.currency] += balance
+                else:
+                    balances[balance.currency] = balance
+        self._balances = tuple(balances.values())
+        self.event_balance_updated()
 
     def serialize(self) -> dict[str, Any]:
         index = self.parent.get_child_index(self) if self.parent is not None else None
@@ -146,4 +159,7 @@ class AccountGroup(NameMixin, GetBalanceMixin, JSONSerializableMixin, UUIDMixin)
             )
             obj._parent._children_dict[index] = obj  # noqa: SLF001
             obj._parent._update_children_tuple()  # noqa: SLF001
+            obj.event_balance_updated.append(
+                obj._parent._update_balances  # noqa: SLF001
+            )
         return obj
