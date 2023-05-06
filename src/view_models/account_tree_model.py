@@ -1,7 +1,6 @@
 import logging
-import time
 import unicodedata
-from collections.abc import Callable, Sequence
+from collections.abc import Sequence
 from copy import copy
 from decimal import Decimal
 from typing import Any, Self
@@ -10,13 +9,11 @@ from uuid import UUID
 from PyQt6.QtCore import (
     QAbstractItemModel,
     QModelIndex,
-    QObject,
     QSortFilterProxyModel,
     Qt,
-    QTimer,
     pyqtSignal,
 )
-from PyQt6.QtGui import QBrush, QColor, QIcon
+from PyQt6.QtGui import QBrush, QIcon
 from PyQt6.QtWidgets import QTreeView
 from src.models.base_classes.account import Account
 from src.models.model_objects.account_group import AccountGroup
@@ -494,6 +491,26 @@ class AccountTreeModel(QAbstractItemModel):
         else:
             node.set_check_state(checked=checked)
             logging.debug(f"Set check state: {node.check_state.name}, item={node.item}")
+
+    def select_all_cash_accounts_below(self, account_group: AccountGroup) -> None:
+        parent_node = get_node(account_group, self._flat_nodes)
+        if parent_node is None:
+            raise ValueError(f"Node with path='{account_group.path}' not found.")
+        for node in self._flat_nodes:
+            if parent_node.item.path in node.item.path and isinstance(
+                node.item, CashAccount
+            ):
+                node.set_check_state(checked=True)
+
+    def select_all_security_accounts_below(self, account_group: AccountGroup) -> None:
+        parent_node = get_node(account_group, self._flat_nodes)
+        if parent_node is None:
+            raise ValueError(f"Node with path='{account_group.path}' not found.")
+        for node in self._flat_nodes:
+            if parent_node.item.path in node.item.path and isinstance(
+                node.item, SecurityAccount
+            ):
+                node.set_check_state(checked=True)
 
     def _node_check_state_changed(self, item_path: str) -> None:
         node = get_node_by_item_path(item_path, self._flat_nodes)

@@ -282,7 +282,7 @@ class CheckableAccountTreeModel(QAbstractItemModel):
     def select_all_security_accounts_below(self, account_group: AccountGroup) -> None:
         parent_node = get_node(account_group, self._flat_nodes)
         if parent_node is None:
-            raise ValueError(f"Node with path='{account_group.path}' not found")
+            raise ValueError(f"Node with path='{account_group.path}' not found.")
         for node in self._flat_nodes:
             if parent_node.item.path in node.item.path and isinstance(
                 node.item, SecurityAccount
@@ -292,7 +292,7 @@ class CheckableAccountTreeModel(QAbstractItemModel):
     def _node_check_state_changed(self, item_path: str) -> None:
         node = get_node_by_item_path(item_path, self._flat_nodes)
         if node is None:
-            raise ValueError(f"Node with path='{item_path}' not found")
+            raise ValueError(f"Node with path='{item_path}' not found.")
         if node.parent is None:
             row = self._root_nodes.index(node)
         else:

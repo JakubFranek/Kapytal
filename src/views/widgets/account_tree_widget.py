@@ -16,6 +16,8 @@ class AccountTreeWidget(QWidget, Ui_AccountTreeWidget):
     signal_show_all = pyqtSignal()
     signal_hide_all = pyqtSignal()
     signal_show_selection_only = pyqtSignal()
+    signal_select_all_cash_accounts_below = pyqtSignal()
+    signal_select_all_security_accounts_below = pyqtSignal()
 
     signal_add_account_group = pyqtSignal()
     signal_add_security_account = pyqtSignal()
@@ -103,6 +105,8 @@ class AccountTreeWidget(QWidget, Ui_AccountTreeWidget):
         self.actionEdit.setEnabled(enable_modify_object)
         self.actionDelete.setEnabled(enable_modify_object)
         self.actionExpand_All_Below.setEnabled(enable_expand_below)
+        self.actionSelect_All_Cash_Accounts_Below.setEnabled(enable_expand_below)
+        self.actionSelect_All_Security_Accounts_Below.setEnabled(enable_expand_below)
         self.actionShow_Selection_Only.setEnabled(enable_modify_object)
 
     def _create_context_menu(self, event: QContextMenuEvent) -> None:
@@ -115,8 +119,11 @@ class AccountTreeWidget(QWidget, Ui_AccountTreeWidget):
         self.menu.addAction(self.actionEdit)
         self.menu.addAction(self.actionDelete)
         self.menu.addSeparator()
-        self.menu.addAction(self.actionExpand_All_Below)
         self.menu.addAction(self.actionShow_Selection_Only)
+        self.menu.addAction(self.actionSelect_All_Cash_Accounts_Below)
+        self.menu.addAction(self.actionSelect_All_Security_Accounts_Below)
+        self.menu.addSeparator()
+        self.menu.addAction(self.actionExpand_All_Below)
         self.menu.popup(QCursor.pos())
 
     def finalize_setup(self) -> None:
@@ -150,7 +157,11 @@ class AccountTreeWidget(QWidget, Ui_AccountTreeWidget):
 
         self.actionShow_All.setIcon(icons.select_all)
         self.actionHide_All.setIcon(icons.unselect_all)
-        self.actionShow_Selection_Only.setIcon(icons.eye_red)
+        self.actionShow_Selection_Only.setIcon(icons.select_this)
+        self.actionSelect_All_Cash_Accounts_Below.setIcon(icons.select_cash_accounts)
+        self.actionSelect_All_Security_Accounts_Below.setIcon(
+            icons.select_security_accounts
+        )
 
         self.actionAdd_Account_Group.setIcon(icons.add_account_group)
         self.actionAdd_Security_Account.setIcon(icons.add_security_account)
@@ -171,10 +182,16 @@ class AccountTreeWidget(QWidget, Ui_AccountTreeWidget):
         self.actionReset_Sort_Order.triggered.connect(self.signal_reset_sort_order.emit)
 
         self.actionShow_All.triggered.connect(self.signal_show_all.emit)
+        self.actionHide_All.triggered.connect(self.signal_hide_all.emit)
         self.actionShow_Selection_Only.triggered.connect(
             self.signal_show_selection_only.emit
         )
-        self.actionHide_All.triggered.connect(self.signal_hide_all.emit)
+        self.actionSelect_All_Cash_Accounts_Below.triggered.connect(
+            self.signal_select_all_cash_accounts_below.emit
+        )
+        self.actionSelect_All_Security_Accounts_Below.triggered.connect(
+            self.signal_select_all_security_accounts_below.emit
+        )
 
         self.actionAdd_Account_Group.triggered.connect(
             self.signal_add_account_group.emit

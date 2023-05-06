@@ -13,7 +13,7 @@ class Ui_TransactionFilterForm(object):
     def setupUi(self, TransactionFilterForm):
         TransactionFilterForm.setObjectName("TransactionFilterForm")
         TransactionFilterForm.setWindowModality(QtCore.Qt.WindowModality.WindowModal)
-        TransactionFilterForm.resize(475, 528)
+        TransactionFilterForm.resize(475, 538)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Preferred, QtWidgets.QSizePolicy.Policy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -482,7 +482,7 @@ class Ui_TransactionFilterForm(object):
         self.descriptionFilterPatternLineEdit.setToolTip(_translate("TransactionFilterForm", "<html><head/><body><p>Special regex characters:</p><p>. matches any character<br/>* matches zero or more of preceding token<br/>? matches zero or one of preceding token<br/>+ matches one or more of the preceding token<br/>^ matches the beginning of a string<br/>$ matches the end of a string<br/>| matches the expression to the right or left<br/>[...] matches any character within square brackets<br/>(...) groups tokens together<br/>\\ escapes a special character</p></body></html>"))
         self.mainTabWidget.setTabText(self.mainTabWidget.indexOf(self.generalTab), _translate("TransactionFilterForm", "General"))
         self.accountsFilterModeGroupBox.setTitle(_translate("TransactionFilterForm", "Accounts Filter Mode"))
-        self.accountsFilterTreeRadioButton.setText(_translate("TransactionFilterForm", "Filter based on Account Tree \"Show\" column"))
+        self.accountsFilterTreeRadioButton.setText(_translate("TransactionFilterForm", "Filter based on Account Tree selection"))
         self.accountsFilterSelectionRadioButton.setText(_translate("TransactionFilterForm", "Filter based on Accounts Filter selection below"))
         self.accountsFilterGroupBox.setToolTip(_translate("TransactionFilterForm", "<html><head/><body><p>Filter Transactions based on the associated Accounts and/or Account Groups.</p><p>In case of Cash and Security Transfers, if at least one of the Accounts is checked, the Transaction is not discarded.</p></body></html>"))
         self.accountsFilterGroupBox.setTitle(_translate("TransactionFilterForm", "Accounts Filter"))

@@ -681,8 +681,10 @@ class TransactionFilterForm(QWidget, Ui_TransactionFilterForm):
         )
         self.actionExpandAllAccountItemsBelow = QAction("Expand All Below", self)
 
-        self.actionSelectAllCashAccountsBelow.setIcon(icons.cash_account)
-        self.actionSelectAllSecurityAccountsBelow.setIcon(icons.security_account)
+        self.actionSelectAllCashAccountsBelow.setIcon(icons.select_cash_accounts)
+        self.actionSelectAllSecurityAccountsBelow.setIcon(
+            icons.select_security_accounts
+        )
         self.actionExpandAllAccountItemsBelow.setIcon(icons.expand_below)
 
         self.actionSelectAllCashAccountsBelow.triggered.connect(

@@ -92,6 +92,9 @@
      </item>
      <item>
       <widget class="QLineEdit" name="searchLineEdit">
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Special characters:&lt;/p&gt;&lt;p&gt;* matches zero or more of any characters&lt;br/&gt;? matches any single character&lt;br/&gt;[...] matches any character within square brackets&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
        <property name="placeholderText">
         <string>Search Accounts</string>
        </property>
@@ -192,7 +195,10 @@
   </action>
   <action name="actionShow_Selection_Only">
    <property name="text">
-    <string>Show Selection Only</string>
+    <string>Select Only This Item</string>
+   </property>
+   <property name="toolTip">
+    <string>Select Only This Item</string>
    </property>
   </action>
   <action name="actionReset_Sort_Order">
@@ -201,6 +207,16 @@
    </property>
    <property name="toolTip">
     <string>Reset Sort Order</string>
+   </property>
+  </action>
+  <action name="actionSelect_All_Cash_Accounts_Below">
+   <property name="text">
+    <string>Select All Cash Accounts Below</string>
+   </property>
+  </action>
+  <action name="actionSelect_All_Security_Accounts_Below">
+   <property name="text">
+    <string>Select All Security Accounts Below</string>
    </property>
   </action>
  </widget>

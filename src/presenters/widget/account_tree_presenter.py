@@ -11,7 +11,6 @@ from src.models.record_keeper import RecordKeeper
 from src.presenters.utilities.event import Event
 from src.presenters.utilities.handle_exception import handle_exception
 from src.view_models.account_tree_model import AccountTreeModel
-from src.view_models.proxy_models.account_tree_proxy_model import AccountTreeProxyModel
 from src.views.constants import AccountTreeColumn
 from src.views.dialogs.account_group_dialog import AccountGroupDialog
 from src.views.dialogs.cash_account_dialog import CashAccountDialog
@@ -57,7 +56,7 @@ class AccountTreePresenter:
         self._proxy.setSourceModel(self._model)
         self._view.treeView.setModel(self._proxy)
 
-        self._setup_signals()
+        self._initialize_signals()
         self._view.finalize_setup()
         self._reset_sort_order()
 
@@ -506,7 +505,7 @@ class AccountTreePresenter:
             return self._record_keeper.root_account_items.index(item)
         return parent.children.index(item)
 
-    def _setup_signals(self) -> None:
+    def _initialize_signals(self) -> None:
         self._view.signal_selection_changed.connect(self._selection_changed)
         self._view.signal_expand_below.connect(self.expand_all_below)
 
@@ -514,11 +513,17 @@ class AccountTreePresenter:
         self._view.signal_sort.connect(lambda index: self._sort(index))
 
         self._view.signal_show_all.connect(
-            lambda: self._set_visibility_all(visible=True)
+            lambda: self._set_check_state_all(visible=True)
         )
-        self._view.signal_show_selection_only.connect(self._set_visible_only)
+        self._view.signal_show_selection_only.connect(self._set_check_state_only)
         self._view.signal_hide_all.connect(
-            lambda: self._set_visibility_all(visible=False)
+            lambda: self._set_check_state_all(visible=False)
+        )
+        self._view.signal_select_all_cash_accounts_below.connect(
+            self._check_all_cash_accounts_below
+        )
+        self._view.signal_select_all_security_accounts_below.connect(
+            self._check_all_security_accounts_below
         )
 
         self._view.signal_add_account_group.connect(
@@ -567,15 +572,31 @@ class AccountTreePresenter:
             for account_group in self._record_keeper.account_groups
         ]
 
-    def _set_visibility_all(self, *, visible: bool) -> None:
+    def _set_check_state_all(self, *, visible: bool) -> None:
         self._model.set_check_state_all(checked=visible)
         self._view.refresh()
         self.event_check_state_changed()
 
-    def _set_visible_only(self) -> None:
+    def _set_check_state_only(self) -> None:
         self._model.set_selected_check_state(checked=True, only=True)
         self._view.refresh()
         self.event_check_state_changed()
+
+    def _check_all_cash_accounts_below(self) -> None:
+        account_group = self._model.get_selected_item()
+        if not isinstance(account_group, AccountGroup):
+            raise TypeError(f"Selected item is not an AccountGroup: {account_group}")
+        logging.debug(f"Selecting all Cash Accounts below path='{account_group.path}'")
+        self._model.select_all_cash_accounts_below(account_group)
+
+    def _check_all_security_accounts_below(self) -> None:
+        account_group = self._model.get_selected_item()
+        if not isinstance(account_group, AccountGroup):
+            raise TypeError(f"Selected item is not an AccountGroup: {account_group}")
+        logging.debug(
+            f"Selecting all Security Accounts below path='{account_group.path}'"
+        )
+        self._model.select_all_security_accounts_below(account_group)
 
     def _sort(self, index: int) -> None:
         sort_order = self._view.sort_order
