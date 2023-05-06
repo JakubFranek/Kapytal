@@ -263,6 +263,7 @@ class CategoryFormPresenter:
             enable_expand_below=enable_expand_below,
         )
 
+    # TODO: refactor methods like this to get pattern from the signal
     def _filter(self) -> None:
         pattern = self._view.search_bar_text
         if ("[" in pattern and "]" not in pattern) or "[]" in pattern:

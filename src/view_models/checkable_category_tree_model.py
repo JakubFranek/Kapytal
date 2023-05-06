@@ -303,4 +303,4 @@ class CheckableCategoryTreeModel(QAbstractItemModel):
         else:
             row = node.parent.children.index(node)
         index = QAbstractItemModel.createIndex(self, row, 0, node)
-        self.dataChanged.emit(index, index)
+        self.dataChanged.emit(index, index, [Qt.ItemDataRole.CheckStateRole])

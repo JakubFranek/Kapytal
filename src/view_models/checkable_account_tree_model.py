@@ -109,9 +109,6 @@ def get_node_by_item_path(
     return None
 
 
-# TODO: check root/branch nodes based on leaf state
-
-
 class CheckableAccountTreeModel(QAbstractItemModel):
     def __init__(
         self,
@@ -214,7 +211,6 @@ class CheckableAccountTreeModel(QAbstractItemModel):
             return node.check_state
         if role == Qt.ItemDataRole.DecorationRole:
             if isinstance(item, AccountGroup):
-                # TODO: map index to proxy
                 if self._tree_view.isExpanded(self._proxy.mapFromSource(index)):
                     return icons.folder_open
                 return icons.folder_closed
@@ -302,4 +298,4 @@ class CheckableAccountTreeModel(QAbstractItemModel):
         else:
             row = node.parent.children.index(node)
         index = QAbstractItemModel.createIndex(self, row, 0, node)
-        self.dataChanged.emit(index, index)
+        self.dataChanged.emit(index, index, [Qt.ItemDataRole.CheckStateRole])

@@ -2,12 +2,10 @@ import logging
 
 from PyQt6.QtCore import QEvent, QObject, Qt, pyqtSignal
 from PyQt6.QtGui import QContextMenuEvent, QCursor, QKeyEvent, QMouseEvent
-from PyQt6.QtWidgets import QHeaderView, QMenu, QWidget
+from PyQt6.QtWidgets import QHeaderView, QLineEdit, QMenu, QWidget
 from src.views import icons
 from src.views.constants import AccountTreeColumn
 from src.views.ui_files.widgets.Ui_account_tree_widget import Ui_AccountTreeWidget
-
-# TODO: add search bar
 
 
 class AccountTreeWidget(QWidget, Ui_AccountTreeWidget):
@@ -26,6 +24,8 @@ class AccountTreeWidget(QWidget, Ui_AccountTreeWidget):
     signal_edit_item = pyqtSignal()
     signal_delete_item = pyqtSignal()
 
+    signal_search_text_changed = pyqtSignal(str)
+
     def __init__(self, parent: QWidget | None) -> None:
         super().__init__(parent)
         self.setupUi(self)
@@ -42,6 +42,8 @@ class AccountTreeWidget(QWidget, Ui_AccountTreeWidget):
         self.treeView.header().sectionClicked.connect(
             lambda index: self._header_clicked(index)
         )
+
+        self.searchLineEdit.textChanged.connect(self.signal_search_text_changed)
 
     @property
     def sort_order(self) -> Qt.SortOrder:
@@ -146,8 +148,8 @@ class AccountTreeWidget(QWidget, Ui_AccountTreeWidget):
 
         self.actionReset_Sort_Order.setIcon(icons.reset_sort_order)
 
-        self.actionShow_All.setIcon(icons.eye_open)
-        self.actionHide_All.setIcon(icons.eye_closed)
+        self.actionShow_All.setIcon(icons.select_all)
+        self.actionHide_All.setIcon(icons.unselect_all)
         self.actionShow_Selection_Only.setIcon(icons.eye_red)
 
         self.actionAdd_Account_Group.setIcon(icons.add_account_group)
@@ -156,6 +158,10 @@ class AccountTreeWidget(QWidget, Ui_AccountTreeWidget):
 
         self.actionEdit.setIcon(icons.edit)
         self.actionDelete.setIcon(icons.remove)
+
+        self.searchLineEdit.addAction(
+            icons.magnifier, QLineEdit.ActionPosition.LeadingPosition
+        )
 
     def _connect_actions(self) -> None:
         self.actionExpand_All.triggered.connect(self.expand_all)
@@ -187,9 +193,3 @@ class AccountTreeWidget(QWidget, Ui_AccountTreeWidget):
 
         self.showAllToolButton.setDefaultAction(self.actionShow_All)
         self.hideAllToolButton.setDefaultAction(self.actionHide_All)
-
-        self.addAccountGroupToolButton.setDefaultAction(self.actionAdd_Account_Group)
-        self.addCashAccountToolButton.setDefaultAction(self.actionAdd_Cash_Account)
-        self.addSecurityAccountToolButton.setDefaultAction(
-            self.actionAdd_Security_Account
-        )

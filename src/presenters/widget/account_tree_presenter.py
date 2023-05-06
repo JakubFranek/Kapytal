@@ -11,6 +11,7 @@ from src.models.record_keeper import RecordKeeper
 from src.presenters.utilities.event import Event
 from src.presenters.utilities.handle_exception import handle_exception
 from src.view_models.account_tree_model import AccountTreeModel
+from src.view_models.proxy_models.account_tree_proxy_model import AccountTreeProxyModel
 from src.views.constants import AccountTreeColumn
 from src.views.dialogs.account_group_dialog import AccountGroupDialog
 from src.views.dialogs.cash_account_dialog import CashAccountDialog
@@ -35,7 +36,7 @@ class SetupDialogCallable(Protocol):
 
 class AccountTreePresenter:
     event_data_changed = Event()
-    event_visibility_changed = Event()
+    event_check_state_changed = Event()
 
     def __init__(self, view: AccountTreeWidget, record_keeper: RecordKeeper) -> None:
         self._view = view
@@ -44,6 +45,9 @@ class AccountTreePresenter:
         self._proxy = QSortFilterProxyModel(self._view)
         self._proxy.setSortRole(Qt.ItemDataRole.UserRole)
         self._proxy.setSortCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+        self._proxy.setFilterRole(Qt.ItemDataRole.UserRole + 1)
+        self._proxy.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+        self._proxy.setRecursiveFilteringEnabled(True)  # noqa: FBT003
         self._model = AccountTreeModel(
             view=view.treeView,
             proxy=self._proxy,
@@ -59,7 +63,7 @@ class AccountTreePresenter:
 
     @property
     def valid_accounts(self) -> tuple[Account, ...]:
-        return self._model.visible_accounts
+        return self._model.checked_accounts
 
     def set_widget_visibility(self, *, visible: bool) -> None:
         if visible and self._view.isHidden():
@@ -536,8 +540,11 @@ class AccountTreePresenter:
         self._view.signal_edit_item.connect(self.edit_item)
         self._view.signal_delete_item.connect(self.remove_item)
 
-        self._model.signal_show_only_selection.connect(self._set_visible_only)
-        self._model.signal_toggle_visibility.connect(self._toggle_visibility)
+        self._view.signal_search_text_changed.connect(
+            lambda pattern: self._filter(pattern)
+        )
+
+        self._model.signal_check_state_changed.connect(self.event_check_state_changed)
 
         self._selection_changed()  # called to ensure context menu is OK at start of run
 
@@ -561,19 +568,14 @@ class AccountTreePresenter:
         ]
 
     def _set_visibility_all(self, *, visible: bool) -> None:
-        self._model.set_visibility_all(visible=visible)
+        self._model.set_check_state_all(checked=visible)
         self._view.refresh()
-        self.event_visibility_changed()
+        self.event_check_state_changed()
 
     def _set_visible_only(self) -> None:
-        self._model.set_visibility(visible=True, only=True)
+        self._model.set_selected_check_state(checked=True, only=True)
         self._view.refresh()
-        self.event_visibility_changed()
-
-    def _toggle_visibility(self) -> None:
-        self._model.toggle_visibility()
-        self._view.refresh()
-        self.event_visibility_changed()
+        self.event_check_state_changed()
 
     def _sort(self, index: int) -> None:
         sort_order = self._view.sort_order
@@ -587,3 +589,9 @@ class AccountTreePresenter:
         logging.debug("Resetting AccountTree sort order")
         self._proxy.sort(-1)
         self._view.treeView.header().setSortIndicatorShown(False)  # noqa: FBT003
+
+    def _filter(self, pattern: str) -> None:
+        if ("[" in pattern and "]" not in pattern) or "[]" in pattern:
+            return
+        logging.debug(f"Filtering Accounts: {pattern=}")
+        self._proxy.setFilterWildcard(pattern)

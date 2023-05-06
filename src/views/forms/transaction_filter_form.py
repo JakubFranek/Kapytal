@@ -436,34 +436,22 @@ class TransactionFilterForm(QWidget, Ui_TransactionFilterForm):
         self.buttonBox.clicked.connect(self._handle_button_box_click)
 
         self.accountsSearchLineEdit.textChanged.connect(
-            lambda: self.signal_accounts_search_text_changed.emit(
-                self.accountsSearchLineEdit.text()
-            )
+            self.signal_accounts_search_text_changed.emit
         )
         self.tagsSearchLineEdit.textChanged.connect(
-            lambda: self.signal_tags_search_text_changed.emit(
-                self.tagsSearchLineEdit.text()
-            )
+            self.signal_tags_search_text_changed.emit
         )
         self.payeesSearchLineEdit.textChanged.connect(
-            lambda: self.signal_payees_search_text_changed.emit(
-                self.payeesSearchLineEdit.text()
-            )
+            self.signal_payees_search_text_changed.emit
         )
         self.incomeCategoriesSearchLineEdit.textChanged.connect(
-            lambda: self.signal_income_categories_search_text_changed.emit(
-                self.incomeCategoriesSearchLineEdit.text()
-            )
+            self.signal_income_categories_search_text_changed.emit
         )
         self.expenseCategoriesSearchLineEdit.textChanged.connect(
-            lambda: self.signal_expense_categories_search_text_changed.emit(
-                self.expenseCategoriesSearchLineEdit.text()
-            )
+            self.signal_expense_categories_search_text_changed.emit
         )
         self.incomeAndExpenseCategoriesSearchLineEdit.textChanged.connect(
-            lambda: self.signal_income_and_expense_categories_search_text_changed.emit(
-                self.incomeAndExpenseCategoriesSearchLineEdit.text()
-            )
+            self.signal_income_and_expense_categories_search_text_changed.emit
         )
 
         self.accountsFilterSelectAllPushButton.clicked.connect(
