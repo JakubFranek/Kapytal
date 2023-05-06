@@ -4,15 +4,28 @@ from src.models.base_classes.transaction import Transaction
 from src.models.model_objects.cash_objects import (
     CashTransaction,
     CashTransactionType,
+    CashTransfer,
+    RefundTransaction,
 )
 from src.models.model_objects.security_objects import (
     SecurityTransaction,
     SecurityTransactionType,
+    SecurityTransfer,
 )
 from src.models.transaction_filters.base_transaction_filter import (
     BaseTransactionFilter,
     FilterMode,
 )
+
+TYPE_NAME_DICT = {
+    CashTransactionType.INCOME: "Income",
+    CashTransactionType.EXPENSE: "Expense",
+    RefundTransaction: "Refund",
+    CashTransfer: "Cash Transfer",
+    SecurityTransfer: "Security Transfer",
+    SecurityTransactionType.BUY: "Buy",
+    SecurityTransactionType.SELL: "Sell",
+}
 
 
 class TypeFilter(BaseTransactionFilter):
@@ -31,7 +44,7 @@ class TypeFilter(BaseTransactionFilter):
             ):
                 continue
             raise TypeError(
-                "Parameter 'types' must be a Collection ofTransaction "
+                "Parameter 'types' must be a Collection of Transaction "
                 "types, CashTransactionType or SecurityTransactionType."
             )
         self._types = frozenset(types)
@@ -44,13 +57,7 @@ class TypeFilter(BaseTransactionFilter):
 
     @property
     def type_names(self) -> tuple[str]:
-        type_names_ = []
-        for type_ in self._types:
-            if isinstance(type_, CashTransactionType | SecurityTransactionType):
-                type_names_.append(type_.name)
-            else:
-                type_names_.append(type_.__name__)
-        return tuple(sorted(type_names_))
+        return tuple(TYPE_NAME_DICT[type_] for type_ in self._types)
 
     @property
     def transaction_types(self) -> tuple[type[Transaction], ...]:

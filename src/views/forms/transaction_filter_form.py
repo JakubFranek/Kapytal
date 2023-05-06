@@ -1,5 +1,4 @@
 import logging
-from collections.abc import Collection
 from datetime import datetime, time
 from decimal import Decimal
 from enum import Enum, auto
@@ -17,7 +16,6 @@ from PyQt6.QtWidgets import (
     QTreeView,
     QWidget,
 )
-from src.models.base_classes.transaction import Transaction
 from src.models.model_objects.cash_objects import (
     CashTransactionType,
     CashTransfer,
@@ -25,7 +23,6 @@ from src.models.model_objects.cash_objects import (
 )
 from src.models.model_objects.security_objects import (
     SecurityTransactionType,
-    SecurityTransfer,
 )
 from src.models.transaction_filters.base_transaction_filter import FilterMode
 from src.models.user_settings import user_settings
@@ -49,7 +46,6 @@ class AccountFilterMode(Enum):
 
 
 # TODO: print Filter summary button?
-# TODO: improve Type Filter selection (list view?)
 
 
 class TransactionFilterForm(QWidget, Ui_TransactionFilterForm):
@@ -62,6 +58,9 @@ class TransactionFilterForm(QWidget, Ui_TransactionFilterForm):
     signal_income_categories_search_text_changed = pyqtSignal(str)
     signal_expense_categories_search_text_changed = pyqtSignal(str)
     signal_income_and_expense_categories_search_text_changed = pyqtSignal(str)
+
+    signal_types_select_all = pyqtSignal()
+    signal_types_unselect_all = pyqtSignal()
 
     signal_accounts_select_all = pyqtSignal()
     signal_accounts_unselect_all = pyqtSignal()
@@ -110,6 +109,10 @@ class TransactionFilterForm(QWidget, Ui_TransactionFilterForm):
         self._date_filter_mode_changed()
         self._account_filter_mode_changed()
         self._tagless_filter_mode_changed()
+
+    @property
+    def types_list_view(self) -> QListView:
+        return self.typeFilterListView
 
     @property
     def account_tree_view(self) -> QTreeView:
@@ -174,44 +177,6 @@ class TransactionFilterForm(QWidget, Ui_TransactionFilterForm):
     @security_filter_active.setter
     def security_filter_active(self, value: bool) -> None:
         self.securityFilterGroupBox.setChecked(value)
-
-    @property
-    def types(
-        self,
-    ) -> set[type[Transaction | CashTransactionType | SecurityTransactionType]]:
-        _types: set[
-            type[Transaction] | CashTransactionType | SecurityTransactionType
-        ] = set()
-        if self.incomeCheckBox.isChecked():
-            _types.add(CashTransactionType.INCOME)
-        if self.expenseCheckBox.isChecked():
-            _types.add(CashTransactionType.EXPENSE)
-        if self.refundCheckBox.isChecked():
-            _types.add(RefundTransaction)
-        if self.cashTransferCheckBox.isChecked():
-            _types.add(CashTransfer)
-        if self.securityTransferCheckBox.isChecked():
-            _types.add(SecurityTransfer)
-        if self.buyCheckBox.isChecked():
-            _types.add(SecurityTransactionType.BUY)
-        if self.sellCheckBox.isChecked():
-            _types.add(SecurityTransactionType.SELL)
-        return _types
-
-    @types.setter
-    def types(
-        self,
-        types: Collection[
-            type[Transaction | CashTransactionType | SecurityTransactionType]
-        ],
-    ) -> None:
-        self.incomeCheckBox.setChecked(CashTransactionType.INCOME in types)
-        self.expenseCheckBox.setChecked(CashTransactionType.EXPENSE in types)
-        self.refundCheckBox.setChecked(RefundTransaction in types)
-        self.cashTransferCheckBox.setChecked(CashTransfer in types)
-        self.securityTransferCheckBox.setChecked(SecurityTransfer in types)
-        self.buyCheckBox.setChecked(SecurityTransactionType.BUY in types)
-        self.sellCheckBox.setChecked(SecurityTransactionType.SELL in types)
 
     @property
     def date_filter_mode(self) -> FilterMode:
@@ -397,10 +362,7 @@ class TransactionFilterForm(QWidget, Ui_TransactionFilterForm):
 
     def _update_cash_amount_filter_state(self) -> None:
         if self._base_currency_code:
-            any_cash_related = any(
-                type_ in CASH_RELATED_TRANSACTION_TYPES for type_ in self.types
-            )
-            self.cashAmountGroupBox.setEnabled(any_cash_related)
+            self.cashAmountGroupBox.setEnabled(True)
             self.cashAmountFilterMinimumDoubleSpinBox.setEnabled(
                 self.cash_amount_filter_mode != FilterMode.OFF
             )
@@ -452,6 +414,13 @@ class TransactionFilterForm(QWidget, Ui_TransactionFilterForm):
         )
         self.incomeAndExpenseCategoriesSearchLineEdit.textChanged.connect(
             self.signal_income_and_expense_categories_search_text_changed.emit
+        )
+
+        self.typeFilterSelectAllPushButton.clicked.connect(
+            self.signal_types_select_all.emit
+        )
+        self.typeFilterUnselectAllPushButton.clicked.connect(
+            self.signal_types_unselect_all.emit
         )
 
         self.accountsFilterSelectAllPushButton.clicked.connect(
@@ -524,16 +493,9 @@ class TransactionFilterForm(QWidget, Ui_TransactionFilterForm):
         self.cashAmountFilterModeComboBox.currentTextChanged.connect(
             self._update_cash_amount_filter_state
         )
-
-        self.incomeCheckBox.toggled.connect(self._update_cash_amount_filter_state)
-        self.expenseCheckBox.toggled.connect(self._update_cash_amount_filter_state)
-        self.refundCheckBox.toggled.connect(self._update_cash_amount_filter_state)
-        self.cashTransferCheckBox.toggled.connect(self._update_cash_amount_filter_state)
-        self.securityTransferCheckBox.toggled.connect(
-            self._update_cash_amount_filter_state
+        self.cashAmountFilterMaximumDoubleSpinBox.valueChanged.connect(
+            self._update_cash_amount_filter_minimum
         )
-        self.buyCheckBox.toggled.connect(self._update_cash_amount_filter_state)
-        self.sellCheckBox.toggled.connect(self._update_cash_amount_filter_state)
 
     def _initialize_window(self) -> None:
         self.setWindowFlag(Qt.WindowType.Window)
@@ -715,3 +677,9 @@ class TransactionFilterForm(QWidget, Ui_TransactionFilterForm):
         self.actionSelectAllCashAccountsBelow.setEnabled(account_group_selected)
         self.actionSelectAllSecurityAccountsBelow.setEnabled(account_group_selected)
         self.actionExpandAllAccountItemsBelow.setEnabled(account_group_selected)
+
+    def _update_cash_amount_filter_minimum(self) -> None:
+        text = self.cashAmountFilterMaximumDoubleSpinBox.text()
+        text = text.replace(",", "")
+        maximum = Decimal(text.removesuffix(" " + self._base_currency_code))
+        self.cashAmountFilterMinimumDoubleSpinBox.setMaximum(maximum)

@@ -13,12 +13,15 @@ class CheckableListModel(QAbstractListModel):
         items: Collection[Any],
         checked_items: Collection[Any],
         proxy: QSortFilterProxyModel,
+        *,
+        sort: bool = True
     ) -> None:
         super().__init__()
         self._list_view = view
-        self._items = sorted(items, key=lambda x: str(x))
-        self._checked_items = sorted(checked_items, key=lambda x: str(x))
+        self._items = sorted(items, key=str) if sort else items
+        self._checked_items = sorted(checked_items, key=str) if sort else checked_items
         self._proxy = proxy
+        self._sort = sort
 
     @property
     def items(self) -> tuple[Any]:
@@ -26,7 +29,7 @@ class CheckableListModel(QAbstractListModel):
 
     @items.setter
     def items(self, values: Collection[Any]) -> None:
-        self._items = sorted(values, key=str)
+        self._items = sorted(values, key=str) if self._sort else values
 
     @property
     def checked_items(self) -> tuple[Any]:
@@ -34,7 +37,7 @@ class CheckableListModel(QAbstractListModel):
 
     @checked_items.setter
     def checked_items(self, values: Collection[Any]) -> None:
-        self._checked_items = sorted(values, key=str)
+        self._checked_items = sorted(values, key=str) if self._sort else list(values)
 
     def rowCount(self, index: QModelIndex = ...) -> int:  # noqa: N802
         if isinstance(index, QModelIndex) and index.isValid():
@@ -89,11 +92,12 @@ class CheckableListModel(QAbstractListModel):
         )
 
     def get_selected_item(self) -> Any | None:
-        proxy_indexes = self._list_view.selectedIndexes()
-        source_indexes = [self._proxy.mapToSource(index) for index in proxy_indexes]
-        if len(source_indexes) == 0:
+        indexes = self._list_view.selectedIndexes()
+        if self._proxy:
+            indexes = [self._proxy.mapToSource(index) for index in indexes]
+        if len(indexes) == 0:
             return None
-        return source_indexes[0].internalPointer()
+        return indexes[0].internalPointer()
 
     def pre_reset_model(self) -> None:
         self.beginResetModel()

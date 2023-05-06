@@ -12,6 +12,7 @@ from src.views.dialogs.category_dialog import CategoryDialog
 from src.views.forms.category_form import CategoryForm
 
 # TODO: Have 3 separate treeviews and models?
+# TODO: add sorting
 
 
 class CategoryFormPresenter:
@@ -32,6 +33,7 @@ class CategoryFormPresenter:
         self._proxy_model.setSourceModel(self._model)
         self._proxy_model.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
         self._proxy_model.setRecursiveFilteringEnabled(True)  # noqa: FBT003
+        self._proxy_model.setFilterRole(Qt.ItemDataRole.UserRole + 1)
         self._view.category_tree.setModel(self._proxy_model)
 
         self._view.incomeRadioButton.setChecked(True)  # noqa: FBT003

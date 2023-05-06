@@ -102,6 +102,8 @@ class CategoryTreeModel(QAbstractItemModel):
             return self._get_display_role_data(column, category, stats)
         if role == Qt.ItemDataRole.UserRole and column == CategoryTreeColumn.NAME:
             return unicodedata.normalize("NFD", category.name)
+        if role == Qt.ItemDataRole.UserRole + 1 and column == CategoryTreeColumn.NAME:
+            return category.path
         if role == Qt.ItemDataRole.TextAlignmentRole and (
             column == CategoryTreeColumn.TRANSACTIONS
             or column == CategoryTreeColumn.BALANCE

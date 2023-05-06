@@ -226,7 +226,11 @@ class TransactionFilter:
         self._cash_amount_filter = None
 
     def set_type_filter(
-        self, types: Collection[type[Transaction]], mode: FilterMode
+        self,
+        types: Collection[
+            type[Transaction] | CashTransactionType | SecurityTransactionType
+        ],
+        mode: FilterMode,
     ) -> None:
         self._type_filter = TypeFilter(types, mode)
 

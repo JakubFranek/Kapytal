@@ -255,6 +255,8 @@ class CheckableCategoryTreeModel(QAbstractItemModel):
             return node.check_state
         if role == Qt.ItemDataRole.FontRole and node.are_children_check_states_mixed:
             return bold_font
+        if role == Qt.ItemDataRole.UserRole:
+            return node.item.path
         return None
 
     def setData(  # noqa: N802

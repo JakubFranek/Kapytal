@@ -52,6 +52,7 @@ class AccountFilterPresenter:
             return
         logging.debug(f"Filtering Account Tree items: {pattern=}")
         self._proxy.setFilterWildcard(pattern)
+        self._form.account_tree_view.expandAll()
 
     def _initialize_models(self) -> None:
         self._proxy = QSortFilterProxyModel(self._form)

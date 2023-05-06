@@ -1,5 +1,5 @@
 import logging
-from collections.abc import Collection
+from collections.abc import Collection, Iterable
 
 from PyQt6.QtWidgets import QWidget
 from src.models.base_classes.account import Account
@@ -17,6 +17,7 @@ from src.models.model_objects.security_objects import (
 from src.models.record_keeper import RecordKeeper
 from src.models.transaction_filters.base_transaction_filter import FilterMode
 from src.models.transaction_filters.transaction_filter import TransactionFilter
+from src.models.transaction_filters.type_filter import TYPE_NAME_DICT
 from src.presenters.form.transaction_filter.account_filter_presenter import (
     AccountFilterPresenter,
 )
@@ -34,6 +35,9 @@ from src.presenters.form.transaction_filter.security_filter_presenter import (
 )
 from src.presenters.form.transaction_filter.tag_filter_presenter import (
     TagFilterPresenter,
+)
+from src.presenters.form.transaction_filter.type_filter_presenter import (
+    TypeFilterPresenter,
 )
 from src.presenters.utilities.event import Event
 from src.views.forms.transaction_filter_form import (
@@ -67,16 +71,6 @@ category_related_types = {
     RefundTransaction,
 }
 
-ordered_types = (
-    CashTransactionType.INCOME,
-    CashTransactionType.EXPENSE,
-    RefundTransaction,
-    CashTransfer,
-    SecurityTransfer,
-    SecurityTransactionType.BUY,
-    SecurityTransactionType.SELL,
-)
-
 
 def get_type_names(
     types: Collection[
@@ -86,7 +80,7 @@ def get_type_names(
     type_names_: list[str] = []
     ordered_types_: list[
         type[Transaction] | CashTransactionType | SecurityTransactionType
-    ] = order_subset(ordered_types, types)
+    ] = order_subset(tuple(TYPE_NAME_DICT.keys()), types)
 
     for type_ in ordered_types_:
         if isinstance(type_, CashTransactionType | SecurityTransactionType):
@@ -94,15 +88,15 @@ def get_type_names(
         else:
             name = type_.__name__
             # insert space in front of each capital letter (except for the first one)
-            for i in range(1, len(name)):
-                if name[i].isupper():
-                    name = name[:i] + " " + name[i:]
-            type_names_.append(name)
+            capital_indexes = [i for i, c in enumerate(name) if c.isupper() if i != 0]
+            for i in capital_indexes:
+                name = name[:i] + " " + name[i:]
+            type_names_.append(name.title())
 
     return tuple(type_names_)
 
 
-def order_subset(reference_list: list, subset_list: list) -> list:
+def order_subset(reference_list: Iterable, subset_list: list) -> list:
     index_dict = {item: index for index, item in enumerate(reference_list)}
     return sorted(subset_list, key=lambda x: index_dict[x])
 
@@ -127,7 +121,7 @@ class TransactionFilterFormPresenter:
             else ""
         )
         self._form = TransactionFilterForm(parent_view, base_currency_code)
-
+        self._type_filter_presenter = TypeFilterPresenter(self._form)
         self._account_filter_presenter = AccountFilterPresenter(
             self._form, record_keeper
         )
@@ -203,7 +197,9 @@ class TransactionFilterFormPresenter:
 
     def _get_transaction_filter_from_form(self) -> TransactionFilter:
         filter_ = TransactionFilter()
-        filter_.set_type_filter(self._form.types, FilterMode.KEEP)
+        filter_.set_type_filter(
+            self._type_filter_presenter.checked_types, FilterMode.KEEP
+        )
         filter_.set_datetime_filter(
             self._form.date_filter_start,
             self._form.date_filter_end,
@@ -260,7 +256,7 @@ class TransactionFilterFormPresenter:
         return filter_
 
     def _update_form_from_filter(self, filter_: TransactionFilter) -> None:
-        self._form.types = filter_.type_filter.types
+        self._type_filter_presenter.load_from_type_filter(filter_.type_filter)
         self._form.date_filter_mode = filter_.datetime_filter.mode
         self._form.date_filter_start = filter_.datetime_filter.start
         self._form.date_filter_end = filter_.datetime_filter.end
@@ -405,7 +401,7 @@ class TransactionFilterFormPresenter:
                 )
 
     def _check_filter_form_sanity(self) -> None:
-        types = self._form.types
+        types = self._type_filter_presenter.checked_types
         if not types:
             display_error_message(
                 (
@@ -432,6 +428,10 @@ class TransactionFilterFormPresenter:
             self._check_filter_related_types("Payee Filter", payee_related_types)
         if self._form.category_filters_active:
             self._check_filter_related_types("Category Filter", category_related_types)
+        if self._form.cash_amount_filter_mode != FilterMode.OFF:
+            self._check_filter_related_types(
+                "Cash Amount Filter", currency_related_types
+            )
 
     def _check_filter_related_types(
         self,
@@ -440,7 +440,7 @@ class TransactionFilterFormPresenter:
             type[Transaction] | CashTransactionType | SecurityTransactionType
         ],
     ) -> None:
-        types = self._form.types
+        types = self._type_filter_presenter.checked_types
         field_name = filter_name.removesuffix(" Filter")
         unrelated_types = types.difference(related_types)
         if unrelated_types:
@@ -461,8 +461,8 @@ class TransactionFilterFormPresenter:
             answer = ask_yes_no_question(self._form, question, title, warning=True)
             if answer:
                 logging.info("User chose to unselect unrelated types in Type Filter")
-                self._form.types = types - unrelated_types
-                types = self._form.types
+                self._type_filter_presenter.checked_types = types - unrelated_types
+                types = self._type_filter_presenter.checked_types
             else:
                 logging.info("User chose to keep unrelated types in Type Filter")
         related_types = types.intersection(related_types)

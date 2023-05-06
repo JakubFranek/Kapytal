@@ -105,18 +105,21 @@ class CategoryFilterPresenter:
 
         self._form.multiple_categories_filter_mode = multiple_categories_filter.mode
 
-    # FIXME: weird filtering: typing "Transport" does not show its children...
-    # potential solution: filter based on user role returning full path
     def _filter(self, pattern: str, proxy: QSortFilterProxyModel) -> None:
         if ("[" in pattern and "]" not in pattern) or "[]" in pattern:
             return
         if proxy == self._income_categories_proxy:
             logging.debug(f"Filtering Income Categories: {pattern=}")
+            proxy.setFilterWildcard(pattern)
+            self._form.income_category_tree_view.expandAll()
         elif proxy == self._expense_categories_proxy:
             logging.debug(f"Filtering Expense Categories: {pattern=}")
+            proxy.setFilterWildcard(pattern)
+            self._form.expense_category_tree_view.expandAll()
         else:
             logging.debug(f"Filtering Income and Expense Categories: {pattern=}")
-        proxy.setFilterWildcard(pattern)
+            proxy.setFilterWildcard(pattern)
+            self._form.income_and_expense_category_tree_view.expandAll()
 
     def _initialize_models(self) -> None:
         self._income_categories_proxy = QSortFilterProxyModel(self._form)
@@ -131,6 +134,12 @@ class CategoryFilterPresenter:
         )
         self._income_and_expense_categories_proxy.setFilterCaseSensitivity(
             Qt.CaseSensitivity.CaseInsensitive
+        )
+
+        self._income_categories_proxy.setFilterRole(Qt.ItemDataRole.UserRole)
+        self._expense_categories_proxy.setFilterRole(Qt.ItemDataRole.UserRole)
+        self._income_and_expense_categories_proxy.setFilterRole(
+            Qt.ItemDataRole.UserRole
         )
 
         self._income_categories_proxy.setRecursiveFilteringEnabled(True)  # noqa: FBT003
