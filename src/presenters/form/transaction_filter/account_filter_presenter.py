@@ -47,8 +47,6 @@ class AccountFilterPresenter:
                 if account not in account_filter.accounts
             ]
 
-    # FIXME: weird filtering: typing "Degiro" does not show children...
-    # potential solution: filter based on user role returning full path
     def _filter(self, pattern: str) -> None:
         if ("[" in pattern and "]" not in pattern) or "[]" in pattern:
             return
@@ -59,6 +57,7 @@ class AccountFilterPresenter:
         self._proxy = QSortFilterProxyModel(self._form)
         self._proxy.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
         self._proxy.setRecursiveFilteringEnabled(True)  # noqa: FBT003
+        self._proxy.setFilterRole(Qt.ItemDataRole.UserRole)
 
         self._model = CheckableAccountTreeModel(
             self._form.account_tree_view, self._proxy, self._record_keeper.account_items

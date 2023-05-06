@@ -201,7 +201,7 @@ class CheckableAccountTreeModel(QAbstractItemModel):
             parent_row = grandparent.children.index(parent)
         return QAbstractItemModel.createIndex(self, parent_row, 0, parent)
 
-    def data(  # noqa: PLR0911
+    def data(  # noqa: PLR0911, C901
         self, index: QModelIndex, role: Qt.ItemDataRole = ...
     ) -> str | Qt.AlignmentFlag | None:
         if not index.isValid():
@@ -224,6 +224,8 @@ class CheckableAccountTreeModel(QAbstractItemModel):
                 return icons.cash_account_empty
             if isinstance(item, SecurityAccount):
                 return icons.security_account
+        if role == Qt.ItemDataRole.UserRole:  # used for filtering
+            return item.path
         return None
 
     def setData(  # noqa: N802
