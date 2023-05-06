@@ -2,11 +2,15 @@ import logging
 
 from PyQt6.QtCore import QSortFilterProxyModel, Qt
 from src.models.base_classes.account import Account
+from src.models.model_objects.account_group import AccountGroup
 from src.models.record_keeper import RecordKeeper
 from src.models.transaction_filters.account_filter import AccountFilter
 from src.models.transaction_filters.base_transaction_filter import FilterMode
 from src.view_models.checkable_account_tree_model import CheckableAccountTreeModel
-from src.views.forms.transaction_filter_form import TransactionFilterForm
+from src.views.forms.transaction_filter_form import (
+    AccountFilterMode,
+    TransactionFilterForm,
+)
 
 
 class AccountFilterPresenter:
@@ -32,9 +36,8 @@ class AccountFilterPresenter:
         self,
         account_filter: AccountFilter,
     ) -> None:
-        self._model.pre_reset_model()
         if account_filter.mode == FilterMode.OFF:
-            pass
+            self._form.account_filter_mode = AccountFilterMode.ACCOUNT_TREE
         elif account_filter.mode == FilterMode.KEEP:
             self._model.checked_accounts = account_filter.accounts
         else:
@@ -43,7 +46,6 @@ class AccountFilterPresenter:
                 for account in self._record_keeper.accounts
                 if account not in account_filter.accounts
             ]
-        self._model.post_reset_model()
 
     # FIXME: weird filtering: typing "Degiro" does not show children...
     # potential solution: filter based on user role returning full path
@@ -68,4 +70,51 @@ class AccountFilterPresenter:
     def _connect_to_signals(self) -> None:
         self._form.signal_accounts_search_text_changed.connect(
             lambda pattern: self._filter(pattern)
+        )
+        self._form.signal_accounts_select_all.connect(lambda: self._model.select_all())
+        self._form.signal_accounts_unselect_all.connect(
+            lambda: self._model.unselect_all()
+        )
+        self._form.signal_accounts_expand_all_below.connect(
+            lambda: self._expand_all_below_current_selection()
+        )
+        self._form.signal_accounts_select_all_cash_accounts_below.connect(
+            self._select_all_cash_accounts_below
+        )
+        self._form.signal_accounts_select_all_security_accounts_below.connect(
+            self._select_all_security_accounts_below
+        )
+        self._form.account_tree_view.selectionModel().selectionChanged.connect(
+            self._selection_changed
+        )
+
+    def _expand_all_below_current_selection(self) -> None:
+        indexes = self._form.account_tree_view.selectedIndexes()
+        if len(indexes) == 0:
+            raise ValueError("No index to expand recursively selected.")
+        item = self._model.get_selected_item()
+        logging.debug(f"Expanding all nodes below {item}")
+        self._form.account_tree_view.expandRecursively(indexes[0])
+
+    def _select_all_cash_accounts_below(self) -> None:
+        account_group = self._model.get_selected_item()
+        if not isinstance(account_group, AccountGroup):
+            raise TypeError(f"Selected item is not an AccountGroup: {account_group}")
+        logging.debug(f"Selecting all cash accounts below path='{account_group.path}'")
+        self._model.select_all_cash_accounts_below(account_group)
+
+    def _select_all_security_accounts_below(self) -> None:
+        account_group = self._model.get_selected_item()
+        if not isinstance(account_group, AccountGroup):
+            raise TypeError(f"Selected item is not an AccountGroup: {account_group}")
+        logging.debug(
+            f"Selecting all security accounts below path='{account_group.path}'"
+        )
+        self._model.select_all_security_accounts_below(account_group)
+
+    def _selection_changed(self) -> None:
+        item = self._model.get_selected_item()
+        account_group_selected = isinstance(item, AccountGroup)
+        self._form.set_account_filter_action_states(
+            account_group_selected=account_group_selected
         )

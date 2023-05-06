@@ -193,8 +193,7 @@ class TransactionFilterFormPresenter:
         self._form.show_form()
 
     def _form_accepted(self) -> None:
-        if self._check_filter_form_sanity() is False:
-            return
+        self._check_filter_form_sanity()
         new_filter = self._get_transaction_filter_from_form()
         if self.transaction_filter != new_filter:
             self._log_filter_differences(new_filter)
@@ -411,6 +410,15 @@ class TransactionFilterFormPresenter:
             display_error_message(
                 (
                     "No Transaction types selected in Type Filter, "
+                    "all Transactions will be discarded."
+                ),
+                title="Warning",
+            )
+        accounts = self._account_filter_presenter.checked_accounts
+        if not accounts:
+            display_error_message(
+                (
+                    "No Accounts selected in Account Filter, "
                     "all Transactions will be discarded."
                 ),
                 title="Warning",

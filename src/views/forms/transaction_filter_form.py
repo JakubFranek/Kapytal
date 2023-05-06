@@ -5,7 +5,7 @@ from decimal import Decimal
 from enum import Enum, auto
 
 from PyQt6.QtCore import QSignalBlocker, Qt, pyqtSignal
-from PyQt6.QtGui import QAction, QCloseEvent
+from PyQt6.QtGui import QAction, QCloseEvent, QContextMenuEvent, QCursor
 from PyQt6.QtWidgets import (
     QAbstractButton,
     QButtonGroup,
@@ -13,6 +13,7 @@ from PyQt6.QtWidgets import (
     QDialogButtonBox,
     QLineEdit,
     QListView,
+    QMenu,
     QTreeView,
     QWidget,
 )
@@ -62,6 +63,12 @@ class TransactionFilterForm(QWidget, Ui_TransactionFilterForm):
     signal_expense_categories_search_text_changed = pyqtSignal(str)
     signal_income_and_expense_categories_search_text_changed = pyqtSignal(str)
 
+    signal_accounts_select_all = pyqtSignal()
+    signal_accounts_unselect_all = pyqtSignal()
+    signal_accounts_select_all_cash_accounts_below = pyqtSignal()
+    signal_accounts_select_all_security_accounts_below = pyqtSignal()
+    signal_accounts_expand_all_below = pyqtSignal()
+
     signal_tags_select_all = pyqtSignal()
     signal_tags_unselect_all = pyqtSignal()
 
@@ -96,6 +103,8 @@ class TransactionFilterForm(QWidget, Ui_TransactionFilterForm):
         self._initialize_tool_buttons()
         self._initialize_signals()
         self._initialize_mode_comboboxes()
+        self._initialize_account_filter_actions()
+        self._initialize_context_menu_events()
         self.base_currency_code = base_currency_code
         self._description_filter_mode_changed()
         self._date_filter_mode_changed()
@@ -282,6 +291,7 @@ class TransactionFilterForm(QWidget, Ui_TransactionFilterForm):
             self.accountsFilterTreeRadioButton.setChecked(True)
         else:
             self.accountsFilterSelectionRadioButton.setChecked(True)
+        self._account_filter_mode_changed()
 
     @property
     def tagless_filter_mode(self) -> FilterMode:
@@ -454,6 +464,13 @@ class TransactionFilterForm(QWidget, Ui_TransactionFilterForm):
             lambda: self.signal_income_and_expense_categories_search_text_changed.emit(
                 self.incomeAndExpenseCategoriesSearchLineEdit.text()
             )
+        )
+
+        self.accountsFilterSelectAllPushButton.clicked.connect(
+            self.signal_accounts_select_all.emit
+        )
+        self.accountsFilterUnselectAllPushButton.clicked.connect(
+            self.signal_accounts_unselect_all.emit
         )
 
         self.tagsSelectAllPushButton.clicked.connect(self.signal_tags_select_all.emit)
@@ -666,3 +683,45 @@ class TransactionFilterForm(QWidget, Ui_TransactionFilterForm):
         if mode == FilterMode.KEEP:
             self.splitTagsFilterModeComboBox.setCurrentText(FilterMode.OFF.name)
         self.splitTagsFilterModeComboBox.setEnabled(mode != FilterMode.KEEP)
+
+    def _initialize_account_filter_actions(self) -> None:
+        self.actionSelectAllCashAccountsBelow = QAction(
+            "Select All Cash Accounts Below", self
+        )
+        self.actionSelectAllSecurityAccountsBelow = QAction(
+            "Select All Security Accounts Below", self
+        )
+        self.actionExpandAllAccountItemsBelow = QAction("Expand All Below", self)
+
+        self.actionSelectAllCashAccountsBelow.setIcon(icons.cash_account)
+        self.actionSelectAllSecurityAccountsBelow.setIcon(icons.security_account)
+        self.actionExpandAllAccountItemsBelow.setIcon(icons.expand_below)
+
+        self.actionSelectAllCashAccountsBelow.triggered.connect(
+            self.signal_accounts_select_all_cash_accounts_below.emit
+        )
+        self.actionSelectAllSecurityAccountsBelow.triggered.connect(
+            self.signal_accounts_select_all_security_accounts_below.emit
+        )
+        self.actionExpandAllAccountItemsBelow.triggered.connect(
+            self.signal_accounts_expand_all_below.emit
+        )
+
+    def _create_account_filter_context_menu(self, event: QContextMenuEvent) -> None:
+        del event
+        self.menu = QMenu(self)
+        self.menu.addAction(self.actionSelectAllCashAccountsBelow)
+        self.menu.addAction(self.actionSelectAllSecurityAccountsBelow)
+        self.menu.addSeparator()
+        self.menu.addAction(self.actionExpandAllAccountItemsBelow)
+        self.menu.popup(QCursor.pos())
+
+    def _initialize_context_menu_events(self) -> None:
+        self.accountsTreeView.contextMenuEvent = (
+            self._create_account_filter_context_menu
+        )
+
+    def set_account_filter_action_states(self, *, account_group_selected: bool) -> None:
+        self.actionSelectAllCashAccountsBelow.setEnabled(account_group_selected)
+        self.actionSelectAllSecurityAccountsBelow.setEnabled(account_group_selected)
+        self.actionExpandAllAccountItemsBelow.setEnabled(account_group_selected)

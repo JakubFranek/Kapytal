@@ -156,15 +156,7 @@ class CheckableAccountTreeModel(QAbstractItemModel):
     @checked_accounts.setter
     def checked_accounts(self, checked_accounts: Collection[Account]) -> None:
         for node in self._flat_nodes:
-            node.check_state = (
-                Qt.CheckState.Checked
-                if node.item in checked_accounts
-                else Qt.CheckState.Unchecked
-            )
-        for node in self._flat_nodes:
-            if len(node.children) == 0 and node.parent is not None:
-                # start updates at leaf nodes and propagate up
-                node.parent.update_check_state()
+            node.set_check_state(checked=node.item in checked_accounts)
 
     def rowCount(self, index: QModelIndex = ...) -> int:  # noqa: N802
         if index.isValid():
@@ -259,6 +251,14 @@ class CheckableAccountTreeModel(QAbstractItemModel):
     def post_reset_model(self) -> None:
         self.endResetModel()
 
+    def get_selected_item(self) -> Account | AccountGroup | None:
+        proxy_indexes = self._tree_view.selectedIndexes()
+        source_indexes = [self._proxy.mapToSource(index) for index in proxy_indexes]
+        if len(source_indexes) == 0:
+            return None
+        node: AccountTreeNode = source_indexes[0].internalPointer()
+        return node.item
+
     def select_all(self) -> None:
         for node in self._root_nodes:
             node.set_check_state(
@@ -270,6 +270,26 @@ class CheckableAccountTreeModel(QAbstractItemModel):
             node.set_check_state(
                 checked=False,
             )
+
+    def select_all_cash_accounts_below(self, account_group: AccountGroup) -> None:
+        parent_node = get_node(account_group, self._flat_nodes)
+        if parent_node is None:
+            raise ValueError(f"Node with path='{account_group.path}' not found")
+        for node in self._flat_nodes:
+            if parent_node.item.path in node.item.path and isinstance(
+                node.item, CashAccount
+            ):
+                node.set_check_state(checked=True)
+
+    def select_all_security_accounts_below(self, account_group: AccountGroup) -> None:
+        parent_node = get_node(account_group, self._flat_nodes)
+        if parent_node is None:
+            raise ValueError(f"Node with path='{account_group.path}' not found")
+        for node in self._flat_nodes:
+            if parent_node.item.path in node.item.path and isinstance(
+                node.item, SecurityAccount
+            ):
+                node.set_check_state(checked=True)
 
     def _node_check_state_changed(self, item_path: str) -> None:
         node = get_node_by_item_path(item_path, self._flat_nodes)

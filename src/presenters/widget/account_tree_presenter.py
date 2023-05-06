@@ -87,10 +87,10 @@ class AccountTreePresenter:
 
     def expand_all_below(self) -> None:
         indexes = self._view.treeView.selectedIndexes()
-        item = self._model.get_selected_item()
-        logging.debug(f"Expanding all nodes below {item}")
         if len(indexes) == 0:
             raise ValueError("No index to expand recursively selected.")
+        item = self._model.get_selected_item()
+        logging.debug(f"Expanding all nodes below {item}")
         self._view.treeView.expandRecursively(indexes[0])  # view index required here
 
     def edit_item(self) -> None:
