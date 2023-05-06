@@ -511,7 +511,7 @@ class TransactionFilterFormPresenter:
         )
         message_box = QMessageBox(
             QMessageBox.Icon.Information,
-            "Filter Help",
+            "Transaction Filter Help",
             text,
             QMessageBox.StandardButton.Ok,
             self._form,
