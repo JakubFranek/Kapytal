@@ -72,7 +72,9 @@ class CategoryFilterPresenter:
             specific_categories_filter.mode != FilterMode.OFF
             or multiple_categories_filter.mode != FilterMode.OFF
         )
-        if specific_categories_filter.mode == FilterMode.KEEP:
+        if specific_categories_filter.mode == FilterMode.OFF:
+            pass
+        elif specific_categories_filter.mode == FilterMode.KEEP:
             self._income_categories_model.checked_categories = (
                 specific_categories_filter.income_categories
             )
