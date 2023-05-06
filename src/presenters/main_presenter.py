@@ -178,36 +178,28 @@ class MainPresenter:
         self._category_form_presenter.load_record_keeper(record_keeper)
 
     def _initialize_presenters(self) -> None:
-        logging.debug("Creating AccountTreePresenter")
         self._account_tree_presenter = AccountTreePresenter(
             self._view.account_tree_widget, self._record_keeper
         )
-        logging.debug("Creating TransactionsPresenter")
         self._transactions_presenter = TransactionsPresenter(
             self._view.transaction_table_widget, self._record_keeper
         )
-        logging.debug("Creating Currency Form and CurrencyFormPresenter")
         currency_form = CurrencyForm(parent=self._view)
         self._currency_form_presenter = CurrencyFormPresenter(
             currency_form, self._record_keeper
         )
-        logging.debug("Creating SecurityForm and SecurityFormPresenter")
         security_form = SecurityForm(parent=self._view)
         self._security_form_presenter = SecurityFormPresenter(
             security_form, self._record_keeper
         )
-        logging.debug("Creating PayeeForm and PayeeFormPresenter")
         payee_form = PayeeForm(parent=self._view)
         self._payee_form_presenter = PayeeFormPresenter(payee_form, self._record_keeper)
-        logging.debug("Creating TagForm and TagFormPresenter")
         tag_form = TagForm(parent=self._view)
         self._tag_form_presenter = TagFormPresenter(tag_form, self._record_keeper)
-        logging.debug("Creating CategoryForm and CategoryFormPresenter")
         category_form = CategoryForm(parent=self._view)
         self._category_form_presenter = CategoryFormPresenter(
             category_form, self._record_keeper
         )
-        logging.debug("Creating SettingsForm and SettingsFormPresenter")
         settings_form = SettingsForm(parent=self._view)
         self._settings_form_presenter = SettingsFormPresenter(settings_form)
 

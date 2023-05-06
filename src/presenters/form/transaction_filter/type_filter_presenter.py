@@ -55,7 +55,9 @@ class TypeFilterPresenter:
         self,
         type_filter: TypeFilter,
     ) -> None:
+        self._type_list_model.pre_reset_model()
         self._type_list_model.checked_items = type_filter.type_names
+        self._type_list_model.post_reset_model()
 
     def _select_all(self) -> None:
         self._type_list_model.pre_reset_model()

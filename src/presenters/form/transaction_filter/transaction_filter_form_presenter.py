@@ -215,6 +215,10 @@ class TransactionFilterFormPresenter:
             filter_.set_account_filter(
                 self._account_filter_presenter.checked_accounts, FilterMode.KEEP
             )
+        else:
+            filter_.set_account_filter(
+                self._account_tree_shown_accounts, FilterMode.KEEP
+            )
 
         filter_.set_specific_tags_filter(
             self._tag_filter_presenter.checked_tags,
@@ -292,7 +296,6 @@ class TransactionFilterFormPresenter:
         else:
             self._form.base_currency_code = ""
 
-    # TODO: review the default functions
     def _restore_defaults(self) -> None:
         logging.info("Restoring TransactionFilterForm to default")
         self._update_form_from_filter(self._default_filter)
@@ -301,8 +304,12 @@ class TransactionFilterFormPresenter:
         self._default_filter = self._get_default_filter()
 
     def _get_default_filter(self) -> TransactionFilter:
+        # This method cannot be merged with _setup_default_filter because otherwise
+        # self._transaction_filter and self._default filter would point to same object
+
         filter_ = TransactionFilter()
         filter_.set_specific_tags_filter(self._record_keeper.tags, FilterMode.KEEP)
+        filter_.set_account_filter(self._record_keeper.accounts, FilterMode.KEEP)
         if self._record_keeper.base_currency is not None:
             filter_.set_cash_amount_filter(
                 CashAmount(0, self._record_keeper.base_currency),

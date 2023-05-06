@@ -59,6 +59,7 @@ class AccountTreePresenter:
         self._initialize_signals()
         self._view.finalize_setup()
         self._reset_sort_order()
+        self.event_check_state_changed()
 
     @property
     def valid_accounts(self) -> tuple[Account, ...]:
@@ -77,6 +78,7 @@ class AccountTreePresenter:
         self._record_keeper = record_keeper
         self.update_model_data()
         self._model.post_reset_model()
+        self.event_check_state_changed()
 
     def refresh_view(self) -> None:
         self._view.refresh()
