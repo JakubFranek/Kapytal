@@ -33,6 +33,8 @@ from src.views.constants import (
 
 # TODO: look into overriding "multidata" method to improve performance
 
+ALIGNMENT_AMOUNTS = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+
 
 class TransactionTableModel(QAbstractTableModel):
     def __init__(  # noqa: PLR0913
@@ -71,19 +73,22 @@ class TransactionTableModel(QAbstractTableModel):
     def rowCount(self, index: QModelIndex = ...) -> int:  # noqa: N802
         if isinstance(index, QModelIndex) and index.isValid():
             return 0
-        return len(self.transactions)
+        return len(self._transactions)
 
-    def columnCount(self, index: QModelIndex = ...) -> int:  # noqa: N802
-        del index
-        return len(TransactionTableColumn)
+    def columnCount(self, index: QModelIndex = ...) -> int:  # noqa: N802, ARG002
+        if not hasattr(self, "_column_count"):
+            self._column_count = len(TRANSACTION_TABLE_COLUMN_HEADERS)
+        return self._column_count
 
     def index(self, row: int, column: int, parent: QModelIndex = ...) -> QModelIndex:
-        if parent.isValid():
+        if parent.isValid():  # now we already know that parent is invalid
             return QModelIndex()
-        if not QAbstractTableModel.hasIndex(self, row, column, QModelIndex()):
+        if row < 0 or column < 0:
+            return QModelIndex()
+        if row >= len(self._transactions) or column >= self._column_count:
             return QModelIndex()
 
-        item = self.transactions[row]
+        item = self._transactions[row]
         return QAbstractTableModel.createIndex(self, row, column, item)
 
     def data(  # noqa: PLR0911
@@ -92,21 +97,29 @@ class TransactionTableModel(QAbstractTableModel):
         if not index.isValid():
             return None
 
-        column = index.column()
-        transaction = self.transactions[index.row()]
-
         if role == Qt.ItemDataRole.DisplayRole:
-            return self._get_display_role_data(transaction, column)
+            return self._get_display_role_data(
+                self._transactions[index.row()], index.column()
+            )
         if role == Qt.ItemDataRole.DecorationRole:
-            return self._get_decoration_role_data(transaction, column)
+            return self._get_decoration_role_data(
+                self._transactions[index.row()], index.column()
+            )
         if role == Qt.ItemDataRole.TextAlignmentRole:
-            return TransactionTableModel.get_text_alignment_data(column)
+            return TransactionTableModel._get_text_alignment_data(index.column())
         if role == Qt.ItemDataRole.ForegroundRole:
-            return TransactionTableModel._get_foreground_data(transaction, column)
-        if role == Qt.ItemDataRole.FontRole and column == TransactionTableColumn.UUID:
+            return TransactionTableModel._get_foreground_data(
+                self._transactions[index.row()], index.column()
+            )
+        if (
+            role == Qt.ItemDataRole.FontRole
+            and index.column() == TransactionTableColumn.UUID
+        ):
             return monospace_font
         if role == Qt.ItemDataRole.UserRole:
-            return self._get_user_role_data(transaction, column)
+            return self._get_user_role_data(
+                self._transactions[index.row()], index.column()
+            )
         return None
 
     def headerData(  # noqa: N802
@@ -173,7 +186,7 @@ class TransactionTableModel(QAbstractTableModel):
     def get_index_from_item(self, item: Transaction | None) -> QModelIndex:
         if item is None:
             return QModelIndex()
-        row = self.transactions.index(item)
+        row = self._transactions.index(item)
         return QAbstractTableModel.createIndex(self, row, 0, item)
 
     def _get_display_role_data(  # noqa: PLR0911, PLR0912, C901
@@ -327,7 +340,7 @@ class TransactionTableModel(QAbstractTableModel):
         )
 
     @staticmethod
-    def get_text_alignment_data(column: int) -> Qt.AlignmentFlag | None:
+    def _get_text_alignment_data(column: int) -> Qt.AlignmentFlag | None:
         if (
             column == TransactionTableColumn.AMOUNT_NATIVE
             or column == TransactionTableColumn.AMOUNT_BASE
@@ -336,7 +349,7 @@ class TransactionTableModel(QAbstractTableModel):
             or column == TransactionTableColumn.SHARES
             or column == TransactionTableColumn.BALANCE
         ):
-            return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+            return ALIGNMENT_AMOUNTS
         return None
 
     @staticmethod

@@ -4,7 +4,6 @@ from collections.abc import Sequence
 from copy import copy
 from decimal import Decimal
 from typing import Any, Self
-from uuid import UUID
 
 from PyQt6.QtCore import (
     QAbstractItemModel,
@@ -27,12 +26,22 @@ from src.presenters.utilities.event import Event
 from src.views import colors, icons
 from src.views.constants import AccountTreeColumn
 
+TEXT_ALIGNMENT_BALANCE = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+FLAGS_SHOW = (
+    Qt.ItemFlag.ItemIsSelectable
+    | Qt.ItemFlag.ItemIsEnabled
+    | Qt.ItemFlag.ItemIsUserCheckable
+)
+FLAGS_DEFAULT = Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsEnabled
+
 
 def convert_bool_to_checkstate(*, checked: bool) -> Qt.CheckState:
     return Qt.CheckState.Checked if checked else Qt.CheckState.Unchecked
 
 
 class AccountTreeNode:
+    __slots__ = ("item", "parent", "children", "check_state", "event_signal_changed")
+
     def __init__(self, item: Account | AccountGroup, parent: Self | None) -> None:
         self.item = item
         self.parent = parent
@@ -40,17 +49,13 @@ class AccountTreeNode:
         self.check_state: Qt.CheckState = Qt.CheckState.Checked
         self.event_signal_changed = Event()
 
-    @property
-    def uuid(self) -> UUID:
-        return self.item.uuid
-
     def __repr__(self) -> str:
         return f"AccountTreeNode({str(self.item)})"
 
     def __eq__(self, __o: object) -> bool:
         if not isinstance(__o, AccountTreeNode):
             return False
-        return self.uuid == __o.uuid
+        return self.item.uuid == __o.item.uuid
 
     def set_check_state(self, *, checked: bool) -> None:
         """Sets check state of this node and its children, and updates the parents."""
@@ -191,8 +196,6 @@ class AccountTreeModel(QAbstractItemModel):
             if index.column() != 0:
                 return 0
             node: AccountTreeNode = index.internalPointer()
-            if not isinstance(node, AccountTreeNode):
-                raise TypeError(f"node should be AccountTreeNode, is {type(node)}")
             return len(node.children)
         return len(self._root_nodes)
 
@@ -233,12 +236,8 @@ class AccountTreeModel(QAbstractItemModel):
             return Qt.ItemFlag.NoItemFlags
         column = index.column()
         if column == AccountTreeColumn.SHOW:
-            return (
-                Qt.ItemFlag.ItemIsSelectable
-                | Qt.ItemFlag.ItemIsEnabled
-                | Qt.ItemFlag.ItemIsUserCheckable
-            )
-        return Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsEnabled
+            return FLAGS_SHOW
+        return FLAGS_DEFAULT
 
     def setData(  # noqa: N802
         self, index: QModelIndex, value: Any, role: int = ...  # noqa: ANN401
@@ -262,36 +261,49 @@ class AccountTreeModel(QAbstractItemModel):
             return Qt.AlignmentFlag.AlignCenter
         return None
 
-    def data(  # noqa: PLR0911
+    def data(  # noqa: PLR0911, C901
         self, index: QModelIndex, role: Qt.ItemDataRole = ...
     ) -> str | QIcon | QBrush | Qt.AlignmentFlag | None:
         if not index.isValid():
             return None
-        column = index.column()
-        node: AccountTreeNode = index.internalPointer()
-        item = node.item
+
         if role == Qt.ItemDataRole.DisplayRole:
-            return self._get_display_role_data(column, item)
+            return self._get_display_role_data(
+                index.column(), index.internalPointer().item
+            )
         if role == Qt.ItemDataRole.DecorationRole:
-            return self._get_decoration_role_data(column, item, index)
-        if role == Qt.ItemDataRole.TextAlignmentRole and (
-            column == AccountTreeColumn.BALANCE_NATIVE
-            or column == AccountTreeColumn.BALANCE_BASE
+            return self._get_decoration_role_data(
+                index.column(), index.internalPointer().item, index
+            )
+        if (
+            role == Qt.ItemDataRole.CheckStateRole
+            and index.column() == AccountTreeColumn.SHOW
         ):
-            return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+            return index.internalPointer().check_state
+        if role == Qt.ItemDataRole.TextAlignmentRole:
+            column = index.column()
+            if (
+                column == AccountTreeColumn.BALANCE_NATIVE
+                or column == AccountTreeColumn.BALANCE_BASE
+            ):
+                return TEXT_ALIGNMENT_BALANCE
         if role == Qt.ItemDataRole.ForegroundRole:
-            return self._get_foreground_role_data(column, item)
-        if role == Qt.ItemDataRole.ToolTipRole and column == AccountTreeColumn.SHOW:
+            return self._get_foreground_role_data(
+                index.column(), index.internalPointer().item
+            )
+        if role == Qt.ItemDataRole.UserRole:
+            return self._get_sort_data(index.column(), index.internalPointer().item)
+        if role == Qt.ItemDataRole.UserRole + 1:
+            return self._get_filter_data(index.column(), index.internalPointer().item)
+        if (
+            role == Qt.ItemDataRole.ToolTipRole
+            and index.column() == AccountTreeColumn.SHOW
+        ):
             return (
                 "Only Transactions related to checked Accounts will be shown in "
                 "the Transaction Table"
             )
-        if role == Qt.ItemDataRole.UserRole:
-            return self._get_sort_data(column, item)
-        if role == Qt.ItemDataRole.UserRole + 1:
-            return self._get_filter_data(column, item)
-        if role == Qt.ItemDataRole.CheckStateRole and column == AccountTreeColumn.SHOW:
-            return node.check_state
+
         return None
 
     def _get_display_role_data(
