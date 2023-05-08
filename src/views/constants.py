@@ -43,6 +43,16 @@ class SecurityTableColumn(IntEnum):
     LAST_DATE = 4
 
 
+class SecurityAccountTableColumn(IntEnum):
+    SECURITY_NAME = 0
+    SYMBOL = 1
+    TYPE = 2
+    SHARES = 3
+    PRICE = 4
+    AMOUNT_NATIVE = 5
+    AMOUNT_BASE = 6
+
+
 class CategoryTreeColumn(IntEnum):
     NAME = 0
     TRANSACTIONS = 1

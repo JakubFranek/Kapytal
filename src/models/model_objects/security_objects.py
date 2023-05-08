@@ -112,6 +112,7 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
     def symbol(self) -> str:
         return self._symbol
 
+    # FIXME: fix this stupid way of logging
     @symbol.setter
     def symbol(self, value: str) -> None:
         if not isinstance(value, str):
@@ -140,16 +141,15 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
 
     @property
     def price(self) -> CashAmount:
-        if len(self._price_history) == 0:
-            return CashAmount(Decimal(0), self.currency)
-        latest_date = self.latest_date
-        return self._price_history[latest_date]
+        if hasattr(self, "_latest_price"):
+            return self._latest_price
+        return CashAmount(Decimal(0), self._currency)
 
     @property
     def latest_date(self) -> date | None:
-        if len(self._price_history) == 0:
-            return None
-        return max(date_ for date_ in self._price_history)
+        if hasattr(self, "_latest_date"):
+            return self._latest_date
+        return None
 
     @property
     def price_history(self) -> dict[date, CashAmount]:
@@ -179,6 +179,8 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
         if price.currency != self.currency:
             raise CurrencyError("Security.currency and price.currency must match.")
         self._price_history[date_] = price
+        self._latest_date = max(date_ for date_ in self._price_history)
+        self._latest_price = self._price_history[self._latest_date]
 
     def serialize(self) -> dict[str, Any]:
         date_price_pairs = [

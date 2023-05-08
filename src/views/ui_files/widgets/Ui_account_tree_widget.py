@@ -97,6 +97,8 @@ class Ui_AccountTreeWidget(object):
         self.actionSelect_All_Cash_Accounts_Below.setObjectName("actionSelect_All_Cash_Accounts_Below")
         self.actionSelect_All_Security_Accounts_Below = QtGui.QAction(AccountTreeWidget)
         self.actionSelect_All_Security_Accounts_Below.setObjectName("actionSelect_All_Security_Accounts_Below")
+        self.actionShow_Securities = QtGui.QAction(AccountTreeWidget)
+        self.actionShow_Securities.setObjectName("actionShow_Securities")
 
         self.retranslateUi(AccountTreeWidget)
         QtCore.QMetaObject.connectSlotsByName(AccountTreeWidget)
@@ -130,3 +132,4 @@ class Ui_AccountTreeWidget(object):
         self.actionReset_Sort_Order.setToolTip(_translate("AccountTreeWidget", "Reset Sort Order"))
         self.actionSelect_All_Cash_Accounts_Below.setText(_translate("AccountTreeWidget", "Select All Cash Accounts Below"))
         self.actionSelect_All_Security_Accounts_Below.setText(_translate("AccountTreeWidget", "Select All Security Accounts Below"))
+        self.actionShow_Securities.setText(_translate("AccountTreeWidget", "Show Securities"))

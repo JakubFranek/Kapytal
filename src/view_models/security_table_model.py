@@ -64,6 +64,7 @@ class SecurityTableModel(QAbstractTableModel):
 
         if role == Qt.ItemDataRole.DisplayRole:
             return self._get_display_role_data(column, security)
+        # TODO: fix sorting
         if role == Qt.ItemDataRole.UserRole and column == SecurityTableColumn.NAME:
             return unicodedata.normalize("NFD", security.name)
         if (
@@ -81,7 +82,7 @@ class SecurityTableModel(QAbstractTableModel):
         if column == SecurityTableColumn.TYPE:
             return security.type_
         if column == SecurityTableColumn.PRICE:
-            return security.price.convert(security.currency).to_str_normalized()
+            return security.price.to_str_normalized()
         if column == SecurityTableColumn.LAST_DATE:
             latest_date = security.latest_date
             return (

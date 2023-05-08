@@ -219,6 +219,11 @@
     <string>Select All Security Accounts Below</string>
    </property>
   </action>
+  <action name="actionShow_Securities">
+   <property name="text">
+    <string>Show Securities</string>
+   </property>
+  </action>
  </widget>
  <resources/>
  <connections/>

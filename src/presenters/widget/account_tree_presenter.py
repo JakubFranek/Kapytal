@@ -8,6 +8,9 @@ from src.models.model_objects.account_group import AccountGroup
 from src.models.model_objects.cash_objects import CashAccount
 from src.models.model_objects.security_objects import SecurityAccount
 from src.models.record_keeper import RecordKeeper
+from src.presenters.form.security_account_form_presenter import (
+    SecurityAccountFormPresenter,
+)
 from src.presenters.utilities.event import Event
 from src.presenters.utilities.handle_exception import handle_exception
 from src.view_models.account_tree_model import AccountTreeModel
@@ -41,21 +44,11 @@ class AccountTreePresenter:
         self._view = view
         self._record_keeper = record_keeper
 
-        self._proxy = QSortFilterProxyModel(self._view)
-        self._proxy.setSortRole(Qt.ItemDataRole.UserRole)
-        self._proxy.setSortCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
-        self._proxy.setFilterRole(Qt.ItemDataRole.UserRole + 1)
-        self._proxy.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
-        self._proxy.setRecursiveFilteringEnabled(True)  # noqa: FBT003
-        self._model = AccountTreeModel(
-            view=view.treeView,
-            proxy=self._proxy,
-            flat_items=record_keeper.root_account_items,
-            base_currency=record_keeper.base_currency,
+        self._security_account_form_presenter = SecurityAccountFormPresenter(
+            self._view, self._record_keeper
         )
-        self._proxy.setSourceModel(self._model)
-        self._view.treeView.setModel(self._proxy)
 
+        self._initialize_models()
         self._initialize_signals()
         self._view.finalize_setup()
         self._reset_sort_order()
@@ -78,6 +71,7 @@ class AccountTreePresenter:
         self._record_keeper = record_keeper
         self.update_model_data()
         self._model.post_reset_model()
+        self._security_account_form_presenter.load_record_keeper(record_keeper)
         self.event_check_state_changed()
 
     def refresh_view(self) -> None:
@@ -507,6 +501,22 @@ class AccountTreePresenter:
             return self._record_keeper.root_account_items.index(item)
         return parent.children.index(item)
 
+    def _initialize_models(self) -> None:
+        self._proxy = QSortFilterProxyModel(self._view)
+        self._proxy.setSortRole(Qt.ItemDataRole.UserRole)
+        self._proxy.setSortCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+        self._proxy.setFilterRole(Qt.ItemDataRole.UserRole + 1)
+        self._proxy.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+        self._proxy.setRecursiveFilteringEnabled(True)  # noqa: FBT003
+        self._model = AccountTreeModel(
+            view=self._view.treeView,
+            proxy=self._proxy,
+            flat_items=self._record_keeper.root_account_items,
+            base_currency=self._record_keeper.base_currency,
+        )
+        self._proxy.setSourceModel(self._model)
+        self._view.treeView.setModel(self._proxy)
+
     def _initialize_signals(self) -> None:
         self._view.signal_selection_changed.connect(self._selection_changed)
         self._view.signal_expand_below.connect(self.expand_all_below)
@@ -547,6 +557,8 @@ class AccountTreePresenter:
         self._view.signal_edit_item.connect(self.edit_item)
         self._view.signal_delete_item.connect(self.remove_item)
 
+        self._view.signal_show_securities.connect(self._show_security_account_contents)
+
         self._view.signal_search_text_changed.connect(
             lambda pattern: self._filter(pattern)
         )
@@ -561,11 +573,13 @@ class AccountTreePresenter:
         enable_modify_object = item is not None
         enable_add_objects = item is None or isinstance(item, AccountGroup)
         enable_expand_below = isinstance(item, AccountGroup)
+        enable_show_securities = isinstance(item, SecurityAccount)
 
         self._view.enable_actions(
             enable_add_objects=enable_add_objects,
             enable_modify_object=enable_modify_object,
             enable_expand_below=enable_expand_below,
+            enable_show_securities=enable_show_securities,
         )
 
     def _get_account_group_paths(self) -> list[str]:
@@ -620,3 +634,9 @@ class AccountTreePresenter:
             return
         logging.debug(f"Filtering Accounts: {pattern=}")
         self._proxy.setFilterWildcard(pattern)
+
+    def _show_security_account_contents(self) -> None:
+        selected_item = self._model.get_selected_item()
+        if not isinstance(selected_item, SecurityAccount):
+            raise TypeError(f"Selected item is not a SecurityAccount: {selected_item}")
+        self._security_account_form_presenter.show(selected_item)
