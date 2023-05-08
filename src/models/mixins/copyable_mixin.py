@@ -17,7 +17,8 @@ class CopyableMixin:
         memo[id(self)] = result
         if hasattr(self, "__slots__"):
             for name in self.__slots__:
-                setattr(result, name, copy.deepcopy(getattr(self, name), memo))
+                if hasattr(self, name):
+                    setattr(result, name, copy.deepcopy(getattr(self, name), memo))
         if hasattr(self, "__dict__"):
             for key, value in self.__dict__.items():
                 setattr(result, key, copy.deepcopy(value, memo))

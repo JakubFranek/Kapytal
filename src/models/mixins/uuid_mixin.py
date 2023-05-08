@@ -12,9 +12,9 @@ class UUIDMixin:
         return self._uuid
 
     def __hash__(self) -> int:
-        return hash(self.uuid)
+        return hash(self._uuid)
 
     def __eq__(self, __o: object) -> bool:
         if not isinstance(__o, UUIDMixin):
-            return NotImplemented
-        return self.uuid == __o.uuid
+            return False
+        return self._uuid == __o._uuid  # noqa: SLF001

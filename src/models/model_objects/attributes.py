@@ -45,10 +45,10 @@ class Attribute(NameMixin, JSONSerializableMixin):
         return self._type
 
     def __repr__(self) -> str:
-        return f"Attribute('{self.name}', {self.type_.name})"
+        return f"Attribute('{self._name}', {self._type.name})"
 
     def __str__(self) -> str:
-        return self.name
+        return self._name
 
     def serialize(self) -> dict[str, Any]:
         return {"datatype": "Attribute", "name": self._name, "type": self._type.name}
@@ -115,12 +115,12 @@ class Category(NameMixin, JSONSerializableMixin):
 
     @property
     def path(self) -> str:
-        if self.parent is None:
-            return self.name
-        return self.parent.path + "/" + self.name
+        if self._parent is None:
+            return self._name
+        return self._parent.path + "/" + self._name
 
     def __repr__(self) -> str:
-        return f"Category('{self.path}', {self.type_.name})"
+        return f"Category('{self.path}', {self._type.name})"
 
     def _update_children_tuple(self) -> None:
         self._children_tuple = tuple(
@@ -148,7 +148,7 @@ class Category(NameMixin, JSONSerializableMixin):
     def set_child_index(self, child: Self, index: int) -> None:
         if index < 0:
             raise ValueError("Parameter 'index' must not be negative.")
-        if child not in self.children:
+        if child not in self._children_tuple:
             raise NotFoundError("Parameter 'child' not in this Category's children.")
 
         current_index = self.get_child_index(child)
@@ -173,7 +173,7 @@ class Category(NameMixin, JSONSerializableMixin):
         ]
 
     def serialize(self) -> dict[str, Any]:
-        index = self.parent.get_child_index(self) if self.parent is not None else None
+        index = self._parent.get_child_index(self) if self._parent is not None else None
         return {
             "datatype": "Category",
             "path": self.path,

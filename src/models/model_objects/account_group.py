@@ -53,17 +53,12 @@ class AccountGroup(NameMixin, BalanceMixin, JSONSerializableMixin, UUIDMixin):
     # TODO: this could be optimized
     @property
     def path(self) -> str:
-        if self.parent is None:
-            return self.name
-        return self.parent.path + "/" + self.name
+        if self._parent is None:
+            return self._name
+        return self._parent.path + "/" + self._name
 
     def __repr__(self) -> str:
         return f"AccountGroup('{self.path}')"
-
-    def __eq__(self, __o: object) -> bool:
-        if not isinstance(__o, AccountGroup):
-            return NotImplemented
-        return self._uuid == __o._uuid  # noqa: SLF001
 
     def _update_children_tuple(self) -> None:
         self._children_tuple = tuple(

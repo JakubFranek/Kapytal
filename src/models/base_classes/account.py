@@ -30,14 +30,6 @@ class Account(
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}('{self.path}')"
 
-    def __hash__(self) -> int:
-        return hash(self.uuid)
-
-    def __eq__(self, __o: object) -> bool:
-        if not isinstance(__o, Account):
-            return False
-        return self.uuid == __o.uuid
-
     @property
     def parent(self) -> AccountGroup | None:
         return self._parent
@@ -66,9 +58,9 @@ class Account(
 
     @property
     def path(self) -> str:
-        if self.parent is None:
-            return self.name
-        return self.parent.path + "/" + self.name
+        if self._parent is None:
+            return self._name
+        return self._parent.path + "/" + self._name
 
     @property
     @abstractmethod

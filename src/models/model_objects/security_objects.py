@@ -182,7 +182,10 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
 
     def serialize(self) -> dict[str, Any]:
         date_price_pairs = [
-            (date_.strftime("%Y-%m-%d"), str(price.value_normalized))
+            (
+                date_.strftime("%Y-%m-%d"),
+                price.to_str_normalized().removesuffix(" " + self._currency.code),
+            )
             for date_, price in self.price_history_pairs
         ]
         return {
@@ -211,7 +214,7 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
 
         obj = Security(name, symbol, type_, security_currency, shares_unit)
 
-        date_price_pairs: list[tuple[str, str]] = data["date_price_pairs"]
+        date_price_pairs: list[list[str, str]] = data["date_price_pairs"]
         for date_, price in date_price_pairs:
             obj.set_price(
                 datetime.strptime(date_, "%Y-%m-%d")

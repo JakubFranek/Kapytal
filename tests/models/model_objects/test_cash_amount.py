@@ -13,7 +13,6 @@ from src.models.model_objects.currency_objects import (
     ExchangeRate,
 )
 from src.models.user_settings import user_settings
-from src.utilities.general import normalize_decimal_to_min_places
 from tests.models.test_assets.composites import (
     cash_amounts,
     currencies,
@@ -28,14 +27,16 @@ from tests.models.test_assets.composites import (
 )
 def test_creation(value: Decimal, currency: Currency) -> None:
     cash_amount = CashAmount(value, currency)
+    expected_normalized_value = value.normalize()
+    if -value.as_tuple().exponent < currency.places:
+        expected_normalized_value = expected_normalized_value.quantize(
+            Decimal(f"1e-{currency.places}")
+        )
     assert cash_amount.value_rounded == round(value, currency.places)
-    assert cash_amount.value_normalized == normalize_decimal_to_min_places(
-        value, currency.places
-    )
+    assert cash_amount.value_normalized == expected_normalized_value
     assert (
         cash_amount.__repr__()
-        == f"CashAmount({normalize_decimal_to_min_places(value,currency.places)}"
-        f" {currency.code})"
+        == f"CashAmount({cash_amount.value_normalized} {cash_amount.currency})"
     )
     assert (
         cash_amount.to_str_rounded()
@@ -63,7 +64,7 @@ def test_value_invalid_str(value: str, currency: Currency) -> None:
     try:
         Decimal(value)
     except InvalidOperation:
-        with pytest.raises(InvalidOperation):
+        with pytest.raises(TypeError, match="CashAmount.value must be a Decimal"):
             CashAmount(value, currency)
 
 

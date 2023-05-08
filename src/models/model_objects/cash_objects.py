@@ -285,6 +285,7 @@ class CashTransaction(CashRelatedTransaction):
     def account(self) -> CashAccount:
         return self._account
 
+    # TODO: optimize this
     @property
     def amount(self) -> CashAmount:
         return sum(
