@@ -265,7 +265,9 @@ class ExchangeRate(CopyableMixin, JSONSerializableMixin):
         self.primary_currency.reset_cache()
         self.secondary_currency.reset_cache()
 
-    # TODO: add delete_rate method
+    # TODO: implement this in User Interface
+    def delete_rate(self, date_: date) -> None:
+        del self._rate_history[date_]
 
     def prepare_for_deletion(self) -> None:
         self.primary_currency.remove_exchange_rate(self)
