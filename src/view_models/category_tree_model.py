@@ -11,9 +11,9 @@ from src.views.constants import CategoryTreeColumn
 
 class CategoryTreeModel(QAbstractItemModel):
     COLUMN_HEADERS = {
-        CategoryTreeColumn.COLUMN_NAME: "Name",
-        CategoryTreeColumn.COLUMN_TRANSACTIONS: "Transactions",
-        CategoryTreeColumn.COLUMN_BALANCE: "Balance",
+        CategoryTreeColumn.NAME: "Name",
+        CategoryTreeColumn.TRANSACTIONS: "Transactions",
+        CategoryTreeColumn.BALANCE: "Balance",
     }
 
     def __init__(  # noqa: PLR0913
@@ -100,14 +100,13 @@ class CategoryTreeModel(QAbstractItemModel):
         stats = self._get_category_stats(category)
         if role == Qt.ItemDataRole.DisplayRole:
             return self._get_display_role_data(column, category, stats)
-        if (
-            role == Qt.ItemDataRole.UserRole
-            and column == CategoryTreeColumn.COLUMN_NAME
-        ):
+        if role == Qt.ItemDataRole.UserRole and column == CategoryTreeColumn.NAME:
             return unicodedata.normalize("NFD", category.name)
+        if role == Qt.ItemDataRole.UserRole + 1 and column == CategoryTreeColumn.NAME:
+            return category.path
         if role == Qt.ItemDataRole.TextAlignmentRole and (
-            column == CategoryTreeColumn.COLUMN_TRANSACTIONS
-            or column == CategoryTreeColumn.COLUMN_BALANCE
+            column == CategoryTreeColumn.TRANSACTIONS
+            or column == CategoryTreeColumn.BALANCE
         ):
             return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
         return None
@@ -115,13 +114,13 @@ class CategoryTreeModel(QAbstractItemModel):
     def _get_display_role_data(
         self, column: int, category: Category, stats: CategoryStats
     ) -> str | int | None:
-        if column == CategoryTreeColumn.COLUMN_NAME:
+        if column == CategoryTreeColumn.NAME:
             return category.name
-        if column == CategoryTreeColumn.COLUMN_TRANSACTIONS:
+        if column == CategoryTreeColumn.TRANSACTIONS:
             if len(category.children) == 0:
                 return stats.transactions_total
             return f"{stats.transactions_total} ({stats.transactions_self})"
-        if column == CategoryTreeColumn.COLUMN_BALANCE:
+        if column == CategoryTreeColumn.BALANCE:
             return stats.balance.convert(self.base_currency).to_str_rounded()
         return None
 
@@ -129,9 +128,9 @@ class CategoryTreeModel(QAbstractItemModel):
         self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole = ...
     ) -> str | int | None:
         if role == Qt.ItemDataRole.TextAlignmentRole:
-            if section == CategoryTreeColumn.COLUMN_TRANSACTIONS:
+            if section == CategoryTreeColumn.TRANSACTIONS:
                 return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
-            if section == CategoryTreeColumn.COLUMN_BALANCE:
+            if section == CategoryTreeColumn.BALANCE:
                 return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
         if role == Qt.ItemDataRole.DisplayRole:
             if orientation == Qt.Orientation.Horizontal:

@@ -2,8 +2,9 @@ import logging
 
 from PyQt6 import QtGui
 from PyQt6.QtCore import pyqtSignal
-from PyQt6.QtGui import QContextMenuEvent, QCursor, QIcon
+from PyQt6.QtGui import QContextMenuEvent, QCursor
 from PyQt6.QtWidgets import QHeaderView, QMenu, QTreeView, QWidget
+from src.views import icons
 from src.views.constants import CategoryTreeColumn
 
 
@@ -34,12 +35,12 @@ class CategoryTree(QTreeView):
         self.actionCollapse_All = QtGui.QAction(self)
         self.actionCollapse_All.setText("Collapse All")
 
-        self.actionExpand_All.setIcon(QIcon("icons_custom:arrow-out.png"))
-        self.actionExpand_All_Below.setIcon(QIcon("icons_16:arrow-stop-270.png"))
-        self.actionCollapse_All.setIcon(QIcon("icons_16:arrow-in.png"))
-        self.actionAdd_Category.setIcon(QIcon("icons_custom:category-plus.png"))
-        self.actionEdit_Category.setIcon(QIcon("icons_16:pencil.png"))
-        self.actionDelete_Category.setIcon(QIcon("icons_16:minus.png"))
+        self.actionExpand_All.setIcon(icons.expand)
+        self.actionExpand_All_Below.setIcon(icons.expand_below)
+        self.actionCollapse_All.setIcon(icons.collapse)
+        self.actionAdd_Category.setIcon(icons.add_category)
+        self.actionEdit_Category.setIcon(icons.edit)
+        self.actionDelete_Category.setIcon(icons.remove)
 
         self.actionExpand_All.triggered.connect(self._expand_all)
         self.actionExpand_All_Below.triggered.connect(self.signal_expand_below.emit)
@@ -80,15 +81,15 @@ class CategoryTree(QTreeView):
 
     def finalize_setup(self) -> None:
         self.header().setSectionResizeMode(
-            CategoryTreeColumn.COLUMN_NAME,
+            CategoryTreeColumn.NAME,
             QHeaderView.ResizeMode.ResizeToContents,
         )
         self.header().setSectionResizeMode(
-            CategoryTreeColumn.COLUMN_TRANSACTIONS,
+            CategoryTreeColumn.TRANSACTIONS,
             QHeaderView.ResizeMode.ResizeToContents,
         )
         self.header().setSectionResizeMode(
-            CategoryTreeColumn.COLUMN_BALANCE,
+            CategoryTreeColumn.BALANCE,
             QHeaderView.ResizeMode.Stretch,
         )
 

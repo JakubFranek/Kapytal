@@ -1,7 +1,7 @@
 from PyQt6.QtWidgets import QWidget
 from pytestqt.modeltest import ModelTester
 from pytestqt.qtbot import QtBot
-from src.presenters.widget_presenters.transactions_presenter import (
+from src.presenters.widget.transactions_presenter import (
     TransactionsPresenter,
 )
 from src.view_models.transaction_table_model import TransactionTableModel
@@ -21,8 +21,9 @@ def test_transaction_table_model(qtbot: QtBot, qtmodeltester: ModelTester) -> No
         view=view.tableView,
         transactions=record_keeper.transactions,
         base_currency=record_keeper.base_currency,
-        valid_accounts=presenter.valid_accounts,
-        proxy=presenter._proxy_model,
+        valid_accounts=presenter.account_tree_shown_accounts,
+        proxy_viewside=presenter._proxy_regex_sort_filter,
+        proxy_sourceside=presenter._proxy_transaction_filter,
     )
 
     qtmodeltester.check(model)

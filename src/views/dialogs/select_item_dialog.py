@@ -11,6 +11,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 from src.view_models.simple_list_model import SimpleListModel
+from src.views import icons
 from src.views.ui_files.dialogs.Ui_select_item_dialog import Ui_SelectItemDialog
 
 
@@ -26,14 +27,17 @@ class SelectItemDialog(QDialog, Ui_SelectItemDialog):
         self._proxy = QSortFilterProxyModel(self)
         self._model = SimpleListModel(self.listView, items, self._proxy)
         self._proxy.setSourceModel(self._model)
+        self._proxy.setSortCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+        self._proxy.setSortRole(Qt.ItemDataRole.UserRole)
         self._proxy.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
         self.listView.setModel(self._proxy)
+        self._proxy.sort(0, Qt.SortOrder.AscendingOrder)
 
         self.buttonBox.clicked.connect(self._handle_button_box_click)
 
         self.searchLineEdit.textChanged.connect(self._filter)
         self.searchLineEdit.addAction(
-            QIcon("icons_16:magnifier.png"), QLineEdit.ActionPosition.LeadingPosition
+            icons.magnifier, QLineEdit.ActionPosition.LeadingPosition
         )
 
         self.listView.selectionModel().selectionChanged.connect(self._selection_changed)

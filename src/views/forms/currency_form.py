@@ -1,12 +1,14 @@
 import logging
 
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QCloseEvent, QIcon
+from PyQt6.QtGui import QCloseEvent
 from PyQt6.QtWidgets import QHeaderView, QWidget
+from src.views import icons
 from src.views.constants import ExchangeRateTableColumn
 from src.views.ui_files.forms.Ui_currency_form import Ui_CurrencyForm
 
 
+# TODO: change visual style from side buttons to tool buttons and context menu
 # TODO: add some way to view and edit exchange rate history
 class CurrencyForm(QWidget, Ui_CurrencyForm):
     signal_add_currency = pyqtSignal()
@@ -22,9 +24,9 @@ class CurrencyForm(QWidget, Ui_CurrencyForm):
         super().__init__(parent=parent)
         self.setupUi(self)
         self.setWindowFlag(Qt.WindowType.Window)
-        self.setWindowIcon(QIcon("icons_custom:currency.png"))
+        self.setWindowIcon(icons.currency)
 
-        self.setBaseCurrencyButton.setIcon(QIcon("icons_16:star.png"))
+        self.setBaseCurrencyButton.setIcon(icons.base_currency)
 
         self.addCurrencyButton.clicked.connect(self.signal_add_currency.emit)
         self.setBaseCurrencyButton.clicked.connect(self.signal_set_base_currency.emit)
@@ -57,21 +59,21 @@ class CurrencyForm(QWidget, Ui_CurrencyForm):
     def finalize_setup(self) -> None:
         self.exchangeRateTable.horizontalHeader().setStretchLastSection(False)
         self.exchangeRateTable.horizontalHeader().setSectionResizeMode(
-            ExchangeRateTableColumn.COLUMN_CODE,
+            ExchangeRateTableColumn.CODE,
             QHeaderView.ResizeMode.ResizeToContents,
         )
         self.exchangeRateTable.horizontalHeader().setSectionResizeMode(
-            ExchangeRateTableColumn.COLUMN_RATE,
+            ExchangeRateTableColumn.RATE,
             QHeaderView.ResizeMode.ResizeToContents,
         )
         self.exchangeRateTable.horizontalHeader().setSectionResizeMode(
-            ExchangeRateTableColumn.COLUMN_LAST_DATE,
+            ExchangeRateTableColumn.LAST_DATE,
             QHeaderView.ResizeMode.Stretch,
         )
 
         style = self.style()
         last_section_text = self.exchangeRateTable.model().headerData(
-            ExchangeRateTableColumn.COLUMN_LAST_DATE,
+            ExchangeRateTableColumn.LAST_DATE,
             Qt.Orientation.Horizontal,
             Qt.ItemDataRole.DisplayRole,
         )

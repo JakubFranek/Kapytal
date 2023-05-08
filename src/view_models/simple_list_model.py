@@ -1,3 +1,4 @@
+import unicodedata
 from collections.abc import Collection
 
 from PyQt6.QtCore import QAbstractListModel, QModelIndex, QSortFilterProxyModel, Qt
@@ -30,8 +31,11 @@ class SimpleListModel(QAbstractListModel):
     def data(self, index: QModelIndex, role: Qt.ItemDataRole = ...) -> str | None:
         if not index.isValid():
             return None
+        item = index.internalPointer()
         if role == Qt.ItemDataRole.DisplayRole:
-            return self._items[index.row()]
+            return item
+        if role == Qt.ItemDataRole.UserRole:
+            return unicodedata.normalize("NFD", str(item))
         return None
 
     def get_selected_item(self) -> str | None:

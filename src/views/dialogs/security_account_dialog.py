@@ -2,7 +2,6 @@ import logging
 from collections.abc import Collection
 
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import (
     QAbstractButton,
     QCompleter,
@@ -10,6 +9,7 @@ from PyQt6.QtWidgets import (
     QDialogButtonBox,
     QWidget,
 )
+from src.views import icons
 from src.views.ui_files.dialogs.Ui_security_account_dialog import (
     Ui_SecurityAccountDialog,
 )
@@ -32,10 +32,10 @@ class SecurityAccountDialog(QDialog, Ui_SecurityAccountDialog):
 
         if edit:
             self.setWindowTitle("Edit Security Account")
-            self.setWindowIcon(QIcon("icons_16:bank--pencil.png"))
+            self.setWindowIcon(icons.edit_security_account)
         else:
             self.setWindowTitle("Add Security Account")
-            self.setWindowIcon(QIcon("icons_custom:bank-plus.png"))
+            self.setWindowIcon(icons.add_security_account)
             self.currentPathLabel.setVisible(False)
             self.currentPathLineEdit.setVisible(False)
 

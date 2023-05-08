@@ -22,6 +22,7 @@ if TYPE_CHECKING:
     from src.models.model_objects.attributes import Category
 
 # TODO: allow changing types of multiple transactions of same type
+# TODO: add confirmation dialog for new Category creation
 
 
 class CashTransactionDialogPresenter:
@@ -80,7 +81,7 @@ class CashTransactionDialogPresenter:
         self._dialog.description = transaction.description
         self._dialog.amount = transaction.amount.value_rounded
         category_amount_pairs = [
-            (category.name, amount.value_rounded)
+            (category.path, amount.value_rounded)
             for category, amount in transaction.category_amount_pairs
         ]
         self._dialog.category_amount_pairs = category_amount_pairs

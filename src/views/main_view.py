@@ -3,10 +3,11 @@ import sys
 from collections.abc import Collection
 from pathlib import Path
 
-from PyQt6.QtCore import PYQT_VERSION_STR, QT_VERSION_STR, QDir, QSize, Qt, pyqtSignal
+from PyQt6.QtCore import PYQT_VERSION_STR, QT_VERSION_STR, QSize, Qt, pyqtSignal
 from PyQt6.QtGui import QAction, QCloseEvent, QIcon
 from PyQt6.QtWidgets import QFileDialog, QMainWindow, QMessageBox
 from src.utilities import constants
+from src.views import icons
 from src.views.ui_files.Ui_main_window import Ui_MainWindow
 from src.views.widgets.account_tree_widget import AccountTreeWidget
 from src.views.widgets.transaction_table_widget import TransactionTableWidget
@@ -58,7 +59,7 @@ class MainView(QMainWindow, Ui_MainWindow):
             ),
             self,
         )
-        message_box.setWindowIcon(QIcon("icons_16:question.png"))
+        message_box.setWindowIcon(icons.question)
         message_box.setDefaultButton(QMessageBox.StandardButton.Cancel)
         reply = message_box.exec()
         if reply == QMessageBox.StandardButton.Yes:
@@ -69,10 +70,10 @@ class MainView(QMainWindow, Ui_MainWindow):
 
     def set_save_status(self, current_file_path: Path | None, *, unsaved: bool) -> None:
         if unsaved is True:
-            self.actionSave.setIcon(QIcon("icons_16:disk--exclamation.png"))
+            self.actionSave.setIcon(icons.disk_warning)
             star_str = "*"
         else:
-            self.actionSave.setIcon(QIcon("icons_16:disk.png"))
+            self.actionSave.setIcon(icons.disk)
             star_str = ""
 
         if current_file_path is None:
@@ -122,9 +123,9 @@ class MainView(QMainWindow, Ui_MainWindow):
             "household finances</em><br/>"
             "Source code and documentation available on "
             "<a href=https://github.com/JakubFranek/Kapytal>"
-            "Kapytal GitHub repository</a>.<br/>"
+            "Kapytal GitHub repository</a><br/>"
             "Published under <a href=https://www.gnu.org/licenses/gpl-3.0.html>"
-            "GNU General Public Licence v3.0</a>.<br/>"
+            "GNU General Public Licence v3.0</a><br/>"
             "<br/>"
             "<b>Version info</b><br/>"
             f"Kapytal {constants.VERSION}<br/>"
@@ -136,8 +137,9 @@ class MainView(QMainWindow, Ui_MainWindow):
             "<a href=https://p.yusukekamiyamane.com>Fugue Icons set</a> by "
             "Yusuke Kamiyamane.<br/>"
             "Custom icons located in <tt>Kapytal/resources/icons/icons-custom</tt> "
-            "are modifications of existing Fugue Icons.<br/>"
-            "</html"
+            "are modifications of existing Fugue Icons.<br/><br/>"
+            "<em>Dedicated to my wife Soňa</em>"
+            "</html>"
         )
         message_box = QMessageBox(self)
         message_box.setWindowTitle("About Kapytal")
@@ -149,18 +151,7 @@ class MainView(QMainWindow, Ui_MainWindow):
         logging.debug("Closing About dialog")
 
     def _initial_setup(self) -> None:
-        QDir.addSearchPath(
-            "icons_24",
-            str(Path(QDir.currentPath() + "/resources/icons/icons-24")),
-        )
-        QDir.addSearchPath(
-            "icons_16",
-            str(Path(QDir.currentPath() + "/resources/icons/icons-16")),
-        )
-        QDir.addSearchPath(
-            "icons_custom",
-            str(Path(QDir.currentPath() + "/resources/icons/icons-custom")),
-        )
+        icons.setup()
 
         self.setupUi(self)
         self.account_tree_widget = AccountTreeWidget(self)
@@ -179,20 +170,18 @@ class MainView(QMainWindow, Ui_MainWindow):
         self.actionShow_Hide_Account_Tree.setCheckable(True)
         self.actionShow_Hide_Account_Tree.setChecked(True)
 
-        self.actionOpen_File.setIcon(QIcon("icons_16:folder-open-document.png"))
-        self.actionSave.setIcon(QIcon("icons_16:disk.png"))
-        self.actionSave_As.setIcon(QIcon("icons_16:disks.png"))
-        self.actionCurrencies_and_Exchange_Rates.setIcon(
-            QIcon("icons_custom:currency.png")
-        )
-        self.actionQuit.setIcon(QIcon("icons_16:door-open-out.png"))
-        self.actionSecurities.setIcon(QIcon("icons_16:certificate.png"))
-        self.actionCategories.setIcon(QIcon("icons_custom:category.png"))
-        self.actionTags.setIcon(QIcon("icons_16:tag.png"))
-        self.actionPayees.setIcon(QIcon("icons_16:user-silhouette.png"))
-        self.actionSettings.setIcon(QIcon("icons_16:gear.png"))
-        self.actionAbout.setIcon(QIcon("icons_16:information.png"))
-        self.actionShow_Hide_Account_Tree.setIcon(QIcon("icons_16:folder-tree.png"))
+        self.actionOpen_File.setIcon(icons.open_file)
+        self.actionSave.setIcon(icons.disk)
+        self.actionSave_As.setIcon(icons.disks)
+        self.actionCurrencies_and_Exchange_Rates.setIcon(icons.currency)
+        self.actionQuit.setIcon(icons.quit_)
+        self.actionSecurities.setIcon(icons.security)
+        self.actionCategories.setIcon(icons.category)
+        self.actionTags.setIcon(icons.tag)
+        self.actionPayees.setIcon(icons.payee)
+        self.actionSettings.setIcon(icons.settings)
+        self.actionAbout.setIcon(icons.about)
+        self.actionShow_Hide_Account_Tree.setIcon(icons.account_tree)
 
         self.actionCurrencies_and_Exchange_Rates.triggered.connect(
             self.signal_open_currency_form.emit

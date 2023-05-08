@@ -45,7 +45,10 @@ class Attribute(NameMixin, JSONSerializableMixin):
         return self._type
 
     def __repr__(self) -> str:
-        return f"Attribute('{self.name}', {self.type_.name})"
+        return f"Attribute('{self._name}', {self._type.name})"
+
+    def __str__(self) -> str:
+        return self._name
 
     def serialize(self) -> dict[str, Any]:
         return {"datatype": "Attribute", "name": self._name, "type": self._type.name}
@@ -69,7 +72,8 @@ class Category(NameMixin, JSONSerializableMixin):
         self._type = type_
 
         self.parent = parent
-        self._children: dict[int, Self] = {}
+        self._children_dict: dict[int, Self] = {}
+        self._children_tuple: tuple[Self, ...] = ()
 
     @property
     def parent(self) -> Self | None:
@@ -103,7 +107,7 @@ class Category(NameMixin, JSONSerializableMixin):
 
     @property
     def children(self) -> tuple[Self, ...]:
-        return tuple(self._children[key] for key in sorted(self._children.keys()))
+        return self._children_tuple
 
     @property
     def type_(self) -> CategoryType:
@@ -111,33 +115,40 @@ class Category(NameMixin, JSONSerializableMixin):
 
     @property
     def path(self) -> str:
-        if self.parent is None:
-            return self.name
-        return self.parent.path + "/" + self.name
+        if self._parent is None:
+            return self._name
+        return self._parent.path + "/" + self._name
 
     def __repr__(self) -> str:
-        return f"Category('{self.path}', {self.type_.name})"
+        return f"Category('{self.path}', {self._type.name})"
+
+    def _update_children_tuple(self) -> None:
+        self._children_tuple = tuple(
+            self._children_dict[key] for key in sorted(self._children_dict.keys())
+        )
 
     def _add_child(self, child: Self) -> None:
-        max_index = max(sorted(self._children.keys()), default=-1)
-        self._children[max_index + 1] = child
+        max_index = max(sorted(self._children_dict.keys()), default=-1)
+        self._children_dict[max_index + 1] = child
+        self._update_children_tuple()
 
     def _remove_child(self, child: Self) -> None:
         index = self.get_child_index(child)
         aux_dict: dict[int, Self] = {}
-        for key, value in self._children.items():
+        for key, value in self._children_dict.items():
             if key >= index:
-                aux_dict[key] = self._children.get(key + 1, None)
+                aux_dict[key] = self._children_dict.get(key + 1, None)
             else:
                 aux_dict[key] = value
         max_index = max(sorted(aux_dict.keys()), default=0)
         del aux_dict[max_index]
-        self._children = aux_dict
+        self._children_dict = aux_dict
+        self._update_children_tuple()
 
     def set_child_index(self, child: Self, index: int) -> None:
         if index < 0:
             raise ValueError("Parameter 'index' must not be negative.")
-        if child not in self.children:
+        if child not in self._children_tuple:
             raise NotFoundError("Parameter 'child' not in this Category's children.")
 
         current_index = self.get_child_index(child)
@@ -146,20 +157,23 @@ class Category(NameMixin, JSONSerializableMixin):
 
         self._remove_child(child)
         aux_dict: dict[int, Self] = {}
-        for key, value in self._children.items():
+        for key, value in self._children_dict.items():
             if key >= index:
                 aux_dict[key + 1] = value
             else:
                 aux_dict[key] = value
         aux_dict[index] = child
-        self._children = aux_dict
+        self._children_dict = aux_dict
+        self._update_children_tuple()
         logging.info(f"Changing index from {current_index} to {index}")
 
     def get_child_index(self, child: Self) -> int:
-        return list(self._children.keys())[list(self._children.values()).index(child)]
+        return list(self._children_dict.keys())[
+            list(self._children_dict.values()).index(child)
+        ]
 
     def serialize(self) -> dict[str, Any]:
-        index = self.parent.get_child_index(self) if self.parent is not None else None
+        index = self._parent.get_child_index(self) if self._parent is not None else None
         return {
             "datatype": "Category",
             "path": self.path,
@@ -176,5 +190,6 @@ class Category(NameMixin, JSONSerializableMixin):
         obj = Category(name, type_)
         if parent_path:
             obj._parent = find_category_by_path(parent_path, categories)  # noqa: SLF001
-            obj._parent._children[index] = obj  # noqa: SLF001
+            obj._parent._children_dict[index] = obj  # noqa: SLF001
+            obj._parent._update_children_tuple()  # noqa: SLF001
         return obj

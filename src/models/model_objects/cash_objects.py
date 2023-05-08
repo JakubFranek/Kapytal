@@ -4,6 +4,7 @@ import uuid
 from abc import ABC, abstractmethod
 from collections.abc import Collection
 from datetime import datetime, timedelta
+from decimal import Decimal
 from enum import Enum, auto
 from types import NoneType
 from typing import Any
@@ -145,6 +146,10 @@ class CashAccount(Account):
     def get_balance(self, currency: Currency) -> CashAmount:
         return self._balance_history[-1][1].convert(currency)
 
+    @property
+    def balances(self) -> tuple[CashAmount, ...]:
+        return (self._balance_history[-1][1],)
+
     def get_balance_after_transaction(
         self, currency: Currency, transaction: CashRelatedTransaction
     ) -> CashAmount:
@@ -205,7 +210,12 @@ class CashAccount(Account):
             obj._parent = find_account_group_by_path(  # noqa: SLF001
                 parent_path, account_groups
             )
-            obj._parent._children[index] = obj  # noqa: SLF001
+            obj._parent._children_dict[index] = obj  # noqa: SLF001
+            obj._parent._update_children_tuple()  # noqa: SLF001
+            obj.event_balance_updated.append(
+                obj._parent._update_balances  # noqa: SLF001
+            )
+            obj.event_balance_updated()
         return obj
 
     def update_balance(self) -> None:
@@ -226,6 +236,7 @@ class CashAccount(Account):
                 (transaction.datetime_, next_balance, transaction)
             )
         self._balance_history = datetime_balance_history
+        self.event_balance_updated()
 
     def _validate_transaction(
         self,
@@ -274,6 +285,7 @@ class CashTransaction(CashRelatedTransaction):
     def account(self) -> CashAccount:
         return self._account
 
+    # TODO: optimize this
     @property
     def amount(self) -> CashAmount:
         return sum(
@@ -332,6 +344,18 @@ class CashTransaction(CashRelatedTransaction):
         if hasattr(self, "_refunds"):
             return tuple(self._refunds)
         return ()
+
+    @property
+    def refunded_ratio(self) -> Decimal:
+        if self.is_refunded:
+            return (
+                sum(
+                    (refund.amount for refund in self.refunds),
+                    start=CashAmount(0, self.currency),
+                )
+                / self.amount
+            )
+        return 0
 
     @property
     def is_refunded(self) -> bool:
@@ -679,12 +703,12 @@ class CashTransaction(CashRelatedTransaction):
         self._category_amount_pairs = list(category_amount_pairs)
         self._tag_amount_pairs = list(tag_amount_pairs)
         self._set_account(account)
-        self._account.update_balance()
 
     # IDEA: looks very similar to its Security counterpart
     def _set_account(self, account: CashAccount) -> None:
         if hasattr(self, "_account"):
             if self._account == account:
+                self._account.update_balance()
                 return
             self._account.remove_transaction(self)
         self._account = account
@@ -1146,6 +1170,10 @@ class RefundTransaction(CashRelatedTransaction):
     @property
     def payee(self) -> Attribute:
         return self._payee
+
+    @property
+    def refund_ratio(self) -> Decimal:
+        return Decimal(self.amount / self.refunded_transaction.amount)
 
     def __repr__(self) -> str:
         return (

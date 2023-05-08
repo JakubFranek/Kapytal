@@ -1,8 +1,8 @@
 import logging
 
 from PyQt6.QtCore import pyqtSignal
-from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QAbstractButton, QDialog, QDialogButtonBox, QWidget
+from src.views import icons
 from src.views.ui_files.dialogs.Ui_currency_dialog import Ui_CurrencyDialog
 
 
@@ -12,7 +12,7 @@ class CurrencyDialog(QDialog, Ui_CurrencyDialog):
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.setupUi(self)
-        self.setWindowIcon(QIcon("icons_custom:currency-plus.png"))
+        self.setWindowIcon(icons.add_currency)
         self.buttonBox.clicked.connect(self._handle_button_box_click)
 
     @property

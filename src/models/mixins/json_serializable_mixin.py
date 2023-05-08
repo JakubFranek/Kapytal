@@ -3,6 +3,8 @@ from typing import Any
 
 
 class JSONSerializableMixin(ABC):
+    __slots__ = ()
+
     @abstractmethod
     def serialize(self) -> dict[str, Any]:
         """Serialize object to a JSON compatible dictionary."""

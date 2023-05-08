@@ -11,6 +11,9 @@ from src.view_models.category_tree_model import CategoryTreeModel
 from src.views.dialogs.category_dialog import CategoryDialog
 from src.views.forms.category_form import CategoryForm
 
+# TODO: Have 3 separate treeviews and models?
+# TODO: add sorting
+
 
 class CategoryFormPresenter:
     event_data_changed = Event()
@@ -30,6 +33,7 @@ class CategoryFormPresenter:
         self._proxy_model.setSourceModel(self._model)
         self._proxy_model.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
         self._proxy_model.setRecursiveFilteringEnabled(True)  # noqa: FBT003
+        self._proxy_model.setFilterRole(Qt.ItemDataRole.UserRole + 1)
         self._view.category_tree.setModel(self._proxy_model)
 
         self._view.incomeRadioButton.setChecked(True)  # noqa: FBT003
@@ -81,10 +85,10 @@ class CategoryFormPresenter:
 
     def expand_all_below(self) -> None:
         indexes = self._view.category_tree.selectedIndexes()
-        item = self._model.get_selected_item()
-        logging.debug(f"Expanding all nodes below {item}")
         if len(indexes) == 0:
             raise ValueError("No index to expand recursively selected.")
+        item = self._model.get_selected_item()
+        logging.debug(f"Expanding all nodes below {item}")
         self._view.category_tree.expandRecursively(indexes[0])
 
     def run_dialog(self, *, edit: bool) -> None:
@@ -253,7 +257,7 @@ class CategoryFormPresenter:
 
         enable_modify_object = item is not None
         enable_add_objects = True
-        enable_expand_below = isinstance(item, Category)
+        enable_expand_below = isinstance(item, Category) and len(item.children) > 0
 
         self._view.category_tree.enable_actions(
             enable_add_objects=enable_add_objects,
@@ -261,6 +265,7 @@ class CategoryFormPresenter:
             enable_expand_below=enable_expand_below,
         )
 
+    # TODO: refactor methods like this to get pattern from the signal
     def _filter(self) -> None:
         pattern = self._view.search_bar_text
         if ("[" in pattern and "]" not in pattern) or "[]" in pattern:

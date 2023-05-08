@@ -3,8 +3,8 @@ from datetime import date
 from decimal import Decimal
 
 from PyQt6.QtCore import pyqtSignal
-from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QAbstractButton, QDialog, QDialogButtonBox, QWidget
+from src.views import icons
 from src.views.ui_files.dialogs.Ui_set_security_price_dialog import (
     Ui_SetSecurityPriceDialog,
 )
@@ -21,7 +21,7 @@ class SetSecurityPriceDialog(QDialog, Ui_SetSecurityPriceDialog):
     ) -> None:
         super().__init__(parent)
         self.setupUi(self)
-        self.setWindowIcon(QIcon("icons_custom:certificate-pencil.png"))
+        self.setWindowIcon(icons.edit_security)
         self.priceDoubleSpinBox.setMaximum(1_000_000_000_000)
         self.priceDoubleSpinBox.setValue(last_value)
         self.priceDoubleSpinBox.setDecimals(9)

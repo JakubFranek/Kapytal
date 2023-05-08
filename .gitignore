@@ -17,3 +17,4 @@ coverage
 icons-custom-redundant
 *.psd
 aux_scripts
+.profile_data

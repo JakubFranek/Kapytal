@@ -86,6 +86,9 @@ def setup_logging() -> None:
     logger.setLevel(logging.DEBUG)
     logger.addHandler(handler_debug)
     logger.addHandler(handler_info)
+    logging.logThreads = False
+    logging.logProcesses = False
+    logging.logMultiprocessing = False
     logging.debug("Logging setup complete")
 
 

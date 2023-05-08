@@ -3,7 +3,6 @@ from collections.abc import Collection
 from decimal import Decimal
 
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import (
     QAbstractButton,
     QCompleter,
@@ -11,6 +10,7 @@ from PyQt6.QtWidgets import (
     QDialogButtonBox,
     QWidget,
 )
+from src.views import icons
 from src.views.ui_files.dialogs.Ui_security_dialog import Ui_SecurityDialog
 
 
@@ -35,14 +35,14 @@ class SecurityDialog(QDialog, Ui_SecurityDialog):
 
         if edit:
             self.setWindowTitle("Edit Security")
-            self.setWindowIcon(QIcon("icons_custom:certificate-pencil.png"))
+            self.setWindowIcon(icons.edit_security)
             self.currencyComboBox.setVisible(False)
             self.currencyLabel.setVisible(False)
             self.unitDoubleSpinBox.setVisible(False)
             self.unitLabel.setVisible(False)
         else:
             self.setWindowTitle("Add Security")
-            self.setWindowIcon(QIcon("icons_custom:certificate-plus.png"))
+            self.setWindowIcon(icons.add_security)
             for code in currency_codes:
                 self.currencyComboBox.addItem(code)
 

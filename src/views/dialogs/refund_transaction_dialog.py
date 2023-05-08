@@ -4,7 +4,6 @@ from datetime import datetime
 from decimal import Decimal
 
 from PyQt6.QtCore import pyqtSignal
-from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import (
     QAbstractButton,
     QDialog,
@@ -19,8 +18,8 @@ from src.models.model_objects.cash_objects import (
     RefundTransaction,
 )
 from src.models.model_objects.currency_objects import CashAmount
-from src.models.model_objects.security_objects import SecurityAccount
 from src.models.user_settings import user_settings
+from src.views import icons
 from src.views.dialogs.select_item_dialog import ask_user_for_selection
 from src.views.ui_files.dialogs.Ui_refund_transaction_dialog import (
     Ui_RefundTransactionDialog,
@@ -36,7 +35,7 @@ class RefundTransactionDialog(QDialog, Ui_RefundTransactionDialog):
         self,
         parent: QWidget,
         refunded_transaction: CashTransaction,
-        accounts: Collection[Account],
+        accounts: Collection[CashAccount],
         payees: Collection[str],
         edited_refund: RefundTransaction | None = None,
     ) -> None:
@@ -160,7 +159,7 @@ class RefundTransactionDialog(QDialog, Ui_RefundTransactionDialog):
             raise ValueError("Unknown role of the clicked button in the ButtonBox")
 
     def _initialize_window(self) -> None:
-        self.setWindowIcon(QIcon("icons_custom:coins-arrow-back.png"))
+        self.setWindowIcon(icons.refund)
 
         if self._edited_refund is not None:
             self.setWindowTitle("Edit Refund")
@@ -172,19 +171,13 @@ class RefundTransactionDialog(QDialog, Ui_RefundTransactionDialog):
         self.buttonBox.addButton("Close", QDialogButtonBox.ButtonRole.RejectRole)
 
     def _initialize_actions(self) -> None:
-        self.actionSelect_Payee.setIcon(QIcon("icons_16:user-silhouette.png"))
+        self.actionSelect_Payee.setIcon(icons.payee)
         self.actionSelect_Payee.triggered.connect(self._get_payee)
         self.payeeToolButton.setDefaultAction(self.actionSelect_Payee)
 
     def _initialize_accounts_combobox(self, accounts: Collection[Account]) -> None:
         for account in accounts:
-            if isinstance(account, CashAccount):
-                icon = QIcon("icons_16:piggy-bank.png")
-            elif isinstance(account, SecurityAccount):
-                icon = QIcon("icons_16:bank.png")
-            else:
-                raise TypeError("Unexpected Account type.")
-            self.accountsComboBox.addItem(icon, account.path)
+            self.accountsComboBox.addItem(icons.cash_account, account.path)
 
     def _initialize_placeholders(self) -> None:
         self.payeeComboBox.lineEdit().setPlaceholderText("Enter Payee name")
@@ -264,7 +257,7 @@ class RefundTransactionDialog(QDialog, Ui_RefundTransactionDialog):
             self,
             self._payees,
             "Select Payee",
-            QIcon("icons_16:user-silhouette.png"),
+            icons.payee,
         )
         self.payee = payee if payee else self.payee
 

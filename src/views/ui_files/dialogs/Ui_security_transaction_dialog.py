@@ -13,7 +13,7 @@ class Ui_SecurityTransactionDialog(object):
     def setupUi(self, SecurityTransactionDialog):
         SecurityTransactionDialog.setObjectName("SecurityTransactionDialog")
         SecurityTransactionDialog.setWindowModality(QtCore.Qt.WindowModality.WindowModal)
-        SecurityTransactionDialog.resize(239, 296)
+        SecurityTransactionDialog.resize(248, 305)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Preferred, QtWidgets.QSizePolicy.Policy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -112,8 +112,7 @@ class Ui_SecurityTransactionDialog(object):
         self.descriptionPlainTextEdit.setObjectName("descriptionPlainTextEdit")
         self.formLayout.setWidget(5, QtWidgets.QFormLayout.ItemRole.FieldRole, self.descriptionPlainTextEdit)
         self.totalDoubleSpinBox = QtWidgets.QDoubleSpinBox(SecurityTransactionDialog)
-        self.totalDoubleSpinBox.setEnabled(True)
-        self.totalDoubleSpinBox.setStyleSheet("background-color:rgb(240,240,240);")
+        self.totalDoubleSpinBox.setEnabled(False)
         self.totalDoubleSpinBox.setReadOnly(True)
         self.totalDoubleSpinBox.setButtonSymbols(QtWidgets.QAbstractSpinBox.ButtonSymbols.NoButtons)
         self.totalDoubleSpinBox.setProperty("showGroupSeparator", True)
@@ -130,10 +129,14 @@ class Ui_SecurityTransactionDialog(object):
         self.retranslateUi(SecurityTransactionDialog)
         QtCore.QMetaObject.connectSlotsByName(SecurityTransactionDialog)
         SecurityTransactionDialog.setTabOrder(self.buyRadioButton, self.sellRadioButton)
-        SecurityTransactionDialog.setTabOrder(self.sellRadioButton, self.cashAccountComboBox)
-        SecurityTransactionDialog.setTabOrder(self.cashAccountComboBox, self.dateEdit)
+        SecurityTransactionDialog.setTabOrder(self.sellRadioButton, self.securityComboBox)
+        SecurityTransactionDialog.setTabOrder(self.securityComboBox, self.cashAccountComboBox)
+        SecurityTransactionDialog.setTabOrder(self.cashAccountComboBox, self.securityAccountComboBox)
+        SecurityTransactionDialog.setTabOrder(self.securityAccountComboBox, self.dateEdit)
         SecurityTransactionDialog.setTabOrder(self.dateEdit, self.descriptionPlainTextEdit)
-        SecurityTransactionDialog.setTabOrder(self.descriptionPlainTextEdit, self.priceDoubleSpinBox)
+        SecurityTransactionDialog.setTabOrder(self.descriptionPlainTextEdit, self.sharesDoubleSpinBox)
+        SecurityTransactionDialog.setTabOrder(self.sharesDoubleSpinBox, self.priceDoubleSpinBox)
+        SecurityTransactionDialog.setTabOrder(self.priceDoubleSpinBox, self.totalDoubleSpinBox)
 
     def retranslateUi(self, SecurityTransactionDialog):
         _translate = QtCore.QCoreApplication.translate

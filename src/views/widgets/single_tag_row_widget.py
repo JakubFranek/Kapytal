@@ -1,8 +1,9 @@
 from collections.abc import Collection
 
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QAction, QIcon
+from PyQt6.QtGui import QAction
 from PyQt6.QtWidgets import QHBoxLayout, QToolButton, QWidget
+from src.views import icons
 from src.views.widgets.multiple_tags_selector_widget import MultipleTagsSelectorWidget
 
 
@@ -18,7 +19,7 @@ class SingleTagRowWidget(QWidget):
 
         self.split_tool_button = QToolButton(self)
         self.actionSplit_Tags = QAction("Split Tags", self)
-        self.actionSplit_Tags.setIcon(QIcon("icons_16:arrow-split.png"))
+        self.actionSplit_Tags.setIcon(icons.split_attribute)
         self.actionSplit_Tags.triggered.connect(self.signal_split_tags.emit)
         self.split_tool_button.setDefaultAction(self.actionSplit_Tags)
 

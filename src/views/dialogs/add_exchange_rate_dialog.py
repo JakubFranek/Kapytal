@@ -1,8 +1,8 @@
 import logging
 
 from PyQt6.QtCore import pyqtSignal
-from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QAbstractButton, QDialog, QDialogButtonBox, QWidget
+from src.views import icons
 from src.views.ui_files.dialogs.Ui_add_exchange_rate_dialog import (
     Ui_AddExchangeRateDialog,
 )
@@ -18,7 +18,7 @@ class AddExchangeRateDialog(QDialog, Ui_AddExchangeRateDialog):
     ) -> None:
         super().__init__(parent)
         self.setupUi(self)
-        self.setWindowIcon(QIcon("icons_custom:currency-arrow.png"))
+        self.setWindowIcon(icons.exchange_rate)
         self.setWindowTitle("Add Exchange Rate")
 
         for code in currency_codes:

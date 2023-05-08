@@ -10,9 +10,9 @@ from src.views.constants import PayeeTableColumn
 
 class PayeeTableModel(QAbstractTableModel):
     COLUMN_HEADERS = {
-        PayeeTableColumn.COLUMN_NAME: "Name",
-        PayeeTableColumn.COLUMN_TRANSACTIONS: "Transactions",
-        PayeeTableColumn.COLUMN_BALANCE: "Balance",
+        PayeeTableColumn.NAME: "Name",
+        PayeeTableColumn.TRANSACTIONS: "Transactions",
+        PayeeTableColumn.BALANCE: "Balance",
     }
 
     def __init__(
@@ -66,8 +66,8 @@ class PayeeTableModel(QAbstractTableModel):
         if role == Qt.ItemDataRole.UserRole:
             return self._get_user_role_data(column, payee_stats)
         if role == Qt.ItemDataRole.TextAlignmentRole and (
-            column == PayeeTableColumn.COLUMN_TRANSACTIONS
-            or column == PayeeTableColumn.COLUMN_BALANCE
+            column == PayeeTableColumn.TRANSACTIONS
+            or column == PayeeTableColumn.BALANCE
         ):
             return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
         return None
@@ -75,22 +75,22 @@ class PayeeTableModel(QAbstractTableModel):
     def _get_display_role_data(
         self, column: int, payee_stats: AttributeStats
     ) -> str | int | None:
-        if column == PayeeTableColumn.COLUMN_NAME:
+        if column == PayeeTableColumn.NAME:
             return payee_stats.attribute.name
-        if column == PayeeTableColumn.COLUMN_TRANSACTIONS:
+        if column == PayeeTableColumn.TRANSACTIONS:
             return payee_stats.no_of_transactions
-        if column == PayeeTableColumn.COLUMN_BALANCE:
+        if column == PayeeTableColumn.BALANCE:
             return payee_stats.balance.to_str_rounded()
         return None
 
     def _get_user_role_data(
         self, column: int, payee_stats: AttributeStats
     ) -> str | int | None:
-        if column == PayeeTableColumn.COLUMN_NAME:
+        if column == PayeeTableColumn.NAME:
             return unicodedata.normalize("NFD", payee_stats.attribute.name)
-        if column == PayeeTableColumn.COLUMN_TRANSACTIONS:
+        if column == PayeeTableColumn.TRANSACTIONS:
             return payee_stats.no_of_transactions
-        if column == PayeeTableColumn.COLUMN_BALANCE:
+        if column == PayeeTableColumn.BALANCE:
             return float(payee_stats.balance.value_normalized)
         return None
 
@@ -102,8 +102,8 @@ class PayeeTableModel(QAbstractTableModel):
                 return self.COLUMN_HEADERS[section]
             return str(section)
         if role == Qt.ItemDataRole.TextAlignmentRole and (
-            section == PayeeTableColumn.COLUMN_TRANSACTIONS
-            or section == PayeeTableColumn.COLUMN_BALANCE
+            section == PayeeTableColumn.TRANSACTIONS
+            or section == PayeeTableColumn.BALANCE
         ):
             return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
         return None

@@ -1,6 +1,7 @@
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QAction, QIcon
+from PyQt6.QtGui import QAction
 from PyQt6.QtWidgets import QHBoxLayout, QSizePolicy, QSpacerItem, QToolButton, QWidget
+from src.views import icons
 
 
 class AddAttributeRowWidget(QWidget):
@@ -9,7 +10,7 @@ class AddAttributeRowWidget(QWidget):
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
 
-        self.actionAdd_Row = QAction(QIcon("icons_16:plus.png"), "Add a row", parent)
+        self.actionAdd_Row = QAction(icons.add, "Add a row", parent)
         self.actionAdd_Row.triggered.connect(self.signal_add_row.emit)
 
         self.tool_button = QToolButton(self)

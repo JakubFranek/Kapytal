@@ -1,8 +1,8 @@
 import logging
 
 from PyQt6.QtCore import pyqtSignal
-from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QAbstractButton, QDialog, QDialogButtonBox, QWidget
+from src.views import icons
 from src.views.ui_files.dialogs.Ui_tag_dialog import Ui_TagDialog
 
 
@@ -15,10 +15,10 @@ class TagDialog(QDialog, Ui_TagDialog):
         self.resize(270, 80)
         if edit:
             self.setWindowTitle("Rename Tag")
-            self.setWindowIcon(QIcon("icons_16:tag--pencil.png"))
+            self.setWindowIcon(icons.edit_tag)
         else:
             self.setWindowTitle("Add Tag")
-            self.setWindowIcon(QIcon("icons_16:tag--plus.png"))
+            self.setWindowIcon(icons.add_tag)
 
         self.buttonBox.clicked.connect(self._handle_button_box_click)
 

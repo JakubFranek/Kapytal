@@ -4,7 +4,6 @@ from decimal import Decimal
 from enum import Enum, auto
 
 from PyQt6.QtCore import pyqtSignal
-from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import (
     QAbstractButton,
     QDialog,
@@ -18,6 +17,7 @@ from src.models.model_objects.security_objects import (
     SecurityAccount,
 )
 from src.models.user_settings import user_settings
+from src.views import icons
 from src.views.ui_files.dialogs.Ui_security_transfer_dialog import (
     Ui_SecurityTransferDialog,
 )
@@ -162,7 +162,7 @@ class SecurityTransferDialog(QDialog, Ui_SecurityTransferDialog):
         self.tags_widget.tag_names = tag_names
 
     def _initialize_window(self) -> None:
-        self.setWindowIcon(QIcon("icons_16:certificate.png"))
+        self.setWindowIcon(icons.security_transfer)
         self.buttonBox = QDialogButtonBox(self)
         if self._edit_mode != EditMode.ADD:
             if self._edit_mode == EditMode.EDIT_MULTIPLE:
@@ -199,10 +199,9 @@ class SecurityTransferDialog(QDialog, Ui_SecurityTransferDialog):
     def _initialize_security_combobox(self, securities: Collection[Security]) -> None:
         if self._edit_mode == EditMode.EDIT_MULTIPLE:
             self.securityComboBox.addItem(self.KEEP_CURRENT_VALUES)
-        icon = QIcon("icons_16:certificate.png")
         for security in securities:
             text = SecurityTransferDialog._get_security_text(security)
-            self.securityComboBox.addItem(icon, text, security)
+            self.securityComboBox.addItem(icons.security, text, security)
 
         self.securityComboBox.currentTextChanged.connect(self._security_changed)
         self._security_changed()
@@ -220,11 +219,11 @@ class SecurityTransferDialog(QDialog, Ui_SecurityTransferDialog):
             self.senderComboBox.addItem(self.KEEP_CURRENT_VALUES)
             self.recipientComboBox.addItem(self.KEEP_CURRENT_VALUES)
 
-        icon_security_account = QIcon("icons_16:bank.png")
-
         for security_account in self._security_accounts:
-            self.senderComboBox.addItem(icon_security_account, security_account.path)
-            self.recipientComboBox.addItem(icon_security_account, security_account.path)
+            self.senderComboBox.addItem(icons.security_account, security_account.path)
+            self.recipientComboBox.addItem(
+                icons.security_account, security_account.path
+            )
 
     def _get_security(self, security_name: str) -> Security | None:
         for security in self._securities:

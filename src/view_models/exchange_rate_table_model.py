@@ -8,16 +8,16 @@ from src.views.constants import ExchangeRateTableColumn
 
 class ExchangeRateTableModel(QAbstractTableModel):
     COLUMN_HEADERS = {
-        ExchangeRateTableColumn.COLUMN_CODE: "Exchange Rate",
-        ExchangeRateTableColumn.COLUMN_RATE: "Latest rate",
-        ExchangeRateTableColumn.COLUMN_LAST_DATE: "Latest date",
+        ExchangeRateTableColumn.CODE: "Exchange Rate",
+        ExchangeRateTableColumn.RATE: "Latest rate",
+        ExchangeRateTableColumn.LAST_DATE: "Latest date",
     }
 
     def __init__(
         self, view: QTableView, exchange_rates: tuple[ExchangeRate, ...]
     ) -> None:
         super().__init__()
-        self._tree = view
+        self._view = view
         self.exchange_rates = exchange_rates
 
     @property
@@ -56,7 +56,7 @@ class ExchangeRateTableModel(QAbstractTableModel):
             return self._get_display_role_data(column, exchange_rate)
         if (
             role == Qt.ItemDataRole.TextAlignmentRole
-            and column == ExchangeRateTableColumn.COLUMN_RATE
+            and column == ExchangeRateTableColumn.RATE
         ):
             return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
         return None
@@ -64,15 +64,15 @@ class ExchangeRateTableModel(QAbstractTableModel):
     def _get_display_role_data(
         self, column: int, exchange_rate: ExchangeRate
     ) -> str | None:
-        if column == ExchangeRateTableColumn.COLUMN_CODE:
+        if column == ExchangeRateTableColumn.CODE:
             return str(exchange_rate)
-        if column == ExchangeRateTableColumn.COLUMN_RATE:
+        if column == ExchangeRateTableColumn.RATE:
             return (
                 f"1 {exchange_rate.primary_currency.code} = "
                 f"{str(exchange_rate.latest_rate)} "
                 f"{exchange_rate.secondary_currency.code}"
             )
-        if column == ExchangeRateTableColumn.COLUMN_LAST_DATE:
+        if column == ExchangeRateTableColumn.LAST_DATE:
             latest_date = exchange_rate.latest_date
             if latest_date is None:
                 return "None"
@@ -87,8 +87,8 @@ class ExchangeRateTableModel(QAbstractTableModel):
                 return self.COLUMN_HEADERS[section]
             return str(section)
         if role == Qt.ItemDataRole.TextAlignmentRole and (
-            section == ExchangeRateTableColumn.COLUMN_LAST_DATE
-            or section == ExchangeRateTableColumn.COLUMN_CODE
+            section == ExchangeRateTableColumn.LAST_DATE
+            or section == ExchangeRateTableColumn.CODE
         ):
             return Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
         return None
@@ -113,13 +113,13 @@ class ExchangeRateTableModel(QAbstractTableModel):
         self.endRemoveRows()
 
     def get_selected_item_index(self) -> QModelIndex:
-        indexes = self._tree.selectedIndexes()
+        indexes = self._view.selectedIndexes()
         if len(indexes) == 0:
             return QModelIndex()
         return indexes[0]
 
     def get_selected_item(self) -> ExchangeRate | None:
-        indexes = self._tree.selectedIndexes()
+        indexes = self._view.selectedIndexes()
         if len(indexes) == 0:
             return None
         return indexes[0].internalPointer()

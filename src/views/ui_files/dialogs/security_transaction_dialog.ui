@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>239</width>
-    <height>296</height>
+    <width>248</width>
+    <height>305</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -235,10 +235,7 @@
      <item row="8" column="1">
       <widget class="QDoubleSpinBox" name="totalDoubleSpinBox">
        <property name="enabled">
-        <bool>true</bool>
-       </property>
-       <property name="styleSheet">
-        <string notr="true">background-color:rgb(240,240,240);</string>
+        <bool>false</bool>
        </property>
        <property name="readOnly">
         <bool>true</bool>
@@ -271,10 +268,14 @@
  <tabstops>
   <tabstop>buyRadioButton</tabstop>
   <tabstop>sellRadioButton</tabstop>
+  <tabstop>securityComboBox</tabstop>
   <tabstop>cashAccountComboBox</tabstop>
+  <tabstop>securityAccountComboBox</tabstop>
   <tabstop>dateEdit</tabstop>
   <tabstop>descriptionPlainTextEdit</tabstop>
+  <tabstop>sharesDoubleSpinBox</tabstop>
   <tabstop>priceDoubleSpinBox</tabstop>
+  <tabstop>totalDoubleSpinBox</tabstop>
  </tabstops>
  <resources/>
  <connections/>

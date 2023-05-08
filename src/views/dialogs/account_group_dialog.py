@@ -2,7 +2,6 @@ import logging
 from collections.abc import Collection
 
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import (
     QAbstractButton,
     QCompleter,
@@ -10,6 +9,7 @@ from PyQt6.QtWidgets import (
     QDialogButtonBox,
     QWidget,
 )
+from src.views import icons
 from src.views.ui_files.dialogs.Ui_account_group_dialog import Ui_AccountGroupDialog
 
 
@@ -31,10 +31,10 @@ class AccountGroupDialog(QDialog, Ui_AccountGroupDialog):
 
         if edit:
             self.setWindowTitle("Edit Account Group")
-            self.setWindowIcon(QIcon("icons_16:folder--pencil.png"))
+            self.setWindowIcon(icons.edit_account_group)
         else:
             self.setWindowTitle("Add Account Group")
-            self.setWindowIcon(QIcon("icons_16:folder--plus.png"))
+            self.setWindowIcon(icons.add_account_group)
             self.currentPathLabel.setVisible(False)
             self.currentPathLineEdit.setVisible(False)
 

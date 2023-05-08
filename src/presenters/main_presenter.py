@@ -6,15 +6,15 @@ from PyQt6.QtWidgets import QApplication
 from src.models.json.custom_json_decoder import CustomJSONDecoder
 from src.models.json.custom_json_encoder import CustomJSONEncoder
 from src.models.record_keeper import RecordKeeper
-from src.presenters.form_presenters.category_form_presenter import CategoryFormPresenter
-from src.presenters.form_presenters.currency_form_presenter import CurrencyFormPresenter
-from src.presenters.form_presenters.payee_form_presenter import PayeeFormPresenter
-from src.presenters.form_presenters.security_form_presenter import SecurityFormPresenter
-from src.presenters.form_presenters.settings_form_presenter import SettingsFormPresenter
-from src.presenters.form_presenters.tag_form_presenter import TagFormPresenter
+from src.presenters.form.category_form_presenter import CategoryFormPresenter
+from src.presenters.form.currency_form_presenter import CurrencyFormPresenter
+from src.presenters.form.payee_form_presenter import PayeeFormPresenter
+from src.presenters.form.security_form_presenter import SecurityFormPresenter
+from src.presenters.form.settings_form_presenter import SettingsFormPresenter
+from src.presenters.form.tag_form_presenter import TagFormPresenter
 from src.presenters.utilities.handle_exception import handle_exception
-from src.presenters.widget_presenters.account_tree_presenter import AccountTreePresenter
-from src.presenters.widget_presenters.transactions_presenter import (
+from src.presenters.widget.account_tree_presenter import AccountTreePresenter
+from src.presenters.widget.transactions_presenter import (
     TransactionsPresenter,
 )
 from src.utilities import constants
@@ -178,69 +178,47 @@ class MainPresenter:
         self._category_form_presenter.load_record_keeper(record_keeper)
 
     def _initialize_presenters(self) -> None:
-        logging.debug("Creating AccountTreePresenter")
         self._account_tree_presenter = AccountTreePresenter(
             self._view.account_tree_widget, self._record_keeper
         )
-        logging.debug("Creating TransactionsPresenter")
         self._transactions_presenter = TransactionsPresenter(
             self._view.transaction_table_widget, self._record_keeper
         )
-        logging.debug("Creating Currency Form and CurrencyFormPresenter")
         currency_form = CurrencyForm(parent=self._view)
         self._currency_form_presenter = CurrencyFormPresenter(
             currency_form, self._record_keeper
         )
-        logging.debug("Creating SecurityForm and SecurityFormPresenter")
         security_form = SecurityForm(parent=self._view)
         self._security_form_presenter = SecurityFormPresenter(
             security_form, self._record_keeper
         )
-        logging.debug("Creating PayeeForm and PayeeFormPresenter")
         payee_form = PayeeForm(parent=self._view)
         self._payee_form_presenter = PayeeFormPresenter(payee_form, self._record_keeper)
-        logging.debug("Creating TagForm and TagFormPresenter")
         tag_form = TagForm(parent=self._view)
         self._tag_form_presenter = TagFormPresenter(tag_form, self._record_keeper)
-        logging.debug("Creating CategoryForm and CategoryFormPresenter")
         category_form = CategoryForm(parent=self._view)
         self._category_form_presenter = CategoryFormPresenter(
             category_form, self._record_keeper
         )
-        logging.debug("Creating SettingsForm and SettingsFormPresenter")
         settings_form = SettingsForm(parent=self._view)
         self._settings_form_presenter = SettingsFormPresenter(settings_form)
 
     def _setup_event_observers(self) -> None:
-        self._account_tree_presenter.event_data_changed.append(
-            lambda: self._update_unsaved_changes(unsaved_changes=True)
-        )
-        self._account_tree_presenter.event_visibility_changed.append(
+        self._account_tree_presenter.event_data_changed.append(self._data_changed)
+        self._account_tree_presenter.event_check_state_changed.append(
             self._update_valid_accounts
         )
         self._currency_form_presenter.event_base_currency_changed.append(
-            self._account_tree_presenter.update_model_data
+            self._base_currency_changed
         )
-        self._currency_form_presenter.event_data_changed.append(
-            lambda: self._update_unsaved_changes(unsaved_changes=True)
-        )
-        self._security_form_presenter.event_data_changed.append(
-            lambda: self._update_unsaved_changes(unsaved_changes=True)
-        )
-        self._payee_form_presenter.event_data_changed.append(
-            lambda: self._update_unsaved_changes(unsaved_changes=True)
-        )
-        self._tag_form_presenter.event_data_changed.append(
-            lambda: self._update_unsaved_changes(unsaved_changes=True)
-        )
-        self._category_form_presenter.event_data_changed.append(
-            lambda: self._update_unsaved_changes(unsaved_changes=True)
-        )
-        self._transactions_presenter.event_data_changed.append(
-            lambda: self._update_unsaved_changes(unsaved_changes=True)
-        )
+        self._currency_form_presenter.event_data_changed.append(self._data_changed)
+        self._security_form_presenter.event_data_changed.append(self._data_changed)
+        self._payee_form_presenter.event_data_changed.append(self._data_changed)
+        self._tag_form_presenter.event_data_changed.append(self._data_changed)
+        self._category_form_presenter.event_data_changed.append(self._data_changed)
+        self._transactions_presenter.event_data_changed.append(self._data_changed)
         self._transactions_presenter.event_refresh_account_tree.append(
-            self._account_tree_presenter.refresh_view
+            self._refresh_account_tree
         )
 
     def _connect_view_signals(self) -> None:
@@ -313,6 +291,22 @@ class MainPresenter:
         self._update_recent_paths_menu()
 
     def _update_valid_accounts(self) -> None:
-        self._transactions_presenter.valid_accounts = (
+        self._transactions_presenter.account_tree_shown_accounts = (
             self._account_tree_presenter.valid_accounts
         )
+
+    def _data_changed(self) -> None:
+        self._transactions_presenter.update_filter_models()
+        self._transactions_presenter.refresh_view()
+        self._refresh_account_tree()
+        self._update_unsaved_changes(unsaved_changes=True)
+
+    def _base_currency_changed(self) -> None:
+        self._account_tree_presenter.update_model_data()
+        self._transactions_presenter.update_base_currency()
+        self._transactions_presenter.resize_table_to_contents()
+        self._data_changed()
+
+    def _refresh_account_tree(self) -> None:
+        self._account_tree_presenter.refresh_view()
+        self._account_tree_presenter.update_geometries()

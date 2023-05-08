@@ -119,6 +119,7 @@ def test_creation(  # noqa: PLR0913
     assert cash_transaction.are_tags_split is any(
         amount != cash_transaction.amount for _, amount in tag_amount_collection
     )
+    assert cash_transaction.refunded_ratio == Decimal(0)
     assert dt_created_diff.seconds < 1
 
 

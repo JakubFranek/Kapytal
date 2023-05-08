@@ -2,7 +2,6 @@ import logging
 from collections.abc import Collection
 
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import (
     QAbstractButton,
     QCompleter,
@@ -10,6 +9,7 @@ from PyQt6.QtWidgets import (
     QDialogButtonBox,
     QWidget,
 )
+from src.views import icons
 from src.views.ui_files.dialogs.Ui_category_dialog import Ui_CategoryDialog
 
 
@@ -40,10 +40,10 @@ class CategoryDialog(QDialog, Ui_CategoryDialog):
 
         if edit:
             self.setWindowTitle("Edit Category")
-            self.setWindowIcon(QIcon("icons_custom:category-pencil.png"))
+            self.setWindowIcon(icons.edit_category)
         else:
             self.setWindowTitle("Add Category")
-            self.setWindowIcon(QIcon("icons_custom:category-plus.png"))
+            self.setWindowIcon(icons.add_category)
             self.currentPathLabel.setVisible(False)
             self.currentPathLineEdit.setVisible(False)
 

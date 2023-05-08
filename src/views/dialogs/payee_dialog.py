@@ -1,8 +1,8 @@
 import logging
 
 from PyQt6.QtCore import pyqtSignal
-from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QAbstractButton, QDialog, QDialogButtonBox, QWidget
+from src.views import icons
 from src.views.ui_files.dialogs.Ui_payee_dialog import Ui_PayeeDialog
 
 
@@ -15,10 +15,10 @@ class PayeeDialog(QDialog, Ui_PayeeDialog):
         self.resize(270, 80)
         if edit:
             self.setWindowTitle("Rename Payee")
-            self.setWindowIcon(QIcon("icons_custom:user-silhouette-pencil.png"))
+            self.setWindowIcon(icons.edit_payee)
         else:
             self.setWindowTitle("Add Payee")
-            self.setWindowIcon(QIcon("icons_custom:user-silhouette-plus.png"))
+            self.setWindowIcon(icons.add_payee)
 
         self.buttonBox.clicked.connect(self._handle_button_box_click)
 

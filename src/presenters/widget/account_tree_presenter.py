@@ -2,6 +2,7 @@ import copy
 import logging
 from typing import Protocol
 
+from PyQt6.QtCore import QSortFilterProxyModel, Qt
 from src.models.base_classes.account import Account
 from src.models.model_objects.account_group import AccountGroup
 from src.models.model_objects.cash_objects import CashAccount
@@ -10,41 +11,59 @@ from src.models.record_keeper import RecordKeeper
 from src.presenters.utilities.event import Event
 from src.presenters.utilities.handle_exception import handle_exception
 from src.view_models.account_tree_model import AccountTreeModel
+from src.views.constants import AccountTreeColumn
 from src.views.dialogs.account_group_dialog import AccountGroupDialog
 from src.views.dialogs.cash_account_dialog import CashAccountDialog
 from src.views.dialogs.security_account_dialog import SecurityAccountDialog
+from src.views.utilities.handle_exception import display_error_message
 from src.views.widgets.account_tree_widget import AccountTreeWidget
+
+# REFACTOR: split dialog presenters into separate classes?
+# REFACTOR: remove RecordKeeper deepcopying somehow
+# possibilities:
+# 1. add RecordKeeper validation method to run before adding?
 
 
 class SetupDialogCallable(Protocol):
-    """Definition of custom Callable type for setting up dialogs"""
+    """Custom Callable type for setting up dialogs"""
 
     def __call__(
         self, item: Account | AccountGroup | None, max_position: int, *, edit: bool
-    ) -> None:
+    ) -> bool:
         ...
 
 
 class AccountTreePresenter:
     event_data_changed = Event()
-    event_visibility_changed = Event()
+    event_check_state_changed = Event()
 
     def __init__(self, view: AccountTreeWidget, record_keeper: RecordKeeper) -> None:
         self._view = view
         self._record_keeper = record_keeper
+
+        self._proxy = QSortFilterProxyModel(self._view)
+        self._proxy.setSortRole(Qt.ItemDataRole.UserRole)
+        self._proxy.setSortCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+        self._proxy.setFilterRole(Qt.ItemDataRole.UserRole + 1)
+        self._proxy.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+        self._proxy.setRecursiveFilteringEnabled(True)  # noqa: FBT003
         self._model = AccountTreeModel(
             view=view.treeView,
+            proxy=self._proxy,
             flat_items=record_keeper.root_account_items,
             base_currency=record_keeper.base_currency,
         )
-        self._view.treeView.setModel(self._model)
+        self._proxy.setSourceModel(self._model)
+        self._view.treeView.setModel(self._proxy)
 
-        self._setup_signals()
+        self._initialize_signals()
         self._view.finalize_setup()
+        self._reset_sort_order()
+        self.event_check_state_changed()
 
     @property
     def valid_accounts(self) -> tuple[Account, ...]:
-        return self._model.visible_accounts
+        return self._model.checked_accounts
 
     def set_widget_visibility(self, *, visible: bool) -> None:
         if visible and self._view.isHidden():
@@ -59,9 +78,13 @@ class AccountTreePresenter:
         self._record_keeper = record_keeper
         self.update_model_data()
         self._model.post_reset_model()
+        self.event_check_state_changed()
 
     def refresh_view(self) -> None:
         self._view.refresh()
+
+    def update_geometries(self) -> None:
+        self._view.treeView.updateGeometries()
 
     def update_model_data(self) -> None:
         self._model.flat_items = self._record_keeper.account_items
@@ -69,11 +92,11 @@ class AccountTreePresenter:
 
     def expand_all_below(self) -> None:
         indexes = self._view.treeView.selectedIndexes()
-        item = self._model.get_selected_item()
-        logging.debug(f"Expanding all nodes below {item}")
         if len(indexes) == 0:
             raise ValueError("No index to expand recursively selected.")
-        self._view.treeView.expandRecursively(indexes[0])
+        item = self._model.get_selected_item()
+        logging.debug(f"Expanding all nodes below {item}")
+        self._view.treeView.expandRecursively(indexes[0])  # view index required here
 
     def edit_item(self) -> None:
         item = self._model.get_selected_item()
@@ -118,7 +141,9 @@ class AccountTreePresenter:
     def run_add_dialog(self, setup_dialog: SetupDialogCallable) -> None:
         item = self._model.get_selected_item()
         max_position = self._get_max_child_position(item)
-        setup_dialog(item, max_position, edit=False)
+        setup_ok = setup_dialog(item, max_position, edit=False)
+        if not setup_ok:
+            return
         self._dialog.path = "" if item is None else item.path + "/"
         self._dialog.position = self._dialog.positionSpinBox.maximum()
         logging.debug(f"Running {self._dialog.__class__.__name__} (edit=False)")
@@ -149,7 +174,7 @@ class AccountTreePresenter:
         max_position: int,
         *,
         edit: bool,
-    ) -> None:
+    ) -> bool:
         del item
         account_group_paths = self._get_account_group_paths()
         if edit:
@@ -168,6 +193,7 @@ class AccountTreePresenter:
                 edit=edit,
             )
             self._dialog.signal_ok.connect(self.add_account_group)
+        return True
 
     def add_account_group(self) -> None:
         path = self._dialog.path
@@ -264,20 +290,25 @@ class AccountTreePresenter:
                 edit=edit,
             )
             self._dialog.signal_ok.connect(self.add_security_account)
+        return True
 
     def add_security_account(self) -> None:
         path = self._dialog.path
         index = self._dialog.position - 1
 
         logging.info("Adding SecurityAccount")
+        record_keeper_copy = copy.deepcopy(self._record_keeper)
         try:
-            self._record_keeper.add_security_account(path, index)
+            logging.disable(logging.INFO)
+            record_keeper_copy.add_security_account(path, index)
+            logging.disable(logging.NOTSET)
         except Exception as exception:  # noqa: BLE001
             handle_exception(exception)
             return
 
         item = self._model.get_selected_item()
         self._model.pre_add(item)
+        self._record_keeper.add_security_account(path, index)
         self.update_model_data()
         self._model.post_add()
         self._dialog.close()
@@ -332,13 +363,22 @@ class AccountTreePresenter:
 
     def setup_cash_account_dialog(
         self,
-        item: CashAccount,
+        item: CashAccount | None,
         max_position: int,
         *,
         edit: bool,
     ) -> None:
+        if len(self._record_keeper.currencies) == 0:
+            display_error_message(
+                "Create at least one Currency before creating a CashAccount.",
+                title="Warning",
+            )
+            return False
+
         account_group_paths = self._get_account_group_paths()
         if edit:
+            if not isinstance(item, CashAccount):
+                raise TypeError(f"Expected CashAccount, received {type(item)}")
             code_places_pairs = [(item.currency.code, item.currency.places)]
             self._dialog = CashAccountDialog(
                 parent=self._view,
@@ -362,6 +402,7 @@ class AccountTreePresenter:
                 edit=edit,
             )
             self._dialog.signal_ok.connect(self.add_cash_account)
+        return True
 
     def add_cash_account(self) -> None:
         path = self._dialog.path
@@ -370,16 +411,22 @@ class AccountTreePresenter:
         initial_balance = self._dialog.initial_balance
 
         logging.info("Adding CashAccount")
+        record_keeper_copy = copy.deepcopy(self._record_keeper)
         try:
-            self._record_keeper.add_cash_account(
+            logging.disable(logging.INFO)
+            record_keeper_copy.add_cash_account(
                 path, currency_code, initial_balance, index
             )
+            logging.disable(logging.NOTSET)
         except Exception as exception:  # noqa: BLE001
             handle_exception(exception)
             return
 
         item = self._model.get_selected_item()
         self._model.pre_add(item)
+        self._record_keeper.add_cash_account(
+            path, currency_code, initial_balance, index
+        )
         self.update_model_data()
         self._model.post_add()
         self._dialog.close()
@@ -460,16 +507,25 @@ class AccountTreePresenter:
             return self._record_keeper.root_account_items.index(item)
         return parent.children.index(item)
 
-    def _setup_signals(self) -> None:
+    def _initialize_signals(self) -> None:
         self._view.signal_selection_changed.connect(self._selection_changed)
         self._view.signal_expand_below.connect(self.expand_all_below)
 
+        self._view.signal_reset_sort_order.connect(self._reset_sort_order)
+        self._view.signal_sort.connect(lambda index: self._sort(index))
+
         self._view.signal_show_all.connect(
-            lambda: self._set_visibility_all(visible=True)
+            lambda: self._set_check_state_all(visible=True)
         )
-        self._view.signal_show_selection_only.connect(self._set_visible_only)
+        self._view.signal_show_selection_only.connect(self._set_check_state_only)
         self._view.signal_hide_all.connect(
-            lambda: self._set_visibility_all(visible=False)
+            lambda: self._set_check_state_all(visible=False)
+        )
+        self._view.signal_select_all_cash_accounts_below.connect(
+            self._check_all_cash_accounts_below
+        )
+        self._view.signal_select_all_security_accounts_below.connect(
+            self._check_all_security_accounts_below
         )
 
         self._view.signal_add_account_group.connect(
@@ -491,8 +547,11 @@ class AccountTreePresenter:
         self._view.signal_edit_item.connect(self.edit_item)
         self._view.signal_delete_item.connect(self.remove_item)
 
-        self._model.signal_show_only_selection.connect(self._set_visible_only)
-        self._model.signal_toggle_visibility.connect(self._toggle_visibility)
+        self._view.signal_search_text_changed.connect(
+            lambda pattern: self._filter(pattern)
+        )
+
+        self._model.signal_check_state_changed.connect(self.event_check_state_changed)
 
         self._selection_changed()  # called to ensure context menu is OK at start of run
 
@@ -515,17 +574,49 @@ class AccountTreePresenter:
             for account_group in self._record_keeper.account_groups
         ]
 
-    def _set_visibility_all(self, *, visible: bool) -> None:
-        self._model.set_visibility_all(visible=visible)
+    def _set_check_state_all(self, *, visible: bool) -> None:
+        self._model.set_check_state_all(checked=visible)
         self._view.refresh()
-        self.event_visibility_changed()
+        self.event_check_state_changed()
 
-    def _set_visible_only(self) -> None:
-        self._model.set_visibility(visible=True, only=True)
+    def _set_check_state_only(self) -> None:
+        self._model.set_selected_check_state(checked=True, only=True)
         self._view.refresh()
-        self.event_visibility_changed()
+        self.event_check_state_changed()
 
-    def _toggle_visibility(self) -> None:
-        self._model.toggle_visibility()
-        self._view.refresh()
-        self.event_visibility_changed()
+    def _check_all_cash_accounts_below(self) -> None:
+        account_group = self._model.get_selected_item()
+        if not isinstance(account_group, AccountGroup):
+            raise TypeError(f"Selected item is not an AccountGroup: {account_group}")
+        logging.debug(f"Selecting all Cash Accounts below path='{account_group.path}'")
+        self._model.select_all_cash_accounts_below(account_group)
+        self.event_check_state_changed()
+
+    def _check_all_security_accounts_below(self) -> None:
+        account_group = self._model.get_selected_item()
+        if not isinstance(account_group, AccountGroup):
+            raise TypeError(f"Selected item is not an AccountGroup: {account_group}")
+        logging.debug(
+            f"Selecting all Security Accounts below path='{account_group.path}'"
+        )
+        self._model.select_all_security_accounts_below(account_group)
+        self.event_check_state_changed()
+
+    def _sort(self, index: int) -> None:
+        sort_order = self._view.sort_order
+        logging.debug(
+            f"Sorting AccountTree: column={AccountTreeColumn(index).name}, "
+            f"order={sort_order.name}"
+        )
+        self._proxy.sort(index, sort_order)
+
+    def _reset_sort_order(self) -> None:
+        logging.debug("Resetting AccountTree sort order")
+        self._proxy.sort(-1)
+        self._view.treeView.header().setSortIndicatorShown(False)  # noqa: FBT003
+
+    def _filter(self, pattern: str) -> None:
+        if ("[" in pattern and "]" not in pattern) or "[]" in pattern:
+            return
+        logging.debug(f"Filtering Accounts: {pattern=}")
+        self._proxy.setFilterWildcard(pattern)

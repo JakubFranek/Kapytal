@@ -1,13 +1,16 @@
 from PyQt6.QtWidgets import QWidget
 from pytestqt.modeltest import ModelTester
 from pytestqt.qtbot import QtBot
-from src.presenters.form_presenters.payee_form_presenter import PayeeFormPresenter
+from src.presenters.form.payee_form_presenter import PayeeFormPresenter
 from src.view_models.payee_table_model import PayeeTableModel
+from src.views import icons
 from src.views.forms.payee_form import PayeeForm
 from tests.models.test_record_keeper import get_preloaded_record_keeper
 
 
 def test_payee_table_model(qtbot: QtBot, qtmodeltester: ModelTester) -> None:
+    icons.setup()
+
     parent = QWidget()
     qtbot.add_widget(parent)
     payee_form = PayeeForm(parent)

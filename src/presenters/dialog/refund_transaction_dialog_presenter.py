@@ -44,7 +44,7 @@ class RefundTransactionDialogPresenter:
         if len(transactions) > 1:
             raise ValueError("Cannot refund multiple transactions.")
 
-        refunded_transaction = transactions.pop()
+        refunded_transaction = transactions[0]
         self._prepare_dialog(refunded_transaction, edited_refund=None)
 
         self._dialog.account = tuple(valid_accounts)[0].path
@@ -60,7 +60,7 @@ class RefundTransactionDialogPresenter:
             display_error_message("Cannot edit multiple Refunds.", title="Warning")
             return
 
-        refund: RefundTransaction = transactions.pop()
+        refund: RefundTransaction = transactions[0]
         self._prepare_dialog(refund.refunded_transaction, edited_refund=refund)
         self._dialog.signal_do_and_close.connect(self._edit_refund)
         self._dialog.exec()

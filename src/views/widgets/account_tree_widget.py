@@ -1,8 +1,9 @@
 import logging
 
-from PyQt6.QtCore import pyqtSignal
-from PyQt6.QtGui import QContextMenuEvent, QCursor, QIcon
-from PyQt6.QtWidgets import QHeaderView, QMenu, QWidget
+from PyQt6.QtCore import QEvent, QObject, Qt, pyqtSignal
+from PyQt6.QtGui import QContextMenuEvent, QCursor, QKeyEvent, QMouseEvent
+from PyQt6.QtWidgets import QHeaderView, QLineEdit, QMenu, QWidget
+from src.views import icons
 from src.views.constants import AccountTreeColumn
 from src.views.ui_files.widgets.Ui_account_tree_widget import Ui_AccountTreeWidget
 
@@ -10,9 +11,13 @@ from src.views.ui_files.widgets.Ui_account_tree_widget import Ui_AccountTreeWidg
 class AccountTreeWidget(QWidget, Ui_AccountTreeWidget):
     signal_selection_changed = pyqtSignal()
     signal_expand_below = pyqtSignal()
+    signal_reset_sort_order = pyqtSignal()
+    signal_sort = pyqtSignal(int)
     signal_show_all = pyqtSignal()
     signal_hide_all = pyqtSignal()
     signal_show_selection_only = pyqtSignal()
+    signal_select_all_cash_accounts_below = pyqtSignal()
+    signal_select_all_security_accounts_below = pyqtSignal()
 
     signal_add_account_group = pyqtSignal()
     signal_add_security_account = pyqtSignal()
@@ -20,6 +25,8 @@ class AccountTreeWidget(QWidget, Ui_AccountTreeWidget):
 
     signal_edit_item = pyqtSignal()
     signal_delete_item = pyqtSignal()
+
+    signal_search_text_changed = pyqtSignal(str)
 
     def __init__(self, parent: QWidget | None) -> None:
         super().__init__(parent)
@@ -30,6 +37,49 @@ class AccountTreeWidget(QWidget, Ui_AccountTreeWidget):
         self._connect_actions()
 
         self.treeView.contextMenuEvent = self._create_context_menu
+
+        self.treeView.installEventFilter(self)
+        self.treeView.viewport().installEventFilter(self)
+        self.treeView.header().setSectionsClickable(True)
+        self.treeView.header().sectionClicked.connect(
+            lambda index: self._header_clicked(index)
+        )
+
+        self.searchLineEdit.textChanged.connect(self.signal_search_text_changed)
+
+    @property
+    def sort_order(self) -> Qt.SortOrder:
+        return self.treeView.header().sortIndicatorOrder()
+
+    def _header_clicked(self, index: int) -> None:
+        header = self.treeView.header()
+        if not header.isSortIndicatorShown():
+            header.setSortIndicatorShown(True)
+            header.setSortIndicator(index, Qt.SortOrder.AscendingOrder)
+        # BUG: this below seems like a bug but it works
+        elif header.sortIndicatorOrder() == Qt.SortOrder.DescendingOrder:
+            header.setSortIndicator(index, Qt.SortOrder.DescendingOrder)
+        else:
+            header.setSortIndicator(index, Qt.SortOrder.AscendingOrder)
+        self.signal_sort.emit(index)
+
+    def eventFilter(self, source: QObject, event: QEvent) -> bool:  # noqa: N802
+        if (
+            source is self.treeView
+            and isinstance(event, QKeyEvent)
+            and event.key() == Qt.Key.Key_Escape
+            and event.modifiers() == Qt.KeyboardModifier.NoModifier
+        ) or (
+            source is self.treeView.viewport()
+            and isinstance(event, QMouseEvent)
+            and (
+                event.button() == Qt.MouseButton.LeftButton
+                or event.button() == Qt.MouseButton.RightButton
+            )
+            and not self.treeView.indexAt(event.pos()).isValid()
+        ):
+            self.treeView.selectionModel().clear()
+        return super().eventFilter(source, event)
 
     def refresh(self) -> None:
         self.treeView.viewport().update()
@@ -55,6 +105,8 @@ class AccountTreeWidget(QWidget, Ui_AccountTreeWidget):
         self.actionEdit.setEnabled(enable_modify_object)
         self.actionDelete.setEnabled(enable_modify_object)
         self.actionExpand_All_Below.setEnabled(enable_expand_below)
+        self.actionSelect_All_Cash_Accounts_Below.setEnabled(enable_expand_below)
+        self.actionSelect_All_Security_Accounts_Below.setEnabled(enable_expand_below)
         self.actionShow_Selection_Only.setEnabled(enable_modify_object)
 
     def _create_context_menu(self, event: QContextMenuEvent) -> None:
@@ -67,25 +119,28 @@ class AccountTreeWidget(QWidget, Ui_AccountTreeWidget):
         self.menu.addAction(self.actionEdit)
         self.menu.addAction(self.actionDelete)
         self.menu.addSeparator()
-        self.menu.addAction(self.actionExpand_All_Below)
         self.menu.addAction(self.actionShow_Selection_Only)
+        self.menu.addAction(self.actionSelect_All_Cash_Accounts_Below)
+        self.menu.addAction(self.actionSelect_All_Security_Accounts_Below)
+        self.menu.addSeparator()
+        self.menu.addAction(self.actionExpand_All_Below)
         self.menu.popup(QCursor.pos())
 
     def finalize_setup(self) -> None:
         self.treeView.header().setSectionResizeMode(
-            AccountTreeColumn.COLUMN_NAME,
+            AccountTreeColumn.NAME,
             QHeaderView.ResizeMode.ResizeToContents,
         )
         self.treeView.header().setSectionResizeMode(
-            AccountTreeColumn.COLUMN_BALANCE_NATIVE,
+            AccountTreeColumn.BALANCE_NATIVE,
             QHeaderView.ResizeMode.ResizeToContents,
         )
         self.treeView.header().setSectionResizeMode(
-            AccountTreeColumn.COLUMN_BALANCE_BASE,
+            AccountTreeColumn.BALANCE_BASE,
             QHeaderView.ResizeMode.ResizeToContents,
         )
         self.treeView.header().setSectionResizeMode(
-            AccountTreeColumn.COLUMN_SHOW,
+            AccountTreeColumn.SHOW,
             QHeaderView.ResizeMode.ResizeToContents,
         )
 
@@ -94,31 +149,49 @@ class AccountTreeWidget(QWidget, Ui_AccountTreeWidget):
         )
 
     def _set_action_icons(self) -> None:
-        self.actionExpand_All.setIcon(QIcon("icons_custom:arrow-out.png"))
-        self.actionExpand_All_Below.setIcon(QIcon("icons_16:arrow-stop-270.png"))
-        self.actionCollapse_All.setIcon(QIcon("icons_16:arrow-in.png"))
+        self.actionExpand_All.setIcon(icons.expand)
+        self.actionExpand_All_Below.setIcon(icons.expand_below)
+        self.actionCollapse_All.setIcon(icons.collapse)
 
-        self.actionShow_All.setIcon(QIcon("icons_16:eye.png"))
-        self.actionHide_All.setIcon(QIcon("icons_16:eye-close.png"))
-        self.actionShow_Selection_Only.setIcon(QIcon("icons_16:eye-red.png"))
+        self.actionReset_Sort_Order.setIcon(icons.reset_sort_order)
 
-        self.actionAdd_Account_Group.setIcon(QIcon("icons_16:folder--plus.png"))
-        self.actionAdd_Security_Account.setIcon(QIcon("icons_custom:bank-plus.png"))
-        self.actionAdd_Cash_Account.setIcon(QIcon("icons_custom:piggy-bank-plus.png"))
+        self.actionShow_All.setIcon(icons.select_all)
+        self.actionHide_All.setIcon(icons.unselect_all)
+        self.actionShow_Selection_Only.setIcon(icons.select_this)
+        self.actionSelect_All_Cash_Accounts_Below.setIcon(icons.select_cash_accounts)
+        self.actionSelect_All_Security_Accounts_Below.setIcon(
+            icons.select_security_accounts
+        )
 
-        self.actionEdit.setIcon(QIcon("icons_16:pencil.png"))
-        self.actionDelete.setIcon(QIcon("icons_16:minus.png"))
+        self.actionAdd_Account_Group.setIcon(icons.add_account_group)
+        self.actionAdd_Security_Account.setIcon(icons.add_security_account)
+        self.actionAdd_Cash_Account.setIcon(icons.add_cash_account)
+
+        self.actionEdit.setIcon(icons.edit)
+        self.actionDelete.setIcon(icons.remove)
+
+        self.searchLineEdit.addAction(
+            icons.magnifier, QLineEdit.ActionPosition.LeadingPosition
+        )
 
     def _connect_actions(self) -> None:
         self.actionExpand_All.triggered.connect(self.expand_all)
         self.actionExpand_All_Below.triggered.connect(self.signal_expand_below.emit)
         self.actionCollapse_All.triggered.connect(self.collapse_all)
 
+        self.actionReset_Sort_Order.triggered.connect(self.signal_reset_sort_order.emit)
+
         self.actionShow_All.triggered.connect(self.signal_show_all.emit)
+        self.actionHide_All.triggered.connect(self.signal_hide_all.emit)
         self.actionShow_Selection_Only.triggered.connect(
             self.signal_show_selection_only.emit
         )
-        self.actionHide_All.triggered.connect(self.signal_hide_all.emit)
+        self.actionSelect_All_Cash_Accounts_Below.triggered.connect(
+            self.signal_select_all_cash_accounts_below.emit
+        )
+        self.actionSelect_All_Security_Accounts_Below.triggered.connect(
+            self.signal_select_all_security_accounts_below.emit
+        )
 
         self.actionAdd_Account_Group.triggered.connect(
             self.signal_add_account_group.emit
@@ -133,11 +206,7 @@ class AccountTreeWidget(QWidget, Ui_AccountTreeWidget):
         self.expandAllToolButton.setDefaultAction(self.actionExpand_All)
         self.collapseAllToolButton.setDefaultAction(self.actionCollapse_All)
 
+        self.resetSortOrderToolButton.setDefaultAction(self.actionReset_Sort_Order)
+
         self.showAllToolButton.setDefaultAction(self.actionShow_All)
         self.hideAllToolButton.setDefaultAction(self.actionHide_All)
-
-        self.addAccountGroupToolButton.setDefaultAction(self.actionAdd_Account_Group)
-        self.addCashAccountToolButton.setDefaultAction(self.actionAdd_Cash_Account)
-        self.addSecurityAccountToolButton.setDefaultAction(
-            self.actionAdd_Security_Account
-        )

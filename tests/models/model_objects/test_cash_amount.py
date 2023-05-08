@@ -13,7 +13,6 @@ from src.models.model_objects.currency_objects import (
     ExchangeRate,
 )
 from src.models.user_settings import user_settings
-from src.utilities.general import normalize_decimal_to_min_places
 from tests.models.test_assets.composites import (
     cash_amounts,
     currencies,
@@ -28,18 +27,17 @@ from tests.models.test_assets.composites import (
 )
 def test_creation(value: Decimal, currency: Currency) -> None:
     cash_amount = CashAmount(value, currency)
+    expected_normalized_value = value.normalize()
+    if -value.as_tuple().exponent < currency.places:
+        expected_normalized_value = expected_normalized_value.quantize(
+            Decimal(f"1e-{currency.places}")
+        )
     assert cash_amount.value_rounded == round(value, currency.places)
-    assert cash_amount.value_normalized == normalize_decimal_to_min_places(
-        value, currency.places
-    )
-    assert (
-        cash_amount.__repr__()
-        == f"CashAmount({normalize_decimal_to_min_places(value,currency.places)}"
-        f" {currency.code})"
-    )
+    assert cash_amount.value_normalized == expected_normalized_value
+    assert cash_amount.__repr__() == f"CashAmount({cash_amount.to_str_normalized()})"
     assert (
         cash_amount.to_str_rounded()
-        == f"{round(value,currency.places):,} {currency.code}"
+        == f"{round(value,currency.places):,.{currency.places}f} {currency.code}"
     )
 
 
@@ -47,7 +45,19 @@ def test_creation(value: Decimal, currency: Currency) -> None:
     value=everything_except((Decimal, int, str)),
     currency=currencies(),
 )
-def test_value_invalid_type(value: Decimal, currency: Currency) -> None:
+def test_value_invalid_type(value: Any, currency: Currency) -> None:
+    with pytest.raises(
+        TypeError,
+        match="CashAmount.value must be a Decimal, integer or a string",
+    ):
+        CashAmount(value, currency)
+
+
+@given(
+    value=st.floats(),
+    currency=currencies(),
+)
+def test_value_invalid_type_float(value: float, currency: Currency) -> None:
     with pytest.raises(
         TypeError,
         match="CashAmount.value must be a Decimal, integer or a string",
@@ -63,7 +73,7 @@ def test_value_invalid_str(value: str, currency: Currency) -> None:
     try:
         Decimal(value)
     except InvalidOperation:
-        with pytest.raises(InvalidOperation):
+        with pytest.raises(TypeError, match="CashAmount.value must be a Decimal"):
             CashAmount(value, currency)
 
 
@@ -276,6 +286,38 @@ def test_mul_rmul_invalid_type(cash_amount: CashAmount, number: Any) -> None:
     assert result == NotImplemented
 
 
+@given(
+    data=st.data(),
+)
+def test_truediv_rtruediv(data: st.DataObject) -> None:
+    currency = data.draw(currencies())
+    amount_1 = data.draw(cash_amounts(currency=currency, min_value=1e-6))
+    amount_2 = data.draw(cash_amounts(currency=currency, min_value=1e-6))
+    expected_truediv = amount_1.value_normalized / amount_2.value_normalized
+    expected_rtruediv = amount_2.value_normalized / amount_1.value_normalized
+    assert amount_1.__truediv__(amount_2) == expected_truediv
+    assert amount_1.__rtruediv__(amount_2) == expected_rtruediv
+
+
+@given(cash_amount_1=cash_amounts(), cash_amount_2=cash_amounts())
+def test_truediv_rtruediv_different_currencies(
+    cash_amount_1: CashAmount, cash_amount_2: CashAmount
+) -> None:
+    assume(cash_amount_1.currency != cash_amount_2.currency)
+    with pytest.raises(CurrencyError):
+        cash_amount_1.__truediv__(cash_amount_2)
+    with pytest.raises(CurrencyError):
+        cash_amount_1.__rtruediv__(cash_amount_2)
+
+
+@given(amount_1=cash_amounts(), amount_2=everything_except(CashAmount))
+def test_truediv_rtruediv_invalid_type(amount_1: CashAmount, amount_2: Any) -> None:
+    result = amount_1.__truediv__(amount_2)
+    assert result == NotImplemented
+    result = amount_1.__rtruediv__(amount_2)
+    assert result == NotImplemented
+
+
 @given(cash_amount=cash_amounts())
 def test_is_positive(cash_amount: CashAmount) -> None:
     assert (cash_amount.value_rounded > 0) == cash_amount.is_positive()
@@ -291,6 +333,13 @@ def test_convert_czk_to_btc() -> None:
     cash_amount = CashAmount(Decimal(1_000_000), currencies["CZK"])
     result = cash_amount.convert(currencies["BTC"])
     assert result == CashAmount(Decimal("0.9"), currencies["BTC"])
+    # repeat the conversion in the other direction (from BTC to CZK)
+    cash_amount = CashAmount(Decimal("0.9"), currencies["BTC"])
+    result = cash_amount.convert(currencies["CZK"])
+    assert (
+        result.to_str_rounded()
+        == CashAmount(Decimal(1_000_000), currencies["CZK"]).to_str_rounded()
+    )
 
 
 def test_convert_czk_to_btc_date() -> None:

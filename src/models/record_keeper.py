@@ -1,5 +1,3 @@
-# FIXME: this file belongs somewhere else...
-
 import logging
 import uuid
 from collections.abc import Collection
@@ -25,7 +23,6 @@ from src.models.model_objects.attributes import (
 )
 from src.models.model_objects.cash_objects import (
     CashAccount,
-    CashRelatedTransaction,
     CashTransaction,
     CashTransactionType,
     CashTransfer,
@@ -1038,12 +1035,12 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
                 "Cannot delete a Currency referenced in any ExchangeRate."
             )
         if any(
-            currency in transaction.currencies
-            for transaction in self._transactions
-            if isinstance(transaction, CashRelatedTransaction)
+            account.currency == currency
+            for account in self._accounts
+            if isinstance(account, CashAccount)
         ):
             raise InvalidOperationError(
-                "Cannot delete a Currency referenced in any CashRelatedTransaction."
+                "Cannot delete a Currency referenced in any CashAccount."
             )
         if any(currency == security.currency for security in self._securities):
             raise InvalidOperationError(
@@ -1564,7 +1561,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         transactions: list[RecordKeeper.TransactionType] = []
         if any(not isinstance(uuid_, uuid.UUID) for uuid_ in uuids):
             raise TypeError(
-                "Parameter 'uuids' must be a collection of uuid.UUID objects."
+                "Parameter 'uuids' must be a Collection ofuuid.UUID objects."
             )
         for transaction in self._transactions:
             if transaction.uuid in uuids:

@@ -1,8 +1,9 @@
 import logging
 
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QAction, QContextMenuEvent, QCursor, QIcon
+from PyQt6.QtGui import QAction, QContextMenuEvent, QCursor
 from PyQt6.QtWidgets import QLineEdit, QMenu, QWidget
+from src.views import icons
 from src.views.constants import TRANSACTION_TABLE_COLUMN_HEADERS, TransactionTableColumn
 from src.views.ui_files.widgets.Ui_transaction_table_widget import (
     Ui_TransactionTableWidget,
@@ -11,6 +12,7 @@ from src.views.ui_files.widgets.Ui_transaction_table_widget import (
 
 class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
     signal_search_text_changed = pyqtSignal()
+    signal_filter_transactions = pyqtSignal()
 
     signal_income = pyqtSignal()
     signal_expense = pyqtSignal()
@@ -37,7 +39,7 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
         self._create_column_actions()
         self._set_icons()
         self._connect_actions()
-        self._connect_signals()
+        self._initialize_signals()
         self._setup_header()
         self._setup_table()
 
@@ -84,6 +86,36 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
     def show_all_columns(self) -> None:
         for column in TRANSACTION_TABLE_COLUMN_HEADERS:
             self.set_column_visibility(column, show=True)
+
+    def set_actions(
+        self, *, enable_duplicate: bool, enable_refund: bool, enable_find_related: bool
+    ) -> None:
+        selected_indexes = self.tableView.selectionModel().selectedIndexes()
+        selected_rows = [index for index in selected_indexes if index.column() == 0]
+
+        is_any_selected = len(selected_rows) > 0
+        is_one_selected = len(selected_rows) == 1
+
+        self.actionEdit.setEnabled(is_any_selected)
+        self.actionDuplicate.setEnabled(is_one_selected and enable_duplicate)
+        self.actionDelete.setEnabled(is_any_selected)
+        self.actionAdd_Tags.setEnabled(is_any_selected)
+        self.actionRemove_Tags.setEnabled(is_any_selected)
+        self.actionRefund.setEnabled(enable_refund)
+        self.actionFind_Related.setEnabled(enable_find_related)
+
+    def set_filter_active(self, *, active: bool) -> None:
+        if not active:
+            self.actionFilter_Transactions.setIcon(icons.filter_)
+            self.filterToolButton.setToolButtonStyle(
+                Qt.ToolButtonStyle.ToolButtonIconOnly
+            )
+        else:
+            self.actionFilter_Transactions.setIcon(icons.filter_warning)
+            self.filterToolButton.setToolButtonStyle(
+                Qt.ToolButtonStyle.ToolButtonTextBesideIcon
+            )
+            self.filterToolButton.setText("Filter active")
 
     def _create_column_actions(self) -> None:
         self.column_actions: list[QAction] = []
@@ -132,30 +164,27 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
         self.header_menu.popup(QCursor.pos())
 
     def _set_icons(self) -> None:
-        self.actionFilter_Transactions = QAction(self)
-        self.actionFilter_Transactions.setIcon(QIcon("icons_16:funnel.png"))
-        self.actionIncome.setIcon(QIcon("icons_custom:coins-plus.png"))
-        self.actionExpense.setIcon(QIcon("icons_custom:coins-minus.png"))
-        self.actionBuy.setIcon(QIcon("icons_custom:certificate-plus.png"))
-        self.actionSell.setIcon(QIcon("icons_custom:certificate-minus.png"))
-        self.actionCash_Transfer.setIcon(QIcon("icons_custom:coins-arrow.png"))
-        self.actionSecurity_Transfer.setIcon(
-            QIcon("icons_custom:certificate-arrow.png")
-        )
-        self.actionRefund.setIcon(QIcon("icons_custom:coins-arrow-back.png"))
-        self.actionFind_Related.setIcon(QIcon("icons_16:magnifier.png"))
+        self.actionFilter_Transactions.setIcon(icons.filter_)
+        self.actionIncome.setIcon(icons.income)
+        self.actionExpense.setIcon(icons.expense)
+        self.actionBuy.setIcon(icons.buy)
+        self.actionSell.setIcon(icons.sell)
+        self.actionCash_Transfer.setIcon(icons.cash_transfer)
+        self.actionSecurity_Transfer.setIcon(icons.security_transfer)
+        self.actionRefund.setIcon(icons.refund)
+        self.actionFind_Related.setIcon(icons.magnifier)
 
-        self.actionEdit.setIcon(QIcon("icons_16:pencil.png"))
-        self.actionDelete.setIcon(QIcon("icons_16:minus.png"))
-        self.actionDuplicate.setIcon(QIcon("icons_16:document-copy.png"))
+        self.actionEdit.setIcon(icons.edit)
+        self.actionDelete.setIcon(icons.remove)
+        self.actionDuplicate.setIcon(icons.duplicate)
 
-        self.actionAdd_Tags.setIcon(QIcon("icons_16:tag--plus.png"))
-        self.actionRemove_Tags.setIcon(QIcon("icons_16:tag--minus.png"))
+        self.actionAdd_Tags.setIcon(icons.add_tag)
+        self.actionRemove_Tags.setIcon(icons.remove_tag)
 
-        self.transferToolButton.setIcon(QIcon("icons_16:arrow-curve-000-left.png"))
+        self.transferToolButton.setIcon(icons.transfer)
 
         self.searchLineEdit.addAction(
-            QIcon("icons_16:magnifier.png"), QLineEdit.ActionPosition.LeadingPosition
+            icons.magnifier, QLineEdit.ActionPosition.LeadingPosition
         )
 
     def _connect_actions(self) -> None:
@@ -174,7 +203,9 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
         )
         self.actionReset_Columns.triggered.connect(self._reset_column_order)
 
-    def _connect_signals(self) -> None:
+    def _initialize_signals(self) -> None:
+        self.tableView.doubleClicked.connect(self.signal_edit.emit)
+
         self.actionIncome.triggered.connect(self.signal_income.emit)
         self.actionExpense.triggered.connect(self.signal_expense.emit)
         self.actionRefund.triggered.connect(self.signal_refund.emit)
@@ -193,6 +224,9 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
 
         self.actionAdd_Tags.triggered.connect(self.signal_add_tags.emit)
         self.actionRemove_Tags.triggered.connect(self.signal_remove_tags.emit)
+        self.actionFilter_Transactions.triggered.connect(
+            self.signal_filter_transactions.emit
+        )
 
         self.searchLineEdit.textChanged.connect(self.signal_search_text_changed.emit)
 
@@ -207,23 +241,6 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
         self.tableView.customContextMenuRequested.connect(
             self._create_table_context_menu
         )
-
-    def set_actions(
-        self, *, enable_duplicate: bool, enable_refund: bool, enable_find_related: bool
-    ) -> None:
-        selected_indexes = self.tableView.selectionModel().selectedIndexes()
-        selected_rows = [index for index in selected_indexes if index.column() == 0]
-
-        is_any_selected = len(selected_rows) > 0
-        is_one_selected = len(selected_rows) == 1
-
-        self.actionEdit.setEnabled(is_any_selected)
-        self.actionDuplicate.setEnabled(is_one_selected and enable_duplicate)
-        self.actionDelete.setEnabled(is_any_selected)
-        self.actionAdd_Tags.setEnabled(is_any_selected)
-        self.actionRemove_Tags.setEnabled(is_any_selected)
-        self.actionRefund.setEnabled(enable_refund)
-        self.actionFind_Related.setEnabled(enable_find_related)
 
     def _reset_column_order(self) -> None:
         header = self.tableView.horizontalHeader()

@@ -1,14 +1,16 @@
 import logging
 
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QCloseEvent, QIcon
+from PyQt6.QtGui import QCloseEvent
 from PyQt6.QtWidgets import QHeaderView, QLineEdit, QWidget
+from src.views import icons
 from src.views.constants import SecurityTableColumn
 from src.views.ui_files.forms.Ui_security_form import Ui_SecurityForm
 
 # TODO: add some way to view and edit price history
 # TODO: add way to see overview of owned securities (per account and total)
 # TODO: double click security account to view its contents
+# TODO: change visual style from side buttons to tool buttons and context menu
 
 
 class SecurityForm(QWidget, Ui_SecurityForm):
@@ -24,7 +26,7 @@ class SecurityForm(QWidget, Ui_SecurityForm):
         super().__init__(parent=parent)
         self.setupUi(self)
         self.setWindowFlag(Qt.WindowType.Window)
-        self.setWindowIcon(QIcon("icons_16:certificate.png"))
+        self.setWindowIcon(icons.security)
 
         self.addButton.clicked.connect(self.signal_add_security.emit)
         self.removeButton.clicked.connect(self.signal_remove_security.emit)
@@ -33,7 +35,7 @@ class SecurityForm(QWidget, Ui_SecurityForm):
         self.selectButton.clicked.connect(self.signal_select_security.emit)
 
         self.searchLineEdit.addAction(
-            QIcon("icons_16:magnifier.png"), QLineEdit.ActionPosition.LeadingPosition
+            icons.magnifier, QLineEdit.ActionPosition.LeadingPosition
         )
         self.searchLineEdit.textChanged.connect(self.signal_search_text_changed.emit)
 
@@ -58,29 +60,29 @@ class SecurityForm(QWidget, Ui_SecurityForm):
     def finalize_setup(self) -> None:
         self.tableView.horizontalHeader().setStretchLastSection(False)
         self.tableView.horizontalHeader().setSectionResizeMode(
-            SecurityTableColumn.COLUMN_NAME,
+            SecurityTableColumn.NAME,
             QHeaderView.ResizeMode.ResizeToContents,
         )
         self.tableView.horizontalHeader().setSectionResizeMode(
-            SecurityTableColumn.COLUMN_SYMBOL,
+            SecurityTableColumn.SYMBOL,
             QHeaderView.ResizeMode.ResizeToContents,
         )
         self.tableView.horizontalHeader().setSectionResizeMode(
-            SecurityTableColumn.COLUMN_TYPE,
+            SecurityTableColumn.TYPE,
             QHeaderView.ResizeMode.ResizeToContents,
         )
         self.tableView.horizontalHeader().setSectionResizeMode(
-            SecurityTableColumn.COLUMN_PRICE,
+            SecurityTableColumn.PRICE,
             QHeaderView.ResizeMode.ResizeToContents,
         )
         self.tableView.horizontalHeader().setSectionResizeMode(
-            SecurityTableColumn.COLUMN_LAST_DATE,
+            SecurityTableColumn.LAST_DATE,
             QHeaderView.ResizeMode.Stretch,
         )
 
         style = self.style()
         last_section_text = self.tableView.model().headerData(
-            SecurityTableColumn.COLUMN_LAST_DATE,
+            SecurityTableColumn.LAST_DATE,
             Qt.Orientation.Horizontal,
             Qt.ItemDataRole.DisplayRole,
         )
