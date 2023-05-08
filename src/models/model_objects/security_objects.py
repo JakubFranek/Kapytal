@@ -31,6 +31,7 @@ from src.models.utilities.find_helpers import (
     find_currency_by_code,
     find_security_by_name,
 )
+from src.presenters.utilities.event import Event
 
 
 class PriceNotFoundError(ValueError):
@@ -80,6 +81,7 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
         self._shares_unit = _shares_unit
 
         self._price_history: dict[date, CashAmount] = {}
+        self.event_price_updated = Event()
 
     @property
     def type_(self) -> str:
@@ -178,9 +180,19 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
             raise TypeError("Parameter 'price' must be a CashAmount.")
         if price.currency != self.currency:
             raise CurrencyError("Security.currency and price.currency must match.")
+
         self._price_history[date_] = price
         self._latest_date = max(date_ for date_ in self._price_history)
+
+        latest_price = self._price_history[self._latest_date]
+        if hasattr(self, "_latest_price"):
+            previous_latest_price = self._latest_price
+        else:
+            previous_latest_price = None
+
         self._latest_price = self._price_history[self._latest_date]
+        if previous_latest_price != latest_price:
+            self.event_price_updated()
 
     def serialize(self) -> dict[str, Any]:
         date_price_pairs = [
@@ -272,9 +284,13 @@ class SecurityAccount(Account):
         self._transactions.remove(transaction)
 
     def update_securities(self) -> None:
+        for security in self._securities:
+            security.event_price_updated.remove(self._update_balances)
         self._securities.clear()
         for transaction in self._transactions:
             self._securities[transaction.security] += transaction.get_shares(self)
+        for security in self._securities:
+            security.event_price_updated.append(self._update_balances)
         self._update_balances()
 
     def serialize(self) -> dict[str, Any]:

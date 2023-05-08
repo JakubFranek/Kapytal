@@ -10,6 +10,8 @@ from src.models.model_objects.currency_objects import (
 from src.models.model_objects.security_objects import Security, SecurityAccount
 from src.views.constants import SecurityAccountTableColumn
 
+ALIGNMENT_AMOUNTS = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+
 
 class SecurityAccountTableModel(QAbstractTableModel):
     COLUMN_HEADERS = {
@@ -112,7 +114,7 @@ class SecurityAccountTableModel(QAbstractTableModel):
             or column == SecurityAccountTableColumn.AMOUNT_NATIVE
             or column == SecurityAccountTableColumn.AMOUNT_BASE
         ):
-            return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+            return ALIGNMENT_AMOUNTS
         return None
 
     def _get_display_role_data(  # noqa: PLR0911

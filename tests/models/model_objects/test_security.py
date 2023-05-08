@@ -245,16 +245,27 @@ def test_shares_unit_not_power_of_10(
 
 
 @given(
-    date_=st.dates(),
-    value=valid_decimals(),
+    data=st.data(),
 )
-def test_set_price(date_: date, value: Decimal) -> None:
+def test_set_price(
+    data: st.DataObject,
+) -> None:
     security = get_security()
     currency = security.currency
-    price = CashAmount(value, currency)
+    price = CashAmount(data.draw(valid_decimals()), currency)
+    date_ = data.draw(st.dates())
     security.set_price(date_, price)
     assert security.price.value_normalized == price.value_normalized
     assert security.price_history[date_].value_normalized == price.value_normalized
+    assert security.price == price
+    assert security.latest_date == date_
+    price_2 = CashAmount(data.draw(valid_decimals()), currency)
+    date_2 = data.draw(st.dates())
+    security.set_price(date_2, price_2)
+    assert security.price_history[date_2].value_normalized == price_2.value_normalized
+    if date_2 > date_:
+        assert security.price == price_2
+        assert security.latest_date == date_2
 
 
 @given(
