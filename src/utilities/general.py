@@ -3,7 +3,6 @@ import shutil
 import sys
 import traceback
 from datetime import datetime
-from decimal import Decimal
 from pathlib import Path
 from types import TracebackType
 
@@ -122,23 +121,3 @@ def get_exception_info(
     file_name = Path(file_name).name
 
     return file_name, line, exc_details
-
-
-quantizers = {}
-for i in range(0, 12):
-    quantizers[i] = Decimal(f"1e-{i}")
-
-
-def normalize_decimal_to_min_places(value: Decimal, min_places: int) -> Decimal:
-    """Returns a Decimal which has at least 'min_places' decimal places,
-    but has no trailing zeroes beyond that limit."""
-
-    normalized = value.normalize()
-    _, _, exponent = normalized.as_tuple()
-    try:
-        if -exponent < min_places:
-            return normalized.quantize(quantizers[min_places])
-    except TypeError:
-        return normalized
-    else:
-        return normalized
