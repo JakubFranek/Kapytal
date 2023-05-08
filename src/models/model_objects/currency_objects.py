@@ -111,9 +111,11 @@ class Currency(CopyableMixin, JSONSerializableMixin):
             if factor is not None:
                 return factor
             reversed_cache_key = f"{target_currency.code}/{self.code}"
-            factor = self._factor_cache.get(reversed_cache_key)
+            factor = target_currency._factor_cache.get(  # noqa: SLF001
+                reversed_cache_key
+            )
             if factor is not None:
-                return Decimal(1) / factor
+                return 1 / factor
 
         exchange_rates = Currency._get_exchange_rates(  # noqa: SLF001
             self, target_currency
@@ -368,13 +370,13 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
         return self._currency
 
     def __repr__(self) -> str:
-        return f"CashAmount({self.value_normalized} {self._currency.code})"
+        return f"CashAmount({self.to_str_normalized()})"
 
     def __str__(self) -> str:
         return self.to_str_normalized()
 
     def __hash__(self) -> int:
-        return hash((self.value_normalized, self._currency))
+        return hash((self._raw_value, self._currency))
 
     def __eq__(self, __o: object) -> bool:
         if not isinstance(__o, CashAmount):

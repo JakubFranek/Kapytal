@@ -1,5 +1,3 @@
-# FIXME: this file belongs somewhere else...
-
 import logging
 import uuid
 from collections.abc import Collection

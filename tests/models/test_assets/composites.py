@@ -50,8 +50,6 @@ from src.models.transaction_filters.transaction_filter import FilterMode, TypeFi
 from src.models.user_settings import user_settings
 from tests.models.test_assets.constants import MIN_DATETIME
 
-# IDEA: check if optional params for some composites can help optimize tests
-
 
 def everything_except(excluded_types: type | tuple[type, ...]) -> Any:
     return (

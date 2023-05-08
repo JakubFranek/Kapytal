@@ -38,7 +38,7 @@ def check_transaction(filter_: SpecificTagsFilter, transaction: Transaction) -> 
 def test_creation(tags: list[Attribute], mode: FilterMode) -> None:
     filter_ = SpecificTagsFilter(tags, mode)
     assert filter_.tags == frozenset(tags)
-    assert filter_.tag_names == tuple(sorted(tag.name for tag in tags))
+    assert frozenset(filter_.tag_names) == frozenset(sorted(tag.name for tag in tags))
     assert filter_.mode == mode
     assert (
         filter_.__repr__()

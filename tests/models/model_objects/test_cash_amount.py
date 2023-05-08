@@ -34,10 +34,7 @@ def test_creation(value: Decimal, currency: Currency) -> None:
         )
     assert cash_amount.value_rounded == round(value, currency.places)
     assert cash_amount.value_normalized == expected_normalized_value
-    assert (
-        cash_amount.__repr__()
-        == f"CashAmount({cash_amount.value_normalized} {cash_amount.currency})"
-    )
+    assert cash_amount.__repr__() == f"CashAmount({cash_amount.to_str_normalized()})"
     assert (
         cash_amount.to_str_rounded()
         == f"{round(value,currency.places):,.{currency.places}f} {currency.code}"
@@ -48,7 +45,19 @@ def test_creation(value: Decimal, currency: Currency) -> None:
     value=everything_except((Decimal, int, str)),
     currency=currencies(),
 )
-def test_value_invalid_type(value: Decimal, currency: Currency) -> None:
+def test_value_invalid_type(value: Any, currency: Currency) -> None:
+    with pytest.raises(
+        TypeError,
+        match="CashAmount.value must be a Decimal, integer or a string",
+    ):
+        CashAmount(value, currency)
+
+
+@given(
+    value=st.floats(),
+    currency=currencies(),
+)
+def test_value_invalid_type_float(value: float, currency: Currency) -> None:
     with pytest.raises(
         TypeError,
         match="CashAmount.value must be a Decimal, integer or a string",
@@ -324,6 +333,13 @@ def test_convert_czk_to_btc() -> None:
     cash_amount = CashAmount(Decimal(1_000_000), currencies["CZK"])
     result = cash_amount.convert(currencies["BTC"])
     assert result == CashAmount(Decimal("0.9"), currencies["BTC"])
+    # repeat the conversion in the other direction (from BTC to CZK)
+    cash_amount = CashAmount(Decimal("0.9"), currencies["BTC"])
+    result = cash_amount.convert(currencies["CZK"])
+    assert (
+        result.to_str_rounded()
+        == CashAmount(Decimal(1_000_000), currencies["CZK"]).to_str_rounded()
+    )
 
 
 def test_convert_czk_to_btc_date() -> None:

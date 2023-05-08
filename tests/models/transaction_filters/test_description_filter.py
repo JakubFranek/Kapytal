@@ -18,7 +18,7 @@ from tests.models.test_assets.transaction_list import transaction_list
 def check_transaction(filter_: DescriptionFilter, transaction: Transaction) -> bool:
     if filter_.mode == FilterMode.OFF:
         return True
-    return re.search(filter_.regex_pattern, transaction.description)
+    return re.search(filter_.regex_pattern, transaction.description, re.IGNORECASE)
 
 
 @given(pattern=st.text(), mode=st.sampled_from(FilterMode))
