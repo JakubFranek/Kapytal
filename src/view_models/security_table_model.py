@@ -38,20 +38,37 @@ class SecurityTableModel(QAbstractTableModel):
     def rowCount(self, index: QModelIndex = ...) -> int:  # noqa: N802
         if isinstance(index, QModelIndex) and index.isValid():
             return 0
-        return len(self.securities)
+        return len(self._securities)
 
-    def columnCount(self, index: QModelIndex = ...) -> int:  # noqa: N802
-        del index
-        return 5
+    def columnCount(self, index: QModelIndex = ...) -> int:  # noqa: N802, ARG002
+        if not hasattr(self, "_column_count"):
+            self._column_count = len(self.COLUMN_HEADERS)
+        return self._column_count
 
     def index(self, row: int, column: int, parent: QModelIndex = ...) -> QModelIndex:
         if parent.isValid():
             return QModelIndex()
-        if not QAbstractTableModel.hasIndex(self, row, column, QModelIndex()):
+        if row < 0 or column < 0:
+            return QModelIndex()
+        if row >= len(self._securities) or column >= self._column_count:
             return QModelIndex()
 
-        item = self.securities[row]
+        item = self._securities[row]
         return QAbstractTableModel.createIndex(self, row, column, item)
+
+    def headerData(  # noqa: N802
+        self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole = ...
+    ) -> str | int | None:
+        if role == Qt.ItemDataRole.DisplayRole:
+            if orientation == Qt.Orientation.Horizontal:
+                return self.COLUMN_HEADERS[section]
+            return str(section)
+        if (
+            role == Qt.ItemDataRole.TextAlignmentRole
+            and section == SecurityTableColumn.LAST_DATE
+        ):
+            return Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
+        return None
 
     def data(
         self, index: QModelIndex, role: Qt.ItemDataRole = ...
@@ -60,13 +77,12 @@ class SecurityTableModel(QAbstractTableModel):
             return None
 
         column = index.column()
-        security = self.securities[index.row()]
+        security = self._securities[index.row()]
 
         if role == Qt.ItemDataRole.DisplayRole:
             return self._get_display_role_data(column, security)
-        # TODO: fix sorting
-        if role == Qt.ItemDataRole.UserRole and column == SecurityTableColumn.NAME:
-            return unicodedata.normalize("NFD", security.name)
+        if role == Qt.ItemDataRole.UserRole:
+            return self._get_user_role_data(column, security)
         if (
             role == Qt.ItemDataRole.TextAlignmentRole
             and column == SecurityTableColumn.PRICE
@@ -90,18 +106,25 @@ class SecurityTableModel(QAbstractTableModel):
             )
         return None
 
-    def headerData(  # noqa: N802
-        self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole = ...
-    ) -> str | int | None:
-        if role == Qt.ItemDataRole.DisplayRole:
-            if orientation == Qt.Orientation.Horizontal:
-                return self.COLUMN_HEADERS[section]
-            return str(section)
-        if (
-            role == Qt.ItemDataRole.TextAlignmentRole
-            and section == SecurityTableColumn.LAST_DATE
-        ):
-            return Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
+    def _get_user_role_data(  # noqa: PLR0911
+        self,
+        column: int,
+        security: Security,
+    ) -> str | None:
+        if column == SecurityTableColumn.NAME:
+            return unicodedata.normalize("NFD", security.name)
+        if column == SecurityTableColumn.SYMBOL:
+            return unicodedata.normalize("NFD", security.symbol)
+        if column == SecurityTableColumn.TYPE:
+            return unicodedata.normalize("NFD", security.type_)
+        if column == SecurityTableColumn.PRICE:
+            amount = security.price
+            return float(amount.value_normalized)
+        if column == SecurityTableColumn.LAST_DATE:
+            latest_date = security.latest_date
+            if latest_date is not None:
+                return latest_date.toordinal()
+            return None
         return None
 
     def pre_add(self) -> None:
