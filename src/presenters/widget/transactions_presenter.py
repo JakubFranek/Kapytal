@@ -52,6 +52,8 @@ from src.views.utilities.handle_exception import display_error_message
 from src.views.utilities.message_box_functions import ask_yes_no_question
 from src.views.widgets.transaction_table_widget import TransactionTableWidget
 
+# TODO: reapply sort after data changes
+
 
 class TransactionsPresenter:
     event_data_changed = Event()

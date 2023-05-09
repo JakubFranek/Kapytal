@@ -62,6 +62,7 @@ class Ui_AccountTreeWidget(object):
         self.treeView.setSizePolicy(sizePolicy)
         self.treeView.setMouseTracking(False)
         self.treeView.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
+        self.treeView.setUniformRowHeights(True)
         self.treeView.setSortingEnabled(False)
         self.treeView.setObjectName("treeView")
         self.treeView.header().setHighlightSections(False)

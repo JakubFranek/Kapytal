@@ -53,6 +53,13 @@ class SecurityAccountTableColumn(IntEnum):
     AMOUNT_BASE = 6
 
 
+class OwnedSecuritiesTreeColumn(IntEnum):
+    NAME = 0
+    SHARES = 1
+    AMOUNT_NATIVE = 2
+    AMOUNT_BASE = 3
+
+
 class CategoryTreeColumn(IntEnum):
     NAME = 0
     TRANSACTIONS = 1

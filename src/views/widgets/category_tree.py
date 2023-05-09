@@ -18,6 +18,8 @@ class CategoryTree(QTreeView):
     def __init__(self, parent: QWidget | None = ...) -> None:
         super().__init__(parent)
 
+        self.setUniformRowHeights(True)
+
         self.setObjectName("categoryTree")
         self.header().setSortIndicatorShown(False)
         self.header().setStretchLastSection(False)

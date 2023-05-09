@@ -35,7 +35,7 @@ class SelectItemDialog(QDialog, Ui_SelectItemDialog):
 
         self.buttonBox.clicked.connect(self._handle_button_box_click)
 
-        self.searchLineEdit.textChanged.connect(self._filter)
+        self.searchLineEdit.textChanged.connect(lambda text: self._filter(text))
         self.searchLineEdit.addAction(
             icons.magnifier, QLineEdit.ActionPosition.LeadingPosition
         )
@@ -46,8 +46,7 @@ class SelectItemDialog(QDialog, Ui_SelectItemDialog):
 
         self.selection = ""
 
-    def _filter(self) -> None:
-        pattern = self.searchLineEdit.text()
+    def _filter(self, pattern: str) -> None:
         if ("[" in pattern and "]" not in pattern) or "[]" in pattern:
             return
         logging.debug(f"Filtering items: {pattern=}")

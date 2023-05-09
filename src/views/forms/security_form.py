@@ -4,11 +4,10 @@ from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QCloseEvent
 from PyQt6.QtWidgets import QHeaderView, QLineEdit, QWidget
 from src.views import icons
-from src.views.constants import SecurityTableColumn
+from src.views.constants import OwnedSecuritiesTreeColumn, SecurityTableColumn
 from src.views.ui_files.forms.Ui_security_form import Ui_SecurityForm
 
 # TODO: add some way to view and edit price history
-# TODO: add way to see overview of owned securities (per account and total)
 # TODO: change visual style from side buttons to tool buttons and context menu
 
 
@@ -31,7 +30,6 @@ class SecurityForm(QWidget, Ui_SecurityForm):
         self.removeButton.clicked.connect(self.signal_remove_security.emit)
         self.editButton.clicked.connect(self.signal_edit_security.emit)
         self.setPriceButton.clicked.connect(self.signal_set_security_price.emit)
-        self.selectButton.clicked.connect(self.signal_select_security.emit)
 
         self.searchLineEdit.addAction(
             icons.magnifier, QLineEdit.ActionPosition.LeadingPosition
@@ -54,7 +52,6 @@ class SecurityForm(QWidget, Ui_SecurityForm):
         self.removeButton.setEnabled(is_security_selected)
         self.editButton.setEnabled(is_security_selected)
         self.setPriceButton.setEnabled(is_security_selected)
-        self.selectButton.setEnabled(is_security_selected)
 
     def finalize_setup(self) -> None:
         self.tableView.horizontalHeader().setStretchLastSection(False)
@@ -95,3 +92,8 @@ class SecurityForm(QWidget, Ui_SecurityForm):
             self.signal_selection_changed.emit
         )
         self.tableView.sortByColumn(0, Qt.SortOrder.AscendingOrder)
+
+    def refresh_tree_view(self) -> None:
+        self.treeView.expandAll()
+        for column in OwnedSecuritiesTreeColumn:
+            self.treeView.resizeColumnToContents(column)

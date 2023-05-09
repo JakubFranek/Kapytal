@@ -289,6 +289,11 @@ class SecurityAccount(Account):
         self._securities.clear()
         for transaction in self._transactions:
             self._securities[transaction.security] += transaction.get_shares(self)
+        self._securities = defaultdict(
+            self._securities.default_factory,
+            {key: value for key, value in self._securities.items() if value > 0},
+        )
+
         for security in self._securities:
             security.event_price_updated.append(self._update_balances)
         self._update_balances()
