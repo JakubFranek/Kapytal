@@ -113,6 +113,7 @@ class AccountTreeWidget(QWidget, Ui_AccountTreeWidget):
         self.actionShow_Selection_Only.setEnabled(enable_modify_object)
         self.actionShow_Securities.setEnabled(enable_show_securities)
 
+    # IDEA: don't show actions which are not relevant in the context menu?
     def _create_context_menu(self, event: QContextMenuEvent) -> None:
         del event
         self.menu = QMenu(self)

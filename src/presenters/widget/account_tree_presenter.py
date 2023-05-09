@@ -559,9 +559,7 @@ class AccountTreePresenter:
 
         self._view.signal_show_securities.connect(self._show_security_account_contents)
 
-        self._view.signal_search_text_changed.connect(
-            lambda pattern: self._filter(pattern)
-        )
+        self._view.signal_search_text_changed.connect(self._filter)
 
         self._model.signal_check_state_changed.connect(self.event_check_state_changed)
 

@@ -14,7 +14,7 @@ class TagForm(QWidget, Ui_TagForm):
     signal_rename_tag = pyqtSignal()
     signal_remove_tag = pyqtSignal()
     signal_select_tag = pyqtSignal()
-    signal_search_text_changed = pyqtSignal()
+    signal_search_text_changed = pyqtSignal(str)
     signal_selection_changed = pyqtSignal()
 
     def __init__(self, parent: QWidget | None = None) -> None:

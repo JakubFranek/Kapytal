@@ -127,8 +127,7 @@ class PayeeFormPresenter:
         self._model.post_remove_item()
         self.event_data_changed()
 
-    def _filter(self) -> None:
-        pattern = self._view.search_bar_text
+    def _filter(self, pattern: str) -> None:
         if ("[" in pattern and "]" not in pattern) or "[]" in pattern:
             return
         logging.debug(f"Filtering Payees: {pattern=}")

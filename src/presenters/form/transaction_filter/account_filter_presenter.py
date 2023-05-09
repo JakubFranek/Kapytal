@@ -68,9 +68,7 @@ class AccountFilterPresenter:
         self._form.account_tree_view.setModel(self._proxy)
 
     def _connect_to_signals(self) -> None:
-        self._form.signal_accounts_search_text_changed.connect(
-            lambda pattern: self._filter(pattern)
-        )
+        self._form.signal_accounts_search_text_changed.connect(self._filter)
         self._form.signal_accounts_select_all.connect(lambda: self._model.select_all())
         self._form.signal_accounts_unselect_all.connect(
             lambda: self._model.unselect_all()

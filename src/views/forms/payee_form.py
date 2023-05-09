@@ -15,7 +15,7 @@ class PayeeForm(QWidget, Ui_PayeeForm):
     signal_rename_payee = pyqtSignal()
     signal_remove_payee = pyqtSignal()
     signal_select_payee = pyqtSignal()
-    signal_search_text_changed = pyqtSignal()
+    signal_search_text_changed = pyqtSignal(str)
     signal_selection_changed = pyqtSignal()
 
     def __init__(self, parent: QWidget | None = None) -> None:

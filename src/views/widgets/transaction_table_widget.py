@@ -11,7 +11,7 @@ from src.views.ui_files.widgets.Ui_transaction_table_widget import (
 
 
 class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
-    signal_search_text_changed = pyqtSignal()
+    signal_search_text_changed = pyqtSignal(str)
     signal_filter_transactions = pyqtSignal()
 
     signal_income = pyqtSignal()
