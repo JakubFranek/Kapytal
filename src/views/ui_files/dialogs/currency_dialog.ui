@@ -35,7 +35,7 @@
         <number>3</number>
        </property>
        <property name="placeholderText">
-        <string>Enter an ISO 4217 currency code.</string>
+        <string>Enter an ISO 4217 currency code</string>
        </property>
       </widget>
      </item>

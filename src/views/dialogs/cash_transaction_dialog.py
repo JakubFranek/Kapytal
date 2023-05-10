@@ -187,13 +187,9 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
 
     @property
     def amount(self) -> Decimal | None:
-        text = self.amountDoubleSpinBox.text()
+        text = self.amountDoubleSpinBox.cleanText().replace(",", "")
         if text == self.KEEP_CURRENT_VALUES:
             return None
-        if hasattr(self, "_currency_code") and self._currency_code in text:
-            text = text.removesuffix(self.currency_code)
-        if "," in text:
-            text = text.replace(",", "")
         return Decimal(text)
 
     @amount.setter

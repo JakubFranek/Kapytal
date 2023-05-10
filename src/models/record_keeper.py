@@ -1252,7 +1252,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
             if str(exchange_rate) == exchange_rate_code:
                 exchange_rate.set_rate(date_, rate)
                 return
-        raise NotFoundError(f"Exchange rate '{exchange_rate_code} not found.'")
+        raise NotFoundError(f"Exchange rate '{exchange_rate_code}' not found.")
 
     def set_security_price(self, uuid: str, value: Decimal, date_: date) -> None:
         security = self.get_security_by_uuid(uuid)

@@ -179,6 +179,7 @@ class SecurityFormPresenter:
             date_today=datetime.now(user_settings.settings.time_zone).date(),
             last_value=last_value,
             parent=self._view,
+            currency_code=security.currency.code,
         )
         self._dialog.signal_ok.connect(self.set_price)
         logging.debug("Running SetSecurityPriceDialog")

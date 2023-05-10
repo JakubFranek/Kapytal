@@ -162,6 +162,7 @@ class TransactionFilterFormPresenter:
         self._account_tree_shown_accounts = tuple(accounts)
         if self._form.account_filter_mode == AccountFilterMode.ACCOUNT_TREE:
             self._transaction_filter.set_account_filter(accounts, FilterMode.KEEP)
+            self.event_filter_changed()
 
     @property
     def filter_active(self) -> bool:

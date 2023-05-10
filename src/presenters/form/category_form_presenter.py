@@ -92,7 +92,21 @@ class CategoryFormPresenter:
     def run_dialog(self, *, edit: bool) -> None:
         item = self._model.get_selected_item()
         type_ = self._view.checked_type
-        paths = [category.path + "/" for category in self._record_keeper.categories]
+        if type_ == CategoryType.INCOME:
+            paths = [
+                category.path + "/"
+                for category in self._record_keeper.income_categories
+            ]
+        elif type_ == CategoryType.EXPENSE:
+            paths = [
+                category.path + "/"
+                for category in self._record_keeper.expense_categories
+            ]
+        else:
+            paths = [
+                category.path + "/"
+                for category in self._record_keeper.income_and_expense_categories
+            ]
         max_position = (
             self._get_max_child_position(item)
             if edit is False

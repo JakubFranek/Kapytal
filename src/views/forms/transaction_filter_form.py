@@ -300,12 +300,7 @@ class TransactionFilterForm(QWidget, Ui_TransactionFilterForm):
 
     @property
     def cash_amount_filter_minimum(self) -> Decimal:
-        text = self.cashAmountFilterMinimumDoubleSpinBox.text()
-        suffix = self.cashAmountFilterMinimumDoubleSpinBox.suffix()
-        if suffix in text:
-            text = text.removesuffix(suffix)
-        if "," in text:
-            text = text.replace(",", "")
+        text = self.cashAmountFilterMinimumDoubleSpinBox.cleanText().replace(",", "")
         return Decimal(text)
 
     @cash_amount_filter_minimum.setter
@@ -314,12 +309,7 @@ class TransactionFilterForm(QWidget, Ui_TransactionFilterForm):
 
     @property
     def cash_amount_filter_maximum(self) -> Decimal:
-        text = self.cashAmountFilterMaximumDoubleSpinBox.text()
-        suffix = self.cashAmountFilterMaximumDoubleSpinBox.suffix()
-        if suffix in text:
-            text = text.removesuffix(suffix)
-        if "," in text:
-            text = text.replace(",", "")
+        text = self.cashAmountFilterMaximumDoubleSpinBox.cleanText().replace(",", "")
         return Decimal(text)
 
     @cash_amount_filter_maximum.setter
@@ -680,7 +670,6 @@ class TransactionFilterForm(QWidget, Ui_TransactionFilterForm):
         self.actionExpandAllAccountItemsBelow.setEnabled(account_group_selected)
 
     def _update_cash_amount_filter_minimum(self) -> None:
-        text = self.cashAmountFilterMaximumDoubleSpinBox.text()
-        text = text.replace(",", "")
-        maximum = Decimal(text.removesuffix(" " + self._base_currency_code))
+        text = self.cashAmountFilterMaximumDoubleSpinBox.cleanText().replace(",", "")
+        maximum = Decimal(text)
         self.cashAmountFilterMinimumDoubleSpinBox.setMaximum(maximum)

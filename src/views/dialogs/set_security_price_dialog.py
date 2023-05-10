@@ -17,6 +17,7 @@ class SetSecurityPriceDialog(QDialog, Ui_SetSecurityPriceDialog):
         self,
         date_today: date,
         last_value: Decimal,
+        currency_code: str,
         parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
@@ -25,6 +26,7 @@ class SetSecurityPriceDialog(QDialog, Ui_SetSecurityPriceDialog):
         self.priceDoubleSpinBox.setMaximum(1_000_000_000_000)
         self.priceDoubleSpinBox.setValue(last_value)
         self.priceDoubleSpinBox.setDecimals(9)
+        self.priceDoubleSpinBox.setSuffix(" " + currency_code)
         self.dateEdit.setDate(date_today)
         self.dateEdit.setMaximumDate(date_today)
 
@@ -32,7 +34,7 @@ class SetSecurityPriceDialog(QDialog, Ui_SetSecurityPriceDialog):
 
     @property
     def value(self) -> Decimal:
-        return Decimal(self.priceDoubleSpinBox.text())
+        return Decimal(self.priceDoubleSpinBox.cleanText().replace(",", ""))
 
     @property
     def date_(self) -> date:

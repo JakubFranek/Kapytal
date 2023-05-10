@@ -25,6 +25,7 @@ class SetExchangeRateDialog(QDialog, Ui_SetExchangeRateDialog):
         self.setWindowIcon(icons.exchange_rate)
 
         primary_code, _, secondary_code = exchange_rate.partition("/")
+        self._exchange_rate_code = exchange_rate
 
         self.exchangeRateLabel.setText(f"1 {primary_code} =")
         self.exchangeRateDoubleSpinBox.setMaximum(1_000_000_000_000)
@@ -38,7 +39,7 @@ class SetExchangeRateDialog(QDialog, Ui_SetExchangeRateDialog):
 
     @property
     def value(self) -> Decimal:
-        return Decimal(self.exchangeRateDoubleSpinBox.text())
+        return Decimal(self.exchangeRateDoubleSpinBox.cleanText().replace(",", ""))
 
     @property
     def date_(self) -> date:
@@ -46,7 +47,7 @@ class SetExchangeRateDialog(QDialog, Ui_SetExchangeRateDialog):
 
     @property
     def exchange_rate_code(self) -> str:
-        return self.exchangeRateLabel.text()
+        return self._exchange_rate_code
 
     def _handle_button_box_click(self, button: QAbstractButton) -> None:
         role = self.buttonBox.buttonRole(button)

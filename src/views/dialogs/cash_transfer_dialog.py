@@ -123,14 +123,9 @@ class CashTransferDialog(QDialog, Ui_CashTransferDialog):
 
     @property
     def amount_sent(self) -> Decimal | None:
-        text = self.sentDoubleSpinBox.text()
+        text = self.sentDoubleSpinBox.cleanText().replace(",", "")
         if text == self.KEEP_CURRENT_VALUES:
             return None
-        suffix = self.sentDoubleSpinBox.suffix()
-        if suffix in text:
-            text = text.removesuffix(suffix)
-        if "," in text:
-            text = text.replace(",", "")
         return Decimal(text)
 
     @amount_sent.setter
@@ -139,14 +134,10 @@ class CashTransferDialog(QDialog, Ui_CashTransferDialog):
 
     @property
     def amount_received(self) -> Decimal | None:
-        text = self.receivedDoubleSpinBox.text()
+        text = self.receivedDoubleSpinBox.cleanText()
         if text == self.KEEP_CURRENT_VALUES:
             return None
-        suffix = self.receivedDoubleSpinBox.suffix()
-        if suffix in text:
-            text = text.removesuffix(suffix)
-        if "," in text:
-            text = text.replace(",", "")
+        text = text.replace(",", "")
         return Decimal(text)
 
     @amount_received.setter

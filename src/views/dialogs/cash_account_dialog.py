@@ -79,7 +79,7 @@ class CashAccountDialog(QDialog, Ui_CashAccountDialog):
 
     @property
     def initial_balance(self) -> Decimal:
-        return Decimal(self.initialBalanceDoubleSpinBox.cleanText())
+        return Decimal(self.initialBalanceDoubleSpinBox.cleanText().replace(",", ""))
 
     @initial_balance.setter
     def initial_balance(self, value: Decimal) -> None:

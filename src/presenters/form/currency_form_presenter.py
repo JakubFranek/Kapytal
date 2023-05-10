@@ -15,6 +15,9 @@ from src.views.dialogs.set_exchange_rate_dialog import SetExchangeRateDialog
 from src.views.forms.currency_form import CurrencyForm
 from src.views.utilities.message_box_functions import ask_yes_no_question
 
+# TODO: sortable Exchange Rate table
+# TODO: sortable Currency table
+
 
 class CurrencyFormPresenter:
     event_data_changed = Event()
