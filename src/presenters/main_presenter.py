@@ -297,6 +297,7 @@ class MainPresenter:
         self._transactions_presenter.refresh_view()
         self._transactions_presenter.reapply_sort()
         self._account_tree_presenter.refresh_view()
+        self._account_tree_presenter.update_total_balance()
         self._account_tree_presenter.update_geometries()
         self._update_unsaved_changes(unsaved_changes=True)
 

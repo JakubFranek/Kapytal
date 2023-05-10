@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'd:\Coding\Kapytal\src\views\ui_files\cash_account_dialog.ui'
+# Form implementation generated from reading ui file 'd:\Coding\Kapytal\src\views\ui_files\dialogs\cash_account_dialog.ui'
 #
 # Created by: PyQt6 UI code generator 6.4.0
 #
@@ -55,6 +55,7 @@ class Ui_CashAccountDialog(object):
         self.currencyComboBox.setObjectName("currencyComboBox")
         self.formLayout.setWidget(2, QtWidgets.QFormLayout.ItemRole.FieldRole, self.currencyComboBox)
         self.initialBalanceDoubleSpinBox = QtWidgets.QDoubleSpinBox(CashAccountDialog)
+        self.initialBalanceDoubleSpinBox.setProperty("showGroupSeparator", True)
         self.initialBalanceDoubleSpinBox.setObjectName("initialBalanceDoubleSpinBox")
         self.formLayout.setWidget(3, QtWidgets.QFormLayout.ItemRole.FieldRole, self.initialBalanceDoubleSpinBox)
         self.verticalLayout.addLayout(self.formLayout)

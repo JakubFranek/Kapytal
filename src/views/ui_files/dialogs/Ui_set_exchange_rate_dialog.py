@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'd:\Coding\Kapytal\src\views\ui_files\set_exchange_rate_dialog.ui'
+# Form implementation generated from reading ui file 'd:\Coding\Kapytal\src\views\ui_files\dialogs\set_exchange_rate_dialog.ui'
 #
 # Created by: PyQt6 UI code generator 6.4.0
 #
@@ -26,6 +26,7 @@ class Ui_SetExchangeRateDialog(object):
         self.dateLabel.setObjectName("dateLabel")
         self.formLayout.setWidget(1, QtWidgets.QFormLayout.ItemRole.LabelRole, self.dateLabel)
         self.exchangeRateDoubleSpinBox = QtWidgets.QDoubleSpinBox(SetExchangeRateDialog)
+        self.exchangeRateDoubleSpinBox.setProperty("showGroupSeparator", True)
         self.exchangeRateDoubleSpinBox.setDecimals(9)
         self.exchangeRateDoubleSpinBox.setObjectName("exchangeRateDoubleSpinBox")
         self.formLayout.setWidget(0, QtWidgets.QFormLayout.ItemRole.FieldRole, self.exchangeRateDoubleSpinBox)

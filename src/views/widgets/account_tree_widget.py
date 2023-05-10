@@ -53,6 +53,9 @@ class AccountTreeWidget(QWidget, Ui_AccountTreeWidget):
     def sort_order(self) -> Qt.SortOrder:
         return self.treeView.header().sortIndicatorOrder()
 
+    def set_total_base_balance(self, total_base_balance: str) -> None:
+        self.totalBaseBalanceAmountLabel.setText(total_base_balance)
+
     def _header_clicked(self, index: int) -> None:
         header = self.treeView.header()
         if not header.isSortIndicatorShown():

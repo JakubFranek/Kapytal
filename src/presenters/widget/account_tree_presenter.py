@@ -6,6 +6,10 @@ from PyQt6.QtCore import QSortFilterProxyModel, Qt
 from src.models.base_classes.account import Account
 from src.models.model_objects.account_group import AccountGroup
 from src.models.model_objects.cash_objects import CashAccount
+from src.models.model_objects.currency_objects import (
+    CashAmount,
+    ConversionFactorNotFoundError,
+)
 from src.models.model_objects.security_objects import SecurityAccount
 from src.models.record_keeper import RecordKeeper
 from src.presenters.form.security_account_form_presenter import (
@@ -84,6 +88,21 @@ class AccountTreePresenter:
     def update_model_data(self) -> None:
         self._model.flat_items = self._record_keeper.account_items
         self._model.base_currency = self._record_keeper.base_currency
+        self.update_total_balance()
+
+    def update_total_balance(self) -> None:
+        try:
+            total = sum(
+                (
+                    item.get_balance(self._record_keeper.base_currency)
+                    for item in self._record_keeper.root_account_items
+                ),
+                CashAmount(0, self._record_keeper.base_currency),
+            )
+            total = total.to_str_rounded()
+        except ConversionFactorNotFoundError:
+            total = "Error!"
+        self._view.set_total_base_balance(total)
 
     def expand_all_below(self) -> None:
         indexes = self._view.treeView.selectedIndexes()

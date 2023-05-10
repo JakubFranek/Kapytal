@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'd:\Coding\Kapytal\src\views\ui_files\set_security_price_dialog.ui'
+# Form implementation generated from reading ui file 'd:\Coding\Kapytal\src\views\ui_files\dialogs\set_security_price_dialog.ui'
 #
 # Created by: PyQt6 UI code generator 6.4.0
 #
@@ -26,6 +26,7 @@ class Ui_SetSecurityPriceDialog(object):
         self.dateLabel.setObjectName("dateLabel")
         self.formLayout.setWidget(1, QtWidgets.QFormLayout.ItemRole.LabelRole, self.dateLabel)
         self.priceDoubleSpinBox = QtWidgets.QDoubleSpinBox(SetSecurityPriceDialog)
+        self.priceDoubleSpinBox.setProperty("showGroupSeparator", True)
         self.priceDoubleSpinBox.setDecimals(9)
         self.priceDoubleSpinBox.setObjectName("priceDoubleSpinBox")
         self.formLayout.setWidget(0, QtWidgets.QFormLayout.ItemRole.FieldRole, self.priceDoubleSpinBox)
