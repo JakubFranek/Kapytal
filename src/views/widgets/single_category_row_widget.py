@@ -7,6 +7,7 @@ from src.views import icons
 from src.views.dialogs.select_item_dialog import ask_user_for_selection
 
 
+# TODO: this could be a subclass of CategoryRowWidget ABC
 class SingleCategoryRowWidget(QWidget):
     signal_split_categories = pyqtSignal()
 
@@ -63,13 +64,13 @@ class SingleCategoryRowWidget(QWidget):
         else:
             self.combo_box.lineEdit().setPlaceholderText("Enter Category path")
 
-    def load_categories(self, categories: Collection[str]) -> None:
+    def load_categories(self, categories: Collection[str], *, keep_text: bool) -> None:
         current_text = self.category
         self._combo_box_items = categories
         self.combo_box.clear()
         for item in categories:
             self.combo_box.addItem(item)
-        if current_text in categories:
+        if keep_text:
             self.combo_box.setCurrentText(current_text)
         else:
             self.combo_box.setCurrentIndex(-1)

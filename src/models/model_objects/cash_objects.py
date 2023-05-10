@@ -735,8 +735,19 @@ class CashTransaction(CashRelatedTransaction):
         categories = [category for category, _ in category_amount_pairs]
         if len(categories) > len(set(categories)):
             raise ValueError("Categories in category_amount_pairs must be unique.")
+
         if not all(category.type_ in valid_category_types for category in categories):
-            raise InvalidCategoryTypeError("Invalid Category.type_.")
+            invalid_categories = [
+                category.path
+                for category in categories
+                if category.type_ not in valid_category_types
+            ]
+            valid_category_type_names = [type_.name for type_ in valid_category_types]
+            raise InvalidCategoryTypeError(
+                f"Expected Category types: {', '.join(valid_category_type_names)}. "
+                "The following Categories are of different type: "
+                f"{', '.join(invalid_categories)}"
+            )
 
         if not all(amount.currency == currency for _, amount in validated_pairs):
             raise CurrencyError(

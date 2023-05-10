@@ -497,7 +497,7 @@ def test_category_amount_pairs_invalid_category_type(
     tup = ((category, transaction.amount),)
     with pytest.raises(
         InvalidCategoryTypeError,
-        match="Invalid Category.type_.",
+        match="Expected Category types:",
     ):
         transaction.set_attributes(category_amount_pairs=tup)
 

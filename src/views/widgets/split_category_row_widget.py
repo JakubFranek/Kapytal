@@ -104,13 +104,13 @@ class SplitCategoryRowWidget(QWidget):
     def __repr__(self) -> str:
         return f"SplitCategoryRowWidget('{self.category}')"
 
-    def load_categories(self, categories: Collection[str]) -> None:
+    def load_categories(self, categories: Collection[str], *, keep_text: bool) -> None:
         current_text = self.category
         self._categories = categories
         self.combo_box.clear()
         for item in categories:
             self.combo_box.addItem(item)
-        if current_text in categories:
+        if keep_text:
             self.combo_box.setCurrentText(current_text)
         else:
             self.combo_box.setCurrentIndex(-1)

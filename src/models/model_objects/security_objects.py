@@ -285,13 +285,15 @@ class SecurityAccount(Account):
 
     def update_securities(self) -> None:
         for security in self._securities:
-            security.event_price_updated.remove(self._update_balances)
+            if self._update_balances in security.event_price_updated:
+                security.event_price_updated.remove(self._update_balances)
+
         self._securities.clear()
         for transaction in self._transactions:
             self._securities[transaction.security] += transaction.get_shares(self)
         self._securities = defaultdict(
             self._securities.default_factory,
-            {key: value for key, value in self._securities.items() if value > 0},
+            {key: value for key, value in self._securities.items() if value != 0},
         )
 
         for security in self._securities:

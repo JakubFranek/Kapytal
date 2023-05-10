@@ -33,8 +33,6 @@ from src.views.constants import (
     monospace_font,
 )
 
-# TODO: look into overriding "multidata" method to improve performance
-
 ALIGNMENT_AMOUNTS = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
 
 

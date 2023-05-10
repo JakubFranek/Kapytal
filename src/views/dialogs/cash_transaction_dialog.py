@@ -41,6 +41,8 @@ class EditMode(Enum):
 # IDEA: "preferred" size for description? or something
 # TODO: delete dialogs on close?
 # REFACTOR: refactor this dialog (messy code)
+
+
 class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
     KEEP_CURRENT_VALUES = "Keep current values"
 
@@ -76,8 +78,12 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
         self._initialize_single_category_row()
         self._initialize_single_tag_row()
 
-        self.incomeRadioButton.toggled.connect(self._setup_categories_combobox)
-        self.expenseRadioButton.toggled.connect(self._setup_categories_combobox)
+        self.incomeRadioButton.toggled.connect(
+            lambda: self._setup_categories_combobox(keep_text=False)
+        )
+        self.expenseRadioButton.toggled.connect(
+            lambda: self._setup_categories_combobox(keep_text=False)
+        )
 
         if edit_mode != EditMode.ADD:
             self.dateEdit.setSpecialValueText(self.KEEP_CURRENT_VALUES)
@@ -369,12 +375,12 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
             self.payeeComboBox.lineEdit().setPlaceholderText("Enter Payee name")
         self.payeeComboBox.setCurrentIndex(-1)
 
-    def _setup_categories_combobox(self) -> None:
+    def _setup_categories_combobox(self, *, keep_text: bool) -> None:
         for row in self._category_rows:
             if self.type_ == CashTransactionType.INCOME:
-                row.load_categories(self._categories_income)
+                row.load_categories(self._categories_income, keep_text=keep_text)
             else:
-                row.load_categories(self._categories_expense)
+                row.load_categories(self._categories_expense, keep_text=keep_text)
 
     def _initialize_single_category_row(self) -> None:
         if hasattr(self, "_category_rows") and len(self._category_rows) == 1:
@@ -384,7 +390,7 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
         row = SingleCategoryRowWidget(self, edit=edit)
         self._category_rows = [row]
         self.formLayout.insertRow(6, LabelWidget(self, "Category"), row)
-        self._setup_categories_combobox()
+        self._setup_categories_combobox(keep_text=True)
         row.signal_split_categories.connect(lambda: self._split_categories(user=True))
         self._set_tab_order()
 
@@ -413,7 +419,7 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
             6, LabelWidget(self, "Categories"), self.split_categories_vertical_layout
         )
 
-        self._setup_categories_combobox()
+        self._setup_categories_combobox(keep_text=True)
         self._category_rows[0].category = current_category
 
         for row in self._category_rows:
@@ -441,7 +447,7 @@ class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
         self._category_rows.append(row)
         index = self.split_categories_vertical_layout.count() - 1
         self.split_categories_vertical_layout.insertWidget(index, row)
-        self._setup_categories_combobox()
+        self._setup_categories_combobox(keep_text=True)
         row.signal_remove_row.connect(self._remove_split_category_row)
         row.signal_amount_changed.connect(self._split_category_amount_changed)
         self._equalize_split_category_amounts()

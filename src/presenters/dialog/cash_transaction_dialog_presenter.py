@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 from PyQt6.QtWidgets import QWidget
+from src.models.model_objects.attributes import CategoryType
 from src.models.model_objects.cash_objects import (
     CashAccount,
     CashTransaction,
@@ -17,12 +18,12 @@ from src.presenters.utilities.validate_inputs import validate_datetime
 from src.view_models.transaction_table_model import TransactionTableModel
 from src.views.dialogs.cash_transaction_dialog import CashTransactionDialog, EditMode
 from src.views.utilities.handle_exception import display_error_message
+from src.views.utilities.message_box_functions import ask_yes_no_question
 
 if TYPE_CHECKING:
     from src.models.model_objects.attributes import Category
 
 # TODO: allow changing types of multiple transactions of same type
-# TODO: add confirmation dialog for new Category creation
 
 
 class CashTransactionDialogPresenter:
@@ -233,6 +234,35 @@ class CashTransactionDialogPresenter:
         if any(not category for category in categories):
             display_error_message("Empty Category paths are invalid.", title="Warning")
             return
+
+        # TODO: refactor this into a function
+        # and make a similar one for Tags and Payees
+        nonexistent_categories = []
+        for category in categories:
+            if category not in (
+                category_.path for category_ in self._record_keeper.categories
+            ):
+                nonexistent_categories.append(category)
+        if nonexistent_categories:
+            nonexistent_categories_str = ", ".join(nonexistent_categories)
+            category_type = (
+                CategoryType.INCOME
+                if type_ == CashTransactionType.INCOME
+                else CategoryType.EXPENSE
+            )
+            if not ask_yes_no_question(
+                self._dialog,
+                (
+                    "<html>The following Categories do not "
+                    "exist:<br/>"
+                    f"<b><i>{nonexistent_categories_str}</i></b><br/><br/>"
+                    f"Create new {category_type.name.title()} Categories "
+                    "and proceed?</html>"
+                ),
+                title="Create new Categories?",
+            ):
+                return
+
         tags = [tag for tag, _ in tag_amount_pairs]
         if any(not tag for tag in tags):
             display_error_message("Empty Tag names are invalid.", title="Warning")
