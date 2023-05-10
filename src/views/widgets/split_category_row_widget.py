@@ -66,9 +66,7 @@ class SplitCategoryRowWidget(QWidget):
 
     @property
     def amount(self) -> Decimal:
-        text = self.double_spin_box.text()
-        text = text.removesuffix(" " + self._currency_code)
-        text = text.replace(",", "")
+        text = self.double_spin_box.cleanText().replace(",", "")
         return Decimal(text)
 
     @amount.setter
