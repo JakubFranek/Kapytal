@@ -113,24 +113,33 @@ class AccountTreeWidget(QWidget, Ui_AccountTreeWidget):
         self.actionShow_Selection_Only.setEnabled(enable_modify_object)
         self.actionShow_Securities.setEnabled(enable_show_securities)
 
-    # IDEA: don't show actions which are not relevant in the context menu?
+        self._enable_add_objects = enable_add_objects
+        self._enable_modify_object = enable_modify_object
+        self._enable_expand_below = enable_expand_below
+        self._enable_show_securities = enable_show_securities
+
     def _create_context_menu(self, event: QContextMenuEvent) -> None:
         del event
         self.menu = QMenu(self)
-        self.menu.addAction(self.actionAdd_Account_Group)
-        self.menu.addAction(self.actionAdd_Cash_Account)
-        self.menu.addAction(self.actionAdd_Security_Account)
-        self.menu.addSeparator()
-        self.menu.addAction(self.actionEdit)
-        self.menu.addAction(self.actionDelete)
-        self.menu.addSeparator()
-        self.menu.addAction(self.actionShow_Securities)
-        self.menu.addSeparator()
-        self.menu.addAction(self.actionShow_Selection_Only)
-        self.menu.addAction(self.actionSelect_All_Cash_Accounts_Below)
-        self.menu.addAction(self.actionSelect_All_Security_Accounts_Below)
-        self.menu.addSeparator()
-        self.menu.addAction(self.actionExpand_All_Below)
+        if self._enable_add_objects:
+            self.menu.addAction(self.actionAdd_Account_Group)
+            self.menu.addAction(self.actionAdd_Cash_Account)
+            self.menu.addAction(self.actionAdd_Security_Account)
+            self.menu.addSeparator()
+        if self._enable_modify_object:
+            self.menu.addAction(self.actionEdit)
+            self.menu.addAction(self.actionDelete)
+            self.menu.addSeparator()
+        if self._enable_show_securities:
+            self.menu.addAction(self.actionShow_Securities)
+            self.menu.addSeparator()
+        if self._enable_modify_object:
+            self.menu.addAction(self.actionShow_Selection_Only)
+        if self._enable_expand_below:
+            self.menu.addAction(self.actionSelect_All_Cash_Accounts_Below)
+            self.menu.addAction(self.actionSelect_All_Security_Accounts_Below)
+            self.menu.addSeparator()
+            self.menu.addAction(self.actionExpand_All_Below)
         self.menu.popup(QCursor.pos())
 
     def finalize_setup(self) -> None:
