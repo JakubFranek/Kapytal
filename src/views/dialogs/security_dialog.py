@@ -84,7 +84,7 @@ class SecurityDialog(QDialog, Ui_SecurityDialog):
 
     @property
     def unit(self) -> Decimal:
-        return Decimal(self.unitDoubleSpinBox.text())
+        return Decimal(self.unitDoubleSpinBox.cleanText().replace(",", ""))
 
     @unit.setter
     def unit(self, value: Decimal) -> None:

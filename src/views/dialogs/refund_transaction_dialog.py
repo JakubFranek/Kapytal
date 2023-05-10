@@ -111,10 +111,7 @@ class RefundTransactionDialog(QDialog, Ui_RefundTransactionDialog):
 
     @property
     def amount(self) -> Decimal:
-        text = self.amountDoubleSpinBox.text()
-        text = text.removesuffix(self.currency_code)
-        if "," in text:
-            text = text.replace(",", "")
+        text = self.amountDoubleSpinBox.cleanText().replace(",", "")
         return Decimal(text)
 
     @property

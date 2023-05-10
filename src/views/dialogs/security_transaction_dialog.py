@@ -167,11 +167,9 @@ class SecurityTransactionDialog(QDialog, Ui_SecurityTransactionDialog):
 
     @property
     def shares(self) -> Decimal | None:
-        text = self.sharesDoubleSpinBox.text()
+        text = self.sharesDoubleSpinBox.cleanText().replace(",", "")
         if text == self.KEEP_CURRENT_VALUES:
             return None
-        if "," in text:
-            text = text.replace(",", "")
         return Decimal(text)
 
     @shares.setter
@@ -180,14 +178,9 @@ class SecurityTransactionDialog(QDialog, Ui_SecurityTransactionDialog):
 
     @property
     def price_per_share(self) -> Decimal | None:
-        text = self.priceDoubleSpinBox.text()
+        text = self.priceDoubleSpinBox.cleanText().replace(",", "")
         if text == self.KEEP_CURRENT_VALUES:
             return None
-        suffix = self.priceDoubleSpinBox.suffix()
-        if suffix in text:
-            text = text.removesuffix(suffix)
-        if "," in text:
-            text = text.replace(",", "")
         return Decimal(text)
 
     @price_per_share.setter
@@ -196,7 +189,7 @@ class SecurityTransactionDialog(QDialog, Ui_SecurityTransactionDialog):
 
     @property
     def currency_code(self) -> str | None:
-        if self.priceDoubleSpinBox.text() == self.KEEP_CURRENT_VALUES:
+        if self.priceDoubleSpinBox.cleanText() == self.KEEP_CURRENT_VALUES:
             return None
         suffix = self.priceDoubleSpinBox.suffix()
         return suffix.strip()

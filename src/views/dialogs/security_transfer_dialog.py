@@ -135,11 +135,9 @@ class SecurityTransferDialog(QDialog, Ui_SecurityTransferDialog):
 
     @property
     def shares(self) -> Decimal | None:
-        text = self.sharesDoubleSpinBox.text()
+        text = self.sharesDoubleSpinBox.cleanText().replace(",", "")
         if text == self.KEEP_CURRENT_VALUES:
             return None
-        if "," in text:
-            text = text.replace(",", "")
         return Decimal(text)
 
     @shares.setter
