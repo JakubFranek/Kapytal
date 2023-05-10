@@ -52,12 +52,9 @@ from src.views.utilities.handle_exception import display_error_message
 from src.views.utilities.message_box_functions import ask_yes_no_question
 from src.views.widgets.transaction_table_widget import TransactionTableWidget
 
-# TODO: reapply sort after data changes
-
 
 class TransactionsPresenter:
     event_data_changed = Event()
-    event_refresh_account_tree = Event()
 
     def __init__(
         self, view: TransactionTableWidget, record_keeper: RecordKeeper
@@ -126,6 +123,9 @@ class TransactionsPresenter:
 
     def resize_table_to_contents(self) -> None:
         self._view.resize_table_to_contents()
+
+    def reapply_sort(self) -> None:
+        self._proxy_regex_sort_filter.setDynamicSortFilter(True)  # noqa: FBT003
 
     def _reset_model(self) -> None:
         """Resets the TransactionTableModel only."""
@@ -382,7 +382,6 @@ class TransactionsPresenter:
             finally:
                 if any_deleted:
                     self.event_data_changed()
-                    self.event_refresh_account_tree()
 
     def _duplicate_transaction(self) -> None:
         transactions = self._model.get_selected_items()
@@ -533,6 +532,4 @@ class TransactionsPresenter:
         self._update_table_columns()
 
     def _data_changed(self) -> None:
-        self.refresh_view()
-        self.resize_table_to_contents()
         self.event_data_changed()

@@ -1,4 +1,5 @@
 import unicodedata
+import uuid
 from collections.abc import Collection
 
 from PyQt6.QtCore import QAbstractTableModel, QModelIndex, QSortFilterProxyModel, Qt
@@ -24,6 +25,7 @@ from src.models.model_objects.security_objects import (
     SecurityTransactionType,
     SecurityTransfer,
 )
+from src.models.utilities.find_helpers import find_transaction_by_uuid
 from src.views import colors, icons
 from src.views.constants import (
     TRANSACTION_TABLE_COLUMN_HEADERS,
@@ -520,3 +522,9 @@ class TransactionTableModel(QAbstractTableModel):
                 return balance.to_str_rounded()
             return ""
         return ""
+
+    def emit_data_changed_for_uuids(self, uuids: Collection[uuid.UUID]) -> None:
+        for uuid_ in uuids:
+            item = find_transaction_by_uuid(uuid_, self._transactions)
+            index = self.get_index_from_item(item)
+            self.dataChanged.emit(index, index)

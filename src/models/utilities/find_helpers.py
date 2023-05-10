@@ -42,7 +42,7 @@ def find_transaction_by_uuid(
     for transaction in transactions:
         if transaction.uuid == uuid:
             return transaction
-    raise NotFoundError(f"Refunded transaction uuid='{uuid}' not found.")
+    raise NotFoundError(f"Transaction uuid='{uuid}' not found.")
 
 
 def find_attribute_by_name(

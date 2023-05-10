@@ -186,6 +186,7 @@ class RefundTransactionDialogPresenter:
             return
 
         self.event_update_model()
+        self._model.emit_data_changed_for_uuids([refund_uuid])
         self.event_data_changed()
         self._dialog.close()
 

@@ -217,9 +217,6 @@ class MainPresenter:
         self._tag_form_presenter.event_data_changed.append(self._data_changed)
         self._category_form_presenter.event_data_changed.append(self._data_changed)
         self._transactions_presenter.event_data_changed.append(self._data_changed)
-        self._transactions_presenter.event_refresh_account_tree.append(
-            self._refresh_account_tree
-        )
 
     def _connect_view_signals(self) -> None:
         self._view.signal_exit.connect(self._quit)
@@ -298,7 +295,9 @@ class MainPresenter:
     def _data_changed(self) -> None:
         self._transactions_presenter.update_filter_models()
         self._transactions_presenter.refresh_view()
-        self._refresh_account_tree()
+        self._transactions_presenter.reapply_sort()
+        self._account_tree_presenter.refresh_view()
+        self._account_tree_presenter.update_geometries()
         self._update_unsaved_changes(unsaved_changes=True)
 
     def _base_currency_changed(self) -> None:
@@ -306,7 +305,3 @@ class MainPresenter:
         self._transactions_presenter.update_base_currency()
         self._transactions_presenter.resize_table_to_contents()
         self._data_changed()
-
-    def _refresh_account_tree(self) -> None:
-        self._account_tree_presenter.refresh_view()
-        self._account_tree_presenter.update_geometries()

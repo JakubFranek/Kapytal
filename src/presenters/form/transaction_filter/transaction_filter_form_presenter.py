@@ -178,11 +178,13 @@ class TransactionFilterFormPresenter:
         self.reset_filter_to_default()
 
     def reset_filter_to_default(self) -> None:
+        previous_filter = self._transaction_filter
         self._setup_default_filter()
         self._transaction_filter = self._get_default_filter()
         self._update_form_from_filter(self._transaction_filter)
-        logging.debug("TransactionFilter reset to default")
-        self.event_filter_changed()
+        if previous_filter != self._transaction_filter:
+            logging.debug("TransactionFilter reset to default")
+            self.event_filter_changed()
 
     def show_form(self) -> None:
         self._update_form_from_filter(self._transaction_filter)

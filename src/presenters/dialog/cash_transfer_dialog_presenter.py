@@ -234,6 +234,7 @@ class CashTransferDialogPresenter:
 
         self._dialog.close()
         self.event_update_model()
+        self._model.emit_data_changed_for_uuids(uuids)
         self.event_data_changed()
 
     def _prepare_dialog(self, edit_mode: EditMode) -> bool:
