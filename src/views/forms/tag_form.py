@@ -14,7 +14,7 @@ class TagForm(QWidget, Ui_TagForm):
     signal_rename_tag = pyqtSignal()
     signal_remove_tag = pyqtSignal()
     signal_select_tag = pyqtSignal()
-    signal_search_text_changed = pyqtSignal()
+    signal_search_text_changed = pyqtSignal(str)
     signal_selection_changed = pyqtSignal()
 
     def __init__(self, parent: QWidget | None = None) -> None:
@@ -26,7 +26,6 @@ class TagForm(QWidget, Ui_TagForm):
         self.addButton.clicked.connect(self.signal_add_tag.emit)
         self.removeButton.clicked.connect(self.signal_remove_tag.emit)
         self.renameButton.clicked.connect(self.signal_rename_tag.emit)
-        self.selectButton.clicked.connect(self.signal_select_tag.emit)
         self.searchLineEdit.textChanged.connect(self.signal_search_text_changed.emit)
 
         self.searchLineEdit.addAction(
@@ -48,7 +47,6 @@ class TagForm(QWidget, Ui_TagForm):
     def set_buttons(self, *, is_tag_selected: bool) -> None:
         self.removeButton.setEnabled(is_tag_selected)
         self.renameButton.setEnabled(is_tag_selected)
-        self.selectButton.setEnabled(is_tag_selected)
 
     def finalize_setup(self) -> None:
         self.tableView.horizontalHeader().setStretchLastSection(False)

@@ -77,9 +77,7 @@ class CategoryFormPresenter:
             self._view.category_tree.expand_all()
 
     def show_form(self) -> None:
-        self._model.pre_reset_model()
-        self.update_model_data()
-        self._model.post_reset_model()
+        self.reset_model()
         self._view.category_tree.expand_all()
         self._view.show_form()
 
@@ -265,9 +263,7 @@ class CategoryFormPresenter:
             enable_expand_below=enable_expand_below,
         )
 
-    # TODO: refactor methods like this to get pattern from the signal
-    def _filter(self) -> None:
-        pattern = self._view.search_bar_text
+    def _filter(self, pattern: str) -> None:
         if ("[" in pattern and "]" not in pattern) or "[]" in pattern:
             return
         logging.debug(f"Filtering Categories: {pattern=}")

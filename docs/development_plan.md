@@ -10,7 +10,8 @@
 1. reports
     - cashflow
     - pie charts
-1. scheduled transactions
+1. scheduled (recurrent) transactions
+    - a "wrapper" around Transactions with scheduling info?
 1. documentation
 
 ## Should haves

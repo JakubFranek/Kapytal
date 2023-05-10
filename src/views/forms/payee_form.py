@@ -15,7 +15,7 @@ class PayeeForm(QWidget, Ui_PayeeForm):
     signal_rename_payee = pyqtSignal()
     signal_remove_payee = pyqtSignal()
     signal_select_payee = pyqtSignal()
-    signal_search_text_changed = pyqtSignal()
+    signal_search_text_changed = pyqtSignal(str)
     signal_selection_changed = pyqtSignal()
 
     def __init__(self, parent: QWidget | None = None) -> None:
@@ -27,7 +27,6 @@ class PayeeForm(QWidget, Ui_PayeeForm):
         self.addButton.clicked.connect(self.signal_add_payee.emit)
         self.removeButton.clicked.connect(self.signal_remove_payee.emit)
         self.renameButton.clicked.connect(self.signal_rename_payee.emit)
-        self.selectButton.clicked.connect(self.signal_select_payee.emit)
         self.searchLineEdit.textChanged.connect(self.signal_search_text_changed.emit)
 
         self.searchLineEdit.addAction(
@@ -49,7 +48,6 @@ class PayeeForm(QWidget, Ui_PayeeForm):
     def set_buttons(self, *, is_payee_selected: bool) -> None:
         self.removeButton.setEnabled(is_payee_selected)
         self.renameButton.setEnabled(is_payee_selected)
-        self.selectButton.setEnabled(is_payee_selected)
 
     def finalize_setup(self) -> None:
         self.tableView.horizontalHeader().setStretchLastSection(False)

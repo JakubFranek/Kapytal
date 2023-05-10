@@ -93,8 +93,6 @@ class PayeeFilterPresenter:
         self._form.payee_list_view.setModel(self._payee_list_proxy)
 
     def _connect_to_signals(self) -> None:
-        self._form.signal_payees_search_text_changed.connect(
-            lambda pattern: self._filter(pattern)
-        )
+        self._form.signal_payees_search_text_changed.connect(self._filter)
         self._form.signal_payees_select_all.connect(self._select_all)
         self._form.signal_payees_unselect_all.connect(self._unselect_all)

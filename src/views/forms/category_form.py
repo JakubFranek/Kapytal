@@ -14,7 +14,7 @@ class CategoryForm(QWidget, Ui_CategoryForm):
     signal_edit_category = pyqtSignal()
     signal_delete_category = pyqtSignal()
     signal_select_category = pyqtSignal()
-    signal_search_text_changed = pyqtSignal()
+    signal_search_text_changed = pyqtSignal(str)
     signal_tree_selection_changed = pyqtSignal()
     signal_type_selection_changed = pyqtSignal()
     signal_expand_all_below = pyqtSignal()

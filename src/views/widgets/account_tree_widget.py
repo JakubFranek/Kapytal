@@ -19,6 +19,8 @@ class AccountTreeWidget(QWidget, Ui_AccountTreeWidget):
     signal_select_all_cash_accounts_below = pyqtSignal()
     signal_select_all_security_accounts_below = pyqtSignal()
 
+    signal_show_securities = pyqtSignal()
+
     signal_add_account_group = pyqtSignal()
     signal_add_security_account = pyqtSignal()
     signal_add_cash_account = pyqtSignal()
@@ -98,6 +100,7 @@ class AccountTreeWidget(QWidget, Ui_AccountTreeWidget):
         enable_add_objects: bool,
         enable_modify_object: bool,
         enable_expand_below: bool,
+        enable_show_securities: bool
     ) -> None:
         self.actionAdd_Account_Group.setEnabled(enable_add_objects)
         self.actionAdd_Security_Account.setEnabled(enable_add_objects)
@@ -108,7 +111,9 @@ class AccountTreeWidget(QWidget, Ui_AccountTreeWidget):
         self.actionSelect_All_Cash_Accounts_Below.setEnabled(enable_expand_below)
         self.actionSelect_All_Security_Accounts_Below.setEnabled(enable_expand_below)
         self.actionShow_Selection_Only.setEnabled(enable_modify_object)
+        self.actionShow_Securities.setEnabled(enable_show_securities)
 
+    # IDEA: don't show actions which are not relevant in the context menu?
     def _create_context_menu(self, event: QContextMenuEvent) -> None:
         del event
         self.menu = QMenu(self)
@@ -118,6 +123,8 @@ class AccountTreeWidget(QWidget, Ui_AccountTreeWidget):
         self.menu.addSeparator()
         self.menu.addAction(self.actionEdit)
         self.menu.addAction(self.actionDelete)
+        self.menu.addSeparator()
+        self.menu.addAction(self.actionShow_Securities)
         self.menu.addSeparator()
         self.menu.addAction(self.actionShow_Selection_Only)
         self.menu.addAction(self.actionSelect_All_Cash_Accounts_Below)
@@ -170,6 +177,8 @@ class AccountTreeWidget(QWidget, Ui_AccountTreeWidget):
         self.actionEdit.setIcon(icons.edit)
         self.actionDelete.setIcon(icons.remove)
 
+        self.actionShow_Securities.setIcon(icons.security)
+
         self.searchLineEdit.addAction(
             icons.magnifier, QLineEdit.ActionPosition.LeadingPosition
         )
@@ -202,6 +211,8 @@ class AccountTreeWidget(QWidget, Ui_AccountTreeWidget):
         self.actionAdd_Cash_Account.triggered.connect(self.signal_add_cash_account.emit)
         self.actionEdit.triggered.connect(self.signal_edit_item.emit)
         self.actionDelete.triggered.connect(self.signal_delete_item.emit)
+
+        self.actionShow_Securities.triggered.connect(self.signal_show_securities.emit)
 
         self.expandAllToolButton.setDefaultAction(self.actionExpand_All)
         self.collapseAllToolButton.setDefaultAction(self.actionCollapse_All)

@@ -119,6 +119,9 @@
      <property name="sizeAdjustPolicy">
       <enum>QAbstractScrollArea::AdjustToContents</enum>
      </property>
+     <property name="uniformRowHeights">
+      <bool>true</bool>
+     </property>
      <property name="sortingEnabled">
       <bool>false</bool>
      </property>
@@ -217,6 +220,11 @@
   <action name="actionSelect_All_Security_Accounts_Below">
    <property name="text">
     <string>Select All Security Accounts Below</string>
+   </property>
+  </action>
+  <action name="actionShow_Securities">
+   <property name="text">
+    <string>Show Securities</string>
    </property>
   </action>
  </widget>

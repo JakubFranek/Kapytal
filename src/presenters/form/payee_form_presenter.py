@@ -37,8 +37,11 @@ class PayeeFormPresenter:
         self._selection_changed()
 
     def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
-        self._model.pre_reset_model()
         self._record_keeper = record_keeper
+        self.reset_model()
+
+    def reset_model(self) -> None:
+        self._model.pre_reset_model()
         self.update_model_data()
         self._model.post_reset_model()
 
@@ -55,10 +58,7 @@ class PayeeFormPresenter:
         self._model.payee_stats = payee_stats
 
     def show_form(self) -> None:
-        self._model.pre_reset_model()
-        self.update_model_data()
-        self._model.post_reset_model()
-        self._view.selectButton.setVisible(False)  # noqa: FBT003
+        self.reset_model()
         self._view.show_form()
 
     def run_payee_dialog(self, *, edit: bool) -> None:
@@ -127,8 +127,7 @@ class PayeeFormPresenter:
         self._model.post_remove_item()
         self.event_data_changed()
 
-    def _filter(self) -> None:
-        pattern = self._view.search_bar_text
+    def _filter(self, pattern: str) -> None:
         if ("[" in pattern and "]" not in pattern) or "[]" in pattern:
             return
         logging.debug(f"Filtering Payees: {pattern=}")

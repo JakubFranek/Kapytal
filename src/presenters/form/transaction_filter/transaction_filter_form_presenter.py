@@ -506,8 +506,7 @@ class TransactionFilterFormPresenter:
             detailed_text += f"{filter_member}\n\n"
         text += (
             "\nDetailed summary of the filter settings is available via "
-            "the Show Details button.\n"
-            "For better reading experience, copy paste the details into a text editor."
+            "the Show Details button."
         )
         message_box = QMessageBox(
             QMessageBox.Icon.Information,
