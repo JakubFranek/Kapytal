@@ -6,6 +6,9 @@ from PyQt6.QtWidgets import QWidget
 from src.models.model_objects.cash_objects import CashAccount, CashTransfer
 from src.models.record_keeper import RecordKeeper
 from src.models.user_settings import user_settings
+from src.presenters.utilities.check_for_nonexistent_attributes import (
+    check_for_nonexistent_attributes,
+)
 from src.presenters.utilities.event import Event
 from src.presenters.utilities.handle_exception import handle_exception
 from src.presenters.utilities.validate_inputs import validate_datetime
@@ -196,7 +199,13 @@ class CashTransferDialogPresenter:
         if datetime_ is not None and not validate_datetime(datetime_, self._dialog):
             return
         description = self._dialog.description
-        tags = self._dialog.tag_names
+        tag_names = self._dialog.tag_names
+
+        if not check_for_nonexistent_attributes(
+            tag_names, self._record_keeper.tags, self._dialog, "Tag"
+        ):
+            logging.info("Dialog aborted")
+            return
 
         log = []
         if description is not None:
@@ -211,8 +220,8 @@ class CashTransferDialogPresenter:
             log.append(f"sent={amount_sent}")
         if amount_received is not None:
             log.append(f"received={amount_received}")
-        if tags is not None:
-            log.append(f"tags={tags}")
+        if tag_names is not None:
+            log.append(f"tags={tag_names}")
         logging.info(
             f"Editing {len(transactions)} CashTransaction(s): {', '.join(log)}, "
             f"uuids={[str(uuid) for uuid in uuids]}"
@@ -226,7 +235,7 @@ class CashTransferDialogPresenter:
                 recipient_path,
                 amount_sent,
                 amount_received,
-                tags,
+                tag_names,
             )
         except Exception as exception:  # noqa: BLE001
             handle_exception(exception)

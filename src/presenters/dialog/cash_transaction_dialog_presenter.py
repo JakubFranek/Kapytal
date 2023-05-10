@@ -4,7 +4,6 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 from PyQt6.QtWidgets import QWidget
-from src.models.model_objects.attributes import CategoryType
 from src.models.model_objects.cash_objects import (
     CashAccount,
     CashTransaction,
@@ -12,13 +11,16 @@ from src.models.model_objects.cash_objects import (
 )
 from src.models.record_keeper import RecordKeeper
 from src.models.user_settings import user_settings
+from src.presenters.utilities.check_for_nonexistent_attributes import (
+    check_for_nonexistent_attributes,
+    check_for_nonexistent_categories,
+)
 from src.presenters.utilities.event import Event
 from src.presenters.utilities.handle_exception import handle_exception
 from src.presenters.utilities.validate_inputs import validate_datetime
 from src.view_models.transaction_table_model import TransactionTableModel
 from src.views.dialogs.cash_transaction_dialog import CashTransactionDialog, EditMode
 from src.views.utilities.handle_exception import display_error_message
-from src.views.utilities.message_box_functions import ask_yes_no_question
 
 if TYPE_CHECKING:
     from src.models.model_objects.attributes import Category
@@ -206,12 +208,18 @@ class CashTransactionDialogPresenter:
                 "Payee name must be at least 1 character long.", title="Warning"
             )
             return
+        if not check_for_nonexistent_attributes(
+            [payee], self._record_keeper.payees, self._dialog, "Payee"
+        ):
+            logging.info("Dialog aborted")
+            return
+
         datetime_ = self._dialog.datetime_
         if datetime_ is None:
             raise ValueError("Expected datetime_, received None.")
         if not validate_datetime(datetime_, self._dialog):
             return
-        description = self._dialog.description
+        description = self._dialog.description if self._dialog.description else ""
         total_amount = self._dialog.amount
         if total_amount is None:
             raise ValueError("Expected Decimal, received None.")
@@ -235,44 +243,28 @@ class CashTransactionDialogPresenter:
             display_error_message("Empty Category paths are invalid.", title="Warning")
             return
 
-        # TODO: refactor this into a function
-        # and make a similar one for Tags and Payees
-        nonexistent_categories = []
-        for category in categories:
-            if category not in (
-                category_.path for category_ in self._record_keeper.categories
-            ):
-                nonexistent_categories.append(category)
-        if nonexistent_categories:
-            nonexistent_categories_str = ", ".join(nonexistent_categories)
-            category_type = (
-                CategoryType.INCOME
-                if type_ == CashTransactionType.INCOME
-                else CategoryType.EXPENSE
-            )
-            if not ask_yes_no_question(
-                self._dialog,
-                (
-                    "<html>The following Categories do not "
-                    "exist:<br/>"
-                    f"<b><i>{nonexistent_categories_str}</i></b><br/><br/>"
-                    f"Create new {category_type.name.title()} Categories "
-                    "and proceed?</html>"
-                ),
-                title="Create new Categories?",
-            ):
-                return
+        if not check_for_nonexistent_categories(
+            categories, type_, self._record_keeper.categories, self._dialog
+        ):
+            logging.info("Dialog aborted")
+            return
 
-        tags = [tag for tag, _ in tag_amount_pairs]
-        if any(not tag for tag in tags):
+        tag_names = [tag for tag, _ in tag_amount_pairs]
+        if any(not tag for tag in tag_names):
             display_error_message("Empty Tag names are invalid.", title="Warning")
+            return
+
+        if not check_for_nonexistent_attributes(
+            tag_names, self._record_keeper.tags, self._dialog, "Tag"
+        ):
+            logging.info("Dialog aborted")
             return
 
         logging.info(
             f"Adding CashTransaction: {datetime_.strftime('%Y-%m-%d')}, "
             f"{description=}, type={type_.name}, {account=}, {payee=}, "
             f"amount={str(total_amount)} {self._dialog.currency_code}, "
-            f"{categories=}, {tags=}"
+            f"{categories=}, {tag_names=}"
         )
         try:
             self._record_keeper.add_cash_transaction(

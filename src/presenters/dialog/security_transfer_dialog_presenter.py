@@ -7,6 +7,9 @@ from src.models.base_classes.account import Account
 from src.models.model_objects.security_objects import SecurityAccount, SecurityTransfer
 from src.models.record_keeper import RecordKeeper
 from src.models.user_settings import user_settings
+from src.presenters.utilities.check_for_nonexistent_attributes import (
+    check_for_nonexistent_attributes,
+)
 from src.presenters.utilities.event import Event
 from src.presenters.utilities.handle_exception import handle_exception
 from src.presenters.utilities.validate_inputs import validate_datetime
@@ -193,6 +196,12 @@ class SecurityTransferDialogPresenter:
         recipient_path = self._dialog.recipient_path
         shares = self._dialog.shares
         tag_names = self._dialog.tag_names
+
+        if not check_for_nonexistent_attributes(
+            tag_names, self._record_keeper.tags, self._dialog, "Tag"
+        ):
+            logging.info("Dialog aborted")
+            return
 
         log = []
         if description is not None:

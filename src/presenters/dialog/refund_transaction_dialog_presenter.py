@@ -10,6 +10,9 @@ from src.models.model_objects.cash_objects import (
 )
 from src.models.record_keeper import RecordKeeper
 from src.models.user_settings import user_settings
+from src.presenters.utilities.check_for_nonexistent_attributes import (
+    check_for_nonexistent_attributes,
+)
 from src.presenters.utilities.event import Event
 from src.presenters.utilities.handle_exception import handle_exception
 from src.presenters.utilities.validate_inputs import validate_datetime
@@ -131,6 +134,12 @@ class RefundTransactionDialogPresenter:
                 "Payee name must be at least 1 character long.", title="Warning"
             )
             return
+        if not check_for_nonexistent_attributes(
+            [payee], self._record_keeper.payees, self._dialog, "Payee"
+        ):
+            logging.info("Dialog aborted")
+            return
+
         datetime_ = self._dialog.datetime_
         if datetime_ is not None and not validate_datetime(datetime_, self._dialog):
             return

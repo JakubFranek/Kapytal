@@ -1,6 +1,7 @@
 import unicodedata
 import uuid
 from collections.abc import Collection
+from decimal import Decimal
 
 from PyQt6.QtCore import QAbstractTableModel, QModelIndex, QSortFilterProxyModel, Qt
 from PyQt6.QtGui import QBrush, QIcon
@@ -227,7 +228,7 @@ class TransactionTableModel(QAbstractTableModel):
         if column == TransactionTableColumn.SECURITY:
             return TransactionTableModel._get_transaction_security(transaction)
         if column == TransactionTableColumn.SHARES:
-            return TransactionTableModel._get_transaction_shares(transaction)
+            return str(TransactionTableModel._get_transaction_shares(transaction))
         if column == TransactionTableColumn.AMOUNT_NATIVE:
             return self._get_transaction_amount_string(transaction, base=False)
         if column == TransactionTableColumn.AMOUNT_BASE:
@@ -320,7 +321,8 @@ class TransactionTableModel(QAbstractTableModel):
         if column == TransactionTableColumn.DATETIME:
             return transaction.datetime_.timestamp()
         if column == TransactionTableColumn.SHARES:
-            return TransactionTableModel._get_transaction_shares(transaction)
+            shares = TransactionTableModel._get_transaction_shares(transaction)
+            return float(shares) if shares else float("-inf")
         if column == TransactionTableColumn.AMOUNT_NATIVE:
             return self._get_transaction_amount_value(transaction, base=False)
         if column == TransactionTableColumn.AMOUNT_BASE:
@@ -433,11 +435,11 @@ class TransactionTableModel(QAbstractTableModel):
         return ""
 
     @staticmethod
-    def _get_transaction_shares(transaction: Transaction) -> str:
+    def _get_transaction_shares(transaction: Transaction) -> Decimal:
         if isinstance(transaction, SecurityTransaction):
-            return str(transaction.get_shares(transaction.security_account))
+            return transaction.get_shares(transaction.security_account)
         if isinstance(transaction, SecurityTransfer):
-            return str(transaction.get_shares(transaction.recipient))
+            return transaction.get_shares(transaction.recipient)
         return ""
 
     def _get_transaction_amount_string(

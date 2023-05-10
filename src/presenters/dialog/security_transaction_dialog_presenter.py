@@ -12,6 +12,9 @@ from src.models.model_objects.security_objects import (
 )
 from src.models.record_keeper import RecordKeeper
 from src.models.user_settings import user_settings
+from src.presenters.utilities.check_for_nonexistent_attributes import (
+    check_for_nonexistent_attributes,
+)
 from src.presenters.utilities.event import Event
 from src.presenters.utilities.handle_exception import handle_exception
 from src.presenters.utilities.validate_inputs import validate_datetime
@@ -245,6 +248,12 @@ class SecurityTransactionDialogPresenter:
         shares = self._dialog.shares
         price_per_share = self._dialog.price_per_share
         tag_names = self._dialog.tag_names
+
+        if not check_for_nonexistent_attributes(
+            tag_names, self._record_keeper.tags, self._dialog, "Tag"
+        ):
+            logging.info("Dialog aborted")
+            return
 
         log = []
         if description is not None:
