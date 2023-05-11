@@ -2,14 +2,12 @@
 
 ## Must haves
 
-1. SecurityAccount contents view
-    - launched from AccountTree right click
-    - option to create Security transactions from this view
 1. automatic exchange rate / price updates
 1. way to show / edit exchange rate / security price history
 1. reports
     - cashflow
-    - pie charts
+    - pie charts (categories, payees, tags...)
+    - wealth overview (currencies x securities, accounts)
 1. scheduled (recurrent) transactions
     - a "wrapper" around Transactions with scheduling info?
 1. documentation

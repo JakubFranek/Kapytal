@@ -25,7 +25,6 @@ class TransactionTableProxyModel(QSortFilterProxyModel):
         self, source_row: int, source_parent: QModelIndex
     ) -> bool:
         del source_parent
-        # TODO: the line below could be optimized (source model does not change)
         source_model: TransactionTableModel = self.sourceModel()
         transaction = source_model.transactions[source_row]
 

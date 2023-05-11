@@ -12,7 +12,7 @@ from src.views.ui_files.Ui_main_window import Ui_MainWindow
 from src.views.widgets.account_tree_widget import AccountTreeWidget
 from src.views.widgets.transaction_table_widget import TransactionTableWidget
 
-# TODO: close forms / dialogs via ESC key
+# TODO: close forms / dialogs via ESC key (implement keypress event)
 
 
 class MainView(QMainWindow, Ui_MainWindow):
