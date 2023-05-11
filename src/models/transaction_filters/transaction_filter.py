@@ -4,6 +4,7 @@ from datetime import datetime, time
 
 from src.models.base_classes.account import Account
 from src.models.base_classes.transaction import Transaction
+from src.models.mixins.copyable_mixin import CopyableMixin
 from src.models.model_objects.attributes import Attribute
 from src.models.model_objects.cash_objects import (
     CashTransactionType,
@@ -70,7 +71,7 @@ def set_maximum_time(datetime_: datetime) -> datetime:
     )
 
 
-class TransactionFilter:
+class TransactionFilter(CopyableMixin):
     def __init__(self) -> None:
         self.restore_defaults()
 
@@ -146,6 +147,24 @@ class TransactionFilter:
             self._cash_amount_filter,
         )
 
+    def _get_members_without_cash_amount_filter(
+        self,
+    ) -> tuple[BaseTransactionFilter, ...]:
+        return (
+            self._type_filter,
+            self._datetime_filter,
+            self._description_filter,
+            self._account_filter,
+            self._specific_tags_filter,
+            self._tagless_filter,
+            self._split_tags_filter,
+            self._payee_filter,
+            self._specific_categories_filter,
+            self._multiple_categories_filter,
+            self._currency_filter,
+            self._security_filter,
+        )
+
     def __repr__(self) -> str:
         return "TransactionFilter"
 
@@ -155,7 +174,31 @@ class TransactionFilter:
     def __eq__(self, __o: object) -> bool:
         if not isinstance(__o, TransactionFilter):
             return False
-        return self.members == __o.members
+        self_members = self._get_members_without_cash_amount_filter()
+        other_members = __o._get_members_without_cash_amount_filter()  # noqa: SLF001
+        if self_members != other_members:
+            return False
+
+        return self._are_cash_amount_filters_equal(
+            __o._cash_amount_filter  # noqa: SLF001
+        )
+
+    def _are_cash_amount_filters_equal(self, other: CashAmountFilter | None) -> bool:
+        if self._cash_amount_filter is None and other is None:
+            return True
+        if (
+            self._cash_amount_filter is None
+            and isinstance(other, CashAmountFilter)
+            and other.mode == FilterMode.OFF
+        ):
+            return True
+        if (
+            isinstance(self._cash_amount_filter, CashAmountFilter)
+            and self._cash_amount_filter.mode == FilterMode.OFF
+            and other is None
+        ):
+            return True
+        return self._cash_amount_filter == other
 
     def validate_transaction(self, transaction: Transaction) -> bool:
         result = all(
