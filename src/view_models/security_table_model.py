@@ -6,6 +6,8 @@ from PyQt6.QtWidgets import QTableView
 from src.models.model_objects.security_objects import Security
 from src.views.constants import SecurityTableColumn
 
+ALIGNMENT_LEFT = Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
+
 
 class SecurityTableModel(QAbstractTableModel):
     COLUMN_HEADERS = {
@@ -67,7 +69,7 @@ class SecurityTableModel(QAbstractTableModel):
             role == Qt.ItemDataRole.TextAlignmentRole
             and section == SecurityTableColumn.LAST_DATE
         ):
-            return Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
+            return ALIGNMENT_LEFT
         return None
 
     def data(
@@ -87,7 +89,7 @@ class SecurityTableModel(QAbstractTableModel):
             role == Qt.ItemDataRole.TextAlignmentRole
             and column == SecurityTableColumn.PRICE
         ):
-            return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+            return ALIGNMENT_LEFT
         return None
 
     def _get_display_role_data(self, column: int, security: Security) -> str | None:

@@ -109,7 +109,7 @@
   </action>
   <action name="actionRemove_Tag">
    <property name="text">
-    <string>Remove Tag</string>
+    <string>Remove Tag(s)</string>
    </property>
    <property name="toolTip">
     <string>Remove Tag</string>

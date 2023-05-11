@@ -62,6 +62,7 @@ def get_tag_stats(
     ]
     no_of_transactions = len(_transactions)
 
+    # TODO: implement this for all Transactions!
     _cash_amount_transactions = [
         transaction
         for transaction in _transactions

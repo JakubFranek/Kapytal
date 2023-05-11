@@ -64,11 +64,14 @@ class PayeeFormPresenter:
     def run_payee_dialog(self, *, edit: bool) -> None:
         self._dialog = PayeeDialog(self._view, edit=edit)
         if edit:
-            item = self._model.get_selected_item()
-            if item is None:
+            payees = self._model.get_selected_items()
+            if len(payees) == 0:
                 raise ValueError("Cannot edit an unselected item.")
+            if len(payees) > 1:
+                raise ValueError("Cannot edit more than one item.")
+            payee = payees[0]
             self._dialog.signal_ok.connect(self.rename_payee)
-            self._dialog.name = item.name
+            self._dialog.name = payee.name
         else:
             self._dialog.signal_ok.connect(self.add_payee)
         logging.debug(f"Running PayeeDialog ({edit=})")
@@ -91,9 +94,12 @@ class PayeeFormPresenter:
         self.event_data_changed()
 
     def rename_payee(self) -> None:
-        payee = self._model.get_selected_item()
-        if payee is None:
+        payees = self._model.get_selected_items()
+        if len(payees) == 0:
             raise ValueError("Cannot edit an unselected item.")
+        if len(payees) > 1:
+            raise ValueError("Cannot edit more than one item.")
+        payee = payees[0]
         current_name = payee.name
         new_name = self._dialog.name
 
@@ -111,21 +117,24 @@ class PayeeFormPresenter:
         self.event_data_changed()
 
     def remove_payee(self) -> None:
-        payee = self._model.get_selected_item()
-        if payee is None:
-            return
+        payees = self._model.get_selected_items()
+        if len(payees) == 0:
+            raise ValueError("Cannot remove an unselected item.")
 
-        logging.info(f"Removing {payee}")
-        try:
-            self._record_keeper.remove_payee(payee.name)
-        except Exception as exception:  # noqa: BLE001
-            handle_exception(exception)
-            return
-
-        self._model.pre_remove_item(payee)
-        self.update_model_data()
-        self._model.post_remove_item()
-        self.event_data_changed()
+        logging.info(f"Removing {payees}")
+        any_deleted = False
+        for payee in payees:
+            try:
+                self._record_keeper.remove_payee(payee.name)
+                self._model.pre_remove_item(payee)
+                self.update_model_data()
+                self._model.post_remove_item()
+                any_deleted = True
+            except Exception as exception:  # noqa: BLE001
+                handle_exception(exception)
+            finally:
+                if any_deleted:
+                    self.event_data_changed()
 
     def _filter(self, pattern: str) -> None:
         if ("[" in pattern and "]" not in pattern) or "[]" in pattern:
@@ -134,6 +143,10 @@ class PayeeFormPresenter:
         self._proxy_model.setFilterWildcard(pattern)
 
     def _selection_changed(self) -> None:
-        item = self._model.get_selected_item()
-        is_payee_selected = item is not None
-        self._view.set_buttons(is_payee_selected=is_payee_selected)
+        payees = self._model.get_selected_items()
+        is_payee_selected = len(payees) > 0
+        is_one_payee_selected = len(payees) == 1
+        self._view.enable_actions(
+            is_payee_selected=is_payee_selected,
+            is_one_payee_selected=is_one_payee_selected,
+        )

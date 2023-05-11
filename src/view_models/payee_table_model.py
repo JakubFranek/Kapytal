@@ -7,6 +7,8 @@ from src.models.model_objects.attributes import Attribute
 from src.models.utilities.calculation import AttributeStats
 from src.views.constants import PayeeTableColumn
 
+ALIGNMENT_RIGHT = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+
 
 class PayeeTableModel(QAbstractTableModel):
     COLUMN_HEADERS = {
@@ -72,7 +74,7 @@ class PayeeTableModel(QAbstractTableModel):
             column == PayeeTableColumn.TRANSACTIONS
             or column == PayeeTableColumn.BALANCE
         ):
-            return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+            return ALIGNMENT_RIGHT
         return None
 
     def _get_display_role_data(
@@ -108,7 +110,7 @@ class PayeeTableModel(QAbstractTableModel):
             section == PayeeTableColumn.TRANSACTIONS
             or section == PayeeTableColumn.BALANCE
         ):
-            return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+            return ALIGNMENT_RIGHT
         return None
 
     def pre_add(self) -> None:
@@ -136,19 +138,12 @@ class PayeeTableModel(QAbstractTableModel):
     def post_remove_item(self) -> None:
         self.endRemoveRows()
 
-    def get_selected_item_index(self) -> QModelIndex:
+    def get_selected_items(self) -> tuple[Attribute]:
         proxy_indexes = self._view.selectedIndexes()
         source_indexes = [self._proxy.mapToSource(index) for index in proxy_indexes]
-        if len(source_indexes) == 0:
-            return QModelIndex()
-        return source_indexes[0]
-
-    def get_selected_item(self) -> Attribute | None:
-        proxy_indexes = self._view.selectedIndexes()
-        source_indexes = [self._proxy.mapToSource(index) for index in proxy_indexes]
-        if len(source_indexes) == 0:
-            return None
-        return source_indexes[0].internalPointer()
+        return tuple(
+            index.internalPointer() for index in source_indexes if index.column() == 0
+        )
 
     def get_index_from_item(self, item: Attribute | None) -> QModelIndex:
         if item is None:

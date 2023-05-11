@@ -69,5 +69,5 @@ class Ui_TagForm(object):
         self.actionAdd_Tag.setText(_translate("TagForm", "Add Tag"))
         self.actionAdd_Tag.setToolTip(_translate("TagForm", "Add Tag"))
         self.actionRename_Tag.setText(_translate("TagForm", "Rename Tag"))
-        self.actionRemove_Tag.setText(_translate("TagForm", "Remove Tag"))
+        self.actionRemove_Tag.setText(_translate("TagForm", "Remove Tag(s)"))
         self.actionRemove_Tag.setToolTip(_translate("TagForm", "Remove Tag"))

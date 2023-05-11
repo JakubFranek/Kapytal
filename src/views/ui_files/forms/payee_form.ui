@@ -9,7 +9,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>425</width>
+    <width>360</width>
     <height>360</height>
    </rect>
   </property>
@@ -24,6 +24,27 @@
     <layout class="QVBoxLayout" name="leftVerticalLayout">
      <item>
       <layout class="QHBoxLayout" name="controlsHorizontalLayout">
+       <item>
+        <widget class="QToolButton" name="addToolButton">
+         <property name="text">
+          <string>...</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QToolButton" name="renameToolButton">
+         <property name="text">
+          <string>...</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QToolButton" name="removeToolButton">
+         <property name="text">
+          <string>...</string>
+         </property>
+        </widget>
+       </item>
        <item>
         <widget class="QLineEdit" name="searchLineEdit">
          <property name="toolTip">
@@ -42,7 +63,7 @@
      <item>
       <widget class="QTableView" name="tableView">
        <property name="selectionMode">
-        <enum>QAbstractItemView::SingleSelection</enum>
+        <enum>QAbstractItemView::ExtendedSelection</enum>
        </property>
        <property name="selectionBehavior">
         <enum>QAbstractItemView::SelectRows</enum>
@@ -63,45 +84,22 @@
      </item>
     </layout>
    </item>
-   <item>
-    <layout class="QVBoxLayout" name="rightVerticalLayout">
-     <item>
-      <widget class="QPushButton" name="addButton">
-       <property name="text">
-        <string>Add</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="renameButton">
-       <property name="text">
-        <string>Rename</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="removeButton">
-       <property name="text">
-        <string>Remove</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <spacer name="verticalSpacer">
-       <property name="orientation">
-        <enum>Qt::Vertical</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>20</width>
-         <height>40</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-    </layout>
-   </item>
   </layout>
+  <action name="actionAdd_Payee">
+   <property name="text">
+    <string>Add Payee</string>
+   </property>
+  </action>
+  <action name="actionRename_Payee">
+   <property name="text">
+    <string>Rename Payee</string>
+   </property>
+  </action>
+  <action name="actionRemove_Payee">
+   <property name="text">
+    <string>Remove Payee(s)</string>
+   </property>
+  </action>
  </widget>
  <resources/>
  <connections/>

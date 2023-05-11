@@ -51,6 +51,7 @@ edit_category: QIcon | None = None
 add_currency: QIcon | None = None
 add_payee: QIcon | None = None
 edit_payee: QIcon | None = None
+remove_payee: QIcon | None = None
 add_security_account: QIcon | None = None
 edit_security_account: QIcon | None = None
 add_security: QIcon | None = None
@@ -88,7 +89,7 @@ def setup() -> None:  # noqa: PLR0915
     global exchange_rate, add_cash_account, edit_cash_account  # noqa: PLW0603
     global add_cash_transaction, edit_cash_transaction  # noqa: PLW0603
     global add_category, edit_category, add_currency  # noqa: PLW0603
-    global add_payee, edit_payee  # noqa: PLW0603
+    global add_payee, edit_payee, remove_payee  # noqa: PLW0603
     global add_security_account, edit_security_account  # noqa: PLW0603
     global add_security, edit_security, set_security_price  # noqa: PLW0603
     global magnifier  # noqa: PLW0603
@@ -158,6 +159,7 @@ def setup() -> None:  # noqa: PLR0915
     add_currency = QIcon("icons_custom:currency-plus.png")
     add_payee = QIcon("icons_custom:user-business-plus.png")
     edit_payee = QIcon("icons_custom:user-business-pencil.png")
+    remove_payee = QIcon("icons_custom:user-business-minus.png")
     add_security_account = QIcon("icons_custom:bank-plus.png")
     edit_security_account = QIcon("icons_16:bank--pencil.png")
     add_security = QIcon("icons_custom:certificate-plus.png")
