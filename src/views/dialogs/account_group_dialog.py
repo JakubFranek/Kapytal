@@ -12,8 +12,9 @@ from src.views import icons
 from src.views.base_classes.custom_dialog import CustomDialog
 from src.views.ui_files.dialogs.Ui_account_group_dialog import Ui_AccountGroupDialog
 
-
 # TODO: update position limits based on path state?
+
+
 class AccountGroupDialog(CustomDialog, Ui_AccountGroupDialog):
     signal_ok = pyqtSignal()
 

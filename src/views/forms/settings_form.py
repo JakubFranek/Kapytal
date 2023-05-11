@@ -1,7 +1,5 @@
-import logging
 
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QCloseEvent
 from PyQt6.QtWidgets import QAbstractButton, QDialogButtonBox, QFileDialog, QWidget
 from src.views import icons
 from src.views.base_classes.custom_widget import CustomWidget
@@ -54,20 +52,12 @@ class SettingsForm(CustomWidget, Ui_SettingsForm):
     def logs_max_size_kb(self, value: int) -> None:
         self.logsSizeLimitSpinBox.setValue(value)
 
-    def show_form(self) -> None:
-        logging.debug(f"Showing {self.__class__.__name__}")
-        self.show()
-
     def get_directory_path(self) -> str:
         return QFileDialog.getExistingDirectory(self)
 
     def set_backup_path_buttons(self, *, is_backup_path_selected: bool) -> None:
         self.openBackupDirectoryButton.setEnabled(is_backup_path_selected)
         self.removeBackupDirectoryButton.setEnabled(is_backup_path_selected)
-
-    def closeEvent(self, a0: QCloseEvent) -> None:  # noqa: N802
-        logging.debug(f"Closing {self.__class__.__name__}")
-        return super().closeEvent(a0)
 
     def finalize_setup(self) -> None:
         self.backupsListView.selectionModel().selectionChanged.connect(

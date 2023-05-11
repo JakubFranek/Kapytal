@@ -1,10 +1,9 @@
-import logging
 from datetime import datetime, time
 from decimal import Decimal
 from enum import Enum, auto
 
 from PyQt6.QtCore import QSignalBlocker, Qt, pyqtSignal
-from PyQt6.QtGui import QAction, QCloseEvent, QContextMenuEvent, QCursor
+from PyQt6.QtGui import QAction, QContextMenuEvent, QCursor
 from PyQt6.QtWidgets import (
     QAbstractButton,
     QButtonGroup,
@@ -350,13 +349,6 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
     def multiple_categories_filter_mode(self, mode: FilterMode) -> None:
         self.multipleCategoriesFilterModeComboBox.setCurrentText(mode.name)
 
-    def show_form(self) -> None:
-        logging.debug(f"Showing {self.__class__.__name__}")
-        self.show()
-
-    def closeEvent(self, a0: QCloseEvent) -> None:  # noqa: N802
-        logging.debug(f"Closing {self.__class__.__name__}")
-        return super().closeEvent(a0)
 
     def _update_cash_amount_filter_state(self) -> None:
         if self._base_currency_code:

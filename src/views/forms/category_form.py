@@ -1,7 +1,5 @@
-import logging
 
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QCloseEvent
 from PyQt6.QtWidgets import QLineEdit, QWidget
 from src.models.model_objects.attributes import CategoryType
 from src.views import icons
@@ -74,14 +72,6 @@ class CategoryForm(CustomWidget, Ui_CategoryForm):
         if self.incomeAndExpenseRadioButton.isChecked():
             return CategoryType.INCOME_AND_EXPENSE
         raise ValueError("No radio button checked.")
-
-    def show_form(self) -> None:
-        logging.debug(f"Showing {self.__class__.__name__}")
-        self.show()
-
-    def closeEvent(self, a0: QCloseEvent) -> None:  # noqa: N802
-        logging.debug(f"Closing {self.__class__.__name__}")
-        return super().closeEvent(a0)
 
     def finalize_setup(self) -> None:
         self.category_tree.finalize_setup()

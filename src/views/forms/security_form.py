@@ -1,7 +1,5 @@
-import logging
 
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QCloseEvent
 from PyQt6.QtWidgets import QHeaderView, QLineEdit, QWidget
 from src.views import icons
 from src.views.base_classes.custom_widget import CustomWidget
@@ -40,14 +38,6 @@ class SecurityForm(CustomWidget, Ui_SecurityForm):
     @property
     def search_bar_text(self) -> str:
         return self.searchLineEdit.text()
-
-    def show_form(self) -> None:
-        logging.debug(f"Showing {self.__class__.__name__}")
-        self.show()
-
-    def closeEvent(self, a0: QCloseEvent) -> None:  # noqa: N802
-        logging.debug(f"Closing {self.__class__.__name__}")
-        return super().closeEvent(a0)
 
     def set_buttons(self, *, is_security_selected: bool) -> None:
         self.removeButton.setEnabled(is_security_selected)

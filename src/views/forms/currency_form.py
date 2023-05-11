@@ -1,7 +1,5 @@
-import logging
 
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QCloseEvent
 from PyQt6.QtWidgets import QHeaderView, QWidget
 from src.views import icons
 from src.views.base_classes.custom_widget import CustomWidget
@@ -37,14 +35,6 @@ class CurrencyForm(CustomWidget, Ui_CurrencyForm):
             self.signal_remove_exchange_rate.emit
         )
         self.setExchangeRateButton.clicked.connect(self.signal_set_exchange_rate.emit)
-
-    def show_form(self) -> None:
-        logging.debug(f"Showing {self.__class__.__name__}")
-        self.show()
-
-    def closeEvent(self, a0: QCloseEvent) -> None:  # noqa: N802
-        logging.debug(f"Closing {self.__class__.__name__}")
-        return super().closeEvent(a0)
 
     def set_currency_buttons(self, *, is_currency_selected: bool) -> None:
         self.setBaseCurrencyButton.setEnabled(is_currency_selected)

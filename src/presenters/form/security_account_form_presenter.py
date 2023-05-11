@@ -53,7 +53,8 @@ class SecurityAccountFormPresenter:
         self._view.table_view.resizeColumnsToContents()
         width, height = self._calculate_table_view_size()
         self._view.resize(width, height)
-        self._view.show_form(security_account.path)
+        self._view.set_account_path(security_account.path)
+        self._view.show_form()
 
     def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
         self._record_keeper = record_keeper

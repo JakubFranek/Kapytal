@@ -1582,6 +1582,7 @@ def _get_amount_for_category(
     return running_sum
 
 
+# FIXME: this function looks really weird and should be in base Transaction anyway
 def _get_amount_for_tag(
     transaction: CashTransaction | RefundTransaction, tag: Attribute
 ) -> CashAmount:
