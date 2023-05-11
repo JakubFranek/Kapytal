@@ -69,14 +69,14 @@ class ExchangeRateTableModel(QAbstractTableModel):
         if column == ExchangeRateTableColumn.RATE:
             return (
                 f"1 {exchange_rate.primary_currency.code} = "
-                f"{str(exchange_rate.latest_rate)} "
+                f"{exchange_rate.latest_rate:,} "
                 f"{exchange_rate.secondary_currency.code}"
             )
         if column == ExchangeRateTableColumn.LAST_DATE:
             latest_date = exchange_rate.latest_date
             if latest_date is None:
                 return "None"
-            return latest_date.strftime("%Y-%m-%d")
+            return latest_date.strftime("%d.%m.%Y")
         return None
 
     def headerData(  # noqa: N802

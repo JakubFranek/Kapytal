@@ -7,6 +7,8 @@ from src.models.model_objects.attributes import Attribute
 from src.models.utilities.calculation import AttributeStats
 from src.views.constants import TagTableColumn
 
+ALIGNMENT_RIGHT = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+
 
 class TagTableModel(QAbstractTableModel):
     COLUMN_HEADERS = {
@@ -37,19 +39,22 @@ class TagTableModel(QAbstractTableModel):
     def rowCount(self, index: QModelIndex = ...) -> int:  # noqa: N802
         if isinstance(index, QModelIndex) and index.isValid():
             return 0
-        return len(self.tag_stats)
+        return len(self._tag_stats)
 
-    def columnCount(self, index: QModelIndex = ...) -> int:  # noqa: N802
-        del index
-        return 3
+    def columnCount(self, index: QModelIndex = ...) -> int:  # noqa: N802, ARG002
+        if not hasattr(self, "_column_count"):
+            self._column_count = len(self.COLUMN_HEADERS)
+        return self._column_count
 
     def index(self, row: int, column: int, parent: QModelIndex = ...) -> QModelIndex:
         if parent.isValid():
             return QModelIndex()
-        if not QAbstractTableModel.hasIndex(self, row, column, QModelIndex()):
+        if row < 0 or column < 0:
+            return QModelIndex()
+        if row >= len(self._tag_stats) or column >= self._column_count:
             return QModelIndex()
 
-        item = self.tag_stats[row].attribute
+        item = self._tag_stats[row].attribute
         return QAbstractTableModel.createIndex(self, row, column, item)
 
     def data(
@@ -58,17 +63,19 @@ class TagTableModel(QAbstractTableModel):
         if not index.isValid():
             return None
 
-        column = index.column()
-        tag_stats = self.tag_stats[index.row()]
-
         if role == Qt.ItemDataRole.DisplayRole:
-            return self._get_display_role_data(column, tag_stats)
+            return self._get_display_role_data(
+                index.column(), self._tag_stats[index.row()]
+            )
         if role == Qt.ItemDataRole.UserRole:
-            return self._get_user_role_data(column, tag_stats)
+            return self._get_user_role_data(
+                index.column(), self._tag_stats[index.row()]
+            )
+        column = index.column()
         if role == Qt.ItemDataRole.TextAlignmentRole and (
             column == TagTableColumn.TRANSACTIONS or column == TagTableColumn.BALANCE
         ):
-            return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+            return ALIGNMENT_RIGHT
         return None
 
     def _get_display_role_data(
@@ -100,10 +107,11 @@ class TagTableModel(QAbstractTableModel):
             if orientation == Qt.Orientation.Horizontal:
                 return self.COLUMN_HEADERS[section]
             return str(section)
-        if role == Qt.ItemDataRole.TextAlignmentRole and (
-            section == TagTableColumn.TRANSACTIONS or section == TagTableColumn.BALANCE
+        if (
+            role == Qt.ItemDataRole.TextAlignmentRole
+            and section == TagTableColumn.BALANCE
         ):
-            return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+            return ALIGNMENT_RIGHT
         return None
 
     def pre_add(self) -> None:
@@ -138,20 +146,20 @@ class TagTableModel(QAbstractTableModel):
             return QModelIndex()
         return source_indexes[0]
 
-    def get_selected_item(self) -> Attribute | None:
+    def get_selected_items(self) -> tuple[Attribute]:
         proxy_indexes = self._view.selectedIndexes()
         source_indexes = [self._proxy.mapToSource(index) for index in proxy_indexes]
-        if len(source_indexes) == 0:
-            return None
-        return source_indexes[0].internalPointer()
+        return tuple(
+            index.internalPointer() for index in source_indexes if index.column() == 0
+        )
 
     def get_index_from_item(self, item: Attribute | None) -> QModelIndex:
         if item is None:
             return QModelIndex()
-        for index, tag_stats in enumerate(self.tag_stats):
+        for index, tag_stats in enumerate(self._tag_stats):
             if tag_stats.attribute == item:
                 row = index
                 break
         else:
-            raise ValueError(f"Parameter {item=} not in PayeeTableModel.payee_stats.")
+            raise ValueError(f"Parameter {item=} not in TagTableModel.tag_stats.")
         return QAbstractTableModel.createIndex(self, row, 0, item)

@@ -23,9 +23,7 @@ class TagForm(QWidget, Ui_TagForm):
         self.setWindowFlag(Qt.WindowType.Window)
         self.setWindowIcon(icons.tag)
 
-        self.addButton.clicked.connect(self.signal_add_tag.emit)
-        self.removeButton.clicked.connect(self.signal_remove_tag.emit)
-        self.renameButton.clicked.connect(self.signal_rename_tag.emit)
+        self._initialize_actions()
         self.searchLineEdit.textChanged.connect(self.signal_search_text_changed.emit)
 
         self.searchLineEdit.addAction(
@@ -38,15 +36,18 @@ class TagForm(QWidget, Ui_TagForm):
 
     def show_form(self) -> None:
         logging.debug(f"Showing {self.__class__.__name__}")
+        self.tableView.resizeColumnsToContents()
         self.show()
 
     def closeEvent(self, a0: QCloseEvent) -> None:  # noqa: N802
         logging.debug(f"Closing {self.__class__.__name__}")
         return super().closeEvent(a0)
 
-    def set_buttons(self, *, is_tag_selected: bool) -> None:
-        self.removeButton.setEnabled(is_tag_selected)
-        self.renameButton.setEnabled(is_tag_selected)
+    def enable_actions(
+        self, *, is_tag_selected: bool, is_one_tag_selected: bool
+    ) -> None:
+        self.actionRename_Tag.setEnabled(is_one_tag_selected)
+        self.actionRemove_Tag.setEnabled(is_tag_selected)
 
     def finalize_setup(self) -> None:
         self.tableView.horizontalHeader().setStretchLastSection(False)
@@ -79,3 +80,16 @@ class TagForm(QWidget, Ui_TagForm):
             self.signal_selection_changed.emit
         )
         self.tableView.sortByColumn(0, Qt.SortOrder.AscendingOrder)
+
+    def _initialize_actions(self) -> None:
+        self.actionAdd_Tag.setIcon(icons.add_tag)
+        self.actionRename_Tag.setIcon(icons.edit_tag)
+        self.actionRemove_Tag.setIcon(icons.remove_tag)
+
+        self.actionAdd_Tag.triggered.connect(self.signal_add_tag.emit)
+        self.actionRename_Tag.triggered.connect(self.signal_rename_tag.emit)
+        self.actionRemove_Tag.triggered.connect(self.signal_remove_tag.emit)
+
+        self.addToolButton.setDefaultAction(self.actionAdd_Tag)
+        self.renameToolButton.setDefaultAction(self.actionRename_Tag)
+        self.removeToolButton.setDefaultAction(self.actionRemove_Tag)

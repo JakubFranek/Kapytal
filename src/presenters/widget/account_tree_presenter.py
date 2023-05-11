@@ -90,16 +90,19 @@ class AccountTreePresenter:
         self.update_total_balance()
 
     def update_total_balance(self) -> None:
-        try:
-            total = sum(
-                (
-                    item.get_balance(self._record_keeper.base_currency)
-                    for item in self._record_keeper.root_account_items
-                ),
-                CashAmount(0, self._record_keeper.base_currency),
-            )
-            total = total.to_str_rounded()
-        except ConversionFactorNotFoundError:
+        if self._record_keeper.base_currency is not None:
+            try:
+                total = sum(
+                    (
+                        item.get_balance(self._record_keeper.base_currency)
+                        for item in self._record_keeper.root_account_items
+                    ),
+                    CashAmount(0, self._record_keeper.base_currency),
+                )
+                total = total.to_str_rounded()
+            except ConversionFactorNotFoundError:
+                total = "Error!"
+        else:
             total = "Error!"
         self._view.set_total_base_balance(total)
 

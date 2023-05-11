@@ -64,11 +64,14 @@ class TagFormPresenter:
     def run_tag_dialog(self, *, edit: bool) -> None:
         self._dialog = TagDialog(self._view, edit=edit)
         if edit:
-            item = self._model.get_selected_item()
-            if item is None:
+            tags = self._model.get_selected_items()
+            if len(tags) == 0:
                 raise ValueError("Cannot edit an unselected item.")
+            if len(tags) > 1:
+                raise ValueError("Cannot edit more than one item.")
+            tag = tags[0]
             self._dialog.signal_ok.connect(self.rename_tag)
-            self._dialog.name = item.name
+            self._dialog.name = tag.name
         else:
             self._dialog.signal_ok.connect(self.add_tag)
         logging.debug(f"Running TagDialog ({edit=})")
@@ -91,9 +94,12 @@ class TagFormPresenter:
         self.event_data_changed()
 
     def rename_tag(self) -> None:
-        tag = self._model.get_selected_item()
-        if tag is None:
+        tags = self._model.get_selected_items()
+        if len(tags) == 0:
             raise ValueError("Cannot edit an unselected item.")
+        if len(tags) > 1:
+            raise ValueError("Cannot edit more than one item.")
+        tag = tags[0]
         current_name = tag.name
         new_name = self._dialog.name
 
@@ -111,21 +117,24 @@ class TagFormPresenter:
         self.event_data_changed()
 
     def remove_tag(self) -> None:
-        tag = self._model.get_selected_item()
-        if tag is None:
-            return
+        tags = self._model.get_selected_items()
+        if len(tags) == 0:
+            raise ValueError("Cannot remove an unselected item.")
 
-        logging.info(f"Removing {tag}")
-        try:
-            self._record_keeper.remove_tag(tag.name)
-        except Exception as exception:  # noqa: BLE001
-            handle_exception(exception)
-            return
-
-        self._model.pre_remove_item(tag)
-        self.update_model_data()
-        self._model.post_remove_item()
-        self.event_data_changed()
+        logging.info(f"Removing {tags}")
+        any_deleted = False
+        for tag in tags:
+            try:
+                self._record_keeper.remove_tag(tag.name)
+                self._model.pre_remove_item(tag)
+                self.update_model_data()
+                self._model.post_remove_item()
+                any_deleted = True
+            except Exception as exception:  # noqa: BLE001
+                handle_exception(exception)
+            finally:
+                if any_deleted:
+                    self.event_data_changed()
 
     def _filter(self, pattern: str) -> None:
         if ("[" in pattern and "]" not in pattern) or "[]" in pattern:
@@ -134,6 +143,9 @@ class TagFormPresenter:
         self._proxy_model.setFilterWildcard(pattern)
 
     def _selection_changed(self) -> None:
-        item = self._model.get_selected_item()
-        is_tag_selected = item is not None
-        self._view.set_buttons(is_tag_selected=is_tag_selected)
+        tags = self._model.get_selected_items()
+        is_tag_selected = len(tags) > 0
+        is_one_tag_selected = len(tags) == 1
+        self._view.enable_actions(
+            is_tag_selected=is_tag_selected, is_one_tag_selected=is_one_tag_selected
+        )
