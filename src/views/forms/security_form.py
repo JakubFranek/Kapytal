@@ -93,6 +93,24 @@ class SecurityForm(QWidget, Ui_SecurityForm):
         )
         self.tableView.sortByColumn(0, Qt.SortOrder.AscendingOrder)
 
+        self.treeView.header().setStretchLastSection(False)
+        self.treeView.header().setSectionResizeMode(
+            OwnedSecuritiesTreeColumn.NAME,
+            QHeaderView.ResizeMode.Stretch,
+        )
+        self.treeView.header().setSectionResizeMode(
+            OwnedSecuritiesTreeColumn.SHARES,
+            QHeaderView.ResizeMode.ResizeToContents,
+        )
+        self.treeView.header().setSectionResizeMode(
+            OwnedSecuritiesTreeColumn.AMOUNT_NATIVE,
+            QHeaderView.ResizeMode.ResizeToContents,
+        )
+        self.treeView.header().setSectionResizeMode(
+            OwnedSecuritiesTreeColumn.AMOUNT_BASE,
+            QHeaderView.ResizeMode.ResizeToContents,
+        )
+
     def refresh_tree_view(self) -> None:
         self.treeView.expandAll()
         for column in OwnedSecuritiesTreeColumn:

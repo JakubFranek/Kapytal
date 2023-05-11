@@ -55,6 +55,7 @@ add_security_account: QIcon | None = None
 edit_security_account: QIcon | None = None
 add_security: QIcon | None = None
 edit_security: QIcon | None = None
+set_security_price: QIcon | None = None
 magnifier: QIcon | None = None
 add_tag: QIcon | None = None
 edit_tag: QIcon | None = None
@@ -89,7 +90,7 @@ def setup() -> None:  # noqa: PLR0915
     global add_category, edit_category, add_currency  # noqa: PLW0603
     global add_payee, edit_payee  # noqa: PLW0603
     global add_security_account, edit_security_account  # noqa: PLW0603
-    global add_security, edit_security  # noqa: PLW0603
+    global add_security, edit_security, set_security_price  # noqa: PLW0603
     global magnifier  # noqa: PLW0603
     global tag, add_tag, edit_tag, remove_tag  # noqa: PLW0603
     global filter_, filter_warning  # noqa: PLW0603
@@ -161,9 +162,10 @@ def setup() -> None:  # noqa: PLR0915
     edit_security_account = QIcon("icons_16:bank--pencil.png")
     add_security = QIcon("icons_custom:certificate-plus.png")
     edit_security = QIcon("icons_custom:certificate-pencil.png")
+    set_security_price = QIcon("icons_16:chart-up.png")
     magnifier = QIcon("icons_16:magnifier.png")
     add_tag = QIcon("icons_16:tag--plus.png")
-    edit_tag = QIcon("icons_16:tag--pencil.png")
+    edit_tag = QIcon("icons_custom:tag-pencil.png")
     remove_tag = QIcon("icons_16:tag--minus.png")
     filter_ = QIcon("icons_16:funnel.png")
     filter_warning = QIcon("icons_16:funnel--exclamation.png")

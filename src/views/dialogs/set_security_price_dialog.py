@@ -22,7 +22,7 @@ class SetSecurityPriceDialog(QDialog, Ui_SetSecurityPriceDialog):
     ) -> None:
         super().__init__(parent)
         self.setupUi(self)
-        self.setWindowIcon(icons.edit_security)
+        self.setWindowIcon(icons.set_security_price)
         self.priceDoubleSpinBox.setMaximum(1_000_000_000_000)
         self.priceDoubleSpinBox.setValue(last_value)
         self.priceDoubleSpinBox.setDecimals(9)
