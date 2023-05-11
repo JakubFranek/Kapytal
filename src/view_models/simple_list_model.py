@@ -20,11 +20,13 @@ class SimpleListModel(QAbstractListModel):
         return len(self._items)
 
     def index(self, row: int, column: int, parent: QModelIndex = ...) -> QModelIndex:
-        del column
         if parent.isValid():
             return QModelIndex()
-        if not QAbstractListModel.hasIndex(self, row, 0, QModelIndex()):
+        if row < 0 or column < 0:
             return QModelIndex()
+        if row >= len(self._items) or column >= 1:
+            return QModelIndex()
+
         item = self._items[row]
         return QAbstractListModel.createIndex(self, row, 0, item)
 

@@ -31,18 +31,22 @@ class ExchangeRateTableModel(QAbstractTableModel):
     def rowCount(self, index: QModelIndex = ...) -> int:  # noqa: N802
         if isinstance(index, QModelIndex) and index.isValid():
             return 0
-        return len(self.exchange_rates)
+        return len(self._exchange_rates)
 
-    def columnCount(self, index: QModelIndex = ...) -> int:  # noqa: N802
-        del index
-        return 3
+    def columnCount(self, index: QModelIndex = ...) -> int:  # noqa: N802, ARG002
+        if not hasattr(self, "_column_count"):
+            self._column_count = len(self.COLUMN_HEADERS)
+        return self._column_count
 
     def index(self, row: int, column: int, parent: QModelIndex = ...) -> QModelIndex:
         if parent.isValid():
             return QModelIndex()
-        if not QAbstractTableModel.hasIndex(self, row, column, QModelIndex()):
+        if row < 0 or column < 0:
             return QModelIndex()
-        item = self.exchange_rates[row]
+        if row >= len(self._exchange_rates) or column >= self._column_count:
+            return QModelIndex()
+
+        item = self._exchange_rates[row]
         return QAbstractTableModel.createIndex(self, row, column, item)
 
     def data(

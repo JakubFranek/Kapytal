@@ -425,15 +425,16 @@ class TransactionFilterFormPresenter:
                 ),
                 title="Warning",
             )
-        accounts = self._account_filter_presenter.checked_accounts
-        if not accounts:
-            display_error_message(
-                (
-                    "No Accounts selected in Account Filter, "
-                    "all Transactions will be discarded."
-                ),
-                title="Warning",
-            )
+        if self._form.account_filter_mode == AccountFilterMode.SELECTION:
+            accounts = self._account_filter_presenter.checked_accounts
+            if not accounts:
+                display_error_message(
+                    (
+                        "No Accounts selected in Account Filter, "
+                        "all Transactions will be discarded."
+                    ),
+                    title="Warning",
+                )
 
         if self._form.currency_filter_active:
             self._check_filter_related_types("Currency Filter", currency_related_types)

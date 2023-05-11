@@ -37,19 +37,22 @@ class PayeeTableModel(QAbstractTableModel):
     def rowCount(self, index: QModelIndex = ...) -> int:  # noqa: N802
         if isinstance(index, QModelIndex) and index.isValid():
             return 0
-        return len(self.payee_stats)
+        return len(self._payee_stats)
 
-    def columnCount(self, index: QModelIndex = ...) -> int:  # noqa: N802
-        del index
-        return 3
+    def columnCount(self, index: QModelIndex = ...) -> int:  # noqa: N802, ARG002
+        if not hasattr(self, "_column_count"):
+            self._column_count = len(self.COLUMN_HEADERS)
+        return self._column_count
 
     def index(self, row: int, column: int, parent: QModelIndex = ...) -> QModelIndex:
         if parent.isValid():
             return QModelIndex()
-        if not QAbstractTableModel.hasIndex(self, row, column, QModelIndex()):
+        if row < 0 or column < 0:
+            return QModelIndex()
+        if row >= len(self._payee_stats) or column >= self._column_count:
             return QModelIndex()
 
-        item = self.payee_stats[row].attribute
+        item = self._payee_stats[row].attribute
         return QAbstractTableModel.createIndex(self, row, column, item)
 
     def data(
@@ -59,7 +62,7 @@ class PayeeTableModel(QAbstractTableModel):
             return None
 
         column = index.column()
-        payee_stats = self.payee_stats[index.row()]
+        payee_stats = self._payee_stats[index.row()]
 
         if role == Qt.ItemDataRole.DisplayRole:
             return self._get_display_role_data(column, payee_stats)

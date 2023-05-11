@@ -36,18 +36,22 @@ class CurrencyTableModel(QAbstractTableModel):
     def rowCount(self, index: QModelIndex = ...) -> int:  # noqa: N802
         if isinstance(index, QModelIndex) and index.isValid():
             return 0
-        return len(self.currencies)
+        return len(self._currencies)
 
-    def columnCount(self, index: QModelIndex = ...) -> int:  # noqa: N802
-        del index
-        return 2
+    def columnCount(self, index: QModelIndex = ...) -> int:  # noqa: N802, ARG002
+        if not hasattr(self, "_column_count"):
+            self._column_count = len(self.COLUMN_HEADERS)
+        return self._column_count
 
     def index(self, row: int, column: int, parent: QModelIndex = ...) -> QModelIndex:
         if parent.isValid():
             return QModelIndex()
-        if not QAbstractTableModel.hasIndex(self, row, column, QModelIndex()):
+        if row < 0 or column < 0:
             return QModelIndex()
-        item = self.currencies[row]
+        if row >= len(self._currencies) or column >= self._column_count:
+            return QModelIndex()
+
+        item = self._currencies[row]
         return QAbstractTableModel.createIndex(self, row, column, item)
 
     def data(
@@ -56,7 +60,7 @@ class CurrencyTableModel(QAbstractTableModel):
         if not index.isValid():
             return None
         column = index.column()
-        currency = self.currencies[index.row()]
+        currency = self._currencies[index.row()]
         if role == Qt.ItemDataRole.DisplayRole:
             if column == CurrencyTableColumn.CODE:
                 return currency.code

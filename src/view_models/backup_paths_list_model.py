@@ -25,20 +25,21 @@ class BackupPathsListModel(QAbstractListModel):
         return len(self.paths)
 
     def index(self, row: int, column: int, parent: QModelIndex = ...) -> QModelIndex:
-        del column
         if parent.isValid():
             return QModelIndex()
-        if not QAbstractListModel.hasIndex(self, row, 0, QModelIndex()):
+        if row < 0 or column < 0:
             return QModelIndex()
-        item = self.paths[row]
+        if row >= len(self._paths) or column >= 1:
+            return QModelIndex()
+
+        item = self._paths[row]
         return QAbstractListModel.createIndex(self, row, 0, item)
 
     def data(self, index: QModelIndex, role: Qt.ItemDataRole = ...) -> str | None:
         if not index.isValid():
             return None
-        path = self.paths[index.row()]
         if role == Qt.ItemDataRole.DisplayRole:
-            return str(path)
+            return str(self._paths[index.row()])
         return None
 
     def pre_add(self) -> None:

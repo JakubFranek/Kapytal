@@ -215,9 +215,6 @@ class CheckableCategoryTreeModel(QAbstractItemModel):
         if _parent.isValid() and _parent.column() != 0:
             return QModelIndex()
 
-        if not QAbstractItemModel.hasIndex(self, row, column, _parent):
-            return QModelIndex()
-
         if not _parent or not _parent.isValid():
             parent = None
         else:

@@ -22,7 +22,7 @@ class AccountTreeNode:
         self.parent = parent
         self.children: list[Self] = []
         self.check_state: Qt.CheckState = Qt.CheckState.Checked
-        self.event_check_state_changed = Event()  
+        self.event_check_state_changed = Event()
 
     def __repr__(self) -> str:
         return f"AccountTreeNode({str(self.item)}, {self.check_state.name})"
@@ -168,9 +168,6 @@ class CheckableAccountTreeModel(QAbstractItemModel):
 
     def index(self, row: int, column: int, _parent: QModelIndex = ...) -> QModelIndex:
         if _parent.isValid() and _parent.column() != 0:
-            return QModelIndex()
-
-        if not QAbstractItemModel.hasIndex(self, row, column, _parent):
             return QModelIndex()
 
         if not _parent or not _parent.isValid():

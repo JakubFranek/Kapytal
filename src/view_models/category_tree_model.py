@@ -32,11 +32,11 @@ class CategoryTreeModel(QAbstractItemModel):
         self._proxy = proxy
 
     @property
-    def root_items(self) -> tuple[Category, ...]:
+    def root_categories(self) -> tuple[Category, ...]:
         return self._root_categories
 
-    @root_items.setter
-    def root_items(self, root_categories: Collection[Category]) -> None:
+    @root_categories.setter
+    def root_categories(self, root_categories: Collection[Category]) -> None:
         self._root_categories = tuple(root_categories)
 
     @property
@@ -53,7 +53,7 @@ class CategoryTreeModel(QAbstractItemModel):
                 return 0
             node: Category = index.internalPointer()
             return len(node.children)
-        return len(self.root_categories)
+        return len(self._root_categories)
 
     def columnCount(self, index: QModelIndex = ...) -> int:  # noqa: N802
         return 3 if not index.isValid() or index.column() == 0 else 0
@@ -62,15 +62,12 @@ class CategoryTreeModel(QAbstractItemModel):
         if _parent.isValid() and _parent.column() != 0:
             return QModelIndex()
 
-        if not QAbstractItemModel.hasIndex(self, row, column, _parent):
-            return QModelIndex()
-
         if not _parent or not _parent.isValid():
             parent = None
         else:
             parent: Category = _parent.internalPointer()
 
-        child = self.root_categories[row] if parent is None else parent.children[row]
+        child = self._root_categories[row] if parent is None else parent.children[row]
         if child:
             return QAbstractItemModel.createIndex(self, row, column, child)
         return QModelIndex()
