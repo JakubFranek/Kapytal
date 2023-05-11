@@ -22,7 +22,7 @@ class AccountTreeNode:
         self.parent = parent
         self.children: list[Self] = []
         self.check_state: Qt.CheckState = Qt.CheckState.Checked
-        self.event_signal_changed = Event()
+        self.event_check_state_changed = Event()  
 
     def __repr__(self) -> str:
         return f"AccountTreeNode({str(self.item)}, {self.check_state.name})"
@@ -41,7 +41,7 @@ class AccountTreeNode:
     def _set_check_state(self, check_state: Qt.CheckState) -> None:
         if check_state != self.check_state:
             self.check_state = check_state
-            self.event_signal_changed(self.item.path)
+            self.event_check_state_changed(self.item.path)
 
     def _set_check_state_recursive(self, check_state: Qt.CheckState) -> None:
         self._set_check_state(check_state)
@@ -136,8 +136,8 @@ class CheckableAccountTreeModel(QAbstractItemModel):
             node for node in self._flat_nodes if node.parent is None
         )
         for node in self._flat_nodes:
-            node.event_signal_changed.clear()
-            node.event_signal_changed.append(
+            node.event_check_state_changed.clear()
+            node.event_check_state_changed.append(
                 lambda item_path: self._node_check_state_changed(item_path)
             )
 

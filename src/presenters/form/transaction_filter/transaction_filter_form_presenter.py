@@ -1,5 +1,6 @@
 import logging
 from collections.abc import Collection, Iterable
+from copy import copy
 
 from PyQt6.QtWidgets import QMessageBox, QWidget
 from src.models.base_classes.account import Account
@@ -161,8 +162,10 @@ class TransactionFilterFormPresenter:
     def account_tree_shown_accounts(self, accounts: Collection[Account]) -> None:
         self._account_tree_shown_accounts = tuple(accounts)
         if self._form.account_filter_mode == AccountFilterMode.ACCOUNT_TREE:
+            previous_filter = copy(self._transaction_filter)
             self._transaction_filter.set_account_filter(accounts, FilterMode.KEEP)
-            self.event_filter_changed()
+            if previous_filter != self._transaction_filter:
+                self.event_filter_changed()
 
     @property
     def filter_active(self) -> bool:
@@ -311,7 +314,6 @@ class TransactionFilterFormPresenter:
         # self._transaction_filter and self._default filter would point to same object
 
         filter_ = TransactionFilter()
-        filter_.set_specific_tags_filter(self._record_keeper.tags, FilterMode.KEEP)
         filter_.set_account_filter(self._record_keeper.accounts, FilterMode.KEEP)
         if self._record_keeper.base_currency is not None:
             filter_.set_cash_amount_filter(

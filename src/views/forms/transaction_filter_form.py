@@ -146,6 +146,14 @@ class TransactionFilterForm(QWidget, Ui_TransactionFilterForm):
         return self.securityListView
 
     @property
+    def specific_tags_filter_active(self) -> bool:
+        return self.specificTagsFilterGroupBox.isChecked()
+
+    @specific_tags_filter_active.setter
+    def specific_tags_filter_active(self, value: bool) -> None:
+        self.specificTagsFilterGroupBox.setChecked(value)
+
+    @property
     def payee_filter_active(self) -> bool:
         return self.payeeFilterGroupBox.isChecked()
 

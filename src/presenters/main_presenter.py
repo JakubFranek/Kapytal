@@ -169,8 +169,9 @@ class MainPresenter:
 
     def _load_record_keeper(self, record_keeper: RecordKeeper) -> None:
         self._record_keeper = record_keeper
-        self._account_tree_presenter.load_record_keeper(record_keeper)
         self._transactions_presenter.load_record_keeper(record_keeper)
+        self._account_tree_presenter.load_record_keeper(record_keeper)
+
         self._currency_form_presenter.load_record_keeper(record_keeper)
         self._payee_form_presenter.load_record_keeper(record_keeper)
         self._tag_form_presenter.load_record_keeper(record_keeper)

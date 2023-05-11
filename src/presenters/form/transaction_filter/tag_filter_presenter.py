@@ -29,7 +29,11 @@ class TagFilterPresenter:
 
     @property
     def specific_tag_filter_mode(self) -> FilterMode:
-        return FilterMode.KEEP
+        return (
+            FilterMode.KEEP
+            if self._form.specific_tags_filter_active
+            else FilterMode.OFF
+        )
 
     @property
     def checked_tags(self) -> tuple[Attribute, ...]:
@@ -52,18 +56,21 @@ class TagFilterPresenter:
         tagless_filter: TaglessFilter,
         split_tags_filter: SplitTagsFilter,
     ) -> None:
-        self._tags_list_model.pre_reset_model()
-        if specific_tag_filter.mode == FilterMode.OFF:
-            self._tags_list_model.checked_items = self._record_keeper.tags
-        elif specific_tag_filter.mode == FilterMode.KEEP:
-            self._tags_list_model.checked_items = specific_tag_filter.tags
-        else:
-            self._tags_list_model.checked_items = [
-                tag
-                for tag in self._record_keeper.tags
-                if tag not in specific_tag_filter.tags
-            ]
-        self._tags_list_model.post_reset_model()
+        self._form.specific_tags_filter_active = (
+            specific_tag_filter.mode != FilterMode.OFF
+        )
+
+        if specific_tag_filter.mode != FilterMode.OFF:
+            self._tags_list_model.pre_reset_model()
+            if specific_tag_filter.mode == FilterMode.KEEP:
+                self._tags_list_model.checked_items = specific_tag_filter.tags
+            else:
+                self._tags_list_model.checked_items = [
+                    tag
+                    for tag in self._record_keeper.tags
+                    if tag not in specific_tag_filter.tags
+                ]
+            self._tags_list_model.post_reset_model()
 
         self._form.tagless_filter_mode = tagless_filter.mode
         self._form.split_tags_filter_mode = split_tags_filter.mode

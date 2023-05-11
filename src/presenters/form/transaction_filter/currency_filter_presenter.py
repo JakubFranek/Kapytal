@@ -35,10 +35,12 @@ class CurrencyFilterPresenter:
         self,
         currency_filter: CurrencyFilter,
     ) -> None:
-        self._currency_list_model.pre_reset_model()
+        self._form.currency_filter_active = currency_filter.mode != FilterMode.OFF
         if currency_filter.mode == FilterMode.OFF:
-            self._form.currency_filter_active = False
-        elif currency_filter.mode == FilterMode.KEEP:
+            return
+
+        self._currency_list_model.pre_reset_model()
+        if currency_filter.mode == FilterMode.KEEP:
             self._form.currency_filter_active = True
             self._currency_list_model.checked_items = currency_filter.currencies
         else:

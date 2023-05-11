@@ -80,12 +80,6 @@ class TransactionsPresenter:
         self._account_tree_shown_accounts = tuple(accounts)
         self._model.valid_accounts = accounts
         self._transaction_filter_form_presenter.account_tree_shown_accounts = accounts
-        self._view.set_filter_active(
-            active=self._transaction_filter_form_presenter.filter_active
-        )
-        self._reset_model()
-        self._update_table_columns()
-        self.resize_table_to_contents()
 
     def reset_model(self) -> None:
         """Resets TransactionTableModel and TransactionFilter, and updates columns."""
@@ -365,7 +359,6 @@ class TransactionsPresenter:
             return
 
         any_deleted = False
-
         for transaction in transactions:
             try:
                 self._record_keeper.remove_transactions((transaction.uuid,))

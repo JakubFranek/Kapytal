@@ -160,7 +160,7 @@ class Ui_TransactionFilterForm(object):
         self.formLayout_5.setWidget(0, QtWidgets.QFormLayout.ItemRole.FieldRole, self.tagLessFilterModeComboBox)
         self.verticalLayout_5.addWidget(self.tagLessFilterGroupBox)
         self.specificTagsFilterGroupBox = QtWidgets.QGroupBox(self.tagsTab)
-        self.specificTagsFilterGroupBox.setCheckable(False)
+        self.specificTagsFilterGroupBox.setCheckable(True)
         self.specificTagsFilterGroupBox.setChecked(False)
         self.specificTagsFilterGroupBox.setObjectName("specificTagsFilterGroupBox")
         self.verticalLayout_14 = QtWidgets.QVBoxLayout(self.specificTagsFilterGroupBox)

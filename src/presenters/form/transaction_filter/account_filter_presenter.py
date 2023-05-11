@@ -36,6 +36,9 @@ class AccountFilterPresenter:
         self,
         account_filter: AccountFilter,
     ) -> None:
+        if self._form.account_filter_mode == AccountFilterMode.ACCOUNT_TREE:
+            return
+
         if account_filter.mode == FilterMode.OFF:
             self._form.account_filter_mode = AccountFilterMode.ACCOUNT_TREE
         elif account_filter.mode == FilterMode.KEEP:
