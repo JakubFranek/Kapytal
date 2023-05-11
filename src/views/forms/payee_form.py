@@ -4,11 +4,12 @@ from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QCloseEvent
 from PyQt6.QtWidgets import QHeaderView, QLineEdit, QWidget
 from src.views import icons
+from src.views.base_classes.custom_widget import CustomWidget
 from src.views.constants import PayeeTableColumn
 from src.views.ui_files.forms.Ui_payee_form import Ui_PayeeForm
 
 
-class PayeeForm(QWidget, Ui_PayeeForm):
+class PayeeForm(CustomWidget, Ui_PayeeForm):
     signal_add_payee = pyqtSignal()
     signal_rename_payee = pyqtSignal()
     signal_remove_payee = pyqtSignal()

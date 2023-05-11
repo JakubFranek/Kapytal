@@ -28,6 +28,7 @@ from src.models.transaction_filters.base_transaction_filter import FilterMode
 from src.models.user_settings import user_settings
 from src.view_models.checkable_category_tree_model import CategorySelectionMode
 from src.views import icons
+from src.views.base_classes.custom_widget import CustomWidget
 from src.views.ui_files.forms.Ui_transaction_filter_form import Ui_TransactionFilterForm
 
 CASH_RELATED_TRANSACTION_TYPES = (
@@ -45,7 +46,7 @@ class AccountFilterMode(Enum):
     SELECTION = auto()
 
 
-class TransactionFilterForm(QWidget, Ui_TransactionFilterForm):
+class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
     signal_ok = pyqtSignal()
     signal_restore_defaults = pyqtSignal()
 

@@ -1,12 +1,13 @@
 import logging
 
 from PyQt6.QtCore import pyqtSignal
-from PyQt6.QtWidgets import QAbstractButton, QDialog, QDialogButtonBox, QWidget
+from PyQt6.QtWidgets import QAbstractButton, QDialogButtonBox, QWidget
 from src.views import icons
+from src.views.base_classes.custom_dialog import CustomDialog
 from src.views.ui_files.dialogs.Ui_currency_dialog import Ui_CurrencyDialog
 
 
-class CurrencyDialog(QDialog, Ui_CurrencyDialog):
+class CurrencyDialog(CustomDialog, Ui_CurrencyDialog):
     signal_ok = pyqtSignal()
 
     def __init__(self, parent: QWidget | None = None) -> None:

@@ -5,11 +5,12 @@ from PyQt6.QtGui import QCloseEvent
 from PyQt6.QtWidgets import QLineEdit, QWidget
 from src.models.model_objects.attributes import CategoryType
 from src.views import icons
+from src.views.base_classes.custom_widget import CustomWidget
 from src.views.ui_files.forms.Ui_category_form import Ui_CategoryForm
 from src.views.widgets.category_tree import CategoryTree
 
 
-class CategoryForm(QWidget, Ui_CategoryForm):
+class CategoryForm(CustomWidget, Ui_CategoryForm):
     signal_add_category = pyqtSignal()
     signal_edit_category = pyqtSignal()
     signal_delete_category = pyqtSignal()

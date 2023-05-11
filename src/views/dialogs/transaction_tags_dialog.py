@@ -4,17 +4,17 @@ from collections.abc import Collection
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtWidgets import (
     QAbstractButton,
-    QDialog,
     QDialogButtonBox,
     QFormLayout,
     QLabel,
     QWidget,
 )
 from src.views import icons
+from src.views.base_classes.custom_dialog import CustomDialog
 from src.views.widgets.multiple_tags_selector_widget import MultipleTagsSelectorWidget
 
 
-class TransactionTagsDialog(QDialog):
+class TransactionTagsDialog(CustomDialog):
     signal_ok = pyqtSignal()
 
     def __init__(

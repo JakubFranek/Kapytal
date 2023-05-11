@@ -4,11 +4,12 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QCloseEvent
 from PyQt6.QtWidgets import QHeaderView, QTableView, QWidget
 from src.views import icons
+from src.views.base_classes.custom_widget import CustomWidget
 from src.views.constants import SecurityAccountTableColumn
 from src.views.ui_files.forms.Ui_security_account_form import Ui_SecurityAccountForm
 
 
-class SecurityAccountForm(QWidget, Ui_SecurityAccountForm):
+class SecurityAccountForm(CustomWidget, Ui_SecurityAccountForm):
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent=parent)
         self.setupUi(self)

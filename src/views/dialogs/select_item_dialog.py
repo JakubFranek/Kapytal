@@ -5,17 +5,17 @@ from PyQt6.QtCore import QSortFilterProxyModel, Qt
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import (
     QAbstractButton,
-    QDialog,
     QDialogButtonBox,
     QLineEdit,
     QWidget,
 )
 from src.view_models.simple_list_model import SimpleListModel
 from src.views import icons
+from src.views.base_classes.custom_dialog import CustomDialog
 from src.views.ui_files.dialogs.Ui_select_item_dialog import Ui_SelectItemDialog
 
 
-class SelectItemDialog(QDialog, Ui_SelectItemDialog):
+class SelectItemDialog(CustomDialog, Ui_SelectItemDialog):
     def __init__(
         self, parent: QWidget, items: Collection[str], title: str, icon: QIcon
     ) -> None:

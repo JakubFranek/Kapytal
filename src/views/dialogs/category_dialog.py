@@ -5,16 +5,16 @@ from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtWidgets import (
     QAbstractButton,
     QCompleter,
-    QDialog,
     QDialogButtonBox,
     QWidget,
 )
 from src.views import icons
+from src.views.base_classes.custom_dialog import CustomDialog
 from src.views.ui_files.dialogs.Ui_category_dialog import Ui_CategoryDialog
 
 
 # TODO: update position limits based on path state?
-class CategoryDialog(QDialog, Ui_CategoryDialog):
+class CategoryDialog(CustomDialog, Ui_CategoryDialog):
     signal_ok = pyqtSignal()
 
     def __init__(

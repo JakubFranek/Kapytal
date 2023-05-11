@@ -4,6 +4,7 @@ from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QCloseEvent
 from PyQt6.QtWidgets import QHeaderView, QLineEdit, QWidget
 from src.views import icons
+from src.views.base_classes.custom_widget import CustomWidget
 from src.views.constants import OwnedSecuritiesTreeColumn, SecurityTableColumn
 from src.views.ui_files.forms.Ui_security_form import Ui_SecurityForm
 
@@ -11,7 +12,7 @@ from src.views.ui_files.forms.Ui_security_form import Ui_SecurityForm
 # TODO: change visual style from side buttons to tool buttons and context menu
 
 
-class SecurityForm(QWidget, Ui_SecurityForm):
+class SecurityForm(CustomWidget, Ui_SecurityForm):
     signal_add_security = pyqtSignal()
     signal_edit_security = pyqtSignal()
     signal_set_security_price = pyqtSignal()

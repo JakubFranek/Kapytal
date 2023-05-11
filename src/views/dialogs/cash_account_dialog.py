@@ -6,15 +6,15 @@ from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtWidgets import (
     QAbstractButton,
     QCompleter,
-    QDialog,
     QDialogButtonBox,
     QWidget,
 )
 from src.views import icons
+from src.views.base_classes.custom_dialog import CustomDialog
 from src.views.ui_files.dialogs.Ui_cash_account_dialog import Ui_CashAccountDialog
 
 
-class CashAccountDialog(QDialog, Ui_CashAccountDialog):
+class CashAccountDialog(CustomDialog, Ui_CashAccountDialog):
     signal_ok = pyqtSignal()
 
     def __init__(

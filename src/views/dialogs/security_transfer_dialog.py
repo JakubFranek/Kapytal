@@ -6,7 +6,6 @@ from enum import Enum, auto
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtWidgets import (
     QAbstractButton,
-    QDialog,
     QDialogButtonBox,
     QFormLayout,
     QLabel,
@@ -18,6 +17,7 @@ from src.models.model_objects.security_objects import (
 )
 from src.models.user_settings import user_settings
 from src.views import icons
+from src.views.base_classes.custom_dialog import CustomDialog
 from src.views.ui_files.dialogs.Ui_security_transfer_dialog import (
     Ui_SecurityTransferDialog,
 )
@@ -30,7 +30,7 @@ class EditMode(Enum):
     EDIT_MULTIPLE = auto()
 
 
-class SecurityTransferDialog(QDialog, Ui_SecurityTransferDialog):
+class SecurityTransferDialog(CustomDialog, Ui_SecurityTransferDialog):
     KEEP_CURRENT_VALUES = "Keep current values"
 
     signal_do_and_close = pyqtSignal()

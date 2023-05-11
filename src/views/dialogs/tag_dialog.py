@@ -1,12 +1,13 @@
 import logging
 
 from PyQt6.QtCore import pyqtSignal
-from PyQt6.QtWidgets import QAbstractButton, QDialog, QDialogButtonBox, QWidget
+from PyQt6.QtWidgets import QAbstractButton, QDialogButtonBox, QWidget
 from src.views import icons
+from src.views.base_classes.custom_dialog import CustomDialog
 from src.views.ui_files.dialogs.Ui_tag_dialog import Ui_TagDialog
 
 
-class TagDialog(QDialog, Ui_TagDialog):
+class TagDialog(CustomDialog, Ui_TagDialog):
     signal_ok = pyqtSignal()
 
     def __init__(self, parent: QWidget, *, edit: bool = False) -> None:

@@ -3,14 +3,15 @@ from datetime import date
 from decimal import Decimal
 
 from PyQt6.QtCore import pyqtSignal
-from PyQt6.QtWidgets import QAbstractButton, QDialog, QDialogButtonBox, QWidget
+from PyQt6.QtWidgets import QAbstractButton, QDialogButtonBox, QWidget
 from src.views import icons
+from src.views.base_classes.custom_dialog import CustomDialog
 from src.views.ui_files.dialogs.Ui_set_exchange_rate_dialog import (
     Ui_SetExchangeRateDialog,
 )
 
 
-class SetExchangeRateDialog(QDialog, Ui_SetExchangeRateDialog):
+class SetExchangeRateDialog(CustomDialog, Ui_SetExchangeRateDialog):
     signal_ok = pyqtSignal()
 
     def __init__(

@@ -3,14 +3,15 @@ from datetime import date
 from decimal import Decimal
 
 from PyQt6.QtCore import pyqtSignal
-from PyQt6.QtWidgets import QAbstractButton, QDialog, QDialogButtonBox, QWidget
+from PyQt6.QtWidgets import QAbstractButton, QDialogButtonBox, QWidget
 from src.views import icons
+from src.views.base_classes.custom_dialog import CustomDialog
 from src.views.ui_files.dialogs.Ui_set_security_price_dialog import (
     Ui_SetSecurityPriceDialog,
 )
 
 
-class SetSecurityPriceDialog(QDialog, Ui_SetSecurityPriceDialog):
+class SetSecurityPriceDialog(CustomDialog, Ui_SetSecurityPriceDialog):
     signal_ok = pyqtSignal()
 
     def __init__(

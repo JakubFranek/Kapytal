@@ -4,11 +4,12 @@ from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QCloseEvent
 from PyQt6.QtWidgets import QHeaderView, QLineEdit, QWidget
 from src.views import icons
+from src.views.base_classes.custom_widget import CustomWidget
 from src.views.constants import TagTableColumn
 from src.views.ui_files.forms.Ui_tag_form import Ui_TagForm
 
 
-class TagForm(QWidget, Ui_TagForm):
+class TagForm(CustomWidget, Ui_TagForm):
     signal_add_tag = pyqtSignal()
     signal_rename_tag = pyqtSignal()
     signal_remove_tag = pyqtSignal()

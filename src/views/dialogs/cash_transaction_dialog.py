@@ -7,7 +7,6 @@ from enum import Enum, auto
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtWidgets import (
     QAbstractButton,
-    QDialog,
     QDialogButtonBox,
     QVBoxLayout,
     QWidget,
@@ -15,6 +14,7 @@ from PyQt6.QtWidgets import (
 from src.models.model_objects.cash_objects import CashAccount, CashTransactionType
 from src.models.user_settings import user_settings
 from src.views import icons
+from src.views.base_classes.custom_dialog import CustomDialog
 from src.views.dialogs.select_item_dialog import ask_user_for_selection
 from src.views.ui_files.dialogs.Ui_cash_transaction_dialog import (
     Ui_CashTransactionDialog,
@@ -43,7 +43,7 @@ class EditMode(Enum):
 # REFACTOR: refactor this dialog (messy code)
 
 
-class CashTransactionDialog(QDialog, Ui_CashTransactionDialog):
+class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
     KEEP_CURRENT_VALUES = "Keep current values"
 
     signal_do_and_close = pyqtSignal()

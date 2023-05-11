@@ -4,13 +4,14 @@ from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QCloseEvent
 from PyQt6.QtWidgets import QHeaderView, QWidget
 from src.views import icons
+from src.views.base_classes.custom_widget import CustomWidget
 from src.views.constants import ExchangeRateTableColumn
 from src.views.ui_files.forms.Ui_currency_form import Ui_CurrencyForm
 
 
 # TODO: change visual style from side buttons to tool buttons and context menu
 # TODO: add some way to view and edit exchange rate history
-class CurrencyForm(QWidget, Ui_CurrencyForm):
+class CurrencyForm(CustomWidget, Ui_CurrencyForm):
     signal_add_currency = pyqtSignal()
     signal_set_base_currency = pyqtSignal()
     signal_remove_currency = pyqtSignal()

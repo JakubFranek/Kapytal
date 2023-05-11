@@ -4,15 +4,13 @@ from collections.abc import Collection
 from pathlib import Path
 
 from PyQt6.QtCore import PYQT_VERSION_STR, QT_VERSION_STR, QSize, Qt, pyqtSignal
-from PyQt6.QtGui import QAction, QCloseEvent, QIcon
+from PyQt6.QtGui import QAction, QCloseEvent, QIcon, QKeyEvent
 from PyQt6.QtWidgets import QFileDialog, QMainWindow, QMessageBox
 from src.utilities import constants
 from src.views import icons
 from src.views.ui_files.Ui_main_window import Ui_MainWindow
 from src.views.widgets.account_tree_widget import AccountTreeWidget
 from src.views.widgets.transaction_table_widget import TransactionTableWidget
-
-# TODO: close forms / dialogs via ESC key (implement keypress event)
 
 
 class MainView(QMainWindow, Ui_MainWindow):
@@ -207,3 +205,9 @@ class MainView(QMainWindow, Ui_MainWindow):
         )
         self.actionQuit.triggered.connect(self.close)
         self.actionAbout.triggered.connect(self.show_about)
+
+    def keyPressEvent(self, a0: QKeyEvent) -> None:  # noqa: N802
+        if a0.key() == Qt.Key.Key_Escape:
+            logging.debug(f"Closing {self.__class__.__name__}")
+            self.close()
+        return super().keyPressEvent(a0)

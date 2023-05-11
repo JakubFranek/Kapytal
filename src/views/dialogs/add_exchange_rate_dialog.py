@@ -1,14 +1,15 @@
 import logging
 
 from PyQt6.QtCore import pyqtSignal
-from PyQt6.QtWidgets import QAbstractButton, QDialog, QDialogButtonBox, QWidget
+from PyQt6.QtWidgets import QAbstractButton, QDialogButtonBox, QWidget
 from src.views import icons
+from src.views.base_classes.custom_dialog import CustomDialog
 from src.views.ui_files.dialogs.Ui_add_exchange_rate_dialog import (
     Ui_AddExchangeRateDialog,
 )
 
 
-class AddExchangeRateDialog(QDialog, Ui_AddExchangeRateDialog):
+class AddExchangeRateDialog(CustomDialog, Ui_AddExchangeRateDialog):
     signal_ok = pyqtSignal()
 
     def __init__(

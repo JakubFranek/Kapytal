@@ -4,12 +4,13 @@ from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QCloseEvent
 from PyQt6.QtWidgets import QAbstractButton, QDialogButtonBox, QFileDialog, QWidget
 from src.views import icons
+from src.views.base_classes.custom_widget import CustomWidget
 from src.views.ui_files.forms.Ui_settings_form import Ui_SettingsForm
 
 # IDEA: link to documentation instead of notes?
 
 
-class SettingsForm(QWidget, Ui_SettingsForm):
+class SettingsForm(CustomWidget, Ui_SettingsForm):
     signal_ok = pyqtSignal()
     signal_apply = pyqtSignal()
 

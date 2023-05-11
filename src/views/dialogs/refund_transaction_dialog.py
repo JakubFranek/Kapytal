@@ -6,7 +6,6 @@ from decimal import Decimal
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtWidgets import (
     QAbstractButton,
-    QDialog,
     QDialogButtonBox,
     QVBoxLayout,
     QWidget,
@@ -20,6 +19,7 @@ from src.models.model_objects.cash_objects import (
 from src.models.model_objects.currency_objects import CashAmount
 from src.models.user_settings import user_settings
 from src.views import icons
+from src.views.base_classes.custom_dialog import CustomDialog
 from src.views.dialogs.select_item_dialog import ask_user_for_selection
 from src.views.ui_files.dialogs.Ui_refund_transaction_dialog import (
     Ui_RefundTransactionDialog,
@@ -28,7 +28,7 @@ from src.views.widgets.label_widget import LabelWidget
 from src.views.widgets.refund_row_widget import RefundRowWidget
 
 
-class RefundTransactionDialog(QDialog, Ui_RefundTransactionDialog):
+class RefundTransactionDialog(CustomDialog, Ui_RefundTransactionDialog):
     signal_do_and_close = pyqtSignal()
 
     def __init__(  # noqa: PLR0913

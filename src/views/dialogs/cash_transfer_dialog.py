@@ -6,7 +6,6 @@ from enum import Enum, auto
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtWidgets import (
     QAbstractButton,
-    QDialog,
     QDialogButtonBox,
     QDoubleSpinBox,
     QFormLayout,
@@ -16,6 +15,7 @@ from PyQt6.QtWidgets import (
 from src.models.model_objects.cash_objects import CashAccount
 from src.models.user_settings import user_settings
 from src.views import icons
+from src.views.base_classes.custom_dialog import CustomDialog
 from src.views.ui_files.dialogs.Ui_cash_transfer_dialog import Ui_CashTransferDialog
 from src.views.widgets.multiple_tags_selector_widget import MultipleTagsSelectorWidget
 
@@ -38,7 +38,7 @@ class EditMode(Enum):
         )
 
 
-class CashTransferDialog(QDialog, Ui_CashTransferDialog):
+class CashTransferDialog(CustomDialog, Ui_CashTransferDialog):
     KEEP_CURRENT_VALUES = "Keep current values"
 
     signal_do_and_close = pyqtSignal()
