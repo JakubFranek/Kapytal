@@ -355,6 +355,8 @@ class AccountTreeModel(QAbstractItemModel):
                     return colors.get_gray_brush()
             except ConversionFactorNotFoundError:
                 return None
+            else:
+                return None
         if column == AccountTreeColumn.BALANCE_BASE:
             if self.base_currency is None:
                 return None

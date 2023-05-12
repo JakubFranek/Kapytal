@@ -87,7 +87,7 @@ def test_eq_hash_cash_amount_filters() -> None:
 @given(other=everything_except(TransactionFilter))
 def test_eq_hash_different_type(other: Any) -> None:
     filter_ = TransactionFilter()
-    assert filter_.__eq__(other) is False
+    assert filter_.__eq__(other) is NotImplemented
 
 
 @given(

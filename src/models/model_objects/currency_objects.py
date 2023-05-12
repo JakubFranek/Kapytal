@@ -104,13 +104,13 @@ class Currency(CopyableMixin, JSONSerializableMixin):
     def get_conversion_factor(
         self, target_currency: Self, date_: date | None = None
     ) -> Decimal:
-        cache_key = f"{self.code}/{target_currency.code}"
+        cache_key = f"{self._code}/{target_currency.code}"
         # try to get conversion factor from cache
         if date_ is None:
             factor = self._factor_cache.get(cache_key)
             if factor is not None:
                 return factor
-            reversed_cache_key = f"{target_currency.code}/{self.code}"
+            reversed_cache_key = f"{target_currency.code}/{self._code}"
             factor = target_currency._factor_cache.get(  # noqa: SLF001
                 reversed_cache_key
             )
@@ -122,10 +122,10 @@ class Currency(CopyableMixin, JSONSerializableMixin):
         )
         if exchange_rates is None:
             logging.warning(
-                f"No path from {self.code} to {target_currency.code} found."
+                f"No path from {self._code} to {target_currency.code} found."
             )
             raise ConversionFactorNotFoundError(
-                f"No path from {self.code} to {target_currency.code} found."
+                f"No path from {self._code} to {target_currency.code} found."
             )
 
         factor = Decimal(1)
@@ -338,7 +338,7 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
             )
         try:
             self._raw_value = Decimal(value)
-        except (TypeError, InvalidOperation) as exc:
+        except (TypeError, InvalidOperation, ValueError) as exc:
             raise TypeError(
                 "CashAmount.value must be a Decimal, integer or a string "
                 "containing a number."

@@ -266,6 +266,7 @@ class CashTransaction(CashRelatedTransaction):
         tag_amount_pairs: Collection[tuple[Attribute, CashAmount]],
     ) -> None:
         super().__init__()
+        self._refunds: list[RefundTransaction] = []
         self.set_attributes(
             description=description,
             datetime_=datetime_,
@@ -275,7 +276,6 @@ class CashTransaction(CashRelatedTransaction):
             tag_amount_pairs=tag_amount_pairs,
             payee=payee,
         )
-        self._refunds: list[RefundTransaction] = []
 
     @property
     def type_(self) -> CashTransactionType:
@@ -285,14 +285,9 @@ class CashTransaction(CashRelatedTransaction):
     def account(self) -> CashAccount:
         return self._account
 
-    # TODO: optimize this by caching
-    # has to be recalculated every time category_amount_pairs changes
     @property
     def amount(self) -> CashAmount:
-        return sum(
-            (amount for _, amount in self._category_amount_pairs),
-            start=CashAmount(0, self.currency),
-        )
+        return self._amount
 
     @property
     def currency(self) -> Currency:
@@ -308,7 +303,7 @@ class CashTransaction(CashRelatedTransaction):
 
     @property
     def category_amount_pairs(self) -> tuple[tuple[Category, CashAmount], ...]:
-        return tuple(self._category_amount_pairs)
+        return self._category_amount_pairs
 
     @property
     def categories(self) -> tuple[Category]:
@@ -325,7 +320,7 @@ class CashTransaction(CashRelatedTransaction):
 
     @property
     def tag_amount_pairs(self) -> tuple[tuple[Attribute, CashAmount], ...]:
-        return tuple(self._tag_amount_pairs)
+        return self._tag_amount_pairs
 
     @property
     def tags(self) -> tuple[Attribute]:
@@ -338,25 +333,17 @@ class CashTransaction(CashRelatedTransaction):
 
     @property
     def are_tags_split(self) -> bool:
-        return any(amount != self.amount for _, amount in self._tag_amount_pairs)
+        return any(amount != self._amount for _, amount in self._tag_amount_pairs)
 
     @property
     def refunds(self) -> tuple["RefundTransaction", ...]:
-        if hasattr(self, "_refunds"):
-            return tuple(self._refunds)
-        return ()
+        return tuple(self._refunds)
 
     @property
     def refunded_ratio(self) -> Decimal:
         if self.is_refunded:
-            return (
-                sum(
-                    (refund.amount for refund in self.refunds),
-                    start=CashAmount(0, self.currency),
-                )
-                / self.amount
-            )
-        return 0
+            return self._refunded_ratio
+        return Decimal(0)
 
     @property
     def is_refunded(self) -> bool:
@@ -366,7 +353,7 @@ class CashTransaction(CashRelatedTransaction):
         return (
             f"CashTransaction({self.type_.name}, "
             f"account='{self._account.name}', "
-            f"amount={self.amount}, "
+            f"amount={self._amount}, "
             f"category={{{self.category_names}}}, "
             f"{self.datetime_.strftime('%Y-%m-%d')})"
         )
@@ -447,10 +434,21 @@ class CashTransaction(CashRelatedTransaction):
     def add_refund(self, refund: "RefundTransaction") -> None:
         self._validate_refund(refund)
         self._refunds.append(refund)
+        self._update_refunded_ratio()
 
     def remove_refund(self, refund: "RefundTransaction") -> None:
         self._validate_refund(refund)
         self._refunds.remove(refund)
+        self._update_refunded_ratio()
+
+    def _update_refunded_ratio(self) -> None:
+        self._refunded_ratio = (
+            sum(
+                (refund.amount for refund in self.refunds),
+                start=CashAmount(0, self.currency),
+            )
+            / self._amount
+        )
 
     def get_max_refundable_for_category(
         self, category: Category, ignore_refund: "RefundTransaction|None"
@@ -511,7 +509,7 @@ class CashTransaction(CashRelatedTransaction):
             raise ValueError(f"Tag {tag} not in this CashTransaction's tags.")
 
         other_refunds = [refund for refund in self._refunds if refund != ignore_refund]
-        remaining_amount = self.amount - sum(
+        remaining_amount = self._amount - sum(
             (refund.amount for refund in other_refunds),
             start=CashAmount(0, self.currency),
         )
@@ -563,9 +561,9 @@ class CashTransaction(CashRelatedTransaction):
         new_tags = tuple(tag for tag in tags if tag not in self.tags)
         tag_amount_pairs = list(self._tag_amount_pairs)
         for tag in new_tags:
-            tup = (tag, self.amount)
+            tup = (tag, self._amount)
             tag_amount_pairs.append(tup)
-        self._validate_tag_amount_pairs(tag_amount_pairs, self.amount, self.currency)
+        self._validate_tag_amount_pairs(tag_amount_pairs, self._amount, self.currency)
         self._tag_amount_pairs = tag_amount_pairs
 
     def remove_tags(self, tags: Collection[Attribute]) -> None:
@@ -580,7 +578,7 @@ class CashTransaction(CashRelatedTransaction):
             for tag, amount in self._tag_amount_pairs
             if tag not in tags_to_remove
         ]
-        self._validate_tag_amount_pairs(tag_amount_pairs, self.amount, self.currency)
+        self._validate_tag_amount_pairs(tag_amount_pairs, self._amount, self.currency)
         self._tag_amount_pairs = tag_amount_pairs
 
     def set_attributes(
@@ -701,8 +699,12 @@ class CashTransaction(CashRelatedTransaction):
         self._datetime = datetime_
         self._type = type_
         self._payee = payee
-        self._category_amount_pairs = list(category_amount_pairs)
-        self._tag_amount_pairs = list(tag_amount_pairs)
+        self._category_amount_pairs = tuple(category_amount_pairs)
+        self._tag_amount_pairs = tuple(tag_amount_pairs)
+        self._amount = sum(
+            (amount for _, amount in self._category_amount_pairs),
+            start=CashAmount(0, account.currency),
+        )
         self._set_account(account)
 
     def _set_account(self, account: CashAccount) -> None:
@@ -787,7 +789,7 @@ class CashTransaction(CashRelatedTransaction):
             if amount is None:
                 # This means a split transaction can be made single-category without
                 # specifying amount, using the current total.
-                return ((category, self.amount),)
+                return ((category, self._amount),)
             raise TypeError(
                 "Second element of 'collection' tuples must be of type CashAmount "
                 "or None."
@@ -828,7 +830,7 @@ class CashTransaction(CashRelatedTransaction):
                         break
                 else:
                     # If the Tag is new, use the maximum amount
-                    _tag_amount_pairs.append((tag, self.amount))
+                    _tag_amount_pairs.append((tag, self._amount))
             else:
                 _tag_amount_pairs.append((tag, amount))
 
@@ -869,8 +871,8 @@ class CashTransaction(CashRelatedTransaction):
     def _get_amount(self, account: CashAccount) -> CashAmount:
         del account
         if self.type_ == CashTransactionType.INCOME:
-            return self.amount
-        return -self.amount
+            return self._amount
+        return -self._amount
 
 
 class CashTransfer(CashRelatedTransaction):
@@ -1105,8 +1107,8 @@ class CashTransfer(CashRelatedTransaction):
 
     def _get_amount(self, account: CashAccount) -> CashAmount:
         if self.recipient == account:
-            return self.amount_received
-        return -self.amount_sent
+            return self._amount_received
+        return -self._amount_sent
 
 
 class RefundTransaction(CashRelatedTransaction):
@@ -1132,6 +1134,7 @@ class RefundTransaction(CashRelatedTransaction):
             tag_amount_pairs=tag_amount_pairs,
             payee=payee,
         )
+        self._refunded_transaction.add_refund(self)
 
     @property
     def account(self) -> CashAccount:
@@ -1139,10 +1142,7 @@ class RefundTransaction(CashRelatedTransaction):
 
     @property
     def amount(self) -> CashAmount:
-        return sum(
-            (amount for _, amount in self._category_amount_pairs),
-            start=CashAmount(0, self.currency),
-        )
+        return self._amount
 
     @property
     def currency(self) -> Currency:
@@ -1183,12 +1183,12 @@ class RefundTransaction(CashRelatedTransaction):
 
     @property
     def refund_ratio(self) -> Decimal:
-        return Decimal(self.amount / self.refunded_transaction.amount)
+        return Decimal(self._amount / self.refunded_transaction.amount)
 
     def __repr__(self) -> str:
         return (
             f"RefundTransaction(account='{self._account.name}', "
-            f"amount={self.amount}, "
+            f"amount={self._amount}, "
             f"category={{{self.category_names}}}, "
             f"{self.datetime_.strftime('%Y-%m-%d')})"
         )
@@ -1390,6 +1390,10 @@ class RefundTransaction(CashRelatedTransaction):
         self._category_amount_pairs = tuple(category_amount_pairs)
         self._tag_amount_pairs = tuple(tag_amount_pairs)
         self._payee = payee
+        self._amount = sum(
+            (amount for _, amount in self._category_amount_pairs),
+            start=CashAmount(0, account.currency),
+        )
         self._set_account(account)
 
     def _validate_datetime(
@@ -1430,7 +1434,6 @@ class RefundTransaction(CashRelatedTransaction):
             )
 
         self._refunded_transaction = refunded_transaction
-        self._refunded_transaction.add_refund(self)
 
     def _validate_category_amount_pairs(
         self,
@@ -1509,7 +1512,7 @@ class RefundTransaction(CashRelatedTransaction):
 
     def _get_amount(self, account: CashAccount) -> CashAmount:
         del account
-        return self.amount
+        return self._amount
 
 
 def _validate_payee(payee: Attribute) -> None:

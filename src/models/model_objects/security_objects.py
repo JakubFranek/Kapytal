@@ -437,7 +437,7 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
 
     @property
     def amount(self) -> CashAmount:
-        return self._price_per_share * self._shares
+        return self._amount
 
     @property
     def currency(self) -> Currency:
@@ -624,6 +624,7 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
         self._security = security
         self._shares = Decimal(shares)
         self._price_per_share = price_per_share
+        self._amount = self._shares * self._price_per_share
         self._set_accounts(security_account, cash_account)
 
     def _set_accounts(
@@ -686,14 +687,14 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
     def _get_amount(self, account: CashAccount) -> CashAmount:
         del account
         if self.type_ == SecurityTransactionType.BUY:
-            return -self._shares * self.price_per_share
-        return self._shares * self.price_per_share
+            return -self._amount
+        return self._amount
 
     def _get_shares(self, account: SecurityAccount) -> Decimal:
         del account
         if self.type_ == SecurityTransactionType.BUY:
-            return self.shares
-        return -self.shares
+            return self._shares
+        return -self._shares
 
 
 class SecurityTransfer(SecurityRelatedTransaction):
@@ -870,7 +871,7 @@ class SecurityTransfer(SecurityRelatedTransaction):
         self._description = description
         self._datetime = datetime_
         self._security = security
-        self._shares = Decimal(shares)
+        self._shares = shares
         self._set_accounts(sender, recipient)
 
     def _validate_accounts(
@@ -918,5 +919,5 @@ class SecurityTransfer(SecurityRelatedTransaction):
 
     def _get_shares(self, account: SecurityAccount) -> Decimal:
         if account == self._sender:
-            return -self.shares
-        return self.shares
+            return -self._shares
+        return self._shares
