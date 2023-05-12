@@ -88,17 +88,20 @@ def get_category_stats(
 ) -> CategoryStats:
     _transactions = _filter_date_range(transactions, date_start, date_end)
 
-    _transactions_direct = [
+    _transactions = [
         transaction
         for transaction in _transactions
         if isinstance(transaction, CashTransaction | RefundTransaction)
-        and category in transaction.categories
+    ]
+    _transactions_direct = [
+        transaction
+        for transaction in _transactions
+        if category in transaction.categories
     ]
     _transactions_all = [
         transaction
         for transaction in _transactions
-        if isinstance(transaction, CashTransaction | RefundTransaction)
-        and transaction.is_category_related(category)
+        if transaction.is_category_related(category)
     ]
 
     transactions_self = len(_transactions_direct)

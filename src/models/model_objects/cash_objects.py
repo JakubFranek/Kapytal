@@ -97,6 +97,10 @@ class CashAccount(Account):
     ) -> None:
         super().__init__(name=name, parent=parent)
 
+        # _allow_update_balance attribute is used to block updating the balance
+        # when a transaction is added or removed during deserialization
+        self._allow_update_balance = True
+
         if not isinstance(currency, Currency):
             raise TypeError("CashAccount.currency must be a Currency.")
         self._currency = currency
@@ -128,7 +132,8 @@ class CashAccount(Account):
             )
         logging.info(f"Setting initial_balance={amount}")
         self._initial_balance = amount
-        self.update_balance()
+        if self._allow_update_balance:
+            self.update_balance()
 
     @property
     def balance_history(
@@ -140,7 +145,6 @@ class CashAccount(Account):
     def transactions(
         self,
     ) -> tuple[CashRelatedTransaction, ...]:
-        self._transactions.sort(key=lambda transaction: transaction.datetime_)
         return tuple(self._transactions)
 
     def get_balance(self, currency: Currency) -> CashAmount:
@@ -169,12 +173,14 @@ class CashAccount(Account):
                 "CashAccount.transactions."
             )
         self._transactions.append(transaction)
-        self.update_balance()
+        if self._allow_update_balance:
+            self.update_balance()
 
     def remove_transaction(self, transaction: CashRelatedTransaction) -> None:
         self._validate_transaction(transaction)
         self._transactions.remove(transaction)
-        self.update_balance()
+        if self._allow_update_balance:
+            self.update_balance()
 
     def serialize(self) -> dict[str, Any]:
         index = self.parent.children.index(self) if self.parent is not None else None
@@ -220,16 +226,15 @@ class CashAccount(Account):
 
     def update_balance(self) -> None:
         logging.debug(f"Updating balance of {self}")
-        if len(self.transactions) > 0:
-            oldest_datetime = min(
-                transaction.datetime_ for transaction in self.transactions
-            )
+        self._transactions.sort(key=lambda transaction: transaction.datetime_)
+        if len(self._transactions) > 0:
+            oldest_datetime = self._transactions[0].datetime_
         else:
-            oldest_datetime = self.balance_history[0][0] + timedelta(days=1)
+            oldest_datetime = self._balance_history[0][0] + timedelta(days=1)
         datetime_balance_history: list[
             tuple[datetime, CashAmount, CashRelatedTransaction | None]
-        ] = [(oldest_datetime - timedelta(days=1), self.initial_balance, None)]
-        for transaction in self.transactions:
+        ] = [(oldest_datetime - timedelta(days=1), self._initial_balance, None)]
+        for transaction in self._transactions:
             last_balance = datetime_balance_history[-1][1]
             next_balance = last_balance + transaction.get_amount(self)
             datetime_balance_history.append(
@@ -295,7 +300,7 @@ class CashTransaction(CashRelatedTransaction):
 
     @property
     def currencies(self) -> tuple[Currency]:
-        return (self.currency,)
+        return (self._currency,)
 
     @property
     def payee(self) -> Attribute:
@@ -307,7 +312,7 @@ class CashTransaction(CashRelatedTransaction):
 
     @property
     def categories(self) -> tuple[Category]:
-        return tuple(category for category, _ in self._category_amount_pairs)
+        return self._categories
 
     @property
     def category_names(self) -> str:
@@ -324,7 +329,7 @@ class CashTransaction(CashRelatedTransaction):
 
     @property
     def tags(self) -> tuple[Attribute]:
-        return tuple(tag for tag, _ in self._tag_amount_pairs)
+        return self._tags
 
     @property
     def tag_names(self) -> str:
@@ -333,7 +338,7 @@ class CashTransaction(CashRelatedTransaction):
 
     @property
     def are_tags_split(self) -> bool:
-        return any(amount != self._amount for _, amount in self._tag_amount_pairs)
+        return self._are_tags_split
 
     @property
     def refunds(self) -> tuple["RefundTransaction", ...]:
@@ -536,8 +541,12 @@ class CashTransaction(CashRelatedTransaction):
     def is_accounts_related(self, accounts: Collection[Account]) -> bool:
         return self._account in accounts
 
+    # TODO: this probably does not check 2nd+ level parents
     def is_category_related(self, category: Category) -> bool:
-        return _is_category_related(self, category)
+        direct_match = category in self._categories
+        if direct_match:
+            return True
+        return any(_category.parent == category for _category in self._categories)
 
     def get_amount_for_category(self, category: Category, *, total: bool) -> CashAmount:
         return _get_amount_for_category(self, category, total=total)
@@ -565,6 +574,7 @@ class CashTransaction(CashRelatedTransaction):
             tag_amount_pairs.append(tup)
         self._validate_tag_amount_pairs(tag_amount_pairs, self._amount, self.currency)
         self._tag_amount_pairs = tag_amount_pairs
+        self._tags = tuple(tag for tag, _ in tag_amount_pairs)
 
     def remove_tags(self, tags: Collection[Attribute]) -> None:
         if self.is_refunded:
@@ -580,6 +590,7 @@ class CashTransaction(CashRelatedTransaction):
         ]
         self._validate_tag_amount_pairs(tag_amount_pairs, self._amount, self.currency)
         self._tag_amount_pairs = tag_amount_pairs
+        self._tags = tuple(tag for tag, _ in tag_amount_pairs)
 
     def set_attributes(
         self,
@@ -701,10 +712,7 @@ class CashTransaction(CashRelatedTransaction):
         self._payee = payee
         self._category_amount_pairs = tuple(category_amount_pairs)
         self._tag_amount_pairs = tuple(tag_amount_pairs)
-        self._amount = sum(
-            (amount for _, amount in self._category_amount_pairs),
-            start=CashAmount(0, account.currency),
-        )
+        self._update_cached_data(account)
         self._set_account(account)
 
     def _set_account(self, account: CashAccount) -> None:
@@ -715,6 +723,19 @@ class CashTransaction(CashRelatedTransaction):
             self._account.remove_transaction(self)
         self._account = account
         self._account.add_transaction(self)
+
+    def _update_cached_data(self, account: CashAccount) -> None:
+        self._amount = sum(
+            (amount for _, amount in self._category_amount_pairs),
+            start=CashAmount(0, account.currency),
+        )
+        self._categories = tuple(
+            category for category, _ in self._category_amount_pairs
+        )
+        self._tags = tuple(tag for tag, _ in self._tag_amount_pairs)
+        self._are_tags_split = any(
+            amount != self._amount for _, amount in self._tag_amount_pairs
+        )
 
     def _validate_type(self, type_: CashTransactionType) -> None:
         if not isinstance(type_, CashTransactionType):
@@ -1554,10 +1575,9 @@ def _is_category_related(
     transaction: CashTransaction | RefundTransaction, category: Category
 ) -> bool:
     direct_match = category in transaction.categories
-    indirect_match = any(
-        _category.parent == category for _category in transaction.categories
-    )
-    return direct_match or indirect_match
+    if direct_match:
+        return True
+    return any(_category.parent == category for _category in transaction.categories)
 
 
 def _get_amount_for_category(

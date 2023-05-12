@@ -1375,6 +1375,16 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
             obj._securities,  # noqa: SLF001
         )
 
+        cash_accounts = [
+            account
+            for account in obj._accounts  # noqa: SLF001
+            if isinstance(account, CashAccount)
+        ]
+        for account in cash_accounts:
+            # Enable updating account balance after deserialization
+            account._allow_update_balance = True  # noqa: SLF001
+            account.update_balance()
+
         return obj
 
     @staticmethod
@@ -1422,6 +1432,8 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
                 account = CashAccount.deserialize(
                     account_dict, account_groups, currencies
                 )
+                # Disable updating balance during deserialization
+                account._allow_update_balance = False  # noqa: SLF001
             elif account_dict["datatype"] == "SecurityAccount":
                 account = SecurityAccount.deserialize(account_dict, account_groups)
             else:

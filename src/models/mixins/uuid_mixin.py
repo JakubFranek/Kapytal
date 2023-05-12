@@ -17,4 +17,4 @@ class UUIDMixin:
     def __eq__(self, __o: object) -> bool:
         if not isinstance(__o, UUIDMixin):
             return NotImplemented
-        return self._uuid == __o._uuid  # noqa: SLF001
+        return self._uuid.int == __o._uuid.int  # noqa: SLF001
