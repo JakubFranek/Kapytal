@@ -1314,23 +1314,20 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         if base_currency_code is not None:
             obj.set_base_currency(base_currency_code)
 
-        exchange_rates_dicts = data["exchange_rates"]
         obj._exchange_rates = RecordKeeper._deserialize_exchange_rates(  # noqa: SLF001
-            exchange_rates_dicts, obj._currencies  # noqa: SLF001
+            data["exchange_rates"], obj._currencies  # noqa: SLF001
         )
 
-        security_dicts = data["securities"]
         obj._securities = RecordKeeper._deserialize_securities(  # noqa: SLF001
-            security_dicts, obj._currencies  # noqa: SLF001
+            data["securities"], obj._currencies  # noqa: SLF001
         )
 
         obj._account_groups = RecordKeeper._deserialize_account_groups(  # noqa: SLF001
             data["account_groups"]
         )
 
-        account_dicts = data["accounts"]
         obj._accounts = RecordKeeper._deserialize_accounts(  # noqa: SLF001
-            account_dicts, obj._account_groups, obj._currencies  # noqa: SLF001
+            data["accounts"], obj._account_groups, obj._currencies  # noqa: SLF001
         )
 
         obj._root_account_items = (  # noqa: SLF001
@@ -1341,13 +1338,11 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
             )
         )
 
-        payee_names = data["payees"]
         obj._payees = [  # noqa: SLF001
-            Attribute(name, AttributeType.PAYEE) for name in payee_names
+            Attribute(name, AttributeType.PAYEE) for name in data["payees"]
         ]
-        tag_names = data["tags"]
         obj._tags = [  # noqa: SLF001
-            Attribute(name, AttributeType.TAG) for name in tag_names
+            Attribute(name, AttributeType.TAG) for name in data["tags"]
         ]
 
         obj._categories = RecordKeeper._deserialize_categories(  # noqa: SLF001

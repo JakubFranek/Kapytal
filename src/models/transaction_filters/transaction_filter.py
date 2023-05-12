@@ -173,7 +173,7 @@ class TransactionFilter(CopyableMixin):
 
     def __eq__(self, __o: object) -> bool:
         if not isinstance(__o, TransactionFilter):
-            return False
+            return NotImplemented
         self_members = self._get_members_without_cash_amount_filter()
         other_members = __o._get_members_without_cash_amount_filter()  # noqa: SLF001
         if self_members != other_members:

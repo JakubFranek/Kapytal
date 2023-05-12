@@ -285,7 +285,8 @@ class CashTransaction(CashRelatedTransaction):
     def account(self) -> CashAccount:
         return self._account
 
-    # TODO: optimize this
+    # TODO: optimize this by caching
+    # has to be recalculated every time category_amount_pairs changes
     @property
     def amount(self) -> CashAmount:
         return sum(
@@ -704,7 +705,6 @@ class CashTransaction(CashRelatedTransaction):
         self._tag_amount_pairs = list(tag_amount_pairs)
         self._set_account(account)
 
-    # IDEA: looks very similar to its Security counterpart
     def _set_account(self, account: CashAccount) -> None:
         if hasattr(self, "_account"):
             if self._account == account:
@@ -1062,7 +1062,6 @@ class CashTransfer(CashRelatedTransaction):
         self._amount_received = amount_received
         self._set_accounts(sender, recipient)
 
-    # IDEA: looks very similar to its Security counterpart
     def _set_accounts(self, sender: CashAccount, recipient: CashAccount) -> None:
         add_sender = True
         add_recipient = True

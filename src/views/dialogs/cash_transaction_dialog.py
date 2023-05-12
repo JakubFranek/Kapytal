@@ -39,7 +39,6 @@ class EditMode(Enum):
 
 
 # IDEA: "preferred" size for description? or something
-# TODO: delete dialogs on close?
 # REFACTOR: refactor this dialog (messy code)
 
 

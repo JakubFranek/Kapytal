@@ -12,7 +12,7 @@ from src.models.model_objects.cash_objects import (
     CashTransfer,
     RefundTransaction,
 )
-from src.models.model_objects.currency_objects import Currency
+from src.models.model_objects.currency_objects import CashAmount, Currency
 from src.models.model_objects.security_objects import (
     Security,
     SecurityTransactionType,
@@ -59,6 +59,29 @@ def test_eq_hash() -> None:
     filter_1.set_description_filter("test pattern", FilterMode.KEEP)
     assert filter_1.__eq__(filter_2) is False
     assert filter_1.__hash__() != filter_2.__hash__()
+
+
+def test_eq_hash_cash_amount_filters() -> None:
+    currency = Currency("CZK", 2)
+    filter_1 = TransactionFilter()
+    filter_2 = TransactionFilter()
+    assert filter_1 == filter_2
+    filter_1.set_cash_amount_filter(
+        CashAmount(0, currency), CashAmount(1, currency), FilterMode.OFF
+    )
+    assert filter_1 == filter_2
+    filter_1 = TransactionFilter()
+    filter_2 = TransactionFilter()
+    filter_2.set_cash_amount_filter(
+        CashAmount(0, currency), CashAmount(1, currency), FilterMode.OFF
+    )
+    assert filter_1 == filter_2
+    filter_1 = TransactionFilter()
+    filter_2 = TransactionFilter()
+    filter_1.set_cash_amount_filter(
+        CashAmount(0, currency), CashAmount(1, currency), FilterMode.KEEP
+    )
+    assert filter_1 != filter_2
 
 
 @given(other=everything_except(TransactionFilter))
