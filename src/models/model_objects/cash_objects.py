@@ -32,7 +32,6 @@ from src.models.model_objects.currency_objects import (
     CurrencyError,
 )
 from src.models.user_settings import user_settings
-from src.models.utilities import constants
 from src.models.utilities.find_helpers import (
     find_account_by_path,
     find_account_group_by_path,
@@ -226,16 +225,15 @@ class CashAccount(Account):
 
     def update_balance(self) -> None:
         logging.debug(f"Updating balance of {self}")
+        transactions = sorted(self._transactions, key=lambda x: x.datetime_)
         if len(self._transactions) > 0:
-            oldest_datetime = min(
-                transaction.datetime_ for transaction in self._transactions
-            )
+            oldest_datetime = transactions[0].datetime_
         else:
             oldest_datetime = self._balance_history[0][0] + timedelta(days=1)
         datetime_balance_history: list[
             tuple[datetime, CashAmount, CashRelatedTransaction | None]
         ] = [(oldest_datetime - timedelta(days=1), self._initial_balance, None)]
-        for transaction in self._transactions:
+        for transaction in transactions:
             last_balance = datetime_balance_history[-1][1]
             next_balance = last_balance + transaction.get_amount(self)
             datetime_balance_history.append(
@@ -301,7 +299,7 @@ class CashTransaction(CashRelatedTransaction):
 
     @property
     def currencies(self) -> tuple[Currency]:
-        return (self._currency,)
+        return (self._account.currency,)
 
     @property
     def payee(self) -> Attribute:
@@ -376,7 +374,7 @@ class CashTransaction(CashRelatedTransaction):
         return {
             "datatype": "CashTransaction",
             "description": self._description,
-            "datetime": self._datetime,
+            "datetime": self._datetime.replace(microsecond=0),
             "type": self._type.name,
             "account_path": self._account.path,
             "payee_name": self._payee.name,
@@ -396,9 +394,7 @@ class CashTransaction(CashRelatedTransaction):
         currencies: Collection[Currency],
     ) -> "CashTransaction":
         description = data["description"]
-        datetime_ = datetime.strptime(  # noqa: DTZ007
-            data["datetime"], constants.DATETIME_SERDES_FMT
-        )
+        datetime_ = datetime.fromisoformat(data["datetime"])
         type_ = CashTransactionType[data["type"]]
 
         cash_account = find_account_by_path(data["account_path"], accounts)
@@ -431,8 +427,8 @@ class CashTransaction(CashRelatedTransaction):
             category_amount_pairs=decoded_category_amount_pairs,
             tag_amount_pairs=decoded_tag_amount_pairs,
         )
-        obj._datetime_created = datetime.strptime(  # noqa: DTZ007, SLF001
-            data["datetime_created"], constants.DATETIME_SERDES_FMT
+        obj._datetime_created = datetime.fromisoformat(  # noqa: SLF001
+            data["datetime_created"]
         )
         obj._uuid = uuid.UUID(data["uuid"])  # noqa: SLF001
         return obj
@@ -734,6 +730,7 @@ class CashTransaction(CashRelatedTransaction):
             total_amount += amount
             categories.append(category)
         self._amount = total_amount
+        self._amount_negative = total_amount
         self._categories = tuple(categories)
 
         tags = []
@@ -899,11 +896,10 @@ class CashTransaction(CashRelatedTransaction):
             return (CategoryType.INCOME, CategoryType.INCOME_AND_EXPENSE)
         return (CategoryType.EXPENSE, CategoryType.INCOME_AND_EXPENSE)
 
-    def _get_amount(self, account: CashAccount) -> CashAmount:
-        del account
+    def _get_amount(self, account: CashAccount) -> CashAmount:  # noqa: ARG002
         if self.type_ == CashTransactionType.INCOME:
             return self._amount
-        return -self._amount
+        return self._amount_negative
 
 
 class CashTransfer(CashRelatedTransaction):
@@ -969,7 +965,7 @@ class CashTransfer(CashRelatedTransaction):
         return {
             "datatype": "CashTransfer",
             "description": self._description,
-            "datetime": self._datetime,
+            "datetime": self._datetime.replace(microsecond=0),
             "sender_path": self._sender.path,
             "recipient_path": self._recipient.path,
             "amount_sent": self._amount_sent,
@@ -985,9 +981,7 @@ class CashTransfer(CashRelatedTransaction):
         currencies: Collection[Currency],
     ) -> "CashTransaction":
         description = data["description"]
-        datetime_ = datetime.strptime(  # noqa: DTZ007
-            data["datetime"], constants.DATETIME_SERDES_FMT
-        )
+        datetime_ = datetime.fromisoformat(data["datetime"])
 
         sender = find_account_by_path(data["sender_path"], accounts)
         recipient = find_account_by_path(data["recipient_path"], accounts)
@@ -1003,8 +997,8 @@ class CashTransfer(CashRelatedTransaction):
             amount_sent=amount_sent,
             amount_received=amount_received,
         )
-        obj._datetime_created = datetime.strptime(  # noqa: DTZ007, SLF001
-            data["datetime_created"], constants.DATETIME_SERDES_FMT
+        obj._datetime_created = datetime.fromisoformat(  # noqa: SLF001
+            data["datetime_created"]
         )
         obj._uuid = uuid.UUID(data["uuid"])  # noqa: SLF001
         return obj
@@ -1253,7 +1247,7 @@ class RefundTransaction(CashRelatedTransaction):
         return {
             "datatype": "RefundTransaction",
             "description": self._description,
-            "datetime": self._datetime,
+            "datetime": self._datetime.replace(microsecond=0),
             "account_path": self._account.path,
             "refunded_transaction_uuid": str(self._refunded_transaction.uuid),
             "payee_name": self._payee.name,
@@ -1274,10 +1268,7 @@ class RefundTransaction(CashRelatedTransaction):
         currencies: Collection[Currency],
     ) -> "CashTransaction":
         description = data["description"]
-        datetime_ = datetime.strptime(  # noqa: DTZ007
-            data["datetime"], constants.DATETIME_SERDES_FMT
-        )
-
+        datetime_ = datetime.fromisoformat(data["datetime"])
         cash_account = find_account_by_path(data["account_path"], accounts)
 
         transaction_uuid = uuid.UUID(data["refunded_transaction_uuid"])
@@ -1310,8 +1301,8 @@ class RefundTransaction(CashRelatedTransaction):
             category_amount_pairs=decoded_category_amount_pairs,
             tag_amount_pairs=decoded_tag_amount_pairs,
         )
-        obj._datetime_created = datetime.strptime(  # noqa: DTZ007, SLF001
-            data["datetime_created"], constants.DATETIME_SERDES_FMT
+        obj._datetime_created = datetime.fromisoformat(  # noqa: SLF001
+            data["datetime_created"]
         )
         obj._uuid = uuid.UUID(data["uuid"])  # noqa: SLF001
         return obj
@@ -1574,9 +1565,14 @@ def _validate_collection_of_tuple_pairs(
                 f"{first_type.__name__}."
             )
         if not isinstance(second_member, second_type):
+            if isinstance(second_type, type):
+                raise TypeError(
+                    "Second element of 'collection' tuples must be of type "
+                    f"{second_type.__name__}."
+                )
             raise TypeError(
-                "Second element of 'collection' tuples must be of type "
-                f"{second_type.__name__}."
+                "Second element of 'collection' tuples must be any of following types: "
+                f"{second_type}."
             )
         first_members.append(first_member)
     if len(first_members) > len(set(first_members)):

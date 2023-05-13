@@ -58,9 +58,7 @@ def test_decimal() -> None:
 def test_datetime() -> None:
     dt = datetime.now(user_settings.settings.time_zone).replace(microsecond=0)
     serialized = json.dumps(dt, cls=CustomJSONEncoder).strip('"')
-    decoded = datetime.strptime(  # noqa: DTZ007
-        serialized, constants.DATETIME_SERDES_FMT
-    )
+    decoded = datetime.fromisoformat(serialized)
     assert decoded == dt
 
 

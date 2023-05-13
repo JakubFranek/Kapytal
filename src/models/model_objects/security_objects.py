@@ -24,7 +24,6 @@ from src.models.model_objects.currency_objects import (
     CurrencyError,
 )
 from src.models.user_settings import user_settings
-from src.models.utilities import constants
 from src.models.utilities.find_helpers import (
     find_account_by_path,
     find_account_group_by_path,
@@ -469,7 +468,7 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
         return {
             "datatype": "SecurityTransaction",
             "description": self._description,
-            "datetime": self._datetime,
+            "datetime": self._datetime.replace(microsecond=0),
             "type": self._type.name,
             "security_name": self._security.name,
             "shares": str(self._shares),
@@ -488,9 +487,7 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
         securities: Collection[Security],
     ) -> "SecurityTransaction":
         description = data["description"]
-        datetime_ = datetime.strptime(  # noqa: DTZ007
-            data["datetime"], constants.DATETIME_SERDES_FMT
-        )
+        datetime_ = datetime.fromisoformat(data["datetime"])
 
         type_ = SecurityTransactionType[data["type"]]
         shares = Decimal(data["shares"])
@@ -511,8 +508,8 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
             security_account=security_account,
             cash_account=cash_account,
         )
-        obj._datetime_created = datetime.strptime(  # noqa: DTZ007, SLF001
-            data["datetime_created"], constants.DATETIME_SERDES_FMT
+        obj._datetime_created = datetime.fromisoformat(  # noqa: SLF001
+            data["datetime_created"]
         )
         obj._uuid = uuid.UUID(data["uuid"])  # noqa: SLF001
         return obj
@@ -748,7 +745,7 @@ class SecurityTransfer(SecurityRelatedTransaction):
         return {
             "datatype": "SecurityTransfer",
             "description": self._description,
-            "datetime": self._datetime,
+            "datetime": self._datetime.replace(microsecond=0),
             "security_name": self._security.name,
             "shares": str(self._shares),
             "sender_path": self._sender.path,
@@ -764,9 +761,7 @@ class SecurityTransfer(SecurityRelatedTransaction):
         securities: Collection[Security],
     ) -> "SecurityTransfer":
         description = data["description"]
-        datetime_ = datetime.strptime(  # noqa: DTZ007
-            data["datetime"], constants.DATETIME_SERDES_FMT
-        )
+        datetime_ = datetime.fromisoformat(data["datetime"])
         shares = Decimal(data["shares"])
 
         security = find_security_by_name(data["security_name"], securities)
@@ -782,8 +777,8 @@ class SecurityTransfer(SecurityRelatedTransaction):
             sender=sender,
             recipient=recipient,
         )
-        obj._datetime_created = datetime.strptime(  # noqa: DTZ007, SLF001
-            data["datetime_created"], constants.DATETIME_SERDES_FMT
+        obj._datetime_created = datetime.fromisoformat(  # noqa: SLF001
+            data["datetime_created"]
         )
         obj._uuid = uuid.UUID(data["uuid"])  # noqa: SLF001
         return obj

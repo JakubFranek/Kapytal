@@ -19,7 +19,7 @@ class CustomJSONEncoder(json.JSONEncoder):
 
     def default(self, arg: Any) -> Any:  # noqa: ANN401
         if isinstance(arg, datetime):
-            return arg.strftime(constants.DATETIME_SERDES_FMT)
+            return arg.isoformat()
         if isinstance(arg, Decimal):
             return {"datatype": "Decimal", "number": str(arg)}
         if isinstance(arg, JSONSerializableMixin):
