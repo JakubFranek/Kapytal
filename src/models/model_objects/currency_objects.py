@@ -25,8 +25,8 @@ class ConversionFactorNotFoundError(ValueError):
     for the given Currency pair."""
 
 
-# TODO: idea have a Currency property that returns zero CashAmount
 class Currency(CopyableMixin, JSONSerializableMixin):
+    __slots__ = ("_code", "_places", "_exchange_rates", "_factor_cache", "_zero_amount")
     CODE_LENGTH = 3
 
     def __init__(self, code: str, places: int) -> None:
@@ -194,6 +194,14 @@ class Currency(CopyableMixin, JSONSerializableMixin):
 
 
 class ExchangeRate(CopyableMixin, JSONSerializableMixin):
+    __slots__ = (
+        "_primary_currency",
+        "_secondary_currency",
+        "_rate_history",
+        "_latest_rate",
+        "_latest_date",
+    )
+
     def __init__(
         self, primary_currency: Currency, secondary_currency: Currency
     ) -> None:
