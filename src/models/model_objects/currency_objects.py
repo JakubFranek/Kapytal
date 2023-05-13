@@ -25,6 +25,7 @@ class ConversionFactorNotFoundError(ValueError):
     for the given Currency pair."""
 
 
+# TODO: idea have a Currency property that returns zero CashAmount
 class Currency(CopyableMixin, JSONSerializableMixin):
     CODE_LENGTH = 3
 
@@ -395,6 +396,13 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
         if self._currency != __o._currency:  # noqa: SLF001
             raise CurrencyError("CashAmount.currency of operands must match.")
         return self._raw_value < __o._raw_value  # noqa: SLF001
+
+    def __le__(self, __o: object) -> bool:
+        if not isinstance(__o, CashAmount):
+            return NotImplemented
+        if self._currency != __o._currency:  # noqa: SLF001
+            raise CurrencyError("CashAmount.currency of operands must match.")
+        return self._raw_value <= __o._raw_value  # noqa: SLF001
 
     def __neg__(self) -> Self:
         return CashAmount(-self._raw_value, self._currency)

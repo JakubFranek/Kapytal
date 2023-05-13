@@ -63,7 +63,7 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
         self.tableView.horizontalHeader().setStretchLastSection(True)
 
     def set_column_visibility(
-        self, column: TransactionTableColumn, *, show: bool
+        self, column: TransactionTableColumn, *, show: bool, resize: bool = False
     ) -> None:
         if show != self.tableView.isColumnHidden(column):
             return
@@ -79,7 +79,9 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
         self.tableView.setColumnHidden(column, not show)
         if show:
             logging.debug(f"Showing TransactionTable column {column.name}")
-            self.tableView.resizeColumnToContents(column)
+            if resize:
+                self.resize_table_to_contents()
+                self.tableView.viewport().update()
         else:
             logging.debug(f"Hiding TransactionTable column {column.name}")
 
@@ -127,7 +129,7 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
             action.setCheckable(True)
             action.triggered.connect(
                 lambda checked, column=column: self.set_column_visibility(
-                    column=column, show=checked
+                    column=column, show=checked, resize=True
                 )
             )
             self.column_actions.append(action)

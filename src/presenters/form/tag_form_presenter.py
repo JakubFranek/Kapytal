@@ -38,7 +38,6 @@ class TagFormPresenter:
 
     def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
         self._record_keeper = record_keeper
-        self.reset_model()
 
     def reset_model(self) -> None:
         self._model.pre_reset_model()

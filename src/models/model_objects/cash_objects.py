@@ -108,7 +108,7 @@ class CashAccount(Account):
         self._balance_history: list[
             tuple[datetime, CashAmount, CashRelatedTransaction | None]
         ] = [(datetime.now(user_settings.settings.time_zone), initial_balance, None)]
-        self._transactions: list[CashRelatedTransaction] = []
+        self._transactions: set[CashRelatedTransaction] = set()
 
         self.initial_balance = initial_balance
 
@@ -172,7 +172,7 @@ class CashAccount(Account):
                 "Provided CashRelatedTransaction is already within this "
                 "CashAccount.transactions."
             )
-        self._transactions.append(transaction)
+        self._transactions.add(transaction)
         if self._allow_update_balance:
             self.update_balance()
 
@@ -226,9 +226,10 @@ class CashAccount(Account):
 
     def update_balance(self) -> None:
         logging.debug(f"Updating balance of {self}")
-        self._transactions.sort(key=lambda transaction: transaction.datetime_)
         if len(self._transactions) > 0:
-            oldest_datetime = self._transactions[0].datetime_
+            oldest_datetime = min(
+                transaction.datetime_ for transaction in self._transactions
+            )
         else:
             oldest_datetime = self._balance_history[0][0] + timedelta(days=1)
         datetime_balance_history: list[
@@ -541,12 +542,15 @@ class CashTransaction(CashRelatedTransaction):
     def is_accounts_related(self, accounts: Collection[Account]) -> bool:
         return self._account in accounts
 
-    # TODO: this probably does not check 2nd+ level parents
     def is_category_related(self, category: Category) -> bool:
-        direct_match = category in self._categories
-        if direct_match:
+        if category in self._categories:
             return True
-        return any(_category.parent == category for _category in self._categories)
+        if len(category.children) == 0:
+            return False
+        for _category in self._categories:  # noqa: SIM110
+            if category.path in _category.path:
+                return True
+        return False
 
     def get_amount_for_category(self, category: Category, *, total: bool) -> CashAmount:
         return _get_amount_for_category(self, category, total=total)
@@ -678,16 +682,15 @@ class CashTransaction(CashRelatedTransaction):
         currency = account.currency
 
         valid_category_types = self._get_valid_category_types(type_)
-        valid_category_amount_pairs = self._validate_category_amount_pairs(
+        (
+            valid_category_amount_pairs,
+            max_tag_amount,
+        ) = self._validate_category_amount_pairs(
             category_amount_pairs=category_amount_pairs,
             valid_category_types=valid_category_types,
             currency=currency,
         )
 
-        max_tag_amount = sum(
-            (amount for _, amount in valid_category_amount_pairs),
-            start=CashAmount(0, currency),
-        )
         valid_tag_amount_pairs = self._validate_tag_amount_pairs(
             tag_amount_pairs=tag_amount_pairs,
             max_tag_amount=max_tag_amount,
@@ -725,17 +728,21 @@ class CashTransaction(CashRelatedTransaction):
         self._account.add_transaction(self)
 
     def _update_cached_data(self, account: CashAccount) -> None:
-        self._amount = sum(
-            (amount for _, amount in self._category_amount_pairs),
-            start=CashAmount(0, account.currency),
-        )
-        self._categories = tuple(
-            category for category, _ in self._category_amount_pairs
-        )
-        self._tags = tuple(tag for tag, _ in self._tag_amount_pairs)
-        self._are_tags_split = any(
-            amount != self._amount for _, amount in self._tag_amount_pairs
-        )
+        total_amount = CashAmount(0, account.currency)
+        categories: list[Category] = []
+        for category, amount in self._category_amount_pairs:
+            total_amount += amount
+            categories.append(category)
+        self._amount = total_amount
+        self._categories = tuple(categories)
+
+        tags = []
+        self._are_tags_split = False
+        for tag, amount in self._tag_amount_pairs:
+            tags.append(tag)
+            if not self._are_tags_split and amount != self._amount:
+                self._are_tags_split = True
+        self._tags = tuple(tags)
 
     def _validate_type(self, type_: CashTransactionType) -> None:
         if not isinstance(type_, CashTransactionType):
@@ -750,7 +757,7 @@ class CashTransaction(CashRelatedTransaction):
         category_amount_pairs: Collection[tuple[Category, CashAmount | None]],
         valid_category_types: Collection[CategoryType],
         currency: Currency,
-    ) -> tuple[tuple[Category, CashAmount]]:
+    ) -> tuple[tuple[tuple[Category, CashAmount], ...], CashAmount]:
         validated_pairs = self._validate_category_amount_pairs_types(
             category_amount_pairs,
         )
@@ -759,31 +766,37 @@ class CashTransaction(CashRelatedTransaction):
         if len(categories) > len(set(categories)):
             raise ValueError("Categories in category_amount_pairs must be unique.")
 
-        if not all(category.type_ in valid_category_types for category in categories):
-            invalid_categories = [
-                category.path
-                for category in categories
-                if category.type_ not in valid_category_types
-            ]
-            valid_category_type_names = [type_.name for type_ in valid_category_types]
-            raise InvalidCategoryTypeError(
-                f"Expected Category types: {', '.join(valid_category_type_names)}. "
-                "The following Categories are of different type: "
-                f"{', '.join(invalid_categories)}"
-            )
+        for category in categories:
+            if category.type_ not in valid_category_types:
+                invalid_categories = [
+                    category.path
+                    for category in categories
+                    if category.type_ not in valid_category_types
+                ]
+                valid_category_type_names = [
+                    type_.name for type_ in valid_category_types
+                ]
+                raise InvalidCategoryTypeError(
+                    f"Expected Category types: {', '.join(valid_category_type_names)}. "
+                    "The following Categories are of different type: "
+                    f"{', '.join(invalid_categories)}"
+                )
 
-        if not all(amount.currency == currency for _, amount in validated_pairs):
-            raise CurrencyError(
-                "Currency of CashAmounts in category_amount_pairs must match the "
-                "currency of the CashAccount."
-            )
-        if not all(amount.is_positive() for _, amount in validated_pairs):
-            raise ValueError(
-                "Second member of CashTransaction.category_amount_pairs "
-                "tuples must be a positive CashAmount."
-            )
+        total_amount = CashAmount(0, currency)
+        for _, amount in validated_pairs:
+            if amount.currency != currency:
+                raise CurrencyError(
+                    "Currency of CashAmounts in category_amount_pairs must match the "
+                    "currency of the CashAccount."
+                )
+            if not amount.is_positive():
+                raise ValueError(
+                    "Second member of CashTransaction.category_amount_pairs "
+                    "tuples must be a positive CashAmount."
+                )
+            total_amount += amount
 
-        return validated_pairs
+        return validated_pairs, total_amount
 
     def _validate_category_amount_pairs_types(
         self,
@@ -793,20 +806,20 @@ class CashTransaction(CashRelatedTransaction):
             raise TypeError("Parameter 'collection' must be a Collection.")
         if len(collection) < 1:
             raise ValueError("Length of 'collection' must be at least 1.")
-        if not all(isinstance(element, tuple) for element in collection):
-            raise TypeError("Elements of 'collection' must be tuples.")
-        if not all(
-            isinstance(first_member, Category) for first_member, _ in collection
-        ):
-            raise TypeError(
-                "First element of 'collection' tuples must be of type Category."
-            )
+        for element in collection:
+            if not isinstance(element, tuple):
+                raise TypeError("Elements of 'collection' must be tuples.")
+        for first_member, _ in collection:
+            if not isinstance(first_member, Category):
+                raise TypeError(
+                    "First element of 'collection' tuples must be of type Category."
+                )
 
         if len(collection) == 1:
             tup: tuple[Category, CashAmount | None] = collection[0]
             category, amount = tup
             if isinstance(amount, CashAmount):
-                return ((category, amount),)
+                return collection
             if amount is None:
                 # This means a split transaction can be made single-category without
                 # specifying amount, using the current total.
@@ -816,12 +829,11 @@ class CashTransaction(CashRelatedTransaction):
                 "or None."
             )
 
-        if not all(
-            isinstance(second_member, CashAmount) for _, second_member in collection
-        ):
-            raise TypeError(
-                "Second element of 'collection' tuples must be of type CashAmount."
-            )
+        for _, second_member in collection:
+            if not isinstance(second_member, CashAmount):
+                raise TypeError(
+                    "Second element of 'collection' tuples must be of type CashAmount."
+                )
         return collection
 
     def _validate_tag_amount_pairs(
@@ -833,18 +845,18 @@ class CashTransaction(CashRelatedTransaction):
         _validate_collection_of_tuple_pairs(
             tag_amount_pairs, Attribute, (CashAmount, NoneType), 0
         )
-
-        if not all(
-            attribute.type_ == AttributeType.TAG for attribute, _ in tag_amount_pairs
-        ):
-            raise ValueError(
-                "The type_ of CashTransaction.tag_amount_pairs Attributes must be TAG."
-            )
+        # TODO: The for loops in this method could be merged
+        for attribute, _ in tag_amount_pairs:
+            if attribute.type_ != AttributeType.TAG:
+                raise ValueError(
+                    "The type_ of CashTransaction.tag_amount_pairs Attributes "
+                    "must be TAG."
+                )
 
         _tag_amount_pairs: list[tuple[Attribute, CashAmount]] = []
         for tag, amount in tag_amount_pairs:
             if amount is None:  # Tag amount unspecified
-                for _tag, _amount in self.tag_amount_pairs:
+                for _tag, _amount in self._tag_amount_pairs:
                     if tag == _tag:
                         # If the Tag already exists, preserve amount
                         _tag_amount_pairs.append((tag, _amount))
@@ -855,20 +867,18 @@ class CashTransaction(CashRelatedTransaction):
             else:
                 _tag_amount_pairs.append((tag, amount))
 
-        if not all(amount.currency == currency for _, amount in _tag_amount_pairs):
-            raise CurrencyError(
-                "Currency of CashAmounts in tag_amount_pairs must match the "
-                "currency of the CashAccount."
-            )
-        if not all(
-            amount.is_positive() and amount <= max_tag_amount
-            for _, amount in _tag_amount_pairs
-        ):
-            raise ValueError(
-                "Second member of CashTransaction.tag_amount_pairs "
-                "tuples must be a positive CashAmount which "
-                "does not exceed CashTransaction.amount."
-            )
+        for _, amount in _tag_amount_pairs:
+            if amount.currency != currency:
+                raise CurrencyError(
+                    "Currency of CashAmounts in tag_amount_pairs must match the "
+                    "currency of the CashAccount."
+                )
+            if not (amount.is_positive() and amount <= max_tag_amount):
+                raise ValueError(
+                    "Second member of CashTransaction.tag_amount_pairs "
+                    "tuples must be a positive CashAmount which "
+                    "does not exceed CashTransaction.amount."
+                )
         return _tag_amount_pairs
 
     def _validate_refund(self, refund: "RefundTransaction") -> None:
@@ -1553,22 +1563,24 @@ def _validate_collection_of_tuple_pairs(
         raise TypeError("Parameter 'collection' must be a Collection.")
     if len(collection) < min_length:
         raise ValueError(f"Length of 'collection' must be at least {min_length}.")
-    if not all(isinstance(element, tuple) for element in collection):
-        raise TypeError("Elements of 'collection' must be tuples.")
-    if not all(isinstance(first_member, first_type) for first_member, _ in collection):
-        raise TypeError(
-            "First element of 'collection' tuples must be of type "
-            f"{first_type.__name__}."
-        )
-    first_members = [first_member for first_member, _ in collection]
+    for element in collection:
+        if not isinstance(element, tuple):
+            raise TypeError("Elements of 'collection' must be tuples.")
+    first_members = []
+    for first_member, second_member in collection:
+        if not isinstance(first_member, first_type):
+            raise TypeError(
+                "First element of 'collection' tuples must be of type "
+                f"{first_type.__name__}."
+            )
+        if not isinstance(second_member, second_type):
+            raise TypeError(
+                "Second element of 'collection' tuples must be of type "
+                f"{second_type.__name__}."
+            )
+        first_members.append(first_member)
     if len(first_members) > len(set(first_members)):
         raise ValueError("Categories or Tags in tuple pairs must be unique.")
-    if not all(
-        isinstance(second_member, second_type) for _, second_member in collection
-    ):
-        raise TypeError(
-            f"Second element of 'collection' tuples must be of type {second_type}."
-        )
 
 
 def _is_category_related(

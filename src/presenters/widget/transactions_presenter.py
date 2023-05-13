@@ -86,6 +86,7 @@ class TransactionsPresenter:
         self._reset_model()
         self._transaction_filter_form_presenter.reset_filter_to_default()
         self._update_table_columns()
+        self._view.resize_table_to_contents()
 
     def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
         self._record_keeper = record_keeper
@@ -138,18 +139,21 @@ class TransactionsPresenter:
             f"{len(visible_transactions)}/{len(self._model.transactions)}"
         )
 
-        any_security_related = any(
-            isinstance(transaction, SecurityRelatedTransaction)
-            for transaction in visible_transactions
-        )
-        any_cash_transfers = any(
-            isinstance(transaction, CashTransfer)
-            for transaction in visible_transactions
-        )
-        any_with_categories = any(
-            isinstance(transaction, CashTransaction | RefundTransaction)
-            for transaction in visible_transactions
-        )
+        any_security_related = False
+        any_cash_transfers = False
+        any_with_categories = False
+        for transaction in visible_transactions:
+            if not any_security_related and isinstance(
+                transaction, SecurityTransaction
+            ):
+                any_security_related = True
+            if not any_cash_transfers and isinstance(transaction, CashTransfer):
+                any_cash_transfers = True
+            if not any_with_categories and isinstance(
+                transaction, CashTransaction | RefundTransaction
+            ):
+                any_with_categories = True
+
         single_cash_account = len(
             self._account_tree_shown_accounts
         ) == 1 and isinstance(self._account_tree_shown_accounts[0], CashAccount)
@@ -521,8 +525,8 @@ class TransactionsPresenter:
         self._view.set_filter_active(
             active=self._transaction_filter_form_presenter.filter_active
         )
-        self.resize_table_to_contents()
         self._update_table_columns()
+        self.resize_table_to_contents()
 
     def _data_changed(self) -> None:
         self.event_data_changed()

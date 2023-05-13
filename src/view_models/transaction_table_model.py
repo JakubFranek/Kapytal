@@ -171,18 +171,13 @@ class TransactionTableModel(QAbstractTableModel):
         )
 
     def get_visible_items(self) -> tuple[Transaction, ...]:
-        viewside_rows = self._proxy_viewside.rowCount()
-        proxy_viewside_indexes = [
-            self._proxy_viewside.index(row, 0) for row in range(viewside_rows)
-        ]
-        proxy_sourceside_indexes = [
-            self._proxy_viewside.mapToSource(index) for index in proxy_viewside_indexes
-        ]
-        source_indexes = [
-            self._proxy_sourceside.mapToSource(index)
-            for index in proxy_sourceside_indexes
-        ]
-        return tuple(index.internalPointer() for index in source_indexes)
+        items = []
+        for row in range(self._proxy_viewside.rowCount()):
+            index = self._proxy_viewside.index(row, 0)
+            index = self._proxy_viewside.mapToSource(index)
+            index = self._proxy_sourceside.mapToSource(index)
+            items.append(index.internalPointer())
+        return tuple(items)
 
     def get_index_from_item(self, item: Transaction | None) -> QModelIndex:
         if item is None:
