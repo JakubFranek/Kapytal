@@ -317,8 +317,8 @@ class TransactionFilterFormPresenter:
         filter_.set_account_filter(self._record_keeper.accounts, FilterMode.KEEP)
         if self._record_keeper.base_currency is not None:
             filter_.set_cash_amount_filter(
-                CashAmount(0, self._record_keeper.base_currency),
-                CashAmount(0, self._record_keeper.base_currency),
+                self._record_keeper.base_currency.zero_amount,
+                self._record_keeper.base_currency.zero_amount,
                 FilterMode.OFF,
             )
         return filter_

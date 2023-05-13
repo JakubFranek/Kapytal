@@ -4,7 +4,6 @@ from decimal import Decimal
 from typing import Any
 
 from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
-from src.models.utilities import constants
 
 
 class CustomJSONEncoder(json.JSONEncoder):

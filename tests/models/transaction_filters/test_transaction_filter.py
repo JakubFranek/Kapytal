@@ -67,19 +67,19 @@ def test_eq_hash_cash_amount_filters() -> None:
     filter_2 = TransactionFilter()
     assert filter_1 == filter_2
     filter_1.set_cash_amount_filter(
-        CashAmount(0, currency), CashAmount(1, currency), FilterMode.OFF
+        currency.zero_amount, CashAmount(1, currency), FilterMode.OFF
     )
     assert filter_1 == filter_2
     filter_1 = TransactionFilter()
     filter_2 = TransactionFilter()
     filter_2.set_cash_amount_filter(
-        CashAmount(0, currency), CashAmount(1, currency), FilterMode.OFF
+        currency.zero_amount, CashAmount(1, currency), FilterMode.OFF
     )
     assert filter_1 == filter_2
     filter_1 = TransactionFilter()
     filter_2 = TransactionFilter()
     filter_1.set_cash_amount_filter(
-        CashAmount(0, currency), CashAmount(1, currency), FilterMode.KEEP
+        currency.zero_amount, CashAmount(1, currency), FilterMode.KEEP
     )
     assert filter_1 != filter_2
 

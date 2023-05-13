@@ -97,7 +97,7 @@ class AccountTreePresenter:
                         item.get_balance(self._record_keeper.base_currency)
                         for item in self._record_keeper.root_account_items
                     ),
-                    CashAmount(0, self._record_keeper.base_currency),
+                    start=self._record_keeper.base_currency.zero_amount,
                 )
                 total = total.to_str_rounded()
             except ConversionFactorNotFoundError:

@@ -153,7 +153,7 @@ def cash_transactions(  # noqa: PLR0913
     )
     max_tag_amount = sum(
         (amount for _, amount in category_amount_pairs_list),
-        start=CashAmount(0, currency),
+        start=currency.zero_amount,
     )
     payee = draw(attributes(AttributeType.PAYEE))
     tag_amount_pairs_list = draw(

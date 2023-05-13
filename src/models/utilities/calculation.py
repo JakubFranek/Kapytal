@@ -43,7 +43,7 @@ def get_payee_stats(
             transaction.get_amount(transaction.account).convert(currency)
             for transaction in _transactions
         ),
-        start=CashAmount(0, currency),
+        start=currency.zero_amount,
     )
     return AttributeStats(payee, no_of_transactions, balance)
 
@@ -74,7 +74,7 @@ def get_tag_stats(
             transaction.get_amount_for_tag(tag).convert(currency)
             for transaction in _cash_amount_transactions
         ),
-        start=CashAmount(0, currency),
+        start=currency.zero_amount,
     )
     return AttributeStats(tag, no_of_transactions, balance)
 
@@ -112,7 +112,7 @@ def get_category_stats(
             transaction.get_amount_for_category(category, total=True).convert(currency)
             for transaction in _transactions_all
         ),
-        start=CashAmount(0, currency),
+        start=currency.zero_amount,
     )
     return CategoryStats(category, transactions_self, transactions_total, balance)
 

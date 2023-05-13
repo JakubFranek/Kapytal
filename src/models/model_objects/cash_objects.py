@@ -447,7 +447,7 @@ class CashTransaction(CashRelatedTransaction):
         self._refunded_ratio = (
             sum(
                 (refund.amount for refund in self.refunds),
-                start=CashAmount(0, self.currency),
+                start=self.currency.zero_amount,
             )
             / self._amount
         )
@@ -513,7 +513,7 @@ class CashTransaction(CashRelatedTransaction):
         other_refunds = [refund for refund in self._refunds if refund != ignore_refund]
         remaining_amount = self._amount - sum(
             (refund.amount for refund in other_refunds),
-            start=CashAmount(0, self.currency),
+            start=self.currency.zero_amount,
         )
         for refund in other_refunds:
             for _tag, _amount in refund.tag_amount_pairs:
@@ -524,13 +524,13 @@ class CashTransaction(CashRelatedTransaction):
         if refund_amount is not None:
             return max(
                 max_amount - (remaining_amount - refund_amount),
-                CashAmount(0, self.currency),
+                self.currency.zero_amount,
             )
 
         min_amount = max_amount - remaining_amount
         if not min_amount.is_negative():
             return min_amount
-        return CashAmount(0, self.currency)
+        return self.currency.zero_amount
 
     def is_account_related(self, account: Account) -> bool:
         return self._account == account
@@ -724,13 +724,13 @@ class CashTransaction(CashRelatedTransaction):
         self._account.add_transaction(self)
 
     def _update_cached_data(self, account: CashAccount) -> None:
-        total_amount = CashAmount(0, account.currency)
+        total_amount = account.currency.zero_amount
         categories: list[Category] = []
         for category, amount in self._category_amount_pairs:
             total_amount += amount
             categories.append(category)
         self._amount = total_amount
-        self._amount_negative = total_amount
+        self._amount_negative = -total_amount
         self._categories = tuple(categories)
 
         tags = []
@@ -759,11 +759,12 @@ class CashTransaction(CashRelatedTransaction):
             category_amount_pairs,
         )
 
-        categories = [category for category, _ in category_amount_pairs]
+        categories = [category for category, _ in validated_pairs]
         if len(categories) > len(set(categories)):
             raise ValueError("Categories in category_amount_pairs must be unique.")
 
-        for category in categories:
+        total_amount = currency.zero_amount
+        for category, amount in validated_pairs:
             if category.type_ not in valid_category_types:
                 invalid_categories = [
                     category.path
@@ -778,9 +779,6 @@ class CashTransaction(CashRelatedTransaction):
                     "The following Categories are of different type: "
                     f"{', '.join(invalid_categories)}"
                 )
-
-        total_amount = CashAmount(0, currency)
-        for _, amount in validated_pairs:
             if amount.currency != currency:
                 raise CurrencyError(
                     "Currency of CashAmounts in category_amount_pairs must match the "
@@ -799,22 +797,15 @@ class CashTransaction(CashRelatedTransaction):
         self,
         collection: Collection[tuple[Category, CashAmount | None]],
     ) -> tuple[tuple[Category, CashAmount]]:
-        if not isinstance(collection, Collection):
-            raise TypeError("Parameter 'collection' must be a Collection.")
         if len(collection) < 1:
             raise ValueError("Length of 'collection' must be at least 1.")
-        for element in collection:
-            if not isinstance(element, tuple):
-                raise TypeError("Elements of 'collection' must be tuples.")
-        for first_member, _ in collection:
-            if not isinstance(first_member, Category):
+
+        if len(collection) == 1:
+            category, amount = collection[0]
+            if not isinstance(category, Category):
                 raise TypeError(
                     "First element of 'collection' tuples must be of type Category."
                 )
-
-        if len(collection) == 1:
-            tup: tuple[Category, CashAmount | None] = collection[0]
-            category, amount = tup
             if isinstance(amount, CashAmount):
                 return collection
             if amount is None:
@@ -826,7 +817,11 @@ class CashTransaction(CashRelatedTransaction):
                 "or None."
             )
 
-        for _, second_member in collection:
+        for first_member, second_member in collection:
+            if not isinstance(first_member, Category):
+                raise TypeError(
+                    "First element of 'collection' tuples must be of type Category."
+                )
             if not isinstance(second_member, CashAmount):
                 raise TypeError(
                     "Second element of 'collection' tuples must be of type CashAmount."
@@ -1390,7 +1385,7 @@ class RefundTransaction(CashRelatedTransaction):
         )
         max_tag_amount = sum(
             (amount for _, amount in category_amount_pairs),
-            start=CashAmount(0, currency),
+            start=currency.zero_amount,
         )
         self._validate_tag_amount_pairs(
             tag_amount_pairs, self._refunded_transaction, max_tag_amount
@@ -1414,7 +1409,7 @@ class RefundTransaction(CashRelatedTransaction):
         self._payee = payee
         self._amount = sum(
             (amount for _, amount in self._category_amount_pairs),
-            start=CashAmount(0, account.currency),
+            start=account.currency.zero_amount,
         )
         self._set_account(account)
 
@@ -1479,9 +1474,7 @@ class RefundTransaction(CashRelatedTransaction):
                 "Second member of RefundTransaction.category_amount_pairs "
                 "tuples must be a non-negative CashAmount."
             )
-        refund_amount = sum(
-            (amount for _, amount in pairs), start=CashAmount(0, currency)
-        )
+        refund_amount = sum((amount for _, amount in pairs), start=currency.zero_amount)
         if not refund_amount.value_rounded > 0:
             raise ValueError("Total refunded amount must be positive.")
 
@@ -1591,7 +1584,7 @@ def _is_category_related(
 def _get_amount_for_category(
     transaction: CashTransaction | RefundTransaction, category: Category, *, total: bool
 ) -> CashAmount:
-    running_sum = CashAmount(0, transaction.currency)
+    running_sum = transaction.currency.zero_amount
 
     if not transaction.is_category_related(category):
         return running_sum
@@ -1616,7 +1609,7 @@ def _get_amount_for_category(
 def _get_amount_for_tag(
     transaction: CashTransaction | RefundTransaction, tag: Attribute
 ) -> CashAmount:
-    running_sum = CashAmount(0, transaction.currency)
+    running_sum = transaction.currency.zero_amount
 
     if tag not in transaction.tags:
         return running_sum

@@ -30,7 +30,7 @@ category_income = Category("Cat Expense", CategoryType.INCOME)
 tag = Attribute("Tag 1", AttributeType.TAG)
 tag_dummy = Attribute("Dummy", AttributeType.TAG)
 currency = Currency("CZK", 2)
-account = CashAccount("Account", currency, CashAmount(0, currency))
+account = CashAccount("Account", currency, currency.zero_amount)
 
 
 def test_calculate_attribute_stats() -> None:

@@ -189,7 +189,7 @@ def test_lt_different_currencies(
 def test_sum(value_1: Decimal, value_2: Decimal, currency: Currency) -> None:
     amount_1 = CashAmount(value_1, currency)
     amount_2 = CashAmount(value_2, currency)
-    result = sum([amount_1, amount_2], start=CashAmount(0, currency))
+    result = sum([amount_1, amount_2], start=currency.zero_amount)
     expected = CashAmount(
         amount_1.value_normalized + amount_2.value_normalized, currency
     )

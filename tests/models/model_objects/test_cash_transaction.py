@@ -70,7 +70,7 @@ def test_creation(  # noqa: PLR0913
     )
     max_tag_amount = sum(
         (amount for _, amount in category_amount_collection),
-        start=CashAmount(0, currency),
+        start=currency.zero_amount,
     )
     tag_amount_collection = data.draw(
         st.lists(
@@ -674,7 +674,7 @@ def test_get_amount_for_tag_not_related(
     transaction: CashTransaction, tag: Attribute
 ) -> None:
     assume(tag not in transaction.tags)
-    assert transaction.get_amount_for_tag(tag) == CashAmount(0, transaction.currency)
+    assert transaction.get_amount_for_tag(tag) == transaction.currency.zero_amount
 
 
 @given(transaction=cash_transactions(), unrelated_account=cash_accounts())
@@ -737,9 +737,9 @@ def test_get_max_refundable_for_tag_no_refunds_w_amount(
     transaction.add_tags((Attribute("test_tag", AttributeType.TAG),))
     tag, _ = transaction.tag_amount_pairs[0]
     amount = transaction.get_max_refundable_for_tag(
-        tag, ignore_refund=None, refund_amount=CashAmount(0, transaction.currency)
+        tag, ignore_refund=None, refund_amount=transaction.currency.zero_amount
     )
-    assert amount == CashAmount(0, transaction.currency)
+    assert amount == transaction.currency.zero_amount
 
 
 @given(transaction=cash_transactions())
@@ -763,4 +763,4 @@ def test_get_min_refundable_for_tag_no_refunds(
     amount = transaction.get_min_refundable_for_tag(
         tag, ignore_refund=None, refund_amount=None
     )
-    assert amount == CashAmount(0, transaction.currency)
+    assert amount == transaction.currency.zero_amount

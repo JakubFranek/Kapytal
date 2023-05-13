@@ -260,7 +260,7 @@ class SecurityAccount(Account):
     def get_balance(self, currency: Currency) -> CashAmount:
         return sum(
             (balance.convert(currency) for balance in self._balances),
-            CashAmount(0, currency),
+            start=currency.zero_amount,
         )
 
     def _update_balances(self) -> None:

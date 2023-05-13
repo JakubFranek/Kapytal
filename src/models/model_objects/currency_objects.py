@@ -46,6 +46,7 @@ class Currency(CopyableMixin, JSONSerializableMixin):
 
         self._exchange_rates: dict[Currency, "ExchangeRate"] = {}
         self._factor_cache: dict[str, Decimal] = {}
+        self._zero_amount: CashAmount = CashAmount(0, self)
 
     @property
     def code(self) -> str:
@@ -54,6 +55,10 @@ class Currency(CopyableMixin, JSONSerializableMixin):
     @property
     def places(self) -> int:
         return self._places
+
+    @property
+    def zero_amount(self) -> "CashAmount":
+        return self._zero_amount
 
     @property
     def convertible_to(self) -> set[Self]:
@@ -405,16 +410,20 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
         return self._raw_value <= __o._raw_value  # noqa: SLF001
 
     def __neg__(self) -> Self:
-        return CashAmount(-self._raw_value, self._currency)
+        obj = object.__new__(CashAmount)
+        obj._raw_value = -self._raw_value  # noqa: SLF001
+        obj._currency = self._currency  # noqa: SLF001
+        return obj
 
     def __add__(self, __o: object) -> Self:
         if not isinstance(__o, CashAmount):
             return NotImplemented
         if self._currency != __o._currency:  # noqa: SLF001
             raise CurrencyError("CashAmount.currency of operands must match.")
-        return CashAmount(
-            self._raw_value + __o._raw_value, self._currency  # noqa: SLF001
-        )
+        obj = object.__new__(CashAmount)
+        obj._raw_value = self._raw_value + __o._raw_value  # noqa: SLF001
+        obj._currency = self._currency  # noqa: SLF001
+        return obj
 
     def __radd__(self, __o: object) -> Self:
         return self.__add__(__o)
@@ -424,23 +433,28 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
             return NotImplemented
         if self._currency != __o._currency:  # noqa: SLF001
             raise CurrencyError("CashAmount.currency of operands must match.")
-        return CashAmount(
-            self._raw_value - __o._raw_value, self._currency  # noqa: SLF001
-        )
+        obj = object.__new__(CashAmount)
+        obj._raw_value = self._raw_value - __o._raw_value  # noqa: SLF001
+        obj._currency = self._currency  # noqa: SLF001
+        return obj
 
     def __rsub__(self, __o: object) -> Self:
         if not isinstance(__o, CashAmount):
             return NotImplemented
         if self._currency != __o._currency:  # noqa: SLF001
             raise CurrencyError("CashAmount.currency of operands must match.")
-        return CashAmount(
-            __o._raw_value - self._raw_value, self._currency  # noqa: SLF001
-        )
+        obj = object.__new__(CashAmount)
+        obj._raw_value = __o._raw_value - self._raw_value  # noqa: SLF001
+        obj._currency = self._currency  # noqa: SLF001
+        return obj
 
     def __mul__(self, __o: object) -> Self:
         if not isinstance(__o, int | Decimal):
             return NotImplemented
-        return CashAmount(self._raw_value * __o, self._currency)
+        obj = object.__new__(CashAmount)
+        obj._raw_value = self._raw_value * __o  # noqa: SLF001
+        obj._currency = self._currency  # noqa: SLF001
+        return obj
 
     def __rmul__(self, __o: object) -> Self:
         return self.__mul__(__o)
@@ -481,9 +495,12 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
         if target_currency == self._currency:
             return self
         if self._raw_value == 0:
-            return CashAmount(0, target_currency)
+            return target_currency.zero_amount
         factor = self._currency.get_conversion_factor(target_currency, date_)
-        return CashAmount(self._raw_value * factor, target_currency)
+        obj = object.__new__(CashAmount)
+        obj._raw_value = self._raw_value * factor  # noqa: SLF001
+        obj._currency = target_currency  # noqa: SLF001
+        return obj
 
     def serialize(self) -> dict[str, Any]:
         return self.to_str_normalized()

@@ -50,7 +50,7 @@ def test_creation(
         cash_amounts(currency=account_recipient.currency, min_value="0.01"),
     )
 
-    dt_start = datetime.now(user_settings.settings.time_zone)
+    dt_start = datetime.now(user_settings.settings.time_zone).replace(microsecond=0)
     transfer = CashTransfer(
         description,
         datetime_,

@@ -32,7 +32,6 @@ from src.models.model_objects.security_objects import (
 from src.models.record_keeper import RecordKeeper
 from src.models.user_settings import user_settings
 from src.models.user_settings.user_settings_class import UserSettings
-from src.models.utilities import constants
 from tests.models.test_assets.composites import (
     attributes,
     cash_transactions,
@@ -147,7 +146,7 @@ def test_account_group() -> None:
 
 def test_cash_account() -> None:
     currency = Currency("CZK", 2)
-    cash_account = CashAccount("Test Name", currency, CashAmount(0, currency))
+    cash_account = CashAccount("Test Name", currency, currency.zero_amount)
     serialized = json.dumps(cash_account, cls=CustomJSONEncoder)
     decoded = json.loads(serialized, cls=CustomJSONDecoder)
     decoded = CashAccount.deserialize(decoded, None, [currency])

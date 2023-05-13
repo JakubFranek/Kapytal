@@ -101,7 +101,7 @@ def test_creation() -> None:
         refunded_transaction.refunded_ratio
         == sum(
             (refund.amount for refund in refunded_transaction.refunds),
-            start=CashAmount(0, currency),
+            start=currency.zero_amount,
         )
         / refunded_transaction.amount
     )
@@ -218,9 +218,9 @@ def test_invalid_category_pair_categories() -> None:
     c2 = Category("Wrong Category 2", CategoryType.EXPENSE)
     c3 = Category("Wrong Category 3", CategoryType.EXPENSE)
     category_amount_pairs = (
-        (c1, CashAmount(0, currency)),
+        (c1, currency.zero_amount),
         (c2, CashAmount(50, currency)),
-        (c3, CashAmount(0, currency)),
+        (c3, currency.zero_amount),
     )
     tag_amount_pairs = get_valid_tag_amount_pairs()
     payee = refunded_transaction.payee
@@ -270,9 +270,9 @@ def test_invalid_refund_amount() -> None:
 
     datetime_ = refunded_transaction.datetime_ + timedelta(days=1)
     category_amount_pairs = (
-        (cat_1, CashAmount(0, currency)),
-        (cat_2, CashAmount(0, currency)),
-        (cat_3, CashAmount(0, currency)),
+        (cat_1, currency.zero_amount),
+        (cat_2, currency.zero_amount),
+        (cat_3, currency.zero_amount),
     )
     tag_amount_pairs = get_valid_tag_amount_pairs()
     payee = refunded_transaction.payee
@@ -296,8 +296,8 @@ def test_invalid_category_refund_amount() -> None:
     datetime_ = refunded_transaction.datetime_ + timedelta(days=1)
     category_amount_pairs = (
         (cat_1, CashAmount(200, currency)),
-        (cat_2, CashAmount(0, currency)),
-        (cat_3, CashAmount(0, currency)),
+        (cat_2, currency.zero_amount),
+        (cat_3, currency.zero_amount),
     )
     tag_amount_pairs = get_valid_tag_amount_pairs()
     payee = refunded_transaction.payee
@@ -325,7 +325,7 @@ def test_invalid_tag_type() -> None:
         (t1, CashAmount(50, currency)),
         (tag_2, CashAmount(50, currency)),
         (tag_3, CashAmount(50, currency)),
-        (tag_4, CashAmount(0, currency)),
+        (tag_4, currency.zero_amount),
     )
     payee = refunded_transaction.payee
 
@@ -352,7 +352,7 @@ def test_invalid_tag() -> None:
         (t1, CashAmount(50, currency)),
         (tag_2, CashAmount(50, currency)),
         (tag_3, CashAmount(50, currency)),
-        (tag_4, CashAmount(0, currency)),
+        (tag_4, currency.zero_amount),
     )
     payee = refunded_transaction.payee
 
@@ -404,7 +404,7 @@ def test_invalid_tag_amount() -> None:
         (tag_1, CashAmount(500, currency)),
         (tag_2, CashAmount(50, currency)),
         (tag_3, CashAmount(50, currency)),
-        (tag_4, CashAmount(0, currency)),
+        (tag_4, currency.zero_amount),
     )
     payee = refunded_transaction.payee
 
@@ -426,9 +426,9 @@ def test_invalid_pair_type() -> None:
 
     datetime_ = refunded_transaction.datetime_ + timedelta(days=1)
     category_amount_pairs = (
-        [cat_1, CashAmount(0, currency)],
+        [cat_1, currency.zero_amount],
         (cat_2, CashAmount(50, currency)),
-        (cat_3, CashAmount(0, currency)),
+        (cat_3, currency.zero_amount),
     )
     tag_amount_pairs = get_valid_tag_amount_pairs()
     payee = refunded_transaction.payee
@@ -509,13 +509,13 @@ def test_multi_refund() -> None:
     )
 
     category_amount_pairs = (
-        (cat_1, CashAmount(0, currency)),
-        (cat_2, CashAmount(0, currency)),
+        (cat_1, currency.zero_amount),
+        (cat_2, currency.zero_amount),
         (cat_3, CashAmount(20, currency)),
     )
     tag_amount_pairs = (
-        (tag_1, CashAmount(0, currency)),
-        (tag_2, CashAmount(0, currency)),
+        (tag_1, currency.zero_amount),
+        (tag_2, currency.zero_amount),
         (tag_3, CashAmount(20, currency)),
         (tag_4, CashAmount(20, currency)),
     )
@@ -663,7 +663,7 @@ def get_preloaded_refund() -> RefundTransaction:
         (tag_1, CashAmount(50, currency)),
         (tag_2, CashAmount(50, currency)),
         (tag_3, CashAmount(50, currency)),
-        (tag_4, CashAmount(0, currency)),
+        (tag_4, currency.zero_amount),
     )
     payee = refunded_transaction.payee
 
@@ -710,14 +710,14 @@ def get_preloaded_expense() -> CashTransaction:
 
 
 def get_refunded_account() -> CashAccount:
-    return CashAccount("Refunded Account", currency, CashAmount(0, currency))
+    return CashAccount("Refunded Account", currency, currency.zero_amount)
 
 
 def get_valid_category_amount_pairs() -> tuple[tuple[Category, Decimal], ...]:
     return (
-        (cat_1, CashAmount(0, currency)),
+        (cat_1, currency.zero_amount),
         (cat_2, CashAmount(50, currency)),
-        (cat_3, CashAmount(0, currency)),
+        (cat_3, currency.zero_amount),
     )
 
 
@@ -726,5 +726,5 @@ def get_valid_tag_amount_pairs() -> tuple[tuple[Attribute, Decimal], ...]:
         (tag_1, CashAmount(50, currency)),
         (tag_2, CashAmount(50, currency)),
         (tag_3, CashAmount(50, currency)),
-        (tag_4, CashAmount(0, currency)),
+        (tag_4, currency.zero_amount),
     )

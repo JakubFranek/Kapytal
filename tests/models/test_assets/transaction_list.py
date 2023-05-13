@@ -39,9 +39,9 @@ security = Security("Apple", "AAPL", "Stock", USD, 1)
 security_account_1 = SecurityAccount("DEGIRO")
 security_account_2 = SecurityAccount("Interactive Brokers")
 
-cash_account_1 = CashAccount("Wallet", CZK, CashAmount(0, CZK))
-cash_account_2 = CashAccount("Savings", CZK, CashAmount(0, CZK))
-cash_account_3 = CashAccount("DEGIRO USD", USD, CashAmount(0, USD))
+cash_account_1 = CashAccount("Wallet", CZK, CZK.zero_amount)
+cash_account_2 = CashAccount("Savings", CZK, CZK.zero_amount)
+cash_account_3 = CashAccount("DEGIRO USD", USD, USD.zero_amount)
 
 category_food = Category("Food", CategoryType.EXPENSE)
 category_household = Category("Household", CategoryType.EXPENSE)
