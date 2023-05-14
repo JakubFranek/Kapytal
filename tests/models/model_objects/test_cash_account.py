@@ -5,10 +5,10 @@ from typing import Any
 import pytest
 from hypothesis import assume, given
 from hypothesis import strategies as st
-
 from src.models.custom_exceptions import AlreadyExistsError
 from src.models.model_objects.cash_objects import (
     CashAccount,
+    CashRelatedTransaction,
     CashTransaction,
     CashTransactionType,
     CashTransfer,
@@ -45,10 +45,7 @@ def test_creation(
     cash_account = CashAccount(name, currency, initial_amount)
     assert cash_account.name == name
     assert cash_account.path == name
-    assert (
-        cash_account.__repr__()
-        == f"CashAccount(path='{name}', currency='{cash_account.currency.code}')"
-    )
+    assert cash_account.__repr__() == f"CashAccount('{name}')"
     assert cash_account.currency == currency
     assert cash_account.get_balance(currency) == initial_amount
     assert cash_account.initial_balance == initial_amount
@@ -151,19 +148,39 @@ def test_get_balance(currency: Currency, data: st.DataObject) -> None:
         )
     )
     oldest_datetime = min(transaction.datetime_ for transaction in transactions)
-    datetime_balance_list: list[tuple[datetime, CashAmount]] = [
-        (oldest_datetime - timedelta(days=1), account.initial_balance)
-    ]
+    datetime_balance_list: list[
+        tuple[datetime, CashAmount, CashRelatedTransaction | None]
+    ] = [(oldest_datetime - timedelta(days=1), account.initial_balance, None)]
     transactions.sort(key=lambda transaction: transaction.datetime_)
     for transaction in transactions:
         if transaction.type_ == CashTransactionType.INCOME:
             next_balance = datetime_balance_list[-1][1] + transaction.amount
         else:
             next_balance = datetime_balance_list[-1][1] - transaction.amount
-        datetime_balance_list.append((transaction.datetime_, next_balance))
+        datetime_balance_list.append((transaction.datetime_, next_balance, transaction))
 
     assert datetime_balance_list[-1][1] == account.get_balance(currency)
     assert set(datetime_balance_list) == set(account.balance_history)
+
+
+@given(currency=currencies(), data=st.data())
+def test_get_balance_after_transaction(currency: Currency, data: st.DataObject) -> None:
+    account = data.draw(cash_accounts(currency=currency))
+    transaction_1 = data.draw(cash_transactions(currency=currency, account=account))
+
+    balance_after_1 = account.get_balance_after_transaction(currency, transaction_1)
+
+    assert balance_after_1 == account.get_balance(currency)
+
+    transaction_2 = data.draw(cash_transactions(currency=currency, account=account))
+
+    assume(transaction_2.datetime_ > transaction_1.datetime_)
+
+    balance_after_1_new = account.get_balance_after_transaction(currency, transaction_1)
+    balance_after_2 = account.get_balance_after_transaction(currency, transaction_2)
+
+    assert balance_after_1 == balance_after_1_new
+    assert balance_after_2 == account.get_balance(currency)
 
 
 @given(transaction=cash_transactions())

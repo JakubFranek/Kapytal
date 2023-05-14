@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
 from src.models.mixins.copyable_mixin import CopyableMixin
-from src.models.mixins.get_balance_mixin import GetBalanceMixin
+from src.models.mixins.get_balance_mixin import BalanceMixin
 from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
 from src.models.mixins.name_mixin import NameMixin
 from src.models.mixins.uuid_mixin import UUIDMixin
@@ -18,14 +18,17 @@ class UnrelatedAccountError(ValueError):
     not relate to it."""
 
 
-# IDEA: create base for Account and AccountGroup
-# getbalance, parent, children, transactions
+# IDEA: create base for Account and AccountGroup (AccountTreeItem)
+# getbalance, parent, transactions
 class Account(
-    CopyableMixin, NameMixin, UUIDMixin, GetBalanceMixin, JSONSerializableMixin, ABC
+    CopyableMixin, NameMixin, UUIDMixin, BalanceMixin, JSONSerializableMixin, ABC
 ):
     def __init__(self, name: str, parent: AccountGroup | None = None) -> None:
         super().__init__(name=name, allow_slash=False)
         self.parent = parent
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}('{self.path}')"
 
     @property
     def parent(self) -> AccountGroup | None:
@@ -42,10 +45,10 @@ class Account(
             if self._parent == parent:
                 return
             if self._parent is not None:
-                self._parent._remove_child(self)
+                self._parent._remove_child(self)  # noqa: SLF001
 
         if parent is not None:
-            parent._add_child(self)
+            parent._add_child(self)  # noqa: SLF001
 
         if hasattr(self, "_parent"):
             logging.info(f"Changing parent from {self._parent} to {parent}")
@@ -55,9 +58,9 @@ class Account(
 
     @property
     def path(self) -> str:
-        if self.parent is None:
-            return self.name
-        return self.parent.path + "/" + self.name
+        if self._parent is None:
+            return self._name
+        return self._parent.path + "/" + self._name
 
     @property
     @abstractmethod

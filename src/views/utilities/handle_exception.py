@@ -2,10 +2,9 @@ import logging
 import sys
 from types import TracebackType
 
-from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QApplication, QMessageBox
-
 from src.utilities.general import get_exception_info
+from src.views import icons
 
 
 def handle_uncaught_exception(
@@ -20,7 +19,7 @@ def handle_uncaught_exception(
 
     filename, line, exc_details = get_exception_info(exc_type, exc_value, exc_traceback)
 
-    error = "%s: %s" % (exc_type.__name__, exc_value)
+    error = f"{exc_type.__name__}: {exc_value}"
     text = f"""<html>The following unexpected error has occured:<br/>
         <b>{error}</b><br/><br/>
         It occurred at <b>line {line}</b> of file <b>{filename}</b>.<br/><br/>
@@ -29,25 +28,33 @@ def handle_uncaught_exception(
         "Uncaught exception", exc_info=(exc_type, exc_value, exc_traceback)
     )
 
+    # BUG: this sometimes does not quit the app!
     display_error_message(text=text, exc_details=exc_details, critical=True)
     app = QApplication.instance()
-    app.exit()
+    sys.exit(app.quit())  # app.quit or exit?
 
 
 def display_error_message(
     text: str,
-    exc_details: str,
+    exc_details: str = "",
+    *,
     critical: bool = False,
-    title: str = "Error!",
+    title: str = "Error",
+    log: bool = True,
 ) -> None:
     message_box = QMessageBox()
     if critical is True:
         message_box.setIcon(QMessageBox.Icon.Critical)
-        message_box.setWindowIcon(QIcon("icons_24:cross.png"))
+        message_box.setWindowIcon(icons.critical)
     else:
         message_box.setIcon(QMessageBox.Icon.Warning)
-        message_box.setWindowIcon(QIcon("icons_24:exclamation.png"))
+        message_box.setWindowIcon(icons.warning)
     message_box.setWindowTitle(title)
     message_box.setText(text)
-    message_box.setDetailedText(exc_details)
+    if exc_details:
+        message_box.setDetailedText(exc_details)
+
+    if log:
+        logging.warning(f"Displaying {title}: {text}")
+
     message_box.exec()

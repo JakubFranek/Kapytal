@@ -1,5 +1,6 @@
 import copy
 import string
+import uuid
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 from typing import Any
@@ -7,10 +8,8 @@ from typing import Any
 import pytest
 from hypothesis import assume, given
 from hypothesis import strategies as st
-
-import src.models.user_settings.user_settings as user_settings
 from src.models.base_classes.account import Account
-from src.models.model_objects.attributes import AttributeType, CategoryType
+from src.models.model_objects.attributes import AttributeType, Category, CategoryType
 from src.models.model_objects.cash_objects import (
     CashAccount,
     CashTransaction,
@@ -22,6 +21,7 @@ from src.models.model_objects.security_objects import (
     SecurityTransactionType,
 )
 from src.models.record_keeper import AlreadyExistsError, NotFoundError, RecordKeeper
+from src.models.user_settings import user_settings
 from tests.models.test_assets.composites import (
     currencies,
     everything_except,
@@ -38,6 +38,9 @@ def test_creation() -> None:
     assert record_keeper.transactions == ()
     assert record_keeper.tags == ()
     assert record_keeper.categories == ()
+    assert record_keeper.income_categories == ()
+    assert record_keeper.expense_categories == ()
+    assert record_keeper.income_and_expense_categories == ()
     assert record_keeper.root_income_categories == ()
     assert record_keeper.root_expense_categories == ()
     assert record_keeper.root_income_and_expense_categories == ()
@@ -72,38 +75,38 @@ def test_set_base_currency() -> None:
 
 
 @given(
-    currency_A=currencies(),
-    currency_B=currencies(),
+    currency_a=currencies(),
+    currency_b=currencies(),
     places=st.integers(min_value=0, max_value=8),
 )
 def test_add_exchange_rate(
-    currency_A: Currency, currency_B: Currency, places: int
+    currency_a: Currency, currency_b: Currency, places: int
 ) -> None:
-    assume(currency_A != currency_B)
+    assume(currency_a != currency_b)
     record_keeper = RecordKeeper()
-    record_keeper.add_currency(currency_A.code, places)
-    record_keeper.add_currency(currency_B.code, places)
-    record_keeper.add_exchange_rate(currency_A.code, currency_B.code)
+    record_keeper.add_currency(currency_a.code, places)
+    record_keeper.add_currency(currency_b.code, places)
+    record_keeper.add_exchange_rate(currency_a.code, currency_b.code)
     assert (
-        str(record_keeper.exchange_rates[0]) == f"{currency_A.code}/{currency_B.code}"
+        str(record_keeper.exchange_rates[0]) == f"{currency_a.code}/{currency_b.code}"
     )
 
 
 @given(
-    currency_A=currencies(),
-    currency_B=currencies(),
+    currency_a=currencies(),
+    currency_b=currencies(),
     places=st.integers(min_value=0, max_value=8),
 )
 def test_add_exchange_rate_already_exists(
-    currency_A: Currency, currency_B: Currency, places: int
+    currency_a: Currency, currency_b: Currency, places: int
 ) -> None:
-    assume(currency_A != currency_B)
+    assume(currency_a != currency_b)
     record_keeper = RecordKeeper()
-    record_keeper.add_currency(currency_A.code, places)
-    record_keeper.add_currency(currency_B.code, places)
-    record_keeper.add_exchange_rate(currency_A.code, currency_B.code)
+    record_keeper.add_currency(currency_a.code, places)
+    record_keeper.add_currency(currency_b.code, places)
+    record_keeper.add_exchange_rate(currency_a.code, currency_b.code)
     with pytest.raises(AlreadyExistsError):
-        record_keeper.add_exchange_rate(currency_A.code, currency_B.code)
+        record_keeper.add_exchange_rate(currency_a.code, currency_b.code)
 
 
 @given(
@@ -214,7 +217,7 @@ def test_add_cash_account(
 @given(
     description=st.text(min_size=0, max_size=256),
     datetime_=st.datetimes(
-        min_value=datetime.now() + timedelta(days=1),
+        min_value=datetime.now() + timedelta(days=1),  # noqa: DTZ005
         timezones=st.just(user_settings.settings.time_zone),
     ),
     transaction_type=st.sampled_from(CashTransactionType),
@@ -275,8 +278,8 @@ def test_add_cash_transaction(
         datetime_,
         transaction_type,
         account_path,
-        category_name_amount_pairs,
         payee_name,
+        category_name_amount_pairs,
         tag_name_amount_pairs,
     )
     transaction = record_keeper.transactions[0]
@@ -287,7 +290,7 @@ def test_add_cash_transaction(
 @given(
     description=st.text(min_size=0, max_size=256),
     datetime_=st.datetimes(
-        min_value=datetime.now() + timedelta(days=1),
+        min_value=datetime.now() + timedelta(days=1),  # noqa: DTZ005
         timezones=st.just(user_settings.settings.time_zone),
     ),
     amount_sent=valid_decimals(min_value=0.01),
@@ -540,25 +543,42 @@ def test_add_refund() -> RecordKeeper:
     record_keeper.add_refund(
         "Refund!",
         datetime.now(user_settings.settings.time_zone),
-        str(refunded_transaction.uuid),
+        refunded_transaction.uuid,
         "Bank Accounts/Raiffeisen CZK",
+        refunded_transaction.payee.name,
         (("Food and Drink/Groceries", Decimal(1000)),),
         (("Test Tag", Decimal(1000)),),
-        refunded_transaction.payee.name,
     )
     refunded_transaction = record_keeper.transactions[0]
     refund = record_keeper.transactions[1]
     assert refund in refunded_transaction.refunds
 
 
-def test_add_refund_wrong_uuid() -> RecordKeeper:
+def test_add_refund_invalid_uuid_type() -> RecordKeeper:
     record_keeper = get_preloaded_record_keeper_with_expense()
     refunded_transaction: CashTransaction = record_keeper.transactions[0]
-    with pytest.raises(ValueError, match="Transaction with UUID 'xxx' not found."):
+    with pytest.raises(
+        TypeError, match="Parameter 'uuids' must be a Collection ofuuid.UUID objects"
+    ):
         record_keeper.add_refund(
             description="Refund!",
             datetime_=datetime.now(user_settings.settings.time_zone),
             refunded_transaction_uuid="xxx",
+            refunded_account_path="Bank Accounts/Raiffeisen CZK",
+            category_path_amount_pairs=(("Food and Drink/Groceries", Decimal(1000)),),
+            tag_name_amount_pairs=(("Test Tag", Decimal(1000)),),
+            payee_name=refunded_transaction.payee.name,
+        )
+
+
+def test_add_refund_uuid_not_found() -> RecordKeeper:
+    record_keeper = get_preloaded_record_keeper_with_expense()
+    refunded_transaction: CashTransaction = record_keeper.transactions[0]
+    with pytest.raises(ValueError, match="not found"):
+        record_keeper.add_refund(
+            description="Refund!",
+            datetime_=datetime.now(user_settings.settings.time_zone),
+            refunded_transaction_uuid=uuid.uuid4(),
             refunded_account_path="Bank Accounts/Raiffeisen CZK",
             category_path_amount_pairs=(("Food and Drink/Groceries", Decimal(1000)),),
             tag_name_amount_pairs=(("Test Tag", Decimal(1000)),),
@@ -630,18 +650,17 @@ def test_get_security_by_name_does_not_exist(name: str) -> None:
         record_keeper.get_security_by_name(name)
 
 
-@given(uuid=everything_except(str))
+@given(uuid=everything_except(uuid.UUID))
 def test_get_security_by_uuid_invalid_type(uuid: Any) -> None:
     record_keeper = RecordKeeper()
-    with pytest.raises(TypeError, match="Parameter 'uuid' must be a string."):
+    with pytest.raises(TypeError, match="Parameter 'uuid' must be a UUID."):
         record_keeper.get_security_by_uuid(uuid)
 
 
-@given(uuid=st.text(min_size=1, max_size=32))
-def test_get_security_by_uuid_does_not_exist(uuid: str) -> None:
+def test_get_security_by_uuid_does_not_exist() -> None:
     record_keeper = RecordKeeper()
     with pytest.raises(NotFoundError):
-        record_keeper.get_security_by_uuid(uuid)
+        record_keeper.get_security_by_uuid(uuid.uuid4())
 
 
 @given(
@@ -793,7 +812,7 @@ def test_record_keeper_deep_copy() -> None:
 
 
 @given(name=names())
-def test_record_keeper_add_payee(name: str) -> None:
+def test_add_payee(name: str) -> None:
     record_keeper = RecordKeeper()
     record_keeper.add_payee(name)
     payee = record_keeper.get_attribute(name, AttributeType.PAYEE)
@@ -802,7 +821,7 @@ def test_record_keeper_add_payee(name: str) -> None:
 
 
 @given(name=names())
-def test_record_keeper_add_payee_already_exists(name: str) -> None:
+def test_add_payee_already_exists(name: str) -> None:
     record_keeper = RecordKeeper()
     record_keeper.add_payee(name)
     with pytest.raises(AlreadyExistsError):
@@ -810,7 +829,7 @@ def test_record_keeper_add_payee_already_exists(name: str) -> None:
 
 
 @given(name=names())
-def test_record_keeper_add_tag(name: str) -> None:
+def test_add_tag(name: str) -> None:
     record_keeper = RecordKeeper()
     record_keeper.add_tag(name)
     tag = record_keeper.get_attribute(name, AttributeType.TAG)
@@ -819,7 +838,7 @@ def test_record_keeper_add_tag(name: str) -> None:
 
 
 @given(name=names())
-def test_record_keeper_add_tag_already_exists(name: str) -> None:
+def test_add_tag_already_exists(name: str) -> None:
     record_keeper = RecordKeeper()
     record_keeper.add_tag(name)
     with pytest.raises(AlreadyExistsError):
@@ -827,13 +846,49 @@ def test_record_keeper_add_tag_already_exists(name: str) -> None:
 
 
 @given(value=valid_decimals(), date_=st.dates())
-def test_record_keeper_set_security_price(value: Decimal, date_: date) -> None:
+def test_set_security_price(value: Decimal, date_: date) -> None:
     record_keeper = RecordKeeper()
     record_keeper.add_currency("EUR", 2)
     record_keeper.add_security("NAME", "SYMBOL", "TYPE", "EUR", 1)
     security = record_keeper.get_security_by_name("NAME")
-    record_keeper.set_security_price(uuid=str(security.uuid), value=value, date_=date_)
+    record_keeper.set_security_price(uuid=security.uuid, value=value, date_=date_)
     assert security.price.value_normalized == value
+
+
+def test_account_items() -> None:
+    record_keeper = get_preloaded_record_keeper()
+    items = record_keeper.account_items
+    assert len(items) == len(record_keeper.account_groups) + len(record_keeper.accounts)
+
+
+def test_save_category() -> None:
+    category = Category("Test", CategoryType.INCOME_AND_EXPENSE)
+    record_keeper = RecordKeeper()
+    record_keeper._save_category(category)
+    assert category in record_keeper.categories
+    assert category in record_keeper.root_income_and_expense_categories
+
+
+def test_flatten_categories() -> None:
+    cat_1 = Category("1", CategoryType.INCOME)
+    cat_1_1 = Category("1.1", CategoryType.INCOME, cat_1)
+    cat_1_2 = Category("1.2", CategoryType.INCOME, cat_1)
+    cat_1_1_1 = Category("1.1.1", CategoryType.INCOME, cat_1_1)
+    cat_2 = Category("2", CategoryType.INCOME)
+    cat_2_1 = Category("1.1", CategoryType.INCOME, cat_2)
+    cat_2_1_1 = Category("1.1", CategoryType.INCOME, cat_2_1)
+
+    root_categories = [cat_1, cat_2]
+    flat_categories = RecordKeeper._flatten_categories(root_categories)
+    assert flat_categories == [
+        cat_1,
+        cat_1_1,
+        cat_1_1_1,
+        cat_1_2,
+        cat_2,
+        cat_2_1,
+        cat_2_1_1,
+    ]
 
 
 def get_preloaded_record_keeper_with_security_transactions() -> RecordKeeper:
@@ -904,8 +959,8 @@ def get_preloaded_record_keeper_with_refunds() -> RecordKeeper:
         datetime.now(user_settings.settings.time_zone) - timedelta(days=2),
         CashTransactionType.EXPENSE,
         "Bank Accounts/Raiffeisen CZK",
-        (("Food and Drink/Groceries", Decimal(1000)),),
         "Albert",
+        (("Food and Drink/Groceries", Decimal(1000)),),
         (("Test Tag", Decimal(1000)),),
     )
     record_keeper.add_cash_transaction(
@@ -913,8 +968,8 @@ def get_preloaded_record_keeper_with_refunds() -> RecordKeeper:
         datetime.now(user_settings.settings.time_zone) - timedelta(days=2),
         CashTransactionType.EXPENSE,
         "Bank Accounts/Moneta EUR",
-        (("Electronics", Decimal(400)),),
         "Alza",
+        (("Electronics", Decimal(400)),),
         (("Test Tag", Decimal(400)),),
     )
     transaction_cooking = record_keeper.transactions[0]
@@ -923,7 +978,7 @@ def get_preloaded_record_keeper_with_refunds() -> RecordKeeper:
     record_keeper.add_refund(
         description="An expense transaction",
         datetime_=datetime.now(user_settings.settings.time_zone),
-        refunded_transaction_uuid=str(transaction_cooking.uuid),
+        refunded_transaction_uuid=transaction_cooking.uuid,
         refunded_account_path="Bank Accounts/Raiffeisen CZK",
         category_path_amount_pairs=(("Food and Drink/Groceries", Decimal(250)),),
         payee_name="Albert",
@@ -932,7 +987,7 @@ def get_preloaded_record_keeper_with_refunds() -> RecordKeeper:
     record_keeper.add_refund(
         description="An expense transaction",
         datetime_=datetime.now(user_settings.settings.time_zone),
-        refunded_transaction_uuid=str(transaction_cooking.uuid),
+        refunded_transaction_uuid=transaction_cooking.uuid,
         refunded_account_path="Bank Accounts/Raiffeisen CZK",
         category_path_amount_pairs=(("Food and Drink/Groceries", Decimal(750)),),
         payee_name="Albert",
@@ -941,7 +996,7 @@ def get_preloaded_record_keeper_with_refunds() -> RecordKeeper:
     record_keeper.add_refund(
         description="An expense transaction",
         datetime_=datetime.now(user_settings.settings.time_zone),
-        refunded_transaction_uuid=str(transaction_electronics.uuid),
+        refunded_transaction_uuid=transaction_electronics.uuid,
         refunded_account_path="Bank Accounts/Moneta EUR",
         category_path_amount_pairs=(("Electronics", Decimal(400)),),
         payee_name="Alza",
@@ -957,8 +1012,8 @@ def get_preloaded_record_keeper_with_expense() -> RecordKeeper:
         datetime.now(user_settings.settings.time_zone),
         CashTransactionType.EXPENSE,
         "Bank Accounts/Raiffeisen CZK",
-        (("Food and Drink/Groceries", Decimal(1000)),),
         "Albert",
+        (("Food and Drink/Groceries", Decimal(1000)),),
         (("Test Tag", Decimal(1000)),),
     )
     return record_keeper
@@ -971,8 +1026,8 @@ def get_preloaded_record_keeper_with_cash_transactions() -> RecordKeeper:
         datetime.now(user_settings.settings.time_zone),
         CashTransactionType.EXPENSE,
         "Bank Accounts/Raiffeisen CZK",
-        (("Food and Drink/Groceries", Decimal(1000)),),
         "Albert",
+        (("Food and Drink/Groceries", Decimal(1000)),),
         (("Split with GF", Decimal(500)),),
     )
     record_keeper.add_cash_transaction(
@@ -980,8 +1035,8 @@ def get_preloaded_record_keeper_with_cash_transactions() -> RecordKeeper:
         datetime.now(user_settings.settings.time_zone) - timedelta(days=1),
         CashTransactionType.EXPENSE,
         "Bank Accounts/Raiffeisen CZK",
-        (("Food and Drink/Eating out", Decimal(500)),),
         "Doe Boy",
+        (("Food and Drink/Eating out", Decimal(500)),),
         (("Split with GF", Decimal(250)),),
     )
     record_keeper.add_cash_transaction(
@@ -989,8 +1044,8 @@ def get_preloaded_record_keeper_with_cash_transactions() -> RecordKeeper:
         datetime.now(user_settings.settings.time_zone) - timedelta(days=7),
         CashTransactionType.INCOME,
         "Bank Accounts/Raiffeisen CZK",
-        (("Salary", Decimal(50000)),),
         "Employer",
+        (("Salary", Decimal(50000)),),
         (),
     )
     record_keeper.add_cash_transaction(
@@ -998,8 +1053,8 @@ def get_preloaded_record_keeper_with_cash_transactions() -> RecordKeeper:
         datetime.now(user_settings.settings.time_zone) - timedelta(days=180),
         CashTransactionType.EXPENSE,
         "Bank Accounts/Moneta EUR",
-        (("Food and Drink/Eating out", Decimal(30)),),
         "unknown payee",
+        (("Food and Drink/Eating out", Decimal(30)),),
         (("Split with GF", Decimal(15)),),
     )
     return record_keeper
@@ -1065,8 +1120,8 @@ def get_preloaded_record_keeper_with_various_transactions() -> RecordKeeper:
         datetime.now(user_settings.settings.time_zone),
         CashTransactionType.EXPENSE,
         "Bank Accounts/Raiffeisen CZK",
-        (("Food and Drink/Groceries", Decimal(1000)),),
         "Albert",
+        (("Food and Drink/Groceries", Decimal(1000)),),
         (("Split with GF", Decimal(500)),),
     )
     record_keeper.add_cash_transaction(
@@ -1074,8 +1129,8 @@ def get_preloaded_record_keeper_with_various_transactions() -> RecordKeeper:
         datetime.now(user_settings.settings.time_zone) - timedelta(days=2),
         CashTransactionType.EXPENSE,
         "Bank Accounts/Moneta EUR",
-        (("Electronics", Decimal(400)),),
         "Alza",
+        (("Electronics", Decimal(400)),),
         (("Test Tag", Decimal(400)),),
     )
     transaction_electronics = next(
@@ -1086,7 +1141,7 @@ def get_preloaded_record_keeper_with_various_transactions() -> RecordKeeper:
     record_keeper.add_refund(
         description="An expense transaction",
         datetime_=datetime.now(user_settings.settings.time_zone),
-        refunded_transaction_uuid=str(transaction_electronics.uuid),
+        refunded_transaction_uuid=transaction_electronics.uuid,
         refunded_account_path="Bank Accounts/Moneta EUR",
         category_path_amount_pairs=(("Electronics", Decimal(400)),),
         payee_name="Alza",

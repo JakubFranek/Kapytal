@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'd:\Coding\Kapytal\src\views\ui_files\category_form.ui'
+# Form implementation generated from reading ui file 'd:\Coding\Kapytal\src\views\ui_files\forms\category_form.ui'
 #
 # Created by: PyQt6 UI code generator 6.4.0
 #
@@ -13,7 +13,7 @@ class Ui_CategoryForm(object):
     def setupUi(self, CategoryForm):
         CategoryForm.setObjectName("CategoryForm")
         CategoryForm.setWindowModality(QtCore.Qt.WindowModality.WindowModal)
-        CategoryForm.resize(323, 454)
+        CategoryForm.resize(400, 500)
         CategoryForm.setLocale(QtCore.QLocale(QtCore.QLocale.Language.English, QtCore.QLocale.Country.UnitedKingdom))
         self.horizontalLayout = QtWidgets.QHBoxLayout(CategoryForm)
         self.horizontalLayout.setObjectName("horizontalLayout")
@@ -64,4 +64,5 @@ class Ui_CategoryForm(object):
         self.expandAllToolButton.setText(_translate("CategoryForm", "..."))
         self.collapseAllToolButton.setText(_translate("CategoryForm", "..."))
         self.addToolButton.setText(_translate("CategoryForm", "..."))
-        self.searchLineEdit.setPlaceholderText(_translate("CategoryForm", "Search..."))
+        self.searchLineEdit.setToolTip(_translate("CategoryForm", "<html><head/><body><p>Special characters:<br/>* matches zero or more of any characters<br/>? matches any single character<br/>[...] matches any character within square brackets</p></body></html>"))
+        self.searchLineEdit.setPlaceholderText(_translate("CategoryForm", "Search Categories"))

@@ -3,7 +3,6 @@ from typing import Any
 import pytest
 from hypothesis import given
 from hypothesis import strategies as st
-
 from src.models.custom_exceptions import InvalidCharacterError
 from src.models.mixins.name_mixin import NameLengthError
 from src.models.model_objects.account_group import AccountGroup
@@ -16,6 +15,17 @@ def test_creation(name: str) -> None:
     account = ConcreteAccount(name)
     assert account.name == name
     assert account.path == name
+
+
+def test_eq() -> None:
+    account1 = ConcreteAccount("test")
+    account2 = ConcreteAccount("test")
+    assert account1.__eq__(account2) == (account1.uuid == account2.uuid)
+    assert account1.__hash__() != account2.__hash__()
+    account2._uuid = account1.uuid
+    assert account1.__eq__(account2) == (account1.uuid == account2.uuid)
+    assert account1.__hash__() == account2.__hash__()
+    assert account1.__eq__("anything else") is NotImplemented
 
 
 @given(name=st.just(""))

@@ -5,7 +5,6 @@ from typing import Any
 import pytest
 from hypothesis import assume, given
 from hypothesis import strategies as st
-
 from src.models.mixins.name_mixin import NameLengthError
 from src.models.model_objects.currency_objects import (
     CashAmount,
@@ -15,6 +14,7 @@ from src.models.model_objects.currency_objects import (
 from src.models.model_objects.security_objects import InvalidCharacterError, Security
 from tests.models.test_assets.composites import (
     currencies,
+    decimal_powers_of_10,
     everything_except,
     names,
     securities,
@@ -27,7 +27,7 @@ from tests.models.test_assets.composites import (
     symbol=st.text(alphabet=Security.SYMBOL_ALLOWED_CHARS, min_size=1, max_size=8),
     type_=names(min_size=1, max_size=32),
     currency=currencies(),
-    shares_unit=valid_decimals(min_value=1e-10, max_value=1),
+    shares_unit=decimal_powers_of_10(),
 )
 def test_creation(
     name: str,
@@ -45,6 +45,7 @@ def test_creation(
     assert security.latest_date is None
     assert security.price_history == {}
     assert security.__repr__() == f"Security('{security.name}')"
+    assert security.__str__() == security.name
     assert isinstance(security.__hash__(), int)
     assert security.shares_unit == shares_unit
 
@@ -224,16 +225,47 @@ def test_shares_unit_invalid_value(
 
 
 @given(
-    date_=st.dates(),
-    value=valid_decimals(),
+    data=st.data(),
+    name=names(min_size=1, max_size=64),
+    symbol=st.text(alphabet=Security.SYMBOL_ALLOWED_CHARS, min_size=1, max_size=8),
+    type_=names(min_size=1, max_size=32),
+    currency=currencies(),
 )
-def test_set_price(date_: date, value: Decimal) -> None:
+def test_shares_unit_not_power_of_10(
+    data: st.DataObject,
+    name: str,
+    symbol: str,
+    type_: str,
+    currency: Currency,
+) -> None:
+    shares_unit = data.draw(valid_decimals(min_value=1e-10))
+    assume(shares_unit.log10() % 1 != 0)
+    with pytest.raises(ValueError, match="Security.shares_unit must be a power of 10."):
+        Security(name, symbol, type_, currency, shares_unit)
+
+
+@given(
+    data=st.data(),
+)
+def test_set_price(
+    data: st.DataObject,
+) -> None:
     security = get_security()
     currency = security.currency
-    price = CashAmount(value, currency)
+    price = CashAmount(data.draw(valid_decimals()), currency)
+    date_ = data.draw(st.dates())
     security.set_price(date_, price)
     assert security.price.value_normalized == price.value_normalized
     assert security.price_history[date_].value_normalized == price.value_normalized
+    assert security.price == price
+    assert security.latest_date == date_
+    price_2 = CashAmount(data.draw(valid_decimals()), currency)
+    date_2 = data.draw(st.dates())
+    security.set_price(date_2, price_2)
+    assert security.price_history[date_2].value_normalized == price_2.value_normalized
+    if date_2 > date_:
+        assert security.price == price_2
+        assert security.latest_date == date_2
 
 
 @given(

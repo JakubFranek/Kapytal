@@ -3,20 +3,19 @@ from collections.abc import Collection
 from decimal import Decimal
 
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import (
     QAbstractButton,
     QCompleter,
-    QDialog,
     QDialogButtonBox,
     QWidget,
 )
-
+from src.views import icons
+from src.views.base_classes.custom_dialog import CustomDialog
 from src.views.ui_files.dialogs.Ui_cash_account_dialog import Ui_CashAccountDialog
 
 
-class CashAccountDialog(QDialog, Ui_CashAccountDialog):
-    signal_OK = pyqtSignal()
+class CashAccountDialog(CustomDialog, Ui_CashAccountDialog):
+    signal_ok = pyqtSignal()
 
     def __init__(
         self,
@@ -24,6 +23,7 @@ class CashAccountDialog(QDialog, Ui_CashAccountDialog):
         max_position: int,
         paths: Collection[str],
         code_places_pairs: Collection[tuple[str, int]],
+        *,
         edit: bool,
     ) -> None:
         super().__init__(parent=parent)
@@ -37,12 +37,12 @@ class CashAccountDialog(QDialog, Ui_CashAccountDialog):
 
         if edit:
             self.setWindowTitle("Edit Cash Account")
-            self.setWindowIcon(QIcon("icons_custom:piggy-bank-pencil.png"))
+            self.setWindowIcon(icons.edit_cash_account)
             self.currencyComboBox.setVisible(False)
             self.currencyLabel.setVisible(False)
         else:
             self.setWindowTitle("Add Cash Account")
-            self.setWindowIcon(QIcon("icons_custom:piggy-bank-plus.png"))
+            self.setWindowIcon(icons.add_cash_account)
             self.currentPathLabel.setVisible(False)
             self.currentPathLineEdit.setVisible(False)
             for code, _ in code_places_pairs:
@@ -79,7 +79,7 @@ class CashAccountDialog(QDialog, Ui_CashAccountDialog):
 
     @property
     def initial_balance(self) -> Decimal:
-        return Decimal(self.initialBalanceDoubleSpinBox.cleanText())
+        return Decimal(self.initialBalanceDoubleSpinBox.cleanText().replace(",", ""))
 
     @initial_balance.setter
     def initial_balance(self, value: Decimal) -> None:
@@ -106,7 +106,7 @@ class CashAccountDialog(QDialog, Ui_CashAccountDialog):
     def _handle_button_box_click(self, button: QAbstractButton) -> None:
         role = self.buttonBox.buttonRole(button)
         if role == QDialogButtonBox.ButtonRole.AcceptRole:
-            self.signal_OK.emit()
+            self.signal_ok.emit()
         elif role == QDialogButtonBox.ButtonRole.RejectRole:
             self.reject()
         else:

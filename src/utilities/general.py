@@ -3,12 +3,11 @@ import shutil
 import sys
 import traceback
 from datetime import datetime
-from decimal import Decimal
 from pathlib import Path
 from types import TracebackType
 
-import src.models.user_settings.user_settings as user_settings
-import src.utilities.constants as constants
+from src.models.user_settings import user_settings
+from src.utilities import constants
 
 
 def backup_json_file(file_path: Path) -> None:
@@ -67,12 +66,13 @@ def contains_timestamp(path: Path) -> bool:
     at the end of its stem."""
 
     stem = path.stem
-    timestamp = stem[-len(constants.TIMESTAMP_EXAMPLE) :]  # noqa: E203
+    timestamp = stem[-len(constants.TIMESTAMP_EXAMPLE) :]
     try:
         datetime.strptime(timestamp, constants.TIMESTAMP_FORMAT)  # noqa: DTZ007
-        return True
     except ValueError:
         return False
+    else:
+        return True
 
 
 def get_datetime_from_file_path(path: Path) -> datetime:
@@ -80,36 +80,33 @@ def get_datetime_from_file_path(path: Path) -> datetime:
     at the end of the stem."""
 
     stem = path.stem
-    timestamp = stem[-len(constants.TIMESTAMP_EXAMPLE) :]  # noqa: E203
+    timestamp = stem[-len(constants.TIMESTAMP_EXAMPLE) :]
     return datetime.strptime(timestamp, constants.TIMESTAMP_FORMAT).replace(
         tzinfo=user_settings.settings.time_zone
     )
 
 
-def get_exception_display_info() -> tuple[str, str] | None:
-    exc_type, exc_value, exc_traceback = sys.exc_info()
+def get_exception_display_info(exception: Exception) -> tuple[str, str]:
+    exc_traceback = exception.__traceback__
+    exc_type = type(exception)
+    exc_value = exception
 
-    if exc_type is not None and exc_value is not None and exc_traceback is not None:
-        # Ignore KeyboardInterrupt (special case)
-        if issubclass(exc_type, KeyboardInterrupt):
-            sys.__excepthook__(exc_type, exc_value, exc_traceback)
-            return None
+    if exc_traceback is None:
+        raise ValueError("Exception traceback is None.")
 
-        filename, line, exc_details = get_exception_info(
-            exc_type, exc_value, exc_traceback
-        )
+    # Ignore KeyboardInterrupt (special case)
+    if issubclass(exc_type, KeyboardInterrupt):
+        sys.__excepthook__(exc_type, exc_value, exc_traceback)
+        return None
 
-        error = "%s: %s" % (exc_type.__name__, exc_value)
-        display_text = f"""<html>The following error has occured:<br/>
-            <b>{error}</b><br/><br/>
-            It occurred at <b>line {line}</b> of file <b>{filename}</b>.<br/></html>"""
+    filename, line, exc_details = get_exception_info(exc_type, exc_value, exc_traceback)
 
-        logging.error(
-            "Handled exception", exc_info=(exc_type, exc_value, exc_traceback)
-        )
+    error = f"{exc_type.__name__}: {exc_value}"
+    display_text = f"""<html>The following error has occured:<br/>
+        <b>{error}</b><br/><br/>
+        It occurred at <b>line {line}</b> of file <b>{filename}</b>.<br/></html>"""
 
-        return display_text, exc_details
-    return None
+    return display_text, exc_details
 
 
 def get_exception_info(
@@ -124,14 +121,3 @@ def get_exception_info(
     file_name = Path(file_name).name
 
     return file_name, line, exc_details
-
-
-def normalize_decimal_to_min_places(value: Decimal, min_places: int) -> Decimal:
-    """Returns a Decimal which has at least 'min_places' decimal places,
-    but has no trailing zeroes beyond that limit."""
-
-    normalized = value.normalize()
-    _, _, exponent = normalized.as_tuple()
-    if isinstance(exponent, int) and -exponent < min_places:
-        return normalized.quantize(Decimal(f"1e-{min_places}"))
-    return normalized

@@ -1,16 +1,15 @@
-import logging
 
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QCloseEvent, QIcon
 from PyQt6.QtWidgets import QAbstractButton, QDialogButtonBox, QFileDialog, QWidget
-
+from src.views import icons
+from src.views.base_classes.custom_widget import CustomWidget
 from src.views.ui_files.forms.Ui_settings_form import Ui_SettingsForm
 
 # IDEA: link to documentation instead of notes?
 
 
-class SettingsForm(QWidget, Ui_SettingsForm):
-    signal_OK = pyqtSignal()
+class SettingsForm(CustomWidget, Ui_SettingsForm):
+    signal_ok = pyqtSignal()
     signal_apply = pyqtSignal()
 
     signal_data_changed = pyqtSignal()
@@ -26,7 +25,7 @@ class SettingsForm(QWidget, Ui_SettingsForm):
         super().__init__(parent=parent)
         self.setupUi(self)
         self.setWindowFlag(Qt.WindowType.Window)
-        self.setWindowIcon(QIcon("icons_16:gear.png"))
+        self.setWindowIcon(icons.settings)
 
         self.buttonBox.clicked.connect(self._handle_button_box_click)
         self.addBackupDirectoryButton.clicked.connect(self.signal_add_backup_path)
@@ -38,35 +37,27 @@ class SettingsForm(QWidget, Ui_SettingsForm):
         self.backupsSizeLimitSpinBox.valueChanged.connect(self.signal_data_changed.emit)
 
     @property
-    def backups_max_size_KB(self) -> int:
+    def backups_max_size_kb(self) -> int:
         return self.backupsSizeLimitSpinBox.value()
 
-    @backups_max_size_KB.setter
-    def backups_max_size_KB(self, value: int) -> None:
+    @backups_max_size_kb.setter
+    def backups_max_size_kb(self, value: int) -> None:
         self.backupsSizeLimitSpinBox.setValue(value)
 
     @property
-    def logs_max_size_KB(self) -> int:
+    def logs_max_size_kb(self) -> int:
         return self.logsSizeLimitSpinBox.value()
 
-    @logs_max_size_KB.setter
-    def logs_max_size_KB(self, value: int) -> None:
+    @logs_max_size_kb.setter
+    def logs_max_size_kb(self, value: int) -> None:
         self.logsSizeLimitSpinBox.setValue(value)
-
-    def show_form(self) -> None:
-        logging.debug(f"Showing {self.__class__.__name__}")
-        self.show()
 
     def get_directory_path(self) -> str:
         return QFileDialog.getExistingDirectory(self)
 
-    def set_backup_path_buttons(self, is_backup_path_selected: bool) -> None:
+    def set_backup_path_buttons(self, *, is_backup_path_selected: bool) -> None:
         self.openBackupDirectoryButton.setEnabled(is_backup_path_selected)
         self.removeBackupDirectoryButton.setEnabled(is_backup_path_selected)
-
-    def closeEvent(self, a0: QCloseEvent) -> None:
-        logging.debug(f"Closing {self.__class__.__name__}")
-        return super().closeEvent(a0)
 
     def finalize_setup(self) -> None:
         self.backupsListView.selectionModel().selectionChanged.connect(
@@ -76,7 +67,7 @@ class SettingsForm(QWidget, Ui_SettingsForm):
     def _handle_button_box_click(self, button: QAbstractButton) -> None:
         role = self.buttonBox.buttonRole(button)
         if role == QDialogButtonBox.ButtonRole.AcceptRole:
-            self.signal_OK.emit()
+            self.signal_ok.emit()
         elif role == QDialogButtonBox.ButtonRole.ApplyRole:
             self.signal_apply.emit()
         elif role == QDialogButtonBox.ButtonRole.RejectRole:

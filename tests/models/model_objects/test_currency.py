@@ -4,7 +4,6 @@ from typing import Any
 import pytest
 from hypothesis import assume, given
 from hypothesis import strategies as st
-
 from src.models.model_objects.currency_objects import (
     Currency,
     CurrencyError,
@@ -22,6 +21,7 @@ def test_creation(code: str, places: int) -> None:
 
     assert currency.code == code.upper()
     assert currency.__repr__() == f"Currency({code.upper()})"
+    assert currency.__str__() == code.upper()
     assert currency.places == places
     assert currency.convertible_to == set()
     assert currency.exchange_rates == {}

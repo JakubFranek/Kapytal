@@ -1,9 +1,8 @@
 from datetime import datetime
 from decimal import Decimal
+from typing import TYPE_CHECKING
 
 import pytest
-
-import src.models.user_settings.user_settings as user_settings
 from src.models.custom_exceptions import InvalidOperationError, NotFoundError
 from src.models.model_objects.attributes import Attribute, AttributeType, CategoryType
 from src.models.model_objects.cash_objects import (
@@ -11,12 +10,14 @@ from src.models.model_objects.cash_objects import (
     CashTransactionType,
     RefundTransaction,
 )
-from src.models.model_objects.currency_objects import Currency
-from src.models.model_objects.security_objects import SecurityTransactionType
 from src.models.record_keeper import RecordKeeper
+from src.models.user_settings import user_settings
 from tests.models.test_record_keeper import (
     get_preloaded_record_keeper_with_various_transactions,
 )
+
+if TYPE_CHECKING:
+    from src.models.model_objects.currency_objects import Currency
 
 
 def test_remove_account() -> None:
@@ -127,7 +128,7 @@ def test_remove_transactions() -> None:
     record_keeper = get_preloaded_record_keeper_with_various_transactions()
     assert record_keeper.transactions != ()
     refund_uuids = [
-        str(transaction.uuid)
+        transaction.uuid
         for transaction in record_keeper.transactions
         if isinstance(transaction, RefundTransaction)
     ]
@@ -138,7 +139,7 @@ def test_remove_transactions() -> None:
         if isinstance(transaction, RefundTransaction)
     ]
     assert refunds == []
-    other_uuids = [str(transaction.uuid) for transaction in record_keeper.transactions]
+    other_uuids = [transaction.uuid for transaction in record_keeper.transactions]
     record_keeper.remove_transactions(other_uuids)
     assert record_keeper.transactions == ()
 
@@ -147,7 +148,7 @@ def test_remove_transactions_is_refunded() -> None:
     record_keeper = get_preloaded_record_keeper_with_various_transactions()
     assert record_keeper.transactions != ()
     refunded_transaction_uuids = [
-        str(transaction.uuid)
+        transaction.uuid
         for transaction in record_keeper.transactions
         if isinstance(transaction, CashTransaction) and transaction.is_refunded
     ]
@@ -161,7 +162,7 @@ def test_remove_security() -> None:
     record_keeper.add_security("NAME", "SYMB", "ETF", "CZK", 1)
     security = record_keeper.get_security_by_name("NAME")
     assert len(record_keeper.securities) == 1
-    record_keeper.remove_security(str(security.uuid))
+    record_keeper.remove_security(security.uuid)
     assert record_keeper.securities == ()
 
 
@@ -169,7 +170,7 @@ def test_remove_security_referenced_in_transaction() -> None:
     record_keeper = get_preloaded_record_keeper_with_various_transactions()
     security = record_keeper.securities[0]
     with pytest.raises(InvalidOperationError):
-        record_keeper.remove_security(str(security.uuid))
+        record_keeper.remove_security(security.uuid)
 
 
 def test_remove_currency() -> None:
@@ -191,31 +192,19 @@ def test_remove_currency_referenced_in_security() -> None:
         record_keeper.remove_currency("CZK")
 
 
+def test_remove_currency_referenced_in_account() -> None:
+    record_keeper = RecordKeeper()
+    record_keeper.add_currency("CZK", 2)
+    record_keeper.add_cash_account("PATH", "CZK", 0)
+    with pytest.raises(InvalidOperationError):
+        record_keeper.remove_currency("CZK")
+
+
 def test_remove_currency_referenced_in_exchange_rate() -> None:
     record_keeper = RecordKeeper()
     record_keeper.add_currency("CZK", 2)
     record_keeper.add_currency("EUR", 2)
     record_keeper.add_exchange_rate("CZK", "EUR")
-    with pytest.raises(InvalidOperationError):
-        record_keeper.remove_currency("CZK")
-
-
-def test_remove_currency_referenced_in_transaction() -> None:
-    record_keeper = RecordKeeper()
-    record_keeper.add_currency("CZK", 2)
-    record_keeper.add_security_account("SECURITY ACC", None)
-    record_keeper.add_cash_account("CASH ACC", "CZK", 0, None)
-    record_keeper.add_security("NAME", "SYMB", "ETF", "CZK", 1)
-    record_keeper.add_security_transaction(
-        "",
-        datetime.now(user_settings.settings.time_zone),
-        SecurityTransactionType.BUY,
-        "NAME",
-        1,
-        1,
-        "SECURITY ACC",
-        "CASH ACC",
-    )
     with pytest.raises(InvalidOperationError):
         record_keeper.remove_currency("CZK")
 
@@ -252,8 +241,8 @@ def test_remove_tag_in_transaction() -> None:
         datetime.now(user_settings.settings.time_zone),
         CashTransactionType.EXPENSE,
         "ACCOUNT",
-        [("Category", Decimal(1))],
         "PAYEE",
+        [("Category", Decimal(1))],
         [(("TAG"), Decimal(1))],
     )
     with pytest.raises(InvalidOperationError):
@@ -276,8 +265,8 @@ def test_remove_payee_in_transaction() -> None:
         datetime.now(user_settings.settings.time_zone),
         CashTransactionType.EXPENSE,
         "ACCOUNT",
-        [("Category", Decimal(1))],
         "PAYEE",
+        [("Category", Decimal(1))],
         [(("TAG"), Decimal(1))],
     )
     with pytest.raises(InvalidOperationError):
@@ -316,8 +305,8 @@ def test_remove_category_in_transaction() -> None:
         datetime.now(user_settings.settings.time_zone),
         CashTransactionType.EXPENSE,
         "ACCOUNT",
-        [("Category", Decimal(1))],
         "PAYEE",
+        [("Category", Decimal(1))],
         [(("TAG"), Decimal(1))],
     )
     with pytest.raises(InvalidOperationError):

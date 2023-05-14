@@ -1,45 +1,105 @@
 from enum import IntEnum
 
+from PyQt6.QtGui import QFont
 
-class AccountTreeColumns(IntEnum):
-    COLUMN_NAME = 0
-    COLUMN_BALANCE_NATIVE = 2
-    COLUMN_BALANCE_BASE = 1
-    COLUMN_SHOW = 3
+monospace_font = QFont("Consolas")
 
 
-class CurrencyTableColumns(IntEnum):
-    COLUMN_CODE = 0
-    COLUMN_PLACES = 1
+class AccountTreeColumn(IntEnum):
+    NAME = 0
+    BALANCE_NATIVE = 1
+    BALANCE_BASE = 2
+    SHOW = 3
 
 
-class ExchangeRateTableColumns(IntEnum):
-    COLUMN_CODE = 0
-    COLUMN_RATE = 1
-    COLUMN_LAST_DATE = 2
+class CurrencyTableColumn(IntEnum):
+    CODE = 0
+    PLACES = 1
 
 
-class PayeeTableColumns(IntEnum):
-    COLUMN_NAME = 0
-    COLUMN_TRANSACTIONS = 1
-    COLUMN_BALANCE = 2
+class ExchangeRateTableColumn(IntEnum):
+    CODE = 0
+    RATE = 1
+    LAST_DATE = 2
 
 
-class TagTableColumns(IntEnum):
-    COLUMN_NAME = 0
-    COLUMN_TRANSACTIONS = 1
-    COLUMN_BALANCE = 2
+class PayeeTableColumn(IntEnum):
+    NAME = 0
+    TRANSACTIONS = 1
+    BALANCE = 2
 
 
-class SecurityTableColumns(IntEnum):
-    COLUMN_NAME = 0
-    COLUMN_SYMBOL = 1
-    COLUMN_TYPE = 2
-    COLUMN_PRICE = 3
-    COLUMN_LAST_DATE = 4
+class TagTableColumn(IntEnum):
+    NAME = 0
+    TRANSACTIONS = 1
+    BALANCE = 2
 
 
-class CategoryTreeColumns(IntEnum):
-    COLUMN_NAME = 0
-    COLUMN_TRANSACTIONS = 1
-    COLUMN_BALANCE = 2
+class SecurityTableColumn(IntEnum):
+    NAME = 0
+    SYMBOL = 1
+    TYPE = 2
+    PRICE = 3
+    LAST_DATE = 4
+
+
+class SecurityAccountTableColumn(IntEnum):
+    SECURITY_NAME = 0
+    SYMBOL = 1
+    TYPE = 2
+    SHARES = 3
+    PRICE = 4
+    AMOUNT_NATIVE = 5
+    AMOUNT_BASE = 6
+
+
+class OwnedSecuritiesTreeColumn(IntEnum):
+    NAME = 0
+    SHARES = 1
+    AMOUNT_NATIVE = 2
+    AMOUNT_BASE = 3
+
+
+class CategoryTreeColumn(IntEnum):
+    NAME = 0
+    TRANSACTIONS = 1
+    BALANCE = 2
+
+
+class TransactionTableColumn(IntEnum):
+    DATETIME = 0
+    DESCRIPTION = 1
+    TYPE = 2
+    FROM = 3
+    TO = 4
+    SECURITY = 5
+    SHARES = 6
+    AMOUNT_NATIVE = 7
+    AMOUNT_BASE = 8
+    AMOUNT_SENT = 9
+    AMOUNT_RECEIVED = 10
+    BALANCE = 11
+    CATEGORY = 12
+    TAG = 13
+    UUID = 14
+    DATETIME_CREATED = 15
+
+
+TRANSACTION_TABLE_COLUMN_HEADERS = {
+    TransactionTableColumn.DATETIME: "Date",
+    TransactionTableColumn.DESCRIPTION: "Description",
+    TransactionTableColumn.TYPE: "Type",
+    TransactionTableColumn.FROM: "From",
+    TransactionTableColumn.TO: "To",
+    TransactionTableColumn.SECURITY: "Security",
+    TransactionTableColumn.SHARES: "Shares",
+    TransactionTableColumn.AMOUNT_NATIVE: "Native amount",
+    TransactionTableColumn.AMOUNT_BASE: "Base amount",
+    TransactionTableColumn.AMOUNT_SENT: "Amount sent",
+    TransactionTableColumn.AMOUNT_RECEIVED: "Amount received",
+    TransactionTableColumn.BALANCE: "Balance",
+    TransactionTableColumn.CATEGORY: "Category",
+    TransactionTableColumn.TAG: "Tags",
+    TransactionTableColumn.UUID: "UUID",
+    TransactionTableColumn.DATETIME_CREATED: "Date & time created",
+}

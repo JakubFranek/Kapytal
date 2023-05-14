@@ -3,19 +3,20 @@ import sys
 from collections.abc import Collection
 from pathlib import Path
 
-from PyQt6.QtCore import PYQT_VERSION_STR, QT_VERSION_STR, QDir, QSize, Qt, pyqtSignal
-from PyQt6.QtGui import QAction, QCloseEvent, QIcon
-from PyQt6.QtWidgets import QFileDialog, QLineEdit, QMainWindow, QMessageBox
-
-import src.utilities.constants as constants
-from src.views.account_tree import AccountTree
+from PyQt6.QtCore import PYQT_VERSION_STR, QT_VERSION_STR, QSize, Qt, pyqtSignal
+from PyQt6.QtGui import QAction, QCloseEvent, QIcon, QKeyEvent
+from PyQt6.QtWidgets import QFileDialog, QMainWindow, QMessageBox
+from src.utilities import constants
+from src.views import icons
 from src.views.ui_files.Ui_main_window import Ui_MainWindow
-
-# IDEA: swap QToolButtons for QPushButtons (see how drop down menu works though)
+from src.views.widgets.account_tree_widget import AccountTreeWidget
+from src.views.widgets.transaction_table_widget import TransactionTableWidget
 
 
 class MainView(QMainWindow, Ui_MainWindow):
     signal_exit = pyqtSignal()
+
+    signal_show_account_tree = pyqtSignal(bool)
 
     signal_open_currency_form = pyqtSignal()
     signal_open_security_form = pyqtSignal()
@@ -58,7 +59,7 @@ class MainView(QMainWindow, Ui_MainWindow):
             ),
             self,
         )
-        message_box.setWindowIcon(QIcon("icons_16:question.png"))
+        message_box.setWindowIcon(icons.question)
         message_box.setDefaultButton(QMessageBox.StandardButton.Cancel)
         reply = message_box.exec()
         if reply == QMessageBox.StandardButton.Yes:
@@ -67,14 +68,12 @@ class MainView(QMainWindow, Ui_MainWindow):
             return False
         return None
 
-    def set_save_status(
-        self, current_file_path: Path | None, unsaved_changes: bool
-    ) -> None:
-        if unsaved_changes is True:
-            self.actionSave.setIcon(QIcon("icons_16:disk--exclamation.png"))
+    def set_save_status(self, current_file_path: Path | None, *, unsaved: bool) -> None:
+        if unsaved is True:
+            self.actionSave.setIcon(icons.disk_warning)
             star_str = "*"
         else:
-            self.actionSave.setIcon(QIcon("icons_16:disk.png"))
+            self.actionSave.setIcon(icons.disk)
             star_str = ""
 
         if current_file_path is None:
@@ -106,15 +105,13 @@ class MainView(QMainWindow, Ui_MainWindow):
         for path in reversed(recent_files):
             action = QAction(path, self)
             action.triggered.connect(
-                lambda _, path=path: self.signal_open_recent_file.emit(  # noqa : U101
-                    path
-                )
+                lambda _, path=path: self.signal_open_recent_file.emit(path)
             )
             actions = self.menuRecent_Files.actions()
             before_action = actions[0] if actions else None
             self.menuRecent_Files.insertAction(before_action, action)
 
-    def closeEvent(self, event: QCloseEvent) -> None:
+    def closeEvent(self, event: QCloseEvent) -> None:  # noqa: N802
         self.signal_exit.emit()
         event.ignore()
 
@@ -126,9 +123,9 @@ class MainView(QMainWindow, Ui_MainWindow):
             "household finances</em><br/>"
             "Source code and documentation available on "
             "<a href=https://github.com/JakubFranek/Kapytal>"
-            "Kapytal GitHub repository</a>.<br/>"
+            "Kapytal GitHub repository</a><br/>"
             "Published under <a href=https://www.gnu.org/licenses/gpl-3.0.html>"
-            "GNU General Public Licence v3.0</a>.<br/>"
+            "GNU General Public Licence v3.0</a><br/>"
             "<br/>"
             "<b>Version info</b><br/>"
             f"Kapytal {constants.VERSION}<br/>"
@@ -140,8 +137,9 @@ class MainView(QMainWindow, Ui_MainWindow):
             "<a href=https://p.yusukekamiyamane.com>Fugue Icons set</a> by "
             "Yusuke Kamiyamane.<br/>"
             "Custom icons located in <tt>Kapytal/resources/icons/icons-custom</tt> "
-            "are modifications of existing Fugue Icons.<br/>"
-            "</html"
+            "are modifications of existing Fugue Icons.<br/><br/>"
+            "<em>Dedicated to my wife Soňa</em>"
+            "</html>"
         )
         message_box = QMessageBox(self)
         message_box.setWindowTitle("About Kapytal")
@@ -153,22 +151,14 @@ class MainView(QMainWindow, Ui_MainWindow):
         logging.debug("Closing About dialog")
 
     def _initial_setup(self) -> None:
-        QDir.addSearchPath(
-            "icons_24",
-            str(Path(QDir.currentPath() + "/resources/icons/icons-24")),
-        )
-        QDir.addSearchPath(
-            "icons_16",
-            str(Path(QDir.currentPath() + "/resources/icons/icons-16")),
-        )
-        QDir.addSearchPath(
-            "icons_custom",
-            str(Path(QDir.currentPath() + "/resources/icons/icons-custom")),
-        )
+        icons.setup()
 
         self.setupUi(self)
-        self.account_tree = AccountTree(self)
-        self.verticalLayoutTree.addWidget(self.account_tree)
+        self.account_tree_widget = AccountTreeWidget(self)
+        self.transaction_table_widget = TransactionTableWidget(self)
+        self.horizontalLayout.addWidget(self.account_tree_widget)
+        self.horizontalLayout.addWidget(self.transaction_table_widget)
+        self.horizontalLayout.setStretch(1, 1)
 
         app_icon = QIcon()
         app_icon.addFile("icons_custom:coin-k.png", QSize(24, 24))
@@ -177,28 +167,21 @@ class MainView(QMainWindow, Ui_MainWindow):
 
         self.actionFilterTransactions = QAction(self)
 
-        self.actionOpen_File.setIcon(QIcon("icons_16:folder-open-document.png"))
-        self.actionSave.setIcon(QIcon("icons_16:disk.png"))
-        self.actionSave_As.setIcon(QIcon("icons_16:disks.png"))
-        self.actionCurrencies_and_Exchange_Rates.setIcon(
-            QIcon("icons_custom:currency.png")
-        )
-        self.actionQuit.setIcon(QIcon("icons_16:door-open-out.png"))
-        self.actionSecurities.setIcon(QIcon("icons_16:certificate.png"))
-        self.actionCategories.setIcon(QIcon("icons_custom:category.png"))
-        self.actionTags.setIcon(QIcon("icons_16:tag.png"))
-        self.actionPayees.setIcon(QIcon("icons_16:user-silhouette.png"))
-        self.actionSettings.setIcon(QIcon("icons_16:gear.png"))
-        self.actionAbout.setIcon(QIcon("icons_16:information.png"))
-        self.actionFilterTransactions.setIcon(QIcon("icons_16:funnel.png"))
-        self.actionIncome.setIcon(QIcon("icons_custom:coins-plus.png"))
-        self.actionExpense.setIcon(QIcon("icons_custom:coins-minus.png"))
-        self.actionBuy.setIcon(QIcon("icons_custom:certificate-plus.png"))
-        self.actionSell.setIcon(QIcon("icons_custom:certificate-minus.png"))
-        self.actionTransfer.setIcon(QIcon("icons_16:arrow-curve-000-left.png"))
-        self.actionCashTransfer.setIcon(QIcon("icons_custom:coins-arrow.png"))
-        self.actionSecurityTransfer.setIcon(QIcon("icons_custom:certificate-arrow.png"))
-        self.actionRefund.setIcon(QIcon("icons_custom:coins-arrow-back.png"))
+        self.actionShow_Hide_Account_Tree.setCheckable(True)
+        self.actionShow_Hide_Account_Tree.setChecked(True)
+
+        self.actionOpen_File.setIcon(icons.open_file)
+        self.actionSave.setIcon(icons.disk)
+        self.actionSave_As.setIcon(icons.disks)
+        self.actionCurrencies_and_Exchange_Rates.setIcon(icons.currency)
+        self.actionQuit.setIcon(icons.quit_)
+        self.actionSecurities.setIcon(icons.security)
+        self.actionCategories.setIcon(icons.category)
+        self.actionTags.setIcon(icons.tag)
+        self.actionPayees.setIcon(icons.payee)
+        self.actionSettings.setIcon(icons.settings)
+        self.actionAbout.setIcon(icons.about)
+        self.actionShow_Hide_Account_Tree.setIcon(icons.account_tree)
 
         self.actionCurrencies_and_Exchange_Rates.triggered.connect(
             self.signal_open_currency_form.emit
@@ -217,39 +200,14 @@ class MainView(QMainWindow, Ui_MainWindow):
         )
         self.actionClose_File.triggered.connect(self.signal_close_file.emit)
 
+        self.actionShow_Hide_Account_Tree.triggered.connect(
+            lambda checked: self.signal_show_account_tree.emit(checked)
+        )
         self.actionQuit.triggered.connect(self.close)
         self.actionAbout.triggered.connect(self.show_about)
 
-        self.expandAllToolButton.setDefaultAction(self.account_tree.actionExpand_All)
-        self.collapseAllToolButton.setDefaultAction(
-            self.account_tree.actionCollapse_All
-        )
-        self.addAccountGroupToolButton.setDefaultAction(
-            self.account_tree.actionAdd_Account_Group
-        )
-        self.addCashAccountToolButton.setDefaultAction(
-            self.account_tree.actionAdd_Cash_Account
-        )
-        self.addSecurityAccountToolButton.setDefaultAction(
-            self.account_tree.actionAdd_Security_Account
-        )
-        self.filterToolButton.setDefaultAction(self.actionFilterTransactions)
-        self.buyToolButton.setDefaultAction(self.actionBuy)
-        self.sellToolButton.setDefaultAction(self.actionSell)
-        self.incomeToolButton.setDefaultAction(self.actionIncome)
-        self.expenseToolButton.setDefaultAction(self.actionExpense)
-        self.transferToolButton.setIcon(QIcon("icons_16:arrow-curve-000-left.png"))
-        self.transferToolButton.addAction(self.actionCashTransfer)
-        self.transferToolButton.addAction(self.actionSecurityTransfer)
-
-        self.searchLineEdit.addAction(
-            QIcon("icons_16:magnifier.png"), QLineEdit.ActionPosition.LeadingPosition
-        )
-        self.searchLineEdit.setToolTip(
-            (
-                "Special characters:\n"
-                "* matches zero or more of any characters\n"
-                "? matches any single character\n"
-                "[...] matches any character within square brackets"
-            )
-        )
+    def keyPressEvent(self, a0: QKeyEvent) -> None:  # noqa: N802
+        if a0.key() == Qt.Key.Key_Escape:
+            logging.debug(f"Closing {self.__class__.__name__}")
+            self.close()
+        return super().keyPressEvent(a0)

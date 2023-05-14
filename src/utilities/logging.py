@@ -2,18 +2,53 @@ import logging
 from datetime import datetime
 from pathlib import Path
 
-import src.models.user_settings.user_settings as user_settings
-import src.utilities.constants as constants
+from src.models.user_settings import user_settings
+from src.utilities import constants
 from src.utilities.general import contains_timestamp, get_datetime_from_file_path
 
 
+class MyFormatter(logging.Formatter):
+    converter = datetime.fromtimestamp
+
+    def formatTime(  # noqa: N802
+        self, record: logging.LogRecord, datefmt: str | None = None
+    ) -> str:
+        dt: datetime = self.converter(record.created)
+        if datefmt:
+            return dt.strftime(datefmt)
+        dt_as_str = dt.strftime("%Y-%m-%d %H:%M:%S")
+        return "%s.%03d" % (dt_as_str, record.msecs)
+
+
 class DuplicateFilter(logging.Filter):
-    """Ignores subsequent identical logs."""
+    """Ignores subsequent identical logs, if time interval < 100 ms."""
+
+    DELAY_US = 100_000
+
+    def __init__(self, formatter: logging.Formatter, name: str = "") -> None:
+        super().__init__(name)
+        self.formatter = formatter
 
     def filter(self, record: logging.LogRecord) -> bool:  # noqa: A003
+        self.formatter.format(record)
         current_log = (record.module, record.levelno, record.msg)
+        current_dt = datetime.strptime(  # noqa: DTZ007
+            record.asctime, "%Y-%m-%d %H:%M:%S.%f"
+        )
+
         if current_log != getattr(self, "last_log", None):
+            # New record
             self.last_log = current_log
+            self.last_dt = current_dt
+            return True
+
+        if hasattr(self, "last_dt"):
+            # Same record
+            time_delta = current_dt - self.last_dt
+            if time_delta.microseconds > DuplicateFilter.DELAY_US:
+                # Same record with at least 100 ms interval
+                self.last_log = current_log
+                self.last_dt = current_dt
             return True
         return False
 
@@ -29,12 +64,9 @@ def setup_logging() -> None:
     filename_debug = constants.logs_debug_path / (
         "debug_" + dt_now.strftime(constants.TIMESTAMP_FORMAT) + ".log"
     )
-    formatter = logging.Formatter(
-        fmt=(
-            "%(asctime)s.%(msecs)03d %(levelname)-8s "
-            "{%(module)s} [%(funcName)s] %(message)s"
-        ),
-        datefmt="%Y-%m-%d %H:%M:%S",
+    formatter = MyFormatter(
+        fmt=("%(asctime)s %(levelname)-8s {%(module)s} [%(funcName)s] %(message)s"),
+        datefmt="%Y-%m-%d %H:%M:%S.%f",
     )
 
     handler_info = logging.FileHandler(
@@ -50,10 +82,13 @@ def setup_logging() -> None:
     handler_info.setFormatter(formatter)
 
     logger = logging.getLogger()  # this is the root logger
-    logger.addFilter(DuplicateFilter())
+    logger.addFilter(DuplicateFilter(formatter))
     logger.setLevel(logging.DEBUG)
     logger.addHandler(handler_debug)
     logger.addHandler(handler_info)
+    logging.logThreads = False
+    logging.logProcesses = False
+    logging.logMultiprocessing = False
     logging.debug("Logging setup complete")
 
 

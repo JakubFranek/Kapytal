@@ -1,16 +1,16 @@
 import logging
 
 from PyQt6.QtCore import pyqtSignal
-from PyQt6.QtGui import QIcon
-from PyQt6.QtWidgets import QAbstractButton, QDialog, QDialogButtonBox, QWidget
-
+from PyQt6.QtWidgets import QAbstractButton, QDialogButtonBox, QWidget
+from src.views import icons
+from src.views.base_classes.custom_dialog import CustomDialog
 from src.views.ui_files.dialogs.Ui_add_exchange_rate_dialog import (
     Ui_AddExchangeRateDialog,
 )
 
 
-class AddExchangeRateDialog(QDialog, Ui_AddExchangeRateDialog):
-    signal_OK = pyqtSignal()
+class AddExchangeRateDialog(CustomDialog, Ui_AddExchangeRateDialog):
+    signal_ok = pyqtSignal()
 
     def __init__(
         self,
@@ -19,7 +19,7 @@ class AddExchangeRateDialog(QDialog, Ui_AddExchangeRateDialog):
     ) -> None:
         super().__init__(parent)
         self.setupUi(self)
-        self.setWindowIcon(QIcon("icons_custom:currency-arrow.png"))
+        self.setWindowIcon(icons.exchange_rate)
         self.setWindowTitle("Add Exchange Rate")
 
         for code in currency_codes:
@@ -41,7 +41,7 @@ class AddExchangeRateDialog(QDialog, Ui_AddExchangeRateDialog):
     def _handle_button_box_click(self, button: QAbstractButton) -> None:
         role = self.buttonBox.buttonRole(button)
         if role == QDialogButtonBox.ButtonRole.AcceptRole:
-            self.signal_OK.emit()
+            self.signal_ok.emit()
         elif role == QDialogButtonBox.ButtonRole.RejectRole:
             self.reject()
         else:

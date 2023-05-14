@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'd:\Coding\Kapytal\src\views\ui_files\currency_dialog.ui'
+# Form implementation generated from reading ui file 'd:\Coding\Kapytal\src\views\ui_files\dialogs\currency_dialog.ui'
 #
 # Created by: PyQt6 UI code generator 6.4.0
 #
@@ -45,5 +45,5 @@ class Ui_CurrencyDialog(object):
         _translate = QtCore.QCoreApplication.translate
         CurrencyDialog.setWindowTitle(_translate("CurrencyDialog", "Add Currency"))
         self.currencyCodeLabel.setText(_translate("CurrencyDialog", "Currency Code"))
-        self.currencyCodeLineEdit.setPlaceholderText(_translate("CurrencyDialog", "Enter an ISO 4217 currency code."))
+        self.currencyCodeLineEdit.setPlaceholderText(_translate("CurrencyDialog", "Enter an ISO 4217 currency code"))
         self.currencyPlacesLabel.setText(_translate("CurrencyDialog", "Number of decimal places"))

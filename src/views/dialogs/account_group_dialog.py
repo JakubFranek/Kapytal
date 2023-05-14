@@ -2,24 +2,24 @@ import logging
 from collections.abc import Collection
 
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import (
     QAbstractButton,
     QCompleter,
-    QDialog,
     QDialogButtonBox,
     QWidget,
 )
-
+from src.views import icons
+from src.views.base_classes.custom_dialog import CustomDialog
 from src.views.ui_files.dialogs.Ui_account_group_dialog import Ui_AccountGroupDialog
 
+# TODO: update position limits based on path state?
 
-# IDEA: update position limits based on path state?
-class AccountGroupDialog(QDialog, Ui_AccountGroupDialog):
-    signal_OK = pyqtSignal()
+
+class AccountGroupDialog(CustomDialog, Ui_AccountGroupDialog):
+    signal_ok = pyqtSignal()
 
     def __init__(
-        self, parent: QWidget, max_position: int, paths: Collection[str], edit: bool
+        self, parent: QWidget, max_position: int, paths: Collection[str], *, edit: bool
     ) -> None:
         super().__init__(parent=parent)
         self.setupUi(self)
@@ -32,10 +32,10 @@ class AccountGroupDialog(QDialog, Ui_AccountGroupDialog):
 
         if edit:
             self.setWindowTitle("Edit Account Group")
-            self.setWindowIcon(QIcon("icons_16:folder--pencil.png"))
+            self.setWindowIcon(icons.edit_account_group)
         else:
             self.setWindowTitle("Add Account Group")
-            self.setWindowIcon(QIcon("icons_16:folder--plus.png"))
+            self.setWindowIcon(icons.add_account_group)
             self.currentPathLabel.setVisible(False)
             self.currentPathLineEdit.setVisible(False)
 
@@ -69,7 +69,7 @@ class AccountGroupDialog(QDialog, Ui_AccountGroupDialog):
     def _handle_button_box_click(self, button: QAbstractButton) -> None:
         role = self.buttonBox.buttonRole(button)
         if role == QDialogButtonBox.ButtonRole.AcceptRole:
-            self.signal_OK.emit()
+            self.signal_ok.emit()
         elif role == QDialogButtonBox.ButtonRole.RejectRole:
             self.reject()
         else:

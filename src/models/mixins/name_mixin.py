@@ -12,7 +12,13 @@ class NameMixin:
     NAME_MIN_LENGTH = 1
     NAME_MAX_LENGTH = 32
 
-    def __init__(self, name: str, allow_slash: bool, *args: Any, **kwargs: Any) -> None:
+    def __init__(
+        self,
+        name: str,
+        allow_slash: bool,  # noqa: FBT001
+        *args: Any,  # noqa: ANN401
+        **kwargs: Any,  # noqa: ANN401
+    ) -> None:
         super().__init__(*args, **kwargs)
 
         if not isinstance(allow_slash, bool):
@@ -44,6 +50,7 @@ class NameMixin:
                 f"Slashes in {self.__class__.__name__}.name are forbidden."
             )
 
+        # FIXME: get rid of this stupid logging method
         if hasattr(self, "_name"):
             logging.info(
                 f"Renaming {self.__class__.__name__} from '{self._name}' to '{name}'"

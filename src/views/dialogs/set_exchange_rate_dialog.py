@@ -3,16 +3,16 @@ from datetime import date
 from decimal import Decimal
 
 from PyQt6.QtCore import pyqtSignal
-from PyQt6.QtGui import QIcon
-from PyQt6.QtWidgets import QAbstractButton, QDialog, QDialogButtonBox, QWidget
-
+from PyQt6.QtWidgets import QAbstractButton, QDialogButtonBox, QWidget
+from src.views import icons
+from src.views.base_classes.custom_dialog import CustomDialog
 from src.views.ui_files.dialogs.Ui_set_exchange_rate_dialog import (
     Ui_SetExchangeRateDialog,
 )
 
 
-class SetExchangeRateDialog(QDialog, Ui_SetExchangeRateDialog):
-    signal_OK = pyqtSignal()
+class SetExchangeRateDialog(CustomDialog, Ui_SetExchangeRateDialog):
+    signal_ok = pyqtSignal()
 
     def __init__(
         self,
@@ -23,9 +23,10 @@ class SetExchangeRateDialog(QDialog, Ui_SetExchangeRateDialog):
     ) -> None:
         super().__init__(parent)
         self.setupUi(self)
-        self.setWindowIcon(QIcon("icons_custom:currency-arrow.png"))
+        self.setWindowIcon(icons.exchange_rate)
 
         primary_code, _, secondary_code = exchange_rate.partition("/")
+        self._exchange_rate_code = exchange_rate
 
         self.exchangeRateLabel.setText(f"1 {primary_code} =")
         self.exchangeRateDoubleSpinBox.setMaximum(1_000_000_000_000)
@@ -39,7 +40,7 @@ class SetExchangeRateDialog(QDialog, Ui_SetExchangeRateDialog):
 
     @property
     def value(self) -> Decimal:
-        return Decimal(self.exchangeRateDoubleSpinBox.text())
+        return Decimal(self.exchangeRateDoubleSpinBox.cleanText().replace(",", ""))
 
     @property
     def date_(self) -> date:
@@ -47,12 +48,12 @@ class SetExchangeRateDialog(QDialog, Ui_SetExchangeRateDialog):
 
     @property
     def exchange_rate_code(self) -> str:
-        return self.exchangeRateLabel.text()
+        return self._exchange_rate_code
 
     def _handle_button_box_click(self, button: QAbstractButton) -> None:
         role = self.buttonBox.buttonRole(button)
         if role == QDialogButtonBox.ButtonRole.AcceptRole:
-            self.signal_OK.emit()
+            self.signal_ok.emit()
         elif role == QDialogButtonBox.ButtonRole.RejectRole:
             self.reject()
         else:

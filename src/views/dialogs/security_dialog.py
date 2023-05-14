@@ -3,27 +3,27 @@ from collections.abc import Collection
 from decimal import Decimal
 
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import (
     QAbstractButton,
     QCompleter,
-    QDialog,
     QDialogButtonBox,
     QWidget,
 )
-
+from src.views import icons
+from src.views.base_classes.custom_dialog import CustomDialog
 from src.views.ui_files.dialogs.Ui_security_dialog import Ui_SecurityDialog
 
 
-class SecurityDialog(QDialog, Ui_SecurityDialog):
-    signal_OK = pyqtSignal()
+class SecurityDialog(CustomDialog, Ui_SecurityDialog):
+    signal_ok = pyqtSignal()
 
     def __init__(
         self,
         parent: QWidget,
         security_types: Collection[str],
         currency_codes: Collection[str],
-        edit: bool = False,
+        *,
+        edit: bool,
     ) -> None:
         super().__init__(parent=parent)
         self.setupUi(self)
@@ -35,14 +35,14 @@ class SecurityDialog(QDialog, Ui_SecurityDialog):
 
         if edit:
             self.setWindowTitle("Edit Security")
-            self.setWindowIcon(QIcon("icons_custom:certificate-pencil.png"))
+            self.setWindowIcon(icons.edit_security)
             self.currencyComboBox.setVisible(False)
             self.currencyLabel.setVisible(False)
             self.unitDoubleSpinBox.setVisible(False)
             self.unitLabel.setVisible(False)
         else:
             self.setWindowTitle("Add Security")
-            self.setWindowIcon(QIcon("icons_custom:certificate-plus.png"))
+            self.setWindowIcon(icons.add_security)
             for code in currency_codes:
                 self.currencyComboBox.addItem(code)
 
@@ -84,7 +84,7 @@ class SecurityDialog(QDialog, Ui_SecurityDialog):
 
     @property
     def unit(self) -> Decimal:
-        return Decimal(self.unitDoubleSpinBox.text())
+        return Decimal(self.unitDoubleSpinBox.cleanText().replace(",", ""))
 
     @unit.setter
     def unit(self, value: Decimal) -> None:
@@ -93,7 +93,7 @@ class SecurityDialog(QDialog, Ui_SecurityDialog):
     def _handle_button_box_click(self, button: QAbstractButton) -> None:
         role = self.buttonBox.buttonRole(button)
         if role == QDialogButtonBox.ButtonRole.AcceptRole:
-            self.signal_OK.emit()
+            self.signal_ok.emit()
         elif role == QDialogButtonBox.ButtonRole.RejectRole:
             self.reject()
         else:

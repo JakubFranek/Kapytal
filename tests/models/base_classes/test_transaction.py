@@ -7,20 +7,19 @@ from typing import Any
 import pytest
 from hypothesis import given
 from hypothesis import strategies as st
-
-import src.models.user_settings.user_settings as user_settings
 from src.models.model_objects.attributes import (
     Attribute,
     AttributeType,
     InvalidAttributeError,
 )
+from src.models.user_settings import user_settings
 from tests.models.test_assets.composites import attributes, everything_except
 from tests.models.test_assets.concrete_abcs import ConcreteTransaction
 
 
 @given(description=st.text(min_size=0, max_size=256), datetime_=st.datetimes())
 def test_creation(description: str, datetime_: datetime) -> None:
-    dt_start = datetime.now(user_settings.settings.time_zone)
+    dt_start = datetime.now(user_settings.settings.time_zone).replace(microsecond=0)
     transaction = ConcreteTransaction(description, datetime_)
 
     dt_created_diff = transaction.datetime_created - dt_start
@@ -41,7 +40,7 @@ def test_invalid_description_type(description: str, datetime_: datetime) -> None
 
 
 @given(
-    description=st.text(min_size=257, max_size=1000),
+    description=st.text(min_size=257, max_size=500),
     datetime_=st.datetimes(),
 )
 def test_invalid_description_value(description: str, datetime_: datetime) -> None:
@@ -108,3 +107,13 @@ def test_validate_tags_invalid_attribute_type(tags: Any) -> None:
     )
     with pytest.raises(InvalidAttributeError):
         transaction._validate_tags(tags)
+
+
+def test_clear_tags() -> None:
+    transaction = ConcreteTransaction(
+        "test", datetime.now(user_settings.settings.time_zone)
+    )
+    transaction._tags = ["TEST TAG"]
+    assert transaction.tags == ("TEST TAG",)
+    transaction.clear_tags()
+    assert transaction.tags == ()

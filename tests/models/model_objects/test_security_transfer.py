@@ -5,21 +5,19 @@ from typing import Any
 import pytest
 from hypothesis import given
 from hypothesis import strategies as st
-
-import src.models.user_settings.user_settings as user_settings
 from src.models.custom_exceptions import TransferSameAccountError
 from src.models.model_objects.security_objects import (
     Security,
     SecurityAccount,
     SecurityTransfer,
 )
+from src.models.user_settings import user_settings
 from tests.models.test_assets.composites import (
     everything_except,
     securities,
     security_accounts,
     security_transfers,
     share_decimals,
-    valid_decimals,
 )
 
 
@@ -31,7 +29,7 @@ from tests.models.test_assets.composites import (
     account_recipient=security_accounts(),
     data=st.data(),
 )
-def test_creation(
+def test_creation(  # noqa: PLR0913
     description: str,
     datetime_: datetime,
     security: Security,
@@ -39,9 +37,7 @@ def test_creation(
     account_recipient: SecurityAccount,
     data: st.DataObject,
 ) -> None:
-    shares = data.draw(
-        valid_decimals(min_value=1e-10).filter(lambda x: x % security.shares_unit == 0)
-    )
+    shares = data.draw(share_decimals(security.shares_unit))
     transfer = SecurityTransfer(
         description, datetime_, security, shares, account_sender, account_recipient
     )
@@ -68,7 +64,7 @@ def test_creation(
     account_recipient=security_accounts(),
     data=st.data(),
 )
-def test_invalid_account_sender_type(
+def test_invalid_account_sender_type(  # noqa: PLR0913
     description: str,
     datetime_: datetime,
     security: Security,
@@ -93,7 +89,7 @@ def test_invalid_account_sender_type(
     account_sender=security_accounts(),
     data=st.data(),
 )
-def test_invalid_account_recipient_type(
+def test_invalid_account_recipient_type(  # noqa: PLR0913
     description: str,
     datetime_: datetime,
     security: Security,
@@ -152,3 +148,17 @@ def test_set_attribues_same_values(transfer: SecurityTransfer) -> None:
 def test_set_attribues_same_accounts(transfer: SecurityTransfer) -> None:
     with pytest.raises(TransferSameAccountError):
         transfer.set_attributes(recipient=transfer.sender)
+
+
+@given(transaction=security_transfers(), unrelated_account=security_accounts())
+def test_is_accounts_related(
+    transaction: SecurityTransfer, unrelated_account: SecurityAccount
+) -> None:
+    related_accounts = (transaction.sender, unrelated_account)
+    assert transaction.is_accounts_related(related_accounts)
+    related_accounts = (transaction.recipient, unrelated_account)
+    assert transaction.is_accounts_related(related_accounts)
+    related_accounts = (transaction.sender, transaction.recipient, unrelated_account)
+    assert transaction.is_accounts_related(related_accounts)
+    unrelated_accounts = (unrelated_account,)
+    assert not transaction.is_accounts_related(unrelated_accounts)

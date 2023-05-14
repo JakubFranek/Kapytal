@@ -7,12 +7,18 @@ from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
 
 
 class CustomJSONEncoder(json.JSONEncoder):
-    def __init__(self, *args: Any, **kwargs: Any) -> None:  # noqa: U100
-        super().__init__(indent=2, separators=(", ", ": "))
+    def __init__(self, **kwargs: Any) -> None:  # noqa: ANN401
+        """Arguments indent and separators are overriden!"""
 
-    def default(self, arg: Any) -> Any:
+        if kwargs.get("indent") is None:
+            kwargs["indent"] = 2
+        if kwargs.get("separators") is None:
+            kwargs["separators"] = (", ", ": ")
+        super().__init__(**kwargs)
+
+    def default(self, arg: Any) -> Any:  # noqa: ANN401
         if isinstance(arg, datetime):
-            return {"datatype": "datetime", "datetime": arg.isoformat()}
+            return arg.isoformat()
         if isinstance(arg, Decimal):
             return {"datatype": "Decimal", "number": str(arg)}
         if isinstance(arg, JSONSerializableMixin):

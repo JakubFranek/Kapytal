@@ -6,6 +6,7 @@ __pycache__
 *.log
 saved_data/**/*.json
 .pytest_cache
+.ruff_cache
 .coverage
 coverage.xml
 *.exe
@@ -15,3 +16,5 @@ coverage
 *.autosave
 icons-custom-redundant
 *.psd
+aux_scripts
+.profile_data

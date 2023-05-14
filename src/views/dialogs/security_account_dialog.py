@@ -2,25 +2,24 @@ import logging
 from collections.abc import Collection
 
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import (
     QAbstractButton,
     QCompleter,
-    QDialog,
     QDialogButtonBox,
     QWidget,
 )
-
+from src.views import icons
+from src.views.base_classes.custom_dialog import CustomDialog
 from src.views.ui_files.dialogs.Ui_security_account_dialog import (
     Ui_SecurityAccountDialog,
 )
 
 
-class SecurityAccountDialog(QDialog, Ui_SecurityAccountDialog):
-    signal_OK = pyqtSignal()
+class SecurityAccountDialog(CustomDialog, Ui_SecurityAccountDialog):
+    signal_ok = pyqtSignal()
 
     def __init__(
-        self, parent: QWidget, max_position: int, paths: Collection[str], edit: bool
+        self, parent: QWidget, max_position: int, paths: Collection[str], *, edit: bool
     ) -> None:
         super().__init__(parent=parent)
         self.setupUi(self)
@@ -33,10 +32,10 @@ class SecurityAccountDialog(QDialog, Ui_SecurityAccountDialog):
 
         if edit:
             self.setWindowTitle("Edit Security Account")
-            self.setWindowIcon(QIcon("icons_16:bank--pencil.png"))
+            self.setWindowIcon(icons.edit_security_account)
         else:
             self.setWindowTitle("Add Security Account")
-            self.setWindowIcon(QIcon("icons_custom:bank-plus.png"))
+            self.setWindowIcon(icons.add_security_account)
             self.currentPathLabel.setVisible(False)
             self.currentPathLineEdit.setVisible(False)
 
@@ -70,7 +69,7 @@ class SecurityAccountDialog(QDialog, Ui_SecurityAccountDialog):
     def _handle_button_box_click(self, button: QAbstractButton) -> None:
         role = self.buttonBox.buttonRole(button)
         if role == QDialogButtonBox.ButtonRole.AcceptRole:
-            self.signal_OK.emit()
+            self.signal_ok.emit()
         elif role == QDialogButtonBox.ButtonRole.RejectRole:
             self.reject()
         else:

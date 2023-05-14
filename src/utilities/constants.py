@@ -24,13 +24,13 @@ logs_debug_path: Path
 
 
 def set_app_root_path(path: Path) -> None:
-    global app_root_path
-    global settings_path
-    global recent_files_path
-    global backups_folder_path
-    global logs_folder_path
-    global logs_info_path
-    global logs_debug_path
+    global app_root_path  # noqa: PLW0603
+    global settings_path  # noqa: PLW0603
+    global recent_files_path  # noqa: PLW0603
+    global backups_folder_path  # noqa: PLW0603
+    global logs_folder_path  # noqa: PLW0603
+    global logs_info_path  # noqa: PLW0603
+    global logs_debug_path  # noqa: PLW0603
 
     app_root_path = path
     settings_path = app_root_path / SETTINGS_SUFFIX

@@ -2,21 +2,20 @@ import logging
 from collections.abc import Collection
 
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import (
     QAbstractButton,
     QCompleter,
-    QDialog,
     QDialogButtonBox,
     QWidget,
 )
-
+from src.views import icons
+from src.views.base_classes.custom_dialog import CustomDialog
 from src.views.ui_files.dialogs.Ui_category_dialog import Ui_CategoryDialog
 
 
-# IDEA: update position limits based on path state?
-class CategoryDialog(QDialog, Ui_CategoryDialog):
-    signal_OK = pyqtSignal()
+# TODO: update position limits based on path state?
+class CategoryDialog(CustomDialog, Ui_CategoryDialog):
+    signal_ok = pyqtSignal()
 
     def __init__(
         self,
@@ -24,6 +23,7 @@ class CategoryDialog(QDialog, Ui_CategoryDialog):
         type_: str,
         paths: Collection[str],
         max_position: int,
+        *,
         edit: bool,
     ) -> None:
         super().__init__(parent=parent)
@@ -40,10 +40,10 @@ class CategoryDialog(QDialog, Ui_CategoryDialog):
 
         if edit:
             self.setWindowTitle("Edit Category")
-            self.setWindowIcon(QIcon("icons_custom:category-pencil.png"))
+            self.setWindowIcon(icons.edit_category)
         else:
             self.setWindowTitle("Add Category")
-            self.setWindowIcon(QIcon("icons_custom:category-plus.png"))
+            self.setWindowIcon(icons.add_category)
             self.currentPathLabel.setVisible(False)
             self.currentPathLineEdit.setVisible(False)
 
@@ -81,7 +81,7 @@ class CategoryDialog(QDialog, Ui_CategoryDialog):
     def _handle_button_box_click(self, button: QAbstractButton) -> None:
         role = self.buttonBox.buttonRole(button)
         if role == QDialogButtonBox.ButtonRole.AcceptRole:
-            self.signal_OK.emit()
+            self.signal_ok.emit()
         elif role == QDialogButtonBox.ButtonRole.RejectRole:
             self.reject()
         else:

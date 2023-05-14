@@ -1,4 +1,3 @@
-import copy
 import logging
 import string
 import uuid
@@ -10,7 +9,6 @@ from decimal import Decimal
 from enum import Enum, auto
 from typing import Any
 
-import src.models.user_settings.user_settings as user_settings
 from src.models.base_classes.account import Account, UnrelatedAccountError
 from src.models.base_classes.transaction import Transaction
 from src.models.custom_exceptions import InvalidCharacterError, TransferSameAccountError
@@ -25,12 +23,8 @@ from src.models.model_objects.currency_objects import (
     Currency,
     CurrencyError,
 )
-from src.models.utilities.find_helpers import (
-    find_account_by_uuid,
-    find_account_group_by_path,
-    find_currency_by_code,
-    find_security_by_uuid,
-)
+from src.models.user_settings import user_settings
+from src.presenters.utilities.event import Event
 
 
 class PriceNotFoundError(ValueError):
@@ -51,7 +45,7 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
     SYMBOL_MAX_LENGTH = 8
     SYMBOL_ALLOWED_CHARS = string.ascii_letters + string.digits + "."
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         name: str,
         symbol: str,
@@ -67,7 +61,7 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
             raise TypeError("Security.currency must be a Currency.")
         self._currency = currency
 
-        if not isinstance(shares_unit, (Decimal, int, str)):
+        if not isinstance(shares_unit, Decimal | int | str):
             raise TypeError(
                 "Security.shares_unit must be a Decimal, integer or a string "
                 "containing a number."
@@ -75,9 +69,12 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
         _shares_unit = Decimal(shares_unit)
         if not _shares_unit.is_finite() or _shares_unit <= 0:
             raise ValueError("Security.shares_unit must be finite and positive.")
+        if _shares_unit.log10() % 1 != 0:
+            raise ValueError("Security.shares_unit must be a power of 10.")
         self._shares_unit = _shares_unit
 
         self._price_history: dict[date, CashAmount] = {}
+        self.event_price_updated = Event()
 
     @property
     def type_(self) -> str:
@@ -94,7 +91,10 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
             )
 
         if hasattr(self, "_type"):
-            logging.info(f"Changing Security.type_ from '{self._type}' to '{value}'")
+            if self._type != value:
+                logging.info(
+                    f"Changing Security.type_ from '{self._type}' to '{value}'"
+                )
         else:
             logging.info(f"Setting Security.type_='{value}'")
         self._type = value
@@ -107,6 +107,7 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
     def symbol(self) -> str:
         return self._symbol
 
+    # FIXME: fix this stupid way of logging
     @symbol.setter
     def symbol(self, value: str) -> None:
         if not isinstance(value, str):
@@ -121,28 +122,33 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
                 "Security.symbol can contain only ASCII letters, digits or a period."
             )
 
+        value_capitalized = value.upper()
+
         if hasattr(self, "_symbol"):
-            logging.info(f"Changing Security.symbol from '{self._symbol}' to '{value}'")
+            if self._symbol != value_capitalized:
+                logging.info(
+                    f"Changing Security.symbol from '{self._symbol}' "
+                    f"to '{value_capitalized}'"
+                )
         else:
-            logging.info(f"Setting Security.symbol='{value}'")
-        self._symbol = value.upper()
+            logging.info(f"Setting Security.symbol='{value_capitalized}'")
+        self._symbol = value_capitalized
 
     @property
     def price(self) -> CashAmount:
-        if len(self._price_history) == 0:
-            return CashAmount(Decimal(0), self.currency)
-        latest_date = self.latest_date
-        return self._price_history[latest_date]
+        if hasattr(self, "_latest_price"):
+            return self._latest_price
+        return CashAmount(Decimal(0), self._currency)
 
     @property
     def latest_date(self) -> date | None:
-        if len(self._price_history) == 0:
-            return None
-        return max(date_ for date_ in self._price_history)
+        if hasattr(self, "_latest_date"):
+            return self._latest_date
+        return None
 
     @property
     def price_history(self) -> dict[date, CashAmount]:
-        return copy.deepcopy(self._price_history)
+        return self._price_history
 
     @property
     def price_history_pairs(self) -> tuple[tuple[date, CashAmount]]:
@@ -155,27 +161,45 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
         return self._shares_unit
 
     def __repr__(self) -> str:
-        return f"Security('{self.name}')"
+        return f"Security('{self._name}')"
+
+    def __str__(self) -> str:
+        return self._name
 
     def set_price(self, date_: date, price: CashAmount) -> None:
         if not isinstance(date_, date):
             raise TypeError("Parameter 'date_' must be a date.")
         if not isinstance(price, CashAmount):
             raise TypeError("Parameter 'price' must be a CashAmount.")
-        if price.currency != self.currency:
+        if price.currency != self._currency:
             raise CurrencyError("Security.currency and price.currency must match.")
+
         self._price_history[date_] = price
+        self._latest_date = max(date_ for date_ in self._price_history)
+
+        latest_price = self._price_history[self._latest_date]
+        if hasattr(self, "_latest_price"):
+            previous_latest_price = self._latest_price
+        else:
+            previous_latest_price = None
+
+        self._latest_price = self._price_history[self._latest_date]
+        if previous_latest_price != latest_price:
+            self.event_price_updated()
 
     def serialize(self) -> dict[str, Any]:
         date_price_pairs = [
-            (date_.strftime("%Y-%m-%d"), str(price.value_normalized))
+            (
+                date_.strftime("%Y-%m-%d"),
+                price.to_str_normalized().removesuffix(" " + self._currency.code),
+            )
             for date_, price in self.price_history_pairs
         ]
         return {
             "datatype": "Security",
             "name": self._name,
             "symbol": self._symbol,
-            "type_": self._type,
+            "type": self._type,
             "currency_code": self._currency.code,
             "shares_unit": str(self._shares_unit.normalize()),
             "uuid": str(self._uuid),
@@ -184,20 +208,19 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
 
     @staticmethod
     def deserialize(
-        data: dict[str, Any], currencies: Collection[Currency]
+        data: dict[str, Any],
+        currencies: dict[str, Currency],
     ) -> "Security":
         name = data["name"]
         symbol = data["symbol"]
-        type_ = data["type_"]
-
-        currency_code = data["currency_code"]
-        security_currency = find_currency_by_code(currency_code, currencies)
+        type_ = data["type"]
+        security_currency = currencies[data["currency_code"]]
 
         shares_unit = Decimal(data["shares_unit"])
 
         obj = Security(name, symbol, type_, security_currency, shares_unit)
 
-        date_price_pairs: list[tuple[str, str]] = data["date_price_pairs"]
+        date_price_pairs: list[list[str, str]] = data["date_price_pairs"]
         for date_, price in date_price_pairs:
             obj.set_price(
                 datetime.strptime(date_, "%Y-%m-%d")
@@ -206,11 +229,11 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
                 CashAmount(price, obj.currency),
             )
 
-        obj._uuid = uuid.UUID(data["uuid"])
+        obj._uuid = uuid.UUID(data["uuid"])  # noqa: SLF001
         return obj
 
 
-# IDEA: maybe add shares / balance history
+# IDEA: maybe add shares / balance history (calculated)
 class SecurityAccount(Account):
     def __init__(self, name: str, parent: AccountGroup | None = None) -> None:
         super().__init__(name, parent)
@@ -219,38 +242,66 @@ class SecurityAccount(Account):
         )
         self._transactions: list[SecurityRelatedTransaction] = []
 
+        # allow_update_balance attribute is used to block updating the balance
+        # when a transaction is added or removed during deserialization
+        self.allow_update_balance = True
+
     @property
     def securities(self) -> dict[Security, Decimal]:
-        return copy.deepcopy(self._securities)
+        return self._securities
 
     @property
     def transactions(self) -> tuple["SecurityRelatedTransaction", ...]:
         return tuple(self._transactions)
 
-    def __repr__(self) -> str:
-        return f"SecurityAccount(path='{self.path}')"
-
     def get_balance(self, currency: Currency) -> CashAmount:
         return sum(
-            (
-                security.price.convert(currency) * shares
-                for security, shares in self._securities.items()
-            ),
-            start=CashAmount(0, currency),
+            (balance.convert(currency) for balance in self._balances),
+            start=currency.zero_amount,
         )
+
+    def _update_balances(self) -> None:
+        balances: dict[Currency, CashAmount] = {}
+        for security, shares in self._securities.items():
+            security_amount = security.price * shares
+            if security_amount.currency in balances:
+                balances[security_amount.currency] += security_amount
+            else:
+                balances[security_amount.currency] = security_amount
+        self._balances = tuple(balances.values())
+        self.event_balance_updated()
 
     def add_transaction(self, transaction: "SecurityRelatedTransaction") -> None:
         self._validate_transaction(transaction)
-        self._securities[transaction.security] += transaction.get_shares(self)
         self._transactions.append(transaction)
+        if self.allow_update_balance:
+            self.update_securities()
 
     def remove_transaction(self, transaction: "SecurityRelatedTransaction") -> None:
         self._validate_transaction(transaction)
-        self._securities[transaction.security] -= transaction.get_shares(self)
         self._transactions.remove(transaction)
+        if self.allow_update_balance:
+            self.update_securities()
+
+    def update_securities(self) -> None:
+        for security in self._securities:
+            if self._update_balances in security.event_price_updated:
+                security.event_price_updated.remove(self._update_balances)
+
+        self._securities.clear()
+        for transaction in self._transactions:
+            self._securities[transaction.security] += transaction.get_shares(self)
+        self._securities = defaultdict(
+            self._securities.default_factory,
+            {key: value for key, value in self._securities.items() if value != 0},
+        )
+
+        for security in self._securities:
+            security.event_price_updated.append(self._update_balances)
+        self._update_balances()
 
     def serialize(self) -> dict[str, Any]:
-        index = self.parent.children.index(self) if self.parent is not None else None
+        index = self._parent.children.index(self) if self._parent is not None else None
         return {
             "datatype": "SecurityAccount",
             "path": self.path,
@@ -260,18 +311,21 @@ class SecurityAccount(Account):
 
     @staticmethod
     def deserialize(
-        data: dict[str, Any], account_groups: Collection[AccountGroup]
+        data: dict[str, Any], account_group_dict: dict[str, AccountGroup]
     ) -> "SecurityAccount":
         path: str = data["path"]
         index: int | None = data["index"]
         parent_path, _, name = path.rpartition("/")
 
         obj = SecurityAccount(name)
-        obj._uuid = uuid.UUID(data["uuid"])
+        obj._uuid = uuid.UUID(data["uuid"])  # noqa: SLF001
 
-        if parent_path != "":
-            obj._parent = find_account_group_by_path(parent_path, account_groups)
-            obj._parent._children[index] = obj
+        if parent_path:
+            parent = account_group_dict[parent_path]
+            parent._children_dict[index] = obj  # noqa: SLF001
+            parent._update_children_tuple()  # noqa: SLF001
+            obj.event_balance_updated.append(parent._update_balances)  # noqa: SLF001
+            obj._parent = parent  # noqa: SLF001
         return obj
 
     def _validate_transaction(self, transaction: "SecurityRelatedTransaction") -> None:
@@ -284,7 +338,6 @@ class SecurityAccount(Account):
                 "This SecurityAccount is not related to the provided "
                 "SecurityRelatedTransaction."
             )
-        return
 
 
 class SecurityRelatedTransaction(Transaction, ABC):
@@ -292,6 +345,8 @@ class SecurityRelatedTransaction(Transaction, ABC):
         self,
     ) -> None:
         super().__init__()
+        self._security: Security
+        self._shares: Decimal
 
     @property
     def security(self) -> Security:
@@ -318,7 +373,7 @@ class SecurityRelatedTransaction(Transaction, ABC):
     def _validate_shares(
         self, value: Decimal | int | str, shares_unit: Decimal
     ) -> None:
-        if not isinstance(value, (Decimal, int, str)):
+        if not isinstance(value, Decimal | int | str):
             raise TypeError(
                 f"{self.__class__.__name__}.shares must be a Decimal, integer "
                 "or a string containing a number."
@@ -340,7 +395,7 @@ class SecurityRelatedTransaction(Transaction, ABC):
 
 
 class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         description: str,
         datetime_: datetime,
@@ -380,6 +435,10 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
         return self._price_per_share
 
     @property
+    def amount(self) -> CashAmount:
+        return self._amount
+
+    @property
     def currency(self) -> Currency:
         return self._cash_account.currency
 
@@ -389,14 +448,17 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
 
     def __repr__(self) -> str:
         return (
-            f"SecurityTransaction({self.type_.name}, "
-            f"security='{self.security.symbol}', "
-            f"shares={self.shares}, "
-            f"{self.datetime_.strftime('%Y-%m-%d')})"
+            f"SecurityTransaction({self._type.name}, "
+            f"security='{self._security.symbol}', "
+            f"shares={self._shares}, "
+            f"{self._datetime.strftime('%Y-%m-%d')})"
         )
 
     def is_account_related(self, account: Account) -> bool:
         return account == self._cash_account or account == self._security_account
+
+    def is_accounts_related(self, accounts: Collection[Account]) -> bool:
+        return self._security_account in accounts or self._cash_account in accounts
 
     def prepare_for_deletion(self) -> None:
         self._cash_account.remove_transaction(self)
@@ -406,13 +468,13 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
         return {
             "datatype": "SecurityTransaction",
             "description": self._description,
-            "datetime_": self._datetime,
-            "type_": self._type.name,
-            "security_uuid": str(self._security.uuid),
-            "shares": self._shares,
+            "datetime": self._datetime.replace(microsecond=0),
+            "type": self._type.name,
+            "security_name": self._security.name,
+            "shares": str(self._shares),
             "price_per_share": self._price_per_share,
-            "security_account_uuid": str(self._security_account.uuid),
-            "cash_account_uuid": str(self._cash_account.uuid),
+            "security_account_path": self._security_account.path,
+            "cash_account_path": self._cash_account.path,
             "datetime_created": self._datetime_created,
             "uuid": str(self._uuid),
         }
@@ -420,23 +482,18 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
     @staticmethod
     def deserialize(
         data: dict[str, Any],
-        accounts: Collection[Account],
-        currencies: Collection[Currency],
-        securities: Collection[Security],
+        accounts: dict[str, Account],
+        currencies: dict[str, Currency],
+        securities: dict[str, Security],
     ) -> "SecurityTransaction":
         description = data["description"]
-        datetime_ = data["datetime_"]
-        type_ = SecurityTransactionType[data["type_"]]
-        shares = data["shares"]
+        datetime_ = datetime.fromisoformat(data["datetime"])
+        type_ = SecurityTransactionType[data["type"]]
+        shares = Decimal(data["shares"])
         price_per_share = CashAmount.deserialize(data["price_per_share"], currencies)
-
-        security_uuid = uuid.UUID(data["security_uuid"])
-        security = find_security_by_uuid(security_uuid, securities)
-
-        cash_account_uuid = uuid.UUID(data["cash_account_uuid"])
-        security_account_uuid = uuid.UUID(data["security_account_uuid"])
-        cash_account = find_account_by_uuid(cash_account_uuid, accounts)
-        security_account = find_account_by_uuid(security_account_uuid, accounts)
+        security = securities[data["security_name"]]
+        cash_account = accounts[data["cash_account_path"]]
+        security_account = accounts[data["security_account_path"]]
 
         obj = SecurityTransaction(
             description=description,
@@ -448,8 +505,10 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
             security_account=security_account,
             cash_account=cash_account,
         )
-        obj._datetime_created = data["datetime_created"]
-        obj._uuid = uuid.UUID(data["uuid"])
+        obj._datetime_created = datetime.fromisoformat(  # noqa: SLF001
+            data["datetime_created"]
+        )
+        obj._uuid = uuid.UUID(data["uuid"])  # noqa: SLF001
         return obj
 
     def set_attributes(
@@ -559,7 +618,12 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
         self._security = security
         self._shares = Decimal(shares)
         self._price_per_share = price_per_share
+        self._update_cached_data()
         self._set_accounts(security_account, cash_account)
+
+    def _update_cached_data(self) -> None:
+        self._amount = self._shares * self._price_per_share
+        self._amount_negative = -self._amount
 
     def _set_accounts(
         self, security_account: SecurityAccount, cash_account: CashAccount
@@ -571,11 +635,13 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
             if self._security_account != security_account:
                 self._security_account.remove_transaction(self)
             else:
+                self._security_account.update_securities()
                 add_security_account = False
         if hasattr(self, "_cash_account"):
             if self._cash_account != cash_account:
                 self._cash_account.remove_transaction(self)
             else:
+                self._cash_account.update_balance()
                 add_cash_account = False
 
         self._security_account = security_account
@@ -598,12 +664,10 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
                 "SecurityTransaction.security_account must be a SecurityAccount."
             )
 
-    def _validate_cash_account(
-        self, new_account: CashAccount, currency: Currency
-    ) -> None:
-        if not isinstance(new_account, CashAccount):
+    def _validate_cash_account(self, account: CashAccount, currency: Currency) -> None:
+        if not isinstance(account, CashAccount):
             raise TypeError("SecurityTransaction.cash_account must be a CashAccount.")
-        if new_account.currency != currency:
+        if account.currency != currency:
             raise CurrencyError(
                 "The currencies of SecurityTransaction.security and "
                 "SecurityTransaction.cash_account must match."
@@ -617,19 +681,21 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
         if amount.currency != currency:
             raise CurrencyError("Invalid CashAmount currency.")
 
-    def _get_amount(self, account: CashAccount) -> CashAmount:  # noqa: U100
-        if self.type_ == SecurityTransactionType.BUY:
-            return -self._shares * self.price_per_share
-        return self._shares * self.price_per_share
+    def _get_amount(self, account: CashAccount) -> CashAmount:
+        del account
+        if self._type == SecurityTransactionType.BUY:
+            return self._amount_negative
+        return self._amount
 
-    def _get_shares(self, account: SecurityAccount) -> Decimal:  # noqa: U100
-        if self.type_ == SecurityTransactionType.BUY:
-            return self.shares
-        return -self.shares
+    def _get_shares(self, account: SecurityAccount) -> Decimal:
+        del account
+        if self._type == SecurityTransactionType.BUY:
+            return self._shares
+        return -self._shares
 
 
 class SecurityTransfer(SecurityRelatedTransaction):
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         description: str,
         datetime_: datetime,
@@ -658,15 +724,18 @@ class SecurityTransfer(SecurityRelatedTransaction):
 
     def __repr__(self) -> str:
         return (
-            f"SecurityTransfer(security='{self.security.symbol}', "
-            f"shares={self.shares}, "
-            f"from='{self.sender.name}', "
-            f"to='{self.recipient.name}', "
-            f"{self.datetime_.strftime('%Y-%m-%d')})"
+            f"SecurityTransfer(security='{self._security.symbol}', "
+            f"shares={self._shares}, "
+            f"from='{self._sender.name}', "
+            f"to='{self._recipient.name}', "
+            f"{self._datetime.strftime('%Y-%m-%d')})"
         )
 
     def is_account_related(self, account: Account) -> bool:
-        return account == self.sender or account == self.recipient
+        return account == self._sender or account == self._recipient
+
+    def is_accounts_related(self, accounts: Collection[Account]) -> bool:
+        return self._sender in accounts or self._recipient in accounts
 
     def prepare_for_deletion(self) -> None:
         self._sender.remove_transaction(self)
@@ -676,11 +745,11 @@ class SecurityTransfer(SecurityRelatedTransaction):
         return {
             "datatype": "SecurityTransfer",
             "description": self._description,
-            "datetime_": self._datetime,
-            "security_uuid": str(self._security.uuid),
-            "shares": self._shares,
-            "sender_uuid": str(self._sender.uuid),
-            "recipient_uuid": str(self._recipient.uuid),
+            "datetime": self._datetime.replace(microsecond=0),
+            "security_name": self._security.name,
+            "shares": str(self._shares),
+            "sender_path": self._sender.path,
+            "recipient_path": self._recipient.path,
             "datetime_created": self._datetime_created,
             "uuid": str(self._uuid),
         }
@@ -688,20 +757,15 @@ class SecurityTransfer(SecurityRelatedTransaction):
     @staticmethod
     def deserialize(
         data: dict[str, Any],
-        accounts: Collection[Account],
-        securities: Collection[Security],
+        accounts: dict[str, Account],
+        securities: dict[str, Security],
     ) -> "SecurityTransfer":
         description = data["description"]
-        datetime_ = data["datetime_"]
-        shares = data["shares"]
-
-        security_uuid = uuid.UUID(data["security_uuid"])
-        security = find_security_by_uuid(security_uuid, securities)
-
-        sender_uuid = uuid.UUID(data["sender_uuid"])
-        recipient_uuid = uuid.UUID(data["recipient_uuid"])
-        sender = find_account_by_uuid(sender_uuid, accounts)
-        recipient = find_account_by_uuid(recipient_uuid, accounts)
+        datetime_ = datetime.fromisoformat(data["datetime"])
+        shares = Decimal(data["shares"])
+        security = securities[data["security_name"]]
+        sender = accounts[data["sender_path"]]
+        recipient = accounts[data["recipient_path"]]
 
         obj = SecurityTransfer(
             description=description,
@@ -711,8 +775,10 @@ class SecurityTransfer(SecurityRelatedTransaction):
             sender=sender,
             recipient=recipient,
         )
-        obj._datetime_created = data["datetime_created"]
-        obj._uuid = uuid.UUID(data["uuid"])
+        obj._datetime_created = datetime.fromisoformat(  # noqa: SLF001
+            data["datetime_created"]
+        )
+        obj._uuid = uuid.UUID(data["uuid"])  # noqa: SLF001
         return obj
 
     def set_attributes(
@@ -824,11 +890,13 @@ class SecurityTransfer(SecurityRelatedTransaction):
             if self._sender != sender:
                 self._sender.remove_transaction(self)
             else:
+                sender.update_securities()
                 add_sender = False
         if hasattr(self, "_recipient"):
             if self._recipient != recipient:
                 self._recipient.remove_transaction(self)
             else:
+                recipient.update_securities()
                 add_recipient = False
 
         self._sender = sender
@@ -841,5 +909,5 @@ class SecurityTransfer(SecurityRelatedTransaction):
 
     def _get_shares(self, account: SecurityAccount) -> Decimal:
         if account == self._sender:
-            return -self.shares
-        return self.shares
+            return -self._shares
+        return self._shares
