@@ -1399,10 +1399,12 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         obj._transactions = list(obj._transactions_uuid_dict.values())  # noqa: SLF001
 
         for account in obj._accounts:  # noqa: SLF001
+            account: CashAccount | SecurityAccount
+            account.allow_update_balance = True
             if isinstance(account, CashAccount):
-                # Enable updating account balance after deserialization
-                account.allow_update_balance = True
                 account.update_balance()
+            else:
+                account.update_securities()
 
         return obj
 
@@ -1451,13 +1453,13 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
                 account = CashAccount.deserialize(
                     account_dict, account_groups, currencies
                 )
-                # Disable updating balance during deserialization
-                account.allow_update_balance = False
             elif account_dict["datatype"] == "SecurityAccount":
                 account = SecurityAccount.deserialize(account_dict, account_groups)
             else:
                 raise ValueError("Unexpected 'datatype' value.")
             accounts[account.path] = account
+            # Disable updating balance during deserialization due to performance penalty
+            account.allow_update_balance = False
         return accounts
 
     @staticmethod

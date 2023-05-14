@@ -161,7 +161,7 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
         return self._shares_unit
 
     def __repr__(self) -> str:
-        return f"Security('{self.name}')"
+        return f"Security('{self._name}')"
 
     def __str__(self) -> str:
         return self._name
@@ -171,7 +171,7 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
             raise TypeError("Parameter 'date_' must be a date.")
         if not isinstance(price, CashAmount):
             raise TypeError("Parameter 'price' must be a CashAmount.")
-        if price.currency != self.currency:
+        if price.currency != self._currency:
             raise CurrencyError("Security.currency and price.currency must match.")
 
         self._price_history[date_] = price
@@ -242,6 +242,10 @@ class SecurityAccount(Account):
         )
         self._transactions: list[SecurityRelatedTransaction] = []
 
+        # allow_update_balance attribute is used to block updating the balance
+        # when a transaction is added or removed during deserialization
+        self.allow_update_balance = True
+
     @property
     def securities(self) -> dict[Security, Decimal]:
         return self._securities
@@ -270,10 +274,14 @@ class SecurityAccount(Account):
     def add_transaction(self, transaction: "SecurityRelatedTransaction") -> None:
         self._validate_transaction(transaction)
         self._transactions.append(transaction)
+        if self.allow_update_balance:
+            self.update_securities()
 
     def remove_transaction(self, transaction: "SecurityRelatedTransaction") -> None:
         self._validate_transaction(transaction)
         self._transactions.remove(transaction)
+        if self.allow_update_balance:
+            self.update_securities()
 
     def update_securities(self) -> None:
         for security in self._securities:
@@ -293,7 +301,7 @@ class SecurityAccount(Account):
         self._update_balances()
 
     def serialize(self) -> dict[str, Any]:
-        index = self.parent.children.index(self) if self.parent is not None else None
+        index = self._parent.children.index(self) if self._parent is not None else None
         return {
             "datatype": "SecurityAccount",
             "path": self.path,
@@ -337,6 +345,8 @@ class SecurityRelatedTransaction(Transaction, ABC):
         self,
     ) -> None:
         super().__init__()
+        self._security: Security
+        self._shares: Decimal
 
     @property
     def security(self) -> Security:
@@ -438,10 +448,10 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
 
     def __repr__(self) -> str:
         return (
-            f"SecurityTransaction({self.type_.name}, "
-            f"security='{self.security.symbol}', "
-            f"shares={self.shares}, "
-            f"{self.datetime_.strftime('%Y-%m-%d')})"
+            f"SecurityTransaction({self._type.name}, "
+            f"security='{self._security.symbol}', "
+            f"shares={self._shares}, "
+            f"{self._datetime.strftime('%Y-%m-%d')})"
         )
 
     def is_account_related(self, account: Account) -> bool:
@@ -608,8 +618,12 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
         self._security = security
         self._shares = Decimal(shares)
         self._price_per_share = price_per_share
-        self._amount = self._shares * self._price_per_share
+        self._update_cached_data()
         self._set_accounts(security_account, cash_account)
+
+    def _update_cached_data(self) -> None:
+        self._amount = self._shares * self._price_per_share
+        self._amount_negative = -self._amount
 
     def _set_accounts(
         self, security_account: SecurityAccount, cash_account: CashAccount
@@ -620,13 +634,14 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
         if hasattr(self, "_security_account"):
             if self._security_account != security_account:
                 self._security_account.remove_transaction(self)
-                self._security_account.update_securities()
             else:
+                self._security_account.update_securities()
                 add_security_account = False
         if hasattr(self, "_cash_account"):
             if self._cash_account != cash_account:
                 self._cash_account.remove_transaction(self)
             else:
+                self._cash_account.update_balance()
                 add_cash_account = False
 
         self._security_account = security_account
@@ -636,8 +651,6 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
             self._security_account.add_transaction(self)
         if add_cash_account:
             self._cash_account.add_transaction(self)
-
-        self._security_account.update_securities()
 
     def _validate_type(self, type_: SecurityTransactionType) -> None:
         if not isinstance(type_, SecurityTransactionType):
@@ -670,13 +683,13 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
 
     def _get_amount(self, account: CashAccount) -> CashAmount:
         del account
-        if self.type_ == SecurityTransactionType.BUY:
-            return -self._amount
+        if self._type == SecurityTransactionType.BUY:
+            return self._amount_negative
         return self._amount
 
     def _get_shares(self, account: SecurityAccount) -> Decimal:
         del account
-        if self.type_ == SecurityTransactionType.BUY:
+        if self._type == SecurityTransactionType.BUY:
             return self._shares
         return -self._shares
 
@@ -711,11 +724,11 @@ class SecurityTransfer(SecurityRelatedTransaction):
 
     def __repr__(self) -> str:
         return (
-            f"SecurityTransfer(security='{self.security.symbol}', "
-            f"shares={self.shares}, "
+            f"SecurityTransfer(security='{self._security.symbol}', "
+            f"shares={self._shares}, "
             f"from='{self._sender.name}', "
             f"to='{self._recipient.name}', "
-            f"{self.datetime_.strftime('%Y-%m-%d')})"
+            f"{self._datetime.strftime('%Y-%m-%d')})"
         )
 
     def is_account_related(self, account: Account) -> bool:
@@ -876,14 +889,14 @@ class SecurityTransfer(SecurityRelatedTransaction):
         if hasattr(self, "_sender"):
             if self._sender != sender:
                 self._sender.remove_transaction(self)
-                self._sender.update_securities()
             else:
+                sender.update_securities()
                 add_sender = False
         if hasattr(self, "_recipient"):
             if self._recipient != recipient:
                 self._recipient.remove_transaction(self)
-                self._recipient.update_securities()
             else:
+                recipient.update_securities()
                 add_recipient = False
 
         self._sender = sender
@@ -893,9 +906,6 @@ class SecurityTransfer(SecurityRelatedTransaction):
             self._sender.add_transaction(self)
         if add_recipient:
             self._recipient.add_transaction(self)
-
-        self._sender.update_securities()
-        self._recipient.update_securities()
 
     def _get_shares(self, account: SecurityAccount) -> Decimal:
         if account == self._sender:
