@@ -256,8 +256,11 @@ class CashTransaction(CashRelatedTransaction):
         payee: Attribute,
         category_amount_pairs: Collection[tuple[Category, CashAmount]],
         tag_amount_pairs: Collection[tuple[Attribute, CashAmount]],
+        uuid: uuid.UUID | None = None,
     ) -> None:
         super().__init__()
+        if uuid is not None:
+            self._uuid = uuid
         self._refunds: list[RefundTransaction] = []
         self.set_attributes(
             description=description,
@@ -409,11 +412,11 @@ class CashTransaction(CashRelatedTransaction):
             payee=payee,
             category_amount_pairs=decoded_category_amount_pairs,
             tag_amount_pairs=decoded_tag_amount_pairs,
+            uuid=uuid.UUID(data["uuid"]),
         )
         obj._datetime_created = datetime.fromisoformat(  # noqa: SLF001
             data["datetime_created"]
         )
-        obj._uuid = uuid.UUID(data["uuid"])  # noqa: SLF001
         return obj
 
     def add_refund(self, refund: "RefundTransaction") -> None:
@@ -535,8 +538,6 @@ class CashTransaction(CashRelatedTransaction):
         return _get_amount_for_category(self, category, total=total)
 
     def get_amount_for_tag(self, tag: Attribute) -> CashAmount:
-        if not isinstance(tag, Attribute):
-            raise TypeError("Parameter 'tag' must be an Attribute.")
         for tag_, amount in self._tag_amount_pairs:
             if tag_ == tag:
                 if self._type == CashTransactionType.INCOME:
@@ -893,8 +894,11 @@ class CashTransfer(CashRelatedTransaction):
         recipient: CashAccount,
         amount_sent: CashAmount,
         amount_received: CashAmount,
+        uuid: uuid.UUID | None = None,
     ) -> None:
         super().__init__()
+        if uuid is not None:
+            self._uuid = uuid
         self.set_attributes(
             description=description,
             datetime_=datetime_,
@@ -978,11 +982,11 @@ class CashTransfer(CashRelatedTransaction):
             recipient=recipient,
             amount_sent=amount_sent,
             amount_received=amount_received,
+            uuid=uuid.UUID(data["uuid"]),
         )
         obj._datetime_created = datetime.fromisoformat(  # noqa: SLF001
             data["datetime_created"]
         )
-        obj._uuid = uuid.UUID(data["uuid"])  # noqa: SLF001
         return obj
 
     def set_attributes(
@@ -1130,8 +1134,11 @@ class RefundTransaction(CashRelatedTransaction):
         payee: Attribute,
         category_amount_pairs: Collection[tuple[Category, CashAmount]],
         tag_amount_pairs: Collection[tuple[Attribute, CashAmount]],
+        uuid: uuid.UUID | None = None,
     ) -> None:
         super().__init__()
+        if uuid is not None:
+            self._uuid = uuid
         self._set_refunded_transaction(refunded_transaction)
         self.set_attributes(
             description=description,
@@ -1213,8 +1220,6 @@ class RefundTransaction(CashRelatedTransaction):
         return _get_amount_for_category(self, category, total=total)
 
     def get_amount_for_tag(self, tag: Attribute) -> CashAmount:
-        if not isinstance(tag, Attribute):
-            raise TypeError("Parameter 'tag' must be an Attribute.")
         for tag_, amount in self._tag_amount_pairs:
             if tag_ == tag:
                 return amount
@@ -1285,11 +1290,11 @@ class RefundTransaction(CashRelatedTransaction):
             payee=payee,
             category_amount_pairs=decoded_category_amount_pairs,
             tag_amount_pairs=decoded_tag_amount_pairs,
+            uuid=uuid.UUID(data["uuid"]),
         )
         obj._datetime_created = datetime.fromisoformat(  # noqa: SLF001
             data["datetime_created"]
         )
-        obj._uuid = uuid.UUID(data["uuid"])  # noqa: SLF001
         return obj
 
     def add_tags(self, tags: Collection[Attribute]) -> None:

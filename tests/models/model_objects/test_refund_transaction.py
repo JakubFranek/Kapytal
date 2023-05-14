@@ -32,6 +32,7 @@ from src.models.model_objects.currency_objects import (
 )
 from src.models.user_settings import user_settings
 from tests.models.test_assets.composites import (
+    attributes,
     cash_accounts,
     cash_transactions,
     everything_except,
@@ -676,6 +677,14 @@ def test_is_accounts_related(unrelated_account: CashAccount) -> None:
     assert transaction.is_accounts_related(related_accounts)
     unrelated_accounts = (unrelated_account,)
     assert not transaction.is_accounts_related(unrelated_accounts)
+
+
+@given(tag=attributes(type_=AttributeType.TAG))
+def test_get_amount_for_tag_not_related(tag: Attribute) -> None:
+    transaction = get_preloaded_refund()
+    assume(tag not in transaction.tags)
+    with pytest.raises(ValueError, match="not found in this RefundTransaction's tags"):
+        transaction.get_amount_for_tag(tag)
 
 
 def get_preloaded_refund() -> RefundTransaction:

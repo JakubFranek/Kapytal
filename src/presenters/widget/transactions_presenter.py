@@ -119,6 +119,7 @@ class TransactionsPresenter:
         self._view.resize_table_to_contents()
 
     def reapply_sort(self) -> None:
+        # TODO: sort does not need to be applied after Transaction deletion
         self._proxy_regex_sort_filter.setDynamicSortFilter(True)  # noqa: FBT003
 
     def _reset_model(self) -> None:

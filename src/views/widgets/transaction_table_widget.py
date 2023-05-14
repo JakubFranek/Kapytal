@@ -35,7 +35,7 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
     def __init__(self, parent: QWidget | None) -> None:
         super().__init__(parent)
         self.setupUi(self)
-
+        self.tableView.horizontalHeader().setResizeContentsPrecision(100)
         self._create_column_actions()
         self._set_icons()
         self._connect_actions()
@@ -69,9 +69,13 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
             return
 
         columns = TRANSACTION_TABLE_COLUMN_HEADERS.keys()
-        for column_ in columns:
-            if column_ != column and self.tableView.isColumnHidden(column_):
-                return  # If all other columns are hidden, this column must stay shown
+        # If all other columns are hidden, this column must stay shown
+        if not any(
+            not self.tableView.isColumnHidden(column_)
+            for column_ in columns
+            if column_ != column
+        ):
+            return
 
         self.tableView.setColumnHidden(column, not show)
         if show:

@@ -1272,9 +1272,11 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         security.set_price(date_, price)
 
     def serialize(self) -> dict[str, Any]:
-        # TODO: is the sorting here necessary?
-        sorted_account_groups = sorted(self._account_groups, key=str)
-        sorted_categories = sorted(self._categories, key=str)
+        sorted_account_groups = sorted(self._account_groups, key=lambda x: x.path)
+        sorted_categories = sorted(self._categories, key=lambda x: x.path)
+        sorted_accounts = sorted(self._accounts, key=lambda x: x.path)
+        sorted_tags = sorted(self._tags, key=lambda x: x.name)
+        sorted_payees = sorted(self._payees, key=lambda x: x.name)
 
         root_item_references = []
         for item in self._root_account_items:
@@ -1302,10 +1304,10 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
             "exchange_rates": self._exchange_rates,
             "securities": self._securities,
             "account_groups": sorted_account_groups,
-            "accounts": self._accounts,
+            "accounts": sorted_accounts,
             "root_account_items": root_item_references,
-            "payees": [payee.name for payee in self._payees],
-            "tags": [tag.name for tag in self._tags],
+            "payees": [payee.name for payee in sorted_payees],
+            "tags": [tag.name for tag in sorted_tags],
             "categories": sorted_categories,
             "root_income_categories": root_income_category_refs,
             "root_expense_categories": root_expense_category_refs,

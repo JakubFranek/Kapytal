@@ -19,6 +19,10 @@ from src.presenters.widget.transactions_presenter import (
 )
 from src.utilities import constants
 from src.utilities.general import backup_json_file
+from src.views.dialogs.busy_dialog import (
+    BusyDialog,
+    create_simple_busy_indicator,
+)
 from src.views.forms.category_form import CategoryForm
 from src.views.forms.currency_form import CurrencyForm
 from src.views.forms.payee_form import PayeeForm
@@ -59,16 +63,26 @@ class MainPresenter:
                     return
                 self._current_file_path = Path(file_path)
 
-            with self._current_file_path.open(mode="w", encoding="UTF-8") as file:
-                logging.debug(f"Saving to file: {self._current_file_path}")
-                json.dump(self._record_keeper, file, cls=CustomJSONEncoder)
+            self._busy_indicator_dialog = create_simple_busy_indicator(
+                self._view, "Saving data to file, please wait..."
+            )
+            self._busy_indicator_dialog.open()
+            QApplication.processEvents()
+            try:
+                with self._current_file_path.open(mode="w", encoding="UTF-8") as file:
+                    logging.debug(f"Saving to file: {self._current_file_path}")
+                    json.dump(self._record_keeper, file, cls=CustomJSONEncoder)
 
-                self._update_unsaved_changes(unsaved_changes=False)
-                self._view.show_status_message(
-                    f"File saved: {self._current_file_path}", 3000
-                )
+                    self._update_unsaved_changes(unsaved_changes=False)
+                    self._view.show_status_message(
+                        f"File saved: {self._current_file_path}", 3000
+                    )
 
-                logging.info(f"File saved: {self._current_file_path}")
+                    logging.info(f"File saved: {self._current_file_path}")
+            except:
+                raise
+            finally:
+                self._busy_indicator_dialog.close()
             backup_json_file(self._current_file_path)
         except Exception as exception:  # noqa: BLE001
             handle_exception(exception)
@@ -94,33 +108,47 @@ class MainPresenter:
             handle_exception(exception)
 
     def _open_file(self, path: Path) -> None:
-        with path.open(mode="r", encoding="UTF-8") as file:
-            backup_json_file(self._current_file_path)
+        self._busy_indicator_dialog = BusyDialog(self._view)
+        self._busy_indicator_dialog.open()
+        QApplication.processEvents()
+        try:
+            with path.open(mode="r", encoding="UTF-8") as file:
+                self._busy_indicator_dialog.set_state("Backing up selected file...", 0)
+                QApplication.processEvents()
+                backup_json_file(self._current_file_path)
 
-            logging.debug(f"Loading file: {self._current_file_path}")
-            logging.disable(logging.INFO)  # suppress logging of object creation
-            record_keeper: RecordKeeper = json.load(file, cls=CustomJSONDecoder)
-            logging.disable(logging.NOTSET)  # enable logging again
+                self._busy_indicator_dialog.set_state("Loading data from file...", 1)
+                QApplication.processEvents()
+                logging.debug(f"Loading file: {self._current_file_path}")
+                logging.disable(logging.INFO)  # suppress logging of object creation
+                record_keeper: RecordKeeper = json.load(file, cls=CustomJSONDecoder)
+                logging.disable(logging.NOTSET)  # enable logging again
 
-            self._load_record_keeper(record_keeper)
+                self._busy_indicator_dialog.set_state("Updating User Interface...", 2)
+                QApplication.processEvents()
+                self._load_record_keeper(record_keeper)
 
-            self._view.show_status_message(
-                f"File loaded: {self._current_file_path}", 3000
-            )
-            self._update_unsaved_changes(unsaved_changes=False)
+                self._view.show_status_message(
+                    f"File loaded: {self._current_file_path}", 3000
+                )
+                self._update_unsaved_changes(unsaved_changes=False)
 
-            self._add_recent_path(self._current_file_path)
+                self._add_recent_path(self._current_file_path)
 
-            logging.debug(f"Currencies: {len(record_keeper.currencies)}")
-            logging.debug(f"Exchange Rates: {len(record_keeper.exchange_rates)}")
-            logging.debug(f"Securities: {len(record_keeper.securities)}")
-            logging.debug(f"AccountGroups: {len(record_keeper.account_groups)}")
-            logging.debug(f"Accounts: {len(record_keeper.accounts)}")
-            logging.debug(f"Transactions: {len(record_keeper.transactions)}")
-            logging.debug(f"Categories: {len(record_keeper.categories)}")
-            logging.debug(f"Tags: {len(record_keeper.tags)}")
-            logging.debug(f"Payees: {len(record_keeper.tags)}")
-            logging.info(f"File loaded: {path}")
+                logging.debug(f"Currencies: {len(record_keeper.currencies)}")
+                logging.debug(f"Exchange Rates: {len(record_keeper.exchange_rates)}")
+                logging.debug(f"Securities: {len(record_keeper.securities)}")
+                logging.debug(f"AccountGroups: {len(record_keeper.account_groups)}")
+                logging.debug(f"Accounts: {len(record_keeper.accounts)}")
+                logging.debug(f"Transactions: {len(record_keeper.transactions)}")
+                logging.debug(f"Categories: {len(record_keeper.categories)}")
+                logging.debug(f"Tags: {len(record_keeper.tags)}")
+                logging.debug(f"Payees: {len(record_keeper.tags)}")
+                logging.info(f"File loaded: {path}")
+        except Exception:
+            raise
+        finally:
+            self._busy_indicator_dialog.close()
 
     def _close_file(self) -> None:
         if self._check_for_unsaved_changes("Close File") is False:

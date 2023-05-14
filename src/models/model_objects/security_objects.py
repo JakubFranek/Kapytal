@@ -405,8 +405,11 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
         price_per_share: CashAmount,
         security_account: SecurityAccount,
         cash_account: CashAccount,
+        uuid: uuid.UUID | None = None,
     ) -> None:
         super().__init__()
+        if uuid is not None:
+            self._uuid = uuid
         self.set_attributes(
             description=description,
             datetime_=datetime_,
@@ -504,11 +507,11 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
             price_per_share=price_per_share,
             security_account=security_account,
             cash_account=cash_account,
+            uuid=uuid.UUID(data["uuid"]),
         )
         obj._datetime_created = datetime.fromisoformat(  # noqa: SLF001
             data["datetime_created"]
         )
-        obj._uuid = uuid.UUID(data["uuid"])  # noqa: SLF001
         return obj
 
     def set_attributes(
@@ -703,8 +706,11 @@ class SecurityTransfer(SecurityRelatedTransaction):
         shares: Decimal | int | str,
         sender: SecurityAccount,
         recipient: SecurityAccount,
+        uuid: uuid.UUID | None = None,
     ) -> None:
         super().__init__()
+        if uuid is not None:
+            self._uuid = uuid
         self.set_attributes(
             description=description,
             datetime_=datetime_,
@@ -774,11 +780,11 @@ class SecurityTransfer(SecurityRelatedTransaction):
             shares=shares,
             sender=sender,
             recipient=recipient,
+            uuid=uuid.UUID(data["uuid"]),
         )
         obj._datetime_created = datetime.fromisoformat(  # noqa: SLF001
             data["datetime_created"]
         )
-        obj._uuid = uuid.UUID(data["uuid"])  # noqa: SLF001
         return obj
 
     def set_attributes(
