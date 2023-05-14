@@ -1,13 +1,18 @@
-# FIXME: this file belongs somewhere else...
-
+import logging
+import uuid
 from collections.abc import Collection
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Any, overload
+from typing import Any, TypeVar
 
 from src.models.base_classes.account import Account
 from src.models.base_classes.transaction import Transaction
-from src.models.custom_exceptions import AlreadyExistsError, InvalidOperationError
+from src.models.custom_exceptions import (
+    AlreadyExistsError,
+    InvalidOperationError,
+    NotFoundError,
+)
+from src.models.mixins.copyable_mixin import CopyableMixin
 from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
 from src.models.model_objects.account_group import AccountGroup
 from src.models.model_objects.attributes import (
@@ -18,7 +23,6 @@ from src.models.model_objects.attributes import (
 )
 from src.models.model_objects.cash_objects import (
     CashAccount,
-    CashRelatedTransaction,
     CashTransaction,
     CashTransactionType,
     CashTransfer,
@@ -37,37 +41,53 @@ from src.models.model_objects.security_objects import (
     SecurityTransaction,
     SecurityTransactionType,
     SecurityTransfer,
-    SecurityType,
 )
 
+# IDEA: split RecordKeeper into smaller object keepers
+# such as CategoryKeeper, AccountItem keeper etc.
 
-class DoesNotExistError(ValueError):
-    """Raised when a search for an object finds nothing."""
 
-
-class RecordKeeper(JSONSerializableMixin):
+class RecordKeeper(CopyableMixin, JSONSerializableMixin):
     def __init__(self) -> None:
         self._accounts: list[Account] = []
         self._account_groups: list[AccountGroup] = []
+        self._root_account_items: list[AccountGroup | Account] = []
         self._currencies: list[Currency] = []
         self._exchange_rates: list[ExchangeRate] = []
         self._securities: list[Security] = []
         self._payees: list[Attribute] = []
         self._categories: list[Category] = []
+        self._root_income_categories: list[Category] = []
+        self._root_expense_categories: list[Category] = []
+        self._root_income_and_expense_categories: list[Category] = []
         self._tags: list[Attribute] = []
         self._transactions: list[Transaction] = []
+        self._transactions_uuid_dict: dict[uuid.UUID, Transaction] = {}
+        self._base_currency: Currency | None = None
 
     @property
     def accounts(self) -> tuple[Account, ...]:
-        return tuple(self._accounts)
+        return tuple(RecordKeeper._flatten_accounts(self._root_account_items))
 
     @property
     def account_groups(self) -> tuple[AccountGroup, ...]:
         return tuple(self._account_groups)
 
     @property
+    def account_items(self) -> tuple[Account | AccountGroup, ...]:
+        return tuple(RecordKeeper._flatten_account_items(self._root_account_items))
+
+    @property
+    def root_account_items(self) -> tuple[Account | AccountGroup, ...]:
+        return tuple(self._root_account_items)
+
+    @property
     def currencies(self) -> tuple[Currency, ...]:
         return tuple(self._currencies)
+
+    @property
+    def base_currency(self) -> Currency | None:
+        return self._base_currency
 
     @property
     def exchange_rates(self) -> tuple[ExchangeRate, ...]:
@@ -79,11 +99,38 @@ class RecordKeeper(JSONSerializableMixin):
 
     @property
     def payees(self) -> tuple[Attribute, ...]:
+        self._payees.sort(key=lambda payee: payee.name)
         return tuple(self._payees)
 
     @property
     def categories(self) -> tuple[Category, ...]:
         return tuple(self._categories)
+
+    @property
+    def root_income_categories(self) -> tuple[Category, ...]:
+        return tuple(self._root_income_categories)
+
+    @property
+    def root_expense_categories(self) -> tuple[Category, ...]:
+        return tuple(self._root_expense_categories)
+
+    @property
+    def root_income_and_expense_categories(self) -> tuple[Category, ...]:
+        return tuple(self._root_income_and_expense_categories)
+
+    @property
+    def income_categories(self) -> tuple[Category, ...]:
+        return tuple(RecordKeeper._flatten_categories(self._root_income_categories))
+
+    @property
+    def expense_categories(self) -> tuple[Category, ...]:
+        return tuple(RecordKeeper._flatten_categories(self._root_expense_categories))
+
+    @property
+    def income_and_expense_categories(self) -> tuple[Category, ...]:
+        return tuple(
+            RecordKeeper._flatten_categories(self._root_income_and_expense_categories)
+        )
 
     @property
     def tags(self) -> tuple[Attribute, ...]:
@@ -92,6 +139,10 @@ class RecordKeeper(JSONSerializableMixin):
     @property
     def transactions(self) -> tuple[Transaction, ...]:
         return tuple(self._transactions)
+
+    @property
+    def transaction_uuid_dict(self) -> dict[uuid.UUID, Transaction]:
+        return self._transactions_uuid_dict
 
     def __repr__(self) -> str:
         return "RecordKeeper"
@@ -103,113 +154,131 @@ class RecordKeeper(JSONSerializableMixin):
                 f"A Currency with code '{code_upper}' already exists."
             )
         currency = Currency(code_upper, places)
+        if len(self._currencies) == 0:
+            self._base_currency = currency
         self._currencies.append(currency)
+
+    def add_payee(self, name: str) -> None:
+        if any(payee.name == name for payee in self._payees):
+            raise AlreadyExistsError(f"A Payee {name=} already exists.")
+        payee = Attribute(name, AttributeType.PAYEE)
+        self._payees.append(payee)
+
+    def add_tag(self, name: str) -> None:
+        if any(tag.name == name for tag in self._tags):
+            raise AlreadyExistsError(f"A Tag {name=} already exists.")
+        tag = Attribute(name, AttributeType.TAG)
+        self._tags.append(tag)
 
     def add_exchange_rate(
         self, primary_currency_code: str, secondary_currency_code: str
     ) -> None:
         exchange_rate_str = f"{primary_currency_code}/{secondary_currency_code}"
+        exchange_rate_str_reverse = f"{secondary_currency_code}/{primary_currency_code}"
         for exchange_rate in self._exchange_rates:
-            if str(exchange_rate) == exchange_rate_str:
+            if (
+                str(exchange_rate) == exchange_rate_str
+                or str(exchange_rate) == exchange_rate_str_reverse
+            ):
                 raise AlreadyExistsError(
-                    f"ExchangeRate '{exchange_rate_str} already exists.'"
+                    f"An ExchangeRate between {primary_currency_code} "
+                    f"and {secondary_currency_code} already exists."
                 )
         primary_currency = self.get_currency(primary_currency_code)
         secondary_currency = self.get_currency(secondary_currency_code)
         exchange_rate = ExchangeRate(primary_currency, secondary_currency)
         self._exchange_rates.append(exchange_rate)
 
-    def add_security(
+    def add_security(  # noqa: PLR0913
         self,
         name: str,
         symbol: str,
-        type_: SecurityType,
+        type_: str,
         currency_code: str,
         unit: Decimal | int | str,
     ) -> None:
+        if any(security.name == name for security in self._securities):
+            raise AlreadyExistsError(f"A Security with name='{name}' already exists.")
         symbol_upper = symbol.upper()
-        if any(security.symbol == symbol_upper for security in self._securities):
+        if len(symbol_upper) != 0 and any(
+            security.symbol == symbol_upper for security in self._securities
+        ):
             raise AlreadyExistsError(
-                f"A Security with symbol '{symbol_upper}' already exists."
+                f"A Security with symbol='{symbol_upper}' already exists."
             )
+
         currency = self.get_currency(currency_code)
         security = Security(name, symbol, type_, currency, unit)
         self._securities.append(security)
 
     def add_category(
-        self, name: str, parent_path: str | None, type_: CategoryType | None = None
-    ) -> Category:
-        if parent_path is not None:
-            for category in self._categories:
-                if category.path == parent_path:
-                    parent = category
-                    category_type = category.type_
-                    break
-            else:
-                raise DoesNotExistError(
-                    f"The parent Category (path '{parent_path}') does not exist."
-                )
-        else:
-            parent = None
-            if not isinstance(type_, CategoryType):
-                raise TypeError(
-                    "If parameter 'parent_path' is None, "
-                    "'type_' must be a CategoryType."
-                )
-            category_type = type_
-
-        path = parent.path + "/" + name if parent else name
+        self, path: str, type_: CategoryType | None = None, index: int | None = None
+    ) -> None:
         for category in self._categories:
             if category.path == path:
                 raise AlreadyExistsError(f"A Category at path '{path}' already exists.")
 
-        category = Category(name, category_type, parent)
-        self._categories.append(category)
-        return category
-
-    def add_account_group(self, name: str, parent_path: str | None) -> None:
-        parent = self.get_account_parent_or_none(parent_path)
-        if parent is not None:
-            target_path = parent.path + "/" + name
+        if "/" in path:
+            parent_path, _, name = path.rpartition("/")
+            parent = self.get_category(parent_path)
+            category_type = parent.type_
         else:
-            target_path = name
+            if not isinstance(type_, CategoryType):
+                raise TypeError(
+                    "If Category to-be-added has no parent, "
+                    "parameter 'type_' must be a CategoryType."
+                )
+            name = path
             parent = None
-        if any(acc_group.path == target_path for acc_group in self._account_groups):
+            category_type = type_
+
+        category = Category(name, category_type, parent)
+        self._set_category_index(category, index)
+        self._categories.append(category)
+
+    def add_account_group(self, path: str, index: int | None = None) -> None:
+        parent_path, _, name = path.rpartition("/")
+        parent = self.get_account_parent_or_none(parent_path)
+        if any(acc_group.path == path for acc_group in self._account_groups):
             raise AlreadyExistsError(
-                f"An AccountGroup with path '{target_path}' already exists."
+                f"An AccountGroup with path '{path}' already exists."
             )
         account_group = AccountGroup(name, parent)
+        self._set_account_item_index(account_group, index)
         self._account_groups.append(account_group)
 
     def add_cash_account(
         self,
-        name: str,
+        path: str,
         currency_code: str,
         initial_balance_value: Decimal | int | str,
-        initial_datetime: datetime,
-        parent_path: str | None,
+        index: int | None = None,
     ) -> None:
-        self._check_account_exists(name, parent_path)
+        parent_path, _, name = path.rpartition("/")
+        self._check_account_exists(path)
         currency = self.get_currency(currency_code)
         parent = self.get_account_parent_or_none(parent_path)
         initial_balance = CashAmount(initial_balance_value, currency)
-        account = CashAccount(name, currency, initial_balance, initial_datetime, parent)
+        account = CashAccount(name, currency, initial_balance, parent)
+        self._set_account_item_index(account, index)
         self._accounts.append(account)
 
-    def add_security_account(self, name: str, parent_path: str | None) -> None:
-        self._check_account_exists(name, parent_path)
+    def add_security_account(self, path: str, index: int | None = None) -> None:
+        parent_path, _, name = path.rpartition("/")
+        self._check_account_exists(path)
         parent = self.get_account_parent_or_none(parent_path)
         account = SecurityAccount(name, parent)
+        self._set_account_item_index(account, index)
         self._accounts.append(account)
 
-    def add_cash_transaction(  # noqa: CFQ002, TMN001
+    def add_cash_transaction(  # noqa: PLR0913
         self,
         description: str,
         datetime_: datetime,
         transaction_type: CashTransactionType,
         account_path: str,
-        category_path_amount_pairs: Collection[tuple[str, Decimal]],
         payee_name: str,
+        category_path_amount_pairs: Collection[tuple[str, Decimal]],
         tag_name_amount_pairs: Collection[tuple[str, Decimal]],
     ) -> None:
         account = self.get_account(account_path, CashAccount)
@@ -237,8 +306,9 @@ class RecordKeeper(JSONSerializableMixin):
             tag_amount_pairs=tag_amount_pairs,
         )
         self._transactions.append(transaction)
+        self._transactions_uuid_dict[transaction.uuid] = transaction
 
-    def add_cash_transfer(  # noqa: CFQ002, TMN001
+    def add_cash_transfer(  # noqa: PLR0913
         self,
         description: str,
         datetime_: datetime,
@@ -246,6 +316,7 @@ class RecordKeeper(JSONSerializableMixin):
         account_recipient_path: str,
         amount_sent: Decimal | int | str,
         amount_received: Decimal | int | str,
+        tag_names: Collection[str] = (),
     ) -> None:
         account_sender = self.get_account(account_sender_path, CashAccount)
         account_recipient = self.get_account(account_recipient_path, CashAccount)
@@ -259,23 +330,31 @@ class RecordKeeper(JSONSerializableMixin):
             amount_received=CashAmount(amount_received, account_recipient.currency),
         )
         self._transactions.append(transfer)
+        self._transactions_uuid_dict[transfer.uuid] = transfer
 
-    def add_refund(
+        tags = [
+            self.get_attribute(tag_name, AttributeType.TAG) for tag_name in tag_names
+        ]
+        transfer.add_tags(tags)
+
+    def add_refund(  # noqa: PLR0913
         self,
         description: str,
         datetime_: datetime,
-        refunded_transaction_uuid: str,
+        refunded_transaction_uuid: uuid.UUID,
         refunded_account_path: str,
+        payee_name: str,
         category_path_amount_pairs: Collection[tuple[str, Decimal]],
         tag_name_amount_pairs: Collection[tuple[str, Decimal]],
-        payee_name: str,
     ) -> None:
-        refunded_transaction = self._get_transactions([refunded_transaction_uuid])
-        if len(refunded_transaction) == 0:
+        refunded_transactions = self._get_transactions(
+            [refunded_transaction_uuid], CashTransaction
+        )
+        if len(refunded_transactions) == 0:
             raise ValueError(
-                f"Transaction with UUID '{refunded_transaction_uuid}' not found."
+                f"Transaction uuid='{str(refunded_transaction_uuid)}' not found."
             )
-        refunded_transaction = refunded_transaction[0]
+        refunded_transaction = refunded_transactions[0]
 
         refunded_account = self.get_account(refunded_account_path, CashAccount)
 
@@ -300,19 +379,21 @@ class RecordKeeper(JSONSerializableMixin):
             payee=payee,
         )
         self._transactions.append(refund)
+        self._transactions_uuid_dict[refund.uuid] = refund
 
-    def add_security_transaction(
+    def add_security_transaction(  # noqa: PLR0913
         self,
         description: str,
         datetime_: datetime,
         type_: SecurityTransactionType,
-        security_symbol: str,
+        security_name: str,
         shares: Decimal | int | str,
         price_per_share: Decimal | int | str,
         security_account_path: str,
         cash_account_path: str,
+        tag_names: Collection[str] = (),
     ) -> None:
-        security = self.get_security(security_symbol)
+        security = self.get_security_by_name(security_name)
         cash_account = self.get_account(cash_account_path, CashAccount)
         security_account = self.get_account(security_account_path, SecurityAccount)
 
@@ -327,17 +408,24 @@ class RecordKeeper(JSONSerializableMixin):
             cash_account=cash_account,
         )
         self._transactions.append(transaction)
+        self._transactions_uuid_dict[transaction.uuid] = transaction
 
-    def add_security_transfer(
+        tags = [
+            self.get_attribute(tag_name, AttributeType.TAG) for tag_name in tag_names
+        ]
+        transaction.add_tags(tags)
+
+    def add_security_transfer(  # noqa: PLR0913
         self,
         description: str,
         datetime_: datetime,
-        security_symbol: str,
+        security_name: str,
         shares: Decimal | int | str,
         account_sender_path: str,
         account_recipient_path: str,
+        tag_names: Collection[str] = (),
     ) -> None:
-        security = self.get_security(security_symbol)
+        security = self.get_security_by_name(security_name)
         account_sender = self.get_account(account_sender_path, SecurityAccount)
         account_recipient = self.get_account(account_recipient_path, SecurityAccount)
         transaction = SecurityTransfer(
@@ -349,31 +437,37 @@ class RecordKeeper(JSONSerializableMixin):
             recipient=account_recipient,
         )
         self._transactions.append(transaction)
+        self._transactions_uuid_dict[transaction.uuid] = transaction
 
-    def edit_cash_transactions(
+        tags = [
+            self.get_attribute(tag_name, AttributeType.TAG) for tag_name in tag_names
+        ]
+        transaction.add_tags(tags)
+
+    def edit_cash_transactions(  # noqa: PLR0913
         self,
-        transaction_uuids: Collection[str],
+        transaction_uuids: Collection[uuid.UUID],
         description: str | None = None,
         datetime_: datetime | None = None,
         transaction_type: CashTransactionType | None = None,
         account_path: str | None = None,
+        payee_name: str | None = None,
         category_path_amount_pairs: Collection[tuple[str, Decimal | None]]
         | None = None,
-        payee_name: str | None = None,
-        tag_name_amount_pairs: Collection[tuple[str, Decimal]] | None = None,
+        tag_name_amount_pairs: Collection[tuple[str, Decimal | None]] | None = None,
     ) -> None:
-        transactions = self._get_transactions(transaction_uuids)
+        transactions = self._get_transactions(transaction_uuids, CashTransaction)
 
-        if not all(
-            isinstance(transaction, CashTransaction) for transaction in transactions
+        if (
+            len(transactions) > 1
+            and transaction_type is not None
+            and not all(
+                transaction.type_ == transaction_type for transaction in transactions
+            )
         ):
-            raise TypeError("All edited transactions must be CashTransactions.")
-
-        if not all(
-            transaction.currency == transactions[0].currency
-            for transaction in transactions
-        ):
-            raise CurrencyError("Edited CashTransactions must have the same currency.")
+            raise InvalidOperationError(
+                "Cannot change type of multiple CashTransactions."
+            )
 
         if account_path is not None:
             account = self.get_account(account_path, CashAccount)
@@ -385,7 +479,34 @@ class RecordKeeper(JSONSerializableMixin):
         else:
             payee = None
 
-        currency = account.currency if account is not None else transactions[0].currency
+        if not all(
+            transaction.currency == transactions[0].currency
+            for transaction in transactions
+        ):
+            currency = None
+            if category_path_amount_pairs is not None and not all(
+                amount is None for _, amount in category_path_amount_pairs
+            ):
+                raise ValueError(
+                    "If CashTransaction of various Currencies are edited, "
+                    "all Category amounts must be None."
+                )
+            if tag_name_amount_pairs is not None and not all(
+                amount is None for _, amount in tag_name_amount_pairs
+            ):
+                raise ValueError(
+                    "If CashTransaction of various Currencies are edited, "
+                    "all Tag amounts must be None."
+                )
+            if account is not None:
+                raise ValueError(
+                    "If CashTransaction of various Currencies are edited, "
+                    "'account_path' must be None."
+                )
+        else:
+            currency = (
+                account.currency if account is not None else transactions[0].currency
+            )
 
         if category_path_amount_pairs is not None:
             category_type = (
@@ -428,20 +549,18 @@ class RecordKeeper(JSONSerializableMixin):
                 payee=payee,
             )
 
-    def edit_cash_transfers(
+    def edit_cash_transfers(  # noqa: PLR0913
         self,
-        transaction_uuids: Collection[str],
+        transaction_uuids: Collection[uuid.UUID],
         description: str | None = None,
         datetime_: datetime | None = None,
         sender_path: str | None = None,
         recipient_path: str | None = None,
         amount_sent: Decimal | None = None,
         amount_received: Decimal | None = None,
+        tag_names: Collection[str] | None = None,
     ) -> None:
-        transfers = self._get_transactions(transaction_uuids)
-
-        if not all(isinstance(transaction, CashTransfer) for transaction in transfers):
-            raise TypeError("All edited transactions must be CashTransfers.")
+        transfers = self._get_transactions(transaction_uuids, CashTransfer)
 
         if sender_path is not None:
             sender = self.get_account(sender_path, CashAccount)
@@ -454,35 +573,39 @@ class RecordKeeper(JSONSerializableMixin):
             recipient = None
 
         if amount_sent is not None:
-            if not all(
-                transfer.sender.currency == transfers[0].sender.currency
-                for transfer in transfers
-            ):
-                raise CurrencyError(
-                    "If amount_sent is to be changed, all sender CashAccounts "
-                    "must be of same Currency."
-                )
-            amount_sent = CashAmount(amount_sent, transfers[0].sender.currency)
+            if sender is not None:
+                _amount_sent = CashAmount(amount_sent, sender.currency)
+            else:
+                if len({transfer.sender.currency for transfer in transfers}) != 1:
+                    raise CurrencyError(
+                        "If amount_sent is to be changed, all sender CashAccounts "
+                        "must be of same Currency."
+                    )
+                _amount_sent = CashAmount(amount_sent, transfers[0].sender.currency)
+        else:
+            _amount_sent = None
 
         if amount_received is not None:
-            if not all(
-                transfer.recipient.currency == transfers[0].recipient.currency
-                for transfer in transfers
-            ):
-                raise CurrencyError(
-                    "If amount_received is to be changed, all recipient CashAccounts "
-                    "must be of same Currency."
+            if recipient is not None:
+                _amount_received = CashAmount(amount_received, recipient.currency)
+            else:
+                if len({transfer.recipient.currency for transfer in transfers}) != 1:
+                    raise CurrencyError(
+                        "If amount_received is to be changed, "
+                        "all recipient CashAccounts must be of same Currency."
+                    )
+                _amount_received = CashAmount(
+                    amount_received, transfers[0].recipient.currency
                 )
-            amount_received = CashAmount(
-                amount_received, transfers[0].recipient.currency
-            )
+        else:
+            _amount_received = None
 
         for transfer in transfers:
             transfer.validate_attributes(
                 description=description,
                 datetime_=datetime_,
-                amount_sent=amount_sent,
-                amount_received=amount_received,
+                amount_sent=_amount_sent,
+                amount_received=_amount_received,
                 sender=sender,
                 recipient=recipient,
             )
@@ -491,28 +614,33 @@ class RecordKeeper(JSONSerializableMixin):
             transfer.set_attributes(
                 description=description,
                 datetime_=datetime_,
-                amount_sent=amount_sent,
-                amount_received=amount_received,
+                amount_sent=_amount_sent,
+                amount_received=_amount_received,
                 sender=sender,
                 recipient=recipient,
             )
 
-    def edit_refunds(
+        if tag_names is not None:
+            tags = [
+                self.get_attribute(tag_name, AttributeType.TAG)
+                for tag_name in tag_names
+            ]
+            for transfer in transfers:
+                transfer.clear_tags()
+                transfer.add_tags(tags)
+
+    def edit_refunds(  # noqa: PLR0913
         self,
-        transaction_uuids: Collection[str],
+        transaction_uuids: Collection[uuid.UUID],
         description: str | None = None,
         datetime_: datetime | None = None,
-        transaction_type: CashTransactionType | None = None,
         account_path: str | None = None,
+        payee_name: str | None = None,
         category_path_amount_pairs: Collection[tuple[str, Decimal | None]]
         | None = None,
-        payee_name: str | None = None,
         tag_name_amount_pairs: Collection[tuple[str, Decimal]] | None = None,
     ) -> None:
-        refunds = self._get_transactions(transaction_uuids)
-
-        if not all(isinstance(refund, RefundTransaction) for refund in refunds):
-            raise TypeError("All edited transactions must be RefundTransactions.")
+        refunds = self._get_transactions(transaction_uuids, RefundTransaction)
 
         if not all(refund.currency == refunds[0].currency for refund in refunds):
             raise CurrencyError(
@@ -532,13 +660,8 @@ class RecordKeeper(JSONSerializableMixin):
         currency = account.currency if account is not None else refunds[0].currency
 
         if category_path_amount_pairs is not None:
-            category_type = (
-                CategoryType.INCOME
-                if transaction_type == CashTransactionType.INCOME
-                else CategoryType.EXPENSE
-            )
             category_amount_pairs = self._create_category_amount_pairs(
-                category_path_amount_pairs, category_type, currency
+                category_path_amount_pairs, CategoryType.EXPENSE, currency
             )
         else:
             category_amount_pairs = None
@@ -570,35 +693,44 @@ class RecordKeeper(JSONSerializableMixin):
                 payee=payee,
             )
 
-    def edit_security_transactions(
+    def edit_security_transactions(  # noqa: PLR0913
         self,
-        transaction_uuids: Collection[str],
+        transaction_uuids: Collection[uuid.UUID],
         description: str | None = None,
         datetime_: datetime | None = None,
         transaction_type: SecurityTransactionType | None = None,
-        security_symbol: str | None = None,
+        security_name: str | None = None,
         cash_account_path: str | None = None,
         security_account_path: str | None = None,
         price_per_share: Decimal | int | str | None = None,
         shares: Decimal | int | str | None = None,
+        tag_names: Collection[str] | None = None,
     ) -> None:
-        transactions = self._get_transactions(transaction_uuids)
+        transactions = self._get_transactions(transaction_uuids, SecurityTransaction)
 
-        if not all(
-            isinstance(transaction, SecurityTransaction) for transaction in transactions
-        ):
-            raise TypeError("All edited transactions must be SecurityTransactions.")
-
-        if not all(
-            transaction.currency == transactions[0].currency
+        if any(
+            transaction.currency != transactions[0].currency
             for transaction in transactions
         ):
-            raise CurrencyError(
-                "Edited SecurityTransactions must have the same currency."
-            )
+            if security_name is None and (
+                cash_account_path is not None or price_per_share is not None
+            ):
+                raise ValueError(
+                    "If mixed currency SecurityTransactions are edited and "
+                    "security_name is None, cash_account_path and price_per_share must "
+                    "be None too."
+                )
+            if security_name is not None and (
+                cash_account_path is None or price_per_share is None
+            ):
+                raise ValueError(
+                    "If mixed currency SecurityTransactions are edited and "
+                    "security_name is not None, cash_account_path and price_per_share "
+                    "must not be None too."
+                )
 
-        if security_symbol is not None:
-            security = self.get_security(security_symbol)
+        if security_name is not None:
+            security = self.get_security_by_name(security_name)
         else:
             security = None
 
@@ -619,7 +751,9 @@ class RecordKeeper(JSONSerializableMixin):
         )
 
         if price_per_share is not None:
-            price_per_share = CashAmount(price_per_share, currency)
+            _price_per_share = CashAmount(price_per_share, currency)
+        else:
+            _price_per_share = None
 
         if shares is not None:
             shares = Decimal(shares)
@@ -630,7 +764,7 @@ class RecordKeeper(JSONSerializableMixin):
                 datetime_=datetime_,
                 type_=transaction_type,
                 security=security,
-                price_per_share=price_per_share,
+                price_per_share=_price_per_share,
                 shares=shares,
                 cash_account=cash_account,
                 security_account=security_account,
@@ -642,31 +776,36 @@ class RecordKeeper(JSONSerializableMixin):
                 datetime_=datetime_,
                 type_=transaction_type,
                 security=security,
-                price_per_share=price_per_share,
+                price_per_share=_price_per_share,
                 shares=shares,
                 cash_account=cash_account,
                 security_account=security_account,
             )
 
-    def edit_security_transfers(
+        if tag_names is not None:
+            tags = [
+                self.get_attribute(tag_name, AttributeType.TAG)
+                for tag_name in tag_names
+            ]
+            for transaction in transactions:
+                transaction.clear_tags()
+                transaction.add_tags(tags)
+
+    def edit_security_transfers(  # noqa: PLR0913
         self,
-        transaction_uuids: Collection[str],
+        transaction_uuids: Collection[uuid.UUID],
         description: str | None = None,
         datetime_: datetime | None = None,
-        security_symbol: str | None = None,
+        security_name: str | None = None,
         shares: Decimal | None = None,
         sender_path: str | None = None,
         recipient_path: str | None = None,
+        tag_names: Collection[str] | None = None,
     ) -> None:
-        transactions = self._get_transactions(transaction_uuids)
+        transactions = self._get_transactions(transaction_uuids, SecurityTransfer)
 
-        if not all(
-            isinstance(transaction, SecurityTransfer) for transaction in transactions
-        ):
-            raise TypeError("All edited transactions must be SecurityTransfers.")
-
-        if security_symbol is not None:
-            security = self.get_security(security_symbol)
+        if security_name is not None:
+            security = self.get_security_by_name(security_name)
         else:
             security = None
 
@@ -700,100 +839,123 @@ class RecordKeeper(JSONSerializableMixin):
                 security=security,
             )
 
+        if tag_names is not None:
+            tags = [
+                self.get_attribute(tag_name, AttributeType.TAG)
+                for tag_name in tag_names
+            ]
+            for transaction in transactions:
+                transaction.clear_tags()
+                transaction.add_tags(tags)
+
     def edit_category(
-        self,
-        current_path: str,
-        new_name: str | None = None,
-        new_parent_path: str | None = None,
+        self, current_path: str, new_path: str, index: int | None = None
     ) -> None:
-        for category in self._categories:
-            if category.path == current_path:
-                current_path = category
-                break
-        else:
-            raise DoesNotExistError(
-                f"Category at path='{current_path}' does not exist."
+        if current_path != new_path and any(
+            category.path == new_path for category in self._categories
+        ):
+            raise AlreadyExistsError(
+                f"A Category with path='{new_path}' already exists."
             )
-        if new_name is not None:
-            category.name = new_name
-        if new_parent_path is not None:
-            new_parent = self.get_category(new_parent_path)
-            category.parent = new_parent
+
+        edited_category = self.get_category(current_path)
+
+        if "/" in new_path:
+            parent_path, _, name = new_path.rpartition("/")
+            new_parent = self.get_category(parent_path)
+        else:
+            name = new_path
+            new_parent = None
+
+        if new_parent == edited_category:
+            raise InvalidOperationError("A Category cannot be its own parent.")
+
+        edited_category.name = name
+        self._edit_category_parent(
+            category=edited_category, new_parent=new_parent, index=index
+        )
 
     def edit_attribute(
         self, current_name: str, new_name: str, type_: AttributeType
     ) -> None:
-        if type_ == AttributeType.PAYEE:
-            attributes = self._payees
-        else:
-            attributes = self._tags
+        attributes = self._payees if type_ == AttributeType.PAYEE else self._tags
 
         for attribute in attributes:
             if attribute.name == current_name:
                 edited_attribute = attribute
                 break
         else:
-            raise DoesNotExistError(
+            raise NotFoundError(
                 f"Attribute of name='{current_name}' and type_={type_} does not exist."
             )
         edited_attribute.name = new_name
 
     def edit_security(
         self,
-        current_symbol: str,
-        new_symbol: str | None = None,
-        new_name: str | None = None,
+        uuid_: uuid.UUID,
+        name: str | None = None,
+        symbol: str | None = None,
+        type_: str | None = None,
     ) -> None:
-        for security in self._securities:
-            if security.symbol == current_symbol.upper():
-                edited_security = security
-                break
-        else:
-            raise DoesNotExistError(
-                f"Security with symbol='{current_symbol}' does not exist."
-            )
-        if new_symbol is not None:
-            edited_security.symbol = new_symbol
-        if new_name is not None:
-            edited_security.name = new_name
+        edited_security = self.get_security_by_uuid(uuid_)
+        if name is not None:
+            edited_security.name = name
+        if symbol is not None:
+            edited_security.symbol = symbol
+        if type_ is not None:
+            edited_security.type_ = type_
 
-    def edit_account(
+    def edit_cash_account(
         self,
         current_path: str,
-        new_name: str | None = None,
-        new_parent_path: str | None = None,
+        new_path: str,
+        initial_balance: Decimal | int | str,
+        index: int | None = None,
     ) -> None:
-        for account in self._accounts:
-            if account.path == current_path:
-                edited_account = account
-                break
-        else:
-            raise DoesNotExistError(f"Account at path='{current_path}' does not exist.")
-        if new_name is not None:
-            edited_account.name = new_name
-        if new_parent_path is not None:
-            parent = self.get_account_parent_or_none(new_parent_path)
-            edited_account.parent = parent
+        parent_path, _, name = new_path.rpartition("/")
+        if current_path != new_path:
+            self._check_account_exists(new_path)
+        edited_account = self.get_account(current_path, CashAccount)
+        new_parent = self.get_account_parent_or_none(parent_path)
+        edited_account.name = name
+        edited_account.initial_balance = CashAmount(
+            initial_balance, edited_account.currency
+        )
+        self._edit_account_item_parent(
+            item=edited_account, new_parent=new_parent, index=index
+        )
+
+    def edit_security_account(
+        self, current_path: str, new_path: str, index: int | None = None
+    ) -> None:
+        parent_path, _, name = new_path.rpartition("/")
+        if current_path != new_path:
+            self._check_account_exists(new_path)
+        edited_account = self.get_account(current_path, SecurityAccount)
+        new_parent = self.get_account_parent_or_none(parent_path)
+        edited_account.name = name
+        self._edit_account_item_parent(
+            item=edited_account, new_parent=new_parent, index=index
+        )
 
     def edit_account_group(
-        self,
-        current_path: str,
-        new_name: str | None = None,
-        new_parent_path: str | None = None,
+        self, current_path: str, new_path: str, index: int | None = None
     ) -> None:
-        for account_group in self._account_groups:
-            if account_group.path == current_path:
-                edited_account_group = account_group
-                break
-        else:
-            raise DoesNotExistError(
-                f"AccountGroup at path='{current_path}' does not exist."
+        if current_path != new_path and any(
+            account_group.path == new_path for account_group in self._account_groups
+        ):
+            raise AlreadyExistsError(
+                f"An Account Group with path='{new_path}' already exists."
             )
-        if new_name is not None:
-            edited_account_group.name = new_name
-        if new_parent_path is not None:
-            parent = self.get_account_parent_or_none(new_parent_path)
-            edited_account_group.parent = parent
+        edited_account_group = self.get_account_parent(current_path)
+        parent_path, _, name = new_path.rpartition("/")
+        new_parent = self.get_account_parent_or_none(parent_path)
+        if new_parent == edited_account_group:
+            raise InvalidOperationError("An AccountGroup cannot be its own parent.")
+        edited_account_group.name = name
+        self._edit_account_item_parent(
+            item=edited_account_group, new_parent=new_parent, index=index
+        )
 
     def add_tags_to_transactions(
         self, transaction_uuids: Collection[str], tag_names: Collection[str]
@@ -819,7 +981,7 @@ class RecordKeeper(JSONSerializableMixin):
         tag_names: Collection[str],
         method_name: str,
     ) -> None:
-        transactions = self._get_transactions(transaction_uuids)
+        transactions = self._get_transactions(transaction_uuids, Transaction)
 
         tags = [
             self.get_attribute(tag_name, AttributeType.TAG) for tag_name in tag_names
@@ -828,16 +990,16 @@ class RecordKeeper(JSONSerializableMixin):
             method = getattr(transaction, method_name)
             method(tags)
 
-    def remove_account(self, account_path: str) -> None:
-        account = self.get_account(account_path, Account)
-        if any(
-            transaction.is_account_related(account)
-            for transaction in self._transactions
-        ):
+    def remove_account(self, path: str) -> None:
+        account = self.get_account(path, Account)
+        if len(account.transactions) != 0:
             raise InvalidOperationError(
                 "Cannot delete an Account which is still used in some transactions."
             )
-        account.parent = None
+        if account.parent is None:
+            self._root_account_items.remove(account)
+        else:
+            account.parent = None
         self._accounts.remove(account)
         del account
 
@@ -847,18 +1009,23 @@ class RecordKeeper(JSONSerializableMixin):
             raise InvalidOperationError(
                 "Cannot delete an AccountGroup which has children."
             )
-        account_group.parent = None
+        if account_group.parent is None:
+            self._root_account_items.remove(account_group)
+        else:
+            account_group.parent = None
         self._account_groups.remove(account_group)
         del account_group
 
     def remove_transactions(self, transaction_uuids: Collection[str]) -> None:
-        transactions = self._get_transactions(transaction_uuids)
+        transactions = self._get_transactions(transaction_uuids, Transaction)
         for transaction in transactions:
             transaction.prepare_for_deletion()
             self._transactions.remove(transaction)
+            # delete transaction from dictionary
+            del self._transactions_uuid_dict[transaction.uuid]
 
-    def remove_security(self, symbol: str) -> None:
-        security = self.get_security(symbol)
+    def remove_security(self, uuid: str) -> None:
+        security = self.get_security_by_uuid(uuid)
         if any(
             transaction.security == security
             for transaction in self._transactions
@@ -880,18 +1047,22 @@ class RecordKeeper(JSONSerializableMixin):
                 "Cannot delete a Currency referenced in any ExchangeRate."
             )
         if any(
-            currency in transaction.currencies
-            for transaction in self._transactions
-            if isinstance(transaction, CashRelatedTransaction)
+            account.currency == currency
+            for account in self._accounts
+            if isinstance(account, CashAccount)
         ):
             raise InvalidOperationError(
-                "Cannot delete a Currency referenced in any CashRelatedTransaction."
+                "Cannot delete a Currency referenced in any CashAccount."
             )
         if any(currency == security.currency for security in self._securities):
             raise InvalidOperationError(
                 "Cannot delete a Currency referenced in any Security."
             )
         self._currencies.remove(currency)
+        if currency == self._base_currency:
+            self._base_currency = (
+                self._currencies[0] if len(self._currencies) > 0 else None
+            )
         del currency
 
     def remove_exchange_rate(self, exchange_rate_code: str) -> None:
@@ -900,24 +1071,31 @@ class RecordKeeper(JSONSerializableMixin):
                 removed_exchange_rate = exchange_rate
                 break
         else:
-            raise DoesNotExistError(
-                f"ExchangeRate '{exchange_rate_code}' does not exist."
-            )
+            raise NotFoundError(f"ExchangeRate '{exchange_rate_code}' does not exist.")
+
+        removed_exchange_rate.prepare_for_deletion()
         self._exchange_rates.remove(removed_exchange_rate)
         del removed_exchange_rate
 
     def remove_category(self, path: str) -> None:
         category = self.get_category(path)
+        if len(category.children) != 0:
+            raise InvalidOperationError("Cannot delete a Category with children.")
         if any(
             category in transaction.categories
             for transaction in self._transactions
-            if isinstance(transaction, (CashTransaction, RefundTransaction))
+            if isinstance(transaction, CashTransaction | RefundTransaction)
         ):
             raise InvalidOperationError(
                 "Cannot delete a Category referenced in any CashTransaction "
                 "or RefundTransaction."
             )
         self._categories.remove(category)
+        if category.parent is None:
+            list_ref = self._get_root_category_list(category)
+            list_ref.remove(category)
+        else:
+            category.parent = None
         del category
 
     def remove_tag(self, name: str) -> None:
@@ -934,7 +1112,7 @@ class RecordKeeper(JSONSerializableMixin):
         if any(
             payee == transaction.payee
             for transaction in self._transactions
-            if isinstance(transaction, (CashTransaction, RefundTransaction))
+            if isinstance(transaction, CashTransaction | RefundTransaction)
         ):
             raise InvalidOperationError(
                 "Cannot delete a payee referenced in any CashTransaction "
@@ -943,8 +1121,12 @@ class RecordKeeper(JSONSerializableMixin):
         self._payees.remove(payee)
         del payee
 
+    def set_base_currency(self, code: str) -> None:
+        currency = self.get_currency(code)
+        self._base_currency = currency
+
     def get_account_parent_or_none(self, path: str | None) -> AccountGroup | None:
-        if path is None:
+        if not path:
             return None
         return self.get_account_parent(path)
 
@@ -952,29 +1134,15 @@ class RecordKeeper(JSONSerializableMixin):
         for account_group in self._account_groups:
             if account_group.path == path:
                 return account_group
-        raise DoesNotExistError(f"An AccountGroup with path='{path}' does not exist.")
+        raise NotFoundError(f"An AccountGroup with path='{path}' does not exist.")
 
-    @overload
-    def get_account(
-        self, path: str, type_: type[CashAccount]  # noqa: U100
-    ) -> CashAccount:
-        ...
-
-    @overload
-    def get_account(
-        self, path: str, type_: type[SecurityAccount]  # noqa: U100
-    ) -> SecurityAccount:
-        ...
-
-    @overload
-    def get_account(self, path: str, type_: type[Account]) -> Account:  # noqa: U100
-        ...
+    AccountType = TypeVar("AccountType", CashAccount, SecurityAccount, Account)
 
     def get_account(
         self,
         path: str,
-        type_: type[Account],
-    ) -> Account:
+        type_: type[AccountType],
+    ) -> AccountType:
         if not isinstance(path, str):
             raise TypeError("Parameter 'path' must be a string.")
         if not isinstance(type_, type(Account)):
@@ -986,18 +1154,23 @@ class RecordKeeper(JSONSerializableMixin):
                         f"Type of Account at path='{path}' is not {type_.__name__}."
                     )
                 return account
-        raise DoesNotExistError(f"An Account with path='{path}' does not exist.")
+        raise NotFoundError(f"An Account with path='{path}' does not exist.")
 
-    def get_security(self, symbol: str) -> Security:
-        if not isinstance(symbol, str):
-            raise TypeError("Parameter 'symbol' must be a string.")
-        symbol_upper = symbol.upper()
+    def get_security_by_uuid(self, uuid_: uuid.UUID) -> Security:
+        if not isinstance(uuid_, uuid.UUID):
+            raise TypeError("Parameter 'uuid' must be a UUID.")
         for security in self._securities:
-            if security.symbol == symbol_upper:
+            if security.uuid == uuid_:
                 return security
-        raise DoesNotExistError(
-            f"A Security with symbol='{symbol_upper}' does not exist."
-        )
+        raise NotFoundError(f"A Security with uuid='{str(uuid_)}' does not exist.")
+
+    def get_security_by_name(self, name: str) -> Security:
+        if not isinstance(name, str):
+            raise TypeError("Parameter 'name' must be a string.")
+        for security in self._securities:
+            if security.name == name:
+                return security
+        raise NotFoundError(f"A Security with name='{name}' does not exist.")
 
     def get_currency(self, code: str) -> Currency:
         if not isinstance(code, str):
@@ -1006,13 +1179,13 @@ class RecordKeeper(JSONSerializableMixin):
         for currency in self._currencies:
             if currency.code == code_upper:
                 return currency
-        raise DoesNotExistError(f"A Currency with code='{code_upper}' does not exist.")
+        raise NotFoundError(f"A Currency with code='{code_upper}' does not exist.")
 
-    def get_category(self, path: str) -> None:
+    def get_category(self, path: str) -> Category:
         for category in self._categories:
             if category.path == path:
                 return category
-        raise DoesNotExistError(f"Category at path='{path}' does not exist.")
+        raise NotFoundError(f"Category at path='{path}' does not exist.")
 
     def get_or_make_category(self, path: str, type_: CategoryType) -> Category:
         """Returns Category at path. If it does not exist, creates a new Category
@@ -1025,11 +1198,16 @@ class RecordKeeper(JSONSerializableMixin):
         for category in self._categories:
             if category.path == path:
                 return category
-        # Category with path not found... searching for parents.
+
+        # Category with path not found... making it (along with any parents).
+        return self._make_category_leaf(path, type_)
+
+    def _make_category_leaf(self, path: str, type_: CategoryType) -> Category:
         current_path = path
         parent = None
         if "/" in current_path:
             while "/" in current_path:
+                # Searching for any existing parent in path.
                 current_path, _, _ = current_path.rpartition("/")
                 for category in self._categories:
                     if category.path == current_path:
@@ -1041,21 +1219,24 @@ class RecordKeeper(JSONSerializableMixin):
                 if parent is None:
                     # No parent Category found - we need to make one.
                     root_name = path.split("/")[0]
+                    logging.info("Creating Category")
                     parent = Category(root_name, type_)
-                    self._categories.append(parent)
+                    self._save_category(parent)
             remainder_name = path.removeprefix(parent.path)[1:]
             while "/" in remainder_name:
                 # As long as multiple categories remain...
                 new_name = remainder_name.split("/")[0]
+                logging.info("Creating Category")
                 new_category = Category(new_name, type_, parent)
-                self._categories.append(new_category)
+                self._save_category(new_category)
                 parent = new_category
                 remainder_name = remainder_name.removeprefix(new_name)[1:]
         else:
             remainder_name = path
         # Reached the end - just one more category left
+        logging.info("Creating Category")
         final_category = Category(remainder_name, type_, parent)
-        self._categories.append(final_category)
+        self._save_category(final_category)
         return final_category
 
     def get_attribute(self, name: str, type_: AttributeType) -> Attribute:
@@ -1068,6 +1249,7 @@ class RecordKeeper(JSONSerializableMixin):
             if attribute.name == name:
                 return attribute
         # Attribute not found! Making a new one.
+        logging.info("Creating Attribute")
         attribute = Attribute(name, type_)
         attributes.append(attribute)
         return attribute
@@ -1082,68 +1264,154 @@ class RecordKeeper(JSONSerializableMixin):
             if str(exchange_rate) == exchange_rate_code:
                 exchange_rate.set_rate(date_, rate)
                 return
-        raise DoesNotExistError(f"Exchange rate '{exchange_rate_code} not found.'")
+        raise NotFoundError(f"Exchange rate '{exchange_rate_code}' not found.")
+
+    def set_security_price(self, uuid: str, value: Decimal, date_: date) -> None:
+        security = self.get_security_by_uuid(uuid)
+        price = CashAmount(value, security.currency)
+        security.set_price(date_, price)
 
     def serialize(self) -> dict[str, Any]:
-        sorted_account_groups = sorted(self._account_groups, key=lambda x: str(x))
-        sorted_categories = sorted(self._categories, key=lambda x: str(x))
+        # TODO: is the sorting here necessary?
+        sorted_account_groups = sorted(self._account_groups, key=str)
+        sorted_categories = sorted(self._categories, key=str)
+
+        root_item_references = []
+        for item in self._root_account_items:
+            root_item_references.append(
+                {"datatype": item.__class__.__name__, "path": item.path}
+            )
+        base_currency_code = (
+            self._base_currency.code if self._base_currency is not None else None
+        )
+
+        root_income_category_refs = []
+        for category in self._root_income_categories:
+            root_income_category_refs.append(category.path)
+        root_expense_category_refs = []
+        for category in self._root_expense_categories:
+            root_expense_category_refs.append(category.path)
+        root_income_and_expense_category_refs = []
+        for category in self._root_income_and_expense_categories:
+            root_income_and_expense_category_refs.append(category.path)
+
         return {
             "datatype": "RecordKeeper",
             "currencies": self._currencies,
+            "base_currency_code": base_currency_code,
             "exchange_rates": self._exchange_rates,
             "securities": self._securities,
             "account_groups": sorted_account_groups,
             "accounts": self._accounts,
-            "payees": self._payees,
-            "tags": self._tags,
+            "root_account_items": root_item_references,
+            "payees": [payee.name for payee in self._payees],
+            "tags": [tag.name for tag in self._tags],
             "categories": sorted_categories,
+            "root_income_categories": root_income_category_refs,
+            "root_expense_categories": root_expense_category_refs,
+            "root_income_and_expense_categories": root_income_and_expense_category_refs,
             "transactions": self._transactions,
         }
 
+    # IDEA: do I need to use private setters in deserializers?
     @staticmethod
     def deserialize(data: dict[str, Any]) -> "RecordKeeper":
         obj = RecordKeeper()
-        obj._currencies = data["currencies"]
+        obj._currencies: list[Currency] = data["currencies"]  # noqa: SLF001
+        currencies: dict[str, Currency] = {
+            currency.code: currency for currency in obj._currencies  # noqa: SLF001
+        }
+        base_currency_code = data["base_currency_code"]
+        if base_currency_code is not None:
+            obj._base_currency = currencies[base_currency_code]  # noqa: SLF001
 
-        exchange_rates_dicts = data["exchange_rates"]
-        obj._exchange_rates = RecordKeeper._deserialize_exchange_rates(
-            exchange_rates_dicts, obj._currencies
+        obj._exchange_rates = RecordKeeper._deserialize_exchange_rates(  # noqa: SLF001
+            data["exchange_rates"], currencies
         )
 
-        security_dicts = data["securities"]
-        obj._securities = RecordKeeper._deserialize_securities(
-            security_dicts, obj._currencies
+        securities = RecordKeeper._deserialize_securities(
+            data["securities"], currencies
         )
+        obj._securities = list(securities.values())  # noqa: SLF001
 
-        obj._account_groups = RecordKeeper._deserialize_account_groups(
+        account_groups = RecordKeeper._deserialize_account_groups(
             data["account_groups"]
         )
+        obj._account_groups = list(account_groups.values())  # noqa: SLF001
 
-        account_dicts = data["accounts"]
-        obj._accounts = RecordKeeper._deserialize_accounts(
-            account_dicts, obj._account_groups, obj._currencies
+        accounts = RecordKeeper._deserialize_accounts(
+            data["accounts"], account_groups, currencies
+        )
+        obj._accounts = list(accounts.values())  # noqa: SLF001
+
+        obj._root_account_items = (  # noqa: SLF001
+            RecordKeeper._deserialize_root_account_items(
+                data["root_account_items"],
+                account_groups,
+                accounts,
+            )
         )
 
-        obj._payees = data["payees"]
-        obj._tags = data["tags"]
-        obj._categories = RecordKeeper._deserialize_categories(data["categories"])
+        obj._payees = [  # noqa: SLF001
+            Attribute(name, AttributeType.PAYEE) for name in data["payees"]
+        ]
+        payees: dict[str, Attribute] = {
+            payee.name: payee for payee in obj._payees  # noqa: SLF001
+        }
+        obj._tags = [  # noqa: SLF001
+            Attribute(name, AttributeType.TAG) for name in data["tags"]
+        ]
+        tags: dict[str, Attribute] = {
+            tag.name: tag for tag in obj._tags  # noqa: SLF001
+        }
 
-        obj._transactions = RecordKeeper._deserialize_transactions(
-            data["transactions"],
-            obj._accounts,
-            obj._payees,
-            obj._tags,
-            obj._categories,
-            obj._currencies,
-            obj._securities,
+        categories = RecordKeeper._deserialize_categories(data["categories"])
+        obj._categories = list(categories.values())  # noqa: SLF001
+
+        obj._root_income_categories = (  # noqa: SLF001
+            RecordKeeper._deserialize_root_categories(
+                data["root_income_categories"], categories
+            )
         )
+        obj._root_expense_categories = (  # noqa: SLF001
+            RecordKeeper._deserialize_root_categories(
+                data["root_expense_categories"], categories
+            )
+        )
+        obj._root_income_and_expense_categories = (  # noqa: SLF001
+            RecordKeeper._deserialize_root_categories(
+                data["root_income_and_expense_categories"],
+                categories,
+            )
+        )
+
+        obj._transactions_uuid_dict = (  # noqa: SLF001
+            RecordKeeper._deserialize_transactions(
+                data["transactions"],
+                accounts,
+                payees,
+                tags,
+                categories,
+                currencies,
+                securities,
+            )
+        )
+        obj._transactions = list(obj._transactions_uuid_dict.values())  # noqa: SLF001
+
+        for account in obj._accounts:  # noqa: SLF001
+            account: CashAccount | SecurityAccount
+            account.allow_update_balance = True
+            if isinstance(account, CashAccount):
+                account.update_balance()
+            else:
+                account.update_securities()
 
         return obj
 
     @staticmethod
     def _deserialize_exchange_rates(
         exchange_rate_dicts: Collection[dict[str, Any]],
-        currencies: Collection[Currency],
+        currencies: dict[str, Currency],
     ) -> list[ExchangeRate]:
         exchange_rates = []
         for exchange_rate_dict in exchange_rate_dicts:
@@ -1154,32 +1422,33 @@ class RecordKeeper(JSONSerializableMixin):
     @staticmethod
     def _deserialize_securities(
         security_dicts: Collection[dict[str, Any]],
-        currencies: Collection[Currency],
-    ) -> list[Security]:
-        securities = []
+        currencies: dict[str, Currency],
+    ) -> dict[str, Security]:
+        securities: dict[str, Security] = {}
         for security_dict in security_dicts:
             security = Security.deserialize(security_dict, currencies)
-            securities.append(security)
+            securities[security.name] = security
         return securities
 
     @staticmethod
     def _deserialize_account_groups(
         account_group_dicts: Collection[dict[str, Any]]
-    ) -> list[AccountGroup]:
-        account_groups = []
+    ) -> dict[str, AccountGroup]:
+        account_groups: dict[str, AccountGroup] = {}
         for account_group_dict in account_group_dicts:
             account_group = AccountGroup.deserialize(account_group_dict, account_groups)
-            account_groups.append(account_group)
+            account_groups[account_group.path] = account_group
         return account_groups
 
     @staticmethod
     def _deserialize_accounts(
-        account_dicts: Collection[dict[str, Any]],
-        account_groups: Collection[AccountGroup],
-        currencies: Collection[Currency],
-    ) -> list[Account]:
-        accounts = []
-        for account_dict in account_dicts:
+        account_path_dicts: Collection[dict[str, Any]],
+        account_groups: dict[str, AccountGroup],
+        currencies: dict[str, Currency],
+    ) -> dict[str, Account]:
+        accounts: dict[str, Account] = {}
+        for account_dict in account_path_dicts:
+            account: Account
             if account_dict["datatype"] == "CashAccount":
                 account = CashAccount.deserialize(
                     account_dict, account_groups, currencies
@@ -1188,34 +1457,66 @@ class RecordKeeper(JSONSerializableMixin):
                 account = SecurityAccount.deserialize(account_dict, account_groups)
             else:
                 raise ValueError("Unexpected 'datatype' value.")
-            accounts.append(account)
+            accounts[account.path] = account
+            # Disable updating balance during deserialization due to performance penalty
+            account.allow_update_balance = False
         return accounts
 
     @staticmethod
+    def _deserialize_root_account_items(
+        root_item_dicts: Collection[dict[str, Any]],
+        account_groups: dict[str, AccountGroup],
+        accounts: dict[str, Account],
+    ) -> list[AccountGroup | Account]:
+        root_items: list[AccountGroup | Account] = []
+        for item_dict in root_item_dicts:
+            datatype: str = item_dict["datatype"]
+            if datatype == "AccountGroup":
+                root_items.append(account_groups[item_dict["path"]])
+            elif datatype.endswith("Account"):
+                root_items.append(accounts[item_dict["path"]])
+            else:
+                raise ValueError("Unexpected 'datatype' value.")
+        return root_items
+
+    @staticmethod
     def _deserialize_categories(
-        category_dicts: Collection[dict[str, Any]]
-    ) -> list[AccountGroup]:
-        categories = []
-        for category_dict in category_dicts:
+        category_path_dicts: Collection[dict[str, Any]]
+    ) -> dict[str, Category]:
+        categories: dict[str, Category] = {}
+        for category_dict in category_path_dicts:
             category = Category.deserialize(category_dict, categories)
-            categories.append(category)
+            categories[category.path] = category
         return categories
 
     @staticmethod
-    def _deserialize_transactions(
+    def _deserialize_root_categories(
+        root_category_paths: Collection[str],
+        categories: dict[str, Category],
+    ) -> list[Category]:
+        return [categories[path] for path in root_category_paths]
+
+    @staticmethod
+    def _deserialize_transactions(  # noqa: PLR0913
         transaction_dicts: Collection[dict[str, Any]],
-        accounts: Collection[Account],
-        payees: Collection[Attribute],
-        tags: Collection[Attribute],
-        categories: Collection[Category],
-        currencies: Collection[Currency],
-        securities: Collection[Security],
-    ) -> list[Transaction]:
-        transactions = []
+        accounts: dict[str, Account],
+        payees: dict[str, Attribute],
+        tags: dict[str, Attribute],
+        categories: dict[str, Category],
+        currencies: dict[str, Currency],
+        securities: dict[str, Security],
+    ) -> dict[uuid.UUID, Transaction]:
+        _transaction_dict: dict[uuid.UUID, Transaction] = {}
         for transaction_dict in transaction_dicts:
+            transaction: Transaction
             if transaction_dict["datatype"] == "CashTransaction":
                 transaction = CashTransaction.deserialize(
-                    transaction_dict, accounts, payees, categories, tags, currencies
+                    transaction_dict,
+                    accounts,
+                    payees,
+                    categories,
+                    tags,
+                    currencies,
                 )
             elif transaction_dict["datatype"] == "CashTransfer":
                 transaction = CashTransfer.deserialize(
@@ -1225,7 +1526,7 @@ class RecordKeeper(JSONSerializableMixin):
                 transaction = RefundTransaction.deserialize(
                     transaction_dict,
                     accounts,
-                    transactions,
+                    _transaction_dict,
                     payees,
                     categories,
                     tags,
@@ -1241,27 +1542,20 @@ class RecordKeeper(JSONSerializableMixin):
                 )
             else:
                 raise ValueError("Unexpected 'datatype' value.")
-            transactions.append(transaction)
-        return transactions
+            _transaction_dict[transaction.uuid] = transaction
+        return _transaction_dict
 
-    def _check_account_exists(self, name: str, parent_path: str | None) -> None:
-        if not isinstance(name, str):
-            raise TypeError("Parameter 'name' must be a string.")
-        if not isinstance(parent_path, str) and parent_path is not None:
-            raise TypeError("Parameter 'parent_path' must be a string or a None.")
-        target_path = parent_path + "/" + name if parent_path is not None else name
-        if any(account.path == target_path for account in self._accounts):
-            raise AlreadyExistsError(
-                f"An Account with path={target_path} already exists."
-            )
+    def _check_account_exists(self, path: str) -> None:
+        if any(account.path == path for account in self._accounts):
+            raise AlreadyExistsError(f"An Account with path={path} already exists.")
 
     def _create_category_amount_pairs(
         self,
         category_path_amount_pairs: Collection[tuple[str, Decimal | None]],
         category_type: CategoryType,
-        currency: Currency,
+        currency: Currency | None,
     ) -> list[tuple[Category, CashAmount | None]]:
-        category_amount_pairs: list[tuple[Category, CashAmount | None]] = []
+        category_amount_pairs = []
         for category_path, amount in category_path_amount_pairs:
             valid_amount = CashAmount(amount, currency) if amount is not None else None
             category = self.get_or_make_category(category_path, category_type)
@@ -1271,22 +1565,166 @@ class RecordKeeper(JSONSerializableMixin):
 
     def _create_tag_amount_pairs(
         self,
-        tag_name_amount_pairs: Collection[tuple[str, Decimal]],
+        tag_name_amount_pairs: Collection[tuple[str, Decimal | None]],
         currency: Currency,
-    ) -> list[tuple[Category, CashAmount]]:
+    ) -> list[tuple[Attribute, CashAmount | None]]:
         tag_amount_pairs: list[tuple[Attribute, CashAmount]] = []
         for tag_name, amount in tag_name_amount_pairs:
-            tag_amount_pairs.append(
-                (
-                    self.get_attribute(tag_name, AttributeType.TAG),
-                    CashAmount(amount, currency),
-                )
-            )
+            _tag = self.get_attribute(tag_name, AttributeType.TAG)
+            _amount = CashAmount(amount, currency) if amount is not None else None
+            tag_amount_pairs.append((_tag, _amount))
         return tag_amount_pairs
 
-    def _get_transactions(self, uuid_strings: Collection[str]) -> list[Transaction]:
-        return [
-            transaction
-            for transaction in self._transactions
-            if str(transaction.uuid) in uuid_strings
-        ]
+    TransactionType = TypeVar("TransactionType", bound=Transaction)
+
+    def _get_transactions(
+        self, uuids: Collection[uuid.UUID], type_: type[TransactionType]
+    ) -> list[TransactionType]:
+        transactions: list[RecordKeeper.TransactionType] = []
+        if any(not isinstance(uuid_, uuid.UUID) for uuid_ in uuids):
+            raise TypeError(
+                "Parameter 'uuids' must be a Collection ofuuid.UUID objects."
+            )
+        for transaction in self._transactions:
+            if transaction.uuid in uuids:
+                if not isinstance(transaction, type_):
+                    raise TypeError(
+                        f"Type of Transaction at uuid='{str(transaction.uuid)}' "
+                        f"is not {type_.__name__}."
+                    )
+                transactions.append(transaction)
+        return transactions
+
+    def _set_account_item_index(
+        self, item: Account | AccountGroup, index: int | None
+    ) -> None:
+        parent = item.parent
+        if parent is None:
+            if index is not None:
+                self._root_account_items.insert(index, item)
+            else:
+                self._root_account_items.append(item)
+        elif index is not None:
+            parent.set_child_index(item, index)
+
+    def _set_category_index(self, category: Category, index: int | None) -> None:
+        parent = category.parent
+        if parent is None:
+            list_ref = self._get_root_category_list(category)
+
+            if index is not None:
+                list_ref.insert(index, category)
+            else:
+                list_ref.append(category)
+        elif index is not None:
+            parent.set_child_index(category, index)
+
+    def _edit_account_item_parent(
+        self,
+        item: Account | AccountGroup,
+        new_parent: AccountGroup | None,
+        index: int | None,
+    ) -> None:
+        current_parent = item.parent
+        if current_parent != new_parent:
+            item.parent = new_parent
+            if current_parent is None and new_parent is not None:
+                self._root_account_items.remove(item)
+            if current_parent is not None and new_parent is None:
+                self._root_account_items.append(item)
+        if index is None:
+            return
+        if new_parent is None:
+            self._root_account_items.remove(item)
+            self._root_account_items.insert(index, item)
+        else:
+            new_parent.set_child_index(item, index)
+
+    def _edit_category_parent(
+        self,
+        category: Category,
+        new_parent: Category | None,
+        index: int | None,
+    ) -> None:
+        current_parent = category.parent
+        if current_parent != new_parent:
+            category.parent = new_parent
+            list_ref = self._get_root_category_list(category)
+            if current_parent is None and new_parent is not None:
+                list_ref.remove(category)
+            if current_parent is not None and new_parent is None:
+                list_ref.append(category)
+        if index is None:
+            return
+        if new_parent is None:
+            list_ref = self._get_root_category_list(category)
+            list_ref.remove(category)
+            list_ref.insert(index, category)
+        else:
+            new_parent.set_child_index(category, index)
+
+    def _get_root_category_list(self, category: Category) -> list[Category]:
+        if category.type_ == CategoryType.INCOME:
+            return self._root_income_categories
+        if category.type_ == CategoryType.EXPENSE:
+            return self._root_expense_categories
+        return self._root_income_and_expense_categories
+
+    @staticmethod
+    def _flatten_accounts(
+        account_items: Collection[Account | AccountGroup],
+    ) -> list[Account]:
+        resulting_list = []
+        for account_item in account_items:
+            if isinstance(account_item, Account):
+                resulting_list.append(account_item)
+            else:
+                resulting_list = resulting_list + RecordKeeper._flatten_accounts(
+                    account_item.children
+                )
+        return resulting_list
+
+    @staticmethod
+    def _flatten_account_items(
+        account_items: Collection[Account | AccountGroup],
+    ) -> list[Account | AccountGroup]:
+        resulting_list: list[Account | AccountGroup] = []
+        for account_item in account_items:
+            resulting_list.append(account_item)
+            if isinstance(account_item, AccountGroup):
+                resulting_list = resulting_list + RecordKeeper._flatten_account_items(
+                    account_item.children
+                )
+        return resulting_list
+
+    @staticmethod
+    def _flatten_categories(root_categories: Collection[Category]) -> list[Category]:
+        """Used to flatten the Category tree, preserving the order."""
+        resulting_list = []
+        for category in root_categories:
+            resulting_list.append(category)
+            if len(category.children) > 0:
+                resulting_list = resulting_list + RecordKeeper._flatten_categories(
+                    category.children
+                )
+        return resulting_list
+
+    def _save_category(self, category: Category) -> None:
+        if category not in self._categories:
+            self._categories.append(category)
+
+        if category.parent is not None:
+            return
+
+        if (
+            category.type_ == CategoryType.INCOME
+            and category not in self._root_income_categories
+        ):
+            self._root_income_categories.append(category)
+        elif (
+            category.type_ == CategoryType.EXPENSE
+            and category not in self._root_income_categories
+        ):
+            self._root_expense_categories.append(category)
+        else:
+            self._root_income_and_expense_categories.append(category)

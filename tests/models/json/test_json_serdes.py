@@ -3,10 +3,8 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 
 import pytest
-from hypothesis import given
+from hypothesis import assume, given
 from hypothesis import strategies as st
-
-from src.models.constants import tzinfo
 from src.models.json.custom_json_decoder import CustomJSONDecoder
 from src.models.json.custom_json_encoder import CustomJSONEncoder
 from src.models.model_objects.account_group import AccountGroup
@@ -30,9 +28,10 @@ from src.models.model_objects.security_objects import (
     SecurityTransaction,
     SecurityTransactionType,
     SecurityTransfer,
-    SecurityType,
 )
 from src.models.record_keeper import RecordKeeper
+from src.models.user_settings import user_settings
+from src.models.user_settings.user_settings_class import UserSettings
 from tests.models.test_assets.composites import (
     attributes,
     cash_transactions,
@@ -56,9 +55,9 @@ def test_decimal() -> None:
 
 
 def test_datetime() -> None:
-    dt = datetime.now(tzinfo)
-    serialized = json.dumps(dt, cls=CustomJSONEncoder)
-    decoded = json.loads(serialized, cls=CustomJSONDecoder)
+    dt = datetime.now(user_settings.settings.time_zone).replace(microsecond=0)
+    serialized = json.dumps(dt, cls=CustomJSONEncoder).strip('"')
+    decoded = datetime.fromisoformat(serialized)
     assert decoded == dt
 
 
@@ -72,13 +71,17 @@ def test_currency() -> None:
 def test_exchange_rate() -> None:
     primary = Currency("EUR", 2)
     secondary = Currency("CZK", 2)
+    currency_dict = {primary.code: primary, secondary.code: secondary}
     exchange_rate = ExchangeRate(primary, secondary)
+    exchange_rate.set_rate(datetime.now(user_settings.settings.time_zone).date(), 1)
     serialized = json.dumps(exchange_rate, cls=CustomJSONEncoder)
     decoded = json.loads(serialized, cls=CustomJSONDecoder)
-    decoded = ExchangeRate.deserialize(decoded, [primary, secondary])
+    decoded = ExchangeRate.deserialize(decoded, currency_dict)
     assert isinstance(decoded, ExchangeRate)
     assert decoded.primary_currency == exchange_rate.primary_currency
     assert decoded.secondary_currency == exchange_rate.secondary_currency
+    assert decoded.latest_date == datetime.now(user_settings.settings.time_zone).date()
+    assert decoded.latest_rate == 1
 
 
 def test_cash_amount() -> None:
@@ -86,7 +89,7 @@ def test_cash_amount() -> None:
     cash_amount = CashAmount(Decimal("1.23"), currency)
     serialized = json.dumps(cash_amount, cls=CustomJSONEncoder)
     decoded = json.loads(serialized, cls=CustomJSONDecoder)
-    decoded = CashAmount.deserialize(decoded, [currency])
+    decoded = CashAmount.deserialize(decoded, {currency.code: currency})
     assert decoded == cash_amount
 
 
@@ -103,15 +106,20 @@ def test_attribute(attribute: Attribute) -> None:
 def test_category(parent: Category, data: st.DataObject) -> None:
     child_1 = data.draw(categories(category_type=parent.type_))
     child_2 = data.draw(categories(category_type=parent.type_))
+    assume(child_1.path != child_2.path)
     child_1.parent = parent
     child_2.parent = parent
+
     category_tuple = (parent, child_1, child_2)
     serialized = json.dumps(category_tuple, cls=CustomJSONEncoder)
     decoded = json.loads(serialized, cls=CustomJSONDecoder)
+
     category_list = []
-    for category_dict in decoded:
-        category = Category.deserialize(category_dict, category_list)
+    category_dict = {}
+    for decoded_dict in decoded:
+        category = Category.deserialize(decoded_dict, category_dict)
         category_list.append(category)
+        category_dict[category.path] = category
     decoded = category_list[0]
     assert isinstance(decoded, Category)
     assert decoded.name == parent.name
@@ -126,15 +134,18 @@ def test_account_group() -> None:
     parent = AccountGroup("Test Name")
     child_1 = AccountGroup("Child 1", parent)
     child_2 = AccountGroup("Child 2", parent)
-    child_1.parent = parent
-    child_2.parent = parent
     account_groups = [parent, child_1, child_2]
     serialized = json.dumps(account_groups, cls=CustomJSONEncoder)
     decoded = json.loads(serialized, cls=CustomJSONDecoder)
+
     account_groups = []
-    for account_group_dict in decoded:
-        account_group = AccountGroup.deserialize(account_group_dict, account_groups)
+    account_group_dict = {}
+    for _account_group_dict in decoded:
+        account_group = AccountGroup.deserialize(
+            _account_group_dict, account_group_dict
+        )
         account_groups.append(account_group)
+        account_group_dict[account_group.path] = account_group
     decoded = account_groups[0]
     assert isinstance(decoded, AccountGroup)
     assert decoded.name == parent.name
@@ -146,17 +157,14 @@ def test_account_group() -> None:
 
 def test_cash_account() -> None:
     currency = Currency("CZK", 2)
-    cash_account = CashAccount(
-        "Test Name", currency, CashAmount(0, currency), datetime.now(tzinfo)
-    )
+    cash_account = CashAccount("Test Name", currency, currency.zero_amount)
     serialized = json.dumps(cash_account, cls=CustomJSONEncoder)
     decoded = json.loads(serialized, cls=CustomJSONDecoder)
-    decoded = CashAccount.deserialize(decoded, None, [currency])
+    decoded = CashAccount.deserialize(decoded, None, {currency.code: currency})
     assert isinstance(decoded, CashAccount)
     assert decoded.name == cash_account.name
     assert decoded.currency == cash_account.currency
     assert decoded.initial_balance == cash_account.initial_balance
-    assert decoded.initial_datetime == cash_account.initial_datetime
     assert decoded.uuid == cash_account.uuid
 
 
@@ -172,18 +180,22 @@ def test_security_account() -> None:
 
 def test_security() -> None:
     currency = Currency("CZK", 2)
-    security = Security("Test Name", "SYMB.OL", SecurityType.ETF, currency, 1)
+    security = Security("Test Name", "SYMB.OL", "ETF", currency, 1)
+    security.set_price(
+        datetime.now(user_settings.settings.time_zone).date(),
+        CashAmount("1.234567890", currency),
+    )
     serialized = json.dumps(security, cls=CustomJSONEncoder)
     decoded = json.loads(serialized, cls=CustomJSONDecoder)
-    decoded = Security.deserialize(decoded, [currency])
+    decoded = Security.deserialize(decoded, {currency.code: currency})
     assert isinstance(decoded, Security)
     assert decoded.name == security.name
     assert decoded.symbol == security.symbol
     assert decoded.currency == security.currency
     assert decoded.type_ == security.type_
     assert decoded.shares_unit == security.shares_unit
-    assert decoded.price_places == security.price_places
     assert decoded.uuid == security.uuid
+    assert decoded.price == security.price
 
 
 def test_record_keeper_currencies_exchange_rates() -> None:
@@ -203,12 +215,14 @@ def test_record_keeper_currencies_exchange_rates() -> None:
 
 def test_record_keeper_account_groups() -> None:
     record_keeper = RecordKeeper()
-    record_keeper.add_account_group("A1", None)
-    record_keeper.add_account_group("A2", "A1")
-    record_keeper.add_account_group("B2", "A1")
-    record_keeper.add_account_group("A3", "A1/A2")
-    record_keeper.add_account_group("B1", None)
-    record_keeper.add_account_group("C1", None)
+    record_keeper.add_account_group("A1")
+    record_keeper.add_account_group("A1/A2")
+    record_keeper.add_account_group("A1/B2")
+    record_keeper.add_account_group("A1/C2")
+    record_keeper.add_account_group("A1/D2")
+    record_keeper.add_account_group("A1/A2/A3")
+    record_keeper.add_account_group("B1")
+    record_keeper.add_account_group("C1")
     serialized = json.dumps(record_keeper, cls=CustomJSONEncoder)
     decoded = json.loads(serialized, cls=CustomJSONDecoder)
     assert isinstance(decoded, RecordKeeper)
@@ -221,13 +235,9 @@ def test_record_keeper_accounts() -> None:
     record_keeper.add_currency("EUR", 2)
     record_keeper.add_account_group("Security Accounts", None)
     record_keeper.add_account_group("Cash Accounts", None)
-    record_keeper.add_cash_account(
-        "CZK Account", "CZK", 0, datetime.now(tzinfo), "Cash Accounts"
-    )
-    record_keeper.add_cash_account(
-        "EUR Account", "EUR", 0, datetime.now(tzinfo), "Cash Accounts"
-    )
-    record_keeper.add_security_account("Degiro", "Security Accounts")
+    record_keeper.add_cash_account("Cash Accounts/CZK Account", "CZK", 0)
+    record_keeper.add_cash_account("Cash Accounts/EUR Account", "EUR", 0)
+    record_keeper.add_security_account("Security Accounts/Degiro")
     serialized = json.dumps(record_keeper, cls=CustomJSONEncoder)
     decoded = json.loads(serialized, cls=CustomJSONDecoder)
     assert isinstance(decoded, RecordKeeper)
@@ -241,15 +251,20 @@ def test_record_keeper_invalid_account_datatype() -> None:
         record_keeper._deserialize_accounts([dictionary], None, None)
 
 
+def test_record_keeper_invalid_root_account_item_datatype() -> None:
+    record_keeper = RecordKeeper()
+    dictionary = {"datatype": "not a valid Account sub-class"}
+    with pytest.raises(ValueError, match="Unexpected 'datatype' value."):
+        record_keeper._deserialize_root_account_items([dictionary], None, None)
+
+
 def test_record_keeper_securities() -> None:
     record_keeper = RecordKeeper()
     record_keeper.add_currency("CZK", 2)
     record_keeper.add_currency("EUR", 2)
+    record_keeper.add_security("iShares MSCI All World", "IWDA.AS", "ETF", "EUR", 1)
     record_keeper.add_security(
-        "iShares MSCI All World", "IWDA.AS", SecurityType.ETF, "EUR", 1
-    )
-    record_keeper.add_security(
-        "ČSOB Dynamický penzijní fond", "CSOB.DYN", SecurityType.MUTUAL_FUND, "CZK", 1
+        "ČSOB Dynamický penzijní fond", "CSOB.DYN", "Pension Fund", "CZK", 1
     )
     serialized = json.dumps(record_keeper, cls=CustomJSONEncoder)
     decoded = json.loads(serialized, cls=CustomJSONDecoder)
@@ -276,37 +291,53 @@ def test_record_keeper_tags_and_payees(
 
 def test_record_keeper_categories() -> None:
     record_keeper = RecordKeeper()
-    record_keeper.add_category("Food", None, CategoryType.EXPENSE)
-    record_keeper.add_category("Groceries", "Food", CategoryType.EXPENSE)
-    record_keeper.add_category("Eating out", "Food", CategoryType.EXPENSE)
-    record_keeper.add_category("Housing", None, CategoryType.EXPENSE)
-    record_keeper.add_category("Rent", "Housing", CategoryType.EXPENSE)
-    record_keeper.add_category("Electricity", "Housing", CategoryType.EXPENSE)
-    record_keeper.add_category("Water", "Housing", CategoryType.EXPENSE)
-    record_keeper.add_category("Work lunch", "Food", CategoryType.EXPENSE)
+    record_keeper.add_category("Salary", CategoryType.INCOME)
+    record_keeper.add_category("Food", CategoryType.EXPENSE)
+    record_keeper.add_category("Food/Groceries")
+    record_keeper.add_category("Food/Eating out")
+    record_keeper.add_category("Housing", CategoryType.EXPENSE)
+    record_keeper.add_category("Housing/Rent")
+    record_keeper.add_category("Housing/Electricity")
+    record_keeper.add_category("Housing/Water")
+    record_keeper.add_category("Food/Work lunch")
+    record_keeper.add_category("Splitting costs", CategoryType.INCOME_AND_EXPENSE)
     serialized = json.dumps(record_keeper, cls=CustomJSONEncoder)
     decoded = json.loads(serialized, cls=CustomJSONDecoder)
     assert isinstance(decoded, RecordKeeper)
     assert len(record_keeper.categories) == len(decoded.categories)
+    assert len(record_keeper.root_income_categories) == len(
+        decoded.root_income_categories
+    )
+    assert len(record_keeper.root_expense_categories) == len(
+        decoded.root_expense_categories
+    )
+    assert len(record_keeper.root_income_and_expense_categories) == len(
+        decoded.root_income_and_expense_categories
+    )
 
 
 @given(transaction=cash_transactions())
 def test_cash_transaction(transaction: CashTransaction) -> None:
+    category_dict = {category.path: category for category in transaction.categories}
+    tag_dict = {tag.name: tag for tag in transaction.tags}
+
     serialized = json.dumps(transaction, cls=CustomJSONEncoder)
     decoded = json.loads(serialized, cls=CustomJSONDecoder)
     decoded = CashTransaction.deserialize(
         decoded,
-        [transaction.account],
-        [transaction.payee],
-        transaction.categories,
-        transaction.tags,
-        [transaction.currency],
+        {transaction.account.path: transaction.account},
+        {transaction.payee.name: transaction.payee},
+        category_dict,
+        tag_dict,
+        {transaction.currency.code: transaction.currency},
     )
     assert isinstance(decoded, CashTransaction)
     assert decoded.uuid == transaction.uuid
     assert decoded.description == transaction.description
-    assert decoded.datetime_ == transaction.datetime_
-    assert decoded.datetime_created == transaction.datetime_created
+    assert decoded.datetime_ == transaction.datetime_.replace(microsecond=0)
+    assert decoded.datetime_created == transaction.datetime_created.replace(
+        microsecond=0
+    )
     assert decoded.type_ == transaction.type_
     assert decoded.account == transaction.account
     assert transaction.payee == transaction.payee
@@ -316,18 +347,26 @@ def test_cash_transaction(transaction: CashTransaction) -> None:
 
 @given(transaction=cash_transfers())
 def test_cash_transfer(transaction: CashTransfer) -> None:
+    currency_dict = {currency.code: currency for currency in transaction.currencies}
+    account_dict = {
+        transaction.sender.path: transaction.sender,
+        transaction.recipient.path: transaction.recipient,
+    }
+
     serialized = json.dumps(transaction, cls=CustomJSONEncoder)
     decoded = json.loads(serialized, cls=CustomJSONDecoder)
     decoded = CashTransfer.deserialize(
         decoded,
-        [transaction.sender, transaction.recipient],
-        transaction.currencies,
+        account_dict,
+        currency_dict,
     )
     assert isinstance(decoded, CashTransfer)
     assert decoded.uuid == transaction.uuid
     assert decoded.description == transaction.description
-    assert decoded.datetime_ == transaction.datetime_
-    assert decoded.datetime_created == transaction.datetime_created
+    assert decoded.datetime_ == transaction.datetime_.replace(microsecond=0)
+    assert decoded.datetime_created == transaction.datetime_created.replace(
+        microsecond=0
+    )
     assert decoded.sender == transaction.sender
     assert decoded.recipient == transaction.recipient
     assert decoded.amount_sent == transaction.amount_sent
@@ -341,6 +380,14 @@ def test_refund_transaction(transaction: CashTransaction) -> None:
             (Attribute("test tag", AttributeType.TAG), transaction.amount)
         ]
     )
+
+    currency_dict = {currency.code: currency for currency in transaction.currencies}
+    tag_dict = {tag.name: tag for tag in transaction.tags}
+    category_dict = {category.path: category for category in transaction.categories}
+    payee_dict = {transaction.payee.name: transaction.payee}
+    account_dict = {transaction.account.path: transaction.account}
+    transaction_dict = {transaction.uuid: transaction}
+
     refund = RefundTransaction(
         "A short description",
         transaction.datetime_ + timedelta(days=1),
@@ -355,18 +402,18 @@ def test_refund_transaction(transaction: CashTransaction) -> None:
     decoded = json.loads(serialized, cls=CustomJSONDecoder)
     decoded = RefundTransaction.deserialize(
         decoded,
-        [transaction.account],
-        [transaction],
-        [transaction.payee],
-        transaction.categories,
-        transaction.tags,
-        transaction.currencies,
+        account_dict,
+        transaction_dict,
+        payee_dict,
+        category_dict,
+        tag_dict,
+        currency_dict,
     )
     assert isinstance(decoded, RefundTransaction)
     assert decoded.uuid == refund.uuid
     assert decoded.description == refund.description
-    assert decoded.datetime_ == refund.datetime_
-    assert decoded.datetime_created == refund.datetime_created
+    assert decoded.datetime_ == refund.datetime_.replace(microsecond=0)
+    assert decoded.datetime_created == refund.datetime_created.replace(microsecond=0)
     assert decoded.account == refund.account
     assert decoded.refunded_transaction.uuid == transaction.uuid
     assert decoded.payee == refund.payee
@@ -380,15 +427,20 @@ def test_security_transaction(transaction: SecurityTransaction) -> None:
     decoded = json.loads(serialized, cls=CustomJSONDecoder)
     decoded = SecurityTransaction.deserialize(
         decoded,
-        [transaction.cash_account, transaction.security_account],
-        [transaction.currency],
-        [transaction.security],
+        {
+            transaction.cash_account.path: transaction.cash_account,
+            transaction.security_account.path: transaction.security_account,
+        },
+        {transaction.currency.code: transaction.currency},
+        {transaction.security.name: transaction.security},
     )
     assert isinstance(decoded, SecurityTransaction)
     assert decoded.uuid == transaction.uuid
     assert decoded.description == transaction.description
-    assert decoded.datetime_ == transaction.datetime_
-    assert decoded.datetime_created == transaction.datetime_created
+    assert decoded.datetime_ == transaction.datetime_.replace(microsecond=0)
+    assert decoded.datetime_created == transaction.datetime_created.replace(
+        microsecond=0
+    )
     assert decoded.type_ == transaction.type_
     assert decoded.security == transaction.security
     assert decoded.price_per_share == transaction.price_per_share
@@ -402,14 +454,19 @@ def test_security_transfer(transaction: SecurityTransfer) -> None:
     decoded = json.loads(serialized, cls=CustomJSONDecoder)
     decoded = SecurityTransfer.deserialize(
         decoded,
-        [transaction.sender, transaction.recipient],
-        [transaction.security],
+        {
+            transaction.sender.path: transaction.sender,
+            transaction.recipient.path: transaction.recipient,
+        },
+        {transaction.security.name: transaction.security},
     )
     assert isinstance(decoded, SecurityTransfer)
     assert decoded.uuid == transaction.uuid
     assert decoded.description == transaction.description
-    assert decoded.datetime_ == transaction.datetime_
-    assert decoded.datetime_created == transaction.datetime_created
+    assert decoded.datetime_ == transaction.datetime_.replace(microsecond=0)
+    assert decoded.datetime_created == transaction.datetime_created.replace(
+        microsecond=0
+    )
     assert decoded.security == transaction.security
     assert decoded.sender == transaction.sender
     assert decoded.recipient == transaction.recipient
@@ -421,47 +478,43 @@ def test_record_keeper_transactions() -> None:
     record_keeper.add_currency("EUR", 2)
     record_keeper.add_exchange_rate("EUR", "CZK")
     record_keeper.add_security(
-        "ČSOB Dynamický penzijní fond", "CSOB.DYN", SecurityType.MUTUAL_FUND, "CZK", 1
+        "ČSOB Dynamický penzijní fond", "CSOB.DYN", "Pension Fund", "CZK", 1
     )
     record_keeper.add_account_group("Bank Accounts", None)
-    record_keeper.add_cash_account(
-        "Raiffeisen", "CZK", 15000, datetime.now(tzinfo), "Bank Accounts"
-    )
-    record_keeper.add_cash_account(
-        "Moneta", "CZK", 0, datetime.now(tzinfo), "Bank Accounts"
-    )
+    record_keeper.add_cash_account("Bank Accounts/Raiffeisen", "CZK", 15000)
+    record_keeper.add_cash_account("Bank Accounts/Moneta", "CZK", 0)
     record_keeper.add_security_account("ČSOB penzijní účet", None)
     record_keeper.add_security_account("ČSOB penzijní účet 2", None)
     record_keeper.add_cash_transaction(
         "chili con carne ingredients",
-        datetime.now(tzinfo),
+        datetime.now(user_settings.settings.time_zone),
         CashTransactionType.EXPENSE,
         "Bank Accounts/Raiffeisen",
-        [("Food/Groceries", 1000)],
         "Albert",
+        [("Food/Groceries", 1000)],
         [("Split", 500)],
     )
     record_keeper.add_cash_transaction(
         "some stupid electronic device",
-        datetime.now(tzinfo),
+        datetime.now(user_settings.settings.time_zone),
         CashTransactionType.EXPENSE,
         "Bank Accounts/Raiffeisen",
-        [("Electronics", 10000)],
         "Alza",
+        [("Electronics", 10000)],
         [],
     )
     record_keeper.add_refund(
         "refunding stupid electronic device",
-        datetime.now(tzinfo) + timedelta(days=1),
-        str(record_keeper.transactions[1].uuid),
+        datetime.now(user_settings.settings.time_zone) + timedelta(days=1),
+        record_keeper.transactions[1].uuid,
         "Bank Accounts/Raiffeisen",
+        "Alza",
         [("Electronics", 10000)],
         [],
-        "Alza",
     )
     record_keeper.add_cash_transfer(
         "sending money to Moneta",
-        datetime.now(tzinfo),
+        datetime.now(user_settings.settings.time_zone),
         "Bank Accounts/Raiffeisen",
         "Bank Accounts/Moneta",
         1000,
@@ -469,9 +522,9 @@ def test_record_keeper_transactions() -> None:
     )
     record_keeper.add_security_transaction(
         "buying ČSOB DPS shares",
-        datetime.now(tzinfo),
+        datetime.now(user_settings.settings.time_zone),
         SecurityTransactionType.BUY,
-        "CSOB.DYN",
+        "ČSOB Dynamický penzijní fond",
         1000,
         "1.7",
         "ČSOB penzijní účet",
@@ -479,8 +532,8 @@ def test_record_keeper_transactions() -> None:
     )
     record_keeper.add_security_transfer(
         "transfering DPS shares",
-        datetime.now(tzinfo),
-        "CSOB.DYN",
+        datetime.now(user_settings.settings.time_zone),
+        "ČSOB Dynamický penzijní fond",
         10,
         "ČSOB penzijní účet",
         "ČSOB penzijní účet 2",
@@ -506,3 +559,14 @@ def test_record_keeper_transactions_invalid_datatype() -> None:
         record_keeper._deserialize_transactions(
             [transaction_dict], None, None, None, None, None, None
         )
+
+
+def test_user_settings() -> None:
+    settings = UserSettings()
+    serialized = json.dumps(settings, cls=CustomJSONEncoder)
+    decoded = json.loads(serialized, cls=CustomJSONDecoder)
+    assert isinstance(decoded, UserSettings)
+    assert decoded.time_zone == settings.time_zone
+    assert decoded.backup_paths == settings.backup_paths
+    assert decoded.logs_max_size_bytes == settings.logs_max_size_bytes
+    assert decoded.backups_max_size_bytes == settings.backups_max_size_bytes

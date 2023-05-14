@@ -54,29 +54,21 @@ Each income or expense transaction will have a payee (for example employer name 
 
 TBD
 
-TODO: budgets
-
 ## Envelopes
 
 Kapytal supports envelope system, where the user can virtually allocate money across multiple accounts to various envelopes. These envelopes can represent financial goals of the user, for example an emergency fund, budget for Christmas gifts, saving for a vacation etc.
 
 Envelopes can have set priorities: for example, if the user creates an expense, the amount will be subtracted from the envelope with the lowest priority.
 
-TODO: envelopes
-
 ## Reports
 
 The user can generate reports, which visually represent the transaction data either in a table or a chart. Example of a report could be a cashflow report (a time-chart showing total income and expense in each month, along with their difference) or an expense category report for a selected time-period (a pie chart showing the composition of users expenses with regards to transaction categories).
-
-TODO: reports
 
 ## Currencies
 
 Kapytal will support multiple currencies. The user can enable or create currencies and use them with transactions or as account currencies.
 
 The user can also designate a single currency as a base currency. This will be the currency used for account group balances and reports.
-
-TODO: base currency recalculation
 
 ## Financial Instruments
 

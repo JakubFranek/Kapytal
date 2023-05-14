@@ -5,12 +5,10 @@ from typing import Any
 import pytest
 from hypothesis import assume, given
 from hypothesis import strategies as st
-
 from src.models.model_objects.currency_objects import (
     Currency,
     CurrencyError,
     ExchangeRate,
-    NoExchangeRateError,
 )
 from tests.models.test_assets.composites import (
     currencies,
@@ -27,8 +25,9 @@ def test_creation(primary: Currency, secondary: Currency) -> None:
     assert exchange_rate.secondary_currency == secondary
     assert exchange_rate.currencies == {primary, secondary}
     assert exchange_rate.rate_history == {}
-    with pytest.raises(NoExchangeRateError):
-        exchange_rate.latest_rate
+    assert exchange_rate.rate_history_pairs == ()
+    assert exchange_rate.latest_rate.is_nan()
+    assert exchange_rate.latest_date is None
     assert exchange_rate.__repr__() == (
         f"ExchangeRate({primary.code}/{secondary.code})"
     )
@@ -51,6 +50,25 @@ def test_set_rate(
     exchange_rate.set_rate(date_, rate)
     assert exchange_rate.latest_rate == rate
     assert exchange_rate.rate_history[date_] == rate
+
+
+@given(
+    primary=currencies(),
+    secondary=currencies(),
+    rate=valid_decimals(min_value=0.01) | st.integers(min_value=1, max_value=1e6),
+    date_=st.dates(),
+)
+def test_set_and_delete_rate(
+    primary: Currency, secondary: Currency, rate: Decimal, date_: date
+) -> None:
+    assume(primary != secondary)
+    exchange_rate = ExchangeRate(primary, secondary)
+    exchange_rate.set_rate(date_, rate)
+    assert exchange_rate.latest_rate == rate
+    assert exchange_rate.rate_history[date_] == rate
+    exchange_rate.delete_rate(date_)
+    assert exchange_rate.latest_rate.is_nan()
+    assert exchange_rate.rate_history.get(date_) is None
 
 
 @given(

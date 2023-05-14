@@ -1,3 +1,4 @@
+import logging
 from typing import Any
 
 from src.models.custom_exceptions import InvalidCharacterError
@@ -11,8 +12,19 @@ class NameMixin:
     NAME_MIN_LENGTH = 1
     NAME_MAX_LENGTH = 32
 
-    def __init__(self, name: str, *args: Any, **kwargs: Any) -> None:
+    def __init__(
+        self,
+        name: str,
+        allow_slash: bool,  # noqa: FBT001
+        *args: Any,  # noqa: ANN401
+        **kwargs: Any,  # noqa: ANN401
+    ) -> None:
         super().__init__(*args, **kwargs)
+
+        if not isinstance(allow_slash, bool):
+            raise TypeError("Parameter 'allow_slash' must be a boolean.")
+        self._allow_slash = allow_slash
+
         self.name = name
 
     @property
@@ -20,16 +32,29 @@ class NameMixin:
         return self._name
 
     @name.setter
-    def name(self, value: str) -> None:
-        if not isinstance(value, str):
+    def name(self, name: str) -> None:
+        if not isinstance(name, str):
             raise TypeError(f"{self.__class__.__name__}.name must be a string.")
 
-        if len(value) < self.NAME_MIN_LENGTH or len(value) > self.NAME_MAX_LENGTH:
+        if hasattr(self, "_name") and self._name == name:
+            return
+
+        if len(name) < self.NAME_MIN_LENGTH or len(name) > self.NAME_MAX_LENGTH:
             raise NameLengthError(
                 f"{self.__class__.__name__}.name length must be between "
                 f"{self.NAME_MIN_LENGTH} and "
-                f"{self.NAME_MAX_LENGTH} characters."
+                f"{self.NAME_MAX_LENGTH} characters (currently {len(name)})."
             )
-        if "/" in value:
-            raise InvalidCharacterError("Slashes in object names are forbidden.")
-        self._name = value
+        if not self._allow_slash and "/" in name:
+            raise InvalidCharacterError(
+                f"Slashes in {self.__class__.__name__}.name are forbidden."
+            )
+
+        # FIXME: get rid of this stupid logging method
+        if hasattr(self, "_name"):
+            logging.info(
+                f"Renaming {self.__class__.__name__} from '{self._name}' to '{name}'"
+            )
+        else:
+            logging.info(f"Setting {self.__class__.__name__} {name=}")
+        self._name: str = name

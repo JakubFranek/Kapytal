@@ -3,6 +3,8 @@ from collections.abc import Collection
 from datetime import datetime
 from typing import TYPE_CHECKING
 
+from src.models.mixins.copyable_mixin import CopyableMixin
+
 if TYPE_CHECKING:
     from src.models.base_classes.account import Account
 
@@ -17,7 +19,9 @@ from src.models.model_objects.attributes import (
 
 
 # IDEA: think about slots
-class Transaction(DatetimeCreatedMixin, UUIDMixin, JSONSerializableMixin, ABC):
+class Transaction(
+    CopyableMixin, DatetimeCreatedMixin, UUIDMixin, JSONSerializableMixin, ABC
+):
     DESCRIPTION_MIN_LENGTH = 0
     DESCRIPTION_MAX_LENGTH = 256
 
@@ -48,7 +52,7 @@ class Transaction(DatetimeCreatedMixin, UUIDMixin, JSONSerializableMixin, ABC):
         return self._datetime
 
     @property
-    def tags(self) -> tuple[Attribute]:
+    def tags(self) -> tuple[Attribute, ...]:
         return tuple(self._tags)
 
     def _validate_datetime(self, value: datetime) -> None:
@@ -82,6 +86,9 @@ class Transaction(DatetimeCreatedMixin, UUIDMixin, JSONSerializableMixin, ABC):
             if tag in self._tags:
                 self._tags.remove(tag)
 
+    def clear_tags(self) -> None:
+        self._tags.clear()
+
     def _validate_tags(self, tags: Collection[Attribute]) -> None:
         if not isinstance(tags, Collection):
             raise TypeError("Parameter 'tags' must be a Collection.")
@@ -94,6 +101,10 @@ class Transaction(DatetimeCreatedMixin, UUIDMixin, JSONSerializableMixin, ABC):
 
     @abstractmethod
     def is_account_related(self, account: "Account") -> bool:
+        raise NotImplementedError
+
+    @abstractmethod
+    def is_accounts_related(self, accounts: Collection["Account"]) -> bool:
         raise NotImplementedError
 
     @abstractmethod

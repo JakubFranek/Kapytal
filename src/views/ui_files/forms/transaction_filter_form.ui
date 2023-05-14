@@ -1,0 +1,888 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>TransactionFilterForm</class>
+ <widget class="QWidget" name="TransactionFilterForm">
+  <property name="windowModality">
+   <enum>Qt::WindowModal</enum>
+  </property>
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>475</width>
+    <height>538</height>
+   </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>0</width>
+    <height>0</height>
+   </size>
+  </property>
+  <property name="windowTitle">
+   <string>Dialog</string>
+  </property>
+  <property name="locale">
+   <locale language="English" country="UnitedKingdom"/>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QTabWidget" name="mainTabWidget">
+     <property name="tabPosition">
+      <enum>QTabWidget::North</enum>
+     </property>
+     <property name="tabShape">
+      <enum>QTabWidget::Rounded</enum>
+     </property>
+     <property name="currentIndex">
+      <number>0</number>
+     </property>
+     <property name="elideMode">
+      <enum>Qt::ElideNone</enum>
+     </property>
+     <property name="documentMode">
+      <bool>false</bool>
+     </property>
+     <property name="tabsClosable">
+      <bool>false</bool>
+     </property>
+     <property name="tabBarAutoHide">
+      <bool>false</bool>
+     </property>
+     <widget class="QWidget" name="generalTab">
+      <attribute name="title">
+       <string>General</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_2">
+       <item>
+        <widget class="QGroupBox" name="typeFilterGroupBox">
+         <property name="toolTip">
+          <string>Filter Transactions based on their type</string>
+         </property>
+         <property name="title">
+          <string>Type Filter</string>
+         </property>
+         <property name="checkable">
+          <bool>false</bool>
+         </property>
+         <property name="checked">
+          <bool>false</bool>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_20">
+          <item>
+           <widget class="QListView" name="typeFilterListView"/>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="typeFilterButtonHorizontalLayout">
+            <item>
+             <widget class="QPushButton" name="typeFilterSelectAllPushButton">
+              <property name="text">
+               <string>Select All</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="typeFilterUnselectAllPushButton">
+              <property name="text">
+               <string>Unselect All</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="dateFilterGroupBox">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Filter Transactions based on their Date. The Start and End date bounds are inclusive.&lt;/p&gt;&lt;p&gt;KEEP: Only Transactions within Start and End dates are kept&lt;/p&gt;&lt;p&gt;DISCARD: Transactions within Start and End dates are discarded&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="title">
+          <string>Date Filter</string>
+         </property>
+         <layout class="QFormLayout" name="formLayout">
+          <item row="0" column="0">
+           <widget class="QLabel" name="dateFilterModeLabel">
+            <property name="text">
+             <string>Mode</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QComboBox" name="dateFilterModeComboBox"/>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="dateFilterStartLabel">
+            <property name="text">
+             <string>Start date</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QDateEdit" name="dateFilterStartDateEdit">
+            <property name="calendarPopup">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="dateFilterEndLabel">
+            <property name="text">
+             <string>End date</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QDateEdit" name="dateFilterEndDateEdit">
+            <property name="calendarPopup">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="descriptionFilterGroupBox">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Filter Transactions based on their Description&lt;/p&gt;&lt;p&gt;KEEP: Only Transactions matching the regex pattern are kept&lt;/p&gt;&lt;p&gt;DISCARD: Transactions matching the regex pattern are discarded&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="title">
+          <string>Description Filter</string>
+         </property>
+         <layout class="QFormLayout" name="formLayout_2">
+          <item row="0" column="0">
+           <widget class="QLabel" name="descriptionFilterModeLabel">
+            <property name="text">
+             <string>Mode</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QComboBox" name="descriptionFilterModeComboBox"/>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="descriptionFilterPatternLabel">
+            <property name="text">
+             <string>Regex pattern</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QLineEdit" name="descriptionFilterPatternLineEdit">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Special regex characters:&lt;/p&gt;&lt;p&gt;. matches any character&lt;br/&gt;* matches zero or more of preceding token&lt;br/&gt;? matches zero or one of preceding token&lt;br/&gt;+ matches one or more of the preceding token&lt;br/&gt;^ matches the beginning of a string&lt;br/&gt;$ matches the end of a string&lt;br/&gt;| matches the expression to the right or left&lt;br/&gt;[...] matches any character within square brackets&lt;br/&gt;(...) groups tokens together&lt;br/&gt;\ escapes a special character&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="accountsTab">
+      <attribute name="title">
+       <string>Accounts</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_3">
+       <item>
+        <widget class="QGroupBox" name="accountsFilterModeGroupBox">
+         <property name="title">
+          <string>Accounts Filter Mode</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_4">
+          <item>
+           <widget class="QRadioButton" name="accountsFilterTreeRadioButton">
+            <property name="text">
+             <string>Filter based on Account Tree selection</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="accountsFilterSelectionRadioButton">
+            <property name="text">
+             <string>Filter based on Accounts Filter selection below</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="accountsFilterGroupBox">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Filter Transactions based on the associated Accounts and/or Account Groups.&lt;/p&gt;&lt;p&gt;In case of Cash and Security Transfers, if at least one of the Accounts is checked, the Transaction is not discarded.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="title">
+          <string>Accounts Filter</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_18">
+          <item>
+           <widget class="QLineEdit" name="accountsSearchLineEdit">
+            <property name="toolTip">
+             <string/>
+            </property>
+            <property name="placeholderText">
+             <string>Search Accounts</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QTreeView" name="accountsTreeView">
+            <property name="enabled">
+             <bool>true</bool>
+            </property>
+            <property name="uniformRowHeights">
+             <bool>true</bool>
+            </property>
+            <property name="headerHidden">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="accountsFilterButtonHorizontalLayout">
+            <item>
+             <widget class="QToolButton" name="accountsFilterExpandAllToolButton">
+              <property name="text">
+               <string>...</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QToolButton" name="accountsFilterCollapseAllToolButton">
+              <property name="text">
+               <string>...</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="accountsFilterSelectAllPushButton">
+              <property name="text">
+               <string>Select All</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="accountsFilterUnselectAllPushButton">
+              <property name="text">
+               <string>Unselect All</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tagsTab">
+      <attribute name="title">
+       <string>Tags</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_5">
+       <item>
+        <widget class="QGroupBox" name="tagLessFilterGroupBox">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Filter Tag-less Transactions&lt;/p&gt;&lt;p&gt;KEEP: Only Tag-less Transactions will be kept&lt;/p&gt;&lt;p&gt;DISCARD: Tag-less Transactions will be discarded&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="title">
+          <string>Tag-less Transaction Filter</string>
+         </property>
+         <layout class="QFormLayout" name="formLayout_5">
+          <item row="0" column="0">
+           <widget class="QLabel" name="tagLessFilterModeLabel">
+            <property name="text">
+             <string>Mode</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QComboBox" name="tagLessFilterModeComboBox"/>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="specificTagsFilterGroupBox">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Filter Transactions (which have at least 1 Tag) based on specific Tags.&lt;/p&gt;&lt;p&gt;Transactions with no Tags are filtered separately via &amp;quot;Tag-less Transaction Filter&amp;quot;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="title">
+          <string>Specific Tags Filter</string>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+         <property name="checked">
+          <bool>false</bool>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_14">
+          <item>
+           <widget class="QLineEdit" name="tagsSearchLineEdit">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Special characters:&lt;/p&gt;&lt;p&gt;* matches zero or more of any characters&lt;br/&gt;? matches any single character&lt;br/&gt;[...] matches any character within square brackets&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="placeholderText">
+             <string>Search Tags</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QListView" name="tagsListView"/>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="tagsButtonsHorizontalLayout">
+            <item>
+             <widget class="QPushButton" name="tagsSelectAllPushButton">
+              <property name="text">
+               <string>Select All</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="tagsUnselectAllPushButton">
+              <property name="text">
+               <string>Unselect All</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="splitTagsFilterGroupBox">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Filter Transactions with &amp;quot;Split Tags&amp;quot;. &lt;/p&gt;&lt;p&gt;Transactions with Split Tags are Transactions, where at least one of the Tag amounts is not equal to the total Transaction amount.&lt;/p&gt;&lt;p&gt;Only Incomes and Expenses can have &amp;quot;Split Tags&amp;quot;. Other Transaction types are unaffected by this filter. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="title">
+          <string>Split Tags Filter</string>
+         </property>
+         <layout class="QFormLayout" name="formLayout_4">
+          <item row="0" column="0">
+           <widget class="QLabel" name="splitTagsFilterModeLabel">
+            <property name="text">
+             <string>Mode</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QComboBox" name="splitTagsFilterModeComboBox"/>
+          </item>
+         </layout>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="payeesTab">
+      <attribute name="title">
+       <string>Payees</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_7">
+       <item>
+        <widget class="QGroupBox" name="payeeFilterGroupBox">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Filter Transactions based on Payees.&lt;/p&gt;&lt;p&gt;Only Incomes, Expenses and Refunds have a Payee attribute. Other Transaction types are unaffected by the Payee Filter.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="title">
+          <string>Payee Filter</string>
+         </property>
+         <property name="flat">
+          <bool>false</bool>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+         <property name="checked">
+          <bool>false</bool>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_15">
+          <item>
+           <widget class="QLineEdit" name="payeesSearchLineEdit">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Special characters:&lt;/p&gt;&lt;p&gt;* matches zero or more of any characters&lt;br/&gt;? matches any single character&lt;br/&gt;[...] matches any character within square brackets&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="placeholderText">
+             <string>Search Payees</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QListView" name="payeesListView"/>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="payeesButtonHorizontalLayout">
+            <item>
+             <widget class="QPushButton" name="payeesSelectAllPushButton">
+              <property name="text">
+               <string>Select All</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="payeesUnselectAllPushButton">
+              <property name="text">
+               <string>Unselect All</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="categoriesTab">
+      <attribute name="title">
+       <string>Categories</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_10">
+       <item>
+        <widget class="QGroupBox" name="categoryFiltersGroupBox">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Filter Transactions based on Categories. &lt;/p&gt;&lt;p&gt;Only Incomes, Expenses and Refunds have a Category attribute. Other Transaction types are unaffected by these filters.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="title">
+          <string>Category Filters</string>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+         <property name="checked">
+          <bool>false</bool>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_17">
+          <item>
+           <widget class="QGroupBox" name="specificCategoryFilterGroupBox">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Filter Income, Expense and Refund Transactions based on specific Categories. Other Transaction types are unaffected by this Filter.&lt;/p&gt;&lt;p&gt;If a Transaction contains multiple Categories, this Filter keeps it if at least one of its Categories is checked.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="title">
+             <string>Specific Category Filter</string>
+            </property>
+            <layout class="QVBoxLayout" name="verticalLayout_16">
+             <item>
+              <widget class="QTabWidget" name="categoriesTypeTabWidget">
+               <property name="currentIndex">
+                <number>0</number>
+               </property>
+               <widget class="QWidget" name="incomeCategoriesTab">
+                <attribute name="title">
+                 <string>Income</string>
+                </attribute>
+                <layout class="QVBoxLayout" name="verticalLayout_11">
+                 <item>
+                  <widget class="QLineEdit" name="incomeCategoriesSearchLineEdit">
+                   <property name="placeholderText">
+                    <string>Search Categories</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QTreeView" name="incomeCategoriesTreeView">
+                   <property name="uniformRowHeights">
+                    <bool>true</bool>
+                   </property>
+                   <attribute name="headerVisible">
+                    <bool>false</bool>
+                   </attribute>
+                  </widget>
+                 </item>
+                 <item>
+                  <layout class="QHBoxLayout" name="incomeCategoriesButtonHorizontalLayout">
+                   <item>
+                    <widget class="QToolButton" name="incomeCategoriesExpandAllToolButton">
+                     <property name="text">
+                      <string>...</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QToolButton" name="incomeCategoriesCollapseAllToolButton">
+                     <property name="text">
+                      <string>...</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QPushButton" name="incomeCategoriesSelectAllPushButton">
+                     <property name="text">
+                      <string>Select All</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QPushButton" name="incomeCategoriesUnselectAllPushButton">
+                     <property name="text">
+                      <string>Unselect All</string>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </item>
+                </layout>
+               </widget>
+               <widget class="QWidget" name="expenseCategoriesTab">
+                <attribute name="title">
+                 <string>Expense</string>
+                </attribute>
+                <layout class="QVBoxLayout" name="verticalLayout_12">
+                 <item>
+                  <widget class="QLineEdit" name="expenseCategoriesSearchLineEdit">
+                   <property name="placeholderText">
+                    <string>Search Categories</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QTreeView" name="expenseCategoriesTreeView">
+                   <property name="uniformRowHeights">
+                    <bool>true</bool>
+                   </property>
+                   <attribute name="headerVisible">
+                    <bool>false</bool>
+                   </attribute>
+                  </widget>
+                 </item>
+                 <item>
+                  <layout class="QHBoxLayout" name="expenseCategoriesButtonHorizontalLayout">
+                   <item>
+                    <widget class="QToolButton" name="expenseCategoriesExpandAllToolButton">
+                     <property name="text">
+                      <string>...</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QToolButton" name="expenseCategoriesCollapseAllToolButton">
+                     <property name="text">
+                      <string>...</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QPushButton" name="expenseCategoriesSelectAllPushButton">
+                     <property name="text">
+                      <string>Select All</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QPushButton" name="expenseCategoriesUnselectAllPushButton">
+                     <property name="text">
+                      <string>Unselect All</string>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </item>
+                </layout>
+               </widget>
+               <widget class="QWidget" name="incomeAndExpenseCategoriesTab">
+                <attribute name="title">
+                 <string>Income and Expense</string>
+                </attribute>
+                <layout class="QVBoxLayout" name="verticalLayout_13">
+                 <item>
+                  <widget class="QLineEdit" name="incomeAndExpenseCategoriesSearchLineEdit">
+                   <property name="placeholderText">
+                    <string>Search Categories</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QTreeView" name="incomeAndExpenseCategoriesTreeView">
+                   <property name="uniformRowHeights">
+                    <bool>true</bool>
+                   </property>
+                   <attribute name="headerVisible">
+                    <bool>false</bool>
+                   </attribute>
+                  </widget>
+                 </item>
+                 <item>
+                  <layout class="QHBoxLayout" name="incomeAndExpenseCategoriesButtonHorizontalLayout">
+                   <item>
+                    <widget class="QToolButton" name="incomeAndExpenseCategoriesExpandAllToolButton">
+                     <property name="text">
+                      <string>...</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QToolButton" name="incomeAndExpenseCategoriesCollapseAllToolButton">
+                     <property name="text">
+                      <string>...</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QPushButton" name="incomeAndExpenseCategoriesUnselectAllPushButton">
+                     <property name="text">
+                      <string>Select All</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QPushButton" name="incomeAndExpenseCategoriesSelectAllPushButton">
+                     <property name="text">
+                      <string>Unselect All</string>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </item>
+                </layout>
+               </widget>
+              </widget>
+             </item>
+             <item>
+              <widget class="QGroupBox" name="selectionModeRadioButtonGroupBox">
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Hierarchical: checking or unchecking a Category automatically checks or unchecks all its sub-Categories&lt;/p&gt;&lt;p&gt;Individual: checking a Category does not change the state of its sub-Categories&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <property name="title">
+                <string>Selection Mode</string>
+               </property>
+               <layout class="QVBoxLayout" name="verticalLayout_19">
+                <item>
+                 <widget class="QRadioButton" name="hierarchicalSelectionModeRadioButton">
+                  <property name="text">
+                   <string>Hierarchical</string>
+                  </property>
+                  <property name="checked">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QRadioButton" name="individualSelectionModeRadioButton">
+                  <property name="text">
+                   <string>Individual</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item>
+           <widget class="QGroupBox" name="multipleCategoriesFilterGroupBox">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Filter Incomes, Expenses and Refunds with multiple Categories. Other Transaction types are unaffected by this Filter.&lt;/p&gt;&lt;p&gt;KEEP: Only Transactions with multiple Categories are kept&lt;/p&gt;&lt;p&gt;DISCARD: Transactions with multiple Categories are discarded&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="title">
+             <string>Multiple Categories Filter</string>
+            </property>
+            <layout class="QFormLayout" name="formLayout_3">
+             <item row="0" column="0">
+              <widget class="QLabel" name="multipleCategoriesFilterModeLabel">
+               <property name="text">
+                <string>Mode</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QComboBox" name="multipleCategoriesFilterModeComboBox"/>
+             </item>
+            </layout>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="miscellaneousTab">
+      <attribute name="title">
+       <string>Miscellaneous</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_6">
+       <item>
+        <layout class="QHBoxLayout" name="currencyAndCashAmountFiltersHorizontalLayout">
+         <item>
+          <widget class="QGroupBox" name="currencyFilterGroupBox">
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Filter Transactions based on their Currency.&lt;/p&gt;&lt;p&gt;All Transaction types except Security Transfer have an associated Currency (or up to two Currencies in the case of Cash Transfers). This Filter does not discard Security Transfers.&lt;/p&gt;&lt;p&gt;This Filter keeps Cash Transfers if at least one of their Currencies is checked.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="title">
+            <string>Currency Filter</string>
+           </property>
+           <property name="checkable">
+            <bool>true</bool>
+           </property>
+           <property name="checked">
+            <bool>false</bool>
+           </property>
+           <layout class="QVBoxLayout" name="verticalLayout_8">
+            <item>
+             <widget class="QListView" name="currencyListView"/>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="currencyFilterButtonHorizontalLayout">
+              <item>
+               <widget class="QPushButton" name="currencyFilterSelectAllPushButton">
+                <property name="text">
+                 <string>Select All</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="currencyFilterUnselectAllPushButton">
+                <property name="text">
+                 <string>Unselect All</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <widget class="QGroupBox" name="cashAmountGroupBox">
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This Filter filters Transactions based on their Cash Amount. All Transaction types except for Security Transfer have a Cash Amount. Security Transfers are unaffected by this Filter.&lt;/p&gt;&lt;p&gt;The Cash Amount range is specified in the base Currency, and all non-base Cash Amounts are converted to base Currency for the purpose of this Filter. The Minimum and Maximum Cash Amount bounds are inclusive.&lt;/p&gt;&lt;p&gt;KEEP: Only Transactions with Cash Amount within Minimum and Maximum are kept.&lt;/p&gt;&lt;p&gt;DISCARD: Transactions with Cash Amount within Minimum and Maximum are discarded.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="title">
+            <string>Cash Amount Filter</string>
+           </property>
+           <property name="checkable">
+            <bool>false</bool>
+           </property>
+           <property name="checked">
+            <bool>false</bool>
+           </property>
+           <layout class="QFormLayout" name="formLayout_6">
+            <item row="0" column="0">
+             <widget class="QLabel" name="cashAmountFilterModeLabel">
+              <property name="text">
+               <string>Mode</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QComboBox" name="cashAmountFilterModeComboBox"/>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="cashAmountFilterMinimumLabel">
+              <property name="text">
+               <string>Minimum</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="cashAmountFilterMaximumLabel">
+              <property name="text">
+               <string>Maximum</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QDoubleSpinBox" name="cashAmountFilterMinimumDoubleSpinBox">
+              <property name="minimumSize">
+               <size>
+                <width>150</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="showGroupSeparator" stdset="0">
+               <bool>true</bool>
+              </property>
+              <property name="maximum">
+               <double>0.000000000000000</double>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QDoubleSpinBox" name="cashAmountFilterMaximumDoubleSpinBox">
+              <property name="minimumSize">
+               <size>
+                <width>150</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="showGroupSeparator" stdset="0">
+               <bool>true</bool>
+              </property>
+              <property name="maximum">
+               <double>10000000000000000.000000000000000</double>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="securityFilterGroupBox">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Filters Transactions based on their Security.&lt;/p&gt;&lt;p&gt;Only Security Transactions and Security Transfers have a Security attribute. Other Transaction types are unaffected by this Filter.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="title">
+          <string>Security Filter</string>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+         <property name="checked">
+          <bool>false</bool>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_9">
+          <item>
+           <widget class="QListView" name="securityListView"/>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="securityFilterButtonHorizontalLayout">
+            <item>
+             <widget class="QPushButton" name="securityFilterSelectAllPushButton">
+              <property name="text">
+               <string>Select All</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="securityFilterUnselectAllPushButton">
+              <property name="text">
+               <string>Unselect All</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+   <item>
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Help|QDialogButtonBox::Ok|QDialogButtonBox::RestoreDefaults</set>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

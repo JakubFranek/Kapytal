@@ -7,8 +7,7 @@ from typing import Any
 import pytest
 from hypothesis import assume, given
 from hypothesis import strategies as st
-
-from src.models.constants import tzinfo
+from src.models.custom_exceptions import InvalidOperationError
 from src.models.model_objects.attributes import (
     Attribute,
     AttributeType,
@@ -28,28 +27,32 @@ from src.models.model_objects.currency_objects import (
     Currency,
     CurrencyError,
 )
+from src.models.user_settings import user_settings
 from tests.models.test_assets.composites import (
     attributes,
     cash_accounts,
     cash_amounts,
     cash_transactions,
+    categories,
     category_amount_pairs,
     currencies,
     everything_except,
     tag_amount_pairs,
 )
-from tests.models.test_assets.constants import min_datetime
+from tests.models.test_assets.constants import MIN_DATETIME
 
 
 @given(
     description=st.text(min_size=0, max_size=256),
-    datetime_=st.datetimes(min_value=min_datetime, timezones=st.just(tzinfo)),
+    datetime_=st.datetimes(
+        min_value=MIN_DATETIME, timezones=st.just(user_settings.settings.time_zone)
+    ),
     type_=st.sampled_from(CashTransactionType),
     account=cash_accounts(),
     payee=attributes(AttributeType.PAYEE),
     data=st.data(),
 )
-def test_creation(  # noqa: CFQ002,TMN001
+def test_creation(  # noqa: PLR0913
     description: str,
     datetime_: datetime,
     type_: CashTransactionType,
@@ -67,17 +70,17 @@ def test_creation(  # noqa: CFQ002,TMN001
     )
     max_tag_amount = sum(
         (amount for _, amount in category_amount_collection),
-        start=CashAmount(0, currency),
+        start=currency.zero_amount,
     )
     tag_amount_collection = data.draw(
         st.lists(
-            tag_amount_pairs(currency=currency, max_value=max_tag_amount.value),
+            tag_amount_pairs(currency=currency, max_value=max_tag_amount.value_rounded),
             min_size=0,
             max_size=5,
         )
     )
     account_currency = account.currency
-    dt_start = datetime.now(tzinfo)
+    dt_start = datetime.now(user_settings.settings.time_zone).replace(microsecond=0)
     cash_transaction = CashTransaction(
         description,
         datetime_,
@@ -110,6 +113,13 @@ def test_creation(  # noqa: CFQ002,TMN001
         f"category={{{cash_transaction.category_names}}}, "
         f"{cash_transaction.datetime_.strftime('%Y-%m-%d')})"
     )
+    assert cash_transaction.are_categories_split is (
+        len(category_amount_collection) > 1
+    )
+    assert cash_transaction.are_tags_split is any(
+        amount != cash_transaction.amount for _, amount in tag_amount_collection
+    )
+    assert cash_transaction.refunded_ratio == Decimal(0)
     assert dt_created_diff.seconds < 1
 
 
@@ -117,7 +127,7 @@ def test_creation(  # noqa: CFQ002,TMN001
     account=cash_accounts(),
     type_=everything_except((CashTransactionType, NoneType)),
 )
-def test_type_invalid_type(  # noqa: CFQ002,TMN001
+def test_type_invalid_type(
     account: CashAccount,
     type_: Any,
 ) -> None:
@@ -136,7 +146,7 @@ def test_type_invalid_type(  # noqa: CFQ002,TMN001
     ):
         CashTransaction(
             "description",
-            datetime.now(tzinfo),
+            datetime.now(user_settings.settings.time_zone),
             type_,
             account,
             payee,
@@ -209,7 +219,10 @@ def test_tags_invalid_second_member_type(
     transaction: CashTransaction, data: st.DataObject
 ) -> None:
     new_tags = [
-        (Attribute("Test", AttributeType.TAG), data.draw(everything_except(CashAmount)))
+        (
+            Attribute("Test", AttributeType.TAG),
+            data.draw(everything_except((CashAmount, NoneType))),
+        )
     ]
     with pytest.raises(
         TypeError,
@@ -230,8 +243,8 @@ def test_tags_invalid_second_member_value(
             data.draw(
                 cash_amounts(
                     currency=currency,
-                    min_value=max_tag_amount.value + Decimal("0.01"),
-                    max_value=max_tag_amount.value + Decimal("1e3"),
+                    min_value=max_tag_amount.value_rounded + Decimal("0.01"),
+                    max_value=max_tag_amount.value_rounded + Decimal("1e3"),
                 )
             ),
         )
@@ -255,7 +268,9 @@ def test_tag_amount_pairs_invalid_amount_currency(
     max_amount = transaction.amount
     amount = data.draw(
         cash_amounts(
-            min_value="0.01", max_value=max_amount.value, currency=invalid_currency
+            min_value="0.01",
+            max_value=max_amount.value_rounded,
+            currency=invalid_currency,
         ),
     )
     tag = data.draw(attributes(type_=AttributeType.TAG))
@@ -276,7 +291,9 @@ def test_tag_amount_pairs_not_unique(
     max_amount = transaction.amount
     amount = data.draw(
         cash_amounts(
-            min_value="0.01", max_value=max_amount.value, currency=transaction.currency
+            min_value="0.01",
+            max_value=max_amount.value_rounded,
+            currency=transaction.currency,
         ),
     )
     tag = data.draw(attributes(type_=AttributeType.TAG))
@@ -288,6 +305,38 @@ def test_tag_amount_pairs_not_unique(
         ValueError, match="Categories or Tags in tuple pairs must be unique."
     ):
         transaction.set_attributes(tag_amount_pairs=tup)
+
+
+@given(
+    transaction=cash_transactions(),
+    data=st.data(),
+)
+def test_tag_amount_pairs_none_amount(
+    transaction: CashTransaction, data: st.DataObject
+) -> None:
+    max_value = transaction.amount.value_rounded
+    tag = data.draw(attributes(type_=AttributeType.TAG))
+    amount = data.draw(cash_amounts(transaction.currency, "0.01", max_value))
+    tup = ((tag, amount),)
+    transaction.set_attributes(tag_amount_pairs=tup)
+    assert transaction.tag_amount_pairs == tup
+
+    tup_none = ((tag, None),)
+    transaction.set_attributes(tag_amount_pairs=tup_none)
+    assert transaction.tag_amount_pairs == tup
+
+
+@given(
+    transaction=cash_transactions(),
+    data=st.data(),
+)
+def test_tag_amount_pairs_none_amount_new_tag(
+    transaction: CashTransaction, data: st.DataObject
+) -> None:
+    tag = data.draw(attributes(type_=AttributeType.TAG))
+    tup = ((tag, None),)
+    transaction.set_attributes(tag_amount_pairs=tup)
+    assert transaction.tag_amount_pairs == ((tag, transaction.amount),)
 
 
 @given(transaction=cash_transactions(), data=st.data())
@@ -344,18 +393,18 @@ def test_get_amount_invalid_account_value(
 def test_category_amount_pairs_invalid_type(
     transaction: CashTransaction, category_amount_pairs: Any
 ) -> None:
-    with pytest.raises(TypeError, match="Parameter 'collection' must be a Collection."):
+    with pytest.raises(TypeError, match="has no len()"):
         transaction.set_attributes(category_amount_pairs=category_amount_pairs)
 
 
 @given(
     transaction=cash_transactions(),
-    category_amount_pairs=st.lists(everything_except(tuple), min_size=1, max_size=5),
+    category_amount_pairs=st.lists(everything_except(tuple), min_size=2, max_size=2),
 )
 def test_category_amount_pairs_invalid_member_type(
     transaction: CashTransaction, category_amount_pairs: Collection[Any]
 ) -> None:
-    with pytest.raises(TypeError, match="Elements of 'collection' must be tuples."):
+    with pytest.raises(TypeError, match="cannot unpack"):
         transaction.set_attributes(category_amount_pairs=category_amount_pairs)
 
 
@@ -382,6 +431,22 @@ def test_category_amount_pairs_invalid_first_member_type(
     first_member: Any,
 ) -> None:
     tup = ((first_member, transaction.amount),)
+    with pytest.raises(
+        TypeError,
+        match="First element of 'collection' tuples",
+    ):
+        transaction.set_attributes(category_amount_pairs=tup)
+
+
+@given(
+    transaction=cash_transactions(),
+    first_member=everything_except(Category),
+)
+def test_category_amount_pairs_invalid_first_member_type_multiple(
+    transaction: CashTransaction,
+    first_member: Any,
+) -> None:
+    tup = ((first_member, transaction.amount), (first_member, transaction.amount))
     with pytest.raises(
         TypeError,
         match="First element of 'collection' tuples",
@@ -448,7 +513,7 @@ def test_category_amount_pairs_invalid_category_type(
     tup = ((category, transaction.amount),)
     with pytest.raises(
         InvalidCategoryTypeError,
-        match="Invalid Category.type_.",
+        match="Expected Category types:",
     ):
         transaction.set_attributes(category_amount_pairs=tup)
 
@@ -589,3 +654,129 @@ def test_add_remove_tags(transaction: CashTransaction, tags: list[Attribute]) ->
         assert tag in transaction.tags
         transaction.remove_tags([tag])
         assert tag not in transaction.tags
+
+
+@given(
+    transaction=cash_transactions(),
+    tags=st.lists(attributes(AttributeType.TAG), min_size=1, max_size=5),
+)
+def test_add_remove_tags_refunded(
+    transaction: CashTransaction, tags: list[Attribute]
+) -> None:
+    transaction._refunds = ["test"]
+    with pytest.raises(
+        InvalidOperationError, match="Cannot add Tags to a refunded CashTransaction."
+    ):
+        transaction.add_tags(tags)
+    with pytest.raises(
+        InvalidOperationError,
+        match="Cannot remove Tags from a refunded CashTransaction.",
+    ):
+        transaction.remove_tags(tags)
+
+
+@given(transaction=cash_transactions(), category=categories(), total=st.booleans())
+def test_get_amount_for_category_not_related(
+    transaction: CashTransaction, category: Category, total: bool  # noqa: FBT001
+) -> None:
+    assume(category not in transaction.categories)
+    assert transaction.get_amount_for_category(category, total=total) == CashAmount(
+        0, transaction.currency
+    )
+
+
+@given(transaction=cash_transactions(), tag=attributes(type_=AttributeType.TAG))
+def test_get_amount_for_tag_not_related(
+    transaction: CashTransaction, tag: Attribute
+) -> None:
+    assume(tag not in transaction.tags)
+    assert transaction.get_amount_for_tag(tag) == transaction.currency.zero_amount
+
+
+@given(transaction=cash_transactions(), unrelated_account=cash_accounts())
+def test_is_accounts_related(
+    transaction: CashTransaction, unrelated_account: CashAccount
+) -> None:
+    related_accounts = (transaction.account, unrelated_account)
+    assert transaction.is_accounts_related(related_accounts)
+    unrelated_accounts = (unrelated_account,)
+    assert not transaction.is_accounts_related(unrelated_accounts)
+
+
+@given(transaction=cash_transactions())
+def test_get_max_refundable_for_category_invalid_category(
+    transaction: CashTransaction,
+) -> None:
+    category = Category("test", CategoryType.INCOME)
+
+    with pytest.raises(ValueError, match="not in this CashTransaction's categories"):
+        transaction.get_max_refundable_for_category(category, ignore_refund=None)
+
+
+@given(transaction=cash_transactions())
+def test_get_max_refundable_for_category_no_refunds(
+    transaction: CashTransaction,
+) -> None:
+    category, expected_amount = transaction.category_amount_pairs[0]
+    amount = transaction.get_max_refundable_for_category(category, ignore_refund=None)
+    assert amount == expected_amount
+
+
+@given(transaction=cash_transactions())
+def test_get_max_refundable_for_tag_invalid_tag(
+    transaction: CashTransaction,
+) -> None:
+    tag = Attribute("test tag", AttributeType.TAG)
+
+    with pytest.raises(ValueError, match="not in this CashTransaction's tags"):
+        transaction.get_max_refundable_for_tag(
+            tag, ignore_refund=None, refund_amount=None
+        )
+
+
+@given(transaction=cash_transactions())
+def test_get_max_refundable_for_tag_no_refunds(
+    transaction: CashTransaction,
+) -> None:
+    transaction.add_tags((Attribute("test_tag", AttributeType.TAG),))
+    tag, expected_amount = transaction.tag_amount_pairs[0]
+    amount = transaction.get_max_refundable_for_tag(
+        tag, ignore_refund=None, refund_amount=None
+    )
+    assert amount == expected_amount
+
+
+@given(transaction=cash_transactions())
+def test_get_max_refundable_for_tag_no_refunds_w_amount(
+    transaction: CashTransaction,
+) -> None:
+    transaction.add_tags((Attribute("test_tag", AttributeType.TAG),))
+    tag, _ = transaction.tag_amount_pairs[0]
+    amount = transaction.get_max_refundable_for_tag(
+        tag, ignore_refund=None, refund_amount=transaction.currency.zero_amount
+    )
+    assert amount == transaction.currency.zero_amount
+
+
+@given(transaction=cash_transactions())
+def test_get_min_refundable_for_tag_invalid_tag(
+    transaction: CashTransaction,
+) -> None:
+    tag = Attribute("test tag", AttributeType.TAG)
+
+    with pytest.raises(ValueError, match="not in this CashTransaction's tags"):
+        transaction.get_min_refundable_for_tag(
+            tag, ignore_refund=None, refund_amount=None
+        )
+
+
+@given(transaction=cash_transactions())
+def test_get_min_refundable_for_tag_no_refunds(
+    transaction: CashTransaction,
+) -> None:
+    transaction.add_tags((Attribute("test_tag", AttributeType.TAG),))
+    tag, _ = transaction.tag_amount_pairs[0]
+    amount = transaction.get_min_refundable_for_tag(
+        tag, ignore_refund=None, refund_amount=None
+    )
+    assert amount == transaction.currency.zero_amount

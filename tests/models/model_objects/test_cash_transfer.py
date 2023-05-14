@@ -5,8 +5,6 @@ from typing import Any
 import pytest
 from hypothesis import assume, given
 from hypothesis import strategies as st
-
-from src.models.constants import tzinfo
 from src.models.model_objects.cash_objects import (
     CashAccount,
     CashTransfer,
@@ -18,6 +16,7 @@ from src.models.model_objects.currency_objects import (
     Currency,
     CurrencyError,
 )
+from src.models.user_settings import user_settings
 from tests.models.test_assets.composites import (
     cash_accounts,
     cash_amounts,
@@ -25,14 +24,16 @@ from tests.models.test_assets.composites import (
     currencies,
     everything_except,
 )
-from tests.models.test_assets.constants import min_datetime
+from tests.models.test_assets.constants import MIN_DATETIME
 
 
 @given(
     description=st.text(min_size=0, max_size=256),
     account_sender=cash_accounts(),
     account_recipient=cash_accounts(),
-    datetime_=st.datetimes(min_value=min_datetime, timezones=st.just(tzinfo)),
+    datetime_=st.datetimes(
+        min_value=MIN_DATETIME, timezones=st.just(user_settings.settings.time_zone)
+    ),
     data=st.data(),
 )
 def test_creation(
@@ -49,7 +50,7 @@ def test_creation(
         cash_amounts(currency=account_recipient.currency, min_value="0.01"),
     )
 
-    dt_start = datetime.now(tzinfo)
+    dt_start = datetime.now(user_settings.settings.time_zone).replace(microsecond=0)
     transfer = CashTransfer(
         description,
         datetime_,
@@ -224,3 +225,17 @@ def test_set_attributes_same_values(transfer: CashTransfer) -> None:
     assert prev_recipient == transfer.recipient
     assert prev_amount_sent == transfer.amount_sent
     assert prev_amount_received == transfer.amount_received
+
+
+@given(transaction=cash_transfers(), unrelated_account=cash_accounts())
+def test_is_accounts_related(
+    transaction: CashTransfer, unrelated_account: CashAccount
+) -> None:
+    related_accounts = (transaction.sender, unrelated_account)
+    assert transaction.is_accounts_related(related_accounts)
+    related_accounts = (transaction.recipient, unrelated_account)
+    assert transaction.is_accounts_related(related_accounts)
+    related_accounts = (transaction.sender, transaction.recipient, unrelated_account)
+    assert transaction.is_accounts_related(related_accounts)
+    unrelated_accounts = (unrelated_account,)
+    assert not transaction.is_accounts_related(unrelated_accounts)

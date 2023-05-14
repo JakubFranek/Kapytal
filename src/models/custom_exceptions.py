@@ -10,7 +10,7 @@ class InvalidOperationError(Exception):
     """Raised when an invalid operation is attempted."""
 
 
-class NotFoundError(Exception):
+class NotFoundError(ValueError):
     """Raised when a required object is not found."""
 
 
