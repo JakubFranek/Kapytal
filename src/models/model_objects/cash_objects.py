@@ -820,16 +820,14 @@ class CashTransaction(CashRelatedTransaction):
         _validate_collection_of_tuple_pairs(
             tag_amount_pairs, Attribute, (CashAmount, NoneType), 0
         )
-        # TODO: The for loops in this method could be merged
-        for attribute, _ in tag_amount_pairs:
-            if attribute.type_ != AttributeType.TAG:
+
+        _tag_amount_pairs: list[tuple[Attribute, CashAmount]] = []
+        for tag, amount in tag_amount_pairs:
+            if tag.type_ != AttributeType.TAG:
                 raise ValueError(
                     "The type_ of CashTransaction.tag_amount_pairs Attributes "
                     "must be TAG."
                 )
-
-        _tag_amount_pairs: list[tuple[Attribute, CashAmount]] = []
-        for tag, amount in tag_amount_pairs:
             if amount is None:  # Tag amount unspecified
                 for _tag, _amount in self._tag_amount_pairs:
                     if tag == _tag:
@@ -840,20 +838,19 @@ class CashTransaction(CashRelatedTransaction):
                     # If the Tag is new, use the maximum amount
                     _tag_amount_pairs.append((tag, self._amount))
             else:
+                if amount.currency != currency:
+                    raise CurrencyError(
+                        "Currency of CashAmounts in tag_amount_pairs must match the "
+                        "currency of the CashAccount."
+                    )
+                if not (amount.is_positive() and amount <= max_tag_amount):
+                    raise ValueError(
+                        "Second member of CashTransaction.tag_amount_pairs "
+                        "tuples must be a positive CashAmount which "
+                        "does not exceed CashTransaction.amount."
+                    )
                 _tag_amount_pairs.append((tag, amount))
 
-        for _, amount in _tag_amount_pairs:
-            if amount.currency != currency:
-                raise CurrencyError(
-                    "Currency of CashAmounts in tag_amount_pairs must match the "
-                    "currency of the CashAccount."
-                )
-            if not (amount.is_positive() and amount <= max_tag_amount):
-                raise ValueError(
-                    "Second member of CashTransaction.tag_amount_pairs "
-                    "tuples must be a positive CashAmount which "
-                    "does not exceed CashTransaction.amount."
-                )
         return _tag_amount_pairs
 
     def _validate_refund(self, refund: "RefundTransaction") -> None:

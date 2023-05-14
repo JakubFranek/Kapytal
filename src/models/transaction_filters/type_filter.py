@@ -48,6 +48,15 @@ class TypeFilter(BaseTransactionFilter):
                 "types, CashTransactionType or SecurityTransactionType."
             )
         self._types = frozenset(types)
+        self._enum_types = tuple(
+            type_
+            for type_ in self._types
+            if isinstance(type_, CashTransactionType | SecurityTransactionType)
+        )
+        self._transaction_types = tuple(
+            type_ for type_ in self._types if isinstance(type_, type(Transaction))
+        )
+        self._type_names = tuple(TYPE_NAME_DICT[type_] for type_ in self._types)
 
     @property
     def types(
@@ -57,21 +66,15 @@ class TypeFilter(BaseTransactionFilter):
 
     @property
     def type_names(self) -> tuple[str]:
-        return tuple(TYPE_NAME_DICT[type_] for type_ in self._types)
+        return self._type_names
 
     @property
     def transaction_types(self) -> tuple[type[Transaction], ...]:
-        return tuple(
-            type_ for type_ in self._types if isinstance(type_, type(Transaction))
-        )
+        return self._transaction_types
 
     @property
     def enum_types(self) -> tuple[CashTransactionType | SecurityTransactionType, ...]:
-        return tuple(
-            type_
-            for type_ in self._types
-            if isinstance(type_, CashTransactionType | SecurityTransactionType)
-        )
+        return self._enum_types
 
     @property
     def members(
@@ -87,8 +90,8 @@ class TypeFilter(BaseTransactionFilter):
 
     def _keep_in_keep_mode(self, transaction: Transaction) -> bool:
         if isinstance(transaction, CashTransaction | SecurityTransaction):
-            return transaction.type_ in self.enum_types
-        return isinstance(transaction, self.transaction_types)
+            return transaction.type_ in self._enum_types
+        return isinstance(transaction, self._transaction_types)
 
     def _keep_in_discard_mode(self, transaction: Transaction) -> bool:
         return not self._keep_in_keep_mode(transaction)

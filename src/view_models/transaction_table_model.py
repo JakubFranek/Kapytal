@@ -26,7 +26,6 @@ from src.models.model_objects.security_objects import (
     SecurityTransactionType,
     SecurityTransfer,
 )
-from src.models.utilities.find_helpers import find_transaction_by_uuid
 from src.views import colors, icons
 from src.views.constants import (
     TRANSACTION_TABLE_COLUMN_HEADERS,
@@ -49,6 +48,7 @@ class TransactionTableModel(QAbstractTableModel):
     ) -> None:
         super().__init__()
         self._view = view
+        self._transaction_uuid_dict: dict[uuid.UUID, Transaction] = {}
         self.transactions = transactions
         self.base_currency = base_currency
         self.valid_accounts = valid_accounts
@@ -62,6 +62,16 @@ class TransactionTableModel(QAbstractTableModel):
     @transactions.setter
     def transactions(self, transactions: Collection[Transaction]) -> None:
         self._transactions = tuple(transactions)
+
+    @property
+    def transaction_uuid_dict(self) -> dict[uuid.UUID, Transaction]:
+        return self._transaction_uuid_dict
+
+    @transaction_uuid_dict.setter
+    def transaction_uuid_dict(
+        self, transaction_uuid_dict: dict[uuid.UUID, Transaction]
+    ) -> None:
+        self._transaction_uuid_dict = transaction_uuid_dict
 
     @property
     def valid_accounts(self) -> tuple[Account]:
@@ -102,6 +112,10 @@ class TransactionTableModel(QAbstractTableModel):
             return self._get_display_role_data(
                 self._transactions[index.row()], index.column()
             )
+        if role == Qt.ItemDataRole.UserRole:
+            return self._get_user_role_data(
+                self._transactions[index.row()], index.column()
+            )
         if role == Qt.ItemDataRole.DecorationRole:
             return self._get_decoration_role_data(
                 self._transactions[index.row()], index.column()
@@ -117,10 +131,6 @@ class TransactionTableModel(QAbstractTableModel):
             and index.column() == TransactionTableColumn.UUID
         ):
             return monospace_font
-        if role == Qt.ItemDataRole.UserRole:
-            return self._get_user_role_data(
-                self._transactions[index.row()], index.column()
-            )
         return None
 
     def headerData(  # noqa: N802
@@ -520,7 +530,6 @@ class TransactionTableModel(QAbstractTableModel):
 
     def emit_data_changed_for_uuids(self, uuids: Collection[uuid.UUID]) -> None:
         for uuid_ in uuids:
-            # TODO: could this be optimized by dicts?
-            item = find_transaction_by_uuid(uuid_, self._transactions)
+            item = self._transaction_uuid_dict[uuid_]
             index = self.get_index_from_item(item)
             self.dataChanged.emit(index, index)

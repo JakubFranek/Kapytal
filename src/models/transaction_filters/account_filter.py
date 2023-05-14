@@ -11,8 +11,11 @@ from src.models.transaction_filters.base_transaction_filter import (
 class AccountFilter(BaseTransactionFilter):
     def __init__(self, accounts: Collection[Account], mode: FilterMode) -> None:
         super().__init__(mode=mode)
-        if any(not isinstance(account, Account) for account in accounts):
-            raise TypeError("Parameter 'accounts' must be a Collection of Accounts.")
+        for account in accounts:
+            if not isinstance(account, Account):
+                raise TypeError(
+                    "Parameter 'accounts' must be a Collection of Accounts."
+                )
         self._accounts = tuple(accounts)
 
     @property

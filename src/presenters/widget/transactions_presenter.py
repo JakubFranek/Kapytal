@@ -13,7 +13,6 @@ from src.models.model_objects.cash_objects import (
     RefundTransaction,
 )
 from src.models.model_objects.security_objects import (
-    SecurityRelatedTransaction,
     SecurityTransaction,
     SecurityTransactionType,
     SecurityTransfer,
@@ -130,6 +129,7 @@ class TransactionsPresenter:
 
     def _update_model_data(self) -> None:
         self._model.transactions = self._record_keeper.transactions
+        self._model.transaction_uuid_dict = self._record_keeper.transaction_uuid_dict
         self._model.base_currency = self._record_keeper.base_currency
 
     def _update_table_columns(self) -> None:

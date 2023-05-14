@@ -69,12 +69,9 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
             return
 
         columns = TRANSACTION_TABLE_COLUMN_HEADERS.keys()
-        if all(
-            self.tableView.isColumnHidden(column_)
-            for column_ in columns
-            if column_ != column
-        ):
-            return  # If all other columns are hidden, this column must stay shown
+        for column_ in columns:
+            if column_ != column and self.tableView.isColumnHidden(column_):
+                return  # If all other columns are hidden, this column must stay shown
 
         self.tableView.setColumnHidden(column, not show)
         if show:

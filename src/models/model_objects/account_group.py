@@ -49,7 +49,6 @@ class AccountGroup(NameMixin, BalanceMixin, JSONSerializableMixin, UUIDMixin):
     def children(self) -> tuple["Account" | Self, ...]:
         return self._children_tuple
 
-    # TODO: this could be optimized
     @property
     def path(self) -> str:
         if self._parent is None:
@@ -114,10 +113,10 @@ class AccountGroup(NameMixin, BalanceMixin, JSONSerializableMixin, UUIDMixin):
         ]
 
     def get_balance(self, currency: Currency) -> CashAmount:
-        return sum(
-            (balance.convert(currency) for balance in self._balances),
-            start=currency.zero_amount,
-        )
+        total = currency.zero_amount
+        for balance in self._balances:
+            total += balance.convert(currency)
+        return total
 
     def _update_balances(self) -> None:
         balances: dict[Currency, CashAmount] = {}

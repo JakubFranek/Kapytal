@@ -62,6 +62,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         self._root_income_and_expense_categories: list[Category] = []
         self._tags: list[Attribute] = []
         self._transactions: list[Transaction] = []
+        self._transactions_uuid_dict: dict[uuid.UUID, Transaction] = {}
         self._base_currency: Currency | None = None
 
     @property
@@ -138,6 +139,10 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
     @property
     def transactions(self) -> tuple[Transaction, ...]:
         return tuple(self._transactions)
+
+    @property
+    def transaction_uuid_dict(self) -> dict[uuid.UUID, Transaction]:
+        return self._transactions_uuid_dict
 
     def __repr__(self) -> str:
         return "RecordKeeper"
@@ -301,6 +306,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
             tag_amount_pairs=tag_amount_pairs,
         )
         self._transactions.append(transaction)
+        self._transactions_uuid_dict[transaction.uuid] = transaction
 
     def add_cash_transfer(  # noqa: PLR0913
         self,
@@ -324,6 +330,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
             amount_received=CashAmount(amount_received, account_recipient.currency),
         )
         self._transactions.append(transfer)
+        self._transactions_uuid_dict[transfer.uuid] = transfer
 
         tags = [
             self.get_attribute(tag_name, AttributeType.TAG) for tag_name in tag_names
@@ -372,6 +379,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
             payee=payee,
         )
         self._transactions.append(refund)
+        self._transactions_uuid_dict[refund.uuid] = refund
 
     def add_security_transaction(  # noqa: PLR0913
         self,
@@ -400,6 +408,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
             cash_account=cash_account,
         )
         self._transactions.append(transaction)
+        self._transactions_uuid_dict[transaction.uuid] = transaction
 
         tags = [
             self.get_attribute(tag_name, AttributeType.TAG) for tag_name in tag_names
@@ -428,6 +437,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
             recipient=account_recipient,
         )
         self._transactions.append(transaction)
+        self._transactions_uuid_dict[transaction.uuid] = transaction
 
         tags = [
             self.get_attribute(tag_name, AttributeType.TAG) for tag_name in tag_names
@@ -1011,6 +1021,8 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         for transaction in transactions:
             transaction.prepare_for_deletion()
             self._transactions.remove(transaction)
+            # delete transaction from dictionary
+            del self._transactions_uuid_dict[transaction.uuid]
 
     def remove_security(self, uuid: str) -> None:
         security = self.get_security_by_uuid(uuid)
@@ -1260,6 +1272,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         security.set_price(date_, price)
 
     def serialize(self) -> dict[str, Any]:
+        # TODO: is the sorting here necessary?
         sorted_account_groups = sorted(self._account_groups, key=str)
         sorted_categories = sorted(self._categories, key=str)
 
@@ -1372,15 +1385,18 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
             )
         )
 
-        obj._transactions = RecordKeeper._deserialize_transactions(  # noqa: SLF001
-            data["transactions"],
-            accounts,
-            payees,
-            tags,
-            categories,
-            currencies,
-            securities,
+        obj._transactions_uuid_dict = (  # noqa: SLF001
+            RecordKeeper._deserialize_transactions(
+                data["transactions"],
+                accounts,
+                payees,
+                tags,
+                categories,
+                currencies,
+                securities,
+            )
         )
+        obj._transactions = list(obj._transactions_uuid_dict.values())  # noqa: SLF001
 
         for account in obj._accounts:  # noqa: SLF001
             if isinstance(account, CashAccount):
@@ -1487,9 +1503,8 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         categories: dict[str, Category],
         currencies: dict[str, Currency],
         securities: dict[str, Security],
-    ) -> list[Transaction]:
-        transactions: list[Transaction] = []
-        _transaction_dict: dict[str, Transaction] = {}
+    ) -> dict[uuid.UUID, Transaction]:
+        _transaction_dict: dict[uuid.UUID, Transaction] = {}
         for transaction_dict in transaction_dicts:
             transaction: Transaction
             if transaction_dict["datatype"] == "CashTransaction":
@@ -1525,9 +1540,8 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
                 )
             else:
                 raise ValueError("Unexpected 'datatype' value.")
-            transactions.append(transaction)
             _transaction_dict[transaction.uuid] = transaction
-        return transactions
+        return _transaction_dict
 
     def _check_account_exists(self, path: str) -> None:
         if any(account.path == path for account in self._accounts):
