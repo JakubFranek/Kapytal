@@ -1260,19 +1260,14 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         security.set_price(date_, price)
 
     def serialize(self) -> dict[str, Any]:
-        sorted_account_groups = sorted(self._account_groups, key=lambda x: str(x))
-        sorted_categories = sorted(self._categories, key=lambda x: str(x))
+        sorted_account_groups = sorted(self._account_groups, key=str)
+        sorted_categories = sorted(self._categories, key=str)
 
         root_item_references = []
         for item in self._root_account_items:
-            if isinstance(item, AccountGroup):
-                root_item_references.append(
-                    {"datatype": "AccountGroup", "path": item.path}
-                )
-            else:
-                root_item_references.append(
-                    {"datatype": "Account", "uuid": str(item.uuid)}
-                )
+            root_item_references.append(
+                {"datatype": item.__class__.__name__, "path": item.path}
+            )
         base_currency_code = (
             self._base_currency.code if self._base_currency is not None else None
         )
@@ -1309,88 +1304,96 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
     @staticmethod
     def deserialize(data: dict[str, Any]) -> "RecordKeeper":
         obj = RecordKeeper()
-        obj._currencies = data["currencies"]  # noqa: SLF001
+        obj._currencies: list[Currency] = data["currencies"]  # noqa: SLF001
+        currencies: dict[str, Currency] = {
+            currency.code: currency for currency in obj._currencies  # noqa: SLF001
+        }
         base_currency_code = data["base_currency_code"]
         if base_currency_code is not None:
-            obj.set_base_currency(base_currency_code)
+            obj._base_currency = currencies[base_currency_code]  # noqa: SLF001
 
         obj._exchange_rates = RecordKeeper._deserialize_exchange_rates(  # noqa: SLF001
-            data["exchange_rates"], obj._currencies  # noqa: SLF001
+            data["exchange_rates"], currencies
         )
 
-        obj._securities = RecordKeeper._deserialize_securities(  # noqa: SLF001
-            data["securities"], obj._currencies  # noqa: SLF001
+        securities = RecordKeeper._deserialize_securities(
+            data["securities"], currencies
         )
+        obj._securities = list(securities.values())  # noqa: SLF001
 
-        obj._account_groups = RecordKeeper._deserialize_account_groups(  # noqa: SLF001
+        account_groups = RecordKeeper._deserialize_account_groups(
             data["account_groups"]
         )
+        obj._account_groups = list(account_groups.values())  # noqa: SLF001
 
-        obj._accounts = RecordKeeper._deserialize_accounts(  # noqa: SLF001
-            data["accounts"], obj._account_groups, obj._currencies  # noqa: SLF001
+        accounts = RecordKeeper._deserialize_accounts(
+            data["accounts"], account_groups, currencies
         )
+        obj._accounts = list(accounts.values())  # noqa: SLF001
 
         obj._root_account_items = (  # noqa: SLF001
             RecordKeeper._deserialize_root_account_items(
                 data["root_account_items"],
-                obj._account_groups,  # noqa: SLF001
-                obj._accounts,  # noqa: SLF001
+                account_groups,
+                accounts,
             )
         )
 
         obj._payees = [  # noqa: SLF001
             Attribute(name, AttributeType.PAYEE) for name in data["payees"]
         ]
+        payees: dict[str, Attribute] = {
+            payee.name: payee for payee in obj._payees  # noqa: SLF001
+        }
         obj._tags = [  # noqa: SLF001
             Attribute(name, AttributeType.TAG) for name in data["tags"]
         ]
+        tags: dict[str, Attribute] = {
+            tag.name: tag for tag in obj._tags  # noqa: SLF001
+        }
 
-        obj._categories = RecordKeeper._deserialize_categories(  # noqa: SLF001
-            data["categories"]
-        )
+        categories = RecordKeeper._deserialize_categories(data["categories"])
+        obj._categories = list(categories.values())  # noqa: SLF001
+
         obj._root_income_categories = (  # noqa: SLF001
             RecordKeeper._deserialize_root_categories(
-                data["root_income_categories"], obj._categories  # noqa: SLF001
+                data["root_income_categories"], categories
             )
         )
         obj._root_expense_categories = (  # noqa: SLF001
             RecordKeeper._deserialize_root_categories(
-                data["root_expense_categories"], obj._categories  # noqa: SLF001
+                data["root_expense_categories"], categories
             )
         )
         obj._root_income_and_expense_categories = (  # noqa: SLF001
             RecordKeeper._deserialize_root_categories(
                 data["root_income_and_expense_categories"],
-                obj._categories,  # noqa: SLF001
+                categories,
             )
         )
 
         obj._transactions = RecordKeeper._deserialize_transactions(  # noqa: SLF001
             data["transactions"],
-            obj._accounts,  # noqa: SLF001
-            obj._payees,  # noqa: SLF001
-            obj._tags,  # noqa: SLF001
-            obj._categories,  # noqa: SLF001
-            obj._currencies,  # noqa: SLF001
-            obj._securities,  # noqa: SLF001
+            accounts,
+            payees,
+            tags,
+            categories,
+            currencies,
+            securities,
         )
 
-        cash_accounts = [
-            account
-            for account in obj._accounts  # noqa: SLF001
-            if isinstance(account, CashAccount)
-        ]
-        for account in cash_accounts:
-            # Enable updating account balance after deserialization
-            account._allow_update_balance = True  # noqa: SLF001
-            account.update_balance()
+        for account in obj._accounts:  # noqa: SLF001
+            if isinstance(account, CashAccount):
+                # Enable updating account balance after deserialization
+                account.allow_update_balance = True
+                account.update_balance()
 
         return obj
 
     @staticmethod
     def _deserialize_exchange_rates(
         exchange_rate_dicts: Collection[dict[str, Any]],
-        currencies: Collection[Currency],
+        currencies: dict[str, Currency],
     ) -> list[ExchangeRate]:
         exchange_rates = []
         for exchange_rate_dict in exchange_rate_dicts:
@@ -1401,107 +1404,102 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
     @staticmethod
     def _deserialize_securities(
         security_dicts: Collection[dict[str, Any]],
-        currencies: Collection[Currency],
-    ) -> list[Security]:
-        securities = []
+        currencies: dict[str, Currency],
+    ) -> dict[str, Security]:
+        securities: dict[str, Security] = {}
         for security_dict in security_dicts:
             security = Security.deserialize(security_dict, currencies)
-            securities.append(security)
+            securities[security.name] = security
         return securities
 
     @staticmethod
     def _deserialize_account_groups(
         account_group_dicts: Collection[dict[str, Any]]
-    ) -> list[AccountGroup]:
-        account_groups: list[AccountGroup] = []
+    ) -> dict[str, AccountGroup]:
+        account_groups: dict[str, AccountGroup] = {}
         for account_group_dict in account_group_dicts:
             account_group = AccountGroup.deserialize(account_group_dict, account_groups)
-            account_groups.append(account_group)
+            account_groups[account_group.path] = account_group
         return account_groups
 
     @staticmethod
     def _deserialize_accounts(
-        account_dicts: Collection[dict[str, Any]],
-        account_groups: Collection[AccountGroup],
-        currencies: Collection[Currency],
-    ) -> list[Account]:
-        accounts: list[Account] = []
-        for account_dict in account_dicts:
+        account_path_dicts: Collection[dict[str, Any]],
+        account_groups: dict[str, AccountGroup],
+        currencies: dict[str, Currency],
+    ) -> dict[str, Account]:
+        accounts: dict[str, Account] = {}
+        for account_dict in account_path_dicts:
             account: Account
             if account_dict["datatype"] == "CashAccount":
                 account = CashAccount.deserialize(
                     account_dict, account_groups, currencies
                 )
                 # Disable updating balance during deserialization
-                account._allow_update_balance = False  # noqa: SLF001
+                account.allow_update_balance = False
             elif account_dict["datatype"] == "SecurityAccount":
                 account = SecurityAccount.deserialize(account_dict, account_groups)
             else:
                 raise ValueError("Unexpected 'datatype' value.")
-            accounts.append(account)
+            accounts[account.path] = account
         return accounts
 
     @staticmethod
     def _deserialize_root_account_items(
         root_item_dicts: Collection[dict[str, Any]],
-        account_groups: Collection[AccountGroup],
-        accounts: Collection[Account],
+        account_groups: dict[str, AccountGroup],
+        accounts: dict[str, Account],
     ) -> list[AccountGroup | Account]:
         root_items: list[AccountGroup | Account] = []
         for item_dict in root_item_dicts:
-            if item_dict["datatype"] == "AccountGroup":
-                for account_group in account_groups:
-                    if account_group.path == item_dict["path"]:
-                        root_items.append(account_group)
-                        break
-            elif item_dict["datatype"] == "Account":
-                for account in accounts:
-                    if str(account.uuid) == item_dict["uuid"]:
-                        root_items.append(account)
-                        break
+            datatype: str = item_dict["datatype"]
+            if datatype == "AccountGroup":
+                root_items.append(account_groups[item_dict["path"]])
+            elif datatype.endswith("Account"):
+                root_items.append(accounts[item_dict["path"]])
             else:
                 raise ValueError("Unexpected 'datatype' value.")
         return root_items
 
     @staticmethod
     def _deserialize_categories(
-        category_dicts: Collection[dict[str, Any]]
-    ) -> list[Category]:
-        categories: list[Category] = []
-        for category_dict in category_dicts:
+        category_path_dicts: Collection[dict[str, Any]]
+    ) -> dict[str, Category]:
+        categories: dict[str, Category] = {}
+        for category_dict in category_path_dicts:
             category = Category.deserialize(category_dict, categories)
-            categories.append(category)
+            categories[category.path] = category
         return categories
 
     @staticmethod
     def _deserialize_root_categories(
         root_category_paths: Collection[str],
-        categories: Collection[Category],
+        categories: dict[str, Category],
     ) -> list[Category]:
-        root_categories = []
-        for path in root_category_paths:
-            for category in categories:
-                if category.path == path:
-                    root_categories.append(category)
-                    break
-        return root_categories
+        return [categories[path] for path in root_category_paths]
 
     @staticmethod
     def _deserialize_transactions(  # noqa: PLR0913
         transaction_dicts: Collection[dict[str, Any]],
-        accounts: Collection[Account],
-        payees: Collection[Attribute],
-        tags: Collection[Attribute],
-        categories: Collection[Category],
-        currencies: Collection[Currency],
-        securities: Collection[Security],
+        accounts: dict[str, Account],
+        payees: dict[str, Attribute],
+        tags: dict[str, Attribute],
+        categories: dict[str, Category],
+        currencies: dict[str, Currency],
+        securities: dict[str, Security],
     ) -> list[Transaction]:
         transactions: list[Transaction] = []
+        _transaction_dict: dict[str, Transaction] = {}
         for transaction_dict in transaction_dicts:
             transaction: Transaction
             if transaction_dict["datatype"] == "CashTransaction":
                 transaction = CashTransaction.deserialize(
-                    transaction_dict, accounts, payees, categories, tags, currencies
+                    transaction_dict,
+                    accounts,
+                    payees,
+                    categories,
+                    tags,
+                    currencies,
                 )
             elif transaction_dict["datatype"] == "CashTransfer":
                 transaction = CashTransfer.deserialize(
@@ -1511,7 +1509,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
                 transaction = RefundTransaction.deserialize(
                     transaction_dict,
                     accounts,
-                    transactions,
+                    _transaction_dict,
                     payees,
                     categories,
                     tags,
@@ -1528,6 +1526,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
             else:
                 raise ValueError("Unexpected 'datatype' value.")
             transactions.append(transaction)
+            _transaction_dict[transaction.uuid] = transaction
         return transactions
 
     def _check_account_exists(self, path: str) -> None:

@@ -1,6 +1,5 @@
 import logging
 import operator
-from collections.abc import Collection
 from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
 from functools import total_ordering
@@ -9,7 +8,6 @@ from typing import Any, Self
 from src.models.mixins.copyable_mixin import CopyableMixin
 from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
 from src.models.user_settings import user_settings
-from src.models.utilities.find_helpers import find_currency_by_code
 
 quantizers: dict[int, Decimal] = {}
 for i in range(0, 12):
@@ -303,21 +301,14 @@ class ExchangeRate(CopyableMixin, JSONSerializableMixin):
 
     @staticmethod
     def deserialize(
-        data: dict[str, Any], currencies: Collection[Currency]
+        data: dict[str, Any], currencies: dict[str, Currency]
     ) -> "ExchangeRate":
         primary_code = data["primary_currency_code"]
         secondary_code = data["secondary_currency_code"]
         date_rate_pairs: list[list[str, str]] = data["date_rate_pairs"]
 
-        primary = None
-        secondary = None
-        for currency in currencies:
-            if currency.code == primary_code:
-                primary = currency
-            if currency.code == secondary_code:
-                secondary = currency
-            if primary and secondary:
-                break
+        primary = currencies[primary_code]
+        secondary = currencies[secondary_code]
 
         obj = ExchangeRate(primary, secondary)
         for date_, rate in date_rate_pairs:
@@ -515,9 +506,9 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
 
     @staticmethod
     def deserialize(
-        cash_amount_string: str, currencies: Collection[Currency]
+        cash_amount_string: str, currencies: dict[str, Currency]
     ) -> "CashAmount":
         value, _, currency_code = cash_amount_string.partition(" ")
         value = value.replace(",", "")  # remove any thousands separators
-        currency = find_currency_by_code(currency_code, currencies)
+        currency = currencies[currency_code]
         return CashAmount(value, currency)

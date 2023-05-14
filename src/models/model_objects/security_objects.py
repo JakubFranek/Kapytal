@@ -24,12 +24,6 @@ from src.models.model_objects.currency_objects import (
     CurrencyError,
 )
 from src.models.user_settings import user_settings
-from src.models.utilities.find_helpers import (
-    find_account_by_path,
-    find_account_group_by_path,
-    find_currency_by_code,
-    find_security_by_name,
-)
 from src.presenters.utilities.event import Event
 
 
@@ -214,14 +208,13 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
 
     @staticmethod
     def deserialize(
-        data: dict[str, Any], currencies: Collection[Currency]
+        data: dict[str, Any],
+        currencies: dict[str, Currency],
     ) -> "Security":
         name = data["name"]
         symbol = data["symbol"]
         type_ = data["type"]
-
-        currency_code = data["currency_code"]
-        security_currency = find_currency_by_code(currency_code, currencies)
+        security_currency = currencies[data["currency_code"]]
 
         shares_unit = Decimal(data["shares_unit"])
 
@@ -310,7 +303,7 @@ class SecurityAccount(Account):
 
     @staticmethod
     def deserialize(
-        data: dict[str, Any], account_groups: Collection[AccountGroup]
+        data: dict[str, Any], account_group_dict: dict[str, AccountGroup]
     ) -> "SecurityAccount":
         path: str = data["path"]
         index: int | None = data["index"]
@@ -320,14 +313,11 @@ class SecurityAccount(Account):
         obj._uuid = uuid.UUID(data["uuid"])  # noqa: SLF001
 
         if parent_path:
-            obj._parent = find_account_group_by_path(  # noqa: SLF001
-                parent_path, account_groups
-            )
-            obj._parent._children_dict[index] = obj  # noqa: SLF001
-            obj._parent._update_children_tuple()  # noqa: SLF001
-            obj.event_balance_updated.append(
-                obj._parent._update_balances  # noqa: SLF001
-            )
+            parent = account_group_dict[parent_path]
+            parent._children_dict[index] = obj  # noqa: SLF001
+            parent._update_children_tuple()  # noqa: SLF001
+            obj.event_balance_updated.append(parent._update_balances)  # noqa: SLF001
+            obj._parent = parent  # noqa: SLF001
         return obj
 
     def _validate_transaction(self, transaction: "SecurityRelatedTransaction") -> None:
@@ -482,21 +472,18 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
     @staticmethod
     def deserialize(
         data: dict[str, Any],
-        accounts: Collection[Account],
-        currencies: Collection[Currency],
-        securities: Collection[Security],
+        accounts: dict[str, Account],
+        currencies: dict[str, Currency],
+        securities: dict[str, Security],
     ) -> "SecurityTransaction":
         description = data["description"]
         datetime_ = datetime.fromisoformat(data["datetime"])
-
         type_ = SecurityTransactionType[data["type"]]
         shares = Decimal(data["shares"])
         price_per_share = CashAmount.deserialize(data["price_per_share"], currencies)
-
-        security = find_security_by_name(data["security_name"], securities)
-
-        cash_account = find_account_by_path(data["cash_account_path"], accounts)
-        security_account = find_account_by_path(data["security_account_path"], accounts)
+        security = securities[data["security_name"]]
+        cash_account = accounts[data["cash_account_path"]]
+        security_account = accounts[data["security_account_path"]]
 
         obj = SecurityTransaction(
             description=description,
@@ -757,17 +744,15 @@ class SecurityTransfer(SecurityRelatedTransaction):
     @staticmethod
     def deserialize(
         data: dict[str, Any],
-        accounts: Collection[Account],
-        securities: Collection[Security],
+        accounts: dict[str, Account],
+        securities: dict[str, Security],
     ) -> "SecurityTransfer":
         description = data["description"]
         datetime_ = datetime.fromisoformat(data["datetime"])
         shares = Decimal(data["shares"])
-
-        security = find_security_by_name(data["security_name"], securities)
-
-        sender = find_account_by_path(data["sender_path"], accounts)
-        recipient = find_account_by_path(data["recipient_path"], accounts)
+        security = securities[data["security_name"]]
+        sender = accounts[data["sender_path"]]
+        recipient = accounts[data["recipient_path"]]
 
         obj = SecurityTransfer(
             description=description,

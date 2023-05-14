@@ -520,6 +520,7 @@ class TransactionTableModel(QAbstractTableModel):
 
     def emit_data_changed_for_uuids(self, uuids: Collection[uuid.UUID]) -> None:
         for uuid_ in uuids:
+            # TODO: could this be optimized by dicts?
             item = find_transaction_by_uuid(uuid_, self._transactions)
             index = self.get_index_from_item(item)
             self.dataChanged.emit(index, index)

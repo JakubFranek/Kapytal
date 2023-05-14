@@ -186,6 +186,33 @@ def test_lt_different_currencies(
     value_2=valid_decimals(),
     currency=currencies(),
 )
+def test_le(value_1: Decimal, value_2: Decimal, currency: Currency) -> None:
+    amount_1 = CashAmount(value_1, currency)
+    amount_2 = CashAmount(value_2, currency)
+    expected = amount_1.value_normalized <= amount_2.value_normalized
+    assert (amount_1 <= amount_2) == expected
+
+
+@given(cash_amount=cash_amounts(), other=everything_except(CashAmount))
+def test_le_not_cashamount(cash_amount: CashAmount, other: Any) -> None:
+    result = cash_amount.__le__(other)
+    assert result == NotImplemented
+
+
+@given(cash_amount_1=cash_amounts(), cash_amount_2=cash_amounts())
+def test_le_different_currencies(
+    cash_amount_1: CashAmount, cash_amount_2: CashAmount
+) -> None:
+    assume(cash_amount_1.currency != cash_amount_2.currency)
+    with pytest.raises(CurrencyError):
+        cash_amount_1.__le__(cash_amount_2)
+
+
+@given(
+    value_1=valid_decimals(),
+    value_2=valid_decimals(),
+    currency=currencies(),
+)
 def test_sum(value_1: Decimal, value_2: Decimal, currency: Currency) -> None:
     amount_1 = CashAmount(value_1, currency)
     amount_2 = CashAmount(value_2, currency)

@@ -32,14 +32,6 @@ from src.models.model_objects.currency_objects import (
     CurrencyError,
 )
 from src.models.user_settings import user_settings
-from src.models.utilities.find_helpers import (
-    find_account_by_path,
-    find_account_group_by_path,
-    find_attribute_by_name,
-    find_category_by_path,
-    find_currency_by_code,
-    find_transaction_by_uuid,
-)
 
 
 class UnrelatedTransactionError(ValueError):
@@ -96,9 +88,9 @@ class CashAccount(Account):
     ) -> None:
         super().__init__(name=name, parent=parent)
 
-        # _allow_update_balance attribute is used to block updating the balance
+        # allow_update_balance attribute is used to block updating the balance
         # when a transaction is added or removed during deserialization
-        self._allow_update_balance = True
+        self.allow_update_balance = True
 
         if not isinstance(currency, Currency):
             raise TypeError("CashAccount.currency must be a Currency.")
@@ -131,7 +123,7 @@ class CashAccount(Account):
             )
         logging.info(f"Setting initial_balance={amount}")
         self._initial_balance = amount
-        if self._allow_update_balance:
+        if self.allow_update_balance:
             self.update_balance()
 
     @property
@@ -172,13 +164,13 @@ class CashAccount(Account):
                 "CashAccount.transactions."
             )
         self._transactions.add(transaction)
-        if self._allow_update_balance:
+        if self.allow_update_balance:
             self.update_balance()
 
     def remove_transaction(self, transaction: CashRelatedTransaction) -> None:
         self._validate_transaction(transaction)
         self._transactions.remove(transaction)
-        if self._allow_update_balance:
+        if self.allow_update_balance:
             self.update_balance()
 
     def serialize(self) -> dict[str, Any]:
@@ -195,16 +187,14 @@ class CashAccount(Account):
     @staticmethod
     def deserialize(
         data: dict[str, Any],
-        account_groups: Collection[AccountGroup],
-        currencies: Collection[Currency],
+        account_groups: dict[str, AccountGroup],
+        currencies: dict[str, Currency],
     ) -> "CashAccount":
         path: str = data["path"]
         index: int | None = data["index"]
         parent_path, _, name = path.rpartition("/")
         initial_balance_value = data["initial_balance"]
-
-        currency_code = data["currency_code"]
-        currency = find_currency_by_code(currency_code, currencies)
+        currency = currencies[data["currency_code"]]
 
         initial_balance = CashAmount(initial_balance_value, currency)
 
@@ -212,9 +202,7 @@ class CashAccount(Account):
         obj._uuid = uuid.UUID(data["uuid"])  # noqa: SLF001
 
         if parent_path:
-            obj._parent = find_account_group_by_path(  # noqa: SLF001
-                parent_path, account_groups
-            )
+            obj._parent = account_groups[parent_path]  # noqa: SLF001
             obj._parent._children_dict[index] = obj  # noqa: SLF001
             obj._parent._update_children_tuple()  # noqa: SLF001
             obj.event_balance_updated.append(
@@ -387,36 +375,31 @@ class CashTransaction(CashRelatedTransaction):
     @staticmethod
     def deserialize(  # noqa: PLR0913
         data: dict[str, Any],
-        accounts: Collection[Account],
-        payees: Collection[Attribute],
-        categories: Collection[Category],
-        tags: Collection[Attribute],
-        currencies: Collection[Currency],
+        accounts: dict[str, Account],
+        payees: dict[str, Attribute],
+        categories: dict[str, Category],
+        tags: dict[str, Attribute],
+        currencies: dict[str, Currency],
     ) -> "CashTransaction":
         description = data["description"]
         datetime_ = datetime.fromisoformat(data["datetime"])
         type_ = CashTransactionType[data["type"]]
-
-        cash_account = find_account_by_path(data["account_path"], accounts)
-
-        payee_name = data["payee_name"]
-        payee = find_attribute_by_name(payee_name, payees)
+        cash_account = accounts[data["account_path"]]
+        payee = payees[data["payee_name"]]
 
         category_path_amount_pairs: list[list[str, str]] = data["category_amount_pairs"]
         decoded_category_amount_pairs: list[tuple[Category, CashAmount]] = []
         for category_path, amount_str in category_path_amount_pairs:
-            category = find_category_by_path(category_path, categories)
+            category = categories[category_path]
             amount = CashAmount.deserialize(amount_str, currencies)
-            tup = (category, amount)
-            decoded_category_amount_pairs.append(tup)
+            decoded_category_amount_pairs.append((category, amount))
 
         tag_name_amount_pairs: list[list[str, str]] = data["tag_amount_pairs"]
         decoded_tag_amount_pairs: list[tuple[Attribute, CashAmount]] = []
         for tag_name, amount_str in tag_name_amount_pairs:
-            tag = find_attribute_by_name(tag_name, tags)
+            tag = tags[tag_name]
             amount = CashAmount.deserialize(amount_str, currencies)
-            tup = (tag, amount)
-            decoded_tag_amount_pairs.append(tup)
+            decoded_tag_amount_pairs.append((tag, amount))
 
         obj = CashTransaction(
             description=description,
@@ -972,14 +955,14 @@ class CashTransfer(CashRelatedTransaction):
     @staticmethod
     def deserialize(
         data: dict[str, Any],
-        accounts: Collection[Account],
-        currencies: Collection[Currency],
+        accounts: dict[str, Account],
+        currencies: dict[str, Currency],
     ) -> "CashTransaction":
         description = data["description"]
         datetime_ = datetime.fromisoformat(data["datetime"])
 
-        sender = find_account_by_path(data["sender_path"], accounts)
-        recipient = find_account_by_path(data["recipient_path"], accounts)
+        sender = accounts[data["sender_path"]]
+        recipient = accounts[data["recipient_path"]]
 
         amount_sent = CashAmount.deserialize(data["amount_sent"], currencies)
         amount_received = CashAmount.deserialize(data["amount_received"], currencies)
@@ -1255,37 +1238,33 @@ class RefundTransaction(CashRelatedTransaction):
     @staticmethod
     def deserialize(  # noqa: PLR0913
         data: dict[str, Any],
-        accounts: Collection[Account],
-        transactions: Collection[Transaction],
-        payees: Collection[Attribute],
-        categories: Collection[Category],
-        tags: Collection[Attribute],
-        currencies: Collection[Currency],
+        accounts: dict[str, Account],
+        transactions: dict[uuid.UUID, Transaction],
+        payees: dict[str, Attribute],
+        categories: dict[str, Category],
+        tags: dict[str, Attribute],
+        currencies: dict[str, Currency],
     ) -> "CashTransaction":
         description = data["description"]
         datetime_ = datetime.fromisoformat(data["datetime"])
-        cash_account = find_account_by_path(data["account_path"], accounts)
-
-        transaction_uuid = uuid.UUID(data["refunded_transaction_uuid"])
-        refunded_transaction = find_transaction_by_uuid(transaction_uuid, transactions)
-
-        payee = find_attribute_by_name(data["payee_name"], payees)
+        cash_account = accounts[data["account_path"]]
+        refunded_transaction_uuid = uuid.UUID(data["refunded_transaction_uuid"])
+        refunded_transaction = transactions[refunded_transaction_uuid]
+        payee = payees[data["payee_name"]]
 
         category_path_amount_pairs: list[list[str, str]] = data["category_amount_pairs"]
         decoded_category_amount_pairs: list[tuple[Category, CashAmount]] = []
         for category_path, amount_str in category_path_amount_pairs:
-            category = find_category_by_path(category_path, categories)
+            category = categories[category_path]
             amount = CashAmount.deserialize(amount_str, currencies)
-            tup = (category, amount)
-            decoded_category_amount_pairs.append(tup)
+            decoded_category_amount_pairs.append((category, amount))
 
         tag_name_amount_pairs: list[list[str, str]] = data["tag_amount_pairs"]
         decoded_tag_amount_pairs: list[tuple[Attribute, CashAmount]] = []
         for tag_name, amount_str in tag_name_amount_pairs:
-            tag = find_attribute_by_name(tag_name, tags)
+            tag = tags[tag_name]
             amount = CashAmount.deserialize(amount_str, currencies)
-            tup = (tag, amount)
-            decoded_tag_amount_pairs.append(tup)
+            decoded_tag_amount_pairs.append((tag, amount))
 
         obj = RefundTransaction(
             description=description,

@@ -237,6 +237,34 @@ def test_invalid_category_pair_categories() -> None:
         )
 
 
+@given(data=st.data())
+def test_invalid_category_pair_invalid_second_type(data: st.DataObject) -> None:
+    refunded_transaction = get_preloaded_expense()
+    refunded_account = get_refunded_account()
+
+    datetime_ = refunded_transaction.datetime_ + timedelta(days=1)
+    category_amount_pairs = (
+        (cat_1, data.draw(everything_except(CashAmount))),
+        (cat_2, data.draw(everything_except(CashAmount))),
+        (cat_3, data.draw(everything_except(CashAmount))),
+    )
+    tag_amount_pairs = get_valid_tag_amount_pairs()
+    payee = refunded_transaction.payee
+
+    with pytest.raises(
+        TypeError, match="Second element of 'collection' tuples must be of type"
+    ):
+        RefundTransaction(
+            "",
+            datetime_,
+            refunded_account,
+            refunded_transaction,
+            payee,
+            category_amount_pairs,
+            tag_amount_pairs,
+        )
+
+
 def test_invalid_category_pair_decimal_values() -> None:
     refunded_transaction = get_preloaded_expense()
     refunded_account = get_refunded_account()

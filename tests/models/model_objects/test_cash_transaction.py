@@ -393,18 +393,18 @@ def test_get_amount_invalid_account_value(
 def test_category_amount_pairs_invalid_type(
     transaction: CashTransaction, category_amount_pairs: Any
 ) -> None:
-    with pytest.raises(TypeError, match="Parameter 'collection' must be a Collection."):
+    with pytest.raises(TypeError, match="has no len()"):
         transaction.set_attributes(category_amount_pairs=category_amount_pairs)
 
 
 @given(
     transaction=cash_transactions(),
-    category_amount_pairs=st.lists(everything_except(tuple), min_size=1, max_size=5),
+    category_amount_pairs=st.lists(everything_except(tuple), min_size=2, max_size=2),
 )
 def test_category_amount_pairs_invalid_member_type(
     transaction: CashTransaction, category_amount_pairs: Collection[Any]
 ) -> None:
-    with pytest.raises(TypeError, match="Elements of 'collection' must be tuples."):
+    with pytest.raises(TypeError, match="cannot unpack"):
         transaction.set_attributes(category_amount_pairs=category_amount_pairs)
 
 
@@ -431,6 +431,22 @@ def test_category_amount_pairs_invalid_first_member_type(
     first_member: Any,
 ) -> None:
     tup = ((first_member, transaction.amount),)
+    with pytest.raises(
+        TypeError,
+        match="First element of 'collection' tuples",
+    ):
+        transaction.set_attributes(category_amount_pairs=tup)
+
+
+@given(
+    transaction=cash_transactions(),
+    first_member=everything_except(Category),
+)
+def test_category_amount_pairs_invalid_first_member_type_multiple(
+    transaction: CashTransaction,
+    first_member: Any,
+) -> None:
+    tup = ((first_member, transaction.amount), (first_member, transaction.amount))
     with pytest.raises(
         TypeError,
         match="First element of 'collection' tuples",

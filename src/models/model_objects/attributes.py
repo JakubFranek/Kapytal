@@ -5,7 +5,6 @@ from typing import Any, Self
 from src.models.custom_exceptions import NotFoundError
 from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
 from src.models.mixins.name_mixin import NameMixin
-from src.models.utilities.find_helpers import find_category_by_path
 
 
 class InvalidAttributeError(ValueError):
@@ -182,14 +181,16 @@ class Category(NameMixin, JSONSerializableMixin):
         }
 
     @staticmethod
-    def deserialize(data: dict[str, Any], categories: list["Category"]) -> "Category":
+    def deserialize(
+        data: dict[str, Any], categories: dict[str, "Category"]
+    ) -> "Category":
         path: str = data["path"]
         parent_path, _, name = path.rpartition("/")
         type_ = CategoryType[data["type"]]
         index: int | None = data["index"]
         obj = Category(name, type_)
         if parent_path:
-            obj._parent = find_category_by_path(parent_path, categories)  # noqa: SLF001
+            obj._parent = categories[parent_path]  # noqa: SLF001
             obj._parent._children_dict[index] = obj  # noqa: SLF001
             obj._parent._update_children_tuple()  # noqa: SLF001
         return obj

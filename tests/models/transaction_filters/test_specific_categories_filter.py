@@ -1,3 +1,4 @@
+import unicodedata
 from typing import Any
 
 import pytest
@@ -54,7 +55,10 @@ def test_creation(categories: list[Category], mode: FilterMode) -> None:
     assert filter_.expense_categories == expense_categories
     assert filter_.income_and_expense_categories == income_and_expense_categories
     assert filter_.category_paths == tuple(
-        sorted(category.path for category in categories)
+        sorted(
+            (category.path for category in categories),
+            key=lambda path: unicodedata.normalize("NFD", path.lower()),
+        )
     )
     assert filter_.mode == mode
     assert filter_.__repr__() == (

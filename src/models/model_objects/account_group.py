@@ -12,7 +12,6 @@ from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
 from src.models.mixins.name_mixin import NameMixin
 from src.models.mixins.uuid_mixin import UUIDMixin
 from src.models.model_objects.currency_objects import CashAmount, Currency
-from src.models.utilities.find_helpers import find_account_group_by_path
 
 
 class AccountGroup(NameMixin, BalanceMixin, JSONSerializableMixin, UUIDMixin):
@@ -142,7 +141,7 @@ class AccountGroup(NameMixin, BalanceMixin, JSONSerializableMixin, UUIDMixin):
 
     @staticmethod
     def deserialize(
-        data: dict[str, Any], account_groups: list["AccountGroup"]
+        data: dict[str, Any], account_groups: dict[str, "AccountGroup"]
     ) -> "AccountGroup":
         path: str = data["path"]
         index: int | None = data["index"]
@@ -150,9 +149,7 @@ class AccountGroup(NameMixin, BalanceMixin, JSONSerializableMixin, UUIDMixin):
         obj = AccountGroup(name)
         obj._uuid = uuid.UUID(data["uuid"])  # noqa: SLF001
         if parent_path:
-            obj._parent = find_account_group_by_path(  # noqa: SLF001
-                parent_path, account_groups
-            )
+            obj._parent = account_groups[parent_path]  # noqa: SLF001
             obj._parent._children_dict[index] = obj  # noqa: SLF001
             obj._parent._update_children_tuple()  # noqa: SLF001
             obj.event_balance_updated.append(
