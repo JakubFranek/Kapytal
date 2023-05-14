@@ -535,7 +535,14 @@ class CashTransaction(CashRelatedTransaction):
         return _get_amount_for_category(self, category, total=total)
 
     def get_amount_for_tag(self, tag: Attribute) -> CashAmount:
-        return _get_amount_for_tag(self, tag)
+        if not isinstance(tag, Attribute):
+            raise TypeError("Parameter 'tag' must be an Attribute.")
+        for tag_, amount in self._tag_amount_pairs:
+            if tag_ == tag:
+                if self._type == CashTransactionType.INCOME:
+                    return amount
+                return -amount
+        raise ValueError(f"Tag '{tag.name}' not found in this CashTransaction's tags.")
 
     def prepare_for_deletion(self) -> None:
         if self.is_refunded:
@@ -1206,7 +1213,14 @@ class RefundTransaction(CashRelatedTransaction):
         return _get_amount_for_category(self, category, total=total)
 
     def get_amount_for_tag(self, tag: Attribute) -> CashAmount:
-        return _get_amount_for_tag(self, tag)
+        if not isinstance(tag, Attribute):
+            raise TypeError("Parameter 'tag' must be an Attribute.")
+        for tag_, amount in self._tag_amount_pairs:
+            if tag_ == tag:
+                return amount
+        raise ValueError(
+            f"Tag '{tag.name}' not found in this RefundTransaction's tags."
+        )
 
     def prepare_for_deletion(self) -> None:
         self._refunded_transaction.remove_refund(self)
@@ -1375,7 +1389,7 @@ class RefundTransaction(CashRelatedTransaction):
         datetime_: datetime,
         account: CashAccount,
         category_amount_pairs: Collection[tuple[Category, CashAmount]],
-        tag_amount_pairs: Collection[tuple[Category, CashAmount]],
+        tag_amount_pairs: Collection[tuple[Attribute, CashAmount]],
         payee: Attribute,
     ) -> None:
         self._description = description
@@ -1577,27 +1591,5 @@ def _get_amount_for_category(
             running_sum = func(running_sum, _amount)
             continue
         if total and _category.parent == category:
-            running_sum = func(running_sum, _amount)
-    return running_sum
-
-
-# FIXME: this function looks really weird and should be in base Transaction anyway
-def _get_amount_for_tag(
-    transaction: CashTransaction | RefundTransaction, tag: Attribute
-) -> CashAmount:
-    running_sum = transaction.currency.zero_amount
-
-    if tag not in transaction.tags:
-        return running_sum
-
-    func = (
-        operator.add
-        if isinstance(transaction, RefundTransaction)
-        or transaction.type_ == CashTransactionType.INCOME
-        else operator.sub
-    )
-
-    for _tag, _amount in transaction.tag_amount_pairs:
-        if _tag == tag:
             running_sum = func(running_sum, _amount)
     return running_sum

@@ -4,7 +4,10 @@ from typing import NamedTuple
 
 from src.models.base_classes.transaction import Transaction
 from src.models.model_objects.attributes import Attribute, Category
-from src.models.model_objects.cash_objects import CashTransaction, RefundTransaction
+from src.models.model_objects.cash_objects import (
+    CashTransaction,
+    RefundTransaction,
+)
 from src.models.model_objects.currency_objects import CashAmount, Currency
 
 
@@ -62,7 +65,6 @@ def get_tag_stats(
     ]
     no_of_transactions = len(_transactions)
 
-    # TODO: implement this for all Transactions!
     _cash_amount_transactions = [
         transaction
         for transaction in _transactions
@@ -122,6 +124,8 @@ def _filter_date_range(
     date_start: date | None = None,
     date_end: date | None = None,
 ) -> tuple[Transaction, ...]:
+    if date_start is None and date_end is None:
+        return tuple(transactions)
     return tuple(
         transaction
         for transaction in transactions
