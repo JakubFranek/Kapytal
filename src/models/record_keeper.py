@@ -1277,6 +1277,8 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         sorted_accounts = sorted(self._accounts, key=lambda x: x.path)
         sorted_tags = sorted(self._tags, key=lambda x: x.name)
         sorted_payees = sorted(self._payees, key=lambda x: x.name)
+        # Sorting transactions here speeds up sorting during deserialization
+        sorted_transactions = sorted(self._transactions, key=lambda x: x.timestamp)
 
         root_item_references = []
         for item in self._root_account_items:
@@ -1312,7 +1314,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
             "root_income_categories": root_income_category_refs,
             "root_expense_categories": root_expense_category_refs,
             "root_income_and_expense_categories": root_income_and_expense_category_refs,
-            "transactions": self._transactions,
+            "transactions": sorted_transactions,
         }
 
     # IDEA: do I need to use private setters in deserializers?
@@ -1398,7 +1400,12 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
                 securities,
             )
         )
-        obj._transactions = list(obj._transactions_uuid_dict.values())  # noqa: SLF001
+        # Sorting transactions here is useful because front-end can assume that
+        # upon load of RecordKeeper._transactions, transactions are already sorted
+        obj._transactions = sorted(  # noqa: SLF001
+            obj._transactions_uuid_dict.values(),  # noqa: SLF001
+            key=lambda x: x.timestamp,
+        )
 
         for account in obj._accounts:  # noqa: SLF001
             account: CashAccount | SecurityAccount

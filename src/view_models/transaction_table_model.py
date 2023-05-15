@@ -61,7 +61,8 @@ class TransactionTableModel(QAbstractTableModel):
 
     @transactions.setter
     def transactions(self, transactions: Collection[Transaction]) -> None:
-        self._transactions = tuple(transactions)
+        """Transactions should be sorted by datetime in ascending order (0 = oldest)"""
+        self._transactions = tuple(transactions[::-1])
 
     @property
     def transaction_uuid_dict(self) -> dict[uuid.UUID, Transaction]:
@@ -90,17 +91,6 @@ class TransactionTableModel(QAbstractTableModel):
         if not hasattr(self, "_column_count"):
             self._column_count = len(TRANSACTION_TABLE_COLUMN_HEADERS)
         return self._column_count
-
-    def index(self, row: int, column: int, parent: QModelIndex = ...) -> QModelIndex:
-        if parent.isValid():  # now we already know that parent is invalid
-            return QModelIndex()
-        if row < 0 or column < 0:
-            return QModelIndex()
-        if row >= len(self._transactions) or column >= self._column_count:
-            return QModelIndex()
-
-        item = self._transactions[row]
-        return QAbstractTableModel.createIndex(self, row, column, item)
 
     def data(  # noqa: PLR0911
         self, index: QModelIndex, role: Qt.ItemDataRole = ...
@@ -153,12 +143,13 @@ class TransactionTableModel(QAbstractTableModel):
         self._proxy_viewside.setDynamicSortFilter(True)  # noqa: FBT003
 
     def pre_reset_model(self) -> None:
-        self._view.setSortingEnabled(False)  # noqa: FBT003
+        self._proxy_viewside.setDynamicSortFilter(False)  # noqa: FBT003
+        self._proxy_viewside.sort(-1)  # TODO: is this necessary?
         self.beginResetModel()
 
     def post_reset_model(self) -> None:
         self.endResetModel()
-        self._view.setSortingEnabled(True)  # noqa: FBT003
+        self._proxy_viewside.setDynamicSortFilter(True)  # noqa: FBT003
 
     def pre_remove_item(self, item: Transaction) -> None:
         index = self.get_index_from_item(item)
@@ -177,7 +168,9 @@ class TransactionTableModel(QAbstractTableModel):
             for index in proxy_sourceside_indexes
         ]
         return tuple(
-            index.internalPointer() for index in source_indexes if index.column() == 0
+            self._transactions[index.row()]
+            for index in source_indexes
+            if index.column() == 0
         )
 
     def get_visible_items(self) -> tuple[Transaction, ...]:
@@ -186,7 +179,7 @@ class TransactionTableModel(QAbstractTableModel):
             index = self._proxy_viewside.index(row, 0)
             index = self._proxy_viewside.mapToSource(index)
             index = self._proxy_sourceside.mapToSource(index)
-            items.append(index.internalPointer())
+            items.append(self._transactions[index.row()])
         return tuple(items)
 
     def get_index_from_item(self, item: Transaction | None) -> QModelIndex:
@@ -324,7 +317,7 @@ class TransactionTableModel(QAbstractTableModel):
         self, transaction: Transaction, column: int
     ) -> float | str:
         if column == TransactionTableColumn.DATETIME:
-            return transaction.datetime_.timestamp()
+            return transaction.timestamp
         if column == TransactionTableColumn.SHARES:
             shares = TransactionTableModel._get_transaction_shares(transaction)
             return float(shares) if shares else float("-inf")

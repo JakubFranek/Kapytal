@@ -36,6 +36,7 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
         super().__init__(parent)
         self.setupUi(self)
         self.tableView.horizontalHeader().setResizeContentsPrecision(100)
+        self.tableView.setSortingEnabled(True)
         self._create_column_actions()
         self._set_icons()
         self._connect_actions()

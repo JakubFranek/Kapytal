@@ -163,7 +163,9 @@ class TransactionFilterFormPresenter:
         self._account_tree_shown_accounts = tuple(accounts)
         if self._form.account_filter_mode == AccountFilterMode.ACCOUNT_TREE:
             previous_filter = copy(self._transaction_filter)
-            self._transaction_filter.set_account_filter(accounts, FilterMode.KEEP)
+            all_accounts = len(self._record_keeper.accounts) == len(accounts)
+            filter_mode = FilterMode.OFF if all_accounts else FilterMode.KEEP
+            self._transaction_filter.set_account_filter(accounts, filter_mode)
             if previous_filter != self._transaction_filter:
                 self.event_filter_changed()
 
@@ -218,12 +220,20 @@ class TransactionFilterFormPresenter:
         )
 
         if self._form.account_filter_mode == AccountFilterMode.SELECTION:
+            all_accounts = len(self._record_keeper.accounts) == len(
+                self._account_filter_presenter.checked_accounts
+            )
+            account_filter_mode = FilterMode.OFF if all_accounts else FilterMode.KEEP
             filter_.set_account_filter(
-                self._account_filter_presenter.checked_accounts, FilterMode.KEEP
+                self._account_filter_presenter.checked_accounts, account_filter_mode
             )
         else:
+            all_accounts = len(self._record_keeper.accounts) == len(
+                self._account_tree_shown_accounts
+            )
+            account_filter_mode = FilterMode.OFF if all_accounts else FilterMode.KEEP
             filter_.set_account_filter(
-                self._account_tree_shown_accounts, FilterMode.KEEP
+                self._account_tree_shown_accounts, account_filter_mode
             )
 
         filter_.set_specific_tags_filter(
@@ -314,7 +324,7 @@ class TransactionFilterFormPresenter:
         # self._transaction_filter and self._default filter would point to same object
 
         filter_ = TransactionFilter()
-        filter_.set_account_filter(self._record_keeper.accounts, FilterMode.KEEP)
+        filter_.set_account_filter(self._record_keeper.accounts, FilterMode.OFF)
         if self._record_keeper.base_currency is not None:
             filter_.set_cash_amount_filter(
                 self._record_keeper.base_currency.zero_amount,

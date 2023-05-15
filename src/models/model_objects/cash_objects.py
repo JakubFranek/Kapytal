@@ -698,6 +698,7 @@ class CashTransaction(CashRelatedTransaction):
     ) -> None:
         self._description = description
         self._datetime = datetime_
+        self._timestamp = datetime_.timestamp()
         self._type = type_
         self._payee = payee
         self._category_amount_pairs = tuple(category_amount_pairs)
@@ -1071,6 +1072,7 @@ class CashTransfer(CashRelatedTransaction):
     ) -> None:
         self._description = description
         self._datetime = datetime_
+        self._timestamp = datetime_.timestamp()
         self._amount_sent = amount_sent
         self._amount_received = amount_received
         self._set_accounts(sender, recipient)
@@ -1399,6 +1401,7 @@ class RefundTransaction(CashRelatedTransaction):
     ) -> None:
         self._description = description
         self._datetime = datetime_
+        self._timestamp = datetime_.timestamp()
         self._category_amount_pairs = tuple(category_amount_pairs)
         self._tag_amount_pairs = tuple(tag_amount_pairs)
         self._payee = payee

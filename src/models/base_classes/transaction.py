@@ -52,6 +52,10 @@ class Transaction(
         return self._datetime
 
     @property
+    def timestamp(self) -> float:
+        return self._timestamp
+
+    @property
     def tags(self) -> tuple[Attribute, ...]:
         return tuple(self._tags)
 
@@ -73,6 +77,10 @@ class Transaction(
         self._validate_datetime(datetime_)
         self._description = description
         self._datetime = datetime_
+        if isinstance(datetime_, datetime):
+            self._timestamp = datetime_.timestamp()
+        else:
+            self._timestamp = float(0)
 
     def add_tags(self, tags: Collection[Attribute]) -> None:
         self._validate_tags(tags)

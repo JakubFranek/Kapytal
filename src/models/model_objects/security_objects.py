@@ -617,6 +617,7 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
     ) -> None:
         self._description = description
         self._datetime = datetime_
+        self._timestamp = datetime_.timestamp()
         self._type = type_
         self._security = security
         self._shares = Decimal(shares)
@@ -869,6 +870,7 @@ class SecurityTransfer(SecurityRelatedTransaction):
     ) -> None:
         self._description = description
         self._datetime = datetime_
+        self._timestamp = datetime_.timestamp()
         self._security = security
         self._shares = shares
         self._set_accounts(sender, recipient)
