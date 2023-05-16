@@ -102,6 +102,9 @@ def order_subset(reference_list: Iterable, subset_list: list) -> list:
     return sorted(subset_list, key=lambda x: index_dict[x])
 
 
+# TODO: add busy indicator for filtering when filter changes
+
+
 class TransactionFilterFormPresenter:
     event_filter_changed = Event()
 

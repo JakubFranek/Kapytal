@@ -1,4 +1,3 @@
-
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtWidgets import QHeaderView, QWidget
 from src.views import icons
@@ -48,6 +47,7 @@ class CurrencyForm(CustomWidget, Ui_CurrencyForm):
         self.currencyTable.viewport().update()
 
     def finalize_setup(self) -> None:
+        # TODO: review resizetocontents settings, resizing precision etc
         self.exchangeRateTable.horizontalHeader().setStretchLastSection(False)
         self.exchangeRateTable.horizontalHeader().setSectionResizeMode(
             ExchangeRateTableColumn.CODE,

@@ -50,6 +50,7 @@ class MainPresenter:
         logging.debug("Showing MainView")
         self._view.show()
 
+    # TODO: include Kapytal version in JSON file
     def _save_to_file(self, *, save_as: bool) -> None:
         logging.debug("Save to file initiated")
         try:
@@ -113,8 +114,6 @@ class MainPresenter:
         QApplication.processEvents()
         try:
             with path.open(mode="r", encoding="UTF-8") as file:
-                self._busy_indicator_dialog.set_state("Backing up selected file...", 0)
-                QApplication.processEvents()
                 backup_json_file(self._current_file_path)
 
                 self._busy_indicator_dialog.set_state("Loading data from file...", 1)

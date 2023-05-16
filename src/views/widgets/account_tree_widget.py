@@ -62,6 +62,7 @@ class AccountTreeWidget(QWidget, Ui_AccountTreeWidget):
             header.setSortIndicatorShown(True)
             header.setSortIndicator(index, Qt.SortOrder.AscendingOrder)
         # BUG: this below seems like a bug but it works
+        # TODO: try to disconnect header section clicked signals
         elif header.sortIndicatorOrder() == Qt.SortOrder.DescendingOrder:
             header.setSortIndicator(index, Qt.SortOrder.DescendingOrder)
         else:

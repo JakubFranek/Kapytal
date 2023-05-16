@@ -134,11 +134,12 @@ class TransactionsPresenter:
         self._model.base_currency = self._record_keeper.base_currency
 
     def _update_table_columns(self) -> None:
+        # TODO: this is not run when transactions are added or removed
         visible_transactions = self._model.get_visible_items()
-        logging.debug(
-            "Visible transactions: "
-            f"{len(visible_transactions)}/{len(self._model.transactions)}"
-        )
+        n_visible = len(visible_transactions)
+        n_total = len(self._record_keeper.transactions)
+        logging.debug(f"Visible transactions: {n_visible:,}/{n_total:,}")
+        self._view.set_shown_transactions(n_visible, n_total)
 
         any_security_related = False
         any_cash_transfers = False

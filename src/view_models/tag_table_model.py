@@ -46,17 +46,6 @@ class TagTableModel(QAbstractTableModel):
             self._column_count = len(self.COLUMN_HEADERS)
         return self._column_count
 
-    def index(self, row: int, column: int, parent: QModelIndex = ...) -> QModelIndex:
-        if parent.isValid():
-            return QModelIndex()
-        if row < 0 or column < 0:
-            return QModelIndex()
-        if row >= len(self._tag_stats) or column >= self._column_count:
-            return QModelIndex()
-
-        item = self._tag_stats[row].attribute
-        return QAbstractTableModel.createIndex(self, row, column, item)
-
     def data(
         self, index: QModelIndex, role: Qt.ItemDataRole = ...
     ) -> str | int | float | Qt.AlignmentFlag | None:
@@ -150,7 +139,9 @@ class TagTableModel(QAbstractTableModel):
         proxy_indexes = self._view.selectedIndexes()
         source_indexes = [self._proxy.mapToSource(index) for index in proxy_indexes]
         return tuple(
-            index.internalPointer() for index in source_indexes if index.column() == 0
+            self._tag_stats[index.row()].attribute
+            for index in source_indexes
+            if index.column() == 0
         )
 
     def get_index_from_item(self, item: Attribute | None) -> QModelIndex:
@@ -162,4 +153,4 @@ class TagTableModel(QAbstractTableModel):
                 break
         else:
             raise ValueError(f"Parameter {item=} not in TagTableModel.tag_stats.")
-        return QAbstractTableModel.createIndex(self, row, 0, item)
+        return QAbstractTableModel.createIndex(self, row, 0)

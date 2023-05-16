@@ -24,6 +24,9 @@ class NameMixin:
         if not isinstance(allow_slash, bool):
             raise TypeError("Parameter 'allow_slash' must be a boolean.")
         self._allow_slash = allow_slash
+        # colons always forbidden, as they are used for Attribute:Amount pairs
+        # in JSON de/serialization
+        self._allow_colon = False
 
         self.name = name
 
@@ -48,6 +51,10 @@ class NameMixin:
         if not self._allow_slash and "/" in name:
             raise InvalidCharacterError(
                 f"Slashes in {self.__class__.__name__}.name are forbidden."
+            )
+        if not self._allow_colon and ":" in name:
+            raise InvalidCharacterError(
+                f"Colons in {self.__class__.__name__}.name are forbidden."
             )
 
         # FIXME: get rid of this stupid logging method

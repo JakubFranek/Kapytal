@@ -144,7 +144,11 @@ class TransactionTableModel(QAbstractTableModel):
 
     def pre_reset_model(self) -> None:
         self._proxy_viewside.setDynamicSortFilter(False)  # noqa: FBT003
-        self._proxy_viewside.sort(-1)  # TODO: is this necessary?
+
+        # this effectively turns off sorting and dramatically decreases calls
+        # to data() for sorting purposes during file load
+        self._proxy_viewside.sort(-1)
+
         self.beginResetModel()
 
     def post_reset_model(self) -> None:
@@ -186,7 +190,7 @@ class TransactionTableModel(QAbstractTableModel):
         if item is None:
             return QModelIndex()
         row = self._transactions.index(item)
-        return QAbstractTableModel.createIndex(self, row, 0, item)
+        return QAbstractTableModel.createIndex(self, row, 0)
 
     def _get_display_role_data(  # noqa: PLR0911, PLR0912, C901
         self, transaction: Transaction, column: int

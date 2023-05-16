@@ -19,21 +19,10 @@ class SimpleListModel(QAbstractListModel):
             return 0
         return len(self._items)
 
-    def index(self, row: int, column: int, parent: QModelIndex = ...) -> QModelIndex:
-        if parent.isValid():
-            return QModelIndex()
-        if row < 0 or column < 0:
-            return QModelIndex()
-        if row >= len(self._items) or column >= 1:
-            return QModelIndex()
-
-        item = self._items[row]
-        return QAbstractListModel.createIndex(self, row, 0, item)
-
     def data(self, index: QModelIndex, role: Qt.ItemDataRole = ...) -> str | None:
         if not index.isValid():
             return None
-        item = index.internalPointer()
+        item = self._items[index.row()]
         if role == Qt.ItemDataRole.DisplayRole:
             return item
         if role == Qt.ItemDataRole.UserRole:
@@ -45,4 +34,4 @@ class SimpleListModel(QAbstractListModel):
         source_indexes = [self._proxy.mapToSource(index) for index in proxy_indexes]
         if len(source_indexes) == 0:
             return None
-        return source_indexes[0].internalPointer()
+        return self._items[source_indexes[0].row()]

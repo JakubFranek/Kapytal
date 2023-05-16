@@ -355,11 +355,11 @@ class CashTransaction(CashRelatedTransaction):
 
     def serialize(self) -> dict[str, Any]:
         tag_amount_pairs = [
-            (tag.name, amount.to_str_normalized())
+            tag.name + ":" + amount.to_str_normalized()
             for tag, amount in self._tag_amount_pairs
         ]
         category_amount_pairs = [
-            (category.path, amount.to_str_normalized())
+            category.path + ":" + amount.to_str_normalized()
             for category, amount in self._category_amount_pairs
         ]
         return {
@@ -390,16 +390,18 @@ class CashTransaction(CashRelatedTransaction):
         cash_account = accounts[data["account_path"]]
         payee = payees[data["payee_name"]]
 
-        category_path_amount_pairs: list[list[str, str]] = data["category_amount_pairs"]
+        category_path_amount_pairs: list[str] = data["category_amount_pairs"]
         decoded_category_amount_pairs: list[tuple[Category, CashAmount]] = []
-        for category_path, amount_str in category_path_amount_pairs:
+        for pair_string in category_path_amount_pairs:
+            category_path, _, amount_str = pair_string.partition(":")
             category = categories[category_path]
             amount = CashAmount.deserialize(amount_str, currencies)
             decoded_category_amount_pairs.append((category, amount))
 
-        tag_name_amount_pairs: list[list[str, str]] = data["tag_amount_pairs"]
+        tag_name_amount_pairs: list[str] = data["tag_amount_pairs"]
         decoded_tag_amount_pairs: list[tuple[Attribute, CashAmount]] = []
-        for tag_name, amount_str in tag_name_amount_pairs:
+        for pair_string in tag_name_amount_pairs:
+            tag_name, _, amount_str = pair_string.partition(":")
             tag = tags[tag_name]
             amount = CashAmount.deserialize(amount_str, currencies)
             decoded_tag_amount_pairs.append((tag, amount))
@@ -1235,10 +1237,12 @@ class RefundTransaction(CashRelatedTransaction):
 
     def serialize(self) -> dict[str, Any]:
         tag_amount_pairs = [
-            (tag.name, amount) for tag, amount in self._tag_amount_pairs
+            tag.name + ":" + amount.to_str_normalized()
+            for tag, amount in self._tag_amount_pairs
         ]
         category_amount_pairs = [
-            (category.path, amount) for category, amount in self._category_amount_pairs
+            category.path + ":" + amount.to_str_normalized()
+            for category, amount in self._category_amount_pairs
         ]
         return {
             "datatype": "RefundTransaction",
@@ -1270,16 +1274,18 @@ class RefundTransaction(CashRelatedTransaction):
         refunded_transaction = transactions[refunded_transaction_uuid]
         payee = payees[data["payee_name"]]
 
-        category_path_amount_pairs: list[list[str, str]] = data["category_amount_pairs"]
+        category_path_amount_pairs: list[str] = data["category_amount_pairs"]
         decoded_category_amount_pairs: list[tuple[Category, CashAmount]] = []
-        for category_path, amount_str in category_path_amount_pairs:
+        for pair_string in category_path_amount_pairs:
+            category_path, _, amount_str = pair_string.partition(":")
             category = categories[category_path]
             amount = CashAmount.deserialize(amount_str, currencies)
             decoded_category_amount_pairs.append((category, amount))
 
-        tag_name_amount_pairs: list[list[str, str]] = data["tag_amount_pairs"]
+        tag_name_amount_strings: list[str] = data["tag_amount_pairs"]
         decoded_tag_amount_pairs: list[tuple[Attribute, CashAmount]] = []
-        for tag_name, amount_str in tag_name_amount_pairs:
+        for pair_string in tag_name_amount_strings:
+            tag_name, _, amount_str = pair_string.partition(":")
             tag = tags[tag_name]
             amount = CashAmount.deserialize(amount_str, currencies)
             decoded_tag_amount_pairs.append((tag, amount))

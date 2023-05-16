@@ -9,6 +9,10 @@ from src.views.ui_files.widgets.Ui_transaction_table_widget import (
     Ui_TransactionTableWidget,
 )
 
+# TODO: log sorting
+# TODO: add busy indicator for sorting
+# TODO: implement showed Transactions indicator
+
 
 class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
     signal_search_text_changed = pyqtSignal(str)
@@ -57,6 +61,9 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
             self.signal_selection_changed.emit
         )
         self.signal_selection_changed.emit()
+
+    def set_shown_transactions(self, shown: int, total: int) -> None:
+        self.transactionsLabel.setText(f"Showing Transactions: {shown:,} / {total:,}")
 
     def resize_table_to_contents(self) -> None:
         self.tableView.horizontalHeader().setStretchLastSection(False)
