@@ -3,6 +3,7 @@ import re
 from collections.abc import Collection
 
 from PyQt6.QtCore import QSortFilterProxyModel, Qt
+from PyQt6.QtWidgets import QApplication
 from src.models.base_classes.account import Account
 from src.models.custom_exceptions import InvalidOperationError
 from src.models.model_objects.cash_objects import (
@@ -47,6 +48,7 @@ from src.view_models.proxy_models.transaction_table_proxy_model import (
 )
 from src.view_models.transaction_table_model import TransactionTableModel
 from src.views.constants import TransactionTableColumn
+from src.views.dialogs.busy_dialog import create_simple_busy_indicator
 from src.views.utilities.handle_exception import display_error_message
 from src.views.utilities.message_box_functions import ask_yes_no_question
 from src.views.widgets.transaction_table_widget import TransactionTableWidget
@@ -98,6 +100,7 @@ class TransactionsPresenter:
         self._transaction_filter_form_presenter.load_record_keeper(record_keeper)
         self._account_tree_shown_accounts = record_keeper.accounts
         self._reset_model()
+        self._update_number_of_shown_transactions()
         self._update_table_columns()
         self._view.resize_table_to_contents()
 
@@ -134,12 +137,7 @@ class TransactionsPresenter:
         self._model.base_currency = self._record_keeper.base_currency
 
     def _update_table_columns(self) -> None:
-        # TODO: this is not run when transactions are added or removed
         visible_transactions = self._model.get_visible_items()
-        n_visible = len(visible_transactions)
-        n_total = len(self._record_keeper.transactions)
-        logging.debug(f"Visible transactions: {n_visible:,}/{n_total:,}")
-        self._view.set_shown_transactions(n_visible, n_total)
 
         any_security_related = False
         any_cash_transfers = False
@@ -380,6 +378,8 @@ class TransactionsPresenter:
                 handle_exception(exception)
             finally:
                 if any_deleted:
+                    self._update_number_of_shown_transactions()
+                    # TODO: deleting transactions should not reset filters!
                     self.event_data_changed()
 
     def _duplicate_transaction(self) -> None:
@@ -521,14 +521,34 @@ class TransactionsPresenter:
         self._transaction_filter_form_presenter.show_form()
 
     def _filter_changed(self) -> None:
-        self._proxy_transaction_filter.transaction_filter = (
-            self._transaction_filter_form_presenter.transaction_filter
+        self._busy_dialog = create_simple_busy_indicator(
+            self._view, "Filtering Transactions, please wait..."
         )
-        self._view.set_filter_active(
-            active=self._transaction_filter_form_presenter.filter_active
-        )
-        self._update_table_columns()
-        self.resize_table_to_contents()
+        self._busy_dialog.open()
+        QApplication.processEvents()
+
+        try:
+            self._proxy_transaction_filter.transaction_filter = (
+                self._transaction_filter_form_presenter.transaction_filter
+            )
+            self._view.set_filter_active(
+                active=self._transaction_filter_form_presenter.filter_active
+            )
+            self._update_number_of_shown_transactions()
+            self._update_table_columns()
+            self.resize_table_to_contents()
+        except:
+            raise
+        finally:
+            self._busy_dialog.close()
 
     def _data_changed(self) -> None:
+        self._update_number_of_shown_transactions()
         self.event_data_changed()
+
+    def _update_number_of_shown_transactions(self) -> None:
+        n_visible = self._proxy_regex_sort_filter.rowCount()
+        n_total = len(self._record_keeper.transactions)
+        logging.debug(f"Visible transactions: {n_visible:,}/{n_total:,}")
+        self._view.set_shown_transactions(n_visible, n_total)
+        self._view.set_shown_transactions(n_visible, n_total)

@@ -20,7 +20,7 @@ from src.presenters.widget.transactions_presenter import (
 from src.utilities import constants
 from src.utilities.general import backup_json_file
 from src.views.dialogs.busy_dialog import (
-    BusyDialog,
+    create_multi_step_busy_indicator,
     create_simple_busy_indicator,
 )
 from src.views.forms.category_form import CategoryForm
@@ -65,7 +65,12 @@ class MainPresenter:
                 self._current_file_path = Path(file_path)
 
             self._busy_indicator_dialog = create_simple_busy_indicator(
-                self._view, "Saving data to file, please wait..."
+                self._view,
+                text="Saving data to file, please wait...",
+                lower_text=(
+                    "This can take up to a minute for "
+                    "large number of Transactions (>10,000)"
+                ),
             )
             self._busy_indicator_dialog.open()
             QApplication.processEvents()
@@ -109,21 +114,26 @@ class MainPresenter:
             handle_exception(exception)
 
     def _open_file(self, path: Path) -> None:
-        self._busy_indicator_dialog = BusyDialog(self._view)
+        self._busy_indicator_dialog = create_multi_step_busy_indicator(
+            self._view,
+            text="Loading data from file...",
+            steps=2,
+            lower_text="This can take up to a minute for huge files (>10 MB)",
+        )
         self._busy_indicator_dialog.open()
         QApplication.processEvents()
         try:
             with path.open(mode="r", encoding="UTF-8") as file:
                 backup_json_file(self._current_file_path)
 
-                self._busy_indicator_dialog.set_state("Loading data from file...", 1)
+                self._busy_indicator_dialog.set_state("Loading data from file...", 0)
                 QApplication.processEvents()
                 logging.debug(f"Loading file: {self._current_file_path}")
                 logging.disable(logging.INFO)  # suppress logging of object creation
                 record_keeper: RecordKeeper = json.load(file, cls=CustomJSONDecoder)
                 logging.disable(logging.NOTSET)  # enable logging again
 
-                self._busy_indicator_dialog.set_state("Updating User Interface...", 2)
+                self._busy_indicator_dialog.set_state("Updating User Interface...", 1)
                 QApplication.processEvents()
                 self._load_record_keeper(record_keeper)
 

@@ -178,7 +178,7 @@ class TransactionTableModel(QAbstractTableModel):
         )
 
     def get_visible_items(self) -> tuple[Transaction, ...]:
-        items = []
+        items: list[Transaction] = []
         for row in range(self._proxy_viewside.rowCount()):
             index = self._proxy_viewside.index(row, 0)
             index = self._proxy_viewside.mapToSource(index)

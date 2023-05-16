@@ -11,8 +11,6 @@ from src.views.ui_files.widgets.Ui_account_tree_widget import Ui_AccountTreeWidg
 class AccountTreeWidget(QWidget, Ui_AccountTreeWidget):
     signal_selection_changed = pyqtSignal()
     signal_expand_below = pyqtSignal()
-    signal_reset_sort_order = pyqtSignal()
-    signal_sort = pyqtSignal(int)
     signal_show_all = pyqtSignal()
     signal_hide_all = pyqtSignal()
     signal_show_selection_only = pyqtSignal()
@@ -42,32 +40,29 @@ class AccountTreeWidget(QWidget, Ui_AccountTreeWidget):
 
         self.treeView.installEventFilter(self)
         self.treeView.viewport().installEventFilter(self)
+
         self.treeView.header().setSectionsClickable(True)
-        self.treeView.header().sectionClicked.connect(
-            lambda index: self._header_clicked(index)
+        self.treeView.header().setSortIndicatorClearable(True)
+        self.treeView.header().sortIndicatorChanged.connect(
+            self._sort_indicator_changed
         )
 
         self.searchLineEdit.textChanged.connect(self.signal_search_text_changed)
 
-    @property
-    def sort_order(self) -> Qt.SortOrder:
-        return self.treeView.header().sortIndicatorOrder()
+    def _sort_indicator_changed(self, index: int, sort_order: Qt.SortOrder) -> None:
+        """Logs sorting change.
+        Sorting itself is performed by other slot of sortIndicatorChanged."""
+
+        if index != -1:
+            logging.debug(
+                f"Sorting: column={AccountTreeColumn(index).name}, "
+                f"order={sort_order.name}"
+            )
+        else:
+            logging.debug("Sorting off")
 
     def set_total_base_balance(self, total_base_balance: str) -> None:
         self.totalBaseBalanceAmountLabel.setText(total_base_balance)
-
-    def _header_clicked(self, index: int) -> None:
-        header = self.treeView.header()
-        if not header.isSortIndicatorShown():
-            header.setSortIndicatorShown(True)
-            header.setSortIndicator(index, Qt.SortOrder.AscendingOrder)
-        # BUG: this below seems like a bug but it works
-        # TODO: try to disconnect header section clicked signals
-        elif header.sortIndicatorOrder() == Qt.SortOrder.DescendingOrder:
-            header.setSortIndicator(index, Qt.SortOrder.DescendingOrder)
-        else:
-            header.setSortIndicator(index, Qt.SortOrder.AscendingOrder)
-        self.signal_sort.emit(index)
 
     def eventFilter(self, source: QObject, event: QEvent) -> bool:  # noqa: N802
         if (
@@ -104,7 +99,7 @@ class AccountTreeWidget(QWidget, Ui_AccountTreeWidget):
         enable_add_objects: bool,
         enable_modify_object: bool,
         enable_expand_below: bool,
-        enable_show_securities: bool
+        enable_show_securities: bool,
     ) -> None:
         self.actionAdd_Account_Group.setEnabled(enable_add_objects)
         self.actionAdd_Security_Account.setEnabled(enable_add_objects)
@@ -173,8 +168,6 @@ class AccountTreeWidget(QWidget, Ui_AccountTreeWidget):
         self.actionExpand_All_Below.setIcon(icons.expand_below)
         self.actionCollapse_All.setIcon(icons.collapse)
 
-        self.actionReset_Sort_Order.setIcon(icons.reset_sort_order)
-
         self.actionShow_All.setIcon(icons.select_all)
         self.actionHide_All.setIcon(icons.unselect_all)
         self.actionShow_Selection_Only.setIcon(icons.select_this)
@@ -200,8 +193,6 @@ class AccountTreeWidget(QWidget, Ui_AccountTreeWidget):
         self.actionExpand_All.triggered.connect(self.expand_all)
         self.actionExpand_All_Below.triggered.connect(self.signal_expand_below.emit)
         self.actionCollapse_All.triggered.connect(self.collapse_all)
-
-        self.actionReset_Sort_Order.triggered.connect(self.signal_reset_sort_order.emit)
 
         self.actionShow_All.triggered.connect(self.signal_show_all.emit)
         self.actionHide_All.triggered.connect(self.signal_hide_all.emit)
@@ -229,8 +220,6 @@ class AccountTreeWidget(QWidget, Ui_AccountTreeWidget):
 
         self.expandAllToolButton.setDefaultAction(self.actionExpand_All)
         self.collapseAllToolButton.setDefaultAction(self.actionCollapse_All)
-
-        self.resetSortOrderToolButton.setDefaultAction(self.actionReset_Sort_Order)
 
         self.showAllToolButton.setDefaultAction(self.actionShow_All)
         self.hideAllToolButton.setDefaultAction(self.actionHide_All)

@@ -2,16 +2,13 @@ import logging
 
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QAction, QContextMenuEvent, QCursor
-from PyQt6.QtWidgets import QLineEdit, QMenu, QWidget
+from PyQt6.QtWidgets import QApplication, QLineEdit, QMenu, QWidget
 from src.views import icons
 from src.views.constants import TRANSACTION_TABLE_COLUMN_HEADERS, TransactionTableColumn
+from src.views.dialogs.busy_dialog import create_simple_busy_indicator
 from src.views.ui_files.widgets.Ui_transaction_table_widget import (
     Ui_TransactionTableWidget,
 )
-
-# TODO: log sorting
-# TODO: add busy indicator for sorting
-# TODO: implement showed Transactions indicator
 
 
 class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
@@ -247,6 +244,9 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
         header.customContextMenuRequested.connect(self._create_header_context_menu)
         header.setSectionsMovable(True)
 
+        header.sortIndicatorChanged.disconnect()  # sorting has to be performed manually
+        header.sortIndicatorChanged.connect(self._sort_indicator_changed)
+
     def _setup_table(self) -> None:
         self.tableView.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.tableView.customContextMenuRequested.connect(
@@ -259,3 +259,22 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
             visual_index = header.visualIndex(column)
             header.moveSection(visual_index, column)
         self.resize_table_to_contents()
+
+    def _sort_indicator_changed(self, section: int, sort_order: Qt.SortOrder) -> None:
+        """Logs and sorts the Table. Shows a busy indicator during the process."""
+
+        self._busy_dialog = create_simple_busy_indicator(
+            self, "Sorting Transactions, please wait..."
+        )
+        self._busy_dialog.open()
+        QApplication.processEvents()
+        try:
+            logging.debug(
+                f"Sorting: column={TransactionTableColumn(section).name}, "
+                f"order={sort_order.name}"
+            )
+            self.tableView.sortByColumn(section, sort_order)
+        except:
+            raise
+        finally:
+            self._busy_dialog.close()

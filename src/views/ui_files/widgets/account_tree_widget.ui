@@ -56,20 +56,6 @@
       </widget>
      </item>
      <item>
-      <widget class="QToolButton" name="resetSortOrderToolButton">
-       <property name="text">
-        <string>...</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="Line" name="verticalLine_2">
-       <property name="orientation">
-        <enum>Qt::Vertical</enum>
-       </property>
-      </widget>
-     </item>
-     <item>
       <widget class="QToolButton" name="showAllToolButton">
        <property name="text">
         <string>...</string>
@@ -123,7 +109,7 @@
       <bool>true</bool>
      </property>
      <property name="sortingEnabled">
-      <bool>false</bool>
+      <bool>true</bool>
      </property>
      <attribute name="headerMinimumSectionSize">
       <number>20</number>
@@ -132,7 +118,7 @@
       <bool>false</bool>
      </attribute>
      <attribute name="headerShowSortIndicator" stdset="0">
-      <bool>false</bool>
+      <bool>true</bool>
      </attribute>
      <attribute name="headerStretchLastSection">
       <bool>false</bool>
@@ -223,14 +209,6 @@
    </property>
    <property name="toolTip">
     <string>Select Only This Item</string>
-   </property>
-  </action>
-  <action name="actionReset_Sort_Order">
-   <property name="text">
-    <string>Reset Sort Order</string>
-   </property>
-   <property name="toolTip">
-    <string>Reset Sort Order</string>
    </property>
   </action>
   <action name="actionSelect_All_Cash_Accounts_Below">
