@@ -5,11 +5,14 @@ from src.presenters.widget.transactions_presenter import (
     TransactionsPresenter,
 )
 from src.view_models.transaction_table_model import TransactionTableModel
+from src.views import icons
 from src.views.widgets.transaction_table_widget import TransactionTableWidget
 from tests.models.test_record_keeper import get_preloaded_record_keeper
 
 
 def test_transaction_table_model(qtbot: QtBot, qtmodeltester: ModelTester) -> None:
+    icons.setup()
+
     parent = QWidget()
     qtbot.add_widget(parent)
     view = TransactionTableWidget(parent)

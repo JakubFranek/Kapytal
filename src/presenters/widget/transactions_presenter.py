@@ -526,6 +526,7 @@ class TransactionsPresenter:
         )
         self._busy_dialog.open()
         QApplication.processEvents()
+        QApplication.processEvents()  # needs to be called twice to show dialog reliably
 
         try:
             self._proxy_transaction_filter.transaction_filter = (

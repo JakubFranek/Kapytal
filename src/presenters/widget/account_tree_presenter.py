@@ -7,7 +7,6 @@ from src.models.base_classes.account import Account
 from src.models.model_objects.account_group import AccountGroup
 from src.models.model_objects.cash_objects import CashAccount
 from src.models.model_objects.currency_objects import (
-    CashAmount,
     ConversionFactorNotFoundError,
 )
 from src.models.model_objects.security_objects import SecurityAccount
@@ -18,7 +17,6 @@ from src.presenters.form.security_account_form_presenter import (
 from src.presenters.utilities.event import Event
 from src.presenters.utilities.handle_exception import handle_exception
 from src.view_models.account_tree_model import AccountTreeModel
-from src.views.constants import AccountTreeColumn
 from src.views.dialogs.account_group_dialog import AccountGroupDialog
 from src.views.dialogs.cash_account_dialog import CashAccountDialog
 from src.views.dialogs.security_account_dialog import SecurityAccountDialog
@@ -542,7 +540,6 @@ class AccountTreePresenter:
     def _initialize_signals(self) -> None:
         self._view.signal_selection_changed.connect(self._selection_changed)
         self._view.signal_expand_below.connect(self.expand_all_below)
-
 
         self._view.signal_show_all.connect(
             lambda: self._set_check_state_all(visible=True)

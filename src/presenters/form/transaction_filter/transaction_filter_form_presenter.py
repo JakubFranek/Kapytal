@@ -102,9 +102,6 @@ def order_subset(reference_list: Iterable, subset_list: list) -> list:
     return sorted(subset_list, key=lambda x: index_dict[x])
 
 
-# TODO: add busy indicator for filtering when filter changes
-
-
 class TransactionFilterFormPresenter:
     event_filter_changed = Event()
 
@@ -184,7 +181,19 @@ class TransactionFilterFormPresenter:
         self._category_filter_presenter.load_record_keeper(record_keeper)
         self._currency_filter_presenter.load_record_keeper(record_keeper)
         self._security_filter_presenter.load_record_keeper(record_keeper)
-        self.reset_filter_to_default()
+        # TODO: only reset filters whose data has changed in some way
+        # never reset:
+        # datetime filter
+        # description filter
+        # type filter
+        # reset cash amount filter if base currency changes
+        # self.reset_filter_to_default()
+        if (
+            self._transaction_filter.cash_amount_filter.currency
+            != record_keeper.base_currency
+        ):
+            self._transaction_filter.set_cash_amount_filter(None, None, FilterMode.OFF)
+            # alert user Cash Amount Filter changed
 
     def reset_filter_to_default(self) -> None:
         previous_filter = self._transaction_filter
@@ -303,17 +312,18 @@ class TransactionFilterFormPresenter:
         self._security_filter_presenter.load_from_security_filter(
             filter_.security_filter
         )
-        if filter_.cash_amount_filter is not None:
+
+        self._form.cash_amount_filter_mode = filter_.cash_amount_filter.mode
+        if filter_.cash_amount_filter.currency is not None:
             self._form.base_currency_code = filter_.cash_amount_filter.currency.code
-            self._form.cash_amount_filter_mode = filter_.cash_amount_filter.mode
+        if filter_.cash_amount_filter.minimum is not None:
             self._form.cash_amount_filter_minimum = (
                 filter_.cash_amount_filter.minimum.value_rounded
             )
+        if filter_.cash_amount_filter.maximum is not None:
             self._form.cash_amount_filter_maximum = (
                 filter_.cash_amount_filter.maximum.value_rounded
             )
-        else:
-            self._form.base_currency_code = ""
 
     def _restore_defaults(self) -> None:
         logging.info("Restoring TransactionFilterForm to default")
@@ -327,7 +337,6 @@ class TransactionFilterFormPresenter:
         # self._transaction_filter and self._default filter would point to same object
 
         filter_ = TransactionFilter()
-        filter_.set_account_filter(self._record_keeper.accounts, FilterMode.OFF)
         if self._record_keeper.base_currency is not None:
             filter_.set_cash_amount_filter(
                 self._record_keeper.base_currency.zero_amount,
@@ -424,8 +433,8 @@ class TransactionFilterFormPresenter:
                 logging.info(
                     "CashAmountFilter changed: "
                     f"mode={new_filter.cash_amount_filter.mode.name}, "
-                    f"min={new_filter.cash_amount_filter.minimum.to_str_rounded()}, "
-                    f"max={new_filter.cash_amount_filter.maximum.to_str_rounded()}"
+                    f"min={new_filter.cash_amount_filter.minimum}, "
+                    f"max={new_filter.cash_amount_filter.maximum}"
                 )
 
     def _check_filter_form_sanity(self) -> None:

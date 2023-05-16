@@ -302,7 +302,7 @@ def names(
             max_size = 32
     return draw(
         st.text(
-            alphabet=st.characters(blacklist_characters=("/")),
+            alphabet=st.characters(blacklist_characters=("/:")),
             min_size=min_size,
             max_size=max_size,
         )

@@ -331,6 +331,8 @@ class MainPresenter:
         )
 
     def _data_changed(self) -> None:
+        # line below should not be called in some cases such as
+        # Transaction deleted
         self._transactions_presenter.update_filter_models()
         self._transactions_presenter.refresh_view()
         self._transactions_presenter.reapply_sort()
