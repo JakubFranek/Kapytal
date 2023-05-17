@@ -40,6 +40,7 @@ class PayeeFormPresenter:
         self._record_keeper = record_keeper
 
     def reset_model(self) -> None:
+        # TODO: add busy indicator here
         self._model.pre_reset_model()
         self.update_model_data()
         self._model.post_reset_model()

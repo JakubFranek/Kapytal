@@ -76,6 +76,7 @@ class CategoryFormPresenter:
             self._view.category_tree.expand_all()
 
     def show_form(self) -> None:
+        # TODO: add busy indicator here
         self.reset_model()
         self._view.category_tree.expand_all()
         self._view.show_form()

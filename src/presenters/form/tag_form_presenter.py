@@ -57,6 +57,7 @@ class TagFormPresenter:
         self._model.tag_stats = tag_stats
 
     def show_form(self) -> None:
+        # TODO: add busy indicator here
         self.reset_model()
         self._view.show_form()
 

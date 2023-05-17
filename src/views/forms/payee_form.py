@@ -1,4 +1,3 @@
-
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtWidgets import QHeaderView, QLineEdit, QWidget
 from src.views import icons
@@ -71,9 +70,9 @@ class PayeeForm(CustomWidget, Ui_PayeeForm):
         self.tableView.sortByColumn(0, Qt.SortOrder.AscendingOrder)
 
     def _initialize_actions(self) -> None:
-        self.actionAdd_Payee.setIcon(icons.add_payee)
-        self.actionRename_Payee.setIcon(icons.edit_payee)
-        self.actionRemove_Payee.setIcon(icons.remove_payee)
+        self.actionAdd_Payee.setIcon(icons.add)
+        self.actionRename_Payee.setIcon(icons.edit)
+        self.actionRemove_Payee.setIcon(icons.remove)
 
         self.actionAdd_Payee.triggered.connect(self.signal_add_payee.emit)
         self.actionRename_Payee.triggered.connect(self.signal_rename_payee.emit)

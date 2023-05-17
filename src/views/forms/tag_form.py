@@ -1,4 +1,3 @@
-
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtWidgets import QHeaderView, QLineEdit, QWidget
 from src.views import icons
@@ -71,9 +70,9 @@ class TagForm(CustomWidget, Ui_TagForm):
         self.tableView.sortByColumn(0, Qt.SortOrder.AscendingOrder)
 
     def _initialize_actions(self) -> None:
-        self.actionAdd_Tag.setIcon(icons.add_tag)
-        self.actionRename_Tag.setIcon(icons.edit_tag)
-        self.actionRemove_Tag.setIcon(icons.remove_tag)
+        self.actionAdd_Tag.setIcon(icons.add)
+        self.actionRename_Tag.setIcon(icons.edit)
+        self.actionRemove_Tag.setIcon(icons.remove)
 
         self.actionAdd_Tag.triggered.connect(self.signal_add_tag.emit)
         self.actionRename_Tag.triggered.connect(self.signal_rename_tag.emit)

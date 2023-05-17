@@ -19,6 +19,8 @@ from src.views.utilities.handle_exception import handle_uncaught_exception
 # QWindowsWindow::setMouseGrabEnabled: Not setting mouse grab for invisible window
 # QWidgetWindow/'menuReportsWindow'
 
+# TODO: add splash screen, ideally with progress bar
+
 
 def main() -> None:
     # The following three lines are needed to make sure task bar icon works on Windows
