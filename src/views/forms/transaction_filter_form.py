@@ -349,7 +349,6 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
     def multiple_categories_filter_mode(self, mode: FilterMode) -> None:
         self.multipleCategoriesFilterModeComboBox.setCurrentText(mode.name)
 
-
     def _update_cash_amount_filter_state(self) -> None:
         if self._base_currency_code:
             self.cashAmountGroupBox.setEnabled(True)
@@ -489,7 +488,7 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
 
     def _initialize_window(self) -> None:
         self.setWindowFlag(Qt.WindowType.Window)
-        self.setWindowTitle("Filter Transaction Table")
+        self.setWindowTitle("Filter Transactions")
         self.setWindowIcon(icons.filter_)
 
     def _initialize_search_boxes(self) -> None:

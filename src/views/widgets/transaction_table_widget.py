@@ -14,6 +14,7 @@ from src.views.ui_files.widgets.Ui_transaction_table_widget import (
 class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
     signal_search_text_changed = pyqtSignal(str)
     signal_filter_transactions = pyqtSignal()
+    signal_reset_columns = pyqtSignal()
 
     signal_income = pyqtSignal()
     signal_expense = pyqtSignal()
@@ -94,6 +95,7 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
     def show_all_columns(self) -> None:
         for column in TRANSACTION_TABLE_COLUMN_HEADERS:
             self.set_column_visibility(column, show=True)
+        self.resize_table_to_contents()
 
     def set_actions(
         self, *, enable_duplicate: bool, enable_refund: bool, enable_find_related: bool
@@ -143,6 +145,10 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
     def _create_header_context_menu(self, event: QContextMenuEvent) -> None:
         del event
         self.header_menu = QMenu(self)
+        self.header_menu.addAction(self.actionShow_All_Columns)
+        self.header_menu.addAction(self.actionResize_Columns_to_Fit)
+        self.header_menu.addAction(self.actionReset_Columns)
+        self.header_menu.addSeparator()
         for action in self.column_actions:
             column = action.data()
             if self.tableView.isColumnHidden(column):
@@ -150,10 +156,6 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
             else:
                 action.setChecked(True)
             self.header_menu.addAction(action)
-        self.header_menu.addSeparator()
-        self.header_menu.addAction(self.actionShow_All_Columns)
-        self.header_menu.addAction(self.actionResize_Columns_to_Fit)
-        self.header_menu.addAction(self.actionReset_Columns)
         self.header_menu.popup(QCursor.pos())
 
     def _create_table_context_menu(self, event: QContextMenuEvent) -> None:
@@ -209,7 +211,7 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
         self.actionResize_Columns_to_Fit.triggered.connect(
             self.resize_table_to_contents
         )
-        self.actionReset_Columns.triggered.connect(self._reset_column_order)
+        self.actionReset_Columns.triggered.connect(self.signal_reset_columns)
 
     def _initialize_signals(self) -> None:
         self.tableView.doubleClicked.connect(self.signal_edit.emit)
@@ -253,7 +255,7 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
             self._create_table_context_menu
         )
 
-    def _reset_column_order(self) -> None:
+    def reset_column_order(self) -> None:
         header = self.tableView.horizontalHeader()
         for column in TransactionTableColumn:
             visual_index = header.visualIndex(column)

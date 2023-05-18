@@ -1402,9 +1402,11 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         )
         # Sorting transactions here is useful because front-end can assume that
         # upon load of RecordKeeper._transactions, transactions are already sorted
+        # in descending order
         obj._transactions = sorted(  # noqa: SLF001
             obj._transactions_uuid_dict.values(),  # noqa: SLF001
             key=lambda x: x.timestamp,
+            reverse=True,
         )
 
         for account in obj._accounts:  # noqa: SLF001

@@ -82,13 +82,6 @@ class TransactionsPresenter:
         self._model.valid_accounts = accounts
         self._transaction_filter_form_presenter.account_tree_shown_accounts = accounts
 
-    def reset_model(self) -> None:
-        """Resets TransactionTableModel and TransactionFilter, and updates columns."""
-        self._reset_model()
-        self._transaction_filter_form_presenter.reset_filter_to_default()
-        self._update_table_columns()
-        self._view.resize_table_to_contents()
-
     def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
         self._record_keeper = record_keeper
         self._cash_transaction_dialog_presenter.load_record_keeper(record_keeper)
@@ -104,13 +97,8 @@ class TransactionsPresenter:
         self._update_table_columns()
         self._view.resize_table_to_contents()
 
-    def update_model_data(self) -> None:
-        self._model.transactions = self._record_keeper.transactions
-        self._model.base_currency = self._record_keeper.base_currency
-
     def update_base_currency(self) -> None:
         self._model.base_currency = self._record_keeper.base_currency
-        self._transaction_filter_form_presenter.reset_filter_to_default()
 
     def update_filter_models(self) -> None:
         self._transaction_filter_form_presenter.load_record_keeper(self._record_keeper)
@@ -122,7 +110,6 @@ class TransactionsPresenter:
         self._view.resize_table_to_contents()
 
     def reapply_sort(self) -> None:
-        # TODO: sort does not need to be applied after Transaction deletion
         self._proxy_regex_sort_filter.setDynamicSortFilter(True)  # noqa: FBT003
 
     def _reset_model(self) -> None:
@@ -132,9 +119,11 @@ class TransactionsPresenter:
         self._model.post_reset_model()
 
     def _update_model_data(self) -> None:
-        self._model.transactions = self._record_keeper.transactions
-        self._model.transaction_uuid_dict = self._record_keeper.transaction_uuid_dict
-        self._model.base_currency = self._record_keeper.base_currency
+        self._model.load_data(
+            self._record_keeper.transactions,
+            self._record_keeper.transaction_uuid_dict,
+            self._record_keeper.base_currency,
+        )
 
     def _update_table_columns(self) -> None:
         visible_transactions = self._model.get_visible_items()
@@ -199,9 +188,6 @@ class TransactionsPresenter:
 
         self._model = TransactionTableModel(
             self._view.tableView,
-            [],
-            self._record_keeper.base_currency,
-            self._account_tree_shown_accounts,
             self._proxy_regex_sort_filter,
             self._proxy_transaction_filter,
         )
@@ -300,31 +286,32 @@ class TransactionsPresenter:
         self._view.signal_selection_changed.connect(self._selection_changed)
         self._view.signal_refund.connect(self._refund_transaction)
         self._view.signal_find_related.connect(self._find_related)
+        self._view.signal_reset_columns.connect(self._reset_columns)
 
     def _connect_events(self) -> None:
         self._cash_transaction_dialog_presenter.event_update_model.append(
-            self.update_model_data
+            self._update_model_data
         )
         self._cash_transaction_dialog_presenter.event_data_changed.append(
             self._data_changed
         )
 
         self._cash_transfer_dialog_presenter.event_update_model.append(
-            self.update_model_data
+            self._update_model_data
         )
         self._cash_transfer_dialog_presenter.event_data_changed.append(
             self._data_changed
         )
 
         self._security_transaction_dialog_presenter.event_update_model.append(
-            self.update_model_data
+            self._update_model_data
         )
         self._security_transaction_dialog_presenter.event_data_changed.append(
             self._data_changed
         )
 
         self._security_transfer_dialog_presenter.event_update_model.append(
-            self.update_model_data
+            self._update_model_data
         )
         self._security_transfer_dialog_presenter.event_data_changed.append(
             self._data_changed
@@ -335,7 +322,7 @@ class TransactionsPresenter:
         )
 
         self._refund_transaction_dialog_presenter.event_update_model.append(
-            self.update_model_data
+            self._update_model_data
         )
         self._refund_transaction_dialog_presenter.event_data_changed.append(
             self._data_changed
@@ -379,7 +366,6 @@ class TransactionsPresenter:
             finally:
                 if any_deleted:
                     self._update_number_of_shown_transactions()
-                    # TODO: deleting transactions should not reset filters!
                     self.event_data_changed()
 
     def _duplicate_transaction(self) -> None:
@@ -521,6 +507,7 @@ class TransactionsPresenter:
         self._transaction_filter_form_presenter.show_form()
 
     def _filter_changed(self) -> None:
+        # TODO: update filter transactions tooltip
         self._busy_dialog = create_simple_busy_indicator(
             self._view, "Filtering Transactions, please wait..."
         )
@@ -553,3 +540,11 @@ class TransactionsPresenter:
         logging.debug(f"Visible transactions: {n_visible:,}/{n_total:,}")
         self._view.set_shown_transactions(n_visible, n_total)
         self._view.set_shown_transactions(n_visible, n_total)
+
+    def _reset_columns(self) -> None:
+        self._view.set_column_visibility(TransactionTableColumn.UUID, show=False)
+        self._view.set_column_visibility(
+            TransactionTableColumn.DATETIME_CREATED, show=False
+        )
+        self._update_table_columns()
+        self._view.reset_column_order()

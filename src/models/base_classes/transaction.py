@@ -111,6 +111,7 @@ class Transaction(
 
     @abstractmethod
     def is_accounts_related(self, accounts: Collection["Account"]) -> bool:
+        # TODO: this would be faster if accounts was a set or a frozenset
         raise NotImplementedError
 
     @abstractmethod

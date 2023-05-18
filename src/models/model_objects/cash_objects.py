@@ -527,6 +527,7 @@ class CashTransaction(CashRelatedTransaction):
         return self._account in accounts
 
     def is_category_related(self, category: Category) -> bool:
+        # TODO: this would be faster if self._categories was a frozenset
         if category in self._categories:
             return True
         if len(category.children) == 0:

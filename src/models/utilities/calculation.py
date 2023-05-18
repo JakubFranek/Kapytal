@@ -90,21 +90,17 @@ def get_category_stats(
 ) -> CategoryStats:
     _transactions = _filter_date_range(transactions, date_start, date_end)
 
-    _transactions = [
-        transaction
-        for transaction in _transactions
-        if isinstance(transaction, CashTransaction | RefundTransaction)
-    ]
-    _transactions_direct = [
-        transaction
-        for transaction in _transactions
-        if category in transaction.categories
-    ]
-    _transactions_all = [
-        transaction
-        for transaction in _transactions
-        if transaction.is_category_related(category)
-    ]
+    # TODO: a lot of time is spend in this listcomp, this could be improved
+    # if RecordKeeper sorted Transactions by type into several lists
+    _transactions_direct: list[CashTransaction | RefundTransaction] = []
+    _transactions_all: list[CashTransaction | RefundTransaction] = []
+    for transaction in _transactions:
+        if not isinstance(transaction, CashTransaction | RefundTransaction):
+            continue
+        if category in transaction.categories:
+            _transactions_direct.append(transaction)
+        if transaction.is_category_related(category):
+            _transactions_all.append(transaction)
 
     transactions_self = len(_transactions_direct)
     transactions_total = len(_transactions_all)

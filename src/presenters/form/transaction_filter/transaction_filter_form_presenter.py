@@ -173,27 +173,50 @@ class TransactionFilterFormPresenter:
     def filter_active(self) -> bool:
         return self._transaction_filter != self._default_filter
 
-    def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
-        self._record_keeper = record_keeper
+    def load_record_keeper(
+        self,
+        record_keeper: RecordKeeper,
+    ) -> None:
         self._account_filter_presenter.load_record_keeper(record_keeper)
         self._tag_filter_presenter.load_record_keeper(record_keeper)
         self._payee_filter_presenter.load_record_keeper(record_keeper)
         self._category_filter_presenter.load_record_keeper(record_keeper)
         self._currency_filter_presenter.load_record_keeper(record_keeper)
         self._security_filter_presenter.load_record_keeper(record_keeper)
-        # TODO: only reset filters whose data has changed in some way
-        # never reset:
-        # datetime filter
-        # description filter
-        # type filter
-        # reset cash amount filter if base currency changes
-        # self.reset_filter_to_default()
+
         if (
             self._transaction_filter.cash_amount_filter.currency
             != record_keeper.base_currency
         ):
-            self._transaction_filter.set_cash_amount_filter(None, None, FilterMode.OFF)
-            # alert user Cash Amount Filter changed
+            if self._transaction_filter.cash_amount_filter.mode != FilterMode.OFF:
+                was_filter_active = True
+            else:
+                was_filter_active = False
+
+            # reset cash amount filter if base currency changes
+            if record_keeper.base_currency is not None:
+                self._transaction_filter.set_cash_amount_filter(
+                    CashAmount(0, record_keeper.base_currency),
+                    CashAmount(0, record_keeper.base_currency),
+                    FilterMode.OFF,
+                )
+            else:
+                self._transaction_filter.set_cash_amount_filter(
+                    None, None, FilterMode.OFF
+                )
+            self._update_form_from_filter(self._transaction_filter)
+
+            if was_filter_active:
+                self.event_filter_changed()
+                display_error_message(
+                    (
+                        "Cash Amount Filter has been turned off and reset to default "
+                        "due to Base Currency change.\n"
+                    ),
+                    title="Warning",
+                )
+
+        self._record_keeper = record_keeper
 
     def reset_filter_to_default(self) -> None:
         previous_filter = self._transaction_filter
@@ -208,13 +231,16 @@ class TransactionFilterFormPresenter:
         self._update_form_from_filter(self._transaction_filter)
         self._form.show_form()
 
-    def _form_accepted(self) -> None:
-        self._check_filter_form_sanity()
+    def _update_filter(self) -> None:
         new_filter = self._get_transaction_filter_from_form()
         if self.transaction_filter != new_filter:
             self._log_filter_differences(new_filter)
             self._transaction_filter = new_filter
             self.event_filter_changed()
+
+    def _form_accepted(self) -> None:
+        self._check_filter_form_sanity()
+        self._update_filter()
         self._form.close()
 
     def _get_transaction_filter_from_form(self) -> TransactionFilter:

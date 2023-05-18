@@ -37,42 +37,37 @@ ALIGNMENT_AMOUNTS = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
 
 
 class TransactionTableModel(QAbstractTableModel):
-    def __init__(  # noqa: PLR0913
+    def __init__(
         self,
         view: QTableView,
-        transactions: Collection[Transaction],
-        base_currency: Currency,
-        valid_accounts: Collection[Account],
         proxy_viewside: QSortFilterProxyModel,
         proxy_sourceside: QSortFilterProxyModel,
     ) -> None:
         super().__init__()
         self._view = view
-        self._transaction_uuid_dict: dict[uuid.UUID, Transaction] = {}
-        self.transactions = transactions
-        self.base_currency = base_currency
-        self.valid_accounts = valid_accounts
         self._proxy_viewside = proxy_viewside
         self._proxy_sourceside = proxy_sourceside
+
+        self._transaction_uuid_dict: dict[uuid.UUID, Transaction] = {}
+        self._transactions: tuple[Transaction] = ()
+        self._base_currency: Currency | None = None
+        self._valid_accounts = ()
 
     @property
     def transactions(self) -> tuple[Transaction, ...]:
         return self._transactions
 
-    @transactions.setter
-    def transactions(self, transactions: Collection[Transaction]) -> None:
-        """Transactions should be sorted by datetime in ascending order (0 = oldest)"""
-        self._transactions = tuple(transactions[::-1])
+    @property
+    def base_currency(self) -> Currency:
+        return self._base_currency
+
+    @base_currency.setter
+    def base_currency(self, currency: Currency) -> None:
+        self._base_currency = currency
 
     @property
     def transaction_uuid_dict(self) -> dict[uuid.UUID, Transaction]:
         return self._transaction_uuid_dict
-
-    @transaction_uuid_dict.setter
-    def transaction_uuid_dict(
-        self, transaction_uuid_dict: dict[uuid.UUID, Transaction]
-    ) -> None:
-        self._transaction_uuid_dict = transaction_uuid_dict
 
     @property
     def valid_accounts(self) -> tuple[Account]:
@@ -81,6 +76,19 @@ class TransactionTableModel(QAbstractTableModel):
     @valid_accounts.setter
     def valid_accounts(self, accounts: Collection[Account]) -> None:
         self._valid_accounts = tuple(accounts)
+
+    # FIXME: this is really hacky
+    def load_data(
+        self,
+        transactions: Collection[Transaction],
+        transaction_uuid_dict: dict[uuid.UUID, Transaction],
+        base_currency: Currency | None,
+    ) -> None:
+        """Transactions should be sorted in descending manner upon initial load!"""
+
+        self._base_currency = base_currency
+        self._transactions = tuple(transactions)
+        self._transaction_uuid_dict = transaction_uuid_dict
 
     def rowCount(self, index: QModelIndex = ...) -> int:  # noqa: N802
         if isinstance(index, QModelIndex) and index.isValid():
@@ -133,17 +141,16 @@ class TransactionTableModel(QAbstractTableModel):
         return None
 
     def pre_add(self) -> None:
-        self._proxy_viewside.setDynamicSortFilter(False)  # noqa: FBT003
         self._view.setSortingEnabled(False)  # noqa: FBT003
         self.beginInsertRows(QModelIndex(), self.rowCount(), self.rowCount())
 
     def post_add(self) -> None:
         self.endInsertRows()
         self._view.setSortingEnabled(True)  # noqa: FBT003
-        self._proxy_viewside.setDynamicSortFilter(True)  # noqa: FBT003
 
     def pre_reset_model(self) -> None:
         self._proxy_viewside.setDynamicSortFilter(False)  # noqa: FBT003
+        self._proxy_sourceside.setDynamicSortFilter(False)  # noqa: FBT003
 
         # this effectively turns off sorting and dramatically decreases calls
         # to data() for sorting purposes during file load
@@ -154,6 +161,7 @@ class TransactionTableModel(QAbstractTableModel):
     def post_reset_model(self) -> None:
         self.endResetModel()
         self._proxy_viewside.setDynamicSortFilter(True)  # noqa: FBT003
+        self._proxy_sourceside.setDynamicSortFilter(True)  # noqa: FBT003
 
     def pre_remove_item(self, item: Transaction) -> None:
         index = self.get_index_from_item(item)
@@ -458,7 +466,7 @@ class TransactionTableModel(QAbstractTableModel):
 
         if base:
             try:
-                return amount.convert(self.base_currency).to_str_rounded()
+                return amount.convert(self._base_currency).to_str_rounded()
             except ConversionFactorNotFoundError:
                 return "Error!"
         return amount.to_str_rounded()
@@ -476,7 +484,7 @@ class TransactionTableModel(QAbstractTableModel):
             return float("-inf")
 
         if base:
-            return float(amount.convert(self.base_currency).value_rounded)
+            return float(amount.convert(self._base_currency).value_rounded)
         return float(amount.value_rounded)
 
     @staticmethod
@@ -512,9 +520,9 @@ class TransactionTableModel(QAbstractTableModel):
     def _get_account_balance(self, transaction: Transaction) -> str:
         if (
             isinstance(transaction, CashRelatedTransaction)
-            and len(self.valid_accounts) == 1
+            and len(self._valid_accounts) == 1
         ):
-            account = self.valid_accounts[0]
+            account = self._valid_accounts[0]
             if not isinstance(account, CashAccount):
                 raise TypeError(f"Expected CashAccount, got {type(account)}.")
             if transaction.is_account_related(account):
