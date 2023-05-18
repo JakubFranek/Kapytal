@@ -11,6 +11,12 @@ from src.models.model_objects.security_objects import SecurityAccount
 from src.presenters.utilities.event import Event
 from src.views import icons
 
+FLAGS_CHECKABLE = (
+    Qt.ItemFlag.ItemIsSelectable
+    | Qt.ItemFlag.ItemIsEnabled
+    | Qt.ItemFlag.ItemIsUserCheckable
+)
+
 
 def convert_bool_to_checkstate(*, checked: bool) -> Qt.CheckState:
     return Qt.CheckState.Checked if checked else Qt.CheckState.Unchecked
@@ -234,11 +240,7 @@ class CheckableAccountTreeModel(QAbstractItemModel):
     def flags(self, index: QModelIndex) -> Qt.ItemFlag:
         if not index.isValid():
             return Qt.ItemFlag.NoItemFlags
-        return (
-            Qt.ItemFlag.ItemIsSelectable
-            | Qt.ItemFlag.ItemIsEnabled
-            | Qt.ItemFlag.ItemIsUserCheckable
-        )
+        return FLAGS_CHECKABLE
 
     def pre_reset_model(self) -> None:
         self.beginResetModel()

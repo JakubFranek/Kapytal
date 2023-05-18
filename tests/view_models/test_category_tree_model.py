@@ -21,11 +21,10 @@ def test_category_tree_model(qtbot: QtBot, qtmodeltester: ModelTester) -> None:
     )
 
     model = CategoryTreeModel(
-        tree_view=category_form.category_tree,
+        tree_view=category_form.expenseTreeView,
         root_categories=record_keeper.root_expense_categories,
-        category_stats=category_form_presenter._model._category_stats_dict,
-        base_currency=record_keeper.base_currency,
-        proxy=category_form_presenter._proxy_model,
+        category_stats=category_form_presenter._model_income._category_stats_dict,
+        proxy=category_form_presenter._proxy_income,
     )
 
     qtmodeltester.check(model)

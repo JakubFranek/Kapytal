@@ -5,6 +5,12 @@ from typing import Any
 from PyQt6.QtCore import QAbstractListModel, QModelIndex, QSortFilterProxyModel, Qt
 from PyQt6.QtWidgets import QListView
 
+FLAGS_CHECKABLE = (
+    Qt.ItemFlag.ItemIsSelectable
+    | Qt.ItemFlag.ItemIsEnabled
+    | Qt.ItemFlag.ItemIsUserCheckable
+)
+
 
 class CheckableListModel(QAbstractListModel):
     def __init__(
@@ -76,11 +82,7 @@ class CheckableListModel(QAbstractListModel):
     def flags(self, index: QModelIndex) -> Qt.ItemFlag:
         if not index.isValid():
             return Qt.ItemFlag.NoItemFlags
-        return (
-            Qt.ItemFlag.ItemIsSelectable
-            | Qt.ItemFlag.ItemIsEnabled
-            | Qt.ItemFlag.ItemIsUserCheckable
-        )
+        return FLAGS_CHECKABLE
 
     def get_selected_item(self) -> Any | None:
         indexes = self._list_view.selectedIndexes()

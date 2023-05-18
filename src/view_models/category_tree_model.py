@@ -4,9 +4,10 @@ from collections.abc import Collection, Sequence
 from PyQt6.QtCore import QAbstractItemModel, QModelIndex, QSortFilterProxyModel, Qt
 from PyQt6.QtWidgets import QTreeView
 from src.models.model_objects.attributes import Category
-from src.models.model_objects.currency_objects import Currency
 from src.models.utilities.calculation import CategoryStats
 from src.views.constants import CategoryTreeColumn
+
+ALIGNMENT_RIGHT = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
 
 
 class CategoryTreeModel(QAbstractItemModel):
@@ -16,19 +17,17 @@ class CategoryTreeModel(QAbstractItemModel):
         CategoryTreeColumn.BALANCE: "Balance",
     }
 
-    def __init__(  # noqa: PLR0913
+    def __init__(
         self,
         tree_view: QTreeView,
         root_categories: Sequence[Category],
         category_stats: dict[Category, CategoryStats],
-        base_currency: Currency,
         proxy: QSortFilterProxyModel,
     ) -> None:
         super().__init__()
         self._tree_view = tree_view
         self.root_categories = root_categories
         self._category_stats_dict: dict[Category, CategoryStats] = category_stats
-        self.base_currency = base_currency
         self._proxy = proxy
 
     @property
@@ -84,7 +83,7 @@ class CategoryTreeModel(QAbstractItemModel):
             parent_row = grandparent.children.index(parent)
         return QAbstractItemModel.createIndex(self, parent_row, 0, parent)
 
-    def data(
+    def data(  # noqa: PLR0911
         self, index: QModelIndex, role: Qt.ItemDataRole = ...
     ) -> str | Qt.AlignmentFlag | None:
         if not index.isValid():
@@ -94,15 +93,30 @@ class CategoryTreeModel(QAbstractItemModel):
         stats = self._category_stats_dict[category]
         if role == Qt.ItemDataRole.DisplayRole:
             return self._get_display_role_data(column, category, stats)
-        if role == Qt.ItemDataRole.UserRole and column == CategoryTreeColumn.NAME:
-            return unicodedata.normalize("NFD", category.name)
+        if role == Qt.ItemDataRole.UserRole:
+            if column == CategoryTreeColumn.NAME:
+                return unicodedata.normalize("NFD", category.name)
+            if column == CategoryTreeColumn.TRANSACTIONS:
+                return stats.transactions_total
+            if column == CategoryTreeColumn.BALANCE:
+                return float(stats.balance.value_normalized)
         if role == Qt.ItemDataRole.UserRole + 1 and column == CategoryTreeColumn.NAME:
             return category.path
         if role == Qt.ItemDataRole.TextAlignmentRole and (
             column == CategoryTreeColumn.TRANSACTIONS
             or column == CategoryTreeColumn.BALANCE
         ):
-            return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+            return ALIGNMENT_RIGHT
+        if (
+            role == Qt.ItemDataRole.ToolTipRole
+            and column == CategoryTreeColumn.TRANSACTIONS
+        ):
+            return (
+                "Number outside of parentheses is the number of Transactions\n"
+                "containing the Category and/or its children Categories.\n"
+                "Number in parentheses is the number of Transactions containing\n"
+                "the Category directly, not counting its children."
+            )
         return None
 
     def _get_display_role_data(
@@ -115,7 +129,7 @@ class CategoryTreeModel(QAbstractItemModel):
                 return stats.transactions_total
             return f"{stats.transactions_total} ({stats.transactions_self})"
         if column == CategoryTreeColumn.BALANCE:
-            return stats.balance.convert(self.base_currency).to_str_rounded()
+            return stats.balance.to_str_rounded()
         return None
 
     def headerData(  # noqa: N802

@@ -1,82 +1,185 @@
-
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtWidgets import QLineEdit, QWidget
+from PyQt6.QtWidgets import QHeaderView, QLineEdit, QTreeView, QWidget
 from src.models.model_objects.attributes import CategoryType
 from src.views import icons
 from src.views.base_classes.custom_widget import CustomWidget
+from src.views.constants import CategoryTreeColumn
 from src.views.ui_files.forms.Ui_category_form import Ui_CategoryForm
-from src.views.widgets.category_tree import CategoryTree
+
+# TODO: add context menu
+# TODO: enable sorting
 
 
 class CategoryForm(CustomWidget, Ui_CategoryForm):
-    signal_add_category = pyqtSignal()
-    signal_edit_category = pyqtSignal()
-    signal_delete_category = pyqtSignal()
-    signal_select_category = pyqtSignal()
-    signal_search_text_changed = pyqtSignal(str)
+    signal_add = pyqtSignal()
+    signal_edit = pyqtSignal()
+    signal_delete = pyqtSignal()
+
     signal_tree_selection_changed = pyqtSignal()
-    signal_type_selection_changed = pyqtSignal()
     signal_expand_all_below = pyqtSignal()
+
+    signal_income_search_text_changed = pyqtSignal(str)
+    signal_expense_search_text_changed = pyqtSignal(str)
+    signal_income_and_expense_search_text_changed = pyqtSignal(str)
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent=parent)
         self.setupUi(self)
-        self.category_tree = CategoryTree(self)
-        self.verticalLayout.addWidget(self.category_tree)
 
         self.setWindowFlag(Qt.WindowType.Window)
         self.setWindowIcon(icons.category)
 
-        self.searchLineEdit.addAction(
-            icons.magnifier, QLineEdit.ActionPosition.LeadingPosition
+        self._initialize_search_bars()
+        self._initialize_actions()
+
+    @property
+    def category_type(self) -> CategoryType:
+        current_index = self.tabWidget.currentIndex()
+        if current_index == 0:
+            return CategoryType.INCOME
+        if current_index == 1:
+            return CategoryType.EXPENSE
+        return CategoryType.INCOME_AND_EXPENSE
+
+    def enable_actions(
+        self,
+        *,
+        enable_add_objects: bool,
+        enable_modify_object: bool,
+        enable_expand_below: bool,
+    ) -> None:
+        self.actionAdd.setEnabled(enable_add_objects)
+        self.actionEdit.setEnabled(enable_modify_object)
+        self.actionRemove.setEnabled(enable_modify_object)
+        self.actionExpand_All_Below.setEnabled(enable_expand_below)
+
+    def get_current_tree_view(self) -> QTreeView:
+        type_ = self.category_type
+        if type_ == CategoryType.INCOME:
+            return self.incomeTreeView
+        if type_ == CategoryType.EXPENSE:
+            return self.expenseTreeView
+        return self.incomeAndExpenseTreeView
+
+    def finalize_setup(self) -> None:
+        self.incomeTreeView.selectionModel().selectionChanged.connect(
+            self.signal_tree_selection_changed.emit
         )
-        self.searchLineEdit.textChanged.connect(self.signal_search_text_changed.emit)
-        self.category_tree.signal_add_category.connect(self.signal_add_category.emit)
-        self.category_tree.signal_edit_category.connect(self.signal_edit_category.emit)
-        self.category_tree.signal_delete_category.connect(
-            self.signal_delete_category.emit
+        self.expenseTreeView.selectionModel().selectionChanged.connect(
+            self.signal_tree_selection_changed.emit
         )
-        self.category_tree.signal_expand_below.connect(
-            self.signal_expand_all_below.emit
-        )
-        self.category_tree.signal_selection_changed.connect(
+        self.incomeAndExpenseTreeView.selectionModel().selectionChanged.connect(
             self.signal_tree_selection_changed.emit
         )
 
-        self.incomeRadioButton.toggled.connect(
-            lambda checked: self._radio_button_toggled(checked=checked)
+        self.incomeTreeView.header().setSectionResizeMode(
+            CategoryTreeColumn.NAME,
+            QHeaderView.ResizeMode.ResizeToContents,
         )
-        self.expenseRadioButton.toggled.connect(
-            lambda checked: self._radio_button_toggled(checked=checked)
+        self.incomeTreeView.header().setSectionResizeMode(
+            CategoryTreeColumn.TRANSACTIONS,
+            QHeaderView.ResizeMode.ResizeToContents,
         )
-        self.incomeAndExpenseRadioButton.toggled.connect(
-            lambda checked: self._radio_button_toggled(checked=checked)
+        self.incomeTreeView.header().setSectionResizeMode(
+            CategoryTreeColumn.BALANCE,
+            QHeaderView.ResizeMode.Stretch,
+        )
+        self.expenseTreeView.header().setSectionResizeMode(
+            CategoryTreeColumn.NAME,
+            QHeaderView.ResizeMode.ResizeToContents,
+        )
+        self.expenseTreeView.header().setSectionResizeMode(
+            CategoryTreeColumn.TRANSACTIONS,
+            QHeaderView.ResizeMode.ResizeToContents,
+        )
+        self.expenseTreeView.header().setSectionResizeMode(
+            CategoryTreeColumn.BALANCE,
+            QHeaderView.ResizeMode.Stretch,
+        )
+        self.incomeAndExpenseTreeView.header().setSectionResizeMode(
+            CategoryTreeColumn.NAME,
+            QHeaderView.ResizeMode.ResizeToContents,
+        )
+        self.incomeAndExpenseTreeView.header().setSectionResizeMode(
+            CategoryTreeColumn.TRANSACTIONS,
+            QHeaderView.ResizeMode.ResizeToContents,
+        )
+        self.incomeAndExpenseTreeView.header().setSectionResizeMode(
+            CategoryTreeColumn.BALANCE,
+            QHeaderView.ResizeMode.Stretch,
         )
 
-        self.expandAllToolButton.setDefaultAction(self.category_tree.actionExpand_All)
-        self.collapseAllToolButton.setDefaultAction(
-            self.category_tree.actionCollapse_All
+    def _initialize_search_bars(self) -> None:
+        self.incomeSearchLineEdit.addAction(
+            icons.magnifier, QLineEdit.ActionPosition.LeadingPosition
         )
-        self.addToolButton.setDefaultAction(self.category_tree.actionAdd_Category)
+        self.expenseSearchLineEdit.addAction(
+            icons.magnifier, QLineEdit.ActionPosition.LeadingPosition
+        )
+        self.incomeAndExpenseSearchLineEdit.addAction(
+            icons.magnifier, QLineEdit.ActionPosition.LeadingPosition
+        )
+        self.incomeSearchLineEdit.textChanged.connect(
+            self.signal_income_search_text_changed.emit
+        )
+        self.expenseSearchLineEdit.textChanged.connect(
+            self.signal_expense_search_text_changed.emit
+        )
+        self.incomeAndExpenseSearchLineEdit.textChanged.connect(
+            self.signal_income_and_expense_search_text_changed.emit
+        )
 
-    @property
-    def search_bar_text(self) -> str:
-        return self.searchLineEdit.text()
+    def _initialize_actions(self) -> None:
+        self.actionExpand_All.setIcon(icons.expand)
+        self.actionExpand_All_Below.setIcon(icons.expand_below)
+        self.actionCollapse_All.setIcon(icons.collapse)
 
-    @property
-    def checked_type(self) -> CategoryType:
-        if self.incomeRadioButton.isChecked():
-            return CategoryType.INCOME
-        if self.expenseRadioButton.isChecked():
-            return CategoryType.EXPENSE
-        if self.incomeAndExpenseRadioButton.isChecked():
-            return CategoryType.INCOME_AND_EXPENSE
-        raise ValueError("No radio button checked.")
+        self.actionAdd.setIcon(icons.add)
+        self.actionEdit.setIcon(icons.edit)
+        self.actionRemove.setIcon(icons.remove)
 
-    def finalize_setup(self) -> None:
-        self.category_tree.finalize_setup()
+        self.actionExpand_All.triggered.connect(self._expand_all)
+        self.actionCollapse_All.triggered.connect(self._collapse_all)
+        self.actionExpand_All_Below.triggered.connect(self.signal_expand_all_below.emit)
 
-    def _radio_button_toggled(self, *, checked: bool) -> None:
-        if not checked:
-            return  # don't care about un-checking of radio button
-        self.signal_type_selection_changed.emit()
+        self.actionAdd.triggered.connect(self.signal_add.emit)
+        self.actionEdit.triggered.connect(self.signal_edit.emit)
+        self.actionRemove.triggered.connect(self.signal_delete.emit)
+
+        self.incomeExpandAllToolButton.setDefaultAction(self.actionExpand_All)
+        self.incomeCollapseAllToolButton.setDefaultAction(self.actionCollapse_All)
+        self.incomeAddToolButton.setDefaultAction(self.actionAdd)
+        self.incomeEditToolButton.setDefaultAction(self.actionEdit)
+        self.incomeRemoveToolButton.setDefaultAction(self.actionRemove)
+
+        self.expenseExpandAllToolButton.setDefaultAction(self.actionExpand_All)
+        self.expenseCollapseAllToolButton.setDefaultAction(self.actionCollapse_All)
+        self.expenseAddToolButton.setDefaultAction(self.actionAdd)
+        self.expenseEditToolButton.setDefaultAction(self.actionEdit)
+        self.expenseRemoveToolButton.setDefaultAction(self.actionRemove)
+
+        self.incomeAndExpenseExpandAllToolButton.setDefaultAction(self.actionExpand_All)
+        self.incomeAndExpenseCollapseAllToolButton.setDefaultAction(
+            self.actionCollapse_All
+        )
+        self.incomeAndExpenseAddToolButton.setDefaultAction(self.actionAdd)
+        self.incomeAndExpenseEditToolButton.setDefaultAction(self.actionEdit)
+        self.incomeAndExpenseRemoveToolButton.setDefaultAction(self.actionRemove)
+
+    def _expand_all(self) -> None:
+        category_type = self.category_type
+        if category_type == CategoryType.INCOME:
+            self.incomeTreeView.expandAll()
+        elif category_type == CategoryType.EXPENSE:
+            self.expenseTreeView.expandAll()
+        else:
+            self.incomeAndExpenseTreeView.expandAll()
+
+    def _collapse_all(self) -> None:
+        category_type = self.category_type
+        if category_type == CategoryType.INCOME:
+            self.incomeTreeView.collapseAll()
+        elif category_type == CategoryType.EXPENSE:
+            self.expenseTreeView.collapseAll()
+        else:
+            self.incomeAndExpenseTreeView.collapseAll()
