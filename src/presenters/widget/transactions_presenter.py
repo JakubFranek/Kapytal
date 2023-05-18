@@ -169,6 +169,7 @@ class TransactionsPresenter:
             return
         logging.debug(f"Filtering Transactions: {pattern=}")
         self._proxy_regex_sort_filter.setFilterRegularExpression(pattern)
+        self._update_number_of_shown_transactions()
         self._update_table_columns()
         self.resize_table_to_contents()
 

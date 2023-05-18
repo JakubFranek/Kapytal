@@ -3,7 +3,7 @@ import logging
 from PyQt6.QtCore import QSortFilterProxyModel, Qt
 from src.models.model_objects.attributes import AttributeType
 from src.models.record_keeper import RecordKeeper
-from src.models.utilities.calculation import AttributeStats, get_tag_stats
+from src.models.utilities.calculation import calculate_tag_stats
 from src.presenters.utilities.event import Event
 from src.presenters.utilities.handle_exception import handle_exception
 from src.view_models.tag_table_model import TagTableModel
@@ -45,16 +45,13 @@ class TagFormPresenter:
         self._model.post_reset_model()
 
     def update_model_data(self) -> None:
-        tag_stats: list[AttributeStats] = []
-        for tag in self._record_keeper.tags:
-            tag_stats.append(
-                get_tag_stats(
-                    tag,
-                    self._record_keeper.transactions,
-                    self._record_keeper.base_currency,
-                )
-            )
-        self._model.tag_stats = tag_stats
+        relevant_transactions = (
+            self._record_keeper.cash_transactions
+            + self._record_keeper.refund_transactions
+        )
+        self._model.tag_stats = calculate_tag_stats(
+            relevant_transactions, self._record_keeper.base_currency
+        ).values()
 
     def show_form(self) -> None:
         # TODO: add busy indicator here

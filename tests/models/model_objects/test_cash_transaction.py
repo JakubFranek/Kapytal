@@ -91,7 +91,7 @@ def test_creation(  # noqa: PLR0913
         tag_amount_collection,
     )
 
-    categories = tuple(category for category, _ in category_amount_collection)
+    categories = frozenset(category for category, _ in category_amount_collection)
 
     dt_created_diff = cash_transaction.datetime_created - dt_start
 

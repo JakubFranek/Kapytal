@@ -301,7 +301,7 @@ class CashTransaction(CashRelatedTransaction):
         return self._category_amount_pairs
 
     @property
-    def categories(self) -> tuple[Category]:
+    def categories(self) -> frozenset[Category]:
         return self._categories
 
     @property
@@ -318,7 +318,7 @@ class CashTransaction(CashRelatedTransaction):
         return self._tag_amount_pairs
 
     @property
-    def tags(self) -> tuple[Attribute]:
+    def tags(self) -> frozenset[Attribute]:
         return self._tags
 
     @property
@@ -527,7 +527,6 @@ class CashTransaction(CashRelatedTransaction):
         return self._account in accounts
 
     def is_category_related(self, category: Category) -> bool:
-        # TODO: this would be faster if self._categories was a frozenset
         if category in self._categories:
             return True
         if len(category.children) == 0:
@@ -719,22 +718,23 @@ class CashTransaction(CashRelatedTransaction):
         self._account.add_transaction(self)
 
     def _update_cached_data(self, account: CashAccount) -> None:
+        # TODO: check if sets/frozensets impose performance penalty
         total_amount = account.currency.zero_amount
-        categories: list[Category] = []
+        categories: set[Category] = set()
         for category, amount in self._category_amount_pairs:
             total_amount += amount
-            categories.append(category)
+            categories.add(category)
         self._amount = total_amount
         self._amount_negative = -total_amount
-        self._categories = tuple(categories)
+        self._categories = frozenset(categories)
 
-        tags = []
+        tags: set[Attribute] = set()
         self._are_tags_split = False
         for tag, amount in self._tag_amount_pairs:
-            tags.append(tag)
+            tags.add(tag)
             if not self._are_tags_split and amount != self._amount:
                 self._are_tags_split = True
-        self._tags = tuple(tags)
+        self._tags = frozenset(tags)
 
     def _validate_type(self, type_: CashTransactionType) -> None:
         if not isinstance(type_, CashTransactionType):
@@ -1180,8 +1180,8 @@ class RefundTransaction(CashRelatedTransaction):
         return tuple(self._category_amount_pairs)
 
     @property
-    def categories(self) -> tuple[Category]:
-        return tuple(category for category, _ in self._category_amount_pairs)
+    def categories(self) -> frozenset[Category]:
+        return self._categories
 
     @property
     def category_names(self) -> str:
@@ -1189,8 +1189,8 @@ class RefundTransaction(CashRelatedTransaction):
         return ", ".join(category_paths)
 
     @property
-    def tags(self) -> tuple[Attribute]:
-        return tuple(tag for tag, _ in self._tag_amount_pairs)
+    def tags(self) -> frozenset[Attribute]:
+        return self._tags
 
     @property
     def tag_amount_pairs(self) -> tuple[tuple[Attribute, CashAmount], ...]:
@@ -1416,6 +1416,10 @@ class RefundTransaction(CashRelatedTransaction):
             (amount for _, amount in self._category_amount_pairs),
             start=account.currency.zero_amount,
         )
+        self._categories = frozenset(
+            category for category, _ in self._category_amount_pairs
+        )
+        self._tags = frozenset(tag for tag, _ in self._tag_amount_pairs)
         self._set_account(account)
 
     def _validate_datetime(
@@ -1580,10 +1584,9 @@ def _validate_collection_of_tuple_pairs(
 def _is_category_related(
     transaction: CashTransaction | RefundTransaction, category: Category
 ) -> bool:
-    direct_match = category in transaction.categories
-    if direct_match:
+    if category in transaction.categories:
         return True
-    return any(_category.parent == category for _category in transaction.categories)
+    return any(category.path in _category.path for _category in transaction.categories)
 
 
 def _get_amount_for_category(
@@ -1605,6 +1608,6 @@ def _get_amount_for_category(
         if _category == category:
             running_sum = func(running_sum, _amount)
             continue
-        if total and _category.parent == category:
+        if total and category.path in _category.path:
             running_sum = func(running_sum, _amount)
     return running_sum

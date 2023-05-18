@@ -4,7 +4,9 @@ import logging
 from PyQt6.QtCore import QSortFilterProxyModel, Qt
 from src.models.model_objects.attributes import Category, CategoryType
 from src.models.record_keeper import RecordKeeper
-from src.models.utilities.calculation import CategoryStats, get_category_stats
+from src.models.utilities.calculation import (
+    calculate_category_stats,
+)
 from src.presenters.utilities.event import Event
 from src.presenters.utilities.handle_exception import handle_exception
 from src.view_models.category_tree_model import CategoryTreeModel
@@ -25,7 +27,7 @@ class CategoryFormPresenter:
         self._model = CategoryTreeModel(
             tree_view=view.category_tree,
             root_categories=record_keeper.root_income_categories,
-            category_stats=[],
+            category_stats={},
             base_currency=record_keeper.base_currency,
             proxy=self._proxy_model,
         )
@@ -57,18 +59,20 @@ class CategoryFormPresenter:
             )
         self._model.base_currency = self._record_keeper.base_currency
 
-        category_stats: list[CategoryStats] = []
-        for category in self._record_keeper.categories:
-            category_stats.append(
-                get_category_stats(
-                    category,
-                    self._record_keeper.transactions,
-                    self._record_keeper.base_currency,
-                )
+        relevant_transactions = (
+            self._record_keeper.cash_transactions
+            + self._record_keeper.refund_transactions
+        )
+        self._model.load_category_stats_dict(
+            calculate_category_stats(
+                relevant_transactions,
+                self._record_keeper.base_currency,
+                self._record_keeper.categories,
             )
-        self._model.category_stats = tuple(category_stats)
+        )
 
     def reset_model(self) -> None:
+        # TODO: add busy indicator
         self._model.pre_reset_model()
         self.update_model_data()
         self._model.post_reset_model()
@@ -76,7 +80,6 @@ class CategoryFormPresenter:
             self._view.category_tree.expand_all()
 
     def show_form(self) -> None:
-        # TODO: add busy indicator here
         self.reset_model()
         self._view.category_tree.expand_all()
         self._view.show_form()
@@ -145,6 +148,7 @@ class CategoryFormPresenter:
         index = self._dialog.position - 1
 
         logging.info(f"Adding Category('{path}', {type_.name}, {index=})")
+        # TODO: get rid of the deep copy due to performance
         record_keeper_copy = copy.deepcopy(self._record_keeper)
         try:
             logging.disable(logging.INFO)

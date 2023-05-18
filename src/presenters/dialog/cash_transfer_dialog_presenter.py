@@ -247,15 +247,10 @@ class CashTransferDialogPresenter:
         self.event_data_changed()
 
     def _prepare_dialog(self, edit_mode: EditMode) -> bool:
-        accounts = [
-            account
-            for account in self._record_keeper.accounts
-            if isinstance(account, CashAccount)
-        ]
         tag_names = sorted(tag.name for tag in self._record_keeper.tags)
         self._dialog = CashTransferDialog(
             self._parent_view,
-            accounts,
+            self._record_keeper.cash_accounts,
             tag_names,
             edit_mode=edit_mode,
         )

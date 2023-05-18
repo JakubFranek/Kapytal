@@ -20,14 +20,14 @@ class CategoryTreeModel(QAbstractItemModel):
         self,
         tree_view: QTreeView,
         root_categories: Sequence[Category],
-        category_stats: Collection[CategoryStats],
+        category_stats: dict[Category, CategoryStats],
         base_currency: Currency,
         proxy: QSortFilterProxyModel,
     ) -> None:
         super().__init__()
         self._tree_view = tree_view
         self.root_categories = root_categories
-        self.category_stats = category_stats
+        self._category_stats_dict: dict[Category, CategoryStats] = category_stats
         self.base_currency = base_currency
         self._proxy = proxy
 
@@ -39,13 +39,10 @@ class CategoryTreeModel(QAbstractItemModel):
     def root_categories(self, root_categories: Collection[Category]) -> None:
         self._root_categories = tuple(root_categories)
 
-    @property
-    def category_stats(self) -> tuple[CategoryStats, ...]:
-        return self._category_stats
-
-    @category_stats.setter
-    def category_stats(self, category_stats: Collection[CategoryStats]) -> None:
-        self._category_stats = tuple(category_stats)
+    def load_category_stats_dict(
+        self, category_stats_dict: dict[Category, CategoryStats]
+    ) -> None:
+        self._category_stats_dict = category_stats_dict
 
     def rowCount(self, index: QModelIndex = ...) -> int:  # noqa: N802
         if index.isValid():
@@ -94,7 +91,7 @@ class CategoryTreeModel(QAbstractItemModel):
             return None
         column = index.column()
         category: Category = index.internalPointer()
-        stats = self._get_category_stats(category)
+        stats = self._category_stats_dict[category]
         if role == Qt.ItemDataRole.DisplayRole:
             return self._get_display_role_data(column, category, stats)
         if role == Qt.ItemDataRole.UserRole and column == CategoryTreeColumn.NAME:
@@ -210,9 +207,3 @@ class CategoryTreeModel(QAbstractItemModel):
         else:
             row = parent.children.index(item)
         return QAbstractItemModel.createIndex(self, row, 0, item)
-
-    def _get_category_stats(self, category: Category) -> CategoryStats:
-        for stats in self.category_stats:
-            if stats.category == category:
-                return stats
-        raise ValueError("No CategoryStats found for given Category.")

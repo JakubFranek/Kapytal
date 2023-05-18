@@ -50,6 +50,8 @@ from src.models.model_objects.security_objects import (
 class RecordKeeper(CopyableMixin, JSONSerializableMixin):
     def __init__(self) -> None:
         self._accounts: list[Account] = []
+        self._cash_accounts: list[CashAccount] = []
+        self._security_accounts: list[SecurityAccount] = []
         self._account_groups: list[AccountGroup] = []
         self._root_account_items: list[AccountGroup | Account] = []
         self._currencies: list[Currency] = []
@@ -62,12 +64,25 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         self._root_income_and_expense_categories: list[Category] = []
         self._tags: list[Attribute] = []
         self._transactions: list[Transaction] = []
+        self._cash_transactions: list[CashTransaction] = []
+        self._refund_transactions: list[RefundTransaction] = []
+        self._cash_transfers: list[CashTransfer] = []
+        self._security_transactions: list[SecurityTransaction] = []
+        self._security_transfers: list[SecurityTransfer] = []
         self._transactions_uuid_dict: dict[uuid.UUID, Transaction] = {}
         self._base_currency: Currency | None = None
 
     @property
     def accounts(self) -> tuple[Account, ...]:
-        return tuple(RecordKeeper._flatten_accounts(self._root_account_items))
+        return tuple(self._accounts)
+
+    @property
+    def cash_accounts(self) -> tuple[CashAccount, ...]:
+        return tuple(self._cash_accounts)
+
+    @property
+    def security_accounts(self) -> tuple[SecurityAccount, ...]:
+        return tuple(self._security_accounts)
 
     @property
     def account_groups(self) -> tuple[AccountGroup, ...]:
@@ -143,6 +158,26 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
     @property
     def transaction_uuid_dict(self) -> dict[uuid.UUID, Transaction]:
         return self._transactions_uuid_dict
+
+    @property
+    def cash_transactions(self) -> tuple[CashTransaction, ...]:
+        return tuple(self._cash_transactions)
+
+    @property
+    def refund_transactions(self) -> tuple[RefundTransaction, ...]:
+        return tuple(self._refund_transactions)
+
+    @property
+    def cash_transfers(self) -> tuple[CashTransfer, ...]:
+        return tuple(self._cash_transfers)
+
+    @property
+    def security_transactions(self) -> tuple[SecurityTransaction, ...]:
+        return tuple(self._security_transactions)
+
+    @property
+    def security_transfers(self) -> tuple[SecurityTransfer, ...]:
+        return tuple(self._security_transfers)
 
     def __repr__(self) -> str:
         return "RecordKeeper"
@@ -262,6 +297,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         account = CashAccount(name, currency, initial_balance, parent)
         self._set_account_item_index(account, index)
         self._accounts.append(account)
+        self._cash_accounts.append(account)
 
     def add_security_account(self, path: str, index: int | None = None) -> None:
         parent_path, _, name = path.rpartition("/")
@@ -270,6 +306,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         account = SecurityAccount(name, parent)
         self._set_account_item_index(account, index)
         self._accounts.append(account)
+        self._security_accounts.append(account)
 
     def add_cash_transaction(  # noqa: PLR0913
         self,
@@ -306,6 +343,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
             tag_amount_pairs=tag_amount_pairs,
         )
         self._transactions.append(transaction)
+        self._cash_transactions.append(transaction)
         self._transactions_uuid_dict[transaction.uuid] = transaction
 
     def add_cash_transfer(  # noqa: PLR0913
@@ -330,6 +368,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
             amount_received=CashAmount(amount_received, account_recipient.currency),
         )
         self._transactions.append(transfer)
+        self._cash_transfers.append(transfer)
         self._transactions_uuid_dict[transfer.uuid] = transfer
 
         tags = [
@@ -379,6 +418,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
             payee=payee,
         )
         self._transactions.append(refund)
+        self._refund_transactions.append(refund)
         self._transactions_uuid_dict[refund.uuid] = refund
 
     def add_security_transaction(  # noqa: PLR0913
@@ -408,6 +448,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
             cash_account=cash_account,
         )
         self._transactions.append(transaction)
+        self._security_transactions.append(transaction)
         self._transactions_uuid_dict[transaction.uuid] = transaction
 
         tags = [
@@ -437,6 +478,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
             recipient=account_recipient,
         )
         self._transactions.append(transaction)
+        self._security_transfers.append(transaction)
         self._transactions_uuid_dict[transaction.uuid] = transaction
 
         tags = [
@@ -1001,6 +1043,10 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         else:
             account.parent = None
         self._accounts.remove(account)
+        if isinstance(account, CashAccount):
+            self._cash_accounts.remove(account)
+        else:
+            self._security_accounts.remove(account)
         del account
 
     def remove_account_group(self, account_group_path: str) -> None:
@@ -1021,6 +1067,21 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         for transaction in transactions:
             transaction.prepare_for_deletion()
             self._transactions.remove(transaction)
+            if isinstance(transaction, CashTransaction):
+                self._cash_transactions.remove(transaction)
+            elif isinstance(transaction, RefundTransaction):
+                self._refund_transactions.remove(transaction)
+            elif isinstance(transaction, CashTransfer):
+                self._cash_transfers.remove(transaction)
+            elif isinstance(transaction, SecurityTransaction):
+                self._security_transactions.remove(transaction)
+            elif isinstance(transaction, SecurityTransfer):
+                self._security_transfers.remove(transaction)
+            else:
+                raise TypeError(  # pragma: no cover
+                    f"Unknown transaction type: {type(transaction)}"
+                )
+
             # delete transaction from dictionary
             del self._transactions_uuid_dict[transaction.uuid]
 
@@ -1347,6 +1408,14 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
             data["accounts"], account_groups, currencies
         )
         obj._accounts = list(accounts.values())  # noqa: SLF001
+        obj._cash_accounts = [  # noqa: SLF001
+            account for account in accounts.values() if isinstance(account, CashAccount)
+        ]
+        obj._security_accounts = [  # noqa: SLF001
+            account
+            for account in accounts.values()
+            if isinstance(account, SecurityAccount)
+        ]
 
         obj._root_account_items = (  # noqa: SLF001
             RecordKeeper._deserialize_root_account_items(
@@ -1408,6 +1477,22 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
             key=lambda x: x.timestamp,
             reverse=True,
         )
+
+        for transaction in obj._transactions:  # noqa: SLF001
+            if isinstance(transaction, CashTransaction):
+                obj._cash_transactions.append(transaction)  # noqa: SLF001
+            elif isinstance(transaction, RefundTransaction):
+                obj._refund_transactions.append(transaction)  # noqa: SLF001
+            elif isinstance(transaction, CashTransfer):
+                obj._cash_transfers.append(transaction)  # noqa: SLF001
+            elif isinstance(transaction, SecurityTransaction):
+                obj._security_transactions.append(transaction)  # noqa: SLF001
+            elif isinstance(transaction, SecurityTransfer):
+                obj._security_transfers.append(transaction)  # noqa: SLF001
+            else:
+                raise TypeError(  # pragma:nocov
+                    f"Unknown transaction type: {type(transaction)}"
+                )
 
         for account in obj._accounts:  # noqa: SLF001
             account: CashAccount | SecurityAccount

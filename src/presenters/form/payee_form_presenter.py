@@ -3,7 +3,7 @@ import logging
 from PyQt6.QtCore import QSortFilterProxyModel, Qt
 from src.models.model_objects.attributes import AttributeType
 from src.models.record_keeper import RecordKeeper
-from src.models.utilities.calculation import AttributeStats, get_payee_stats
+from src.models.utilities.calculation import calculate_payee_stats
 from src.presenters.utilities.event import Event
 from src.presenters.utilities.handle_exception import handle_exception
 from src.view_models.payee_table_model import PayeeTableModel
@@ -46,16 +46,13 @@ class PayeeFormPresenter:
         self._model.post_reset_model()
 
     def update_model_data(self) -> None:
-        payee_stats: list[AttributeStats] = []
-        for payee in self._record_keeper.payees:
-            payee_stats.append(
-                get_payee_stats(
-                    payee,
-                    self._record_keeper.transactions,
-                    self._record_keeper.base_currency,
-                )
-            )
-        self._model.payee_stats = payee_stats
+        relevant_transactions = (
+            self._record_keeper.cash_transactions
+            + self._record_keeper.refund_transactions
+        )
+        self._model.payee_stats = calculate_payee_stats(
+            relevant_transactions, self._record_keeper.base_currency
+        ).values()
 
     def show_form(self) -> None:
         self.reset_model()

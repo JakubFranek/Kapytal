@@ -60,7 +60,7 @@ def test_creation() -> None:
     )
     category_amount_pairs = get_valid_category_amount_pairs()
     tag_amount_pairs = get_valid_tag_amount_pairs()
-    tags = tuple(tag for tag, _ in tag_amount_pairs)
+    tags = frozenset(tag for tag, _ in tag_amount_pairs)
     payee = refunded_transaction.payee
 
     refund = RefundTransaction(
@@ -72,7 +72,7 @@ def test_creation() -> None:
         category_amount_pairs,
         tag_amount_pairs,
     )
-    categories = tuple(category for category, _ in category_amount_pairs)
+    categories = frozenset(category for category, _ in category_amount_pairs)
 
     assert refund.amount == CashAmount(50, currency)
     assert (
