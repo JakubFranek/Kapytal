@@ -36,6 +36,10 @@ class CategoryForm(CustomWidget, Ui_CategoryForm):
         self.expenseTreeView.contextMenuEvent = self._create_context_menu
         self.incomeAndExpenseTreeView.contextMenuEvent = self._create_context_menu
 
+        self.incomeTreeView.header().setSortIndicatorClearable(True)
+        self.expenseTreeView.header().setSortIndicatorClearable(True)
+        self.incomeAndExpenseTreeView.header().setSortIndicatorClearable(True)
+
     @property
     def category_type(self) -> CategoryType:
         current_index = self.tabWidget.currentIndex()
@@ -112,6 +116,10 @@ class CategoryForm(CustomWidget, Ui_CategoryForm):
             CategoryTreeColumn.BALANCE,
             QHeaderView.ResizeMode.Stretch,
         )
+
+        self.incomeTreeView.sortByColumn(-1, Qt.SortOrder.AscendingOrder)
+        self.expenseTreeView.sortByColumn(-1, Qt.SortOrder.AscendingOrder)
+        self.incomeAndExpenseTreeView.sortByColumn(-1, Qt.SortOrder.AscendingOrder)
 
     def _initialize_search_bars(self) -> None:
         self.incomeSearchLineEdit.addAction(

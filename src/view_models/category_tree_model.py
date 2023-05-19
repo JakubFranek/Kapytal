@@ -88,6 +88,17 @@ class CategoryTreeModel(QAbstractItemModel):
             parent_row = grandparent.children.index(parent)
         return QAbstractItemModel.createIndex(self, parent_row, 0, parent)
 
+    def headerData(  # noqa: N802
+        self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole = ...
+    ) -> str | int | None:
+        if role == Qt.ItemDataRole.TextAlignmentRole:
+            return Qt.AlignmentFlag.AlignCenter
+        if role == Qt.ItemDataRole.DisplayRole:
+            if orientation == Qt.Orientation.Horizontal:
+                return self.COLUMN_HEADERS[section]
+            return str(section)
+        return None
+
     def data(  # noqa: PLR0911
         self, index: QModelIndex, role: Qt.ItemDataRole = ...
     ) -> str | Qt.AlignmentFlag | None:
@@ -135,20 +146,6 @@ class CategoryTreeModel(QAbstractItemModel):
             return f"{stats.transactions_total} ({stats.transactions_self})"
         if column == CategoryTreeColumn.BALANCE:
             return stats.balance.to_str_rounded()
-        return None
-
-    def headerData(  # noqa: N802
-        self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole = ...
-    ) -> str | int | None:
-        if role == Qt.ItemDataRole.TextAlignmentRole:
-            if section == CategoryTreeColumn.TRANSACTIONS:
-                return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
-            if section == CategoryTreeColumn.BALANCE:
-                return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
-        if role == Qt.ItemDataRole.DisplayRole:
-            if orientation == Qt.Orientation.Horizontal:
-                return self.COLUMN_HEADERS[section]
-            return str(section)
         return None
 
     def pre_add(self, parent: Category | None) -> None:
