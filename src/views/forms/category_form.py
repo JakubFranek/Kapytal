@@ -1,5 +1,6 @@
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtWidgets import QHeaderView, QLineEdit, QTreeView, QWidget
+from PyQt6.QtGui import QContextMenuEvent, QCursor
+from PyQt6.QtWidgets import QHeaderView, QLineEdit, QMenu, QTreeView, QWidget
 from src.models.model_objects.attributes import CategoryType
 from src.views import icons
 from src.views.base_classes.custom_widget import CustomWidget
@@ -31,6 +32,9 @@ class CategoryForm(CustomWidget, Ui_CategoryForm):
 
         self._initialize_search_bars()
         self._initialize_actions()
+        self.incomeTreeView.contextMenuEvent = self._create_context_menu
+        self.expenseTreeView.contextMenuEvent = self._create_context_menu
+        self.incomeAndExpenseTreeView.contextMenuEvent = self._create_context_menu
 
     @property
     def category_type(self) -> CategoryType:
@@ -183,3 +187,13 @@ class CategoryForm(CustomWidget, Ui_CategoryForm):
             self.expenseTreeView.collapseAll()
         else:
             self.incomeAndExpenseTreeView.collapseAll()
+
+    def _create_context_menu(self, event: QContextMenuEvent) -> None:
+        del event
+        self.menu = QMenu(self)
+        self.menu.addAction(self.actionAdd)
+        self.menu.addAction(self.actionEdit)
+        self.menu.addAction(self.actionRemove)
+        self.menu.addSeparator()
+        self.menu.addAction(self.actionExpand_All_Below)
+        self.menu.popup(QCursor.pos())

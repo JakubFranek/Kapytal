@@ -70,11 +70,7 @@ def calculate_category_stats(
 
     for transaction in transactions:
         for category in transaction.categories:
-            stats = stats_dict.get(category, None)
-            if stats is None:
-                raise ValueError(
-                    f"Category path='{category.path}' not found in 'stats_dict'."
-                )
+            stats = stats_dict[category]
 
             stats.balance += transaction.get_amount_for_category(
                 category, total=False
@@ -82,16 +78,18 @@ def calculate_category_stats(
             stats.transactions_self += 1
             stats.transactions_total += 1
 
-            for parent_category, _stats in stats_dict.items():
-                if (
-                    parent_category != category
-                    and parent_category.path in category.path
-                ):
-                    if parent_category not in transaction.categories:
-                        # prevent double counting if both parent and child are present
-                        _stats.transactions_total += 1
-                    _stats.balance += transaction.get_amount_for_category(
-                        category, total=True
+            ancestors = category.ancestors
+            for ancestor in ancestors:
+                ancestor_stats = stats_dict[ancestor]
+                if ancestor not in transaction.categories:
+                    # prevent double counting if both parent and child are present
+                    ancestor_stats.transactions_total += 1
+                    ancestor_stats.balance += transaction.get_amount_for_category(
+                        ancestor, total=True
+                    ).convert(base_currency)
+                else:
+                    ancestor_stats.balance += transaction.get_amount_for_category(
+                        ancestor, total=False
                     ).convert(base_currency)
 
     return stats_dict

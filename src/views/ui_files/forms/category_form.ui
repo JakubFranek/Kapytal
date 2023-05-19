@@ -84,7 +84,11 @@
         </layout>
        </item>
        <item>
-        <widget class="QTreeView" name="incomeTreeView"/>
+        <widget class="QTreeView" name="incomeTreeView">
+         <property name="sortingEnabled">
+          <bool>true</bool>
+         </property>
+        </widget>
        </item>
       </layout>
      </widget>
@@ -147,7 +151,11 @@
         </layout>
        </item>
        <item>
-        <widget class="QTreeView" name="expenseTreeView"/>
+        <widget class="QTreeView" name="expenseTreeView">
+         <property name="sortingEnabled">
+          <bool>true</bool>
+         </property>
+        </widget>
        </item>
       </layout>
      </widget>
@@ -210,7 +218,11 @@
         </layout>
        </item>
        <item>
-        <widget class="QTreeView" name="incomeAndExpenseTreeView"/>
+        <widget class="QTreeView" name="incomeAndExpenseTreeView">
+         <property name="sortingEnabled">
+          <bool>true</bool>
+         </property>
+        </widget>
        </item>
       </layout>
      </widget>

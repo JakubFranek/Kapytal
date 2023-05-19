@@ -1490,7 +1490,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
             elif isinstance(transaction, SecurityTransfer):
                 obj._security_transfers.append(transaction)  # noqa: SLF001
             else:
-                raise TypeError(  # pragma:nocov
+                raise TypeError(  # pragma: no cover
                     f"Unknown transaction type: {type(transaction)}"
                 )
 
@@ -1765,20 +1765,6 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         if category.type_ == CategoryType.EXPENSE:
             return self._root_expense_categories
         return self._root_income_and_expense_categories
-
-    @staticmethod
-    def _flatten_accounts(
-        account_items: Collection[Account | AccountGroup],
-    ) -> list[Account]:
-        resulting_list = []
-        for account_item in account_items:
-            if isinstance(account_item, Account):
-                resulting_list.append(account_item)
-            else:
-                resulting_list = resulting_list + RecordKeeper._flatten_accounts(
-                    account_item.children
-                )
-        return resulting_list
 
     @staticmethod
     def _flatten_account_items(

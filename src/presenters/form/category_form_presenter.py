@@ -41,15 +41,15 @@ class CategoryFormPresenter:
         )
 
         self._model_income.root_categories = self._record_keeper.root_income_categories
-        self._model_income.load_category_stats_dict(category_stats)
+        self._model_income.category_stats_dict = category_stats
         self._model_expense.root_categories = (
             self._record_keeper.root_expense_categories
         )
-        self._model_expense.load_category_stats_dict(category_stats)
+        self._model_expense.category_stats_dict = category_stats
         self._model_income_and_expense.root_categories = (
             self._record_keeper.root_income_and_expense_categories
         )
-        self._model_income_and_expense.load_category_stats_dict(category_stats)
+        self._model_income_and_expense.category_stats_dict = category_stats
 
     def reset_model(self) -> None:
         # TODO: add busy indicator
@@ -220,16 +220,18 @@ class CategoryFormPresenter:
         self.event_data_changed()
 
     def _get_max_child_position(self, item: Category | None) -> int:
+        model = self._get_current_model()
         if isinstance(item, Category):
             return len(item.children) + 1
         if item is None:
-            return len(self._model_income.root_categories) + 1
+            return len(model.root_categories) + 1
         raise ValueError("Invalid selection.")
 
     def _get_max_parent_position(self, item: Category) -> int:
+        model = self._get_current_model()
         parent = item.parent
         if parent is None:
-            return len(self._model_income.category_stats)
+            return len(model.root_categories)
         return len(parent.children)
 
     def _get_current_index(self, item: Category | None) -> int:
@@ -302,7 +304,7 @@ class CategoryFormPresenter:
         self._proxy_income = QSortFilterProxyModel(self._view.incomeTreeView)
         self._model_income = CategoryTreeModel(
             tree_view=self._view.incomeTreeView,
-            root_categories=self._record_keeper.root_income_categories,
+            root_categories=(),
             category_stats={},
             proxy=self._proxy_income,
         )
@@ -316,7 +318,7 @@ class CategoryFormPresenter:
         self._proxy_expense = QSortFilterProxyModel(self._view.expenseTreeView)
         self._model_expense = CategoryTreeModel(
             tree_view=self._view.expenseTreeView,
-            root_categories=self._record_keeper.root_expense_categories,
+            root_categories=(),
             category_stats={},
             proxy=self._proxy_expense,
         )
@@ -332,7 +334,7 @@ class CategoryFormPresenter:
         )
         self._model_income_and_expense = CategoryTreeModel(
             tree_view=self._view.incomeAndExpenseTreeView,
-            root_categories=self._record_keeper.root_income_and_expense_categories,
+            root_categories=(),
             category_stats={},
             proxy=self._proxy_income_and_expense,
         )

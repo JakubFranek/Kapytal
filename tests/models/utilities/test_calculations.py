@@ -169,4 +169,5 @@ def get_transactions() -> list[CashTransaction]:
             tag_amount_pairs=[(tag, CashAmount(1, currency))],
         )
     )
+
     return transactions

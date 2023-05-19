@@ -38,7 +38,12 @@ class CategoryTreeModel(QAbstractItemModel):
     def root_categories(self, root_categories: Collection[Category]) -> None:
         self._root_categories = tuple(root_categories)
 
-    def load_category_stats_dict(
+    @property
+    def category_stats_dict(self) -> dict[Category, CategoryStats]:
+        return self._category_stats_dict
+
+    @category_stats_dict.setter
+    def category_stats_dict(
         self, category_stats_dict: dict[Category, CategoryStats]
     ) -> None:
         self._category_stats_dict = category_stats_dict
@@ -78,7 +83,7 @@ class CategoryTreeModel(QAbstractItemModel):
             return QModelIndex()
         grandparent = parent.parent
         if grandparent is None:
-            parent_row = self.root_categories.index(parent)
+            parent_row = self._root_categories.index(parent)
         else:
             parent_row = grandparent.children.index(parent)
         return QAbstractItemModel.createIndex(self, parent_row, 0, parent)

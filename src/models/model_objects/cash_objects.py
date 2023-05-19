@@ -527,14 +527,7 @@ class CashTransaction(CashRelatedTransaction):
         return self._account in accounts
 
     def is_category_related(self, category: Category) -> bool:
-        if category in self._categories:
-            return True
-        if len(category.children) == 0:
-            return False
-        for _category in self._categories:  # noqa: SIM110
-            if category.path in _category.path:
-                return True
-        return False
+        return _is_category_related(category, self._categories)
 
     def get_amount_for_category(self, category: Category, *, total: bool) -> CashAmount:
         return _get_amount_for_category(self, category, total=total)
@@ -1219,7 +1212,7 @@ class RefundTransaction(CashRelatedTransaction):
         return self._account in accounts
 
     def is_category_related(self, category: Category) -> bool:
-        return _is_category_related(self, category)
+        return _is_category_related(category, self._categories)
 
     def get_amount_for_category(self, category: Category, *, total: bool) -> CashAmount:
         return _get_amount_for_category(self, category, total=total)
@@ -1581,12 +1574,11 @@ def _validate_collection_of_tuple_pairs(
         raise ValueError("Categories or Tags in tuple pairs must be unique.")
 
 
-def _is_category_related(
-    transaction: CashTransaction | RefundTransaction, category: Category
-) -> bool:
-    if category in transaction.categories:
+def _is_category_related(category: Category, categories: Collection[Category]) -> bool:
+    if category in categories:
         return True
-    return any(category.path in _category.path for _category in transaction.categories)
+    # check if 'category' is a parent of any of this CashTransaction's categories
+    return any(category.is_ancestor_of(_category) for _category in categories)
 
 
 def _get_amount_for_category(
@@ -1608,6 +1600,6 @@ def _get_amount_for_category(
         if _category == category:
             running_sum = func(running_sum, _amount)
             continue
-        if total and category.path in _category.path:
+        if total and category.is_ancestor_of(_category):
             running_sum = func(running_sum, _amount)
     return running_sum

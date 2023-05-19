@@ -22,14 +22,17 @@ if TYPE_CHECKING:
 
 def test_remove_account() -> None:
     record_keeper = RecordKeeper()
+    record_keeper.add_currency("CZK", 2)
     record_keeper.add_account_group("PARENT", None)
     parent = record_keeper.account_groups[0]
 
-    record_keeper.add_security_account("PARENT/TEST NAME")
-    assert len(parent.children) != 0
-    assert len(record_keeper.accounts) != 0
+    record_keeper.add_security_account("PARENT/SECURITY")
+    record_keeper.add_cash_account("PARENT/CASH", "CZK", 0)
+    assert len(parent.children) == 2  # noqa: PLR2004
+    assert len(record_keeper.accounts) == 2  # noqa: PLR2004
 
-    record_keeper.remove_account("PARENT/TEST NAME")
+    record_keeper.remove_account("PARENT/SECURITY")
+    record_keeper.remove_account("PARENT/CASH")
     assert parent.children == ()
     assert record_keeper.accounts == ()
 
@@ -127,21 +130,25 @@ def test_remove_account_group_has_children() -> None:
 def test_remove_transactions() -> None:
     record_keeper = get_preloaded_record_keeper_with_various_transactions()
     assert record_keeper.transactions != ()
+
+    no_of_transactions = len(record_keeper.transactions)
     refund_uuids = [
         transaction.uuid
         for transaction in record_keeper.transactions
         if isinstance(transaction, RefundTransaction)
     ]
     record_keeper.remove_transactions(refund_uuids)
-    refunds = [
-        transaction
-        for transaction in record_keeper.transactions
-        if isinstance(transaction, RefundTransaction)
-    ]
-    assert refunds == []
+    assert record_keeper.refund_transactions == ()
+    assert len(record_keeper.transactions) == no_of_transactions - len(refund_uuids)
+
     other_uuids = [transaction.uuid for transaction in record_keeper.transactions]
     record_keeper.remove_transactions(other_uuids)
     assert record_keeper.transactions == ()
+    assert record_keeper.cash_transactions == ()
+    assert record_keeper.refund_transactions == ()
+    assert record_keeper.cash_transfers == ()
+    assert record_keeper.security_transactions == ()
+    assert record_keeper.security_transfers == ()
 
 
 def test_remove_transactions_is_refunded() -> None:
