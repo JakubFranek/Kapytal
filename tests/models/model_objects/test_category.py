@@ -159,3 +159,84 @@ def test_set_child_index_negative() -> None:
     parent = Category("test", CategoryType.EXPENSE)
     with pytest.raises(ValueError, match="negative"):
         parent.set_child_index(None, -1)
+
+
+def test_is_ancestor_of() -> None:
+    c1 = Category("1", CategoryType.EXPENSE)
+    c2 = Category("2", CategoryType.EXPENSE, c1)
+    c3 = Category("3", CategoryType.EXPENSE, c2)
+    c4 = Category("3", CategoryType.EXPENSE, c3)
+    assert not c1.is_ancestor_of(c1)
+    assert c1.is_ancestor_of(c2)
+    assert c1.is_ancestor_of(c3)
+    assert c1.is_ancestor_of(c4)
+    assert not c2.is_ancestor_of(c1)
+    assert not c2.is_ancestor_of(c2)
+    assert c2.is_ancestor_of(c3)
+    assert c2.is_ancestor_of(c4)
+    assert not c3.is_ancestor_of(c1)
+    assert not c3.is_ancestor_of(c2)
+    assert not c3.is_ancestor_of(c3)
+    assert c3.is_ancestor_of(c4)
+    assert not c4.is_ancestor_of(c1)
+    assert not c4.is_ancestor_of(c2)
+    assert not c4.is_ancestor_of(c3)
+    assert not c4.is_ancestor_of(c4)
+
+
+def test_is_descendant_of() -> None:
+    c1 = Category("1", CategoryType.EXPENSE)
+    c2 = Category("2", CategoryType.EXPENSE, c1)
+    c3 = Category("3", CategoryType.EXPENSE, c2)
+    c4 = Category("3", CategoryType.EXPENSE, c3)
+    assert not c1.is_descendant_of(c1)
+    assert not c1.is_descendant_of(c2)
+    assert not c1.is_descendant_of(c3)
+    assert not c1.is_descendant_of(c4)
+    assert c2.is_descendant_of(c1)
+    assert not c2.is_descendant_of(c2)
+    assert not c2.is_descendant_of(c3)
+    assert not c2.is_descendant_of(c4)
+    assert c3.is_descendant_of(c1)
+    assert c3.is_descendant_of(c2)
+    assert not c3.is_descendant_of(c3)
+    assert not c3.is_descendant_of(c4)
+    assert c4.is_descendant_of(c1)
+    assert c4.is_descendant_of(c2)
+    assert c4.is_descendant_of(c3)
+    assert not c4.is_descendant_of(c4)
+
+
+def test_ancestors() -> None:
+    c1 = Category("1", CategoryType.EXPENSE)
+    c2 = Category("2", CategoryType.EXPENSE, c1)
+    c3 = Category("3", CategoryType.EXPENSE, c2)
+    c4 = Category("3", CategoryType.EXPENSE, c3)
+    assert c1.ancestors == frozenset()
+    assert c2.ancestors == frozenset([c1])
+    assert c3.ancestors == frozenset([c1, c2])
+    assert c4.ancestors == frozenset([c1, c2, c3])
+
+
+def test_descendants() -> None:
+    c1 = Category("1", CategoryType.EXPENSE)
+    c2 = Category("2", CategoryType.EXPENSE, c1)
+    c3 = Category("3", CategoryType.EXPENSE, c2)
+    c4 = Category("3", CategoryType.EXPENSE, c3)
+    assert c1.descendants == frozenset([c2, c3, c4])
+    assert c2.descendants == frozenset([c3, c4])
+    assert c3.descendants == frozenset([c4])
+    assert c4.descendants == frozenset()
+
+
+def test_descendants_multiple_children() -> None:
+    c1 = Category("1", CategoryType.EXPENSE)
+    c2a = Category("2a", CategoryType.EXPENSE, c1)
+    c2b = Category("2b", CategoryType.EXPENSE, c1)
+    c3aa = Category("3aa", CategoryType.EXPENSE, c2a)
+    c3ab = Category("3ab", CategoryType.EXPENSE, c2a)
+    c3ba = Category("3ba", CategoryType.EXPENSE, c2b)
+    c3bb = Category("3bb", CategoryType.EXPENSE, c2b)
+    assert c1.descendants == frozenset([c2a, c2b, c3aa, c3ab, c3ba, c3bb])
+    assert c2a.descendants == frozenset([c3aa, c3ab])
+    assert c2b.descendants == frozenset([c3ba, c3bb])

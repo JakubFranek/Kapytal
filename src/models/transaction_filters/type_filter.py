@@ -26,6 +26,7 @@ TYPE_NAME_DICT = {
     SecurityTransactionType.BUY: "Buy",
     SecurityTransactionType.SELL: "Sell",
 }
+all_types = frozenset(TYPE_NAME_DICT.keys())
 
 
 class TypeFilter(BaseTransactionFilter):
@@ -89,9 +90,13 @@ class TypeFilter(BaseTransactionFilter):
         return f"TypeFilter(types={self.type_names}, mode={self._mode.name})"
 
     def _keep_in_keep_mode(self, transaction: Transaction) -> bool:
+        if self._types == all_types:
+            return True
         if isinstance(transaction, CashTransaction | SecurityTransaction):
             return transaction.type_ in self._enum_types
         return isinstance(transaction, self._transaction_types)
 
     def _keep_in_discard_mode(self, transaction: Transaction) -> bool:
+        if self._types == all_types:
+            return False
         return not self._keep_in_keep_mode(transaction)

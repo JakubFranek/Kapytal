@@ -163,7 +163,9 @@ class TransactionFilterFormPresenter:
         self._account_tree_shown_accounts = tuple(accounts)
         if self._form.account_filter_mode == AccountFilterMode.ACCOUNT_TREE:
             previous_filter = copy(self._transaction_filter)
-            self._transaction_filter.set_account_filter(accounts, FilterMode.KEEP)
+            all_accounts = len(self._record_keeper.accounts) == len(accounts)
+            filter_mode = FilterMode.OFF if all_accounts else FilterMode.KEEP
+            self._transaction_filter.set_account_filter(accounts, filter_mode)
             if previous_filter != self._transaction_filter:
                 self.event_filter_changed()
 
@@ -171,15 +173,50 @@ class TransactionFilterFormPresenter:
     def filter_active(self) -> bool:
         return self._transaction_filter != self._default_filter
 
-    def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
-        self._record_keeper = record_keeper
+    def load_record_keeper(
+        self,
+        record_keeper: RecordKeeper,
+    ) -> None:
         self._account_filter_presenter.load_record_keeper(record_keeper)
         self._tag_filter_presenter.load_record_keeper(record_keeper)
         self._payee_filter_presenter.load_record_keeper(record_keeper)
         self._category_filter_presenter.load_record_keeper(record_keeper)
         self._currency_filter_presenter.load_record_keeper(record_keeper)
         self._security_filter_presenter.load_record_keeper(record_keeper)
-        self.reset_filter_to_default()
+
+        if (
+            self._transaction_filter.cash_amount_filter.currency
+            != record_keeper.base_currency
+        ):
+            if self._transaction_filter.cash_amount_filter.mode != FilterMode.OFF:
+                was_filter_active = True
+            else:
+                was_filter_active = False
+
+            # reset cash amount filter if base currency changes
+            if record_keeper.base_currency is not None:
+                self._transaction_filter.set_cash_amount_filter(
+                    CashAmount(0, record_keeper.base_currency),
+                    CashAmount(0, record_keeper.base_currency),
+                    FilterMode.OFF,
+                )
+            else:
+                self._transaction_filter.set_cash_amount_filter(
+                    None, None, FilterMode.OFF
+                )
+            self._update_form_from_filter(self._transaction_filter)
+
+            if was_filter_active:
+                self.event_filter_changed()
+                display_error_message(
+                    (
+                        "Cash Amount Filter has been turned off and reset to default "
+                        "due to Base Currency change.\n"
+                    ),
+                    title="Warning",
+                )
+
+        self._record_keeper = record_keeper
 
     def reset_filter_to_default(self) -> None:
         previous_filter = self._transaction_filter
@@ -194,13 +231,16 @@ class TransactionFilterFormPresenter:
         self._update_form_from_filter(self._transaction_filter)
         self._form.show_form()
 
-    def _form_accepted(self) -> None:
-        self._check_filter_form_sanity()
+    def _update_filter(self) -> None:
         new_filter = self._get_transaction_filter_from_form()
         if self.transaction_filter != new_filter:
             self._log_filter_differences(new_filter)
             self._transaction_filter = new_filter
             self.event_filter_changed()
+
+    def _form_accepted(self) -> None:
+        self._check_filter_form_sanity()
+        self._update_filter()
         self._form.close()
 
     def _get_transaction_filter_from_form(self) -> TransactionFilter:
@@ -218,12 +258,20 @@ class TransactionFilterFormPresenter:
         )
 
         if self._form.account_filter_mode == AccountFilterMode.SELECTION:
+            all_accounts = len(self._record_keeper.accounts) == len(
+                self._account_filter_presenter.checked_accounts
+            )
+            account_filter_mode = FilterMode.OFF if all_accounts else FilterMode.KEEP
             filter_.set_account_filter(
-                self._account_filter_presenter.checked_accounts, FilterMode.KEEP
+                self._account_filter_presenter.checked_accounts, account_filter_mode
             )
         else:
+            all_accounts = len(self._record_keeper.accounts) == len(
+                self._account_tree_shown_accounts
+            )
+            account_filter_mode = FilterMode.OFF if all_accounts else FilterMode.KEEP
             filter_.set_account_filter(
-                self._account_tree_shown_accounts, FilterMode.KEEP
+                self._account_tree_shown_accounts, account_filter_mode
             )
 
         filter_.set_specific_tags_filter(
@@ -290,17 +338,18 @@ class TransactionFilterFormPresenter:
         self._security_filter_presenter.load_from_security_filter(
             filter_.security_filter
         )
-        if filter_.cash_amount_filter is not None:
+
+        self._form.cash_amount_filter_mode = filter_.cash_amount_filter.mode
+        if filter_.cash_amount_filter.currency is not None:
             self._form.base_currency_code = filter_.cash_amount_filter.currency.code
-            self._form.cash_amount_filter_mode = filter_.cash_amount_filter.mode
+        if filter_.cash_amount_filter.minimum is not None:
             self._form.cash_amount_filter_minimum = (
                 filter_.cash_amount_filter.minimum.value_rounded
             )
+        if filter_.cash_amount_filter.maximum is not None:
             self._form.cash_amount_filter_maximum = (
                 filter_.cash_amount_filter.maximum.value_rounded
             )
-        else:
-            self._form.base_currency_code = ""
 
     def _restore_defaults(self) -> None:
         logging.info("Restoring TransactionFilterForm to default")
@@ -314,7 +363,6 @@ class TransactionFilterFormPresenter:
         # self._transaction_filter and self._default filter would point to same object
 
         filter_ = TransactionFilter()
-        filter_.set_account_filter(self._record_keeper.accounts, FilterMode.KEEP)
         if self._record_keeper.base_currency is not None:
             filter_.set_cash_amount_filter(
                 self._record_keeper.base_currency.zero_amount,
@@ -411,8 +459,8 @@ class TransactionFilterFormPresenter:
                 logging.info(
                     "CashAmountFilter changed: "
                     f"mode={new_filter.cash_amount_filter.mode.name}, "
-                    f"min={new_filter.cash_amount_filter.minimum.to_str_rounded()}, "
-                    f"max={new_filter.cash_amount_filter.maximum.to_str_rounded()}"
+                    f"min={new_filter.cash_amount_filter.minimum}, "
+                    f"max={new_filter.cash_amount_filter.maximum}"
                 )
 
     def _check_filter_form_sanity(self) -> None:

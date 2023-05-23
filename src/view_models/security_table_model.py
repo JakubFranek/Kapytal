@@ -47,17 +47,6 @@ class SecurityTableModel(QAbstractTableModel):
             self._column_count = len(self.COLUMN_HEADERS)
         return self._column_count
 
-    def index(self, row: int, column: int, parent: QModelIndex = ...) -> QModelIndex:
-        if parent.isValid():
-            return QModelIndex()
-        if row < 0 or column < 0:
-            return QModelIndex()
-        if row >= len(self._securities) or column >= self._column_count:
-            return QModelIndex()
-
-        item = self._securities[row]
-        return QAbstractTableModel.createIndex(self, row, column, item)
-
     def headerData(  # noqa: N802
         self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole = ...
     ) -> str | int | None:
@@ -166,10 +155,10 @@ class SecurityTableModel(QAbstractTableModel):
         source_indexes = [self._proxy.mapToSource(index) for index in proxy_indexes]
         if len(source_indexes) == 0:
             return None
-        return source_indexes[0].internalPointer()
+        return self._securities[source_indexes[0].row()]
 
     def get_index_from_item(self, item: Security | None) -> QModelIndex:
         if item is None:
             return QModelIndex()
         row = self.securities.index(item)
-        return QAbstractTableModel.createIndex(self, row, 0, item)
+        return QAbstractTableModel.createIndex(self, row, 0)

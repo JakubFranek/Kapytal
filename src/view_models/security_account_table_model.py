@@ -71,16 +71,6 @@ class SecurityAccountTableModel(QAbstractTableModel):
             self._column_count = len(self.COLUMN_HEADERS)
         return self._column_count
 
-    def index(self, row: int, column: int, parent: QModelIndex = ...) -> QModelIndex:
-        if parent.isValid():
-            return QModelIndex()
-        if row < 0 or column < 0:
-            return QModelIndex()
-        if row >= len(self._securities) or column >= self._column_count:
-            return QModelIndex()
-
-        return QAbstractTableModel.createIndex(self, row, column)
-
     def headerData(  # noqa: N802
         self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole = ...
     ) -> str | int | None:

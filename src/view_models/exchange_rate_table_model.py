@@ -5,6 +5,8 @@ from PyQt6.QtWidgets import QTableView
 from src.models.model_objects.currency_objects import ExchangeRate
 from src.views.constants import ExchangeRateTableColumn
 
+ALIGNMENT_RIGHT = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+
 
 class ExchangeRateTableModel(QAbstractTableModel):
     COLUMN_HEADERS = {
@@ -38,17 +40,6 @@ class ExchangeRateTableModel(QAbstractTableModel):
             self._column_count = len(self.COLUMN_HEADERS)
         return self._column_count
 
-    def index(self, row: int, column: int, parent: QModelIndex = ...) -> QModelIndex:
-        if parent.isValid():
-            return QModelIndex()
-        if row < 0 or column < 0:
-            return QModelIndex()
-        if row >= len(self._exchange_rates) or column >= self._column_count:
-            return QModelIndex()
-
-        item = self._exchange_rates[row]
-        return QAbstractTableModel.createIndex(self, row, column, item)
-
     def data(
         self, index: QModelIndex, role: Qt.ItemDataRole = ...
     ) -> str | Qt.AlignmentFlag | None:
@@ -62,7 +53,7 @@ class ExchangeRateTableModel(QAbstractTableModel):
             role == Qt.ItemDataRole.TextAlignmentRole
             and column == ExchangeRateTableColumn.RATE
         ):
-            return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+            return ALIGNMENT_RIGHT
         return None
 
     def _get_display_role_data(
@@ -126,10 +117,10 @@ class ExchangeRateTableModel(QAbstractTableModel):
         indexes = self._view.selectedIndexes()
         if len(indexes) == 0:
             return None
-        return indexes[0].internalPointer()
+        return self._exchange_rates[indexes[0].row()]
 
     def get_index_from_item(self, item: ExchangeRate | None) -> QModelIndex:
         if item is None:
             return QModelIndex()
         row = self.exchange_rates.index(item)
-        return QAbstractTableModel.createIndex(self, row, 0, item)
+        return QAbstractTableModel.createIndex(self, row, 0)

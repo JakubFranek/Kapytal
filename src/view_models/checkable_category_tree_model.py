@@ -12,6 +12,12 @@ from src.presenters.utilities.event import Event
 bold_font = QFont()
 bold_font.setBold(True)  # noqa: FBT003
 
+FLAGS_CHECKABLE = (
+    Qt.ItemFlag.ItemIsSelectable
+    | Qt.ItemFlag.ItemIsEnabled
+    | Qt.ItemFlag.ItemIsUserCheckable
+)
+
 
 class CategorySelectionMode(Enum):
     HIERARCHICAL = auto()
@@ -269,11 +275,7 @@ class CheckableCategoryTreeModel(QAbstractItemModel):
     def flags(self, index: QModelIndex) -> Qt.ItemFlag:
         if not index.isValid():
             return Qt.ItemFlag.NoItemFlags
-        return (
-            Qt.ItemFlag.ItemIsSelectable
-            | Qt.ItemFlag.ItemIsEnabled
-            | Qt.ItemFlag.ItemIsUserCheckable
-        )
+        return FLAGS_CHECKABLE
 
     def pre_reset_model(self) -> None:
         self.beginResetModel()

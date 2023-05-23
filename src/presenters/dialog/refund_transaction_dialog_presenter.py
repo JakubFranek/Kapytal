@@ -206,9 +206,8 @@ class RefundTransactionDialogPresenter:
     ) -> bool:
         accounts = [
             account
-            for account in self._record_keeper.accounts
-            if isinstance(account, CashAccount)
-            and account.currency == refunded_transaction.currency
+            for account in self._record_keeper.cash_accounts
+            if account.currency == refunded_transaction.currency
         ]
 
         payees = sorted(payee.name for payee in self._record_keeper.payees)

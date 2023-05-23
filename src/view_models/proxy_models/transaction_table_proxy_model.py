@@ -26,6 +26,6 @@ class TransactionTableProxyModel(QSortFilterProxyModel):
     ) -> bool:
         del source_parent
         source_model: TransactionTableModel = self.sourceModel()
-        transaction = source_model.transactions[source_row]
+        transaction = source_model._transactions[source_row]  # noqa: SLF001
 
         return self._transaction_filter.validate_transaction(transaction)

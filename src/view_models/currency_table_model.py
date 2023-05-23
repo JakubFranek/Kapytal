@@ -43,17 +43,6 @@ class CurrencyTableModel(QAbstractTableModel):
             self._column_count = len(self.COLUMN_HEADERS)
         return self._column_count
 
-    def index(self, row: int, column: int, parent: QModelIndex = ...) -> QModelIndex:
-        if parent.isValid():
-            return QModelIndex()
-        if row < 0 or column < 0:
-            return QModelIndex()
-        if row >= len(self._currencies) or column >= self._column_count:
-            return QModelIndex()
-
-        item = self._currencies[row]
-        return QAbstractTableModel.createIndex(self, row, column, item)
-
     def data(
         self, index: QModelIndex, role: Qt.ItemDataRole = ...
     ) -> str | QIcon | None:
@@ -114,10 +103,10 @@ class CurrencyTableModel(QAbstractTableModel):
         indexes = self._view.selectedIndexes()
         if len(indexes) == 0:
             return None
-        return indexes[0].internalPointer()
+        return self._currencies[indexes[0].row()]
 
     def get_index_from_item(self, item: Currency | None) -> QModelIndex:
         if item is None:
             return QModelIndex()
         row = self.currencies.index(item)
-        return QAbstractTableModel.createIndex(self, row, 0, item)
+        return QAbstractTableModel.createIndex(self, row, 0)

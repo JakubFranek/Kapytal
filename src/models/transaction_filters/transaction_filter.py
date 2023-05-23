@@ -124,7 +124,7 @@ class TransactionFilter(CopyableMixin):
         return self._security_filter
 
     @property
-    def cash_amount_filter(self) -> CashAmountFilter | None:
+    def cash_amount_filter(self) -> CashAmountFilter:
         return self._cash_amount_filter
 
     @property
@@ -147,24 +147,6 @@ class TransactionFilter(CopyableMixin):
             self._cash_amount_filter,
         )
 
-    def _get_members_without_cash_amount_filter(
-        self,
-    ) -> tuple[BaseTransactionFilter, ...]:
-        return (
-            self._type_filter,
-            self._datetime_filter,
-            self._description_filter,
-            self._account_filter,
-            self._specific_tags_filter,
-            self._tagless_filter,
-            self._split_tags_filter,
-            self._payee_filter,
-            self._specific_categories_filter,
-            self._multiple_categories_filter,
-            self._currency_filter,
-            self._security_filter,
-        )
-
     def __repr__(self) -> str:
         return "TransactionFilter"
 
@@ -174,34 +156,10 @@ class TransactionFilter(CopyableMixin):
     def __eq__(self, __o: object) -> bool:
         if not isinstance(__o, TransactionFilter):
             return NotImplemented
-        self_members = self._get_members_without_cash_amount_filter()
-        other_members = __o._get_members_without_cash_amount_filter()  # noqa: SLF001
-        if self_members != other_members:
-            return False
-
-        return self._are_cash_amount_filters_equal(
-            __o._cash_amount_filter  # noqa: SLF001
-        )
-
-    def _are_cash_amount_filters_equal(self, other: CashAmountFilter | None) -> bool:
-        if self._cash_amount_filter is None and other is None:
-            return True
-        if (
-            self._cash_amount_filter is None
-            and isinstance(other, CashAmountFilter)
-            and other.mode == FilterMode.OFF
-        ):
-            return True
-        if (
-            isinstance(self._cash_amount_filter, CashAmountFilter)
-            and self._cash_amount_filter.mode == FilterMode.OFF
-            and other is None
-        ):
-            return True
-        return self._cash_amount_filter == other
+        return self.members == __o.members
 
     def validate_transaction(self, transaction: Transaction) -> bool:
-        result = all(
+        return all(
             (
                 self._type_filter.validate_transaction(transaction),
                 self._datetime_filter.validate_transaction(transaction),
@@ -215,11 +173,9 @@ class TransactionFilter(CopyableMixin):
                 self._specific_categories_filter.validate_transaction(transaction),
                 self._multiple_categories_filter.validate_transaction(transaction),
                 self._security_filter.validate_transaction(transaction),
+                self._cash_amount_filter.validate_transaction(transaction),
             )
         )
-        if self._cash_amount_filter is not None:
-            return result and self._cash_amount_filter.validate_transaction(transaction)
-        return result
 
     def filter_transactions(
         self, transactions: Collection[Transaction]
@@ -241,9 +197,8 @@ class TransactionFilter(CopyableMixin):
             _transactions
         )
         _transactions = self._security_filter.filter_transactions(_transactions)
-        if self._cash_amount_filter is not None:
-            _transactions = self._cash_amount_filter.filter_transactions(_transactions)
-        logging.debug(f"Kept {len(_transactions)}/{len(transactions)} transactions")
+        _transactions = self._cash_amount_filter.filter_transactions(_transactions)
+        logging.debug(f"Kept {len(_transactions)} / {len(transactions)} transactions")
         return _transactions
 
     def restore_defaults(self) -> None:
@@ -269,7 +224,7 @@ class TransactionFilter(CopyableMixin):
         self._multiple_categories_filter = MultipleCategoriesFilter(mode=FilterMode.OFF)
         self._currency_filter = CurrencyFilter(currencies=(), mode=FilterMode.OFF)
         self._security_filter = SecurityFilter(securities=(), mode=FilterMode.OFF)
-        self._cash_amount_filter = None
+        self._cash_amount_filter = CashAmountFilter(None, None, FilterMode.OFF)
 
     def set_type_filter(
         self,

@@ -28,53 +28,40 @@ class CashAmountFilter(BaseTransactionFilter):
     CashRelatedTransactions by default."""
 
     def __init__(
-        self, minimum: CashAmount, maximum: CashAmount, mode: FilterMode
+        self, minimum: CashAmount | None, maximum: CashAmount | None, mode: FilterMode
     ) -> None:
         super().__init__(mode)
 
-        if not isinstance(minimum, CashAmount):
-            raise TypeError("Parameter 'minimum' must be a CashAmount.")
-        if not isinstance(maximum, CashAmount):
-            raise TypeError("Parameter 'maximum' must be a CashAmount.")
-
-        if minimum.currency != maximum.currency:
-            raise CurrencyError(
-                "Parameters 'minimum' and 'maximum' must have the same currency."
-            )
-
-        if minimum > maximum:
-            raise ValueError(
-                "Parameter 'minimum' must be less than or equal to 'maximum'."
-            )
-
-        if minimum.is_negative():
-            # It is enough to check minimum since we know that minimum <= maximum
-            raise ValueError("Parameter 'minimum' must not be negative.")
+        if mode != FilterMode.OFF or (minimum is not None or maximum is not None):
+            self._validate_cash_amounts(minimum, maximum)
+        else:
+            self._currency = None
 
         self._minimum = minimum
         self._maximum = maximum
-        self._currency = minimum.currency
 
     @property
-    def minimum(self) -> CashAmount:
+    def minimum(self) -> CashAmount | None:
         return self._minimum
 
     @property
-    def maximum(self) -> CashAmount:
+    def maximum(self) -> CashAmount | None:
         return self._maximum
 
     @property
-    def currency(self) -> Currency:
+    def currency(self) -> Currency | None:
         return self._currency
 
     @property
-    def members(self) -> tuple[CashAmount, CashAmount, FilterMode]:
+    def members(self) -> tuple[CashAmount | None, CashAmount | None, FilterMode]:
         return (self._minimum, self._maximum, self._mode)
 
     def __repr__(self) -> str:
+        min_string = "None" if self._minimum is None else self._minimum.to_str_rounded()
+        max_string = "None" if self._maximum is None else self._maximum.to_str_rounded()
         return (
-            f"CashAmountFilter(min={self._minimum.to_str_rounded()}, "
-            f"max={self._maximum.to_str_rounded()}, mode={self._mode.name})"
+            f"CashAmountFilter(min={min_string}, max={max_string}, "
+            f"mode={self._mode.name})"
         )
 
     def __eq__(self, __o: object) -> bool:
@@ -131,3 +118,21 @@ class CashAmountFilter(BaseTransactionFilter):
         self, amounts: tuple[CashAmount, ...]
     ) -> tuple[CashAmount, ...]:
         return tuple(amount.convert(self._currency) for amount in amounts)
+
+    def _validate_cash_amounts(self, minimum: CashAmount, maximum: CashAmount) -> None:
+        if not isinstance(minimum, CashAmount):
+            raise TypeError("Parameter 'minimum' must be a CashAmount.")
+        if not isinstance(maximum, CashAmount):
+            raise TypeError("Parameter 'maximum' must be a CashAmount.")
+        if minimum.currency != maximum.currency:
+            raise CurrencyError(
+                "Parameters 'minimum' and 'maximum' must have the same currency."
+            )
+        if minimum > maximum:
+            raise ValueError(
+                "Parameter 'minimum' must be less than or equal to 'maximum'."
+            )
+        if minimum.is_negative():
+            # It is enough to check minimum since we know that minimum <= maximum
+            raise ValueError("Parameter 'minimum' must not be negative.")
+        self._currency = minimum.currency

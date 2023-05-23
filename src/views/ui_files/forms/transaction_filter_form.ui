@@ -631,14 +631,14 @@
                     </widget>
                    </item>
                    <item>
-                    <widget class="QPushButton" name="incomeAndExpenseCategoriesUnselectAllPushButton">
+                    <widget class="QPushButton" name="incomeAndExpenseCategoriesSelectAllPushButton">
                      <property name="text">
                       <string>Select All</string>
                      </property>
                     </widget>
                    </item>
                    <item>
-                    <widget class="QPushButton" name="incomeAndExpenseCategoriesSelectAllPushButton">
+                    <widget class="QPushButton" name="incomeAndExpenseCategoriesUnselectAllPushButton">
                      <property name="text">
                       <string>Unselect All</string>
                      </property>

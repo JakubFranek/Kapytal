@@ -17,7 +17,13 @@ from tests.models.test_assets.composites import attributes, everything_except
 from tests.models.test_assets.concrete_abcs import ConcreteTransaction
 
 
-@given(description=st.text(min_size=0, max_size=256), datetime_=st.datetimes())
+@given(
+    description=st.text(min_size=0, max_size=256),
+    datetime_=st.datetimes(
+        min_value=datetime(1971, 1, 1),
+        timezones=st.just(user_settings.settings.time_zone),
+    ),
+)
 def test_creation(description: str, datetime_: datetime) -> None:
     dt_start = datetime.now(user_settings.settings.time_zone).replace(microsecond=0)
     transaction = ConcreteTransaction(description, datetime_)
@@ -59,7 +65,10 @@ def test_invalid_datetime_type(description: str, datetime_: datetime) -> None:
 
 @given(
     description=st.text(min_size=0, max_size=256),
-    datetime_=st.datetimes(),
+    datetime_=st.datetimes(
+        min_value=datetime(year=1971, month=1, day=1),  # noqa: DTZ001
+        timezones=st.just(user_settings.settings.time_zone),
+    ),
 )
 def test_set_attributes_same_values(description: str, datetime_: datetime) -> None:
     transaction = ConcreteTransaction(description, datetime_)

@@ -91,7 +91,7 @@ def test_creation(  # noqa: PLR0913
         tag_amount_collection,
     )
 
-    categories = tuple(category for category, _ in category_amount_collection)
+    categories = frozenset(category for category, _ in category_amount_collection)
 
     dt_created_diff = cash_transaction.datetime_created - dt_start
 
@@ -399,12 +399,12 @@ def test_category_amount_pairs_invalid_type(
 
 @given(
     transaction=cash_transactions(),
-    category_amount_pairs=st.lists(everything_except(tuple), min_size=2, max_size=2),
+    category_amount_pairs=st.lists(everything_except(tuple), min_size=2, max_size=10),
 )
 def test_category_amount_pairs_invalid_member_type(
     transaction: CashTransaction, category_amount_pairs: Collection[Any]
 ) -> None:
-    with pytest.raises(TypeError, match="cannot unpack"):
+    with pytest.raises((TypeError, ValueError), match="unpack"):
         transaction.set_attributes(category_amount_pairs=category_amount_pairs)
 
 
@@ -690,7 +690,8 @@ def test_get_amount_for_tag_not_related(
     transaction: CashTransaction, tag: Attribute
 ) -> None:
     assume(tag not in transaction.tags)
-    assert transaction.get_amount_for_tag(tag) == transaction.currency.zero_amount
+    with pytest.raises(ValueError, match="not found in this CashTransaction's tags"):
+        transaction.get_amount_for_tag(tag)
 
 
 @given(transaction=cash_transactions(), unrelated_account=cash_accounts())

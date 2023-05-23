@@ -57,6 +57,7 @@ class SecurityTransactionDialogPresenter:
             for account in valid_accounts
             if isinstance(account, SecurityAccount)
         ]
+        # FIXME: use RecordKeeper accounts here, not valid (checked) accounts
         if len(valid_cash_accounts) == 0 or len(valid_security_accounts) == 0:
             display_error_message(
                 "Create at least one Cash Account and one Security Account before "
@@ -304,22 +305,12 @@ class SecurityTransactionDialogPresenter:
 
     def _prepare_dialog(self, edit_mode: EditMode) -> bool:
         securities = self._record_keeper.securities
-        cash_accounts = [
-            account
-            for account in self._record_keeper.accounts
-            if isinstance(account, CashAccount)
-        ]
-        security_accounts = [
-            account
-            for account in self._record_keeper.accounts
-            if isinstance(account, SecurityAccount)
-        ]
         tag_names = sorted(tag.name for tag in self._record_keeper.tags)
         self._dialog = SecurityTransactionDialog(
             self._parent_view,
             securities,
-            cash_accounts,
-            security_accounts,
+            self._record_keeper.cash_accounts,
+            self._record_keeper.security_accounts,
             tag_names,
             edit_mode=edit_mode,
         )

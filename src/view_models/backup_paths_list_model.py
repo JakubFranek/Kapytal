@@ -8,7 +8,7 @@ from PyQt6.QtWidgets import QListView
 class BackupPathsListModel(QAbstractListModel):
     def __init__(self, view: QListView, paths: Collection[Path]) -> None:
         super().__init__()
-        self._list = view
+        self._view = view
         self.paths = paths
 
     @property
@@ -23,17 +23,6 @@ class BackupPathsListModel(QAbstractListModel):
         if isinstance(index, QModelIndex) and index.isValid():
             return 0
         return len(self.paths)
-
-    def index(self, row: int, column: int, parent: QModelIndex = ...) -> QModelIndex:
-        if parent.isValid():
-            return QModelIndex()
-        if row < 0 or column < 0:
-            return QModelIndex()
-        if row >= len(self._paths) or column >= 1:
-            return QModelIndex()
-
-        item = self._paths[row]
-        return QAbstractListModel.createIndex(self, row, 0, item)
 
     def data(self, index: QModelIndex, role: Qt.ItemDataRole = ...) -> str | None:
         if not index.isValid():
@@ -62,19 +51,19 @@ class BackupPathsListModel(QAbstractListModel):
         self.endRemoveRows()
 
     def get_selected_item_index(self) -> QModelIndex:
-        indexes = self._list.selectedIndexes()
+        indexes = self._view.selectedIndexes()
         if len(indexes) == 0:
             return QModelIndex()
         return indexes[0]
 
     def get_selected_item(self) -> Path | None:
-        indexes = self._list.selectedIndexes()
+        indexes = self._view.selectedIndexes()
         if len(indexes) == 0:
             return None
-        return indexes[0].internalPointer()
+        return self._paths[indexes[0].row()]
 
     def get_index_from_item(self, item: Path | None) -> QModelIndex:
         if item is None:
             return QModelIndex()
         row = self._paths.index(item)
-        return QAbstractListModel.createIndex(self, row, 0, item)
+        return QAbstractListModel.createIndex(self, row, 0)

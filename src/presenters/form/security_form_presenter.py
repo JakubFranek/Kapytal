@@ -54,11 +54,7 @@ class SecurityFormPresenter:
     def update_model_data(self) -> None:
         self._table_model.securities = self._record_keeper.securities
         self._tree_model.load_security_accounts(
-            [
-                account
-                for account in self._record_keeper.accounts
-                if isinstance(account, SecurityAccount)
-            ],
+            self._record_keeper.security_accounts,
             self._record_keeper.base_currency,
         )
 
@@ -218,14 +214,9 @@ class SecurityFormPresenter:
 
     def _initialize_tree_models(self) -> None:
         self._tree_proxy = QSortFilterProxyModel(self._view.treeView)
-        security_accounts = [
-            account
-            for account in self._record_keeper.accounts
-            if isinstance(account, SecurityAccount)
-        ]
         self._tree_model = OwnedSecuritiesTreeModel(
             self._view.treeView,
-            security_accounts,
+            self._record_keeper.security_accounts,
             self._record_keeper.base_currency,
             self._tree_proxy,
         )

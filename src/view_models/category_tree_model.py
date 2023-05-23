@@ -4,9 +4,10 @@ from collections.abc import Collection, Sequence
 from PyQt6.QtCore import QAbstractItemModel, QModelIndex, QSortFilterProxyModel, Qt
 from PyQt6.QtWidgets import QTreeView
 from src.models.model_objects.attributes import Category
-from src.models.model_objects.currency_objects import Currency
 from src.models.utilities.calculation import CategoryStats
 from src.views.constants import CategoryTreeColumn
+
+ALIGNMENT_RIGHT = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
 
 
 class CategoryTreeModel(QAbstractItemModel):
@@ -16,19 +17,17 @@ class CategoryTreeModel(QAbstractItemModel):
         CategoryTreeColumn.BALANCE: "Balance",
     }
 
-    def __init__(  # noqa: PLR0913
+    def __init__(
         self,
         tree_view: QTreeView,
         root_categories: Sequence[Category],
-        category_stats: Collection[CategoryStats],
-        base_currency: Currency,
+        category_stats: dict[Category, CategoryStats],
         proxy: QSortFilterProxyModel,
     ) -> None:
         super().__init__()
         self._tree_view = tree_view
         self.root_categories = root_categories
-        self.category_stats = category_stats
-        self.base_currency = base_currency
+        self._category_stats_dict: dict[Category, CategoryStats] = category_stats
         self._proxy = proxy
 
     @property
@@ -40,12 +39,14 @@ class CategoryTreeModel(QAbstractItemModel):
         self._root_categories = tuple(root_categories)
 
     @property
-    def category_stats(self) -> tuple[CategoryStats, ...]:
-        return self._category_stats
+    def category_stats_dict(self) -> dict[Category, CategoryStats]:
+        return self._category_stats_dict
 
-    @category_stats.setter
-    def category_stats(self, category_stats: Collection[CategoryStats]) -> None:
-        self._category_stats = tuple(category_stats)
+    @category_stats_dict.setter
+    def category_stats_dict(
+        self, category_stats_dict: dict[Category, CategoryStats]
+    ) -> None:
+        self._category_stats_dict = category_stats_dict
 
     def rowCount(self, index: QModelIndex = ...) -> int:  # noqa: N802
         if index.isValid():
@@ -82,30 +83,56 @@ class CategoryTreeModel(QAbstractItemModel):
             return QModelIndex()
         grandparent = parent.parent
         if grandparent is None:
-            parent_row = self.root_categories.index(parent)
+            parent_row = self._root_categories.index(parent)
         else:
             parent_row = grandparent.children.index(parent)
         return QAbstractItemModel.createIndex(self, parent_row, 0, parent)
 
-    def data(
+    def headerData(  # noqa: N802
+        self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole = ...
+    ) -> str | int | None:
+        if role == Qt.ItemDataRole.TextAlignmentRole:
+            return Qt.AlignmentFlag.AlignCenter
+        if role == Qt.ItemDataRole.DisplayRole:
+            if orientation == Qt.Orientation.Horizontal:
+                return self.COLUMN_HEADERS[section]
+            return str(section)
+        return None
+
+    def data(  # noqa: PLR0911
         self, index: QModelIndex, role: Qt.ItemDataRole = ...
     ) -> str | Qt.AlignmentFlag | None:
         if not index.isValid():
             return None
         column = index.column()
         category: Category = index.internalPointer()
-        stats = self._get_category_stats(category)
+        stats = self._category_stats_dict[category]
         if role == Qt.ItemDataRole.DisplayRole:
             return self._get_display_role_data(column, category, stats)
-        if role == Qt.ItemDataRole.UserRole and column == CategoryTreeColumn.NAME:
-            return unicodedata.normalize("NFD", category.name)
+        if role == Qt.ItemDataRole.UserRole:
+            if column == CategoryTreeColumn.NAME:
+                return unicodedata.normalize("NFD", category.name)
+            if column == CategoryTreeColumn.TRANSACTIONS:
+                return stats.transactions_total
+            if column == CategoryTreeColumn.BALANCE:
+                return float(stats.balance.value_normalized)
         if role == Qt.ItemDataRole.UserRole + 1 and column == CategoryTreeColumn.NAME:
             return category.path
         if role == Qt.ItemDataRole.TextAlignmentRole and (
             column == CategoryTreeColumn.TRANSACTIONS
             or column == CategoryTreeColumn.BALANCE
         ):
-            return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+            return ALIGNMENT_RIGHT
+        if (
+            role == Qt.ItemDataRole.ToolTipRole
+            and column == CategoryTreeColumn.TRANSACTIONS
+        ):
+            return (
+                "Number outside of parentheses is the number of Transactions\n"
+                "containing the Category and/or its children Categories.\n"
+                "Number in parentheses is the number of Transactions containing\n"
+                "the Category directly, not counting its children."
+            )
         return None
 
     def _get_display_role_data(
@@ -118,21 +145,7 @@ class CategoryTreeModel(QAbstractItemModel):
                 return stats.transactions_total
             return f"{stats.transactions_total} ({stats.transactions_self})"
         if column == CategoryTreeColumn.BALANCE:
-            return stats.balance.convert(self.base_currency).to_str_rounded()
-        return None
-
-    def headerData(  # noqa: N802
-        self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole = ...
-    ) -> str | int | None:
-        if role == Qt.ItemDataRole.TextAlignmentRole:
-            if section == CategoryTreeColumn.TRANSACTIONS:
-                return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
-            if section == CategoryTreeColumn.BALANCE:
-                return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
-        if role == Qt.ItemDataRole.DisplayRole:
-            if orientation == Qt.Orientation.Horizontal:
-                return self.COLUMN_HEADERS[section]
-            return str(section)
+            return stats.balance.to_str_rounded()
         return None
 
     def pre_add(self, parent: Category | None) -> None:
@@ -210,9 +223,3 @@ class CategoryTreeModel(QAbstractItemModel):
         else:
             row = parent.children.index(item)
         return QAbstractItemModel.createIndex(self, row, 0, item)
-
-    def _get_category_stats(self, category: Category) -> CategoryStats:
-        for stats in self.category_stats:
-            if stats.category == category:
-                return stats
-        raise ValueError("No CategoryStats found for given Category.")

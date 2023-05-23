@@ -353,12 +353,6 @@ class CashTransactionDialogPresenter:
         self.event_data_changed()
 
     def _prepare_dialog(self, edit_mode: EditMode) -> bool:
-        accounts = [
-            account
-            for account in self._record_keeper.accounts
-            if isinstance(account, CashAccount)
-        ]
-
         payees = sorted(payee.name for payee in self._record_keeper.payees)
         categories_income = (
             self._record_keeper.income_categories
@@ -373,7 +367,7 @@ class CashTransactionDialogPresenter:
         tag_names = sorted(tag.name for tag in self._record_keeper.tags)
         self._dialog = CashTransactionDialog(
             self._parent_view,
-            accounts,
+            self._record_keeper.cash_accounts,
             payees,
             category_income_paths,
             category_expense_paths,

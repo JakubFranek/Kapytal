@@ -19,6 +19,7 @@ class AccountFilterPresenter:
     ) -> None:
         self._form = form
         self._record_keeper = record_keeper
+        self._accounts = record_keeper.accounts
         self._initialize_models()
         self._connect_to_signals()
 
@@ -26,8 +27,13 @@ class AccountFilterPresenter:
     def checked_accounts(self) -> tuple[Account, ...]:
         return self._model.checked_accounts
 
+    @property
+    def accounts(self) -> tuple[Account, ...]:
+        return self._accounts
+
     def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
         self._record_keeper = record_keeper
+        self._accounts = record_keeper.accounts
         self._model.pre_reset_model()
         self._model.flat_account_items = record_keeper.account_items
         self._model.post_reset_model()
@@ -35,13 +41,13 @@ class AccountFilterPresenter:
     def load_from_account_filter(
         self,
         account_filter: AccountFilter,
-    ) -> None:
+    ) -> bool:
         if self._form.account_filter_mode == AccountFilterMode.ACCOUNT_TREE:
             return
 
         if account_filter.mode == FilterMode.OFF:
-            self._form.account_filter_mode = AccountFilterMode.ACCOUNT_TREE
-        elif account_filter.mode == FilterMode.KEEP:
+            return
+        if account_filter.mode == FilterMode.KEEP:
             self._model.checked_accounts = account_filter.accounts
         else:
             self._model.checked_accounts = [

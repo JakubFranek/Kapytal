@@ -74,6 +74,7 @@ remove: QIcon | None = None
 duplicate: QIcon | None = None
 transfer: QIcon | None = None
 reset_sort_order: QIcon | None = None
+hourglass: QIcon | None = None
 
 
 def setup() -> None:  # noqa: PLR0915
@@ -100,6 +101,7 @@ def setup() -> None:  # noqa: PLR0915
     global add, edit, remove, duplicate  # noqa: PLW0603
     global transfer  # noqa: PLW0603
     global reset_sort_order  # noqa: PLW0603
+    global hourglass  # noqa: PLW0603
 
     QDir.addSearchPath(
         "icons_24",
@@ -186,3 +188,4 @@ def setup() -> None:  # noqa: PLR0915
         if colors.color_scheme == Qt.ColorScheme.Dark
         else QIcon("icons_custom:edit-list-order.png")
     )
+    hourglass = QIcon("icons_16:hourglass.png")

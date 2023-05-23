@@ -7,6 +7,8 @@ from zoneinfo import ZoneInfo
 from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
 from tzlocal import get_localzone_name
 
+# TODO: add setting for default datetime filter?
+
 
 class UserSettings(JSONSerializableMixin):
     """This class is intended to be instantiated only once, within user_settings."""

@@ -118,8 +118,47 @@ class Category(NameMixin, JSONSerializableMixin):
             return self._name
         return self._parent.path + "/" + self._name
 
+    @property
+    def ancestors(self) -> frozenset[Self]:
+        ancestors = set()
+        node = self._parent
+        while node is not None:
+            ancestors.add(node)
+            node = node._parent  # noqa: SLF001
+        return frozenset(ancestors)
+
+    @property
+    def descendants(self) -> frozenset[Self]:
+        if not self._children_tuple:
+            return frozenset()
+        descendants = set(self._children_tuple)
+        for child in self._children_tuple:
+            descendants |= child.descendants
+        return frozenset(descendants)
+
     def __repr__(self) -> str:
         return f"Category('{self.path}', {self._type.name})"
+
+    def is_ancestor_of(self, category: Self) -> bool:
+        """Check if this Category is an ancestor of the parameter Category.
+        Seems to be slower than checking if category is in self.descendants."""
+
+        if category in self._children_tuple or category.parent in self._children_tuple:
+            return True
+        if len(self._children_tuple) == 0 or self == category:
+            return False
+        for child in self._children_tuple:  # noqa: SIM110
+            if child.is_ancestor_of(category):
+                return True
+        return False
+
+    def is_descendant_of(self, category: Self) -> bool:
+        """Check if this Category is a descendant of the parameter Category."""
+        if self._parent == category:
+            return True
+        if self._parent is None:
+            return False
+        return self._parent.is_descendant_of(category)
 
     def _update_children_tuple(self) -> None:
         self._children_tuple = tuple(

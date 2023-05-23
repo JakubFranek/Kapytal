@@ -28,6 +28,7 @@ class Transaction(
     def __init__(self) -> None:
         super().__init__()
         self._tags = []
+        self._datetime: datetime
 
     @property
     def description(self) -> str:
@@ -52,6 +53,10 @@ class Transaction(
         return self._datetime
 
     @property
+    def timestamp(self) -> float:
+        return self._timestamp
+
+    @property
     def tags(self) -> tuple[Attribute, ...]:
         return tuple(self._tags)
 
@@ -73,6 +78,7 @@ class Transaction(
         self._validate_datetime(datetime_)
         self._description = description
         self._datetime = datetime_
+        self._timestamp = datetime_.timestamp()
 
     def add_tags(self, tags: Collection[Attribute]) -> None:
         self._validate_tags(tags)

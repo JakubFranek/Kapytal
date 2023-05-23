@@ -182,6 +182,16 @@ def test_filter_discard_premade_transactions(filter_: TypeFilter) -> None:
     )
 
 
+def test_filter_discard_premade_transactions_all_types() -> None:
+    filter_ = TypeFilter(valid_types, FilterMode.DISCARD)
+    filtered = filter_.filter_transactions(transaction_list)
+    assert filtered == tuple(
+        transaction
+        for transaction in transaction_list
+        if not check_transaction(filter_, transaction)
+    )
+
+
 def test_filter_type_names_custom() -> None:
     filter_ = TypeFilter(valid_types, FilterMode.KEEP)
 

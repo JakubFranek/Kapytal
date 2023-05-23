@@ -33,9 +33,16 @@ from tests.models.test_assets.composites import (
 def test_creation() -> None:
     record_keeper = RecordKeeper()
     assert record_keeper.accounts == ()
+    assert record_keeper.cash_accounts == ()
+    assert record_keeper.security_accounts == ()
     assert record_keeper.account_groups == ()
     assert record_keeper.root_account_items == ()
     assert record_keeper.transactions == ()
+    assert record_keeper.cash_transactions == ()
+    assert record_keeper.refund_transactions == ()
+    assert record_keeper.cash_transfers == ()
+    assert record_keeper.security_transactions == ()
+    assert record_keeper.security_transfers == ()
     assert record_keeper.tags == ()
     assert record_keeper.categories == ()
     assert record_keeper.income_categories == ()
@@ -207,11 +214,32 @@ def test_add_cash_account(
     parent_group = record_keeper.account_groups[0] if parent_name else None
     cash_account: CashAccount = record_keeper.accounts[0]
     assert cash_account.name == name
+    assert cash_account in record_keeper.cash_accounts
     assert cash_account.currency.code == currency_code.upper()
     assert cash_account.initial_balance == CashAmount(
         initial_balance, cash_account.currency
     )
     assert cash_account.parent == parent_group
+
+
+@given(
+    name=names(),
+    parent_name=st.none() | names(),
+)
+def test_add_security_account(
+    name: str,
+    parent_name: str | None,
+) -> None:
+    path = parent_name + "/" + name if parent_name is not None else name
+    record_keeper = RecordKeeper()
+    if parent_name:
+        record_keeper.add_account_group(parent_name)
+    record_keeper.add_security_account(path)
+    parent_group = record_keeper.account_groups[0] if parent_name else None
+    security_account: SecurityAccount = record_keeper.accounts[0]
+    assert security_account.name == name
+    assert security_account in record_keeper.security_accounts
+    assert security_account.parent == parent_group
 
 
 @given(
@@ -283,6 +311,7 @@ def test_add_cash_transaction(
         tag_name_amount_pairs,
     )
     transaction = record_keeper.transactions[0]
+    assert transaction in record_keeper.cash_transactions
     assert transaction.datetime_ == datetime_
     assert transaction.description == description
 
@@ -333,6 +362,7 @@ def test_add_cash_transfer(
         amount_received,
     )
     transfer = record_keeper.transactions[0]
+    assert transfer in record_keeper.cash_transfers
     assert transfer.datetime_ == datetime_
     assert transfer.description == description
 
@@ -711,6 +741,7 @@ def test_add_security_transaction(
         cash_account_path,
     )
     assert len(record_keeper.transactions) == 1
+    assert len(record_keeper.security_transactions) == 1
 
 
 @given(
@@ -754,6 +785,7 @@ def test_add_security_transfer(
         account_recipient_path,
     )
     assert len(record_keeper.transactions) == 1
+    assert len(record_keeper.security_transfers) == 1
 
 
 def test_set_exchange() -> None:

@@ -322,6 +322,7 @@ def test_cash_transaction(transaction: CashTransaction) -> None:
     tag_dict = {tag.name: tag for tag in transaction.tags}
 
     serialized = json.dumps(transaction, cls=CustomJSONEncoder)
+    transaction.account.remove_transaction(transaction)
     decoded = json.loads(serialized, cls=CustomJSONDecoder)
     decoded = CashTransaction.deserialize(
         decoded,
@@ -354,6 +355,8 @@ def test_cash_transfer(transaction: CashTransfer) -> None:
     }
 
     serialized = json.dumps(transaction, cls=CustomJSONEncoder)
+    transaction.sender.remove_transaction(transaction)
+    transaction.recipient.remove_transaction(transaction)
     decoded = json.loads(serialized, cls=CustomJSONDecoder)
     decoded = CashTransfer.deserialize(
         decoded,
@@ -399,6 +402,7 @@ def test_refund_transaction(transaction: CashTransaction) -> None:
     )
     transaction.remove_refund(refund)
     serialized = json.dumps(refund, cls=CustomJSONEncoder)
+    refund.account.remove_transaction(refund)
     decoded = json.loads(serialized, cls=CustomJSONDecoder)
     decoded = RefundTransaction.deserialize(
         decoded,
@@ -424,6 +428,7 @@ def test_refund_transaction(transaction: CashTransaction) -> None:
 @given(transaction=security_transactions())
 def test_security_transaction(transaction: SecurityTransaction) -> None:
     serialized = json.dumps(transaction, cls=CustomJSONEncoder)
+    transaction.cash_account.remove_transaction(transaction)
     decoded = json.loads(serialized, cls=CustomJSONDecoder)
     decoded = SecurityTransaction.deserialize(
         decoded,

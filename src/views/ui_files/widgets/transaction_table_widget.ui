@@ -165,6 +165,13 @@
      </attribute>
     </widget>
    </item>
+   <item>
+    <widget class="QLabel" name="transactionsLabel">
+     <property name="text">
+      <string>Showing Transactions: 0/0</string>
+     </property>
+    </widget>
+   </item>
   </layout>
   <action name="actionExpense">
    <property name="text">

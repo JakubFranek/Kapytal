@@ -5,6 +5,12 @@ from typing import Any
 from PyQt6.QtCore import QAbstractListModel, QModelIndex, QSortFilterProxyModel, Qt
 from PyQt6.QtWidgets import QListView
 
+FLAGS_CHECKABLE = (
+    Qt.ItemFlag.ItemIsSelectable
+    | Qt.ItemFlag.ItemIsEnabled
+    | Qt.ItemFlag.ItemIsUserCheckable
+)
+
 
 class CheckableListModel(QAbstractListModel):
     def __init__(
@@ -44,21 +50,10 @@ class CheckableListModel(QAbstractListModel):
             return 0
         return len(self._items)
 
-    def index(self, row: int, column: int, parent: QModelIndex = ...) -> QModelIndex:
-        if parent.isValid():
-            return QModelIndex()
-        if row < 0 or column < 0:
-            return QModelIndex()
-        if row >= len(self._items) or column >= 1:
-            return QModelIndex()
-
-        item = self._items[row]
-        return QAbstractListModel.createIndex(self, row, 0, item)
-
     def data(self, index: QModelIndex, role: Qt.ItemDataRole = ...) -> str | None:
         if not index.isValid():
             return None
-        item = index.internalPointer()
+        item = self._items[index.row()]
         if role == Qt.ItemDataRole.DisplayRole:
             return str(item)
         if role == Qt.ItemDataRole.CheckStateRole:
@@ -75,7 +70,7 @@ class CheckableListModel(QAbstractListModel):
         self, index: QModelIndex, value: Any, role: int = ...  # noqa: ANN401
     ) -> bool | None:
         if role == Qt.ItemDataRole.CheckStateRole:
-            item: str = index.internalPointer()
+            item: str = self._items[index.row()]
             checked = value == Qt.CheckState.Checked.value
             if checked and item not in self._checked_items:
                 self._checked_items.append(item)
@@ -87,11 +82,7 @@ class CheckableListModel(QAbstractListModel):
     def flags(self, index: QModelIndex) -> Qt.ItemFlag:
         if not index.isValid():
             return Qt.ItemFlag.NoItemFlags
-        return (
-            Qt.ItemFlag.ItemIsSelectable
-            | Qt.ItemFlag.ItemIsEnabled
-            | Qt.ItemFlag.ItemIsUserCheckable
-        )
+        return FLAGS_CHECKABLE
 
     def get_selected_item(self) -> Any | None:
         indexes = self._list_view.selectedIndexes()
@@ -99,7 +90,7 @@ class CheckableListModel(QAbstractListModel):
             indexes = [self._proxy.mapToSource(index) for index in indexes]
         if len(indexes) == 0:
             return None
-        return indexes[0].internalPointer()
+        return self._items[indexes[0].row()]
 
     def pre_reset_model(self) -> None:
         self.beginResetModel()

@@ -15,18 +15,18 @@ from src.models.model_objects.cash_objects import (
 from src.models.model_objects.currency_objects import CashAmount, Currency
 from src.models.user_settings import user_settings
 from src.models.utilities.calculation import (
-    get_category_stats,
-    get_payee_stats,
-    get_tag_stats,
+    calculate_category_stats,
+    calculate_payee_stats,
+    calculate_tag_stats,
 )
 
 payee = Attribute("Payee 1", AttributeType.PAYEE)
 payee_dummy = Attribute("Dummy", AttributeType.PAYEE)
-category_expense = Category("Cat Income", CategoryType.EXPENSE)
+category_expense = Category("Cat Expense", CategoryType.EXPENSE)
 category_expense_child = Category(
     "Expense child", CategoryType.EXPENSE, category_expense
 )
-category_income = Category("Cat Expense", CategoryType.INCOME)
+category_income = Category("Cat Income", CategoryType.INCOME)
 tag = Attribute("Tag 1", AttributeType.TAG)
 tag_dummy = Attribute("Dummy", AttributeType.TAG)
 currency = Currency("CZK", 2)
@@ -35,52 +35,33 @@ account = CashAccount("Account", currency, currency.zero_amount)
 
 def test_calculate_attribute_stats() -> None:
     transactions = get_transactions()
-    payee_stats = get_payee_stats(
-        payee,
+    payee_stats = calculate_payee_stats(
         transactions,
         currency,
-        date_start=datetime.now(user_settings.settings.time_zone).date()
-        - timedelta(days=1),
-        date_end=datetime.now(user_settings.settings.time_zone).date()
-        + timedelta(days=1),
     )
-    tag_stats = get_tag_stats(
-        tag,
+    tag_stats = calculate_tag_stats(
         transactions,
         currency,
-        date_start=datetime.now(user_settings.settings.time_zone).date()
-        - timedelta(days=1),
-        date_end=datetime.now(user_settings.settings.time_zone).date()
-        + timedelta(days=1),
     )
+    payee_stats = payee_stats[payee]
+    tag_stats = tag_stats[tag]
     assert payee_stats.attribute == payee
-    assert payee_stats.no_of_transactions == 5  # noqa: PLR2004
-    assert payee_stats.balance.value_rounded == -1 - 2 + 3 + 5 + 1
+    assert payee_stats.no_of_transactions == 7  # noqa: PLR2004
+    assert payee_stats.balance.value_rounded == -1 - 2 + 3 + 5 + 6 + 7 + 1
     assert tag_stats.attribute == tag
-    assert tag_stats.no_of_transactions == 5  # noqa: PLR2004
-    assert tag_stats.balance.value_rounded == -1 - 2 + 3 - 4 + 1
+    assert tag_stats.no_of_transactions == 7  # noqa: PLR2004
+    assert tag_stats.balance.value_rounded == -1 - 2 + 3 - 4 + 6 + 7 + 1
 
 
 def test_calculate_category_stats() -> None:
     transactions = get_transactions()
-    category_stats = get_category_stats(
-        category_expense,
+    category_stats_dict = calculate_category_stats(
         transactions,
         currency,
-        date_start=datetime.now(user_settings.settings.time_zone).date()
-        - timedelta(days=1),
-        date_end=datetime.now(user_settings.settings.time_zone).date()
-        + timedelta(days=1),
+        [category_income, category_expense, category_expense_child],
     )
-    category_child_stats = get_category_stats(
-        category_expense_child,
-        transactions,
-        currency,
-        date_start=datetime.now(user_settings.settings.time_zone).date()
-        - timedelta(days=1),
-        date_end=datetime.now(user_settings.settings.time_zone).date()
-        + timedelta(days=1),
-    )
+    category_stats = category_stats_dict[category_expense]
+    category_child_stats = category_stats_dict[category_expense_child]
 
     assert category_stats.category == category_expense
     assert category_stats.transactions_self == 3  # noqa: PLR2004
@@ -188,4 +169,5 @@ def get_transactions() -> list[CashTransaction]:
             tag_amount_pairs=[(tag, CashAmount(1, currency))],
         )
     )
+
     return transactions

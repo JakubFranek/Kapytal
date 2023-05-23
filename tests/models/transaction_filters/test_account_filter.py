@@ -32,6 +32,7 @@ def check_transaction(filter_: AccountFilter, transaction: Transaction) -> bool:
 def test_creation(accounts: list[Account], mode: FilterMode) -> None:
     filter_ = AccountFilter(accounts, mode)
     assert filter_.accounts == tuple(accounts)
+    assert filter_.accounts_set == frozenset(accounts)
     assert filter_.mode == mode
     assert (
         filter_.__repr__()

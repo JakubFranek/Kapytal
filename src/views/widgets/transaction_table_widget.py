@@ -2,9 +2,10 @@ import logging
 
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QAction, QContextMenuEvent, QCursor
-from PyQt6.QtWidgets import QLineEdit, QMenu, QWidget
+from PyQt6.QtWidgets import QApplication, QLineEdit, QMenu, QWidget
 from src.views import icons
 from src.views.constants import TRANSACTION_TABLE_COLUMN_HEADERS, TransactionTableColumn
+from src.views.dialogs.busy_dialog import create_simple_busy_indicator
 from src.views.ui_files.widgets.Ui_transaction_table_widget import (
     Ui_TransactionTableWidget,
 )
@@ -13,6 +14,7 @@ from src.views.ui_files.widgets.Ui_transaction_table_widget import (
 class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
     signal_search_text_changed = pyqtSignal(str)
     signal_filter_transactions = pyqtSignal()
+    signal_reset_columns = pyqtSignal()
 
     signal_income = pyqtSignal()
     signal_expense = pyqtSignal()
@@ -35,7 +37,8 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
     def __init__(self, parent: QWidget | None) -> None:
         super().__init__(parent)
         self.setupUi(self)
-
+        self.tableView.horizontalHeader().setResizeContentsPrecision(100)
+        self.tableView.setSortingEnabled(True)
         self._create_column_actions()
         self._set_icons()
         self._connect_actions()
@@ -57,6 +60,9 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
         )
         self.signal_selection_changed.emit()
 
+    def set_shown_transactions(self, shown: int, total: int) -> None:
+        self.transactionsLabel.setText(f"Showing Transactions: {shown:,} / {total:,}")
+
     def resize_table_to_contents(self) -> None:
         self.tableView.horizontalHeader().setStretchLastSection(False)
         self.tableView.resizeColumnsToContents()
@@ -69,9 +75,13 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
             return
 
         columns = TRANSACTION_TABLE_COLUMN_HEADERS.keys()
-        for column_ in columns:
-            if column_ != column and self.tableView.isColumnHidden(column_):
-                return  # If all other columns are hidden, this column must stay shown
+        # If all other columns are hidden, this column must stay shown
+        if not any(
+            not self.tableView.isColumnHidden(column_)
+            for column_ in columns
+            if column_ != column
+        ):
+            return
 
         self.tableView.setColumnHidden(column, not show)
         if show:
@@ -85,6 +95,7 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
     def show_all_columns(self) -> None:
         for column in TRANSACTION_TABLE_COLUMN_HEADERS:
             self.set_column_visibility(column, show=True)
+        self.resize_table_to_contents()
 
     def set_actions(
         self, *, enable_duplicate: bool, enable_refund: bool, enable_find_related: bool
@@ -134,6 +145,10 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
     def _create_header_context_menu(self, event: QContextMenuEvent) -> None:
         del event
         self.header_menu = QMenu(self)
+        self.header_menu.addAction(self.actionShow_All_Columns)
+        self.header_menu.addAction(self.actionResize_Columns_to_Fit)
+        self.header_menu.addAction(self.actionReset_Columns)
+        self.header_menu.addSeparator()
         for action in self.column_actions:
             column = action.data()
             if self.tableView.isColumnHidden(column):
@@ -141,10 +156,6 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
             else:
                 action.setChecked(True)
             self.header_menu.addAction(action)
-        self.header_menu.addSeparator()
-        self.header_menu.addAction(self.actionShow_All_Columns)
-        self.header_menu.addAction(self.actionResize_Columns_to_Fit)
-        self.header_menu.addAction(self.actionReset_Columns)
         self.header_menu.popup(QCursor.pos())
 
     def _create_table_context_menu(self, event: QContextMenuEvent) -> None:
@@ -200,7 +211,7 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
         self.actionResize_Columns_to_Fit.triggered.connect(
             self.resize_table_to_contents
         )
-        self.actionReset_Columns.triggered.connect(self._reset_column_order)
+        self.actionReset_Columns.triggered.connect(self.signal_reset_columns)
 
     def _initialize_signals(self) -> None:
         self.tableView.doubleClicked.connect(self.signal_edit.emit)
@@ -235,15 +246,37 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
         header.customContextMenuRequested.connect(self._create_header_context_menu)
         header.setSectionsMovable(True)
 
+        header.sortIndicatorChanged.disconnect()  # sorting has to be performed manually
+        header.sortIndicatorChanged.connect(self._sort_indicator_changed)
+
     def _setup_table(self) -> None:
         self.tableView.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.tableView.customContextMenuRequested.connect(
             self._create_table_context_menu
         )
 
-    def _reset_column_order(self) -> None:
+    def reset_column_order(self) -> None:
         header = self.tableView.horizontalHeader()
         for column in TransactionTableColumn:
             visual_index = header.visualIndex(column)
             header.moveSection(visual_index, column)
         self.resize_table_to_contents()
+
+    def _sort_indicator_changed(self, section: int, sort_order: Qt.SortOrder) -> None:
+        """Logs and sorts the Table. Shows a busy indicator during the process."""
+
+        self._busy_dialog = create_simple_busy_indicator(
+            self, "Sorting Transactions, please wait..."
+        )
+        self._busy_dialog.open()
+        QApplication.processEvents()
+        try:
+            logging.debug(
+                f"Sorting: column={TransactionTableColumn(section).name}, "
+                f"order={sort_order.name}"
+            )
+            self.tableView.sortByColumn(section, sort_order)
+        except:
+            raise
+        finally:
+            self._busy_dialog.close()
