@@ -1,4 +1,3 @@
-import copy
 import logging
 
 from PyQt6.QtCore import QSortFilterProxyModel, Qt
@@ -88,7 +87,8 @@ class CategoryFormPresenter:
         tree_view.expandRecursively(indexes[0])
 
     def run_dialog(self, *, edit: bool) -> None:
-        item = self._model_income.get_selected_item()
+        model = self._get_current_model()
+        item = model.get_selected_item()
         type_ = self._view.category_type
         if type_ == CategoryType.INCOME:
             paths = [
@@ -118,14 +118,14 @@ class CategoryFormPresenter:
             edit=edit,
         )
         if edit:
-            item = self._model_income.get_selected_item()
+            item = model.get_selected_item()
             if item is None:
                 raise ValueError("Cannot edit an unselected item.")
             self._dialog.signal_ok.connect(self.edit_category)
             self._dialog.path = item.path
             self._dialog.current_path = item.path
             if item.parent is None:
-                index = self._model_income.root_categories.index(item)
+                index = model.root_categories.index(item)
             else:
                 index = item.parent.get_child_index(item)
             self._dialog.position = index + 1
@@ -143,28 +143,26 @@ class CategoryFormPresenter:
         index = self._dialog.position - 1
 
         logging.info(f"Adding Category('{path}', {type_.name}, {index=})")
-        # TODO: get rid of the deep copy due to performance
-        record_keeper_copy = copy.deepcopy(self._record_keeper)
         try:
-            logging.disable(logging.INFO)
-            record_keeper_copy.add_category(path, type_, index)
-            logging.disable(logging.NOTSET)
+            self._record_keeper.check_add_category(path, type_, index)
         except Exception as exception:  # noqa: BLE001
             handle_exception(exception)
             return
 
-        item = self._model_income.get_selected_item()
-        self._model_income.pre_add(item)
+        model = self._get_current_model()
+        item = model.get_selected_item()
+        model.pre_add(item)
         logging.disable(logging.INFO)
         self._record_keeper.add_category(path, type_, index)
         logging.disable(logging.NOTSET)
         self.update_model_data()
-        self._model_income.post_add()
+        model.post_add()
         self._dialog.close()
         self.event_data_changed()
 
     def edit_category(self) -> None:
-        item: Category = self._model_income.get_selected_item()
+        model = self._get_current_model()
+        item: Category = model.get_selected_item()
         previous_parent = item.parent
         previous_path = self._dialog.current_path
         previous_index = self._get_current_index(item)
@@ -177,13 +175,10 @@ class CategoryFormPresenter:
         new_index = self._dialog.position - 1
 
         logging.info(f"Editing Category at path='{item.path}'")
-        record_keeper_copy = copy.deepcopy(self._record_keeper)
         try:
-            logging.disable(logging.INFO)
-            record_keeper_copy.edit_category(
+            self._record_keeper.check_edit_category(
                 current_path=previous_path, new_path=new_path, index=new_index
             )
-            logging.disable(logging.NOTSET)
         except Exception as exception:  # noqa: BLE001
             handle_exception(exception)
             return
@@ -194,7 +189,7 @@ class CategoryFormPresenter:
             move = True
 
         if move:
-            self._model_income.pre_move_item(
+            model.pre_move_item(
                 previous_parent=previous_parent,
                 previous_index=previous_index,
                 new_parent=new_parent,
@@ -205,30 +200,28 @@ class CategoryFormPresenter:
         )
         self.update_model_data()
         if move:
-            self._model_income.post_move_item()
+            model.post_move_item()
         self._dialog.close()
         self._tree_selection_changed()
         self.event_data_changed()
 
     def delete_category(self) -> None:
-        item = self._model_income.get_selected_item()
+        model = self._get_current_model()
+        item = model.get_selected_item()
         if item is None:
             raise ValueError("Cannot delete non-existent item.")
         logging.info(f"Removing {item.__class__.__name__} at path='{item.path}'")
 
-        # Attempt deletion on a RecordKeeper copy
-        record_keeper_copy = copy.deepcopy(self._record_keeper)
         try:
-            record_keeper_copy.remove_category(item.path)
+            self._record_keeper.check_if_category_removeable(item.path)
         except Exception as exception:  # noqa: BLE001
             handle_exception(exception)
             return
 
-        # Perform the deletion on the "real" RecordKeeper if it went fine
-        self._model_income.pre_remove_item(item)
+        model.pre_remove_item(item)
         self._record_keeper.remove_category(item.path)
         self.update_model_data()
-        self._model_income.post_remove_item()
+        model.post_remove_item()
         self.event_data_changed()
 
     def _get_max_child_position(self, item: Category | None) -> int:
@@ -247,11 +240,12 @@ class CategoryFormPresenter:
         return len(parent.children)
 
     def _get_current_index(self, item: Category | None) -> int:
+        model = self._get_current_model()
         if item is None:
             raise NotImplementedError
         parent = item.parent
         if parent is None:
-            return self._model_income.root_categories.index(item)
+            return model.root_categories.index(item)
         return parent.children.index(item)
 
     def _setup_signals(self) -> None:

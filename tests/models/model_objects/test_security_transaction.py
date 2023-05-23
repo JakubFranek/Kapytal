@@ -312,7 +312,10 @@ def test_invalid_shares_unit(  # noqa: PLR0913
     type_=st.sampled_from(SecurityTransactionType),
     security=securities(),
     security_account=security_accounts(),
-    datetime_=st.datetimes(timezones=st.just(user_settings.settings.time_zone)),
+    datetime_=st.datetimes(
+        min_value=datetime(1900, 1, 1),  # noqa: DTZ001
+        timezones=st.just(user_settings.settings.time_zone),
+    ),
     data=st.data(),
 )
 def test_valid_shares_unit_str(
