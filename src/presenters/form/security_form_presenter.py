@@ -237,4 +237,4 @@ class SecurityFormPresenter:
     def _selection_changed(self) -> None:
         item = self._table_model.get_selected_item()
         is_security_selected = item is not None
-        self._view.set_buttons(is_security_selected=is_security_selected)
+        self._view.enable_actions(is_security_selected=is_security_selected)

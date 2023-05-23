@@ -24,6 +24,9 @@ class CategoryStats:
     balance: CashAmount
 
 
+# TODO: output zero values for non-present attributes!
+
+
 def calculate_tag_stats(
     transactions: Collection[CashTransaction | RefundTransaction],
     base_currency: Currency,

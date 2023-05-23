@@ -7,6 +7,7 @@ from src.models.model_objects.security_objects import Security
 from src.views.constants import SecurityTableColumn
 
 ALIGNMENT_LEFT = Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
+ALIGNMENT_RIGHT = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
 
 
 class SecurityTableModel(QAbstractTableModel):
@@ -78,7 +79,7 @@ class SecurityTableModel(QAbstractTableModel):
             role == Qt.ItemDataRole.TextAlignmentRole
             and column == SecurityTableColumn.PRICE
         ):
-            return ALIGNMENT_LEFT
+            return ALIGNMENT_RIGHT
         return None
 
     def _get_display_role_data(self, column: int, security: Security) -> str | None:
@@ -93,7 +94,7 @@ class SecurityTableModel(QAbstractTableModel):
         if column == SecurityTableColumn.LAST_DATE:
             latest_date = security.latest_date
             return (
-                latest_date.strftime("%Y-%m-%d") if latest_date is not None else "None"
+                latest_date.strftime("%d.%m.%Y") if latest_date is not None else "None"
             )
         return None
 

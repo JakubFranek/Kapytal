@@ -132,6 +132,7 @@ class AccountTreePresenter:
         logging.info(f"Removing {item.__class__.__name__} at path='{item.path}'")
 
         # Attempt deletion on a RecordKeeper copy
+        # TODO: remove deepcopy calls from this class
         record_keeper_copy = copy.deepcopy(self._record_keeper)
         try:
             if isinstance(item, AccountGroup):

@@ -9,7 +9,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
+    <width>450</width>
     <height>500</height>
    </rect>
   </property>
@@ -231,20 +231,26 @@
   </layout>
   <action name="actionAdd">
    <property name="text">
-    <string>Add</string>
+    <string>Add Category</string>
    </property>
    <property name="toolTip">
-    <string>Add</string>
+    <string>Add Category</string>
    </property>
   </action>
   <action name="actionEdit">
    <property name="text">
-    <string>Edit</string>
+    <string>Edit Category</string>
+   </property>
+   <property name="toolTip">
+    <string>Edit Category</string>
    </property>
   </action>
   <action name="actionRemove">
    <property name="text">
-    <string>Remove</string>
+    <string>Remove Category</string>
+   </property>
+   <property name="toolTip">
+    <string>Remove Category</string>
    </property>
   </action>
   <action name="actionExpand_All">
