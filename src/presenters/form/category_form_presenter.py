@@ -2,6 +2,7 @@ import copy
 import logging
 
 from PyQt6.QtCore import QSortFilterProxyModel, Qt
+from PyQt6.QtWidgets import QApplication
 from src.models.model_objects.attributes import Category, CategoryType
 from src.models.record_keeper import RecordKeeper
 from src.models.utilities.calculation import (
@@ -10,6 +11,7 @@ from src.models.utilities.calculation import (
 from src.presenters.utilities.event import Event
 from src.presenters.utilities.handle_exception import handle_exception
 from src.view_models.category_tree_model import CategoryTreeModel
+from src.views.dialogs.busy_dialog import create_simple_busy_indicator
 from src.views.dialogs.category_dialog import CategoryDialog
 from src.views.forms.category_form import CategoryForm
 
@@ -52,7 +54,6 @@ class CategoryFormPresenter:
         self._model_income_and_expense.category_stats_dict = category_stats
 
     def reset_model(self) -> None:
-        # TODO: add busy indicator
         self._model_income.pre_reset_model()
         self._model_expense.pre_reset_model()
         self._model_income_and_expense.pre_reset_model()
@@ -62,7 +63,18 @@ class CategoryFormPresenter:
         self._model_income_and_expense.post_reset_model()
 
     def show_form(self) -> None:
-        self.reset_model()
+        self._busy_dialog = create_simple_busy_indicator(
+            self._view, "Calculating Category stats, please wait..."
+        )
+        self._busy_dialog.open()
+        QApplication.processEvents()
+        try:
+            self.reset_model()
+        except:  # noqa: TRY302
+            raise
+        finally:
+            self._busy_dialog.close()
+
         self._view.incomeTreeView.expandAll()
         self._view.expenseTreeView.expandAll()
         self._view.incomeAndExpenseTreeView.expandAll()
@@ -294,11 +306,6 @@ class CategoryFormPresenter:
         logging.debug(f"Filtering Income and Expense Categories: {pattern=}")
         self._proxy_income_and_expense.setFilterWildcard(pattern)
         self._view.incomeAndExpenseTreeView.expandAll()
-
-    def _type_changed(self) -> None:
-        type_ = self._view.category_type.name
-        logging.debug(f"CategoryType selection changed: {type_}")
-        self.reset_model()
 
     def _initialize_models(self) -> None:
         self._proxy_income = QSortFilterProxyModel(self._view.incomeTreeView)

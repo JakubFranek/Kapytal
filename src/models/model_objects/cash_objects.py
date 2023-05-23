@@ -1578,7 +1578,10 @@ def _is_category_related(category: Category, categories: Collection[Category]) -
         return True
     # check if 'category' is a parent of any of this CashTransaction's categories
     descendants = category.descendants
-    return any(_category in descendants for _category in categories)
+    for _category in categories:  # noqa: SIM110
+        if _category in descendants:
+            return True
+    return False
 
 
 def _get_amount_for_category(

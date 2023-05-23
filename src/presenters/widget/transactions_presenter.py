@@ -526,7 +526,7 @@ class TransactionsPresenter:
             self._update_number_of_shown_transactions()
             self._update_table_columns()
             self.resize_table_to_contents()
-        except:
+        except:  # noqa: TRY302
             raise
         finally:
             self._busy_dialog.close()
