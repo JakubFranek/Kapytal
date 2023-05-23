@@ -101,7 +101,7 @@ class RefundTransactionDialogPresenter:
         logging.info(
             f"Adding RefundTransaction: {datetime_.strftime('%Y-%m-%d')}, "
             f"{description=}, {account=}, {payee=}, "
-            f"amount={str(total_amount)} {self._dialog.currency_code}, "
+            f"amount={total_amount!s} {self._dialog.currency_code}, "
             f"{categories=}, {tags=}"
         )
         try:

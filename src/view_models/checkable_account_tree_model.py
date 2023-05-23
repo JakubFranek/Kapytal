@@ -31,7 +31,7 @@ class AccountTreeNode:
         self.event_check_state_changed = Event()
 
     def __repr__(self) -> str:
-        return f"AccountTreeNode({str(self.item)}, {self.check_state.name})"
+        return f"AccountTreeNode({self.item!s}, {self.check_state.name})"
 
     def set_check_state(
         self,

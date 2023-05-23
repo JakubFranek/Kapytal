@@ -38,7 +38,7 @@ class CategoryTreeNode:
         self.event_signal_changed = Event()
 
     def __repr__(self) -> str:
-        return f"CategoryTreeNode({str(self.item)}, {self.check_state.name})"
+        return f"CategoryTreeNode({self.item!s}, {self.check_state.name})"
 
     @property
     def are_children_check_states_mixed(self) -> bool:

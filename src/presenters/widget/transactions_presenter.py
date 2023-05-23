@@ -356,7 +356,7 @@ class TransactionsPresenter:
                 self._record_keeper.remove_transactions((transaction.uuid,))
                 logging.info(
                     f"Removed {transaction.__class__.__name__}: "
-                    f"uuid={str(transaction.uuid)}"
+                    f"uuid={transaction.uuid!s}"
                 )
                 self._model.pre_remove_item(transaction)
                 self._update_model_data()

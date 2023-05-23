@@ -263,7 +263,7 @@ class CashTransactionDialogPresenter:
         logging.info(
             f"Adding CashTransaction: {datetime_.strftime('%Y-%m-%d')}, "
             f"{description=}, type={type_.name}, {account=}, {payee=}, "
-            f"amount={str(total_amount)} {self._dialog.currency_code}, "
+            f"amount={total_amount!s} {self._dialog.currency_code}, "
             f"{categories=}, {tag_names=}"
         )
         try:

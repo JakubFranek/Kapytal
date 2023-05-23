@@ -403,7 +403,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         )
         if len(refunded_transactions) == 0:
             raise ValueError(
-                f"Transaction uuid='{str(refunded_transaction_uuid)}' not found."
+                f"Transaction uuid='{refunded_transaction_uuid!s}' not found."
             )
         refunded_transaction = refunded_transactions[0]
 
@@ -1247,7 +1247,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         for security in self._securities:
             if security.uuid == uuid_:
                 return security
-        raise NotFoundError(f"A Security with uuid='{str(uuid_)}' does not exist.")
+        raise NotFoundError(f"A Security with uuid='{uuid_!s}' does not exist.")
 
     def get_security_by_name(self, name: str) -> Security:
         if not isinstance(name, str):
@@ -1709,7 +1709,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
             if transaction.uuid in uuids:
                 if not isinstance(transaction, type_):
                     raise TypeError(
-                        f"Type of Transaction at uuid='{str(transaction.uuid)}' "
+                        f"Type of Transaction at uuid='{transaction.uuid!s}' "
                         f"is not {type_.__name__}."
                     )
                 transactions.append(transaction)

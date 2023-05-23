@@ -124,7 +124,7 @@ class CurrencyFormPresenter:
         logging.debug("Currency deletion requested, asking the user for confirmation")
         if not ask_yes_no_question(
             self._view,
-            question=f"Do you want to delete the {str(currency.code)} currency?",
+            question=f"Do you want to delete the {currency.code!s} currency?",
             title="Are you sure?",
         ):
             logging.debug("User cancelled the Currency deletion")
@@ -215,13 +215,13 @@ class CurrencyFormPresenter:
         )
         if not ask_yes_no_question(
             self._view,
-            question=f"Do you want to delete the {str(exchange_rate)} exchange rate?",
+            question=f"Do you want to delete the {exchange_rate!s} exchange rate?",
             title="Are you sure?",
         ):
             logging.debug("User cancelled the ExchangeRate deletion")
             return
 
-        logging.info(f"Removing {repr(exchange_rate)}")
+        logging.info(f"Removing {exchange_rate!r}")
         try:
             self._record_keeper.remove_exchange_rate(str(exchange_rate))
         except Exception as exception:  # noqa: BLE001

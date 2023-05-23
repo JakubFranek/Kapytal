@@ -2,7 +2,6 @@ import logging
 from datetime import datetime
 
 from PyQt6.QtCore import QSortFilterProxyModel, Qt
-from src.models.model_objects.security_objects import SecurityAccount
 from src.models.record_keeper import RecordKeeper
 from src.models.user_settings import user_settings
 from src.presenters.utilities.event import Event

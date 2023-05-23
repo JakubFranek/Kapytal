@@ -20,7 +20,7 @@ from tests.models.test_assets.concrete_abcs import ConcreteTransaction
 @given(
     description=st.text(min_size=0, max_size=256),
     datetime_=st.datetimes(
-        min_value=datetime(1971, 1, 1),
+        min_value=datetime(1971, 1, 1),  # noqa: DTZ001
         timezones=st.just(user_settings.settings.time_zone),
     ),
 )

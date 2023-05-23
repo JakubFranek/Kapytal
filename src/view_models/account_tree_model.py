@@ -50,7 +50,7 @@ class AccountTreeNode:
         self.event_signal_changed = Event()
 
     def __repr__(self) -> str:
-        return f"AccountTreeNode({str(self.item)})"
+        return f"AccountTreeNode({self.item!s})"
 
     def __eq__(self, __o: object) -> bool:
         if not isinstance(__o, AccountTreeNode):
