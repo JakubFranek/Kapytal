@@ -1,5 +1,4 @@
 # REFACTOR: refactor the icons module
-# NOTE: payee remove icon not used
 
 from pathlib import Path
 

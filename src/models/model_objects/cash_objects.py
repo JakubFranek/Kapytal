@@ -711,7 +711,6 @@ class CashTransaction(CashRelatedTransaction):
         self._account.add_transaction(self)
 
     def _update_cached_data(self, account: CashAccount) -> None:
-        # TODO: check if sets/frozensets impose performance penalty
         total_amount = account.currency.zero_amount
         categories: set[Category] = set()
         for category, amount in self._category_amount_pairs:
@@ -1578,7 +1577,8 @@ def _is_category_related(category: Category, categories: Collection[Category]) -
     if category in categories:
         return True
     # check if 'category' is a parent of any of this CashTransaction's categories
-    return any(category.is_ancestor_of(_category) for _category in categories)
+    descendants = category.descendants
+    return any(_category in descendants for _category in categories)
 
 
 def _get_amount_for_category(
@@ -1600,6 +1600,6 @@ def _get_amount_for_category(
         if _category == category:
             running_sum = func(running_sum, _amount)
             continue
-        if total and category.is_ancestor_of(_category):
+        if total and _category in category.descendants:
             running_sum = func(running_sum, _amount)
     return running_sum

@@ -7,9 +7,6 @@ from src.views.base_classes.custom_widget import CustomWidget
 from src.views.constants import CategoryTreeColumn
 from src.views.ui_files.forms.Ui_category_form import Ui_CategoryForm
 
-# TODO: add context menu
-# TODO: enable sorting
-
 
 class CategoryForm(CustomWidget, Ui_CategoryForm):
     signal_add = pyqtSignal()
