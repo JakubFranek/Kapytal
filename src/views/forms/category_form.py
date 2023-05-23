@@ -20,6 +20,8 @@ class CategoryForm(CustomWidget, Ui_CategoryForm):
     signal_expense_search_text_changed = pyqtSignal(str)
     signal_income_and_expense_search_text_changed = pyqtSignal(str)
 
+    signal_tab_changed = pyqtSignal()
+
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent=parent)
         self.setupUi(self)
@@ -36,6 +38,8 @@ class CategoryForm(CustomWidget, Ui_CategoryForm):
         self.incomeTreeView.header().setSortIndicatorClearable(True)
         self.expenseTreeView.header().setSortIndicatorClearable(True)
         self.incomeAndExpenseTreeView.header().setSortIndicatorClearable(True)
+
+        self.tabWidget.currentChanged.connect(self.signal_tab_changed.emit)
 
     @property
     def category_type(self) -> CategoryType:

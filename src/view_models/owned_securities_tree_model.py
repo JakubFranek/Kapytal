@@ -180,8 +180,8 @@ class OwnedSecuritiesTreeModel(QAbstractItemModel):
             return item.account.path
         if column == OwnedSecuritiesTreeColumn.SHARES:
             if isinstance(item, SecurityItem):
-                return str(item.total_shares)
-            return str(item.shares)
+                return f"{item.total_shares:,}"
+            return f"{item.shares:,}"
         if column == OwnedSecuritiesTreeColumn.AMOUNT_NATIVE:
             return item.native_amount.to_str_rounded()
         if column == OwnedSecuritiesTreeColumn.AMOUNT_BASE:

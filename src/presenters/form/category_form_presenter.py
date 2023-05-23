@@ -250,6 +250,7 @@ class CategoryFormPresenter:
 
     def _setup_signals(self) -> None:
         self._view.signal_tree_selection_changed.connect(self._tree_selection_changed)
+        self._view.signal_tab_changed.connect(self._tree_selection_changed)
         self._view.signal_expand_all_below.connect(self.expand_all_below)
         self._view.signal_add.connect(lambda: self.run_dialog(edit=False))
         self._view.signal_edit.connect(lambda: self.run_dialog(edit=True))
