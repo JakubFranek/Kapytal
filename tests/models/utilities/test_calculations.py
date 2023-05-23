@@ -35,14 +35,8 @@ account = CashAccount("Account", currency, currency.zero_amount)
 
 def test_calculate_attribute_stats() -> None:
     transactions = get_transactions()
-    payee_stats = calculate_payee_stats(
-        transactions,
-        currency,
-    )
-    tag_stats = calculate_tag_stats(
-        transactions,
-        currency,
-    )
+    payee_stats = calculate_payee_stats(transactions, currency, [payee, payee_dummy])
+    tag_stats = calculate_tag_stats(transactions, currency, [tag, tag_dummy])
     payee_stats = payee_stats[payee]
     tag_stats = tag_stats[tag]
     assert payee_stats.attribute == payee

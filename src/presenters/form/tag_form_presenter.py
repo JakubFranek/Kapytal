@@ -52,7 +52,9 @@ class TagFormPresenter:
             + self._record_keeper.refund_transactions
         )
         self._model.tag_stats = calculate_tag_stats(
-            relevant_transactions, self._record_keeper.base_currency
+            relevant_transactions,
+            self._record_keeper.base_currency,
+            self._record_keeper.tags,
         ).values()
 
     def show_form(self) -> None:

@@ -52,7 +52,9 @@ class PayeeFormPresenter:
             + self._record_keeper.refund_transactions
         )
         self._model.payee_stats = calculate_payee_stats(
-            relevant_transactions, self._record_keeper.base_currency
+            relevant_transactions,
+            self._record_keeper.base_currency,
+            self._record_keeper.payees,
         ).values()
 
     def show_form(self) -> None:

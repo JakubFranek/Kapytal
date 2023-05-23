@@ -24,20 +24,18 @@ class CategoryStats:
     balance: CashAmount
 
 
-# TODO: output zero values for non-present attributes!
-
-
 def calculate_tag_stats(
     transactions: Collection[CashTransaction | RefundTransaction],
     base_currency: Currency,
+    all_tags: Collection[Attribute],
 ) -> dict[Attribute, AttributeStats]:
     stats_dict: dict[Attribute, AttributeStats] = {}
+    for tag in all_tags:
+        stats = AttributeStats(tag, 0, base_currency.zero_amount)
+        stats_dict[tag] = stats
     for transaction in transactions:
         for tag in transaction.tags:
-            stats = stats_dict.get(tag, None)
-            if stats is None:
-                stats = AttributeStats(tag, 0, base_currency.zero_amount)
-                stats_dict[tag] = stats
+            stats = stats_dict[tag]
             stats.no_of_transactions += 1
             stats.balance += transaction.get_amount_for_tag(tag).convert(base_currency)
     return stats_dict
@@ -46,14 +44,15 @@ def calculate_tag_stats(
 def calculate_payee_stats(
     transactions: Collection[CashTransaction | RefundTransaction],
     base_currency: Currency,
+    all_payees: Collection[Attribute],
 ) -> dict[Attribute, AttributeStats]:
     stats_dict: dict[Attribute, AttributeStats] = {}
+    for payee in all_payees:
+        stats = AttributeStats(payee, 0, base_currency.zero_amount)
+        stats_dict[payee] = stats
     for transaction in transactions:
         payee = transaction.payee
-        stats = stats_dict.get(payee, None)
-        if stats is None:
-            stats = AttributeStats(payee, 0, base_currency.zero_amount)
-            stats_dict[payee] = stats
+        stats = stats_dict[payee]
         stats.no_of_transactions += 1
         stats.balance += transaction.get_amount(transaction.account).convert(
             base_currency
