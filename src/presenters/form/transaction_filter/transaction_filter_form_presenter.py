@@ -16,7 +16,10 @@ from src.models.model_objects.security_objects import (
     SecurityTransfer,
 )
 from src.models.record_keeper import RecordKeeper
-from src.models.transaction_filters.base_transaction_filter import FilterMode
+from src.models.transaction_filters.base_transaction_filter import (
+    BaseTransactionFilter,
+    FilterMode,
+)
 from src.models.transaction_filters.transaction_filter import TransactionFilter
 from src.models.transaction_filters.type_filter import TYPE_NAME_DICT
 from src.presenters.form.transaction_filter.account_filter_presenter import (
@@ -172,6 +175,13 @@ class TransactionFilterFormPresenter:
     @property
     def filter_active(self) -> bool:
         return self._transaction_filter != self._default_filter
+
+    @property
+    def active_filter_names(self) -> tuple[str]:
+        active_filters = _get_active_filters(
+            self._transaction_filter, self._default_filter
+        )
+        return tuple(f"{filter_.__class__.__name__}" for filter_ in active_filters)
 
     def load_record_keeper(
         self,
@@ -543,10 +553,7 @@ class TransactionFilterFormPresenter:
     def _show_help(self) -> None:
         filter_ = self._get_transaction_filter_from_form()
         default_filter = self._default_filter
-        non_default_filters = []
-        for i in range(len(filter_.members)):
-            if filter_.members[i] != default_filter.members[i]:
-                non_default_filters.append(filter_.members[i])
+        non_default_filters = _get_active_filters(filter_, default_filter)
         if not non_default_filters:
             QMessageBox.information(
                 self._form, "Filter Help", "All filters are set to default."
@@ -571,3 +578,13 @@ class TransactionFilterFormPresenter:
         )
         message_box.setDetailedText(detailed_text)
         message_box.exec()
+
+
+def _get_active_filters(
+    filter_: TransactionFilter, default_filter: TransactionFilter
+) -> tuple[BaseTransactionFilter, ...]:
+    non_default_filters = []
+    for i in range(len(filter_.members)):
+        if filter_.members[i] != default_filter.members[i]:
+            non_default_filters.append(filter_.members[i])
+    return tuple(non_default_filters)

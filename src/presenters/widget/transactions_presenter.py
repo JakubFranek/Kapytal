@@ -507,7 +507,6 @@ class TransactionsPresenter:
         self._transaction_filter_form_presenter.show_form()
 
     def _filter_changed(self) -> None:
-        # TODO: update filter transactions tooltip
         self._busy_dialog = create_simple_busy_indicator(
             self._view, "Filtering Transactions, please wait..."
         )
@@ -525,6 +524,9 @@ class TransactionsPresenter:
             self._update_number_of_shown_transactions()
             self._update_table_columns()
             self.resize_table_to_contents()
+            self._view.set_filter_tooltip(
+                self._transaction_filter_form_presenter.active_filter_names
+            )
         except:  # noqa: TRY302
             raise
         finally:

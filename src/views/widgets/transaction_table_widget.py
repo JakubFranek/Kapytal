@@ -54,6 +54,14 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
     def search_bar_text(self, text: str) -> None:
         self.searchLineEdit.setText(text)
 
+    def set_filter_tooltip(self, active_filters: str) -> None:
+        text = "Filter Transactions"
+        if active_filters:
+            text += "\n\nActive Filters:"
+            for filter_ in active_filters:
+                text += f"\n-{filter_}"
+        self.actionFilter_Transactions.setToolTip(text)
+
     def finalize_setup(self) -> None:
         self.tableView.selectionModel().selectionChanged.connect(
             self.signal_selection_changed.emit
