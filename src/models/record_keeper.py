@@ -1793,6 +1793,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
     def _flatten_account_items(
         account_items: Collection[Account | AccountGroup],
     ) -> list[Account | AccountGroup]:
+        """Used to flatten the Account Item tree, preserving the order."""
         resulting_list: list[Account | AccountGroup] = []
         for account_item in account_items:
             resulting_list.append(account_item)

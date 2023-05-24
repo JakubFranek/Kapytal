@@ -1,13 +1,83 @@
+import copy
 import unicodedata
+import uuid
 from collections.abc import Collection, Sequence
+from dataclasses import dataclass
+from typing import Self
 
 from PyQt6.QtCore import QAbstractItemModel, QModelIndex, QSortFilterProxyModel, Qt
 from PyQt6.QtWidgets import QTreeView
 from src.models.model_objects.attributes import Category
+from src.models.model_objects.currency_objects import CashAmount
 from src.models.utilities.calculation import CategoryStats
 from src.views.constants import CategoryTreeColumn
 
 ALIGNMENT_RIGHT = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+
+
+@dataclass
+class CategoryTreeNode:
+    name: str
+    path: str
+    transactions_self: int
+    transactions_total: int
+    balance: CashAmount
+    parent: Self | None
+    children: list[Self]
+    uuid: uuid.UUID
+
+    def __repr__(self) -> str:
+        return f"CategoryTreeNode({self.path})"
+
+
+def sync_nodes(
+    nodes: Sequence[CategoryTreeNode],
+    flat_categories: Sequence[Category],
+    category_stats: dict[Category, CategoryStats],
+) -> tuple[CategoryTreeNode]:
+    nodes_copy = list(copy.copy(nodes))
+    new_nodes: list[CategoryTreeNode] = []
+
+    for category in flat_categories:
+        stats = category_stats[category]
+        node = get_node(category, nodes_copy)
+        parent_node = get_node(category.parent, nodes_copy)
+        if node is None:
+            node = CategoryTreeNode(
+                category.name,
+                category.path,
+                stats.transactions_self,
+                stats.transactions_total,
+                stats.balance,
+                parent_node,
+                [],
+                category.uuid,
+            )
+        else:
+            node.name = category.name
+            node.path = category.path
+            node.transactions_self = stats.transactions_self
+            node.transactions_total = stats.transactions_total
+            node.balance = stats.balance
+            node.parent = parent_node
+            node.children = []
+        if parent_node is not None:
+            parent_node.children.append(node)
+        if node not in nodes_copy:
+            nodes_copy.append(node)
+        new_nodes.append(node)
+    return tuple(new_nodes)
+
+
+def get_node(
+    category: Category | None, nodes: Collection[CategoryTreeNode]
+) -> CategoryTreeNode | None:
+    if category is None:
+        return None
+    for node in nodes:
+        if node.uuid == category.uuid:
+            return node
+    return None
 
 
 class CategoryTreeModel(QAbstractItemModel):
@@ -20,41 +90,46 @@ class CategoryTreeModel(QAbstractItemModel):
     def __init__(
         self,
         tree_view: QTreeView,
-        root_categories: Sequence[Category],
-        category_stats: dict[Category, CategoryStats],
         proxy: QSortFilterProxyModel,
     ) -> None:
         super().__init__()
         self._tree_view = tree_view
-        self.root_categories = root_categories
-        self._category_stats_dict: dict[Category, CategoryStats] = category_stats
         self._proxy = proxy
+        self._root_categories: tuple[Category, ...] = ()
+        self._category_stats_dict: dict[Category, CategoryStats] = {}
+        self._flat_nodes: tuple[CategoryTreeNode, ...] = ()
+        self._root_nodes: tuple[CategoryTreeNode, ...] = ()
 
     @property
     def root_categories(self) -> tuple[Category, ...]:
         return self._root_categories
 
-    @root_categories.setter
-    def root_categories(self, root_categories: Collection[Category]) -> None:
-        self._root_categories = tuple(root_categories)
-
     @property
     def category_stats_dict(self) -> dict[Category, CategoryStats]:
         return self._category_stats_dict
 
-    @category_stats_dict.setter
-    def category_stats_dict(
-        self, category_stats_dict: dict[Category, CategoryStats]
+    def load_data(
+        self,
+        flat_categories: Sequence[Category],
+        category_stats: dict[Category, CategoryStats],
     ) -> None:
-        self._category_stats_dict = category_stats_dict
+        self._flat_categories = tuple(flat_categories)
+        self._flat_nodes = sync_nodes(self._flat_nodes, flat_categories, category_stats)
+        self._root_nodes = tuple(
+            node for node in self._flat_nodes if node.parent is None
+        )
+        self._root_categories = tuple(
+            category for category in flat_categories if category.parent is None
+        )
+        self._category_stats_dict = category_stats
 
     def rowCount(self, index: QModelIndex = ...) -> int:  # noqa: N802
         if index.isValid():
             if index.column() != 0:
                 return 0
-            node: Category = index.internalPointer()
+            node: CategoryTreeNode = index.internalPointer()
             return len(node.children)
-        return len(self._root_categories)
+        return len(self._root_nodes)
 
     def columnCount(self, index: QModelIndex = ...) -> int:  # noqa: N802
         return 3 if not index.isValid() or index.column() == 0 else 0
@@ -66,9 +141,12 @@ class CategoryTreeModel(QAbstractItemModel):
         if not _parent or not _parent.isValid():
             parent = None
         else:
-            parent: Category = _parent.internalPointer()
+            parent: CategoryTreeNode = _parent.internalPointer()
 
-        child = self._root_categories[row] if parent is None else parent.children[row]
+        try:
+            child = self._root_nodes[row] if parent is None else parent.children[row]
+        except IndexError:
+            pass
         if child:
             return QAbstractItemModel.createIndex(self, row, column, child)
         return QModelIndex()
@@ -77,13 +155,13 @@ class CategoryTreeModel(QAbstractItemModel):
         if not index.isValid():
             return QModelIndex()
 
-        child: Category = index.internalPointer()
+        child: CategoryTreeNode = index.internalPointer()
         parent = child.parent
         if parent is None:
             return QModelIndex()
         grandparent = parent.parent
         if grandparent is None:
-            parent_row = self._root_categories.index(parent)
+            parent_row = self._root_nodes.index(parent)
         else:
             parent_row = grandparent.children.index(parent)
         return QAbstractItemModel.createIndex(self, parent_row, 0, parent)
@@ -105,19 +183,18 @@ class CategoryTreeModel(QAbstractItemModel):
         if not index.isValid():
             return None
         column = index.column()
-        category: Category = index.internalPointer()
-        stats = self._category_stats_dict[category]
+        node: CategoryTreeNode = index.internalPointer()
         if role == Qt.ItemDataRole.DisplayRole:
-            return self._get_display_role_data(column, category, stats)
+            return self._get_display_role_data(column, node)
         if role == Qt.ItemDataRole.UserRole:
             if column == CategoryTreeColumn.NAME:
-                return unicodedata.normalize("NFD", category.name)
+                return unicodedata.normalize("NFD", node.name)
             if column == CategoryTreeColumn.TRANSACTIONS:
-                return stats.transactions_total
+                return node.transactions_total
             if column == CategoryTreeColumn.BALANCE:
-                return float(stats.balance.value_normalized)
+                return float(node.balance.value_normalized)
         if role == Qt.ItemDataRole.UserRole + 1 and column == CategoryTreeColumn.NAME:
-            return category.path
+            return node.path
         if role == Qt.ItemDataRole.TextAlignmentRole and (
             column == CategoryTreeColumn.TRANSACTIONS
             or column == CategoryTreeColumn.BALANCE
@@ -136,24 +213,21 @@ class CategoryTreeModel(QAbstractItemModel):
         return None
 
     def _get_display_role_data(
-        self, column: int, category: Category, stats: CategoryStats
+        self, column: int, node: CategoryTreeNode
     ) -> str | int | None:
         if column == CategoryTreeColumn.NAME:
-            return category.name
+            return node.name
         if column == CategoryTreeColumn.TRANSACTIONS:
-            if len(category.children) == 0:
-                return stats.transactions_total
-            return f"{stats.transactions_total} ({stats.transactions_self})"
+            if len(node.children) == 0:
+                return node.transactions_total
+            return f"{node.transactions_total} ({node.transactions_self})"
         if column == CategoryTreeColumn.BALANCE:
-            return stats.balance.to_str_rounded()
+            return node.balance.to_str_rounded()
         return None
 
     def pre_add(self, parent: Category | None) -> None:
         parent_index = self.get_index_from_item(parent)
-        if parent is None:
-            row_index = len(self.root_categories)
-        else:
-            row_index = len(parent.children)
+        row_index = len(self._root_nodes) if parent is None else len(parent.children)
         self.beginInsertRows(parent_index, row_index, row_index)
 
     def post_add(self) -> None:
@@ -200,26 +274,33 @@ class CategoryTreeModel(QAbstractItemModel):
     def post_move_item(self) -> None:
         self.endMoveRows()
 
-    def get_selected_item_index(self) -> QModelIndex:
-        proxy_indexes = self._tree_view.selectedIndexes()
-        source_indexes = [self._proxy.mapToSource(index) for index in proxy_indexes]
-        if len(source_indexes) == 0:
-            return QModelIndex()
-        return source_indexes[0]
-
     def get_selected_item(self) -> Category | None:
         proxy_indexes = self._tree_view.selectedIndexes()
         source_indexes = [self._proxy.mapToSource(index) for index in proxy_indexes]
         if len(source_indexes) == 0:
             return None
-        return source_indexes[0].internalPointer()
+        node = source_indexes[0].internalPointer()
+        return self._get_item_from_node(node)
 
     def get_index_from_item(self, item: Category | None) -> QModelIndex:
         if item is None:
             return QModelIndex()
         parent = item.parent
         if parent is None:
-            row = self.root_categories.index(item)
+            row = self._root_categories.index(item)
         else:
             row = parent.children.index(item)
-        return QAbstractItemModel.createIndex(self, row, 0, item)
+        node = self._get_node_from_item(item)
+        return QAbstractItemModel.createIndex(self, row, 0, node)
+
+    def _get_item_from_node(self, node: CategoryTreeNode) -> Category:
+        for category in self._flat_categories:
+            if node.uuid == category.uuid:
+                return category
+        raise ValueError(f"Category {node.path} not found.")
+
+    def _get_node_from_item(self, item: Category) -> CategoryTreeNode:
+        for node in self._flat_nodes:
+            if node.uuid == item.uuid:
+                return node
+        raise ValueError(f"Node for Category {item.path} not found.")

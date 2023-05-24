@@ -163,6 +163,7 @@ class AccountTreeModel(QAbstractItemModel):
 
     @property
     def flat_items(self) -> tuple[Account | AccountGroup, ...]:
+        # REFACTOR: this property is not needed... could be refactor into load method
         return tuple(self._flat_items)
 
     @flat_items.setter
@@ -177,10 +178,6 @@ class AccountTreeModel(QAbstractItemModel):
             node.event_signal_changed.append(
                 lambda item_path: self._node_check_state_changed(item_path)
             )
-
-    @property
-    def root_items(self) -> tuple[Account | AccountGroup, ...]:
-        return tuple(node.item for node in self._root_nodes)
 
     @property
     def checked_accounts(self) -> tuple[Account, ...]:

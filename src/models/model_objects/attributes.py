@@ -5,6 +5,7 @@ from typing import Any, Self
 from src.models.custom_exceptions import NotFoundError
 from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
 from src.models.mixins.name_mixin import NameMixin
+from src.models.mixins.uuid_mixin import UUIDMixin
 
 
 class InvalidAttributeError(ValueError):
@@ -59,7 +60,7 @@ class Attribute(NameMixin, JSONSerializableMixin):
         return Attribute(name, type_)
 
 
-class Category(NameMixin, JSONSerializableMixin):
+class Category(NameMixin, JSONSerializableMixin, UUIDMixin):
     def __init__(
         self, name: str, type_: CategoryType, parent: Self | None = None
     ) -> None:
