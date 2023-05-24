@@ -1402,7 +1402,6 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
             "transactions": sorted_transactions,
         }
 
-    # IDEA: do I need to use private setters in deserializers?
     @staticmethod
     def deserialize(data: dict[str, Any]) -> "RecordKeeper":
         obj = RecordKeeper()
