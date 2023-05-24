@@ -6,7 +6,6 @@ from src.views.constants import OwnedSecuritiesTreeColumn, SecurityTableColumn
 from src.views.ui_files.forms.Ui_security_form import Ui_SecurityForm
 
 # TODO: add some way to view and edit price history
-# TODO: add search bar, expand and collapse controls to Overview tab
 
 
 class SecurityForm(CustomWidget, Ui_SecurityForm):
@@ -15,7 +14,8 @@ class SecurityForm(CustomWidget, Ui_SecurityForm):
     signal_set_security_price = pyqtSignal()
     signal_remove_security = pyqtSignal()
     signal_select_security = pyqtSignal()
-    signal_search_text_changed = pyqtSignal(str)
+    signal_manage_search_text_changed = pyqtSignal(str)
+    signal_overview_search_text_changed = pyqtSignal(str)
     signal_selection_changed = pyqtSignal()
 
     def __init__(self, parent: QWidget | None = None) -> None:
@@ -41,14 +41,27 @@ class SecurityForm(CustomWidget, Ui_SecurityForm):
         self.actionEdit_Security.setIcon(icons.edit)
         self.actionSet_Security_Price.setIcon(icons.set_security_price)
 
-        self.searchLineEdit.addAction(
+        self.manageSearchLineEdit.addAction(
             icons.magnifier, QLineEdit.ActionPosition.LeadingPosition
         )
-        self.searchLineEdit.textChanged.connect(self.signal_search_text_changed.emit)
+        self.manageSearchLineEdit.textChanged.connect(
+            self.signal_manage_search_text_changed.emit
+        )
+        self.overviewSearchLineEdit.addAction(
+            icons.magnifier, QLineEdit.ActionPosition.LeadingPosition
+        )
+        self.overviewSearchLineEdit.textChanged.connect(
+            self.signal_overview_search_text_changed.emit
+        )
 
-    @property
-    def search_bar_text(self) -> str:
-        return self.searchLineEdit.text()
+        self.actionExpand_All.setIcon(icons.expand)
+        self.actionCollapse_All.setIcon(icons.collapse)
+
+        self.actionExpand_All.triggered.connect(self.treeView.expandAll)
+        self.actionCollapse_All.triggered.connect(self.treeView.collapseAll)
+
+        self.expandAllToolButton.setDefaultAction(self.actionExpand_All)
+        self.collapseAllToolButton.setDefaultAction(self.actionCollapse_All)
 
     def enable_actions(self, *, is_security_selected: bool) -> None:
         self.actionRemove_Security.setEnabled(is_security_selected)

@@ -27,10 +27,6 @@ class PayeeForm(CustomWidget, Ui_PayeeForm):
             icons.magnifier, QLineEdit.ActionPosition.LeadingPosition
         )
 
-    @property
-    def search_bar_text(self) -> str:
-        return self.searchLineEdit.text()
-
     def enable_actions(
         self, *, is_payee_selected: bool, is_one_payee_selected: bool
     ) -> None:

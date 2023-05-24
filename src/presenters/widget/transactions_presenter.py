@@ -163,8 +163,7 @@ class TransactionsPresenter:
             if column == TransactionTableColumn.BALANCE:
                 self._view.set_column_visibility(column, show=single_cash_account)
 
-    def _search_filter(self) -> None:
-        pattern = self._view.search_bar_text
+    def _search_filter(self, pattern: str) -> None:
         if self._validate_regex(pattern) is False:
             return
         logging.debug(f"Filtering Transactions: {pattern=}")

@@ -33,7 +33,7 @@
        <item>
         <layout class="QVBoxLayout" name="leftVerticalLayout">
          <item>
-          <layout class="QHBoxLayout" name="controlsHorizontalLayout">
+          <layout class="QHBoxLayout" name="manageControlsHorizontalLayout">
            <item>
             <widget class="QToolButton" name="addToolButton">
              <property name="text">
@@ -63,7 +63,7 @@
             </widget>
            </item>
            <item>
-            <widget class="QLineEdit" name="searchLineEdit">
+            <widget class="QLineEdit" name="manageSearchLineEdit">
              <property name="toolTip">
               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Special characters:&lt;/p&gt;&lt;p&gt;* matches zero or more of any characters&lt;br/&gt;? matches any single character&lt;br/&gt;[...] matches any character within square brackets&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
              </property>
@@ -107,7 +107,32 @@
       <attribute name="title">
        <string>Overview</string>
       </attribute>
-      <layout class="QHBoxLayout" name="horizontalLayout_3">
+      <layout class="QVBoxLayout" name="verticalLayout">
+       <item>
+        <layout class="QHBoxLayout" name="overviewControlsHorizontalLayout">
+         <item>
+          <widget class="QToolButton" name="expandAllToolButton">
+           <property name="text">
+            <string>...</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QToolButton" name="collapseAllToolButton">
+           <property name="text">
+            <string>...</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="overviewSearchLineEdit">
+           <property name="placeholderText">
+            <string>Search</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
        <item>
         <widget class="QTreeView" name="treeView">
          <property name="uniformRowHeights">
@@ -141,6 +166,16 @@
   <action name="actionRemove_Security">
    <property name="text">
     <string>Remove Security</string>
+   </property>
+  </action>
+  <action name="actionExpand_All">
+   <property name="text">
+    <string>Expand All</string>
+   </property>
+  </action>
+  <action name="actionCollapse_All">
+   <property name="text">
+    <string>Collapse All</string>
    </property>
   </action>
  </widget>

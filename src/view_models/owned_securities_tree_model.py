@@ -159,8 +159,8 @@ class OwnedSecuritiesTreeModel(QAbstractItemModel):
         item: SecurityItem | AccountItem = index.internalPointer()
         if role == Qt.ItemDataRole.DisplayRole:
             return self._get_display_role_data(column, item)
-        if role == Qt.ItemDataRole.UserRole:
-            return self._get_user_role_data(column, item)
+        if role == Qt.ItemDataRole.UserRole:  # sort role
+            return self._get_sort_data(column, item)
         if role == Qt.ItemDataRole.TextAlignmentRole and (
             column == OwnedSecuritiesTreeColumn.SHARES
             or column == OwnedSecuritiesTreeColumn.AMOUNT_NATIVE
@@ -190,7 +190,7 @@ class OwnedSecuritiesTreeModel(QAbstractItemModel):
             return item.base_amount
         return None
 
-    def _get_user_role_data(  # noqa: PLR0911
+    def _get_sort_data(  # noqa: PLR0911
         self, column: int, item: SecurityItem | AccountItem
     ) -> str | Decimal | None:
         if column == OwnedSecuritiesTreeColumn.NAME:

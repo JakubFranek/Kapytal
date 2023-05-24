@@ -35,7 +35,8 @@ class SecurityFormPresenter:
             lambda: self.run_security_dialog(edit=True)
         )
         self._view.signal_set_security_price.connect(self.run_set_price_dialog)
-        self._view.signal_search_text_changed.connect(self._filter)
+        self._view.signal_manage_search_text_changed.connect(self._filter_table)
+        self._view.signal_overview_search_text_changed.connect(self._filter_tree)
 
         self._view.finalize_setup()
         self._view.signal_selection_changed.connect(self._selection_changed)
@@ -228,13 +229,22 @@ class SecurityFormPresenter:
         self._tree_proxy.sort(
             OwnedSecuritiesTreeColumn.AMOUNT_BASE, Qt.SortOrder.DescendingOrder
         )
+        self._tree_proxy.setFilterKeyColumn(-1)
+        self._tree_proxy.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
         self._view.treeView.setModel(self._tree_proxy)
 
-    def _filter(self, pattern: str) -> None:
+    def _filter_table(self, pattern: str) -> None:
         if ("[" in pattern and "]" not in pattern) or "[]" in pattern:
             return
-        logging.debug(f"Filtering Securities: {pattern=}")
+        logging.debug(f"Filtering Manage Securities table: {pattern=}")
         self._table_proxy.setFilterWildcard(pattern)
+
+    def _filter_tree(self, pattern: str) -> None:
+        if ("[" in pattern and "]" not in pattern) or "[]" in pattern:
+            return
+        logging.debug(f"Filtering Securities Overview tree: {pattern=}")
+        self._tree_proxy.setFilterWildcard(pattern)
+        self._view.treeView.expandAll()
 
     def _selection_changed(self) -> None:
         item = self._table_model.get_selected_item()

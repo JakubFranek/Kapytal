@@ -27,10 +27,6 @@ class TagForm(CustomWidget, Ui_TagForm):
             icons.magnifier, QLineEdit.ActionPosition.LeadingPosition
         )
 
-    @property
-    def search_bar_text(self) -> str:
-        return self.searchLineEdit.text()
-
     def enable_actions(
         self, *, is_tag_selected: bool, is_one_tag_selected: bool
     ) -> None:
