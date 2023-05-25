@@ -1,7 +1,6 @@
-import copy
 import unicodedata
 import uuid
-from collections.abc import Collection, Sequence
+from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Self
 
@@ -35,13 +34,13 @@ def sync_nodes(
     flat_categories: Sequence[Category],
     category_stats: dict[Category, CategoryStats],
 ) -> tuple[CategoryTreeNode]:
-    nodes_copy = list(copy.copy(nodes))
+    nodes_dict = {node.uuid: node for node in nodes}
     new_nodes: list[CategoryTreeNode] = []
 
     for category in flat_categories:
         stats = category_stats[category]
-        node = get_node(category, nodes_copy)
-        parent_node = get_node(category.parent, nodes_copy)
+        node = get_node(category, nodes_dict)
+        parent_node = get_node(category.parent, nodes_dict)
         if node is None:
             node = CategoryTreeNode(
                 category.name,
@@ -63,21 +62,21 @@ def sync_nodes(
             node.children = []
         if parent_node is not None:
             parent_node.children.append(node)
-        if node not in nodes_copy:
-            nodes_copy.append(node)
+        if node.uuid not in nodes_dict:
+            nodes_dict[node.uuid] = node
         new_nodes.append(node)
     return tuple(new_nodes)
 
 
 def get_node(
-    category: Category | None, nodes: Collection[CategoryTreeNode]
+    category: Category | None, nodes: dict[uuid.UUID, CategoryTreeNode]
 ) -> CategoryTreeNode | None:
     if category is None:
         return None
-    for node in nodes:
-        if node.uuid == category.uuid:
-            return node
-    return None
+    try:
+        return nodes[category.uuid]
+    except KeyError:
+        return None
 
 
 class CategoryTreeModel(QAbstractItemModel):
@@ -143,10 +142,7 @@ class CategoryTreeModel(QAbstractItemModel):
         else:
             parent: CategoryTreeNode = _parent.internalPointer()
 
-        try:
-            child = self._root_nodes[row] if parent is None else parent.children[row]
-        except IndexError:
-            pass
+        child = self._root_nodes[row] if parent is None else parent.children[row]
         if child:
             return QAbstractItemModel.createIndex(self, row, column, child)
         return QModelIndex()
