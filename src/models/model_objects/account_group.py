@@ -1,6 +1,6 @@
 import logging
-import uuid
 from typing import TYPE_CHECKING, Any, Self
+from uuid import UUID
 
 from src.models.custom_exceptions import NotFoundError
 
@@ -146,7 +146,7 @@ class AccountGroup(NameMixin, BalanceMixin, JSONSerializableMixin, UUIDMixin):
         index: int | None = data["index"]
         parent_path, _, name = path.rpartition("/")
         obj = AccountGroup(name)
-        obj._uuid = uuid.UUID(data["uuid"])  # noqa: SLF001
+        obj._uuid = UUID(data["uuid"])  # noqa: SLF001
         if parent_path:
             obj._parent = account_groups[parent_path]  # noqa: SLF001
             obj._parent._children_dict[index] = obj  # noqa: SLF001

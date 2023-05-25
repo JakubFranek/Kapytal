@@ -1,9 +1,9 @@
 import logging
-import uuid
 from collections.abc import Collection
 from datetime import date, datetime
 from decimal import Decimal
 from typing import Any, TypeVar
+from uuid import UUID
 
 from src.models.base_classes.account import Account
 from src.models.base_classes.transaction import Transaction
@@ -69,7 +69,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         self._cash_transfers: list[CashTransfer] = []
         self._security_transactions: list[SecurityTransaction] = []
         self._security_transfers: list[SecurityTransfer] = []
-        self._transactions_uuid_dict: dict[uuid.UUID, Transaction] = {}
+        self._transactions_uuid_dict: dict[UUID, Transaction] = {}
         self._base_currency: Currency | None = None
 
     @property
@@ -156,7 +156,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         return tuple(self._transactions)
 
     @property
-    def transaction_uuid_dict(self) -> dict[uuid.UUID, Transaction]:
+    def transaction_uuid_dict(self) -> dict[UUID, Transaction]:
         return self._transactions_uuid_dict
 
     @property
@@ -382,7 +382,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         self,
         description: str,
         datetime_: datetime,
-        refunded_transaction_uuid: uuid.UUID,
+        refunded_transaction_uuid: UUID,
         refunded_account_path: str,
         payee_name: str,
         category_path_amount_pairs: Collection[tuple[str, Decimal]],
@@ -490,7 +490,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
 
     def edit_cash_transactions(  # noqa: PLR0913
         self,
-        transaction_uuids: Collection[uuid.UUID],
+        transaction_uuids: Collection[UUID],
         description: str | None = None,
         datetime_: datetime | None = None,
         transaction_type: CashTransactionType | None = None,
@@ -595,7 +595,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
 
     def edit_cash_transfers(  # noqa: PLR0913
         self,
-        transaction_uuids: Collection[uuid.UUID],
+        transaction_uuids: Collection[UUID],
         description: str | None = None,
         datetime_: datetime | None = None,
         sender_path: str | None = None,
@@ -675,7 +675,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
 
     def edit_refunds(  # noqa: PLR0913
         self,
-        transaction_uuids: Collection[uuid.UUID],
+        transaction_uuids: Collection[UUID],
         description: str | None = None,
         datetime_: datetime | None = None,
         account_path: str | None = None,
@@ -739,7 +739,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
 
     def edit_security_transactions(  # noqa: PLR0913
         self,
-        transaction_uuids: Collection[uuid.UUID],
+        transaction_uuids: Collection[UUID],
         description: str | None = None,
         datetime_: datetime | None = None,
         transaction_type: SecurityTransactionType | None = None,
@@ -837,7 +837,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
 
     def edit_security_transfers(  # noqa: PLR0913
         self,
-        transaction_uuids: Collection[uuid.UUID],
+        transaction_uuids: Collection[UUID],
         description: str | None = None,
         datetime_: datetime | None = None,
         security_name: str | None = None,
@@ -936,7 +936,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
 
     def edit_security(
         self,
-        uuid_: uuid.UUID,
+        uuid_: UUID,
         name: str | None = None,
         symbol: str | None = None,
         type_: str | None = None,
@@ -1219,8 +1219,8 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
                 return account
         raise NotFoundError(f"An Account with path='{path}' does not exist.")
 
-    def get_security_by_uuid(self, uuid_: uuid.UUID) -> Security:
-        if not isinstance(uuid_, uuid.UUID):
+    def get_security_by_uuid(self, uuid_: UUID) -> Security:
+        if not isinstance(uuid_, UUID):
             raise TypeError("Parameter 'uuid' must be a UUID.")
         for security in self._securities:
             if security.uuid == uuid_:
@@ -1602,8 +1602,8 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         categories: dict[str, Category],
         currencies: dict[str, Currency],
         securities: dict[str, Security],
-    ) -> dict[uuid.UUID, Transaction]:
-        _transaction_dict: dict[uuid.UUID, Transaction] = {}
+    ) -> dict[UUID, Transaction]:
+        _transaction_dict: dict[UUID, Transaction] = {}
         for transaction_dict in transaction_dicts:
             transaction: Transaction
             if transaction_dict["datatype"] == "CashTransaction":
@@ -1675,13 +1675,11 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
     TransactionType = TypeVar("TransactionType", bound=Transaction)
 
     def _get_transactions(
-        self, uuids: Collection[uuid.UUID], type_: type[TransactionType]
+        self, uuids: Collection[UUID], type_: type[TransactionType]
     ) -> list[TransactionType]:
         transactions: list[RecordKeeper.TransactionType] = []
-        if any(not isinstance(uuid_, uuid.UUID) for uuid_ in uuids):
-            raise TypeError(
-                "Parameter 'uuids' must be a Collection ofuuid.UUID objects."
-            )
+        if any(not isinstance(uuid_, UUID) for uuid_ in uuids):
+            raise TypeError("Parameter 'uuids' must be a Collection ofUUID objects.")
         for transaction in self._transactions:
             if transaction.uuid in uuids:
                 if not isinstance(transaction, type_):

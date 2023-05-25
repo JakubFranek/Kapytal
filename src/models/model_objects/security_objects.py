@@ -1,6 +1,5 @@
 import logging
 import string
-import uuid
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from collections.abc import Collection
@@ -8,6 +7,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum, auto
 from typing import Any
+from uuid import UUID
 
 from src.models.base_classes.account import Account, UnrelatedAccountError
 from src.models.base_classes.transaction import Transaction
@@ -229,7 +229,7 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
                 CashAmount(price, obj.currency),
             )
 
-        obj._uuid = uuid.UUID(data["uuid"])  # noqa: SLF001
+        obj._uuid = UUID(data["uuid"])  # noqa: SLF001
         return obj
 
 
@@ -318,7 +318,7 @@ class SecurityAccount(Account):
         parent_path, _, name = path.rpartition("/")
 
         obj = SecurityAccount(name)
-        obj._uuid = uuid.UUID(data["uuid"])  # noqa: SLF001
+        obj._uuid = UUID(data["uuid"])  # noqa: SLF001
 
         if parent_path:
             parent = account_group_dict[parent_path]
@@ -405,7 +405,7 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
         price_per_share: CashAmount,
         security_account: SecurityAccount,
         cash_account: CashAccount,
-        uuid: uuid.UUID | None = None,
+        uuid: UUID | None = None,
     ) -> None:
         super().__init__()
         if uuid is not None:
@@ -507,7 +507,7 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
             price_per_share=price_per_share,
             security_account=security_account,
             cash_account=cash_account,
-            uuid=uuid.UUID(data["uuid"]),
+            uuid=UUID(data["uuid"]),
         )
         obj._datetime_created = datetime.fromisoformat(  # noqa: SLF001
             data["datetime_created"]
@@ -707,7 +707,7 @@ class SecurityTransfer(SecurityRelatedTransaction):
         shares: Decimal | int | str,
         sender: SecurityAccount,
         recipient: SecurityAccount,
-        uuid: uuid.UUID | None = None,
+        uuid: UUID | None = None,
     ) -> None:
         super().__init__()
         if uuid is not None:
@@ -781,7 +781,7 @@ class SecurityTransfer(SecurityRelatedTransaction):
             shares=shares,
             sender=sender,
             recipient=recipient,
-            uuid=uuid.UUID(data["uuid"]),
+            uuid=UUID(data["uuid"]),
         )
         obj._datetime_created = datetime.fromisoformat(  # noqa: SLF001
             data["datetime_created"]

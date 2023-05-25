@@ -1,6 +1,6 @@
-import uuid
 from datetime import datetime
 from decimal import Decimal
+from uuid import uuid4
 
 import pytest
 from hypothesis import given
@@ -146,7 +146,7 @@ def test_edit_security() -> None:
 def test_edit_security_does_not_exist() -> None:
     record_keeper = RecordKeeper()
     with pytest.raises(NotFoundError):
-        record_keeper.edit_security(uuid.uuid4(), "SMBL", "SYMB", "NEW NAME")
+        record_keeper.edit_security(uuid4(), "SMBL", "SYMB", "NEW NAME")
 
 
 def test_edit_security_account() -> None:

@@ -1,8 +1,8 @@
 import unicodedata
-import uuid
 from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Self
+from uuid import UUID
 
 from PyQt6.QtCore import QAbstractItemModel, QModelIndex, QSortFilterProxyModel, Qt
 from PyQt6.QtWidgets import QTreeView
@@ -23,7 +23,7 @@ class CategoryTreeNode:
     balance: CashAmount
     parent: Self | None
     children: list[Self]
-    uuid: uuid.UUID
+    uuid: UUID
 
     def __repr__(self) -> str:
         return f"CategoryTreeNode({self.path})"
@@ -69,7 +69,7 @@ def sync_nodes(
 
 
 def get_node(
-    category: Category | None, nodes: dict[uuid.UUID, CategoryTreeNode]
+    category: Category | None, nodes: dict[UUID, CategoryTreeNode]
 ) -> CategoryTreeNode | None:
     if category is None:
         return None

@@ -1,6 +1,5 @@
 import logging
 import operator
-import uuid
 from abc import ABC, abstractmethod
 from collections.abc import Collection
 from datetime import datetime, timedelta
@@ -8,6 +7,7 @@ from decimal import Decimal
 from enum import Enum, auto
 from types import NoneType
 from typing import Any
+from uuid import UUID
 
 from src.models.base_classes.account import Account, UnrelatedAccountError
 from src.models.base_classes.transaction import Transaction
@@ -199,7 +199,7 @@ class CashAccount(Account):
         initial_balance = CashAmount(initial_balance_value, currency)
 
         obj = CashAccount(name, currency, initial_balance)
-        obj._uuid = uuid.UUID(data["uuid"])  # noqa: SLF001
+        obj._uuid = UUID(data["uuid"])  # noqa: SLF001
 
         if parent_path:
             obj._parent = account_groups[parent_path]  # noqa: SLF001
@@ -256,7 +256,7 @@ class CashTransaction(CashRelatedTransaction):
         payee: Attribute,
         category_amount_pairs: Collection[tuple[Category, CashAmount]],
         tag_amount_pairs: Collection[tuple[Attribute, CashAmount]],
-        uuid: uuid.UUID | None = None,
+        uuid: UUID | None = None,
     ) -> None:
         super().__init__()
         if uuid is not None:
@@ -414,7 +414,7 @@ class CashTransaction(CashRelatedTransaction):
             payee=payee,
             category_amount_pairs=decoded_category_amount_pairs,
             tag_amount_pairs=decoded_tag_amount_pairs,
-            uuid=uuid.UUID(data["uuid"]),
+            uuid=UUID(data["uuid"]),
         )
         obj._datetime_created = datetime.fromisoformat(  # noqa: SLF001
             data["datetime_created"]
@@ -890,7 +890,7 @@ class CashTransfer(CashRelatedTransaction):
         recipient: CashAccount,
         amount_sent: CashAmount,
         amount_received: CashAmount,
-        uuid: uuid.UUID | None = None,
+        uuid: UUID | None = None,
     ) -> None:
         super().__init__()
         if uuid is not None:
@@ -978,7 +978,7 @@ class CashTransfer(CashRelatedTransaction):
             recipient=recipient,
             amount_sent=amount_sent,
             amount_received=amount_received,
-            uuid=uuid.UUID(data["uuid"]),
+            uuid=UUID(data["uuid"]),
         )
         obj._datetime_created = datetime.fromisoformat(  # noqa: SLF001
             data["datetime_created"]
@@ -1131,7 +1131,7 @@ class RefundTransaction(CashRelatedTransaction):
         payee: Attribute,
         category_amount_pairs: Collection[tuple[Category, CashAmount]],
         tag_amount_pairs: Collection[tuple[Attribute, CashAmount]],
-        uuid: uuid.UUID | None = None,
+        uuid: UUID | None = None,
     ) -> None:
         super().__init__()
         if uuid is not None:
@@ -1254,7 +1254,7 @@ class RefundTransaction(CashRelatedTransaction):
     def deserialize(  # noqa: PLR0913
         data: dict[str, Any],
         accounts: dict[str, Account],
-        transactions: dict[uuid.UUID, Transaction],
+        transactions: dict[UUID, Transaction],
         payees: dict[str, Attribute],
         categories: dict[str, Category],
         tags: dict[str, Attribute],
@@ -1263,7 +1263,7 @@ class RefundTransaction(CashRelatedTransaction):
         description = data["description"]
         datetime_ = datetime.fromisoformat(data["datetime"])
         cash_account = accounts[data["account_path"]]
-        refunded_transaction_uuid = uuid.UUID(data["refunded_transaction_uuid"])
+        refunded_transaction_uuid = UUID(data["refunded_transaction_uuid"])
         refunded_transaction = transactions[refunded_transaction_uuid]
         payee = payees[data["payee_name"]]
 
@@ -1291,7 +1291,7 @@ class RefundTransaction(CashRelatedTransaction):
             payee=payee,
             category_amount_pairs=decoded_category_amount_pairs,
             tag_amount_pairs=decoded_tag_amount_pairs,
-            uuid=uuid.UUID(data["uuid"]),
+            uuid=UUID(data["uuid"]),
         )
         obj._datetime_created = datetime.fromisoformat(  # noqa: SLF001
             data["datetime_created"]
