@@ -38,7 +38,7 @@ class CategoryFormPresenter:
         self._busy_dialog.open()
         QApplication.processEvents()
         try:
-            self._reset_model()
+            self._reset_model()  # TODO: model should be only reset on data change
         except:  # noqa: TRY302
             raise
         finally:

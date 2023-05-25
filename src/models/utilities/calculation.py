@@ -84,12 +84,11 @@ def calculate_category_stats(
             for ancestor in ancestors:
                 ancestor_stats = stats_dict[ancestor]
                 if ancestor not in transaction.categories:
-                    # prevent double counting if both parent and child are present
                     ancestor_stats.transactions_total += 1
                     ancestor_stats.balance += transaction.get_amount_for_category(
                         ancestor, total=True
                     ).convert(base_currency)
-                else:
+                else:  # prevent double counting if both parent and child are present
                     ancestor_stats.balance += transaction.get_amount_for_category(
                         ancestor, total=False
                     ).convert(base_currency)

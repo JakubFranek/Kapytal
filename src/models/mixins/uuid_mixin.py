@@ -12,7 +12,7 @@ class UUIDMixin:
         return self._uuid
 
     def __hash__(self) -> int:
-        return hash(self._uuid)
+        return hash(self._uuid.int)
 
     def __eq__(self, __o: object) -> bool:
         if isinstance(__o, UUIDMixin):

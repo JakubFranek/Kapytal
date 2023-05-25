@@ -1576,7 +1576,7 @@ def _validate_collection_of_tuple_pairs(
 def _is_category_related(category: Category, categories: Collection[Category]) -> bool:
     if category in categories:
         return True
-    # check if 'category' is a parent of any of this CashTransaction's categories
+    # check if 'category' is a parent of any of the Categories in 'categories'
     descendants = category.descendants
     for _category in categories:  # noqa: SIM110
         if _category in descendants:
@@ -1589,9 +1589,6 @@ def _get_amount_for_category(
 ) -> CashAmount:
     running_sum = transaction.currency.zero_amount
 
-    if not transaction.is_category_related(category):
-        return running_sum
-
     func = (
         operator.add
         if isinstance(transaction, RefundTransaction)
@@ -1599,10 +1596,12 @@ def _get_amount_for_category(
         else operator.sub
     )
 
+    descendants = category.descendants if total else ()
+
     for _category, _amount in transaction.category_amount_pairs:
         if _category == category:
             running_sum = func(running_sum, _amount)
             continue
-        if total and _category in category.descendants:
+        if total and _category in descendants:
             running_sum = func(running_sum, _amount)
     return running_sum

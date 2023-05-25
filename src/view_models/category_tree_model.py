@@ -94,8 +94,6 @@ class CategoryTreeModel(QAbstractItemModel):
         super().__init__()
         self._tree_view = tree_view
         self._proxy = proxy
-        self._root_categories: tuple[Category, ...] = ()
-        self._category_stats_dict: dict[Category, CategoryStats] = {}
         self._flat_nodes: tuple[CategoryTreeNode, ...] = ()
         self._root_nodes: tuple[CategoryTreeNode, ...] = ()
 
@@ -109,10 +107,6 @@ class CategoryTreeModel(QAbstractItemModel):
         self._root_nodes = tuple(
             node for node in self._flat_nodes if node.parent is None
         )
-        self._root_categories = tuple(
-            category for category in flat_categories if category.parent is None
-        )
-        self._category_stats_dict = category_stats
 
     def rowCount(self, index: QModelIndex = ...) -> int:  # noqa: N802
         if index.isValid():
@@ -244,8 +238,8 @@ class CategoryTreeModel(QAbstractItemModel):
         new_parent_index = self.get_index_from_item(new_parent)
         # Index must be limited to valid indexes
         if new_parent is None:
-            if new_index > len(self._root_categories):
-                new_index = len(self._root_categories)
+            if new_index > len(self._root_nodes):
+                new_index = len(self._root_nodes)
         elif new_index > len(new_parent.children):
             new_index = len(new_parent.children)
         if previous_parent == new_parent and new_index > previous_index:
