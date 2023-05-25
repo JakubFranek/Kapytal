@@ -58,7 +58,7 @@ class AccountTreePresenter:
 
     @property
     def valid_accounts(self) -> tuple[Account, ...]:
-        return self._model.checked_accounts
+        return self._model.get_checked_accounts()
 
     def set_widget_visibility(self, *, visible: bool) -> None:
         if visible and self._view.isHidden():
@@ -83,8 +83,9 @@ class AccountTreePresenter:
         self._view.treeView.updateGeometries()
 
     def update_model_data(self) -> None:
-        self._model.flat_items = self._record_keeper.account_items
-        self._model.base_currency = self._record_keeper.base_currency
+        self._model.load_data(
+            self._record_keeper.account_items, self._record_keeper.base_currency
+        )
         self.update_total_balance()
 
     def update_total_balance(self) -> None:
@@ -532,8 +533,6 @@ class AccountTreePresenter:
         self._model = AccountTreeModel(
             view=self._view.treeView,
             proxy=self._proxy,
-            flat_items=self._record_keeper.root_account_items,
-            base_currency=self._record_keeper.base_currency,
         )
         self._proxy.setSourceModel(self._model)
         self._view.treeView.setModel(self._proxy)
