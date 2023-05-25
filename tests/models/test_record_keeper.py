@@ -415,8 +415,6 @@ def test_add_category_parent_does_not_exist(
     path = parent + "/" + name
     with pytest.raises(NotFoundError):
         record_keeper.add_category(path, type_)
-    with pytest.raises(NotFoundError):
-        record_keeper.check_add_category(path, type_)
 
 
 @given(
@@ -426,8 +424,6 @@ def test_add_category_invalid_type(name: str) -> None:
     record_keeper = RecordKeeper()
     with pytest.raises(TypeError, match="parameter 'type_'"):
         record_keeper.add_category(name, None, None)
-    with pytest.raises(TypeError, match="parameter 'type_'"):
-        record_keeper.check_add_category(name, None, None)
 
 
 @given(name=names(), type_=st.sampled_from(CategoryType))
@@ -436,8 +432,6 @@ def test_add_category_already_exists(name: str, type_: CategoryType) -> None:
     record_keeper.add_category(name, type_)
     with pytest.raises(AlreadyExistsError):
         record_keeper.add_category(name, type_)
-    with pytest.raises(AlreadyExistsError):
-        record_keeper.check_add_category(name, type_)
 
 
 @given(

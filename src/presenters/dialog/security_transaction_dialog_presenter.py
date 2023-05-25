@@ -57,8 +57,10 @@ class SecurityTransactionDialogPresenter:
             for account in valid_accounts
             if isinstance(account, SecurityAccount)
         ]
-        # FIXME: use RecordKeeper accounts here, not valid (checked) accounts
-        if len(valid_cash_accounts) == 0 or len(valid_security_accounts) == 0:
+        if (
+            len(self._record_keeper.cash_accounts) == 0
+            or len(self._record_keeper.security_accounts) == 0
+        ):
             display_error_message(
                 "Create at least one Cash Account and one Security Account before "
                 "creating a Security transaction.",

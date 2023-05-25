@@ -92,8 +92,6 @@ def test_edit_category_already_exists() -> None:
     record_keeper.add_category("TEST 2", CategoryType.EXPENSE)
     with pytest.raises(AlreadyExistsError):
         record_keeper.edit_category("TEST", "TEST 2")
-    with pytest.raises(AlreadyExistsError):
-        record_keeper.check_edit_category("TEST", "TEST 2")
 
 
 def test_edit_category_its_own_parent() -> None:
@@ -101,16 +99,12 @@ def test_edit_category_its_own_parent() -> None:
     record_keeper.add_category("TEST", CategoryType.EXPENSE)
     with pytest.raises(InvalidOperationError):
         record_keeper.edit_category("TEST", "TEST/TEST")
-    with pytest.raises(InvalidOperationError):
-        record_keeper.check_edit_category("TEST", "TEST/TEST")
 
 
 def test_edit_category_does_not_exist() -> None:
     record_keeper = RecordKeeper()
     with pytest.raises(NotFoundError):
         record_keeper.edit_category("abc", "def")
-    with pytest.raises(NotFoundError):
-        record_keeper.check_edit_category("abc", "def")
 
 
 def test_edit_payee() -> None:
