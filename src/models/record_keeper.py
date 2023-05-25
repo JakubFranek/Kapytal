@@ -1,4 +1,3 @@
-import copy
 import logging
 import uuid
 from collections.abc import Collection
@@ -273,15 +272,6 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         category = Category(name, category_type, parent)
         self._set_category_index(category, index)
         self._categories.append(category)
-
-    def check_add_category(
-        self,
-        path: str,
-        type_: CategoryType | None = None,
-        index: int | None = None,
-    ) -> None:
-        record_keeper_copy = get_record_keeper_categories_deepcopy(self)
-        record_keeper_copy.add_category(path, type_, index)
 
     def add_account_group(self, path: str, index: int | None = None) -> None:
         parent_path, _, name = path.rpartition("/")
@@ -929,12 +919,6 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
             category=edited_category, new_parent=new_parent, index=index
         )
 
-    def check_edit_category(
-        self, current_path: str, new_path: str, index: int | None = None
-    ) -> None:
-        record_keeper_copy = get_record_keeper_categories_deepcopy(self)
-        record_keeper_copy.edit_category(current_path, new_path, index)
-
     def edit_attribute(
         self, current_name: str, new_name: str, type_: AttributeType
     ) -> None:
@@ -1156,10 +1140,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         self._exchange_rates.remove(removed_exchange_rate)
         del removed_exchange_rate
 
-    def check_if_category_removeable(self, path: str) -> None:
-        """Checks if Category at 'path' is safe to remove.
-        Raises an exception otherwise."""
-
+    def remove_category(self, path: str) -> None:
         category = self.get_category(path)
         if len(category.children) != 0:
             raise InvalidOperationError("Cannot delete a Category with children.")
@@ -1172,9 +1153,6 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
                 "or RefundTransaction."
             )
 
-    def remove_category(self, path: str) -> None:
-        self.check_if_category_removeable(path)
-        category = self.get_category(path)
         self._categories.remove(category)
         if category.parent is None:
             list_ref = self._get_root_category_list(category)
@@ -1834,26 +1812,3 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
             self._root_expense_categories.append(category)
         else:
             self._root_income_and_expense_categories.append(category)
-
-
-def get_record_keeper_categories_deepcopy(record_keeper: RecordKeeper) -> RecordKeeper:
-    record_keeper_copy = RecordKeeper()
-    record_keeper_copy._categories = copy.deepcopy(  # noqa: SLF001
-        record_keeper._categories  # noqa: SLF001
-    )
-    record_keeper_copy._root_income_categories = [  # noqa: SLF001
-        category
-        for category in record_keeper_copy._categories  # noqa: SLF001
-        if category.parent is None and category.type_ == CategoryType.INCOME
-    ]
-    record_keeper_copy._root_expense_categories = [  # noqa: SLF001
-        category
-        for category in record_keeper_copy._categories  # noqa: SLF001
-        if category.parent is None and category.type_ == CategoryType.EXPENSE
-    ]
-    record_keeper_copy._root_income_and_expense_categories = [  # noqa: SLF001
-        category
-        for category in record_keeper_copy._categories  # noqa: SLF001
-        if category.parent is None and category.type_ == CategoryType.INCOME_AND_EXPENSE
-    ]
-    return record_keeper_copy

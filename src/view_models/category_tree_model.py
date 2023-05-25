@@ -99,14 +99,6 @@ class CategoryTreeModel(QAbstractItemModel):
         self._flat_nodes: tuple[CategoryTreeNode, ...] = ()
         self._root_nodes: tuple[CategoryTreeNode, ...] = ()
 
-    @property
-    def root_categories(self) -> tuple[Category, ...]:
-        return self._root_categories
-
-    @property
-    def category_stats_dict(self) -> dict[Category, CategoryStats]:
-        return self._category_stats_dict
-
     def load_data(
         self,
         flat_categories: Sequence[Category],
@@ -221,10 +213,9 @@ class CategoryTreeModel(QAbstractItemModel):
             return node.balance.to_str_rounded()
         return None
 
-    def pre_add(self, parent: Category | None) -> None:
+    def pre_add(self, parent: Category | None, index: int) -> None:
         parent_index = self.get_index_from_item(parent)
-        row_index = len(self._root_nodes) if parent is None else len(parent.children)
-        self.beginInsertRows(parent_index, row_index, row_index)
+        self.beginInsertRows(parent_index, index, index)
 
     def post_add(self) -> None:
         self.endInsertRows()
@@ -253,8 +244,8 @@ class CategoryTreeModel(QAbstractItemModel):
         new_parent_index = self.get_index_from_item(new_parent)
         # Index must be limited to valid indexes
         if new_parent is None:
-            if new_index > len(self.root_categories):
-                new_index = len(self.root_categories)
+            if new_index > len(self._root_categories):
+                new_index = len(self._root_categories)
         elif new_index > len(new_parent.children):
             new_index = len(new_parent.children)
         if previous_parent == new_parent and new_index > previous_index:
@@ -281,12 +272,12 @@ class CategoryTreeModel(QAbstractItemModel):
     def get_index_from_item(self, item: Category | None) -> QModelIndex:
         if item is None:
             return QModelIndex()
-        parent = item.parent
-        if parent is None:
-            row = self._root_categories.index(item)
-        else:
-            row = parent.children.index(item)
         node = self._get_node_from_item(item)
+        parent_node = node.parent
+        if parent_node is None:
+            row = self._root_nodes.index(node)
+        else:
+            row = parent_node.children.index(node)
         return QAbstractItemModel.createIndex(self, row, 0, node)
 
     def _get_item_from_node(self, node: CategoryTreeNode) -> Category:

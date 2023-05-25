@@ -13,22 +13,25 @@ from src.views.base_classes.custom_dialog import CustomDialog
 from src.views.ui_files.dialogs.Ui_category_dialog import Ui_CategoryDialog
 
 
-# TODO: update position limits based on path state?
 class CategoryDialog(CustomDialog, Ui_CategoryDialog):
     signal_ok = pyqtSignal()
+    signal_path_changed = pyqtSignal(str)
 
     def __init__(
         self,
         parent: QWidget,
         type_: str,
         paths: Collection[str],
-        max_position: int,
         *,
         edit: bool,
     ) -> None:
         super().__init__(parent=parent)
         self.setupUi(self)
         self.resize(400, 105)
+
+        self._edit = edit
+        self.positionSpinBox.setMinimum(1)
+
         self.currentPathLineEdit.setEnabled(False)
 
         self.pathCompleter = QCompleter(paths)
@@ -47,8 +50,8 @@ class CategoryDialog(CustomDialog, Ui_CategoryDialog):
             self.currentPathLabel.setVisible(False)
             self.currentPathLineEdit.setVisible(False)
 
-        self.positionSpinBox.setMaximum(max_position)
         self.buttonBox.clicked.connect(self._handle_button_box_click)
+        self.pathLineEdit.textChanged.connect(self.signal_path_changed.emit)
 
     @property
     def type_(self) -> str:
@@ -77,6 +80,18 @@ class CategoryDialog(CustomDialog, Ui_CategoryDialog):
     @position.setter
     def position(self, value: int) -> None:
         self.positionSpinBox.setValue(value)
+
+    @property
+    def maximum_position(self) -> int:
+        return self.positionSpinBox.maximum()
+
+    @maximum_position.setter
+    def maximum_position(self, value: int) -> None:
+        self.positionSpinBox.setMaximum(value)
+
+    @property
+    def edit(self) -> bool:
+        return self._edit
 
     def _handle_button_box_click(self, button: QAbstractButton) -> None:
         role = self.buttonBox.buttonRole(button)
