@@ -166,7 +166,6 @@ class TransactionsPresenter:
     def _search_filter(self, pattern: str) -> None:
         if self._validate_regex(pattern) is False:
             return
-        logging.debug(f"Filtering Transactions: {pattern=}")
         self._proxy_regex_sort_filter.setFilterRegularExpression(pattern)
         self._update_number_of_shown_transactions()
         self._update_table_columns()

@@ -236,21 +236,18 @@ class CategoryFormPresenter:
     def _filter_income_categories(self, pattern: str) -> None:
         if ("[" in pattern and "]" not in pattern) or "[]" in pattern:
             return
-        logging.debug(f"Filtering Income Categories: {pattern=}")
         self._proxy_income.setFilterWildcard(pattern)
         self._view.incomeTreeView.expandAll()
 
     def _filter_expense_categories(self, pattern: str) -> None:
         if ("[" in pattern and "]" not in pattern) or "[]" in pattern:
             return
-        logging.debug(f"Filtering Expense Categories: {pattern=}")
         self._proxy_expense.setFilterWildcard(pattern)
         self._view.expenseTreeView.expandAll()
 
     def _filter_income_and_expense_categories(self, pattern: str) -> None:
         if ("[" in pattern and "]" not in pattern) or "[]" in pattern:
             return
-        logging.debug(f"Filtering Income and Expense Categories: {pattern=}")
         self._proxy_income_and_expense.setFilterWildcard(pattern)
         self._view.incomeAndExpenseTreeView.expandAll()
 

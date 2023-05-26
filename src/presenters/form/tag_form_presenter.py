@@ -150,7 +150,6 @@ class TagFormPresenter:
     def _filter(self, pattern: str) -> None:
         if ("[" in pattern and "]" not in pattern) or "[]" in pattern:
             return
-        logging.debug(f"Filtering Tags: {pattern=}")
         self._proxy_model.setFilterWildcard(pattern)
 
     def _selection_changed(self) -> None:

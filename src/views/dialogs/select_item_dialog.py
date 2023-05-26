@@ -49,7 +49,6 @@ class SelectItemDialog(CustomDialog, Ui_SelectItemDialog):
     def _filter(self, pattern: str) -> None:
         if ("[" in pattern and "]" not in pattern) or "[]" in pattern:
             return
-        logging.debug(f"Filtering items: {pattern=}")
         self._proxy.setFilterWildcard(pattern)
 
     def _handle_button_box_click(self, button: QAbstractButton) -> None:

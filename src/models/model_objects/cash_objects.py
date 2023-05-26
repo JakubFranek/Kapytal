@@ -525,9 +525,6 @@ class CashTransaction(CashRelatedTransaction):
     def is_accounts_related(self, accounts: Collection[Account]) -> bool:
         return self._account in accounts
 
-    def is_category_related(self, category: Category) -> bool:
-        return _is_category_related(category, self._categories)
-
     def get_amount_for_category(self, category: Category, *, total: bool) -> CashAmount:
         return _get_amount_for_category(self, category, total=total)
 
@@ -1208,9 +1205,6 @@ class RefundTransaction(CashRelatedTransaction):
 
     def is_accounts_related(self, accounts: Collection[Account]) -> bool:
         return self._account in accounts
-
-    def is_category_related(self, category: Category) -> bool:
-        return _is_category_related(category, self._categories)
 
     def get_amount_for_category(self, category: Category, *, total: bool) -> CashAmount:
         return _get_amount_for_category(self, category, total=total)

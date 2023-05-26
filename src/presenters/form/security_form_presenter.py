@@ -242,13 +242,11 @@ class SecurityFormPresenter:
     def _filter_table(self, pattern: str) -> None:
         if ("[" in pattern and "]" not in pattern) or "[]" in pattern:
             return
-        logging.debug(f"Filtering Manage Securities table: {pattern=}")
         self._table_proxy.setFilterWildcard(pattern)
 
     def _filter_tree(self, pattern: str) -> None:
         if ("[" in pattern and "]" not in pattern) or "[]" in pattern:
             return
-        logging.debug(f"Filtering Securities Overview tree: {pattern=}")
         self._tree_proxy.setFilterWildcard(pattern)
         self._view.treeView.expandAll()
 

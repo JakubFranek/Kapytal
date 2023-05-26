@@ -1,4 +1,3 @@
-import logging
 
 from PyQt6.QtCore import QSortFilterProxyModel, Qt
 from src.models.model_objects.attributes import Attribute
@@ -78,7 +77,6 @@ class TagFilterPresenter:
     def _filter(self, pattern: str) -> None:
         if ("[" in pattern and "]" not in pattern) or "[]" in pattern:
             return
-        logging.debug(f"Filtering Tags: {pattern=}")
         self._tags_list_proxy.setFilterWildcard(pattern)
 
     def _select_all(self) -> None:

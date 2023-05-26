@@ -111,15 +111,12 @@ class CategoryFilterPresenter:
         if ("[" in pattern and "]" not in pattern) or "[]" in pattern:
             return
         if proxy == self._income_categories_proxy:
-            logging.debug(f"Filtering Income Categories: {pattern=}")
             proxy.setFilterWildcard(pattern)
             self._form.income_category_tree_view.expandAll()
         elif proxy == self._expense_categories_proxy:
-            logging.debug(f"Filtering Expense Categories: {pattern=}")
             proxy.setFilterWildcard(pattern)
             self._form.expense_category_tree_view.expandAll()
         else:
-            logging.debug(f"Filtering Income and Expense Categories: {pattern=}")
             proxy.setFilterWildcard(pattern)
             self._form.income_and_expense_category_tree_view.expandAll()
 
