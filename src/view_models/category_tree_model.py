@@ -1,8 +1,8 @@
 import unicodedata
-import uuid
 from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Self
+from uuid import UUID
 
 from PyQt6.QtCore import QAbstractItemModel, QModelIndex, QSortFilterProxyModel, Qt
 from PyQt6.QtWidgets import QTreeView
@@ -23,24 +23,23 @@ class CategoryTreeNode:
     balance: CashAmount
     parent: Self | None
     children: list[Self]
-    uuid: uuid.UUID
+    uuid: UUID
 
     def __repr__(self) -> str:
         return f"CategoryTreeNode({self.path})"
 
 
 def sync_nodes(
-    nodes: Sequence[CategoryTreeNode],
+    nodes: dict[UUID, CategoryTreeNode],
     flat_categories: Sequence[Category],
     category_stats: dict[Category, CategoryStats],
 ) -> tuple[CategoryTreeNode]:
-    nodes_dict = {node.uuid: node for node in nodes}
     new_nodes: list[CategoryTreeNode] = []
 
     for category in flat_categories:
         stats = category_stats[category]
-        node = get_node(category, nodes_dict)
-        parent_node = get_node(category.parent, nodes_dict)
+        node = get_node(category, nodes)
+        parent_node = get_node(category.parent, nodes)
         if node is None:
             node = CategoryTreeNode(
                 category.name,
@@ -62,14 +61,14 @@ def sync_nodes(
             node.children = []
         if parent_node is not None:
             parent_node.children.append(node)
-        if node.uuid not in nodes_dict:
-            nodes_dict[node.uuid] = node
+        if node.uuid not in nodes:
+            nodes[node.uuid] = node
         new_nodes.append(node)
     return tuple(new_nodes)
 
 
 def get_node(
-    category: Category | None, nodes: dict[uuid.UUID, CategoryTreeNode]
+    category: Category | None, nodes: dict[UUID, CategoryTreeNode]
 ) -> CategoryTreeNode | None:
     if category is None:
         return None
@@ -94,7 +93,8 @@ class CategoryTreeModel(QAbstractItemModel):
         super().__init__()
         self._tree_view = tree_view
         self._proxy = proxy
-        self._flat_nodes: tuple[CategoryTreeNode, ...] = ()
+        self._category_dict: dict[UUID, Category] = {}
+        self._node_dict: dict[UUID, CategoryTreeNode] = {}
         self._root_nodes: tuple[CategoryTreeNode, ...] = ()
 
     def load_data(
@@ -102,11 +102,10 @@ class CategoryTreeModel(QAbstractItemModel):
         flat_categories: Sequence[Category],
         category_stats: dict[Category, CategoryStats],
     ) -> None:
-        self._flat_categories = tuple(flat_categories)
-        self._flat_nodes = sync_nodes(self._flat_nodes, flat_categories, category_stats)
-        self._root_nodes = tuple(
-            node for node in self._flat_nodes if node.parent is None
-        )
+        nodes = sync_nodes(self._node_dict, flat_categories, category_stats)
+        self._root_nodes = tuple(node for node in nodes if node.parent is None)
+        self._category_dict = {category.uuid: category for category in flat_categories}
+        self._node_dict = {node.uuid: node for node in nodes}
 
     def rowCount(self, index: QModelIndex = ...) -> int:  # noqa: N802
         if index.isValid():
@@ -275,13 +274,17 @@ class CategoryTreeModel(QAbstractItemModel):
         return QAbstractItemModel.createIndex(self, row, 0, node)
 
     def _get_item_from_node(self, node: CategoryTreeNode) -> Category:
-        for category in self._flat_categories:
-            if node.uuid == category.uuid:
-                return category
-        raise ValueError(f"Category {node.path} not found.")
+        try:
+            return self._category_dict[node.uuid]
+        except KeyError as exc:
+            raise ValueError(
+                f"Category for node path='{node.path}' not found."
+            ) from exc
 
     def _get_node_from_item(self, item: Category) -> CategoryTreeNode:
-        for node in self._flat_nodes:
-            if node.uuid == item.uuid:
-                return node
-        raise ValueError(f"Node for Category {item.path} not found.")
+        try:
+            return self._node_dict[item.uuid]
+        except KeyError as exc:
+            raise ValueError(
+                f"Node for Category path='{item.path}' not found."
+            ) from exc

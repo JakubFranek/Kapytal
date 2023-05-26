@@ -105,8 +105,8 @@ class CategoryFormPresenter:
             if selected_item is None:
                 raise ValueError("Cannot edit an unselected item.")
             self._dialog.signal_ok.connect(self._edit_category)
-            self._dialog.path = selected_item.path
             self._dialog.current_path = selected_item.path
+            self._dialog.path = selected_item.path
             self._dialog.position = self._get_category_index(selected_item) + 1
         else:
             if selected_item is not None:
@@ -123,29 +123,19 @@ class CategoryFormPresenter:
         type_ = CategoryType(self._dialog.type_)
         index = self._dialog.position - 1
 
-        logging.info(f"Adding Category('{path}', {type_.name}, {index=})")
+        logging.info(f"Adding Category: {path=}, type={type_.name}, {index=}")
         try:
             self._record_keeper.add_category(path, type_, index)
         except Exception as exception:  # noqa: BLE001
             handle_exception(exception)
             return
 
-        if "/" not in path:
-            item = None
-        else:
-            parent_path = path.rpartition("/")[0]
-            for category in self._record_keeper.categories:
-                if category.path == parent_path:
-                    item = category
-                    break
-            else:
-                raise ValueError(f"Could not find parent category for '{path}'.")
-
+        parent_category = self._get_parent_category_from_path(path)
         new_category = self._record_keeper.get_category(path)
         index_actual = self._get_category_index(new_category)
 
         model = self._get_current_model()
-        model.pre_add(item, index_actual)
+        model.pre_add(parent_category, index_actual)
         self._update_model_data()
         model.post_add()
         self._dialog.close()
@@ -158,11 +148,7 @@ class CategoryFormPresenter:
         previous_path = self._dialog.current_path
         previous_index = self._get_category_index(item)
         new_path = self._dialog.path
-        if "/" in new_path:
-            new_parent_path, _, _ = new_path.rpartition("/")
-            new_parent = self._record_keeper.get_category(new_parent_path)
-        else:
-            new_parent = None
+        new_parent = self._get_parent_category_from_path(new_path)
         new_index = self._dialog.position - 1
 
         logging.info(
@@ -250,21 +236,18 @@ class CategoryFormPresenter:
     def _filter_income_categories(self, pattern: str) -> None:
         if ("[" in pattern and "]" not in pattern) or "[]" in pattern:
             return
-        logging.debug(f"Filtering Income Categories: {pattern=}")
         self._proxy_income.setFilterWildcard(pattern)
         self._view.incomeTreeView.expandAll()
 
     def _filter_expense_categories(self, pattern: str) -> None:
         if ("[" in pattern and "]" not in pattern) or "[]" in pattern:
             return
-        logging.debug(f"Filtering Expense Categories: {pattern=}")
         self._proxy_expense.setFilterWildcard(pattern)
         self._view.expenseTreeView.expandAll()
 
     def _filter_income_and_expense_categories(self, pattern: str) -> None:
         if ("[" in pattern and "]" not in pattern) or "[]" in pattern:
             return
-        logging.debug(f"Filtering Income and Expense Categories: {pattern=}")
         self._proxy_income_and_expense.setFilterWildcard(pattern)
         self._view.incomeAndExpenseTreeView.expandAll()
 
@@ -387,3 +370,12 @@ class CategoryFormPresenter:
             return category.parent.children.index(category)
         root_categories = self._get_root_categories_for_type(category.type_)
         return root_categories.index(category)
+
+    def _get_parent_category_from_path(self, path: str) -> Category | None:
+        if "/" not in path:
+            return None
+        parent_path, _, _ = path.rpartition("/")
+        try:
+            return self._record_keeper.get_category(parent_path)
+        except NotFoundError:
+            return None

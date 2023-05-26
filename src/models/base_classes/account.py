@@ -1,4 +1,3 @@
-import logging
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
@@ -50,10 +49,6 @@ class Account(
         if parent is not None:
             parent._add_child(self)  # noqa: SLF001
 
-        if hasattr(self, "_parent"):
-            logging.info(f"Changing parent from {self._parent} to {parent}")
-        else:
-            logging.info(f"Setting {parent=}")
         self._parent = parent
 
     @property

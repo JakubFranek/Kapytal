@@ -1,9 +1,9 @@
 import logging
 import unicodedata
 from collections.abc import Sequence
-from copy import copy
 from decimal import Decimal
 from typing import Any, Self
+from uuid import UUID
 
 from PyQt6.QtCore import (
     QAbstractItemModel,
@@ -18,6 +18,7 @@ from src.models.base_classes.account import Account
 from src.models.model_objects.account_group import AccountGroup
 from src.models.model_objects.cash_objects import CashAccount
 from src.models.model_objects.currency_objects import (
+    CashAmount,
     ConversionFactorNotFoundError,
     Currency,
 )
@@ -40,22 +41,48 @@ def convert_bool_to_checkstate(*, checked: bool) -> Qt.CheckState:
 
 
 class AccountTreeNode:
-    __slots__ = ("item", "parent", "children", "check_state", "event_signal_changed")
+    __slots__ = (
+        "name",
+        "path",
+        "type_",
+        "balance_base",
+        "balance_native",
+        "uuid",
+        "parent",
+        "children",
+        "check_state",
+        "event_signal_changed",
+    )
 
-    def __init__(self, item: Account | AccountGroup, parent: Self | None) -> None:
-        self.item = item
+    def __init__(  # noqa: PLR0913
+        self,
+        name: str,
+        path: str,
+        type_: type[Account | AccountGroup],
+        balance_base: CashAmount | None,
+        balance_native: CashAmount | None,
+        uuid: UUID,
+        parent: Self | None,
+        children: list[Self],
+    ) -> None:
+        self.name = name
+        self.path = path
+        self.type_ = type_
+        self.balance_base = balance_base
+        self.balance_native = balance_native
+        self.uuid = uuid
         self.parent = parent
-        self.children: list[Self] = []
+        self.children: list[Self] = children
         self.check_state: Qt.CheckState = Qt.CheckState.Checked
         self.event_signal_changed = Event()
 
     def __repr__(self) -> str:
-        return f"AccountTreeNode({self.item!s})"
+        return f"AccountTreeNode({self.path})"
 
     def __eq__(self, __o: object) -> bool:
         if not isinstance(__o, AccountTreeNode):
             return False
-        return self.item.uuid == __o.item.uuid
+        return self.uuid == __o.uuid
 
     def set_check_state(self, *, checked: bool) -> None:
         """Sets check state of this node and its children, and updates the parents."""
@@ -68,7 +95,7 @@ class AccountTreeNode:
     def _set_check_state(self, check_state: Qt.CheckState) -> None:
         if check_state != self.check_state:
             self.check_state = check_state
-            self.event_signal_changed(self.item.path)
+            self.event_signal_changed(str(self.uuid))
 
     def _set_check_state_recursive(self, check_state: Qt.CheckState) -> None:
         self._set_check_state(check_state)
@@ -89,52 +116,62 @@ class AccountTreeNode:
             self.parent.update_check_state()
 
 
-# BUG: there is a bug here somewhere when deleting account item (maybe only CashAccount)
-# can't reproduce it anymore...
 def sync_nodes(
-    items: Sequence[Account | AccountGroup], nodes: Sequence[AccountTreeNode]
-) -> list[AccountTreeNode]:
-    """Accepts flat sequences of items and nodes. Returns new flat nodes."""
+    items: Sequence[Account | AccountGroup],
+    nodes: dict[UUID, AccountTreeNode],
+    base_currency: Currency,
+) -> tuple[AccountTreeNode]:
+    """Accepts ordered sequence of items. Returns an ordered tuple of nodes."""
 
-    nodes_copy = list(copy(nodes))
     new_nodes: list[AccountTreeNode] = []
 
     for item in items:
-        node = get_node(item, nodes_copy)
-        parent_node = (
-            get_node(item.parent, nodes_copy) if item.parent is not None else None
-        )
+        node = get_node(item, nodes)
+        parent_node = get_node(item.parent, nodes) if item.parent is not None else None
         if node is None:
-            node = AccountTreeNode(item, None)
+            balance_base = item.get_balance(currency=base_currency)
+            if isinstance(item, CashAccount):
+                balance_native = balance_base.convert(item.currency)
+            else:
+                balance_native = None
+            node = AccountTreeNode(
+                item.name,
+                item.path,
+                item.__class__,
+                balance_base,
+                balance_native,
+                item.uuid,
+                parent_node,
+                [],
+            )
         else:
-            node.item = item
+            node.name = item.name
+            node.path = item.path
+            node.balance_base = item.get_balance(currency=base_currency)
+            if isinstance(item, CashAccount):
+                node.balance_native = node.balance_base.convert(item.currency)
+            node.parent = parent_node
+            node.children = []
         node.parent = parent_node
         node.children = []
         if parent_node is not None:
             parent_node.children.append(node)
-        if node not in nodes_copy:
-            nodes_copy.append(node)
+        if node.uuid not in nodes:
+            nodes[node.uuid] = node
         new_nodes.append(node)
 
-    return new_nodes
+    return tuple(new_nodes)
 
 
 def get_node(
-    item: Account | AccountGroup, nodes: Sequence[AccountTreeNode]
+    item: Account | AccountGroup | None, nodes: dict[UUID, AccountTreeNode]
 ) -> AccountTreeNode | None:
-    for node in nodes:
-        if node.item == item:
-            return node
-    return None
-
-
-def get_node_by_item_path(
-    item_path: str, nodes: Sequence[AccountTreeNode]
-) -> AccountTreeNode | None:
-    for node in nodes:
-        if node.item.path == item_path:
-            return node
-    return None
+    if item is None:
+        return None
+    try:
+        return nodes[item.uuid]
+    except KeyError:
+        return None
 
 
 class AccountTreeModel(QAbstractItemModel):
@@ -150,43 +187,36 @@ class AccountTreeModel(QAbstractItemModel):
         self,
         view: QTreeView,
         proxy: QSortFilterProxyModel,
-        flat_items: Sequence[Account | AccountGroup],
-        base_currency: Currency,
     ) -> None:
         super().__init__()
         self._tree = view
         self._proxy = proxy
-        self._root_nodes = ()
-        self._flat_nodes = ()
-        self.flat_items = flat_items
-        self.base_currency = base_currency
+        self._root_nodes: tuple[AccountTreeNode] = ()
+        self._item_dict: dict[UUID, Account | AccountGroup] = {}
+        self._node_dict: dict[UUID, AccountTreeNode] = {}
 
-    @property
-    def flat_items(self) -> tuple[Account | AccountGroup, ...]:
-        # REFACTOR: this property is not needed... could be refactor into load method
-        return tuple(self._flat_items)
+    def load_data(
+        self, items: Sequence[Account | AccountGroup], base_currency: Currency | None
+    ) -> None:
+        nodes = sync_nodes(items, self._node_dict, base_currency)
+        self._item_dict = {item.uuid: item for item in items}
+        self._node_dict = {node.uuid: node for node in nodes}
+        self._root_nodes = tuple(node for node in nodes if node.parent is None)
 
-    @flat_items.setter
-    def flat_items(self, items: Sequence[Account | AccountGroup]) -> None:
-        self._flat_items = list(items)
-        self._flat_nodes = tuple(sync_nodes(items, self._flat_nodes))
-        self._root_nodes = tuple(
-            node for node in self._flat_nodes if node.parent is None
-        )
-        for node in self._flat_nodes:
+        for node in nodes:
             node.event_signal_changed.clear()
             node.event_signal_changed.append(
-                lambda item_path: self._node_check_state_changed(item_path)
+                lambda uuid_string: self._node_check_state_changed(uuid_string)
             )
 
-    @property
-    def checked_accounts(self) -> tuple[Account, ...]:
-        return tuple(
-            node.item
-            for node in self._flat_nodes
+    def get_checked_accounts(self) -> frozenset[Account]:
+        uuids = {
+            node.uuid
+            for node in self._node_dict.values()
             if node.check_state == Qt.CheckState.Checked
-            and isinstance(node.item, Account)
-        )
+        }
+        items = [self._item_dict[uuid] for uuid in uuids]
+        return frozenset(item for item in items if isinstance(item, Account))
 
     def rowCount(self, index: QModelIndex = ...) -> int:  # noqa: N802
         if index.isValid():
@@ -265,12 +295,10 @@ class AccountTreeModel(QAbstractItemModel):
             return None
 
         if role == Qt.ItemDataRole.DisplayRole:
-            return self._get_display_role_data(
-                index.column(), index.internalPointer().item
-            )
+            return self._get_display_role_data(index.column(), index.internalPointer())
         if role == Qt.ItemDataRole.DecorationRole:
             return self._get_decoration_role_data(
-                index.column(), index.internalPointer().item, index
+                index.column(), index.internalPointer(), index
             )
         if (
             role == Qt.ItemDataRole.CheckStateRole
@@ -286,12 +314,12 @@ class AccountTreeModel(QAbstractItemModel):
                 return TEXT_ALIGNMENT_BALANCE
         if role == Qt.ItemDataRole.ForegroundRole:
             return self._get_foreground_role_data(
-                index.column(), index.internalPointer().item
+                index.column(), index.internalPointer()
             )
         if role == Qt.ItemDataRole.UserRole:
-            return self._get_sort_data(index.column(), index.internalPointer().item)
+            return self._get_sort_data(index.column(), index.internalPointer())
         if role == Qt.ItemDataRole.UserRole + 1:
-            return self._get_filter_data(index.column(), index.internalPointer().item)
+            return self._get_filter_data(index.column(), index.internalPointer())
         if (
             role == Qt.ItemDataRole.ToolTipRole
             and index.column() == AccountTreeColumn.SHOW
@@ -303,16 +331,17 @@ class AccountTreeModel(QAbstractItemModel):
 
         return None
 
-    def _get_display_role_data(
-        self, column: int, item: Account | AccountGroup
-    ) -> str | None:
+    def _get_display_role_data(self, column: int, item: AccountTreeNode) -> str | None:
         if column == AccountTreeColumn.NAME:
             return item.name
-        if column == AccountTreeColumn.BALANCE_NATIVE and isinstance(item, CashAccount):
-            return item.get_balance(item.currency).to_str_rounded()
-        if column == AccountTreeColumn.BALANCE_BASE and self.base_currency is not None:
+        if (
+            column == AccountTreeColumn.BALANCE_NATIVE
+            and item.balance_native is not None
+        ):
+            return item.balance_native.to_str_rounded()
+        if column == AccountTreeColumn.BALANCE_BASE and item.balance_base is not None:
             try:
-                balance = item.get_balance(self.base_currency)
+                balance = item.balance_base
             except ConversionFactorNotFoundError:
                 return "Error!"
             else:
@@ -322,49 +351,42 @@ class AccountTreeModel(QAbstractItemModel):
     def _get_decoration_role_data(
         self,
         column: int,
-        item: Account | AccountGroup,
+        item: AccountTreeNode,
         index: QModelIndex,
     ) -> QIcon | None:
         if column == AccountTreeColumn.NAME:
-            if isinstance(item, AccountGroup):
+            if item.type_ == AccountGroup:
                 if self._tree.isExpanded(index):
                     return icons.folder_open
                 return icons.folder_closed
-            if isinstance(item, SecurityAccount):
+            if item.type_ == SecurityAccount:
                 return icons.security_account
-            if isinstance(item, CashAccount):
-                if item.get_balance(item.currency).is_positive():
+            if item.type_ == CashAccount:
+                if item.balance_base is not None and item.balance_base.is_positive():
                     return icons.cash_account
                 return icons.cash_account_empty
         return None
 
-    def _get_foreground_role_data(  # noqa: PLR0911, PLR0912, C901
-        self, column: int, item: Account | AccountGroup
+    def _get_foreground_role_data(  # noqa: PLR0911
+        self, column: int, item: AccountTreeNode
     ) -> QBrush | None:
         if column == AccountTreeColumn.SHOW:
             return None
 
         if column == AccountTreeColumn.NAME:
-            if self.base_currency is None:
+            if item.balance_base is None:
                 return None
-            try:
-                if item.get_balance(self.base_currency).value_normalized == 0:
-                    return colors.get_gray_brush()
-            except ConversionFactorNotFoundError:
-                return None
-            else:
-                return None
+            if item.balance_base.value_normalized == 0:
+                return colors.get_gray_brush()
         if column == AccountTreeColumn.BALANCE_BASE:
-            if self.base_currency is None:
-                return None
-            try:
-                amount = item.get_balance(self.base_currency)
-            except ConversionFactorNotFoundError:
+            if item.balance_base is None:
                 return colors.get_red_brush()
-        elif column == AccountTreeColumn.BALANCE_NATIVE and isinstance(
-            item, CashAccount
+            amount = item.balance_base
+        elif (
+            column == AccountTreeColumn.BALANCE_NATIVE
+            and item.balance_native is not None
         ):
-            amount = item.get_balance(item.currency)
+            amount = item.balance_native
         else:
             return None
 
@@ -375,31 +397,33 @@ class AccountTreeModel(QAbstractItemModel):
         return None
 
     def _get_sort_data(
-        self, column: int, item: Account | AccountGroup
+        self, column: int, item: AccountTreeNode
     ) -> Decimal | str | None:
         if column == AccountTreeColumn.NAME:
             return unicodedata.normalize(
                 "NFD", self._get_display_role_data(column, item)
             )
-        if column == AccountTreeColumn.BALANCE_NATIVE and isinstance(item, CashAccount):
-            return float(item.get_balance(item.currency).value_normalized)
-        if column == AccountTreeColumn.BALANCE_BASE and self.base_currency is not None:
+        if (
+            column == AccountTreeColumn.BALANCE_NATIVE
+            and item.balance_native is not None
+        ):
+            return float(item.balance_native.value_normalized)
+        if column == AccountTreeColumn.BALANCE_BASE and item.balance_base is not None:
             try:
-                return float(item.get_balance(self.base_currency).value_normalized)
+                return float(item.balance_base.value_normalized)
             except ConversionFactorNotFoundError:
                 return None
         return None
 
-    def _get_filter_data(self, column: int, item: Account | AccountGroup) -> str | None:
+    def _get_filter_data(self, column: int, item: AccountTreeNode) -> str | None:
         if column == AccountTreeColumn.NAME:
             return item.path
         return self._get_display_role_data(column, item)
 
-    def pre_add(self, parent: AccountGroup | None) -> None:
+    def pre_add(self, parent: AccountGroup | None, index: int) -> None:
         self._proxy.setDynamicSortFilter(False)  # noqa: FBT003
         parent_index = self.get_index_from_item(parent)
-        row_index = len(self._root_nodes) if parent is None else len(parent.children)
-        self.beginInsertRows(parent_index, row_index, row_index)
+        self.beginInsertRows(parent_index, index, index)
 
     def post_add(self) -> None:
         self.endInsertRows()
@@ -464,7 +488,7 @@ class AccountTreeModel(QAbstractItemModel):
         node: AccountTreeNode | None = index.internalPointer()
         if node is None:
             return None
-        return node.item
+        return self._item_dict[node.uuid]
 
     def get_index_from_item(self, item: Account | AccountGroup | None) -> QModelIndex:
         if item is None:
@@ -478,7 +502,7 @@ class AccountTreeModel(QAbstractItemModel):
         return QAbstractItemModel.createIndex(self, row, 0, node)
 
     def _get_node_from_item(self, item: Account | AccountGroup) -> AccountTreeNode:
-        node = get_node(item, self._flat_nodes)
+        node = get_node(item, self._node_dict)
         if node is None:
             raise ValueError(f"Item {item} not present within AccountTreeModel data.")
         return node
@@ -486,7 +510,7 @@ class AccountTreeModel(QAbstractItemModel):
     def set_check_state_all(self, *, checked: bool) -> None:
         check_state = convert_bool_to_checkstate(checked=checked)
         logging.debug(f"Set all AccountTree item check state: {check_state.name}")
-        for node in self._flat_nodes:
+        for node in self._node_dict.values():
             node.check_state = check_state
 
     def set_selected_check_state(self, *, checked: bool, only: bool) -> None:
@@ -497,36 +521,35 @@ class AccountTreeModel(QAbstractItemModel):
             self.set_check_state_all(checked=not checked)
             node.set_check_state(checked=checked)
             logging.debug(
-                f"Set exclusive check state: {node.check_state.name}, item={node.item}"
+                f"Set exclusive check state: {node.check_state.name}, path={node.path}"
             )
         else:
             node.set_check_state(checked=checked)
-            logging.debug(f"Set check state: {node.check_state.name}, item={node.item}")
+            logging.debug(f"Set check state: {node.check_state.name}, path={node.path}")
 
     def select_all_cash_accounts_below(self, account_group: AccountGroup) -> None:
-        parent_node = get_node(account_group, self._flat_nodes)
+        parent_node = get_node(account_group, self._node_dict)
         if parent_node is None:
             raise ValueError(f"Node with path='{account_group.path}' not found.")
-        for node in self._flat_nodes:
-            if parent_node.item.path in node.item.path and isinstance(
-                node.item, CashAccount
-            ):
+        for node in self._node_dict.values():
+            if parent_node.path in node.path and node.type_ == CashAccount:
                 node.set_check_state(checked=True)
 
     def select_all_security_accounts_below(self, account_group: AccountGroup) -> None:
-        parent_node = get_node(account_group, self._flat_nodes)
+        parent_node = get_node(account_group, self._node_dict)
         if parent_node is None:
             raise ValueError(f"Node with path='{account_group.path}' not found.")
-        for node in self._flat_nodes:
-            if parent_node.item.path in node.item.path and isinstance(
-                node.item, SecurityAccount
-            ):
+        for node in self._node_dict.values():
+            if parent_node.path in node.path and node.type_ == SecurityAccount:
                 node.set_check_state(checked=True)
 
-    def _node_check_state_changed(self, item_path: str) -> None:
-        node = get_node_by_item_path(item_path, self._flat_nodes)
-        if node is None:
-            raise ValueError(f"Node with path='{item_path}' not found")
+    def _node_check_state_changed(self, uuid_string: str) -> None:
+        uuid = UUID(uuid_string)
+        try:
+            node = self._node_dict[uuid]
+        except KeyError as exc:
+            raise ValueError(f"Node with uuid='{uuid_string}' not found.") from exc
+
         if node.parent is None:
             row = self._root_nodes.index(node)
         else:

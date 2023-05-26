@@ -59,7 +59,6 @@ class AccountFilterPresenter:
     def _filter(self, pattern: str) -> None:
         if ("[" in pattern and "]" not in pattern) or "[]" in pattern:
             return
-        logging.debug(f"Filtering Account Tree items: {pattern=}")
         self._proxy.setFilterWildcard(pattern)
         self._form.account_tree_view.expandAll()
 

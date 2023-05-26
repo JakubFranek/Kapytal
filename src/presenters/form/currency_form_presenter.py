@@ -81,7 +81,7 @@ class CurrencyFormPresenter:
         code = self._dialog.currency_code
         places = self._dialog.currency_places
 
-        logging.info(f"Adding Currency(code='{code}', places='{places}')")
+        logging.info(f"Adding Currency: {code=}, {places=}")
         try:
             self._record_keeper.add_currency(code, places)
         except Exception as exception:  # noqa: BLE001
@@ -130,7 +130,7 @@ class CurrencyFormPresenter:
             logging.debug("User cancelled the Currency deletion")
             return
 
-        logging.info(f"Removing {currency}")
+        logging.info(f"Removing Currency: {currency.code}")
         try:
             self._record_keeper.remove_currency(currency.code)
         except Exception as exception:  # noqa: BLE001
@@ -156,7 +156,7 @@ class CurrencyFormPresenter:
         primary_code = self._dialog.primary_currency_code
         secondary_code = self._dialog.secondary_currency_code
 
-        logging.info(f"Adding ExchangeRate({primary_code}/{secondary_code})")
+        logging.info(f"Adding ExchangeRate: {primary_code}/{secondary_code}")
         try:
             self._record_keeper.add_exchange_rate(primary_code, secondary_code)
         except Exception as exception:  # noqa: BLE001
@@ -192,7 +192,10 @@ class CurrencyFormPresenter:
         value = self._dialog.value.normalize()
         date_ = self._dialog.date_
         exchange_rate_code = self._dialog.exchange_rate_code
-        logging.info(f"Setting ExchangeRate({exchange_rate_code}): {value} on {date_}")
+        logging.info(
+            f"Setting ExchangeRate {exchange_rate_code}: "
+            f"{value!s} on {date_.strftime('%Y-%m-%d')}"
+        )
         try:
             self._record_keeper.set_exchange_rate(exchange_rate_code, value, date_)
         except Exception as exception:  # noqa: BLE001
@@ -221,7 +224,7 @@ class CurrencyFormPresenter:
             logging.debug("User cancelled the ExchangeRate deletion")
             return
 
-        logging.info(f"Removing {exchange_rate!r}")
+        logging.info(f"Removing ExchangeRate: {exchange_rate!s}")
         try:
             self._record_keeper.remove_exchange_rate(str(exchange_rate))
         except Exception as exception:  # noqa: BLE001

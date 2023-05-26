@@ -1,6 +1,5 @@
-import logging
-import uuid
 from typing import TYPE_CHECKING, Any, Self
+from uuid import UUID
 
 from src.models.custom_exceptions import NotFoundError
 
@@ -39,10 +38,6 @@ class AccountGroup(NameMixin, BalanceMixin, JSONSerializableMixin, UUIDMixin):
         if parent is not None:
             parent._add_child(self)  # noqa: SLF001
 
-        if hasattr(self, "_parent"):
-            logging.info(f"Changing parent from {self._parent} to {parent}")
-        else:
-            logging.info(f"Setting {parent=}")
         self._parent = parent
 
     @property
@@ -103,9 +98,9 @@ class AccountGroup(NameMixin, BalanceMixin, JSONSerializableMixin, UUIDMixin):
             else:
                 aux_dict[key] = value
         aux_dict[index] = child
+        child.event_balance_updated.append(self._update_balances)
         self._children_dict = aux_dict
         self._update_children_tuple()
-        logging.info(f"Changing index from {current_index} to {index}")
 
     def get_child_index(self, child: "Account" | Self) -> int:
         return list(self._children_dict.keys())[
@@ -146,7 +141,7 @@ class AccountGroup(NameMixin, BalanceMixin, JSONSerializableMixin, UUIDMixin):
         index: int | None = data["index"]
         parent_path, _, name = path.rpartition("/")
         obj = AccountGroup(name)
-        obj._uuid = uuid.UUID(data["uuid"])  # noqa: SLF001
+        obj._uuid = UUID(data["uuid"])  # noqa: SLF001
         if parent_path:
             obj._parent = account_groups[parent_path]  # noqa: SLF001
             obj._parent._children_dict[index] = obj  # noqa: SLF001

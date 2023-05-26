@@ -90,7 +90,7 @@ class TagFormPresenter:
     def add_tag(self) -> None:
         name = self._dialog.name
 
-        logging.info("Adding Tag")
+        logging.info(f"Adding Tag: {name=}")
         try:
             self._record_keeper.add_tag(name)
         except Exception as exception:  # noqa: BLE001
@@ -113,7 +113,7 @@ class TagFormPresenter:
         current_name = tag.name
         new_name = self._dialog.name
 
-        logging.info("Renaming Tag")
+        logging.info(f"Renaming Tag name={current_name}: new name='{new_name}'")
         try:
             self._record_keeper.edit_attribute(
                 current_name, new_name, AttributeType.TAG
@@ -131,7 +131,8 @@ class TagFormPresenter:
         if len(tags) == 0:
             raise ValueError("Cannot remove an unselected item.")
 
-        logging.info(f"Removing {tags}")
+        tag_names = ["'" + tag.name + "'" for tag in tags]
+        logging.info(f"Removing Tags: {', '.join(tag_names)}")
         any_deleted = False
         for tag in tags:
             try:
@@ -149,7 +150,6 @@ class TagFormPresenter:
     def _filter(self, pattern: str) -> None:
         if ("[" in pattern and "]" not in pattern) or "[]" in pattern:
             return
-        logging.debug(f"Filtering Tags: {pattern=}")
         self._proxy_model.setFilterWildcard(pattern)
 
     def _selection_changed(self) -> None:

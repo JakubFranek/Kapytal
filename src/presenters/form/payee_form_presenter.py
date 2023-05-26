@@ -90,7 +90,7 @@ class PayeeFormPresenter:
     def add_payee(self) -> None:
         name = self._dialog.name
 
-        logging.info("Adding Payee")
+        logging.info(f"Adding Payee: {name=}")
         try:
             self._record_keeper.add_payee(name)
         except Exception as exception:  # noqa: BLE001
@@ -113,7 +113,7 @@ class PayeeFormPresenter:
         current_name = payee.name
         new_name = self._dialog.name
 
-        logging.info("Renaming Payee")
+        logging.info(f"Renaming Payee name='{current_name}': new name='{new_name=}'")
         try:
             self._record_keeper.edit_attribute(
                 current_name, new_name, AttributeType.PAYEE
@@ -131,7 +131,8 @@ class PayeeFormPresenter:
         if len(payees) == 0:
             raise ValueError("Cannot remove an unselected item.")
 
-        logging.info(f"Removing {payees}")
+        payee_names = ["'" + payee.name + "'" for payee in payees]
+        logging.info(f"Removing Payees: {', '.join(payee_names)}")
         any_deleted = False
         for payee in payees:
             try:
@@ -149,7 +150,6 @@ class PayeeFormPresenter:
     def _filter(self, pattern: str) -> None:
         if ("[" in pattern and "]" not in pattern) or "[]" in pattern:
             return
-        logging.debug(f"Filtering Payees: {pattern=}")
         self._proxy_model.setFilterWildcard(pattern)
 
     def _selection_changed(self) -> None:

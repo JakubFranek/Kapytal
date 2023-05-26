@@ -1,6 +1,4 @@
-import logging
 import string
-import uuid
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from collections.abc import Collection
@@ -8,6 +6,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum, auto
 from typing import Any
+from uuid import UUID
 
 from src.models.base_classes.account import Account, UnrelatedAccountError
 from src.models.base_classes.transaction import Transaction
@@ -90,13 +89,6 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
                 f"{self.TYPE_MIN_LENGTH} and {self.TYPE_MAX_LENGTH}"
             )
 
-        if hasattr(self, "_type"):
-            if self._type != value:
-                logging.info(
-                    f"Changing Security.type_ from '{self._type}' to '{value}'"
-                )
-        else:
-            logging.info(f"Setting Security.type_='{value}'")
         self._type = value
 
     @property
@@ -107,7 +99,6 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
     def symbol(self) -> str:
         return self._symbol
 
-    # FIXME: fix this stupid way of logging
     @symbol.setter
     def symbol(self, value: str) -> None:
         if not isinstance(value, str):
@@ -123,15 +114,6 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
             )
 
         value_capitalized = value.upper()
-
-        if hasattr(self, "_symbol"):
-            if self._symbol != value_capitalized:
-                logging.info(
-                    f"Changing Security.symbol from '{self._symbol}' "
-                    f"to '{value_capitalized}'"
-                )
-        else:
-            logging.info(f"Setting Security.symbol='{value_capitalized}'")
         self._symbol = value_capitalized
 
     @property
@@ -229,7 +211,7 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
                 CashAmount(price, obj.currency),
             )
 
-        obj._uuid = uuid.UUID(data["uuid"])  # noqa: SLF001
+        obj._uuid = UUID(data["uuid"])  # noqa: SLF001
         return obj
 
 
@@ -318,7 +300,7 @@ class SecurityAccount(Account):
         parent_path, _, name = path.rpartition("/")
 
         obj = SecurityAccount(name)
-        obj._uuid = uuid.UUID(data["uuid"])  # noqa: SLF001
+        obj._uuid = UUID(data["uuid"])  # noqa: SLF001
 
         if parent_path:
             parent = account_group_dict[parent_path]
@@ -405,7 +387,7 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
         price_per_share: CashAmount,
         security_account: SecurityAccount,
         cash_account: CashAccount,
-        uuid: uuid.UUID | None = None,
+        uuid: UUID | None = None,
     ) -> None:
         super().__init__()
         if uuid is not None:
@@ -507,7 +489,7 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
             price_per_share=price_per_share,
             security_account=security_account,
             cash_account=cash_account,
-            uuid=uuid.UUID(data["uuid"]),
+            uuid=UUID(data["uuid"]),
         )
         obj._datetime_created = datetime.fromisoformat(  # noqa: SLF001
             data["datetime_created"]
@@ -707,7 +689,7 @@ class SecurityTransfer(SecurityRelatedTransaction):
         shares: Decimal | int | str,
         sender: SecurityAccount,
         recipient: SecurityAccount,
-        uuid: uuid.UUID | None = None,
+        uuid: UUID | None = None,
     ) -> None:
         super().__init__()
         if uuid is not None:
@@ -781,7 +763,7 @@ class SecurityTransfer(SecurityRelatedTransaction):
             shares=shares,
             sender=sender,
             recipient=recipient,
-            uuid=uuid.UUID(data["uuid"]),
+            uuid=UUID(data["uuid"]),
         )
         obj._datetime_created = datetime.fromisoformat(  # noqa: SLF001
             data["datetime_created"]

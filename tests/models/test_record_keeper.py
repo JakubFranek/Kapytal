@@ -1,9 +1,9 @@
 import copy
 import string
-import uuid
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 from typing import Any
+from uuid import UUID, uuid4
 
 import pytest
 from hypothesis import assume, given
@@ -457,7 +457,7 @@ def test_add_cash_account_already_exists(data: st.DataObject) -> None:
 def test_get_account_parent_does_not_exist() -> None:
     record_keeper = get_preloaded_record_keeper()
     with pytest.raises(NotFoundError):
-        record_keeper.get_account_parent_or_none("does not exist")
+        record_keeper.get_account_group_or_none("does not exist")
 
 
 @given(path=everything_except(str))
@@ -588,7 +588,7 @@ def test_add_refund_invalid_uuid_type() -> RecordKeeper:
     record_keeper = get_preloaded_record_keeper_with_expense()
     refunded_transaction: CashTransaction = record_keeper.transactions[0]
     with pytest.raises(
-        TypeError, match="Parameter 'uuids' must be a Collection ofuuid.UUID objects"
+        TypeError, match="Parameter 'uuids' must be a Collection ofUUID objects"
     ):
         record_keeper.add_refund(
             description="Refund!",
@@ -608,7 +608,7 @@ def test_add_refund_uuid_not_found() -> RecordKeeper:
         record_keeper.add_refund(
             description="Refund!",
             datetime_=datetime.now(user_settings.settings.time_zone),
-            refunded_transaction_uuid=uuid.uuid4(),
+            refunded_transaction_uuid=uuid4(),
             refunded_account_path="Bank Accounts/Raiffeisen CZK",
             category_path_amount_pairs=(("Food and Drink/Groceries", Decimal(1000)),),
             tag_name_amount_pairs=(("Test Tag", Decimal(1000)),),
@@ -680,7 +680,7 @@ def test_get_security_by_name_does_not_exist(name: str) -> None:
         record_keeper.get_security_by_name(name)
 
 
-@given(uuid=everything_except(uuid.UUID))
+@given(uuid=everything_except(UUID))
 def test_get_security_by_uuid_invalid_type(uuid: Any) -> None:
     record_keeper = RecordKeeper()
     with pytest.raises(TypeError, match="Parameter 'uuid' must be a UUID."):
@@ -690,7 +690,7 @@ def test_get_security_by_uuid_invalid_type(uuid: Any) -> None:
 def test_get_security_by_uuid_does_not_exist() -> None:
     record_keeper = RecordKeeper()
     with pytest.raises(NotFoundError):
-        record_keeper.get_security_by_uuid(uuid.uuid4())
+        record_keeper.get_security_by_uuid(uuid4())
 
 
 @given(

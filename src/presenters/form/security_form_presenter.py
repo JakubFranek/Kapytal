@@ -97,7 +97,10 @@ class SecurityFormPresenter:
         currency_code = self._dialog.currency_code
         unit = self._dialog.unit
 
-        logging.info("Adding Security")
+        logging.info(
+            f"Adding Security: {name=}, {symbol=}, type={type_}, "
+            f"currency={currency_code}, unit={unit!s}"
+        )
         try:
             self._record_keeper.add_security(
                 name=name,
@@ -126,7 +129,10 @@ class SecurityFormPresenter:
         symbol = self._dialog.symbol
         type_ = self._dialog.type_
 
-        logging.info(f"Editing Security '{security.name}'")
+        logging.info(
+            f"Editing Security name='{security.name}', symbol='{security.symbol}', "
+            f"type='{security.type_}': new {name=}, new {symbol=}, new type={type_}"
+        )
         try:
             self._record_keeper.edit_security(
                 uuid_=uuid, name=name, symbol=symbol, type_=type_
@@ -236,13 +242,11 @@ class SecurityFormPresenter:
     def _filter_table(self, pattern: str) -> None:
         if ("[" in pattern and "]" not in pattern) or "[]" in pattern:
             return
-        logging.debug(f"Filtering Manage Securities table: {pattern=}")
         self._table_proxy.setFilterWildcard(pattern)
 
     def _filter_tree(self, pattern: str) -> None:
         if ("[" in pattern and "]" not in pattern) or "[]" in pattern:
             return
-        logging.debug(f"Filtering Securities Overview tree: {pattern=}")
         self._tree_proxy.setFilterWildcard(pattern)
         self._view.treeView.expandAll()
 

@@ -1,4 +1,3 @@
-import logging
 from typing import Any
 
 from src.models.custom_exceptions import InvalidCharacterError
@@ -57,11 +56,4 @@ class NameMixin:
                 f"Colons in {self.__class__.__name__}.name are forbidden."
             )
 
-        # FIXME: get rid of this stupid logging method
-        if hasattr(self, "_name"):
-            logging.info(
-                f"Renaming {self.__class__.__name__} from '{self._name}' to '{name}'"
-            )
-        else:
-            logging.info(f"Setting {self.__class__.__name__} {name=}")
         self._name: str = name

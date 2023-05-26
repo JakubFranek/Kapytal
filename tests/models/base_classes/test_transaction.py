@@ -1,8 +1,8 @@
-import uuid
 from collections.abc import Collection
 from datetime import datetime
 from types import NoneType
 from typing import Any
+from uuid import UUID
 
 import pytest
 from hypothesis import given
@@ -32,7 +32,7 @@ def test_creation(description: str, datetime_: datetime) -> None:
 
     assert transaction.description == description
     assert transaction.datetime_ == datetime_
-    assert isinstance(transaction.uuid, uuid.UUID)
+    assert isinstance(transaction.uuid, UUID)
     assert dt_created_diff.seconds < 1
 
 

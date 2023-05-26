@@ -12,18 +12,16 @@ from src.views import icons
 from src.views.base_classes.custom_dialog import CustomDialog
 from src.views.ui_files.dialogs.Ui_account_group_dialog import Ui_AccountGroupDialog
 
-# TODO: update position limits based on path state?
-
 
 class AccountGroupDialog(CustomDialog, Ui_AccountGroupDialog):
     signal_ok = pyqtSignal()
+    signal_path_changed = pyqtSignal(str)
 
-    def __init__(
-        self, parent: QWidget, max_position: int, paths: Collection[str], *, edit: bool
-    ) -> None:
+    def __init__(self, parent: QWidget, paths: Collection[str], *, edit: bool) -> None:
         super().__init__(parent=parent)
         self.setupUi(self)
         self.resize(400, 105)
+        self._edit = edit
         self.currentPathLineEdit.setEnabled(False)
 
         self.pathCompleter = QCompleter(paths)
@@ -39,8 +37,9 @@ class AccountGroupDialog(CustomDialog, Ui_AccountGroupDialog):
             self.currentPathLabel.setVisible(False)
             self.currentPathLineEdit.setVisible(False)
 
-        self.positionSpinBox.setMaximum(max_position)
+        self.positionSpinBox.setMinimum(1)
         self.buttonBox.clicked.connect(self._handle_button_box_click)
+        self.pathLineEdit.textChanged.connect(self.signal_path_changed.emit)
 
     @property
     def path(self) -> str:
@@ -65,6 +64,18 @@ class AccountGroupDialog(CustomDialog, Ui_AccountGroupDialog):
     @position.setter
     def position(self, value: int) -> None:
         self.positionSpinBox.setValue(value)
+
+    @property
+    def maximum_position(self) -> int:
+        return self.positionSpinBox.maximum()
+
+    @maximum_position.setter
+    def maximum_position(self, value: int) -> None:
+        self.positionSpinBox.setMaximum(value)
+
+    @property
+    def edit(self) -> bool:
+        return self._edit
 
     def _handle_button_box_click(self, button: QAbstractButton) -> None:
         role = self.buttonBox.buttonRole(button)

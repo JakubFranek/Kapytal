@@ -73,12 +73,12 @@ class TransactionsPresenter:
         self._view.finalize_setup()
 
     @property
-    def account_tree_shown_accounts(self) -> tuple[Account, ...]:
+    def account_tree_shown_accounts(self) -> frozenset[Account]:
         return self._account_tree_shown_accounts
 
     @account_tree_shown_accounts.setter
     def account_tree_shown_accounts(self, accounts: Collection[Account]) -> None:
-        self._account_tree_shown_accounts = tuple(accounts)
+        self._account_tree_shown_accounts = frozenset(accounts)
         self._model.valid_accounts = accounts
         self._transaction_filter_form_presenter.account_tree_shown_accounts = accounts
 
@@ -166,7 +166,6 @@ class TransactionsPresenter:
     def _search_filter(self, pattern: str) -> None:
         if self._validate_regex(pattern) is False:
             return
-        logging.debug(f"Filtering Transactions: {pattern=}")
         self._proxy_regex_sort_filter.setFilterRegularExpression(pattern)
         self._update_number_of_shown_transactions()
         self._update_table_columns()

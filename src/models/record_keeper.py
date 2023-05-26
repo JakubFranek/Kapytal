@@ -1,9 +1,9 @@
 import logging
-import uuid
 from collections.abc import Collection
 from datetime import date, datetime
 from decimal import Decimal
 from typing import Any, TypeVar
+from uuid import UUID
 
 from src.models.base_classes.account import Account
 from src.models.base_classes.transaction import Transaction
@@ -69,7 +69,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         self._cash_transfers: list[CashTransfer] = []
         self._security_transactions: list[SecurityTransaction] = []
         self._security_transfers: list[SecurityTransfer] = []
-        self._transactions_uuid_dict: dict[uuid.UUID, Transaction] = {}
+        self._transactions_uuid_dict: dict[UUID, Transaction] = {}
         self._base_currency: Currency | None = None
 
     @property
@@ -156,7 +156,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         return tuple(self._transactions)
 
     @property
-    def transaction_uuid_dict(self) -> dict[uuid.UUID, Transaction]:
+    def transaction_uuid_dict(self) -> dict[UUID, Transaction]:
         return self._transactions_uuid_dict
 
     @property
@@ -275,7 +275,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
 
     def add_account_group(self, path: str, index: int | None = None) -> None:
         parent_path, _, name = path.rpartition("/")
-        parent = self.get_account_parent_or_none(parent_path)
+        parent = self.get_account_group_or_none(parent_path)
         if any(acc_group.path == path for acc_group in self._account_groups):
             raise AlreadyExistsError(
                 f"An AccountGroup with path '{path}' already exists."
@@ -294,7 +294,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         parent_path, _, name = path.rpartition("/")
         self._check_account_exists(path)
         currency = self.get_currency(currency_code)
-        parent = self.get_account_parent_or_none(parent_path)
+        parent = self.get_account_group_or_none(parent_path)
         initial_balance = CashAmount(initial_balance_value, currency)
         account = CashAccount(name, currency, initial_balance, parent)
         self._set_account_item_index(account, index)
@@ -304,7 +304,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
     def add_security_account(self, path: str, index: int | None = None) -> None:
         parent_path, _, name = path.rpartition("/")
         self._check_account_exists(path)
-        parent = self.get_account_parent_or_none(parent_path)
+        parent = self.get_account_group_or_none(parent_path)
         account = SecurityAccount(name, parent)
         self._set_account_item_index(account, index)
         self._accounts.append(account)
@@ -382,7 +382,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         self,
         description: str,
         datetime_: datetime,
-        refunded_transaction_uuid: uuid.UUID,
+        refunded_transaction_uuid: UUID,
         refunded_account_path: str,
         payee_name: str,
         category_path_amount_pairs: Collection[tuple[str, Decimal]],
@@ -490,7 +490,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
 
     def edit_cash_transactions(  # noqa: PLR0913
         self,
-        transaction_uuids: Collection[uuid.UUID],
+        transaction_uuids: Collection[UUID],
         description: str | None = None,
         datetime_: datetime | None = None,
         transaction_type: CashTransactionType | None = None,
@@ -595,7 +595,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
 
     def edit_cash_transfers(  # noqa: PLR0913
         self,
-        transaction_uuids: Collection[uuid.UUID],
+        transaction_uuids: Collection[UUID],
         description: str | None = None,
         datetime_: datetime | None = None,
         sender_path: str | None = None,
@@ -675,7 +675,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
 
     def edit_refunds(  # noqa: PLR0913
         self,
-        transaction_uuids: Collection[uuid.UUID],
+        transaction_uuids: Collection[UUID],
         description: str | None = None,
         datetime_: datetime | None = None,
         account_path: str | None = None,
@@ -739,7 +739,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
 
     def edit_security_transactions(  # noqa: PLR0913
         self,
-        transaction_uuids: Collection[uuid.UUID],
+        transaction_uuids: Collection[UUID],
         description: str | None = None,
         datetime_: datetime | None = None,
         transaction_type: SecurityTransactionType | None = None,
@@ -837,7 +837,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
 
     def edit_security_transfers(  # noqa: PLR0913
         self,
-        transaction_uuids: Collection[uuid.UUID],
+        transaction_uuids: Collection[UUID],
         description: str | None = None,
         datetime_: datetime | None = None,
         security_name: str | None = None,
@@ -936,7 +936,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
 
     def edit_security(
         self,
-        uuid_: uuid.UUID,
+        uuid_: UUID,
         name: str | None = None,
         symbol: str | None = None,
         type_: str | None = None,
@@ -960,7 +960,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         if current_path != new_path:
             self._check_account_exists(new_path)
         edited_account = self.get_account(current_path, CashAccount)
-        new_parent = self.get_account_parent_or_none(parent_path)
+        new_parent = self.get_account_group_or_none(parent_path)
         edited_account.name = name
         edited_account.initial_balance = CashAmount(
             initial_balance, edited_account.currency
@@ -976,7 +976,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         if current_path != new_path:
             self._check_account_exists(new_path)
         edited_account = self.get_account(current_path, SecurityAccount)
-        new_parent = self.get_account_parent_or_none(parent_path)
+        new_parent = self.get_account_group_or_none(parent_path)
         edited_account.name = name
         self._edit_account_item_parent(
             item=edited_account, new_parent=new_parent, index=index
@@ -991,9 +991,9 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
             raise AlreadyExistsError(
                 f"An Account Group with path='{new_path}' already exists."
             )
-        edited_account_group = self.get_account_parent(current_path)
+        edited_account_group = self.get_account_group(current_path)
         parent_path, _, name = new_path.rpartition("/")
-        new_parent = self.get_account_parent_or_none(parent_path)
+        new_parent = self.get_account_group_or_none(parent_path)
         if new_parent == edited_account_group:
             raise InvalidOperationError("An AccountGroup cannot be its own parent.")
         edited_account_group.name = name
@@ -1052,7 +1052,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         del account
 
     def remove_account_group(self, account_group_path: str) -> None:
-        account_group = self.get_account_parent(account_group_path)
+        account_group = self.get_account_group(account_group_path)
         if len(account_group.children) != 0:
             raise InvalidOperationError(
                 "Cannot delete an AccountGroup which has children."
@@ -1188,12 +1188,12 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         currency = self.get_currency(code)
         self._base_currency = currency
 
-    def get_account_parent_or_none(self, path: str | None) -> AccountGroup | None:
+    def get_account_group_or_none(self, path: str) -> AccountGroup | None:
         if not path:
             return None
-        return self.get_account_parent(path)
+        return self.get_account_group(path)
 
-    def get_account_parent(self, path: str) -> AccountGroup:
+    def get_account_group(self, path: str) -> AccountGroup:
         for account_group in self._account_groups:
             if account_group.path == path:
                 return account_group
@@ -1219,8 +1219,8 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
                 return account
         raise NotFoundError(f"An Account with path='{path}' does not exist.")
 
-    def get_security_by_uuid(self, uuid_: uuid.UUID) -> Security:
-        if not isinstance(uuid_, uuid.UUID):
+    def get_security_by_uuid(self, uuid_: UUID) -> Security:
+        if not isinstance(uuid_, UUID):
             raise TypeError("Parameter 'uuid' must be a UUID.")
         for security in self._securities:
             if security.uuid == uuid_:
@@ -1282,23 +1282,23 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
                 if parent is None:
                     # No parent Category found - we need to make one.
                     root_name = path.split("/")[0]
-                    logging.info("Creating Category")
                     parent = Category(root_name, type_)
+                    logging.info(f"Created Category: path={parent.path}")
                     self._save_category(parent)
             remainder_name = path.removeprefix(parent.path)[1:]
             while "/" in remainder_name:
                 # As long as multiple categories remain...
                 new_name = remainder_name.split("/")[0]
-                logging.info("Creating Category")
                 new_category = Category(new_name, type_, parent)
+                logging.info(f"Created Category: path={new_category.path}")
                 self._save_category(new_category)
                 parent = new_category
                 remainder_name = remainder_name.removeprefix(new_name)[1:]
         else:
             remainder_name = path
         # Reached the end - just one more category left
-        logging.info("Creating Category")
         final_category = Category(remainder_name, type_, parent)
+        logging.info(f"Created Category: path={final_category.path}")
         self._save_category(final_category)
         return final_category
 
@@ -1602,8 +1602,8 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         categories: dict[str, Category],
         currencies: dict[str, Currency],
         securities: dict[str, Security],
-    ) -> dict[uuid.UUID, Transaction]:
-        _transaction_dict: dict[uuid.UUID, Transaction] = {}
+    ) -> dict[UUID, Transaction]:
+        _transaction_dict: dict[UUID, Transaction] = {}
         for transaction_dict in transaction_dicts:
             transaction: Transaction
             if transaction_dict["datatype"] == "CashTransaction":
@@ -1675,13 +1675,11 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
     TransactionType = TypeVar("TransactionType", bound=Transaction)
 
     def _get_transactions(
-        self, uuids: Collection[uuid.UUID], type_: type[TransactionType]
+        self, uuids: Collection[UUID], type_: type[TransactionType]
     ) -> list[TransactionType]:
         transactions: list[RecordKeeper.TransactionType] = []
-        if any(not isinstance(uuid_, uuid.UUID) for uuid_ in uuids):
-            raise TypeError(
-                "Parameter 'uuids' must be a Collection ofuuid.UUID objects."
-            )
+        if any(not isinstance(uuid_, UUID) for uuid_ in uuids):
+            raise TypeError("Parameter 'uuids' must be a Collection ofUUID objects.")
         for transaction in self._transactions:
             if transaction.uuid in uuids:
                 if not isinstance(transaction, type_):

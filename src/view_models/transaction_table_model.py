@@ -1,7 +1,7 @@
 import unicodedata
-import uuid
 from collections.abc import Collection
 from decimal import Decimal
+from uuid import UUID
 
 from PyQt6.QtCore import QAbstractTableModel, QModelIndex, QSortFilterProxyModel, Qt
 from PyQt6.QtGui import QBrush, QIcon
@@ -48,7 +48,7 @@ class TransactionTableModel(QAbstractTableModel):
         self._proxy_viewside = proxy_viewside
         self._proxy_sourceside = proxy_sourceside
 
-        self._transaction_uuid_dict: dict[uuid.UUID, Transaction] = {}
+        self._transaction_uuid_dict: dict[UUID, Transaction] = {}
         self._transactions: tuple[Transaction] = ()
         self._base_currency: Currency | None = None
         self._valid_accounts = ()
@@ -66,7 +66,7 @@ class TransactionTableModel(QAbstractTableModel):
         self._base_currency = currency
 
     @property
-    def transaction_uuid_dict(self) -> dict[uuid.UUID, Transaction]:
+    def transaction_uuid_dict(self) -> dict[UUID, Transaction]:
         return self._transaction_uuid_dict
 
     @property
@@ -81,7 +81,7 @@ class TransactionTableModel(QAbstractTableModel):
     def load_data(
         self,
         transactions: Collection[Transaction],
-        transaction_uuid_dict: dict[uuid.UUID, Transaction],
+        transaction_uuid_dict: dict[UUID, Transaction],
         base_currency: Currency | None,
     ) -> None:
         """Transactions should be sorted in descending manner upon initial load!"""
@@ -533,7 +533,7 @@ class TransactionTableModel(QAbstractTableModel):
             return ""
         return ""
 
-    def emit_data_changed_for_uuids(self, uuids: Collection[uuid.UUID]) -> None:
+    def emit_data_changed_for_uuids(self, uuids: Collection[UUID]) -> None:
         for uuid_ in uuids:
             item = self._transaction_uuid_dict[uuid_]
             index = self.get_index_from_item(item)

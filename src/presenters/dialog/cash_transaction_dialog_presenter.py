@@ -25,8 +25,6 @@ from src.views.utilities.handle_exception import display_error_message
 if TYPE_CHECKING:
     from src.models.model_objects.attributes import Category
 
-# TODO: allow changing types of multiple transactions of same type
-
 
 class CashTransactionDialogPresenter:
     event_update_model = Event()
