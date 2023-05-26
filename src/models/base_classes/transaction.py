@@ -18,7 +18,6 @@ from src.models.model_objects.attributes import (
 )
 
 
-# IDEA: think about slots
 class Transaction(
     CopyableMixin, DatetimeCreatedMixin, UUIDMixin, JSONSerializableMixin, ABC
 ):

@@ -161,11 +161,11 @@ class TransactionFilterFormPresenter:
     def account_tree_shown_accounts(self) -> frozenset[Account]:
         return self._account_tree_shown_accounts
 
+    # TODO: this setter should be a method
     @account_tree_shown_accounts.setter
     def account_tree_shown_accounts(self, accounts: Collection[Account]) -> None:
         self._account_tree_shown_accounts = frozenset(accounts)
         if self._form.account_filter_mode == AccountFilterMode.ACCOUNT_TREE:
-            # REFACTOR: would be nice to get rid of this copy
             previous_filter = copy(self._transaction_filter)
             all_accounts = len(self._record_keeper.accounts) == len(accounts)
             filter_mode = FilterMode.OFF if all_accounts else FilterMode.KEEP

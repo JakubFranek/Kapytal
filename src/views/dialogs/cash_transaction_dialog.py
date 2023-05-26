@@ -38,7 +38,6 @@ class EditMode(Enum):
         return (EditMode.EDIT_MULTIPLE, EditMode.EDIT_MULTIPLE_MIXED_CURRENCY)
 
 
-# IDEA: "preferred" size for description? or something
 # REFACTOR: refactor this dialog (messy code)
 
 
