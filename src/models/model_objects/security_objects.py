@@ -1,4 +1,3 @@
-import logging
 import string
 from abc import ABC, abstractmethod
 from collections import defaultdict
@@ -90,13 +89,6 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
                 f"{self.TYPE_MIN_LENGTH} and {self.TYPE_MAX_LENGTH}"
             )
 
-        if hasattr(self, "_type"):
-            if self._type != value:
-                logging.info(
-                    f"Changing Security.type_ from '{self._type}' to '{value}'"
-                )
-        else:
-            logging.info(f"Setting Security.type_='{value}'")
         self._type = value
 
     @property
@@ -107,7 +99,6 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
     def symbol(self) -> str:
         return self._symbol
 
-    # FIXME: fix this stupid way of logging
     @symbol.setter
     def symbol(self, value: str) -> None:
         if not isinstance(value, str):
@@ -123,15 +114,6 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
             )
 
         value_capitalized = value.upper()
-
-        if hasattr(self, "_symbol"):
-            if self._symbol != value_capitalized:
-                logging.info(
-                    f"Changing Security.symbol from '{self._symbol}' "
-                    f"to '{value_capitalized}'"
-                )
-        else:
-            logging.info(f"Setting Security.symbol='{value_capitalized}'")
         self._symbol = value_capitalized
 
     @property

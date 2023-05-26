@@ -121,7 +121,6 @@ class CashAccount(Account):
             raise CurrencyError(
                 "CashAccount.initial_balance.currency must match CashAccount.currency."
             )
-        logging.info(f"Setting initial_balance={amount}")
         self._initial_balance = amount
         if self.allow_update_balance:
             self.update_balance()

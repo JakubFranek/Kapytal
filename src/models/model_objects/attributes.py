@@ -1,4 +1,3 @@
-import logging
 from enum import Enum, auto
 from typing import Any, Self
 
@@ -37,7 +36,6 @@ class Attribute(NameMixin, JSONSerializableMixin):
 
         if not isinstance(type_, AttributeType):
             raise TypeError("Attribute.type_ must be an AttributeType.")
-        logging.info(f"Setting type_ to {type_.name}")
         self._type = type_
 
     @property
@@ -68,7 +66,6 @@ class Category(NameMixin, JSONSerializableMixin, UUIDMixin):
 
         if not isinstance(type_, CategoryType):
             raise TypeError("Category.type_ must be a CategoryType.")
-        logging.info(f"Setting type_ to {type_.name}")
         self._type = type_
 
         self.parent = parent
@@ -99,10 +96,6 @@ class Category(NameMixin, JSONSerializableMixin, UUIDMixin):
         if parent is not None:
             parent._add_child(self)  # noqa: SLF001
 
-        if hasattr(self, "_parent"):
-            logging.info(f"Changing parent from {self._parent} to {parent}")
-        else:
-            logging.info(f"Setting {parent=}")
         self._parent = parent
 
     @property
@@ -204,7 +197,6 @@ class Category(NameMixin, JSONSerializableMixin, UUIDMixin):
         aux_dict[index] = child
         self._children_dict = aux_dict
         self._update_children_tuple()
-        logging.info(f"Changing index from {current_index} to {index}")
 
     def get_child_index(self, child: Self) -> int:
         return list(self._children_dict.keys())[

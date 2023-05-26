@@ -1282,23 +1282,23 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
                 if parent is None:
                     # No parent Category found - we need to make one.
                     root_name = path.split("/")[0]
-                    logging.info("Creating Category")
                     parent = Category(root_name, type_)
+                    logging.info(f"Created Category: path={parent.path}")
                     self._save_category(parent)
             remainder_name = path.removeprefix(parent.path)[1:]
             while "/" in remainder_name:
                 # As long as multiple categories remain...
                 new_name = remainder_name.split("/")[0]
-                logging.info("Creating Category")
                 new_category = Category(new_name, type_, parent)
+                logging.info(f"Created Category: path={new_category.path}")
                 self._save_category(new_category)
                 parent = new_category
                 remainder_name = remainder_name.removeprefix(new_name)[1:]
         else:
             remainder_name = path
         # Reached the end - just one more category left
-        logging.info("Creating Category")
         final_category = Category(remainder_name, type_, parent)
+        logging.info(f"Created Category: path={final_category.path}")
         self._save_category(final_category)
         return final_category
 

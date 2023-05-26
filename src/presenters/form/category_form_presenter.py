@@ -123,7 +123,7 @@ class CategoryFormPresenter:
         type_ = CategoryType(self._dialog.type_)
         index = self._dialog.position - 1
 
-        logging.info(f"Adding Category('{path}', {type_.name}, {index=})")
+        logging.info(f"Adding Category: {path=}, type={type_.name}, {index=}")
         try:
             self._record_keeper.add_category(path, type_, index)
         except Exception as exception:  # noqa: BLE001
