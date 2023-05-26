@@ -900,6 +900,19 @@ class CashTransaction(CashRelatedTransaction):
 
 
 class CashTransfer(CashRelatedTransaction):
+    __slots__ = (
+        "_uuid",
+        "_sender",
+        "_recipient",
+        "_amount_sent",
+        "_amount_received",
+        "_description",
+        "_datetime",
+        "_datetime_created",
+        "_timestamp",
+        "_tags",
+    )
+
     def __init__(  # noqa: PLR0913
         self,
         description: str,
@@ -1139,6 +1152,24 @@ class CashTransfer(CashRelatedTransaction):
 
 class RefundTransaction(CashRelatedTransaction):
     """A refund which attaches itself to an expense CashTransaction"""
+
+    __slots__ = (
+        "_uuid",
+        "_refunded_transaction",
+        "_refund_ratio",
+        "_type",
+        "_payee",
+        "_category_amount_pairs",
+        "_categories",
+        "_tag_amount_pairs",
+        "_tags",
+        "_account",
+        "_description",
+        "_datetime",
+        "_datetime_created",
+        "_timestamp",
+        "_amount",
+    )
 
     def __init__(  # noqa: PLR0913
         self,

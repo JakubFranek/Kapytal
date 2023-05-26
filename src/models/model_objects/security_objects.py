@@ -323,6 +323,8 @@ class SecurityAccount(Account):
 
 
 class SecurityRelatedTransaction(Transaction, ABC):
+    __slots__ = ()
+
     def __init__(
         self,
     ) -> None:
@@ -377,6 +379,23 @@ class SecurityRelatedTransaction(Transaction, ABC):
 
 
 class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
+    __slots__ = (
+        "_uuid",
+        "_type",
+        "_security",
+        "_shares",
+        "_price_per_share",
+        "_security_account",
+        "_cash_account",
+        "_description",
+        "_datetime",
+        "_datetime_created",
+        "_timestamp",
+        "_tags",
+        "_amount",
+        "_amount_negative",
+    )
+
     def __init__(  # noqa: PLR0913
         self,
         description: str,
@@ -681,6 +700,19 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
 
 
 class SecurityTransfer(SecurityRelatedTransaction):
+    __slots__ = (
+        "_uuid",
+        "_sender",
+        "_recipient",
+        "_shares",
+        "_security",
+        "_datetime",
+        "_datetime_created",
+        "_timestamp",
+        "_description",
+        "_tags",
+    )
+
     def __init__(  # noqa: PLR0913
         self,
         description: str,
