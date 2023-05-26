@@ -143,9 +143,10 @@ class TransactionsPresenter:
             ):
                 any_with_categories = True
 
-        single_cash_account = len(
-            self._account_tree_shown_accounts
-        ) == 1 and isinstance(self._account_tree_shown_accounts[0], CashAccount)
+        shown_accounts = tuple(self._account_tree_shown_accounts)
+        single_cash_account = len(shown_accounts) == 1 and isinstance(
+            shown_accounts[0], CashAccount
+        )
 
         for column in TransactionTableColumn:
             if (
