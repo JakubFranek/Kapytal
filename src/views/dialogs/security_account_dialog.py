@@ -17,13 +17,14 @@ from src.views.ui_files.dialogs.Ui_security_account_dialog import (
 
 class SecurityAccountDialog(CustomDialog, Ui_SecurityAccountDialog):
     signal_ok = pyqtSignal()
+    signal_path_changed = pyqtSignal(str)
 
-    def __init__(
-        self, parent: QWidget, max_position: int, paths: Collection[str], *, edit: bool
-    ) -> None:
+    def __init__(self, parent: QWidget, paths: Collection[str], *, edit: bool) -> None:
         super().__init__(parent=parent)
         self.setupUi(self)
         self.resize(400, 105)
+
+        self._edit = edit
         self.currentPathLineEdit.setEnabled(False)
 
         self.pathCompleter = QCompleter(paths)
@@ -39,8 +40,9 @@ class SecurityAccountDialog(CustomDialog, Ui_SecurityAccountDialog):
             self.currentPathLabel.setVisible(False)
             self.currentPathLineEdit.setVisible(False)
 
-        self.positionSpinBox.setMaximum(max_position)
+        self.positionSpinBox.setMinimum(1)
         self.buttonBox.clicked.connect(self._handle_button_box_click)
+        self.pathLineEdit.textChanged.connect(self.signal_path_changed.emit)
 
     @property
     def path(self) -> str:
@@ -65,6 +67,18 @@ class SecurityAccountDialog(CustomDialog, Ui_SecurityAccountDialog):
     @position.setter
     def position(self, value: int) -> None:
         self.positionSpinBox.setValue(value)
+
+    @property
+    def maximum_position(self) -> int:
+        return self.positionSpinBox.maximum()
+
+    @maximum_position.setter
+    def maximum_position(self, value: int) -> None:
+        self.positionSpinBox.setMaximum(value)
+
+    @property
+    def edit(self) -> bool:
+        return self._edit
 
     def _handle_button_box_click(self, button: QAbstractButton) -> None:
         role = self.buttonBox.buttonRole(button)

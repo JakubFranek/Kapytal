@@ -275,7 +275,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
 
     def add_account_group(self, path: str, index: int | None = None) -> None:
         parent_path, _, name = path.rpartition("/")
-        parent = self.get_account_parent_or_none(parent_path)
+        parent = self.get_account_group_or_none(parent_path)
         if any(acc_group.path == path for acc_group in self._account_groups):
             raise AlreadyExistsError(
                 f"An AccountGroup with path '{path}' already exists."
@@ -294,7 +294,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         parent_path, _, name = path.rpartition("/")
         self._check_account_exists(path)
         currency = self.get_currency(currency_code)
-        parent = self.get_account_parent_or_none(parent_path)
+        parent = self.get_account_group_or_none(parent_path)
         initial_balance = CashAmount(initial_balance_value, currency)
         account = CashAccount(name, currency, initial_balance, parent)
         self._set_account_item_index(account, index)
@@ -304,7 +304,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
     def add_security_account(self, path: str, index: int | None = None) -> None:
         parent_path, _, name = path.rpartition("/")
         self._check_account_exists(path)
-        parent = self.get_account_parent_or_none(parent_path)
+        parent = self.get_account_group_or_none(parent_path)
         account = SecurityAccount(name, parent)
         self._set_account_item_index(account, index)
         self._accounts.append(account)
@@ -960,7 +960,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         if current_path != new_path:
             self._check_account_exists(new_path)
         edited_account = self.get_account(current_path, CashAccount)
-        new_parent = self.get_account_parent_or_none(parent_path)
+        new_parent = self.get_account_group_or_none(parent_path)
         edited_account.name = name
         edited_account.initial_balance = CashAmount(
             initial_balance, edited_account.currency
@@ -976,7 +976,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         if current_path != new_path:
             self._check_account_exists(new_path)
         edited_account = self.get_account(current_path, SecurityAccount)
-        new_parent = self.get_account_parent_or_none(parent_path)
+        new_parent = self.get_account_group_or_none(parent_path)
         edited_account.name = name
         self._edit_account_item_parent(
             item=edited_account, new_parent=new_parent, index=index
@@ -991,9 +991,9 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
             raise AlreadyExistsError(
                 f"An Account Group with path='{new_path}' already exists."
             )
-        edited_account_group = self.get_account_parent(current_path)
+        edited_account_group = self.get_account_group(current_path)
         parent_path, _, name = new_path.rpartition("/")
-        new_parent = self.get_account_parent_or_none(parent_path)
+        new_parent = self.get_account_group_or_none(parent_path)
         if new_parent == edited_account_group:
             raise InvalidOperationError("An AccountGroup cannot be its own parent.")
         edited_account_group.name = name
@@ -1052,7 +1052,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         del account
 
     def remove_account_group(self, account_group_path: str) -> None:
-        account_group = self.get_account_parent(account_group_path)
+        account_group = self.get_account_group(account_group_path)
         if len(account_group.children) != 0:
             raise InvalidOperationError(
                 "Cannot delete an AccountGroup which has children."
@@ -1188,12 +1188,12 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         currency = self.get_currency(code)
         self._base_currency = currency
 
-    def get_account_parent_or_none(self, path: str | None) -> AccountGroup | None:
+    def get_account_group_or_none(self, path: str) -> AccountGroup | None:
         if not path:
             return None
-        return self.get_account_parent(path)
+        return self.get_account_group(path)
 
-    def get_account_parent(self, path: str) -> AccountGroup:
+    def get_account_group(self, path: str) -> AccountGroup:
         for account_group in self._account_groups:
             if account_group.path == path:
                 return account_group

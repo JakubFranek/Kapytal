@@ -457,7 +457,7 @@ def test_add_cash_account_already_exists(data: st.DataObject) -> None:
 def test_get_account_parent_does_not_exist() -> None:
     record_keeper = get_preloaded_record_keeper()
     with pytest.raises(NotFoundError):
-        record_keeper.get_account_parent_or_none("does not exist")
+        record_keeper.get_account_group_or_none("does not exist")
 
 
 @given(path=everything_except(str))

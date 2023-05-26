@@ -1,7 +1,6 @@
 import logging
 import unicodedata
 from collections.abc import Sequence
-from copy import copy
 from decimal import Decimal
 from typing import Any, Self
 from uuid import UUID
@@ -55,7 +54,7 @@ class AccountTreeNode:
         "event_signal_changed",
     )
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         name: str,
         path: str,
@@ -421,11 +420,10 @@ class AccountTreeModel(QAbstractItemModel):
             return item.path
         return self._get_display_role_data(column, item)
 
-    def pre_add(self, parent: AccountGroup | None) -> None:
+    def pre_add(self, parent: AccountGroup | None, index: int) -> None:
         self._proxy.setDynamicSortFilter(False)  # noqa: FBT003
         parent_index = self.get_index_from_item(parent)
-        row_index = len(self._root_nodes) if parent is None else len(parent.children)
-        self.beginInsertRows(parent_index, row_index, row_index)
+        self.beginInsertRows(parent_index, index, index)
 
     def post_add(self) -> None:
         self.endInsertRows()

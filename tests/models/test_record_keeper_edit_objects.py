@@ -180,7 +180,7 @@ def test_edit_security_account_group() -> None:
     record_keeper.add_account_group("TEST PARENT/TEST CHILD")
     record_keeper.add_account_group("NEW PARENT")
     record_keeper.edit_account_group("TEST PARENT/TEST CHILD", "NEW PARENT/NEW NAME")
-    account_group = record_keeper.get_account_parent_or_none("NEW PARENT/NEW NAME")
+    account_group = record_keeper.get_account_group_or_none("NEW PARENT/NEW NAME")
     assert isinstance(account_group, AccountGroup)
     assert account_group.name == "NEW NAME"
     assert account_group.path == "NEW PARENT/NEW NAME"
@@ -195,7 +195,7 @@ def test_edit_security_account_group_index() -> None:
     record_keeper.edit_account_group(
         "TEST PARENT/TEST CHILD", "NEW PARENT/NEW NAME", index=0
     )
-    account_group = record_keeper.get_account_parent("NEW PARENT/NEW NAME")
+    account_group = record_keeper.get_account_group("NEW PARENT/NEW NAME")
     parent = account_group.parent
     assert isinstance(parent, AccountGroup)
     assert account_group.name == "NEW NAME"

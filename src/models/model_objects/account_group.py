@@ -103,6 +103,7 @@ class AccountGroup(NameMixin, BalanceMixin, JSONSerializableMixin, UUIDMixin):
             else:
                 aux_dict[key] = value
         aux_dict[index] = child
+        child.event_balance_updated.append(self._update_balances)
         self._children_dict = aux_dict
         self._update_children_tuple()
         logging.info(f"Changing index from {current_index} to {index}")
