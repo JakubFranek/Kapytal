@@ -81,6 +81,21 @@ class CashTransactionType(Enum):
 
 
 class CashAccount(Account):
+    __slots__ = (
+        "_uuid",
+        "_currency",
+        "_initial_balance",
+        "_balance_history",
+        "_balances",
+        "_transactions",
+        "_name",
+        "_parent",
+        "_allow_slash",
+        "_allow_colon",
+        "allow_update_balance",
+        "event_balance_updated",
+    )
+
     def __init__(
         self,
         name: str,

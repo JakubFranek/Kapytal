@@ -20,6 +20,8 @@ class SpecificCategoriesFilter(BaseTransactionFilter):
     KEEP: Keeps only Transactions with at least one of the specified Categories.
     DISCARD: Discards Transactions with at least one of the specified Categories."""
 
+    __slots__ = ("_categories", "_mode")
+
     def __init__(self, categories: Collection[Category], mode: FilterMode) -> None:
         super().__init__(mode=mode)
 

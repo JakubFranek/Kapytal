@@ -72,6 +72,22 @@ def set_maximum_time(datetime_: datetime) -> datetime:
 
 
 class TransactionFilter(CopyableMixin):
+    __slots__ = (
+        "_type_filter",
+        "_datetime_filter",
+        "_description_filter",
+        "_account_filter",
+        "_specific_tags_filter",
+        "_tagless_filter",
+        "_split_tags_filter",
+        "_payee_filter",
+        "_specific_categories_filter",
+        "_multiple_categories_filter",
+        "_currency_filter",
+        "_security_filter",
+        "_cash_amount_filter",
+    )
+
     def __init__(self) -> None:
         self.restore_defaults()
 

@@ -13,6 +13,8 @@ class CurrencyFilter(BaseTransactionFilter):
     """Filters Transactions based on whether they are related to specific Currencies.
     Ignores Transactions without a Currency."""
 
+    __slots__ = ("_currencies", "_mode")
+
     def __init__(self, currencies: Collection[Currency], mode: FilterMode) -> None:
         super().__init__(mode)
         if not all(isinstance(currency, Currency) for currency in currencies):

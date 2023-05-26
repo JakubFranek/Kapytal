@@ -20,6 +20,8 @@ class SpecificTagsFilter(BaseTransactionFilter):
     KEEP: Keeps only Transactions with the specified Tags (or no Tags).
     DISCARD: Discards Transactions with the specified Tags."""
 
+    __slots__ = ("_tags", "_mode")
+
     def __init__(self, tags: Collection[Attribute], mode: FilterMode) -> None:
         super().__init__(mode=mode)
 

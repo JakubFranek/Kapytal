@@ -13,6 +13,13 @@ from tzlocal import get_localzone_name
 class UserSettings(JSONSerializableMixin):
     """This class is intended to be instantiated only once, within user_settings."""
 
+    __slots__ = (
+        "_time_zone",
+        "_logs_max_size_bytes",
+        "_backups_max_size_bytes",
+        "_backup_paths",
+    )
+
     LOGS_DEFAULT_MAX_SIZE = 1_000_000
     BACKUPS_DEFAULT_MAX_SIZE = 10_000_000
 

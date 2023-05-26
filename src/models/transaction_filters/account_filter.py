@@ -9,6 +9,8 @@ from src.models.transaction_filters.base_transaction_filter import (
 
 
 class AccountFilter(BaseTransactionFilter):
+    __slots__ = ("_accounts", "_mode", "_accounts_set")
+
     def __init__(self, accounts: Collection[Account], mode: FilterMode) -> None:
         super().__init__(mode=mode)
         for account in accounts:

@@ -8,6 +8,8 @@ from src.models.transaction_filters.base_transaction_filter import (
 
 
 class DescriptionFilter(BaseTransactionFilter):
+    __slots__ = ("_regex_pattern", "_mode")
+
     def __init__(self, regex_pattern: str, mode: FilterMode) -> None:
         super().__init__(mode=mode)
         re.compile(regex_pattern)  # Raises re.error if pattern is invalid

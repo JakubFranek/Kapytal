@@ -15,6 +15,8 @@ class SecurityFilter(BaseTransactionFilter):
     """Filters Transactions based on whether they are related to specific Securities.
     Ignores Transactions without a Security."""
 
+    __slots__ = ("_securities", "_mode")
+
     def __init__(self, securities: Collection[Security], mode: FilterMode) -> None:
         super().__init__(mode)
         if not all(isinstance(security, Security) for security in securities):

@@ -31,6 +31,8 @@ class CategoryType(Enum):
 
 
 class Attribute(NameMixin, JSONSerializableMixin):
+    __slots__ = ("_type", "_name", "_allow_slash", "_allow_colon")
+
     def __init__(self, name: str, type_: AttributeType) -> None:
         super().__init__(name=name, allow_slash=True)
 
@@ -59,6 +61,17 @@ class Attribute(NameMixin, JSONSerializableMixin):
 
 
 class Category(NameMixin, JSONSerializableMixin, UUIDMixin):
+    __slots__ = (
+        "_uuid",
+        "_type",
+        "_name",
+        "_allow_slash",
+        "_allow_colon",
+        "_parent",
+        "_children_dict",
+        "_children_tuple",
+    )
+
     def __init__(
         self, name: str, type_: CategoryType, parent: Self | None = None
     ) -> None:

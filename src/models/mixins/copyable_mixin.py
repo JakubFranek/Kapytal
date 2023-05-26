@@ -8,7 +8,11 @@ class CopyableMixin:
     def __copy__(self) -> Self:
         cls = self.__class__
         result = cls.__new__(cls)
-        result.__dict__.update(self.__dict__)
+        if hasattr(self, "__dict__"):
+            result.__dict__.update(self.__dict__)
+        if hasattr(self, "__slots__"):
+            for name in self.__slots__:
+                setattr(result, name, getattr(self, name))
         return result
 
     def __deepcopy__(self, memo: dict[int, Any]) -> Self:

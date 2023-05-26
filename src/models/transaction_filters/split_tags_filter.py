@@ -9,6 +9,8 @@ from src.models.transaction_filters.base_transaction_filter import (
 class SplitTagsFilter(BaseTransactionFilter):
     """Filters CashTransactions which have split Tags. Ignores other Transactions."""
 
+    __slots__ = ("_mode",)
+
     def __init__(self, mode: FilterMode) -> None:
         super().__init__(mode=mode)
 

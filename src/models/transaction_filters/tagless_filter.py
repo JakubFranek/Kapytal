@@ -11,6 +11,8 @@ class TaglessFilter(BaseTransactionFilter):
     KEEP: Keeps only Tag-less Transactions.
     DISCARD: Discards Tag-less Transactions."""
 
+    __slots__ = ("_mode",)
+
     def __init__(self, mode: FilterMode) -> None:
         super().__init__(mode=mode)
 

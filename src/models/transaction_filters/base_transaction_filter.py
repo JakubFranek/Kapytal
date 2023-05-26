@@ -16,6 +16,8 @@ class FilterMode(Enum):
 
 
 class BaseTransactionFilter(ABC):
+    __slots__ = ()
+
     def __init__(
         self, mode: FilterMode, *args: Any, **kwargs: Any  # noqa: ANN401
     ) -> None:

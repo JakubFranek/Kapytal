@@ -45,6 +45,31 @@ from src.models.model_objects.security_objects import (
 
 
 class RecordKeeper(CopyableMixin, JSONSerializableMixin):
+    __slots__ = (
+        "_accounts",
+        "_cash_accounts",
+        "_security_accounts",
+        "_account_groups",
+        "_root_account_items",
+        "_currencies",
+        "_exchange_rates",
+        "_securities",
+        "_payees",
+        "_categories",
+        "_root_income_categories",
+        "_root_expense_categories",
+        "_root_income_and_expense_categories",
+        "_tags",
+        "_transactions",
+        "_cash_transactions",
+        "_refund_transactions",
+        "_cash_transfers",
+        "_security_transactions",
+        "_security_transfers",
+        "_transactions_uuid_dict",
+        "_base_currency",
+    )
+
     def __init__(self) -> None:
         self._accounts: list[Account] = []
         self._cash_accounts: list[CashAccount] = []

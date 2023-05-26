@@ -14,6 +14,18 @@ from src.models.model_objects.currency_objects import CashAmount, Currency
 
 
 class AccountGroup(NameMixin, BalanceMixin, JSONSerializableMixin, UUIDMixin):
+    __slots__ = (
+        "_uuid",
+        "_balances",
+        "_parent",
+        "_children_dict",
+        "_children_tuple",
+        "_name",
+        "_allow_slash",
+        "_allow_colon",
+        "event_balance_updated",
+    )
+
     def __init__(self, name: str, parent: Self | None = None) -> None:
         super().__init__(name=name, allow_slash=False)
         self.parent = parent

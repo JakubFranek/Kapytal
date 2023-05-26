@@ -36,6 +36,21 @@ class SecurityTransactionType(Enum):
 
 
 class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
+    __slots__ = (
+        "_uuid",
+        "_name",
+        "_symbol",
+        "_type",
+        "_currency",
+        "_shares_unit",
+        "_price_history",
+        "_latest_date",
+        "_latest_price",
+        "_allow_slash",
+        "_allow_colon",
+        "event_price_updated",
+    )
+
     NAME_MIN_LENGTH = 1
     NAME_MAX_LENGTH = 64
     TYPE_MIN_LENGTH = 1
@@ -217,6 +232,19 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
 
 # IDEA: maybe add shares / balance history (calculated)
 class SecurityAccount(Account):
+    __slots__ = (
+        "_uuid",
+        "_balances",
+        "_transactions",
+        "_name",
+        "_parent",
+        "_allow_slash",
+        "_allow_colon",
+        "allow_update_balance",
+        "event_balance_updated",
+        "_securities",
+    )
+
     def __init__(self, name: str, parent: AccountGroup | None = None) -> None:
         super().__init__(name, parent)
         self._securities: defaultdict[Security, Decimal] = defaultdict(
