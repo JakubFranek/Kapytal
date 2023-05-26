@@ -8,6 +8,8 @@ class NameLengthError(ValueError):
 
 
 class NameMixin:
+    __slots__ = ()
+
     NAME_MIN_LENGTH = 1
     NAME_MAX_LENGTH = 32
 

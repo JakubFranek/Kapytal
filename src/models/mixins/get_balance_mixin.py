@@ -6,6 +6,8 @@ from src.presenters.utilities.event import Event
 
 
 class BalanceMixin(ABC):
+    __slots__ = ()
+
     def __init__(self, *args: Any, **kwargs: Any) -> None:  # noqa: ANN401
         super().__init__(*args, **kwargs)
         self.event_balance_updated = Event()

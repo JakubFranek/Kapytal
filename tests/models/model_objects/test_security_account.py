@@ -34,7 +34,7 @@ def test_creation(name: str, parent: AccountGroup | None) -> None:
     assert security_account.parent == parent
     assert security_account.securities == {}
     assert security_account.transactions == ()
-    assert security_account.__repr__() == f"SecurityAccount('{expected_path}')"
+    assert security_account.__repr__() == f"SecurityAccount({expected_path})"
 
 
 @given(

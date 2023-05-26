@@ -7,6 +7,7 @@ from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
 from src.models.mixins.name_mixin import NameMixin
 from src.models.mixins.uuid_mixin import UUIDMixin
 from src.models.model_objects.account_group import AccountGroup
+from src.models.model_objects.currency_objects import CashAmount, Currency
 
 if TYPE_CHECKING:
     from src.models.base_classes.transaction import Transaction
@@ -17,17 +18,17 @@ class UnrelatedAccountError(ValueError):
     not relate to it."""
 
 
-# IDEA: create base for Account and AccountGroup (AccountTreeItem)
-# getbalance, parent, transactions
 class Account(
     CopyableMixin, NameMixin, UUIDMixin, BalanceMixin, JSONSerializableMixin, ABC
 ):
+    __slots__ = ()
+
     def __init__(self, name: str, parent: AccountGroup | None = None) -> None:
         super().__init__(name=name, allow_slash=False)
         self.parent = parent
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}('{self.path}')"
+        return f"{self.__class__.__name__}({self.path})"
 
     @property
     def parent(self) -> AccountGroup | None:
@@ -60,4 +61,8 @@ class Account(
     @property
     @abstractmethod
     def transactions(self) -> tuple["Transaction", ...]:
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_balance(self, currency: Currency) -> CashAmount:
         raise NotImplementedError

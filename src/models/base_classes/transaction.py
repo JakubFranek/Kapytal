@@ -22,6 +22,8 @@ from src.models.model_objects.attributes import (
 class Transaction(
     CopyableMixin, DatetimeCreatedMixin, UUIDMixin, JSONSerializableMixin, ABC
 ):
+    __slots__ = ()
+
     DESCRIPTION_MIN_LENGTH = 0
     DESCRIPTION_MAX_LENGTH = 256
 

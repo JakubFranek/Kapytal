@@ -3,6 +3,8 @@ from uuid import UUID, uuid4
 
 
 class UUIDMixin:
+    __slots__ = ()
+
     def __init__(self, *args: Any, **kwargs: Any) -> None:  # noqa: ANN401
         super().__init__(*args, **kwargs)
         self._uuid = uuid4()

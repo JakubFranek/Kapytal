@@ -51,7 +51,7 @@ class AccountGroup(NameMixin, BalanceMixin, JSONSerializableMixin, UUIDMixin):
         return self._parent.path + "/" + self._name
 
     def __repr__(self) -> str:
-        return f"AccountGroup('{self.path}')"
+        return f"AccountGroup({self.path})"
 
     def _update_children_tuple(self) -> None:
         self._children_tuple = tuple(

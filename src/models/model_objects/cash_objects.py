@@ -53,6 +53,8 @@ class InvalidCashTransactionTypeError(ValueError):
 
 
 class CashRelatedTransaction(Transaction, ABC):
+    __slots__ = ()
+
     def get_amount(self, account: "CashAccount") -> CashAmount:
         if not isinstance(account, CashAccount):
             raise TypeError("Parameter 'account' must be a CashAccount.")
@@ -246,6 +248,26 @@ class CashAccount(Account):
 
 
 class CashTransaction(CashRelatedTransaction):
+    __slots__ = (
+        "_uuid",
+        "_refunds",
+        "_refunded_ratio",
+        "_type",
+        "_payee",
+        "_category_amount_pairs",
+        "_categories",
+        "_tag_amount_pairs",
+        "_tags",
+        "_account",
+        "_description",
+        "_datetime",
+        "_datetime_created",
+        "_timestamp",
+        "_amount",
+        "_amount_negative",
+        "_are_tags_split",
+    )
+
     def __init__(  # noqa: PLR0913
         self,
         description: str,
