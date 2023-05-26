@@ -43,9 +43,6 @@ from src.models.model_objects.security_objects import (
     SecurityTransfer,
 )
 
-# IDEA: split RecordKeeper into smaller object keepers
-# such as CategoryKeeper, AccountItem keeper etc.
-
 
 class RecordKeeper(CopyableMixin, JSONSerializableMixin):
     def __init__(self) -> None:

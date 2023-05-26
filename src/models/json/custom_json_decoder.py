@@ -12,7 +12,7 @@ class CustomJSONDecoder(json.JSONDecoder):
     def __init__(self, *args: Any, **kwargs: Any) -> None:  # noqa: ANN401
         super().__init__(*args, **kwargs, object_hook=self.object_hook)
 
-    def object_hook(self, obj: Any) -> Any:  # noqa: ANN401
+    def object_hook(self, obj: Any) -> Any:  # noqa: ANN401, PLR0911
         if "datatype" in obj:
             match obj["datatype"]:
                 case "Decimal":
@@ -27,4 +27,6 @@ class CustomJSONDecoder(json.JSONDecoder):
                     return UserSettings.deserialize(obj)
                 case _:
                     return obj
+        if "data" in obj:
+            return obj
         raise NotImplementedError

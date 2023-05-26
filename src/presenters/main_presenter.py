@@ -1,11 +1,13 @@
 import json
 import logging
+from datetime import datetime
 from pathlib import Path
 
 from PyQt6.QtWidgets import QApplication
 from src.models.json.custom_json_decoder import CustomJSONDecoder
 from src.models.json.custom_json_encoder import CustomJSONEncoder
 from src.models.record_keeper import RecordKeeper
+from src.models.user_settings import user_settings
 from src.presenters.form.category_form_presenter import CategoryFormPresenter
 from src.presenters.form.currency_form_presenter import CurrencyFormPresenter
 from src.presenters.form.payee_form_presenter import PayeeFormPresenter
@@ -50,7 +52,6 @@ class MainPresenter:
         logging.debug("Showing MainView")
         self._view.show()
 
-    # TODO: include Kapytal version in JSON file
     def _save_to_file(self, *, save_as: bool) -> None:
         logging.debug("Save to file initiated")
         try:
@@ -76,8 +77,15 @@ class MainPresenter:
             QApplication.processEvents()
             try:
                 with self._current_file_path.open(mode="w", encoding="UTF-8") as file:
+                    data = {
+                        "version": constants.VERSION,
+                        "datetime_saved": datetime.now(
+                            user_settings.settings.time_zone
+                        ),
+                        "data": self._record_keeper,
+                    }
                     logging.debug(f"Saving to file: {self._current_file_path}")
-                    json.dump(self._record_keeper, file, cls=CustomJSONEncoder)
+                    json.dump(data, file, cls=CustomJSONEncoder)
 
                     self._update_unsaved_changes(unsaved_changes=False)
                     self._view.show_status_message(
@@ -85,7 +93,7 @@ class MainPresenter:
                     )
 
                     logging.info(f"File saved: {self._current_file_path}")
-            except:
+            except:  # noqa: TRY302
                 raise
             finally:
                 self._busy_indicator_dialog.close()
@@ -130,7 +138,8 @@ class MainPresenter:
                 QApplication.processEvents()
                 logging.debug(f"Loading file: {self._current_file_path}")
                 logging.disable(logging.INFO)  # suppress logging of object creation
-                record_keeper: RecordKeeper = json.load(file, cls=CustomJSONDecoder)
+                data = json.load(file, cls=CustomJSONDecoder)
+                record_keeper: RecordKeeper = data["data"]
                 logging.disable(logging.NOTSET)  # enable logging again
 
                 self._busy_indicator_dialog.set_state("Updating User Interface...", 1)
@@ -144,17 +153,22 @@ class MainPresenter:
 
                 self._add_recent_path(self._current_file_path)
 
-                logging.debug(f"Currencies: {len(record_keeper.currencies)}")
-                logging.debug(f"Exchange Rates: {len(record_keeper.exchange_rates)}")
-                logging.debug(f"Securities: {len(record_keeper.securities)}")
-                logging.debug(f"AccountGroups: {len(record_keeper.account_groups)}")
-                logging.debug(f"Accounts: {len(record_keeper.accounts)}")
-                logging.debug(f"Transactions: {len(record_keeper.transactions)}")
-                logging.debug(f"Categories: {len(record_keeper.categories)}")
-                logging.debug(f"Tags: {len(record_keeper.tags)}")
-                logging.debug(f"Payees: {len(record_keeper.tags)}")
-                logging.info(f"File loaded: {path}")
-        except Exception:
+                logging.debug(
+                    f"Currencies: {len(record_keeper.currencies):,}, "
+                    f"Exchange Rates: {len(record_keeper.exchange_rates):,}, "
+                    f"Securities: {len(record_keeper.securities):,},"
+                    f"AccountGroups: {len(record_keeper.account_groups):,}, "
+                    f"Accounts: {len(record_keeper.accounts):,}, "
+                    f"Transactions: {len(record_keeper.transactions):,}, "
+                    f"Categories: {len(record_keeper.categories):,}, "
+                    f"Tags: {len(record_keeper.tags):,}, "
+                    f"Payees: {len(record_keeper.tags):,}"
+                )
+                logging.info(
+                    f"File loaded: {path}, version={data['version']}, "
+                    f"datetime_saved={data['datetime_saved']}"
+                )
+        except Exception:  # noqa: TRY302
             raise
         finally:
             self._busy_indicator_dialog.close()
@@ -333,8 +347,6 @@ class MainPresenter:
     def _data_changed(self) -> None:
         self._transactions_presenter.update_filter_models()
         self._transactions_presenter.refresh_view()
-        # TODO: sort not needed in some cases...
-        self._transactions_presenter.reapply_sort()
         self._account_tree_presenter.refresh_view()
         self._account_tree_presenter.update_total_balance()
         self._account_tree_presenter.update_geometries()
