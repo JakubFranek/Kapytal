@@ -57,7 +57,7 @@ class AccountTreePresenter:
         self.event_check_state_changed()
 
     @property
-    def valid_accounts(self) -> tuple[Account, ...]:
+    def valid_accounts(self) -> frozenset[Account]:
         return self._model.get_checked_accounts()
 
     def set_widget_visibility(self, *, visible: bool) -> None:
@@ -130,26 +130,18 @@ class AccountTreePresenter:
         item = self._model.get_selected_item()
         if item is None:
             raise ValueError("Cannot delete non-existent item.")
-        logging.info(f"Removing {item.__class__.__name__} at path='{item.path}'")
 
-        # Attempt deletion on a RecordKeeper copy
-        # TODO: remove deepcopy calls from this class
-        record_keeper_copy = copy.deepcopy(self._record_keeper)
+        logging.info(f"Removing {item.__class__.__name__} at path='{item.path}'")
         try:
             if isinstance(item, AccountGroup):
-                record_keeper_copy.remove_account_group(item.path)
+                self._record_keeper.remove_account_group(item.path)
             else:
-                record_keeper_copy.remove_account(item.path)
+                self._record_keeper.remove_account(item.path)
         except Exception as exception:  # noqa: BLE001
             handle_exception(exception)
             return
 
-        # Perform the deletion on the "real" RecordKeeper if it went fine
         self._model.pre_remove_item(item)
-        if isinstance(item, AccountGroup):
-            self._record_keeper.remove_account_group(item.path)
-        else:
-            self._record_keeper.remove_account(item.path)
         self.update_model_data()
         self._model.post_remove_item()
         self.event_data_changed()

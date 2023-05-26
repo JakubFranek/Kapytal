@@ -18,6 +18,9 @@ class UnrelatedAccountError(ValueError):
     not relate to it."""
 
 
+# TODO: add ancestors/descendents properties (also to AG)
+
+
 # IDEA: create base for Account and AccountGroup (AccountTreeItem)
 # getbalance, parent, transactions
 class Account(

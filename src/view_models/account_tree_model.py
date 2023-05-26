@@ -117,8 +117,6 @@ class AccountTreeNode:
             self.parent.update_check_state()
 
 
-# BUG: there is a bug here somewhere when deleting account item (maybe only CashAccount)
-# can't reproduce it anymore...
 def sync_nodes(
     items: Sequence[Account | AccountGroup],
     nodes: dict[UUID, AccountTreeNode],
@@ -194,9 +192,9 @@ class AccountTreeModel(QAbstractItemModel):
         super().__init__()
         self._tree = view
         self._proxy = proxy
-        self._root_nodes = ()
-        self._item_dict = {}
-        self._node_dict = {}
+        self._root_nodes: tuple[AccountTreeNode] = ()
+        self._item_dict: dict[UUID, Account | AccountGroup] = {}
+        self._node_dict: dict[UUID, AccountTreeNode] = {}
 
     def load_data(
         self, items: Sequence[Account | AccountGroup], base_currency: Currency | None
@@ -212,15 +210,14 @@ class AccountTreeModel(QAbstractItemModel):
                 lambda uuid_string: self._node_check_state_changed(uuid_string)
             )
 
-    # TODO: could be a set
-    def get_checked_accounts(self) -> tuple[Account, ...]:
+    def get_checked_accounts(self) -> frozenset[Account]:
         uuids = {
             node.uuid
             for node in self._node_dict.values()
             if node.check_state == Qt.CheckState.Checked
         }
         items = [self._item_dict[uuid] for uuid in uuids]
-        return tuple(item for item in items if isinstance(item, Account))
+        return frozenset(item for item in items if isinstance(item, Account))
 
     def rowCount(self, index: QModelIndex = ...) -> int:  # noqa: N802
         if index.isValid():

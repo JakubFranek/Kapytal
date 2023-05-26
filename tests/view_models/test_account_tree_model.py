@@ -19,8 +19,7 @@ def test_account_tree_model(qtbot: QtBot, qtmodeltester: ModelTester) -> None:
     model = AccountTreeModel(
         view=tree_view,
         proxy=proxy,
-        flat_items=record_keeper.root_account_items,
-        base_currency=record_keeper.base_currency,
     )
+    model.load_data(record_keeper.account_items, record_keeper.base_currency)
 
     qtmodeltester.check(model)
