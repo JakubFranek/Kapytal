@@ -80,7 +80,9 @@ class TransactionsPresenter:
     def account_tree_shown_accounts(self, accounts: Collection[Account]) -> None:
         self._account_tree_shown_accounts = frozenset(accounts)
         self._model.valid_accounts = accounts
-        self._transaction_filter_form_presenter.account_tree_shown_accounts = accounts
+        self._transaction_filter_form_presenter.update_account_tree_shown_accounts(
+            accounts
+        )
 
     def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
         self._record_keeper = record_keeper

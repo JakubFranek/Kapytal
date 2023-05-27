@@ -52,6 +52,8 @@ class MainPresenter:
         logging.debug("Showing MainView")
         self._view.show()
 
+    # REFACTOR: refactor out file manipulation code into separate presenter
+    # TODO: try to load/save files on separate threads
     def _save_to_file(self, *, save_as: bool) -> None:
         logging.debug("Save to file initiated")
         try:
@@ -350,6 +352,7 @@ class MainPresenter:
         self._account_tree_presenter.refresh_view()
         self._account_tree_presenter.update_total_balance()
         self._account_tree_presenter.update_geometries()
+        self._category_form_presenter.data_changed()
         self._update_unsaved_changes(unsaved_changes=True)
 
     def _base_currency_changed(self) -> None:

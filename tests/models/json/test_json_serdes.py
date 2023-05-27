@@ -366,6 +366,11 @@ def test_cash_transfer(transaction: CashTransfer) -> None:
     assert isinstance(decoded, CashTransfer)
     assert decoded.uuid == transaction.uuid
     assert decoded.description == transaction.description
+
+    decoded_iso = decoded.datetime_.isoformat()
+    original_iso = transaction.datetime_.replace(microsecond=0).isoformat()
+    assert decoded_iso == original_iso
+
     assert decoded.datetime_ == transaction.datetime_.replace(microsecond=0)
     assert decoded.datetime_created == transaction.datetime_created.replace(
         microsecond=0

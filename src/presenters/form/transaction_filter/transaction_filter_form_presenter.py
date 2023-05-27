@@ -152,27 +152,6 @@ class TransactionFilterFormPresenter:
     def transaction_filter(self) -> TransactionFilter:
         return self._transaction_filter
 
-    @transaction_filter.setter
-    def transaction_filter(self, transaction_filter: TransactionFilter) -> None:
-        self._transaction_filter = transaction_filter
-        self._update_form_from_filter(self._transaction_filter)
-
-    @property
-    def account_tree_shown_accounts(self) -> frozenset[Account]:
-        return self._account_tree_shown_accounts
-
-    # TODO: this setter should be a method
-    @account_tree_shown_accounts.setter
-    def account_tree_shown_accounts(self, accounts: Collection[Account]) -> None:
-        self._account_tree_shown_accounts = frozenset(accounts)
-        if self._form.account_filter_mode == AccountFilterMode.ACCOUNT_TREE:
-            previous_filter = copy(self._transaction_filter)
-            all_accounts = len(self._record_keeper.accounts) == len(accounts)
-            filter_mode = FilterMode.OFF if all_accounts else FilterMode.KEEP
-            self._transaction_filter.set_account_filter(accounts, filter_mode)
-            if previous_filter != self._transaction_filter:
-                self.event_filter_changed()
-
     @property
     def filter_active(self) -> bool:
         return self._transaction_filter != self._default_filter
@@ -183,6 +162,16 @@ class TransactionFilterFormPresenter:
             self._transaction_filter, self._default_filter
         )
         return tuple(f"{filter_.__class__.__name__}" for filter_ in active_filters)
+
+    def update_account_tree_shown_accounts(self, accounts: Collection[Account]) -> None:
+        self._account_tree_shown_accounts = frozenset(accounts)
+        if self._form.account_filter_mode == AccountFilterMode.ACCOUNT_TREE:
+            previous_filter = copy(self._transaction_filter)
+            all_accounts = len(self._record_keeper.accounts) == len(accounts)
+            filter_mode = FilterMode.OFF if all_accounts else FilterMode.KEEP
+            self._transaction_filter.set_account_filter(accounts, filter_mode)
+            if previous_filter != self._transaction_filter:
+                self.event_filter_changed()
 
     def load_record_keeper(
         self,
@@ -244,7 +233,7 @@ class TransactionFilterFormPresenter:
 
     def _update_filter(self) -> None:
         new_filter = self._get_transaction_filter_from_form()
-        if self.transaction_filter != new_filter:
+        if self._transaction_filter != new_filter:
             self._log_filter_differences(new_filter)
             self._transaction_filter = new_filter
             self.event_filter_changed()

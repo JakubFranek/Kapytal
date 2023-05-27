@@ -15,6 +15,9 @@ from src.views.dialogs.busy_dialog import create_simple_busy_indicator
 from src.views.dialogs.category_dialog import CategoryDialog
 from src.views.forms.category_form import CategoryForm
 
+BUSY_DIALOG_TRANSACTION_LIMIT = 20_000
+# TODO: add similar busy dialog to Tag and Payee Forms
+
 
 class CategoryFormPresenter:
     event_data_changed = Event()
@@ -30,24 +33,44 @@ class CategoryFormPresenter:
 
     def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
         self._record_keeper = record_keeper
+        self._recalculate_data = True
+
+    def data_changed(self) -> None:
+        self._recalculate_data = True
 
     def show_form(self) -> None:
-        self._busy_dialog = create_simple_busy_indicator(
-            self._view, "Calculating Category stats, please wait..."
-        )
-        self._busy_dialog.open()
-        QApplication.processEvents()
-        try:
-            self._reset_model()  # TODO: model should be only reset on data change
-        except:  # noqa: TRY302
-            raise
-        finally:
-            self._busy_dialog.close()
+        if self._recalculate_data is True:
+            self._reset_model()
 
         self._view.incomeTreeView.expandAll()
         self._view.expenseTreeView.expandAll()
         self._view.incomeAndExpenseTreeView.expandAll()
         self._view.show_form()
+
+    def _reset_model(self) -> None:
+        self._model_income.pre_reset_model()
+        self._model_expense.pre_reset_model()
+        self._model_income_and_expense.pre_reset_model()
+        self._update_model_data_with_busy_dialog()
+        self._model_income.post_reset_model()
+        self._model_expense.post_reset_model()
+        self._model_income_and_expense.post_reset_model()
+
+    def _update_model_data_with_busy_dialog(self) -> None:
+        no_of_transactions = len(self._record_keeper.transactions)
+        if no_of_transactions >= BUSY_DIALOG_TRANSACTION_LIMIT:
+            self._busy_dialog = create_simple_busy_indicator(
+                self._view, "Calculating Category stats, please wait..."
+            )
+            self._busy_dialog.open()
+            QApplication.processEvents()
+        try:
+            self._update_model_data()
+        except:  # noqa: TRY302
+            raise
+        finally:
+            if no_of_transactions >= BUSY_DIALOG_TRANSACTION_LIMIT:
+                self._busy_dialog.close()
 
     def _update_model_data(self) -> None:
         relevant_transactions = (
@@ -70,14 +93,7 @@ class CategoryFormPresenter:
             self._record_keeper.income_and_expense_categories, category_stats
         )
 
-    def _reset_model(self) -> None:
-        self._model_income.pre_reset_model()
-        self._model_expense.pre_reset_model()
-        self._model_income_and_expense.pre_reset_model()
-        self._update_model_data()
-        self._model_income.post_reset_model()
-        self._model_expense.post_reset_model()
-        self._model_income_and_expense.post_reset_model()
+        self._recalculate_data = False
 
     def _expand_all_below(self) -> None:
         tree_view = self._view.get_current_tree_view()
@@ -136,10 +152,11 @@ class CategoryFormPresenter:
 
         model = self._get_current_model()
         model.pre_add(parent_category, index_actual)
-        self._update_model_data()
+        self._update_model_data_with_busy_dialog()
         model.post_add()
         self._dialog.close()
         self.event_data_changed()
+        self._recalculate_data = False
 
     def _edit_category(self) -> None:
         model = self._get_current_model()
@@ -175,12 +192,13 @@ class CategoryFormPresenter:
                 new_parent=new_parent,
                 new_index=new_index_actual,
             )
-        self._update_model_data()
+        self._update_model_data_with_busy_dialog()
         if move:
             model.post_move_item()
         self._dialog.close()
         self._tree_selection_changed()
         self.event_data_changed()
+        self._recalculate_data = False
 
     def _delete_category(self) -> None:
         model = self._get_current_model()
@@ -196,9 +214,10 @@ class CategoryFormPresenter:
             return
 
         model.pre_remove_item(item)
-        self._update_model_data()
+        self._update_model_data_with_busy_dialog()
         model.post_remove_item()
         self.event_data_changed()
+        self._recalculate_data = False
 
     def _setup_signals(self) -> None:
         self._view.signal_tree_selection_changed.connect(self._tree_selection_changed)
