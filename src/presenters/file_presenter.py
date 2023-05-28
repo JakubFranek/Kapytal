@@ -3,6 +3,7 @@ import logging
 from datetime import datetime
 from pathlib import Path
 
+from PyQt6.QtCore import QObject, QThread, pyqtSignal
 from PyQt6.QtWidgets import QApplication
 from src.models.json.custom_json_decoder import CustomJSONDecoder
 from src.models.json.custom_json_encoder import CustomJSONEncoder
@@ -12,11 +13,69 @@ from src.presenters.utilities.event import Event
 from src.presenters.utilities.handle_exception import handle_exception
 from src.utilities import constants
 from src.utilities.general import backup_json_file
-from src.views.dialogs.busy_dialog import (
-    create_multi_step_busy_indicator,
-    create_simple_busy_indicator,
-)
+from src.views.dialogs.busy_dialog import create_multi_step_busy_indicator
 from src.views.main_view import MainView
+
+
+class LoadFileWorker(QObject):
+    finished = pyqtSignal()
+    failed = pyqtSignal()
+    progress = pyqtSignal(int)
+
+    def __init__(self, parent: QObject | None = None) -> None:
+        super().__init__(parent)
+        self.path: Path
+
+    def run(self) -> None:
+        try:
+            with self.path.open(mode="r", encoding="UTF-8") as file:
+                logging.disable(logging.INFO)  # suppress logging of object creation
+                self.data = json.load(file, cls=CustomJSONDecoder)
+                self.record_keeper = RecordKeeper.deserialize(
+                    self.data["data"],
+                    progress_callable=self._progress,
+                )
+                logging.disable(logging.NOTSET)
+                self.finished.emit()
+        except Exception as exc:  # noqa: BLE001
+            self.exception = exc
+            self.failed.emit()
+
+    def _progress(self, progress: int) -> None:
+        self.progress.emit(progress)
+
+
+class SaveFileWorker(QObject):
+    finished = pyqtSignal()
+    failed = pyqtSignal()
+    progress = pyqtSignal(int)
+    status_text = pyqtSignal(str)
+    progress_unknown = pyqtSignal()
+
+    def __init__(self, parent: QObject | None = None) -> None:
+        super().__init__(parent)
+        self.path: Path
+        self.record_keeper: RecordKeeper
+
+    def run(self) -> None:
+        try:
+            with self.path.open(mode="w", encoding="UTF-8") as file:
+                self.status_text.emit("Serializing data...")
+                data = {
+                    "version": constants.VERSION,
+                    "datetime_saved": datetime.now(user_settings.settings.time_zone),
+                    "data": self.record_keeper.serialize(self._progress),
+                }
+                self.progress_unknown.emit()
+                self.status_text.emit("Writing to file...")
+                json.dump(data, file, cls=CustomJSONEncoder)
+                self.finished.emit()
+        except Exception as exc:  # noqa: BLE001
+            self.exception = exc
+            self.failed.emit()
+
+    def _progress(self, progress: int) -> None:
+        self.progress.emit(progress)
 
 
 class FilePresenter:
@@ -30,75 +89,35 @@ class FilePresenter:
         self._current_file_path: Path | None = None
         self.update_unsaved_changes(unsaved_changes=False)
 
-    # TODO: try to load/save files on separate threads
     def save_to_file(self, record_keeper: RecordKeeper, *, save_as: bool) -> None:
         logging.debug("Save to file initiated")
-        try:
-            if save_as is True or self._current_file_path is None:
-                logging.debug("Asking the user for destination path")
-                file_path = self._view.get_save_path()
-                if not file_path:
-                    logging.info(
-                        "Save to file cancelled: invalid or no file path received"
-                    )
-                    return
-                self._current_file_path = Path(file_path)
+        if save_as is True or self._current_file_path is None:
+            logging.debug("Asking the user for destination path")
+            file_path = self._view.get_save_path()
+            if not file_path:
+                logging.info("Save to file cancelled: invalid or no file path received")
+                return
+            self._current_file_path = Path(file_path)
 
-            self._busy_indicator_dialog = create_simple_busy_indicator(
-                self._view,
-                text="Saving data to file, please wait...",
-                lower_text=(
-                    "This can take up to a minute for "
-                    "large number of Transactions (>10,000)"
-                ),
-            )
-            self._busy_indicator_dialog.open()
-            QApplication.processEvents()
-            try:
-                with self._current_file_path.open(mode="w", encoding="UTF-8") as file:
-                    data = {
-                        "version": constants.VERSION,
-                        "datetime_saved": datetime.now(
-                            user_settings.settings.time_zone
-                        ),
-                        "data": record_keeper,
-                    }
-                    logging.debug(f"Saving to file: {self._current_file_path}")
-                    json.dump(data, file, cls=CustomJSONEncoder)
-
-                    self.update_unsaved_changes(unsaved_changes=False)
-                    self._view.show_status_message(
-                        f"File saved: {self._current_file_path}", 3000
-                    )
-
-                    logging.info(f"File saved: {self._current_file_path}")
-            except:  # noqa: TRY302
-                raise
-            finally:
-                self._busy_indicator_dialog.close()
-            backup_json_file(self._current_file_path)
-        except Exception as exception:  # noqa: BLE001
-            handle_exception(exception)
+        logging.debug(f"Saving to file: {self._current_file_path}")
+        self._save_to_file(record_keeper, self._current_file_path)
 
     def load_from_file(self, path: str | Path | None = None) -> None:
         logging.debug("Load from file initiated")
         if self.check_for_unsaved_changes("Load File") is False:
             return
-        try:
-            if path is None:
-                logging.debug("Asking user for file path")
-                path = self._view.get_open_path()
-                if not path:
-                    logging.info(
-                        "Load from file cancelled: invalid or no file path received"
-                    )
-                    return
+        if path is None:
+            logging.debug("Asking user for file path")
+            path = self._view.get_open_path()
+            if not path:
+                logging.info(
+                    "Load from file cancelled: invalid or no file path received"
+                )
+                return
 
-            logging.debug(f"File path: {path}")
-            self._current_file_path = Path(path)
-            self._open_file(self._current_file_path)
-        except Exception as exception:  # noqa: BLE001
-            handle_exception(exception)
+        logging.debug(f"File path: {path}")
+        self._current_file_path = Path(path)
+        self._open_file(self._current_file_path)
 
     def close_file(self) -> None:
         if self.check_for_unsaved_changes("Close File") is False:
@@ -139,56 +158,113 @@ class FilePresenter:
         return False
 
     def _open_file(self, path: Path) -> None:
-        self._busy_indicator_dialog = create_multi_step_busy_indicator(
-            self._view,
-            text="Loading data from file...",
-            steps=2,
-            lower_text="This can take up to a minute for huge files (>10 MB)",
+        self._busy_indicator = create_multi_step_busy_indicator(
+            self._view, "Loading data, please wait...", 100, "Deserializing data..."
         )
-        self._busy_indicator_dialog.open()
+
+        backup_json_file(self._current_file_path)
+        self._thread = QThread()
+        self._worker = LoadFileWorker()
+        self._worker.moveToThread(self._thread)
+        self._worker.path = path
+        self._thread.started.connect(self._worker.run)
+        self._worker.finished.connect(self._file_load_completed)
+        self._worker.failed.connect(self._worker_operation_failed)
+        self._worker.progress.connect(self._update_load_progress)
+        self._view.set_view_widget_state(enabled=False)
+        self._thread.start()
+        self._busy_indicator.open()
+
+    def _update_load_progress(self, progress: int) -> None:
+        self._busy_indicator.set_value(progress)
+
+    def _file_load_completed(self) -> None:
+        self._busy_indicator.set_progress_bar_range(0, 0)
+        self._busy_indicator.set_lower_text("Updating User Interface...")
+        self._view.set_view_widget_state(enabled=True)
         QApplication.processEvents()
-        try:
-            with path.open(mode="r", encoding="UTF-8") as file:
-                backup_json_file(self._current_file_path)
 
-                self._busy_indicator_dialog.set_state("Loading data from file...", 0)
-                QApplication.processEvents()
-                logging.debug(f"Loading file: {self._current_file_path}")
-                logging.disable(logging.INFO)  # suppress logging of object creation
-                data = json.load(file, cls=CustomJSONDecoder)
-                record_keeper: RecordKeeper = data["data"]
-                logging.disable(logging.NOTSET)  # enable logging again
+        data = self._worker.data
+        record_keeper = self._worker.record_keeper
+        self._worker.thread().quit()
+        self._worker.deleteLater()
+        self._thread.deleteLater()
 
-                self._busy_indicator_dialog.set_state("Updating User Interface...", 1)
-                QApplication.processEvents()
-                self.event_load_record_keeper(record_keeper)
+        self.event_load_record_keeper(record_keeper)
 
-                self._view.show_status_message(
-                    f"File loaded: {self._current_file_path}", 3000
-                )
-                self.update_unsaved_changes(unsaved_changes=False)
+        self._view.show_status_message(f"File loaded: {self._current_file_path}", 3000)
+        self.update_unsaved_changes(unsaved_changes=False)
 
-                self._add_recent_path(self._current_file_path)
+        self._add_recent_path(self._current_file_path)
 
-                logging.debug(
-                    f"Currencies: {len(record_keeper.currencies):,}, "
-                    f"Exchange Rates: {len(record_keeper.exchange_rates):,}, "
-                    f"Securities: {len(record_keeper.securities):,},"
-                    f"AccountGroups: {len(record_keeper.account_groups):,}, "
-                    f"Accounts: {len(record_keeper.accounts):,}, "
-                    f"Transactions: {len(record_keeper.transactions):,}, "
-                    f"Categories: {len(record_keeper.categories):,}, "
-                    f"Tags: {len(record_keeper.tags):,}, "
-                    f"Payees: {len(record_keeper.tags):,}"
-                )
-                logging.info(
-                    f"File loaded: {path}, version={data['version']}, "
-                    f"datetime_saved={data['datetime_saved']}"
-                )
-        except Exception:  # noqa: TRY302
-            raise
-        finally:
-            self._busy_indicator_dialog.close()
+        logging.info(
+            f"File loaded: {self._current_file_path}, version={data['version']}, "
+            f"datetime_saved={data['datetime_saved']}, "
+            f"Currencies: {len(record_keeper.currencies)}, "
+            f"Exchange Rates: {len(record_keeper.exchange_rates)}, "
+            f"Securities: {len(record_keeper.securities)}, "
+            f"AccountGroups: {len(record_keeper.account_groups)}, "
+            f"Accounts: {len(record_keeper.accounts)}, "
+            f"Transactions: {len(record_keeper.transactions)}, "
+            f"Categories: {len(record_keeper.categories)}, "
+            f"Tags: {len(record_keeper.tags)}, "
+            f"Payees: {len(record_keeper.tags)}"
+        )
+        self._busy_indicator.close()
+
+    def _worker_operation_failed(self) -> None:
+        exception = self._worker.exception
+        self._worker.thread().quit()
+        self._worker.deleteLater()
+        self._thread.deleteLater()
+        self._busy_indicator.close()
+        handle_exception(exception)
+
+    def _save_to_file(self, record_keeper: RecordKeeper, path: Path) -> None:
+        self._busy_indicator = create_multi_step_busy_indicator(
+            self._view,
+            "Saving data, please wait...",
+            100,
+            "Starting separate thread...",
+        )
+
+        self._thread = QThread()
+        self._worker = SaveFileWorker()
+        self._worker.moveToThread(self._thread)
+        self._worker.path = path
+        self._worker.record_keeper = record_keeper
+        self._thread.started.connect(self._worker.run)
+        self._worker.finished.connect(self._file_save_completed)
+        self._worker.failed.connect(self._worker_operation_failed)
+        self._worker.progress.connect(self._update_file_save_progress)
+        self._worker.status_text.connect(self._update_file_save_status_text)
+        self._worker.progress_unknown.connect(self._update_file_save_progress_bar_range)
+        self._view.set_view_widget_state(enabled=False)
+        self._thread.start()
+        self._busy_indicator.open()
+
+    def _update_file_save_progress(self, progress: int) -> None:
+        self._busy_indicator.set_value(progress)
+
+    def _update_file_save_status_text(self, text: str) -> None:
+        self._busy_indicator.set_lower_text(text)
+
+    def _update_file_save_progress_bar_range(self) -> None:
+        self._busy_indicator.set_progress_bar_range(0, 0)
+
+    def _file_save_completed(self) -> None:
+        self._busy_indicator.close()
+        self._view.set_view_widget_state(enabled=True)
+
+        self._worker.thread().quit()
+        self._worker.deleteLater()
+        self._thread.deleteLater()
+
+        self.update_unsaved_changes(unsaved_changes=False)
+        self._view.show_status_message(f"File saved: {self._current_file_path}", 3000)
+
+        logging.info(f"File saved: {self._current_file_path}")
+        backup_json_file(self._current_file_path)
 
     def _initialize_recent_paths(self) -> None:
         if not constants.recent_files_path.exists():

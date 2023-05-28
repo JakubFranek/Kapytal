@@ -86,6 +86,7 @@ class TransactionFilter(CopyableMixin):
         "_currency_filter",
         "_security_filter",
         "_cash_amount_filter",
+        "_all_pass",
     )
 
     def __init__(self) -> None:
@@ -175,6 +176,8 @@ class TransactionFilter(CopyableMixin):
         return self.members == __o.members
 
     def validate_transaction(self, transaction: Transaction) -> bool:
+        if self._all_pass:
+            return True
         return all(
             (
                 self._type_filter.validate_transaction(transaction),
@@ -196,6 +199,9 @@ class TransactionFilter(CopyableMixin):
     def filter_transactions(
         self, transactions: Collection[Transaction]
     ) -> tuple[Transaction, ...]:
+        if self._all_pass:
+            return tuple(transactions)
+
         _transactions = tuple(transactions)
         _transactions = self._type_filter.filter_transactions(_transactions)
         _transactions = self._datetime_filter.filter_transactions(_transactions)
@@ -242,6 +248,8 @@ class TransactionFilter(CopyableMixin):
         self._security_filter = SecurityFilter(securities=(), mode=FilterMode.OFF)
         self._cash_amount_filter = CashAmountFilter(None, None, FilterMode.OFF)
 
+        self._set_all_pass()
+
     def set_type_filter(
         self,
         types: Collection[
@@ -250,53 +258,69 @@ class TransactionFilter(CopyableMixin):
         mode: FilterMode,
     ) -> None:
         self._type_filter = TypeFilter(types, mode)
+        self._set_all_pass()
 
     def set_datetime_filter(
         self, start: datetime, end: datetime, mode: FilterMode
     ) -> None:
         self._datetime_filter = DatetimeFilter(start, end, mode)
+        self._set_all_pass()
 
     def set_account_filter(
         self, accounts: Collection[Account], mode: FilterMode
     ) -> None:
         self._account_filter = AccountFilter(accounts, mode)
+        self._set_all_pass()
 
     def set_description_filter(self, regex_pattern: str, mode: FilterMode) -> None:
         self._description_filter = DescriptionFilter(regex_pattern, mode)
+        self._set_all_pass()
 
     def set_specific_tags_filter(
         self, tags: Collection[Attribute], mode: FilterMode
     ) -> None:
         self._specific_tags_filter = SpecificTagsFilter(tags, mode)
+        self._set_all_pass()
 
     def set_tagless_filter(self, mode: FilterMode) -> None:
         self._tagless_filter = TaglessFilter(mode)
+        self._set_all_pass()
 
     def set_split_tags_filter(self, mode: FilterMode) -> None:
         self._split_tags_filter = SplitTagsFilter(mode)
+        self._set_all_pass()
 
     def set_payee_filter(self, payees: Collection[Attribute], mode: FilterMode) -> None:
         self._payee_filter = PayeeFilter(payees, mode)
+        self._set_all_pass()
 
     def set_specific_categories_filter(
         self, categories: Collection[Attribute], mode: FilterMode
     ) -> None:
         self._specific_categories_filter = SpecificCategoriesFilter(categories, mode)
+        self._set_all_pass()
 
     def set_multiple_categories_filter(self, mode: FilterMode) -> None:
         self._multiple_categories_filter = MultipleCategoriesFilter(mode)
+        self._set_all_pass()
 
     def set_currency_filter(
         self, currencies: Collection[Currency], mode: FilterMode
     ) -> None:
         self._currency_filter = CurrencyFilter(currencies, mode)
+        self._set_all_pass()
 
     def set_security_filter(
         self, securities: Collection[Security], mode: FilterMode
     ) -> None:
         self._security_filter = SecurityFilter(securities, mode)
+        self._set_all_pass()
 
     def set_cash_amount_filter(
         self, minimum: CashAmount, maximum: CashAmount, mode: FilterMode
     ) -> None:
         self._cash_amount_filter = CashAmountFilter(minimum, maximum, mode)
+        self._set_all_pass()
+
+    def _set_all_pass(self) -> bool:
+        self._all_pass = all(filter_.is_all_pass for filter_ in self.members)

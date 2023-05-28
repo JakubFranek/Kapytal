@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>340</width>
-    <height>86</height>
+    <height>88</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -53,7 +53,7 @@
       <bool>false</bool>
      </property>
      <property name="format">
-      <string>%v/%m</string>
+      <string/>
      </property>
     </widget>
    </item>

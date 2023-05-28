@@ -500,14 +500,14 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
         return {
             "datatype": "SecurityTransaction",
             "description": self._description,
-            "datetime": self._datetime.replace(microsecond=0),
+            "datetime": self._datetime.replace(microsecond=0).isoformat(),
             "type": self._type.name,
             "security_name": self._security.name,
             "shares": str(self._shares),
-            "price_per_share": self._price_per_share,
+            "price_per_share": self._price_per_share.serialize(),
             "security_account_path": self._security_account.path,
             "cash_account_path": self._cash_account.path,
-            "datetime_created": self._datetime_created,
+            "datetime_created": self._datetime_created.isoformat(),
             "uuid": str(self._uuid),
         }
 
@@ -794,12 +794,12 @@ class SecurityTransfer(SecurityRelatedTransaction):
         return {
             "datatype": "SecurityTransfer",
             "description": self._description,
-            "datetime": self._datetime.replace(microsecond=0),
+            "datetime": self._datetime.replace(microsecond=0).isoformat(),
             "security_name": self._security.name,
             "shares": str(self._shares),
             "sender_path": self._sender.path,
             "recipient_path": self._recipient.path,
-            "datetime_created": self._datetime_created,
+            "datetime_created": self._datetime_created.isoformat(),
             "uuid": str(self._uuid),
         }
 
