@@ -171,7 +171,7 @@ class FilePresenter:
         self._worker.finished.connect(self._file_load_completed)
         self._worker.failed.connect(self._worker_operation_failed)
         self._worker.progress.connect(self._update_load_progress)
-        self._view.set_view_widget_state(enabled=False)
+        self._view.set_item_view_update_state(enabled=False)
         self._thread.start()
         self._busy_indicator.open()
 
@@ -181,7 +181,7 @@ class FilePresenter:
     def _file_load_completed(self) -> None:
         self._busy_indicator.set_progress_bar_range(0, 0)
         self._busy_indicator.set_lower_text("Updating User Interface...")
-        self._view.set_view_widget_state(enabled=True)
+        self._view.set_item_view_update_state(enabled=True)
         QApplication.processEvents()
 
         data = self._worker.data
@@ -239,7 +239,7 @@ class FilePresenter:
         self._worker.progress.connect(self._update_file_save_progress)
         self._worker.status_text.connect(self._update_file_save_status_text)
         self._worker.progress_unknown.connect(self._update_file_save_progress_bar_range)
-        self._view.set_view_widget_state(enabled=False)
+        self._view.set_item_view_update_state(enabled=False)
         self._thread.start()
         self._busy_indicator.open()
 
@@ -254,7 +254,7 @@ class FilePresenter:
 
     def _file_save_completed(self) -> None:
         self._busy_indicator.close()
-        self._view.set_view_widget_state(enabled=True)
+        self._view.set_item_view_update_state(enabled=True)
 
         self._worker.thread().quit()
         self._worker.deleteLater()

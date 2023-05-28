@@ -64,11 +64,11 @@ def main() -> None:
     logging.debug("Creating MainPresenter")
     MainPresenter(main_view, app)
 
-    logging.debug("Setting Fusion style")
-    app.setStyle(QStyleFactory.create("Fusion"))
-
     logging.debug("Showing MainView")
     main_view.show()
+
+    logging.debug("Setting Fusion style")
+    app.setStyle(QStyleFactory.create("Fusion"))
 
     logging.info("Executing QApplication, awaiting user input")
     app.exec()
