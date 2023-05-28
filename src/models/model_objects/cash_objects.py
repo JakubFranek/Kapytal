@@ -401,13 +401,13 @@ class CashTransaction(CashRelatedTransaction):
         return {
             "datatype": "CashTransaction",
             "description": self._description,
-            "datetime": self._datetime.replace(microsecond=0),
+            "datetime": self._datetime.replace(microsecond=0).isoformat(),
             "type": self._type.name,
             "account_path": self._account.path,
             "payee_name": self._payee.name,
             "category_amount_pairs": category_amount_pairs,
             "tag_amount_pairs": tag_amount_pairs,
-            "datetime_created": self._datetime_created,
+            "datetime_created": self._datetime_created.isoformat(),
             "uuid": str(self._uuid),
         }
 
@@ -993,12 +993,12 @@ class CashTransfer(CashRelatedTransaction):
         return {
             "datatype": "CashTransfer",
             "description": self._description,
-            "datetime": self._datetime.replace(microsecond=0),
+            "datetime": self._datetime.replace(microsecond=0).isoformat(),
             "sender_path": self._sender.path,
             "recipient_path": self._recipient.path,
-            "amount_sent": self._amount_sent,
-            "amount_received": self._amount_received,
-            "datetime_created": self._datetime_created,
+            "amount_sent": self._amount_sent.serialize(),
+            "amount_received": self._amount_received.serialize(),
+            "datetime_created": self._datetime_created.isoformat(),
             "uuid": str(self._uuid),
         }
 
@@ -1301,13 +1301,13 @@ class RefundTransaction(CashRelatedTransaction):
         return {
             "datatype": "RefundTransaction",
             "description": self._description,
-            "datetime": self._datetime.replace(microsecond=0),
+            "datetime": self._datetime.replace(microsecond=0).isoformat(),
             "account_path": self._account.path,
             "refunded_transaction_uuid": str(self._refunded_transaction.uuid),
             "payee_name": self._payee.name,
             "category_amount_pairs": category_amount_pairs,
             "tag_amount_pairs": tag_amount_pairs,
-            "datetime_created": self._datetime_created,
+            "datetime_created": self._datetime_created.isoformat(),
             "uuid": str(self._uuid),
         }
 

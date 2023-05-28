@@ -88,6 +88,10 @@ class TypeFilter(BaseTransactionFilter):
     ]:
         return (self._types, self._mode)
 
+    @property
+    def is_all_pass(self) -> bool:
+        return self._mode == FilterMode.OFF or self._types == all_types
+
     def __repr__(self) -> str:
         return f"TypeFilter(types={self.type_names}, mode={self._mode.name})"
 

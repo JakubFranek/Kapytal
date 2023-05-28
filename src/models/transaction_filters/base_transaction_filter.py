@@ -36,6 +36,10 @@ class BaseTransactionFilter(ABC):
     def members(self) -> tuple[Any, ...]:
         raise NotImplementedError
 
+    @property
+    def is_all_pass(self) -> bool:
+        return self._mode == FilterMode.OFF
+
     def __hash__(self) -> int:
         return hash(self.members)
 

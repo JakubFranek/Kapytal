@@ -7,8 +7,9 @@ from src.views.ui_files.dialogs.Ui_busy_dialog import Ui_BusyDialog
 
 class BusyDialog(QDialog, Ui_BusyDialog):
     def __init__(self, parent: QWidget = None) -> None:
-        super().__init__(parent)
+        super().__init__(parent=parent)
         self.setupUi(self)
+        self.setWindowModality(Qt.WindowModality.ApplicationModal)
         self.setWindowFlag(Qt.WindowType.FramelessWindowHint)
         if not isinstance(icons.hourglass, QIcon):
             raise TypeError("icons.hourglass is not a QIcon")
@@ -17,9 +18,11 @@ class BusyDialog(QDialog, Ui_BusyDialog):
     def set_progress_bar_range(self, minimum: int, maximum: int) -> None:
         self.progressBar.setRange(minimum, maximum)
 
-    def set_state(self, text: str, value: int) -> None:
-        self.label.setText(text)
+    def set_value(self, value: int) -> None:
         self.progressBar.setValue(value)
+
+    def set_upper_text(self, text: str) -> None:
+        self.label.setText(text)
 
     def show_progress_bar(self, *, show: bool) -> None:
         self.progressBar.setVisible(show)

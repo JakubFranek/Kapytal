@@ -62,7 +62,10 @@ def main() -> None:
     main_view = MainView()
 
     logging.debug("Creating MainPresenter")
-    main_presenter = MainPresenter(main_view, app)  # noqa: F841
+    MainPresenter(main_view, app)
+
+    logging.debug("Showing MainView")
+    main_view.show()
 
     logging.debug("Setting Fusion style")
     app.setStyle(QStyleFactory.create("Fusion"))

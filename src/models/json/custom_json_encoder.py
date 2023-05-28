@@ -1,6 +1,5 @@
 import json
 from datetime import datetime
-from decimal import Decimal
 from typing import Any
 
 from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
@@ -19,8 +18,6 @@ class CustomJSONEncoder(json.JSONEncoder):
     def default(self, arg: Any) -> Any:  # noqa: ANN401
         if isinstance(arg, datetime):
             return arg.isoformat()
-        if isinstance(arg, Decimal):
-            return {"datatype": "Decimal", "number": str(arg)}
         if isinstance(arg, JSONSerializableMixin):
             return arg.serialize()
         return super().default(arg)  # call to raise proper TypeError

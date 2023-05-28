@@ -13,7 +13,7 @@ class Ui_BusyDialog(object):
     def setupUi(self, BusyDialog):
         BusyDialog.setObjectName("BusyDialog")
         BusyDialog.setWindowModality(QtCore.Qt.WindowModality.WindowModal)
-        BusyDialog.resize(340, 86)
+        BusyDialog.resize(340, 88)
         self.verticalLayout = QtWidgets.QVBoxLayout(BusyDialog)
         self.verticalLayout.setObjectName("verticalLayout")
         self.horizontalLayout = QtWidgets.QHBoxLayout()
@@ -35,6 +35,7 @@ class Ui_BusyDialog(object):
         self.progressBar.setMaximum(3)
         self.progressBar.setProperty("value", 0)
         self.progressBar.setInvertedAppearance(False)
+        self.progressBar.setFormat("")
         self.progressBar.setObjectName("progressBar")
         self.verticalLayout.addWidget(self.progressBar)
         self.belowLabel = QtWidgets.QLabel(BusyDialog)
@@ -48,5 +49,4 @@ class Ui_BusyDialog(object):
         _translate = QtCore.QCoreApplication.translate
         BusyDialog.setWindowTitle(_translate("BusyDialog", "Dialog"))
         self.label.setText(_translate("BusyDialog", "TextLabel"))
-        self.progressBar.setFormat(_translate("BusyDialog", "%v/%m"))
         self.belowLabel.setText(_translate("BusyDialog", "Loading can take more than a minute for huge files (>10 MB)"))

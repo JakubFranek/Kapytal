@@ -1,5 +1,5 @@
 import logging
-from collections.abc import Collection
+from collections.abc import Callable, Collection
 from datetime import date, datetime
 from decimal import Decimal
 from typing import Any, TypeVar
@@ -1356,23 +1356,55 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         price = CashAmount(value, security.currency)
         security.set_price(date_, price)
 
-    def serialize(self) -> dict[str, Any]:
+    def serialize(  # noqa: C901, PLR0912
+        self,
+        progress_callable: Callable[[int], None],
+    ) -> dict[str, Any]:
+        serialized_currencies = []
+        for currency in self._currencies:
+            serialized_currencies.append(currency.serialize())
+        base_currency_code = (
+            self._base_currency.code if self._base_currency is not None else None
+        )
+
+        serialized_exchange_rates = []
+        for exchange_rate in self._exchange_rates:
+            serialized_exchange_rates.append(exchange_rate.serialize())
+
+        serialized_securities = []
+        for security in self._securities:
+            serialized_securities.append(security.serialize())
+
         sorted_account_groups = sorted(self._account_groups, key=lambda x: x.path)
+        serialized_account_groups = []
+        for account_group in sorted_account_groups:
+            serialized_account_groups.append(account_group.serialize())
+
         sorted_categories = sorted(self._categories, key=lambda x: x.path)
+        serialized_categories = []
+        for category in sorted_categories:
+            serialized_categories.append(category.serialize())
+
         sorted_accounts = sorted(self._accounts, key=lambda x: x.path)
+        serialized_accounts = []
+        for account in sorted_accounts:
+            serialized_accounts.append(account.serialize())
+
         sorted_tags = sorted(self._tags, key=lambda x: x.name)
+        serialized_tags = []
+        for tag in sorted_tags:
+            serialized_tags.append(tag.name)
+
         sorted_payees = sorted(self._payees, key=lambda x: x.name)
-        # Sorting transactions here speeds up sorting during deserialization
-        sorted_transactions = sorted(self._transactions, key=lambda x: x.timestamp)
+        serialized_payees = []
+        for payee in sorted_payees:
+            serialized_payees.append(payee.name)
 
         root_item_references = []
         for item in self._root_account_items:
             root_item_references.append(
                 {"datatype": item.__class__.__name__, "path": item.path}
             )
-        base_currency_code = (
-            self._base_currency.code if self._base_currency is not None else None
-        )
 
         root_income_category_refs = []
         for category in self._root_income_categories:
@@ -1384,26 +1416,46 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         for category in self._root_income_and_expense_categories:
             root_income_and_expense_category_refs.append(category.path)
 
+        # Sorting transactions here speeds up sorting during deserialization
+        sorted_transactions = sorted(self._transactions, key=lambda x: x.timestamp)
+        serialized_transactions = []
+        no_of_transactions = len(sorted_transactions)
+        step = no_of_transactions // 100
+        if step == 0:
+            step = 1
+        done = 0
+        for transaction in sorted_transactions:
+            serialized_transaction = transaction.serialize()
+            serialized_transactions.append(serialized_transaction)
+            done += 1
+            if done % step == 0:
+                progress = int(done / no_of_transactions * 100)
+                progress_callable(progress)
+            if done == no_of_transactions:
+                progress_callable(100)
+
         return {
             "datatype": "RecordKeeper",
-            "currencies": self._currencies,
+            "currencies": serialized_currencies,
             "base_currency_code": base_currency_code,
-            "exchange_rates": self._exchange_rates,
-            "securities": self._securities,
-            "account_groups": sorted_account_groups,
-            "accounts": sorted_accounts,
+            "exchange_rates": serialized_exchange_rates,
+            "securities": serialized_securities,
+            "account_groups": serialized_account_groups,
+            "accounts": serialized_accounts,
             "root_account_items": root_item_references,
-            "payees": [payee.name for payee in sorted_payees],
-            "tags": [tag.name for tag in sorted_tags],
-            "categories": sorted_categories,
+            "payees": serialized_payees,
+            "tags": serialized_tags,
+            "categories": serialized_categories,
             "root_income_categories": root_income_category_refs,
             "root_expense_categories": root_expense_category_refs,
             "root_income_and_expense_categories": root_income_and_expense_category_refs,
-            "transactions": sorted_transactions,
+            "transactions": serialized_transactions,
         }
 
     @staticmethod
-    def deserialize(data: dict[str, Any]) -> "RecordKeeper":
+    def deserialize(
+        data: dict[str, Any], progress_callable: Callable[[int], None]
+    ) -> "RecordKeeper":
         obj = RecordKeeper()
         obj._currencies: list[Currency] = data["currencies"]  # noqa: SLF001
         currencies: dict[str, Currency] = {
@@ -1490,6 +1542,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
                 categories,
                 currencies,
                 securities,
+                progress_callable,
             )
         )
         # Sorting transactions here is useful because front-end can assume that
@@ -1624,8 +1677,14 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         categories: dict[str, Category],
         currencies: dict[str, Currency],
         securities: dict[str, Security],
+        progress_callable: Callable[[int], None],
     ) -> dict[UUID, Transaction]:
         _transaction_dict: dict[UUID, Transaction] = {}
+        no_of_transactions = len(transaction_dicts)
+        step = no_of_transactions // 100
+        if step == 0:
+            step = 1
+        done = 0
         for transaction_dict in transaction_dicts:
             transaction: Transaction
             if transaction_dict["datatype"] == "CashTransaction":
@@ -1662,6 +1721,12 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
             else:
                 raise ValueError("Unexpected 'datatype' value.")
             _transaction_dict[transaction.uuid] = transaction
+            done += 1
+            if done % step == 0:
+                progress = int(done / no_of_transactions * 100)
+                progress_callable(progress)
+            if done == no_of_transactions:
+                progress_callable(100)
         return _transaction_dict
 
     def _check_account_exists(self, path: str) -> None:
