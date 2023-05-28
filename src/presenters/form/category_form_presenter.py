@@ -16,7 +16,6 @@ from src.views.dialogs.category_dialog import CategoryDialog
 from src.views.forms.category_form import CategoryForm
 
 BUSY_DIALOG_TRANSACTION_LIMIT = 20_000
-# TODO: add similar busy dialog to Tag and Payee Forms
 
 
 class CategoryFormPresenter:
@@ -39,7 +38,7 @@ class CategoryFormPresenter:
         self._recalculate_data = True
 
     def show_form(self) -> None:
-        if self._recalculate_data is True:
+        if self._recalculate_data:
             self._reset_model()
 
         self._view.incomeTreeView.expandAll()

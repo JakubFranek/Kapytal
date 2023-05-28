@@ -272,7 +272,7 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
 
     def _sort_indicator_changed(self, section: int, sort_order: Qt.SortOrder) -> None:
         """Logs and sorts the Table. Shows a busy indicator during the process."""
-        # TODO: sorting might be faster by sorting the data and resetting model
+        # IDEA: sorting might be faster by sorting the data and resetting model
 
         self._busy_dialog = create_simple_busy_indicator(
             self, "Sorting Transactions, please wait..."

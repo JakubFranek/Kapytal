@@ -148,6 +148,8 @@ class MainPresenter:
         self._account_tree_presenter.update_total_balance()
         self._account_tree_presenter.update_geometries()
         self._category_form_presenter.data_changed()
+        self._payee_form_presenter.data_changed()
+        self._tag_form_presenter.data_changed()
         self._file_presenter.update_unsaved_changes(unsaved_changes=True)
 
     def _base_currency_changed(self) -> None:

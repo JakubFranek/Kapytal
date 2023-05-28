@@ -12,6 +12,8 @@ from src.views.dialogs.busy_dialog import create_simple_busy_indicator
 from src.views.dialogs.tag_dialog import TagDialog
 from src.views.forms.tag_form import TagForm
 
+BUSY_DIALOG_TRANSACTION_LIMIT = 20_000
+
 
 class TagFormPresenter:
     event_data_changed = Event()
@@ -22,16 +24,16 @@ class TagFormPresenter:
 
         self._proxy_model = QSortFilterProxyModel(self._view.tableView)
         self._model = TagTableModel(self._view.tableView, [], self._proxy_model)
-        self.update_model_data()
+        self._update_model_data()
         self._proxy_model.setSourceModel(self._model)
         self._proxy_model.setSortRole(Qt.ItemDataRole.UserRole)
         self._proxy_model.setSortCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
         self._proxy_model.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
         self._view.tableView.setModel(self._proxy_model)
 
-        self._view.signal_add_tag.connect(lambda: self.run_tag_dialog(edit=False))
-        self._view.signal_remove_tag.connect(self.remove_tag)
-        self._view.signal_rename_tag.connect(lambda: self.run_tag_dialog(edit=True))
+        self._view.signal_add_tag.connect(lambda: self._run_tag_dialog(edit=False))
+        self._view.signal_remove_tag.connect(self._remove_tag)
+        self._view.signal_rename_tag.connect(lambda: self._run_tag_dialog(edit=True))
         self._view.signal_search_text_changed.connect(self._filter)
 
         self._view.finalize_setup()
@@ -40,13 +42,22 @@ class TagFormPresenter:
 
     def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
         self._record_keeper = record_keeper
+        self._recalculate_data = True
+
+    def data_changed(self) -> None:
+        self._recalculate_data = True
 
     def reset_model(self) -> None:
         self._model.pre_reset_model()
-        self.update_model_data()
+        self._update_model_data_with_busy_dialog()
         self._model.post_reset_model()
 
-    def update_model_data(self) -> None:
+    def show_form(self) -> None:
+        if self._recalculate_data:
+            self.reset_model()
+        self._view.show_form()
+
+    def _update_model_data(self) -> None:
         relevant_transactions = (
             self._record_keeper.cash_transactions
             + self._record_keeper.refund_transactions
@@ -57,21 +68,23 @@ class TagFormPresenter:
             self._record_keeper.tags,
         ).values()
 
-    def show_form(self) -> None:
-        self._busy_dialog = create_simple_busy_indicator(
-            self._view, "Calculating Tag stats, please wait..."
-        )
-        self._busy_dialog.open()
-        QApplication.processEvents()
+    def _update_model_data_with_busy_dialog(self) -> None:
+        no_of_transactions = len(self._record_keeper.transactions)
+        if no_of_transactions >= BUSY_DIALOG_TRANSACTION_LIMIT:
+            self._busy_dialog = create_simple_busy_indicator(
+                self._view, "Calculating Tag stats, please wait..."
+            )
+            self._busy_dialog.open()
+            QApplication.processEvents()
         try:
-            self.reset_model()
+            self._update_model_data()
         except:  # noqa: TRY302
             raise
         finally:
-            self._busy_dialog.close()
-        self._view.show_form()
+            if no_of_transactions >= BUSY_DIALOG_TRANSACTION_LIMIT:
+                self._busy_dialog.close()
 
-    def run_tag_dialog(self, *, edit: bool) -> None:
+    def _run_tag_dialog(self, *, edit: bool) -> None:
         self._dialog = TagDialog(self._view, edit=edit)
         if edit:
             tags = self._model.get_selected_items()
@@ -80,14 +93,14 @@ class TagFormPresenter:
             if len(tags) > 1:
                 raise ValueError("Cannot edit more than one item.")
             tag = tags[0]
-            self._dialog.signal_ok.connect(self.rename_tag)
+            self._dialog.signal_ok.connect(self._rename_tag)
             self._dialog.name = tag.name
         else:
-            self._dialog.signal_ok.connect(self.add_tag)
+            self._dialog.signal_ok.connect(self._add_tag)
         logging.debug(f"Running TagDialog ({edit=})")
         self._dialog.exec()
 
-    def add_tag(self) -> None:
+    def _add_tag(self) -> None:
         name = self._dialog.name
 
         logging.info(f"Adding Tag: {name=}")
@@ -98,12 +111,13 @@ class TagFormPresenter:
             return
 
         self._model.pre_add()
-        self.update_model_data()
+        self._update_model_data_with_busy_dialog()
         self._model.post_add()
         self._dialog.close()
         self.event_data_changed()
+        self._recalculate_data = False
 
-    def rename_tag(self) -> None:
+    def _rename_tag(self) -> None:
         tags = self._model.get_selected_items()
         if len(tags) == 0:
             raise ValueError("Cannot edit an unselected item.")
@@ -122,11 +136,12 @@ class TagFormPresenter:
             handle_exception(exception)
             return
 
-        self.update_model_data()
+        self._update_model_data_with_busy_dialog()
         self._dialog.close()
         self.event_data_changed()
+        self._recalculate_data = False
 
-    def remove_tag(self) -> None:
+    def _remove_tag(self) -> None:
         tags = self._model.get_selected_items()
         if len(tags) == 0:
             raise ValueError("Cannot remove an unselected item.")
@@ -138,7 +153,7 @@ class TagFormPresenter:
             try:
                 self._record_keeper.remove_tag(tag.name)
                 self._model.pre_remove_item(tag)
-                self.update_model_data()
+                self._update_model_data_with_busy_dialog()
                 self._model.post_remove_item()
                 any_deleted = True
             except Exception as exception:  # noqa: BLE001
@@ -146,6 +161,7 @@ class TagFormPresenter:
             finally:
                 if any_deleted:
                     self.event_data_changed()
+                    self._recalculate_data = False
 
     def _filter(self, pattern: str) -> None:
         if ("[" in pattern and "]" not in pattern) or "[]" in pattern:
