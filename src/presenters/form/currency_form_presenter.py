@@ -2,6 +2,7 @@ import logging
 from datetime import datetime
 from decimal import Decimal
 
+from PyQt6.QtCore import QSortFilterProxyModel
 from src.models.custom_exceptions import InvalidOperationError
 from src.models.record_keeper import RecordKeeper
 from src.models.user_settings import user_settings
@@ -9,6 +10,7 @@ from src.presenters.utilities.event import Event
 from src.presenters.utilities.handle_exception import handle_exception
 from src.view_models.currency_table_model import CurrencyTableModel
 from src.view_models.exchange_rate_table_model import ExchangeRateTableModel
+from src.view_models.value_table_model import ValueTableModel, ValueType
 from src.views.dialogs.add_exchange_rate_dialog import AddExchangeRateDialog
 from src.views.dialogs.currency_dialog import CurrencyDialog
 from src.views.dialogs.set_exchange_rate_dialog import SetExchangeRateDialog
@@ -45,6 +47,17 @@ class CurrencyFormPresenter:
         self._view.signal_add_exchange_rate.connect(self.run_add_exchange_rate_dialog)
         self._view.signal_set_exchange_rate.connect(self.run_set_exchange_rate_dialog)
         self._view.signal_remove_exchange_rate.connect(self.remove_exchange_rate)
+
+        self._exchange_rate_history_proxy = QSortFilterProxyModel(self._view)
+        self._exchange_rate_history_model = ValueTableModel(
+            self._view.exchangeRateHistoryTable,
+            self._exchange_rate_history_proxy,
+            ValueType.EXCHANGE_RATE,
+        )
+        self._exchange_rate_history_proxy.setSourceModel(
+            self._exchange_rate_history_model
+        )
+        self._view.exchangeRateHistoryTable.setModel(self._exchange_rate_history_proxy)
 
         self._view.finalize_setup()
 
@@ -120,15 +133,6 @@ class CurrencyFormPresenter:
         currency = self._currency_table_model.get_selected_item()
         if currency is None:
             raise InvalidOperationError("Cannot remove an unselected Currency.")
-
-        logging.debug("Currency deletion requested, asking the user for confirmation")
-        if not ask_yes_no_question(
-            self._view,
-            question=f"Do you want to delete the {currency.code!s} currency?",
-            title="Are you sure?",
-        ):
-            logging.debug("User cancelled the Currency deletion")
-            return
 
         logging.info(f"Removing Currency: {currency.code}")
         try:
@@ -241,11 +245,18 @@ class CurrencyFormPresenter:
     def _exchange_rate_selection_changed(self) -> None:
         item = self._exchange_rate_table_model.get_selected_item()
         is_exchange_rate_selected = item is not None
-        self._view.set_exchange_rate_buttons(
+        self._view.set_exchange_rate_actions(
             is_exchange_rate_selected=is_exchange_rate_selected
         )
+
+        if item is not None and self._exchange_rate_selection != item:
+            self._view.set_history_group_box_title(str(item) + " history")
+            self._exchange_rate_history_model.pre_reset_model()
+            self._exchange_rate_history_model.load_data(item.rate_history_pairs)
+            self._exchange_rate_history_model.post_reset_model()
+        self._exchange_rate_selection = item
 
     def _currency_selection_changed(self) -> None:
         item = self._currency_table_model.get_selected_item()
         is_currency_selected = item is not None
-        self._view.set_currency_buttons(is_currency_selected=is_currency_selected)
+        self._view.set_currency_actions(is_currency_selected=is_currency_selected)

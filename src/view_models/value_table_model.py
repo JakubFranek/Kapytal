@@ -1,45 +1,46 @@
-import unicodedata
-from collections.abc import Collection
+from collections.abc import Sequence
+from datetime import date
+from decimal import Decimal
+from enum import Enum, auto
 
 from PyQt6.QtCore import QAbstractTableModel, QModelIndex, QSortFilterProxyModel, Qt
 from PyQt6.QtWidgets import QTableView
-from src.models.model_objects.attributes import Attribute
-from src.models.utilities.calculation import AttributeStats
-from src.views.constants import TagTableColumn
+from src.views.constants import ValueTableColumn
 
 ALIGNMENT_RIGHT = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
 
 
-class TagTableModel(QAbstractTableModel):
-    COLUMN_HEADERS = {
-        TagTableColumn.NAME: "Name",
-        TagTableColumn.TRANSACTIONS: "Transactions",
-        TagTableColumn.BALANCE: "Balance",
-    }
+class ValueType(Enum):
+    EXCHANGE_RATE = auto()
+    SECURITY_PRICE = auto()
 
+
+class ValueTableModel(QAbstractTableModel):
     def __init__(
         self,
         view: QTableView,
-        tag_stats: Collection[AttributeStats],  # TODO: get rid of these statements
         proxy: QSortFilterProxyModel,
+        type_: ValueType,
     ) -> None:
         super().__init__()
         self._view = view
-        self.tag_stats = tag_stats
         self._proxy = proxy
+        self._type = type_
+        self._data = ()
 
-    @property
-    def tag_stats(self) -> tuple[AttributeStats, ...]:
-        return self._tag_stats
+        self.COLUMN_HEADERS = {ValueTableColumn.DATE: "Date"}
+        if type_ == ValueType.EXCHANGE_RATE:
+            self.COLUMN_HEADERS[ValueTableColumn.VALUE] = "Rate"
+        else:
+            self.COLUMN_HEADERS[ValueTableColumn.VALUE] = "Price"
 
-    @tag_stats.setter
-    def tag_stats(self, tag_stats: Collection[AttributeStats]) -> None:
-        self._tag_stats = tuple(tag_stats)
+    def load_data(self, date_value_pairs: Sequence[tuple[date, Decimal]]) -> None:
+        self._data = tuple(date_value_pairs)
 
     def rowCount(self, index: QModelIndex = ...) -> int:  # noqa: N802
         if isinstance(index, QModelIndex) and index.isValid():
             return 0
-        return len(self._tag_stats)
+        return len(self._data)
 
     def columnCount(self, index: QModelIndex = ...) -> int:  # noqa: N802, ARG002
         if not hasattr(self, "_column_count"):
@@ -53,40 +54,33 @@ class TagTableModel(QAbstractTableModel):
             return None
 
         if role == Qt.ItemDataRole.DisplayRole:
-            return self._get_display_role_data(
-                index.column(), self._tag_stats[index.row()]
-            )
+            return self._get_display_role_data(index.column(), self._data[index.row()])
         if role == Qt.ItemDataRole.UserRole:
-            return self._get_user_role_data(
-                index.column(), self._tag_stats[index.row()]
-            )
+            return self._get_user_role_data(index.column(), self._data[index.row()])
         column = index.column()
         if role == Qt.ItemDataRole.TextAlignmentRole and (
-            column == TagTableColumn.TRANSACTIONS or column == TagTableColumn.BALANCE
+            column == ValueTableColumn.VALUE
         ):
             return ALIGNMENT_RIGHT
         return None
 
     def _get_display_role_data(
-        self, column: int, tag_stats: AttributeStats
+        self, column: int, data: tuple[date, Decimal]
     ) -> str | int | None:
-        if column == TagTableColumn.NAME:
-            return tag_stats.attribute.name
-        if column == TagTableColumn.TRANSACTIONS:
-            return tag_stats.no_of_transactions
-        if column == TagTableColumn.BALANCE:
-            return tag_stats.balance.to_str_rounded()
+        if column == ValueTableColumn.DATE:
+            return data[0].strftime("%d.%m.%Y")
+        if column == ValueTableColumn.VALUE:
+            return str(data[1])
         return None
 
     def _get_user_role_data(
-        self, column: int, tag_stats: AttributeStats
+        self, column: int, data: tuple[date, Decimal]
     ) -> str | int | float | None:
-        if column == TagTableColumn.NAME:
-            return unicodedata.normalize("NFD", tag_stats.attribute.name)
-        if column == TagTableColumn.TRANSACTIONS:
-            return tag_stats.no_of_transactions
-        if column == TagTableColumn.BALANCE:
-            return float(tag_stats.balance.value_normalized)
+        # used for sorting
+        if column == ValueTableColumn.DATE:
+            return data[0].toordinal()
+        if column == ValueTableColumn.VALUE:
+            return float(data[1])
         return None
 
     def headerData(  # noqa: N802
@@ -96,11 +90,6 @@ class TagTableModel(QAbstractTableModel):
             if orientation == Qt.Orientation.Horizontal:
                 return self.COLUMN_HEADERS[section]
             return str(section)
-        if (
-            role == Qt.ItemDataRole.TextAlignmentRole
-            and section == TagTableColumn.BALANCE
-        ):
-            return ALIGNMENT_RIGHT
         return None
 
     def pre_add(self) -> None:
@@ -121,29 +110,23 @@ class TagTableModel(QAbstractTableModel):
         self.endResetModel()
         self._view.setSortingEnabled(True)  # noqa: FBT003
 
-    def pre_remove_item(self, item: Attribute) -> None:
-        index = self.get_index_from_item(item)
+    def pre_remove_item(self, date_: date) -> None:
+        index = self.get_index_from_date(date_)
         self.beginRemoveRows(QModelIndex(), index.row(), index.row())
 
     def post_remove_item(self) -> None:
         self.endRemoveRows()
 
-    def get_selected_items(self) -> tuple[Attribute]:
+    def get_selected_dates(self) -> tuple[date, ...]:
         proxy_indexes = self._view.selectedIndexes()
         source_indexes = [self._proxy.mapToSource(index) for index in proxy_indexes]
-        return tuple(
-            self._tag_stats[index.row()].attribute
-            for index in source_indexes
-            if index.column() == 0
-        )
+        return tuple(self._data[index.row()][0] for index in source_indexes)
 
-    def get_index_from_item(self, item: Attribute | None) -> QModelIndex:
-        if item is None:
-            return QModelIndex()
-        for index, tag_stats in enumerate(self._tag_stats):
-            if tag_stats.attribute == item:
+    def get_index_from_date(self, date_: date) -> QModelIndex:
+        for index, data in enumerate(self._data):
+            if data[0] == date_:
                 row = index
                 break
         else:
-            raise ValueError(f"Parameter {item=} not in TagTableModel.tag_stats.")
+            raise ValueError(f"Date {date_.strftime('%Y-%m-%d')} not found")
         return QAbstractTableModel.createIndex(self, row, 0)

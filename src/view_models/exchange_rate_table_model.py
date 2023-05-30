@@ -40,6 +40,15 @@ class ExchangeRateTableModel(QAbstractTableModel):
             self._column_count = len(self.COLUMN_HEADERS)
         return self._column_count
 
+    def headerData(  # noqa: N802
+        self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole = ...
+    ) -> str | int | None:
+        if role == Qt.ItemDataRole.DisplayRole:
+            if orientation == Qt.Orientation.Horizontal:
+                return self.COLUMN_HEADERS[section]
+            return str(section)
+        return None
+
     def data(
         self, index: QModelIndex, role: Qt.ItemDataRole = ...
     ) -> str | Qt.AlignmentFlag | None:
@@ -74,20 +83,6 @@ class ExchangeRateTableModel(QAbstractTableModel):
             return latest_date.strftime("%d.%m.%Y")
         return None
 
-    def headerData(  # noqa: N802
-        self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole = ...
-    ) -> str | int | None:
-        if role == Qt.ItemDataRole.DisplayRole:
-            if orientation == Qt.Orientation.Horizontal:
-                return self.COLUMN_HEADERS[section]
-            return str(section)
-        if role == Qt.ItemDataRole.TextAlignmentRole and (
-            section == ExchangeRateTableColumn.LAST_DATE
-            or section == ExchangeRateTableColumn.CODE
-        ):
-            return Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
-        return None
-
     def pre_add(self) -> None:
         self.beginInsertRows(QModelIndex(), self.rowCount(), self.rowCount())
 
@@ -106,12 +101,6 @@ class ExchangeRateTableModel(QAbstractTableModel):
 
     def post_remove_item(self) -> None:
         self.endRemoveRows()
-
-    def get_selected_item_index(self) -> QModelIndex:
-        indexes = self._view.selectedIndexes()
-        if len(indexes) == 0:
-            return QModelIndex()
-        return indexes[0]
 
     def get_selected_item(self) -> ExchangeRate | None:
         indexes = self._view.selectedIndexes()

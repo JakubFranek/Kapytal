@@ -23,6 +23,11 @@ class ExchangeRateTableColumn(IntEnum):
     LAST_DATE = 2
 
 
+class ValueTableColumn(IntEnum):
+    DATE = 0
+    VALUE = 1
+
+
 class PayeeTableColumn(IntEnum):
     NAME = 0
     TRANSACTIONS = 1
