@@ -74,6 +74,11 @@ duplicate: QIcon | None = None
 transfer: QIcon | None = None
 reset_sort_order: QIcon | None = None
 hourglass: QIcon | None = None
+arrow_right: QIcon | None = None
+arrow_left: QIcon | None = None
+arrow_move: QIcon | None = None
+home: QIcon | None = None
+slider: QIcon | None = None
 
 
 def setup() -> None:  # noqa: PLR0915
@@ -101,7 +106,7 @@ def setup() -> None:  # noqa: PLR0915
     global transfer  # noqa: PLW0603
     global reset_sort_order  # noqa: PLW0603
     global hourglass  # noqa: PLW0603
-
+    global arrow_right, arrow_left, arrow_move, home, slider  # noqa: PLW0603
     QDir.addSearchPath(
         "icons_24",
         str(Path(QDir.currentPath() + "/resources/icons/icons-24")),
@@ -187,3 +192,8 @@ def setup() -> None:  # noqa: PLR0915
         else QIcon("icons_custom:edit-list-order.png")
     )
     hourglass = QIcon("icons_16:hourglass.png")
+    arrow_right = QIcon("icons_16:arrow.png")
+    arrow_left = QIcon("icons_16:arrow-180.png")
+    arrow_move = QIcon("icons_16:arrow-move.png")
+    home = QIcon("icons_16:home.png")
+    slider = QIcon("icons_16:ui-slider-050.png")

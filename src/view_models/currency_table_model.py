@@ -5,13 +5,15 @@ from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QTableView
 from src.models.model_objects.currency_objects import Currency
 from src.views import icons
-from src.views.constants import CurrencyTableColumn
+from src.views.constants import CurrencyTableColumn, monospace_font
+
+ALIGN_RIGHT = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
 
 
 class CurrencyTableModel(QAbstractTableModel):
     COLUMN_HEADERS = {
-        CurrencyTableColumn.CODE: "Currency code",
-        CurrencyTableColumn.PLACES: "Decimal places",
+        CurrencyTableColumn.CODE: "Currency",
+        CurrencyTableColumn.PLACES: "Decimals",
     }
 
     def __init__(
@@ -52,7 +54,7 @@ class CurrencyTableModel(QAbstractTableModel):
             return str(section)
         return None
 
-    def data(
+    def data(  # noqa: PLR0911
         self, index: QModelIndex, role: Qt.ItemDataRole = ...
     ) -> str | QIcon | None:
         if not index.isValid():
@@ -70,6 +72,13 @@ class CurrencyTableModel(QAbstractTableModel):
             and currency == self.base_currency
         ):
             return icons.base_currency
+        if (
+            role == Qt.ItemDataRole.TextAlignmentRole
+            and column == CurrencyTableColumn.CODE
+        ):
+            return ALIGN_RIGHT
+        if role == Qt.ItemDataRole.FontRole and column == CurrencyTableColumn.CODE:
+            return monospace_font
         return None
 
     def pre_add(self) -> None:

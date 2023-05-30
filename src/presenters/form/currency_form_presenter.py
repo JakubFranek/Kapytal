@@ -254,6 +254,9 @@ class CurrencyFormPresenter:
             self._exchange_rate_history_model.pre_reset_model()
             self._exchange_rate_history_model.load_data(item.rate_history_pairs)
             self._exchange_rate_history_model.post_reset_model()
+            dates, rates = zip(*item.rate_history_pairs, strict=True)
+            self._view.load_chart_data(dates, rates)
+
         self._exchange_rate_selection = item
 
     def _currency_selection_changed(self) -> None:

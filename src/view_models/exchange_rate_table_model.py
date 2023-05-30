@@ -3,14 +3,14 @@ from collections.abc import Collection
 from PyQt6.QtCore import QAbstractTableModel, QModelIndex, Qt
 from PyQt6.QtWidgets import QTableView
 from src.models.model_objects.currency_objects import ExchangeRate
-from src.views.constants import ExchangeRateTableColumn
+from src.views.constants import ExchangeRateTableColumn, monospace_font
 
 ALIGNMENT_RIGHT = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
 
 
 class ExchangeRateTableModel(QAbstractTableModel):
     COLUMN_HEADERS = {
-        ExchangeRateTableColumn.CODE: "Exchange Rate",
+        ExchangeRateTableColumn.CODE: "Code",
         ExchangeRateTableColumn.RATE: "Latest rate",
         ExchangeRateTableColumn.LAST_DATE: "Latest date",
     }
@@ -63,6 +63,8 @@ class ExchangeRateTableModel(QAbstractTableModel):
             and column == ExchangeRateTableColumn.RATE
         ):
             return ALIGNMENT_RIGHT
+        if role == Qt.ItemDataRole.FontRole and column == ExchangeRateTableColumn.CODE:
+            return monospace_font
         return None
 
     def _get_display_role_data(
@@ -71,11 +73,7 @@ class ExchangeRateTableModel(QAbstractTableModel):
         if column == ExchangeRateTableColumn.CODE:
             return str(exchange_rate)
         if column == ExchangeRateTableColumn.RATE:
-            return (
-                f"1 {exchange_rate.primary_currency.code} = "
-                f"{exchange_rate.latest_rate:,} "
-                f"{exchange_rate.secondary_currency.code}"
-            )
+            return f"{exchange_rate.latest_rate:,}"
         if column == ExchangeRateTableColumn.LAST_DATE:
             latest_date = exchange_rate.latest_date
             if latest_date is None:

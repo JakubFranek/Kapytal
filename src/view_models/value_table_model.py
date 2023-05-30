@@ -70,7 +70,7 @@ class ValueTableModel(QAbstractTableModel):
         if column == ValueTableColumn.DATE:
             return data[0].strftime("%d.%m.%Y")
         if column == ValueTableColumn.VALUE:
-            return str(data[1])
+            return f"{data[1]:,}"
         return None
 
     def _get_user_role_data(

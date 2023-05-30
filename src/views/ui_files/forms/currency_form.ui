@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>712</width>
-    <height>539</height>
+    <width>950</width>
+    <height>500</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -160,56 +160,62 @@
      <property name="title">
       <string>Selected Exchange Rate History</string>
      </property>
-     <layout class="QVBoxLayout" name="verticalLayout_5">
+     <layout class="QHBoxLayout" name="exchangeRateHistoryGroupBoxHorizontalLayout" stretch="0,0,1">
       <item>
-       <layout class="QHBoxLayout" name="exchangeRateHistoryControlsHorizontalLayout">
+       <layout class="QVBoxLayout" name="exchangeRateHistoryTableVerticalLayout">
         <item>
-         <widget class="QToolButton" name="addRateToolButton">
-          <property name="text">
-           <string>...</string>
-          </property>
-         </widget>
+         <layout class="QHBoxLayout" name="exchangeRateHistoryTableControlsHorizontalLayout">
+          <item>
+           <widget class="QToolButton" name="addRateToolButton">
+            <property name="text">
+             <string>...</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QToolButton" name="editRateToolButton">
+            <property name="text">
+             <string>...</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QToolButton" name="removeRateToolButton">
+            <property name="text">
+             <string>...</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QToolButton" name="loadToolButton">
+            <property name="text">
+             <string>...</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>0</width>
+              <height>0</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
         </item>
-        <item>
-         <widget class="QToolButton" name="editRateToolButton">
-          <property name="text">
-           <string>...</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QToolButton" name="removeRateToolButton">
-          <property name="text">
-           <string>...</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QToolButton" name="loadToolButton">
-          <property name="text">
-           <string>...</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <spacer name="horizontalSpacer">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-       </layout>
-      </item>
-      <item>
-       <layout class="QHBoxLayout" name="exchangeRateHistoryHorizontalLayout">
         <item>
          <widget class="QTableView" name="exchangeRateHistoryTable">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
           <property name="selectionBehavior">
            <enum>QAbstractItemView::SelectRows</enum>
           </property>
@@ -226,6 +232,90 @@
            <bool>false</bool>
           </attribute>
          </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <widget class="Line" name="line">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <layout class="QVBoxLayout" name="exchangeRateHistoryChartVerticalLayout">
+        <item>
+         <layout class="QHBoxLayout" name="exchangeRateHistoryChartControlsHorizontalLayout">
+          <item>
+           <widget class="QToolButton" name="homeToolButton">
+            <property name="text">
+             <string>...</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QToolButton" name="backToolButton">
+            <property name="text">
+             <string>...</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QToolButton" name="forwardToolButton">
+            <property name="text">
+             <string>...</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QToolButton" name="panToolButton">
+            <property name="text">
+             <string>...</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QToolButton" name="zoomToolButton">
+            <property name="text">
+             <string>...</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QToolButton" name="subplotsToolButton">
+            <property name="text">
+             <string>...</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QToolButton" name="customizeToolButton">
+            <property name="text">
+             <string>...</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QToolButton" name="saveToolButton">
+            <property name="text">
+             <string>...</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="exchangeRateHistoryChartControlsHorizontalSpacer">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>0</width>
+              <height>0</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
         </item>
        </layout>
       </item>

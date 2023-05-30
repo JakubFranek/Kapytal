@@ -129,6 +129,7 @@ def sync_nodes(
         node = get_node(item, nodes)
         parent_node = get_node(item.parent, nodes) if item.parent is not None else None
         if node is None:
+            # TODO: add try/except here
             balance_base = item.get_balance(currency=base_currency)
             if isinstance(item, CashAccount):
                 balance_native = balance_base.convert(item.currency)
