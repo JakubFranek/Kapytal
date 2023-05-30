@@ -1,4 +1,5 @@
-from datetime import datetime
+from collections import defaultdict
+from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import Any
 
@@ -7,15 +8,18 @@ from hypothesis import assume, given
 from hypothesis import strategies as st
 from src.models.base_classes.account import UnrelatedAccountError
 from src.models.model_objects.account_group import AccountGroup
+from src.models.model_objects.cash_objects import CashAccount
 from src.models.model_objects.currency_objects import CashAmount, Currency, ExchangeRate
 from src.models.model_objects.security_objects import (
     Security,
     SecurityAccount,
     SecurityRelatedTransaction,
+    SecurityTransaction,
 )
 from src.models.user_settings import user_settings
 from tests.models.test_assets.composites import (
     account_groups,
+    cash_accounts,
     currencies,
     everything_except,
     names,
@@ -81,7 +85,8 @@ def test_get_balance(  # noqa: PLR0913
     exchange_rate: Decimal,
 ) -> None:
     assume(currency_a != currency_b)
-    date_ = datetime.now(user_settings.settings.time_zone).date()
+    datetime_ = datetime.now(user_settings.settings.time_zone)
+    date_ = datetime_.date()
     exchange_rate_obj = ExchangeRate(currency_a, currency_b)
     exchange_rate_obj.set_rate(date_, exchange_rate)
     account = SecurityAccount("Test")
@@ -89,8 +94,10 @@ def test_get_balance(  # noqa: PLR0913
     security_b = Security("B", "B", "ETF", currency_b, 1)
     security_a.set_price(date_, CashAmount(price_a, currency_a))
     security_b.set_price(date_, CashAmount(price_b, currency_b))
-    account._securities[security_a] += shares_a
-    account._securities[security_b] += shares_b
+    d = defaultdict(lambda: Decimal(0))
+    d[security_a] += shares_a
+    d[security_b] += shares_b
+    account._securities_history = [(datetime_, d)]
     account._update_balances()
     balance_a = account.get_balance(currency_a)
     balance_b = account.get_balance(currency_b)
@@ -106,3 +113,73 @@ def test_get_balance(  # noqa: PLR0913
     assert round(balance_b.value_normalized, 10) == round(
         expected_b.value_normalized, 10
     )
+
+
+@given(currency=currencies(), data=st.data())
+def test_get_balance_with_date(
+    currency: Currency,
+    data: st.DataObject,
+) -> None:
+    security = Security("NAME", "SYMB", "TYPE", currency, 1)
+
+    account: SecurityAccount = data.draw(security_accounts())
+    cash_account: CashAccount = data.draw(cash_accounts(currency=currency))
+    t1: SecurityTransaction = data.draw(
+        security_transactions(
+            security_account=account, cash_account=cash_account, security=security
+        )
+    )
+    t2: SecurityTransaction = data.draw(
+        security_transactions(
+            security_account=account, cash_account=cash_account, security=security
+        )
+    )
+    t3: SecurityTransaction = data.draw(
+        security_transactions(
+            security_account=account, cash_account=cash_account, security=security
+        )
+    )
+
+    t1._datetime = datetime.now(user_settings.settings.time_zone) - timedelta(days=2)
+    t2._datetime = datetime.now(user_settings.settings.time_zone) - timedelta(days=1)
+    t3._datetime = datetime.now(user_settings.settings.time_zone)
+    t1._timestamp = t1._datetime.timestamp()
+    t2._timestamp = t2._datetime.timestamp()
+    t3._timestamp = t3._datetime.timestamp()
+    transactions = [t1, t2, t3]
+    security.set_price(
+        t1.datetime_.date() - timedelta(days=10), CashAmount(1, currency)
+    )
+    account.update_securities()
+    transaction_sum_3 = sum(
+        (
+            (t.security.price * t.get_shares(account)).convert(currency)
+            for t in transactions
+        ),
+        start=currency.zero_amount,
+    )
+    transaction_sum_2 = sum(
+        (
+            (t.security.price * t.get_shares(account)).convert(currency)
+            for t in transactions[:-1]
+        ),
+        start=currency.zero_amount,
+    )
+    transaction_sum_1 = sum(
+        (
+            (t.security.price * t.get_shares(account)).convert(currency)
+            for t in transactions[:-2]
+        ),
+        start=currency.zero_amount,
+    )
+
+    latest_balance = account.get_balance(currency)
+    balance_3 = account.get_balance(currency, t3.datetime_.date())
+    balance_2 = account.get_balance(currency, t2.datetime_.date())
+    balance_1 = account.get_balance(currency, t1.datetime_.date())
+    balance_0 = account.get_balance(currency, t1.datetime_.date() - timedelta(days=2))
+    assert latest_balance == transaction_sum_3
+    assert balance_3 == latest_balance
+    assert balance_2 == transaction_sum_2
+    assert balance_1 == transaction_sum_1
+    assert balance_0 == currency.zero_amount

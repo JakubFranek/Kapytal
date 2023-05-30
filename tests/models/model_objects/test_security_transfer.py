@@ -128,8 +128,8 @@ def test_change_accounts(
     assert transfer not in old_recipient.transactions
     assert transfer in new_sender.transactions
     assert transfer in new_recipient.transactions
-    assert old_sender.securities[security] == 0
-    assert old_recipient.securities[security] == 0
+    assert security not in old_sender.securities
+    assert security not in old_recipient.securities
     assert new_sender.securities[security] == -shares
     assert new_recipient.securities[security] == +shares
 

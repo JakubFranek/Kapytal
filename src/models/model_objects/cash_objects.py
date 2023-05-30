@@ -2,7 +2,7 @@ import logging
 import operator
 from abc import ABC, abstractmethod
 from collections.abc import Collection
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 from enum import Enum, auto
 from types import NoneType
@@ -154,8 +154,17 @@ class CashAccount(Account):
     ) -> tuple[CashRelatedTransaction, ...]:
         return tuple(self._transactions)
 
-    def get_balance(self, currency: Currency) -> CashAmount:
-        return self._balance_history[-1][1].convert(currency)
+    def get_balance(self, currency: Currency, date_: date | None = None) -> CashAmount:
+        if date_ is None:
+            amount = self._balance_history[-1][1]
+        else:
+            for _datetime, _balance, _ in reversed(self._balance_history):
+                if _datetime.date() <= date_:
+                    amount = _balance
+                    break
+            else:
+                amount = self._initial_balance
+        return amount.convert(currency, date_)
 
     @property
     def balances(self) -> tuple[CashAmount, ...]:
@@ -229,7 +238,7 @@ class CashAccount(Account):
 
     def update_balance(self) -> None:
         logging.debug(f"Updating balance of {self}")
-        transactions = sorted(self._transactions, key=lambda x: x.datetime_)
+        transactions = sorted(self._transactions, key=lambda x: x.timestamp)
         if len(self._transactions) > 0:
             oldest_datetime = transactions[0].datetime_
         else:

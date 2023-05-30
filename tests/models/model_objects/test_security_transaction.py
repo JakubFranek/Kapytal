@@ -484,7 +484,7 @@ def test_buy_change_security_account(security_account: SecurityAccount) -> None:
     buy.set_attributes(security_account=security_account)
     assert buy in security_account.transactions
     assert buy not in old_security_account.transactions
-    assert old_security_account.securities[security] == 0
+    assert security not in old_security_account.securities
     assert security_account.securities[security] == buy.shares
 
 
@@ -495,7 +495,11 @@ def test_sell_change_security_account(security_account: SecurityAccount) -> None
     security = sell.security
     old_security_account = sell.security_account
     assert sell in old_security_account.transactions
-    assert old_security_account.securities[security] == buy.shares - sell.shares
+    expected_shares = buy.shares - sell.shares
+    if expected_shares != 0:
+        assert old_security_account.securities[security] == expected_shares
+    else:
+        assert security not in old_security_account.securities
 
     sell.set_attributes(security_account=security_account)
     assert sell in security_account.transactions

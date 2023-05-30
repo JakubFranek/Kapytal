@@ -7,7 +7,6 @@ from src.views import icons
 from src.views.dialogs.select_item_dialog import ask_user_for_selection
 
 
-# TODO: this could be a subclass of CategoryRowWidget ABC
 class SingleCategoryRowWidget(QWidget):
     signal_split_categories = pyqtSignal()
 

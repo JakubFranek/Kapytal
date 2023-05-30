@@ -144,7 +144,7 @@ class Currency(CopyableMixin, JSONSerializableMixin):
             if date_ is None:
                 rate = exchange_rate.latest_rate
             else:
-                rate = exchange_rate.rate_history[date_]
+                rate = exchange_rate.get_rate(date_)
             factor = operation(factor, rate)
         self._factor_cache[cache_key] = factor
         return factor
@@ -235,8 +235,10 @@ class ExchangeRate(CopyableMixin, JSONSerializableMixin):
 
     @property
     def rate_history_pairs(self) -> tuple[tuple[date, Decimal]]:
-        pairs = [(date_, rate) for date_, rate in self._rate_history.items()]
-        pairs.sort()
+        pairs: list[tuple[date, Decimal]] = [
+            (date_, rate) for date_, rate in self._rate_history.items()
+        ]
+        pairs.sort(key=lambda x: x[0])
         return tuple(pairs)
 
     @property
@@ -259,6 +261,20 @@ class ExchangeRate(CopyableMixin, JSONSerializableMixin):
 
     def __str__(self) -> str:
         return f"{self._primary_currency.code}/{self._secondary_currency.code}"
+
+    def get_rate(self, date_: date) -> Decimal:
+        try:
+            return self._rate_history[date_]
+        except KeyError:
+            for _date, _rate in reversed(self.rate_history_pairs):
+                if _date <= date_:
+                    logging.warning(
+                        f"{self!s}: no rate found for {date_.strftime('%Y-%m-%d')}, "
+                        f"using rate from {_date.strftime('%Y-%m-%d')}"
+                    )
+                    return _rate
+            logging.warning(f"{self!s}: no rate found for {date_}")
+            return Decimal("NaN")
 
     def set_rate(self, date_: date, rate: Decimal | int | str) -> None:
         if not isinstance(date_, date):

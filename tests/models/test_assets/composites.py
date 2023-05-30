@@ -379,19 +379,25 @@ def security_accounts(draw: st.DrawFn) -> SecurityAccount:
 
 
 @st.composite
-def security_transactions(
+def security_transactions(  # noqa: PLR0913
     draw: st.DrawFn,
     min_datetime: datetime = MIN_DATETIME,
     max_datetime: datetime = datetime.max,
+    security_account: SecurityAccount | None = None,
+    cash_account: CashAccount | None = None,
+    security: Security | None = None,
 ) -> SecurityTransaction:
-    cash_account = draw(cash_accounts())
-    security_account = draw(security_accounts())
+    if cash_account is None:
+        cash_account = draw(cash_accounts())
+    if security_account is None:
+        security_account = draw(security_accounts())
     assume(cash_account.path != security_account.path)
 
     price_per_share = draw(
         cash_amounts(currency=cash_account.currency, min_value=0, max_value=1e9)
     )
-    security = draw(securities(currency=cash_account.currency))
+    if security is None:
+        security = draw(securities(currency=cash_account.currency))
 
     description = draw(st.text(min_size=1, max_size=256))
     datetime_ = draw(

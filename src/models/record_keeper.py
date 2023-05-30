@@ -1545,6 +1545,9 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
                 progress_callable,
             )
         )
+
+        # TODO: add status messages here
+
         # Sorting transactions here is useful because front-end can assume that
         # upon load of RecordKeeper._transactions, transactions are already sorted
         # in descending order

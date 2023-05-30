@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from datetime import date
 from typing import TYPE_CHECKING
 
 from src.models.mixins.copyable_mixin import CopyableMixin
@@ -64,5 +65,6 @@ class Account(
         raise NotImplementedError
 
     @abstractmethod
-    def get_balance(self, currency: Currency) -> CashAmount:
+    def get_balance(self, currency: Currency, date_: date | None = None) -> CashAmount:
+        # TODO: None date should be initialized to today, which is not necessarily the latest!
         raise NotImplementedError

@@ -1,3 +1,4 @@
+import copy
 import string
 from abc import ABC, abstractmethod
 from collections import defaultdict
@@ -242,14 +243,12 @@ class SecurityAccount(Account):
         "_allow_colon",
         "allow_update_balance",
         "event_balance_updated",
-        "_securities",
+        "_securities_history",
     )
 
     def __init__(self, name: str, parent: AccountGroup | None = None) -> None:
         super().__init__(name, parent)
-        self._securities: defaultdict[Security, Decimal] = defaultdict(
-            lambda: Decimal(0)
-        )
+        self._securities_history: list[tuple[datetime, dict[Security, Decimal]]] = []
         self._transactions: list[SecurityRelatedTransaction] = []
 
         # allow_update_balance attribute is used to block updating the balance
@@ -258,28 +257,48 @@ class SecurityAccount(Account):
 
     @property
     def securities(self) -> dict[Security, Decimal]:
-        return self._securities
+        if len(self._securities_history) == 0:
+            return {}
+        return self._securities_history[-1][1]
 
     @property
     def transactions(self) -> tuple["SecurityRelatedTransaction", ...]:
         return tuple(self._transactions)
 
-    def get_balance(self, currency: Currency) -> CashAmount:
-        return sum(
-            (balance.convert(currency) for balance in self._balances),
-            start=currency.zero_amount,
-        )
+    def get_balance(self, currency: Currency, date_: date | None = None) -> CashAmount:
+        if date_ is None:
+            return sum(
+                (balance.convert(currency) for balance in self._balances),
+                start=currency.zero_amount,
+            )
+        for _datetime, _security_dict in reversed(self._securities_history):
+            if _datetime.date() <= date_:
+                balances = self._calculate_balances(_security_dict)
+                return sum(
+                    (balance.convert(currency) for balance in balances),
+                    start=currency.zero_amount,
+                )
+        return CashAmount(0, currency)
 
     def _update_balances(self) -> None:
+        if len(self._securities_history) == 0:
+            self._balances = ()
+            return
+        self._balances = self._calculate_balances(self._securities_history[-1][1])
+        self.event_balance_updated()
+
+    @staticmethod
+    def _calculate_balances(
+        security_dict: dict[Security, Decimal]
+    ) -> tuple[CashAmount, ...]:
         balances: dict[Currency, CashAmount] = {}
-        for security, shares in self._securities.items():
+        for security, shares in security_dict.items():
             security_amount = security.price * shares
             if security_amount.currency in balances:
                 balances[security_amount.currency] += security_amount
             else:
                 balances[security_amount.currency] = security_amount
-        self._balances = tuple(balances.values())
-        self.event_balance_updated()
+        return tuple(balances.values())
 
     def add_transaction(self, transaction: "SecurityRelatedTransaction") -> None:
         self._validate_transaction(transaction)
@@ -294,20 +313,29 @@ class SecurityAccount(Account):
             self.update_securities()
 
     def update_securities(self) -> None:
-        for security in self._securities:
-            if self._update_balances in security.event_price_updated:
-                security.event_price_updated.remove(self._update_balances)
+        if len(self._securities_history) != 0:
+            for security in self._securities_history[-1][1]:
+                if self._update_balances in security.event_price_updated:
+                    security.event_price_updated.remove(self._update_balances)
 
-        self._securities.clear()
+        self._securities_history.clear()
+        self._transactions.sort(key=lambda x: x.timestamp)
         for transaction in self._transactions:
-            self._securities[transaction.security] += transaction.get_shares(self)
-        self._securities = defaultdict(
-            self._securities.default_factory,
-            {key: value for key, value in self._securities.items() if value != 0},
-        )
+            security_dict = (
+                defaultdict(lambda: Decimal(0))
+                if len(self._securities_history) == 0
+                else copy.copy(self._securities_history[-1][1])
+            )
+            security_dict[transaction.security] += transaction.get_shares(self)
+            security_dict = defaultdict(
+                lambda: Decimal(0),
+                {key: value for key, value in security_dict.items() if value != 0},
+            )
+            self._securities_history.append((transaction.datetime_, security_dict))
 
-        for security in self._securities:
-            security.event_price_updated.append(self._update_balances)
+        if len(self._securities_history) != 0:
+            for security in self._securities_history[-1][1]:
+                security.event_price_updated.append(self._update_balances)
         self._update_balances()
 
     def serialize(self) -> dict[str, Any]:

@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 from typing import Any
 
@@ -10,6 +10,7 @@ from src.models.model_objects.currency_objects import (
     CurrencyError,
     ExchangeRate,
 )
+from src.models.user_settings import user_settings
 from tests.models.test_assets.composites import (
     currencies,
     everything_except,
@@ -171,3 +172,26 @@ def test_set_rate_invalid_rate_value(
         ValueError, match="Parameter 'rate' must be finite and positive."
     ):
         exchange_rate.set_rate(date_, rate)
+
+
+def test_get_rate() -> None:
+    primary = Currency("EUR", 2)
+    secondary = Currency("CZK", 2)
+    exchange_rate = ExchangeRate(primary, secondary)
+    date_1 = datetime.now(tz=user_settings.settings.time_zone) - timedelta(days=2)
+    date_2 = datetime.now(tz=user_settings.settings.time_zone) - timedelta(days=1)
+    date_3 = datetime.now(tz=user_settings.settings.time_zone)
+    rate_1 = Decimal(25)
+    rate_2 = Decimal(24)
+    rate_3 = Decimal(23)
+
+    exchange_rate.set_rate(date_1, rate_1)
+    exchange_rate.set_rate(date_2, rate_2)
+    exchange_rate.set_rate(date_3, rate_3)
+
+    assert exchange_rate.latest_rate == rate_3
+    assert exchange_rate.get_rate(date_1) == rate_1
+    assert exchange_rate.get_rate(date_2) == rate_2
+    assert exchange_rate.get_rate(date_3) == rate_3
+    assert exchange_rate.get_rate(date_3 + timedelta(days=1)) == rate_3
+    assert exchange_rate.get_rate(date_1 - timedelta(days=1)).is_nan()

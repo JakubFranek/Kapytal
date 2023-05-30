@@ -5,6 +5,7 @@ from collections.abc import Collection
 from PyQt6.QtCore import QSortFilterProxyModel, Qt
 from PyQt6.QtWidgets import QApplication
 from src.models.base_classes.account import Account
+from src.models.base_classes.transaction import Transaction
 from src.models.custom_exceptions import InvalidOperationError
 from src.models.model_objects.cash_objects import (
     CashAccount,
@@ -72,17 +73,15 @@ class TransactionsPresenter:
         self._update_model_data()
         self._view.finalize_setup()
 
-    @property
-    def account_tree_shown_accounts(self) -> frozenset[Account]:
-        return self._account_tree_shown_accounts
-
-    @account_tree_shown_accounts.setter
-    def account_tree_shown_accounts(self, accounts: Collection[Account]) -> None:
+    def load_account_tree_checked_accounts(self, accounts: Collection[Account]) -> None:
         self._account_tree_shown_accounts = frozenset(accounts)
         self._model.valid_accounts = accounts
         self._transaction_filter_form_presenter.update_account_tree_shown_accounts(
             accounts
         )
+
+    def get_visible_transactions(self) -> tuple[Transaction, ...]:
+        return self._model.get_visible_items()
 
     def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
         self._record_keeper = record_keeper
@@ -245,32 +244,32 @@ class TransactionsPresenter:
 
         self._view.signal_income.connect(
             lambda: self._cash_transaction_dialog_presenter.run_add_dialog(
-                CashTransactionType.INCOME, self.account_tree_shown_accounts
+                CashTransactionType.INCOME, self._account_tree_shown_accounts
             )
         )
         self._view.signal_expense.connect(
             lambda: self._cash_transaction_dialog_presenter.run_add_dialog(
-                CashTransactionType.EXPENSE, self.account_tree_shown_accounts
+                CashTransactionType.EXPENSE, self._account_tree_shown_accounts
             )
         )
         self._view.signal_cash_transfer.connect(
             lambda: self._cash_transfer_dialog_presenter.run_add_dialog(
-                self.account_tree_shown_accounts
+                self._account_tree_shown_accounts
             )
         )
         self._view.signal_buy.connect(
             lambda: self._security_transaction_dialog_presenter.run_add_dialog(
-                SecurityTransactionType.BUY, self.account_tree_shown_accounts
+                SecurityTransactionType.BUY, self._account_tree_shown_accounts
             )
         )
         self._view.signal_sell.connect(
             lambda: self._security_transaction_dialog_presenter.run_add_dialog(
-                SecurityTransactionType.SELL, self.account_tree_shown_accounts
+                SecurityTransactionType.SELL, self._account_tree_shown_accounts
             )
         )
         self._view.signal_security_transfer.connect(
             lambda: self._security_transfer_dialog_presenter.run_add_dialog(
-                self.account_tree_shown_accounts
+                self._account_tree_shown_accounts
             )
         )
 
