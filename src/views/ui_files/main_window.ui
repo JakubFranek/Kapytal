@@ -62,9 +62,9 @@
     <addaction name="actionCurrencies_and_Exchange_Rates"/>
     <addaction name="actionSecurities"/>
     <addaction name="separator"/>
-    <addaction name="actionPayees"/>
-    <addaction name="actionCategories"/>
     <addaction name="actionTags"/>
+    <addaction name="actionCategories"/>
+    <addaction name="actionPayees"/>
     <addaction name="separator"/>
     <addaction name="actionSettings"/>
    </widget>
@@ -72,6 +72,12 @@
     <property name="title">
      <string>Reports</string>
     </property>
+    <addaction name="actionWealth"/>
+    <addaction name="actionCash_Flow"/>
+    <addaction name="separator"/>
+    <addaction name="actionTags_Report"/>
+    <addaction name="actionCategories_Report"/>
+    <addaction name="actionPayees_Report"/>
    </widget>
    <widget class="QMenu" name="menuAbout">
     <property name="title">
@@ -102,9 +108,9 @@
    <addaction name="actionCurrencies_and_Exchange_Rates"/>
    <addaction name="actionSecurities"/>
    <addaction name="separator"/>
+   <addaction name="actionTags"/>
    <addaction name="actionCategories"/>
    <addaction name="actionPayees"/>
-   <addaction name="actionTags"/>
    <addaction name="separator"/>
    <addaction name="actionSettings"/>
    <addaction name="separator"/>
@@ -190,6 +196,31 @@
   <action name="actionShow_Hide_Account_Tree">
    <property name="text">
     <string>Show/Hide Account Tree</string>
+   </property>
+  </action>
+  <action name="actionCash_Flow">
+   <property name="text">
+    <string>Cash Flow</string>
+   </property>
+  </action>
+  <action name="actionCategories_Report">
+   <property name="text">
+    <string>Categories</string>
+   </property>
+  </action>
+  <action name="actionTags_Report">
+   <property name="text">
+    <string>Tags</string>
+   </property>
+  </action>
+  <action name="actionPayees_Report">
+   <property name="text">
+    <string>Payees</string>
+   </property>
+  </action>
+  <action name="actionWealth">
+   <property name="text">
+    <string>Wealth</string>
    </property>
   </action>
  </widget>
