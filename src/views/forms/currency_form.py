@@ -36,6 +36,10 @@ class CurrencyForm(CustomWidget, Ui_CurrencyForm):
         self.chart_widget = ChartWidget(self)
         self.exchangeRateHistoryGroupBoxHorizontalLayout.addWidget(self.chart_widget)
 
+        self.currencyTable.horizontalHeader().setSortIndicatorClearable(True)
+        self.exchangeRateTable.horizontalHeader().setSortIndicatorClearable(True)
+        self.exchangeRateHistoryTable.horizontalHeader().setSortIndicatorClearable(True)
+
     def load_chart_data(self, x: Collection, y: Collection) -> None:
         self.chart_widget.load_data(x, y)
         self.update_history_table_width()
@@ -95,6 +99,10 @@ class CurrencyForm(CustomWidget, Ui_CurrencyForm):
         self.currencyTable.selectionModel().selectionChanged.connect(
             self.signal_currency_selection_changed.emit
         )
+
+        self.currencyTable.sortByColumn(-1, Qt.SortOrder.AscendingOrder)
+        self.exchangeRateTable.sortByColumn(-1, Qt.SortOrder.AscendingOrder)
+        self.exchangeRateHistoryTable.sortByColumn(0, Qt.SortOrder.DescendingOrder)
 
     def _initialize_actions(self) -> None:
         self.actionAdd_Currency.setIcon(icons.add)

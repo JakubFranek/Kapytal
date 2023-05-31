@@ -1,6 +1,6 @@
 from collections.abc import Collection
 
-from PyQt6.QtCore import QAbstractTableModel, QModelIndex, Qt
+from PyQt6.QtCore import QAbstractTableModel, QModelIndex, QSortFilterProxyModel, Qt
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QTableView
 from src.models.model_objects.currency_objects import Currency
@@ -19,11 +19,13 @@ class CurrencyTableModel(QAbstractTableModel):
     def __init__(
         self,
         view: QTableView,
+        proxy: QSortFilterProxyModel,
         currencies: tuple[Currency, ...],
         base_currency: Currency,
     ) -> None:
         super().__init__()
         self._view = view
+        self._proxy = proxy
         self.currencies = currencies
         self.base_currency = base_currency
 
@@ -82,10 +84,14 @@ class CurrencyTableModel(QAbstractTableModel):
         return None
 
     def pre_add(self) -> None:
+        self._proxy.setDynamicSortFilter(False)  # noqa: FBT003
+        self._view.setSortingEnabled(False)  # noqa: FBT003
         self.beginInsertRows(QModelIndex(), self.rowCount(), self.rowCount())
 
     def post_add(self) -> None:
         self.endInsertRows()
+        self._proxy.setDynamicSortFilter(True)  # noqa: FBT003
+        self._view.setSortingEnabled(True)  # noqa: FBT003
 
     def pre_reset_model(self) -> None:
         self.beginResetModel()
@@ -101,10 +107,11 @@ class CurrencyTableModel(QAbstractTableModel):
         self.endRemoveRows()
 
     def get_selected_item(self) -> Currency | None:
-        indexes = self._view.selectedIndexes()
-        if len(indexes) == 0:
+        proxy_indexes = self._view.selectedIndexes()
+        source_indexes = [self._proxy.mapToSource(index) for index in proxy_indexes]
+        if len(source_indexes) == 0:
             return None
-        return self._currencies[indexes[0].row()]
+        return self._currencies[source_indexes[0].row()]
 
     def get_index_from_item(self, item: Currency | None) -> QModelIndex:
         if item is None:

@@ -2,7 +2,7 @@ import logging
 from datetime import datetime
 from decimal import Decimal
 
-from PyQt6.QtCore import QSortFilterProxyModel
+from PyQt6.QtCore import QSortFilterProxyModel, Qt
 from src.models.custom_exceptions import InvalidOperationError
 from src.models.record_keeper import RecordKeeper
 from src.models.user_settings import user_settings
@@ -17,9 +17,6 @@ from src.views.dialogs.set_exchange_rate_dialog import SetExchangeRateDialog
 from src.views.forms.currency_form import CurrencyForm
 from src.views.utilities.message_box_functions import ask_yes_no_question
 
-# TODO: sortable Exchange Rate table
-# TODO: sortable Currency table
-
 
 class CurrencyFormPresenter:
     event_data_changed = Event()
@@ -29,34 +26,13 @@ class CurrencyFormPresenter:
         self._view = view
         self._record_keeper = record_keeper
 
-        self._currency_table_model = CurrencyTableModel(
-            self._view.currencyTable,
-            record_keeper.currencies,
-            record_keeper.base_currency,
-        )
-        self._view.currencyTable.setModel(self._currency_table_model)
-
-        self._exchange_rate_table_model = ExchangeRateTableModel(
-            self._view.exchangeRateTable, record_keeper.exchange_rates
-        )
-        self._view.exchangeRateTable.setModel(self._exchange_rate_table_model)
+        self._initialize_models()
 
         self._view.signal_add_currency.connect(self.run_add_currency_dialog)
         self._view.signal_set_base_currency.connect(self.set_base_currency)
         self._view.signal_remove_currency.connect(self.remove_currency)
         self._view.signal_add_exchange_rate.connect(self.run_add_exchange_rate_dialog)
         self._view.signal_remove_exchange_rate.connect(self.remove_exchange_rate)
-
-        self._exchange_rate_history_proxy = QSortFilterProxyModel(self._view)
-        self._exchange_rate_history_model = ValueTableModel(
-            self._view.exchangeRateHistoryTable,
-            self._exchange_rate_history_proxy,
-            ValueType.EXCHANGE_RATE,
-        )
-        self._exchange_rate_history_proxy.setSourceModel(
-            self._exchange_rate_history_model
-        )
-        self._view.exchangeRateHistoryTable.setModel(self._exchange_rate_history_proxy)
 
         self._view.finalize_setup()
 
@@ -262,3 +238,35 @@ class CurrencyFormPresenter:
         item = self._currency_table_model.get_selected_item()
         is_currency_selected = item is not None
         self._view.set_currency_actions(is_currency_selected=is_currency_selected)
+
+    def _initialize_models(self) -> None:
+        self._currency_table_proxy = QSortFilterProxyModel(self._view)
+        self._currency_table_model = CurrencyTableModel(
+            self._view.currencyTable,
+            self._currency_table_proxy,
+            self._record_keeper.currencies,
+            self._record_keeper.base_currency,
+        )
+        self._currency_table_proxy.setSourceModel(self._currency_table_model)
+        self._view.currencyTable.setModel(self._currency_table_proxy)
+
+        self._exchange_rate_table_proxy = QSortFilterProxyModel(self._view)
+        self._exchange_rate_table_proxy.setSortRole(Qt.ItemDataRole.UserRole)
+        self._exchange_rate_table_model = ExchangeRateTableModel(
+            self._view.exchangeRateTable,
+            self._exchange_rate_table_proxy,
+            self._record_keeper.exchange_rates,
+        )
+        self._exchange_rate_table_proxy.setSourceModel(self._exchange_rate_table_model)
+        self._view.exchangeRateTable.setModel(self._exchange_rate_table_proxy)
+
+        self._exchange_rate_history_proxy = QSortFilterProxyModel(self._view)
+        self._exchange_rate_history_model = ValueTableModel(
+            self._view.exchangeRateHistoryTable,
+            self._exchange_rate_history_proxy,
+            ValueType.EXCHANGE_RATE,
+        )
+        self._exchange_rate_history_proxy.setSourceModel(
+            self._exchange_rate_history_model
+        )
+        self._view.exchangeRateHistoryTable.setModel(self._exchange_rate_history_proxy)
