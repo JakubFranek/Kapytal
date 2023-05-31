@@ -45,7 +45,6 @@ class CurrencyFormPresenter:
         self._view.signal_set_base_currency.connect(self.set_base_currency)
         self._view.signal_remove_currency.connect(self.remove_currency)
         self._view.signal_add_exchange_rate.connect(self.run_add_exchange_rate_dialog)
-        self._view.signal_set_exchange_rate.connect(self.run_set_exchange_rate_dialog)
         self._view.signal_remove_exchange_rate.connect(self.remove_exchange_rate)
 
         self._exchange_rate_history_proxy = QSortFilterProxyModel(self._view)

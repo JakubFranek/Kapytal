@@ -20,7 +20,9 @@ class TagTableModel(QAbstractTableModel):
     def __init__(
         self,
         view: QTableView,
-        tag_stats: Collection[AttributeStats],  # TODO: get rid of these statements
+        tag_stats: Collection[  # TODO: get rid of these parameters across all view models
+            AttributeStats
+        ],
         proxy: QSortFilterProxyModel,
     ) -> None:
         super().__init__()

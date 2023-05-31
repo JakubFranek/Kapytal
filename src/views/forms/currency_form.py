@@ -1,9 +1,6 @@
 from collections.abc import Collection
 
-from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg, NavigationToolbar2QT
-from matplotlib.figure import Figure
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QAction
 from PyQt6.QtWidgets import QHeaderView, QTableView, QWidget
 from src.views import icons
 from src.views.base_classes.custom_widget import CustomWidget
@@ -13,13 +10,7 @@ from src.views.constants import (
     ValueTableColumn,
 )
 from src.views.ui_files.forms.Ui_currency_form import Ui_CurrencyForm
-
-
-class Canvas(FigureCanvasQTAgg):
-    def __init__(self) -> None:
-        fig = Figure(figsize=(10, 10), dpi=100)
-        self.axes = fig.add_subplot(111)
-        super().__init__(fig)
+from src.views.widgets.chart_widget import ChartWidget
 
 
 class CurrencyForm(CustomWidget, Ui_CurrencyForm):
@@ -28,7 +19,10 @@ class CurrencyForm(CustomWidget, Ui_CurrencyForm):
     signal_remove_currency = pyqtSignal()
     signal_add_exchange_rate = pyqtSignal()
     signal_remove_exchange_rate = pyqtSignal()
-    signal_set_exchange_rate = pyqtSignal()
+    signal_add_data = pyqtSignal()
+    signal_edit_data = pyqtSignal()
+    signal_remove_data = pyqtSignal()
+    signal_load_data = pyqtSignal()
     signal_currency_selection_changed = pyqtSignal()
     signal_exchange_rate_selection_changed = pyqtSignal()
 
@@ -39,44 +33,11 @@ class CurrencyForm(CustomWidget, Ui_CurrencyForm):
         self.setWindowIcon(icons.currency)
         self._initialize_actions()
 
-        self._chart = Canvas()
-
-        self._chart_toolbar = NavigationToolbar2QT(self._chart, None)
-        self.actionHome = QAction(icons.home, "Reset Chart", self)
-        self.actionBack = QAction(icons.arrow_left, "Back", self)
-        self.actionForward = QAction(icons.arrow_right, "Forward", self)
-        self.actionPan = QAction(icons.arrow_move, "Pan", self)
-        self.actionZoom = QAction(icons.magnifier, "Zoom", self)
-        self.actionSubplots = QAction(icons.slider, "Subplots", self)
-        self.actionCustomize = QAction(icons.settings, "Customize", self)
-        self.actionSave = QAction(icons.disk, "Save", self)
-        self.actionHome.triggered.connect(self._chart_toolbar.home)
-        self.actionBack.triggered.connect(self._chart_toolbar.back)
-        self.actionForward.triggered.connect(self._chart_toolbar.forward)
-        self.actionPan.triggered.connect(self._chart_toolbar.pan)
-        self.actionZoom.triggered.connect(self._chart_toolbar.zoom)
-        self.actionSubplots.triggered.connect(self._chart_toolbar.configure_subplots)
-        self.actionCustomize.triggered.connect(self._chart_toolbar.edit_parameters)
-        self.actionSave.triggered.connect(self._chart_toolbar.save_figure)
-        self.actionPan.setCheckable(True)
-        self.actionZoom.setCheckable(True)
-        self.homeToolButton.setDefaultAction(self.actionHome)
-        self.backToolButton.setDefaultAction(self.actionBack)
-        self.forwardToolButton.setDefaultAction(self.actionForward)
-        self.panToolButton.setDefaultAction(self.actionPan)
-        self.zoomToolButton.setDefaultAction(self.actionZoom)
-        self.subplotsToolButton.setDefaultAction(self.actionSubplots)
-        self.customizeToolButton.setDefaultAction(self.actionCustomize)
-        self.saveToolButton.setDefaultAction(self.actionSave)
-        self.exchangeRateHistoryChartVerticalLayout.addWidget(self._chart)
+        self.chart_widget = ChartWidget(self)
+        self.exchangeRateHistoryGroupBoxHorizontalLayout.addWidget(self.chart_widget)
 
     def load_chart_data(self, x: Collection, y: Collection) -> None:
-        self._chart.axes.clear()
-        self._chart.axes.plot(x, y)
-        self._chart.axes.grid(visible=True)
-        self._chart.axes.figure.autofmt_xdate()
-        self._chart.draw()
-        self._chart_toolbar.update()
+        self.chart_widget.load_data(x, y)
         self.update_history_table_width()
 
     def set_currency_actions(self, *, is_currency_selected: bool) -> None:
@@ -161,6 +122,11 @@ class CurrencyForm(CustomWidget, Ui_CurrencyForm):
             self.signal_remove_exchange_rate.emit
         )
 
+        self.actionAdd_data.triggered.connect(self.signal_add_data.emit)
+        self.actionEdit_data.triggered.connect(self.signal_edit_data.emit)
+        self.actionRemove_data.triggered.connect(self.signal_remove_data.emit)
+        self.actionLoad_data.triggered.connect(self.signal_load_data.emit)
+
         self.addCurrencyToolButton.setDefaultAction(self.actionAdd_Currency)
         self.setBaseCurrencyToolButton.setDefaultAction(self.actionSet_Base_Currency)
         self.removeCurrencyToolButton.setDefaultAction(self.actionRemove_Currency)
@@ -201,11 +167,16 @@ class CurrencyForm(CustomWidget, Ui_CurrencyForm):
 
     def update_history_table_width(self) -> None:
         self.exchangeRateHistoryTable.resizeColumnsToContents()
+
         exchange_rate_history_table_width = self._calculate_table_width(
             self.exchangeRateHistoryTable
         )
         self.exchangeRateHistoryTable.setFixedWidth(
             exchange_rate_history_table_width + 10
+        )
+        self.exchangeRateHistoryTable.horizontalHeader().setSectionResizeMode(
+            ValueTableColumn.VALUE,
+            QHeaderView.ResizeMode.Stretch,
         )
 
     @staticmethod

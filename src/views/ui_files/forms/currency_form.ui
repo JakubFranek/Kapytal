@@ -160,7 +160,7 @@
      <property name="title">
       <string>Selected Exchange Rate History</string>
      </property>
-     <layout class="QHBoxLayout" name="exchangeRateHistoryGroupBoxHorizontalLayout" stretch="0,0,1">
+     <layout class="QHBoxLayout" name="exchangeRateHistoryGroupBoxHorizontalLayout" stretch="0,0">
       <item>
        <layout class="QVBoxLayout" name="exchangeRateHistoryTableVerticalLayout">
         <item>
@@ -241,83 +241,6 @@
          <enum>Qt::Vertical</enum>
         </property>
        </widget>
-      </item>
-      <item>
-       <layout class="QVBoxLayout" name="exchangeRateHistoryChartVerticalLayout">
-        <item>
-         <layout class="QHBoxLayout" name="exchangeRateHistoryChartControlsHorizontalLayout">
-          <item>
-           <widget class="QToolButton" name="homeToolButton">
-            <property name="text">
-             <string>...</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QToolButton" name="backToolButton">
-            <property name="text">
-             <string>...</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QToolButton" name="forwardToolButton">
-            <property name="text">
-             <string>...</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QToolButton" name="panToolButton">
-            <property name="text">
-             <string>...</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QToolButton" name="zoomToolButton">
-            <property name="text">
-             <string>...</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QToolButton" name="subplotsToolButton">
-            <property name="text">
-             <string>...</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QToolButton" name="customizeToolButton">
-            <property name="text">
-             <string>...</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QToolButton" name="saveToolButton">
-            <property name="text">
-             <string>...</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <spacer name="exchangeRateHistoryChartControlsHorizontalSpacer">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>0</width>
-              <height>0</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-         </layout>
-        </item>
-       </layout>
       </item>
      </layout>
     </widget>
