@@ -1,5 +1,6 @@
 import logging
 import operator
+from collections.abc import Collection
 from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
 from functools import total_ordering
@@ -293,7 +294,26 @@ class ExchangeRate(CopyableMixin, JSONSerializableMixin):
         self.primary_currency.reset_cache()
         self.secondary_currency.reset_cache()
 
-    # TODO: implement delete rate for date in UI
+    def set_rates(
+        self, date_rate_tuples: Collection[tuple[date, Decimal | int | str]]
+    ) -> None:
+        for date_, rate in date_rate_tuples:
+            if not isinstance(date_, date):
+                raise TypeError("Parameter 'date_' must be a date.")
+            if not isinstance(rate, Decimal | int | str):
+                raise TypeError(
+                    "Parameter 'rate' must be a Decimal, integer or a string "
+                    "containing a number."
+                )
+            _rate = Decimal(rate)
+            if not _rate.is_finite() or _rate <= 0:
+                raise ValueError("Parameter 'rate' must be finite and positive.")
+            self._rate_history[date_] = _rate.normalize()
+        self._latest_date = max(date_ for date_ in self._rate_history)
+        self._latest_rate = self._rate_history[self._latest_date]
+        self.primary_currency.reset_cache()
+        self.secondary_currency.reset_cache()
+
     def delete_rate(self, date_: date) -> None:
         del self._rate_history[date_]
 
@@ -375,14 +395,20 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
     @property
     def value_rounded(self) -> Decimal:
         if not hasattr(self, "_value_rounded"):
-            self._value_rounded = round(self._raw_value, self._currency.places)
+            if self._raw_value.is_nan():
+                self._value_rounded = self._raw_value
+            else:
+                self._value_rounded = round(self._raw_value, self._currency.places)
         return self._value_rounded
 
     @property
     def value_normalized(self) -> Decimal:
         if not hasattr(self, "_value_normalized"):
             self._value_normalized = self._raw_value.normalize()
-            if -self._value_normalized.as_tuple().exponent < self._currency.places:
+            if (
+                not self._value_normalized.is_nan()
+                and -self._value_normalized.as_tuple().exponent < self._currency.places
+            ):
                 self._value_normalized = self._value_normalized.quantize(
                     quantizers[self._currency.places]
                 )
@@ -489,9 +515,13 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
         return __o._raw_value / self._raw_value  # noqa: SLF001
 
     def is_positive(self) -> bool:
+        if self._raw_value.is_nan():
+            return False
         return self._raw_value > 0
 
     def is_negative(self) -> bool:
+        if self._raw_value.is_nan():
+            return False
         return self._raw_value < 0
 
     def to_str_rounded(self) -> str:

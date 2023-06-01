@@ -129,9 +129,12 @@ def sync_nodes(
         node = get_node(item, nodes)
         parent_node = get_node(item.parent, nodes) if item.parent is not None else None
         if node is None:
-            balance_base = item.get_balance(currency=base_currency)
+            try:
+                balance_base = item.get_balance(currency=base_currency)
+            except ConversionFactorNotFoundError:
+                balance_base = None
             if isinstance(item, CashAccount):
-                balance_native = balance_base.convert(item.currency)
+                balance_native = item.get_balance(item.currency)
             else:
                 balance_native = None
             node = AccountTreeNode(
@@ -147,9 +150,12 @@ def sync_nodes(
         else:
             node.name = item.name
             node.path = item.path
-            node.balance_base = item.get_balance(currency=base_currency)
+            try:
+                node.balance_base = item.get_balance(currency=base_currency)
+            except ConversionFactorNotFoundError:
+                node.balance_base = None
             if isinstance(item, CashAccount):
-                node.balance_native = node.balance_base.convert(item.currency)
+                node.balance_native = item.get_balance(item.currency)
             node.parent = parent_node
             node.children = []
         node.parent = parent_node
@@ -339,13 +345,10 @@ class AccountTreeModel(QAbstractItemModel):
             and item.balance_native is not None
         ):
             return item.balance_native.to_str_rounded()
-        if column == AccountTreeColumn.BALANCE_BASE and item.balance_base is not None:
-            try:
-                balance = item.balance_base
-            except ConversionFactorNotFoundError:
-                return "Error!"
-            else:
-                return balance.to_str_rounded()
+        if column == AccountTreeColumn.BALANCE_BASE:
+            if item.balance_base is not None:
+                return item.balance_base.to_str_rounded()
+            return "Error!"
         return None
 
     def _get_decoration_role_data(

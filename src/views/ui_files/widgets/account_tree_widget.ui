@@ -102,6 +102,9 @@
      <property name="statusTip">
       <string>Account Tree: right-click to open the context menu</string>
      </property>
+     <property name="verticalScrollBarPolicy">
+      <enum>Qt::ScrollBarAsNeeded</enum>
+     </property>
      <property name="sizeAdjustPolicy">
       <enum>QAbstractScrollArea::AdjustToContents</enum>
      </property>
@@ -112,7 +115,7 @@
       <bool>true</bool>
      </property>
      <attribute name="headerMinimumSectionSize">
-      <number>20</number>
+      <number>10</number>
      </attribute>
      <attribute name="headerHighlightSections">
       <bool>false</bool>

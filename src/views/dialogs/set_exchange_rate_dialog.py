@@ -14,27 +14,34 @@ from src.views.ui_files.dialogs.Ui_set_exchange_rate_dialog import (
 class SetExchangeRateDialog(CustomDialog, Ui_SetExchangeRateDialog):
     signal_ok = pyqtSignal()
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
-        date_today: date,
+        date_: date,
         exchange_rate: str,
-        last_value: Decimal,
-        parent: QWidget | None = None,
+        value: Decimal,
+        parent: QWidget | None,
+        *,
+        edit: bool,
     ) -> None:
         super().__init__(parent)
         self.setupUi(self)
         self.setWindowIcon(icons.exchange_rate)
+        if edit:
+            self.setWindowTitle(f"Edit {exchange_rate} data point")
+            self.dateEdit.setEnabled(False)
+        else:
+            self.setWindowTitle(f"Add {exchange_rate} data point")
 
         primary_code, _, secondary_code = exchange_rate.partition("/")
         self._exchange_rate_code = exchange_rate
 
         self.exchangeRateLabel.setText(f"1 {primary_code} =")
         self.exchangeRateDoubleSpinBox.setMaximum(1_000_000_000_000)
-        self.exchangeRateDoubleSpinBox.setValue(last_value)
+        self.exchangeRateDoubleSpinBox.setValue(value)
         self.exchangeRateDoubleSpinBox.setDecimals(9)
         self.exchangeRateDoubleSpinBox.setSuffix(f" {secondary_code}")
-        self.dateEdit.setDate(date_today)
-        self.dateEdit.setMaximumDate(date_today)
+        self.dateEdit.setDate(date_)
+        self.dateEdit.setMaximumDate(date_)
 
         self.buttonBox.clicked.connect(self._handle_button_box_click)
 

@@ -50,12 +50,6 @@ class BackupPathsListModel(QAbstractListModel):
     def post_remove_item(self) -> None:
         self.endRemoveRows()
 
-    def get_selected_item_index(self) -> QModelIndex:
-        indexes = self._view.selectedIndexes()
-        if len(indexes) == 0:
-            return QModelIndex()
-        return indexes[0]
-
     def get_selected_item(self) -> Path | None:
         indexes = self._view.selectedIndexes()
         if len(indexes) == 0:

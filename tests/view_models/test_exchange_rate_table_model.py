@@ -1,3 +1,4 @@
+from PyQt6.QtCore import QSortFilterProxyModel
 from PyQt6.QtWidgets import QTableView, QWidget
 from pytestqt.modeltest import ModelTester
 from pytestqt.qtbot import QtBot
@@ -10,8 +11,9 @@ def test_exchange_rate_table_model(qtbot: QtBot, qtmodeltester: ModelTester) -> 
     qtbot.add_widget(parent)
     tree_view = QTableView(parent)
     record_keeper = get_preloaded_record_keeper()
+    proxy = QSortFilterProxyModel(tree_view)
     model = ExchangeRateTableModel(
-        view=tree_view, exchange_rates=record_keeper.exchange_rates
+        view=tree_view, proxy=proxy, exchange_rates=record_keeper.exchange_rates
     )
 
     qtmodeltester.check(model)

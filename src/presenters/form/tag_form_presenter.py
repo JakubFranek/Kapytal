@@ -158,10 +158,9 @@ class TagFormPresenter:
                 any_deleted = True
             except Exception as exception:  # noqa: BLE001
                 handle_exception(exception)
-            finally:
-                if any_deleted:
-                    self.event_data_changed()
-                    self._recalculate_data = False
+        if any_deleted:
+            self.event_data_changed()
+            self._recalculate_data = False
 
     def _filter(self, pattern: str) -> None:
         if ("[" in pattern and "]" not in pattern) or "[]" in pattern:

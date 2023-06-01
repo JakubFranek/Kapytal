@@ -144,13 +144,6 @@ class SecurityTableModel(QAbstractTableModel):
     def post_remove_item(self) -> None:
         self.endRemoveRows()
 
-    def get_selected_item_index(self) -> QModelIndex:
-        proxy_indexes = self._view.selectedIndexes()
-        source_indexes = [self._proxy.mapToSource(index) for index in proxy_indexes]
-        if len(source_indexes) == 0:
-            return QModelIndex()
-        return source_indexes[0]
-
     def get_selected_item(self) -> Security | None:
         proxy_indexes = self._view.selectedIndexes()
         source_indexes = [self._proxy.mapToSource(index) for index in proxy_indexes]

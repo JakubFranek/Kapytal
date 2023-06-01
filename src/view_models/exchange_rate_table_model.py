@@ -1,25 +1,29 @@
 from collections.abc import Collection
 
-from PyQt6.QtCore import QAbstractTableModel, QModelIndex, Qt
+from PyQt6.QtCore import QAbstractTableModel, QModelIndex, QSortFilterProxyModel, Qt
 from PyQt6.QtWidgets import QTableView
 from src.models.model_objects.currency_objects import ExchangeRate
-from src.views.constants import ExchangeRateTableColumn
+from src.views.constants import ExchangeRateTableColumn, monospace_font
 
 ALIGNMENT_RIGHT = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
 
 
 class ExchangeRateTableModel(QAbstractTableModel):
     COLUMN_HEADERS = {
-        ExchangeRateTableColumn.CODE: "Exchange Rate",
+        ExchangeRateTableColumn.CODE: "Code",
         ExchangeRateTableColumn.RATE: "Latest rate",
         ExchangeRateTableColumn.LAST_DATE: "Latest date",
     }
 
     def __init__(
-        self, view: QTableView, exchange_rates: tuple[ExchangeRate, ...]
+        self,
+        view: QTableView,
+        proxy: QSortFilterProxyModel,
+        exchange_rates: tuple[ExchangeRate, ...],
     ) -> None:
         super().__init__()
         self._view = view
+        self._proxy = proxy
         self.exchange_rates = exchange_rates
 
     @property
@@ -40,6 +44,15 @@ class ExchangeRateTableModel(QAbstractTableModel):
             self._column_count = len(self.COLUMN_HEADERS)
         return self._column_count
 
+    def headerData(  # noqa: N802
+        self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole = ...
+    ) -> str | int | None:
+        if role == Qt.ItemDataRole.DisplayRole:
+            if orientation == Qt.Orientation.Horizontal:
+                return self.COLUMN_HEADERS[section]
+            return str(section)
+        return None
+
     def data(
         self, index: QModelIndex, role: Qt.ItemDataRole = ...
     ) -> str | Qt.AlignmentFlag | None:
@@ -49,11 +62,15 @@ class ExchangeRateTableModel(QAbstractTableModel):
         exchange_rate = self.exchange_rates[index.row()]
         if role == Qt.ItemDataRole.DisplayRole:
             return self._get_display_role_data(column, exchange_rate)
+        if role == Qt.ItemDataRole.UserRole:
+            return self._get_sort_role_data(column, exchange_rate)
         if (
             role == Qt.ItemDataRole.TextAlignmentRole
             and column == ExchangeRateTableColumn.RATE
         ):
             return ALIGNMENT_RIGHT
+        if role == Qt.ItemDataRole.FontRole and column == ExchangeRateTableColumn.CODE:
+            return monospace_font
         return None
 
     def _get_display_role_data(
@@ -62,11 +79,7 @@ class ExchangeRateTableModel(QAbstractTableModel):
         if column == ExchangeRateTableColumn.CODE:
             return str(exchange_rate)
         if column == ExchangeRateTableColumn.RATE:
-            return (
-                f"1 {exchange_rate.primary_currency.code} = "
-                f"{exchange_rate.latest_rate:,} "
-                f"{exchange_rate.secondary_currency.code}"
-            )
+            return f"{exchange_rate.latest_rate:,}"
         if column == ExchangeRateTableColumn.LAST_DATE:
             latest_date = exchange_rate.latest_date
             if latest_date is None:
@@ -74,25 +87,29 @@ class ExchangeRateTableModel(QAbstractTableModel):
             return latest_date.strftime("%d.%m.%Y")
         return None
 
-    def headerData(  # noqa: N802
-        self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole = ...
-    ) -> str | int | None:
-        if role == Qt.ItemDataRole.DisplayRole:
-            if orientation == Qt.Orientation.Horizontal:
-                return self.COLUMN_HEADERS[section]
-            return str(section)
-        if role == Qt.ItemDataRole.TextAlignmentRole and (
-            section == ExchangeRateTableColumn.LAST_DATE
-            or section == ExchangeRateTableColumn.CODE
-        ):
-            return Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
+    def _get_sort_role_data(
+        self, column: int, exchange_rate: ExchangeRate
+    ) -> str | None:
+        if column == ExchangeRateTableColumn.CODE:
+            return str(exchange_rate)
+        if column == ExchangeRateTableColumn.RATE:
+            return float(exchange_rate.latest_rate)
+        if column == ExchangeRateTableColumn.LAST_DATE:
+            latest_date = exchange_rate.latest_date
+            if latest_date is None:
+                return 0
+            return latest_date.toordinal()
         return None
 
     def pre_add(self) -> None:
+        self._proxy.setDynamicSortFilter(False)  # noqa: FBT003
+        self._view.setSortingEnabled(False)  # noqa: FBT003
         self.beginInsertRows(QModelIndex(), self.rowCount(), self.rowCount())
 
     def post_add(self) -> None:
         self.endInsertRows()
+        self._proxy.setDynamicSortFilter(True)  # noqa: FBT003
+        self._view.setSortingEnabled(True)  # noqa: FBT003
 
     def pre_reset_model(self) -> None:
         self.beginResetModel()
@@ -107,17 +124,12 @@ class ExchangeRateTableModel(QAbstractTableModel):
     def post_remove_item(self) -> None:
         self.endRemoveRows()
 
-    def get_selected_item_index(self) -> QModelIndex:
-        indexes = self._view.selectedIndexes()
-        if len(indexes) == 0:
-            return QModelIndex()
-        return indexes[0]
-
     def get_selected_item(self) -> ExchangeRate | None:
-        indexes = self._view.selectedIndexes()
-        if len(indexes) == 0:
+        proxy_indexes = self._view.selectedIndexes()
+        source_indexes = [self._proxy.mapToSource(index) for index in proxy_indexes]
+        if len(source_indexes) == 0:
             return None
-        return self._exchange_rates[indexes[0].row()]
+        return self._exchange_rates[source_indexes[0].row()]
 
     def get_index_from_item(self, item: ExchangeRate | None) -> QModelIndex:
         if item is None:

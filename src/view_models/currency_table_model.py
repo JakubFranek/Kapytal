@@ -1,27 +1,31 @@
 from collections.abc import Collection
 
-from PyQt6.QtCore import QAbstractTableModel, QModelIndex, Qt
+from PyQt6.QtCore import QAbstractTableModel, QModelIndex, QSortFilterProxyModel, Qt
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QTableView
 from src.models.model_objects.currency_objects import Currency
 from src.views import icons
-from src.views.constants import CurrencyTableColumn
+from src.views.constants import CurrencyTableColumn, monospace_font
+
+ALIGN_RIGHT = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
 
 
 class CurrencyTableModel(QAbstractTableModel):
     COLUMN_HEADERS = {
-        CurrencyTableColumn.CODE: "Currency code",
-        CurrencyTableColumn.PLACES: "Decimal places",
+        CurrencyTableColumn.CODE: "Currency",
+        CurrencyTableColumn.PLACES: "Decimals",
     }
 
     def __init__(
         self,
         view: QTableView,
+        proxy: QSortFilterProxyModel,
         currencies: tuple[Currency, ...],
         base_currency: Currency,
     ) -> None:
         super().__init__()
         self._view = view
+        self._proxy = proxy
         self.currencies = currencies
         self.base_currency = base_currency
 
@@ -43,7 +47,16 @@ class CurrencyTableModel(QAbstractTableModel):
             self._column_count = len(self.COLUMN_HEADERS)
         return self._column_count
 
-    def data(
+    def headerData(  # noqa: N802
+        self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole = ...
+    ) -> str | int | None:
+        if role == Qt.ItemDataRole.DisplayRole:
+            if orientation == Qt.Orientation.Horizontal:
+                return self.COLUMN_HEADERS[section]
+            return str(section)
+        return None
+
+    def data(  # noqa: PLR0911
         self, index: QModelIndex, role: Qt.ItemDataRole = ...
     ) -> str | QIcon | None:
         if not index.isValid():
@@ -61,24 +74,24 @@ class CurrencyTableModel(QAbstractTableModel):
             and currency == self.base_currency
         ):
             return icons.base_currency
-        return None
-
-    def headerData(  # noqa: N802
-        self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole = ...
-    ) -> str | int | None:
-        if role == Qt.ItemDataRole.DisplayRole:
-            if orientation == Qt.Orientation.Horizontal:
-                return self.COLUMN_HEADERS[section]
-            return str(section)
-        if role == Qt.ItemDataRole.TextAlignmentRole:
-            return Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
+        if (
+            role == Qt.ItemDataRole.TextAlignmentRole
+            and column == CurrencyTableColumn.CODE
+        ):
+            return ALIGN_RIGHT
+        if role == Qt.ItemDataRole.FontRole and column == CurrencyTableColumn.CODE:
+            return monospace_font
         return None
 
     def pre_add(self) -> None:
+        self._proxy.setDynamicSortFilter(False)  # noqa: FBT003
+        self._view.setSortingEnabled(False)  # noqa: FBT003
         self.beginInsertRows(QModelIndex(), self.rowCount(), self.rowCount())
 
     def post_add(self) -> None:
         self.endInsertRows()
+        self._proxy.setDynamicSortFilter(True)  # noqa: FBT003
+        self._view.setSortingEnabled(True)  # noqa: FBT003
 
     def pre_reset_model(self) -> None:
         self.beginResetModel()
@@ -93,17 +106,12 @@ class CurrencyTableModel(QAbstractTableModel):
     def post_remove_item(self) -> None:
         self.endRemoveRows()
 
-    def get_selected_item_index(self) -> QModelIndex:
-        indexes = self._view.selectedIndexes()
-        if len(indexes) == 0:
-            return QModelIndex()
-        return indexes[0]
-
     def get_selected_item(self) -> Currency | None:
-        indexes = self._view.selectedIndexes()
-        if len(indexes) == 0:
+        proxy_indexes = self._view.selectedIndexes()
+        source_indexes = [self._proxy.mapToSource(index) for index in proxy_indexes]
+        if len(source_indexes) == 0:
             return None
-        return self._currencies[indexes[0].row()]
+        return self._currencies[source_indexes[0].row()]
 
     def get_index_from_item(self, item: Currency | None) -> QModelIndex:
         if item is None:
