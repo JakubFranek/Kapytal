@@ -1351,6 +1351,16 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
                 return
         raise NotFoundError(f"Exchange rate '{exchange_rate_code}' not found.")
 
+    def delete_exchange_rate(self, exchange_rate_code: str, date_: date) -> None:
+        if not isinstance(exchange_rate_code, str):
+            raise TypeError("Parameter 'exchange_rate_str' must be a string.")
+
+        for exchange_rate in self._exchange_rates:
+            if str(exchange_rate) == exchange_rate_code:
+                exchange_rate.delete_rate(date_)
+                return
+        raise NotFoundError(f"Exchange rate '{exchange_rate_code}' not found.")
+
     def set_security_price(self, uuid: str, value: Decimal, date_: date) -> None:
         security = self.get_security_by_uuid(uuid)
         price = CashAmount(value, security.currency)

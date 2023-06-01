@@ -34,6 +34,10 @@ class ValueTableModel(QAbstractTableModel):
         else:
             self.COLUMN_HEADERS[ValueTableColumn.VALUE] = "Price"
 
+    @property
+    def data_points(self) -> tuple[date, Decimal]:
+        return self._data
+
     def load_data(self, date_value_pairs: Sequence[tuple[date, Decimal]]) -> None:
         self._data = tuple(date_value_pairs)
 
@@ -92,10 +96,10 @@ class ValueTableModel(QAbstractTableModel):
             return str(section)
         return None
 
-    def pre_add(self) -> None:
+    def pre_add(self, row: int) -> None:
         self._proxy.setDynamicSortFilter(False)  # noqa: FBT003
         self._view.setSortingEnabled(False)  # noqa: FBT003
-        self.beginInsertRows(QModelIndex(), self.rowCount(), self.rowCount())
+        self.beginInsertRows(QModelIndex(), row, row)
 
     def post_add(self) -> None:
         self.endInsertRows()
@@ -117,10 +121,12 @@ class ValueTableModel(QAbstractTableModel):
     def post_remove_item(self) -> None:
         self.endRemoveRows()
 
-    def get_selected_dates(self) -> tuple[date, ...]:
+    def get_selected_values(self) -> tuple[tuple[date, Decimal], ...]:
         proxy_indexes = self._view.selectedIndexes()
         source_indexes = [self._proxy.mapToSource(index) for index in proxy_indexes]
-        return tuple(self._data[index.row()][0] for index in source_indexes)
+        return tuple(
+            self._data[index.row()] for index in source_indexes if index.column() == 0
+        )
 
     def get_index_from_date(self, date_: date) -> QModelIndex:
         for index, data in enumerate(self._data):

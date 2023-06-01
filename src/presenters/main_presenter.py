@@ -145,6 +145,7 @@ class MainPresenter:
         self._transactions_presenter.update_filter_models()
         self._transactions_presenter.refresh_view()
         self._account_tree_presenter.refresh_view()
+        self._account_tree_presenter.update_model_data()
         self._account_tree_presenter.update_total_balance()
         self._account_tree_presenter.update_geometries()
         self._category_form_presenter.data_changed()

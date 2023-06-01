@@ -1,6 +1,7 @@
 from collections.abc import Collection
 
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg, NavigationToolbar2QT
+from matplotlib.dates import DateFormatter
 from matplotlib.figure import Figure
 from PyQt6.QtGui import QAction
 from PyQt6.QtWidgets import (
@@ -29,7 +30,9 @@ class ChartWidget(QWidget):
 
         self.chart = Canvas()
         self.chart.axes.grid(visible=True)
-        self.chart.axes.figure.autofmt_xdate()
+        self.chart.axes.xaxis.set_major_formatter(DateFormatter("%d.%m.%Y"))
+        self.chart.axes.tick_params(axis="x", rotation=30)
+        self.chart.axes.figure.set_layout_engine("tight")
         self.line = None
         self.chart_toolbar = NavigationToolbar2QT(self.chart, None)
 
@@ -42,11 +45,13 @@ class ChartWidget(QWidget):
 
     def load_data(self, x: Collection, y: Collection) -> None:
         if self.line is None:
-            self.line = self.chart.axes.plot(x, y, ".-")
+            lines = self.chart.axes.plot(x, y, ".-")
+            self.line = lines[0]
         else:
-            self.line[0].set_data(x, y)
+            self.line.set_data(x, y)
         self.chart.axes.relim()
         self.chart.axes.autoscale()
+        self.chart.draw()
         self.chart_toolbar.update()
 
     def _initialize_toolbar_buttons(self) -> None:

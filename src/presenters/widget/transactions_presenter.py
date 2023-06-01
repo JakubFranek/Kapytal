@@ -364,10 +364,9 @@ class TransactionsPresenter:
                 any_deleted = True
             except Exception as exception:  # noqa: BLE001
                 handle_exception(exception)
-            finally:
-                if any_deleted:
-                    self._update_number_of_shown_transactions()
-                    self.event_data_changed()
+        if any_deleted:
+            self._update_number_of_shown_transactions()
+            self.event_data_changed()
 
     def _duplicate_transaction(self) -> None:
         transactions = self._model.get_selected_items()

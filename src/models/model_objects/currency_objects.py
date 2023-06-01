@@ -375,14 +375,20 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
     @property
     def value_rounded(self) -> Decimal:
         if not hasattr(self, "_value_rounded"):
-            self._value_rounded = round(self._raw_value, self._currency.places)
+            if self._raw_value.is_nan():
+                self._value_rounded = self._raw_value
+            else:
+                self._value_rounded = round(self._raw_value, self._currency.places)
         return self._value_rounded
 
     @property
     def value_normalized(self) -> Decimal:
         if not hasattr(self, "_value_normalized"):
             self._value_normalized = self._raw_value.normalize()
-            if -self._value_normalized.as_tuple().exponent < self._currency.places:
+            if (
+                not self._value_normalized.is_nan()
+                and -self._value_normalized.as_tuple().exponent < self._currency.places
+            ):
                 self._value_normalized = self._value_normalized.quantize(
                     quantizers[self._currency.places]
                 )
@@ -489,9 +495,13 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
         return __o._raw_value / self._raw_value  # noqa: SLF001
 
     def is_positive(self) -> bool:
+        if self._raw_value.is_nan():
+            return False
         return self._raw_value > 0
 
     def is_negative(self) -> bool:
+        if self._raw_value.is_nan():
+            return False
         return self._raw_value < 0
 
     def to_str_rounded(self) -> str:

@@ -25,6 +25,7 @@ class CurrencyForm(CustomWidget, Ui_CurrencyForm):
     signal_load_data = pyqtSignal()
     signal_currency_selection_changed = pyqtSignal()
     signal_exchange_rate_selection_changed = pyqtSignal()
+    signal_data_point_selection_changed = pyqtSignal()
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent=parent)
@@ -50,6 +51,22 @@ class CurrencyForm(CustomWidget, Ui_CurrencyForm):
 
     def set_exchange_rate_actions(self, *, is_exchange_rate_selected: bool) -> None:
         self.actionRemove_Exchange_Rate.setEnabled(is_exchange_rate_selected)
+
+    def set_data_point_actions(
+        self,
+        *,
+        is_exchange_rate_selected: bool,
+        is_data_point_selected: bool,
+        is_single_data_point_selected: bool
+    ) -> None:
+        self.actionAdd_data.setEnabled(is_exchange_rate_selected)
+        self.actionEdit_data.setEnabled(
+            is_exchange_rate_selected and is_single_data_point_selected
+        )
+        self.actionRemove_data.setEnabled(
+            is_exchange_rate_selected and is_data_point_selected
+        )
+        self.actionLoad_data.setEnabled(is_exchange_rate_selected)
 
     def refresh_currency_table(self) -> None:
         self.currencyTable.viewport().update()
@@ -98,6 +115,9 @@ class CurrencyForm(CustomWidget, Ui_CurrencyForm):
         )
         self.currencyTable.selectionModel().selectionChanged.connect(
             self.signal_currency_selection_changed.emit
+        )
+        self.exchangeRateHistoryTable.selectionModel().selectionChanged.connect(
+            self.signal_data_point_selection_changed.emit
         )
 
         self.currencyTable.sortByColumn(-1, Qt.SortOrder.AscendingOrder)
@@ -179,7 +199,7 @@ class CurrencyForm(CustomWidget, Ui_CurrencyForm):
         exchange_rate_history_table_width = self._calculate_table_width(
             self.exchangeRateHistoryTable
         )
-        self.exchangeRateHistoryTable.setFixedWidth(
+        self.exchangeRateHistoryTableWidget.setFixedWidth(
             exchange_rate_history_table_width + 10
         )
         self.exchangeRateHistoryTable.horizontalHeader().setSectionResizeMode(

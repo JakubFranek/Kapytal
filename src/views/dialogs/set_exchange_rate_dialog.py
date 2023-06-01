@@ -16,7 +16,7 @@ class SetExchangeRateDialog(CustomDialog, Ui_SetExchangeRateDialog):
 
     def __init__(
         self,
-        date_today: date,
+        date_: date,
         exchange_rate: str,
         last_value: Decimal,
         parent: QWidget | None = None,
@@ -33,8 +33,8 @@ class SetExchangeRateDialog(CustomDialog, Ui_SetExchangeRateDialog):
         self.exchangeRateDoubleSpinBox.setValue(last_value)
         self.exchangeRateDoubleSpinBox.setDecimals(9)
         self.exchangeRateDoubleSpinBox.setSuffix(f" {secondary_code}")
-        self.dateEdit.setDate(date_today)
-        self.dateEdit.setMaximumDate(date_today)
+        self.dateEdit.setDate(date_)
+        self.dateEdit.setMaximumDate(date_)
 
         self.buttonBox.clicked.connect(self._handle_button_box_click)
 
