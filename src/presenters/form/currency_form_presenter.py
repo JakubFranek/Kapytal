@@ -207,8 +207,9 @@ class CurrencyFormPresenter:
         self._dialog = SetExchangeRateDialog(
             date_=datetime.now(user_settings.settings.time_zone).date(),
             exchange_rate=exchange_rate_code,
-            last_value=last_value,
+            value=last_value,
             parent=self._view,
+            edit=False,
         )
         self._dialog.signal_ok.connect(self._set_exchange_rate)
         logging.debug("Running SetExchangeRateDialog (add data point)")
@@ -227,8 +228,9 @@ class CurrencyFormPresenter:
         self._dialog = SetExchangeRateDialog(
             date_=date_,
             exchange_rate=exchange_rate_code,
-            last_value=value,
+            value=value,
             parent=self._view,
+            edit=True,
         )
         self._dialog.signal_ok.connect(self._set_exchange_rate)
         logging.debug("Running SetExchangeRateDialog (edit data point)")

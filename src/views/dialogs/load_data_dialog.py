@@ -29,9 +29,7 @@ class LoadDataDialog(CustomDialog, Ui_LoadDataDialog):
         self.buttonBox.clicked.connect(self._handle_button_box_click)
 
     def _select_file(self) -> str:
-        path = QFileDialog.getOpenFileName(
-            self, filter="Comma-separated values file (*.csv)"
-        )[0]
+        path = QFileDialog.getOpenFileName(self, filter="CSV file (*.csv)")[0]
         self.pathLineEdit.setText(path)
 
     @property
