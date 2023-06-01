@@ -1,5 +1,6 @@
 import logging
 import operator
+from collections.abc import Collection
 from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
 from functools import total_ordering
@@ -288,6 +289,26 @@ class ExchangeRate(CopyableMixin, JSONSerializableMixin):
         if not _rate.is_finite() or _rate <= 0:
             raise ValueError("Parameter 'rate' must be finite and positive.")
         self._rate_history[date_] = _rate.normalize()
+        self._latest_date = max(date_ for date_ in self._rate_history)
+        self._latest_rate = self._rate_history[self._latest_date]
+        self.primary_currency.reset_cache()
+        self.secondary_currency.reset_cache()
+
+    def set_rates(
+        self, date_rate_tuples: Collection[tuple[date, Decimal | int | str]]
+    ) -> None:
+        for date_, rate in date_rate_tuples:
+            if not isinstance(date_, date):
+                raise TypeError("Parameter 'date_' must be a date.")
+            if not isinstance(rate, Decimal | int | str):
+                raise TypeError(
+                    "Parameter 'rate' must be a Decimal, integer or a string "
+                    "containing a number."
+                )
+            _rate = Decimal(rate)
+            if not _rate.is_finite() or _rate <= 0:
+                raise ValueError("Parameter 'rate' must be finite and positive.")
+            self._rate_history[date_] = _rate.normalize()
         self._latest_date = max(date_ for date_ in self._rate_history)
         self._latest_rate = self._rate_history[self._latest_date]
         self.primary_currency.reset_cache()

@@ -1,6 +1,8 @@
+import csv
 import logging
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
+from pathlib import Path
 
 from PyQt6.QtCore import QSortFilterProxyModel, Qt
 from src.models.custom_exceptions import InvalidOperationError
@@ -14,6 +16,7 @@ from src.view_models.exchange_rate_table_model import ExchangeRateTableModel
 from src.view_models.value_table_model import ValueTableModel, ValueType
 from src.views.dialogs.add_exchange_rate_dialog import AddExchangeRateDialog
 from src.views.dialogs.currency_dialog import CurrencyDialog
+from src.views.dialogs.load_data_dialog import ConflictResolutionMode, LoadDataDialog
 from src.views.dialogs.set_exchange_rate_dialog import SetExchangeRateDialog
 from src.views.forms.currency_form import CurrencyForm
 from src.views.utilities.message_box_functions import ask_yes_no_question
@@ -37,6 +40,7 @@ class CurrencyFormPresenter:
         self._view.signal_add_data.connect(self._run_add_data_point_dialog)
         self._view.signal_edit_data.connect(self._run_edit_data_point_dialog)
         self._view.signal_remove_data.connect(self._remove_data_points)
+        self._view.signal_load_data.connect(self._run_load_data_dialog)
 
         self._view.finalize_setup()
 
@@ -243,7 +247,7 @@ class CurrencyFormPresenter:
             f"{value!s} on {date_.strftime('%Y-%m-%d')}"
         )
         try:
-            self._record_keeper.set_exchange_rate(exchange_rate_code, value, date_)
+            exchange_rate.set_rate(date_, value)
         except Exception as exception:  # noqa: BLE001
             handle_exception(exception)
             return
@@ -282,7 +286,6 @@ class CurrencyFormPresenter:
             raise InvalidOperationError(
                 "An ExchangeRate must be selected to edit its data point."
             )
-        exchange_rate_code = str(exchange_rate)
 
         logging.debug(
             f"{exchange_rate!s} exchange rate data point deletion requested, "
@@ -302,20 +305,84 @@ class CurrencyFormPresenter:
         any_deleted = False
         for date_, _ in selected_data_points:
             try:
-                self._exchange_rate_history_model.pre_remove_item(date_)
-                self._record_keeper.delete_exchange_rate(exchange_rate_code, date_)
-                self._exchange_rate_history_model.load_data(
-                    exchange_rate.rate_history_pairs
-                )
-                self._exchange_rate_history_model.post_remove_item()
+                exchange_rate.delete_rate(date_)
                 any_deleted = True
             except Exception as exception:  # noqa: BLE001
                 handle_exception(exception)
                 return
 
         if any_deleted:
+            self._exchange_rate_history_model.pre_reset_model()
+            self._exchange_rate_history_model.load_data(
+                exchange_rate.rate_history_pairs
+            )
+            self._exchange_rate_history_model.post_reset_model()
             self._update_chart(exchange_rate)
             self.event_data_changed()
+
+    def _run_load_data_dialog(self) -> None:
+        exchange_rate = self._exchange_rate_table_model.get_selected_item()
+        if exchange_rate is None:
+            raise InvalidOperationError(
+                "An ExchangeRate must be selected to load data points."
+            )
+        self._dialog = LoadDataDialog(self._view, str(exchange_rate))
+        self._dialog.signal_ok.connect(self._load_data)
+        logging.info(f"Running LoadDataDialog: {exchange_rate!s}")
+        self._dialog.exec()
+
+    def _load_data(self) -> None:
+        exchange_rate = self._exchange_rate_table_model.get_selected_item()
+        if exchange_rate is None:
+            raise InvalidOperationError(
+                "An ExchangeRate must be selected to load data points."
+            )
+
+        _path = self._dialog.path
+        conflict_resolution_mode = self._dialog.conflict_resolution_mode
+        path = Path(_path)
+
+        logging.debug(f"Loading {exchange_rate!s} data from {path!s}")
+        data: list[tuple[date, Decimal]] = []
+        try:
+            with path.open("r") as file:
+                reader = csv.reader(file)
+                for _date, _value in reader:
+                    date_ = datetime.strptime(_date, "%Y-%m-%d").date()  # noqa: DTZ007
+                    value = Decimal(_value)
+                    data.append((date_, value))
+        except Exception as exception:  # noqa: BLE001
+            handle_exception(exception)
+            return
+
+        logging.debug(f"Loaded {len(data):,} data points for {exchange_rate!s}")
+
+        if conflict_resolution_mode == ConflictResolutionMode.OVERWRITE:
+            filtered_data = data
+        else:
+            filtered_data = [
+                (date_, value_)
+                for date_, value_ in data
+                if date_ not in exchange_rate.rate_history
+            ]
+
+        try:
+            exchange_rate.set_rates(filtered_data)
+        except Exception as exception:  # noqa: BLE001
+            handle_exception(exception)
+            return
+
+        logging.debug(
+            f"Set {len(filtered_data):,} data points to {exchange_rate!s} "
+            f"(conflict_resolution_mode={conflict_resolution_mode.name})"
+        )
+
+        self._exchange_rate_history_model.pre_reset_model()
+        self._exchange_rate_history_model.load_data(exchange_rate.rate_history_pairs)
+        self._exchange_rate_history_model.post_reset_model()
+        self._dialog.close()
+        self._update_chart(exchange_rate)
+        self.event_data_changed()
 
     def _exchange_rate_selection_changed(self) -> None:
         item = self._exchange_rate_table_model.get_selected_item()
