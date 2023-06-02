@@ -278,44 +278,23 @@ class ExchangeRate(CopyableMixin, JSONSerializableMixin):
             return Decimal("NaN")
 
     def set_rate(self, date_: date, rate: Decimal | int | str) -> None:
-        if not isinstance(date_, date):
-            raise TypeError("Parameter 'date_' must be a date.")
-        if not isinstance(rate, Decimal | int | str):
-            raise TypeError(
-                "Parameter 'rate' must be a Decimal, integer or a string "
-                "containing a number."
-            )
-        _rate = Decimal(rate)
-        if not _rate.is_finite() or _rate <= 0:
-            raise ValueError("Parameter 'rate' must be finite and positive.")
+        self._validate_date(date_)
+        _rate = self._validate_rate(rate)
         self._rate_history[date_] = _rate.normalize()
-        self._latest_date = max(date_ for date_ in self._rate_history)
-        self._latest_rate = self._rate_history[self._latest_date]
-        self.primary_currency.reset_cache()
-        self.secondary_currency.reset_cache()
+        self._update_values()
 
     def set_rates(
         self, date_rate_tuples: Collection[tuple[date, Decimal | int | str]]
     ) -> None:
         for date_, rate in date_rate_tuples:
-            if not isinstance(date_, date):
-                raise TypeError("Parameter 'date_' must be a date.")
-            if not isinstance(rate, Decimal | int | str):
-                raise TypeError(
-                    "Parameter 'rate' must be a Decimal, integer or a string "
-                    "containing a number."
-                )
-            _rate = Decimal(rate)
-            if not _rate.is_finite() or _rate <= 0:
-                raise ValueError("Parameter 'rate' must be finite and positive.")
+            self._validate_date(date_)
+            _rate = self._validate_rate(rate)
             self._rate_history[date_] = _rate.normalize()
-        self._latest_date = max(date_ for date_ in self._rate_history)
-        self._latest_rate = self._rate_history[self._latest_date]
-        self.primary_currency.reset_cache()
-        self.secondary_currency.reset_cache()
+        self._update_values()
 
     def delete_rate(self, date_: date) -> None:
         del self._rate_history[date_]
+        self._update_values()
 
     def prepare_for_deletion(self) -> None:
         self.primary_currency.remove_exchange_rate(self)
@@ -357,6 +336,31 @@ class ExchangeRate(CopyableMixin, JSONSerializableMixin):
 
         return obj
 
+    def _validate_date(self, date_: date) -> None:
+        if not isinstance(date_, date):
+            raise TypeError("Parameter 'date_' must be a date.")
+
+    def _validate_rate(self, rate: Decimal | int | str) -> Decimal:
+        if not isinstance(rate, Decimal | int | str):
+            raise TypeError(
+                "Parameter 'rate' must be a Decimal, integer or a string "
+                "containing a number."
+            )
+        _rate = Decimal(rate)
+        if not _rate.is_finite() or _rate <= 0:
+            raise ValueError("Parameter 'rate' must be finite and positive.")
+        return _rate
+
+    def _update_values(self) -> None:
+        if len(self._rate_history) == 0:
+            self._latest_date = None
+            self._latest_rate = Decimal("NaN")
+        else:
+            self._latest_date = max(date_ for date_ in self._rate_history)
+            self._latest_rate = self._rate_history[self._latest_date]
+        self.primary_currency.reset_cache()
+        self.secondary_currency.reset_cache()
+
 
 @total_ordering
 class CashAmount(CopyableMixin, JSONSerializableMixin):
@@ -384,9 +388,6 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
                 "CashAmount.value must be a Decimal, integer or a string "
                 "containing a number."
             ) from exc
-
-        if not self._raw_value.is_finite():
-            raise ValueError("CashAmount.value must be finite.")
 
         if not isinstance(currency, Currency):
             raise TypeError("CashAmount.currency must be a Currency.")
@@ -523,6 +524,12 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
         if self._raw_value.is_nan():
             return False
         return self._raw_value < 0
+
+    def is_nan(self) -> bool:
+        return self._raw_value.is_nan()
+
+    def is_finite(self) -> bool:
+        return self._raw_value.is_finite()
 
     def to_str_rounded(self) -> str:
         if not hasattr(self, "_str_rounded"):

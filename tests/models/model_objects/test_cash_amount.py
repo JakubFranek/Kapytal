@@ -93,17 +93,6 @@ def test_value_valid_str(value: str, currency: Currency) -> None:
 
 
 @given(
-    value=st.sampled_from(
-        [Decimal("NaN"), Decimal("sNan"), Decimal("-Infinity"), Decimal("Infinity")]
-    ),
-    currency=currencies(),
-)
-def test_value_invalid_value(value: Decimal, currency: Currency) -> None:
-    with pytest.raises(ValueError, match="CashAmount.value must be finite."):
-        CashAmount(value, currency)
-
-
-@given(
     value=valid_decimals(),
     currency=everything_except(Currency),
 )
@@ -382,6 +371,16 @@ def test_convert_no_path() -> None:
     cash_amount = CashAmount(Decimal(1), currencies["CZK"])
     with pytest.raises(ConversionFactorNotFoundError):
         cash_amount.convert(currencies["XXX"])
+
+
+def test_nan() -> None:
+    nan_amount = CashAmount(Decimal("NaN"), Currency("CZK", 2))
+    assert not nan_amount.is_positive()
+    assert not nan_amount.is_negative()
+    assert nan_amount.is_nan()
+    assert not nan_amount.is_finite()
+    assert nan_amount.value_rounded.is_nan()
+    assert nan_amount.value_normalized.is_nan()
 
 
 def get_currencies() -> dict[str, Currency]:

@@ -195,3 +195,26 @@ def test_get_rate() -> None:
     assert exchange_rate.get_rate(date_3) == rate_3
     assert exchange_rate.get_rate(date_3 + timedelta(days=1)) == rate_3
     assert exchange_rate.get_rate(date_1 - timedelta(days=1)).is_nan()
+
+
+@given(
+    primary=currencies(),
+    secondary=currencies(),
+    data=st.data(),
+)
+def test_set_rates(primary: Currency, secondary: Currency, data: st.DataObject) -> None:
+    assume(primary != secondary)
+
+    data = data.draw(
+        st.lists(
+            st.tuples(
+                st.dates(),
+                st.decimals(min_value=0.01, allow_infinity=False, allow_nan=False),
+            ),
+            min_size=0,
+            max_size=5,
+        )
+    )
+
+    exchange_rate = ExchangeRate(primary, secondary)
+    exchange_rate.set_rates(data)

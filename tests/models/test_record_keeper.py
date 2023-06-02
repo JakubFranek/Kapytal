@@ -117,6 +117,41 @@ def test_add_exchange_rate_already_exists(
 
 
 @given(
+    currency_a=currencies(),
+    currency_b=currencies(),
+    places=st.integers(min_value=0, max_value=8),
+)
+def test_get_exchange_rate(
+    currency_a: Currency, currency_b: Currency, places: int
+) -> None:
+    assume(currency_a != currency_b)
+    record_keeper = RecordKeeper()
+    record_keeper.add_currency(currency_a.code, places)
+    record_keeper.add_currency(currency_b.code, places)
+    record_keeper.add_exchange_rate(currency_a.code, currency_b.code)
+    exchange_rate = record_keeper.get_exchange_rate(
+        f"{currency_a.code}/{currency_b.code}"
+    )
+    assert exchange_rate is not None
+    assert exchange_rate.primary_currency == currency_a
+    assert exchange_rate.secondary_currency == currency_b
+
+
+@given(code=everything_except(str))
+def test_get_exchange_rate_invalid_type(code: Any) -> None:
+    record_keeper = RecordKeeper()
+    with pytest.raises(TypeError, match="string"):
+        record_keeper.get_exchange_rate(code)
+
+
+@given(code=st.text(min_size=7, max_size=7))
+def test_get_exchange_rate_not_found(code: str) -> None:
+    record_keeper = RecordKeeper()
+    with pytest.raises(NotFoundError):
+        record_keeper.get_exchange_rate(code)
+
+
+@given(
     name=names(),
 )
 def test_add_account_group_no_parent(name: str) -> None:
@@ -788,37 +823,6 @@ def test_add_security_transfer(
     assert len(record_keeper.security_transfers) == 1
 
 
-def test_set_exchange() -> None:
-    record_keeper = get_preloaded_record_keeper()
-    yesterday = datetime.now(user_settings.settings.time_zone).date() - timedelta(
-        days=1
-    )
-    assert record_keeper.exchange_rates[0].latest_rate == Decimal(25)
-    record_keeper.set_exchange_rate("EUR/CZK", Decimal(1), yesterday)
-    assert record_keeper.exchange_rates[0].rate_history[yesterday] == Decimal(1)
-
-
-@given(exchange_rate_str=everything_except(str))
-def test_set_exchange_rate_invalid_type(exchange_rate_str: Any) -> None:
-    record_keeper = RecordKeeper()
-    with pytest.raises(
-        TypeError, match="Parameter 'exchange_rate_str' must be a string."
-    ):
-        record_keeper.set_exchange_rate(
-            exchange_rate_str,
-            Decimal(1),
-            datetime.now(user_settings.settings.time_zone).date(),
-        )
-
-
-def test_set_exchange_rate_does_not_exist() -> None:
-    record_keeper = RecordKeeper()
-    with pytest.raises(NotFoundError):
-        record_keeper.set_exchange_rate(
-            "N/A", Decimal(1), datetime.now(user_settings.settings.time_zone).date()
-        )
-
-
 def test_add_security_account_already_exists() -> None:
     record_keeper = RecordKeeper()
     record_keeper.add_security_account("Test path")
@@ -1206,14 +1210,13 @@ def get_preloaded_record_keeper() -> RecordKeeper:
     record_keeper.add_currency("EUR", 2)
     record_keeper.add_currency("BTC", 8)
     record_keeper.add_exchange_rate("EUR", "CZK")
-    record_keeper.set_exchange_rate(
-        "EUR/CZK", Decimal(25), datetime.now(user_settings.settings.time_zone).date()
-    )
+    eur_czk = record_keeper.get_exchange_rate("EUR/CZK")
+    eur_czk.set_rate(datetime.now(user_settings.settings.time_zone).date(), Decimal(25))
     record_keeper.add_exchange_rate("BTC", "CZK")
-    record_keeper.set_exchange_rate(
-        "BTC/CZK",
-        Decimal("600000"),
+    btc_czk = record_keeper.get_exchange_rate("BTC/CZK")
+    btc_czk.set_rate(
         datetime.now(user_settings.settings.time_zone).date(),
+        Decimal("600000"),
     )
     record_keeper.add_account_group("Bank Accounts")
     record_keeper.add_account_group("Security Accounts")

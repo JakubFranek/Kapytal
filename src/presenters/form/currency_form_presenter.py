@@ -73,6 +73,7 @@ class CurrencyFormPresenter:
         self._view.load_chart_data((), ())
 
     def show_form(self) -> None:
+        # TODO: add busy indicator
         self._view.exchangeRateTable.selectRow(0)
         self._view.show_form()
 
@@ -421,6 +422,7 @@ class CurrencyFormPresenter:
         )
 
     def _update_chart(self, exchange_rate: ExchangeRate) -> None:
+        # TODO: add busy indicator for chart redrawing
         if len(exchange_rate.rate_history_pairs) == 0:
             self._view.load_chart_data((), ())
             return

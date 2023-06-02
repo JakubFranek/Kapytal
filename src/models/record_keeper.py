@@ -1266,6 +1266,15 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
                 return currency
         raise NotFoundError(f"A Currency with code='{code_upper}' does not exist.")
 
+    def get_exchange_rate(self, code: str) -> ExchangeRate:
+        if not isinstance(code, str):
+            raise TypeError("Parameter 'code' must be a string.")
+        code_upper = code.upper()
+        for exchange_rate in self._exchange_rates:
+            if str(exchange_rate) == code_upper:
+                return exchange_rate
+        raise NotFoundError(f"An ExchangeRate with code='{code_upper}' does not exist.")
+
     def get_category(self, path: str) -> Category:
         for category in self._categories:
             if category.path == path:
@@ -1339,28 +1348,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         attributes.append(attribute)
         return attribute
 
-    def set_exchange_rate(
-        self, exchange_rate_code: str, rate: Decimal, date_: date
-    ) -> None:
-        if not isinstance(exchange_rate_code, str):
-            raise TypeError("Parameter 'exchange_rate_str' must be a string.")
-
-        for exchange_rate in self._exchange_rates:
-            if str(exchange_rate) == exchange_rate_code:
-                exchange_rate.set_rate(date_, rate)
-                return
-        raise NotFoundError(f"Exchange rate '{exchange_rate_code}' not found.")
-
-    def delete_exchange_rate(self, exchange_rate_code: str, date_: date) -> None:
-        if not isinstance(exchange_rate_code, str):
-            raise TypeError("Parameter 'exchange_rate_str' must be a string.")
-
-        for exchange_rate in self._exchange_rates:
-            if str(exchange_rate) == exchange_rate_code:
-                exchange_rate.delete_rate(date_)
-                return
-        raise NotFoundError(f"Exchange rate '{exchange_rate_code}' not found.")
-
+    # TODO: remove this method
     def set_security_price(self, uuid: str, value: Decimal, date_: date) -> None:
         security = self.get_security_by_uuid(uuid)
         price = CashAmount(value, security.currency)
