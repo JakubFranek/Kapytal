@@ -19,9 +19,9 @@ def test_security_table_model(qtbot: QtBot, qtmodeltester: ModelTester) -> None:
     security_form_presenter = SecurityFormPresenter(security_form, record_keeper)
 
     model = SecurityTableModel(
-        view=security_form.tableView,
-        securities=security_form_presenter._table_model.securities,
-        proxy=security_form_presenter._table_proxy,
+        view=security_form.securityTableView,
+        securities=security_form_presenter._security_table_model.securities,
+        proxy=security_form_presenter._security_table_proxy,
     )
 
     qtmodeltester.check(model)

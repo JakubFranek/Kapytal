@@ -155,6 +155,15 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
         return tuple(pairs)
 
     @property
+    def decimal_price_history_pairs(self) -> tuple[tuple[date, Decimal]]:
+        pairs = [
+            (date_, price.value_normalized)
+            for date_, price in self._price_history.items()
+        ]
+        pairs.sort()
+        return tuple(pairs)
+
+    @property
     def shares_unit(self) -> Decimal:
         return self._shares_unit
 

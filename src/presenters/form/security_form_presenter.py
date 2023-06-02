@@ -1,13 +1,16 @@
 import logging
 from datetime import datetime
+from decimal import Decimal
 
 from PyQt6.QtCore import QSortFilterProxyModel, Qt
+from src.models.model_objects.security_objects import Security
 from src.models.record_keeper import RecordKeeper
 from src.models.user_settings import user_settings
 from src.presenters.utilities.event import Event
 from src.presenters.utilities.handle_exception import handle_exception
 from src.view_models.owned_securities_tree_model import OwnedSecuritiesTreeModel
 from src.view_models.security_table_model import SecurityTableModel
+from src.view_models.value_table_model import ValueTableModel, ValueType
 from src.views.constants import OwnedSecuritiesTreeColumn
 from src.views.dialogs.security_dialog import SecurityDialog
 from src.views.dialogs.set_security_price_dialog import SetSecurityPriceDialog
@@ -34,27 +37,26 @@ class SecurityFormPresenter:
         self._view.signal_edit_security.connect(
             lambda: self.run_security_dialog(edit=True)
         )
-        self._view.signal_set_security_price.connect(self.run_set_price_dialog)
         self._view.signal_manage_search_text_changed.connect(self._filter_table)
         self._view.signal_overview_search_text_changed.connect(self._filter_tree)
 
         self._view.finalize_setup()
-        self._view.signal_selection_changed.connect(self._selection_changed)
-        self._selection_changed()
+        self._view.signal_selection_changed.connect(self._security_selection_changed)
+        self._security_selection_changed()
 
     def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
         self._record_keeper = record_keeper
         self.reset_models()
 
     def reset_models(self) -> None:
-        self._table_model.pre_reset_model()
+        self._security_table_model.pre_reset_model()
         self._tree_model.pre_reset_model()
         self.update_model_data()
-        self._table_model.post_reset_model()
+        self._security_table_model.post_reset_model()
         self._tree_model.post_reset_model()
 
     def update_model_data(self) -> None:
-        self._table_model.securities = self._record_keeper.securities
+        self._security_table_model.securities = self._record_keeper.securities
         self._tree_model.load_security_accounts(
             self._record_keeper.security_accounts,
             self._record_keeper.base_currency,
@@ -77,8 +79,9 @@ class SecurityFormPresenter:
             currency_codes=currency_codes,
             edit=edit,
         )
+        self._dialog.unit = Decimal(1)
         if edit:
-            security = self._table_model.get_selected_item()
+            security = self._security_table_model.get_selected_item()
             if security is None:
                 raise ValueError("Cannot edit an unselected item.")
             self._dialog.signal_ok.connect(self.edit_security)
@@ -113,14 +116,14 @@ class SecurityFormPresenter:
             handle_exception(exception)
             return
 
-        self._table_model.pre_add()
+        self._security_table_model.pre_add()
         self.update_model_data()
-        self._table_model.post_add()
+        self._security_table_model.post_add()
         self._dialog.close()
         self.event_data_changed()
 
     def edit_security(self) -> None:
-        security = self._table_model.get_selected_item()
+        security = self._security_table_model.get_selected_item()
         if security is None:
             raise ValueError("Cannot edit an unselected item.")
 
@@ -146,7 +149,7 @@ class SecurityFormPresenter:
         self.event_data_changed()
 
     def remove_security(self) -> None:
-        security = self._table_model.get_selected_item()
+        security = self._security_table_model.get_selected_item()
         if security is None:
             return
 
@@ -168,13 +171,13 @@ class SecurityFormPresenter:
             handle_exception(exception)
             return
 
-        self._table_model.pre_remove_item(security)
+        self._security_table_model.pre_remove_item(security)
         self.update_model_data()
-        self._table_model.post_remove_item()
+        self._security_table_model.post_remove_item()
         self.event_data_changed()
 
     def run_set_price_dialog(self) -> None:
-        security = self._table_model.get_selected_item()
+        security = self._security_table_model.get_selected_item()
         if security is None:
             raise ValueError("A Security must be selected to set its price.")
 
@@ -190,7 +193,7 @@ class SecurityFormPresenter:
         self._dialog.exec()
 
     def set_price(self) -> None:
-        security = self._table_model.get_selected_item()
+        security = self._security_table_model.get_selected_item()
         if security is None:
             raise ValueError("A Security must be selected to set its price.")
 
@@ -209,16 +212,34 @@ class SecurityFormPresenter:
         self.event_data_changed()
 
     def _initialize_table_models(self) -> None:
-        self._table_proxy = QSortFilterProxyModel(self._view.tableView)
-        self._table_model = SecurityTableModel(
-            self._view.tableView, self._record_keeper.securities, self._table_proxy
+        self._security_table_proxy = QSortFilterProxyModel(self._view.securityTableView)
+        self._security_table_model = SecurityTableModel(
+            self._view.securityTableView,
+            self._record_keeper.securities,
+            self._security_table_proxy,
         )
-        self._table_proxy.setSourceModel(self._table_model)
-        self._table_proxy.setSortRole(Qt.ItemDataRole.UserRole)
-        self._table_proxy.setSortCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
-        self._table_proxy.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
-        self._table_proxy.setFilterKeyColumn(-1)
-        self._view.tableView.setModel(self._table_proxy)
+        self._security_table_proxy.setSourceModel(self._security_table_model)
+        self._security_table_proxy.setSortRole(Qt.ItemDataRole.UserRole)
+        self._security_table_proxy.setSortCaseSensitivity(
+            Qt.CaseSensitivity.CaseInsensitive
+        )
+        self._security_table_proxy.setFilterCaseSensitivity(
+            Qt.CaseSensitivity.CaseInsensitive
+        )
+        self._security_table_proxy.setFilterKeyColumn(-1)
+        self._view.securityTableView.setModel(self._security_table_proxy)
+
+        self._price_table_proxy = QSortFilterProxyModel(
+            self._view.securityPriceTableView
+        )
+        self._price_table_model = ValueTableModel(
+            self._view.securityPriceTableView,
+            self._price_table_proxy,
+            ValueType.SECURITY_PRICE,
+        )
+        self._price_table_proxy.setSourceModel(self._price_table_model)
+        self._price_table_proxy.setSortRole(Qt.ItemDataRole.UserRole)
+        self._view.securityPriceTableView.setModel(self._price_table_proxy)
 
     def _initialize_tree_models(self) -> None:
         self._tree_proxy = QSortFilterProxyModel(self._view.treeView)
@@ -242,7 +263,7 @@ class SecurityFormPresenter:
     def _filter_table(self, pattern: str) -> None:
         if ("[" in pattern and "]" not in pattern) or "[]" in pattern:
             return
-        self._table_proxy.setFilterWildcard(pattern)
+        self._security_table_proxy.setFilterWildcard(pattern)
 
     def _filter_tree(self, pattern: str) -> None:
         if ("[" in pattern and "]" not in pattern) or "[]" in pattern:
@@ -250,7 +271,29 @@ class SecurityFormPresenter:
         self._tree_proxy.setFilterWildcard(pattern)
         self._view.treeView.expandAll()
 
-    def _selection_changed(self) -> None:
-        item = self._table_model.get_selected_item()
+    def _security_selection_changed(self) -> None:
+        item = self._security_table_model.get_selected_item()
         is_security_selected = item is not None
-        self._view.enable_actions(is_security_selected=is_security_selected)
+        self._view.enable_security_table_actions(
+            is_security_selected=is_security_selected
+        )
+
+        if item is not None and self._security_selection != item:
+            self._price_table_model.pre_reset_model()
+            self._price_table_model.load_data(item.decimal_price_history_pairs)
+            self._price_table_model.post_reset_model()
+            self._update_chart(item)
+
+        self._security_selection = item
+        self._price_selection_changed()
+
+    def _price_selection_changed(self) -> None:
+        pass
+
+    def _update_chart(self, security: Security) -> None:
+        # TODO: add busy indicator for chart redrawing
+        if len(security.decimal_price_history_pairs) == 0:
+            self._view.load_chart_data((), ())
+            return
+        dates, rates = zip(*security.decimal_price_history_pairs, strict=True)
+        self._view.load_chart_data(dates, rates)
