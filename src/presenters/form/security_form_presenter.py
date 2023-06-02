@@ -1,8 +1,12 @@
+import csv
 import logging
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
+from pathlib import Path
 
 from PyQt6.QtCore import QSortFilterProxyModel, Qt
+from src.models.custom_exceptions import InvalidOperationError
+from src.models.model_objects.currency_objects import CashAmount
 from src.models.model_objects.security_objects import Security
 from src.models.record_keeper import RecordKeeper
 from src.models.user_settings import user_settings
@@ -12,6 +16,7 @@ from src.view_models.owned_securities_tree_model import OwnedSecuritiesTreeModel
 from src.view_models.security_table_model import SecurityTableModel
 from src.view_models.value_table_model import ValueTableModel, ValueType
 from src.views.constants import OwnedSecuritiesTreeColumn
+from src.views.dialogs.load_data_dialog import ConflictResolutionMode, LoadDataDialog
 from src.views.dialogs.security_dialog import SecurityDialog
 from src.views.dialogs.set_security_price_dialog import SetSecurityPriceDialog
 from src.views.forms.security_form import SecurityForm
@@ -31,17 +36,24 @@ class SecurityFormPresenter:
         self._initialize_tree_models()
 
         self._view.signal_add_security.connect(
-            lambda: self.run_security_dialog(edit=False)
+            lambda: self._run_security_dialog(edit=False)
         )
-        self._view.signal_remove_security.connect(self.remove_security)
+        self._view.signal_remove_security.connect(self._remove_security)
         self._view.signal_edit_security.connect(
-            lambda: self.run_security_dialog(edit=True)
+            lambda: self._run_security_dialog(edit=True)
         )
+        self._view.signal_add_price.connect(self._run_add_price_dialog)
+        self._view.signal_edit_price.connect(self._run_edit_price_dialog)
+        self._view.signal_remove_prices.connect(self._remove_prices)
+
         self._view.signal_manage_search_text_changed.connect(self._filter_table)
         self._view.signal_overview_search_text_changed.connect(self._filter_tree)
 
         self._view.finalize_setup()
-        self._view.signal_selection_changed.connect(self._security_selection_changed)
+        self._view.signal_security_selection_changed.connect(
+            self._security_selection_changed
+        )
+        self._view.signal_price_selection_changed.connect(self._price_selection_changed)
         self._security_selection_changed()
 
     def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
@@ -51,9 +63,13 @@ class SecurityFormPresenter:
     def reset_models(self) -> None:
         self._security_table_model.pre_reset_model()
         self._tree_model.pre_reset_model()
+        self._price_table_model.pre_reset_model()
         self.update_model_data()
         self._security_table_model.post_reset_model()
         self._tree_model.post_reset_model()
+        self._price_table_model.post_reset_model()
+
+        self._view.load_chart_data((), ())
 
     def update_model_data(self) -> None:
         self._security_table_model.securities = self._record_keeper.securities
@@ -61,16 +77,18 @@ class SecurityFormPresenter:
             self._record_keeper.security_accounts,
             self._record_keeper.base_currency,
         )
+        self._price_table_model.load_data(())
 
     def show_form(self) -> None:
-        self.reset_models()
+        if self._security_table_model.get_selected_item() is None:
+            self._view.securityTableView.selectRow(0)
         self._view.refresh_tree_view()
         self._view.treeView.sortByColumn(
             OwnedSecuritiesTreeColumn.AMOUNT_BASE, Qt.SortOrder.DescendingOrder
         )
         self._view.show_form()
 
-    def run_security_dialog(self, *, edit: bool) -> None:
+    def _run_security_dialog(self, *, edit: bool) -> None:
         security_types = {security.type_ for security in self._record_keeper.securities}
         currency_codes = [currency.code for currency in self._record_keeper.currencies]
         self._dialog = SecurityDialog(
@@ -84,16 +102,16 @@ class SecurityFormPresenter:
             security = self._security_table_model.get_selected_item()
             if security is None:
                 raise ValueError("Cannot edit an unselected item.")
-            self._dialog.signal_ok.connect(self.edit_security)
+            self._dialog.signal_ok.connect(self._edit_security)
             self._dialog.name = security.name
             self._dialog.symbol = security.symbol
             self._dialog.type_ = security.type_
         else:
-            self._dialog.signal_ok.connect(self.add_security)
+            self._dialog.signal_ok.connect(self._add_security)
         logging.debug(f"Running SecurityDialog ({edit=})")
         self._dialog.exec()
 
-    def add_security(self) -> None:
+    def _add_security(self) -> None:
         name = self._dialog.name
         symbol = self._dialog.symbol
         type_ = self._dialog.type_
@@ -122,7 +140,7 @@ class SecurityFormPresenter:
         self._dialog.close()
         self.event_data_changed()
 
-    def edit_security(self) -> None:
+    def _edit_security(self) -> None:
         security = self._security_table_model.get_selected_item()
         if security is None:
             raise ValueError("Cannot edit an unselected item.")
@@ -148,7 +166,7 @@ class SecurityFormPresenter:
         self._dialog.close()
         self.event_data_changed()
 
-    def remove_security(self) -> None:
+    def _remove_security(self) -> None:
         security = self._security_table_model.get_selected_item()
         if security is None:
             return
@@ -176,39 +194,190 @@ class SecurityFormPresenter:
         self._security_table_model.post_remove_item()
         self.event_data_changed()
 
-    def run_set_price_dialog(self) -> None:
+    def _run_add_price_dialog(self) -> None:
         security = self._security_table_model.get_selected_item()
         if security is None:
             raise ValueError("A Security must be selected to set its price.")
 
         last_value = security.price.value_normalized
         self._dialog = SetSecurityPriceDialog(
-            date_today=datetime.now(user_settings.settings.time_zone).date(),
-            last_value=last_value,
+            date_=datetime.now(user_settings.settings.time_zone).date(),
+            value=last_value,
+            security_name=security.name,
             parent=self._view,
             currency_code=security.currency.code,
+            edit=False,
         )
-        self._dialog.signal_ok.connect(self.set_price)
-        logging.debug("Running SetSecurityPriceDialog")
+        self._dialog.signal_ok.connect(self._set_price)
+        logging.debug("Running SetSecurityPriceDialog (add data point)")
         self._dialog.exec()
 
-    def set_price(self) -> None:
+    def _run_edit_price_dialog(self) -> None:
+        selected_data_points = self._price_table_model.get_selected_values()
+        if len(selected_data_points) != 1:
+            raise ValueError("Exactly one data point must be selected to edit it.")
         security = self._security_table_model.get_selected_item()
         if security is None:
             raise ValueError("A Security must be selected to set its price.")
 
-        uuid = security.uuid
+        date_, value = selected_data_points[0]
+        self._dialog = SetSecurityPriceDialog(
+            date_=date_,
+            value=value,
+            security_name=security.name,
+            parent=self._view,
+            currency_code=security.currency.code,
+            edit=True,
+        )
+        self._dialog.signal_ok.connect(self._set_price)
+        logging.debug("Running SetSecurityPriceDialog (add data point)")
+        self._dialog.exec()
+
+    def _set_price(self) -> None:
+        security = self._security_table_model.get_selected_item()
+        if security is None:
+            raise ValueError("A Security must be selected to set its price.")
+
         value = self._dialog.value.normalize()
         date_ = self._dialog.date_
-        logging.info(f"Setting {security} price: {value} on {date_}")
+        logging.info(
+            f"Setting {security} price: {value} on {date_.strftime('%Y-%m-%d')}"
+        )
         try:
-            self._record_keeper.set_security_price(uuid, value, date_)
+            security.set_price(date_, CashAmount(value, security.currency))
         except Exception as exception:  # noqa: BLE001
             handle_exception(exception)
             return
 
-        self.update_model_data()
+        previous_data_points = self._price_table_model.data_points
+        new_data_points = security.decimal_price_history_pairs
+        if len(previous_data_points) != len(new_data_points):
+            for _index, _data in enumerate(new_data_points):
+                if date_ == _data[0]:
+                    index = _index
+                    break
+            else:
+                raise ValueError("No data point found for the given date.")
+            add = True
+        else:
+            add = False
+            index = None
+
+        if add:
+            self._price_table_model.pre_add(index)
+            self._price_table_model.load_data(new_data_points)
+            self._price_table_model.post_add()
+        else:
+            self._price_table_model.load_data(new_data_points)
+
         self._dialog.close()
+        self._update_chart(security)
+        self.event_data_changed()
+
+    def _remove_prices(self) -> None:
+        selected_data_points = self._price_table_model.get_selected_values()
+        if len(selected_data_points) == 0:
+            raise InvalidOperationError(
+                "At least one data point must be selected for removal."
+            )
+        security = self._security_table_model.get_selected_item()
+        if security is None:
+            raise InvalidOperationError(
+                "An ExchangeRate must be selected to edit its data point."
+            )
+
+        logging.debug(
+            f"{security!s} price deletion requested, asking the user for confirmation"
+        )
+        if not ask_yes_no_question(
+            self._view,
+            question=(
+                f"Do you want to delete {len(selected_data_points):,} data point(s) "
+                f"of {security.name}?"
+            ),
+            title="Are you sure?",
+        ):
+            logging.debug("User cancelled the data point deletion")
+            return
+
+        any_deleted = False
+        for date_, _ in selected_data_points:
+            try:
+                security.delete_price(date_)
+                any_deleted = True
+            except Exception as exception:  # noqa: BLE001
+                handle_exception(exception)
+                return
+
+        if any_deleted:
+            self._price_table_model.pre_reset_model()
+            self._price_table_model.load_data(security.decimal_price_history_pairs)
+            self._price_table_model.post_reset_model()
+            self._update_chart(security)
+            self.event_data_changed()
+
+    def _run_load_data_dialog(self) -> None:
+        security = self._security_table_model.get_selected_item()
+        if security is None:
+            raise InvalidOperationError(
+                "A Security must be selected to load data points."
+            )
+        self._dialog = LoadDataDialog(self._view, security.name)
+        self._dialog.signal_ok.connect(self._load_data)
+        logging.info(f"Running LoadDataDialog: {security.name}")
+        self._dialog.exec()
+
+    def _load_data(self) -> None:
+        security = self._security_table_model.get_selected_item()
+        if security is None:
+            raise InvalidOperationError(
+                "A Security must be selected to load data points."
+            )
+
+        _path = self._dialog.path
+        conflict_resolution_mode = self._dialog.conflict_resolution_mode
+        path = Path(_path)
+
+        logging.debug(f"Loading {security!s} data from {path!s}")
+        data: list[tuple[date, CashAmount]] = []
+        try:
+            with path.open("r") as file:
+                reader = csv.reader(file)
+                for _date, _value in reader:
+                    date_ = datetime.strptime(_date, "%Y-%m-%d").date()  # noqa: DTZ007
+                    value = CashAmount(_value, security.currency)
+                    data.append((date_, value))
+        except Exception as exception:  # noqa: BLE001
+            handle_exception(exception)
+            return
+
+        logging.debug(f"Loaded {len(data):,} data points for {security!s}")
+
+        if conflict_resolution_mode == ConflictResolutionMode.OVERWRITE:
+            filtered_data = data
+        else:
+            filtered_data = [
+                (date_, value)
+                for date_, value in data
+                if date_ not in security.price_history
+            ]
+
+        try:
+            security.set_prices(filtered_data)
+        except Exception as exception:  # noqa: BLE001
+            handle_exception(exception)
+            return
+
+        logging.debug(
+            f"Set {len(filtered_data):,} data points to {security.name} "
+            f"(conflict_resolution_mode={conflict_resolution_mode.name})"
+        )
+
+        self._price_table_model.pre_reset_model()
+        self._price_table_model.load_data(security.decimal_price_history_pairs)
+        self._price_table_model.post_reset_model()
+        self._dialog.close()
+        self._update_chart(security)
         self.event_data_changed()
 
     def _initialize_table_models(self) -> None:
@@ -288,7 +457,16 @@ class SecurityFormPresenter:
         self._price_selection_changed()
 
     def _price_selection_changed(self) -> None:
-        pass
+        security = self._security_table_model.get_selected_item()
+        is_security_selected = security is not None
+        data_points = self._price_table_model.get_selected_values()
+        is_price_selected = len(data_points) > 0
+        is_single_price_selected = len(data_points) == 1
+        self._view.set_price_actions(
+            is_security_selected=is_security_selected,
+            is_price_selected=is_price_selected,
+            is_single_price_selected=is_single_price_selected,
+        )
 
     def _update_chart(self, security: Security) -> None:
         # TODO: add busy indicator for chart redrawing

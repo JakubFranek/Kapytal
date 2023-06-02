@@ -55,7 +55,6 @@ class CurrencyFormPresenter:
         )
         self._exchange_rate_selection_changed()
         self._currency_selection_changed()
-        self._data_point_selection_changed()
 
     def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
         self._currency_table_model.pre_reset_model()
@@ -74,7 +73,8 @@ class CurrencyFormPresenter:
 
     def show_form(self) -> None:
         # TODO: add busy indicator
-        self._view.exchangeRateTable.selectRow(0)
+        if self._exchange_rate_table_model.get_selected_item() is None:
+            self._view.exchangeRateTable.selectRow(0)
         self._view.show_form()
 
     def _run_add_currency_dialog(self) -> None:
@@ -273,6 +273,8 @@ class CurrencyFormPresenter:
             self._exchange_rate_history_model.pre_add(index)
             self._exchange_rate_history_model.load_data(new_data_points)
             self._exchange_rate_history_model.post_add()
+        else:
+            self._exchange_rate_history_model.load_data(new_data_points)
 
         self._dialog.close()
         self._update_chart(exchange_rate)
@@ -364,8 +366,8 @@ class CurrencyFormPresenter:
             filtered_data = data
         else:
             filtered_data = [
-                (date_, value_)
-                for date_, value_ in data
+                (date_, value)
+                for date_, value in data
                 if date_ not in exchange_rate.rate_history
             ]
 

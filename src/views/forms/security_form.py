@@ -23,12 +23,13 @@ class SecurityForm(CustomWidget, Ui_SecurityForm):
 
     signal_add_price = pyqtSignal()
     signal_edit_price = pyqtSignal()
-    signal_remove_price = pyqtSignal()
+    signal_remove_prices = pyqtSignal()
     signal_load_price_data = pyqtSignal()
 
     signal_manage_search_text_changed = pyqtSignal(str)
     signal_overview_search_text_changed = pyqtSignal(str)
-    signal_selection_changed = pyqtSignal()
+    signal_security_selection_changed = pyqtSignal()
+    signal_price_selection_changed = pyqtSignal()
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent=parent)
@@ -55,7 +56,7 @@ class SecurityForm(CustomWidget, Ui_SecurityForm):
 
         self.actionAdd_Price.triggered.connect(self.signal_add_price.emit)
         self.actionEdit_Price.triggered.connect(self.signal_edit_price.emit)
-        self.actionRemove_Price.triggered.connect(self.signal_remove_price.emit)
+        self.actionRemove_Price.triggered.connect(self.signal_remove_prices.emit)
         self.actionLoad_Price_Data.triggered.connect(self.signal_load_price_data.emit)
 
         self.addPriceToolButton.setDefaultAction(self.actionAdd_Price)
@@ -156,7 +157,7 @@ class SecurityForm(CustomWidget, Ui_SecurityForm):
         )
 
         self.securityTableView.selectionModel().selectionChanged.connect(
-            self.signal_selection_changed.emit
+            self.signal_security_selection_changed.emit
         )
         self.securityTableView.sortByColumn(0, Qt.SortOrder.AscendingOrder)
 
@@ -186,6 +187,9 @@ class SecurityForm(CustomWidget, Ui_SecurityForm):
         self.securityPriceTableView.horizontalHeader().setSectionResizeMode(
             ValueTableColumn.VALUE,
             QHeaderView.ResizeMode.Stretch,
+        )
+        self.securityPriceTableView.selectionModel().selectionChanged.connect(
+            self.signal_price_selection_changed.emit
         )
 
     def refresh_tree_view(self) -> None:

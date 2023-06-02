@@ -174,25 +174,23 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
         return self._name
 
     def set_price(self, date_: date, price: CashAmount) -> None:
-        if not isinstance(date_, date):
-            raise TypeError("Parameter 'date_' must be a date.")
-        if not isinstance(price, CashAmount):
-            raise TypeError("Parameter 'price' must be a CashAmount.")
-        if price.currency != self._currency:
-            raise CurrencyError("Security.currency and price.currency must match.")
-
+        self._validate_date(date_)
+        self._validate_price(price)
         self._price_history[date_] = price
-        self._latest_date = max(date_ for date_ in self._price_history)
+        self._update_values()
 
-        latest_price = self._price_history[self._latest_date]
-        if hasattr(self, "_latest_price"):
-            previous_latest_price = self._latest_price
-        else:
-            previous_latest_price = None
+    def set_prices(
+        self, date_price_tuples: Collection[tuple[date, CashAmount]]
+    ) -> None:
+        for date_, price in date_price_tuples:
+            self._validate_date(date_)
+            self._validate_price(price)
+            self._price_history[date_] = price
+        self._update_values()
 
-        self._latest_price = self._price_history[self._latest_date]
-        if previous_latest_price != latest_price:
-            self.event_price_updated()
+    def delete_price(self, date_: date) -> None:
+        del self._price_history[date_]
+        self._update_values()
 
     def serialize(self) -> dict[str, Any]:
         date_price_pairs = [
@@ -238,6 +236,28 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
 
         obj._uuid = UUID(data["uuid"])  # noqa: SLF001
         return obj
+
+    def _update_values(self) -> None:
+        self._latest_date = max(date_ for date_ in self._price_history)
+        latest_price = self._price_history[self._latest_date]
+        if hasattr(self, "_latest_price"):
+            previous_latest_price = self._latest_price
+        else:
+            previous_latest_price = None
+
+        self._latest_price = self._price_history[self._latest_date]
+        if previous_latest_price != latest_price:
+            self.event_price_updated()
+
+    def _validate_date(self, date_: date) -> None:
+        if not isinstance(date_, date):
+            raise TypeError("Parameter 'date_' must be a date.")
+
+    def _validate_price(self, price: CashAmount) -> None:
+        if not isinstance(price, CashAmount):
+            raise TypeError("Parameter 'price' must be a CashAmount.")
+        if price.currency != self._currency:
+            raise CurrencyError("Security.currency and price.currency must match.")
 
 
 # IDEA: maybe add shares / balance history (calculated)
