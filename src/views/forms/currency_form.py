@@ -20,7 +20,7 @@ class CurrencyForm(CustomWidget, Ui_CurrencyForm):
     signal_remove_currency = pyqtSignal()
     signal_add_exchange_rate = pyqtSignal()
     signal_remove_exchange_rate = pyqtSignal()
-    signal_add_data = pyqtSignal()  # TODO: rename data to rate (also in .ui)
+    signal_add_data = pyqtSignal()
     signal_edit_data = pyqtSignal()
     signal_remove_data = pyqtSignal()
     signal_load_data = pyqtSignal()

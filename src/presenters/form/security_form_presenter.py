@@ -5,6 +5,7 @@ from decimal import Decimal
 from pathlib import Path
 
 from PyQt6.QtCore import QSortFilterProxyModel, Qt
+from PyQt6.QtWidgets import QApplication
 from src.models.custom_exceptions import InvalidOperationError
 from src.models.model_objects.currency_objects import CashAmount
 from src.models.model_objects.security_objects import Security
@@ -16,13 +17,12 @@ from src.view_models.owned_securities_tree_model import OwnedSecuritiesTreeModel
 from src.view_models.security_table_model import SecurityTableModel
 from src.view_models.value_table_model import ValueTableModel, ValueType
 from src.views.constants import OwnedSecuritiesTreeColumn
+from src.views.dialogs.busy_dialog import create_simple_busy_indicator
 from src.views.dialogs.load_data_dialog import ConflictResolutionMode, LoadDataDialog
 from src.views.dialogs.security_dialog import SecurityDialog
 from src.views.dialogs.set_security_price_dialog import SetSecurityPriceDialog
 from src.views.forms.security_form import SecurityForm
 from src.views.utilities.message_box_functions import ask_yes_no_question
-
-# BUG: occasional silent crash on security price set (with large precision)
 
 
 class SecurityFormPresenter:
@@ -45,6 +45,7 @@ class SecurityFormPresenter:
         self._view.signal_add_price.connect(self._run_add_price_dialog)
         self._view.signal_edit_price.connect(self._run_edit_price_dialog)
         self._view.signal_remove_prices.connect(self._remove_prices)
+        self._view.signal_load_price_data.connect(self._run_load_data_dialog)
 
         self._view.signal_manage_search_text_changed.connect(self._filter_table)
         self._view.signal_overview_search_text_changed.connect(self._filter_tree)
@@ -80,14 +81,24 @@ class SecurityFormPresenter:
         self._price_table_model.load_data(())
 
     def show_form(self) -> None:
-        # TODO: add busy indicator
-        if self._security_table_model.get_selected_item() is None:
-            self._view.securityTableView.selectRow(0)
-        self._view.refresh_tree_view()
-        self._view.treeView.sortByColumn(
-            OwnedSecuritiesTreeColumn.AMOUNT_BASE, Qt.SortOrder.DescendingOrder
+        self._busy_dialog = create_simple_busy_indicator(
+            self._view, "Preparing Securities form, please wait..."
         )
-        self._view.show_form()
+        self._busy_dialog.open()
+        QApplication.processEvents()
+
+        try:
+            if self._security_table_model.get_selected_item() is None:
+                self._view.securityTableView.selectRow(0)
+            self._view.refresh_tree_view()
+            self._view.treeView.sortByColumn(
+                OwnedSecuritiesTreeColumn.AMOUNT_BASE, Qt.SortOrder.DescendingOrder
+            )
+            self._view.show_form()
+        except:  # noqa: TRY302
+            raise
+        finally:
+            self._busy_dialog.close()
 
     def _run_security_dialog(self, *, edit: bool) -> None:
         security_types = {security.type_ for security in self._record_keeper.securities}

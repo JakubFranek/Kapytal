@@ -5,6 +5,7 @@ from decimal import Decimal
 from pathlib import Path
 
 from PyQt6.QtCore import QSortFilterProxyModel, Qt
+from PyQt6.QtWidgets import QApplication
 from src.models.custom_exceptions import InvalidOperationError
 from src.models.model_objects.currency_objects import ExchangeRate
 from src.models.record_keeper import RecordKeeper
@@ -15,6 +16,7 @@ from src.view_models.currency_table_model import CurrencyTableModel
 from src.view_models.exchange_rate_table_model import ExchangeRateTableModel
 from src.view_models.value_table_model import ValueTableModel, ValueType
 from src.views.dialogs.add_exchange_rate_dialog import AddExchangeRateDialog
+from src.views.dialogs.busy_dialog import create_simple_busy_indicator
 from src.views.dialogs.currency_dialog import CurrencyDialog
 from src.views.dialogs.load_data_dialog import ConflictResolutionMode, LoadDataDialog
 from src.views.dialogs.set_exchange_rate_dialog import SetExchangeRateDialog
@@ -72,10 +74,20 @@ class CurrencyFormPresenter:
         self._view.load_chart_data((), ())
 
     def show_form(self) -> None:
-        # TODO: add busy indicator
-        if self._exchange_rate_table_model.get_selected_item() is None:
-            self._view.exchangeRateTable.selectRow(0)
-        self._view.show_form()
+        self._busy_dialog = create_simple_busy_indicator(
+            self._view, "Preparing Currencies and Exchange Rates form, please wait..."
+        )
+        self._busy_dialog.open()
+        QApplication.processEvents()
+
+        try:
+            if self._exchange_rate_table_model.get_selected_item() is None:
+                self._view.exchangeRateTable.selectRow(0)
+            self._view.show_form()
+        except:  # noqa: TRY302
+            raise
+        finally:
+            self._busy_dialog.close()
 
     def _run_add_currency_dialog(self) -> None:
         self._dialog = CurrencyDialog(self._view)
@@ -424,7 +436,7 @@ class CurrencyFormPresenter:
         )
 
     def _update_chart(self, exchange_rate: ExchangeRate) -> None:
-        # TODO: add busy indicator for chart redrawing
+        # TODO: add busy indicator for chart redrawing (separate method for update chart w/ busy and without, possibly with reset model)
         if len(exchange_rate.rate_history_pairs) == 0:
             self._view.load_chart_data((), ())
             return
