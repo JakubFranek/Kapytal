@@ -1,5 +1,6 @@
 from collections.abc import Collection
 
+import mplcursors
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg, NavigationToolbar2QT
 from matplotlib.dates import DateFormatter
 from matplotlib.figure import Figure
@@ -33,7 +34,7 @@ class ChartWidget(QWidget):
         self.chart.axes.xaxis.set_major_formatter(DateFormatter("%d.%m.%Y"))
         self.chart.axes.tick_params(axis="x", rotation=30)
         self.chart.axes.figure.set_layout_engine("tight")
-        self.line = None
+        self.lines = None
         self.chart_toolbar = NavigationToolbar2QT(self.chart, None)
 
         self.vertical_layout = QVBoxLayout(self)
@@ -51,14 +52,18 @@ class ChartWidget(QWidget):
         ylabel: str = "",
         xlabel: str = "",
     ) -> None:
-        if self.line is None:
-            lines = self.chart.axes.plot(x, y, ".-")
-            self.line = lines[0]
+        if self.lines is None:
+            line = self.chart.axes.plot(x, y, "-", color="tab:blue")
+            points = self.chart.axes.plot(x, y, ".", color="tab:blue")
+            self.lines = [line[0], points[0]]
+            mplcursors.cursor(points)
         else:
-            self.line.set_data(x, y)
+            self.lines[0].set_data(x, y)
+            self.lines[1].set_data(x, y)
         self.chart.axes.set_title(title)
         self.chart.axes.set_ylabel(ylabel)
         self.chart.axes.set_xlabel(xlabel)
+
         self.chart.axes.relim()
         self.chart.axes.autoscale()
         self.chart.draw()
