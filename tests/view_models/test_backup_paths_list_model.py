@@ -13,6 +13,7 @@ def test_backup_paths_list_model(qtbot: QtBot, qtmodeltester: ModelTester) -> No
     qtbot.add_widget(parent)
     settings_form = SettingsForm(parent)
     paths = ["a", "b", "c", "d", "e", "f"]
-    model = BackupPathsListModel(view=settings_form.backupsListView, paths=paths)
+    model = BackupPathsListModel(view=settings_form.backupsListView)
+    model.load_paths(paths)
 
     qtmodeltester.check(model)

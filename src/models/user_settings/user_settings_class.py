@@ -87,7 +87,7 @@ class UserSettings(JSONSerializableMixin):
         self._backups_max_size_bytes = value
 
     @property
-    def backup_paths(self) -> tuple[Path]:
+    def backup_paths(self) -> tuple[Path, ...]:
         return tuple(self._backup_paths)
 
     @backup_paths.setter

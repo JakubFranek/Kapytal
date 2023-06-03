@@ -19,19 +19,17 @@ class ExchangeRateTableModel(QAbstractTableModel):
         self,
         view: QTableView,
         proxy: QSortFilterProxyModel,
-        exchange_rates: tuple[ExchangeRate, ...],
     ) -> None:
         super().__init__()
         self._view = view
         self._proxy = proxy
-        self.exchange_rates = exchange_rates
+        self._exchange_rates = ()
 
     @property
     def exchange_rates(self) -> tuple[ExchangeRate, ...]:
         return self._exchange_rates
 
-    @exchange_rates.setter
-    def exchange_rates(self, exchange_rates: Collection[ExchangeRate]) -> None:
+    def load_exchange_rates(self, exchange_rates: Collection[ExchangeRate]) -> None:
         self._exchange_rates = tuple(exchange_rates)
 
     def rowCount(self, index: QModelIndex = ...) -> int:  # noqa: N802

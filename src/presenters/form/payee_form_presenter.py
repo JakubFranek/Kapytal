@@ -23,7 +23,7 @@ class PayeeFormPresenter:
         self._record_keeper = record_keeper
 
         self._proxy_model = QSortFilterProxyModel(self._view.tableView)
-        self._model = PayeeTableModel(self._view.tableView, [], self._proxy_model)
+        self._model = PayeeTableModel(self._view.tableView, self._proxy_model)
         self._update_model_data()
         self._proxy_model.setSourceModel(self._model)
         self._proxy_model.setSortRole(Qt.ItemDataRole.UserRole)
@@ -64,11 +64,12 @@ class PayeeFormPresenter:
             self._record_keeper.cash_transactions
             + self._record_keeper.refund_transactions
         )
-        self._model.payee_stats = calculate_payee_stats(
+        payee_stats = calculate_payee_stats(
             relevant_transactions,
             self._record_keeper.base_currency,
             self._record_keeper.payees,
         ).values()
+        self._model.load_payee_stats(payee_stats)
         self._recalculate_data = False
 
     def _update_model_data_with_busy_dialog(self) -> None:

@@ -75,17 +75,14 @@ class OwnedSecuritiesTreeModel(QAbstractItemModel):
     def __init__(
         self,
         tree_view: QTreeView,
-        security_accounts: Collection[SecurityAccount],
-        base_currency: Currency | None,
         proxy: QSortFilterProxyModel,
     ) -> None:
         super().__init__()
         self._tree_view = tree_view
-        self.load_security_accounts(security_accounts, base_currency)
         self._proxy = proxy
         self._tree_items = ()
 
-    def load_security_accounts(
+    def load_data(
         self, accounts: Collection[SecurityAccount], base_currency: Currency | None
     ) -> None:
         tree_items: dict[Security, SecurityItem] = {}

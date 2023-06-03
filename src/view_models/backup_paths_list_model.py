@@ -6,17 +6,16 @@ from PyQt6.QtWidgets import QListView
 
 
 class BackupPathsListModel(QAbstractListModel):
-    def __init__(self, view: QListView, paths: Collection[Path]) -> None:
+    def __init__(self, view: QListView) -> None:
         super().__init__()
         self._view = view
-        self.paths = paths
+        self._paths: tuple[Path, ...] = ()
 
     @property
-    def paths(self) -> tuple[Path]:
+    def paths(self) -> tuple[Path, ...]:
         return self._paths
 
-    @paths.setter
-    def paths(self, paths: Collection[Path]) -> None:
+    def load_paths(self, paths: Collection[Path]) -> None:
         self._paths = tuple(paths)
 
     def rowCount(self, index: QModelIndex = ...) -> int:  # noqa: N802

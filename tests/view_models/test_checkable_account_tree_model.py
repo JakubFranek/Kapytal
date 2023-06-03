@@ -19,9 +19,11 @@ def test_checkable_account_tree_model(qtbot: QtBot, qtmodeltester: ModelTester) 
 
     proxy = QSortFilterProxyModel(parent)
     model = CheckableAccountTreeModel(
-        tree_view=view, proxy=proxy, flat_account_items=record_keeper.account_items
+        tree_view=view,
+        proxy=proxy,
     )
-    model.checked_accounts = record_keeper.accounts[:1]
+    model.load_flat_items(record_keeper.account_items)
+    model.load_checked_accounts(record_keeper.accounts[:1])
     proxy.setSourceModel(model)
     view.setModel(proxy)
 

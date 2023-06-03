@@ -120,22 +120,29 @@ class CheckableAccountTreeModel(QAbstractItemModel):
         self,
         tree_view: QTreeView,
         proxy: QSortFilterProxyModel,
-        flat_account_items: Sequence[Account | AccountGroup],
     ) -> None:
         super().__init__()
         self._tree_view = tree_view
         self._proxy = proxy
         self._flat_nodes: tuple[AccountTreeNode] = ()
         self._root_nodes: tuple[AccountTreeNode] = ()
-        self.flat_account_items = flat_account_items
 
     @property
     def flat_account_items(self) -> tuple[Account | AccountGroup, ...]:
         return tuple(node.item for node in self._flat_nodes)
 
-    @flat_account_items.setter
-    def flat_account_items(
-        self, flat_account_items: Collection[Account | AccountGroup]
+    @property
+    def checked_accounts(self) -> tuple[Account, ...]:
+        return tuple(
+            node.item
+            for node in self._flat_nodes
+            if node.check_state == Qt.CheckState.Checked
+            and isinstance(node.item, Account)
+        )
+
+    def load_flat_items(
+        self,
+        flat_account_items: Sequence[Account | AccountGroup],
     ) -> None:
         self._flat_nodes = tuple(sync_nodes(flat_account_items, self._flat_nodes))
         self._root_nodes = tuple(
@@ -147,17 +154,7 @@ class CheckableAccountTreeModel(QAbstractItemModel):
                 lambda item_path: self._node_check_state_changed(item_path)
             )
 
-    @property
-    def checked_accounts(self) -> tuple[Account, ...]:
-        return tuple(
-            node.item
-            for node in self._flat_nodes
-            if node.check_state == Qt.CheckState.Checked
-            and isinstance(node.item, Account)
-        )
-
-    @checked_accounts.setter
-    def checked_accounts(self, checked_accounts: Collection[Account]) -> None:
+    def load_checked_accounts(self, checked_accounts: Collection[Account]) -> None:
         for node in self._flat_nodes:
             node.set_check_state(checked=node.item in checked_accounts)
 

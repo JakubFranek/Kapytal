@@ -20,22 +20,22 @@ class CurrencyTableModel(QAbstractTableModel):
         self,
         view: QTableView,
         proxy: QSortFilterProxyModel,
-        currencies: tuple[Currency, ...],
-        base_currency: Currency,
     ) -> None:
         super().__init__()
         self._view = view
         self._proxy = proxy
-        self.currencies = currencies
-        self.base_currency = base_currency
+        self._currencies = ()
+        self._base_currency = None
 
     @property
     def currencies(self) -> tuple[Currency, ...]:
         return self._currencies
 
-    @currencies.setter
-    def currencies(self, currencies: Collection[Currency]) -> None:
+    def load_data(
+        self, currencies: Collection[Currency], base_currency: Currency | None
+    ) -> None:
         self._currencies = tuple(currencies)
+        self._base_currency = base_currency
 
     def rowCount(self, index: QModelIndex = ...) -> int:  # noqa: N802
         if isinstance(index, QModelIndex) and index.isValid():
@@ -71,7 +71,7 @@ class CurrencyTableModel(QAbstractTableModel):
         if (
             role == Qt.ItemDataRole.DecorationRole
             and column == CurrencyTableColumn.CODE
-            and currency == self.base_currency
+            and currency == self._base_currency
         ):
             return icons.base_currency
         if (

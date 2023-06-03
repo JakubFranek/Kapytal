@@ -22,20 +22,18 @@ class SecurityTableModel(QAbstractTableModel):
     def __init__(
         self,
         view: QTableView,
-        securities: Collection[Security],
         proxy: QSortFilterProxyModel,
     ) -> None:
         super().__init__()
         self._view = view
-        self.securities = tuple(securities)
+        self._securities = ()
         self._proxy = proxy
 
     @property
     def securities(self) -> tuple[Security, ...]:
         return self._securities
 
-    @securities.setter
-    def securities(self, securities: Collection[Security]) -> None:
+    def load_securities(self, securities: Collection[Security]) -> None:
         self._securities = tuple(securities)
 
     def rowCount(self, index: QModelIndex = ...) -> int:  # noqa: N802

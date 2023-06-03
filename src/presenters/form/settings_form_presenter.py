@@ -15,9 +15,7 @@ class SettingsFormPresenter:
 
         self._backup_paths = list(user_settings.settings.backup_paths)
 
-        self._backup_paths_list_model = BackupPathsListModel(
-            self._view.backupsListView, user_settings.settings.backup_paths
-        )
+        self._backup_paths_list_model = BackupPathsListModel(self._view.backupsListView)
         self._view.backupsListView.setModel(self._backup_paths_list_model)
 
         self._view.signal_ok.connect(lambda: self.save(close=True))
@@ -40,7 +38,6 @@ class SettingsFormPresenter:
         self._backup_path_selection_changed()
 
     def show_form(self) -> None:
-        self._backup_paths = list(user_settings.settings.backup_paths)
         self._view.backups_max_size_kb = (
             user_settings.settings.backups_max_size_bytes // 1000
         )
@@ -52,7 +49,7 @@ class SettingsFormPresenter:
         self._view.show_form()
 
     def update_model_data(self) -> None:
-        self._backup_paths_list_model.paths = self._backup_paths
+        self._backup_paths_list_model.load_paths(self._backup_paths)
 
     def add_backup_path(self) -> None:
         logging.debug("Backup path addition initiated: asking user for directory")

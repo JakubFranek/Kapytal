@@ -20,20 +20,18 @@ class PayeeTableModel(QAbstractTableModel):
     def __init__(
         self,
         view: QTableView,
-        payee_stats: Collection[AttributeStats],
         proxy: QSortFilterProxyModel,
     ) -> None:
         super().__init__()
         self._view = view
-        self.payee_stats = payee_stats
+        self._payee_stats: tuple[AttributeStats, ...] = ()
         self._proxy = proxy
 
     @property
     def payee_stats(self) -> tuple[AttributeStats, ...]:
         return self._payee_stats
 
-    @payee_stats.setter
-    def payee_stats(self, payee_stats: Collection[AttributeStats]) -> None:
+    def load_payee_stats(self, payee_stats: Collection[AttributeStats]) -> None:
         self._payee_stats = tuple(payee_stats)
 
     def rowCount(self, index: QModelIndex = ...) -> int:  # noqa: N802
@@ -52,13 +50,15 @@ class PayeeTableModel(QAbstractTableModel):
         if not index.isValid():
             return None
 
-        column = index.column()
-        payee_stats = self._payee_stats[index.row()]
-
         if role == Qt.ItemDataRole.DisplayRole:
-            return self._get_display_role_data(column, payee_stats)
+            return self._get_display_role_data(
+                index.column(), self._payee_stats[index.row()]
+            )
         if role == Qt.ItemDataRole.UserRole:
-            return self._get_user_role_data(column, payee_stats)
+            return self._get_user_role_data(
+                index.column(), self._payee_stats[index.row()]
+            )
+        column = index.column()
         if role == Qt.ItemDataRole.TextAlignmentRole and (
             column == PayeeTableColumn.TRANSACTIONS
             or column == PayeeTableColumn.BALANCE

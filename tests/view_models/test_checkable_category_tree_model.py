@@ -18,10 +18,9 @@ def test_checkable_category_tree_model(
     view = QTreeView(parent)
     record_keeper = get_preloaded_record_keeper_with_various_transactions()
 
-    model = CheckableCategoryTreeModel(
-        tree_view=view, flat_categories=record_keeper.categories
-    )
-    model.checked_categories = record_keeper.categories[:1]
+    model = CheckableCategoryTreeModel(tree_view=view)
+    model.load_flat_categories(record_keeper.categories)
+    model.load_checked_categories(record_keeper.categories[:1])
     view.setModel(model)
 
     qtmodeltester.check(model)

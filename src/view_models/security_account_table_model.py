@@ -27,14 +27,12 @@ class SecurityAccountTableModel(QAbstractTableModel):
     def __init__(
         self,
         view: QTableView,
-        security_account: SecurityAccount | None,
-        base_currency: Currency | None,
         proxy: QSortFilterProxyModel,
     ) -> None:
         super().__init__()
         self._view = view
-        self.security_account = security_account
-        self.base_currency = base_currency
+        self._security_account = None
+        self._base_currency = None
         self._proxy = proxy
         self._securities = ()
 
@@ -42,9 +40,14 @@ class SecurityAccountTableModel(QAbstractTableModel):
     def security_account(self) -> SecurityAccount | None:
         return self._security_account
 
-    @security_account.setter
-    def security_account(self, value: SecurityAccount | None) -> None:
-        self._security_account = value
+    @property
+    def base_currency(self) -> Currency | None:
+        return self._base_currency
+
+    def load_data(
+        self, security_account: SecurityAccount | None, base_currency: Currency | None
+    ) -> None:
+        self._security_account = security_account
         if isinstance(self._security_account, SecurityAccount):
             self._securities: tuple[tuple[Security, Decimal], ...] = tuple(
                 (security, shares)
@@ -52,14 +55,7 @@ class SecurityAccountTableModel(QAbstractTableModel):
             )
         else:
             self._securities = ()
-
-    @property
-    def base_currency(self) -> Currency | None:
-        return self._base_currency
-
-    @base_currency.setter
-    def base_currency(self, value: Currency | None) -> None:
-        self._base_currency = value
+        self._base_currency = base_currency
 
     def rowCount(self, index: QModelIndex = ...) -> int:  # noqa: N802
         if isinstance(index, QModelIndex) and index.isValid():

@@ -25,7 +25,8 @@ class SelectItemDialog(CustomDialog, Ui_SelectItemDialog):
         self.setWindowIcon(icon)
 
         self._proxy = QSortFilterProxyModel(self)
-        self._model = SimpleListModel(self.listView, items, self._proxy)
+        self._model = SimpleListModel(self.listView, self._proxy)
+        self._model.load_items(items)
         self._proxy.setSourceModel(self._model)
         self._proxy.setSortCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
         self._proxy.setSortRole(Qt.ItemDataRole.UserRole)

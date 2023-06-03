@@ -12,9 +12,9 @@ def test_checkable_list_model(qtbot: QtBot, qtmodeltester: ModelTester) -> None:
     items = ["a", "b", "c", "d", "e", "f"]
     model = CheckableListModel(
         view=list_view,
-        items=items,
-        checked_items=items[1:4],
         proxy=QSortFilterProxyModel(),
     )
+    model.load_items(items)
+    model.load_checked_items(items[1:4])
 
     qtmodeltester.check(model)

@@ -6,13 +6,14 @@ from PyQt6.QtWidgets import QListView
 
 
 class SimpleListModel(QAbstractListModel):
-    def __init__(
-        self, view: QListView, items: Collection[str], proxy: QSortFilterProxyModel
-    ) -> None:
+    def __init__(self, view: QListView, proxy: QSortFilterProxyModel) -> None:
         super().__init__()
         self._list_view = view
-        self._items: list[str] = items
+        self._items: tuple[str, ...] = ()
         self._proxy = proxy
+
+    def load_items(self, items: Collection[str]) -> None:
+        self._items = tuple(items)
 
     def rowCount(self, index: QModelIndex = ...) -> int:  # noqa: N802
         if isinstance(index, QModelIndex) and index.isValid():

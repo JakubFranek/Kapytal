@@ -48,11 +48,13 @@ class CategoryFilterPresenter:
         self._income_categories_model.pre_reset_model()
         self._expense_categories_model.pre_reset_model()
         self._income_and_expense_categories_model.pre_reset_model()
-        self._income_categories_model.flat_categories = record_keeper.income_categories
-        self._expense_categories_model.flat_categories = (
+        self._income_categories_model.load_flat_categories(
+            record_keeper.income_categories
+        )
+        self._expense_categories_model.load_flat_categories(
             record_keeper.expense_categories
         )
-        self._income_and_expense_categories_model.flat_categories = (
+        self._income_and_expense_categories_model.load_flat_categories(
             record_keeper.income_and_expense_categories
         )
         self._income_categories_model.post_reset_model()
@@ -75,32 +77,38 @@ class CategoryFilterPresenter:
         if specific_categories_filter.mode == FilterMode.OFF:
             pass
         elif specific_categories_filter.mode == FilterMode.KEEP:
-            self._income_categories_model.checked_categories = (
+            self._income_categories_model.load_checked_categories(
                 specific_categories_filter.income_categories
             )
-            self._expense_categories_model.checked_categories = (
+            self._expense_categories_model.load_checked_categories(
                 specific_categories_filter.expense_categories
             )
-            self._income_and_expense_categories_model.checked_categories = (
+            self._income_and_expense_categories_model.load_checked_categories(
                 specific_categories_filter.income_and_expense_categories
             )
         else:
-            self._income_categories_model.checked_categories = [
-                category
-                for category in self._record_keeper.income_categories
-                if category not in specific_categories_filter.income_categories
-            ]
-            self._expense_categories_model.checked_categories = [
-                category
-                for category in self._record_keeper.expense_categories
-                if category not in specific_categories_filter.expense_categories
-            ]
-            self._income_and_expense_categories_model.checked_categories = [
-                category
-                for category in self._record_keeper.income_and_expense_categories
-                if category
-                not in specific_categories_filter.income_and_expense_categories
-            ]
+            self._income_categories_model.load_checked_categories(
+                [
+                    category
+                    for category in self._record_keeper.income_categories
+                    if category not in specific_categories_filter.income_categories
+                ]
+            )
+            self._expense_categories_model.load_checked_categories(
+                [
+                    category
+                    for category in self._record_keeper.expense_categories
+                    if category not in specific_categories_filter.expense_categories
+                ]
+            )
+            self._income_and_expense_categories_model.load_checked_categories(
+                [
+                    category
+                    for category in self._record_keeper.income_and_expense_categories
+                    if category
+                    not in specific_categories_filter.income_and_expense_categories
+                ]
+            )
         self._income_categories_model.post_reset_model()
         self._expense_categories_model.post_reset_model()
         self._income_and_expense_categories_model.post_reset_model()
@@ -150,14 +158,13 @@ class CategoryFilterPresenter:
         )
 
         self._income_categories_model = CheckableCategoryTreeModel(
-            self._form.currency_list_view, self._record_keeper.income_categories
+            self._form.currency_list_view
         )
         self._expense_categories_model = CheckableCategoryTreeModel(
-            self._form.currency_list_view, self._record_keeper.expense_categories
+            self._form.currency_list_view
         )
         self._income_and_expense_categories_model = CheckableCategoryTreeModel(
-            self._form.currency_list_view,
-            self._record_keeper.income_and_expense_categories,
+            self._form.currency_list_view
         )
 
         self._income_categories_proxy.setSourceModel(self._income_categories_model)
@@ -210,7 +217,7 @@ class CategoryFilterPresenter:
 
     def _selection_mode_changed(self) -> None:
         selection_mode = self._form.category_selection_mode
-        self._income_categories_model.selection_mode = selection_mode
-        self._expense_categories_model.selection_mode = selection_mode
-        self._income_and_expense_categories_model.selection_mode = selection_mode
+        self._income_categories_model.set_selection_mode(selection_mode)
+        self._expense_categories_model.set_selection_mode(selection_mode)
+        self._income_and_expense_categories_model.set_selection_mode(selection_mode)
         logging.debug(f"Category selection mode changed: {selection_mode.name}")

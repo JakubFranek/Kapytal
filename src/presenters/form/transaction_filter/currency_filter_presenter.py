@@ -27,8 +27,8 @@ class CurrencyFilterPresenter:
     def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
         self._record_keeper = record_keeper
         self._currency_list_model.pre_reset_model()
-        self._currency_list_model.items = record_keeper.currencies
-        self._currency_list_model.checked_items = record_keeper.currencies
+        self._currency_list_model.load_items(record_keeper.currencies)
+        self._currency_list_model.load_checked_items(record_keeper.currencies)
         self._currency_list_model.post_reset_model()
 
     def load_from_currency_filter(
@@ -42,23 +42,25 @@ class CurrencyFilterPresenter:
         self._currency_list_model.pre_reset_model()
         if currency_filter.mode == FilterMode.KEEP:
             self._form.currency_filter_active = True
-            self._currency_list_model.checked_items = currency_filter.currencies
+            self._currency_list_model.load_checked_items(currency_filter.currencies)
         else:
-            self._currency_list_model.checked_items = [
-                currency
-                for currency in self._record_keeper.currencies
-                if currency not in currency_filter.currencies
-            ]
+            self._currency_list_model.load_checked_items(
+                [
+                    currency
+                    for currency in self._record_keeper.currencies
+                    if currency not in currency_filter.currencies
+                ]
+            )
         self._currency_list_model.post_reset_model()
 
     def _select_all(self) -> None:
         self._currency_list_model.pre_reset_model()
-        self._currency_list_model.checked_items = self._record_keeper.currencies
+        self._currency_list_model.load_checked_items(self._record_keeper.currencies)
         self._currency_list_model.post_reset_model()
 
     def _unselect_all(self) -> None:
         self._currency_list_model.pre_reset_model()
-        self._currency_list_model.checked_items = ()
+        self._currency_list_model.load_checked_items(())
         self._currency_list_model.post_reset_model()
 
     def _initialize_model_and_proxy(self) -> None:
@@ -70,8 +72,6 @@ class CurrencyFilterPresenter:
 
         self._currency_list_model = CheckableListModel(
             self._form.currency_list_view,
-            self._record_keeper.currencies,
-            self._record_keeper.currencies,
             self._currency_list_proxy,
         )
 

@@ -128,12 +128,13 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
             self.filterToolButton.setToolButtonStyle(
                 Qt.ToolButtonStyle.ToolButtonIconOnly
             )
+            self.actionFilter_Transactions.setText("Filter Transactions")
         else:
             self.actionFilter_Transactions.setIcon(icons.filter_warning)
             self.filterToolButton.setToolButtonStyle(
                 Qt.ToolButtonStyle.ToolButtonTextBesideIcon
             )
-            self.filterToolButton.setText("Filter active")
+            self.actionFilter_Transactions.setText("Filter active")
 
     def _create_column_actions(self) -> None:
         self.column_actions: list[QAction] = []

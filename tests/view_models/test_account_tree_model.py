@@ -5,7 +5,9 @@ from pytestqt.qtbot import QtBot
 from src.view_models.account_tree_model import AccountTreeModel
 from src.views import icons
 from src.views.widgets.account_tree_widget import AccountTreeWidget
-from tests.models.test_record_keeper import get_preloaded_record_keeper
+from tests.models.test_record_keeper import (
+    get_preloaded_record_keeper_with_various_transactions,
+)
 
 
 def test_account_tree_model(qtbot: QtBot, qtmodeltester: ModelTester) -> None:
@@ -14,7 +16,7 @@ def test_account_tree_model(qtbot: QtBot, qtmodeltester: ModelTester) -> None:
     parent = QWidget()
     qtbot.add_widget(parent)
     tree_view = AccountTreeWidget(parent).treeView
-    record_keeper = get_preloaded_record_keeper()
+    record_keeper = get_preloaded_record_keeper_with_various_transactions()
     proxy = QSortFilterProxyModel(parent)
     model = AccountTreeModel(
         view=tree_view,

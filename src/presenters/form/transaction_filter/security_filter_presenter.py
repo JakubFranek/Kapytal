@@ -30,8 +30,8 @@ class SecurityFilterPresenter:
     def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
         self._record_keeper = record_keeper
         self._security_list_model.pre_reset_model()
-        self._security_list_model.items = record_keeper.securities
-        self._security_list_model.checked_items = record_keeper.securities
+        self._security_list_model.load_items(record_keeper.securities)
+        self._security_list_model.load_checked_items(record_keeper.securities)
         self._security_list_model.post_reset_model()
 
     def load_from_security_filter(
@@ -42,23 +42,25 @@ class SecurityFilterPresenter:
         if security_filter.mode == FilterMode.OFF:
             self._form.security_filter_active = False
         elif security_filter.mode == FilterMode.KEEP:
-            self._security_list_model.checked_items = security_filter.securities
+            self._security_list_model.load_checked_items(security_filter.securities)
         else:
-            self._security_list_model.checked_items = [
-                security
-                for security in self._record_keeper.securities
-                if security not in security_filter.securities
-            ]
+            self._security_list_model.load_checked_items(
+                [
+                    security
+                    for security in self._record_keeper.securities
+                    if security not in security_filter.securities
+                ]
+            )
         self._security_list_model.post_reset_model()
 
     def _select_all(self) -> None:
         self._security_list_model.pre_reset_model()
-        self._security_list_model.checked_items = self._record_keeper.securities
+        self._security_list_model.load_checked_items(self._record_keeper.securities)
         self._security_list_model.post_reset_model()
 
     def _unselect_all(self) -> None:
         self._security_list_model.pre_reset_model()
-        self._security_list_model.checked_items = ()
+        self._security_list_model.load_checked_items(())
         self._security_list_model.post_reset_model()
 
     def _initialize_model_and_proxy(self) -> None:
@@ -70,8 +72,6 @@ class SecurityFilterPresenter:
 
         self._security_list_model = CheckableListModel(
             self._form.security_list_view,
-            self._record_keeper.securities,
-            self._record_keeper.securities,
             self._security_list_proxy,
         )
 

@@ -150,21 +150,37 @@ class CheckableCategoryTreeModel(QAbstractItemModel):
     def __init__(
         self,
         tree_view: QTreeView,
-        flat_categories: Sequence[Category],
     ) -> None:
         super().__init__()
         self._tree_view = tree_view
         self._flat_nodes: tuple[CategoryTreeNode] = ()
         self._root_nodes: tuple[CategoryTreeNode] = ()
-        self.flat_categories = flat_categories
         self._selection_mode = CategorySelectionMode.HIERARCHICAL
 
     @property
     def flat_categories(self) -> tuple[Category, ...]:
         return tuple(node.item for node in self._flat_nodes)
 
-    @flat_categories.setter
-    def flat_categories(self, flat_categories: Collection[Category]) -> None:
+    @property
+    def checked_categories(self) -> tuple[Category, ...]:
+        return tuple(
+            node.item
+            for node in self._flat_nodes
+            if node.check_state == Qt.CheckState.Checked
+        )
+
+    @property
+    def selection_mode(self) -> CategorySelectionMode:
+        return self._selection_mode
+
+    def set_selection_mode(self, selection_mode: CategorySelectionMode) -> None:
+        if not isinstance(selection_mode, CategorySelectionMode):
+            raise TypeError(
+                "CheckableCategoryTreeModel.selection_mode must be a SelectionMode."
+            )
+        self._selection_mode = selection_mode
+
+    def load_flat_categories(self, flat_categories: Collection[Category]) -> None:
         self._flat_nodes = tuple(sync_nodes(flat_categories, self._flat_nodes))
         self._root_nodes = tuple(
             node for node in self._flat_nodes if node.parent is None
@@ -175,16 +191,7 @@ class CheckableCategoryTreeModel(QAbstractItemModel):
                 lambda item_path: self._node_check_state_changed(item_path)
             )
 
-    @property
-    def checked_categories(self) -> tuple[Category, ...]:
-        return tuple(
-            node.item
-            for node in self._flat_nodes
-            if node.check_state == Qt.CheckState.Checked
-        )
-
-    @checked_categories.setter
-    def checked_categories(self, checked_categories: Collection[Category]) -> None:
+    def load_checked_categories(self, checked_categories: Collection[Category]) -> None:
         for node in self._flat_nodes:
             node.check_state = (
                 Qt.CheckState.Checked
@@ -193,18 +200,6 @@ class CheckableCategoryTreeModel(QAbstractItemModel):
             )
         for node in self._flat_nodes:
             node.update_are_children_mixed_check_state()
-
-    @property
-    def selection_mode(self) -> CategorySelectionMode:
-        return self._selection_mode
-
-    @selection_mode.setter
-    def selection_mode(self, selection_mode: CategorySelectionMode) -> None:
-        if not isinstance(selection_mode, CategorySelectionMode):
-            raise TypeError(
-                "CheckableCategoryTreeModel.selection_mode must be a SelectionMode."
-            )
-        self._selection_mode = selection_mode
 
     def rowCount(self, index: QModelIndex = ...) -> int:  # noqa: N802
         if index.isValid():

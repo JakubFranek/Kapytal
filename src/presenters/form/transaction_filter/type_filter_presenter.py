@@ -46,8 +46,8 @@ class TypeFilterPresenter:
         ],
     ) -> None:
         self._type_list_model.pre_reset_model()
-        self._type_list_model.checked_items = tuple(
-            TYPE_NAME_DICT[type_] for type_ in types
+        self._type_list_model.load_checked_items(
+            tuple(TYPE_NAME_DICT[type_] for type_ in types)
         )
         self._type_list_model.post_reset_model()
 
@@ -56,27 +56,27 @@ class TypeFilterPresenter:
         type_filter: TypeFilter,
     ) -> None:
         self._type_list_model.pre_reset_model()
-        self._type_list_model.checked_items = type_filter.type_names
+        self._type_list_model.load_checked_items(type_filter.type_names)
         self._type_list_model.post_reset_model()
 
     def _select_all(self) -> None:
         self._type_list_model.pre_reset_model()
-        self._type_list_model.checked_items = TYPE_NAME_DICT.values()
+        self._type_list_model.load_checked_items(tuple(TYPE_NAME_DICT.values()))
         self._type_list_model.post_reset_model()
 
     def _unselect_all(self) -> None:
         self._type_list_model.pre_reset_model()
-        self._type_list_model.checked_items = ()
+        self._type_list_model.load_checked_items(())
         self._type_list_model.post_reset_model()
 
     def _initialize_model(self) -> None:
         self._type_list_model = CheckableListModel(
             self._form.types_list_view,
-            tuple(TYPE_NAME_DICT.values()),
-            tuple(TYPE_NAME_DICT.values()),
             None,
             sort=False,
         )
+        self._type_list_model.load_items(tuple(TYPE_NAME_DICT.values()))
+        self._type_list_model.load_checked_items(tuple(TYPE_NAME_DICT.values()))
 
         self._form.types_list_view.setModel(self._type_list_model)
 

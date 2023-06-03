@@ -20,22 +20,18 @@ class TagTableModel(QAbstractTableModel):
     def __init__(
         self,
         view: QTableView,
-        tag_stats: Collection[  # TODO: get rid of these parameters across all view models
-            AttributeStats
-        ],
         proxy: QSortFilterProxyModel,
     ) -> None:
         super().__init__()
         self._view = view
-        self.tag_stats = tag_stats
+        self._tag_stats: tuple[AttributeStats, ...] = ()
         self._proxy = proxy
 
     @property
     def tag_stats(self) -> tuple[AttributeStats, ...]:
         return self._tag_stats
 
-    @tag_stats.setter
-    def tag_stats(self, tag_stats: Collection[AttributeStats]) -> None:
+    def load_tag_stats(self, tag_stats: Collection[AttributeStats]) -> None:
         self._tag_stats = tuple(tag_stats)
 
     def rowCount(self, index: QModelIndex = ...) -> int:  # noqa: N802

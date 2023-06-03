@@ -20,10 +20,9 @@ def test_owned_securities_tree_model(qtbot: QtBot, qtmodeltester: ModelTester) -
     proxy = QSortFilterProxyModel(parent)
     model = OwnedSecuritiesTreeModel(
         tree_view=view,
-        security_accounts=record_keeper.security_accounts,
-        base_currency=record_keeper.base_currency,
         proxy=proxy,
     )
+    model.load_data(record_keeper.security_accounts, record_keeper.base_currency)
     proxy.setSourceModel(model)
     view.setModel(proxy)
 

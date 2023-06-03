@@ -73,8 +73,8 @@ class SecurityFormPresenter:
         self._update_chart(None)
 
     def update_model_data(self) -> None:
-        self._security_table_model.securities = self._record_keeper.securities
-        self._tree_model.load_security_accounts(
+        self._security_table_model.load_securities(self._record_keeper.securities)
+        self._tree_model.load_data(
             self._record_keeper.security_accounts,
             self._record_keeper.base_currency,
         )
@@ -386,7 +386,6 @@ class SecurityFormPresenter:
         self._security_table_proxy = QSortFilterProxyModel(self._view.securityTableView)
         self._security_table_model = SecurityTableModel(
             self._view.securityTableView,
-            self._record_keeper.securities,
             self._security_table_proxy,
         )
         self._security_table_proxy.setSourceModel(self._security_table_model)
@@ -416,8 +415,6 @@ class SecurityFormPresenter:
         self._tree_proxy = QSortFilterProxyModel(self._view.treeView)
         self._tree_model = OwnedSecuritiesTreeModel(
             self._view.treeView,
-            self._record_keeper.security_accounts,
-            self._record_keeper.base_currency,
             self._tree_proxy,
         )
         self._tree_proxy.setSourceModel(self._tree_model)

@@ -63,9 +63,12 @@ class CurrencyFormPresenter:
         self._exchange_rate_table_model.pre_reset_model()
         self._exchange_rate_history_model.pre_reset_model()
         self._record_keeper = record_keeper
-        self._currency_table_model.currencies = record_keeper.currencies
-        self._currency_table_model.base_currency = record_keeper.base_currency
-        self._exchange_rate_table_model.exchange_rates = record_keeper.exchange_rates
+        self._currency_table_model.load_data(
+            record_keeper.currencies, record_keeper.base_currency
+        )
+        self._exchange_rate_table_model.load_exchange_rates(
+            record_keeper.exchange_rates
+        )
         self._exchange_rate_history_model.load_data(())
         self._currency_table_model.post_reset_model()
         self._exchange_rate_table_model.post_reset_model()
@@ -104,8 +107,9 @@ class CurrencyFormPresenter:
             return
 
         self._currency_table_model.pre_add()
-        self._currency_table_model.currencies = self._record_keeper.currencies
-        self._currency_table_model.base_currency = self._record_keeper.base_currency
+        self._currency_table_model.load_data(
+            self._record_keeper.currencies, self._record_keeper.base_currency
+        )
         self._currency_table_model.post_add()
         self._dialog.close()
         self.event_data_changed()
@@ -124,7 +128,9 @@ class CurrencyFormPresenter:
             handle_exception(exception)
             return
 
-        self._currency_table_model.base_currency = self._record_keeper.base_currency
+        self._currency_table_model.load_data(
+            self._record_keeper.currencies, self._record_keeper.base_currency
+        )
         self.event_base_currency_changed()
         self.event_data_changed()
         self._view.refresh_currency_table()
@@ -143,8 +149,9 @@ class CurrencyFormPresenter:
             return
 
         self._currency_table_model.pre_remove_item(currency)
-        self._currency_table_model.currencies = self._record_keeper.currencies
-        self._currency_table_model.base_currency = self._record_keeper.base_currency
+        self._currency_table_model.load_data(
+            self._record_keeper.currencies, self._record_keeper.base_currency
+        )
         self._currency_table_model.post_remove_item()
         self.event_data_changed()
         if self._record_keeper.base_currency != previous_base_currency:
@@ -169,7 +176,7 @@ class CurrencyFormPresenter:
             return
 
         self._exchange_rate_table_model.pre_add()
-        self._exchange_rate_table_model.exchange_rates = (
+        self._exchange_rate_table_model.load_exchange_rates(
             self._record_keeper.exchange_rates
         )
         self._exchange_rate_table_model.post_add()
@@ -200,7 +207,7 @@ class CurrencyFormPresenter:
             return
 
         self._exchange_rate_table_model.pre_remove_item(exchange_rate)
-        self._exchange_rate_table_model.exchange_rates = (
+        self._exchange_rate_table_model.load_exchange_rates(
             self._record_keeper.exchange_rates
         )
         self._exchange_rate_table_model.post_remove_item()
@@ -448,8 +455,6 @@ class CurrencyFormPresenter:
         self._currency_table_model = CurrencyTableModel(
             self._view.currencyTable,
             self._currency_table_proxy,
-            self._record_keeper.currencies,
-            self._record_keeper.base_currency,
         )
         self._currency_table_proxy.setSourceModel(self._currency_table_model)
         self._view.currencyTable.setModel(self._currency_table_proxy)
@@ -459,7 +464,6 @@ class CurrencyFormPresenter:
         self._exchange_rate_table_model = ExchangeRateTableModel(
             self._view.exchangeRateTable,
             self._exchange_rate_table_proxy,
-            self._record_keeper.exchange_rates,
         )
         self._exchange_rate_table_proxy.setSourceModel(self._exchange_rate_table_model)
         self._view.exchangeRateTable.setModel(self._exchange_rate_table_proxy)

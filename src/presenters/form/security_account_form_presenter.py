@@ -13,22 +13,11 @@ class SecurityAccountFormPresenter:
         self._record_keeper = record_keeper
         self._view = SecurityAccountForm(parent=parent)
 
-        security_account = next(
-            (
-                account
-                for account in record_keeper.accounts
-                if isinstance(account, SecurityAccount)
-            ),
-            None,
-        )
-
         self._proxy = QSortFilterProxyModel(parent)
         self._proxy.setSortRole(Qt.ItemDataRole.UserRole)
         self._proxy.setSortCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
         self._model = SecurityAccountTableModel(
             view=self._view.table_view,
-            security_account=security_account,
-            base_currency=record_keeper.base_currency,
             proxy=self._proxy,
         )
         self._proxy.setSourceModel(self._model)
@@ -36,7 +25,7 @@ class SecurityAccountFormPresenter:
 
     def show(self, security_account: SecurityAccount) -> None:
         self._model.pre_reset_model()
-        self._model.security_account = security_account
+        self._model.load_data(security_account, self._record_keeper.base_currency)
         self._model.post_reset_model()
 
         if all(not security.symbol for security in security_account.securities):
@@ -58,9 +47,6 @@ class SecurityAccountFormPresenter:
 
     def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
         self._record_keeper = record_keeper
-        self._model.pre_reset_model()
-        self._model.base_currency = record_keeper.base_currency
-        self._model.post_reset_model()
 
     def _calculate_table_view_size(self) -> tuple[int, int]:
         """Calculates a good size for the table view which

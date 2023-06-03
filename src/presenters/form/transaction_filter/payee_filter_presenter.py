@@ -1,4 +1,3 @@
-
 from PyQt6.QtCore import QSortFilterProxyModel, Qt
 from src.models.model_objects.attributes import Attribute
 from src.models.record_keeper import RecordKeeper
@@ -31,8 +30,8 @@ class PayeeFilterPresenter:
     def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
         self._record_keeper = record_keeper
         self._payee_list_model.pre_reset_model()
-        self._payee_list_model.items = record_keeper.payees
-        self._payee_list_model.checked_items = record_keeper.payees
+        self._payee_list_model.load_items(record_keeper.payees)
+        self._payee_list_model.load_checked_items(record_keeper.payees)
         self._payee_list_model.post_reset_model()
 
     def load_from_payee_filter(
@@ -45,13 +44,15 @@ class PayeeFilterPresenter:
 
         self._payee_list_model.pre_reset_model()
         if payee_filter.mode == FilterMode.KEEP:
-            self._payee_list_model.checked_items = payee_filter.payees
+            self._payee_list_model.load_checked_items(payee_filter.payees)
         else:
-            self._payee_list_model.checked_items = [
-                payee
-                for payee in self._record_keeper.payees
-                if payee not in payee_filter.payees
-            ]
+            self._payee_list_model.load_checked_items(
+                [
+                    payee
+                    for payee in self._record_keeper.payees
+                    if payee not in payee_filter.payees
+                ]
+            )
         self._payee_list_model.post_reset_model()
 
     def _filter(self, pattern: str) -> None:
@@ -61,12 +62,12 @@ class PayeeFilterPresenter:
 
     def _select_all(self) -> None:
         self._payee_list_model.pre_reset_model()
-        self._payee_list_model.checked_items = self._record_keeper.payees
+        self._payee_list_model.load_checked_items(self._record_keeper.payees)
         self._payee_list_model.post_reset_model()
 
     def _unselect_all(self) -> None:
         self._payee_list_model.pre_reset_model()
-        self._payee_list_model.checked_items = ()
+        self._payee_list_model.load_checked_items(())
         self._payee_list_model.post_reset_model()
 
     def _initialize_model_and_proxy(self) -> None:
@@ -81,8 +82,6 @@ class PayeeFilterPresenter:
 
         self._payee_list_model = CheckableListModel(
             self._form.payee_list_view,
-            self._record_keeper.payees,
-            self._record_keeper.payees,
             self._payee_list_proxy,
         )
 

@@ -1,4 +1,3 @@
-
 from PyQt6.QtCore import QSortFilterProxyModel, Qt
 from src.models.model_objects.attributes import Attribute
 from src.models.record_keeper import RecordKeeper
@@ -45,8 +44,8 @@ class TagFilterPresenter:
     def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
         self._record_keeper = record_keeper
         self._tags_list_model.pre_reset_model()
-        self._tags_list_model.items = record_keeper.tags
-        self._tags_list_model.checked_items = record_keeper.tags
+        self._tags_list_model.load_items(record_keeper.tags)
+        self._tags_list_model.load_checked_items(record_keeper.tags)
         self._tags_list_model.post_reset_model()
 
     def load_from_tag_filters(
@@ -62,13 +61,15 @@ class TagFilterPresenter:
         if specific_tag_filter.mode != FilterMode.OFF:
             self._tags_list_model.pre_reset_model()
             if specific_tag_filter.mode == FilterMode.KEEP:
-                self._tags_list_model.checked_items = specific_tag_filter.tags
+                self._tags_list_model.load_checked_items(specific_tag_filter.tags)
             else:
-                self._tags_list_model.checked_items = [
-                    tag
-                    for tag in self._record_keeper.tags
-                    if tag not in specific_tag_filter.tags
-                ]
+                self._tags_list_model.load_checked_items(
+                    [
+                        tag
+                        for tag in self._record_keeper.tags
+                        if tag not in specific_tag_filter.tags
+                    ]
+                )
             self._tags_list_model.post_reset_model()
 
         self._form.tagless_filter_mode = tagless_filter.mode
@@ -81,12 +82,12 @@ class TagFilterPresenter:
 
     def _select_all(self) -> None:
         self._tags_list_model.pre_reset_model()
-        self._tags_list_model.checked_items = self._record_keeper.tags
+        self._tags_list_model.load_checked_items(self._record_keeper.tags)
         self._tags_list_model.post_reset_model()
 
     def _unselect_all(self) -> None:
         self._tags_list_model.pre_reset_model()
-        self._tags_list_model.checked_items = ()
+        self._tags_list_model.load_checked_items(())
         self._tags_list_model.post_reset_model()
 
     def _initialize_model_and_proxy(self) -> None:
@@ -99,8 +100,6 @@ class TagFilterPresenter:
 
         self._tags_list_model = CheckableListModel(
             self._form.tags_list_view,
-            self._record_keeper.tags,
-            self._record_keeper.tags,
             self._tags_list_proxy,
         )
 

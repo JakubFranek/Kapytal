@@ -23,7 +23,7 @@ class TagFormPresenter:
         self._record_keeper = record_keeper
 
         self._proxy_model = QSortFilterProxyModel(self._view.tableView)
-        self._model = TagTableModel(self._view.tableView, [], self._proxy_model)
+        self._model = TagTableModel(self._view.tableView, self._proxy_model)
         self._update_model_data()
         self._proxy_model.setSourceModel(self._model)
         self._proxy_model.setSortRole(Qt.ItemDataRole.UserRole)
@@ -62,11 +62,13 @@ class TagFormPresenter:
             self._record_keeper.cash_transactions
             + self._record_keeper.refund_transactions
         )
-        self._model.tag_stats = calculate_tag_stats(
+        tag_stats = calculate_tag_stats(
             relevant_transactions,
             self._record_keeper.base_currency,
             self._record_keeper.tags,
         ).values()
+        self._model.load_tag_stats(tag_stats)
+        self._recalculate_data = False
 
     def _update_model_data_with_busy_dialog(self) -> None:
         no_of_transactions = len(self._record_keeper.transactions)

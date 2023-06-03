@@ -20,10 +20,9 @@ def test_security_account_table_model(qtbot: QtBot, qtmodeltester: ModelTester) 
     proxy = QSortFilterProxyModel(parent)
     model = SecurityAccountTableModel(
         view=view,
-        security_account=record_keeper.security_accounts[0],
-        base_currency=record_keeper.base_currency,
         proxy=proxy,
     )
+    model.load_data(record_keeper.security_accounts[0], record_keeper.base_currency)
     proxy.setSourceModel(model)
     view.setModel(proxy)
 

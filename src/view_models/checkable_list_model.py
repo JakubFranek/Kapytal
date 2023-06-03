@@ -14,18 +14,12 @@ FLAGS_CHECKABLE = (
 
 class CheckableListModel(QAbstractListModel):
     def __init__(
-        self,
-        view: QListView,
-        items: Collection[Any],
-        checked_items: Collection[Any],
-        proxy: QSortFilterProxyModel,
-        *,
-        sort: bool = True
+        self, view: QListView, proxy: QSortFilterProxyModel, *, sort: bool = True
     ) -> None:
         super().__init__()
         self._list_view = view
-        self._items = sorted(items, key=str) if sort else items
-        self._checked_items = sorted(checked_items, key=str) if sort else checked_items
+        self._items = ()
+        self._checked_items = ()
         self._proxy = proxy
         self._sort = sort
 
@@ -33,16 +27,14 @@ class CheckableListModel(QAbstractListModel):
     def items(self) -> tuple[Any]:
         return tuple(self._items)
 
-    @items.setter
-    def items(self, values: Collection[Any]) -> None:
-        self._items = sorted(values, key=str) if self._sort else values
-
     @property
     def checked_items(self) -> tuple[Any]:
         return tuple(self._checked_items)
 
-    @checked_items.setter
-    def checked_items(self, values: Collection[Any]) -> None:
+    def load_items(self, values: Collection[Any]) -> None:
+        self._items = sorted(values, key=str) if self._sort else values
+
+    def load_checked_items(self, values: Collection[Any]) -> None:
         self._checked_items = sorted(values, key=str) if self._sort else list(values)
 
     def rowCount(self, index: QModelIndex = ...) -> int:  # noqa: N802

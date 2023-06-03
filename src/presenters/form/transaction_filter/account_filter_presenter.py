@@ -35,7 +35,7 @@ class AccountFilterPresenter:
         self._record_keeper = record_keeper
         self._accounts = record_keeper.accounts
         self._model.pre_reset_model()
-        self._model.flat_account_items = record_keeper.account_items
+        self._model.load_flat_items(record_keeper.account_items)
         self._model.post_reset_model()
 
     def load_from_account_filter(
@@ -48,13 +48,15 @@ class AccountFilterPresenter:
         if account_filter.mode == FilterMode.OFF:
             return
         if account_filter.mode == FilterMode.KEEP:
-            self._model.checked_accounts = account_filter.accounts
+            self._model.load_checked_accounts(account_filter.accounts)
         else:
-            self._model.checked_accounts = [
-                account
-                for account in self._record_keeper.accounts
-                if account not in account_filter.accounts
-            ]
+            self._model.load_checked_accounts(
+                [
+                    account
+                    for account in self._record_keeper.accounts
+                    if account not in account_filter.accounts
+                ]
+            )
 
     def _filter(self, pattern: str) -> None:
         if ("[" in pattern and "]" not in pattern) or "[]" in pattern:
@@ -69,7 +71,7 @@ class AccountFilterPresenter:
         self._proxy.setFilterRole(Qt.ItemDataRole.UserRole)
 
         self._model = CheckableAccountTreeModel(
-            self._form.account_tree_view, self._proxy, self._record_keeper.account_items
+            self._form.account_tree_view, self._proxy
         )
 
         self._proxy.setSourceModel(self._model)
