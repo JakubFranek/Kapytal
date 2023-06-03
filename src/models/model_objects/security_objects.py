@@ -238,14 +238,18 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
         return obj
 
     def _update_values(self) -> None:
-        self._latest_date = max(date_ for date_ in self._price_history)
-        latest_price = self._price_history[self._latest_date]
+        if len(self._price_history) == 0:
+            self._latest_date = None
+            latest_price = Decimal("NaN")
+        else:
+            self._latest_date = max(date_ for date_ in self._price_history)
+            latest_price = self._price_history[self._latest_date]
         if hasattr(self, "_latest_price"):
             previous_latest_price = self._latest_price
         else:
             previous_latest_price = None
 
-        self._latest_price = self._price_history[self._latest_date]
+        self._latest_price = latest_price
         if previous_latest_price != latest_price:
             self.event_price_updated()
 

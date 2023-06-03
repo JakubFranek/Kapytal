@@ -76,7 +76,6 @@ class CurrencyForm(CustomWidget, Ui_CurrencyForm):
         self.exchangeRateHistoryGroupBox.setTitle(title)
 
     def finalize_setup(self) -> None:
-        # TODO: review resizetocontents settings, resizing precision etc
         self.currencyTable.horizontalHeader().setStretchLastSection(False)
         self.currencyTable.horizontalHeader().setSectionResizeMode(
             CurrencyTableColumn.CODE,

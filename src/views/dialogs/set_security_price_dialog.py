@@ -14,7 +14,7 @@ from src.views.ui_files.dialogs.Ui_set_security_price_dialog import (
 class SetSecurityPriceDialog(CustomDialog, Ui_SetSecurityPriceDialog):
     signal_ok = pyqtSignal()
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         date_: date,
         value: Decimal,

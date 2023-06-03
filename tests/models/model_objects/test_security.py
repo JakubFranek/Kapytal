@@ -44,6 +44,8 @@ def test_creation(
     assert security.price == CashAmount(Decimal(0), currency)
     assert security.latest_date is None
     assert security.price_history == {}
+    assert security.price_history_pairs == ()
+    assert security.decimal_price_history_pairs == ()
     assert security.__repr__() == f"Security('{security.name}')"
     assert security.__str__() == security.name
     assert isinstance(security.__hash__(), int)
@@ -269,6 +271,27 @@ def test_set_price(
 
 
 @given(
+    data=st.data(),
+)
+def test_set_and_delete_price(
+    data: st.DataObject,
+) -> None:
+    security = get_security()
+    currency = security.currency
+    price = CashAmount(data.draw(valid_decimals()), currency)
+    date_ = data.draw(st.dates())
+    security.set_price(date_, price)
+    assert security.price.value_normalized == price.value_normalized
+    assert security.price_history[date_].value_normalized == price.value_normalized
+    assert security.price == price
+    assert security.latest_date == date_
+
+    security.delete_price(date_)
+    assert security.price.is_nan()
+    assert security.latest_date is None
+
+
+@given(
     date_=everything_except(date),
     price=valid_decimals(min_value=0),
 )
@@ -303,6 +326,46 @@ def test_set_price_invalid_currency(
 @given(security=securities(), other=everything_except(Security))
 def test_eq_different_types(security: Security, other: Any) -> None:
     assert (security == other) is False
+
+
+@given(
+    currency=currencies(),
+    data=st.data(),
+)
+def test_set_prices(currency: Currency, data: st.DataObject) -> None:
+    data = data.draw(
+        st.lists(
+            st.tuples(
+                st.dates(),
+                st.decimals(min_value=0.01, allow_infinity=False, allow_nan=False),
+            ),
+            min_size=0,
+            max_size=5,
+        )
+    )
+    data_prep: list[tuple[date, CashAmount]] = []
+    for date_, rate in data:
+        data_prep.append((date_, CashAmount(rate, currency)))
+
+    security = Security("NAME", "SYMB", "TYPE", currency, 1)
+    security.set_prices(data_prep)
+
+    if len(data_prep) != 0:
+        latest_date = max(date_ for date_, _ in data_prep)
+        latest_rate = None
+        for date_, rate in data_prep:
+            if date_ == latest_date:
+                latest_rate = rate
+                break
+        assert security.price == latest_rate
+        assert security.price_history[latest_date] == latest_rate
+
+    else:
+        latest_date = None
+        latest_rate = Decimal("NaN")
+        assert security._latest_price.is_nan()
+
+    assert security.latest_date == latest_date
 
 
 def get_security() -> Security:

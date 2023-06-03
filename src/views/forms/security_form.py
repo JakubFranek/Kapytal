@@ -13,8 +13,6 @@ from src.views.ui_files.forms.Ui_security_form import Ui_SecurityForm
 from src.views.utilities.helper_functions import calculate_table_width
 from src.views.widgets.chart_widget import ChartWidget
 
-# TODO: add some way to view and edit price history
-
 
 class SecurityForm(CustomWidget, Ui_SecurityForm):
     signal_add_security = pyqtSignal()

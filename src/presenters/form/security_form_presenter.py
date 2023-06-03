@@ -80,6 +80,7 @@ class SecurityFormPresenter:
         self._price_table_model.load_data(())
 
     def show_form(self) -> None:
+        # TODO: add busy indicator
         if self._security_table_model.get_selected_item() is None:
             self._view.securityTableView.selectRow(0)
         self._view.refresh_tree_view()

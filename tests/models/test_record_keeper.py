@@ -1,6 +1,6 @@
 import copy
 import string
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import Any
 from uuid import UUID, uuid4
@@ -879,16 +879,6 @@ def test_add_tag_already_exists(name: str) -> None:
     record_keeper.add_tag(name)
     with pytest.raises(AlreadyExistsError):
         record_keeper.add_tag(name)
-
-
-@given(value=valid_decimals(), date_=st.dates())
-def test_set_security_price(value: Decimal, date_: date) -> None:
-    record_keeper = RecordKeeper()
-    record_keeper.add_currency("EUR", 2)
-    record_keeper.add_security("NAME", "SYMBOL", "TYPE", "EUR", 1)
-    security = record_keeper.get_security_by_name("NAME")
-    record_keeper.set_security_price(uuid=security.uuid, value=value, date_=date_)
-    assert security.price.value_normalized == value
 
 
 def test_account_items() -> None:

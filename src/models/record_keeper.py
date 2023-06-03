@@ -1348,12 +1348,6 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
         attributes.append(attribute)
         return attribute
 
-    # TODO: remove this method
-    def set_security_price(self, uuid: str, value: Decimal, date_: date) -> None:
-        security = self.get_security_by_uuid(uuid)
-        price = CashAmount(value, security.currency)
-        security.set_price(date_, price)
-
     def serialize(  # noqa: C901, PLR0912
         self,
         progress_callable: Callable[[int], None],
@@ -1543,8 +1537,6 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
                 progress_callable,
             )
         )
-
-        # TODO: add status messages here
 
         # Sorting transactions here is useful because front-end can assume that
         # upon load of RecordKeeper._transactions, transactions are already sorted

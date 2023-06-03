@@ -7,6 +7,8 @@ from src.views import icons
 from src.views.widgets.account_tree_widget import AccountTreeWidget
 from tests.models.test_record_keeper import get_preloaded_record_keeper
 
+# TODO: add view model tests
+
 
 def test_account_tree_model(qtbot: QtBot, qtmodeltester: ModelTester) -> None:
     icons.setup()

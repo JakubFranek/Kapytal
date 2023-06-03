@@ -205,11 +205,13 @@ def test_get_rate() -> None:
 def test_set_rates(primary: Currency, secondary: Currency, data: st.DataObject) -> None:
     assume(primary != secondary)
 
-    data = data.draw(
+    data: list[tuple[date, Decimal]] = data.draw(
         st.lists(
             st.tuples(
                 st.dates(),
-                st.decimals(min_value=0.01, allow_infinity=False, allow_nan=False),
+                st.decimals(
+                    min_value=0.01, max_value=1e6, allow_infinity=False, allow_nan=False
+                ),
             ),
             min_size=0,
             max_size=5,
@@ -218,3 +220,21 @@ def test_set_rates(primary: Currency, secondary: Currency, data: st.DataObject) 
 
     exchange_rate = ExchangeRate(primary, secondary)
     exchange_rate.set_rates(data)
+
+    if len(data) != 0:
+        latest_date = max(date_ for date_, _ in data)
+        latest_rate = None
+        for date_, rate in data:
+            if date_ == latest_date:
+                latest_rate = rate
+                break
+        assert round(exchange_rate.latest_rate, 10) == round(latest_rate, 10)
+        assert round(exchange_rate.rate_history[latest_date], 10) == round(
+            latest_rate, 10
+        )
+    else:
+        latest_date = None
+        latest_rate = Decimal("NaN")
+        assert exchange_rate.latest_rate.is_nan()
+
+    assert exchange_rate.latest_date == latest_date
