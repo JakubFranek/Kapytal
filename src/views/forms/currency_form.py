@@ -1,7 +1,7 @@
 from collections.abc import Collection
 
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtWidgets import QHeaderView, QTableView, QWidget
+from PyQt6.QtWidgets import QHeaderView, QWidget
 from src.views import icons
 from src.views.base_classes.custom_widget import CustomWidget
 from src.views.constants import (
@@ -10,6 +10,7 @@ from src.views.constants import (
     ValueTableColumn,
 )
 from src.views.ui_files.forms.Ui_currency_form import Ui_CurrencyForm
+from src.views.utilities.helper_functions import calculate_table_width
 from src.views.widgets.chart_widget import ChartWidget
 
 
@@ -41,8 +42,8 @@ class CurrencyForm(CustomWidget, Ui_CurrencyForm):
         self.exchangeRateTable.horizontalHeader().setSortIndicatorClearable(True)
         self.exchangeRateHistoryTable.horizontalHeader().setSortIndicatorClearable(True)
 
-    def load_chart_data(self, x: Collection, y: Collection) -> None:
-        self.chart_widget.load_data(x, y)
+    def load_chart_data(self, x: Collection, y: Collection, title: str) -> None:
+        self.chart_widget.load_data(x, y, title)
         self.update_history_table_width()
 
     def set_currency_actions(self, *, is_currency_selected: bool) -> None:
@@ -75,7 +76,6 @@ class CurrencyForm(CustomWidget, Ui_CurrencyForm):
         self.exchangeRateHistoryGroupBox.setTitle(title)
 
     def finalize_setup(self) -> None:
-        # TODO: review resizetocontents settings, resizing precision etc
         self.currencyTable.horizontalHeader().setStretchLastSection(False)
         self.currencyTable.horizontalHeader().setSectionResizeMode(
             CurrencyTableColumn.CODE,
@@ -175,8 +175,8 @@ class CurrencyForm(CustomWidget, Ui_CurrencyForm):
         self.currencyTable.resizeColumnsToContents()
         self.exchangeRateTable.resizeColumnsToContents()
 
-        currency_table_width = self._calculate_table_width(self.currencyTable)
-        exchange_rate_table_width = self._calculate_table_width(self.exchangeRateTable)
+        currency_table_width = calculate_table_width(self.currencyTable)
+        exchange_rate_table_width = calculate_table_width(self.exchangeRateTable)
         larger_width = max(currency_table_width, exchange_rate_table_width)
 
         self.currencyGroupBox.setFixedWidth(larger_width + 30)
@@ -196,17 +196,13 @@ class CurrencyForm(CustomWidget, Ui_CurrencyForm):
     def update_history_table_width(self) -> None:
         self.exchangeRateHistoryTable.resizeColumnsToContents()
 
-        exchange_rate_history_table_width = self._calculate_table_width(
+        exchange_rate_history_table_width = calculate_table_width(
             self.exchangeRateHistoryTable
         )
         self.exchangeRateHistoryTableWidget.setFixedWidth(
-            exchange_rate_history_table_width + 10
+            exchange_rate_history_table_width + 25
         )
         self.exchangeRateHistoryTable.horizontalHeader().setSectionResizeMode(
             ValueTableColumn.VALUE,
             QHeaderView.ResizeMode.Stretch,
         )
-
-    @staticmethod
-    def _calculate_table_width(table: QTableView) -> int:
-        return table.horizontalHeader().length() + table.verticalHeader().width()
