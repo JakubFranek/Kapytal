@@ -70,7 +70,7 @@ class SecurityFormPresenter:
         self._tree_model.post_reset_model()
         self._price_table_model.post_reset_model()
 
-        self._view.load_chart_data((), ())
+        self._update_chart(None)
 
     def update_model_data(self) -> None:
         self._security_table_model.securities = self._record_keeper.securities
@@ -87,18 +87,14 @@ class SecurityFormPresenter:
         self._busy_dialog.open()
         QApplication.processEvents()
 
-        try:
-            if self._security_table_model.get_selected_item() is None:
-                self._view.securityTableView.selectRow(0)
-            self._view.refresh_tree_view()
-            self._view.treeView.sortByColumn(
-                OwnedSecuritiesTreeColumn.AMOUNT_BASE, Qt.SortOrder.DescendingOrder
-            )
-            self._view.show_form()
-        except:  # noqa: TRY302
-            raise
-        finally:
-            self._busy_dialog.close()
+        if self._security_table_model.get_selected_item() is None:
+            self._view.securityTableView.selectRow(0)
+        self._view.refresh_tree_view()
+        self._view.treeView.sortByColumn(
+            OwnedSecuritiesTreeColumn.AMOUNT_BASE, Qt.SortOrder.DescendingOrder
+        )
+        self._view.show_form()
+        self._busy_dialog.close()
 
     def _run_security_dialog(self, *, edit: bool) -> None:
         security_types = {security.type_ for security in self._record_keeper.securities}
@@ -322,10 +318,7 @@ class SecurityFormPresenter:
                 return
 
         if any_deleted:
-            self._price_table_model.pre_reset_model()
-            self._price_table_model.load_data(security.decimal_price_history_pairs)
-            self._price_table_model.post_reset_model()
-            self._update_chart(security)
+            self._reset_model_and_update_chart(security)
             self.event_data_changed()
 
     def _run_load_data_dialog(self) -> None:
@@ -385,11 +378,8 @@ class SecurityFormPresenter:
             f"(conflict_resolution_mode={conflict_resolution_mode.name})"
         )
 
-        self._price_table_model.pre_reset_model()
-        self._price_table_model.load_data(security.decimal_price_history_pairs)
-        self._price_table_model.post_reset_model()
+        self._reset_model_and_update_chart(security)
         self._dialog.close()
-        self._update_chart(security)
         self.event_data_changed()
 
     def _initialize_table_models(self) -> None:
@@ -453,19 +443,16 @@ class SecurityFormPresenter:
         self._view.treeView.expandAll()
 
     def _security_selection_changed(self) -> None:
-        item = self._security_table_model.get_selected_item()
-        is_security_selected = item is not None
+        security = self._security_table_model.get_selected_item()
+        is_security_selected = security is not None
         self._view.enable_security_table_actions(
             is_security_selected=is_security_selected
         )
 
-        if item is not None and self._security_selection != item:
-            self._price_table_model.pre_reset_model()
-            self._price_table_model.load_data(item.decimal_price_history_pairs)
-            self._price_table_model.post_reset_model()
-            self._update_chart(item)
+        if security is not None and self._security_selection != security:
+            self._reset_model_and_update_chart(security)
 
-        self._security_selection = item
+        self._security_selection = security
         self._price_selection_changed()
 
     def _price_selection_changed(self) -> None:
@@ -480,10 +467,27 @@ class SecurityFormPresenter:
             is_single_price_selected=is_single_price_selected,
         )
 
-    def _update_chart(self, security: Security) -> None:
-        # TODO: add busy indicator for chart redrawing
-        if len(security.decimal_price_history_pairs) == 0:
-            self._view.load_chart_data((), ())
+    def _reset_model_and_update_chart(self, security: Security) -> None:
+        if not self._busy_dialog.isVisible():
+            self._busy_chart_dialog = create_simple_busy_indicator(
+                self._view, "Updating Security price chart, please wait..."
+            )
+            self._busy_chart_dialog.open()
+            QApplication.processEvents()
+
+        self._price_table_model.pre_reset_model()
+        self._price_table_model.load_data(security.decimal_price_history_pairs)
+        self._price_table_model.post_reset_model()
+        self._update_chart(security)
+
+        if not self._busy_dialog.isVisible():
+            self._busy_chart_dialog.close()
+
+    def _update_chart(self, security: Security | None) -> None:
+        if security is None or len(security.decimal_price_history_pairs) == 0:
+            self._view.load_chart_data((), (), "", "")
             return
         dates, rates = zip(*security.decimal_price_history_pairs, strict=True)
-        self._view.load_chart_data(dates, rates)
+        self._view.load_chart_data(
+            dates, rates, security.name, f"Price ({security.currency.code})"
+        )

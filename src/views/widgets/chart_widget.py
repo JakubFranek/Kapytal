@@ -43,12 +43,22 @@ class ChartWidget(QWidget):
         self._initialize_toolbar_buttons()
         self._initialize_toolbar_actions()
 
-    def load_data(self, x: Collection, y: Collection) -> None:
+    def load_data(  # noqa: PLR0913
+        self,
+        x: Collection,
+        y: Collection,
+        title: str,
+        ylabel: str = "",
+        xlabel: str = "",
+    ) -> None:
         if self.line is None:
             lines = self.chart.axes.plot(x, y, ".-")
             self.line = lines[0]
         else:
             self.line.set_data(x, y)
+        self.chart.axes.set_title(title)
+        self.chart.axes.set_ylabel(ylabel)
+        self.chart.axes.set_xlabel(xlabel)
         self.chart.axes.relim()
         self.chart.axes.autoscale()
         self.chart.draw()

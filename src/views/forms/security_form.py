@@ -97,8 +97,10 @@ class SecurityForm(CustomWidget, Ui_SecurityForm):
         self.securityPriceTableView.horizontalHeader().setSortIndicatorClearable(True)
         self.treeView.header().setSortIndicatorClearable(True)
 
-    def load_chart_data(self, x: Collection, y: Collection) -> None:
-        self.chart_widget.load_data(x, y)
+    def load_chart_data(
+        self, x: Collection, y: Collection, title: str, ylabel: str
+    ) -> None:
+        self.chart_widget.load_data(x, y, title, ylabel)
         self.update_price_table_width()
 
     def enable_security_table_actions(self, *, is_security_selected: bool) -> None:
@@ -199,7 +201,7 @@ class SecurityForm(CustomWidget, Ui_SecurityForm):
         self.securityPriceTableView.resizeColumnsToContents()
 
         price_table_width = calculate_table_width(self.securityPriceTableView)
-        self.securityPriceTableView.setFixedWidth(price_table_width + 10)
+        self.securityPriceTableView.setFixedWidth(price_table_width + 25)
         self.securityPriceTableView.horizontalHeader().setSectionResizeMode(
             ValueTableColumn.VALUE,
             QHeaderView.ResizeMode.Stretch,

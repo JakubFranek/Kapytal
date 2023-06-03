@@ -42,8 +42,8 @@ class CurrencyForm(CustomWidget, Ui_CurrencyForm):
         self.exchangeRateTable.horizontalHeader().setSortIndicatorClearable(True)
         self.exchangeRateHistoryTable.horizontalHeader().setSortIndicatorClearable(True)
 
-    def load_chart_data(self, x: Collection, y: Collection) -> None:
-        self.chart_widget.load_data(x, y)
+    def load_chart_data(self, x: Collection, y: Collection, title: str) -> None:
+        self.chart_widget.load_data(x, y, title)
         self.update_history_table_width()
 
     def set_currency_actions(self, *, is_currency_selected: bool) -> None:
@@ -200,7 +200,7 @@ class CurrencyForm(CustomWidget, Ui_CurrencyForm):
             self.exchangeRateHistoryTable
         )
         self.exchangeRateHistoryTableWidget.setFixedWidth(
-            exchange_rate_history_table_width + 10
+            exchange_rate_history_table_width + 25
         )
         self.exchangeRateHistoryTable.horizontalHeader().setSectionResizeMode(
             ValueTableColumn.VALUE,

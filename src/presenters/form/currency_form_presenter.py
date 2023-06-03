@@ -71,7 +71,7 @@ class CurrencyFormPresenter:
         self._exchange_rate_table_model.post_reset_model()
         self._exchange_rate_history_model.post_reset_model()
 
-        self._view.load_chart_data((), ())
+        self._update_chart(None)
 
     def show_form(self) -> None:
         self._busy_dialog = create_simple_busy_indicator(
@@ -80,14 +80,10 @@ class CurrencyFormPresenter:
         self._busy_dialog.open()
         QApplication.processEvents()
 
-        try:
-            if self._exchange_rate_table_model.get_selected_item() is None:
-                self._view.exchangeRateTable.selectRow(0)
-            self._view.show_form()
-        except:  # noqa: TRY302
-            raise
-        finally:
-            self._busy_dialog.close()
+        if self._exchange_rate_table_model.get_selected_item() is None:
+            self._view.exchangeRateTable.selectRow(0)
+        self._view.show_form()
+        self._busy_dialog.close()
 
     def _run_add_currency_dialog(self) -> None:
         self._dialog = CurrencyDialog(self._view)
@@ -329,12 +325,7 @@ class CurrencyFormPresenter:
                 return
 
         if any_deleted:
-            self._exchange_rate_history_model.pre_reset_model()
-            self._exchange_rate_history_model.load_data(
-                exchange_rate.rate_history_pairs
-            )
-            self._exchange_rate_history_model.post_reset_model()
-            self._update_chart(exchange_rate)
+            self._reset_model_and_update_chart(exchange_rate)
             self.event_data_changed()
 
     def _run_load_data_dialog(self) -> None:
@@ -394,11 +385,8 @@ class CurrencyFormPresenter:
             f"(conflict_resolution_mode={conflict_resolution_mode.name})"
         )
 
-        self._exchange_rate_history_model.pre_reset_model()
-        self._exchange_rate_history_model.load_data(exchange_rate.rate_history_pairs)
-        self._exchange_rate_history_model.post_reset_model()
+        self._reset_model_and_update_chart(exchange_rate)
         self._dialog.close()
-        self._update_chart(exchange_rate)
         self.event_data_changed()
 
     def _exchange_rate_selection_changed(self) -> None:
@@ -410,10 +398,7 @@ class CurrencyFormPresenter:
 
         if item is not None and self._exchange_rate_selection != item:
             self._view.set_history_group_box_title(str(item) + " history")
-            self._exchange_rate_history_model.pre_reset_model()
-            self._exchange_rate_history_model.load_data(item.rate_history_pairs)
-            self._exchange_rate_history_model.post_reset_model()
-            self._update_chart(item)
+            self._reset_model_and_update_chart(item)
 
         self._exchange_rate_selection = item
         self._data_point_selection_changed()
@@ -435,13 +420,28 @@ class CurrencyFormPresenter:
             is_single_data_point_selected=is_single_data_point_selected,
         )
 
-    def _update_chart(self, exchange_rate: ExchangeRate) -> None:
-        # TODO: add busy indicator for chart redrawing (separate method for update chart w/ busy and without, possibly with reset model)
-        if len(exchange_rate.rate_history_pairs) == 0:
-            self._view.load_chart_data((), ())
+    def _reset_model_and_update_chart(self, exchange_rate: ExchangeRate) -> None:
+        if not self._busy_dialog.isVisible():
+            self._busy_chart_dialog = create_simple_busy_indicator(
+                self._view, "Updating Exchange Rate chart, please wait..."
+            )
+            self._busy_chart_dialog.open()
+            QApplication.processEvents()
+
+        self._exchange_rate_history_model.pre_reset_model()
+        self._exchange_rate_history_model.load_data(exchange_rate.rate_history_pairs)
+        self._exchange_rate_history_model.post_reset_model()
+        self._update_chart(exchange_rate)
+
+        if not self._busy_dialog.isVisible():
+            self._busy_chart_dialog.close()
+
+    def _update_chart(self, exchange_rate: ExchangeRate | None) -> None:
+        if exchange_rate is None or len(exchange_rate.rate_history_pairs) == 0:
+            self._view.load_chart_data((), (), "")
             return
         dates, rates = zip(*exchange_rate.rate_history_pairs, strict=True)
-        self._view.load_chart_data(dates, rates)
+        self._view.load_chart_data(dates, rates, str(exchange_rate))
 
     def _initialize_models(self) -> None:
         self._currency_table_proxy = QSortFilterProxyModel(self._view)
