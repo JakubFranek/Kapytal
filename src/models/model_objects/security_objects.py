@@ -154,6 +154,7 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
         pairs.sort()
         return tuple(pairs)
 
+    # TODO: review whether the following property is really needed
     @property
     def decimal_price_history_pairs(self) -> tuple[tuple[date, Decimal]]:
         pairs = [

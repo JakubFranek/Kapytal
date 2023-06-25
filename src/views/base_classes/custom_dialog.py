@@ -5,7 +5,6 @@ from PyQt6.QtGui import QCloseEvent, QKeyEvent
 from PyQt6.QtWidgets import QDialog
 
 
-# TODO: delete dialogs on close?
 class CustomDialog(QDialog):
     """Can be closed by via ESC key."""
 
