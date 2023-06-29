@@ -72,8 +72,23 @@
     <property name="title">
      <string>Reports</string>
     </property>
-    <addaction name="actionWealth"/>
-    <addaction name="actionCash_Flow"/>
+    <widget class="QMenu" name="menuCash_Flow">
+     <property name="title">
+      <string>Cash Flow</string>
+     </property>
+     <addaction name="actionCash_Flow_Monthly"/>
+     <addaction name="actionCash_Flow_Annual"/>
+     <addaction name="actionCash_Flow_Overall"/>
+    </widget>
+    <widget class="QMenu" name="menuOverview">
+     <property name="title">
+      <string>Overview</string>
+     </property>
+     <addaction name="actionAccounts_Report"/>
+     <addaction name="actionAsset_Type_Report"/>
+    </widget>
+    <addaction name="menuOverview"/>
+    <addaction name="menuCash_Flow"/>
     <addaction name="separator"/>
     <addaction name="actionTags_Report"/>
     <addaction name="actionCategories_Report"/>
@@ -198,11 +213,6 @@
     <string>Show/Hide Account Tree</string>
    </property>
   </action>
-  <action name="actionCash_Flow">
-   <property name="text">
-    <string>Cash Flow</string>
-   </property>
-  </action>
   <action name="actionCategories_Report">
    <property name="text">
     <string>Categories</string>
@@ -218,9 +228,29 @@
     <string>Payees</string>
    </property>
   </action>
-  <action name="actionWealth">
+  <action name="actionCash_Flow_Monthly">
    <property name="text">
-    <string>Wealth</string>
+    <string>Monthly</string>
+   </property>
+  </action>
+  <action name="actionCash_Flow_Annual">
+   <property name="text">
+    <string>Annual</string>
+   </property>
+  </action>
+  <action name="actionCash_Flow_Overall">
+   <property name="text">
+    <string>Overall</string>
+   </property>
+  </action>
+  <action name="actionAccounts_Report">
+   <property name="text">
+    <string>Accounts</string>
+   </property>
+  </action>
+  <action name="actionAsset_Type_Report">
+   <property name="text">
+    <string>Asset Type</string>
    </property>
   </action>
  </widget>
