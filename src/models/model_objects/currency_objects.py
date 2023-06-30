@@ -501,12 +501,17 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
     def __rmul__(self, __o: object) -> Self:
         return self.__mul__(__o)
 
-    def __truediv__(self, __o: object) -> Decimal:
-        if not isinstance(__o, CashAmount):
+    def __truediv__(self, __o: object) -> Decimal | Self:
+        if isinstance(__o, CashAmount):
+            if self._currency != __o._currency:  # noqa: SLF001
+                raise CurrencyError("CashAmount.currency of operands must match.")
+            return self._raw_value / __o._raw_value  # noqa: SLF001
+        if not isinstance(__o, int | Decimal):
             return NotImplemented
-        if self._currency != __o._currency:  # noqa: SLF001
-            raise CurrencyError("CashAmount.currency of operands must match.")
-        return self._raw_value / __o._raw_value  # noqa: SLF001
+        obj = object.__new__(CashAmount)
+        obj._raw_value = self._raw_value / __o  # noqa: SLF001
+        obj._currency = self._currency  # noqa: SLF001
+        return obj
 
     def __rtruediv__(self, __o: object) -> Decimal:
         if not isinstance(__o, CashAmount):

@@ -11,7 +11,7 @@ from src.views.constants import (
 )
 from src.views.ui_files.forms.Ui_currency_form import Ui_CurrencyForm
 from src.views.utilities.helper_functions import calculate_table_width
-from src.views.widgets.chart_widget import ChartWidget
+from src.views.widgets.charts.line_chart_widget import LineChartWidget
 
 
 class CurrencyForm(CustomWidget, Ui_CurrencyForm):
@@ -35,7 +35,7 @@ class CurrencyForm(CustomWidget, Ui_CurrencyForm):
         self.setWindowIcon(icons.currency)
         self._initialize_actions()
 
-        self.chart_widget = ChartWidget(self)
+        self.chart_widget = LineChartWidget(self)
         self.exchangeRateHistoryGroupBoxHorizontalLayout.addWidget(self.chart_widget)
 
         self.currencyTable.horizontalHeader().setSortIndicatorClearable(True)

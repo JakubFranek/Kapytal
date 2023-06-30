@@ -6,6 +6,9 @@ from src.views.base_classes.custom_widget import CustomWidget
 from src.views.ui_files.reports.Ui_cash_flow_overall_report import (
     Ui_CashFlowOverallReport,
 )
+from src.views.widgets.charts.cash_flow_overall_chart_widget import (
+    CashFlowOverallChartWidget,
+)
 
 
 class CashFlowOverallReport(CustomWidget, Ui_CashFlowOverallReport):
@@ -15,6 +18,9 @@ class CashFlowOverallReport(CustomWidget, Ui_CashFlowOverallReport):
         self.setWindowFlag(Qt.WindowType.Window)
         self.setWindowTitle("Cash Flow Report - Overall")
         self.setWindowIcon(icons.bar_chart)
+
+        self.chart_widget = CashFlowOverallChartWidget(self)
+        self.horizontalLayout.addWidget(self.chart_widget)
 
     def load_stats(self, stats: CashFlowStats) -> None:
         self.incomeAmountLabel.setText(stats.incomes.to_str_rounded())
@@ -35,18 +41,18 @@ class CashFlowOverallReport(CustomWidget, Ui_CashFlowOverallReport):
         if stats.inflows.is_positive():
             self.inflowAmountLabel.setStyleSheet(f"color: {colors.get_green().name()}")
 
-        self.expensesAmountLabel.setText(stats.expenses.to_str_rounded())
-        if stats.expenses.is_negative():
+        self.expensesAmountLabel.setText("-" + stats.expenses.to_str_rounded())
+        if stats.expenses.is_positive():
             self.expensesAmountLabel.setStyleSheet(f"color: {colors.get_red().name()}")
         self.outwardTransfersAmountLabel.setText(
-            stats.outward_transfers.to_str_rounded()
+            "-" + stats.outward_transfers.to_str_rounded()
         )
-        if stats.outward_transfers.is_negative():
+        if stats.outward_transfers.is_positive():
             self.outwardTransfersAmountLabel.setStyleSheet(
                 f"color: {colors.get_red().name()}"
             )
-        self.outflowAmountLabel.setText(stats.outflows.to_str_rounded())
-        if stats.outflows.is_negative():
+        self.outflowAmountLabel.setText("-" + stats.outflows.to_str_rounded())
+        if stats.outflows.is_positive():
             self.outflowAmountLabel.setStyleSheet(f"color: {colors.get_red().name()}")
 
         self.gainLossAmountLabel.setText(stats.delta_performance.to_str_rounded())
@@ -65,12 +71,12 @@ class CashFlowOverallReport(CustomWidget, Ui_CashFlowOverallReport):
         elif stats.delta_neutral.is_negative():
             self.cashFlowAmountLabel.setStyleSheet(f"color: {colors.get_red().name()}")
 
-        self.cashFlowGainLossAmountLabel.setText(stats.delta_total.to_str_rounded())
+        self.netGrowthAmountLabel.setText(stats.delta_total.to_str_rounded())
         if stats.delta_total.is_positive():
-            self.cashFlowGainLossAmountLabel.setStyleSheet(
+            self.netGrowthAmountLabel.setStyleSheet(
                 f"color: {colors.get_green().name()}"
             )
         elif stats.delta_total.is_negative():
-            self.cashFlowGainLossAmountLabel.setStyleSheet(
-                f"color: {colors.get_red().name()}"
-            )
+            self.netGrowthAmountLabel.setStyleSheet(f"color: {colors.get_red().name()}")
+
+        self.chart_widget.load_data(stats)

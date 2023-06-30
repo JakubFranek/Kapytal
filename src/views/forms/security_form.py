@@ -11,7 +11,7 @@ from src.views.constants import (
 )
 from src.views.ui_files.forms.Ui_security_form import Ui_SecurityForm
 from src.views.utilities.helper_functions import calculate_table_width
-from src.views.widgets.chart_widget import ChartWidget
+from src.views.widgets.charts.line_chart_widget import LineChartWidget
 
 
 class SecurityForm(CustomWidget, Ui_SecurityForm):
@@ -84,7 +84,7 @@ class SecurityForm(CustomWidget, Ui_SecurityForm):
         self.expandAllToolButton.setDefaultAction(self.actionExpand_All)
         self.collapseAllToolButton.setDefaultAction(self.actionCollapse_All)
 
-        self.chart_widget = ChartWidget(self)
+        self.chart_widget = LineChartWidget(self)
         self.securityPriceHorizontalLayout.addWidget(self.chart_widget)
         self.securityPriceHorizontalLayout.setStretchFactor(self.chart_widget, 100)
         self.securityPriceHorizontalLayout.setStretchFactor(

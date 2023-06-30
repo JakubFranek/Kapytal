@@ -54,6 +54,7 @@ class Ui_CashTransferDialog(object):
         self.receivedLabel.setObjectName("receivedLabel")
         self.formLayout.setWidget(3, QtWidgets.QFormLayout.ItemRole.LabelRole, self.receivedLabel)
         self.receivedDoubleSpinBox = QtWidgets.QDoubleSpinBox(CashTransferDialog)
+        self.receivedDoubleSpinBox.setProperty("showGroupSeparator", True)
         self.receivedDoubleSpinBox.setMaximum(1e+16)
         self.receivedDoubleSpinBox.setObjectName("receivedDoubleSpinBox")
         self.formLayout.setWidget(3, QtWidgets.QFormLayout.ItemRole.FieldRole, self.receivedDoubleSpinBox)
