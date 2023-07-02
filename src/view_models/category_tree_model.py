@@ -12,6 +12,11 @@ from src.models.utilities.calculation import CategoryStats
 from src.views.constants import CategoryTreeColumn
 
 ALIGNMENT_RIGHT = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+COLUMN_HEADERS = {
+    CategoryTreeColumn.NAME: "Name",
+    CategoryTreeColumn.TRANSACTIONS: "Transactions",
+    CategoryTreeColumn.BALANCE: "Balance",
+}
 
 
 @dataclass
@@ -79,12 +84,6 @@ def get_node(
 
 
 class CategoryTreeModel(QAbstractItemModel):
-    COLUMN_HEADERS = {
-        CategoryTreeColumn.NAME: "Name",
-        CategoryTreeColumn.TRANSACTIONS: "Transactions",
-        CategoryTreeColumn.BALANCE: "Balance",
-    }
-
     def __init__(
         self,
         tree_view: QTreeView,
@@ -154,7 +153,7 @@ class CategoryTreeModel(QAbstractItemModel):
             return Qt.AlignmentFlag.AlignCenter
         if role == Qt.ItemDataRole.DisplayRole:
             if orientation == Qt.Orientation.Horizontal:
-                return self.COLUMN_HEADERS[section]
+                return COLUMN_HEADERS[section]
             return str(section)
         return None
 

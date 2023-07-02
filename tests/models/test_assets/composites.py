@@ -125,7 +125,7 @@ def cash_transactions(  # noqa: PLR0913
     currency: Currency | None = None,
     min_datetime: datetime = MIN_DATETIME,
     max_datetime: datetime = datetime.max,
-    account: CashAccount = None,
+    account: CashAccount | None = None,
     type_: CashTransactionType | None = None,
 ) -> CashTransaction:
     description = draw(st.text(min_size=0, max_size=256))

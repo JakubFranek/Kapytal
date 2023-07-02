@@ -34,6 +34,12 @@ FLAGS_SHOW = (
     | Qt.ItemFlag.ItemIsUserCheckable
 )
 FLAGS_DEFAULT = Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsEnabled
+COLUMN_HEADERS = {
+    AccountTreeColumn.NAME: "Name",
+    AccountTreeColumn.BALANCE_NATIVE: "Native balance",
+    AccountTreeColumn.BALANCE_BASE: "Base balance",
+    AccountTreeColumn.SHOW: "",
+}
 
 
 def convert_bool_to_checkstate(*, checked: bool) -> Qt.CheckState:
@@ -181,12 +187,6 @@ def get_node(
 
 
 class AccountTreeModel(QAbstractItemModel):
-    COLUMN_HEADERS = {
-        AccountTreeColumn.NAME: "Name",
-        AccountTreeColumn.BALANCE_NATIVE: "Native balance",
-        AccountTreeColumn.BALANCE_BASE: "Base balance",
-        AccountTreeColumn.SHOW: "",
-    }
     signal_check_state_changed = pyqtSignal()
 
     def __init__(
@@ -288,7 +288,7 @@ class AccountTreeModel(QAbstractItemModel):
     ) -> str | int | None:
         if role == Qt.ItemDataRole.DisplayRole:
             if orientation == Qt.Orientation.Horizontal:
-                return self.COLUMN_HEADERS[section]
+                return COLUMN_HEADERS[section]
             return str(section)
         if role == Qt.ItemDataRole.TextAlignmentRole:
             return Qt.AlignmentFlag.AlignCenter

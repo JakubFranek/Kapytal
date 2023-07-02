@@ -8,14 +8,13 @@ from src.views import icons
 from src.views.constants import CurrencyTableColumn, monospace_font
 
 ALIGN_RIGHT = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+COLUMN_HEADERS = {
+    CurrencyTableColumn.CODE: "Currency",
+    CurrencyTableColumn.PLACES: "Decimals",
+}
 
 
 class CurrencyTableModel(QAbstractTableModel):
-    COLUMN_HEADERS = {
-        CurrencyTableColumn.CODE: "Currency",
-        CurrencyTableColumn.PLACES: "Decimals",
-    }
-
     def __init__(
         self,
         view: QTableView,
@@ -44,7 +43,7 @@ class CurrencyTableModel(QAbstractTableModel):
 
     def columnCount(self, index: QModelIndex = ...) -> int:  # noqa: N802, ARG002
         if not hasattr(self, "_column_count"):
-            self._column_count = len(self.COLUMN_HEADERS)
+            self._column_count = len(COLUMN_HEADERS)
         return self._column_count
 
     def headerData(  # noqa: N802
@@ -52,7 +51,7 @@ class CurrencyTableModel(QAbstractTableModel):
     ) -> str | int | None:
         if role == Qt.ItemDataRole.DisplayRole:
             if orientation == Qt.Orientation.Horizontal:
-                return self.COLUMN_HEADERS[section]
+                return COLUMN_HEADERS[section]
             return str(section)
         return None
 

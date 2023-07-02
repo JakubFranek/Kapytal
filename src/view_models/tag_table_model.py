@@ -8,15 +8,14 @@ from src.models.utilities.calculation import AttributeStats
 from src.views.constants import TagTableColumn
 
 ALIGNMENT_RIGHT = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+COLUMN_HEADERS = {
+    TagTableColumn.NAME: "Name",
+    TagTableColumn.TRANSACTIONS: "Transactions",
+    TagTableColumn.BALANCE: "Balance",
+}
 
 
 class TagTableModel(QAbstractTableModel):
-    COLUMN_HEADERS = {
-        TagTableColumn.NAME: "Name",
-        TagTableColumn.TRANSACTIONS: "Transactions",
-        TagTableColumn.BALANCE: "Balance",
-    }
-
     def __init__(
         self,
         view: QTableView,
@@ -41,7 +40,7 @@ class TagTableModel(QAbstractTableModel):
 
     def columnCount(self, index: QModelIndex = ...) -> int:  # noqa: N802, ARG002
         if not hasattr(self, "_column_count"):
-            self._column_count = len(self.COLUMN_HEADERS)
+            self._column_count = len(COLUMN_HEADERS)
         return self._column_count
 
     def data(
@@ -92,7 +91,7 @@ class TagTableModel(QAbstractTableModel):
     ) -> str | int | None:
         if role == Qt.ItemDataRole.DisplayRole:
             if orientation == Qt.Orientation.Horizontal:
-                return self.COLUMN_HEADERS[section]
+                return COLUMN_HEADERS[section]
             return str(section)
         return None
 

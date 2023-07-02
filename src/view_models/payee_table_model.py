@@ -8,15 +8,14 @@ from src.models.utilities.calculation import AttributeStats
 from src.views.constants import PayeeTableColumn
 
 ALIGNMENT_RIGHT = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+COLUMN_HEADERS = {
+    PayeeTableColumn.NAME: "Name",
+    PayeeTableColumn.TRANSACTIONS: "Transactions",
+    PayeeTableColumn.BALANCE: "Balance",
+}
 
 
 class PayeeTableModel(QAbstractTableModel):
-    COLUMN_HEADERS = {
-        PayeeTableColumn.NAME: "Name",
-        PayeeTableColumn.TRANSACTIONS: "Transactions",
-        PayeeTableColumn.BALANCE: "Balance",
-    }
-
     def __init__(
         self,
         view: QTableView,
@@ -41,8 +40,17 @@ class PayeeTableModel(QAbstractTableModel):
 
     def columnCount(self, index: QModelIndex = ...) -> int:  # noqa: N802, ARG002
         if not hasattr(self, "_column_count"):
-            self._column_count = len(self.COLUMN_HEADERS)
+            self._column_count = len(COLUMN_HEADERS)
         return self._column_count
+
+    def headerData(  # noqa: N802
+        self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole = ...
+    ) -> str | int | None:
+        if role == Qt.ItemDataRole.DisplayRole:
+            if orientation == Qt.Orientation.Horizontal:
+                return COLUMN_HEADERS[section]
+            return str(section)
+        return None
 
     def data(
         self, index: QModelIndex, role: Qt.ItemDataRole = ...
@@ -86,15 +94,6 @@ class PayeeTableModel(QAbstractTableModel):
             return payee_stats.no_of_transactions
         if column == PayeeTableColumn.BALANCE:
             return float(payee_stats.balance.value_normalized)
-        return None
-
-    def headerData(  # noqa: N802
-        self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole = ...
-    ) -> str | int | None:
-        if role == Qt.ItemDataRole.DisplayRole:
-            if orientation == Qt.Orientation.Horizontal:
-                return self.COLUMN_HEADERS[section]
-            return str(section)
         return None
 
     def pre_add(self) -> None:

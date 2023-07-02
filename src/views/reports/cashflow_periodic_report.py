@@ -2,7 +2,7 @@ from PyQt6.QtCore import QSortFilterProxyModel, Qt
 from PyQt6.QtWidgets import QWidget
 from src.models.utilities.cashflow_report import CashFlowStats
 from src.view_models.cash_flow_table_model import CashFlowTableModel
-from src.views import colors, icons
+from src.views import icons
 from src.views.base_classes.custom_widget import CustomWidget
 from src.views.ui_files.reports.Ui_cash_flow_periodic_report import (
     Ui_CashFlowPeriodicReport,

@@ -11,19 +11,18 @@ from src.models.model_objects.security_objects import Security, SecurityAccount
 from src.views.constants import SecurityAccountTableColumn
 
 ALIGNMENT_AMOUNTS = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+COLUMN_HEADERS = {
+    SecurityAccountTableColumn.SECURITY_NAME: "Security",
+    SecurityAccountTableColumn.SYMBOL: "Symbol",
+    SecurityAccountTableColumn.TYPE: "Type",
+    SecurityAccountTableColumn.SHARES: "Shares",
+    SecurityAccountTableColumn.PRICE: "Price",
+    SecurityAccountTableColumn.AMOUNT_NATIVE: "Native Total",
+    SecurityAccountTableColumn.AMOUNT_BASE: "Base Total",
+}
 
 
 class SecurityAccountTableModel(QAbstractTableModel):
-    COLUMN_HEADERS = {
-        SecurityAccountTableColumn.SECURITY_NAME: "Security",
-        SecurityAccountTableColumn.SYMBOL: "Symbol",
-        SecurityAccountTableColumn.TYPE: "Type",
-        SecurityAccountTableColumn.SHARES: "Shares",
-        SecurityAccountTableColumn.PRICE: "Price",
-        SecurityAccountTableColumn.AMOUNT_NATIVE: "Native Total",
-        SecurityAccountTableColumn.AMOUNT_BASE: "Base Total",
-    }
-
     def __init__(
         self,
         view: QTableView,
@@ -64,7 +63,7 @@ class SecurityAccountTableModel(QAbstractTableModel):
 
     def columnCount(self, index: QModelIndex = ...) -> int:  # noqa: N802, ARG002
         if not hasattr(self, "_column_count"):
-            self._column_count = len(self.COLUMN_HEADERS)
+            self._column_count = len(COLUMN_HEADERS)
         return self._column_count
 
     def headerData(  # noqa: N802
@@ -74,7 +73,7 @@ class SecurityAccountTableModel(QAbstractTableModel):
             role == Qt.ItemDataRole.DisplayRole
             and orientation == Qt.Orientation.Horizontal
         ):
-            return self.COLUMN_HEADERS[section]
+            return COLUMN_HEADERS[section]
         return None
 
     def data(

@@ -1,14 +1,13 @@
 from collections import defaultdict
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import pytest
 from hypothesis import assume, given
 from hypothesis import strategies as st
 from src.models.base_classes.account import UnrelatedAccountError
 from src.models.model_objects.account_group import AccountGroup
-from src.models.model_objects.cash_objects import CashAccount
 from src.models.model_objects.currency_objects import CashAmount, Currency, ExchangeRate
 from src.models.model_objects.security_objects import (
     Security,
@@ -28,6 +27,9 @@ from tests.models.test_assets.composites import (
     security_transfers,
     valid_decimals,
 )
+
+if TYPE_CHECKING:
+    from src.models.model_objects.cash_objects import CashAccount
 
 
 @given(name=names(), parent=st.none() | account_groups())
