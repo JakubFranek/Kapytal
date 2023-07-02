@@ -11,7 +11,7 @@ from src.views.reports.cashflow_overall_report import CashFlowOverallReport
 from src.views.reports.cashflow_periodic_report import CashFlowPeriodicReport
 
 
-class ReportPresenter:
+class CashFlowReportPresenter:
     def __init__(
         self,
         main_view: MainView,

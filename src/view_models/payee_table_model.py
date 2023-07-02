@@ -74,6 +74,10 @@ class PayeeTableModel(QAbstractTableModel):
             or column == PayeeTableColumn.BALANCE
         ):
             return ALIGNMENT_RIGHT
+        if role == Qt.ItemDataRole.ForegroundRole:
+            return self._get_foreground_role_data(
+                column, self._payee_stats[index.row()]
+            )
         return None
 
     def _get_display_role_data(

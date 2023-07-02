@@ -178,38 +178,28 @@ def calculate_average_cash_flow(
 ) -> CashFlowStats:
     average = CashFlowStats(base_currency)
     average.period = "Average"
-    average.incomes = sum(
-        (stats.incomes for stats in stats_list), start=base_currency.zero_amount
-    ) / len(stats_list)
-    average.inward_transfers = sum(
-        (stats.inward_transfers for stats in stats_list),
-        start=base_currency.zero_amount,
-    ) / len(stats_list)
-    average.refunds = sum(
-        (stats.refunds for stats in stats_list), start=base_currency.zero_amount
-    ) / len(stats_list)
-    average.inflows = sum(
-        (stats.inflows for stats in stats_list), start=base_currency.zero_amount
-    ) / len(stats_list)
-    average.expenses = sum(
-        (stats.expenses for stats in stats_list), start=base_currency.zero_amount
-    ) / len(stats_list)
-    average.outward_transfers = sum(
-        (stats.outward_transfers for stats in stats_list),
-        start=base_currency.zero_amount,
-    ) / len(stats_list)
-    average.outflows = sum(
-        (stats.outflows for stats in stats_list), start=base_currency.zero_amount
-    ) / len(stats_list)
-    average.delta_total = sum(
-        (stats.delta_total for stats in stats_list), start=base_currency.zero_amount
-    ) / len(stats_list)
-    average.delta_neutral = sum(
-        (stats.delta_neutral for stats in stats_list), start=base_currency.zero_amount
-    ) / len(stats_list)
-    average.delta_performance = sum(
-        (stats.delta_performance for stats in stats_list),
-        start=base_currency.zero_amount,
-    ) / len(stats_list)
+    periods = len(stats_list)
+    for stats in stats_list:
+        average.incomes += stats.incomes
+        average.inward_transfers += stats.inward_transfers
+        average.refunds += stats.refunds
+        average.inflows += stats.inflows
+        average.expenses += stats.expenses
+        average.outward_transfers += stats.outward_transfers
+        average.outflows += stats.outflows
+        average.delta_neutral += stats.delta_neutral
+        average.delta_total += stats.delta_total
+        average.delta_performance += stats.delta_performance
+
+    average.incomes /= periods
+    average.inward_transfers /= periods
+    average.refunds /= periods
+    average.inflows /= periods
+    average.expenses /= periods
+    average.outward_transfers /= periods
+    average.outflows /= periods
+    average.delta_neutral /= periods
+    average.delta_total /= periods
+    average.delta_performance /= periods
 
     return average

@@ -9,7 +9,7 @@ from src.presenters.form.payee_form_presenter import PayeeFormPresenter
 from src.presenters.form.security_form_presenter import SecurityFormPresenter
 from src.presenters.form.settings_form_presenter import SettingsFormPresenter
 from src.presenters.form.tag_form_presenter import TagFormPresenter
-from src.presenters.report_presenter import ReportPresenter
+from src.presenters.reports.report_presenter import ReportPresenter
 from src.presenters.widget.account_tree_presenter import AccountTreePresenter
 from src.presenters.widget.transactions_presenter import (
     TransactionsPresenter,
@@ -41,6 +41,7 @@ class MainPresenter:
 
     def _load_record_keeper(self, record_keeper: RecordKeeper) -> None:
         self._record_keeper = record_keeper
+        self._file_presenter.load_record_keeper(record_keeper)
         self._transactions_presenter.load_record_keeper(record_keeper)
         self._account_tree_presenter.load_record_keeper(record_keeper)
 
@@ -53,7 +54,7 @@ class MainPresenter:
         self._report_presenter.load_record_keeper(record_keeper)
 
     def _initialize_presenters(self) -> None:
-        self._file_presenter = FilePresenter(self._view)
+        self._file_presenter = FilePresenter(self._view, self._record_keeper)
 
         self._account_tree_presenter = AccountTreePresenter(
             self._view.account_tree_widget, self._record_keeper

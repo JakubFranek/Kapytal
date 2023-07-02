@@ -1,4 +1,4 @@
-from collections.abc import Collection
+from collections.abc import Sequence
 
 import mplcursors
 from matplotlib.dates import DateFormatter
@@ -18,8 +18,8 @@ class LineChartWidget(ChartWidget):
 
     def load_data(  # noqa: PLR0913
         self,
-        x: Collection,
-        y: Collection,
+        x: Sequence,
+        y: Sequence,
         title: str,
         ylabel: str = "",
         xlabel: str = "",

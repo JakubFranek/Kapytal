@@ -29,6 +29,9 @@ class MainView(QMainWindow, Ui_MainWindow):
     signal_cash_flow_annual_report = pyqtSignal()
     signal_cash_flow_overall_report = pyqtSignal()
 
+    signal_tag_total_report = pyqtSignal()
+    signal_tag_average_per_month_report = pyqtSignal()
+
     signal_save_file = pyqtSignal()
     signal_save_file_as = pyqtSignal()
     signal_open_file = pyqtSignal()
@@ -223,6 +226,11 @@ class MainView(QMainWindow, Ui_MainWindow):
         )
         self.actionCash_Flow_Overall.triggered.connect(
             self.signal_cash_flow_overall_report.emit
+        )
+
+        self.actionTag_Report_Total.triggered.connect(self.signal_tag_total_report.emit)
+        self.actionTag_Report_Average_Per_Month.triggered.connect(
+            self.signal_tag_average_per_month_report.emit
         )
 
     def keyPressEvent(self, a0: QKeyEvent) -> None:  # noqa: N802

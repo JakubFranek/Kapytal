@@ -74,7 +74,7 @@ class TagTableModel(QAbstractTableModel):
         ):
             return ALIGNMENT_RIGHT
         if role == Qt.ItemDataRole.ForegroundRole:
-            self._get_foreground_role_data(column, self._tag_stats[index.row()])
+            return self._get_foreground_role_data(column, self._tag_stats[index.row()])
         return None
 
     def _get_display_role_data(

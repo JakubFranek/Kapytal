@@ -188,7 +188,7 @@ class CategoryTreeModel(QAbstractItemModel):
                 "the Category directly, not counting its children."
             )
         if role == Qt.ItemDataRole.ForegroundRole:
-            self._get_foreground_role_data(column, node)
+            return self._get_foreground_role_data(column, node)
         return None
 
     def _get_display_role_data(
