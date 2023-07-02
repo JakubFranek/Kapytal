@@ -4,7 +4,7 @@ from PyQt6.QtCore import QSortFilterProxyModel, Qt
 from PyQt6.QtWidgets import QApplication
 from src.models.model_objects.attributes import AttributeType
 from src.models.record_keeper import RecordKeeper
-from src.models.utilities.calculation import calculate_tag_stats
+from src.models.statistics.attribute_stats import calculate_attribute_stats
 from src.presenters.utilities.event import Event
 from src.presenters.utilities.handle_exception import handle_exception
 from src.view_models.tag_table_model import TagTableModel
@@ -62,7 +62,7 @@ class TagFormPresenter:
             self._record_keeper.cash_transactions
             + self._record_keeper.refund_transactions
         )
-        tag_stats = calculate_tag_stats(
+        tag_stats = calculate_attribute_stats(
             relevant_transactions,
             self._record_keeper.base_currency,
             self._record_keeper.tags,

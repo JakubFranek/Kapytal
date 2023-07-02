@@ -1,10 +1,10 @@
 from src.models.record_keeper import RecordKeeper
-from src.models.transaction_filters.base_transaction_filter import FilterMode
-from src.models.utilities.cashflow_report import (
+from src.models.statistics.cashflow_stats import (
     calculate_annual_cash_flow,
     calculate_cash_flow,
     calculate_monthly_cash_flow,
 )
+from src.models.transaction_filters.base_transaction_filter import FilterMode
 from src.presenters.widget.transactions_presenter import TransactionsPresenter
 from src.views.main_view import MainView
 from src.views.reports.cashflow_overall_report import CashFlowOverallReport

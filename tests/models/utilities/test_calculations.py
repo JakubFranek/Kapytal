@@ -13,12 +13,11 @@ from src.models.model_objects.cash_objects import (
     RefundTransaction,
 )
 from src.models.model_objects.currency_objects import CashAmount, Currency
-from src.models.user_settings import user_settings
-from src.models.utilities.calculation import (
-    calculate_category_stats,
-    calculate_payee_stats,
-    calculate_tag_stats,
+from src.models.statistics.attribute_stats import (
+    calculate_attribute_stats,
 )
+from src.models.statistics.category_stats import calculate_category_stats
+from src.models.user_settings import user_settings
 
 payee = Attribute("Payee 1", AttributeType.PAYEE)
 payee_dummy = Attribute("Dummy", AttributeType.PAYEE)
@@ -35,8 +34,10 @@ account = CashAccount("Account", currency, currency.zero_amount)
 
 def test_calculate_attribute_stats() -> None:
     transactions = get_transactions()
-    payee_stats = calculate_payee_stats(transactions, currency, [payee, payee_dummy])
-    tag_stats = calculate_tag_stats(transactions, currency, [tag, tag_dummy])
+    payee_stats = calculate_attribute_stats(
+        transactions, currency, [payee, payee_dummy]
+    )
+    tag_stats = calculate_attribute_stats(transactions, currency, [tag, tag_dummy])
     payee_stats = payee_stats[payee]
     tag_stats = tag_stats[tag]
     assert payee_stats.attribute == payee

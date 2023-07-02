@@ -1,10 +1,10 @@
 from src.models.model_objects.cash_objects import CashTransaction, RefundTransaction
 from src.models.record_keeper import RecordKeeper
-from src.models.transaction_filters.base_transaction_filter import FilterMode
-from src.models.utilities.calculation import (
-    calculate_average_per_month_tag_stats,
-    calculate_tag_stats,
+from src.models.statistics.attribute_stats import (
+    calculate_attribute_stats,
+    calculate_average_per_month_attribute_stats,
 )
+from src.models.transaction_filters.base_transaction_filter import FilterMode
 from src.presenters.widget.transactions_presenter import TransactionsPresenter
 from src.views.main_view import MainView
 from src.views.reports.tag_report import TagReport
@@ -39,7 +39,7 @@ class TagReportPresenter:
             if isinstance(transaction, CashTransaction | RefundTransaction)
         ]
         base_currency = self._record_keeper.base_currency
-        tag_stats = calculate_tag_stats(
+        tag_stats = calculate_attribute_stats(
             transactions, base_currency, self._record_keeper.tags
         )
         self.report = TagReport("Total", self._main_view)
@@ -55,7 +55,7 @@ class TagReportPresenter:
             if isinstance(transaction, CashTransaction | RefundTransaction)
         ]
         base_currency = self._record_keeper.base_currency
-        tag_stats = calculate_average_per_month_tag_stats(
+        tag_stats = calculate_average_per_month_attribute_stats(
             transactions, base_currency, self._record_keeper.tags
         )
         self.report = TagReport("Average Per Month", self._main_view)

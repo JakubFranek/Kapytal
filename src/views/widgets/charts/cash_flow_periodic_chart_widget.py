@@ -7,7 +7,7 @@ from matplotlib.container import BarContainer
 from matplotlib.ticker import StrMethodFormatter
 from mplcursors import Selection
 from PyQt6.QtWidgets import QWidget
-from src.models.utilities.cashflow_report import CashFlowStats
+from src.models.statistics.cashflow_stats import CashFlowStats
 from src.views.widgets.charts.chart_widget import ChartWidget
 
 if TYPE_CHECKING:

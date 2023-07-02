@@ -2,7 +2,7 @@ from PyQt6.QtCore import QSortFilterProxyModel
 from PyQt6.QtWidgets import QWidget
 from pytestqt.modeltest import ModelTester
 from pytestqt.qtbot import QtBot
-from src.models.utilities.calculation import calculate_tag_stats
+from src.models.statistics.attribute_stats import calculate_attribute_stats
 from src.view_models.tag_table_model import TagTableModel
 from src.views import icons
 from src.views.forms.tag_form import TagForm
@@ -21,7 +21,7 @@ def test_tag_table_model(qtbot: QtBot, qtmodeltester: ModelTester) -> None:
     relevant_transactions = (
         record_keeper.cash_transactions + record_keeper.refund_transactions
     )
-    tag_stats = calculate_tag_stats(
+    tag_stats = calculate_attribute_stats(
         relevant_transactions,
         record_keeper.base_currency,
         record_keeper.tags,

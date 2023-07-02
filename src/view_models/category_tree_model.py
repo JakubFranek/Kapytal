@@ -9,7 +9,7 @@ from PyQt6.QtGui import QBrush
 from PyQt6.QtWidgets import QTreeView
 from src.models.model_objects.attributes import Category
 from src.models.model_objects.currency_objects import CashAmount
-from src.models.utilities.calculation import CategoryStats
+from src.models.statistics.category_stats import CategoryStats
 from src.views import colors
 from src.views.constants import CategoryTreeColumn
 

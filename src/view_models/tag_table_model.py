@@ -5,7 +5,7 @@ from PyQt6.QtCore import QAbstractTableModel, QModelIndex, QSortFilterProxyModel
 from PyQt6.QtGui import QBrush
 from PyQt6.QtWidgets import QTableView
 from src.models.model_objects.attributes import Attribute
-from src.models.utilities.calculation import AttributeStats
+from src.models.statistics.attribute_stats import AttributeStats
 from src.views import colors
 from src.views.constants import TagTableColumn
 

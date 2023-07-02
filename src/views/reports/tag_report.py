@@ -3,7 +3,7 @@ from typing import Literal
 
 from PyQt6.QtCore import QSortFilterProxyModel, Qt
 from PyQt6.QtWidgets import QHeaderView, QWidget
-from src.models.utilities.calculation import AttributeStats
+from src.models.statistics.attribute_stats import AttributeStats
 from src.view_models.tag_table_model import TagTableModel
 from src.views import icons
 from src.views.base_classes.custom_widget import CustomWidget
