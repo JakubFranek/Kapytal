@@ -1,3 +1,7 @@
+from collections.abc import Collection
+
+from src.models.base_classes.transaction import Transaction
+from src.models.model_objects.attributes import AttributeType
 from src.models.model_objects.cash_objects import CashTransaction, RefundTransaction
 from src.models.record_keeper import RecordKeeper
 from src.models.statistics.attribute_stats import (
@@ -25,39 +29,57 @@ class AttributeReportPresenter:
         self._record_keeper = record_keeper
 
     def _connect_to_view_signals(self) -> None:
-        self._main_view.signal_tag_total_report.connect(self._create_tag_total_report)
+        self._main_view.signal_tag_total_report.connect(
+            lambda: self._create_total_report(AttributeType.TAG)
+        )
         self._main_view.signal_tag_average_per_month_report.connect(
-            self._create_tag_average_per_month_report
+            lambda: self._create_average_per_month_report(AttributeType.TAG)
+        )
+        self._main_view.signal_payee_total_report.connect(
+            lambda: self._create_total_report(AttributeType.PAYEE)
+        )
+        self._main_view.signal_payee_average_per_month_report.connect(
+            lambda: self._create_average_per_month_report(AttributeType.PAYEE)
         )
 
-    def _create_tag_total_report(self) -> None:
+    def _create_total_report(self, attribute_type: AttributeType) -> None:
         transactions = self._transactions_presenter.get_visible_transactions()
-        transactions = [
-            transaction
-            for transaction in transactions
-            if isinstance(transaction, CashTransaction | RefundTransaction)
-        ]
+        transactions = _filter_transactions(transactions)
         base_currency = self._record_keeper.base_currency
-        tag_stats = calculate_attribute_stats(
-            transactions, base_currency, self._record_keeper.tags
+        attributes = (
+            self._record_keeper.tags
+            if attribute_type == AttributeType.TAG
+            else self._record_keeper.payees
         )
+        stats = calculate_attribute_stats(transactions, base_currency, attributes)
         self.report = AttributeReport("Total", self._main_view)
         self.report.finalize_setup()
-        self.report.load_stats(tag_stats.values())
+        self.report.load_stats(stats.values())
         self.report.show_form()
 
-    def _create_tag_average_per_month_report(self) -> None:
+    def _create_average_per_month_report(self, attribute_type: AttributeType) -> None:
         transactions = self._transactions_presenter.get_visible_transactions()
-        transactions = [
-            transaction
-            for transaction in transactions
-            if isinstance(transaction, CashTransaction | RefundTransaction)
-        ]
+        transactions = _filter_transactions(transactions)
         base_currency = self._record_keeper.base_currency
-        tag_stats = calculate_average_per_month_attribute_stats(
-            transactions, base_currency, self._record_keeper.tags
+        attributes = (
+            self._record_keeper.tags
+            if attribute_type == AttributeType.TAG
+            else self._record_keeper.payees
+        )
+        stats = calculate_average_per_month_attribute_stats(
+            transactions, base_currency, attributes
         )
         self.report = AttributeReport("Average Per Month", self._main_view)
         self.report.finalize_setup()
-        self.report.load_stats(tag_stats)
+        self.report.load_stats(stats)
         self.report.show_form()
+
+
+def _filter_transactions(
+    transactions: Collection[Transaction],
+) -> tuple[CashTransaction | RefundTransaction]:
+    return tuple(
+        transaction
+        for transaction in transactions
+        if isinstance(transaction, CashTransaction | RefundTransaction)
+    )
