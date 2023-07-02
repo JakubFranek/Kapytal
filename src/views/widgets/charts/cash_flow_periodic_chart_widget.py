@@ -122,7 +122,9 @@ class CashFlowPeriodicChartWidget(ChartWidget):
                     bar.get_x() + bar.get_width() / 2,
                     bar.get_y() + bar.get_height() / 2,
                 )
-                annotation.get_bbox_patch().set_alpha(0.8)
+                bbox_patch = annotation.get_bbox_patch()
+                if bbox_patch is not None:
+                    bbox_patch.set_alpha(0.8)
 
         cursor = mplcursors.cursor(pickables=[axes])
         cursor.connect("add", show_annotation)

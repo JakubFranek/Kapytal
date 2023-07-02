@@ -2,9 +2,11 @@ import unicodedata
 from collections.abc import Collection
 
 from PyQt6.QtCore import QAbstractTableModel, QModelIndex, QSortFilterProxyModel, Qt
+from PyQt6.QtGui import QBrush
 from PyQt6.QtWidgets import QTableView
 from src.models.model_objects.attributes import Attribute
 from src.models.utilities.calculation import AttributeStats
+from src.views import colors
 from src.views.constants import PayeeTableColumn
 
 ALIGNMENT_RIGHT = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
@@ -95,6 +97,17 @@ class PayeeTableModel(QAbstractTableModel):
         if column == PayeeTableColumn.BALANCE:
             return float(payee_stats.balance.value_normalized)
         return None
+
+    def _get_foreground_role_data(
+        self, column: int, stats: AttributeStats
+    ) -> QBrush | None:
+        if column != PayeeTableColumn.BALANCE:
+            return None
+        if stats.balance.is_positive():
+            return colors.get_green_brush()
+        if stats.balance.is_negative():
+            return colors.get_red_brush()
+        return colors.get_gray_brush()
 
     def pre_add(self) -> None:
         self._proxy.setDynamicSortFilter(False)  # noqa: FBT003

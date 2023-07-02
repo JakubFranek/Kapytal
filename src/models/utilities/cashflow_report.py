@@ -1,4 +1,5 @@
 from collections.abc import Collection
+from datetime import timedelta
 
 from src.models.base_classes.account import Account
 from src.models.base_classes.transaction import Transaction
@@ -58,13 +59,12 @@ def calculate_cash_flow(
     stats = CashFlowStats(base_currency)
 
     transactions = sorted(transactions, key=lambda x: x.timestamp)
-    earliest_date = transactions[0].datetime_.date()
+    earliest_date = transactions[0].datetime_.date() - timedelta(days=1)
     latest_date = transactions[-1].datetime_.date()
 
     initial_balance = base_currency.zero_amount
     final_balance = base_currency.zero_amount
     for account in accounts:
-        # FIXME: this does not work properly when earliest_date == latest_date
         initial_balance += account.get_balance(base_currency, earliest_date)
         final_balance += account.get_balance(base_currency, latest_date)
 
