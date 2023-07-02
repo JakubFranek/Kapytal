@@ -1,7 +1,12 @@
 import math
+from collections.abc import Sequence
 
+import mplcursors
 from matplotlib.backends.backend_qtagg import NavigationToolbar2QT
+from matplotlib.container import BarContainer
+from matplotlib.text import Annotation
 from matplotlib.ticker import StrMethodFormatter
+from mplcursors import Selection
 from PyQt6.QtGui import QAction
 from PyQt6.QtWidgets import (
     QHBoxLayout,
@@ -15,10 +20,10 @@ from src.models.utilities.cashflow_report import CashFlowStats
 from src.views import icons
 from src.views.widgets.charts.canvas import Canvas
 
-x_labels = ["Inflows", "Outflows", "Cash Flow", "Gain / Loss"]
+BAR_WIDTH = 0.2
 
 
-class CashFlowOverallChartWidget(QWidget):
+class CashFlowPeriodicChartWidget(QWidget):
     def __init__(self, parent: QWidget | None) -> None:
         super().__init__(parent)
 
@@ -35,98 +40,113 @@ class CashFlowOverallChartWidget(QWidget):
         self._initialize_toolbar_buttons()
         self._initialize_toolbar_actions()
 
-    def load_data(self, stats: CashFlowStats) -> None:
-        self.chart.axes.clear()
-        bar_incomes = self.chart.axes.bar(
-            "Inflows", stats.incomes.value_rounded, color="green"
-        )
-        bar_inward_transfers = self.chart.axes.bar(
-            "Inflows",
-            stats.inward_transfers.value_rounded,
-            bottom=stats.incomes.value_rounded,
+    def load_data(self, stats_sequence: Sequence[CashFlowStats]) -> None:
+        axes = self.chart.axes
+        axes.clear()
+
+        currency = stats_sequence[0].inflows.currency
+
+        incomes = []
+        inward_transfers = []
+        refunds = []
+        expenses = []
+        outward_transfers = []
+        cash_flow = []
+        gain_loss = []
+        max_value = 0
+        min_value = 0
+        for stats in stats_sequence:
+            incomes.append(stats.incomes.value_rounded)
+            inward_transfers.append(stats.inward_transfers.value_rounded)
+            refunds.append(stats.refunds.value_rounded)
+            expenses.append(stats.expenses.value_rounded)
+            outward_transfers.append(stats.outward_transfers.value_rounded)
+            cash_flow.append(stats.delta_neutral.value_rounded)
+            gain_loss.append(stats.delta_performance.value_rounded)
+            max_value = max(
+                stats.inflows.value_rounded,
+                stats.outflows.value_rounded,
+                stats.delta_neutral.value_rounded,
+                stats.delta_performance.value_rounded,
+                max_value,
+            )
+            min_value = min(
+                stats.inflows.value_rounded,
+                stats.outflows.value_rounded,
+                stats.delta_neutral.value_rounded,
+                stats.delta_performance.value_rounded,
+                min_value,
+            )
+
+        refund_bottom = [x + y for x, y in zip(incomes, inward_transfers)]
+
+        x1 = list(range(len(incomes)))
+        x2 = [x + BAR_WIDTH for x in x1]
+        x3 = [x + BAR_WIDTH for x in x2]
+        x4 = [x + BAR_WIDTH for x in x3]
+        axes.bar(x1, incomes, width=BAR_WIDTH, color="green", label="Income")
+        axes.bar(
+            x1,
+            inward_transfers,
+            width=BAR_WIDTH,
+            bottom=incomes,
             color="limegreen",
+            label="Inward Transfers",
         )
-        bar_refunds = self.chart.axes.bar(
-            "Inflows",
-            stats.refunds.value_rounded,
-            bottom=stats.incomes.value_rounded + stats.inward_transfers.value_rounded,
+        axes.bar(
+            x1,
+            refunds,
+            width=BAR_WIDTH,
+            bottom=refund_bottom,
             color="lime",
+            label="Refunds",
         )
-
-        bar_expenses = self.chart.axes.bar(
-            "Outflows", stats.expenses.value_rounded, color="red"
-        )
-        bar_outward_transfers = self.chart.axes.bar(
-            "Outflows",
-            stats.outward_transfers.value_rounded,
-            bottom=stats.expenses.value_rounded,
+        axes.bar(x2, expenses, width=BAR_WIDTH, color="red", label="Expenses")
+        axes.bar(
+            x2,
+            outward_transfers,
+            width=BAR_WIDTH,
+            bottom=expenses,
             color="salmon",
+            label="Outward Transfers",
+        )
+        axes.bar(x3, cash_flow, width=BAR_WIDTH, color="royalblue", label="Cash Flow")
+        axes.bar(x4, gain_loss, width=BAR_WIDTH, color="orange", label="Gain / Loss")
+
+        axes.set_axisbelow(True)
+        axes.yaxis.set_major_formatter(StrMethodFormatter("{x:,.0f}"))
+        axes.grid(visible=True, axis="y")
+        axes.set_ylabel(currency.code)
+        axes.set_xticks(
+            [x + 1.5 * BAR_WIDTH for x in x1],
+            [stats.period for stats in stats_sequence],
         )
 
-        bar_cash_flow = self.chart.axes.bar(
-            "Cash Flow", stats.delta_neutral.value_rounded, color="royalblue"
-        )
-
-        bar_delta_performance = self.chart.axes.bar(
-            "Gain / Loss",
-            stats.delta_performance.value_rounded,
-            color="orange",
-        )
-
-        self.chart.axes.bar_label(
-            bar_refunds, labels=[f"{stats.inflows.value_rounded:,}"]
-        )
-        self.chart.axes.bar_label(
-            bar_outward_transfers, labels=[f"{stats.outflows.value_rounded:,}"]
-        )
-        self.chart.axes.bar_label(
-            bar_cash_flow, labels=[f"{stats.delta_neutral.value_rounded:,}"]
-        )
-        self.chart.axes.bar_label(
-            bar_delta_performance, labels=[f"{stats.delta_performance.value_rounded:,}"]
-        )
-
-        self.chart.axes.set_axisbelow(True)
-        self.chart.axes.yaxis.set_major_formatter(StrMethodFormatter("{x:,.0f}"))
-        self.chart.axes.grid(visible=True, axis="y")
-
-        self.chart.axes.legend(
-            bar_incomes.patches
-            + bar_inward_transfers.patches
-            + bar_refunds.patches
-            + bar_expenses.patches
-            + bar_outward_transfers.patches
-            + bar_cash_flow.patches
-            + bar_delta_performance.patches,
-            [
-                "Income",
-                "Inward Transfers",
-                "Refunds",
-                "Expenses",
-                "Outward Transfers",
-                "Cash Flow",
-                "Gain / Loss",
-            ],
-        )
-
-        max_value = max(
-            stats.inflows,
-            stats.outflows,
-            stats.delta_neutral,
-            stats.delta_performance,
-        )
-        min_value = min(
-            stats.inflows,
-            stats.outflows,
-            stats.delta_neutral,
-            stats.delta_performance,
-        )
-        yticks = self.chart.axes.get_yticks()
+        yticks = axes.get_yticks()
         step = abs(yticks[1] - yticks[0])
-        ymax = math.ceil(float(max_value.value_rounded) / step) * step
-        ymin = math.floor(float(min_value.value_rounded) / step) * step
-        self.chart.axes.set_ylim(ymin, ymax)
-        self.chart.axes.set_ylabel(stats.inflows.currency.code)
+        ymax = math.ceil(float(max_value) / step) * step
+        ymin = math.floor(float(min_value) / step) * step
+        axes.set_ylim(ymin, ymax)
+
+        def show_annotation(sel: Selection) -> None:
+            if type(sel.artist) == BarContainer:
+                bar = sel.artist[sel.index]
+                annotation: Annotation = sel.annotation
+                annotation.set_text(
+                    f"{sel.artist.get_label()}: {round(bar.get_height(),currency.places):,.{currency.places}f} {currency.code}"
+                )
+                annotation.xy = (
+                    bar.get_x() + bar.get_width() / 2,
+                    bar.get_y() + bar.get_height() / 2,
+                )
+                annotation.get_bbox_patch().set_alpha(0.8)
+            else:
+                sel.annotation.remove()
+
+        cursor = mplcursors.cursor(pickables=[axes])
+        cursor.connect("add", show_annotation)
+
+        axes.legend()
 
     def _initialize_toolbar_buttons(self) -> None:
         self.homeToolButton = QToolButton(self)

@@ -64,6 +64,7 @@ def calculate_cash_flow(
     initial_balance = base_currency.zero_amount
     final_balance = base_currency.zero_amount
     for account in accounts:
+        # FIXME: this does not work properly when earliest_date == latest_date
         initial_balance += account.get_balance(base_currency, earliest_date)
         final_balance += account.get_balance(base_currency, latest_date)
 

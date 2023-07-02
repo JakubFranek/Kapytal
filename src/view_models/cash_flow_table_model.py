@@ -1,11 +1,11 @@
 from collections.abc import Sequence
 
-import src.views.colors as colors
 from PyQt6.QtCore import QAbstractTableModel, QModelIndex, QSortFilterProxyModel, Qt
 from PyQt6.QtGui import QBrush, QFont
 from PyQt6.QtWidgets import QTableView
 from src.models.model_objects.currency_objects import CashAmount
 from src.models.utilities.cashflow_report import CashFlowStats
+from src.views import colors
 from src.views.constants import CashFlowTableColumn
 
 bold_font = QFont()
@@ -67,7 +67,11 @@ class CashFlowTableModel(QAbstractTableModel):
             and orientation == Qt.Orientation.Vertical
         ):
             return ALIGNMENT_RIGHT
-        if role == Qt.ItemDataRole.FontRole and section == len(self._stats) - 1:
+        if (
+            role == Qt.ItemDataRole.FontRole
+            and orientation == Qt.Orientation.Vertical
+            and section == len(self._stats) - 1
+        ):
             return bold_font
         return None
 
