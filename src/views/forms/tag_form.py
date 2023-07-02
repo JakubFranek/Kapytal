@@ -2,7 +2,7 @@ from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtWidgets import QHeaderView, QLineEdit, QWidget
 from src.views import icons
 from src.views.base_classes.custom_widget import CustomWidget
-from src.views.constants import TagTableColumn
+from src.views.constants import AttributeTableColumn
 from src.views.ui_files.forms.Ui_tag_form import Ui_TagForm
 
 
@@ -36,21 +36,21 @@ class TagForm(CustomWidget, Ui_TagForm):
     def finalize_setup(self) -> None:
         self.tableView.horizontalHeader().setStretchLastSection(False)
         self.tableView.horizontalHeader().setSectionResizeMode(
-            TagTableColumn.NAME,
+            AttributeTableColumn.NAME,
             QHeaderView.ResizeMode.ResizeToContents,
         )
         self.tableView.horizontalHeader().setSectionResizeMode(
-            TagTableColumn.TRANSACTIONS,
+            AttributeTableColumn.TRANSACTIONS,
             QHeaderView.ResizeMode.ResizeToContents,
         )
         self.tableView.horizontalHeader().setSectionResizeMode(
-            TagTableColumn.BALANCE,
+            AttributeTableColumn.BALANCE,
             QHeaderView.ResizeMode.Stretch,
         )
 
         style = self.style()
         last_section_text = self.tableView.model().headerData(
-            TagTableColumn.BALANCE,
+            AttributeTableColumn.BALANCE,
             Qt.Orientation.Horizontal,
             Qt.ItemDataRole.DisplayRole,
         )

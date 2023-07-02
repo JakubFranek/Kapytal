@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'd:\Coding\Kapytal\src\views\ui_files\reports\tag_report.ui'
+# Form implementation generated from reading ui file 'd:\Coding\Kapytal\src\views\ui_files\reports\attribute_report.ui'
 #
 # Created by: PyQt6 UI code generator 6.4.0
 #
@@ -9,15 +9,15 @@
 from PyQt6 import QtCore, QtGui, QtWidgets
 
 
-class Ui_TagReport(object):
-    def setupUi(self, TagReport):
-        TagReport.setObjectName("TagReport")
-        TagReport.setWindowModality(QtCore.Qt.WindowModality.WindowModal)
-        TagReport.resize(800, 600)
-        TagReport.setLocale(QtCore.QLocale(QtCore.QLocale.Language.English, QtCore.QLocale.Country.UnitedKingdom))
-        self.horizontalLayout = QtWidgets.QHBoxLayout(TagReport)
+class Ui_AttributeReport(object):
+    def setupUi(self, AttributeReport):
+        AttributeReport.setObjectName("AttributeReport")
+        AttributeReport.setWindowModality(QtCore.Qt.WindowModality.WindowModal)
+        AttributeReport.resize(800, 600)
+        AttributeReport.setLocale(QtCore.QLocale(QtCore.QLocale.Language.English, QtCore.QLocale.Country.UnitedKingdom))
+        self.horizontalLayout = QtWidgets.QHBoxLayout(AttributeReport)
         self.horizontalLayout.setObjectName("horizontalLayout")
-        self.tableView = QtWidgets.QTableView(TagReport)
+        self.tableView = QtWidgets.QTableView(AttributeReport)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.MinimumExpanding, QtWidgets.QSizePolicy.Policy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -28,7 +28,7 @@ class Ui_TagReport(object):
         self.tableView.setObjectName("tableView")
         self.tableView.verticalHeader().setVisible(False)
         self.horizontalLayout.addWidget(self.tableView)
-        self.tabWidget = QtWidgets.QTabWidget(TagReport)
+        self.tabWidget = QtWidgets.QTabWidget(AttributeReport)
         self.tabWidget.setObjectName("tabWidget")
         self.incomeTab = QtWidgets.QWidget()
         self.incomeTab.setObjectName("incomeTab")
@@ -43,12 +43,12 @@ class Ui_TagReport(object):
         self.horizontalLayout.addWidget(self.tabWidget)
         self.horizontalLayout.setStretch(1, 1)
 
-        self.retranslateUi(TagReport)
+        self.retranslateUi(AttributeReport)
         self.tabWidget.setCurrentIndex(0)
-        QtCore.QMetaObject.connectSlotsByName(TagReport)
+        QtCore.QMetaObject.connectSlotsByName(AttributeReport)
 
-    def retranslateUi(self, TagReport):
+    def retranslateUi(self, AttributeReport):
         _translate = QtCore.QCoreApplication.translate
-        TagReport.setWindowTitle(_translate("TagReport", "Cash Flow Report"))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.incomeTab), _translate("TagReport", "Income"))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.expenseTab), _translate("TagReport", "Expense"))
+        AttributeReport.setWindowTitle(_translate("AttributeReport", "Cash Flow Report"))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.incomeTab), _translate("AttributeReport", "Income"))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.expenseTab), _translate("AttributeReport", "Expense"))

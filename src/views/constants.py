@@ -34,7 +34,7 @@ class PayeeTableColumn(IntEnum):
     BALANCE = 2
 
 
-class TagTableColumn(IntEnum):
+class AttributeTableColumn(IntEnum):
     NAME = 0
     TRANSACTIONS = 1
     BALANCE = 2

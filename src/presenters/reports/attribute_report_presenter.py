@@ -4,13 +4,12 @@ from src.models.statistics.attribute_stats import (
     calculate_attribute_stats,
     calculate_average_per_month_attribute_stats,
 )
-from src.models.transaction_filters.base_transaction_filter import FilterMode
 from src.presenters.widget.transactions_presenter import TransactionsPresenter
 from src.views.main_view import MainView
-from src.views.reports.tag_report import TagReport
+from src.views.reports.attribute_report import AttributeReport
 
 
-class TagReportPresenter:
+class AttributeReportPresenter:
     def __init__(
         self,
         main_view: MainView,
@@ -42,7 +41,7 @@ class TagReportPresenter:
         tag_stats = calculate_attribute_stats(
             transactions, base_currency, self._record_keeper.tags
         )
-        self.report = TagReport("Total", self._main_view)
+        self.report = AttributeReport("Total", self._main_view)
         self.report.finalize_setup()
         self.report.load_stats(tag_stats.values())
         self.report.show_form()
@@ -58,7 +57,7 @@ class TagReportPresenter:
         tag_stats = calculate_average_per_month_attribute_stats(
             transactions, base_currency, self._record_keeper.tags
         )
-        self.report = TagReport("Average Per Month", self._main_view)
+        self.report = AttributeReport("Average Per Month", self._main_view)
         self.report.finalize_setup()
         self.report.load_stats(tag_stats)
         self.report.show_form()

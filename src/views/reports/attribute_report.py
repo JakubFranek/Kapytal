@@ -4,15 +4,15 @@ from typing import Literal
 from PyQt6.QtCore import QSortFilterProxyModel, Qt
 from PyQt6.QtWidgets import QHeaderView, QWidget
 from src.models.statistics.attribute_stats import AttributeStats
-from src.view_models.tag_table_model import TagTableModel
+from src.view_models.attribute_table_model import AttributeTableModel
 from src.views import icons
 from src.views.base_classes.custom_widget import CustomWidget
-from src.views.constants import TagTableColumn
-from src.views.ui_files.reports.Ui_tag_report import Ui_TagReport
+from src.views.constants import AttributeTableColumn
+from src.views.ui_files.reports.Ui_attribute_report import Ui_AttributeReport
 from src.views.widgets.charts.pie_chart_widget import PieChartWidget
 
 
-class TagReport(CustomWidget, Ui_TagReport):
+class AttributeReport(CustomWidget, Ui_AttributeReport):
     def __init__(
         self,
         type_: Literal["Total", "Average Per Month"],
@@ -32,13 +32,13 @@ class TagReport(CustomWidget, Ui_TagReport):
         self._proxy_model = QSortFilterProxyModel(self)
         self._proxy_model.setSortRole(Qt.ItemDataRole.UserRole)
         self._proxy_model.setSortCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
-        self._table_model = TagTableModel(self.tableView, self._proxy_model)
+        self._table_model = AttributeTableModel(self.tableView, self._proxy_model)
         self._proxy_model.setSourceModel(self._table_model)
         self.tableView.setModel(self._proxy_model)
 
     def load_stats(self, stats: Collection[AttributeStats]) -> None:
         self._table_model.pre_reset_model()
-        self._table_model.load_tag_stats(stats)
+        self._table_model.load_attribute_stats(stats)
         self._table_model.post_reset_model()
         self.tableView.resizeColumnsToContents()
         self.tableView.sortByColumn(0, Qt.SortOrder.AscendingOrder)
@@ -56,14 +56,14 @@ class TagReport(CustomWidget, Ui_TagReport):
 
     def finalize_setup(self) -> None:
         self.tableView.horizontalHeader().setSectionResizeMode(
-            TagTableColumn.NAME,
+            AttributeTableColumn.NAME,
             QHeaderView.ResizeMode.ResizeToContents,
         )
         self.tableView.horizontalHeader().setSectionResizeMode(
-            TagTableColumn.TRANSACTIONS,
+            AttributeTableColumn.TRANSACTIONS,
             QHeaderView.ResizeMode.ResizeToContents,
         )
         self.tableView.horizontalHeader().setSectionResizeMode(
-            TagTableColumn.BALANCE,
+            AttributeTableColumn.BALANCE,
             QHeaderView.ResizeMode.ResizeToContents,
         )

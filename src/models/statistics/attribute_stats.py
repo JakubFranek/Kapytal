@@ -78,9 +78,9 @@ def calculate_attribute_stats(
     all_attributes: Collection[Attribute],
 ) -> dict[Attribute, AttributeStats]:
     attribute_types = {attribute.type_ for attribute in all_attributes}
-    if len(attribute_types) != 1:
+    if len(attribute_types) > 1:
         raise ValueError("All Attributes must be of the same type_.")
-    attribute_type = attribute_types.pop()
+    attribute_type = attribute_types.pop() if len(attribute_types) == 1 else None
 
     stats_dict: dict[Attribute, AttributeStats] = {}
     for attribute in all_attributes:

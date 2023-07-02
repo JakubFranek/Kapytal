@@ -1,6 +1,6 @@
 from src.models.record_keeper import RecordKeeper
+from src.presenters.reports.attribute_report_presenter import AttributeReportPresenter
 from src.presenters.reports.cash_flow_report_presenter import CashFlowReportPresenter
-from src.presenters.reports.tag_report_presenter import TagReportPresenter
 from src.presenters.widget.transactions_presenter import TransactionsPresenter
 from src.views.main_view import MainView
 
@@ -18,7 +18,7 @@ class ReportPresenter:
         self._cash_flow_presenter = CashFlowReportPresenter(
             main_view, transactions_presenter, record_keeper
         )
-        self._tag_presenter = TagReportPresenter(
+        self._tag_presenter = AttributeReportPresenter(
             main_view, transactions_presenter, record_keeper
         )
 

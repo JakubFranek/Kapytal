@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>TagReport</class>
- <widget class="QWidget" name="TagReport">
+ <class>AttributeReport</class>
+ <widget class="QWidget" name="AttributeReport">
   <property name="windowModality">
    <enum>Qt::WindowModal</enum>
   </property>
