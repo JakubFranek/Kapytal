@@ -1,9 +1,4 @@
-from collections.abc import Collection
-
-import mplcursors
-from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg, NavigationToolbar2QT
-from matplotlib.dates import DateFormatter
-from matplotlib.figure import Figure
+from matplotlib.backends.backend_qtagg import NavigationToolbar2QT
 from PyQt6.QtGui import QAction
 from PyQt6.QtWidgets import (
     QHBoxLayout,
@@ -14,13 +9,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 from src.views import icons
-
-
-class Canvas(FigureCanvasQTAgg):
-    def __init__(self) -> None:
-        fig = Figure(figsize=(10, 10), dpi=100)
-        self.axes = fig.add_subplot(111)
-        super().__init__(fig)
+from src.views.widgets.charts.canvas import Canvas
 
 
 class ChartWidget(QWidget):
@@ -30,44 +19,13 @@ class ChartWidget(QWidget):
         self.horizontal_layout = QHBoxLayout()
 
         self.chart = Canvas()
-        self.chart.axes.grid(visible=True)
-        self.chart.axes.xaxis.set_major_formatter(DateFormatter("%d.%m.%Y"))
-        self.chart.axes.tick_params(axis="x", rotation=30)
-        self.chart.axes.figure.set_layout_engine("tight")
-        self.lines = None
         self.chart_toolbar = NavigationToolbar2QT(self.chart, None)
-
         self.vertical_layout = QVBoxLayout(self)
         self.vertical_layout.addLayout(self.horizontal_layout)
         self.vertical_layout.addWidget(self.chart)
 
         self._initialize_toolbar_buttons()
         self._initialize_toolbar_actions()
-
-    def load_data(  # noqa: PLR0913
-        self,
-        x: Collection,
-        y: Collection,
-        title: str,
-        ylabel: str = "",
-        xlabel: str = "",
-    ) -> None:
-        if self.lines is None:
-            line = self.chart.axes.plot(x, y, "-", color="tab:blue")
-            points = self.chart.axes.plot(x, y, ".", color="tab:blue")
-            self.lines = [line[0], points[0]]
-            mplcursors.cursor(points)
-        else:
-            self.lines[0].set_data(x, y)
-            self.lines[1].set_data(x, y)
-        self.chart.axes.set_title(title)
-        self.chart.axes.set_ylabel(ylabel)
-        self.chart.axes.set_xlabel(xlabel)
-
-        self.chart.axes.relim()
-        self.chart.axes.autoscale()
-        self.chart.draw()
-        self.chart_toolbar.update()
 
     def _initialize_toolbar_buttons(self) -> None:
         self.homeToolButton = QToolButton(self)
@@ -96,7 +54,6 @@ class ChartWidget(QWidget):
         self.layout().setContentsMargins(0, 0, 0, 0)
 
     def _initialize_toolbar_actions(self) -> None:
-        self.chart_toolbar = NavigationToolbar2QT(self.chart, None)
         self.actionHome = QAction(icons.home, "Reset Chart", self)
         self.actionBack = QAction(icons.arrow_left, "Back", self)
         self.actionForward = QAction(icons.arrow_right, "Forward", self)

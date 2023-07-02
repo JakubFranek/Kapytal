@@ -15,6 +15,12 @@ from src.views import icons
 from src.views.constants import OwnedSecuritiesTreeColumn
 
 ALIGNMENT_AMOUNTS = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+COLUMN_HEADERS = {
+    OwnedSecuritiesTreeColumn.NAME: "Name",
+    OwnedSecuritiesTreeColumn.SHARES: "Shares",
+    OwnedSecuritiesTreeColumn.AMOUNT_NATIVE: "Native total",
+    OwnedSecuritiesTreeColumn.AMOUNT_BASE: "Base total",
+}
 
 
 class SecurityItem:
@@ -65,13 +71,6 @@ class AccountItem:
 
 
 class OwnedSecuritiesTreeModel(QAbstractItemModel):
-    COLUMN_HEADERS = {
-        OwnedSecuritiesTreeColumn.NAME: "Name",
-        OwnedSecuritiesTreeColumn.SHARES: "Shares",
-        OwnedSecuritiesTreeColumn.AMOUNT_NATIVE: "Native total",
-        OwnedSecuritiesTreeColumn.AMOUNT_BASE: "Base total",
-    }
-
     def __init__(
         self,
         tree_view: QTreeView,
@@ -141,7 +140,7 @@ class OwnedSecuritiesTreeModel(QAbstractItemModel):
     ) -> str | int | None:
         if role == Qt.ItemDataRole.DisplayRole:
             if orientation == Qt.Orientation.Horizontal:
-                return self.COLUMN_HEADERS[section]
+                return COLUMN_HEADERS[section]
             return str(section)
         if role == Qt.ItemDataRole.TextAlignmentRole:
             return Qt.AlignmentFlag.AlignCenter

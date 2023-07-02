@@ -108,3 +108,16 @@ TRANSACTION_TABLE_COLUMN_HEADERS = {
     TransactionTableColumn.UUID: "UUID",
     TransactionTableColumn.DATETIME_CREATED: "Date & time created",
 }
+
+
+class CashFlowTableColumn(IntEnum):
+    INCOME = 0
+    INWARD_TRANSFERS = 1
+    REFUNDS = 2
+    TOTAL_INFLOW = 3
+    EXPENSES = 4
+    OUTWARD_TRANSFERS = 5
+    TOTAL_OUTFLOW = 6
+    DELTA_NEUTRAL = 7
+    DELTA_PERFORMANCE = 8
+    DELTA_TOTAL = 9

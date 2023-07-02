@@ -16,6 +16,8 @@ from src.view_models.transaction_table_model import TransactionTableModel
 from src.views.dialogs.cash_transfer_dialog import CashTransferDialog, EditMode
 from src.views.utilities.handle_exception import display_error_message
 
+# TODO: add warning when transfer currency is same but amounts different
+
 
 class CashTransferDialogPresenter:
     event_update_model = Event()

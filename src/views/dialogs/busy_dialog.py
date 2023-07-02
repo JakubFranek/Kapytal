@@ -6,7 +6,7 @@ from src.views.ui_files.dialogs.Ui_busy_dialog import Ui_BusyDialog
 
 
 class BusyDialog(QDialog, Ui_BusyDialog):
-    def __init__(self, parent: QWidget = None) -> None:
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent=parent)
         self.setupUi(self)
         self.setWindowModality(Qt.WindowModality.ApplicationModal)

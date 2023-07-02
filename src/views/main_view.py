@@ -25,6 +25,10 @@ class MainView(QMainWindow, Ui_MainWindow):
     signal_open_category_form = pyqtSignal()
     signal_open_settings_form = pyqtSignal()
 
+    signal_cash_flow_montly_report = pyqtSignal()
+    signal_cash_flow_annual_report = pyqtSignal()
+    signal_cash_flow_overall_report = pyqtSignal()
+
     signal_save_file = pyqtSignal()
     signal_save_file_as = pyqtSignal()
     signal_open_file = pyqtSignal()
@@ -210,6 +214,16 @@ class MainView(QMainWindow, Ui_MainWindow):
         )
         self.actionQuit.triggered.connect(self.close)
         self.actionAbout.triggered.connect(self.show_about)
+
+        self.actionCash_Flow_Monthly.triggered.connect(
+            self.signal_cash_flow_montly_report.emit
+        )
+        self.actionCash_Flow_Annual.triggered.connect(
+            self.signal_cash_flow_annual_report.emit
+        )
+        self.actionCash_Flow_Overall.triggered.connect(
+            self.signal_cash_flow_overall_report.emit
+        )
 
     def keyPressEvent(self, a0: QKeyEvent) -> None:  # noqa: N802
         if a0.key() == Qt.Key.Key_Escape:

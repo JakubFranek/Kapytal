@@ -2,21 +2,22 @@ import unicodedata
 from collections.abc import Collection
 
 from PyQt6.QtCore import QAbstractTableModel, QModelIndex, QSortFilterProxyModel, Qt
+from PyQt6.QtGui import QBrush
 from PyQt6.QtWidgets import QTableView
 from src.models.model_objects.attributes import Attribute
 from src.models.utilities.calculation import AttributeStats
+from src.views import colors
 from src.views.constants import TagTableColumn
 
 ALIGNMENT_RIGHT = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+COLUMN_HEADERS = {
+    TagTableColumn.NAME: "Name",
+    TagTableColumn.TRANSACTIONS: "Transactions",
+    TagTableColumn.BALANCE: "Balance",
+}
 
 
 class TagTableModel(QAbstractTableModel):
-    COLUMN_HEADERS = {
-        TagTableColumn.NAME: "Name",
-        TagTableColumn.TRANSACTIONS: "Transactions",
-        TagTableColumn.BALANCE: "Balance",
-    }
-
     def __init__(
         self,
         view: QTableView,
@@ -41,8 +42,17 @@ class TagTableModel(QAbstractTableModel):
 
     def columnCount(self, index: QModelIndex = ...) -> int:  # noqa: N802, ARG002
         if not hasattr(self, "_column_count"):
-            self._column_count = len(self.COLUMN_HEADERS)
+            self._column_count = len(COLUMN_HEADERS)
         return self._column_count
+
+    def headerData(  # noqa: N802
+        self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole = ...
+    ) -> str | int | None:
+        if role == Qt.ItemDataRole.DisplayRole:
+            if orientation == Qt.Orientation.Horizontal:
+                return COLUMN_HEADERS[section]
+            return str(section)
+        return None
 
     def data(
         self, index: QModelIndex, role: Qt.ItemDataRole = ...
@@ -63,6 +73,8 @@ class TagTableModel(QAbstractTableModel):
             column == TagTableColumn.TRANSACTIONS or column == TagTableColumn.BALANCE
         ):
             return ALIGNMENT_RIGHT
+        if role == Qt.ItemDataRole.ForegroundRole:
+            self._get_foreground_role_data(column, self._tag_stats[index.row()])
         return None
 
     def _get_display_role_data(
@@ -87,14 +99,16 @@ class TagTableModel(QAbstractTableModel):
             return float(tag_stats.balance.value_normalized)
         return None
 
-    def headerData(  # noqa: N802
-        self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole = ...
-    ) -> str | int | None:
-        if role == Qt.ItemDataRole.DisplayRole:
-            if orientation == Qt.Orientation.Horizontal:
-                return self.COLUMN_HEADERS[section]
-            return str(section)
-        return None
+    def _get_foreground_role_data(
+        self, column: int, stats: AttributeStats
+    ) -> QBrush | None:
+        if column != TagTableColumn.BALANCE:
+            return None
+        if stats.balance.is_positive():
+            return colors.get_green_brush()
+        if stats.balance.is_negative():
+            return colors.get_red_brush()
+        return colors.get_gray_brush()
 
     def pre_add(self) -> None:
         self._proxy.setDynamicSortFilter(False)  # noqa: FBT003

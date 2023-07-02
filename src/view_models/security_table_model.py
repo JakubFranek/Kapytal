@@ -8,17 +8,16 @@ from src.views.constants import SecurityTableColumn
 
 ALIGNMENT_LEFT = Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
 ALIGNMENT_RIGHT = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+COLUMN_HEADERS = {
+    SecurityTableColumn.NAME: "Name",
+    SecurityTableColumn.SYMBOL: "Symbol",
+    SecurityTableColumn.TYPE: "Type",
+    SecurityTableColumn.PRICE: "Latest price",
+    SecurityTableColumn.LAST_DATE: "Latest date",
+}
 
 
 class SecurityTableModel(QAbstractTableModel):
-    COLUMN_HEADERS = {
-        SecurityTableColumn.NAME: "Name",
-        SecurityTableColumn.SYMBOL: "Symbol",
-        SecurityTableColumn.TYPE: "Type",
-        SecurityTableColumn.PRICE: "Latest price",
-        SecurityTableColumn.LAST_DATE: "Latest date",
-    }
-
     def __init__(
         self,
         view: QTableView,
@@ -43,7 +42,7 @@ class SecurityTableModel(QAbstractTableModel):
 
     def columnCount(self, index: QModelIndex = ...) -> int:  # noqa: N802, ARG002
         if not hasattr(self, "_column_count"):
-            self._column_count = len(self.COLUMN_HEADERS)
+            self._column_count = len(COLUMN_HEADERS)
         return self._column_count
 
     def headerData(  # noqa: N802
@@ -51,7 +50,7 @@ class SecurityTableModel(QAbstractTableModel):
     ) -> str | int | None:
         if role == Qt.ItemDataRole.DisplayRole:
             if orientation == Qt.Orientation.Horizontal:
-                return self.COLUMN_HEADERS[section]
+                return COLUMN_HEADERS[section]
             return str(section)
         if (
             role == Qt.ItemDataRole.TextAlignmentRole

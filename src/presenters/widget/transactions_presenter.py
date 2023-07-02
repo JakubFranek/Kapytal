@@ -73,6 +73,10 @@ class TransactionsPresenter:
         self._update_model_data()
         self._view.finalize_setup()
 
+    @property
+    def transaction_filter_form_presenter(self) -> TransactionFilterFormPresenter:
+        return self._transaction_filter_form_presenter
+
     def load_account_tree_checked_accounts(self, accounts: Collection[Account]) -> None:
         self._account_tree_shown_accounts = frozenset(accounts)
         self._model.valid_accounts = accounts

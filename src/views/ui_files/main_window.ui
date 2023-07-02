@@ -62,9 +62,9 @@
     <addaction name="actionCurrencies_and_Exchange_Rates"/>
     <addaction name="actionSecurities"/>
     <addaction name="separator"/>
-    <addaction name="actionPayees"/>
-    <addaction name="actionCategories"/>
     <addaction name="actionTags"/>
+    <addaction name="actionCategories"/>
+    <addaction name="actionPayees"/>
     <addaction name="separator"/>
     <addaction name="actionSettings"/>
    </widget>
@@ -72,6 +72,49 @@
     <property name="title">
      <string>Reports</string>
     </property>
+    <widget class="QMenu" name="menuCash_Flow">
+     <property name="title">
+      <string>Cash Flow</string>
+     </property>
+     <addaction name="actionCash_Flow_Monthly"/>
+     <addaction name="actionCash_Flow_Annual"/>
+     <addaction name="actionCash_Flow_Overall"/>
+    </widget>
+    <widget class="QMenu" name="menuOverview">
+     <property name="title">
+      <string>Net Worth</string>
+     </property>
+     <addaction name="actionAccounts_Report"/>
+     <addaction name="actionAsset_Type_Report"/>
+     <addaction name="actionNet_Worth_Report_Time"/>
+    </widget>
+    <widget class="QMenu" name="menuCategories">
+     <property name="title">
+      <string>Categories</string>
+     </property>
+     <addaction name="actionCategory_Report_Total"/>
+     <addaction name="actionCategory_Report_Average_Per_Month"/>
+    </widget>
+    <widget class="QMenu" name="menuTags">
+     <property name="title">
+      <string>Tags</string>
+     </property>
+     <addaction name="actionTag_Report_Total"/>
+     <addaction name="actionTag_Report_Average_Per_Month"/>
+    </widget>
+    <widget class="QMenu" name="menuPayees">
+     <property name="title">
+      <string>Payees</string>
+     </property>
+     <addaction name="actionPayee_Report_Total"/>
+     <addaction name="actionPayee_Report_Average_Per_Month"/>
+    </widget>
+    <addaction name="menuOverview"/>
+    <addaction name="menuCash_Flow"/>
+    <addaction name="separator"/>
+    <addaction name="menuTags"/>
+    <addaction name="menuCategories"/>
+    <addaction name="menuPayees"/>
    </widget>
    <widget class="QMenu" name="menuAbout">
     <property name="title">
@@ -102,9 +145,9 @@
    <addaction name="actionCurrencies_and_Exchange_Rates"/>
    <addaction name="actionSecurities"/>
    <addaction name="separator"/>
+   <addaction name="actionTags"/>
    <addaction name="actionCategories"/>
    <addaction name="actionPayees"/>
-   <addaction name="actionTags"/>
    <addaction name="separator"/>
    <addaction name="actionSettings"/>
    <addaction name="separator"/>
@@ -190,6 +233,66 @@
   <action name="actionShow_Hide_Account_Tree">
    <property name="text">
     <string>Show/Hide Account Tree</string>
+   </property>
+  </action>
+  <action name="actionCash_Flow_Monthly">
+   <property name="text">
+    <string>Monthly</string>
+   </property>
+  </action>
+  <action name="actionCash_Flow_Annual">
+   <property name="text">
+    <string>Annual</string>
+   </property>
+  </action>
+  <action name="actionCash_Flow_Overall">
+   <property name="text">
+    <string>Overall</string>
+   </property>
+  </action>
+  <action name="actionAccounts_Report">
+   <property name="text">
+    <string>Accounts</string>
+   </property>
+  </action>
+  <action name="actionAsset_Type_Report">
+   <property name="text">
+    <string>Asset Type</string>
+   </property>
+  </action>
+  <action name="actionCategory_Report_Total">
+   <property name="text">
+    <string>Total</string>
+   </property>
+  </action>
+  <action name="actionCategory_Report_Average_Per_Month">
+   <property name="text">
+    <string>Average per month</string>
+   </property>
+  </action>
+  <action name="actionNet_Worth_Report_Time">
+   <property name="text">
+    <string>Time</string>
+   </property>
+  </action>
+  <action name="actionTag_Report_Total">
+   <property name="text">
+    <string>Total</string>
+   </property>
+  </action>
+  <action name="actionTag_Report_Average_Per_Month">
+   <property name="text">
+    <string>Average per month</string>
+   </property>
+  </action>
+  <action name="actionPayee_Report_Total">
+   <property name="text">
+    <string>Total</string>
+   </property>
+  </action>
+  <action name="actionPayee_Report_Average_Per_Month">
+   <property name="text">
+    <string>Average per month</string>
    </property>
   </action>
  </widget>

@@ -5,13 +5,20 @@ from typing import Self
 from uuid import UUID
 
 from PyQt6.QtCore import QAbstractItemModel, QModelIndex, QSortFilterProxyModel, Qt
+from PyQt6.QtGui import QBrush
 from PyQt6.QtWidgets import QTreeView
 from src.models.model_objects.attributes import Category
 from src.models.model_objects.currency_objects import CashAmount
 from src.models.utilities.calculation import CategoryStats
+from src.views import colors
 from src.views.constants import CategoryTreeColumn
 
 ALIGNMENT_RIGHT = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+COLUMN_HEADERS = {
+    CategoryTreeColumn.NAME: "Name",
+    CategoryTreeColumn.TRANSACTIONS: "Transactions",
+    CategoryTreeColumn.BALANCE: "Balance",
+}
 
 
 @dataclass
@@ -79,12 +86,6 @@ def get_node(
 
 
 class CategoryTreeModel(QAbstractItemModel):
-    COLUMN_HEADERS = {
-        CategoryTreeColumn.NAME: "Name",
-        CategoryTreeColumn.TRANSACTIONS: "Transactions",
-        CategoryTreeColumn.BALANCE: "Balance",
-    }
-
     def __init__(
         self,
         tree_view: QTreeView,
@@ -154,11 +155,11 @@ class CategoryTreeModel(QAbstractItemModel):
             return Qt.AlignmentFlag.AlignCenter
         if role == Qt.ItemDataRole.DisplayRole:
             if orientation == Qt.Orientation.Horizontal:
-                return self.COLUMN_HEADERS[section]
+                return COLUMN_HEADERS[section]
             return str(section)
         return None
 
-    def data(  # noqa: PLR0911
+    def data(
         self, index: QModelIndex, role: Qt.ItemDataRole = ...
     ) -> str | Qt.AlignmentFlag | None:
         if not index.isValid():
@@ -168,12 +169,7 @@ class CategoryTreeModel(QAbstractItemModel):
         if role == Qt.ItemDataRole.DisplayRole:
             return self._get_display_role_data(column, node)
         if role == Qt.ItemDataRole.UserRole:
-            if column == CategoryTreeColumn.NAME:
-                return unicodedata.normalize("NFD", node.name)
-            if column == CategoryTreeColumn.TRANSACTIONS:
-                return node.transactions_total
-            if column == CategoryTreeColumn.BALANCE:
-                return float(node.balance.value_normalized)
+            self._get_user_role_data(column, node)
         if role == Qt.ItemDataRole.UserRole + 1 and column == CategoryTreeColumn.NAME:
             return node.path
         if role == Qt.ItemDataRole.TextAlignmentRole and (
@@ -191,6 +187,8 @@ class CategoryTreeModel(QAbstractItemModel):
                 "Number in parentheses is the number of Transactions containing\n"
                 "the Category directly, not counting its children."
             )
+        if role == Qt.ItemDataRole.ForegroundRole:
+            self._get_foreground_role_data(column, node)
         return None
 
     def _get_display_role_data(
@@ -205,6 +203,28 @@ class CategoryTreeModel(QAbstractItemModel):
         if column == CategoryTreeColumn.BALANCE:
             return node.balance.to_str_rounded()
         return None
+
+    def _get_user_role_data(
+        self, column: int, node: CategoryTreeNode
+    ) -> str | int | float | None:
+        if column == CategoryTreeColumn.NAME:
+            return unicodedata.normalize("NFD", node.name)
+        if column == CategoryTreeColumn.TRANSACTIONS:
+            return node.transactions_total
+        if column == CategoryTreeColumn.BALANCE:
+            return float(node.balance.value_normalized)
+        return None
+
+    def _get_foreground_role_data(
+        self, column: int, node: CategoryTreeNode
+    ) -> QBrush | None:
+        if column != CategoryTreeColumn.BALANCE:
+            return None
+        if node.balance.is_positive():
+            return colors.get_green_brush()
+        if node.balance.is_negative():
+            return colors.get_red_brush()
+        return colors.get_gray_brush()
 
     def pre_add(self, parent: Category | None, index: int) -> None:
         parent_index = self.get_index_from_item(parent)

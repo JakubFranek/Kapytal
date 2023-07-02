@@ -6,15 +6,14 @@ from src.models.model_objects.currency_objects import ExchangeRate
 from src.views.constants import ExchangeRateTableColumn, monospace_font
 
 ALIGNMENT_RIGHT = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+COLUMN_HEADERS = {
+    ExchangeRateTableColumn.CODE: "Code",
+    ExchangeRateTableColumn.RATE: "Latest rate",
+    ExchangeRateTableColumn.LAST_DATE: "Latest date",
+}
 
 
 class ExchangeRateTableModel(QAbstractTableModel):
-    COLUMN_HEADERS = {
-        ExchangeRateTableColumn.CODE: "Code",
-        ExchangeRateTableColumn.RATE: "Latest rate",
-        ExchangeRateTableColumn.LAST_DATE: "Latest date",
-    }
-
     def __init__(
         self,
         view: QTableView,
@@ -39,7 +38,7 @@ class ExchangeRateTableModel(QAbstractTableModel):
 
     def columnCount(self, index: QModelIndex = ...) -> int:  # noqa: N802, ARG002
         if not hasattr(self, "_column_count"):
-            self._column_count = len(self.COLUMN_HEADERS)
+            self._column_count = len(COLUMN_HEADERS)
         return self._column_count
 
     def headerData(  # noqa: N802
@@ -47,7 +46,7 @@ class ExchangeRateTableModel(QAbstractTableModel):
     ) -> str | int | None:
         if role == Qt.ItemDataRole.DisplayRole:
             if orientation == Qt.Orientation.Horizontal:
-                return self.COLUMN_HEADERS[section]
+                return COLUMN_HEADERS[section]
             return str(section)
         return None
 

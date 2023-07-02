@@ -66,5 +66,6 @@ class Account(
 
     @abstractmethod
     def get_balance(self, currency: Currency, date_: date | None = None) -> CashAmount:
+        """Returns latest balance, or the latest balance for the specified date."""
         # TODO: None date should be initialized to today, which is not necessarily the latest!
         raise NotImplementedError
