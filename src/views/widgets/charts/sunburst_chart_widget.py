@@ -81,7 +81,7 @@ def create_sunburst_chart(
             _, value, subnodes = tup_
 
             try:
-                child_color = colors[index % len(color)]
+                child_color = colors[index % len(nodes)]
                 if len(child_color) != 4:  # noqa: PLR2004
                     child_color = color
             except TypeError:
