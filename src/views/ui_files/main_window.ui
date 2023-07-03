@@ -84,9 +84,9 @@
      <property name="title">
       <string>Net Worth</string>
      </property>
-     <addaction name="actionAccounts_Report"/>
-     <addaction name="actionAsset_Type_Report"/>
-     <addaction name="actionNet_Worth_Report_Time"/>
+     <addaction name="actionNet_Worth_Accounts_Report"/>
+     <addaction name="actionNet_Worth_Asset_Type_Report"/>
+     <addaction name="actionNet_Worth_Time_Report"/>
     </widget>
     <widget class="QMenu" name="menuCategories">
      <property name="title">
@@ -250,12 +250,12 @@
     <string>Total</string>
    </property>
   </action>
-  <action name="actionAccounts_Report">
+  <action name="actionNet_Worth_Accounts_Report">
    <property name="text">
     <string>Accounts</string>
    </property>
   </action>
-  <action name="actionAsset_Type_Report">
+  <action name="actionNet_Worth_Asset_Type_Report">
    <property name="text">
     <string>Asset Type</string>
    </property>
@@ -270,7 +270,7 @@
     <string>Average per month</string>
    </property>
   </action>
-  <action name="actionNet_Worth_Report_Time">
+  <action name="actionNet_Worth_Time_Report">
    <property name="text">
     <string>Time</string>
    </property>

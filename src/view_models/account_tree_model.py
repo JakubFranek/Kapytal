@@ -224,6 +224,16 @@ class AccountTreeModel(QAbstractItemModel):
         items = [self._item_dict[uuid] for uuid in uuids]
         return frozenset(item for item in items if isinstance(item, Account))
 
+    def get_checked_account_items(self) -> frozenset[Account | AccountGroup]:
+        uuids = {
+            node.uuid
+            for node in self._node_dict.values()
+            if node.check_state == Qt.CheckState.Checked
+            or node.check_state == Qt.CheckState.PartiallyChecked
+        }
+        items = [self._item_dict[uuid] for uuid in uuids]
+        return frozenset(items)
+
     def rowCount(self, index: QModelIndex = ...) -> int:  # noqa: N802
         if index.isValid():
             if index.column() != 0:

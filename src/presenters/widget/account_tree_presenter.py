@@ -57,8 +57,12 @@ class AccountTreePresenter:
         self.event_check_state_changed()
 
     @property
-    def valid_accounts(self) -> frozenset[Account]:
+    def checked_accounts(self) -> frozenset[Account]:
         return self._model.get_checked_accounts()
+
+    @property
+    def checked_account_items(self) -> frozenset[Account | AccountGroup]:
+        return self._model.get_checked_account_items()
 
     def set_widget_visibility(self, *, visible: bool) -> None:
         if visible and self._view.isHidden():

@@ -7,6 +7,7 @@ from PyQt6.QtWidgets import QApplication
 from src.models.base_classes.account import Account
 from src.models.base_classes.transaction import Transaction
 from src.models.custom_exceptions import InvalidOperationError
+from src.models.model_objects.account_group import AccountGroup
 from src.models.model_objects.cash_objects import (
     CashAccount,
     CashTransaction,
@@ -77,11 +78,20 @@ class TransactionsPresenter:
     def transaction_filter_form_presenter(self) -> TransactionFilterFormPresenter:
         return self._transaction_filter_form_presenter
 
-    def load_account_tree_checked_accounts(self, accounts: Collection[Account]) -> None:
-        self._account_tree_shown_accounts = frozenset(accounts)
+    @property
+    def checked_account_items(self) -> frozenset[Account | AccountGroup]:
+        return self._transaction_filter_form_presenter.checked_account_items
+
+    def load_account_tree_checked_items(
+        self, account_items: Collection[Account | AccountGroup]
+    ) -> None:
+        accounts = frozenset(
+            account for account in account_items if isinstance(account, Account)
+        )
+        self._account_tree_shown_accounts = accounts
         self._model.valid_accounts = accounts
-        self._transaction_filter_form_presenter.update_account_tree_shown_accounts(
-            accounts
+        self._transaction_filter_form_presenter.update_account_tree_checked_items(
+            account_items
         )
 
     def get_visible_transactions(self) -> tuple[Transaction, ...]:

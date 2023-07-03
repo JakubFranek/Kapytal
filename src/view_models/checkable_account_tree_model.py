@@ -140,6 +140,14 @@ class CheckableAccountTreeModel(QAbstractItemModel):
             and isinstance(node.item, Account)
         )
 
+    @property
+    def checked_account_items(self) -> tuple[Account | AccountGroup, ...]:
+        return tuple(
+            node.item
+            for node in self._flat_nodes
+            if node.check_state == Qt.CheckState.Checked
+        )
+
     def load_flat_items(
         self,
         flat_account_items: Sequence[Account | AccountGroup],
