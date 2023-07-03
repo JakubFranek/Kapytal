@@ -57,13 +57,16 @@ class AttributeReport(CustomWidget, Ui_AttributeReport):
             stats for stats in filtered_stats if stats.balance.is_negative()
         ]
 
-        income_sizes = [stats.balance.value_rounded for stats in income_stats]
-        income_labels = [stats.attribute.name for stats in income_stats]
-        expense_sizes = [-stats.balance.value_rounded for stats in expense_stats]
-        expense_labels = [stats.attribute.name for stats in expense_stats]
-
-        self.income_chart_widget.load_data(income_sizes, income_labels)
-        self.expense_chart_widget.load_data(expense_sizes, expense_labels)
+        income_data = [
+            (stats.balance.value_rounded, stats.attribute.name)
+            for stats in income_stats
+        ]
+        expense_data = [
+            (-stats.balance.value_rounded, stats.attribute.name)
+            for stats in expense_stats
+        ]
+        self.income_chart_widget.load_data(income_data)
+        self.expense_chart_widget.load_data(expense_data)
 
     def finalize_setup(self) -> None:
         self.tableView.horizontalHeader().setSectionResizeMode(
