@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>CashFlowOverallReport</class>
- <widget class="QWidget" name="CashFlowOverallReport">
+ <class>CashFlowTotalReport</class>
+ <widget class="QWidget" name="CashFlowTotalReport">
   <property name="windowModality">
    <enum>Qt::WindowModal</enum>
   </property>

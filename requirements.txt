@@ -11,7 +11,7 @@ gprof2dot==2022.7.29
 hypothesis==6.80.0
 iniconfig==2.0.0
 kiwisolver==1.4.4
-matplotlib==3.7.1
+matplotlib==3.7.0
 mplcursors==0.5.2
 mypy==1.4.1
 mypy-extensions==1.0.0
@@ -41,6 +41,6 @@ six==1.16.0
 snakeviz==2.2.0
 sortedcontainers==2.4.0
 tornado==6.3.2
-typing_extensions==4.6.3
+typing_extensions==4.7.0
 tzdata==2023.3
 tzlocal==5.0.1

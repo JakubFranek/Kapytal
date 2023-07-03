@@ -1,6 +1,6 @@
 from PyQt6.QtCore import QSortFilterProxyModel, Qt
 from PyQt6.QtWidgets import QWidget
-from src.models.utilities.cashflow_report import CashFlowStats
+from src.models.statistics.cashflow_stats import CashFlowStats
 from src.view_models.cash_flow_table_model import CashFlowTableModel
 from src.views import icons
 from src.views.base_classes.custom_widget import CustomWidget
@@ -23,6 +23,13 @@ class CashFlowPeriodicReport(CustomWidget, Ui_CashFlowPeriodicReport):
     ) -> None:
         super().__init__(parent=parent)
         self.setupUi(self)
+
+        font = self.font()
+        font_size = font.pointSize()
+        table_font = self.tableView.font()
+        table_font.setPointSize(font_size)
+        self.tableView.setFont(table_font)
+
         self.setWindowFlag(Qt.WindowType.Window)
         self.setWindowTitle(f"Cash Flow Report - {period}")
         self.setWindowIcon(icons.bar_chart)

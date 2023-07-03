@@ -5,7 +5,7 @@ from PyQt6.QtWidgets import QApplication
 from src.models.custom_exceptions import NotFoundError
 from src.models.model_objects.attributes import Category, CategoryType
 from src.models.record_keeper import RecordKeeper
-from src.models.utilities.calculation import (
+from src.models.statistics.category_stats import (
     calculate_category_stats,
 )
 from src.presenters.utilities.event import Event

@@ -81,13 +81,17 @@ class SaveFileWorker(QObject):
 class FilePresenter:
     event_load_record_keeper = Event()
 
-    def __init__(self, view: MainView) -> None:
+    def __init__(self, view: MainView, record_keeper: RecordKeeper) -> None:
         self._view = view
         self._initialize_recent_paths()
+        self.load_record_keeper(record_keeper)
 
         # File path initialization
         self._current_file_path: Path | None = None
         self.update_unsaved_changes(unsaved_changes=False)
+
+    def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
+        self._record_keeper = record_keeper
 
     def save_to_file(self, record_keeper: RecordKeeper, *, save_as: bool) -> None:
         logging.debug("Save to file initiated")
@@ -145,7 +149,9 @@ class FilePresenter:
         )
         reply = self._view.ask_save_before_close()
         if reply is True:
-            self.save_to_file(save_as=False)
+            self.save_to_file(self._record_keeper, save_as=False)
+            # FIXME: due to multithreaded saving, the next line is always False and the program does not Quit
+            # solution: pass operation function as argument and perform it once thread is done
             if not self._unsaved_changes:
                 logging.info(f"Saved, proceeding with '{operation}'")
                 return True

@@ -326,7 +326,7 @@ def test_truediv_rtruediv_different_currencies(
         cash_amount_1.__rtruediv__(cash_amount_2)
 
 
-@given(amount_1=cash_amounts(), amount_2=everything_except(CashAmount))
+@given(amount_1=cash_amounts(), amount_2=everything_except((int, Decimal, CashAmount)))
 def test_truediv_rtruediv_invalid_type(amount_1: CashAmount, amount_2: Any) -> None:
     result = amount_1.__truediv__(amount_2)
     assert result == NotImplemented

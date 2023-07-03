@@ -4,7 +4,7 @@ from PyQt6.QtCore import QAbstractTableModel, QModelIndex, QSortFilterProxyModel
 from PyQt6.QtGui import QBrush, QFont
 from PyQt6.QtWidgets import QTableView
 from src.models.model_objects.currency_objects import CashAmount
-from src.models.utilities.cashflow_report import CashFlowStats
+from src.models.statistics.cashflow_stats import CashFlowStats
 from src.views import colors
 from src.views.constants import CashFlowTableColumn
 

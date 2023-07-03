@@ -9,7 +9,7 @@ from PyQt6.QtGui import QBrush
 from PyQt6.QtWidgets import QTreeView
 from src.models.model_objects.attributes import Category
 from src.models.model_objects.currency_objects import CashAmount
-from src.models.utilities.calculation import CategoryStats
+from src.models.statistics.category_stats import CategoryStats
 from src.views import colors
 from src.views.constants import CategoryTreeColumn
 
@@ -169,7 +169,7 @@ class CategoryTreeModel(QAbstractItemModel):
         if role == Qt.ItemDataRole.DisplayRole:
             return self._get_display_role_data(column, node)
         if role == Qt.ItemDataRole.UserRole:
-            self._get_user_role_data(column, node)
+            return self._get_user_role_data(column, node)
         if role == Qt.ItemDataRole.UserRole + 1 and column == CategoryTreeColumn.NAME:
             return node.path
         if role == Qt.ItemDataRole.TextAlignmentRole and (
@@ -188,7 +188,7 @@ class CategoryTreeModel(QAbstractItemModel):
                 "the Category directly, not counting its children."
             )
         if role == Qt.ItemDataRole.ForegroundRole:
-            self._get_foreground_role_data(column, node)
+            return self._get_foreground_role_data(column, node)
         return None
 
     def _get_display_role_data(

@@ -2,13 +2,13 @@ import math
 
 from matplotlib.ticker import StrMethodFormatter
 from PyQt6.QtWidgets import QWidget
-from src.models.utilities.cashflow_report import CashFlowStats
+from src.models.statistics.cashflow_stats import CashFlowStats
 from src.views.widgets.charts.chart_widget import ChartWidget
 
 x_labels = ["Inflows", "Outflows", "Cash Flow", "Gain / Loss"]
 
 
-class CashFlowOverallChartWidget(ChartWidget):
+class CashFlowTotalChartWidget(ChartWidget):
     def __init__(self, parent: QWidget | None) -> None:
         super().__init__(parent)
         self.chart.axes.figure.set_layout_engine("tight")

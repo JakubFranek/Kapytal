@@ -1,25 +1,23 @@
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QWidget
-from src.models.utilities.cashflow_report import CashFlowStats
+from src.models.statistics.cashflow_stats import CashFlowStats
 from src.views import colors, icons
 from src.views.base_classes.custom_widget import CustomWidget
-from src.views.ui_files.reports.Ui_cash_flow_overall_report import (
-    Ui_CashFlowOverallReport,
-)
-from src.views.widgets.charts.cash_flow_overall_chart_widget import (
-    CashFlowOverallChartWidget,
+from src.views.ui_files.reports.Ui_cash_flow_total_report import Ui_CashFlowTotalReport
+from src.views.widgets.charts.cash_flow_total_chart_widget import (
+    CashFlowTotalChartWidget,
 )
 
 
-class CashFlowOverallReport(CustomWidget, Ui_CashFlowOverallReport):
+class CashFlowTotalReport(CustomWidget, Ui_CashFlowTotalReport):
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent=parent)
         self.setupUi(self)
         self.setWindowFlag(Qt.WindowType.Window)
-        self.setWindowTitle("Cash Flow Report - Overall")
+        self.setWindowTitle("Cash Flow Report - Total")
         self.setWindowIcon(icons.bar_chart)
 
-        self.chart_widget = CashFlowOverallChartWidget(self)
+        self.chart_widget = CashFlowTotalChartWidget(self)
         self.horizontalLayout.addWidget(self.chart_widget)
 
     def load_stats(self, stats: CashFlowStats) -> None:
