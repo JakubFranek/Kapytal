@@ -1,5 +1,4 @@
 from collections.abc import Collection
-from typing import Literal
 
 from PyQt6.QtCore import QSortFilterProxyModel, Qt
 from PyQt6.QtWidgets import QHeaderView, QWidget
@@ -15,13 +14,20 @@ from src.views.widgets.charts.pie_chart_widget import PieChartWidget
 class AttributeReport(CustomWidget, Ui_AttributeReport):
     def __init__(
         self,
-        type_: Literal["Total", "Average Per Month"],
+        title: str,
         parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent=parent)
         self.setupUi(self)
+
+        font = self.font()
+        font_size = font.pointSize()
+        table_font = self.tableView.font()
+        table_font.setPointSize(font_size)
+        self.tableView.setFont(table_font)
+
         self.setWindowFlag(Qt.WindowType.Window)
-        self.setWindowTitle(f"Tag Report - {type_}")
+        self.setWindowTitle(title)
         self.setWindowIcon(icons.bar_chart)
 
         self.income_chart_widget = PieChartWidget(self)
@@ -37,14 +43,19 @@ class AttributeReport(CustomWidget, Ui_AttributeReport):
         self.tableView.setModel(self._proxy_model)
 
     def load_stats(self, stats: Collection[AttributeStats]) -> None:
+        filtered_stats = [item for item in stats if item.no_of_transactions != 0]
         self._table_model.pre_reset_model()
-        self._table_model.load_attribute_stats(stats)
+        self._table_model.load_attribute_stats(filtered_stats)
         self._table_model.post_reset_model()
         self.tableView.resizeColumnsToContents()
         self.tableView.sortByColumn(0, Qt.SortOrder.AscendingOrder)
 
-        income_stats = [stats for stats in stats if stats.balance.is_positive()]
-        expense_stats = [stats for stats in stats if stats.balance.is_negative()]
+        income_stats = [
+            stats for stats in filtered_stats if stats.balance.is_positive()
+        ]
+        expense_stats = [
+            stats for stats in filtered_stats if stats.balance.is_negative()
+        ]
 
         income_sizes = [stats.balance.value_rounded for stats in income_stats]
         income_labels = [stats.attribute.name for stats in income_stats]

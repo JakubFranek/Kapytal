@@ -8,7 +8,7 @@ from src.views.widgets.charts.chart_widget import ChartWidget
 x_labels = ["Inflows", "Outflows", "Cash Flow", "Gain / Loss"]
 
 
-class CashFlowOverallChartWidget(ChartWidget):
+class CashFlowTotalChartWidget(ChartWidget):
     def __init__(self, parent: QWidget | None) -> None:
         super().__init__(parent)
         self.chart.axes.figure.set_layout_engine("tight")

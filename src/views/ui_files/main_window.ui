@@ -78,7 +78,7 @@
      </property>
      <addaction name="actionCash_Flow_Monthly"/>
      <addaction name="actionCash_Flow_Annual"/>
-     <addaction name="actionCash_Flow_Overall"/>
+     <addaction name="actionCash_Flow_Total"/>
     </widget>
     <widget class="QMenu" name="menuOverview">
      <property name="title">
@@ -245,9 +245,9 @@
     <string>Annual</string>
    </property>
   </action>
-  <action name="actionCash_Flow_Overall">
+  <action name="actionCash_Flow_Total">
    <property name="text">
-    <string>Overall</string>
+    <string>Total</string>
    </property>
   </action>
   <action name="actionAccounts_Report">

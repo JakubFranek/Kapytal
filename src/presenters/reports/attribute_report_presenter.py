@@ -51,8 +51,13 @@ class AttributeReportPresenter:
             if attribute_type == AttributeType.TAG
             else self._record_keeper.payees
         )
+        title = (
+            "Tag Report - Total"
+            if attribute_type == AttributeType.TAG
+            else "Payee Report - Total"
+        )
         stats = calculate_attribute_stats(transactions, base_currency, attributes)
-        self.report = AttributeReport("Total", self._main_view)
+        self.report = AttributeReport(title, self._main_view)
         self.report.finalize_setup()
         self.report.load_stats(stats.values())
         self.report.show_form()
@@ -66,10 +71,15 @@ class AttributeReportPresenter:
             if attribute_type == AttributeType.TAG
             else self._record_keeper.payees
         )
+        title = (
+            "Tag Report - Average Per Month"
+            if attribute_type == AttributeType.TAG
+            else "Payee Report - Average Per Month"
+        )
         stats = calculate_average_per_month_attribute_stats(
             transactions, base_currency, attributes
         )
-        self.report = AttributeReport("Average Per Month", self._main_view)
+        self.report = AttributeReport(title, self._main_view)
         self.report.finalize_setup()
         self.report.load_stats(stats)
         self.report.show_form()
