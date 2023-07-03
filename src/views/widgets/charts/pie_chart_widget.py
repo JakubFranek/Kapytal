@@ -1,5 +1,6 @@
 from collections.abc import Sequence
 
+import matplotlib
 from PyQt6.QtWidgets import QWidget
 from src.views.widgets.charts.chart_widget import ChartWidget
 
@@ -12,7 +13,11 @@ class PieChartWidget(ChartWidget):
         self.lines = None
 
     def load_data(self, sizes: Sequence, labels: Sequence[str]) -> None:
-        self.chart.axes.pie(sizes, labels=labels)
+        self.chart.axes.pie(
+            sizes,
+            labels=labels,
+            colors=matplotlib.colormaps["Set2"](range(len(sizes))),
+        )
         self.chart.axes.relim()
         self.chart.axes.autoscale()
         self.chart.draw()

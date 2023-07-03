@@ -1,4 +1,3 @@
-from collections.abc import Collection
 from typing import Literal
 
 from PyQt6.QtCore import QSortFilterProxyModel, Qt
@@ -10,7 +9,7 @@ from src.views import icons
 from src.views.base_classes.custom_widget import CustomWidget
 from src.views.constants import CategoryTreeColumn
 from src.views.ui_files.reports.Ui_category_report import Ui_CategoryReport
-from src.views.widgets.charts.pie_chart_widget import PieChartWidget
+from src.views.widgets.charts.sunburst_chart_widget import SunburstChartWidget
 
 
 class CategoryReport(CustomWidget, Ui_CategoryReport):
@@ -34,8 +33,8 @@ class CategoryReport(CustomWidget, Ui_CategoryReport):
         self.setWindowTitle(f"Category Report - {type_}")
         self.setWindowIcon(icons.bar_chart)
 
-        self.income_chart_widget = PieChartWidget(self)
-        self.expense_chart_widget = PieChartWidget(self)
+        self.income_chart_widget = SunburstChartWidget(self)
+        self.expense_chart_widget = SunburstChartWidget(self)
         self.incomeTabHorizontalLayout.addWidget(self.income_chart_widget)
         self.expenseTabHorizontalLayout.addWidget(self.expense_chart_widget)
         self.incomeTabHorizontalLayout.setStretch(0, 0)
@@ -60,6 +59,29 @@ class CategoryReport(CustomWidget, Ui_CategoryReport):
         self._expense_proxy.setSourceModel(self._expense_model)
         self.expenseTreeView.setModel(self._expense_proxy)
         self.expenseTreeView.header().setSortIndicatorClearable(True)
+
+        self.actionExpand_All_Income.setIcon(icons.expand)
+        self.actionExpand_All_Expense.setIcon(icons.expand)
+        self.actionCollapse_All_Income.setIcon(icons.collapse)
+        self.actionCollapse_All_Expense.setIcon(icons.collapse)
+
+        self.actionExpand_All_Income.triggered.connect(self.incomeTreeView.expandAll)
+        self.actionExpand_All_Expense.triggered.connect(self.expenseTreeView.expandAll)
+        self.actionCollapse_All_Income.triggered.connect(
+            self.incomeTreeView.collapseAll
+        )
+        self.actionCollapse_All_Expense.triggered.connect(
+            self.expenseTreeView.collapseAll
+        )
+
+        self.incomeExpandAllToolButton.setDefaultAction(self.actionExpand_All_Income)
+        self.expenseExpandAllToolButton.setDefaultAction(self.actionExpand_All_Expense)
+        self.incomeCollapseAllToolButton.setDefaultAction(
+            self.actionCollapse_All_Income
+        )
+        self.expenseCollapseAllToolButton.setDefaultAction(
+            self.actionCollapse_All_Expense
+        )
 
     def load_stats(
         self,
@@ -87,6 +109,14 @@ class CategoryReport(CustomWidget, Ui_CategoryReport):
         self.incomeTreeView.sortByColumn(-1, Qt.SortOrder.AscendingOrder)
         self.expenseTreeView.sortByColumn(-1, Qt.SortOrder.AscendingOrder)
 
+        sunburst_income_data = convert_category_stats_to_sunburst_data(income_stats)
+        sunburst_expense_data = convert_category_stats_to_sunburst_data(expense_stats)
+        self.income_chart_widget.load_data(sunburst_income_data)
+        self.expense_chart_widget.load_data(sunburst_expense_data)
+
+        self.incomeTreeView.sortByColumn(2, Qt.SortOrder.DescendingOrder)
+        self.expenseTreeView.sortByColumn(2, Qt.SortOrder.AscendingOrder)
+
     def finalize_setup(self) -> None:
         self.incomeTreeView.header().setSectionResizeMode(
             CategoryTreeColumn.NAME,
@@ -113,3 +143,35 @@ class CategoryReport(CustomWidget, Ui_CategoryReport):
             CategoryTreeColumn.BALANCE,
             QHeaderView.ResizeMode.ResizeToContents,
         )
+
+
+def convert_category_stats_to_sunburst_data(
+    stats: dict[Category, CategoryStats]
+) -> tuple:
+    balance = 0.0
+    tuples = []
+    for category, _stats in stats.items():
+        if category.parent is not None:
+            continue
+        stats_tuple = create_stats_tuple(category, stats)
+        balance += stats_tuple[1]
+        tuples.append(stats_tuple)
+    tuples.sort(key=lambda x: abs(x[1]), reverse=True)
+    return [("", balance, tuples)]
+
+
+def create_stats_tuple(
+    category: Category, stats: dict[Category, CategoryStats]
+) -> tuple[str, float, list]:
+    children_tuples = []
+    tuple_ = (
+        category.name,
+        float(stats[category].balance.value_rounded),
+        children_tuples,
+    )
+
+    for _category, _stats in stats.items():
+        if _category in category.children:
+            children_tuples.append(create_stats_tuple(_category, stats))
+    children_tuples.sort(key=lambda x: abs(x[1]), reverse=True)
+    return tuple_

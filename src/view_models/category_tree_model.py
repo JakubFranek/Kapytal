@@ -169,7 +169,7 @@ class CategoryTreeModel(QAbstractItemModel):
         if role == Qt.ItemDataRole.DisplayRole:
             return self._get_display_role_data(column, node)
         if role == Qt.ItemDataRole.UserRole:
-            self._get_user_role_data(column, node)
+            return self._get_user_role_data(column, node)
         if role == Qt.ItemDataRole.UserRole + 1 and column == CategoryTreeColumn.NAME:
             return node.path
         if role == Qt.ItemDataRole.TextAlignmentRole and (

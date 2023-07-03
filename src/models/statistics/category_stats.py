@@ -13,8 +13,8 @@ from src.models.model_objects.currency_objects import CashAmount, Currency
 @dataclass
 class CategoryStats:
     category: Category
-    transactions_self: int
-    transactions_total: int
+    transactions_self: int | float
+    transactions_total: int | float
     balance: CashAmount
 
 
@@ -67,8 +67,8 @@ def calculate_average_per_month_attribute_stats(
 
     for stats in average_stats.values():
         stats.balance = stats.balance / periods
-        stats.transactions_self = stats.transactions_self / periods
-        stats.transactions_total = stats.transactions_total / periods
+        stats.transactions_self = round(stats.transactions_self / periods, 2)
+        stats.transactions_total = round(stats.transactions_total / periods, 2)
 
     return average_stats
 
@@ -84,6 +84,7 @@ def calculate_category_stats(
         stats_dict[category] = stats
 
     for transaction in transactions:
+        already_counted_ancestors = set()
         for category in transaction.categories:
             stats = stats_dict[category]
 
@@ -96,11 +97,15 @@ def calculate_category_stats(
             ancestors = category.ancestors
             for ancestor in ancestors:
                 ancestor_stats = stats_dict[ancestor]
-                if ancestor not in transaction.categories:
+                if (
+                    ancestor not in transaction.categories
+                    and ancestor not in already_counted_ancestors
+                ):
                     ancestor_stats.transactions_total += 1
                     ancestor_stats.balance += transaction.get_amount_for_category(
                         ancestor, total=True
                     ).convert(base_currency)
+                    already_counted_ancestors.add(ancestor)
                 else:  # prevent double counting if both parent and child are present
                     ancestor_stats.balance += transaction.get_amount_for_category(
                         ancestor, total=False

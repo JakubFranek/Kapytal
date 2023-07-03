@@ -13,12 +13,12 @@ from src.views.widgets.charts.canvas import Canvas
 
 
 class ChartWidget(QWidget):
-    def __init__(self, parent: QWidget | None) -> None:
+    def __init__(self, parent: QWidget | None, *, polar: bool = False) -> None:
         super().__init__(parent)
 
         self.horizontal_layout = QHBoxLayout()
 
-        self.chart = Canvas()
+        self.chart = Canvas(polar=polar)
         self.chart_toolbar = NavigationToolbar2QT(self.chart, None)
         self.vertical_layout = QVBoxLayout(self)
         self.vertical_layout.addLayout(self.horizontal_layout)
