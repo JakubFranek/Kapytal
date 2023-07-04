@@ -1,4 +1,5 @@
 from collections.abc import Collection
+from datetime import datetime
 
 from PyQt6.QtCore import QSortFilterProxyModel, Qt
 from src.models.base_classes.account import Account
@@ -11,6 +12,7 @@ from src.models.statistics.net_worth_stats import (
     calculate_net_worth_over_time,
 )
 from src.models.transaction_filters.base_transaction_filter import FilterMode
+from src.models.user_settings import user_settings
 from src.presenters.widget.transactions_presenter import TransactionsPresenter
 from src.view_models.account_tree_model import AccountTreeModel
 from src.view_models.asset_type_tree_model import AssetTypeTreeModel
@@ -113,12 +115,14 @@ class NetWorthReportPresenter:
                 transactions, key=lambda transaction: transaction.timestamp
             )
             start = transactions[0].datetime_.date()
-            end = transactions[-1].datetime_.date()
+            end = datetime.now(tz=user_settings.settings.time_zone).date()
         base_currency = self._record_keeper.base_currency
         if base_currency is None:
             raise ValueError("Variable 'base_currency' is None.")
+
         data = calculate_net_worth_over_time(accounts, base_currency, start, end)
         data = [(date, net_worth.value_rounded) for date, net_worth in data]
+
         self.report = TableAndLineChartReport(
             "Net Worth Report - Asset Types", "", self._main_view
         )

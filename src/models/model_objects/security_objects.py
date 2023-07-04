@@ -1,6 +1,8 @@
 import copy
+import logging
 import string
 from abc import ABC, abstractmethod
+from bisect import bisect_right
 from collections import defaultdict
 from collections.abc import Collection
 from datetime import date, datetime
@@ -45,11 +47,13 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
         "_currency",
         "_shares_unit",
         "_price_history",
+        "_price_history_pairs",
         "_latest_date",
         "_latest_price",
         "_allow_slash",
         "_allow_colon",
         "event_price_updated",
+        "_recalculate_price_history_pairs",
     )
 
     NAME_MIN_LENGTH = 1
@@ -89,6 +93,8 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
         self._shares_unit = _shares_unit
 
         self._price_history: dict[date, CashAmount] = {}
+        self._price_history_pairs: tuple[tuple[date, CashAmount], ...] = ()
+        self._recalculate_price_history_pairs = False
         self.event_price_updated = Event()
 
     @property
@@ -144,25 +150,26 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
             return self._latest_date
         return None
 
+    # TODO: review whether the following property is really needed
     @property
     def price_history(self) -> dict[date, CashAmount]:
         return self._price_history
 
     @property
-    def price_history_pairs(self) -> tuple[tuple[date, CashAmount]]:
-        pairs = [(date_, price) for date_, price in self._price_history.items()]
-        pairs.sort()
-        return tuple(pairs)
+    def price_history_pairs(self) -> tuple[tuple[date, CashAmount], ...]:
+        if self._recalculate_price_history_pairs:
+            pairs = [(date_, price) for date_, price in self._price_history.items()]
+            pairs.sort()
+            self._price_history_pairs = tuple(pairs)
+            self._recalculate_price_history_pairs = False
+        return self._price_history_pairs
 
     # TODO: review whether the following property is really needed
     @property
     def decimal_price_history_pairs(self) -> tuple[tuple[date, Decimal]]:
-        pairs = [
-            (date_, price.value_normalized)
-            for date_, price in self._price_history.items()
-        ]
-        pairs.sort()
-        return tuple(pairs)
+        return tuple(
+            (date_, price.value_normalized) for date_, price in self.price_history_pairs
+        )
 
     @property
     def shares_unit(self) -> Decimal:
@@ -173,6 +180,27 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
 
     def __str__(self) -> str:
         return self._name
+
+    def get_price(self, date_: date | None) -> CashAmount:
+        if date_ is None:
+            return self._latest_price
+        try:
+            return self._price_history[date_]
+        except KeyError:
+            i = bisect_right(self.price_history_pairs, date_, key=lambda x: x[0])
+            if i:
+                _date, price = self.price_history_pairs[i - 1]
+                if i == 1:
+                    logging.warning(
+                        f"{self!s}: no price found for {date_.strftime('%Y-%m-%d')}, "
+                        f"using the earliest available price "
+                        f"({_date.strftime('%Y-%m-%d')}: {price.to_str_normalized()})"
+                    )
+                return price
+            logging.warning(
+                f"{self!s}: no earlier price found for {date_}, returning 'NaN'"
+            )
+            return CashAmount(Decimal("NaN"), self._currency)
 
     def set_price(self, date_: date, price: CashAmount) -> None:
         self._validate_date(date_)
@@ -197,7 +225,7 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
         date_price_pairs = [
             (
                 date_.strftime("%Y-%m-%d"),
-                price.to_str_normalized().removesuffix(" " + self._currency.code),
+                str(price.value_normalized),
             )
             for date_, price in self.price_history_pairs
         ]
@@ -241,7 +269,7 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
     def _update_values(self) -> None:
         if len(self._price_history) == 0:
             self._latest_date = None
-            latest_price = Decimal("NaN")
+            latest_price = CashAmount(Decimal("NaN"), self._currency)
         else:
             self._latest_date = max(date_ for date_ in self._price_history)
             latest_price = self._price_history[self._latest_date]
@@ -254,6 +282,8 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
         if previous_latest_price != latest_price:
             self.event_price_updated()
 
+        self._recalculate_price_history_pairs = True
+
     def _validate_date(self, date_: date) -> None:
         if not isinstance(date_, date):
             raise TypeError("Parameter 'date_' must be a date.")
@@ -265,7 +295,6 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
             raise CurrencyError("Security.currency and price.currency must match.")
 
 
-# IDEA: maybe add shares / balance history (calculated)
 class SecurityAccount(Account):
     __slots__ = (
         "_uuid",
@@ -305,13 +334,26 @@ class SecurityAccount(Account):
                 (balance.convert(currency) for balance in self._balances),
                 start=currency.zero_amount,
             )
-        for _datetime, _security_dict in reversed(self._securities_history):
-            if _datetime.date() <= date_:
-                balances = self._calculate_balances(_security_dict)
-                return sum(
-                    (balance.convert(currency) for balance in balances),
-                    start=currency.zero_amount,
+        i = bisect_right(self._securities_history, date_, key=lambda x: x[0].date())
+        if i:
+            _datetime, security_dict = self._securities_history[i - 1]
+            _date = _datetime.date()
+            if i == 1 and date_ != _datetime.date():
+                logging.warning(
+                    f"{self!s}: no Security history found for "
+                    f"{date_.strftime('%Y-%m-%d')}, "
+                    f"using the earliest available Security history for "
+                    f"{_date.strftime('%Y-%m-%d')}"
                 )
+            balances = self._calculate_balances(security_dict, date_)
+            return sum(
+                (balance.convert(currency) for balance in balances),
+                start=currency.zero_amount,
+            )
+        logging.warning(
+            f"{self!s}: no earlier Security history found for {date_}, "
+            f"returning 0 {currency.code}"
+        )
         return CashAmount(0, currency)
 
     def _update_balances(self) -> None:
@@ -323,11 +365,13 @@ class SecurityAccount(Account):
 
     @staticmethod
     def _calculate_balances(
-        security_dict: dict[Security, Decimal]
+        security_dict: dict[Security, Decimal], date_: date | None = None
     ) -> tuple[CashAmount, ...]:
         balances: dict[Currency, CashAmount] = {}
         for security, shares in security_dict.items():
-            security_amount = security.price * shares
+            security_amount = security.get_price(date_) * shares
+            if security_amount.is_nan():
+                continue
             if security_amount.currency in balances:
                 balances[security_amount.currency] += security_amount
             else:

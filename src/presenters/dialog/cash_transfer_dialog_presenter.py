@@ -15,8 +15,7 @@ from src.presenters.utilities.validate_inputs import validate_datetime
 from src.view_models.transaction_table_model import TransactionTableModel
 from src.views.dialogs.cash_transfer_dialog import CashTransferDialog, EditMode
 from src.views.utilities.handle_exception import display_error_message
-
-# TODO: add warning when transfer currency is same but amounts different
+from src.views.utilities.message_box_functions import ask_yes_no_question
 
 
 class CashTransferDialogPresenter:
@@ -163,6 +162,24 @@ class CashTransferDialogPresenter:
             return
         tags = self._dialog.tag_names
 
+        sender = self._record_keeper.get_account(sender_path, CashAccount)
+        recipient = self._record_keeper.get_account(recipient_path, CashAccount)
+        if sender.currency == recipient.currency and amount_sent != amount_received:
+            logging.debug(
+                "Amounts have different values but the same currency, "
+                "asking the user for confirmation"
+            )
+            if not ask_yes_no_question(
+                self._dialog,
+                "The sent and received amounts have different values but the same "
+                " currency. Some monetary value is therefore created or lost. "
+                "This is not the intended use of Cash Transfer transaction type."
+                "Do you want to proceed anyway?",
+                "Are you sure?",
+            ):
+                logging.debug("User cancelled the CashTransfer creation")
+            return
+
         logging.info(
             f"Adding CashTransfer: {datetime_.strftime('%Y-%m-%d')}, "
             f"{description=}, sender={sender_path}, sent={amount_sent}, "
@@ -207,6 +224,24 @@ class CashTransferDialogPresenter:
             tag_names, self._record_keeper.tags, self._dialog, "Tag"
         ):
             logging.info("Dialog aborted")
+            return
+
+        sender = self._record_keeper.get_account(sender_path, CashAccount)
+        recipient = self._record_keeper.get_account(recipient_path, CashAccount)
+        if sender.currency == recipient.currency and amount_sent != amount_received:
+            logging.debug(
+                "Amounts have different values but the same currency, "
+                "asking the user for confirmation"
+            )
+            if not ask_yes_no_question(
+                self._dialog,
+                "The sent and received amounts have different values but the same "
+                "currency. Some monetary value is therefore created or lost. "
+                "This is not the intended use of the Cash Transfer transaction type. "
+                "Do you want to proceed anyway?",
+                "Are you sure?",
+            ):
+                logging.debug("User cancelled the CashTransfer creation")
             return
 
         log = []

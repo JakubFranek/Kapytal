@@ -1,6 +1,6 @@
 import logging
 import operator
-from bisect import bisect
+from bisect import bisect_right
 from collections.abc import Collection
 from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
@@ -275,13 +275,13 @@ class ExchangeRate(CopyableMixin, JSONSerializableMixin):
         try:
             return self._rate_history[date_]
         except KeyError:
-            i = bisect(self.rate_history_pairs, date_, key=lambda x: x[0])
+            i = bisect_right(self.rate_history_pairs, date_, key=lambda x: x[0])
             if i:
                 _date, rate = self._rate_history_pairs[i - 1]
                 if i == 1:
                     logging.warning(
                         f"{self!s}: no rate found for {date_.strftime('%Y-%m-%d')}, "
-                        f"using earliest available rate "
+                        f"using the earliest available rate "
                         f"({_date.strftime('%Y-%m-%d')}: {rate})"
                     )
                 return rate
