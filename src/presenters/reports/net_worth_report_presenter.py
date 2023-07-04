@@ -128,7 +128,7 @@ class NetWorthReportPresenter:
             "Net Worth is calculated based on Account Filter settings."
         )
         self.report = TableAndLineChartReport(
-            "Net Worth Report - Asset Types", label_text, self._main_view
+            "Net Worth Report - Time", label_text, self._main_view
         )
         self._proxy = QSortFilterProxyModel(self.report)
         self._proxy.setSortRole(Qt.ItemDataRole.UserRole)

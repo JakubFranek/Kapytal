@@ -18,17 +18,53 @@ class CategoryStats:
     balance: CashAmount
 
 
+def calculate_monthly_totals_and_averages(
+    monthly_stats: dict[str, tuple[CategoryStats]]
+) -> tuple[
+    dict[str, CashAmount], dict[Category, CashAmount], dict[Category, CashAmount]
+]:
+    """Returns a tuple of (month_totals, category_averages, category_totals)"""
+    category_totals: dict[Category, CashAmount] = {}
+    month_totals: dict[str, CashAmount] = {}
+    category_averages: dict[Category, CashAmount] = {}
+
+    currency = None
+    for month in monthly_stats:
+        if len(monthly_stats[month]) == 0:
+            continue
+        currency = monthly_stats[month][0].balance.currency
+    if currency is None:
+        raise ValueError("No data found within 'monthly_stats'.")
+
+    for month in monthly_stats:
+        month_totals[month] = sum(
+            (stats.balance for stats in monthly_stats[month]),
+            start=currency.zero_amount,
+        )
+        for stats in monthly_stats[month]:
+            category_totals[stats.category] = (
+                category_totals.get(stats.category, currency.zero_amount)
+                + stats.balance
+            )
+    category_averages = {
+        category: category_totals[category] / len(monthly_stats)
+        for category in category_totals
+    }
+    return month_totals, category_averages, category_totals
+
+
 def calculate_monthly_category_stats(
     transactions: Collection[CashTransaction | RefundTransaction],
     base_currency: Currency,
     all_categories: Collection[Category],
+    period_format: str = "%B %Y",
 ) -> dict[str, tuple[CategoryStats]]:
     transactions = sorted(transactions, key=lambda x: x.timestamp)
 
     # separate transactions into bins by month/year
     transactions_by_month: dict[str, list[CashTransaction | RefundTransaction]] = {}
     for transaction in transactions:
-        key = transaction.datetime_.strftime("%B %Y")
+        key = transaction.datetime_.strftime(period_format)
         if key not in transactions_by_month:
             transactions_by_month[key] = []
         transactions_by_month[key].append(transaction)

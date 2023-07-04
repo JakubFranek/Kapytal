@@ -94,6 +94,8 @@
      </property>
      <addaction name="actionCategory_Report_Total"/>
      <addaction name="actionCategory_Report_Average_Per_Month"/>
+     <addaction name="actionCategory_Report_Monthly"/>
+     <addaction name="actionCategory_Report_Annual"/>
     </widget>
     <widget class="QMenu" name="menuTags">
      <property name="title">
@@ -293,6 +295,16 @@
   <action name="actionPayee_Report_Average_Per_Month">
    <property name="text">
     <string>Average per month</string>
+   </property>
+  </action>
+  <action name="actionCategory_Report_Monthly">
+   <property name="text">
+    <string>Monthly</string>
+   </property>
+  </action>
+  <action name="actionCategory_Report_Annual">
+   <property name="text">
+    <string>Annual</string>
    </property>
   </action>
  </widget>

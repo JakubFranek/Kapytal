@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>CategoryPeriodicReport</class>
+ <widget class="QWidget" name="CategoryPeriodicReport">
+  <property name="windowModality">
+   <enum>Qt::WindowModal</enum>
+  </property>
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>800</width>
+    <height>600</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Category Report</string>
+  </property>
+  <property name="locale">
+   <locale language="English" country="UnitedKingdom"/>
+  </property>
+  <layout class="QHBoxLayout" name="horizontalLayout" stretch="1">
+   <item>
+    <widget class="QTabWidget" name="tabWidget">
+     <property name="currentIndex">
+      <number>0</number>
+     </property>
+     <widget class="QWidget" name="incomeTab">
+      <attribute name="title">
+       <string>Income</string>
+      </attribute>
+      <layout class="QHBoxLayout" name="incomeTabHorizontalLayout">
+       <item>
+        <layout class="QVBoxLayout" name="incomeTabVerticalLayout">
+         <item>
+          <layout class="QHBoxLayout" name="incomeTabControlsHorizontalLayout">
+           <item>
+            <widget class="QToolButton" name="incomeExpandAllToolButton">
+             <property name="text">
+              <string>...</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QToolButton" name="incomeCollapseAllToolButton">
+             <property name="text">
+              <string>...</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="incomeHorizontalSpacer">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <widget class="QTreeView" name="incomeTreeView">
+           <property name="sortingEnabled">
+            <bool>true</bool>
+           </property>
+           <attribute name="headerShowSortIndicator" stdset="0">
+            <bool>true</bool>
+           </attribute>
+           <attribute name="headerStretchLastSection">
+            <bool>false</bool>
+           </attribute>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="expenseTab">
+      <attribute name="title">
+       <string>Expense</string>
+      </attribute>
+      <layout class="QHBoxLayout" name="expenseTabHorizontalLayout">
+       <item>
+        <layout class="QVBoxLayout" name="expenseTabVerticalLayout">
+         <item>
+          <layout class="QHBoxLayout" name="expenseTabControlsHorizontalLayout">
+           <item>
+            <widget class="QToolButton" name="expenseExpandAllToolButton">
+             <property name="text">
+              <string>...</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QToolButton" name="expenseCollapseAllToolButton">
+             <property name="text">
+              <string>...</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="expenseHorizontalSpacer">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <widget class="QTreeView" name="expenseTreeView">
+           <property name="sortingEnabled">
+            <bool>true</bool>
+           </property>
+           <attribute name="headerShowSortIndicator" stdset="0">
+            <bool>true</bool>
+           </attribute>
+           <attribute name="headerStretchLastSection">
+            <bool>false</bool>
+           </attribute>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+  </layout>
+  <action name="actionExpand_All_Income">
+   <property name="text">
+    <string>Expand All</string>
+   </property>
+  </action>
+  <action name="actionExpand_All_Expense">
+   <property name="text">
+    <string>Expand All</string>
+   </property>
+  </action>
+  <action name="actionCollapse_All_Income">
+   <property name="text">
+    <string>Collapse All</string>
+   </property>
+  </action>
+  <action name="actionCollapse_All_Expense">
+   <property name="text">
+    <string>Collapse All</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

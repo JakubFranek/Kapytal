@@ -23,8 +23,9 @@ class PieChartWidget(ChartWidget):
             colors=mpl.colormaps["Set2"](range(len(sizes))),
             startangle=90,
             rotatelabels=True,
-            labeldistance=0.5,
+            labeldistance=0.75,
             counterclock=False,
+            textprops={"va": "center", "rotation_mode": "anchor"},
         )
         self.chart.axes.relim()
         self.chart.axes.autoscale()

@@ -8,8 +8,8 @@ from src.models.statistics.cashflow_stats import CashFlowStats
 from src.views import colors
 from src.views.constants import CashFlowTableColumn
 
-bold_font = QFont()
-bold_font.setBold(True)  # noqa: FBT003
+overline_font = QFont()
+overline_font.setOverline(True)  # noqa: FBT003
 
 ALIGNMENT_RIGHT = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
 
@@ -63,16 +63,11 @@ class CashFlowTableModel(QAbstractTableModel):
                 return COLUMN_HEADERS[section]
             return self._stats[section].period
         if (
-            role == Qt.ItemDataRole.TextAlignmentRole
-            and orientation == Qt.Orientation.Vertical
-        ):
-            return ALIGNMENT_RIGHT
-        if (
             role == Qt.ItemDataRole.FontRole
             and orientation == Qt.Orientation.Vertical
             and section == len(self._stats) - 1
         ):
-            return bold_font
+            return overline_font
         return None
 
     def data(
@@ -92,11 +87,11 @@ class CashFlowTableModel(QAbstractTableModel):
                 index.column(), self._stats[index.row()]
             )
         if role == Qt.ItemDataRole.FontRole and index.row() == len(self._stats) - 1:
-            return bold_font
+            return overline_font
         return None
 
     def _get_display_role_data(self, column: int, stats: CashFlowStats) -> str:
-        return self._get_cash_amount_for_column(stats, column).to_str_rounded()
+        return f"{self._get_cash_amount_for_column(stats, column).value_rounded:,}"
 
     def _get_user_role_data(self, column: int, stats: CashFlowStats) -> float:
         return float(self._get_cash_amount_for_column(stats, column).value_rounded)

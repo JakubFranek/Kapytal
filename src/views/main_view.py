@@ -37,6 +37,8 @@ class MainView(QMainWindow, Ui_MainWindow):
 
     signal_category_total_report = pyqtSignal()
     signal_category_average_per_month_report = pyqtSignal()
+    signal_category_monthly_report = pyqtSignal()
+    signal_category_annual_report = pyqtSignal()
 
     signal_net_worth_accounts_report = pyqtSignal()
     signal_net_worth_asset_type_report = pyqtSignal()
@@ -205,6 +207,9 @@ class MainView(QMainWindow, Ui_MainWindow):
         self.actionAbout.setIcon(icons.about)
         self.actionShow_Hide_Account_Tree.setIcon(icons.account_tree)
 
+        self._connect_actions_to_signals()
+
+    def _connect_actions_to_signals(self) -> None:
         self.actionCurrencies_and_Exchange_Rates.triggered.connect(
             self.signal_open_currency_form.emit
         )
@@ -255,6 +260,12 @@ class MainView(QMainWindow, Ui_MainWindow):
         )
         self.actionCategory_Report_Average_Per_Month.triggered.connect(
             self.signal_category_average_per_month_report.emit
+        )
+        self.actionCategory_Report_Monthly.triggered.connect(
+            self.signal_category_monthly_report.emit
+        )
+        self.actionCategory_Report_Annual.triggered.connect(
+            self.signal_category_annual_report.emit
         )
 
         self.actionNet_Worth_Accounts_Report.triggered.connect(
