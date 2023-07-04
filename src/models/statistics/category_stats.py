@@ -18,7 +18,7 @@ class CategoryStats:
     balance: CashAmount
 
 
-def calculate_monthly_attribute_stats(
+def calculate_monthly_category_stats(
     transactions: Collection[CashTransaction | RefundTransaction],
     base_currency: Currency,
     all_categories: Collection[Category],
@@ -43,14 +43,10 @@ def calculate_monthly_attribute_stats(
     return stats_dict
 
 
-def calculate_average_per_month_attribute_stats(
-    transactions: Collection[CashTransaction | RefundTransaction],
-    base_currency: Currency,
-    all_attributes: Collection[Category],
+def calculate_average_per_month_category_stats(
+    stats_per_month: dict[str, tuple[CategoryStats]],
 ) -> dict[Category, CategoryStats]:
-    stats_per_month = calculate_monthly_attribute_stats(
-        transactions, base_currency, all_attributes
-    )
+    base_currency = list(stats_per_month.values())[0][0].balance.currency
     all_stats = list(itertools.chain(*stats_per_month.values()))
     periods = len(stats_per_month)
 

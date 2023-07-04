@@ -170,18 +170,30 @@ class NetWorthReportPresenter:
 def calculate_accounts_sunburst_data(
     account_items: Collection[Account | AccountGroup], base_currency: Currency
 ) -> tuple:
+    total = sum(
+        (
+            item.get_balance(base_currency)
+            for item in account_items
+            if item.parent not in account_items
+        ),
+        start=base_currency.zero_amount,
+    )
+    no_label_threshold = abs(float(total.value_rounded) * 0.25 / 100)
     balance = 0.0
+    level = 1
     tuples = []
     for account in account_items:
         if account.parent is not None:
             continue
-        account_item_tuple = create_account_item_tuple(
-            account, account_items, base_currency
+        child_tuple = create_account_item_tuple(
+            account, account_items, base_currency, no_label_threshold, level + 1
         )
-        if account_item_tuple[1] == 0 and len(account_item_tuple[2]) == 0:
+        if child_tuple[1] == 0 and len(child_tuple[2]) == 0:
             continue
-        balance += account_item_tuple[1]
-        tuples.append(account_item_tuple)
+        if child_tuple[1] < no_label_threshold / level:
+            child_tuple = ("", child_tuple[1], child_tuple[2])
+        balance += child_tuple[1]
+        tuples.append(child_tuple)
     tuples.sort(key=lambda x: abs(x[1]), reverse=True)
     return [("", balance, tuples)]
 
@@ -190,6 +202,8 @@ def create_account_item_tuple(
     account_item: Account,
     account_items: Collection[Account | AccountGroup],
     currency: Currency,
+    no_label_threshold: float,
+    level: int,
 ) -> tuple[str, float, list]:
     children_tuples = []
     balance = 0
@@ -198,10 +212,16 @@ def create_account_item_tuple(
         for _account_item in account_items:
             if _account_item in account_item.children:
                 child_tuple = create_account_item_tuple(
-                    _account_item, account_items, currency
+                    _account_item,
+                    account_items,
+                    currency,
+                    no_label_threshold,
+                    level + 1,
                 )
                 if child_tuple[1] == 0 and len(child_tuple[2]) == 0:
                     continue
+                if child_tuple[1] < no_label_threshold / level:
+                    child_tuple = ("", child_tuple[1], child_tuple[2])
                 children_tuples.append(child_tuple)
                 balance += child_tuple[1]
     else:
@@ -219,25 +239,34 @@ def create_account_item_tuple(
 
 
 def calculate_asset_type_sunburst_data(stats: Collection[AssetStats]) -> tuple:
+    total = sum(_stats.amount_base.value_rounded for _stats in stats)
+    no_label_threshold = abs(float(total) * 0.25 / 100)
     balance = 0.0
+    level = 1
     tuples = []
     for item in stats:
-        child_tuple = create_asset_tuple(item)
+        child_tuple = create_asset_tuple(item, no_label_threshold, level + 1)
         if child_tuple[1] > 0:
+            if child_tuple[1] < no_label_threshold / level:
+                child_tuple = ("", child_tuple[1], child_tuple[2])
             balance += child_tuple[1]
             tuples.append(child_tuple)
     tuples.sort(key=lambda x: abs(x[1]), reverse=True)
     return [("", balance, tuples)]
 
 
-def create_asset_tuple(stats: AssetStats) -> tuple[str, float, list]:
+def create_asset_tuple(
+    stats: AssetStats, no_label_threshold: float, level: int
+) -> tuple[str, float, list]:
     balance = 0
     name = stats.name
     children_tuples = []
     if stats.children:
         for item in stats.children:
-            child_tuple = create_asset_tuple(item)
+            child_tuple = create_asset_tuple(item, no_label_threshold, level)
             if child_tuple[1] > 0:
+                if child_tuple[1] < no_label_threshold / level:
+                    child_tuple = ("", child_tuple[1], child_tuple[2])
                 children_tuples.append(child_tuple)
                 balance += child_tuple[1]
     else:

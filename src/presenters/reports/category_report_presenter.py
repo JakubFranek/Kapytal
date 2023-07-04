@@ -4,8 +4,9 @@ from src.models.base_classes.transaction import Transaction
 from src.models.model_objects.cash_objects import CashTransaction, RefundTransaction
 from src.models.record_keeper import RecordKeeper
 from src.models.statistics.category_stats import (
-    calculate_average_per_month_attribute_stats,
+    calculate_average_per_month_category_stats,
     calculate_category_stats,
+    calculate_monthly_category_stats,
 )
 from src.presenters.widget.transactions_presenter import TransactionsPresenter
 from src.views.main_view import MainView
@@ -49,9 +50,10 @@ class CategoryReportPresenter:
         transactions = self._transactions_presenter.get_visible_transactions()
         transactions = _filter_transactions(transactions)
         base_currency = self._record_keeper.base_currency
-        stats = calculate_average_per_month_attribute_stats(
+        stats_per_month = calculate_monthly_category_stats(
             transactions, base_currency, self._record_keeper.categories
         )
+        stats = calculate_average_per_month_category_stats(stats_per_month)
         self.report = CategoryReport("Average Per Month", self._main_view)
         self.report.finalize_setup()
         self.report.load_stats(stats)

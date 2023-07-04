@@ -148,20 +148,28 @@ class CategoryReport(CustomWidget, Ui_CategoryReport):
 def convert_category_stats_to_sunburst_data(
     stats: dict[Category, CategoryStats]
 ) -> tuple:
+    total = sum((stats.balance.value_rounded) for stats in stats.values())
+    no_label_threshold = abs(float(total) * 0.25 / 100)
     balance = 0.0
+    level = 1
     tuples = []
-    for category, _stats in stats.items():
+    for category in stats:
         if category.parent is not None:
             continue
-        stats_tuple = create_stats_tuple(category, stats)
+        stats_tuple = create_stats_tuple(category, stats, no_label_threshold, level + 1)
         balance += stats_tuple[1]
+        if abs(stats_tuple[1]) < no_label_threshold / level:
+            stats_tuple = ("", stats_tuple[1], stats_tuple[2])
         tuples.append(stats_tuple)
     tuples.sort(key=lambda x: abs(x[1]), reverse=True)
     return [("", balance, tuples)]
 
 
 def create_stats_tuple(
-    category: Category, stats: dict[Category, CategoryStats]
+    category: Category,
+    stats: dict[Category, CategoryStats],
+    no_label_threshold: float,  # abs value
+    level: int,
 ) -> tuple[str, float, list]:
     children_tuples = []
     tuple_ = (
@@ -170,8 +178,13 @@ def create_stats_tuple(
         children_tuples,
     )
 
-    for _category, _stats in stats.items():
+    for _category in stats:
         if _category in category.children:
-            children_tuples.append(create_stats_tuple(_category, stats))
+            child_tuple = create_stats_tuple(
+                _category, stats, no_label_threshold, level + 1
+            )
+            if abs(child_tuple[1]) < no_label_threshold / level:
+                child_tuple = ("", child_tuple[1], child_tuple[2])
+            children_tuples.append(child_tuple)
     children_tuples.sort(key=lambda x: abs(x[1]), reverse=True)
     return tuple_

@@ -42,7 +42,7 @@ def create_sunburst_chart(
         )
     elif nodes:
         d = math.pi * 2 / total  # conversion factor between values and radians
-        labels = []
+        labels: list[str] = []
         widths = []
         for label, value, _ in nodes:
             labels.append(label)
@@ -74,7 +74,24 @@ def create_sunburst_chart(
             x = rect.get_x() + rect.get_width() / 2
             y = rect.get_y() + rect.get_height() / 2
             rotation = (90 + (360 - (180 * x / math.pi) % 180)) % 360
-            ax.text(x, y, label, rotation=rotation, ha="center", va="center")
+            ha = "left" if x > math.pi else "right"
+            if len(label) > 15 and " " in label:
+                index = get_middle_whitespace_index(label)
+                if index > 0:
+                    _label = label[:index] + "\n" + label[index + 1 :]
+                else:
+                    _label = label
+            else:
+                _label = label
+            ax.text(
+                x,
+                y + 0.45,
+                _label,
+                rotation=rotation,
+                rotation_mode="anchor",
+                ha=ha,
+                va="center",
+            )
 
         local_offset = offset
         for index, tup_ in enumerate(nodes):
@@ -114,3 +131,24 @@ def get_color_map_ratios(n: int) -> tuple[float]:
         return tuple(round(0.2 + 0.2 * i, 2) for i in range(n))
     ratios = tuple(round(i * 0.8 / n, 2) for i in range(n + 1))
     return ratios[1:]
+
+
+def get_middle_whitespace_index(string: str) -> int:
+    middle_index = math.ceil(len(string) / 2)
+    left_part = string[:middle_index]
+    right_part = string[middle_index:]
+    right_whitespace_index = right_part.find(" ")
+    left_whitespace_index = left_part.rfind(" ")
+
+    if right_whitespace_index == -1 and left_whitespace_index == -1:
+        return -1
+    if right_whitespace_index == -1:
+        return left_whitespace_index
+    if left_whitespace_index == -1:
+        return right_whitespace_index + middle_index
+
+    distance_left = abs(middle_index - left_whitespace_index)
+    distance_right = right_whitespace_index
+    if distance_right <= distance_left:
+        return right_whitespace_index + middle_index
+    return left_whitespace_index
