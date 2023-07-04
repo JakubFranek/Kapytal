@@ -41,7 +41,7 @@ def test_creation(
     assert security.symbol == symbol.upper()
     assert security.type_ == type_
     assert security.currency == currency
-    assert security.price == CashAmount(Decimal(0), currency)
+    assert security.price.is_nan()
     assert security.latest_date is None
     assert security.price_history == {}
     assert security.price_history_pairs == ()

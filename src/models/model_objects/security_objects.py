@@ -142,7 +142,7 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
     def price(self) -> CashAmount:
         if hasattr(self, "_latest_price"):
             return self._latest_price
-        return CashAmount(Decimal(0), self._currency)
+        return CashAmount(Decimal("NaN"), self._currency)
 
     @property
     def latest_date(self) -> date | None:
@@ -183,7 +183,7 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
 
     def get_price(self, date_: date | None) -> CashAmount:
         if date_ is None:
-            return self._latest_price
+            return self.price
         try:
             return self._price_history[date_]
         except KeyError:
