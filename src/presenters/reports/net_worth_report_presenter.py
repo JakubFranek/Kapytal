@@ -110,7 +110,7 @@ class NetWorthReportPresenter:
             start = datetime_filter.start.date()
             end = datetime_filter.end.date()
         else:
-            transactions = self._transactions_presenter.get_visible_transactions()
+            transactions = self._record_keeper.transactions
             transactions = sorted(
                 transactions, key=lambda transaction: transaction.timestamp
             )
@@ -123,8 +123,12 @@ class NetWorthReportPresenter:
         data = calculate_net_worth_over_time(accounts, base_currency, start, end)
         data = [(date, net_worth.value_rounded) for date, net_worth in data]
 
+        label_text = (
+            "NOTE: to change the date range, use the Date & Time Filter. "
+            "Net Worth is calculated based on Account Filter settings."
+        )
         self.report = TableAndLineChartReport(
-            "Net Worth Report - Asset Types", "", self._main_view
+            "Net Worth Report - Asset Types", label_text, self._main_view
         )
         self._proxy = QSortFilterProxyModel(self.report)
         self._proxy.setSortRole(Qt.ItemDataRole.UserRole)

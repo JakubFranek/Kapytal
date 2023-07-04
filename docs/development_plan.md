@@ -3,9 +3,8 @@
 ## Must haves
 
 1. reports
-    - cashflow
-    - pie charts (categories, payees, tags...)
-    - wealth overview (currencies x securities, accounts)
+    - monthly categories
+1. tests & coverage
 1. automatic exchange rate / price updates
 1. scheduled (recurrent) transactions
     - a "wrapper" around Transactions with scheduling info?
