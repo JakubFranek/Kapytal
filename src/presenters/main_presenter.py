@@ -92,7 +92,7 @@ class MainPresenter:
 
         self._account_tree_presenter.event_data_changed.append(self._data_changed)
         self._account_tree_presenter.event_check_state_changed.append(
-            self._update_valid_accounts
+            self._update_checked_accounts
         )
         self._currency_form_presenter.event_base_currency_changed.append(
             self._base_currency_changed
@@ -144,9 +144,9 @@ class MainPresenter:
             )
         )
 
-    def _update_valid_accounts(self) -> None:
-        self._transactions_presenter.load_account_tree_checked_accounts(
-            self._account_tree_presenter.valid_accounts
+    def _update_checked_accounts(self) -> None:
+        self._transactions_presenter.load_account_tree_checked_items(
+            self._account_tree_presenter.checked_account_items
         )
 
     def _data_changed(self) -> None:

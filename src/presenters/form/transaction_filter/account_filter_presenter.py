@@ -28,8 +28,8 @@ class AccountFilterPresenter:
         return self._model.checked_accounts
 
     @property
-    def accounts(self) -> tuple[Account, ...]:
-        return self._accounts
+    def checked_account_items(self) -> tuple[Account | AccountGroup, ...]:
+        return self._model.checked_account_items
 
     def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
         self._record_keeper = record_keeper

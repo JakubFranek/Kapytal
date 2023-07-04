@@ -5,6 +5,7 @@ from copy import copy
 from PyQt6.QtWidgets import QMessageBox, QWidget
 from src.models.base_classes.account import Account
 from src.models.base_classes.transaction import Transaction
+from src.models.model_objects.account_group import AccountGroup
 from src.models.model_objects.cash_objects import (
     CashTransactionType,
     CashTransfer,
@@ -117,7 +118,7 @@ class TransactionFilterFormPresenter:
         self._parent_view = parent_view
         self._record_keeper = record_keeper
 
-        self._account_tree_shown_accounts = tuple(account_tree_shown_accounts)
+        self._account_tree_checked_accounts = tuple(account_tree_shown_accounts)
 
         base_currency_code = (
             record_keeper.base_currency.code
@@ -163,8 +164,22 @@ class TransactionFilterFormPresenter:
         )
         return tuple(f"{filter_.__class__.__name__}" for filter_ in active_filters)
 
-    def update_account_tree_shown_accounts(self, accounts: Collection[Account]) -> None:
-        self._account_tree_shown_accounts = frozenset(accounts)
+    @property
+    def checked_account_items(self) -> frozenset[Account | AccountGroup]:
+        if self._form.account_filter_mode == AccountFilterMode.ACCOUNT_TREE:
+            return self._account_tree_checked_items
+        if self._transaction_filter.account_filter.mode == FilterMode.OFF:
+            return frozenset(self._record_keeper.account_items)
+        return self._account_filter_presenter.checked_account_items
+
+    def update_account_tree_checked_items(
+        self, account_items: Collection[Account | AccountGroup]
+    ) -> None:
+        accounts = frozenset(
+            account for account in account_items if isinstance(account, Account)
+        )
+        self._account_tree_checked_accounts = frozenset(accounts)
+        self._account_tree_checked_items = frozenset(account_items)
         if self._form.account_filter_mode == AccountFilterMode.ACCOUNT_TREE:
             previous_filter = copy(self._transaction_filter)
             all_accounts = len(self._record_keeper.accounts) == len(accounts)
@@ -267,11 +282,11 @@ class TransactionFilterFormPresenter:
             )
         else:
             all_accounts = len(self._record_keeper.accounts) == len(
-                self._account_tree_shown_accounts
+                self._account_tree_checked_accounts
             )
             account_filter_mode = FilterMode.OFF if all_accounts else FilterMode.KEEP
             filter_.set_account_filter(
-                self._account_tree_shown_accounts, account_filter_mode
+                self._account_tree_checked_accounts, account_filter_mode
             )
 
         filter_.set_specific_tags_filter(
@@ -354,6 +369,7 @@ class TransactionFilterFormPresenter:
     def _restore_defaults(self) -> None:
         logging.info("Restoring TransactionFilterForm to default")
         self._update_form_from_filter(self._default_filter)
+        self._form.account_filter_mode = AccountFilterMode.ACCOUNT_TREE
 
     def _setup_default_filter(self) -> None:
         self._default_filter = self._get_default_filter()

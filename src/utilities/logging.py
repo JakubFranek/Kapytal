@@ -82,6 +82,7 @@ def setup_logging() -> None:
     handler_info.setFormatter(formatter)
 
     logger = logging.getLogger()  # this is the root logger
+    logging.getLogger("matplotlib.font_manager").disabled = True
     logger.addFilter(DuplicateFilter(formatter))
     logger.setLevel(logging.DEBUG)
     logger.addHandler(handler_debug)

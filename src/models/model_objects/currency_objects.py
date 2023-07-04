@@ -1,5 +1,6 @@
 import logging
 import operator
+from bisect import bisect
 from collections.abc import Collection
 from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
@@ -197,8 +198,10 @@ class ExchangeRate(CopyableMixin, JSONSerializableMixin):
         "_primary_currency",
         "_secondary_currency",
         "_rate_history",
+        "_rate_history_pairs",
         "_latest_rate",
         "_latest_date",
+        "_recalculate_rate_history_pairs",
     )
 
     def __init__(
@@ -217,6 +220,8 @@ class ExchangeRate(CopyableMixin, JSONSerializableMixin):
         self._secondary_currency.add_exchange_rate(self)
 
         self._rate_history: dict[date, Decimal] = {}
+        self._rate_history_pairs: tuple[tuple[date, Decimal]] = ()
+        self._recalculate_rate_history_pairs = False
 
     @property
     def primary_currency(self) -> Currency:
@@ -236,11 +241,14 @@ class ExchangeRate(CopyableMixin, JSONSerializableMixin):
 
     @property
     def rate_history_pairs(self) -> tuple[tuple[date, Decimal]]:
-        pairs: list[tuple[date, Decimal]] = [
-            (date_, rate) for date_, rate in self._rate_history.items()
-        ]
-        pairs.sort(key=lambda x: x[0])
-        return tuple(pairs)
+        if self._recalculate_rate_history_pairs:
+            pairs: list[tuple[date, Decimal]] = [
+                (date_, rate) for date_, rate in self._rate_history.items()
+            ]
+            pairs.sort(key=lambda x: x[0])
+            self._rate_history_pairs = tuple(pairs)
+            self._recalculate_rate_history_pairs = False
+        return self._rate_history_pairs
 
     @property
     def latest_rate(self) -> Decimal:
@@ -267,14 +275,19 @@ class ExchangeRate(CopyableMixin, JSONSerializableMixin):
         try:
             return self._rate_history[date_]
         except KeyError:
-            for _date, _rate in reversed(self.rate_history_pairs):
-                if _date <= date_:
+            i = bisect(self.rate_history_pairs, date_, key=lambda x: x[0])
+            if i:
+                _date, rate = self._rate_history_pairs[i - 1]
+                if i == 1:
                     logging.warning(
                         f"{self!s}: no rate found for {date_.strftime('%Y-%m-%d')}, "
-                        f"using rate from {_date.strftime('%Y-%m-%d')}"
+                        f"using earliest available rate "
+                        f"({_date.strftime('%Y-%m-%d')}: {rate})"
                     )
-                    return _rate
-            logging.warning(f"{self!s}: no rate found for {date_}")
+                return rate
+            logging.warning(
+                f"{self!s}: no earlier rate found for {date_}, returning 'NaN'"
+            )
             return Decimal("NaN")
 
     def set_rate(self, date_: date, rate: Decimal | int | str) -> None:
@@ -358,8 +371,10 @@ class ExchangeRate(CopyableMixin, JSONSerializableMixin):
         else:
             self._latest_date = max(date_ for date_ in self._rate_history)
             self._latest_rate = self._rate_history[self._latest_date]
+
         self.primary_currency.reset_cache()
         self.secondary_currency.reset_cache()
+        self._recalculate_rate_history_pairs = True
 
 
 @total_ordering
