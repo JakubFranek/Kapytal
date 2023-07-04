@@ -121,3 +121,9 @@ class CashFlowTableColumn(IntEnum):
     DELTA_NEUTRAL = 7
     DELTA_PERFORMANCE = 8
     DELTA_TOTAL = 9
+
+
+class AssetTypeTreeColumn(IntEnum):
+    NAME = 0
+    BALANCE_NATIVE = 1
+    BALANCE_BASE = 2

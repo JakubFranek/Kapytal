@@ -13,6 +13,7 @@ ALIGNMENT_RIGHT = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
 class ValueType(Enum):
     EXCHANGE_RATE = auto()
     SECURITY_PRICE = auto()
+    NET_WORTH = auto()
 
 
 class ValueTableModel(QAbstractTableModel):
@@ -21,6 +22,7 @@ class ValueTableModel(QAbstractTableModel):
         view: QTableView,
         proxy: QSortFilterProxyModel,
         type_: ValueType,
+        unit: str = "",
     ) -> None:
         super().__init__()
         self._view = view
@@ -31,8 +33,10 @@ class ValueTableModel(QAbstractTableModel):
         self.COLUMN_HEADERS = {ValueTableColumn.DATE: "Date"}
         if type_ == ValueType.EXCHANGE_RATE:
             self.COLUMN_HEADERS[ValueTableColumn.VALUE] = "Rate"
+        elif type_ == ValueType.SECURITY_PRICE:
+            self.COLUMN_HEADERS[ValueTableColumn.VALUE] = f"Price ({unit})"
         else:
-            self.COLUMN_HEADERS[ValueTableColumn.VALUE] = "Price"
+            self.COLUMN_HEADERS[ValueTableColumn.VALUE] = f"Net Worth ({unit})"
 
     @property
     def data_points(self) -> tuple[date, Decimal]:
@@ -40,6 +44,13 @@ class ValueTableModel(QAbstractTableModel):
 
     def load_data(self, date_value_pairs: Sequence[tuple[date, Decimal]]) -> None:
         self._data = tuple(date_value_pairs)
+
+    def set_unit(self, unit: str) -> None:
+        self._unit = unit
+        if self._type == ValueType.SECURITY_PRICE:
+            self.COLUMN_HEADERS[ValueTableColumn.VALUE] = f"Price ({unit})"
+        elif self._type == ValueType.NET_WORTH:
+            self.COLUMN_HEADERS[ValueTableColumn.VALUE] = f"Net Worth ({unit})"
 
     def rowCount(self, index: QModelIndex = ...) -> int:  # noqa: N802
         if isinstance(index, QModelIndex) and index.isValid():

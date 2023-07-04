@@ -369,6 +369,7 @@ class TransactionFilterFormPresenter:
     def _restore_defaults(self) -> None:
         logging.info("Restoring TransactionFilterForm to default")
         self._update_form_from_filter(self._default_filter)
+        self._form.account_filter_mode = AccountFilterMode.ACCOUNT_TREE
 
     def _setup_default_filter(self) -> None:
         self._default_filter = self._get_default_filter()

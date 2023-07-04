@@ -274,6 +274,7 @@ class SecurityFormPresenter:
         if add:
             self._price_table_model.pre_add(index)
             self._price_table_model.load_data(new_data_points)
+            self._price_table_model.set_unit(security.currency.code)
             self._price_table_model.post_add()
         else:
             self._price_table_model.load_data(new_data_points)
@@ -474,6 +475,7 @@ class SecurityFormPresenter:
 
         self._price_table_model.pre_reset_model()
         self._price_table_model.load_data(security.decimal_price_history_pairs)
+        self._price_table_model.set_unit(security.currency.code)
         self._price_table_model.post_reset_model()
         self._update_chart(security)
 
