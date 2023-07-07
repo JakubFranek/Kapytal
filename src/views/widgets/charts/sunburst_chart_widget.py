@@ -1,11 +1,25 @@
 import math
 from collections.abc import Sequence
+from dataclasses import dataclass
 from numbers import Real
+from typing import Self
 
 import matplotlib as mpl
 from matplotlib.axes import Axes
 from PyQt6.QtWidgets import QWidget
 from src.views.widgets.charts.chart_widget import ChartWidget
+
+
+@dataclass
+class SunburstNode:
+    label: str
+    value: Real
+    children: list[Self]
+
+    def clear_label(self) -> None:
+        self.label = ""
+        for child in self.children:
+            child.clear_label()
 
 
 class SunburstChartWidget(ChartWidget):
@@ -18,35 +32,36 @@ class SunburstChartWidget(ChartWidget):
     def load_data(self, data: Sequence) -> None:
         self.chart.axes.clear()
         create_sunburst_chart(self.chart.axes, data)
+        self.chart.draw()
         self.chart_toolbar.update()
 
 
 def create_sunburst_chart(
     ax: Axes,
-    nodes: Sequence,
+    nodes: Sequence[SunburstNode],
     color: str | Sequence = "white",
     total: Real = math.pi * 2,
     offset: Real = 0,
     level: int = 0,
 ) -> None:
     if level == 0 and len(nodes) == 1:
-        label, value, subnodes = nodes[0]
+        node = nodes[0]
         ax.bar(x=[0], height=[0.5], width=[math.pi * 2], color=color)
-        ax.text(0, 0, label, ha="center", va="center")
+        ax.text(0, 0, node.label, ha="center", va="center")
         create_sunburst_chart(
             ax,
-            subnodes,
-            color=mpl.colormaps["tab10"](range(len(subnodes))),
-            total=value,
+            node.children,
+            color=mpl.colormaps["tab10"](range(len(node.children))),
+            total=node.value,
             level=level + 1,
         )
     elif nodes:
         d = math.pi * 2 / total  # conversion factor between values and radians
         labels: list[str] = []
         widths = []
-        for label, value, _ in nodes:
-            labels.append(label)
-            widths.append(value * d)
+        for node in nodes:
+            labels.append(node.label)
+            widths.append(node.value * d)
 
         values = cumulative_sum([offset * d] + widths[:-1])
         heights = [1] * len(nodes)
@@ -94,9 +109,7 @@ def create_sunburst_chart(
             )
 
         local_offset = offset
-        for index, tup_ in enumerate(nodes):
-            _, value, subnodes = tup_
-
+        for index, node in enumerate(nodes):
             try:
                 child_color = colors[index % len(nodes)]
                 if len(child_color) != 4:  # noqa: PLR2004
@@ -106,13 +119,13 @@ def create_sunburst_chart(
 
             create_sunburst_chart(
                 ax,
-                subnodes,
+                node.children,
                 color=child_color,
                 total=total,
                 offset=local_offset,
                 level=level + 1,
             )
-            local_offset += value
+            local_offset += node.value
 
     if level == 0:
         ax.set_theta_direction(-1)

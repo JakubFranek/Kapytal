@@ -7,12 +7,17 @@ from PyQt6.QtCore import QAbstractItemModel, QModelIndex, QSortFilterProxyModel,
 from PyQt6.QtGui import QBrush, QFont
 from PyQt6.QtWidgets import QTreeView
 from src.models.model_objects.attributes import Category
-from src.models.model_objects.currency_objects import CashAmount
+from src.models.model_objects.currency_objects import CashAmount, Currency
 from src.models.statistics.category_stats import CategoryStats
 from src.views import colors
 
 overline_font = QFont()
 overline_font.setOverline(True)  # noqa: FBT003
+bold_font = QFont()
+bold_font.setBold(True)  # noqa: FBT003
+overline_bold_font = QFont()
+overline_bold_font.setOverline(True)  # noqa: FBT003
+overline_bold_font.setBold(True)  # noqa: FBT003
 
 ALIGNMENT_RIGHT = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
 ALIGNMENT_CENTER = Qt.AlignmentFlag.AlignCenter | Qt.AlignmentFlag.AlignVCenter
@@ -47,8 +52,11 @@ class PeriodicCategoryStatsTreeModel(QAbstractItemModel):
         self,
         periodic_stats: dict[str, tuple[CategoryStats]],
         periodic_totals: dict[str, CashAmount],
+        periodic_income_totals: dict[str, CashAmount],
+        periodic_expense_totals: dict[str, CashAmount],
         category_averages: dict[Category, CashAmount],
         category_totals: dict[Category, CashAmount],
+        base_currency: Currency,
     ) -> None:
         self._root_row_objects: list[RowObject] = []
         self._flat_row_objects: list[RowObject] = []
@@ -59,10 +67,6 @@ class PeriodicCategoryStatsTreeModel(QAbstractItemModel):
             item.category for stats in periodic_stats.values() for item in stats
         )
         categories = sorted(categories, key=lambda x: x.path)
-        self._row_headers = tuple(
-            [category.path for category in categories if category.parent is None]
-            + ["Σ Total"]
-        )
         for category in categories:
             row_data: list[Decimal] = []
             for period in periodic_stats:
@@ -70,7 +74,10 @@ class PeriodicCategoryStatsTreeModel(QAbstractItemModel):
                 if stats is not None:
                     row_data.append(stats.balance.value_rounded)
                 else:
-                    row_data.append(Decimal(0))
+                    row_data.append(Decimal(base_currency.zero_amount.value_rounded))
+
+            if all(balance == 0 for balance in row_data):
+                continue
             row_data.append(category_averages[category].value_rounded)
             row_data.append(category_totals[category].value_rounded)
 
@@ -88,19 +95,54 @@ class PeriodicCategoryStatsTreeModel(QAbstractItemModel):
             self._flat_row_objects.append(row_object)
 
         periodic_totals_row: list[Decimal] = []
+        periodic_income_totals_row: list[Decimal] = []
+        periodic_expense_totals_row: list[Decimal] = []
         for period in periodic_totals:
             periodic_totals_row.append(periodic_totals[period].value_rounded)
-        average_sum = sum(row.data[-2] for row in self._root_row_objects)
-        total_sum = sum(row.data[-1] for row in self._root_row_objects)
+            periodic_income_totals_row.append(
+                periodic_income_totals[period].value_rounded
+            )
+            periodic_expense_totals_row.append(
+                periodic_expense_totals[period].value_rounded
+            )
+
+        total_sum = sum(periodic_totals_row)
+        average_sum = round(total_sum / len(periodic_totals_row), base_currency.places)
         periodic_totals_row.append(average_sum)
         periodic_totals_row.append(total_sum)
+
+        income_sum = sum(periodic_income_totals_row)
+        average_income_sum = round(
+            income_sum / len(periodic_income_totals_row), base_currency.places
+        )
+        periodic_income_totals_row.append(average_income_sum)
+        periodic_income_totals_row.append(income_sum)
+
+        expense_sum = sum(periodic_expense_totals_row)
+        average_expense_sum = round(
+            expense_sum / len(periodic_expense_totals_row), base_currency.places
+        )
+        periodic_expense_totals_row.append(average_expense_sum)
+        periodic_expense_totals_row.append(expense_sum)
+
+        self._root_row_objects.sort(key=lambda x: x.data[-1], reverse=True)
+        self._root_row_objects.append(
+            RowObject("Σ Income", "Σ Income", periodic_income_totals_row, None)
+        )
+        self._root_row_objects.append(
+            RowObject("Σ Expense", "Σ Expense", periodic_expense_totals_row, None)
+        )
         self._root_row_objects.append(
             RowObject("Σ Total", "Σ Total", periodic_totals_row, None)
         )
 
         self.TOTAL_COLUMN_INDEX = len(self._column_headers) - 1
         self.AVERAGE_COLUMN_INDEX = len(self._column_headers) - 2
-        self.TOTAL_ROW_INDEX = len(self._row_headers) - 1
+        self.TOTAL_ROWS_INDEXES = (
+            len(self._root_row_objects) - 1,
+            len(self._root_row_objects) - 2,
+            len(self._root_row_objects) - 3,
+        )
 
     def rowCount(self, index: QModelIndex = ...) -> int:  # noqa: N802
         if index.isValid():
@@ -147,10 +189,11 @@ class PeriodicCategoryStatsTreeModel(QAbstractItemModel):
     def headerData(  # noqa: N802
         self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole = ...
     ) -> str | int | None:
-        if role == Qt.ItemDataRole.DisplayRole:
-            if orientation == Qt.Orientation.Horizontal:
-                return self._column_headers[section]
-            return self._row_headers[section]
+        if (
+            role == Qt.ItemDataRole.DisplayRole
+            and orientation == Qt.Orientation.Horizontal
+        ):
+            return self._column_headers[section]
         if role == Qt.ItemDataRole.TextAlignmentRole:
             return ALIGNMENT_CENTER
         if (
@@ -180,8 +223,8 @@ class PeriodicCategoryStatsTreeModel(QAbstractItemModel):
             return ALIGNMENT_RIGHT
         if role == Qt.ItemDataRole.ForegroundRole:
             return self._get_foreground_role_data(column, row_object.data[column - 1])
-        if role == Qt.ItemDataRole.FontRole and column == self.AVERAGE_COLUMN_INDEX:
-            return overline_font
+        if role == Qt.ItemDataRole.FontRole:
+            return self._get_font_role_data(row, column)
         return None
 
     def _get_display_role_data(
@@ -189,7 +232,7 @@ class PeriodicCategoryStatsTreeModel(QAbstractItemModel):
     ) -> str | None:
         if column == 0:
             return row_object.name
-        if column == self.TOTAL_COLUMN_INDEX or row == self.TOTAL_ROW_INDEX:
+        if column == self.TOTAL_COLUMN_INDEX or row in self.TOTAL_ROWS_INDEXES:
             prefix = "Σ "
         else:
             prefix = ""
@@ -208,6 +251,17 @@ class PeriodicCategoryStatsTreeModel(QAbstractItemModel):
         if amount < 0:
             return colors.get_red_brush()
         return colors.get_gray_brush()
+
+    def _get_font_role_data(self, row: int, column: int) -> QFont | None:
+        if row in self.TOTAL_ROWS_INDEXES:
+            if column == self.AVERAGE_COLUMN_INDEX:
+                return overline_bold_font
+            return bold_font
+        if column == self.TOTAL_COLUMN_INDEX:
+            return bold_font
+        if column == self.AVERAGE_COLUMN_INDEX:
+            return overline_font
+        return None
 
     def pre_reset_model(self) -> None:
         self._view.setSortingEnabled(False)  # noqa: FBT003

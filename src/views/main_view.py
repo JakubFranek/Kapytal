@@ -29,14 +29,12 @@ class MainView(QMainWindow, Ui_MainWindow):
     signal_cash_flow_annual_report = pyqtSignal()
     signal_cash_flow_total_report = pyqtSignal()
 
-    signal_tag_total_report = pyqtSignal()
-    signal_tag_average_per_month_report = pyqtSignal()
+    signal_tag_monthly_report = pyqtSignal()
+    signal_tag_annual_report = pyqtSignal()
 
-    signal_payee_total_report = pyqtSignal()
-    signal_payee_average_per_month_report = pyqtSignal()
+    signal_payee_monthly_report = pyqtSignal()
+    signal_payee_annual_report = pyqtSignal()
 
-    signal_category_total_report = pyqtSignal()
-    signal_category_average_per_month_report = pyqtSignal()
     signal_category_monthly_report = pyqtSignal()
     signal_category_annual_report = pyqtSignal()
 
@@ -243,24 +241,20 @@ class MainView(QMainWindow, Ui_MainWindow):
             self.signal_cash_flow_total_report.emit
         )
 
-        self.actionTag_Report_Total.triggered.connect(self.signal_tag_total_report.emit)
-        self.actionTag_Report_Average_Per_Month.triggered.connect(
-            self.signal_tag_average_per_month_report.emit
+        self.actionTag_Report_Monthly.triggered.connect(
+            self.signal_tag_monthly_report.emit
+        )
+        self.actionTag_Report_Annual.triggered.connect(
+            self.signal_tag_annual_report.emit
         )
 
-        self.actionPayee_Report_Total.triggered.connect(
-            self.signal_payee_total_report.emit
+        self.actionPayee_Report_Monthly.triggered.connect(
+            self.signal_payee_monthly_report.emit
         )
-        self.actionPayee_Report_Average_Per_Month.triggered.connect(
-            self.signal_payee_average_per_month_report.emit
+        self.actionPayee_Report_Annual.triggered.connect(
+            self.signal_payee_annual_report.emit
         )
 
-        self.actionCategory_Report_Total.triggered.connect(
-            self.signal_category_total_report.emit
-        )
-        self.actionCategory_Report_Average_Per_Month.triggered.connect(
-            self.signal_category_average_per_month_report.emit
-        )
         self.actionCategory_Report_Monthly.triggered.connect(
             self.signal_category_monthly_report.emit
         )

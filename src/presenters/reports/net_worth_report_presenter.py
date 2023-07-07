@@ -21,6 +21,7 @@ from src.views.constants import AccountTreeColumn
 from src.views.main_view import MainView
 from src.views.reports.table_and_line_chart_report import TableAndLineChartReport
 from src.views.reports.tree_and_sunburst_report import TreeAndSunburstReport
+from src.views.widgets.charts.sunburst_chart_widget import SunburstNode
 
 
 class NetWorthReportPresenter:
@@ -170,111 +171,142 @@ class NetWorthReportPresenter:
 
 def calculate_accounts_sunburst_data(
     account_items: Collection[Account | AccountGroup], base_currency: Currency
-) -> tuple:
+) -> tuple[SunburstNode]:
+    balances = tuple(
+        item.get_balance(base_currency)
+        for item in account_items
+        if item.parent not in account_items
+    )
     total = sum(
-        (
-            item.get_balance(base_currency)
-            for item in account_items
-            if item.parent not in account_items
-        ),
+        (balance for balance in balances if balance.value_rounded > 0),
         start=base_currency.zero_amount,
     )
-    no_label_threshold = abs(float(total.value_rounded) * 0.25 / 100)
+    no_label_threshold = abs(float(total.value_rounded) * 0.4 / 100)
     balance = 0.0
     level = 1
-    tuples = []
+    nodes: list[SunburstNode] = []
     for account in account_items:
         if account.parent is not None:
             continue
-        child_tuple = create_account_item_tuple(
-            account, account_items, base_currency, no_label_threshold, level + 1
+        child_node = _create_account_item_node(
+            account,
+            account_items,
+            base_currency,
+            no_label_threshold,
+            level + 1,
+            parent_label_visible=True,
         )
-        if child_tuple[1] == 0 and len(child_tuple[2]) == 0:
+        if child_node.value == 0 and len(child_node.children) == 0:
             continue
-        if child_tuple[1] < no_label_threshold / level:
-            child_tuple = ("", child_tuple[1], child_tuple[2])
-        balance += child_tuple[1]
-        tuples.append(child_tuple)
-    tuples.sort(key=lambda x: abs(x[1]), reverse=True)
-    return [("", balance, tuples)]
+        if child_node.value < no_label_threshold:
+            child_node.clear_label()
+        balance += child_node.value
+        nodes.append(child_node)
+    nodes.sort(key=lambda x: abs(x.value), reverse=True)
+    return (SunburstNode("", balance, nodes),)
 
 
-def create_account_item_tuple(
+def _create_account_item_node(
     account_item: Account,
     account_items: Collection[Account | AccountGroup],
     currency: Currency,
     no_label_threshold: float,
     level: int,
-) -> tuple[str, float, list]:
-    children_tuples = []
+    *,
+    parent_label_visible: bool
+) -> SunburstNode:
+    children: list[SunburstNode] = []
     balance = 0
+
+    _balance = float(account_item.get_balance(currency).value_rounded)
+    label_visible = _balance >= no_label_threshold / (level - 1)
 
     if isinstance(account_item, AccountGroup):
         for _account_item in account_items:
             if _account_item in account_item.children:
-                child_tuple = create_account_item_tuple(
+                child_node = _create_account_item_node(
                     _account_item,
                     account_items,
                     currency,
                     no_label_threshold,
                     level + 1,
+                    parent_label_visible=label_visible,
                 )
-                if child_tuple[1] == 0 and len(child_tuple[2]) == 0:
+                if child_node.value == 0 and len(child_node.children) == 0:
                     continue
-                if child_tuple[1] < no_label_threshold / level:
-                    child_tuple = ("", child_tuple[1], child_tuple[2])
-                children_tuples.append(child_tuple)
-                balance += child_tuple[1]
+                if (
+                    child_node.value < no_label_threshold / level
+                    or not parent_label_visible
+                    or not label_visible
+                ):
+                    child_node.clear_label()
+                children.append(child_node)
+                balance += child_node.value
     else:
         balance = float(account_item.get_balance(currency).value_rounded)
         balance = balance if balance > 0 else 0
 
-    tuple_ = (
+    node = SunburstNode(
         account_item.name,
         balance,
-        children_tuples,
+        children,
     )
 
-    children_tuples.sort(key=lambda x: abs(x[1]), reverse=True)
-    return tuple_
+    node.children.sort(key=lambda x: abs(x.value), reverse=True)
+    return node
 
 
-def calculate_asset_type_sunburst_data(stats: Collection[AssetStats]) -> tuple:
+def calculate_asset_type_sunburst_data(
+    stats: Collection[AssetStats],
+) -> tuple[SunburstNode]:
     total = sum(_stats.amount_base.value_rounded for _stats in stats)
-    no_label_threshold = abs(float(total) * 0.25 / 100)
+    no_label_threshold = abs(float(total) * 0.4 / 100)
     balance = 0.0
     level = 1
-    tuples = []
+    children: list[SunburstNode] = []
     for item in stats:
-        child_tuple = create_asset_tuple(item, no_label_threshold, level + 1)
-        if child_tuple[1] > 0:
-            if child_tuple[1] < no_label_threshold / level:
-                child_tuple = ("", child_tuple[1], child_tuple[2])
-            balance += child_tuple[1]
-            tuples.append(child_tuple)
-    tuples.sort(key=lambda x: abs(x[1]), reverse=True)
-    return [("", balance, tuples)]
+        child_node = _create_asset_node(
+            item, no_label_threshold, level + 1, parent_label_visible=True
+        )
+        if child_node.value > 0:
+            if child_node.value < no_label_threshold:
+                child_node.clear_label()
+            balance += child_node.value
+            children.append(child_node)
+    children.sort(key=lambda x: abs(x.value), reverse=True)
+    return (SunburstNode("", balance, children),)
 
 
-def create_asset_tuple(
-    stats: AssetStats, no_label_threshold: float, level: int
-) -> tuple[str, float, list]:
+def _create_asset_node(
+    stats: AssetStats,
+    no_label_threshold: float,
+    level: int,
+    *,
+    parent_label_visible: bool
+) -> SunburstNode:
     balance = 0
     name = stats.name
-    children_tuples = []
+    children: list[SunburstNode] = []
+    label_visible = stats.amount_base.value_rounded > no_label_threshold / (level - 1)
     if stats.children:
         for item in stats.children:
-            child_tuple = create_asset_tuple(item, no_label_threshold, level)
-            if child_tuple[1] > 0:
-                if child_tuple[1] < no_label_threshold / level:
-                    child_tuple = ("", child_tuple[1], child_tuple[2])
-                children_tuples.append(child_tuple)
-                balance += child_tuple[1]
+            child_node = _create_asset_node(
+                item, no_label_threshold, level + 1, parent_label_visible=label_visible
+            )
+            if child_node.value > 0:
+                if (
+                    child_node.value < no_label_threshold / level
+                    or not parent_label_visible
+                    or not label_visible
+                ):
+                    child_node.clear_label()
+                children.append(child_node)
+                balance += child_node.value
     else:
         balance = (
             float(stats.amount_base.value_rounded)
             if stats.amount_base.value_rounded > 0
             else 0
         )
-    children_tuples.sort(key=lambda x: abs(x[1]), reverse=True)
-    return (name, balance, children_tuples)
+    children.sort(key=lambda x: abs(x.value), reverse=True)
+    return SunburstNode(name, balance, children)

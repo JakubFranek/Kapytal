@@ -5,12 +5,17 @@ from PyQt6.QtCore import QAbstractTableModel, QModelIndex, QSortFilterProxyModel
 from PyQt6.QtGui import QBrush, QFont
 from PyQt6.QtWidgets import QTableView
 from src.models.model_objects.attributes import Attribute
-from src.models.model_objects.currency_objects import CashAmount
+from src.models.model_objects.currency_objects import CashAmount, Currency
 from src.models.statistics.attribute_stats import AttributeStats
 from src.views import colors
 
 overline_font = QFont()
 overline_font.setOverline(True)  # noqa: FBT003
+bold_font = QFont()
+bold_font.setBold(True)  # noqa: FBT003
+overline_bold_font = QFont()
+overline_bold_font.setOverline(True)  # noqa: FBT003
+overline_bold_font.setBold(True)  # noqa: FBT003
 
 ALIGNMENT_RIGHT = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
 
@@ -31,6 +36,7 @@ class PeriodicAttributeStatsTableModel(QAbstractTableModel):
         periodic_totals: dict[str, CashAmount],
         attribute_averages: dict[Attribute, CashAmount],
         attribute_totals: dict[Attribute, CashAmount],
+        base_currency: Currency,
     ) -> None:
         self._rows: list[list[Decimal]] = []
         periods = list(periodic_stats.keys())
@@ -39,7 +45,7 @@ class PeriodicAttributeStatsTableModel(QAbstractTableModel):
         attributes = frozenset(
             item.attribute for stats in periodic_stats.values() for item in stats
         )
-        attributes = sorted(attributes, key=lambda x: x.path)
+        attributes = sorted(attributes, key=lambda x: x.name)
         self._row_headers = tuple(
             [attribute.name for attribute in attributes] + ["Σ Total"]
         )
@@ -50,7 +56,7 @@ class PeriodicAttributeStatsTableModel(QAbstractTableModel):
                 if stats is not None:
                     row.append(stats.balance.value_rounded)
                 else:
-                    row.append(Decimal(0))
+                    row.append(base_currency.zero_amount.value_rounded)
             row.append(attribute_averages[attribute].value_rounded)
             row.append(attribute_totals[attribute].value_rounded)
             self._rows.append(row)
@@ -63,6 +69,10 @@ class PeriodicAttributeStatsTableModel(QAbstractTableModel):
         periodic_totals_row.append(average_sum)
         periodic_totals_row.append(total_sum)
         self._rows.append(periodic_totals_row)
+
+        self.TOTAL_COLUMN_INDEX = len(self._column_headers) - 1
+        self.AVERAGE_COLUMN_INDEX = len(self._column_headers) - 2
+        self.TOTAL_ROW_INDEX = len(self._row_headers) - 1
 
     def rowCount(self, index: QModelIndex = ...) -> int:  # noqa: N802
         if isinstance(index, QModelIndex) and index.isValid():
@@ -84,14 +94,14 @@ class PeriodicAttributeStatsTableModel(QAbstractTableModel):
         if role == Qt.ItemDataRole.FontRole:
             if (
                 orientation == Qt.Orientation.Vertical
-                and section == len(self._rows) - 1
+                and section == self.TOTAL_ROW_INDEX
             ):
-                return None
+                return bold_font
             if orientation == Qt.Orientation.Horizontal:
-                if section == len(self._column_headers) - 2:
+                if section == self.AVERAGE_COLUMN_INDEX:
                     return overline_font
-                if section == len(self._column_headers) - 1:
-                    return None
+                if section == self.TOTAL_COLUMN_INDEX:
+                    return bold_font
         return None
 
     def data(
@@ -103,20 +113,23 @@ class PeriodicAttributeStatsTableModel(QAbstractTableModel):
         row = index.row()
         column = index.column()
         if role == Qt.ItemDataRole.DisplayRole:
-            if column == len(self._column_headers) - 1 or row == len(self._rows) - 1:
-                prefix = "Σ "
-            else:
-                prefix = ""
-            return prefix + f"{self._rows[row][column]:,}"
+            return self._get_display_role_data(row, column)
         if role == Qt.ItemDataRole.UserRole:
             return float(self._rows[row][column])
         if role == Qt.ItemDataRole.TextAlignmentRole:
             return ALIGNMENT_RIGHT
         if role == Qt.ItemDataRole.ForegroundRole:
             return self._get_foreground_role_data(self._rows[row][column])
-        if role == Qt.ItemDataRole.FontRole and column == len(self._column_headers) - 2:
-            return overline_font
+        if role == Qt.ItemDataRole.FontRole:
+            return self._get_font_role_data(row, column)
         return None
+
+    def _get_display_role_data(self, row: int, column: int) -> str | None:
+        if column == self.TOTAL_COLUMN_INDEX or row == self.TOTAL_ROW_INDEX:
+            prefix = "Σ "
+        else:
+            prefix = ""
+        return prefix + f"{self._rows[row][column]:,}"
 
     def _get_foreground_role_data(self, amount: Decimal) -> QBrush | None:
         if amount > 0:
@@ -124,6 +137,17 @@ class PeriodicAttributeStatsTableModel(QAbstractTableModel):
         if amount < 0:
             return colors.get_red_brush()
         return colors.get_gray_brush()
+
+    def _get_font_role_data(self, row: int, column: int) -> QFont | None:
+        if row == self.TOTAL_ROW_INDEX:
+            if column == self.AVERAGE_COLUMN_INDEX:
+                return overline_bold_font
+            return bold_font
+        if column == self.TOTAL_COLUMN_INDEX:
+            return bold_font
+        if column == self.AVERAGE_COLUMN_INDEX:
+            return overline_font
+        return None
 
     def pre_reset_model(self) -> None:
         self._view.setSortingEnabled(False)  # noqa: FBT003

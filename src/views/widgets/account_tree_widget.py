@@ -31,7 +31,7 @@ class AccountTreeWidget(QWidget, Ui_AccountTreeWidget):
     def __init__(self, parent: QWidget | None) -> None:
         super().__init__(parent)
         self.setupUi(self)
-        self.controlsHorizontalLayout.setContentsMargins(-1, 2, -1, 0)
+        self.controlsHorizontalLayout.setContentsMargins(0, 0, 0, 0)
 
         self._set_action_icons()
         self._connect_actions()

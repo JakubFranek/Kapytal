@@ -1,8 +1,8 @@
 import itertools
-from collections.abc import Collection
+from collections.abc import Collection, Sequence
 from dataclasses import dataclass
 
-from src.models.model_objects.attributes import Category
+from src.models.model_objects.attributes import Category, CategoryType
 from src.models.model_objects.cash_objects import (
     CashTransaction,
     RefundTransaction,
@@ -19,27 +19,56 @@ class CategoryStats:
 
 
 def calculate_periodic_totals_and_averages(
-    periodic_stats: dict[str, tuple[CategoryStats]]
+    periodic_stats: dict[str, Sequence[CategoryStats]], currency: Currency
 ) -> tuple[
-    dict[str, CashAmount], dict[Category, CashAmount], dict[Category, CashAmount]
+    dict[str, CashAmount],
+    dict[str, CashAmount],
+    dict[str, CashAmount],
+    dict[Category, CashAmount],
+    dict[Category, CashAmount],
 ]:
-    """Returns a tuple of (period_totals, category_averages, category_totals)"""
+    """Returns a tuple of (period_totals, period_income_totals, period_expense_totals,
+    category_averages, category_totals)"""
+
     category_totals: dict[Category, CashAmount] = {}
     period_totals: dict[str, CashAmount] = {}
+    period_income_totals: dict[str, CashAmount] = {}
+    period_expense_totals: dict[str, CashAmount] = {}
     category_averages: dict[Category, CashAmount] = {}
 
-    currency = None
     for period in periodic_stats:
-        if len(periodic_stats[period]) == 0:
-            continue
-        currency = periodic_stats[period][0].balance.currency
-    if currency is None:
-        raise ValueError("No data found within 'periodic_stats'.")
-
-    for period in periodic_stats:
-        period_totals[period] = sum(
-            (stats.balance for stats in periodic_stats[period]),
+        period_income_totals[period] = sum(
+            (
+                stats.balance
+                for stats in periodic_stats[period]
+                if (
+                    stats.category.type_ == CategoryType.INCOME
+                    or (
+                        stats.category.type_ == CategoryType.INCOME_AND_EXPENSE
+                        and stats.balance.value_rounded > 0
+                    )
+                )
+                and stats.category.parent is None
+            ),
             start=currency.zero_amount,
+        )
+        period_expense_totals[period] = sum(
+            (
+                stats.balance
+                for stats in periodic_stats[period]
+                if (
+                    stats.category.type_ == CategoryType.EXPENSE
+                    or (
+                        stats.category.type_ == CategoryType.INCOME_AND_EXPENSE
+                        and stats.balance.value_rounded < 0
+                    )
+                )
+                and stats.category.parent is None
+            ),
+            start=currency.zero_amount,
+        )
+        period_totals[period] = (
+            period_income_totals[period] + period_expense_totals[period]
         )
         for stats in periodic_stats[period]:
             category_totals[stats.category] = (
@@ -50,7 +79,13 @@ def calculate_periodic_totals_and_averages(
         category: category_totals[category] / len(periodic_stats)
         for category in category_totals
     }
-    return period_totals, category_averages, category_totals
+    return (
+        period_totals,
+        period_income_totals,
+        period_expense_totals,
+        category_averages,
+        category_totals,
+    )
 
 
 def calculate_periodic_category_stats(

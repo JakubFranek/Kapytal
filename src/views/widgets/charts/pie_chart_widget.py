@@ -14,6 +14,7 @@ class PieChartWidget(ChartWidget):
         self.lines = None
 
     def load_data(self, data: Sequence[tuple[Real, str]]) -> None:
+        self.chart.axes.clear()
         data = sorted(data, key=lambda x: x[0], reverse=True)
         sizes = [data[0] for data in data]
         labels = [data[1] for data in data]
