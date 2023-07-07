@@ -1,5 +1,6 @@
 import logging
 
+from PyQt6.QtWidgets import QApplication
 from src.models.record_keeper import RecordKeeper
 from src.models.statistics.cashflow_stats import (
     calculate_cash_flow,
@@ -7,6 +8,7 @@ from src.models.statistics.cashflow_stats import (
 )
 from src.models.transaction_filters.base_transaction_filter import FilterMode
 from src.presenters.widget.transactions_presenter import TransactionsPresenter
+from src.views.dialogs.busy_dialog import create_simple_busy_indicator
 from src.views.main_view import MainView
 from src.views.reports.cashflow_periodic_report import CashFlowPeriodicReport
 from src.views.reports.cashflow_total_report import CashFlowTotalReport
@@ -30,18 +32,46 @@ class CashFlowReportPresenter:
 
     def _connect_to_view_signals(self) -> None:
         self._main_view.signal_cash_flow_total_report.connect(
-            self._create_total_cash_flow_report
+            self._create_total_cash_flow_report_with_busy_dialog
         )
         self._main_view.signal_cash_flow_montly_report.connect(
-            lambda: self._create_periodic_cash_flow_report(
+            lambda: self._create_periodic_cash_flow_report_with_busy_dialog(
                 "%b %Y", "Cash Flow Report - Monthly"
             )
         )
         self._main_view.signal_cash_flow_annual_report.connect(
-            lambda: self._create_periodic_cash_flow_report(
+            lambda: self._create_periodic_cash_flow_report_with_busy_dialog(
                 "%Y", "Cash Flow Report - Annual"
             )
         )
+
+    def _create_total_cash_flow_report_with_busy_dialog(self) -> None:
+        self._busy_dialog = create_simple_busy_indicator(
+            self._main_view, "Preparing report, please wait..."
+        )
+        self._busy_dialog.open()
+        QApplication.processEvents()
+        try:
+            self._create_total_cash_flow_report()
+        except:  # noqa: TRY302
+            raise
+        finally:
+            self._busy_dialog.close()
+
+    def _create_periodic_cash_flow_report_with_busy_dialog(
+        self, period_format: str, title: str
+    ) -> None:
+        self._busy_dialog = create_simple_busy_indicator(
+            self._main_view, "Preparing report, please wait..."
+        )
+        self._busy_dialog.open()
+        QApplication.processEvents()
+        try:
+            self._create_periodic_cash_flow_report(period_format, title)
+        except:  # noqa: TRY302
+            raise
+        finally:
+            self._busy_dialog.close()
 
     def _create_total_cash_flow_report(self) -> None:
         logging.debug("Total Cash Flow Report requested")

@@ -3,6 +3,7 @@ from collections.abc import Collection
 from datetime import datetime
 
 from PyQt6.QtCore import QSortFilterProxyModel, Qt
+from PyQt6.QtWidgets import QApplication
 from src.models.base_classes.account import Account
 from src.models.model_objects.account_group import AccountGroup
 from src.models.model_objects.currency_objects import Currency
@@ -18,6 +19,7 @@ from src.view_models.account_tree_model import AccountTreeModel
 from src.view_models.asset_type_tree_model import AssetTypeTreeModel
 from src.view_models.value_table_model import ValueTableModel, ValueType
 from src.views.constants import AccountTreeColumn
+from src.views.dialogs.busy_dialog import create_simple_busy_indicator
 from src.views.main_view import MainView
 from src.views.reports.table_and_line_chart_report import TableAndLineChartReport
 from src.views.reports.tree_and_sunburst_report import TreeAndSunburstReport
@@ -42,12 +44,53 @@ class NetWorthReportPresenter:
 
     def _connect_to_view_signals(self) -> None:
         self._main_view.signal_net_worth_accounts_report.connect(
-            self._create_accounts_report
+            self._create_accounts_report_with_busy_dialog
         )
         self._main_view.signal_net_worth_asset_type_report.connect(
-            self._create_asset_type_report
+            self._create_asset_type_report_with_busy_dialog
         )
-        self._main_view.signal_net_worth_time_report.connect(self._create_time_report)
+        self._main_view.signal_net_worth_time_report.connect(
+            self._create_time_report_with_busy_dialog
+        )
+
+    def _create_accounts_report_with_busy_dialog(self) -> None:
+        self._busy_dialog = create_simple_busy_indicator(
+            self._main_view, "Preparing report, please wait..."
+        )
+        self._busy_dialog.open()
+        QApplication.processEvents()
+        try:
+            self._create_accounts_report()
+        except:  # noqa: TRY302
+            raise
+        finally:
+            self._busy_dialog.close()
+
+    def _create_asset_type_report_with_busy_dialog(self) -> None:
+        self._busy_dialog = create_simple_busy_indicator(
+            self._main_view, "Preparing report, please wait..."
+        )
+        self._busy_dialog.open()
+        QApplication.processEvents()
+        try:
+            self._create_asset_type_report()
+        except:  # noqa: TRY302
+            raise
+        finally:
+            self._busy_dialog.close()
+
+    def _create_time_report_with_busy_dialog(self) -> None:
+        self._busy_dialog = create_simple_busy_indicator(
+            self._main_view, "Preparing report, please wait..."
+        )
+        self._busy_dialog.open()
+        QApplication.processEvents()
+        try:
+            self._create_time_report()
+        except:  # noqa: TRY302
+            raise
+        finally:
+            self._busy_dialog.close()
 
     def _create_accounts_report(self) -> None:
         logging.debug("Net Worth Accounts Report requested")

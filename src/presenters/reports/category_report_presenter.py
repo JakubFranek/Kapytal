@@ -2,6 +2,7 @@ import logging
 from collections.abc import Collection
 
 from PyQt6.QtCore import QSortFilterProxyModel, Qt
+from PyQt6.QtWidgets import QApplication
 from src.models.base_classes.transaction import Transaction
 from src.models.model_objects.cash_objects import CashTransaction, RefundTransaction
 from src.models.record_keeper import RecordKeeper
@@ -14,6 +15,7 @@ from src.presenters.widget.transactions_presenter import TransactionsPresenter
 from src.view_models.periodic_category_stats_tree_model import (
     PeriodicCategoryStatsTreeModel,
 )
+from src.views.dialogs.busy_dialog import create_simple_busy_indicator
 from src.views.main_view import MainView
 from src.views.reports.category_report import CategoryReport
 from src.views.utilities.handle_exception import display_error_message
@@ -36,15 +38,30 @@ class CategoryReportPresenter:
 
     def _connect_to_view_signals(self) -> None:
         self._main_view.signal_category_monthly_report.connect(
-            lambda: self._create_periodic_report(
+            lambda: self._create_periodic_report_with_busy_dialog(
                 period_format="%b %Y", title="Category Report - Monthly"
             )
         )
         self._main_view.signal_category_annual_report.connect(
-            lambda: self._create_periodic_report(
+            lambda: self._create_periodic_report_with_busy_dialog(
                 period_format="%Y", title="Category Report - Annual"
             )
         )
+
+    def _create_periodic_report_with_busy_dialog(
+        self, period_format: str, title: str
+    ) -> None:
+        self._busy_dialog = create_simple_busy_indicator(
+            self._main_view, "Preparing report, please wait..."
+        )
+        self._busy_dialog.open()
+        QApplication.processEvents()
+        try:
+            self._create_periodic_report(period_format, title)
+        except:  # noqa: TRY302
+            raise
+        finally:
+            self._busy_dialog.close()
 
     def _create_periodic_report(self, period_format: str, title: str) -> None:
         logging.debug(f"Category Report requested: {period_format=}")
