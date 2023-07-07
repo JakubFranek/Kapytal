@@ -27,6 +27,29 @@ class CategoryPeriodicReport(CustomWidget, Ui_CategoryPeriodicReport):
         self.setWindowTitle(title)
         self.setWindowIcon(icons.bar_chart)
 
+        self.actionExpand_All_Income.setIcon(icons.expand)
+        self.actionExpand_All_Expense.setIcon(icons.expand)
+        self.actionCollapse_All_Income.setIcon(icons.collapse)
+        self.actionCollapse_All_Expense.setIcon(icons.collapse)
+
+        self.actionExpand_All_Income.triggered.connect(self.incomeTreeView.expandAll)
+        self.actionExpand_All_Expense.triggered.connect(self.expenseTreeView.expandAll)
+        self.actionCollapse_All_Income.triggered.connect(
+            self.incomeTreeView.collapseAll
+        )
+        self.actionCollapse_All_Expense.triggered.connect(
+            self.expenseTreeView.collapseAll
+        )
+
+        self.incomeExpandAllToolButton.setDefaultAction(self.actionExpand_All_Income)
+        self.expenseExpandAllToolButton.setDefaultAction(self.actionExpand_All_Expense)
+        self.incomeCollapseAllToolButton.setDefaultAction(
+            self.actionCollapse_All_Income
+        )
+        self.expenseCollapseAllToolButton.setDefaultAction(
+            self.actionCollapse_All_Expense
+        )
+
     def finalize_setup(self) -> None:
         for column in range(self.incomeTreeView.model().columnCount()):
             self.incomeTreeView.header().setSectionResizeMode(

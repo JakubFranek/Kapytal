@@ -173,9 +173,7 @@ class PeriodicCategoryStatsTreeModel(QAbstractItemModel):
         if role == Qt.ItemDataRole.DisplayRole:
             return self._get_display_role_data(row, column, row_object)
         if role == Qt.ItemDataRole.UserRole:
-            if column == 0:
-                return unicodedata.normalize("NFD", row_object.name)
-            return float(row_object.data[column - 1])
+            return self._get_user_role_data(column, row_object)
         if role == Qt.ItemDataRole.TextAlignmentRole:
             if column == 0:
                 return ALIGNMENT_LEFT
@@ -196,6 +194,11 @@ class PeriodicCategoryStatsTreeModel(QAbstractItemModel):
         else:
             prefix = ""
         return prefix + f"{row_object.data[column-1]:,}"
+
+    def _get_user_role_data(self, column: int, row_object: RowObject) -> str | None:
+        if column == 0:
+            return unicodedata.normalize("NFD", row_object.name)
+        return float(row_object.data[column - 1])
 
     def _get_foreground_role_data(self, column: int, amount: Decimal) -> QBrush | None:
         if column == 0:

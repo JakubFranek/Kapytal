@@ -5,10 +5,10 @@ from src.models.base_classes.transaction import Transaction
 from src.models.model_objects.cash_objects import CashTransaction, RefundTransaction
 from src.models.record_keeper import RecordKeeper
 from src.models.statistics.category_stats import (
-    calculate_average_per_month_category_stats,
+    calculate_average_per_period_category_stats,
     calculate_category_stats,
-    calculate_monthly_category_stats,
-    calculate_monthly_totals_and_averages,
+    calculate_periodic_category_stats,
+    calculate_periodic_totals_and_averages,
 )
 from src.presenters.widget.transactions_presenter import TransactionsPresenter
 from src.view_models.periodic_category_stats_tree_model import (
@@ -59,10 +59,10 @@ class CategoryReportPresenter:
         transactions = self._transactions_presenter.get_visible_transactions()
         transactions = _filter_transactions(transactions)
         base_currency = self._record_keeper.base_currency
-        stats_per_month = calculate_monthly_category_stats(
+        stats_per_month = calculate_periodic_category_stats(
             transactions, base_currency, self._record_keeper.categories
         )
-        stats = calculate_average_per_month_category_stats(stats_per_month)
+        stats = calculate_average_per_period_category_stats(stats_per_month)
         self.report = CategoryReport("Average Per Month", self._main_view)
         self.report.finalize_setup()
         self.report.load_stats(stats)
@@ -72,7 +72,7 @@ class CategoryReportPresenter:
         transactions = self._transactions_presenter.get_visible_transactions()
         transactions = _filter_transactions(transactions)
         base_currency = self._record_keeper.base_currency
-        stats_per_month = calculate_monthly_category_stats(
+        stats_per_month = calculate_periodic_category_stats(
             transactions,
             base_currency,
             self._record_keeper.categories,
@@ -95,12 +95,12 @@ class CategoryReportPresenter:
             income_month_totals,
             income_category_averages,
             income_category_totals,
-        ) = calculate_monthly_totals_and_averages(income_stats_per_month)
+        ) = calculate_periodic_totals_and_averages(income_stats_per_month)
         (
             expense_month_totals,
             expense_category_averages,
             expense_category_totals,
-        ) = calculate_monthly_totals_and_averages(expense_stats_per_month)
+        ) = calculate_periodic_totals_and_averages(expense_stats_per_month)
 
         self.report = CategoryPeriodicReport(
             "Category Report - Monthly", self._main_view

@@ -74,7 +74,7 @@ def create_sunburst_chart(
             x = rect.get_x() + rect.get_width() / 2
             y = rect.get_y() + rect.get_height() / 2
             rotation = (90 + (360 - (180 * x / math.pi) % 180)) % 360
-            ha = "left" if x > math.pi else "right"
+            ha = "left" if x >= math.pi else "right"
             if len(label) > 15 and " " in label:
                 index = get_middle_whitespace_index(label)
                 if index > 0:

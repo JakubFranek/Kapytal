@@ -75,8 +75,9 @@ class NetWorthReportPresenter:
         self.report.show_form()
 
     def _create_asset_type_report(self) -> None:
+        accounts = self._transactions_presenter.checked_accounts
         base_currency = self._record_keeper.base_currency
-        stats = calculate_asset_stats(self._record_keeper.accounts, base_currency)
+        stats = calculate_asset_stats(accounts, base_currency)
         data = calculate_asset_type_sunburst_data(stats)
         label_text = (
             "NOTE: this chart does not display assets with zero or negative balance."
