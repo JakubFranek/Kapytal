@@ -21,6 +21,7 @@ from src.views.constants import AccountTreeColumn
 from src.views.main_view import MainView
 from src.views.reports.table_and_line_chart_report import TableAndLineChartReport
 from src.views.reports.tree_and_sunburst_report import TreeAndSunburstReport
+from src.views.utilities.handle_exception import display_error_message
 from src.views.widgets.charts.sunburst_chart_widget import SunburstNode
 
 
@@ -51,6 +52,19 @@ class NetWorthReportPresenter:
     def _create_accounts_report(self) -> None:
         account_items = self._transactions_presenter.checked_account_items
         base_currency = self._record_keeper.base_currency
+        if base_currency is None:
+            display_error_message(
+                "Set a base Currency before running this report.",
+                title="Warning",
+            )
+            return
+        if not account_items:
+            display_error_message(
+                "Select at least one Account before running this report.",
+                title="Warning",
+            )
+            return
+
         data = calculate_accounts_sunburst_data(account_items, base_currency)
         label_text = (
             "NOTE: this chart does not display Accounts and Account Groups with "
@@ -78,6 +92,19 @@ class NetWorthReportPresenter:
     def _create_asset_type_report(self) -> None:
         accounts = self._transactions_presenter.checked_accounts
         base_currency = self._record_keeper.base_currency
+        if base_currency is None:
+            display_error_message(
+                "Set a base Currency before running this report.",
+                title="Warning",
+            )
+            return
+        if not accounts:
+            display_error_message(
+                "Select at least one Account before running this report.",
+                title="Warning",
+            )
+            return
+
         stats = calculate_asset_stats(accounts, base_currency)
         data = calculate_asset_type_sunburst_data(stats)
         label_text = (
@@ -105,22 +132,33 @@ class NetWorthReportPresenter:
         accounts = frozenset(
             account for account in account_items if isinstance(account, Account)
         )
-        datetime_filter = (
-            self._transactions_presenter.transaction_filter_form_presenter.transaction_filter.datetime_filter
+        transactions = self._record_keeper.transactions
+        transactions = sorted(
+            transactions, key=lambda transaction: transaction.timestamp
         )
-        if datetime_filter.mode != FilterMode.OFF:
-            start = datetime_filter.start.date()
-            end = datetime_filter.end.date()
-        else:
-            transactions = self._record_keeper.transactions
-            transactions = sorted(
-                transactions, key=lambda transaction: transaction.timestamp
+        if not transactions:
+            display_error_message(
+                "This report cannot be run because there are no Transactions passing "
+                "Transaction filter.",
+                title="Warning",
             )
-            start = transactions[0].datetime_.date()
-            end = datetime.now(tz=user_settings.settings.time_zone).date()
+            return
+        start = transactions[0].datetime_.date()
+        end = datetime.now(tz=user_settings.settings.time_zone).date()
+
         base_currency = self._record_keeper.base_currency
         if base_currency is None:
-            raise ValueError("Variable 'base_currency' is None.")
+            display_error_message(
+                "Set a base Currency before running this report.",
+                title="Warning",
+            )
+            return
+        if not account_items:
+            display_error_message(
+                "Select at least one Account before running this report.",
+                title="Warning",
+            )
+            return
 
         data = calculate_net_worth_over_time(accounts, base_currency, start, end)
         data = [(date, net_worth.value_rounded) for date, net_worth in data]

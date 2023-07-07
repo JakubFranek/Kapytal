@@ -15,6 +15,7 @@ from src.view_models.periodic_category_stats_tree_model import (
 )
 from src.views.main_view import MainView
 from src.views.reports.category_report import CategoryReport
+from src.views.utilities.handle_exception import display_error_message
 
 
 class CategoryReportPresenter:
@@ -48,8 +49,21 @@ class CategoryReportPresenter:
         transactions = self._transactions_presenter.get_visible_transactions()
         transactions = _filter_transactions(transactions)
         base_currency = self._record_keeper.base_currency
+
         if base_currency is None:
-            raise ValueError("Base Currency must not be None.")
+            display_error_message(
+                "Set a base Currency before running this report.",
+                title="Warning",
+            )
+            return
+        if not transactions:
+            display_error_message(
+                "This report cannot be run because there are no Transactions passing "
+                "Transaction filter.",
+                title="Warning",
+            )
+            return
+
         periodic_stats = calculate_periodic_category_stats(
             transactions,
             base_currency,

@@ -175,6 +175,8 @@ class TransactionFilterFormPresenter:
     @property
     def checked_account_items(self) -> frozenset[Account | AccountGroup]:
         if self._form.account_filter_mode == AccountFilterMode.ACCOUNT_TREE:
+            if not hasattr(self, "_account_tree_checked_items"):
+                return frozenset()
             return self._account_tree_checked_items
         if self._transaction_filter.account_filter.mode == FilterMode.OFF:
             return frozenset(self._record_keeper.account_items)

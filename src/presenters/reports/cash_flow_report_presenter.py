@@ -8,6 +8,7 @@ from src.presenters.widget.transactions_presenter import TransactionsPresenter
 from src.views.main_view import MainView
 from src.views.reports.cashflow_periodic_report import CashFlowPeriodicReport
 from src.views.reports.cashflow_total_report import CashFlowTotalReport
+from src.views.utilities.handle_exception import display_error_message
 
 
 class CashFlowReportPresenter:
@@ -52,6 +53,20 @@ class CashFlowReportPresenter:
         else:
             raise ValueError(f"Unexpected filter mode: {account_filter.mode}")
         base_currency = self._record_keeper.base_currency
+
+        if base_currency is None:
+            display_error_message(
+                "Set a base Currency before running this report.",
+                title="Warning",
+            )
+            return
+        if not accounts:
+            display_error_message(
+                "Select at least one Account before running this report.",
+                title="Warning",
+            )
+            return
+
         cash_flow_stats = calculate_cash_flow(transactions, accounts, base_currency)
         self.report = CashFlowTotalReport(self._main_view)
         self.report.load_stats(cash_flow_stats)
@@ -69,6 +84,20 @@ class CashFlowReportPresenter:
         else:
             raise ValueError(f"Unexpected filter mode: {account_filter.mode}")
         base_currency = self._record_keeper.base_currency
+
+        if base_currency is None:
+            display_error_message(
+                "Set a base Currency before running this report.",
+                title="Warning",
+            )
+            return
+        if not accounts:
+            display_error_message(
+                "Select at least one Account before running this report.",
+                title="Warning",
+            )
+            return
+
         cash_flow_stats = calculate_periodic_cash_flow(
             transactions, accounts, base_currency, period_format
         )
