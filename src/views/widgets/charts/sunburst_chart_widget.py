@@ -1,11 +1,25 @@
 import math
 from collections.abc import Sequence
+from dataclasses import dataclass
 from numbers import Real
+from typing import Self
 
 import matplotlib as mpl
 from matplotlib.axes import Axes
 from PyQt6.QtWidgets import QWidget
 from src.views.widgets.charts.chart_widget import ChartWidget
+
+
+@dataclass
+class SunburstNode:
+    label: str
+    value: Real
+    children: list[Self]
+
+    def clear_label(self) -> None:
+        self.label = ""
+        for child in self.children:
+            child.clear_label()
 
 
 class SunburstChartWidget(ChartWidget):
@@ -18,35 +32,36 @@ class SunburstChartWidget(ChartWidget):
     def load_data(self, data: Sequence) -> None:
         self.chart.axes.clear()
         create_sunburst_chart(self.chart.axes, data)
+        self.chart.draw()
         self.chart_toolbar.update()
 
 
 def create_sunburst_chart(
     ax: Axes,
-    nodes: Sequence,
+    nodes: Sequence[SunburstNode],
     color: str | Sequence = "white",
     total: Real = math.pi * 2,
     offset: Real = 0,
     level: int = 0,
 ) -> None:
     if level == 0 and len(nodes) == 1:
-        label, value, subnodes = nodes[0]
+        node = nodes[0]
         ax.bar(x=[0], height=[0.5], width=[math.pi * 2], color=color)
-        ax.text(0, 0, label, ha="center", va="center")
+        ax.text(0, 0, node.label, ha="center", va="center")
         create_sunburst_chart(
             ax,
-            subnodes,
-            color=mpl.colormaps["tab10"](range(len(subnodes))),
-            total=value,
+            node.children,
+            color=mpl.colormaps["tab10"](range(len(node.children))),
+            total=node.value,
             level=level + 1,
         )
     elif nodes:
         d = math.pi * 2 / total  # conversion factor between values and radians
-        labels = []
+        labels: list[str] = []
         widths = []
-        for label, value, _ in nodes:
-            labels.append(label)
-            widths.append(value * d)
+        for node in nodes:
+            labels.append(node.label)
+            widths.append(node.value * d)
 
         values = cumulative_sum([offset * d] + widths[:-1])
         heights = [1] * len(nodes)
@@ -74,12 +89,27 @@ def create_sunburst_chart(
             x = rect.get_x() + rect.get_width() / 2
             y = rect.get_y() + rect.get_height() / 2
             rotation = (90 + (360 - (180 * x / math.pi) % 180)) % 360
-            ax.text(x, y, label, rotation=rotation, ha="center", va="center")
+            ha = "left" if x >= math.pi else "right"
+            if len(label) > 15 and " " in label:
+                index = get_middle_whitespace_index(label)
+                if index > 0:
+                    _label = label[:index] + "\n" + label[index + 1 :]
+                else:
+                    _label = label
+            else:
+                _label = label
+            ax.text(
+                x,
+                y + 0.45,
+                _label,
+                rotation=rotation,
+                rotation_mode="anchor",
+                ha=ha,
+                va="center",
+            )
 
         local_offset = offset
-        for index, tup_ in enumerate(nodes):
-            _, value, subnodes = tup_
-
+        for index, node in enumerate(nodes):
             try:
                 child_color = colors[index % len(nodes)]
                 if len(child_color) != 4:  # noqa: PLR2004
@@ -89,13 +119,13 @@ def create_sunburst_chart(
 
             create_sunburst_chart(
                 ax,
-                subnodes,
+                node.children,
                 color=child_color,
                 total=total,
                 offset=local_offset,
                 level=level + 1,
             )
-            local_offset += value
+            local_offset += node.value
 
     if level == 0:
         ax.set_theta_direction(-1)
@@ -114,3 +144,24 @@ def get_color_map_ratios(n: int) -> tuple[float]:
         return tuple(round(0.2 + 0.2 * i, 2) for i in range(n))
     ratios = tuple(round(i * 0.8 / n, 2) for i in range(n + 1))
     return ratios[1:]
+
+
+def get_middle_whitespace_index(string: str) -> int:
+    middle_index = math.ceil(len(string) / 2)
+    left_part = string[:middle_index]
+    right_part = string[middle_index:]
+    right_whitespace_index = right_part.find(" ")
+    left_whitespace_index = left_part.rfind(" ")
+
+    if right_whitespace_index == -1 and left_whitespace_index == -1:
+        return -1
+    if right_whitespace_index == -1:
+        return left_whitespace_index
+    if left_whitespace_index == -1:
+        return right_whitespace_index + middle_index
+
+    distance_left = abs(middle_index - left_whitespace_index)
+    distance_right = right_whitespace_index
+    if distance_right <= distance_left:
+        return right_whitespace_index + middle_index
+    return left_whitespace_index

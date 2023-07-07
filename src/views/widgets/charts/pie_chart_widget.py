@@ -14,6 +14,7 @@ class PieChartWidget(ChartWidget):
         self.lines = None
 
     def load_data(self, data: Sequence[tuple[Real, str]]) -> None:
+        self.chart.axes.clear()
         data = sorted(data, key=lambda x: x[0], reverse=True)
         sizes = [data[0] for data in data]
         labels = [data[1] for data in data]
@@ -23,8 +24,9 @@ class PieChartWidget(ChartWidget):
             colors=mpl.colormaps["Set2"](range(len(sizes))),
             startangle=90,
             rotatelabels=True,
-            labeldistance=0.5,
+            labeldistance=0.75,
             counterclock=False,
+            textprops={"va": "center", "rotation_mode": "anchor"},
         )
         self.chart.axes.relim()
         self.chart.axes.autoscale()

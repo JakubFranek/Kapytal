@@ -1,3 +1,5 @@
+from collections.abc import Collection
+
 from PyQt6.QtCore import QSortFilterProxyModel, Qt
 from PyQt6.QtWidgets import QWidget
 from src.models.statistics.cashflow_stats import CashFlowStats
@@ -18,7 +20,7 @@ MAXIMUM_TABLE_HEIGHT = 800
 class CashFlowPeriodicReport(CustomWidget, Ui_CashFlowPeriodicReport):
     def __init__(
         self,
-        period: str,
+        title: str,
         parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent=parent)
@@ -31,7 +33,7 @@ class CashFlowPeriodicReport(CustomWidget, Ui_CashFlowPeriodicReport):
         self.tableView.setFont(table_font)
 
         self.setWindowFlag(Qt.WindowType.Window)
-        self.setWindowTitle(f"Cash Flow Report - {period}")
+        self.setWindowTitle(title)
         self.setWindowIcon(icons.bar_chart)
 
         self.chart_widget = CashFlowPeriodicChartWidget(self)
@@ -44,13 +46,13 @@ class CashFlowPeriodicReport(CustomWidget, Ui_CashFlowPeriodicReport):
         self.tableView.setModel(self._proxy_model)
         self.tableView.horizontalHeader().setSortIndicatorClearable(True)
 
-    def load_stats(self, stats: CashFlowStats) -> None:
+    def load_stats(self, stats: Collection[CashFlowStats]) -> None:
         self._table_model.pre_reset_model()
         self._table_model.load_cash_flow_stats(stats)
         self._table_model.post_reset_model()
         self.tableView.resizeColumnsToContents()
         self.tableView.sortByColumn(-1, Qt.SortOrder.AscendingOrder)
-        self.chart_widget.load_data(stats)
+        self.chart_widget.load_data(stats[:-1])
         width, height = self._calculate_table_view_size()
         self.resize(width, height)
 

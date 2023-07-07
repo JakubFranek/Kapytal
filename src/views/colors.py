@@ -8,7 +8,7 @@ _blue_dark_mode = QColor("deepskyblue")
 _green_light_mode = QColor("green")
 _green_dark_mode = QColor("lime")
 _red_light_mode = QColor("red")
-_red_dark_mode = QColor("deeppink")
+_red_dark_mode = QColor(255, 0, 191, 255)  # "shocking pink"
 _gray = QColor("gray")
 
 _brush_blue_light_mode = QBrush(_blue_light_mode)

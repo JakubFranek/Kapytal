@@ -79,6 +79,10 @@ class TransactionsPresenter:
         return self._transaction_filter_form_presenter
 
     @property
+    def checked_accounts(self) -> frozenset[Account]:
+        return self._transaction_filter_form_presenter.checked_accounts
+
+    @property
     def checked_account_items(self) -> frozenset[Account | AccountGroup]:
         return self._transaction_filter_form_presenter.checked_account_items
 

@@ -287,165 +287,6 @@
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="tagsTab">
-      <attribute name="title">
-       <string>Tags</string>
-      </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout_5">
-       <item>
-        <widget class="QGroupBox" name="tagLessFilterGroupBox">
-         <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Filter Tag-less Transactions&lt;/p&gt;&lt;p&gt;KEEP: Only Tag-less Transactions will be kept&lt;/p&gt;&lt;p&gt;DISCARD: Tag-less Transactions will be discarded&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-         <property name="title">
-          <string>Tag-less Transaction Filter</string>
-         </property>
-         <layout class="QFormLayout" name="formLayout_5">
-          <item row="0" column="0">
-           <widget class="QLabel" name="tagLessFilterModeLabel">
-            <property name="text">
-             <string>Mode</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1">
-           <widget class="QComboBox" name="tagLessFilterModeComboBox"/>
-          </item>
-         </layout>
-        </widget>
-       </item>
-       <item>
-        <widget class="QGroupBox" name="specificTagsFilterGroupBox">
-         <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Filter Transactions (which have at least 1 Tag) based on specific Tags.&lt;/p&gt;&lt;p&gt;Transactions with no Tags are filtered separately via &amp;quot;Tag-less Transaction Filter&amp;quot;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-         <property name="title">
-          <string>Specific Tags Filter</string>
-         </property>
-         <property name="checkable">
-          <bool>true</bool>
-         </property>
-         <property name="checked">
-          <bool>false</bool>
-         </property>
-         <layout class="QVBoxLayout" name="verticalLayout_14">
-          <item>
-           <widget class="QLineEdit" name="tagsSearchLineEdit">
-            <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Special characters:&lt;/p&gt;&lt;p&gt;* matches zero or more of any characters&lt;br/&gt;? matches any single character&lt;br/&gt;[...] matches any character within square brackets&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-            </property>
-            <property name="placeholderText">
-             <string>Search Tags</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QListView" name="tagsListView"/>
-          </item>
-          <item>
-           <layout class="QHBoxLayout" name="tagsButtonsHorizontalLayout">
-            <item>
-             <widget class="QPushButton" name="tagsSelectAllPushButton">
-              <property name="text">
-               <string>Select All</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QPushButton" name="tagsUnselectAllPushButton">
-              <property name="text">
-               <string>Unselect All</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-         </layout>
-        </widget>
-       </item>
-       <item>
-        <widget class="QGroupBox" name="splitTagsFilterGroupBox">
-         <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Filter Transactions with &amp;quot;Split Tags&amp;quot;. &lt;/p&gt;&lt;p&gt;Transactions with Split Tags are Transactions, where at least one of the Tag amounts is not equal to the total Transaction amount.&lt;/p&gt;&lt;p&gt;Only Incomes and Expenses can have &amp;quot;Split Tags&amp;quot;. Other Transaction types are unaffected by this filter. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-         <property name="title">
-          <string>Split Tags Filter</string>
-         </property>
-         <layout class="QFormLayout" name="formLayout_4">
-          <item row="0" column="0">
-           <widget class="QLabel" name="splitTagsFilterModeLabel">
-            <property name="text">
-             <string>Mode</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1">
-           <widget class="QComboBox" name="splitTagsFilterModeComboBox"/>
-          </item>
-         </layout>
-        </widget>
-       </item>
-      </layout>
-     </widget>
-     <widget class="QWidget" name="payeesTab">
-      <attribute name="title">
-       <string>Payees</string>
-      </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout_7">
-       <item>
-        <widget class="QGroupBox" name="payeeFilterGroupBox">
-         <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Filter Transactions based on Payees.&lt;/p&gt;&lt;p&gt;Only Incomes, Expenses and Refunds have a Payee attribute. Other Transaction types are unaffected by the Payee Filter.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-         <property name="title">
-          <string>Payee Filter</string>
-         </property>
-         <property name="flat">
-          <bool>false</bool>
-         </property>
-         <property name="checkable">
-          <bool>true</bool>
-         </property>
-         <property name="checked">
-          <bool>false</bool>
-         </property>
-         <layout class="QVBoxLayout" name="verticalLayout_15">
-          <item>
-           <widget class="QLineEdit" name="payeesSearchLineEdit">
-            <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Special characters:&lt;/p&gt;&lt;p&gt;* matches zero or more of any characters&lt;br/&gt;? matches any single character&lt;br/&gt;[...] matches any character within square brackets&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-            </property>
-            <property name="placeholderText">
-             <string>Search Payees</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QListView" name="payeesListView"/>
-          </item>
-          <item>
-           <layout class="QHBoxLayout" name="payeesButtonHorizontalLayout">
-            <item>
-             <widget class="QPushButton" name="payeesSelectAllPushButton">
-              <property name="text">
-               <string>Select All</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QPushButton" name="payeesUnselectAllPushButton">
-              <property name="text">
-               <string>Unselect All</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-         </layout>
-        </widget>
-       </item>
-      </layout>
-     </widget>
      <widget class="QWidget" name="categoriesTab">
       <attribute name="title">
        <string>Categories</string>
@@ -703,6 +544,165 @@
              </item>
             </layout>
            </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tagsTab">
+      <attribute name="title">
+       <string>Tags</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_5">
+       <item>
+        <widget class="QGroupBox" name="tagLessFilterGroupBox">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Filter Tag-less Transactions&lt;/p&gt;&lt;p&gt;KEEP: Only Tag-less Transactions will be kept&lt;/p&gt;&lt;p&gt;DISCARD: Tag-less Transactions will be discarded&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="title">
+          <string>Tag-less Transaction Filter</string>
+         </property>
+         <layout class="QFormLayout" name="formLayout_5">
+          <item row="0" column="0">
+           <widget class="QLabel" name="tagLessFilterModeLabel">
+            <property name="text">
+             <string>Mode</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QComboBox" name="tagLessFilterModeComboBox"/>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="specificTagsFilterGroupBox">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Filter Transactions (which have at least 1 Tag) based on specific Tags.&lt;/p&gt;&lt;p&gt;Transactions with no Tags are filtered separately via &amp;quot;Tag-less Transaction Filter&amp;quot;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="title">
+          <string>Specific Tags Filter</string>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+         <property name="checked">
+          <bool>false</bool>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_14">
+          <item>
+           <widget class="QLineEdit" name="tagsSearchLineEdit">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Special characters:&lt;/p&gt;&lt;p&gt;* matches zero or more of any characters&lt;br/&gt;? matches any single character&lt;br/&gt;[...] matches any character within square brackets&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="placeholderText">
+             <string>Search Tags</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QListView" name="tagsListView"/>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="tagsButtonsHorizontalLayout">
+            <item>
+             <widget class="QPushButton" name="tagsSelectAllPushButton">
+              <property name="text">
+               <string>Select All</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="tagsUnselectAllPushButton">
+              <property name="text">
+               <string>Unselect All</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="splitTagsFilterGroupBox">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Filter Transactions with &amp;quot;Split Tags&amp;quot;. &lt;/p&gt;&lt;p&gt;Transactions with Split Tags are Transactions, where at least one of the Tag amounts is not equal to the total Transaction amount.&lt;/p&gt;&lt;p&gt;Only Incomes and Expenses can have &amp;quot;Split Tags&amp;quot;. Other Transaction types are unaffected by this filter. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="title">
+          <string>Split Tags Filter</string>
+         </property>
+         <layout class="QFormLayout" name="formLayout_4">
+          <item row="0" column="0">
+           <widget class="QLabel" name="splitTagsFilterModeLabel">
+            <property name="text">
+             <string>Mode</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QComboBox" name="splitTagsFilterModeComboBox"/>
+          </item>
+         </layout>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="payeesTab">
+      <attribute name="title">
+       <string>Payees</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_7">
+       <item>
+        <widget class="QGroupBox" name="payeeFilterGroupBox">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Filter Transactions based on Payees.&lt;/p&gt;&lt;p&gt;Only Incomes, Expenses and Refunds have a Payee attribute. Other Transaction types are unaffected by the Payee Filter.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="title">
+          <string>Payee Filter</string>
+         </property>
+         <property name="flat">
+          <bool>false</bool>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+         <property name="checked">
+          <bool>false</bool>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_15">
+          <item>
+           <widget class="QLineEdit" name="payeesSearchLineEdit">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Special characters:&lt;/p&gt;&lt;p&gt;* matches zero or more of any characters&lt;br/&gt;? matches any single character&lt;br/&gt;[...] matches any character within square brackets&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="placeholderText">
+             <string>Search Payees</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QListView" name="payeesListView"/>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="payeesButtonHorizontalLayout">
+            <item>
+             <widget class="QPushButton" name="payeesSelectAllPushButton">
+              <property name="text">
+               <string>Select All</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="payeesUnselectAllPushButton">
+              <property name="text">
+               <string>Unselect All</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
           </item>
          </layout>
         </widget>

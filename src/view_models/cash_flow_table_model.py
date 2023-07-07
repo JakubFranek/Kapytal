@@ -8,11 +8,12 @@ from src.models.statistics.cashflow_stats import CashFlowStats
 from src.views import colors
 from src.views.constants import CashFlowTableColumn
 
+overline_font = QFont()
+overline_font.setOverline(True)  # noqa: FBT003
 bold_font = QFont()
 bold_font.setBold(True)  # noqa: FBT003
 
 ALIGNMENT_RIGHT = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
-
 COLUMN_HEADERS = {
     CashFlowTableColumn.INCOME: "Income",
     CashFlowTableColumn.INWARD_TRANSFERS: "Inward Transfers",
@@ -44,6 +45,8 @@ class CashFlowTableModel(QAbstractTableModel):
 
     def load_cash_flow_stats(self, stats: Sequence[CashFlowStats]) -> None:
         self._stats = tuple(stats)
+        self.AVERAGE_ROW = len(self._stats) - 2
+        self.TOTAL_ROW = len(self._stats) - 1
 
     def rowCount(self, index: QModelIndex = ...) -> int:  # noqa: N802
         if isinstance(index, QModelIndex) and index.isValid():
@@ -63,16 +66,11 @@ class CashFlowTableModel(QAbstractTableModel):
                 return COLUMN_HEADERS[section]
             return self._stats[section].period
         if (
-            role == Qt.ItemDataRole.TextAlignmentRole
-            and orientation == Qt.Orientation.Vertical
-        ):
-            return ALIGNMENT_RIGHT
-        if (
             role == Qt.ItemDataRole.FontRole
             and orientation == Qt.Orientation.Vertical
-            and section == len(self._stats) - 1
+            and section == self.AVERAGE_ROW
         ):
-            return bold_font
+            return overline_font
         return None
 
     def data(
@@ -91,12 +89,15 @@ class CashFlowTableModel(QAbstractTableModel):
             return self._get_foreground_role_data(
                 index.column(), self._stats[index.row()]
             )
-        if role == Qt.ItemDataRole.FontRole and index.row() == len(self._stats) - 1:
-            return bold_font
+        if role == Qt.ItemDataRole.FontRole:
+            if index.row() == self.AVERAGE_ROW:
+                return overline_font
+            if index.row() == self.TOTAL_ROW:
+                return bold_font
         return None
 
     def _get_display_role_data(self, column: int, stats: CashFlowStats) -> str:
-        return self._get_cash_amount_for_column(stats, column).to_str_rounded()
+        return f"{self._get_cash_amount_for_column(stats, column).value_rounded:,}"
 
     def _get_user_role_data(self, column: int, stats: CashFlowStats) -> float:
         return float(self._get_cash_amount_for_column(stats, column).value_rounded)

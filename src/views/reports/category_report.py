@@ -1,21 +1,22 @@
-from typing import Literal
+from collections.abc import Collection
 
-from PyQt6.QtCore import QSortFilterProxyModel, Qt
-from PyQt6.QtWidgets import QHeaderView, QWidget
-from src.models.model_objects.attributes import Category
+from PyQt6.QtCore import QSignalBlocker, Qt
+from PyQt6.QtWidgets import QComboBox, QHBoxLayout, QHeaderView, QWidget
 from src.models.statistics.category_stats import CategoryStats
-from src.view_models.category_tree_model import CategoryTreeModel
 from src.views import icons
 from src.views.base_classes.custom_widget import CustomWidget
-from src.views.constants import CategoryTreeColumn
 from src.views.ui_files.reports.Ui_category_report import Ui_CategoryReport
-from src.views.widgets.charts.sunburst_chart_widget import SunburstChartWidget
+from src.views.widgets.charts.sunburst_chart_widget import (
+    SunburstChartWidget,
+    SunburstNode,
+)
 
 
 class CategoryReport(CustomWidget, Ui_CategoryReport):
     def __init__(
         self,
-        type_: Literal["Total", "Average Per Month"],
+        title: str,
+        currency_code: str,
         parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent=parent)
@@ -24,154 +25,133 @@ class CategoryReport(CustomWidget, Ui_CategoryReport):
         # BUG: figure out why this is needed at all
         font = self.font()
         font_size = font.pointSize()
-        tree_font = self.incomeTreeView.font()
+        tree_font = self.treeView.font()
         tree_font.setPointSize(font_size)
-        self.incomeTreeView.setFont(tree_font)
-        self.expenseTreeView.setFont(tree_font)
+        self.treeView.setFont(tree_font)
 
         self.setWindowFlag(Qt.WindowType.Window)
-        self.setWindowTitle(f"Category Report - {type_}")
-        self.setWindowIcon(icons.bar_chart)
+        self.setWindowTitle(title)
+        self.setWindowIcon(icons.category)
+        self.currencyNoteLabel.setText(f"All values in {currency_code}")
 
-        self.income_chart_widget = SunburstChartWidget(self)
-        self.expense_chart_widget = SunburstChartWidget(self)
-        self.incomeTabHorizontalLayout.addWidget(self.income_chart_widget)
-        self.expenseTabHorizontalLayout.addWidget(self.expense_chart_widget)
-        self.incomeTabHorizontalLayout.setStretch(0, 0)
-        self.incomeTabHorizontalLayout.setStretch(1, 1)
-        self.expenseTabHorizontalLayout.setStretch(0, 0)
-        self.expenseTabHorizontalLayout.setStretch(1, 1)
+        self.chart_widget = SunburstChartWidget(self)
+        self.splitter.addWidget(self.chart_widget)
 
-        self._income_proxy = QSortFilterProxyModel(self)
-        self._income_proxy.setSortRole(Qt.ItemDataRole.UserRole)
-        self._income_proxy.setSortCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
-        self._income_model = CategoryTreeModel(self.incomeTreeView, self._income_proxy)
-        self._income_proxy.setSourceModel(self._income_model)
-        self.incomeTreeView.setModel(self._income_proxy)
-        self.incomeTreeView.header().setSortIndicatorClearable(True)
+        self.actionExpand_All.setIcon(icons.expand)
+        self.actionCollapse_All.setIcon(icons.collapse)
 
-        self._expense_proxy = QSortFilterProxyModel(self)
-        self._expense_proxy.setSortRole(Qt.ItemDataRole.UserRole)
-        self._expense_proxy.setSortCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
-        self._expense_model = CategoryTreeModel(
-            self._expense_proxy, self._expense_proxy
-        )
-        self._expense_proxy.setSourceModel(self._expense_model)
-        self.expenseTreeView.setModel(self._expense_proxy)
-        self.expenseTreeView.header().setSortIndicatorClearable(True)
+        self.actionExpand_All.triggered.connect(self.treeView.expandAll)
+        self.actionCollapse_All.triggered.connect(self.treeView.collapseAll)
 
-        self.actionExpand_All_Income.setIcon(icons.expand)
-        self.actionExpand_All_Expense.setIcon(icons.expand)
-        self.actionCollapse_All_Income.setIcon(icons.collapse)
-        self.actionCollapse_All_Expense.setIcon(icons.collapse)
+        self.expandAllToolButton.setDefaultAction(self.actionExpand_All)
+        self.collapseAllToolButton.setDefaultAction(self.actionCollapse_All)
 
-        self.actionExpand_All_Income.triggered.connect(self.incomeTreeView.expandAll)
-        self.actionExpand_All_Expense.triggered.connect(self.expenseTreeView.expandAll)
-        self.actionCollapse_All_Income.triggered.connect(
-            self.incomeTreeView.collapseAll
-        )
-        self.actionCollapse_All_Expense.triggered.connect(
-            self.expenseTreeView.collapseAll
-        )
+        self.typeComboBox = QComboBox(self)
+        self.typeComboBox.addItem("Income")
+        self.typeComboBox.addItem("Expense")
+        self.typeComboBox.setCurrentText("Income")
+        self.typeComboBox.currentTextChanged.connect(self._combobox_text_changed)
 
-        self.incomeExpandAllToolButton.setDefaultAction(self.actionExpand_All_Income)
-        self.expenseExpandAllToolButton.setDefaultAction(self.actionExpand_All_Expense)
-        self.incomeCollapseAllToolButton.setDefaultAction(
-            self.actionCollapse_All_Income
-        )
-        self.expenseCollapseAllToolButton.setDefaultAction(
-            self.actionCollapse_All_Expense
-        )
+        self.periodComboBox = QComboBox(self)
+        self.periodComboBox.currentTextChanged.connect(self._combobox_text_changed)
+
+        self.combo_box_horizontal_layout = QHBoxLayout()
+        self.combo_box_horizontal_layout.addWidget(self.typeComboBox)
+        self.combo_box_horizontal_layout.addWidget(self.periodComboBox)
+        self.chart_widget.horizontal_layout.addLayout(self.combo_box_horizontal_layout)
+
+    def finalize_setup(self) -> None:
+        for column in range(self.treeView.model().columnCount()):
+            self.treeView.header().setSectionResizeMode(
+                column, QHeaderView.ResizeMode.ResizeToContents
+            )
+
+    def show_form(self) -> None:
+        super().show_form()
+        width = self.splitter.size().width()
+        self.splitter.setSizes([width // 2, width // 2])
 
     def load_stats(
         self,
-        stats: dict[Category, CategoryStats],
+        income_periodic_stats: dict[str, Collection[CategoryStats]],
+        expense_periodic_stats: dict[str, Collection[CategoryStats]],
     ) -> None:
-        income_stats = {
-            category: stats
-            for category, stats in stats.items()
-            if stats.balance.is_positive()
-        }
-        flat_income_categories = [category for category, _ in income_stats.items()]
-        expense_stats = {
-            category: stats
-            for category, stats in stats.items()
-            if stats.balance.is_negative()
-        }
-        flat_expense_categories = [category for category, _ in expense_stats.items()]
+        self._income_periodic_stats = income_periodic_stats
+        self._expense_periodic_stats = expense_periodic_stats
 
-        self._income_model.pre_reset_model()
-        self._income_model.load_data(flat_income_categories, income_stats)
-        self._income_model.post_reset_model()
-        self._expense_model.pre_reset_model()
-        self._expense_model.load_data(flat_expense_categories, expense_stats)
-        self._expense_model.post_reset_model()
-        self.incomeTreeView.sortByColumn(-1, Qt.SortOrder.AscendingOrder)
-        self.expenseTreeView.sortByColumn(-1, Qt.SortOrder.AscendingOrder)
+        periods = list(income_periodic_stats.keys())
+        self._setup_comboboxes(periods)
 
-        sunburst_income_data = convert_category_stats_to_sunburst_data(income_stats)
-        sunburst_expense_data = convert_category_stats_to_sunburst_data(expense_stats)
-        self.income_chart_widget.load_data(sunburst_income_data)
-        self.expense_chart_widget.load_data(sunburst_expense_data)
+    def _setup_comboboxes(self, periods: Collection[str]) -> None:
+        with QSignalBlocker(self.periodComboBox):
+            for period in periods:
+                self.periodComboBox.addItem(period)
+        self.periodComboBox.setCurrentText(periods[-1])
 
-        self.incomeTreeView.sortByColumn(2, Qt.SortOrder.DescendingOrder)
-        self.expenseTreeView.sortByColumn(2, Qt.SortOrder.AscendingOrder)
-
-    def finalize_setup(self) -> None:
-        self.incomeTreeView.header().setSectionResizeMode(
-            CategoryTreeColumn.NAME,
-            QHeaderView.ResizeMode.ResizeToContents,
+    def _combobox_text_changed(self) -> None:
+        type_ = self.typeComboBox.currentText()
+        data = (
+            self._income_periodic_stats
+            if type_ == "Income"
+            else self._expense_periodic_stats
         )
-        self.incomeTreeView.header().setSectionResizeMode(
-            CategoryTreeColumn.TRANSACTIONS,
-            QHeaderView.ResizeMode.ResizeToContents,
-        )
-        self.incomeTreeView.header().setSectionResizeMode(
-            CategoryTreeColumn.BALANCE,
-            QHeaderView.ResizeMode.ResizeToContents,
-        )
-
-        self.expenseTreeView.header().setSectionResizeMode(
-            CategoryTreeColumn.NAME,
-            QHeaderView.ResizeMode.ResizeToContents,
-        )
-        self.expenseTreeView.header().setSectionResizeMode(
-            CategoryTreeColumn.TRANSACTIONS,
-            QHeaderView.ResizeMode.ResizeToContents,
-        )
-        self.expenseTreeView.header().setSectionResizeMode(
-            CategoryTreeColumn.BALANCE,
-            QHeaderView.ResizeMode.ResizeToContents,
-        )
+        selected_period = self.periodComboBox.currentText()
+        sunburst_data = _convert_category_stats_to_sunburst_data(data[selected_period])
+        self.chart_widget.load_data(sunburst_data)
 
 
-def convert_category_stats_to_sunburst_data(
-    stats: dict[Category, CategoryStats]
-) -> tuple:
+def _convert_category_stats_to_sunburst_data(
+    stats: Collection[CategoryStats],
+) -> tuple[SunburstNode]:
+    total = sum((stats.balance.value_rounded) for stats in stats)
+    no_label_threshold = abs(float(total) * 0.4 / 100)
     balance = 0.0
-    tuples = []
-    for category, _stats in stats.items():
-        if category.parent is not None:
+    level = 1
+    children: list[SunburstNode] = []
+    for item in stats:
+        if item.category.parent is not None:
             continue
-        stats_tuple = create_stats_tuple(category, stats)
-        balance += stats_tuple[1]
-        tuples.append(stats_tuple)
-    tuples.sort(key=lambda x: abs(x[1]), reverse=True)
-    return [("", balance, tuples)]
+        node = _create_node(
+            item, stats, no_label_threshold, level + 1, parent_label_visible=True
+        )
+        balance += node.value
+        if abs(node.value) < no_label_threshold:
+            node.clear_label()
+        children.append(node)
+    children.sort(key=lambda x: abs(x.value), reverse=True)
+    return (SunburstNode("", balance, children),)
 
 
-def create_stats_tuple(
-    category: Category, stats: dict[Category, CategoryStats]
-) -> tuple[str, float, list]:
-    children_tuples = []
-    tuple_ = (
-        category.name,
-        float(stats[category].balance.value_rounded),
-        children_tuples,
+def _create_node(
+    stats: CategoryStats,
+    all_stats: Collection[CategoryStats],
+    no_label_threshold: float,  # abs value
+    level: int,
+    *,
+    parent_label_visible: bool,
+) -> SunburstNode:
+    node = SunburstNode(
+        stats.category.name,
+        float(stats.balance.value_rounded),
+        [],
     )
+    label_visible = abs(node.value) >= no_label_threshold / (level - 1)
 
-    for _category, _stats in stats.items():
-        if _category in category.children:
-            children_tuples.append(create_stats_tuple(_category, stats))
-    children_tuples.sort(key=lambda x: abs(x[1]), reverse=True)
-    return tuple_
+    for item in all_stats:
+        if item.category in stats.category.children:
+            child_node = _create_node(
+                item,
+                all_stats,
+                no_label_threshold,
+                level + 1,
+                parent_label_visible=label_visible,
+            )
+            if (
+                abs(child_node.value) < no_label_threshold / level
+                or not parent_label_visible
+                or not label_visible
+            ):
+                child_node.clear_label()
+            node.children.append(child_node)
+    node.children.sort(key=lambda x: abs(x.value), reverse=True)
+    return node

@@ -1,16 +1,25 @@
+import logging
 from collections.abc import Collection
 
+from PyQt6.QtCore import QSortFilterProxyModel, Qt
+from PyQt6.QtWidgets import QApplication
 from src.models.base_classes.transaction import Transaction
 from src.models.model_objects.attributes import AttributeType
 from src.models.model_objects.cash_objects import CashTransaction, RefundTransaction
 from src.models.record_keeper import RecordKeeper
 from src.models.statistics.attribute_stats import (
-    calculate_attribute_stats,
-    calculate_average_per_month_attribute_stats,
+    AttributeStats,
+    calculate_periodic_attribute_stats,
+    calculate_periodic_totals_and_averages,
 )
 from src.presenters.widget.transactions_presenter import TransactionsPresenter
+from src.view_models.periodic_attribute_stats_table_model import (
+    PeriodicAttributeStatsTableModel,
+)
+from src.views.dialogs.busy_dialog import create_simple_busy_indicator
 from src.views.main_view import MainView
-from src.views.reports.attribute_report import AttributeReport
+from src.views.reports.attribute_periodic_report import AttributeReport
+from src.views.utilities.handle_exception import display_error_message
 
 
 class AttributeReportPresenter:
@@ -29,59 +38,152 @@ class AttributeReportPresenter:
         self._record_keeper = record_keeper
 
     def _connect_to_view_signals(self) -> None:
-        self._main_view.signal_tag_total_report.connect(
-            lambda: self._create_total_report(AttributeType.TAG)
+        self._main_view.signal_tag_monthly_report.connect(
+            lambda: self._create_periodic_report_with_busy_dialog(
+                period_format="%b %Y",
+                title="Tag Report - Monthly",
+                attribute_type=AttributeType.TAG,
+            )
         )
-        self._main_view.signal_tag_average_per_month_report.connect(
-            lambda: self._create_average_per_month_report(AttributeType.TAG)
+        self._main_view.signal_tag_annual_report.connect(
+            lambda: self._create_periodic_report_with_busy_dialog(
+                period_format="%Y",
+                title="Tag Report - Annual",
+                attribute_type=AttributeType.TAG,
+            )
         )
-        self._main_view.signal_payee_total_report.connect(
-            lambda: self._create_total_report(AttributeType.PAYEE)
+        self._main_view.signal_payee_monthly_report.connect(
+            lambda: self._create_periodic_report_with_busy_dialog(
+                period_format="%b %Y",
+                title="Payee Report - Monthly",
+                attribute_type=AttributeType.PAYEE,
+            )
         )
-        self._main_view.signal_payee_average_per_month_report.connect(
-            lambda: self._create_average_per_month_report(AttributeType.PAYEE)
+        self._main_view.signal_payee_annual_report.connect(
+            lambda: self._create_periodic_report_with_busy_dialog(
+                period_format="%Y",
+                title="Payee Report - Annual",
+                attribute_type=AttributeType.PAYEE,
+            )
         )
 
-    def _create_total_report(self, attribute_type: AttributeType) -> None:
+    def _create_periodic_report_with_busy_dialog(
+        self, period_format: str, title: str, attribute_type: AttributeType
+    ) -> None:
+        self._busy_dialog = create_simple_busy_indicator(
+            self._main_view, "Preparing report, please wait..."
+        )
+        self._busy_dialog.open()
+        QApplication.processEvents()
+        try:
+            self._create_periodic_report(period_format, title, attribute_type)
+        except:  # noqa: TRY302
+            raise
+        finally:
+            self._busy_dialog.close()
+
+    def _create_periodic_report(
+        self, period_format: str, title: str, attribute_type: AttributeType
+    ) -> None:
+        logging.debug(
+            f"Attribute Report requested: {period_format=}, "
+            f"attribute_type={attribute_type.name}"
+        )
+
         transactions = self._transactions_presenter.get_visible_transactions()
         transactions = _filter_transactions(transactions)
         base_currency = self._record_keeper.base_currency
+
+        if base_currency is None:
+            display_error_message(
+                "Set a base Currency before running this report.",
+                title="Warning",
+            )
+            return
+        if not transactions:
+            display_error_message(
+                "This report cannot be run because there are no Transactions passing "
+                "Transaction filter.",
+                title="Warning",
+            )
+            return
+
         attributes = (
             self._record_keeper.tags
             if attribute_type == AttributeType.TAG
             else self._record_keeper.payees
         )
-        title = (
-            "Tag Report - Total"
-            if attribute_type == AttributeType.TAG
-            else "Payee Report - Total"
-        )
-        stats = calculate_attribute_stats(transactions, base_currency, attributes)
-        self.report = AttributeReport(title, self._main_view)
-        self.report.finalize_setup()
-        self.report.load_stats(stats.values())
-        self.report.show_form()
 
-    def _create_average_per_month_report(self, attribute_type: AttributeType) -> None:
-        transactions = self._transactions_presenter.get_visible_transactions()
-        transactions = _filter_transactions(transactions)
-        base_currency = self._record_keeper.base_currency
-        attributes = (
-            self._record_keeper.tags
-            if attribute_type == AttributeType.TAG
-            else self._record_keeper.payees
+        periodic_stats = calculate_periodic_attribute_stats(
+            transactions,
+            base_currency,
+            attributes,
+            period_format=period_format,
         )
-        title = (
-            "Tag Report - Average Per Month"
-            if attribute_type == AttributeType.TAG
-            else "Payee Report - Average Per Month"
+
+        # keep only stats which are are non-zero in at least one period
+        _periodic_stats: dict[str, list[AttributeStats]] = {}
+        for period, stats in periodic_stats.items():
+            _stats = []
+            for item in stats:
+                if item.balance.value_rounded != 0:
+                    _stats.append(item)
+            _periodic_stats[period] = _stats
+
+        (
+            period_totals,
+            attribute_averages,
+            attribute_totals,
+        ) = calculate_periodic_totals_and_averages(_periodic_stats)
+
+        self.report = AttributeReport(
+            title, base_currency.code, attribute_type, self._main_view
         )
-        stats = calculate_average_per_month_attribute_stats(
-            transactions, base_currency, attributes
+
+        self._proxy = QSortFilterProxyModel(self.report)
+        self._model = PeriodicAttributeStatsTableModel(
+            self.report.tableView, self._proxy
         )
-        self.report = AttributeReport(title, self._main_view)
+        self._model.load_periodic_attribute_stats(
+            _periodic_stats,
+            period_totals,
+            attribute_averages,
+            attribute_totals,
+            base_currency,
+        )
+        self._proxy.setSourceModel(self._model)
+        self._proxy.setSortRole(Qt.ItemDataRole.UserRole)
+        self.report.tableView.setModel(self._proxy)
+        self.report.tableView.sortByColumn(
+            self._model.AVERAGE_COLUMN_INDEX, Qt.SortOrder.DescendingOrder
+        )
+
+        income_periodic_stats: dict[str, list[AttributeStats]] = {}
+        expense_periodic_stats: dict[str, list[AttributeStats]] = {}
+        for period in periodic_stats:
+            income_periodic_stats[period] = []
+            expense_periodic_stats[period] = []
+            for stats in periodic_stats[period]:
+                if stats.balance.value_rounded > 0:
+                    income_periodic_stats[period].append(stats)
+                elif stats.balance.value_rounded < 0:
+                    expense_periodic_stats[period].append(stats)
+
+        income_average_stats = [
+            AttributeStats(attribute, 0, balance)
+            for attribute, balance in attribute_averages.items()
+            if balance.value_rounded > 0
+        ]
+        expense_average_stats = [
+            AttributeStats(attribute, 0, balance)
+            for attribute, balance in attribute_averages.items()
+            if balance.value_rounded < 0
+        ]
+        income_periodic_stats["Average / Total"] = income_average_stats
+        expense_periodic_stats["Average / Total"] = expense_average_stats
+
+        self.report.load_stats(income_periodic_stats, expense_periodic_stats)
         self.report.finalize_setup()
-        self.report.load_stats(stats)
         self.report.show_form()
 
 

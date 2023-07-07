@@ -165,8 +165,18 @@ class TransactionFilterFormPresenter:
         return tuple(f"{filter_.__class__.__name__}" for filter_ in active_filters)
 
     @property
+    def checked_accounts(self) -> frozenset[Account]:
+        if self._form.account_filter_mode == AccountFilterMode.ACCOUNT_TREE:
+            return self._account_tree_checked_accounts
+        if self._transaction_filter.account_filter.mode == FilterMode.OFF:
+            return frozenset(self._record_keeper.accounts)
+        return self._account_filter_presenter.checked_accounts
+
+    @property
     def checked_account_items(self) -> frozenset[Account | AccountGroup]:
         if self._form.account_filter_mode == AccountFilterMode.ACCOUNT_TREE:
+            if not hasattr(self, "_account_tree_checked_items"):
+                return frozenset()
             return self._account_tree_checked_items
         if self._transaction_filter.account_filter.mode == FilterMode.OFF:
             return frozenset(self._record_keeper.account_items)

@@ -28,7 +28,7 @@ class TreeAndSunburstReport(CustomWidget, Ui_TreeAndSunburstReport):
 
         self.setWindowFlag(Qt.WindowType.Window)
         self.setWindowTitle(title)
-        self.setWindowIcon(icons.bar_chart)
+        self.setWindowIcon(icons.pie_chart)
 
         self.chart_widget = SunburstChartWidget(self)
         self.verticalLayout.insertWidget(0, self.chart_widget)

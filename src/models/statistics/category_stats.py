@@ -1,8 +1,8 @@
 import itertools
-from collections.abc import Collection
+from collections.abc import Collection, Sequence
 from dataclasses import dataclass
 
-from src.models.model_objects.attributes import Category
+from src.models.model_objects.attributes import Category, CategoryType
 from src.models.model_objects.cash_objects import (
     CashTransaction,
     RefundTransaction,
@@ -18,41 +18,108 @@ class CategoryStats:
     balance: CashAmount
 
 
-def calculate_monthly_attribute_stats(
+def calculate_periodic_totals_and_averages(
+    periodic_stats: dict[str, Sequence[CategoryStats]], currency: Currency
+) -> tuple[
+    dict[str, CashAmount],
+    dict[str, CashAmount],
+    dict[str, CashAmount],
+    dict[Category, CashAmount],
+    dict[Category, CashAmount],
+]:
+    """Returns a tuple of (period_totals, period_income_totals, period_expense_totals,
+    category_averages, category_totals)"""
+
+    category_totals: dict[Category, CashAmount] = {}
+    period_totals: dict[str, CashAmount] = {}
+    period_income_totals: dict[str, CashAmount] = {}
+    period_expense_totals: dict[str, CashAmount] = {}
+    category_averages: dict[Category, CashAmount] = {}
+
+    for period in periodic_stats:
+        period_income_totals[period] = sum(
+            (
+                stats.balance
+                for stats in periodic_stats[period]
+                if (
+                    stats.category.type_ == CategoryType.INCOME
+                    or (
+                        stats.category.type_ == CategoryType.INCOME_AND_EXPENSE
+                        and stats.balance.value_rounded > 0
+                    )
+                )
+                and stats.category.parent is None
+            ),
+            start=currency.zero_amount,
+        )
+        period_expense_totals[period] = sum(
+            (
+                stats.balance
+                for stats in periodic_stats[period]
+                if (
+                    stats.category.type_ == CategoryType.EXPENSE
+                    or (
+                        stats.category.type_ == CategoryType.INCOME_AND_EXPENSE
+                        and stats.balance.value_rounded < 0
+                    )
+                )
+                and stats.category.parent is None
+            ),
+            start=currency.zero_amount,
+        )
+        period_totals[period] = (
+            period_income_totals[period] + period_expense_totals[period]
+        )
+        for stats in periodic_stats[period]:
+            category_totals[stats.category] = (
+                category_totals.get(stats.category, currency.zero_amount)
+                + stats.balance
+            )
+    category_averages = {
+        category: category_totals[category] / len(periodic_stats)
+        for category in category_totals
+    }
+    return (
+        period_totals,
+        period_income_totals,
+        period_expense_totals,
+        category_averages,
+        category_totals,
+    )
+
+
+def calculate_periodic_category_stats(
     transactions: Collection[CashTransaction | RefundTransaction],
     base_currency: Currency,
     all_categories: Collection[Category],
+    period_format: str = "%B %Y",
 ) -> dict[str, tuple[CategoryStats]]:
     transactions = sorted(transactions, key=lambda x: x.timestamp)
 
-    # separate transactions into bins by month/year
-    transactions_by_month: dict[str, list[CashTransaction | RefundTransaction]] = {}
+    # separate transactions into bins by period
+    transactions_by_period: dict[str, list[CashTransaction | RefundTransaction]] = {}
     for transaction in transactions:
-        key = transaction.datetime_.strftime("%B %Y")
-        if key not in transactions_by_month:
-            transactions_by_month[key] = []
-        transactions_by_month[key].append(transaction)
+        key = transaction.datetime_.strftime(period_format)
+        if key not in transactions_by_period:
+            transactions_by_period[key] = []
+        transactions_by_period[key].append(transaction)
 
     stats_dict: dict[str, tuple[CategoryStats]] = {}
-    for month in transactions_by_month:
-        monthly_stats = calculate_category_stats(
-            transactions_by_month[month], base_currency, all_categories
+    for period in transactions_by_period:
+        period_stats = calculate_category_stats(
+            transactions_by_period[period], base_currency, all_categories
         )
-        stats_dict[month] = tuple(monthly_stats.values())
+        stats_dict[period] = tuple(period_stats.values())
 
     return stats_dict
 
 
-def calculate_average_per_month_attribute_stats(
-    transactions: Collection[CashTransaction | RefundTransaction],
-    base_currency: Currency,
-    all_attributes: Collection[Category],
+def calculate_average_per_period_category_stats(
+    periodic_stats: dict[str, tuple[CategoryStats]],
 ) -> dict[Category, CategoryStats]:
-    stats_per_month = calculate_monthly_attribute_stats(
-        transactions, base_currency, all_attributes
-    )
-    all_stats = list(itertools.chain(*stats_per_month.values()))
-    periods = len(stats_per_month)
+    base_currency = list(periodic_stats.values())[0][0].balance.currency
+    all_stats = list(itertools.chain(*periodic_stats.values()))
+    periods = len(periodic_stats)
 
     average_stats: dict[Category, CategoryStats] = {}
     for stats in all_stats:

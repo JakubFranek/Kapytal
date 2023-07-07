@@ -113,64 +113,37 @@ def calculate_cash_flow(
     return stats
 
 
-def calculate_monthly_cash_flow(
+def calculate_periodic_cash_flow(
     transactions: Collection[Transaction],
     accounts: Collection[Account],
     base_currency: Currency,
+    period_format: str,
 ) -> tuple[CashFlowStats]:
     transactions = sorted(transactions, key=lambda x: x.timestamp)
 
-    # separate transactions into bins by month/year
-    transactions_by_month: dict[str, list[Transaction]] = {}
+    # separate transactions into bins by period
+    transactions_by_period: dict[str, list[Transaction]] = {}
     for transaction in transactions:
-        key = transaction.datetime_.strftime("%B %Y")
-        if key not in transactions_by_month:
-            transactions_by_month[key] = []
-        transactions_by_month[key].append(transaction)
+        key = transaction.datetime_.strftime(period_format)
+        if key not in transactions_by_period:
+            transactions_by_period[key] = []
+        transactions_by_period[key].append(transaction)
 
     stats_list: list[CashFlowStats] = []
-    for month in transactions_by_month:
+    for period in transactions_by_period:
         stats = calculate_cash_flow(
-            transactions_by_month[month],
+            transactions_by_period[period],
             accounts,
             base_currency,
         )
-        stats.period = month
+        stats.period = period
         stats_list.append(stats)
 
-    stats_list.append(calculate_average_cash_flow(stats_list, base_currency))
+    _stats_list = stats_list.copy()
+    _stats_list.append(calculate_average_cash_flow(stats_list, base_currency))
+    _stats_list.append(calculate_total_cash_flow(stats_list, base_currency))
 
-    return tuple(stats_list)
-
-
-def calculate_annual_cash_flow(
-    transactions: Collection[Transaction],
-    accounts: Collection[Account],
-    base_currency: Currency,
-) -> tuple[CashFlowStats]:
-    transactions = sorted(transactions, key=lambda x: x.timestamp)
-
-    # separate transactions into bins by month/year
-    transactions_by_year: dict[str, list[Transaction]] = {}
-    for transaction in transactions:
-        key = transaction.datetime_.strftime("%Y")
-        if key not in transactions_by_year:
-            transactions_by_year[key] = []
-        transactions_by_year[key].append(transaction)
-
-    stats_list: list[CashFlowStats] = []
-    for year in transactions_by_year:
-        stats = calculate_cash_flow(
-            transactions_by_year[year],
-            accounts,
-            base_currency,
-        )
-        stats.period = year
-        stats_list.append(stats)
-
-    stats_list.append(calculate_average_cash_flow(stats_list, base_currency))
-
-    return tuple(stats_list)
+    return tuple(_stats_list)
 
 
 def calculate_average_cash_flow(
@@ -203,3 +176,23 @@ def calculate_average_cash_flow(
     average.delta_performance /= periods
 
     return average
+
+
+def calculate_total_cash_flow(
+    stats_list: Collection[CashFlowStats], base_currency: Currency
+) -> CashFlowStats:
+    total = CashFlowStats(base_currency)
+    total.period = "Total"
+    for stats in stats_list:
+        total.incomes += stats.incomes
+        total.inward_transfers += stats.inward_transfers
+        total.refunds += stats.refunds
+        total.inflows += stats.inflows
+        total.expenses += stats.expenses
+        total.outward_transfers += stats.outward_transfers
+        total.outflows += stats.outflows
+        total.delta_neutral += stats.delta_neutral
+        total.delta_total += stats.delta_total
+        total.delta_performance += stats.delta_performance
+
+    return total
