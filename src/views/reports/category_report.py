@@ -31,7 +31,7 @@ class CategoryReport(CustomWidget, Ui_CategoryReport):
 
         self.setWindowFlag(Qt.WindowType.Window)
         self.setWindowTitle(title)
-        self.setWindowIcon(icons.bar_chart)
+        self.setWindowIcon(icons.category)
         self.currencyNoteLabel.setText(f"All values in {currency_code}")
 
         self.chart_widget = SunburstChartWidget(self)

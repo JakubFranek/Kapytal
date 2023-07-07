@@ -1,3 +1,4 @@
+import logging
 from collections.abc import Collection
 
 from PyQt6.QtCore import QSortFilterProxyModel, Qt
@@ -46,6 +47,8 @@ class CategoryReportPresenter:
         )
 
     def _create_periodic_report(self, period_format: str, title: str) -> None:
+        logging.debug(f"Category Report requested: {period_format=}")
+
         transactions = self._transactions_presenter.get_visible_transactions()
         transactions = _filter_transactions(transactions)
         base_currency = self._record_keeper.base_currency

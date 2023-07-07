@@ -1,3 +1,5 @@
+import logging
+
 from src.models.record_keeper import RecordKeeper
 from src.models.statistics.cashflow_stats import (
     calculate_cash_flow,
@@ -42,6 +44,8 @@ class CashFlowReportPresenter:
         )
 
     def _create_total_cash_flow_report(self) -> None:
+        logging.debug("Total Cash Flow Report requested")
+
         transactions = self._transactions_presenter.get_visible_transactions()
         account_filter = (
             self._transactions_presenter.transaction_filter_form_presenter.transaction_filter.account_filter
@@ -73,6 +77,8 @@ class CashFlowReportPresenter:
         self.report.show_form()
 
     def _create_periodic_cash_flow_report(self, period_format: str, title: str) -> None:
+        logging.debug(f"Periodic Cash Flow Report requested: {period_format=}")
+
         transactions = self._transactions_presenter.get_visible_transactions()
         account_filter = (
             self._transactions_presenter.transaction_filter_form_presenter.transaction_filter.account_filter

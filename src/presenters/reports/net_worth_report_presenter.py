@@ -1,3 +1,4 @@
+import logging
 from collections.abc import Collection
 from datetime import datetime
 
@@ -11,7 +12,6 @@ from src.models.statistics.net_worth_stats import (
     calculate_asset_stats,
     calculate_net_worth_over_time,
 )
-from src.models.transaction_filters.base_transaction_filter import FilterMode
 from src.models.user_settings import user_settings
 from src.presenters.widget.transactions_presenter import TransactionsPresenter
 from src.view_models.account_tree_model import AccountTreeModel
@@ -50,6 +50,8 @@ class NetWorthReportPresenter:
         self._main_view.signal_net_worth_time_report.connect(self._create_time_report)
 
     def _create_accounts_report(self) -> None:
+        logging.debug("Net Worth Accounts Report requested")
+
         account_items = self._transactions_presenter.checked_account_items
         base_currency = self._record_keeper.base_currency
         if base_currency is None:
@@ -90,6 +92,8 @@ class NetWorthReportPresenter:
         self.report.show_form()
 
     def _create_asset_type_report(self) -> None:
+        logging.debug("Net Worth Asset Type Report requested")
+
         accounts = self._transactions_presenter.checked_accounts
         base_currency = self._record_keeper.base_currency
         if base_currency is None:
@@ -128,6 +132,8 @@ class NetWorthReportPresenter:
         self.report.show_form()
 
     def _create_time_report(self) -> None:
+        logging.debug("Net Worth Time Report requested")
+
         account_items = self._transactions_presenter.checked_account_items
         accounts = frozenset(
             account for account in account_items if isinstance(account, Account)

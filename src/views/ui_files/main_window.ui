@@ -62,8 +62,8 @@
     <addaction name="actionCurrencies_and_Exchange_Rates"/>
     <addaction name="actionSecurities"/>
     <addaction name="separator"/>
-    <addaction name="actionTags"/>
     <addaction name="actionCategories"/>
+    <addaction name="actionTags"/>
     <addaction name="actionPayees"/>
     <addaction name="separator"/>
     <addaction name="actionSettings"/>
@@ -80,7 +80,7 @@
      <addaction name="actionCash_Flow_Annual"/>
      <addaction name="actionCash_Flow_Total"/>
     </widget>
-    <widget class="QMenu" name="menuOverview">
+    <widget class="QMenu" name="menuNet_Worth">
      <property name="title">
       <string>Net Worth</string>
      </property>
@@ -109,11 +109,11 @@
      <addaction name="actionPayee_Report_Monthly"/>
      <addaction name="actionPayee_Report_Annual"/>
     </widget>
-    <addaction name="menuOverview"/>
+    <addaction name="menuNet_Worth"/>
     <addaction name="menuCash_Flow"/>
     <addaction name="separator"/>
-    <addaction name="menuTags"/>
     <addaction name="menuCategories"/>
+    <addaction name="menuTags"/>
     <addaction name="menuPayees"/>
    </widget>
    <widget class="QMenu" name="menuAbout">
@@ -145,8 +145,8 @@
    <addaction name="actionCurrencies_and_Exchange_Rates"/>
    <addaction name="actionSecurities"/>
    <addaction name="separator"/>
-   <addaction name="actionTags"/>
    <addaction name="actionCategories"/>
+   <addaction name="actionTags"/>
    <addaction name="actionPayees"/>
    <addaction name="separator"/>
    <addaction name="actionSettings"/>

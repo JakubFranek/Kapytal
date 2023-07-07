@@ -80,6 +80,7 @@ arrow_move: QIcon | None = None
 home: QIcon | None = None
 slider: QIcon | None = None
 bar_chart: QIcon | None = None
+pie_chart: QIcon | None = None
 
 
 def setup() -> None:  # noqa: PLR0915
@@ -108,7 +109,7 @@ def setup() -> None:  # noqa: PLR0915
     global reset_sort_order  # noqa: PLW0603
     global hourglass  # noqa: PLW0603
     global arrow_right, arrow_left, arrow_move, home, slider  # noqa: PLW0603
-    global bar_chart  # noqa: PLW0603
+    global bar_chart, pie_chart  # noqa: PLW0603
     QDir.addSearchPath(
         "icons_24",
         str(Path(QDir.currentPath() + "/resources/icons/icons-24")),
@@ -200,3 +201,4 @@ def setup() -> None:  # noqa: PLR0915
     home = QIcon("icons_16:home.png")
     slider = QIcon("icons_16:ui-slider-050.png")
     bar_chart = QIcon("icons_16:chart.png")
+    pie_chart = QIcon("icons_16:chart-pie.png")

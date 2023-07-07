@@ -1,3 +1,4 @@
+import logging
 from collections.abc import Collection
 
 from PyQt6.QtCore import QSortFilterProxyModel, Qt
@@ -67,6 +68,11 @@ class AttributeReportPresenter:
     def _create_periodic_report(
         self, period_format: str, title: str, attribute_type: AttributeType
     ) -> None:
+        logging.debug(
+            f"Attribute Report requested: {period_format=}, "
+            f"attribute_type={attribute_type.name}"
+        )
+
         transactions = self._transactions_presenter.get_visible_transactions()
         transactions = _filter_transactions(transactions)
         base_currency = self._record_keeper.base_currency
@@ -113,7 +119,9 @@ class AttributeReportPresenter:
             attribute_totals,
         ) = calculate_periodic_totals_and_averages(_periodic_stats)
 
-        self.report = AttributeReport(title, base_currency.code, self._main_view)
+        self.report = AttributeReport(
+            title, base_currency.code, attribute_type, self._main_view
+        )
 
         self._proxy = QSortFilterProxyModel(self.report)
         self._model = PeriodicAttributeStatsTableModel(

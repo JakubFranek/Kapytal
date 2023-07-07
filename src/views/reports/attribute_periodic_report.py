@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 
 from PyQt6.QtCore import QSignalBlocker, Qt
 from PyQt6.QtWidgets import QComboBox, QHBoxLayout, QHeaderView, QWidget
+from src.models.model_objects.attributes import AttributeType
 from src.models.statistics.attribute_stats import AttributeStats
 from src.views import icons
 from src.views.base_classes.custom_widget import CustomWidget
@@ -20,6 +21,7 @@ class AttributeReport(CustomWidget, Ui_AttributeReport):
         self,
         title: str,
         currency_code: str,
+        attribute_type: AttributeType,
         parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent=parent)
@@ -33,7 +35,10 @@ class AttributeReport(CustomWidget, Ui_AttributeReport):
 
         self.setWindowFlag(Qt.WindowType.Window)
         self.setWindowTitle(title)
-        self.setWindowIcon(icons.bar_chart)
+        if attribute_type == AttributeType.TAG:
+            self.setWindowIcon(icons.tag)
+        else:
+            self.setWindowIcon(icons.payee)
         self.currencyNoteLabel.setText(f"All values in {currency_code}")
 
         self.chart_widget = PieChartWidget(self)

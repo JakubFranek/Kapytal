@@ -205,6 +205,12 @@ class MainView(QMainWindow, Ui_MainWindow):
         self.actionAbout.setIcon(icons.about)
         self.actionShow_Hide_Account_Tree.setIcon(icons.account_tree)
 
+        self.menuNet_Worth.setIcon(icons.pie_chart)
+        self.menuCash_Flow.setIcon(icons.bar_chart)
+        self.menuCategories.setIcon(icons.category)
+        self.menuTags.setIcon(icons.tag)
+        self.menuPayees.setIcon(icons.payee)
+
         self._connect_actions_to_signals()
 
     def _connect_actions_to_signals(self) -> None:
