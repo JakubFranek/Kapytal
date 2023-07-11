@@ -69,23 +69,24 @@ def calculate_cash_flow(
         final_balance += account.get_balance(base_currency, latest_date)
 
     for transaction in transactions:
+        date_ = transaction.datetime_.date()
         if isinstance(transaction, CashTransaction):
             if transaction.type_ == CashTransactionType.INCOME:
-                stats.incomes += transaction.amount.convert(base_currency)
+                stats.incomes += transaction.amount.convert(base_currency, date_)
             else:
-                stats.expenses += transaction.amount.convert(base_currency)
+                stats.expenses += transaction.amount.convert(base_currency, date_)
         elif isinstance(transaction, RefundTransaction):
-            stats.refunds += transaction.amount.convert(base_currency)
+            stats.refunds += transaction.amount.convert(base_currency, date_)
         elif isinstance(transaction, CashTransfer):
             if transaction.sender in accounts and transaction.recipient in accounts:
                 continue
             if transaction.sender in accounts:
                 stats.outward_transfers += transaction.amount_sent.convert(
-                    base_currency
+                    base_currency, date_
                 )
             if transaction.recipient in accounts:
                 stats.inward_transfers += transaction.amount_received.convert(
-                    base_currency
+                    base_currency, date_
                 )
         elif isinstance(transaction, SecurityTransaction):
             if (
@@ -95,13 +96,21 @@ def calculate_cash_flow(
                 continue
             if transaction.cash_account in accounts:
                 if transaction.type_ == SecurityTransactionType.BUY:
-                    stats.outward_transfers += transaction.amount.convert(base_currency)
+                    stats.outward_transfers += transaction.amount.convert(
+                        base_currency, date_
+                    )
                 else:
-                    stats.inward_transfers += transaction.amount.convert(base_currency)
+                    stats.inward_transfers += transaction.amount.convert(
+                        base_currency, date_
+                    )
             elif transaction.type_ == SecurityTransactionType.BUY:
-                stats.inward_transfers += transaction.amount.convert(base_currency)
+                stats.inward_transfers += transaction.amount.convert(
+                    base_currency, date_
+                )
             else:
-                stats.outward_transfers += transaction.amount.convert(base_currency)
+                stats.outward_transfers += transaction.amount.convert(
+                    base_currency, date_
+                )
 
     stats.inflows = stats.incomes + stats.inward_transfers + stats.refunds
     stats.outflows = stats.expenses + stats.outward_transfers

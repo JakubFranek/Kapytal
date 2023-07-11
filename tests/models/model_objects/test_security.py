@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 from typing import Any
 
@@ -249,7 +249,7 @@ def test_shares_unit_not_power_of_10(
 @given(
     data=st.data(),
 )
-def test_set_price(
+def test_set_get_price(
     data: st.DataObject,
 ) -> None:
     security = get_security()
@@ -257,13 +257,19 @@ def test_set_price(
     price = CashAmount(data.draw(valid_decimals()), currency)
     date_ = data.draw(st.dates())
     security.set_price(date_, price)
+
     assert security.price.value_normalized == price.value_normalized
     assert security.price_history[date_].value_normalized == price.value_normalized
     assert security.price == price
     assert security.latest_date == date_
+    assert security.get_price(None) == price
+    assert security.get_price(date_) == price
+    assert security.get_price(date_ - timedelta(days=1)).is_nan()
+
     price_2 = CashAmount(data.draw(valid_decimals()), currency)
     date_2 = data.draw(st.dates())
     security.set_price(date_2, price_2)
+
     assert security.price_history[date_2].value_normalized == price_2.value_normalized
     if date_2 > date_:
         assert security.price == price_2

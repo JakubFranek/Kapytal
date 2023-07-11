@@ -2,12 +2,12 @@
 
 ## Must haves
 
-1. reports
-    - monthly categories
 1. tests & coverage
+1. welcome dialog
 1. automatic exchange rate / price updates
 1. scheduled (recurrent) transactions
     - a "wrapper" around Transactions with scheduling info?
+1. capybara icons (32x32 and maybe 24x24)
 1. documentation
 
 ## Should haves

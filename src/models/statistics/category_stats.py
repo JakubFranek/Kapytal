@@ -152,6 +152,7 @@ def calculate_category_stats(
 
     for transaction in transactions:
         already_counted_ancestors = set()
+        date_ = transaction.datetime_.date()
         for category in transaction.categories:
             stats = stats_dict[category]
 
@@ -171,11 +172,11 @@ def calculate_category_stats(
                     ancestor_stats.transactions_total += 1
                     ancestor_stats.balance += transaction.get_amount_for_category(
                         ancestor, total=True
-                    ).convert(base_currency)
+                    ).convert(base_currency, date_)
                     already_counted_ancestors.add(ancestor)
                 else:  # prevent double counting if both parent and child are present
                     ancestor_stats.balance += transaction.get_amount_for_category(
                         ancestor, total=False
-                    ).convert(base_currency)
+                    ).convert(base_currency, date_)
 
     return stats_dict

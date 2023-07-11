@@ -186,6 +186,10 @@ def test_get_rate() -> None:
     rate_3 = Decimal(23)
 
     exchange_rate.set_rate(date_1, rate_1)
+    assert exchange_rate.latest_rate == rate_1
+    assert exchange_rate.get_rate(date_1) == rate_1
+    assert exchange_rate.get_rate(date_1 + timedelta(days=1)) == rate_1
+
     exchange_rate.set_rate(date_2, rate_2)
     exchange_rate.set_rate(date_3, rate_3)
 

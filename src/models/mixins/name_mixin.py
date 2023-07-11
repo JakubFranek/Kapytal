@@ -11,7 +11,7 @@ class NameMixin:
     __slots__ = ()
 
     NAME_MIN_LENGTH = 1
-    NAME_MAX_LENGTH = 32
+    NAME_MAX_LENGTH = 64
 
     def __init__(
         self,

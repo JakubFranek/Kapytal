@@ -1444,6 +1444,7 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
             "transactions": serialized_transactions,
         }
 
+    # TODO: add progress for exchange rate and price deserialization
     @staticmethod
     def deserialize(
         data: dict[str, Any], progress_callable: Callable[[int], None]

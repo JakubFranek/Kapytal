@@ -315,6 +315,19 @@ def test_truediv_rtruediv(data: st.DataObject) -> None:
     assert amount_1.__rtruediv__(amount_2) == expected_rtruediv
 
 
+@given(
+    data=st.data(),
+)
+def test_truediv_with_numbers(data: st.DataObject) -> None:
+    currency = data.draw(currencies())
+    amount_1 = data.draw(cash_amounts(currency=currency, min_value=1e-6))
+    amount_2 = data.draw(
+        st.decimals(min_value=1e-6, allow_infinity=False, allow_nan=False)
+    )
+    expected_truediv = amount_1.value_normalized / amount_2
+    assert amount_1.__truediv__(amount_2).value_normalized == expected_truediv
+
+
 @given(cash_amount_1=cash_amounts(), cash_amount_2=cash_amounts())
 def test_truediv_rtruediv_different_currencies(
     cash_amount_1: CashAmount, cash_amount_2: CashAmount

@@ -34,7 +34,7 @@ def test_name_too_short(name: str) -> None:
         ConcreteAccount(name)
 
 
-@given(name=names(min_size=33))
+@given(name=names(min_size=65))
 def test_name_too_long(name: str) -> None:
     with pytest.raises(NameLengthError):
         ConcreteAccount(name)

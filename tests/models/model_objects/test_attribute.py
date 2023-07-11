@@ -36,7 +36,7 @@ def test_name_too_short(name: str, type_: AttributeType) -> None:
 
 
 @given(
-    name=names(min_size=33),
+    name=names(min_size=65),
     type_=st.sampled_from(AttributeType),
 )
 def test_name_too_long(name: str, type_: AttributeType) -> None:
