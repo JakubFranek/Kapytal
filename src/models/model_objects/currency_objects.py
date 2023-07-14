@@ -12,7 +12,7 @@ from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
 from src.models.user_settings import user_settings
 
 quantizers: dict[int, Decimal] = {}
-for i in range(0, 12):
+for i in range(0, 18 + 1):
     quantizers[i] = Decimal(f"1e-{i}")
 
 

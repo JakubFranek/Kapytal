@@ -195,17 +195,18 @@ class CashTransferDialog(CustomDialog, Ui_CashTransferDialog):
         try:
             rate_primary = self.amount_received / self.amount_sent
             rate_secondary = self.amount_sent / self.amount_received
-            rate_primary = round(rate_primary, 2 * recipient.currency.places)
-            rate_secondary = round(rate_secondary, 2 * sender.currency.places)
+            rate_primary = round(rate_primary, recipient.currency.places)
+            rate_secondary = round(rate_secondary, sender.currency.places)
+            # TODO: this can fail for large currency places value... maybe a better solution is fixed significant places rounding
         except (InvalidOperation, DivisionByZero, TypeError):
             self.exchangeRateLineEdit.setText("Undefined")
             return
 
         text_primary = (
-            f"1 {sender.currency.code} = {rate_primary} {recipient.currency.code}"
+            f"1 {sender.currency.code} = {rate_primary:,} {recipient.currency.code}"
         )
         text_secondary = (
-            f"1 {recipient.currency.code} = {rate_secondary} {sender.currency.code}"
+            f"1 {recipient.currency.code} = {rate_secondary:,} {sender.currency.code}"
         )
 
         text_overall = text_primary + " | " + text_secondary

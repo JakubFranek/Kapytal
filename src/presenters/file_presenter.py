@@ -68,7 +68,7 @@ class SaveFileWorker(QObject):
                 }
                 self.progress_unknown.emit()
                 self.status_text.emit("Writing to file...")
-                json.dump(data, file, cls=CustomJSONEncoder)
+                json.dump(data, file, cls=CustomJSONEncoder, ensure_ascii=False)
                 self.finished.emit()
         except Exception as exc:  # noqa: BLE001
             self.exception = exc

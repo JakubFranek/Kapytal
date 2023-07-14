@@ -238,7 +238,7 @@ class TransactionTableModel(QAbstractTableModel):
         if column == TransactionTableColumn.SECURITY:
             return TransactionTableModel._get_transaction_security(transaction)
         if column == TransactionTableColumn.SHARES:
-            return str(TransactionTableModel._get_transaction_shares(transaction))
+            return TransactionTableModel._get_transaction_shares_string(transaction)
         if column == TransactionTableColumn.AMOUNT_NATIVE:
             return self._get_transaction_amount_string(transaction, base=False)
         if column == TransactionTableColumn.AMOUNT_BASE:
@@ -450,6 +450,14 @@ class TransactionTableModel(QAbstractTableModel):
             return transaction.get_shares(transaction.security_account)
         if isinstance(transaction, SecurityTransfer):
             return transaction.get_shares(transaction.recipient)
+        return Decimal("NaN")
+
+    @staticmethod
+    def _get_transaction_shares_string(transaction: Transaction) -> str:
+        if isinstance(transaction, SecurityTransaction):
+            return f"{transaction.get_shares(transaction.security_account):,}"
+        if isinstance(transaction, SecurityTransfer):
+            return f"{transaction.get_shares(transaction.recipient):,}"
         return ""
 
     def _get_transaction_amount_string(

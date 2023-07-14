@@ -35,9 +35,14 @@ class CashTransferDialogPresenter:
     def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
         self._record_keeper = record_keeper
 
-    def run_add_dialog(self, valid_accounts: Collection[CashAccount]) -> None:
+    def run_add_dialog(
+        self,
+        shown_accounts: Collection[CashAccount],
+        all_accounts: Collection[CashAccount],
+    ) -> None:
+        # FIXME: the code below is still not perfect...
         logging.debug("Running CashTransferDialog (edit_mode=ADD)")
-        if len(valid_accounts) <= 1:
+        if len(all_accounts) <= 1:
             display_error_message(
                 "Create at least two Cash Accounts before creating a Cash Transfer.",
                 title="Warning",
@@ -45,9 +50,18 @@ class CashTransferDialogPresenter:
             return
 
         self._prepare_dialog(edit_mode=EditMode.ADD)
-
-        self._dialog.sender_path = tuple(valid_accounts)[0].path
-        self._dialog.recipient_path = tuple(valid_accounts)[0].path
+        _shown_accounts = tuple(shown_accounts)
+        _all_accounts = tuple(all_accounts)
+        self._dialog.sender_path = (
+            _shown_accounts[0].path
+            if len(_shown_accounts) > 0
+            else _all_accounts[0].path
+        )
+        self._dialog.recipient_path = (
+            _shown_accounts[1].path
+            if len(_shown_accounts) > 0
+            else _all_accounts[1].path
+        )
         self._dialog.datetime_ = datetime.now(user_settings.settings.time_zone)
 
         self._dialog.signal_do_and_close.connect(
@@ -220,29 +234,30 @@ class CashTransferDialogPresenter:
         description = self._dialog.description
         tag_names = self._dialog.tag_names
 
-        if not check_for_nonexistent_attributes(
+        if tag_names is not None and not check_for_nonexistent_attributes(
             tag_names, self._record_keeper.tags, self._dialog, "Tag"
         ):
             logging.info("Dialog aborted")
             return
 
-        sender = self._record_keeper.get_account(sender_path, CashAccount)
-        recipient = self._record_keeper.get_account(recipient_path, CashAccount)
-        if sender.currency == recipient.currency and amount_sent != amount_received:
-            logging.debug(
-                "Amounts have different values but the same currency, "
-                "asking the user for confirmation"
-            )
-            if not ask_yes_no_question(
-                self._dialog,
-                "The sent and received amounts have different values but the same "
-                "currency. Some monetary value is therefore created or lost. "
-                "This is not the intended use of the Cash Transfer transaction type. "
-                "Do you want to proceed anyway?",
-                "Are you sure?",
-            ):
-                logging.debug("User cancelled the CashTransfer creation")
-            return
+        if sender_path is not None and recipient_path is not None:
+            sender = self._record_keeper.get_account(sender_path, CashAccount)
+            recipient = self._record_keeper.get_account(recipient_path, CashAccount)
+            if sender.currency == recipient.currency and amount_sent != amount_received:
+                logging.debug(
+                    "Amounts have different values but the same currency, "
+                    "asking the user for confirmation"
+                )
+                if not ask_yes_no_question(
+                    self._dialog,
+                    "The sent and received amounts have different values but the same "
+                    "currency. Some monetary value is therefore created or lost. "
+                    "This is not the intended use of the Cash Transfer transaction type. "
+                    "Do you want to proceed anyway?",
+                    "Are you sure?",
+                ):
+                    logging.debug("User cancelled the CashTransfer creation")
+                return
 
         log = []
         if description is not None:

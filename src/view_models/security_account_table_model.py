@@ -10,7 +10,7 @@ from src.models.model_objects.currency_objects import (
 from src.models.model_objects.security_objects import Security, SecurityAccount
 from src.views.constants import SecurityAccountTableColumn
 
-ALIGNMENT_AMOUNTS = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+ALIGNMENT_RIGHT = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
 COLUMN_HEADERS = {
     SecurityAccountTableColumn.SECURITY_NAME: "Security",
     SecurityAccountTableColumn.SYMBOL: "Symbol",
@@ -98,8 +98,9 @@ class SecurityAccountTableModel(QAbstractTableModel):
             column == SecurityAccountTableColumn.PRICE
             or column == SecurityAccountTableColumn.AMOUNT_NATIVE
             or column == SecurityAccountTableColumn.AMOUNT_BASE
+            or column == SecurityAccountTableColumn.SHARES
         ):
-            return ALIGNMENT_AMOUNTS
+            return ALIGNMENT_RIGHT
         return None
 
     def _get_display_role_data(  # noqa: PLR0911
@@ -112,7 +113,7 @@ class SecurityAccountTableModel(QAbstractTableModel):
         if column == SecurityAccountTableColumn.TYPE:
             return security.type_
         if column == SecurityAccountTableColumn.SHARES:
-            return str(shares)
+            return f"{shares:,}"
         if column == SecurityAccountTableColumn.PRICE:
             return security.price.to_str_normalized()
         if column == SecurityAccountTableColumn.AMOUNT_NATIVE:

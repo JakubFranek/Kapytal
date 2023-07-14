@@ -62,6 +62,17 @@ class ValueTableModel(QAbstractTableModel):
             self._column_count = len(self.COLUMN_HEADERS)
         return self._column_count
 
+    def headerData(  # noqa: N802
+        self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole = ...
+    ) -> str | int | None:
+        if section == -1:  # FIXME: this should not be necessary
+            return None
+        if role == Qt.ItemDataRole.DisplayRole:
+            if orientation == Qt.Orientation.Horizontal:
+                return self.COLUMN_HEADERS[section]
+            return str(section)
+        return None
+
     def data(
         self, index: QModelIndex, role: Qt.ItemDataRole = ...
     ) -> str | int | float | Qt.AlignmentFlag | None:
@@ -96,15 +107,6 @@ class ValueTableModel(QAbstractTableModel):
             return data[0].toordinal()
         if column == ValueTableColumn.VALUE:
             return float(data[1])
-        return None
-
-    def headerData(  # noqa: N802
-        self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole = ...
-    ) -> str | int | None:
-        if role == Qt.ItemDataRole.DisplayRole:
-            if orientation == Qt.Orientation.Horizontal:
-                return self.COLUMN_HEADERS[section]
-            return str(section)
         return None
 
     def pre_add(self, row: int) -> None:

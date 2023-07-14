@@ -47,7 +47,10 @@ class CashTransactionDialogPresenter:
         self, type_: CashTransactionType, valid_accounts: Collection[CashAccount]
     ) -> None:
         logging.debug("Running CashTransactionDialog (edit_mode=ADD)")
-        if len(valid_accounts) == 0:
+        _valid_accounts = [
+            account for account in valid_accounts if isinstance(account, CashAccount)
+        ]
+        if len(_valid_accounts) == 0:
             display_error_message(
                 "Create at least one Cash Account before creating a Cash Transaction.",
                 title="Warning",
@@ -57,7 +60,8 @@ class CashTransactionDialogPresenter:
         self._prepare_dialog(edit_mode=EditMode.ADD)
 
         self._dialog.type_ = type_
-        self._dialog.account_path = tuple(valid_accounts)[0].path
+
+        self._dialog.account_path = _valid_accounts[0].path
         self._dialog.datetime_ = datetime.now(user_settings.settings.time_zone)
 
         self._dialog.signal_do_and_close.connect(

@@ -87,8 +87,14 @@ class SecurityFormPresenter:
         self._busy_dialog.open()
         QApplication.processEvents()
 
-        if self._security_table_model.get_selected_item() is None:
+        self.reset_models()  # FIXME: code below still buggy, reset is brute solution
+        if (
+            self._security_table_model.get_selected_item() is None
+            and self._security_table_model.rowCount() > 0
+        ):
             self._view.securityTableView.selectRow(0)
+        else:
+            self._security_selection_changed()
         self._view.refresh_tree_view()
         self._view.treeView.sortByColumn(
             OwnedSecuritiesTreeColumn.AMOUNT_BASE, Qt.SortOrder.DescendingOrder
@@ -208,6 +214,8 @@ class SecurityFormPresenter:
             raise ValueError("A Security must be selected to set its price.")
 
         last_value = security.price.value_normalized
+        if last_value.is_nan():
+            last_value = Decimal(0)
         self._dialog = SetSecurityPriceDialog(
             date_=datetime.now(user_settings.settings.time_zone).date(),
             value=last_value,

@@ -93,7 +93,7 @@ class SecurityTransactionDialogPresenter:
         self._dialog.cash_account_path = transaction.cash_account.path
         self._dialog.security_account_path = transaction.security_account.path
         self._dialog.shares = transaction.shares
-        self._dialog.price_per_share = transaction.price_per_share.value_rounded
+        self._dialog.price_per_share = transaction.price_per_share.value_normalized
         self._dialog.datetime_ = transaction.datetime_
         self._dialog.description = transaction.description
         self._dialog.tag_names = [tag.name for tag in transaction.tags]
@@ -170,7 +170,7 @@ class SecurityTransactionDialogPresenter:
 
         prices = {transaction.price_per_share for transaction in transactions}
         self._dialog.price_per_share = (
-            prices.pop().value_rounded if len(prices) == 1 else 0
+            prices.pop().value_normalized if len(prices) == 1 else 0
         )
 
         tag_names_frozensets = set()

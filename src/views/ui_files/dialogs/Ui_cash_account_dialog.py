@@ -66,6 +66,10 @@ class Ui_CashAccountDialog(object):
 
         self.retranslateUi(CashAccountDialog)
         QtCore.QMetaObject.connectSlotsByName(CashAccountDialog)
+        CashAccountDialog.setTabOrder(self.currentPathLineEdit, self.pathLineEdit)
+        CashAccountDialog.setTabOrder(self.pathLineEdit, self.currencyComboBox)
+        CashAccountDialog.setTabOrder(self.currencyComboBox, self.initialBalanceDoubleSpinBox)
+        CashAccountDialog.setTabOrder(self.initialBalanceDoubleSpinBox, self.positionSpinBox)
 
     def retranslateUi(self, CashAccountDialog):
         _translate = QtCore.QCoreApplication.translate

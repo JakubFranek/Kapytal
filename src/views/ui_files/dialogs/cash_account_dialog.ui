@@ -103,6 +103,13 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>currentPathLineEdit</tabstop>
+  <tabstop>pathLineEdit</tabstop>
+  <tabstop>currencyComboBox</tabstop>
+  <tabstop>initialBalanceDoubleSpinBox</tabstop>
+  <tabstop>positionSpinBox</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>
