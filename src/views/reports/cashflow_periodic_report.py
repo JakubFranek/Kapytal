@@ -1,7 +1,7 @@
 from collections.abc import Collection
 
 from PyQt6.QtCore import QSortFilterProxyModel, Qt
-from PyQt6.QtWidgets import QWidget
+from PyQt6.QtWidgets import QComboBox, QWidget
 from src.models.statistics.cashflow_stats import CashFlowStats
 from src.view_models.cash_flow_table_model import CashFlowTableModel
 from src.views import icons
@@ -11,7 +11,17 @@ from src.views.ui_files.reports.Ui_cash_flow_periodic_report import (
 )
 from src.views.widgets.charts.cash_flow_periodic_chart_widget import (
     CashFlowPeriodicChartWidget,
+    ChartData,
 )
+
+STR_TO_CHART_DATA = {
+    "All data": ChartData.ALL,
+    "Inflows": ChartData.INFLOWS,
+    "Outflows": ChartData.OUTFLOWS,
+    "Cash Flow": ChartData.CASH_FLOW,
+    "Gain / Loss": ChartData.GAIN_LOSS,
+    "Net Growth": ChartData.NET_GROWTH,
+}
 
 MINIMUM_TABLE_HEIGHT = 600
 MAXIMUM_TABLE_HEIGHT = 800
@@ -46,13 +56,29 @@ class CashFlowPeriodicReport(CustomWidget, Ui_CashFlowPeriodicReport):
         self.tableView.setModel(self._proxy_model)
         self.tableView.horizontalHeader().setSortIndicatorClearable(True)
 
+        self.dataSelectorComboBox = QComboBox(self)
+        self.dataSelectorComboBox.addItem("All data")
+        self.dataSelectorComboBox.addItem("Inflows")
+        self.dataSelectorComboBox.addItem("Outflows")
+        self.dataSelectorComboBox.addItem("Cash Flow")
+        self.dataSelectorComboBox.addItem("Gain / Loss")
+        self.dataSelectorComboBox.addItem("Net Growth")
+        self.dataSelectorComboBox.setCurrentText("All data")
+        self.dataSelectorComboBox.currentTextChanged.connect(
+            self._combobox_text_changed
+        )
+        self.chart_widget.horizontal_layout.addWidget(self.dataSelectorComboBox)
+
     def load_stats(self, stats: Collection[CashFlowStats]) -> None:
         self._table_model.pre_reset_model()
         self._table_model.load_cash_flow_stats(stats)
         self._table_model.post_reset_model()
         self.tableView.resizeColumnsToContents()
         self.tableView.sortByColumn(-1, Qt.SortOrder.AscendingOrder)
-        self.chart_widget.load_data(stats[:-1])
+
+        self._stats = stats
+        self._combobox_text_changed()
+
         width, height = self._calculate_table_view_size()
         self.resize(width, height)
 
@@ -72,3 +98,9 @@ class CashFlowPeriodicReport(CustomWidget, Ui_CashFlowPeriodicReport):
         elif height > MAXIMUM_TABLE_HEIGHT:
             height = MAXIMUM_TABLE_HEIGHT
         return width, height
+
+    def _combobox_text_changed(self) -> None:
+        chart_data = STR_TO_CHART_DATA[self.dataSelectorComboBox.currentText()]
+        self.chart_widget.load_data(
+            self._stats[:-1], chart_data  # pass stats without Total
+        )

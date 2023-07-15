@@ -23,7 +23,9 @@ COLUMN_HEADERS = {
     CashFlowTableColumn.OUTWARD_TRANSFERS: "Outward Transfers",
     CashFlowTableColumn.TOTAL_OUTFLOW: "Total Outflow",
     CashFlowTableColumn.DELTA_NEUTRAL: "Cash Flow",
-    CashFlowTableColumn.DELTA_PERFORMANCE: "Gain / Loss",
+    CashFlowTableColumn.DELTA_PERFORMANCE_SECURITIES: "Securities Gain / Loss",
+    CashFlowTableColumn.DELTA_PERFORMANCE_CURRENCIES: "Currencies Gain / Loss",
+    CashFlowTableColumn.DELTA_PERFORMANCE: "Total Gain / Loss",
     CashFlowTableColumn.DELTA_TOTAL: "Net Growth",
 }
 
@@ -139,6 +141,10 @@ class CashFlowTableModel(QAbstractTableModel):
             return -stats.outflows
         if column == CashFlowTableColumn.DELTA_NEUTRAL:
             return stats.delta_neutral
+        if column == CashFlowTableColumn.DELTA_PERFORMANCE_SECURITIES:
+            return stats.delta_performance_securities
+        if column == CashFlowTableColumn.DELTA_PERFORMANCE_CURRENCIES:
+            return stats.delta_performance_currencies
         if column == CashFlowTableColumn.DELTA_PERFORMANCE:
             return stats.delta_performance
         if column == CashFlowTableColumn.DELTA_TOTAL:

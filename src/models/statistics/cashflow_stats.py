@@ -11,6 +11,7 @@ from src.models.model_objects.cash_objects import (
 )
 from src.models.model_objects.currency_objects import Currency
 from src.models.model_objects.security_objects import (
+    SecurityAccount,
     SecurityTransaction,
     SecurityTransactionType,
 )
@@ -26,6 +27,8 @@ class CashFlowStats:
         "delta_total",
         "delta_neutral",
         "delta_performance",
+        "delta_performance_securities",
+        "delta_performance_currencies",
         "inflows",
         "outflows",
         "period",
@@ -41,6 +44,8 @@ class CashFlowStats:
         self.delta_total = base_currency.zero_amount
         self.delta_neutral = base_currency.zero_amount
         self.delta_performance = base_currency.zero_amount
+        self.delta_performance_securities = base_currency.zero_amount
+        self.delta_performance_currencies = base_currency.zero_amount
 
         self.inflows = base_currency.zero_amount
         self.outflows = base_currency.zero_amount
@@ -68,6 +73,14 @@ def calculate_cash_flow(
         initial_balance += account.get_balance(base_currency, earliest_date)
         final_balance += account.get_balance(base_currency, latest_date)
 
+    delta_security = base_currency.zero_amount
+    security_accounts = [
+        account for account in accounts if isinstance(account, SecurityAccount)
+    ]
+    for account in security_accounts:
+        delta_security -= account.get_balance(base_currency, earliest_date)
+        delta_security += account.get_balance(base_currency, latest_date)
+
     for transaction in transactions:
         date_ = transaction.datetime_.date()
         if isinstance(transaction, CashTransaction):
@@ -93,6 +106,10 @@ def calculate_cash_flow(
                 transaction.cash_account in accounts
                 and transaction.security_account in accounts
             ):
+                if transaction.type_ == SecurityTransactionType.BUY:
+                    delta_security -= transaction.amount.convert(base_currency, date_)
+                else:
+                    delta_security += transaction.amount.convert(base_currency, date_)
                 continue
             if transaction.cash_account in accounts:
                 if transaction.type_ == SecurityTransactionType.BUY:
@@ -118,6 +135,10 @@ def calculate_cash_flow(
     stats.delta_total = final_balance - initial_balance
     stats.delta_neutral = stats.inflows - stats.outflows
     stats.delta_performance = stats.delta_total - stats.delta_neutral
+    stats.delta_performance_securities = delta_security
+    stats.delta_performance_currencies = (
+        stats.delta_performance - stats.delta_performance_securities
+    )
 
     return stats
 
@@ -172,6 +193,8 @@ def calculate_average_cash_flow(
         average.delta_neutral += stats.delta_neutral
         average.delta_total += stats.delta_total
         average.delta_performance += stats.delta_performance
+        average.delta_performance_securities += stats.delta_performance_securities
+        average.delta_performance_currencies += stats.delta_performance_currencies
 
     average.incomes /= periods
     average.inward_transfers /= periods
@@ -183,6 +206,8 @@ def calculate_average_cash_flow(
     average.delta_neutral /= periods
     average.delta_total /= periods
     average.delta_performance /= periods
+    average.delta_performance_securities /= periods
+    average.delta_performance_currencies /= periods
 
     return average
 
@@ -203,5 +228,7 @@ def calculate_total_cash_flow(
         total.delta_neutral += stats.delta_neutral
         total.delta_total += stats.delta_total
         total.delta_performance += stats.delta_performance
+        total.delta_performance_securities += stats.delta_performance_securities
+        total.delta_performance_currencies += stats.delta_performance_currencies
 
     return total

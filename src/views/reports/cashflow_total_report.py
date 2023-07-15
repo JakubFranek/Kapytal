@@ -53,6 +53,30 @@ class CashFlowTotalReport(CustomWidget, Ui_CashFlowTotalReport):
         if stats.outflows.is_positive():
             self.outflowAmountLabel.setStyleSheet(f"color: {colors.get_red().name()}")
 
+        self.gainLossSecuritiesAmountLabel.setText(
+            stats.delta_performance_securities.to_str_rounded()
+        )
+        if stats.delta_performance_securities.is_positive():
+            self.gainLossSecuritiesAmountLabel.setStyleSheet(
+                f"color: {colors.get_green().name()}"
+            )
+        elif stats.delta_performance_securities.is_negative():
+            self.gainLossSecuritiesAmountLabel.setStyleSheet(
+                f"color: {colors.get_red().name()}"
+            )
+
+        self.gainLossCurrenciesAmountLabel.setText(
+            stats.delta_performance_currencies.to_str_rounded()
+        )
+        if stats.delta_performance_currencies.is_positive():
+            self.gainLossCurrenciesAmountLabel.setStyleSheet(
+                f"color: {colors.get_green().name()}"
+            )
+        elif stats.delta_performance_currencies.is_negative():
+            self.gainLossCurrenciesAmountLabel.setStyleSheet(
+                f"color: {colors.get_red().name()}"
+            )
+
         self.gainLossAmountLabel.setText(stats.delta_performance.to_str_rounded())
         if stats.delta_performance.is_positive():
             self.gainLossAmountLabel.setStyleSheet(
