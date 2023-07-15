@@ -5,6 +5,7 @@ from numbers import Real
 from typing import Self
 
 import matplotlib as mpl
+import numpy as np
 from matplotlib.axes import Axes
 from PyQt6.QtWidgets import QWidget
 from src.views.widgets.charts.chart_widget import ChartWidget
@@ -48,10 +49,18 @@ def create_sunburst_chart(
         node = nodes[0]
         ax.bar(x=[0], height=[0.5], width=[math.pi * 2], color=color)
         ax.text(0, 0, node.label, ha="center", va="center")
+
+        color_cycle = mpl.colormaps["tab10"](range(len(node.children)))
+        if len(node.children) > 10:
+            color_cycle = color_cycle[:10]
+            extra_cycles = len(node.children) // 10
+            for _ in range(extra_cycles):
+                color_cycle = np.append(color_cycle, color_cycle, axis=0)
+
         create_sunburst_chart(
             ax,
             node.children,
-            color=mpl.colormaps["tab10"](range(len(node.children))),
+            color=color_cycle,
             total=node.value,
             level=level + 1,
         )

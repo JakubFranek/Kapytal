@@ -199,7 +199,9 @@ class CategoryTreeModel(QAbstractItemModel):
         if column == CategoryTreeColumn.TRANSACTIONS:
             if len(node.children) == 0:
                 return node.transactions_total
-            return f"{node.transactions_total} ({node.transactions_self})"
+            if node.transactions_self > 0:
+                return f"{node.transactions_total} ({node.transactions_self})"
+            return f"{node.transactions_total}"
         if column == CategoryTreeColumn.BALANCE:
             return node.balance.to_str_rounded()
         return None

@@ -663,11 +663,32 @@ def test_add_remove_tags() -> None:
         refund.remove_tags(None)
 
 
-def test_edit_refunded_transaction_fail() -> None:
+def test_edit_refunded_transaction_type_fail() -> None:
     refund = get_preloaded_refund()
     refunded_transaction = refund.refunded_transaction
     with pytest.raises(InvalidOperationError):
-        refunded_transaction.set_attributes()
+        refunded_transaction.set_attributes(type_="x")
+
+
+def test_edit_refunded_transaction_account_fail() -> None:
+    refund = get_preloaded_refund()
+    refunded_transaction = refund.refunded_transaction
+    with pytest.raises(InvalidOperationError):
+        refunded_transaction.set_attributes(account="x")
+
+
+def test_edit_refunded_transaction_category_amount_pairs_fail() -> None:
+    refund = get_preloaded_refund()
+    refunded_transaction = refund.refunded_transaction
+    with pytest.raises(InvalidOperationError):
+        refunded_transaction.set_attributes(category_amount_pairs="x")
+
+
+def test_edit_refunded_transaction_tag_amount_pairs_fail() -> None:
+    refund = get_preloaded_refund()
+    refunded_transaction = refund.refunded_transaction
+    with pytest.raises(InvalidOperationError):
+        refunded_transaction.set_attributes(tag_amount_pairs="x")
 
 
 @given(unrelated_account=cash_accounts())

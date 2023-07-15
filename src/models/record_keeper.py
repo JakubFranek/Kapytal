@@ -1572,6 +1572,12 @@ class RecordKeeper(CopyableMixin, JSONSerializableMixin):
             else:
                 account.update_securities()
 
+        # this sort is needed because updating CashAccount balance can change timestamps
+        obj._transactions.sort(  # noqa: SLF001
+            key=lambda x: x.timestamp,
+            reverse=True,
+        )
+
         return obj
 
     @staticmethod

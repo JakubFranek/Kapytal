@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from decimal import Decimal
 from uuid import uuid4
 
@@ -419,7 +419,12 @@ def test_edit_cash_transactions_multiple_currencies() -> None:
     for transaction in cash_transactions:
         assert transaction.description == edit_description
         assert transaction.payee.name == edit_payee
-        assert transaction.datetime_ == edit_datetime
+
+        # this second replace is here because CashAccount update_balance shifts
+        # identical transaction datetimes by 1 second
+        assert transaction.datetime_.replace(second=0) == edit_datetime.replace(
+            second=0
+        )
         assert record_keeper.categories[0] in transaction.categories
         assert record_keeper.tags[1] in transaction.tags
 

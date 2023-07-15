@@ -479,6 +479,9 @@ def test_security_transaction(transaction: SecurityTransaction) -> None:
 @given(transaction=security_transfers())
 def test_security_transfer(transaction: SecurityTransfer) -> None:
     serialized = json.dumps(transaction, cls=CustomJSONEncoder)
+    transaction.sender.remove_transaction(transaction)
+    transaction.recipient.remove_transaction(transaction)
+
     decoded = json.loads(serialized, cls=CustomJSONDecoder)
     decoded = SecurityTransfer.deserialize(
         decoded,

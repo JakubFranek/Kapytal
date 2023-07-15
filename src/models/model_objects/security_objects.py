@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 from bisect import bisect_right
 from collections import defaultdict
 from collections.abc import Collection
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 from enum import Enum, auto
 from typing import Any
@@ -398,6 +398,11 @@ class SecurityAccount(Account):
 
         self._securities_history.clear()
         self._transactions.sort(key=lambda x: x.timestamp)
+        for i, transaction in enumerate(self._transactions):
+            if i > 0 and transaction.datetime_ == self._transactions[i - 1].datetime_:
+                new_datetime = transaction.datetime_ + timedelta(seconds=1)
+                transaction.set_attributes(datetime_=new_datetime)
+
         for transaction in self._transactions:
             security_dict = (
                 defaultdict(lambda: Decimal(0))

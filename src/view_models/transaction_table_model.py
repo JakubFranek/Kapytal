@@ -17,6 +17,7 @@ from src.models.model_objects.cash_objects import (
     RefundTransaction,
 )
 from src.models.model_objects.currency_objects import (
+    CashAmount,
     ConversionFactorNotFoundError,
     Currency,
 )
@@ -121,7 +122,7 @@ class TransactionTableModel(QAbstractTableModel):
         if role == Qt.ItemDataRole.TextAlignmentRole:
             return TransactionTableModel._get_text_alignment_data(index.column())
         if role == Qt.ItemDataRole.ForegroundRole:
-            return TransactionTableModel._get_foreground_data(
+            return self._get_foreground_data(
                 self._transactions[index.row()], index.column()
             )
         if (
@@ -252,7 +253,7 @@ class TransactionTableModel(QAbstractTableModel):
                 transaction, sent=False
             )
         if column == TransactionTableColumn.BALANCE:
-            return self._get_account_balance(transaction)
+            return self._get_account_balance_string(transaction)
         if column == TransactionTableColumn.CATEGORY:
             return TransactionTableModel._get_transaction_category(transaction)
         if column == TransactionTableColumn.TAG:
@@ -313,13 +314,13 @@ class TransactionTableModel(QAbstractTableModel):
                 return icons.security_account
         if (
             column == TransactionTableColumn.CATEGORY
-            and isinstance(transaction, CashTransaction)
+            and isinstance(transaction, CashTransaction | RefundTransaction)
             and transaction.are_categories_split
         ):
             return icons.split_attribute
         if (
             column == TransactionTableColumn.TAG
-            and isinstance(transaction, CashTransaction)
+            and isinstance(transaction, CashTransaction | RefundTransaction)
             and transaction.are_tags_split
         ):
             return icons.split_attribute
@@ -347,6 +348,9 @@ class TransactionTableModel(QAbstractTableModel):
             )
         if column == TransactionTableColumn.DATETIME_CREATED:
             return transaction.datetime_created.timestamp()
+        if column == TransactionTableColumn.BALANCE:
+            balance = self._get_account_balance(transaction)
+            return float(balance.value_normalized)
         return unicodedata.normalize(
             "NFD", self._get_display_role_data(transaction, column)
         )
@@ -364,9 +368,8 @@ class TransactionTableModel(QAbstractTableModel):
             return ALIGNMENT_AMOUNTS
         return None
 
-    @staticmethod
     def _get_foreground_data(  # noqa: PLR0911, C901
-        transaction: Transaction, column: int
+        self, transaction: Transaction, column: int
     ) -> QBrush | None:
         if (
             column == TransactionTableColumn.AMOUNT_NATIVE
@@ -394,6 +397,13 @@ class TransactionTableModel(QAbstractTableModel):
                 return colors.get_red_brush()
             if isinstance(transaction, SecurityTransfer):
                 return colors.get_blue_brush()
+        if column == TransactionTableColumn.BALANCE:
+            balance = self._get_account_balance(transaction)
+            if balance.is_negative():
+                return colors.get_red_brush()
+            if balance.is_positive():
+                return None
+            return colors.get_gray_brush()
         return None
 
     @staticmethod
@@ -525,7 +535,23 @@ class TransactionTableModel(QAbstractTableModel):
         tag_names = [tag.name for tag in transaction.tags]
         return ", ".join(tag_names)
 
-    def _get_account_balance(self, transaction: Transaction) -> str:
+    def _get_account_balance(self, transaction: Transaction) -> CashAmount:
+        if (
+            isinstance(transaction, CashRelatedTransaction)
+            and len(self._valid_accounts) == 1
+        ):
+            account = self._valid_accounts[0]
+            if not isinstance(account, CashAccount):
+                raise TypeError(f"Expected CashAccount, got {type(account)}.")
+            if transaction.is_account_related(account):
+                balance = account.get_balance_after_transaction(
+                    account.currency, transaction
+                )
+                return balance
+            return CashAmount("-inf", self._base_currency)
+        return CashAmount("-inf", self._base_currency)
+
+    def _get_account_balance_string(self, transaction: Transaction) -> str:
         if (
             isinstance(transaction, CashRelatedTransaction)
             and len(self._valid_accounts) == 1

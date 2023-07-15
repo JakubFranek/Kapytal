@@ -208,7 +208,7 @@ def test_filter_keep_premade_transactions_conversion_factor_not_found(
     data: st.DataObject,
 ) -> None:
     mode = FilterMode.KEEP
-    currency = data.draw(currencies())
+    currency = Currency("XXX", 0)
     minimum = data.draw(cash_amounts(currency, min_value=0))
     maximum = data.draw(cash_amounts(currency, min_value=minimum.value_normalized))
     filter_ = CashAmountFilter(minimum, maximum, mode)

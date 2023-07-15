@@ -139,8 +139,7 @@ def test_eq_different_currency_nonzero_value(
     assume(currency_1 != currency_2)
     amount_1 = CashAmount(Decimal("123"), currency_1)
     amount_2 = CashAmount(Decimal("456"), currency_2)
-    with pytest.raises(CurrencyError):
-        amount_1.__eq__(amount_2)
+    assert not amount_1.__eq__(amount_2)
 
 
 @given(

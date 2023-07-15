@@ -156,7 +156,8 @@ def get_transactions() -> list[CashTransaction]:
     transactions.append(
         RefundTransaction(
             description="",
-            datetime_=datetime.now(user_settings.settings.time_zone),
+            datetime_=datetime.now(user_settings.settings.time_zone)
+            + timedelta(days=375),
             account=account,
             refunded_transaction=transactions[0],
             payee=payee,

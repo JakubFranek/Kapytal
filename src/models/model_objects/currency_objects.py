@@ -449,7 +449,7 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
         if self._currency != __o._currency:
             if self._raw_value == 0 and __o._raw_value == 0:
                 return True  # If values are zero, amounts are always equal
-            raise CurrencyError("CashAmount.currency of operands must match.")
+            return False
         return self._raw_value == __o._raw_value
 
     def __lt__(self, __o: object) -> bool:
