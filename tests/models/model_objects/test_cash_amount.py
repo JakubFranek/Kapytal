@@ -27,18 +27,7 @@ from tests.models.test_assets.composites import (
 )
 def test_creation(value: Decimal, currency: Currency) -> None:
     cash_amount = CashAmount(value, currency)
-    expected_normalized_value = value.normalize()
-    if -value.as_tuple().exponent < currency.places:
-        expected_normalized_value = expected_normalized_value.quantize(
-            Decimal(f"1e-{currency.places}")
-        )
-    assert cash_amount.value_rounded == round(value, currency.places)
-    assert cash_amount.value_normalized == expected_normalized_value
     assert cash_amount.__repr__() == f"CashAmount({cash_amount.to_str_normalized()})"
-    assert (
-        cash_amount.to_str_rounded()
-        == f"{round(value,currency.places):,.{currency.places}f} {currency.code}"
-    )
 
 
 @given(
@@ -99,6 +88,98 @@ def test_value_valid_str(value: str, currency: Currency) -> None:
 def test_currency_invalid_type(value: Decimal, currency: Currency) -> None:
     with pytest.raises(TypeError, match="CashAmount.currency must be a Currency."):
         CashAmount(value, currency)
+
+
+@given(
+    value=valid_decimals(),
+    currency=currencies(),
+)
+def test_value_rounded(value: Decimal, currency: Currency) -> None:
+    amount = CashAmount(value, currency)
+    currency_places = currency.places
+    if currency_places < 4:
+        assert amount.value_rounded == round(value, currency_places)
+    else:
+        value_rounded = round(value, currency_places)
+        min_places = min(currency.places, 4)
+        if -value_rounded.as_tuple().exponent > min_places:
+            value_rounded = value_rounded.normalize()
+            if -value_rounded.as_tuple().exponent < min_places:
+                value_rounded = value_rounded.quantize(Decimal(f"1e-{currency_places}"))
+        assert amount.value_rounded == value_rounded
+
+
+def test_value_rounded_specific_values() -> None:
+    currency_0 = Currency("ABC", 0)
+    currency_2 = Currency("DEF", 2)
+    currency_4 = Currency("GHI", 4)
+    currency_6 = Currency("JKL", 6)
+    currency_18 = Currency("MNO", 18)
+
+    amount_0 = CashAmount(Decimal("1.23456789123456789123456789"), currency_0)
+    assert amount_0.value_rounded == Decimal("1")
+    amount_2 = CashAmount(Decimal("1.23456789123456789123456789"), currency_2)
+    assert amount_2.value_rounded == Decimal("1.23")
+    amount_4 = CashAmount(Decimal("1.23456789123456789123456789"), currency_4)
+    assert amount_4.value_rounded == Decimal("1.2346")
+    amount_6 = CashAmount(Decimal("1.23456789123456789123456789"), currency_6)
+    assert amount_6.value_rounded == Decimal("1.234568")
+    amount_18 = CashAmount(Decimal("1.23456789123456789123456789"), currency_18)
+    assert amount_18.value_rounded == Decimal("1.234567891234567891")
+
+    amount_0 = CashAmount(Decimal("1.00000000000000000000000000"), currency_0)
+    assert str(amount_0.value_rounded) == "1"
+    amount_2 = CashAmount(Decimal("1.00000000000000000000000000"), currency_2)
+    assert str(amount_2.value_rounded) == "1.00"
+    amount_4 = CashAmount(Decimal("1.00000000000000000000000000"), currency_4)
+    assert str(amount_4.value_rounded) == "1.0000"
+    amount_6 = CashAmount(Decimal("1.00000000000000000000000000"), currency_6)
+    assert str(amount_6.value_rounded) == "1.0000"
+    amount_18 = CashAmount(Decimal("1.00000000000000000000000000"), currency_18)
+    assert str(amount_18.value_rounded) == "1.0000"
+
+
+@given(
+    value=valid_decimals(),
+    currency=currencies(),
+)
+def test_value_normalized(value: Decimal, currency: Currency) -> None:
+    amount = CashAmount(value, currency)
+    value_normalized = value.normalize()
+    places = min(currency.places, 4)
+    if not value_normalized.is_nan() and -value_normalized.as_tuple().exponent < places:
+        value_normalized = value_normalized.quantize(Decimal(f"1e-{places}"))
+    assert amount.value_normalized == value_normalized
+
+
+def test_value_normalized_specific_values() -> None:
+    currency_0 = Currency("ABC", 0)
+    currency_2 = Currency("DEF", 2)
+    currency_4 = Currency("GHI", 4)
+    currency_6 = Currency("JKL", 6)
+    currency_18 = Currency("MNO", 18)
+
+    amount_0 = CashAmount(Decimal("1.23456789123456789123456789"), currency_0)
+    assert amount_0.value_normalized == Decimal("1.23456789123456789123456789")
+    amount_2 = CashAmount(Decimal("1.23456789123456789123456789"), currency_2)
+    assert amount_2.value_normalized == Decimal("1.23456789123456789123456789")
+    amount_4 = CashAmount(Decimal("1.23456789123456789123456789"), currency_4)
+    assert amount_4.value_normalized == Decimal("1.23456789123456789123456789")
+    amount_6 = CashAmount(Decimal("1.23456789123456789123456789"), currency_6)
+    assert amount_6.value_normalized == Decimal("1.23456789123456789123456789")
+    amount_18 = CashAmount(Decimal("1.23456789123456789123456789"), currency_18)
+    assert amount_18.value_normalized == Decimal("1.23456789123456789123456789")
+
+    amount_0 = CashAmount(Decimal("1.00000000000000000000000000"), currency_0)
+    assert str(amount_0.value_normalized) == "1"
+    amount_2 = CashAmount(Decimal("1.00000000000000000000000000"), currency_2)
+    assert str(amount_2.value_normalized) == "1.00"
+    amount_4 = CashAmount(Decimal("1.00000000000000000000000000"), currency_4)
+    assert str(amount_4.value_normalized) == "1.0000"
+    amount_6 = CashAmount(Decimal("1.00000000000000000000000000"), currency_6)
+    assert str(amount_6.value_normalized) == "1.0000"
+    amount_18 = CashAmount(Decimal("1.00000000000000000000000000"), currency_18)
+    assert str(amount_18.value_normalized) == "1.0000"
 
 
 @given(

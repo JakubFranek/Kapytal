@@ -117,7 +117,9 @@ class CashTransferDialog(CustomDialog, Ui_CashTransferDialog):
     @property
     def description(self) -> str | None:
         text = self.descriptionPlainTextEdit.toPlainText()
-        return text if text else None
+        if self._edit_mode in EditMode.get_multiple_edit_values():
+            return text if text else None
+        return text
 
     @description.setter
     def description(self, description: str) -> None:

@@ -127,7 +127,9 @@ class SecurityTransferDialog(CustomDialog, Ui_SecurityTransferDialog):
     @property
     def description(self) -> str | None:
         text = self.descriptionPlainTextEdit.toPlainText()
-        return text if text else None
+        if self._edit_mode == EditMode.EDIT_MULTIPLE:
+            return text if text else None
+        return text
 
     @description.setter
     def description(self, description: str) -> None:

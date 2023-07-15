@@ -13,7 +13,7 @@ class Ui_PayeeForm(object):
     def setupUi(self, PayeeForm):
         PayeeForm.setObjectName("PayeeForm")
         PayeeForm.setWindowModality(QtCore.Qt.WindowModality.WindowModal)
-        PayeeForm.resize(360, 360)
+        PayeeForm.resize(500, 400)
         PayeeForm.setLocale(QtCore.QLocale(QtCore.QLocale.Language.English, QtCore.QLocale.Country.UnitedKingdom))
         self.horizontalLayout = QtWidgets.QHBoxLayout(PayeeForm)
         self.horizontalLayout.setObjectName("horizontalLayout")

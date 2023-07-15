@@ -177,7 +177,9 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
     @property
     def description(self) -> str | None:
         text = self.descriptionPlainTextEdit.toPlainText()
-        return text if text else None
+        if self._edit_mode in EditMode.get_multiple_edit_values():
+            return text if text else None
+        return text
 
     @description.setter
     def description(self, description: str) -> None:
@@ -355,17 +357,14 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
         self._account_changed()
 
     def _initialize_placeholders(self) -> None:
-        if self._edit_mode != EditMode.ADD:
+        if self._edit_mode in EditMode.get_multiple_edit_values():
             self.descriptionPlainTextEdit.setPlaceholderText(
                 "Leave empty to keep current values"
             )
             self.payeeComboBox.lineEdit().setPlaceholderText(
                 "Leave empty to keep current values"
             )
-            if (
-                self._edit_mode in EditMode.get_multiple_edit_values()
-                and len(self._tag_rows) == 1
-            ):
+            if len(self._tag_rows) == 1:
                 self._tag_rows[0].set_placeholder_text(
                     "Leave empty to keep current values"
                 )
