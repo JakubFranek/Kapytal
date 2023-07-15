@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>253</width>
-    <height>240</height>
+    <height>252</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -26,47 +26,28 @@
    <locale language="English" country="UnitedKingdom"/>
   </property>
   <layout class="QFormLayout" name="formLayout">
-   <item row="0" column="0">
+   <item row="1" column="0">
     <widget class="QLabel" name="senderLabel">
      <property name="text">
       <string>Sender</string>
      </property>
     </widget>
    </item>
-   <item row="0" column="1">
-    <widget class="QComboBox" name="senderComboBox">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="editable">
-      <bool>false</bool>
-     </property>
-     <property name="insertPolicy">
-      <enum>QComboBox::NoInsert</enum>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="0">
+   <item row="3" column="0">
     <widget class="QLabel" name="recipientLabel">
      <property name="text">
       <string>Recipient</string>
      </property>
     </widget>
    </item>
-   <item row="1" column="1">
-    <widget class="QComboBox" name="recipientComboBox"/>
-   </item>
-   <item row="2" column="0">
+   <item row="4" column="0">
     <widget class="QLabel" name="sentLabel">
      <property name="text">
       <string>Sent</string>
      </property>
     </widget>
    </item>
-   <item row="2" column="1">
+   <item row="4" column="1">
     <widget class="QDoubleSpinBox" name="sentDoubleSpinBox">
      <property name="alignment">
       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -79,14 +60,14 @@
      </property>
     </widget>
    </item>
-   <item row="3" column="0">
+   <item row="5" column="0">
     <widget class="QLabel" name="receivedLabel">
      <property name="text">
       <string>Received</string>
      </property>
     </widget>
    </item>
-   <item row="3" column="1">
+   <item row="5" column="1">
     <widget class="QDoubleSpinBox" name="receivedDoubleSpinBox">
      <property name="showGroupSeparator" stdset="0">
       <bool>true</bool>
@@ -96,14 +77,14 @@
      </property>
     </widget>
    </item>
-   <item row="5" column="0">
+   <item row="7" column="0">
     <widget class="QLabel" name="dateLabel">
      <property name="text">
       <string>Date</string>
      </property>
     </widget>
    </item>
-   <item row="5" column="1">
+   <item row="7" column="1">
     <widget class="QDateEdit" name="dateEdit">
      <property name="calendarPopup">
       <bool>true</bool>
@@ -113,7 +94,7 @@
      </property>
     </widget>
    </item>
-   <item row="6" column="0">
+   <item row="8" column="0">
     <layout class="QVBoxLayout" name="descriptionLabelVerticalLayout">
      <item>
       <spacer name="descriptionLabelTopVerticalSpacer">
@@ -153,7 +134,7 @@
      </item>
     </layout>
    </item>
-   <item row="6" column="1">
+   <item row="8" column="1">
     <widget class="QPlainTextEdit" name="descriptionPlainTextEdit">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
@@ -175,14 +156,14 @@
      </property>
     </widget>
    </item>
-   <item row="4" column="0">
+   <item row="6" column="0">
     <widget class="QLabel" name="exchangeRateLabel">
      <property name="text">
       <string>Exchange Rate</string>
      </property>
     </widget>
    </item>
-   <item row="4" column="1">
+   <item row="6" column="1">
     <widget class="QLineEdit" name="exchangeRateLineEdit">
      <property name="enabled">
       <bool>false</bool>
@@ -195,15 +176,56 @@
      </property>
     </widget>
    </item>
+   <item row="1" column="1">
+    <layout class="QHBoxLayout" name="senderHorizontalLayout">
+     <item>
+      <widget class="QComboBox" name="senderComboBox">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="editable">
+        <bool>false</bool>
+       </property>
+       <property name="insertPolicy">
+        <enum>QComboBox::NoInsert</enum>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QToolButton" name="senderToolButton">
+       <property name="text">
+        <string>...</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="3" column="1">
+    <layout class="QHBoxLayout" name="recipientHorizontalLayout">
+     <item>
+      <widget class="QComboBox" name="recipientComboBox"/>
+     </item>
+     <item>
+      <widget class="QToolButton" name="recipientToolButton">
+       <property name="text">
+        <string>...</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
   </layout>
-  <action name="actionSelect_Payee">
+  <action name="actionSelect_Sender">
    <property name="text">
-    <string>Select Payee</string>
+    <string>Select Sender</string>
    </property>
   </action>
-  <action name="actionSelect_Tag">
+  <action name="actionSelect_Recipient">
    <property name="text">
-    <string>Select Tag</string>
+    <string>Select Recipient</string>
    </property>
   </action>
  </widget>

@@ -78,6 +78,12 @@ class RefundTransactionDialogPresenter:
                 "Payee name must be at least 1 character long.", title="Warning"
             )
             return
+        if not check_for_nonexistent_attributes(
+            [payee], self._record_keeper.payees, self._dialog, "Payee"
+        ):
+            logging.info("Dialog aborted")
+            return
+
         datetime_ = self._dialog.datetime_
         if datetime_ is None:
             raise ValueError("Expected datetime_, received None.")

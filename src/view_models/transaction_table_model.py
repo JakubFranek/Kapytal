@@ -34,7 +34,7 @@ from src.views.constants import (
     monospace_font,
 )
 
-ALIGNMENT_AMOUNTS = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+ALIGNMENT_RIGHT = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
 
 
 class TransactionTableModel(QAbstractTableModel):
@@ -240,6 +240,10 @@ class TransactionTableModel(QAbstractTableModel):
             return TransactionTableModel._get_transaction_security(transaction)
         if column == TransactionTableColumn.SHARES:
             return TransactionTableModel._get_transaction_shares_string(transaction)
+        if column == TransactionTableColumn.PRICE_PER_SHARE:
+            return TransactionTableModel._get_transaction_price_per_share_string(
+                transaction
+            )
         if column == TransactionTableColumn.AMOUNT_NATIVE:
             return self._get_transaction_amount_string(transaction, base=False)
         if column == TransactionTableColumn.AMOUNT_BASE:
@@ -334,6 +338,11 @@ class TransactionTableModel(QAbstractTableModel):
         if column == TransactionTableColumn.SHARES:
             shares = TransactionTableModel._get_transaction_shares(transaction)
             return float(shares) if shares else float("-inf")
+        if column == TransactionTableColumn.PRICE_PER_SHARE:
+            price_per_share = TransactionTableModel._get_transaction_price_per_share(
+                transaction
+            )
+            return float(price_per_share) if price_per_share else float("-inf")
         if column == TransactionTableColumn.AMOUNT_NATIVE:
             return self._get_transaction_amount_value(transaction, base=False)
         if column == TransactionTableColumn.AMOUNT_BASE:
@@ -363,9 +372,10 @@ class TransactionTableModel(QAbstractTableModel):
             or column == TransactionTableColumn.AMOUNT_SENT
             or column == TransactionTableColumn.AMOUNT_RECEIVED
             or column == TransactionTableColumn.SHARES
+            or column == TransactionTableColumn.PRICE_PER_SHARE
             or column == TransactionTableColumn.BALANCE
         ):
-            return ALIGNMENT_AMOUNTS
+            return ALIGNMENT_RIGHT
         return None
 
     def _get_foreground_data(  # noqa: PLR0911, C901
@@ -470,6 +480,18 @@ class TransactionTableModel(QAbstractTableModel):
             return f"{transaction.get_shares(transaction.recipient):,}"
         return ""
 
+    @staticmethod
+    def _get_transaction_price_per_share(transaction: Transaction) -> Decimal:
+        if isinstance(transaction, SecurityTransaction):
+            return transaction.price_per_share.value_normalized
+        return Decimal("NaN")
+
+    @staticmethod
+    def _get_transaction_price_per_share_string(transaction: Transaction) -> str:
+        if isinstance(transaction, SecurityTransaction):
+            return f"{transaction.price_per_share.value_normalized:,}"
+        return ""
+
     def _get_transaction_amount_string(
         self, transaction: Transaction, *, base: bool
     ) -> str:
@@ -544,10 +566,9 @@ class TransactionTableModel(QAbstractTableModel):
             if not isinstance(account, CashAccount):
                 raise TypeError(f"Expected CashAccount, got {type(account)}.")
             if transaction.is_account_related(account):
-                balance = account.get_balance_after_transaction(
+                return account.get_balance_after_transaction(
                     account.currency, transaction
                 )
-                return balance
             return CashAmount("-inf", self._base_currency)
         return CashAmount("-inf", self._base_currency)
 

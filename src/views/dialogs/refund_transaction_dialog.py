@@ -44,7 +44,7 @@ class RefundTransactionDialog(CustomDialog, Ui_RefundTransactionDialog):
 
         self._edited_refund = edited_refund
         self._refunded_transaction = refunded_transaction
-
+        self._accounts = accounts
         self._payees = payees
         for payee in payees:
             self.payeeComboBox.addItem(payee)
@@ -172,6 +172,10 @@ class RefundTransactionDialog(CustomDialog, Ui_RefundTransactionDialog):
         self.actionSelect_Payee.triggered.connect(self._get_payee)
         self.payeeToolButton.setDefaultAction(self.actionSelect_Payee)
 
+        self.actionSelect_Account.setIcon(icons.cash_account)
+        self.actionSelect_Account.triggered.connect(self._get_account)
+        self.accountsToolButton.setDefaultAction(self.actionSelect_Account)
+
     def _initialize_accounts_combobox(self, accounts: Collection[Account]) -> None:
         for account in accounts:
             self.accountsComboBox.addItem(icons.cash_account, account.path)
@@ -257,6 +261,16 @@ class RefundTransactionDialog(CustomDialog, Ui_RefundTransactionDialog):
             icons.payee,
         )
         self.payee = payee if payee else self.payee
+
+    def _get_account(self) -> None:
+        account_paths = [account.path for account in self._accounts]
+        account = ask_user_for_selection(
+            self,
+            account_paths,
+            "Select Account",
+            icons.cash_account,
+        )
+        self.account = account if account else self.account
 
     def _set_tab_order(self) -> None:
         self.setTabOrder(self.accountsComboBox, self.payeeComboBox)

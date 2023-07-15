@@ -13,7 +13,7 @@ class Ui_SelectItemDialog(object):
     def setupUi(self, SelectItemDialog):
         SelectItemDialog.setObjectName("SelectItemDialog")
         SelectItemDialog.setWindowModality(QtCore.Qt.WindowModality.WindowModal)
-        SelectItemDialog.resize(278, 233)
+        SelectItemDialog.resize(325, 300)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Preferred, QtWidgets.QSizePolicy.Policy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)

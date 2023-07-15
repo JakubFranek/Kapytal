@@ -16,6 +16,7 @@ from src.models.model_objects.cash_objects import CashAccount
 from src.models.user_settings import user_settings
 from src.views import icons
 from src.views.base_classes.custom_dialog import CustomDialog
+from src.views.dialogs.select_item_dialog import ask_user_for_selection
 from src.views.ui_files.dialogs.Ui_cash_transfer_dialog import Ui_CashTransferDialog
 from src.views.widgets.multiple_tags_selector_widget import MultipleTagsSelectorWidget
 
@@ -67,6 +68,7 @@ class CashTransferDialog(CustomDialog, Ui_CashTransferDialog):
         self._initialize_placeholders()
         self._set_spinbox_states()
         self._initialize_signals()
+        self._initialize_actions()
 
     @property
     def datetime_(self) -> datetime | None:
@@ -297,3 +299,32 @@ class CashTransferDialog(CustomDialog, Ui_CashTransferDialog):
         self.receivedDoubleSpinBox.valueChanged.connect(self._set_exchange_rate)
         self.senderComboBox.currentTextChanged.connect(self._set_spinbox_states)
         self.recipientComboBox.currentTextChanged.connect(self._set_spinbox_states)
+
+    def _initialize_actions(self) -> None:
+        self.actionSelect_Sender.setIcon(icons.cash_account)
+        self.actionSelect_Sender.triggered.connect(self._select_sender)
+        self.senderToolButton.setDefaultAction(self.actionSelect_Sender)
+
+        self.actionSelect_Recipient.setIcon(icons.cash_account)
+        self.actionSelect_Recipient.triggered.connect(self._select_recipient)
+        self.recipientToolButton.setDefaultAction(self.actionSelect_Recipient)
+
+    def _select_sender(self) -> None:
+        account_paths = [account.path for account in self._accounts]
+        account = ask_user_for_selection(
+            self,
+            account_paths,
+            "Select Sender",
+            icons.cash_account,
+        )
+        self.sender_path = account if account else self.sender_path
+
+    def _select_recipient(self) -> None:
+        account_paths = [account.path for account in self._accounts]
+        account = ask_user_for_selection(
+            self,
+            account_paths,
+            "Select Recipient",
+            icons.cash_account,
+        )
+        self.recipient_path = account if account else self.recipient_path

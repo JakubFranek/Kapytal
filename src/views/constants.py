@@ -79,15 +79,16 @@ class TransactionTableColumn(IntEnum):
     TO = 4
     SECURITY = 5
     SHARES = 6
-    AMOUNT_NATIVE = 7
-    AMOUNT_BASE = 8
-    AMOUNT_SENT = 9
-    AMOUNT_RECEIVED = 10
-    BALANCE = 11
-    CATEGORY = 12
-    TAG = 13
-    UUID = 14
-    DATETIME_CREATED = 15
+    PRICE_PER_SHARE = 7
+    AMOUNT_NATIVE = 8
+    AMOUNT_BASE = 9
+    AMOUNT_SENT = 10
+    AMOUNT_RECEIVED = 11
+    BALANCE = 12
+    CATEGORY = 13
+    TAG = 14
+    UUID = 15
+    DATETIME_CREATED = 16
 
 
 TRANSACTION_TABLE_COLUMN_HEADERS = {
@@ -98,6 +99,7 @@ TRANSACTION_TABLE_COLUMN_HEADERS = {
     TransactionTableColumn.TO: "To",
     TransactionTableColumn.SECURITY: "Security",
     TransactionTableColumn.SHARES: "Shares",
+    TransactionTableColumn.PRICE_PER_SHARE: "Price per share",
     TransactionTableColumn.AMOUNT_NATIVE: "Native amount",
     TransactionTableColumn.AMOUNT_BASE: "Base amount",
     TransactionTableColumn.AMOUNT_SENT: "Amount sent",

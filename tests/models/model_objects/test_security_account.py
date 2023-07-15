@@ -197,7 +197,7 @@ def test_get_balance_with_date(
     shares_a=st.integers(min_value=1, max_value=1e6),
     shares_b=st.integers(min_value=1, max_value=1e6),
 )
-def test_get_balance_same_currency_securities(  # noqa: PLR0913
+def test_get_balance_same_currency_securities(
     currency: Currency,
     price_a: Decimal,
     price_b: Decimal,

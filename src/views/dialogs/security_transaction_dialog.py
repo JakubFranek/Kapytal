@@ -21,6 +21,7 @@ from src.models.model_objects.security_objects import (
 from src.models.user_settings import user_settings
 from src.views import icons
 from src.views.base_classes.custom_dialog import CustomDialog
+from src.views.dialogs.select_item_dialog import ask_user_for_selection
 from src.views.ui_files.dialogs.Ui_security_transaction_dialog import (
     Ui_SecurityTransactionDialog,
 )
@@ -72,6 +73,7 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
         self._initialize_window()
         self._initialize_placeholders()
         self._initialize_signals()
+        self._initialize_actions()
         self._initialize_security_combobox(securities)
         self._setup_security_account_combobox()
         self._setup_cash_account_combobox()
@@ -367,9 +369,51 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
                 self.priceDoubleSpinBox.setSpecialValueText(self.KEEP_CURRENT_VALUES)
 
         if security is None:
+            self.actionSelect_Cash_Account.setEnabled(False)
             return
+        self.actionSelect_Cash_Account.setEnabled(True)
 
         exponent = security.shares_unit.as_tuple().exponent
         decimals = -exponent if exponent < 0 else 0
         self.sharesDoubleSpinBox.setDecimals(decimals)
         self.sharesDoubleSpinBox.setSingleStep(10**exponent)
+
+    def _initialize_actions(self) -> None:
+        self.actionSelect_Cash_Account.setIcon(icons.cash_account)
+        self.actionSelect_Cash_Account.triggered.connect(self._select_cash_account)
+        self.cashAccountToolButton.setDefaultAction(self.actionSelect_Cash_Account)
+
+        self.actionSelect_Security_Account.setIcon(icons.security_account)
+        self.actionSelect_Security_Account.triggered.connect(
+            self._select_security_account
+        )
+        self.securityAccountToolButton.setDefaultAction(
+            self.actionSelect_Security_Account
+        )
+
+    def _select_cash_account(self) -> None:
+        security = self._get_security(self.security_name)
+        if security is None:
+            return  # TODO: what about this?
+        account_paths = [
+            account.path
+            for account in self._cash_accounts
+            if account.currency == security.currency
+        ]
+        account = ask_user_for_selection(
+            self,
+            account_paths,
+            "Select Cash Account",
+            icons.cash_account,
+        )
+        self.cash_account_path = account if account else self.cash_account_path
+
+    def _select_security_account(self) -> None:
+        account_paths = [account.path for account in self._security_accounts]
+        account = ask_user_for_selection(
+            self,
+            account_paths,
+            "Select Security Account",
+            icons.cash_account,
+        )
+        self.security_account_path = account if account else self.security_account_path

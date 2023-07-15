@@ -18,8 +18,6 @@ class CustomJSONEncoder(json.JSONEncoder):
     def default(self, arg: Any) -> Any:  # noqa: ANN401
         if isinstance(arg, datetime):
             return arg.isoformat()
-        if isinstance(
-            arg, JSONSerializableMixin
-        ):  # TODO: RecordKeeper missing progress callable
+        if isinstance(arg, JSONSerializableMixin):
             return arg.serialize()
         return super().default(arg)  # call to raise proper TypeError

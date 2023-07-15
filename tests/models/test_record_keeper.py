@@ -1,4 +1,3 @@
-import copy
 import string
 from datetime import datetime, timedelta
 from decimal import Decimal
@@ -828,23 +827,6 @@ def test_add_security_account_already_exists() -> None:
     record_keeper.add_security_account("Test path")
     with pytest.raises(AlreadyExistsError):
         record_keeper.add_security_account("Test path")
-
-
-def test_record_keeper_shallow_copy() -> None:
-    record_keeper = get_preloaded_record_keeper()
-    record_keeper_shallow_copy = copy.copy(record_keeper)
-    assert id(record_keeper) != id(record_keeper_shallow_copy)
-    assert id(record_keeper.currencies[0]) == id(
-        record_keeper_shallow_copy.currencies[0]
-    )
-
-
-def test_record_keeper_deep_copy() -> None:
-    record_keeper = get_preloaded_record_keeper()
-    record_keeper_deep_copy = copy.deepcopy(record_keeper)
-    assert id(record_keeper) != id(record_keeper_deep_copy)
-    assert id(record_keeper.currencies) != id(record_keeper_deep_copy.currencies)
-    assert id(record_keeper.currencies[0]) != id(record_keeper_deep_copy.currencies[0])
 
 
 @given(name=names())

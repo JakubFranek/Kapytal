@@ -299,6 +299,12 @@ class CashTransactionDialogPresenter:
         type_ = self._dialog.type_
         account = self._dialog.account_path
         payee = self._dialog.payee
+        if not check_for_nonexistent_attributes(
+            [payee], self._record_keeper.payees, self._dialog, "Payee"
+        ):
+            logging.info("Dialog aborted")
+            return
+
         datetime_ = self._dialog.datetime_
         if datetime_ is not None and not validate_datetime(datetime_, self._dialog):
             return
@@ -307,6 +313,18 @@ class CashTransactionDialogPresenter:
         tag_amount_pairs = self._dialog.tag_amount_pairs
 
         if category_amount_pairs is not None:
+            categories = [category for category, _ in category_amount_pairs]
+            if any(not category for category in categories):
+                display_error_message(
+                    "Empty Category paths are invalid.", title="Warning"
+                )
+                return
+
+            if not check_for_nonexistent_categories(
+                categories, type_, self._record_keeper.categories, self._dialog
+            ):
+                logging.info("Dialog aborted")
+                return
             for category, _ in category_amount_pairs:
                 if category is None:
                     display_error_message(

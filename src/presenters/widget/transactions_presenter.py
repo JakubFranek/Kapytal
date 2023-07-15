@@ -171,6 +171,7 @@ class TransactionsPresenter:
             if (
                 column == TransactionTableColumn.SECURITY
                 or column == TransactionTableColumn.SHARES
+                or column == TransactionTableColumn.PRICE_PER_SHARE
             ):
                 self._view.set_column_visibility(column, show=any_security_related)
             if (

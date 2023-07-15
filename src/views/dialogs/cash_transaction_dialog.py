@@ -338,6 +338,10 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
         self.actionSelect_Payee.triggered.connect(self._get_payee)
         self.payeeToolButton.setDefaultAction(self.actionSelect_Payee)
 
+        self.actionSelect_Account.setIcon(icons.cash_account)
+        self.actionSelect_Account.triggered.connect(self._get_account)
+        self.accountsToolButton.setDefaultAction(self.actionSelect_Account)
+
     def _initialize_accounts_combobox(self, accounts: Collection[CashAccount]) -> None:
         if (
             self._edit_mode == EditMode.EDIT_MULTIPLE
@@ -574,6 +578,16 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
             icons.payee,
         )
         self.payee = payee if payee else self.payee
+
+    def _get_account(self) -> None:
+        account_paths = [account.path for account in self._accounts]
+        account = ask_user_for_selection(
+            self,
+            account_paths,
+            "Select Account",
+            icons.cash_account,
+        )
+        self.account_path = account if account else self.account_path
 
     def _set_maximum_amounts(self, max_amount: Decimal) -> None:
         split_category_rows = [
