@@ -179,6 +179,16 @@ class CategoryFilterPresenter:
             self._income_and_expense_categories_proxy
         )
 
+        self._income_categories_model.event_checked_categories_changed.append(
+            self._update_checked_categories_number
+        )
+        self._expense_categories_model.event_checked_categories_changed.append(
+            self._update_checked_categories_number
+        )
+        self._income_and_expense_categories_model.event_checked_categories_changed.append(
+            self._update_checked_categories_number
+        )
+
     def _connect_to_signals(self) -> None:
         self._form.signal_category_selection_mode_changed.connect(
             self._selection_mode_changed
@@ -221,3 +231,34 @@ class CategoryFilterPresenter:
         self._expense_categories_model.set_selection_mode(selection_mode)
         self._income_and_expense_categories_model.set_selection_mode(selection_mode)
         logging.debug(f"Category selection mode changed: {selection_mode.name}")
+
+    def _update_checked_categories_number(self) -> None:
+        n_selected_income_categories = len(
+            self._income_categories_model.checked_categories
+        )
+        n_selected_expense_categories = len(
+            self._expense_categories_model.checked_categories
+        )
+        n_selected_income_and_expense_categories = len(
+            self._income_and_expense_categories_model.checked_categories
+        )
+
+        income = (
+            n_selected_income_categories
+            if len(self._record_keeper.income_categories)
+            != n_selected_income_categories
+            else -1
+        )
+        expense = (
+            n_selected_expense_categories
+            if len(self._record_keeper.expense_categories)
+            != n_selected_expense_categories
+            else -1
+        )
+        income_and_expense = (
+            n_selected_income_and_expense_categories
+            if len(self._record_keeper.income_and_expense_categories)
+            != n_selected_income_and_expense_categories
+            else -1
+        )
+        self._form.set_selected_category_numbers(income, expense, income_and_expense)

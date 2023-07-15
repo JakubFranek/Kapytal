@@ -18,22 +18,25 @@ from tests.models.test_assets.transaction_list import transaction_list
 def check_transaction(filter_: DescriptionFilter, transaction: Transaction) -> bool:
     if filter_.mode == FilterMode.OFF:
         return True
-    return re.search(filter_.regex_pattern, transaction.description, re.IGNORECASE)
+    flags = re.IGNORECASE if filter_.ignore_case else 0
+    return re.search(filter_.regex_pattern, transaction.description, flags)
 
 
-@given(pattern=st.text(), mode=st.sampled_from(FilterMode))
-def test_creation(pattern: str, mode: FilterMode) -> None:
+@given(pattern=st.text(), mode=st.sampled_from(FilterMode), ignore_case=st.booleans())
+def test_creation(pattern: str, mode: FilterMode, *, ignore_case: bool) -> None:
     try:
         re.compile(pattern)
         is_pattern_valid = True
     except re.error:
         is_pattern_valid = False
     assume(is_pattern_valid)
-    filter_ = DescriptionFilter(pattern, mode)
+    filter_ = DescriptionFilter(pattern, mode, ignore_case=ignore_case)
     assert filter_.regex_pattern == pattern
     assert filter_.mode == mode
+    assert filter_.ignore_case == ignore_case
     assert filter_.__repr__() == (
-        f"DescriptionFilter(pattern='{pattern}', mode={mode.name})"
+        f"DescriptionFilter(pattern='{pattern}', ignore_case={ignore_case}, "
+        f"mode={mode.name})"
     )
 
 

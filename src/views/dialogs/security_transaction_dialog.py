@@ -394,7 +394,7 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
     def _select_cash_account(self) -> None:
         security = self._get_security(self.security_name)
         if security is None:
-            return  # TODO: what about this?
+            return
         account_paths = [
             account.path
             for account in self._cash_accounts

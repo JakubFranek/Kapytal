@@ -181,7 +181,7 @@ class NetWorthReportPresenter:
         accounts = frozenset(
             account for account in account_items if isinstance(account, Account)
         )
-        transactions = self._record_keeper.transactions
+        transactions = self._transactions_presenter.get_visible_transactions()
         transactions = sorted(
             transactions, key=lambda transaction: transaction.timestamp
         )

@@ -159,7 +159,7 @@ def _create_node(
 ) -> SunburstNode:
     node = SunburstNode(
         stats.category.name,
-        float(stats.balance.value_rounded),
+        abs(float(stats.balance.value_rounded)),
         [],
     )
     label_visible = abs(node.value) >= no_label_threshold / (level - 1)

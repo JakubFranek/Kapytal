@@ -19,6 +19,9 @@ from src.views.dialogs.busy_dialog import create_simple_busy_indicator
 from src.views.main_view import MainView
 from src.views.reports.category_report import CategoryReport
 from src.views.utilities.handle_exception import display_error_message
+from src.views.utilities.message_box_functions import ask_yes_no_question
+
+N_TRANSACTIONS_THRESHOLD = 500
 
 
 class CategoryReportPresenter:
@@ -68,6 +71,24 @@ class CategoryReportPresenter:
 
         transactions = self._transactions_presenter.get_visible_transactions()
         transactions = _filter_transactions(transactions)
+        n_transactions = len(transactions)
+        if n_transactions == 0:
+            display_error_message(
+                "This report cannot be run because there are no Transactions passing "
+                "Transaction filter.",
+                title="Warning",
+            )
+            return
+        if n_transactions > N_TRANSACTIONS_THRESHOLD and not ask_yes_no_question(
+            self._busy_dialog,
+            "The report will be generated from a large number of Transactions "
+            f"({n_transactions}). This may take a while. "
+            "Proceed anyway?",
+            "Are you sure?",
+        ):
+            logging.debug("User cancelled the report creation")
+            return
+
         base_currency = self._record_keeper.base_currency
 
         if base_currency is None:

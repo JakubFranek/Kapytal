@@ -83,6 +83,7 @@ def setup_logging() -> None:
 
     logger = logging.getLogger()  # this is the root logger
     logging.getLogger("matplotlib.font_manager").disabled = True
+    logging.getLogger("pyplot.switch_backend").disabled = True
     logger.addFilter(DuplicateFilter(formatter))
     logger.setLevel(logging.DEBUG)
     logger.addHandler(handler_debug)

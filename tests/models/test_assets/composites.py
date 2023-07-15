@@ -289,7 +289,8 @@ def description_filters(draw: st.DrawFn) -> DescriptionFilter:
     except re.error:
         is_pattern_valid = False
     assume(is_pattern_valid)
-    return DescriptionFilter(pattern, mode)
+    ignore_case = draw(st.booleans())
+    return DescriptionFilter(pattern, mode, ignore_case=ignore_case)
 
 
 @st.composite

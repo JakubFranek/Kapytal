@@ -45,6 +45,7 @@ from src.presenters.form.transaction_filter.type_filter_presenter import (
     TypeFilterPresenter,
 )
 from src.presenters.utilities.event import Event
+from src.presenters.utilities.handle_exception import handle_exception
 from src.views.forms.transaction_filter_form import (
     AccountFilterMode,
     TransactionFilterForm,
@@ -265,7 +266,11 @@ class TransactionFilterFormPresenter:
 
     def _form_accepted(self) -> None:
         self._check_filter_form_sanity()
-        self._update_filter()
+        try:
+            self._update_filter()
+        except Exception as exception:  # noqa: BLE001
+            handle_exception(exception)
+            return
         self._form.close()
 
     def _get_transaction_filter_from_form(self) -> TransactionFilter:
@@ -279,7 +284,9 @@ class TransactionFilterFormPresenter:
             self._form.date_filter_mode,
         )
         filter_.set_description_filter(
-            self._form.description_filter_pattern, self._form.description_filter_mode
+            self._form.description_filter_pattern,
+            self._form.description_filter_mode,
+            ignore_case=self._form.description_filter_ignore_case,
         )
 
         if self._form.account_filter_mode == AccountFilterMode.SELECTION:
@@ -347,6 +354,9 @@ class TransactionFilterFormPresenter:
         self._form.date_filter_end = filter_.datetime_filter.end
         self._form.description_filter_mode = filter_.description_filter.mode
         self._form.description_filter_pattern = filter_.description_filter.regex_pattern
+        self._form.description_filter_ignore_case = (
+            filter_.description_filter.ignore_case
+        )
         self._account_filter_presenter.load_from_account_filter(filter_.account_filter)
         self._tag_filter_presenter.load_from_tag_filters(
             filter_.specific_tags_filter,
@@ -421,7 +431,8 @@ class TransactionFilterFormPresenter:
             logging.info(
                 "DescriptionFilter changed: "
                 f"mode={new_filter.description_filter.mode.name}, "
-                f"pattern='{new_filter.description_filter.regex_pattern}'"
+                f"pattern='{new_filter.description_filter.regex_pattern}', "
+                f"ignore_case={new_filter.description_filter.ignore_case}"
             )
         if old_filter.account_filter != new_filter.account_filter:
             logging.info(

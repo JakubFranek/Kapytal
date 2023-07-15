@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>475</width>
-    <height>538</height>
+    <height>600</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -179,6 +179,26 @@
            <widget class="QLineEdit" name="descriptionFilterPatternLineEdit">
             <property name="toolTip">
              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Special regex characters:&lt;/p&gt;&lt;p&gt;. matches any character&lt;br/&gt;* matches zero or more of preceding token&lt;br/&gt;? matches zero or one of preceding token&lt;br/&gt;+ matches one or more of the preceding token&lt;br/&gt;^ matches the beginning of a string&lt;br/&gt;$ matches the end of a string&lt;br/&gt;| matches the expression to the right or left&lt;br/&gt;[...] matches any character within square brackets&lt;br/&gt;(...) groups tokens together&lt;br/&gt;\ escapes a special character&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="descriptionFilterMatchCaseLabel">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If checked, the regex pattern will be case sensitive.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="text">
+             <string>Match case</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QCheckBox" name="descriptionFilterMatchCaseCheckBox">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If checked, the regex pattern will be case sensitive.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="text">
+             <string/>
             </property>
            </widget>
           </item>

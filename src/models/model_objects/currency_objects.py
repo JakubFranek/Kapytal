@@ -277,13 +277,7 @@ class ExchangeRate(CopyableMixin, JSONSerializableMixin):
         except KeyError:
             i = bisect_right(self.rate_history_pairs, date_, key=lambda x: x[0])
             if i:
-                _date, rate = self._rate_history_pairs[i - 1]
-                if i == 1:
-                    logging.warning(
-                        f"{self!s}: no rate found for {date_.strftime('%Y-%m-%d')}, "
-                        f"using the earliest available rate "
-                        f"({_date.strftime('%Y-%m-%d')}: {rate})"
-                    )
+                _, rate = self._rate_history_pairs[i - 1]
                 return rate
             logging.warning(
                 f"{self!s}: no earlier rate found for {date_}, returning 'NaN'"

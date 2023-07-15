@@ -94,7 +94,7 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
     ) -> None:
         super().__init__(parent=parent)
         self.setupUi(self)
-        self.resize(475, 400)
+        self.resize(475, 600)
 
         self._initialize_window()
         self._initialize_search_boxes()
@@ -250,6 +250,14 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
     @description_filter_pattern.setter
     def description_filter_pattern(self, pattern: str) -> None:
         self.descriptionFilterPatternLineEdit.setText(pattern)
+
+    @property
+    def description_filter_ignore_case(self) -> bool:
+        return not self.descriptionFilterMatchCaseCheckBox.isChecked()
+
+    @description_filter_ignore_case.setter
+    def description_filter_ignore_case(self, value: bool) -> None:
+        self.descriptionFilterMatchCaseCheckBox.setChecked(not value)
 
     @property
     def account_filter_mode(self) -> AccountFilterMode:
@@ -673,3 +681,21 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
         text = self.cashAmountFilterMaximumDoubleSpinBox.cleanText().replace(",", "")
         maximum = Decimal(text)
         self.cashAmountFilterMinimumDoubleSpinBox.setMaximum(maximum)
+
+    def set_selected_category_numbers(
+        self, income: int, expense: int, income_and_expense: int
+    ) -> None:
+        """Set the number of currently selected categories in tab names.
+        Pass a negative number if no number is to be shown."""
+
+        income_text = f"Income ({income})" if income >= 0 else "Income"
+        expense_text = f"Expense ({expense})" if expense >= 0 else "Expense"
+        income_and_expense_text = (
+            f"Income and Expense ({income_and_expense})"
+            if (income_and_expense >= 0)
+            else "Income and Expense"
+        )
+
+        self.categoriesTypeTabWidget.setTabText(0, income_text)
+        self.categoriesTypeTabWidget.setTabText(1, expense_text)
+        self.categoriesTypeTabWidget.setTabText(2, income_and_expense_text)

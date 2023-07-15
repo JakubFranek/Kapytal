@@ -35,7 +35,7 @@ class CategoryTreeNode:
         self.children: list[Self] = []
         self.check_state: Qt.CheckState = Qt.CheckState.Checked
         self._are_children_check_states_mixed: bool = False
-        self.event_signal_changed = Event()
+        self.event_state_changed = Event()
 
     def __repr__(self) -> str:
         return f"CategoryTreeNode({self.item!s}, {self.check_state.name})"
@@ -59,7 +59,7 @@ class CategoryTreeNode:
     def _set_check_state(self, check_state: Qt.CheckState) -> None:
         if check_state != self.check_state:
             self.check_state = check_state
-            self.event_signal_changed(self.item.path)
+            self.event_state_changed(self.item.path)
 
     def _set_check_state_recursive(self, check_state: Qt.CheckState) -> None:
         self._set_check_state(check_state)
@@ -85,7 +85,7 @@ class CategoryTreeNode:
             or any(child.check_state != self.check_state for child in self.children)
         ):
             self._are_children_check_states_mixed = True
-            self.event_signal_changed(self.item.path)
+            self.event_state_changed(self.item.path)
         elif (
             self._are_children_check_states_mixed
             and all(
@@ -94,7 +94,7 @@ class CategoryTreeNode:
             and all(child.check_state == self.check_state for child in self.children)
         ):
             self._are_children_check_states_mixed = False
-            self.event_signal_changed(self.item.path)
+            self.event_state_changed(self.item.path)
 
         if self.parent is not None:
             self.parent.update_are_children_mixed_check_state()
@@ -156,6 +156,7 @@ class CheckableCategoryTreeModel(QAbstractItemModel):
         self._flat_nodes: tuple[CategoryTreeNode] = ()
         self._root_nodes: tuple[CategoryTreeNode] = ()
         self._selection_mode = CategorySelectionMode.HIERARCHICAL
+        self.event_checked_categories_changed = Event()
 
     @property
     def flat_categories(self) -> tuple[Category, ...]:
@@ -186,8 +187,8 @@ class CheckableCategoryTreeModel(QAbstractItemModel):
             node for node in self._flat_nodes if node.parent is None
         )
         for node in self._flat_nodes:
-            node.event_signal_changed.clear()
-            node.event_signal_changed.append(
+            node.event_state_changed.clear()
+            node.event_state_changed.append(
                 lambda item_path: self._node_check_state_changed(item_path)
             )
 
@@ -300,3 +301,4 @@ class CheckableCategoryTreeModel(QAbstractItemModel):
             row = node.parent.children.index(node)
         index = QAbstractItemModel.createIndex(self, row, 0, node)
         self.dataChanged.emit(index, index, [Qt.ItemDataRole.CheckStateRole])
+        self.event_checked_categories_changed()

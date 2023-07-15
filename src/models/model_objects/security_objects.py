@@ -189,13 +189,7 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
         except KeyError:
             i = bisect_right(self.price_history_pairs, date_, key=lambda x: x[0])
             if i:
-                _date, price = self.price_history_pairs[i - 1]
-                if i == 1:
-                    logging.warning(
-                        f"{self!s}: no price found for {date_.strftime('%Y-%m-%d')}, "
-                        f"using the earliest available price "
-                        f"({_date.strftime('%Y-%m-%d')}: {price.to_str_normalized()})"
-                    )
+                _, price = self.price_history_pairs[i - 1]
                 return price
             logging.warning(
                 f"{self!s}: no earlier price found for {date_}, returning 'NaN'"

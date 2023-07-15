@@ -56,7 +56,7 @@ def test_eq_hash() -> None:
     assert filter_1.__eq__(filter_2) is True
     assert filter_1.__hash__() == filter_2.__hash__()
 
-    filter_1.set_description_filter("test pattern", FilterMode.KEEP)
+    filter_1.set_description_filter("test pattern", FilterMode.KEEP, ignore_case=True)
     assert filter_1.__eq__(filter_2) is False
     assert filter_1.__hash__() != filter_2.__hash__()
 
@@ -127,13 +127,9 @@ def test_set_datetime_filter(
     assert filter_.datetime_filter.mode == mode
 
 
-@given(
-    pattern=st.text(),
-    mode=st.sampled_from(FilterMode),
-)
+@given(pattern=st.text(), mode=st.sampled_from(FilterMode), ignore_case=st.booleans())
 def test_set_description_filter(
-    pattern: str,
-    mode: FilterMode,
+    pattern: str, mode: FilterMode, *, ignore_case: bool
 ) -> None:
     try:
         re.compile(pattern)
@@ -143,8 +139,9 @@ def test_set_description_filter(
     assume(is_pattern_valid)
 
     filter_ = TransactionFilter()
-    filter_.set_description_filter(pattern, mode)
+    filter_.set_description_filter(pattern, mode, ignore_case=ignore_case)
     assert filter_.description_filter.regex_pattern == pattern
+    assert filter_.description_filter.ignore_case == ignore_case
     assert filter_.description_filter.mode == mode
 
 
