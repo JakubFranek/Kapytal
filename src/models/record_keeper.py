@@ -320,6 +320,7 @@ class RecordKeeper:
         self._set_account_item_index(account, index)
         self._accounts.append(account)
         self._cash_accounts.append(account)
+        self._cash_accounts.sort(key=lambda account: account.path.lower())
 
     def add_security_account(self, path: str, index: int | None = None) -> None:
         parent_path, _, name = path.rpartition("/")
@@ -329,6 +330,7 @@ class RecordKeeper:
         self._set_account_item_index(account, index)
         self._accounts.append(account)
         self._security_accounts.append(account)
+        self._security_accounts.sort(key=lambda account: account.path.lower())
 
     def add_cash_transaction(  # noqa: PLR0913
         self,
@@ -988,6 +990,7 @@ class RecordKeeper:
         self._edit_account_item_parent(
             item=edited_account, new_parent=new_parent, index=index
         )
+        self._cash_accounts.sort(key=lambda account: account.path.lower())
 
     def edit_security_account(
         self, current_path: str, new_path: str, index: int | None = None
@@ -1001,6 +1004,7 @@ class RecordKeeper:
         self._edit_account_item_parent(
             item=edited_account, new_parent=new_parent, index=index
         )
+        self._security_accounts.sort(key=lambda account: account.path.lower())
 
     def edit_account_group(
         self, current_path: str, new_path: str, index: int | None = None

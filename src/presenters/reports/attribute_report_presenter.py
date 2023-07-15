@@ -18,7 +18,7 @@ from src.view_models.periodic_attribute_stats_table_model import (
 )
 from src.views.dialogs.busy_dialog import create_simple_busy_indicator
 from src.views.main_view import MainView
-from src.views.reports.attribute_periodic_report import AttributeReport
+from src.views.reports.attribute_report import AttributeReport
 from src.views.utilities.handle_exception import display_error_message
 
 

@@ -1,10 +1,11 @@
 from collections.abc import Collection
 
 from PyQt6.QtCore import QSignalBlocker, Qt
-from PyQt6.QtWidgets import QComboBox, QHBoxLayout, QHeaderView, QWidget
+from PyQt6.QtWidgets import QApplication, QComboBox, QHBoxLayout, QHeaderView, QWidget
 from src.models.statistics.category_stats import CategoryStats
 from src.views import icons
 from src.views.base_classes.custom_widget import CustomWidget
+from src.views.dialogs.busy_dialog import create_simple_busy_indicator
 from src.views.ui_files.reports.Ui_category_report import Ui_CategoryReport
 from src.views.widgets.charts.sunburst_chart_widget import (
     SunburstChartWidget,
@@ -39,12 +40,18 @@ class CategoryReport(CustomWidget, Ui_CategoryReport):
 
         self.actionExpand_All.setIcon(icons.expand)
         self.actionCollapse_All.setIcon(icons.collapse)
+        self.actionShow_Hide_Period_Columns.setIcon(icons.calendar)
 
         self.actionExpand_All.triggered.connect(self.treeView.expandAll)
         self.actionCollapse_All.triggered.connect(self.treeView.collapseAll)
+        self.actionShow_Hide_Period_Columns.triggered.connect(self._show_hide_periods)
+
+        self.actionShow_Hide_Period_Columns.setCheckable(True)
+        self.actionShow_Hide_Period_Columns.setChecked(True)
 
         self.expandAllToolButton.setDefaultAction(self.actionExpand_All)
         self.collapseAllToolButton.setDefaultAction(self.actionCollapse_All)
+        self.hidePeriodsToolButton.setDefaultAction(self.actionShow_Hide_Period_Columns)
 
         self.typeComboBox = QComboBox(self)
         self.typeComboBox.addItem("Income")
@@ -98,6 +105,26 @@ class CategoryReport(CustomWidget, Ui_CategoryReport):
         selected_period = self.periodComboBox.currentText()
         sunburst_data = _convert_category_stats_to_sunburst_data(data[selected_period])
         self.chart_widget.load_data(sunburst_data)
+
+    def _show_hide_periods(self) -> None:
+        state = self.actionShow_Hide_Period_Columns.isChecked()
+        message = "Showing " if state else "Hiding "
+        self._busy_dialog = create_simple_busy_indicator(
+            self, message + "columns, please wait..."
+        )
+        self._busy_dialog.open()
+        QApplication.processEvents()
+        try:
+            if state:
+                for column in range(1, self.treeView.model().columnCount() - 2):
+                    self.treeView.showColumn(column)
+            else:
+                for column in range(1, self.treeView.model().columnCount() - 2):
+                    self.treeView.hideColumn(column)
+        except:  # noqa: TRY302
+            raise
+        finally:
+            self._busy_dialog.close()
 
 
 def _convert_category_stats_to_sunburst_data(
@@ -153,5 +180,8 @@ def _create_node(
             ):
                 child_node.clear_label()
             node.children.append(child_node)
+    child_value_sum = sum(child.value for child in node.children)
+    if child_value_sum > node.value:
+        node.value = child_value_sum
     node.children.sort(key=lambda x: abs(x.value), reverse=True)
     return node

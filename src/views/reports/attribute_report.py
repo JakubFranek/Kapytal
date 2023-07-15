@@ -2,11 +2,12 @@ from collections.abc import Collection
 from typing import TYPE_CHECKING
 
 from PyQt6.QtCore import QSignalBlocker, Qt
-from PyQt6.QtWidgets import QComboBox, QHBoxLayout, QHeaderView, QWidget
+from PyQt6.QtWidgets import QApplication, QComboBox, QHBoxLayout, QHeaderView, QWidget
 from src.models.model_objects.attributes import AttributeType
 from src.models.statistics.attribute_stats import AttributeStats
 from src.views import icons
 from src.views.base_classes.custom_widget import CustomWidget
+from src.views.dialogs.busy_dialog import create_simple_busy_indicator
 from src.views.ui_files.reports.Ui_attribute_report import (
     Ui_AttributeReport,
 )
@@ -58,6 +59,14 @@ class AttributeReport(CustomWidget, Ui_AttributeReport):
         self.combobox_horizontal_layout.addWidget(self.periodComboBox)
         self.chart_widget.horizontal_layout.addLayout(self.combobox_horizontal_layout)
 
+        self.actionShow_Hide_Period_Columns.setIcon(icons.calendar)
+        self.actionShow_Hide_Period_Columns.triggered.connect(self._show_hide_periods)
+        self.actionShow_Hide_Period_Columns.setCheckable(True)
+        self.actionShow_Hide_Period_Columns.setChecked(True)
+        self.showHidePeriodColumnsToolButton.setDefaultAction(
+            self.actionShow_Hide_Period_Columns
+        )
+
     def finalize_setup(self) -> None:
         for column in range(self.tableView.model().columnCount()):
             self.tableView.horizontalHeader().setSectionResizeMode(
@@ -101,3 +110,23 @@ class AttributeReport(CustomWidget, Ui_AttributeReport):
             data.append((abs(item.balance.value_rounded), item.attribute.name))
 
         self.chart_widget.load_data(data)
+
+    def _show_hide_periods(self) -> None:
+        state = self.actionShow_Hide_Period_Columns.isChecked()
+        message = "Showing " if state else "Hiding "
+        self._busy_dialog = create_simple_busy_indicator(
+            self, message + "columns, please wait..."
+        )
+        self._busy_dialog.open()
+        QApplication.processEvents()
+        try:
+            if state:
+                for column in range(self.tableView.model().columnCount() - 2):
+                    self.tableView.showColumn(column)
+            else:
+                for column in range(self.tableView.model().columnCount() - 2):
+                    self.tableView.hideColumn(column)
+        except:  # noqa: TRY302
+            raise
+        finally:
+            self._busy_dialog.close()
