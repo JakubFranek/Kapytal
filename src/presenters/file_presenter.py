@@ -90,6 +90,10 @@ class FilePresenter:
         self._current_file_path: Path | None = None
         self.update_unsaved_changes(unsaved_changes=False)
 
+    @property
+    def recent_file_paths(self) -> tuple[Path]:
+        return tuple(self._recent_paths)
+
     def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
         self._record_keeper = record_keeper
 
@@ -106,10 +110,10 @@ class FilePresenter:
         logging.debug(f"Saving to file: {self._current_file_path}")
         self._save_to_file(record_keeper, self._current_file_path)
 
-    def load_from_file(self, path: str | Path | None = None) -> None:
+    def load_from_file(self, path: str | Path | None = None) -> bool:
         logging.debug("Load from file initiated")
-        if self.check_for_unsaved_changes("Load File") is False:
-            return
+        if not self.check_for_unsaved_changes("Load File"):
+            return False
         if path is None:
             logging.debug("Asking user for file path")
             path = self._view.get_open_path()
@@ -117,11 +121,23 @@ class FilePresenter:
                 logging.info(
                     "Load from file cancelled: invalid or no file path received"
                 )
-                return
+                return False
 
         logging.debug(f"File path: {path}")
         self._current_file_path = Path(path)
         self._open_file(self._current_file_path)
+        return True
+
+    def load_most_recent_file(self) -> bool:
+        logging.debug("Load most recent file initiated")
+        if not self.check_for_unsaved_changes("Load Most Recent File"):
+            return False
+        if len(self._recent_paths) == 0:
+            logging.info("Load most recent file cancelled: no recent files")
+            return False
+        recent_path = self._recent_paths[0]
+        self.load_from_file(recent_path)
+        return True
 
     def close_file(self) -> None:
         if self.check_for_unsaved_changes("Close File") is False:

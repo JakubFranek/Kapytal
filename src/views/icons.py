@@ -82,6 +82,10 @@ slider: QIcon | None = None
 bar_chart: QIcon | None = None
 pie_chart: QIcon | None = None
 calendar: QIcon | None = None
+document_smiley: QIcon | None = None
+document_clock: QIcon | None = None
+document_plus: QIcon | None = None
+book_question: QIcon | None = None
 
 
 def setup() -> None:  # noqa: PLR0915
@@ -111,6 +115,9 @@ def setup() -> None:  # noqa: PLR0915
     global hourglass  # noqa: PLW0603
     global arrow_right, arrow_left, arrow_move, home, slider  # noqa: PLW0603
     global bar_chart, pie_chart, calendar  # noqa: PLW0603
+    global document_smiley, document_clock, document_plus  # noqa: PLW0603
+    global book_question  # noqa: PLW0603
+
     QDir.addSearchPath(
         "icons_24",
         str(Path(QDir.currentPath() + "/resources/icons/icons-24")),
@@ -204,3 +211,7 @@ def setup() -> None:  # noqa: PLR0915
     bar_chart = QIcon("icons_16:chart.png")
     pie_chart = QIcon("icons_16:chart-pie.png")
     calendar = QIcon("icons_16:calendar.png")
+    document_smiley = QIcon("icons_16:document-smiley.png")
+    document_clock = QIcon("icons_16:document-clock.png")
+    document_plus = QIcon("icons_16:document--plus.png")
+    book_question = QIcon("icons_16:book-question.png")

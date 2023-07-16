@@ -36,8 +36,6 @@ class CashFlowPeriodicChartWidget(ChartWidget):
     def load_data(
         self, stats_sequence: Sequence[CashFlowStats], chart_data: ChartData
     ) -> None:
-        # TODO: add option to show only selected bars
-
         width = BAR_WIDTH_4 if chart_data == ChartData.ALL else BAR_WIDTH_1
 
         axes = self.chart.axes
