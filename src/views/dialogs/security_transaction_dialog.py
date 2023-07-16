@@ -70,6 +70,8 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
         self.tags_label = QLabel("Tags", self)
         self.formLayout.addRow(self.tags_label, self.tags_widget)
 
+        self._fixed_spinboxes = []
+
         self._initialize_window()
         self._initialize_placeholders()
         self._initialize_signals()
@@ -302,17 +304,53 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
         self.cashAccountComboBox.currentTextChanged.connect(
             self._set_spinboxes_currencies
         )
-        self.sharesDoubleSpinBox.valueChanged.connect(self._update_total)
-        self.priceDoubleSpinBox.valueChanged.connect(self._update_total)
+        self.sharesDoubleSpinBox.valueChanged.connect(
+            lambda: self._update_spinbox_values(self.sharesDoubleSpinBox)
+        )
+        self.priceDoubleSpinBox.valueChanged.connect(
+            lambda: self._update_spinbox_values(self.priceDoubleSpinBox)
+        )
+        self.totalDoubleSpinBox.valueChanged.connect(
+            lambda: self._update_spinbox_values(self.totalDoubleSpinBox)
+        )
 
-    def _update_total(self) -> None:
-        shares = self.shares
-        price_per_share = self.price_per_share
-        if shares is None or price_per_share is None:
-            self.totalDoubleSpinBox.setValue(0)
+    def _update_spinbox_values(self, spinbox: QDoubleSpinBox) -> None:
+        if spinbox not in self._fixed_spinboxes:
+            self._fixed_spinboxes.append(spinbox)
+        if len(self._fixed_spinboxes) == 3:
+            self._fixed_spinboxes.pop(0)
+        elif len(self._fixed_spinboxes) == 2:
+            pass
+        else:
             return
-        total = shares * price_per_share
-        self.totalDoubleSpinBox.setValue(total)
+
+        if self.totalDoubleSpinBox not in self._fixed_spinboxes:
+            with QSignalBlocker(self.totalDoubleSpinBox):
+                shares = self.shares
+                price_per_share = self.price_per_share
+                if shares is None or price_per_share is None:
+                    self.totalDoubleSpinBox.setValue(0)
+                    return
+                total = shares * price_per_share
+                self.totalDoubleSpinBox.setValue(total)
+        elif self.priceDoubleSpinBox not in self._fixed_spinboxes:
+            with QSignalBlocker(self.priceDoubleSpinBox):
+                shares = self.shares
+                total = Decimal(self.totalDoubleSpinBox.cleanText().replace(",", ""))
+                if shares is None or shares == 0:
+                    self.priceDoubleSpinBox.setValue(0)
+                    return
+                self.priceDoubleSpinBox.setValue(total / shares)
+        elif self.sharesDoubleSpinBox not in self._fixed_spinboxes:
+            with QSignalBlocker(self.sharesDoubleSpinBox):
+                price_per_share = self.price_per_share
+                total = Decimal(self.totalDoubleSpinBox.cleanText().replace(",", ""))
+                if price_per_share is None or price_per_share == 0:
+                    self.sharesDoubleSpinBox.setValue(0)
+                    return
+                self.sharesDoubleSpinBox.setValue(total / price_per_share)
+        else:
+            raise ValueError("Invalid spinbox")
 
     def _set_spinboxes_currencies(self) -> None:
         self._set_spinbox_currency(self.cash_account_path, self.priceDoubleSpinBox)

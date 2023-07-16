@@ -80,6 +80,8 @@ class CashAccountDialogPresenter:
             edit=True,
         )
         self._dialog.signal_ok.connect(self.edit_cash_account)
+        self._dialog.signal_path_changed.connect(self._update_dialog_position_limits)
+
         self._dialog.initial_balance = selected_item.initial_balance.value_rounded
 
         if selected_item is None:

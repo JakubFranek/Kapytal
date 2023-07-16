@@ -219,6 +219,12 @@
      </item>
      <item row="6" column="1">
       <widget class="QDoubleSpinBox" name="sharesDoubleSpinBox">
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+       <property name="showGroupSeparator" stdset="0">
+        <bool>true</bool>
+       </property>
        <property name="maximum">
         <double>10000000000000000.000000000000000</double>
        </property>
@@ -234,7 +240,7 @@
      <item row="7" column="1">
       <widget class="QDoubleSpinBox" name="priceDoubleSpinBox">
        <property name="alignment">
-        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
        </property>
        <property name="showGroupSeparator" stdset="0">
         <bool>true</bool>
@@ -257,13 +263,16 @@
      <item row="8" column="1">
       <widget class="QDoubleSpinBox" name="totalDoubleSpinBox">
        <property name="enabled">
-        <bool>false</bool>
-       </property>
-       <property name="readOnly">
         <bool>true</bool>
        </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+       <property name="readOnly">
+        <bool>false</bool>
+       </property>
        <property name="buttonSymbols">
-        <enum>QAbstractSpinBox::NoButtons</enum>
+        <enum>QAbstractSpinBox::UpDownArrows</enum>
        </property>
        <property name="showGroupSeparator" stdset="0">
         <bool>true</bool>

@@ -125,7 +125,7 @@ class AccountTreeNode:
 def sync_nodes(
     items: Sequence[Account | AccountGroup],
     nodes: dict[UUID, AccountTreeNode],
-    base_currency: Currency,
+    base_currency: Currency | None,
 ) -> tuple[AccountTreeNode]:
     """Accepts ordered sequence of items. Returns an ordered tuple of nodes."""
 
@@ -137,7 +137,7 @@ def sync_nodes(
         if node is None:
             try:
                 balance_base = item.get_balance(currency=base_currency)
-            except ConversionFactorNotFoundError:
+            except (ConversionFactorNotFoundError, AttributeError):
                 balance_base = None
             if isinstance(item, CashAccount):
                 balance_native = item.get_balance(item.currency)
@@ -158,7 +158,7 @@ def sync_nodes(
             node.path = item.path
             try:
                 node.balance_base = item.get_balance(currency=base_currency)
-            except ConversionFactorNotFoundError:
+            except (ConversionFactorNotFoundError, AttributeError):
                 node.balance_base = None
             if isinstance(item, CashAccount):
                 node.balance_native = item.get_balance(item.currency)
