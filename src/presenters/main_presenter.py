@@ -14,6 +14,7 @@ from src.presenters.widget.account_tree_presenter import AccountTreePresenter
 from src.presenters.widget.transactions_presenter import (
     TransactionsPresenter,
 )
+from src.views.dialogs.welcome_dialog import WelcomeDialog
 from src.views.forms.category_form import CategoryForm
 from src.views.forms.currency_form import CurrencyForm
 from src.views.forms.payee_form import PayeeForm
@@ -32,6 +33,27 @@ class MainPresenter:
         self._initialize_presenters()
         self._setup_event_observers()
         self._connect_view_signals()
+
+    def show_welcome_dialog(self) -> None:
+        self._welcome_dialog = WelcomeDialog(self._view)
+        self._welcome_dialog.signal_new_file.connect(self._welcome_dialog.close)
+        self._welcome_dialog.signal_open_file.connect(self._load_file)
+        self._welcome_dialog.signal_open_recent_file.connect(
+            self._load_most_recent_file
+        )
+        self._welcome_dialog.signal_quit.connect(self._quit)
+        self._welcome_dialog.set_open_recent_file_button(
+            enabled=len(self._file_presenter.recent_file_paths) > 0
+        )
+        self._welcome_dialog.show()
+
+    def _load_most_recent_file(self) -> None:
+        if self._file_presenter.load_most_recent_file():
+            self._welcome_dialog.close()
+
+    def _load_file(self) -> None:
+        if self._file_presenter.load_from_file():
+            self._welcome_dialog.close()
 
     def _quit(self) -> None:
         if self._file_presenter.check_for_unsaved_changes("Quit") is False:

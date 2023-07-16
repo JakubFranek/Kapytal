@@ -62,13 +62,16 @@ def main() -> None:
     main_view = MainView()
 
     logging.debug("Creating MainPresenter")
-    MainPresenter(main_view, app)
+    main_presenter = MainPresenter(main_view, app)
 
     logging.debug("Showing MainView")
     main_view.show()
 
     logging.debug("Setting Fusion style")
     app.setStyle(QStyleFactory.create("Fusion"))
+
+    logging.debug("Showing Welcome dialog")
+    main_presenter.show_welcome_dialog()
 
     logging.info("Executing QApplication, awaiting user input")
     app.exec()
