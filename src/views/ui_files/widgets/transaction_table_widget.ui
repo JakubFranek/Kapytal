@@ -1,0 +1,288 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>TransactionTableWidget</class>
+ <widget class="QWidget" name="TransactionTableWidget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>454</width>
+    <height>415</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <property name="locale">
+   <locale language="English" country="UnitedKingdom"/>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <property name="leftMargin">
+    <number>0</number>
+   </property>
+   <property name="topMargin">
+    <number>0</number>
+   </property>
+   <property name="rightMargin">
+    <number>0</number>
+   </property>
+   <property name="bottomMargin">
+    <number>0</number>
+   </property>
+   <item>
+    <layout class="QHBoxLayout" name="controlsHorizontalLayout" stretch="0,0,0,0,0,0,0,0">
+     <item>
+      <widget class="QToolButton" name="incomeToolButton">
+       <property name="text">
+        <string>...</string>
+       </property>
+       <property name="toolButtonStyle">
+        <enum>Qt::ToolButtonTextBesideIcon</enum>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QToolButton" name="expenseToolButton">
+       <property name="text">
+        <string>...</string>
+       </property>
+       <property name="toolButtonStyle">
+        <enum>Qt::ToolButtonTextBesideIcon</enum>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QToolButton" name="transferToolButton">
+       <property name="text">
+        <string>Transfer</string>
+       </property>
+       <property name="popupMode">
+        <enum>QToolButton::InstantPopup</enum>
+       </property>
+       <property name="toolButtonStyle">
+        <enum>Qt::ToolButtonTextBesideIcon</enum>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QToolButton" name="buyToolButton">
+       <property name="text">
+        <string>...</string>
+       </property>
+       <property name="toolButtonStyle">
+        <enum>Qt::ToolButtonTextBesideIcon</enum>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QToolButton" name="sellToolButton">
+       <property name="text">
+        <string>...</string>
+       </property>
+       <property name="toolButtonStyle">
+        <enum>Qt::ToolButtonTextBesideIcon</enum>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeType">
+        <enum>QSizePolicy::Fixed</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QToolButton" name="filterToolButton">
+       <property name="text">
+        <string>...</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLineEdit" name="searchLineEdit">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>200</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>16777215</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Search text in all table columns (including hidden columns)&lt;br/&gt;For advanced filtering, use the Filter button to the left&lt;br/&gt;&lt;br/&gt;Special regex characters:&lt;br/&gt;. matches any character&lt;br/&gt;* matches zero or more of preceding token&lt;br/&gt;? matches zero or one of preceding token&lt;br/&gt;+ matches one or more of the preceding token&lt;br/&gt;^ matches the beginning of a string&lt;br/&gt;$ matches the end of a string&lt;br/&gt;| matches the expression to the right or left&lt;br/&gt;[...] matches any character within square brackets&lt;br/&gt;(...) groups tokens together&lt;br/&gt;\ escapes a special character&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="placeholderText">
+        <string>Search Transactions</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QTableView" name="tableView">
+     <property name="statusTip">
+      <string>Transaction Table: right-click to open the context menu</string>
+     </property>
+     <property name="selectionMode">
+      <enum>QAbstractItemView::ExtendedSelection</enum>
+     </property>
+     <property name="selectionBehavior">
+      <enum>QAbstractItemView::SelectRows</enum>
+     </property>
+     <attribute name="horizontalHeaderHighlightSections">
+      <bool>false</bool>
+     </attribute>
+     <attribute name="horizontalHeaderShowSortIndicator" stdset="0">
+      <bool>true</bool>
+     </attribute>
+     <attribute name="horizontalHeaderStretchLastSection">
+      <bool>true</bool>
+     </attribute>
+     <attribute name="verticalHeaderVisible">
+      <bool>false</bool>
+     </attribute>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="transactionsLabel">
+     <property name="text">
+      <string>Showing Transactions: 0/0</string>
+     </property>
+    </widget>
+   </item>
+  </layout>
+  <action name="actionExpense">
+   <property name="text">
+    <string>Expense</string>
+   </property>
+   <property name="shortcut">
+    <string>E</string>
+   </property>
+  </action>
+  <action name="actionIncome">
+   <property name="text">
+    <string>Income</string>
+   </property>
+   <property name="shortcut">
+    <string>I</string>
+   </property>
+  </action>
+  <action name="actionBuy">
+   <property name="text">
+    <string>Buy</string>
+   </property>
+   <property name="shortcut">
+    <string>B</string>
+   </property>
+  </action>
+  <action name="actionSell">
+   <property name="text">
+    <string>Sell</string>
+   </property>
+   <property name="shortcut">
+    <string>S</string>
+   </property>
+  </action>
+  <action name="actionRefund">
+   <property name="text">
+    <string>Refund</string>
+   </property>
+   <property name="toolTip">
+    <string>Only Expenses can be refunded</string>
+   </property>
+  </action>
+  <action name="actionCash_Transfer">
+   <property name="text">
+    <string>Cash Transfer</string>
+   </property>
+  </action>
+  <action name="actionSecurity_Transfer">
+   <property name="text">
+    <string>Security Transfer</string>
+   </property>
+  </action>
+  <action name="actionDelete">
+   <property name="text">
+    <string>Delete</string>
+   </property>
+  </action>
+  <action name="actionEdit">
+   <property name="text">
+    <string>Edit</string>
+   </property>
+   <property name="toolTip">
+    <string>Only Transactions of same type can be edited</string>
+   </property>
+  </action>
+  <action name="actionDuplicate">
+   <property name="text">
+    <string>Duplicate</string>
+   </property>
+  </action>
+  <action name="actionFilter_Transactions">
+   <property name="text">
+    <string>Filter Transactions</string>
+   </property>
+   <property name="toolTip">
+    <string>Filter Transactions</string>
+   </property>
+  </action>
+  <action name="actionReset_Columns">
+   <property name="text">
+    <string>Reset Columns</string>
+   </property>
+  </action>
+  <action name="actionResize_Columns_to_Fit">
+   <property name="text">
+    <string>Resize Columns to Fit</string>
+   </property>
+  </action>
+  <action name="actionShow_All_Columns">
+   <property name="text">
+    <string>Show All Columns</string>
+   </property>
+  </action>
+  <action name="actionAdd_Tags">
+   <property name="text">
+    <string>Add Tags</string>
+   </property>
+  </action>
+  <action name="actionRemove_Tags">
+   <property name="text">
+    <string>Remove Tags</string>
+   </property>
+  </action>
+  <action name="actionFind_Related">
+   <property name="text">
+    <string>Find related</string>
+   </property>
+   <property name="toolTip">
+    <string>Show refunded Expense and its Refunds</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

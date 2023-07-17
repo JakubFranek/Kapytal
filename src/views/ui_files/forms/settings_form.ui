@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>SettingsForm</class>
+ <widget class="QWidget" name="SettingsForm">
+  <property name="windowModality">
+   <enum>Qt::WindowModal</enum>
+  </property>
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>500</width>
+    <height>400</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Settings</string>
+  </property>
+  <property name="locale">
+   <locale language="English" country="UnitedKingdom"/>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QTabWidget" name="tabWidget">
+     <property name="toolTip">
+      <string/>
+     </property>
+     <property name="currentIndex">
+      <number>0</number>
+     </property>
+     <widget class="QWidget" name="backupsTab">
+      <attribute name="title">
+       <string>Backups</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_4">
+       <item>
+        <layout class="QFormLayout" name="backupsFormLayout">
+         <item row="0" column="0">
+          <widget class="QLabel" name="backupsSizeLimitLabel">
+           <property name="text">
+            <string>Maximum backup directory size</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QSpinBox" name="backupsSizeLimitSpinBox">
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;1 MB = 1,000 kB&lt;br/&gt;1 GB = 1,000,000 kB&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="showGroupSeparator" stdset="0">
+            <bool>true</bool>
+           </property>
+           <property name="suffix">
+            <string> kB</string>
+           </property>
+           <property name="maximum">
+            <number>1000000000</number>
+           </property>
+           <property name="singleStep">
+            <number>1</number>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QLabel" name="backupDirectoriesLabel">
+         <property name="text">
+          <string>Backup directories:</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QListView" name="backupsListView"/>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="backupsButtonHorizontalLayout">
+         <item>
+          <widget class="QPushButton" name="addBackupDirectoryButton">
+           <property name="text">
+            <string>Add directory</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="removeBackupDirectoryButton">
+           <property name="text">
+            <string>Remove directory</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="openBackupDirectoryButton">
+           <property name="text">
+            <string>Open directory in File Browser</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="Line" name="backupsLine">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="backupsDisclaimerLabel">
+         <property name="text">
+          <string>NOTE: Kapytal automatically deletes the contents of the backup directories, starting from the oldest file, if the backup directory size limit is exceeded during launch. If you wish to keep any of the backups permanently, copy them elsewhere or set a very large directory size limit. Do not store any other data in the backup directories.</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignJustify|Qt::AlignVCenter</set>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="logsTab">
+      <attribute name="title">
+       <string>Logging</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_2">
+       <item>
+        <layout class="QFormLayout" name="logsFormLayout">
+         <item row="0" column="0">
+          <widget class="QLabel" name="logsSizeLimitLabel">
+           <property name="text">
+            <string>Maximum logs directory size</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QSpinBox" name="logsSizeLimitSpinBox">
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;1 MB = 1,000 kB&lt;br/&gt;1 GB = 1,000,000 kB&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="showGroupSeparator" stdset="0">
+            <bool>true</bool>
+           </property>
+           <property name="suffix">
+            <string> kB</string>
+           </property>
+           <property name="maximum">
+            <number>1000000000</number>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QPushButton" name="openLogsDirectoryButton">
+         <property name="text">
+          <string>Open logs directory in File Browser</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="Line" name="logsLine">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="logsDisclaimerLabel">
+         <property name="text">
+          <string>NOTE: Logs contain records of all operations performed by Kapytal. A new log is created each time the program is launched. Logs contain data entered into the Kapytal by the user, which can be sensitive. The logs exist only locally. The purpose of the logs is to provide information to the developer if unexpected behaviour or an error occurs. &quot;Debug&quot; logs are more detailed than &quot;info&quot; logs. When the logs directory size exceeds the user defined limit during launch, Kapytal automatically deletes the oldest logs until the limit is satisfied. Do not store any other data in the logs directories.</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignJustify|Qt::AlignVCenter</set>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="logsVerticalSpacer">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+   <item>
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Apply|QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
