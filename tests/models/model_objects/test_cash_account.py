@@ -6,6 +6,7 @@ import pytest
 from hypothesis import assume, given
 from hypothesis import strategies as st
 from src.models.custom_exceptions import AlreadyExistsError
+from src.models.model_objects.account_group import AccountGroup
 from src.models.model_objects.cash_objects import (
     CashAccount,
     CashRelatedTransaction,
@@ -228,3 +229,33 @@ def test_get_balance_with_date(
     assert balance_2 == account.initial_balance + transaction_sum_2
     assert balance_1 == account.initial_balance + transaction_sum_1
     assert balance_0 == account.initial_balance
+
+
+def test_parent_change_balance_update() -> None:
+    amount = 100
+    currency = Currency("USD", 2)
+    parent_1 = AccountGroup("Parent 1")
+    parent_2 = AccountGroup("Parent 2")
+    cash_account = CashAccount(
+        "Cash Account",
+        currency,
+        parent=parent_1,
+        initial_balance=CashAmount(amount, currency),
+    )
+    CashAccount(
+        "Dummy",
+        currency,
+        parent=parent_2,
+        initial_balance=currency.zero_amount,
+    )
+
+    assert cash_account.get_balance(currency).value_normalized == amount
+    assert parent_1.get_balance(currency).value_normalized == amount
+    assert parent_2.get_balance(currency).value_normalized == 0
+
+    cash_account.parent = parent_2
+    parent_2.set_child_index(cash_account, 0)
+
+    assert cash_account.get_balance(currency).value_normalized == amount
+    assert parent_1.get_balance(currency).value_normalized == 0
+    assert parent_2.get_balance(currency).value_normalized == amount

@@ -22,9 +22,9 @@ class WelcomeDialog(CustomDialog, Ui_WelcomeDialog):
         self.setWindowFlag(Qt.WindowType.MSWindowsFixedSizeDialogHint)
 
         if colors.color_scheme == Qt.ColorScheme.Dark:
-            self.pixmap = QPixmap("resources/images/kapytal_welcome_dark_mode.png")
+            self.pixmap = QPixmap("resources/images/welcome_dark_mode.png")
         else:
-            self.pixmap = QPixmap("resources/images/kapytal_welcome_light_mode.png")
+            self.pixmap = QPixmap("resources/images/welcome_light_mode.png")
         self.label.setPixmap(self.pixmap)
 
         self._setup_button(

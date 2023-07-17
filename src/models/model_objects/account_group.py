@@ -6,7 +6,7 @@ from src.models.custom_exceptions import NotFoundError
 if TYPE_CHECKING:
     from src.models.base_classes.account import Account
 
-from src.models.mixins.get_balance_mixin import BalanceMixin
+from src.models.mixins.balance_mixin import BalanceMixin
 from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
 from src.models.mixins.name_mixin import NameMixin
 from src.models.mixins.uuid_mixin import UUIDMixin
@@ -75,6 +75,7 @@ class AccountGroup(NameMixin, BalanceMixin, JSONSerializableMixin, UUIDMixin):
         self._children_dict[max_index + 1] = child
         self._update_children_tuple()
         child.event_balance_updated.append(self._update_balances)
+        self._update_balances()
 
     def _remove_child(self, child: Self | "Account") -> None:
         index = self.get_child_index(child)
@@ -89,6 +90,7 @@ class AccountGroup(NameMixin, BalanceMixin, JSONSerializableMixin, UUIDMixin):
         self._children_dict = aux_dict
         self._update_children_tuple()
         child.event_balance_updated.remove(self._update_balances)
+        self._update_balances()
 
     def set_child_index(self, child: "Account" | Self, index: int) -> None:
         if index < 0:
@@ -113,6 +115,7 @@ class AccountGroup(NameMixin, BalanceMixin, JSONSerializableMixin, UUIDMixin):
         child.event_balance_updated.append(self._update_balances)
         self._children_dict = aux_dict
         self._update_children_tuple()
+        self._update_balances()
 
     def get_child_index(self, child: "Account" | Self) -> int:
         return list(self._children_dict.keys())[

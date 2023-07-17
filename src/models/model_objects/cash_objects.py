@@ -103,22 +103,24 @@ class CashAccount(Account):
         initial_balance: CashAmount,
         parent: AccountGroup | None = None,
     ) -> None:
-        super().__init__(name=name, parent=parent)
-
-        # allow_update_balance attribute is used to block updating the balance
-        # when a transaction is added or removed during deserialization
-        self.allow_update_balance = True
-
         if not isinstance(currency, Currency):
             raise TypeError("CashAccount.currency must be a Currency.")
         self._currency = currency
 
+        # allow_update_balance attribute is used to block updating the balance
+        # when a transaction is added or removed during deserialization
+        self.allow_update_balance = False
+
+        # balance update via initial_balance set is suppressed due to line above
+        self.initial_balance = initial_balance
         self._balance_history: list[
             tuple[datetime, CashAmount, CashRelatedTransaction | None]
         ] = [(datetime.now(user_settings.settings.time_zone), initial_balance, None)]
         self._transactions: set[CashRelatedTransaction] = set()
 
-        self.initial_balance = initial_balance
+        # parent is set last because it triggers chain of balance updates
+        self.allow_update_balance = True
+        super().__init__(name=name, parent=parent)
 
     @property
     def currency(self) -> Currency:

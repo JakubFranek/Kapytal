@@ -19,7 +19,7 @@ STR_TO_CHART_DATA = {
     "Inflows": ChartData.INFLOWS,
     "Outflows": ChartData.OUTFLOWS,
     "Cash Flow": ChartData.CASH_FLOW,
-    "Gain / Loss": ChartData.GAIN_LOSS,
+    "Total Gain / Loss": ChartData.GAIN_LOSS,
     "Net Growth": ChartData.NET_GROWTH,
 }
 

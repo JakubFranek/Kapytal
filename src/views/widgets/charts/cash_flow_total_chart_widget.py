@@ -5,7 +5,7 @@ from PyQt6.QtWidgets import QWidget
 from src.models.statistics.cashflow_stats import CashFlowStats
 from src.views.widgets.charts.chart_widget import ChartWidget
 
-x_labels = ["Inflows", "Outflows", "Cash Flow", "Gain / Loss"]
+x_labels = ["Inflows", "Outflows", "Cash Flow", "Total Gain / Loss"]
 
 
 class CashFlowTotalChartWidget(ChartWidget):
@@ -46,7 +46,7 @@ class CashFlowTotalChartWidget(ChartWidget):
         )
 
         bar_delta_performance = self.chart.axes.bar(
-            "Gain / Loss",
+            "Total Gain / Loss",
             stats.delta_performance.value_rounded,
             color="orange",
         )
@@ -83,7 +83,7 @@ class CashFlowTotalChartWidget(ChartWidget):
                 "Expenses",
                 "Outward Transfers",
                 "Cash Flow",
-                "Gain / Loss",
+                "Total Gain / Loss",
             ],
         )
 

@@ -2,8 +2,8 @@ from abc import ABC, abstractmethod
 from datetime import date
 from typing import TYPE_CHECKING
 
+from src.models.mixins.balance_mixin import BalanceMixin
 from src.models.mixins.copyable_mixin import CopyableMixin
-from src.models.mixins.get_balance_mixin import BalanceMixin
 from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
 from src.models.mixins.name_mixin import NameMixin
 from src.models.mixins.uuid_mixin import UUIDMixin
@@ -47,6 +47,7 @@ class Account(
                 return
             if self._parent is not None:
                 self._parent._remove_child(self)  # noqa: SLF001
+                self.event_balance_updated()
 
         if parent is not None:
             parent._add_child(self)  # noqa: SLF001

@@ -130,7 +130,9 @@ class CashFlowPeriodicChartWidget(ChartWidget):
         if chart_data == ChartData.ALL or chart_data == ChartData.CASH_FLOW:
             axes.bar(x3, cash_flow, width=width, color="royalblue", label="Cash Flow")
         if chart_data == ChartData.ALL or chart_data == ChartData.GAIN_LOSS:
-            axes.bar(x4, gain_loss, width=width, color="orange", label="Gain / Loss")
+            axes.bar(
+                x4, gain_loss, width=width, color="orange", label="Total Gain / Loss"
+            )
         if chart_data == ChartData.NET_GROWTH:
             axes.bar(x5, net_growth, width=width, color="deeppink", label="Net Growth")
 
