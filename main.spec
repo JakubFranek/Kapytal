@@ -9,6 +9,7 @@ a = Analysis(
     pathex=[],
     binaries=[],
     datas=[
+        ("resources/images", "resources/images"),
         ("resources/icons", "resources/icons"),
         ("logs/README.md", "logs/."),
         ("saved_data/README.md", "saved_data/."),
