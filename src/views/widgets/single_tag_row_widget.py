@@ -34,11 +34,11 @@ class SingleTagRowWidget(QWidget):
         self.enable_split(enable=True)
 
     @property
-    def tags(self) -> tuple[str, ...]:
+    def tag_names(self) -> tuple[str, ...]:
         return self.tags_widget.tag_names
 
-    @tags.setter
-    def tags(self, values: Collection[str]) -> None:
+    @tag_names.setter
+    def tag_names(self, values: Collection[str]) -> None:
         self.tags_widget.tag_names = values
 
     def enable_split(self, *, enable: bool) -> None:
