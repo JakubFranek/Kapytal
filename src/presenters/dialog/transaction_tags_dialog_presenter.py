@@ -4,6 +4,9 @@ from collections.abc import Collection
 from PyQt6.QtWidgets import QWidget
 from src.models.base_classes.transaction import Transaction
 from src.models.record_keeper import RecordKeeper
+from src.presenters.utilities.check_for_nonexistent_attributes import (
+    check_for_nonexistent_attributes,
+)
 from src.presenters.utilities.event import Event
 from src.presenters.utilities.handle_exception import handle_exception
 from src.views.dialogs.transaction_tags_dialog import TransactionTagsDialog
@@ -24,6 +27,8 @@ class TransactionTagsDialogPresenter:
         self._record_keeper = record_keeper
 
     def run_add_dialog(self, transactions: Collection[Transaction]) -> None:
+        logging.debug("Running TransactionTagsDialog (Add)")
+
         tag_names = [tag.name for tag in self._record_keeper.tags]
         if len(transactions) < 1:
             raise ValueError(
@@ -35,6 +40,8 @@ class TransactionTagsDialogPresenter:
         self._dialog.exec()
 
     def run_remove_dialog(self, transactions: Collection[Transaction]) -> None:
+        logging.debug("Running TransactionTagsDialog (Remove)")
+
         tag_names = [tag.name for tag in self._record_keeper.tags]
         if len(transactions) < 1:
             raise ValueError(
@@ -47,6 +54,13 @@ class TransactionTagsDialogPresenter:
 
     def _add_tags(self) -> None:
         tag_names = self._dialog.tags
+
+        if not check_for_nonexistent_attributes(
+            tag_names, self._record_keeper.tags, self._dialog, "Tag"
+        ):
+            logging.debug("Dialog aborted")
+            return
+
         uuids = [transaction.uuid for transaction in self._transactions]
         try:
             self._record_keeper.add_tags_to_transactions(uuids, tag_names)
@@ -58,6 +72,13 @@ class TransactionTagsDialogPresenter:
 
     def _remove_tags(self) -> None:
         tag_names = self._dialog.tags
+
+        if not check_for_nonexistent_attributes(
+            tag_names, self._record_keeper.tags, self._dialog, "Tag"
+        ):
+            logging.debug("Dialog aborted")
+            return
+
         uuids = [transaction.uuid for transaction in self._transactions]
         try:
             self._record_keeper.remove_tags_from_transactions(uuids, tag_names)

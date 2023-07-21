@@ -174,7 +174,13 @@ class CashTransferDialogPresenter:
                 "Sent and received amounts must be positive.", title="Warning"
             )
             return
-        tags = self._dialog.tag_names
+        tag_names = self._dialog.tag_names
+
+        if not check_for_nonexistent_attributes(
+            tag_names, self._record_keeper.tags, self._dialog, "Tag"
+        ):
+            logging.debug("Dialog aborted")
+            return
 
         sender = self._record_keeper.get_account(sender_path, CashAccount)
         recipient = self._record_keeper.get_account(recipient_path, CashAccount)
@@ -197,7 +203,7 @@ class CashTransferDialogPresenter:
         logging.info(
             f"Adding CashTransfer: {datetime_.strftime('%Y-%m-%d')}, "
             f"{description=}, sender={sender_path}, sent={amount_sent}, "
-            f"recipient={recipient_path}, received={amount_received}, {tags=}"
+            f"recipient={recipient_path}, received={amount_received}, {tag_names=}"
         )
         try:
             self._record_keeper.add_cash_transfer(
@@ -207,7 +213,7 @@ class CashTransferDialogPresenter:
                 recipient_path,
                 amount_sent,
                 amount_received,
-                tags,
+                tag_names,
             )
         except Exception as exception:  # noqa: BLE001
             handle_exception(exception)
@@ -237,7 +243,7 @@ class CashTransferDialogPresenter:
         if tag_names is not None and not check_for_nonexistent_attributes(
             tag_names, self._record_keeper.tags, self._dialog, "Tag"
         ):
-            logging.info("Dialog aborted")
+            logging.debug("Dialog aborted")
             return
 
         if sender_path is not None and recipient_path is not None:
