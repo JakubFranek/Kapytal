@@ -1319,6 +1319,7 @@ class RecordKeeper:
                     logging.info(f"Created Category: path={parent.path}")
                     self._save_category(parent)
             remainder_name = path.removeprefix(parent.path)[1:]
+            type_ = parent.type_
             while "/" in remainder_name:
                 # As long as multiple categories remain...
                 new_name = remainder_name.split("/")[0]
