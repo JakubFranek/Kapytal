@@ -672,7 +672,8 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
     def _set_tab_order(self) -> None:
         self.setTabOrder(self.incomeRadioButton, self.expenseRadioButton)
         self.setTabOrder(self.expenseRadioButton, self.accountsComboBox)
-        self.setTabOrder(self.accountsComboBox, self.payeeComboBox)
+        self.setTabOrder(self.accountsComboBox, self.accountsToolButton)
+        self.setTabOrder(self.accountsToolButton, self.payeeComboBox)
         self.setTabOrder(self.payeeComboBox, self.payeeToolButton)
         self.setTabOrder(self.payeeToolButton, self.dateEdit)
         self.setTabOrder(self.dateEdit, self.descriptionPlainTextEdit)
@@ -718,6 +719,8 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
                     vertical_layout_count - 1
                 ).widget()
                 self.setTabOrder(self._tag_rows[index], last_widget)
+
+        # FIXME: tab order is stuck at the end in the dialog buttons
 
     def _account_changed(self) -> None:
         account_path = self.account_path

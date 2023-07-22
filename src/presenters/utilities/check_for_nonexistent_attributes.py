@@ -42,7 +42,6 @@ def check_for_nonexistent_attributes(
 
 def check_for_nonexistent_categories(
     category_names: Collection[str],
-    type_: CashTransactionType,
     categories: Collection[Category],
     parent: QWidget,
 ) -> bool:
@@ -56,11 +55,6 @@ def check_for_nonexistent_categories(
             nonexistent_categories.append(category)
     if nonexistent_categories:
         nonexistent_categories_str = ", ".join(nonexistent_categories)
-        category_type = (
-            CategoryType.INCOME
-            if type_ == CashTransactionType.INCOME
-            else CategoryType.EXPENSE
-        )
         logging.info(
             "Nonexistent Category paths entered, asking user whether to proceed"
         )
@@ -70,8 +64,7 @@ def check_for_nonexistent_categories(
                 "<html>The following Categories do not "
                 "exist:<br/>"
                 f"<b><i>{nonexistent_categories_str}</i></b><br/><br/>"
-                f"Create new {category_type.name.title()} Categories "
-                "and proceed?</html>"
+                f"Create new Categories and proceed?</html>"
             ),
             title="Create new Categories?",
         )

@@ -230,6 +230,14 @@
   </action>
  </widget>
  <tabstops>
+  <tabstop>senderComboBox</tabstop>
+  <tabstop>senderToolButton</tabstop>
+  <tabstop>recipientComboBox</tabstop>
+  <tabstop>recipientToolButton</tabstop>
+  <tabstop>sentDoubleSpinBox</tabstop>
+  <tabstop>receivedDoubleSpinBox</tabstop>
+  <tabstop>exchangeRateLineEdit</tabstop>
+  <tabstop>dateEdit</tabstop>
   <tabstop>descriptionPlainTextEdit</tabstop>
  </tabstops>
  <resources/>

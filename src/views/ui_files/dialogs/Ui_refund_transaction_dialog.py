@@ -113,6 +113,8 @@ class Ui_RefundTransactionDialog(object):
 
         self.retranslateUi(RefundTransactionDialog)
         QtCore.QMetaObject.connectSlotsByName(RefundTransactionDialog)
+        RefundTransactionDialog.setTabOrder(self.accountsComboBox, self.accountsToolButton)
+        RefundTransactionDialog.setTabOrder(self.accountsToolButton, self.payeeComboBox)
         RefundTransactionDialog.setTabOrder(self.payeeComboBox, self.payeeToolButton)
         RefundTransactionDialog.setTabOrder(self.payeeToolButton, self.dateEdit)
         RefundTransactionDialog.setTabOrder(self.dateEdit, self.descriptionPlainTextEdit)

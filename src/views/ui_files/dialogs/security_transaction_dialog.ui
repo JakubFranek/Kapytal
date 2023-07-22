@@ -310,6 +310,10 @@
   <tabstop>buyRadioButton</tabstop>
   <tabstop>sellRadioButton</tabstop>
   <tabstop>securityComboBox</tabstop>
+  <tabstop>cashAccountComboBox</tabstop>
+  <tabstop>cashAccountToolButton</tabstop>
+  <tabstop>securityAccountComboBox</tabstop>
+  <tabstop>securityAccountToolButton</tabstop>
   <tabstop>dateEdit</tabstop>
   <tabstop>descriptionPlainTextEdit</tabstop>
   <tabstop>sharesDoubleSpinBox</tabstop>

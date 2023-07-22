@@ -71,3 +71,4 @@ class Ui_TagForm(object):
         self.actionRename_Tag.setText(_translate("TagForm", "Rename Tag"))
         self.actionRemove_Tag.setText(_translate("TagForm", "Remove Tag(s)"))
         self.actionRemove_Tag.setToolTip(_translate("TagForm", "Remove Tag"))
+        self.actionRemove_Tag.setShortcut(_translate("TagForm", "Del"))

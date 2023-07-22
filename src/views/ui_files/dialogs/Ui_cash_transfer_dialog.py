@@ -114,6 +114,14 @@ class Ui_CashTransferDialog(object):
 
         self.retranslateUi(CashTransferDialog)
         QtCore.QMetaObject.connectSlotsByName(CashTransferDialog)
+        CashTransferDialog.setTabOrder(self.senderComboBox, self.senderToolButton)
+        CashTransferDialog.setTabOrder(self.senderToolButton, self.recipientComboBox)
+        CashTransferDialog.setTabOrder(self.recipientComboBox, self.recipientToolButton)
+        CashTransferDialog.setTabOrder(self.recipientToolButton, self.sentDoubleSpinBox)
+        CashTransferDialog.setTabOrder(self.sentDoubleSpinBox, self.receivedDoubleSpinBox)
+        CashTransferDialog.setTabOrder(self.receivedDoubleSpinBox, self.exchangeRateLineEdit)
+        CashTransferDialog.setTabOrder(self.exchangeRateLineEdit, self.dateEdit)
+        CashTransferDialog.setTabOrder(self.dateEdit, self.descriptionPlainTextEdit)
 
     def retranslateUi(self, CashTransferDialog):
         _translate = QtCore.QCoreApplication.translate

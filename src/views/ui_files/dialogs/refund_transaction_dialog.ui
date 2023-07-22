@@ -228,6 +228,8 @@
   </action>
  </widget>
  <tabstops>
+  <tabstop>accountsComboBox</tabstop>
+  <tabstop>accountsToolButton</tabstop>
   <tabstop>payeeComboBox</tabstop>
   <tabstop>payeeToolButton</tabstop>
   <tabstop>dateEdit</tabstop>

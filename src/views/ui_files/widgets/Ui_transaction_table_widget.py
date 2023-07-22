@@ -133,6 +133,7 @@ class Ui_TransactionTableWidget(object):
         self.actionCash_Transfer.setText(_translate("TransactionTableWidget", "Cash Transfer"))
         self.actionSecurity_Transfer.setText(_translate("TransactionTableWidget", "Security Transfer"))
         self.actionDelete.setText(_translate("TransactionTableWidget", "Delete"))
+        self.actionDelete.setShortcut(_translate("TransactionTableWidget", "Del"))
         self.actionEdit.setText(_translate("TransactionTableWidget", "Edit"))
         self.actionEdit.setToolTip(_translate("TransactionTableWidget", "Only Transactions of same type can be edited"))
         self.actionDuplicate.setText(_translate("TransactionTableWidget", "Duplicate"))

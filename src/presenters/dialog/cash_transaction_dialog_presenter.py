@@ -246,7 +246,7 @@ class CashTransactionDialogPresenter:
             return
 
         if not check_for_nonexistent_categories(
-            categories, type_, self._record_keeper.categories, self._dialog
+            categories, self._record_keeper.categories, self._dialog
         ):
             logging.debug("Dialog aborted")
             return
@@ -321,7 +321,7 @@ class CashTransactionDialogPresenter:
                 return
 
             if not check_for_nonexistent_categories(
-                categories, type_, self._record_keeper.categories, self._dialog
+                categories, self._record_keeper.categories, self._dialog
             ):
                 logging.debug("Dialog aborted")
                 return
