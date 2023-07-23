@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>248</width>
-    <height>309</height>
+    <height>334</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -178,10 +178,13 @@
          <property name="orientation">
           <enum>Qt::Vertical</enum>
          </property>
+         <property name="sizeType">
+          <enum>QSizePolicy::MinimumExpanding</enum>
+         </property>
          <property name="sizeHint" stdset="0">
           <size>
            <width>20</width>
-           <height>40</height>
+           <height>25</height>
           </size>
          </property>
         </spacer>
@@ -310,6 +313,10 @@
   <tabstop>buyRadioButton</tabstop>
   <tabstop>sellRadioButton</tabstop>
   <tabstop>securityComboBox</tabstop>
+  <tabstop>cashAccountComboBox</tabstop>
+  <tabstop>cashAccountToolButton</tabstop>
+  <tabstop>securityAccountComboBox</tabstop>
+  <tabstop>securityAccountToolButton</tabstop>
   <tabstop>dateEdit</tabstop>
   <tabstop>descriptionPlainTextEdit</tabstop>
   <tabstop>sharesDoubleSpinBox</tabstop>

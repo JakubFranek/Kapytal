@@ -612,7 +612,7 @@ class CashTransaction(CashRelatedTransaction):
             tup = (tag, self._amount)
             tag_amount_pairs.append(tup)
         self._validate_tag_amount_pairs(tag_amount_pairs, self._amount, self.currency)
-        self._tag_amount_pairs = tag_amount_pairs
+        self._tag_amount_pairs = tuple(tag_amount_pairs)
         self._tags = tuple(tag for tag, _ in tag_amount_pairs)
 
     def remove_tags(self, tags: Collection[Attribute]) -> None:
@@ -628,7 +628,7 @@ class CashTransaction(CashRelatedTransaction):
             if tag not in tags_to_remove
         ]
         self._validate_tag_amount_pairs(tag_amount_pairs, self._amount, self.currency)
-        self._tag_amount_pairs = tag_amount_pairs
+        self._tag_amount_pairs = tuple(tag_amount_pairs)
         self._tags = tuple(tag for tag, _ in tag_amount_pairs)
 
     def set_attributes(

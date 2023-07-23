@@ -202,6 +202,12 @@ class SecurityTransactionDialogPresenter:
         cash_account_path = self._dialog.cash_account_path
         tag_names = self._dialog.tag_names
 
+        if not check_for_nonexistent_attributes(
+            tag_names, self._record_keeper.tags, self._dialog, "Tag"
+        ):
+            logging.debug("Dialog aborted")
+            return
+
         cash_account = self._record_keeper.get_account(cash_account_path, CashAccount)
 
         logging.info(
@@ -255,7 +261,7 @@ class SecurityTransactionDialogPresenter:
         if not check_for_nonexistent_attributes(
             tag_names, self._record_keeper.tags, self._dialog, "Tag"
         ):
-            logging.info("Dialog aborted")
+            logging.debug("Dialog aborted")
             return
 
         log = []

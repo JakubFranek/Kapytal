@@ -17,7 +17,7 @@ class LabelWidget(QWidget):
             20, 5, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed
         )
         self.spacer2 = QSpacerItem(
-            20, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
+            20, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Maximum
         )
 
         self.vertical_layout = QVBoxLayout(self)

@@ -114,6 +114,9 @@
    <property name="toolTip">
     <string>Remove Tag</string>
    </property>
+   <property name="shortcut">
+    <string>Del</string>
+   </property>
   </action>
  </widget>
  <resources/>

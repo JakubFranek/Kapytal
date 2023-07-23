@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>253</width>
-    <height>279</height>
+    <width>250</width>
+    <height>242</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -31,6 +31,9 @@
    </property>
    <item>
     <layout class="QFormLayout" name="formLayout">
+     <property name="fieldGrowthPolicy">
+      <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+     </property>
      <item row="0" column="0">
       <widget class="QLabel" name="typeLabel">
        <property name="text">
@@ -178,10 +181,13 @@
          <property name="orientation">
           <enum>Qt::Vertical</enum>
          </property>
+         <property name="sizeType">
+          <enum>QSizePolicy::MinimumExpanding</enum>
+         </property>
          <property name="sizeHint" stdset="0">
           <size>
            <width>20</width>
-           <height>40</height>
+           <height>25</height>
           </size>
          </property>
         </spacer>
@@ -191,7 +197,7 @@
      <item row="4" column="1">
       <widget class="QPlainTextEdit" name="descriptionPlainTextEdit">
        <property name="sizePolicy">
-        <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
          <horstretch>0</horstretch>
          <verstretch>0</verstretch>
         </sizepolicy>
@@ -259,6 +265,8 @@
  <tabstops>
   <tabstop>incomeRadioButton</tabstop>
   <tabstop>expenseRadioButton</tabstop>
+  <tabstop>accountsComboBox</tabstop>
+  <tabstop>accountsToolButton</tabstop>
   <tabstop>payeeComboBox</tabstop>
   <tabstop>payeeToolButton</tabstop>
   <tabstop>dateEdit</tabstop>

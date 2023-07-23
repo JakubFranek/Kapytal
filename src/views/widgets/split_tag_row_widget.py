@@ -61,11 +61,11 @@ class SplitTagRowWidget(QWidget):
         self.setFocusProxy(self.combo_box)
 
     @property
-    def tag(self) -> str:
+    def tag_name(self) -> str:
         return self.combo_box.currentText()
 
-    @tag.setter
-    def tag(self, value: str) -> None:
+    @tag_name.setter
+    def tag_name(self, value: str) -> None:
         self.combo_box.setCurrentText(value.strip())
 
     @property
@@ -103,7 +103,7 @@ class SplitTagRowWidget(QWidget):
         self.double_spin_box.setMaximum(maximum)
 
     def __repr__(self) -> str:
-        return f"SplitTagRowWidget('{self.tag}')"
+        return f"SplitTagRowWidget('{self.tag_name}')"
 
     def _select_item(self) -> None:
         item = ask_user_for_selection(

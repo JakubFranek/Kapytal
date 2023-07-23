@@ -81,7 +81,7 @@ class RefundTransactionDialogPresenter:
         if not check_for_nonexistent_attributes(
             [payee], self._record_keeper.payees, self._dialog, "Payee"
         ):
-            logging.info("Dialog aborted")
+            logging.debug("Dialog aborted")
             return
 
         datetime_ = self._dialog.datetime_
@@ -143,7 +143,7 @@ class RefundTransactionDialogPresenter:
         if not check_for_nonexistent_attributes(
             [payee], self._record_keeper.payees, self._dialog, "Payee"
         ):
-            logging.info("Dialog aborted")
+            logging.debug("Dialog aborted")
             return
 
         datetime_ = self._dialog.datetime_

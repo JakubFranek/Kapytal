@@ -213,7 +213,7 @@ class CashTransactionDialogPresenter:
         if not check_for_nonexistent_attributes(
             [payee], self._record_keeper.payees, self._dialog, "Payee"
         ):
-            logging.info("Dialog aborted")
+            logging.debug("Dialog aborted")
             return
 
         datetime_ = self._dialog.datetime_
@@ -246,9 +246,9 @@ class CashTransactionDialogPresenter:
             return
 
         if not check_for_nonexistent_categories(
-            categories, type_, self._record_keeper.categories, self._dialog
+            categories, self._record_keeper.categories, self._dialog
         ):
-            logging.info("Dialog aborted")
+            logging.debug("Dialog aborted")
             return
 
         tag_names = [tag for tag, _ in tag_amount_pairs]
@@ -259,7 +259,7 @@ class CashTransactionDialogPresenter:
         if not check_for_nonexistent_attributes(
             tag_names, self._record_keeper.tags, self._dialog, "Tag"
         ):
-            logging.info("Dialog aborted")
+            logging.debug("Dialog aborted")
             return
 
         logging.info(
@@ -302,7 +302,7 @@ class CashTransactionDialogPresenter:
         if not check_for_nonexistent_attributes(
             [payee], self._record_keeper.payees, self._dialog, "Payee"
         ):
-            logging.info("Dialog aborted")
+            logging.debug("Dialog aborted")
             return
 
         datetime_ = self._dialog.datetime_
@@ -321,9 +321,9 @@ class CashTransactionDialogPresenter:
                 return
 
             if not check_for_nonexistent_categories(
-                categories, type_, self._record_keeper.categories, self._dialog
+                categories, self._record_keeper.categories, self._dialog
             ):
-                logging.info("Dialog aborted")
+                logging.debug("Dialog aborted")
                 return
             for category, _ in category_amount_pairs:
                 if category is None:

@@ -172,6 +172,7 @@ class Ui_CategoryForm(object):
         self.actionEdit.setToolTip(_translate("CategoryForm", "Edit Category"))
         self.actionRemove.setText(_translate("CategoryForm", "Remove Category"))
         self.actionRemove.setToolTip(_translate("CategoryForm", "Remove Category"))
+        self.actionRemove.setShortcut(_translate("CategoryForm", "Del"))
         self.actionExpand_All.setText(_translate("CategoryForm", "Expand All"))
         self.actionCollapse_All.setText(_translate("CategoryForm", "Collapse All"))
         self.actionCollapse_All.setToolTip(_translate("CategoryForm", "Collapse All"))

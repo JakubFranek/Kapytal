@@ -66,3 +66,4 @@ class Ui_PayeeForm(object):
         self.actionAdd_Payee.setText(_translate("PayeeForm", "Add Payee"))
         self.actionRename_Payee.setText(_translate("PayeeForm", "Rename Payee"))
         self.actionRemove_Payee.setText(_translate("PayeeForm", "Remove Payee(s)"))
+        self.actionRemove_Payee.setShortcut(_translate("PayeeForm", "Del"))

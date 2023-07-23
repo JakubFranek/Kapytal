@@ -99,6 +99,9 @@
    <property name="text">
     <string>Remove Payee(s)</string>
    </property>
+   <property name="shortcut">
+    <string>Del</string>
+   </property>
   </action>
  </widget>
  <resources/>

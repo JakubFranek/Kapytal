@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>250</width>
-    <height>300</height>
+    <width>256</width>
+    <height>126</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -43,46 +43,50 @@
     </widget>
    </item>
    <item>
-    <widget class="QPushButton" name="createNewFilePushButton">
-     <property name="text">
-      <string>Create new file</string>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <widget class="QPushButton" name="openRecentFilePushButton">
-     <property name="text">
-      <string>Open most recent file</string>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <widget class="QPushButton" name="openDemoFilePushButton">
-     <property name="text">
-      <string>Open demo file</string>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <widget class="QPushButton" name="openFilePushButton">
-     <property name="text">
-      <string>Open file from browser</string>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <widget class="QPushButton" name="openQuickStartGuidePushButton">
-     <property name="text">
-      <string>Quick Start Guide</string>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <widget class="QPushButton" name="quitPushButton">
-     <property name="text">
-      <string>Quit</string>
-     </property>
-    </widget>
+    <layout class="QGridLayout" name="gridLayout">
+     <item row="2" column="0">
+      <widget class="QPushButton" name="openFilePushButton">
+       <property name="text">
+        <string>Open file from browser</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QPushButton" name="openRecentFilePushButton">
+       <property name="text">
+        <string>Open most recent file</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0">
+      <widget class="QPushButton" name="createNewFilePushButton">
+       <property name="text">
+        <string>Create new file</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QPushButton" name="openDemoFilePushButton">
+       <property name="text">
+        <string>Open demo file</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QPushButton" name="openQuickStartGuidePushButton">
+       <property name="text">
+        <string>Quick Start Guide</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="QPushButton" name="quitPushButton">
+       <property name="text">
+        <string>Quit</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </item>
   </layout>
  </widget>

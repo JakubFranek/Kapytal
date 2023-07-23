@@ -156,6 +156,12 @@ class SecurityTransferDialogPresenter:
         recipient_path = self._dialog.recipient_path
         tag_names = self._dialog.tag_names
 
+        if not check_for_nonexistent_attributes(
+            tag_names, self._record_keeper.tags, self._dialog, "Tag"
+        ):
+            logging.debug("Dialog aborted")
+            return
+
         logging.info(
             f"Adding SecurityTransfer: {datetime_.strftime('%Y-%m-%d')}, "
             f"{description=}, security='{security_name}', sender='{sender_path}', "
@@ -200,7 +206,7 @@ class SecurityTransferDialogPresenter:
         if not check_for_nonexistent_attributes(
             tag_names, self._record_keeper.tags, self._dialog, "Tag"
         ):
-            logging.info("Dialog aborted")
+            logging.debug("Dialog aborted")
             return
 
         log = []

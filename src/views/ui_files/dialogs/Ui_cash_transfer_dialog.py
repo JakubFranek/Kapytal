@@ -13,7 +13,7 @@ class Ui_CashTransferDialog(object):
     def setupUi(self, CashTransferDialog):
         CashTransferDialog.setObjectName("CashTransferDialog")
         CashTransferDialog.setWindowModality(QtCore.Qt.WindowModality.WindowModal)
-        CashTransferDialog.resize(253, 252)
+        CashTransferDialog.resize(253, 277)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Preferred, QtWidgets.QSizePolicy.Policy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -60,7 +60,7 @@ class Ui_CashTransferDialog(object):
         self.descriptionLabel = QtWidgets.QLabel(CashTransferDialog)
         self.descriptionLabel.setObjectName("descriptionLabel")
         self.descriptionLabelVerticalLayout.addWidget(self.descriptionLabel)
-        spacerItem1 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Expanding)
+        spacerItem1 = QtWidgets.QSpacerItem(20, 25, QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.MinimumExpanding)
         self.descriptionLabelVerticalLayout.addItem(spacerItem1)
         self.formLayout.setLayout(8, QtWidgets.QFormLayout.ItemRole.LabelRole, self.descriptionLabelVerticalLayout)
         self.descriptionPlainTextEdit = QtWidgets.QPlainTextEdit(CashTransferDialog)
@@ -114,6 +114,14 @@ class Ui_CashTransferDialog(object):
 
         self.retranslateUi(CashTransferDialog)
         QtCore.QMetaObject.connectSlotsByName(CashTransferDialog)
+        CashTransferDialog.setTabOrder(self.senderComboBox, self.senderToolButton)
+        CashTransferDialog.setTabOrder(self.senderToolButton, self.recipientComboBox)
+        CashTransferDialog.setTabOrder(self.recipientComboBox, self.recipientToolButton)
+        CashTransferDialog.setTabOrder(self.recipientToolButton, self.sentDoubleSpinBox)
+        CashTransferDialog.setTabOrder(self.sentDoubleSpinBox, self.receivedDoubleSpinBox)
+        CashTransferDialog.setTabOrder(self.receivedDoubleSpinBox, self.exchangeRateLineEdit)
+        CashTransferDialog.setTabOrder(self.exchangeRateLineEdit, self.dateEdit)
+        CashTransferDialog.setTabOrder(self.dateEdit, self.descriptionPlainTextEdit)
 
     def retranslateUi(self, CashTransferDialog):
         _translate = QtCore.QCoreApplication.translate

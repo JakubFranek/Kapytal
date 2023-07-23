@@ -273,7 +273,8 @@ class RefundTransactionDialog(CustomDialog, Ui_RefundTransactionDialog):
         self.account = account if account else self.account
 
     def _set_tab_order(self) -> None:
-        self.setTabOrder(self.accountsComboBox, self.payeeComboBox)
+        self.setTabOrder(self.accountsComboBox, self.accountsToolButton)
+        self.setTabOrder(self.accountsToolButton, self.payeeComboBox)
         self.setTabOrder(self.payeeComboBox, self.payeeToolButton)
         self.setTabOrder(self.payeeToolButton, self.dateEdit)
         self.setTabOrder(self.dateEdit, self.descriptionPlainTextEdit)

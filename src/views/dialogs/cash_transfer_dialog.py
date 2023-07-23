@@ -39,6 +39,9 @@ class EditMode(Enum):
         )
 
 
+# FIXME: fix tab order
+
+
 class CashTransferDialog(CustomDialog, Ui_CashTransferDialog):
     KEEP_CURRENT_VALUES = "Keep current values"
 

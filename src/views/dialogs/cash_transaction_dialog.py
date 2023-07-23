@@ -266,11 +266,13 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
         if len(self._tag_rows) == 1:
             row = self._tag_rows[0]
             if isinstance(row, SingleTagRowWidget):
-                if self._edit_mode in EditMode.get_multiple_edit_values():
+                if (
+                    self._edit_mode in EditMode.get_multiple_edit_values()
+                    and not row.tag_names
+                ):
                     return None
-                return tuple((tag, self.amount) for tag in row.tags)
-            return ((row.tag, row.amount),)
-        return tuple((row.tag, row.amount) for row in self._tag_rows)
+                return tuple((tag, self.amount) for tag in row.tag_names)
+        return tuple((row.tag_name, row.amount) for row in self._tag_rows)
 
     @tag_amount_pairs.setter
     def tag_amount_pairs(self, pairs: Collection[tuple[str, Decimal]]) -> None:
@@ -278,14 +280,14 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
         tags = [tag for tag, _ in pairs]
         if single_row:
             self._initialize_single_tag_row()
-            self._tag_rows[0].tags = tags
+            self._tag_rows[0].tag_names = tags
         else:
             self._split_tags(user=False)
             remaining_rows = len(tags) - 1
             for _ in range(remaining_rows):
                 self._add_split_tag_row()
             for index in range(len(tags)):
-                self._tag_rows[index].tag = pairs[index][0]
+                self._tag_rows[index].tag_name = pairs[index][0]
                 self._tag_rows[index].amount = pairs[index][1]
 
     def reject(self) -> None:
@@ -500,7 +502,7 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
         if user:
             logging.debug("Splitting Tag rows")
 
-        current_tags = self._tag_rows[0].tags
+        current_tags = self._tag_rows[0].tag_names
         if len(current_tags) == 0:
             current_tags = [""]
 
@@ -512,7 +514,7 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
             row.amount_decimals = self._decimals
             row.maximum_amount = self.amount
             row.currency_code = self._currency_code
-            row.tag = tag
+            row.tag_name = tag
             self._tag_rows.append(row)
             self.split_tags_vertical_layout.addWidget(row)
 
@@ -552,11 +554,11 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
 
         no_of_rows = self.split_tags_vertical_layout.count() - 1
         if no_of_rows == 1:
-            remaining_tag = self._tag_rows[0].tag
+            remaining_tag = self._tag_rows[0].tag_name
             logging.debug("Resetting split Tag rows, initializing single row")
             self._reset_tag_rows()
             self._initialize_single_tag_row()
-            self._tag_rows[0].tags = [remaining_tag]
+            self._tag_rows[0].tag_names = [remaining_tag]
             return
 
         self.split_tags_vertical_layout.removeWidget(removed_row)
@@ -670,7 +672,8 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
     def _set_tab_order(self) -> None:
         self.setTabOrder(self.incomeRadioButton, self.expenseRadioButton)
         self.setTabOrder(self.expenseRadioButton, self.accountsComboBox)
-        self.setTabOrder(self.accountsComboBox, self.payeeComboBox)
+        self.setTabOrder(self.accountsComboBox, self.accountsToolButton)
+        self.setTabOrder(self.accountsToolButton, self.payeeComboBox)
         self.setTabOrder(self.payeeComboBox, self.payeeToolButton)
         self.setTabOrder(self.payeeToolButton, self.dateEdit)
         self.setTabOrder(self.dateEdit, self.descriptionPlainTextEdit)
@@ -716,6 +719,8 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
                     vertical_layout_count - 1
                 ).widget()
                 self.setTabOrder(self._tag_rows[index], last_widget)
+
+        # FIXME: tab order is stuck at the end in the dialog buttons
 
     def _account_changed(self) -> None:
         account_path = self.account_path

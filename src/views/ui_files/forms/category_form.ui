@@ -252,6 +252,9 @@
    <property name="toolTip">
     <string>Remove Category</string>
    </property>
+   <property name="shortcut">
+    <string>Del</string>
+   </property>
   </action>
   <action name="actionExpand_All">
    <property name="text">
