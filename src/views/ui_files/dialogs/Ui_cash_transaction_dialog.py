@@ -13,7 +13,7 @@ class Ui_CashTransactionDialog(object):
     def setupUi(self, CashTransactionDialog):
         CashTransactionDialog.setObjectName("CashTransactionDialog")
         CashTransactionDialog.setWindowModality(QtCore.Qt.WindowModality.WindowModal)
-        CashTransactionDialog.resize(250, 325)
+        CashTransactionDialog.resize(250, 242)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Preferred, QtWidgets.QSizePolicy.Policy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -89,7 +89,7 @@ class Ui_CashTransactionDialog(object):
         self.descriptionLabel = QtWidgets.QLabel(CashTransactionDialog)
         self.descriptionLabel.setObjectName("descriptionLabel")
         self.descriptionLabelVerticalLayout.addWidget(self.descriptionLabel)
-        spacerItem2 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Expanding)
+        spacerItem2 = QtWidgets.QSpacerItem(20, 25, QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.MinimumExpanding)
         self.descriptionLabelVerticalLayout.addItem(spacerItem2)
         self.formLayout.setLayout(4, QtWidgets.QFormLayout.ItemRole.LabelRole, self.descriptionLabelVerticalLayout)
         self.descriptionPlainTextEdit = QtWidgets.QPlainTextEdit(CashTransactionDialog)

@@ -13,7 +13,7 @@ class Ui_SecurityTransactionDialog(object):
     def setupUi(self, SecurityTransactionDialog):
         SecurityTransactionDialog.setObjectName("SecurityTransactionDialog")
         SecurityTransactionDialog.setWindowModality(QtCore.Qt.WindowModality.WindowModal)
-        SecurityTransactionDialog.resize(248, 309)
+        SecurityTransactionDialog.resize(248, 334)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Preferred, QtWidgets.QSizePolicy.Policy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -90,7 +90,7 @@ class Ui_SecurityTransactionDialog(object):
         self.descriptionLabel = QtWidgets.QLabel(SecurityTransactionDialog)
         self.descriptionLabel.setObjectName("descriptionLabel")
         self.descriptionLabelVerticalLayout.addWidget(self.descriptionLabel)
-        spacerItem2 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Expanding)
+        spacerItem2 = QtWidgets.QSpacerItem(20, 25, QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.MinimumExpanding)
         self.descriptionLabelVerticalLayout.addItem(spacerItem2)
         self.formLayout.setLayout(5, QtWidgets.QFormLayout.ItemRole.LabelRole, self.descriptionLabelVerticalLayout)
         self.descriptionPlainTextEdit = QtWidgets.QPlainTextEdit(SecurityTransactionDialog)

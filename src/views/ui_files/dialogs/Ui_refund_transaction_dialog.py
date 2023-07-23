@@ -13,7 +13,7 @@ class Ui_RefundTransactionDialog(object):
     def setupUi(self, RefundTransactionDialog):
         RefundTransactionDialog.setObjectName("RefundTransactionDialog")
         RefundTransactionDialog.setWindowModality(QtCore.Qt.WindowModality.WindowModal)
-        RefundTransactionDialog.resize(253, 246)
+        RefundTransactionDialog.resize(253, 212)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Preferred, QtWidgets.QSizePolicy.Policy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -74,7 +74,7 @@ class Ui_RefundTransactionDialog(object):
         self.descriptionLabel = QtWidgets.QLabel(RefundTransactionDialog)
         self.descriptionLabel.setObjectName("descriptionLabel")
         self.descriptionLabelVerticalLayout.addWidget(self.descriptionLabel)
-        spacerItem1 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Expanding)
+        spacerItem1 = QtWidgets.QSpacerItem(20, 25, QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.MinimumExpanding)
         self.descriptionLabelVerticalLayout.addItem(spacerItem1)
         self.formLayout.setLayout(3, QtWidgets.QFormLayout.ItemRole.LabelRole, self.descriptionLabelVerticalLayout)
         self.descriptionPlainTextEdit = QtWidgets.QPlainTextEdit(RefundTransactionDialog)

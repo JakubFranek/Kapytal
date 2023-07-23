@@ -13,7 +13,7 @@ class Ui_SecurityTransferDialog(object):
     def setupUi(self, SecurityTransferDialog):
         SecurityTransferDialog.setObjectName("SecurityTransferDialog")
         SecurityTransferDialog.setWindowModality(QtCore.Qt.WindowModality.WindowModal)
-        SecurityTransferDialog.resize(248, 213)
+        SecurityTransferDialog.resize(248, 238)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Preferred, QtWidgets.QSizePolicy.Policy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -72,7 +72,7 @@ class Ui_SecurityTransferDialog(object):
         self.descriptionLabel = QtWidgets.QLabel(SecurityTransferDialog)
         self.descriptionLabel.setObjectName("descriptionLabel")
         self.descriptionLabelVerticalLayout.addWidget(self.descriptionLabel)
-        spacerItem1 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Expanding)
+        spacerItem1 = QtWidgets.QSpacerItem(20, 25, QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.MinimumExpanding)
         self.descriptionLabelVerticalLayout.addItem(spacerItem1)
         self.formLayout.setLayout(5, QtWidgets.QFormLayout.ItemRole.LabelRole, self.descriptionLabelVerticalLayout)
         self.descriptionPlainTextEdit = QtWidgets.QPlainTextEdit(SecurityTransferDialog)
