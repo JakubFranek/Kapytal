@@ -26,6 +26,7 @@ class Ui_SetExchangeRateDialog(object):
         self.dateLabel.setObjectName("dateLabel")
         self.formLayout.setWidget(1, QtWidgets.QFormLayout.ItemRole.LabelRole, self.dateLabel)
         self.exchangeRateDoubleSpinBox = QtWidgets.QDoubleSpinBox(SetExchangeRateDialog)
+        self.exchangeRateDoubleSpinBox.setAlignment(QtCore.Qt.AlignmentFlag.AlignRight|QtCore.Qt.AlignmentFlag.AlignTrailing|QtCore.Qt.AlignmentFlag.AlignVCenter)
         self.exchangeRateDoubleSpinBox.setProperty("showGroupSeparator", True)
         self.exchangeRateDoubleSpinBox.setDecimals(9)
         self.exchangeRateDoubleSpinBox.setObjectName("exchangeRateDoubleSpinBox")

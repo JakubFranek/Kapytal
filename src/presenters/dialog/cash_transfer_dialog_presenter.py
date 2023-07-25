@@ -59,7 +59,7 @@ class CashTransferDialogPresenter:
         )
         self._dialog.recipient_path = (
             _shown_accounts[1].path
-            if len(_shown_accounts) > 0
+            if len(_shown_accounts) > 1
             else _all_accounts[1].path
         )
         self._dialog.datetime_ = datetime.now(user_settings.settings.time_zone)

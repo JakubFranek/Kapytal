@@ -226,7 +226,7 @@
      <item row="5" column="1">
       <widget class="QDoubleSpinBox" name="amountDoubleSpinBox">
        <property name="alignment">
-        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
        </property>
        <property name="showGroupSeparator" stdset="0">
         <bool>true</bool>

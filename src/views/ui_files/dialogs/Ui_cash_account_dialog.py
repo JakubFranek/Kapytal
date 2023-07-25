@@ -55,6 +55,7 @@ class Ui_CashAccountDialog(object):
         self.currencyComboBox.setObjectName("currencyComboBox")
         self.formLayout.setWidget(2, QtWidgets.QFormLayout.ItemRole.FieldRole, self.currencyComboBox)
         self.initialBalanceDoubleSpinBox = QtWidgets.QDoubleSpinBox(CashAccountDialog)
+        self.initialBalanceDoubleSpinBox.setAlignment(QtCore.Qt.AlignmentFlag.AlignRight|QtCore.Qt.AlignmentFlag.AlignTrailing|QtCore.Qt.AlignmentFlag.AlignVCenter)
         self.initialBalanceDoubleSpinBox.setProperty("showGroupSeparator", True)
         self.initialBalanceDoubleSpinBox.setObjectName("initialBalanceDoubleSpinBox")
         self.formLayout.setWidget(3, QtWidgets.QFormLayout.ItemRole.FieldRole, self.initialBalanceDoubleSpinBox)

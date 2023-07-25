@@ -754,7 +754,7 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
         self._timestamp = datetime_.timestamp()
         self._type = type_
         self._security = security
-        self._shares = Decimal(shares)
+        self._shares = Decimal(shares).normalize()
         self._price_per_share = price_per_share
         self._update_cached_data()
         self._set_accounts(security_account, cash_account)
@@ -1019,7 +1019,7 @@ class SecurityTransfer(SecurityRelatedTransaction):
         self._datetime = datetime_
         self._timestamp = datetime_.timestamp()
         self._security = security
-        self._shares = shares
+        self._shares = shares.normalize()
         self._set_accounts(sender, recipient)
 
     def _validate_accounts(

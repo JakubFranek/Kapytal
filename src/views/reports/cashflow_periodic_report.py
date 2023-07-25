@@ -61,7 +61,7 @@ class CashFlowPeriodicReport(CustomWidget, Ui_CashFlowPeriodicReport):
         self.dataSelectorComboBox.addItem("Inflows")
         self.dataSelectorComboBox.addItem("Outflows")
         self.dataSelectorComboBox.addItem("Cash Flow")
-        self.dataSelectorComboBox.addItem("Gain / Loss")
+        self.dataSelectorComboBox.addItem("Total Gain / Loss")
         self.dataSelectorComboBox.addItem("Net Growth")
         self.dataSelectorComboBox.setCurrentText("All data")
         self.dataSelectorComboBox.currentTextChanged.connect(

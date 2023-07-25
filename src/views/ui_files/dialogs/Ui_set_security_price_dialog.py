@@ -26,6 +26,7 @@ class Ui_SetSecurityPriceDialog(object):
         self.dateLabel.setObjectName("dateLabel")
         self.formLayout.setWidget(1, QtWidgets.QFormLayout.ItemRole.LabelRole, self.dateLabel)
         self.priceDoubleSpinBox = QtWidgets.QDoubleSpinBox(SetSecurityPriceDialog)
+        self.priceDoubleSpinBox.setAlignment(QtCore.Qt.AlignmentFlag.AlignRight|QtCore.Qt.AlignmentFlag.AlignTrailing|QtCore.Qt.AlignmentFlag.AlignVCenter)
         self.priceDoubleSpinBox.setProperty("showGroupSeparator", True)
         self.priceDoubleSpinBox.setDecimals(9)
         self.priceDoubleSpinBox.setObjectName("priceDoubleSpinBox")
