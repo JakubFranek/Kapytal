@@ -3,7 +3,7 @@
 ProjectFileVersion = 1.1
 [General]
 Program name = Kapytal
-Program version = 0.1.0
+Program version = 0.2.0
 Windows XP = 0
 Windows Server 2003 = 0
 Windows Vista = 0
@@ -57,7 +57,7 @@ Time = 2
 PlaySound = 0
 Allow = 0
 [Build]
-File = D:\Coding\Kapytal\installer\kapytal_installer.exe
+File = D:\Coding\Kapytal\installer\kapytal_v0.2.0_win64.exe
 SetupIconPath = ..\icons\ancient.ico
 UninstallIconPath = ..\icons\ancient.ico
 CompressionMethod = 0

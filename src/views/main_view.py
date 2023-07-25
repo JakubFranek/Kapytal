@@ -141,8 +141,7 @@ class MainView(QMainWindow, Ui_MainWindow):
         logging.debug("Showing About dialog")
         text = (
             "<html>"
-            "<b>Kapytal</b> - <em>a tool for managing personal and "
-            "household finances</em><br/>"
+            "<b>Kapytal</b> - <em>a tool for personal finance management</em><br/>"
             "Source code and documentation available on "
             "<a href=https://github.com/JakubFranek/Kapytal>"
             "Kapytal GitHub repository</a><br/>"

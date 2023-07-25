@@ -17,6 +17,5 @@ coverage
 *.autosave
 icons-custom-redundant
 *.psd
-aux_scripts
-aux_resources
+aux_stuff
 .profile_data
