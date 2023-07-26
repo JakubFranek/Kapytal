@@ -165,6 +165,11 @@ class MainPresenter:
                 visible=checked
             )
         )
+        self._view.signal_show_transaction_table.connect(
+            lambda checked: self._transactions_presenter.set_widget_visibility(
+                visible=checked
+            )
+        )
 
     def _update_checked_accounts(self) -> None:
         self._transactions_presenter.load_account_tree_checked_items(

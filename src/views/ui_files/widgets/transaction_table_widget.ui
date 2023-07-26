@@ -230,6 +230,9 @@
    <property name="shortcut">
     <string>Del</string>
    </property>
+   <property name="shortcutContext">
+    <enum>Qt::WidgetShortcut</enum>
+   </property>
   </action>
   <action name="actionEdit">
    <property name="text">

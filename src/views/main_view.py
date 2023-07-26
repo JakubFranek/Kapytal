@@ -17,6 +17,7 @@ class MainView(QMainWindow, Ui_MainWindow):
     signal_exit = pyqtSignal()
 
     signal_show_account_tree = pyqtSignal(bool)
+    signal_show_transaction_table = pyqtSignal(bool)
 
     signal_open_currency_form = pyqtSignal()
     signal_open_security_form = pyqtSignal()
@@ -191,6 +192,9 @@ class MainView(QMainWindow, Ui_MainWindow):
         self.actionShow_Hide_Account_Tree.setCheckable(True)
         self.actionShow_Hide_Account_Tree.setChecked(True)
 
+        self.actionShow_Hide_Transaction_Table.setCheckable(True)
+        self.actionShow_Hide_Transaction_Table.setChecked(True)
+
         self.actionOpen_File.setIcon(icons.open_file)
         self.actionSave.setIcon(icons.disk)
         self.actionSave_As.setIcon(icons.disks)
@@ -203,6 +207,7 @@ class MainView(QMainWindow, Ui_MainWindow):
         self.actionSettings.setIcon(icons.settings)
         self.actionAbout.setIcon(icons.about)
         self.actionShow_Hide_Account_Tree.setIcon(icons.account_tree)
+        self.actionShow_Hide_Transaction_Table.setIcon(icons.table)
 
         self.menuNet_Worth.setIcon(icons.pie_chart)
         self.menuCash_Flow.setIcon(icons.bar_chart)
@@ -232,6 +237,9 @@ class MainView(QMainWindow, Ui_MainWindow):
 
         self.actionShow_Hide_Account_Tree.triggered.connect(
             lambda checked: self.signal_show_account_tree.emit(checked)
+        )
+        self.actionShow_Hide_Transaction_Table.triggered.connect(
+            lambda checked: self.signal_show_transaction_table.emit(checked)
         )
         self.actionQuit.triggered.connect(self.close)
         self.actionAbout.triggered.connect(self.show_about)

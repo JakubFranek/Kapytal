@@ -548,13 +548,15 @@ class TransactionTableModel(QAbstractTableModel):
     @staticmethod
     def _get_transaction_category(transaction: Transaction) -> str:
         if isinstance(transaction, CashTransaction | RefundTransaction):
-            category_paths = [category.path for category in transaction.categories]
+            category_paths = sorted(
+                category.path for category in transaction.categories
+            )
             return ", ".join(category_paths)
         return ""
 
     @staticmethod
     def _get_transaction_tags(transaction: Transaction) -> str:
-        tag_names = [tag.name for tag in transaction.tags]
+        tag_names = sorted(tag.name for tag in transaction.tags)
         return ", ".join(tag_names)
 
     def _get_account_balance(self, transaction: Transaction) -> CashAmount:

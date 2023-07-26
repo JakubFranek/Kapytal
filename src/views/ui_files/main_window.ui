@@ -152,6 +152,7 @@
    <addaction name="actionSettings"/>
    <addaction name="separator"/>
    <addaction name="actionShow_Hide_Account_Tree"/>
+   <addaction name="actionShow_Hide_Transaction_Table"/>
   </widget>
   <action name="actionSave">
    <property name="text">
@@ -323,6 +324,11 @@
   <action name="actionPayee_Report_Annual">
    <property name="text">
     <string>Annual</string>
+   </property>
+  </action>
+  <action name="actionShow_Hide_Transaction_Table">
+   <property name="text">
+    <string>Show/Hide Transaction Table</string>
    </property>
   </action>
  </widget>

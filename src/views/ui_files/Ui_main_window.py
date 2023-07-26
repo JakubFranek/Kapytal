@@ -118,6 +118,8 @@ class Ui_MainWindow(object):
         self.actionPayee_Report_Monthly.setObjectName("actionPayee_Report_Monthly")
         self.actionPayee_Report_Annual = QtGui.QAction(MainWindow)
         self.actionPayee_Report_Annual.setObjectName("actionPayee_Report_Annual")
+        self.actionShow_Hide_Transaction_Table = QtGui.QAction(MainWindow)
+        self.actionShow_Hide_Transaction_Table.setObjectName("actionShow_Hide_Transaction_Table")
         self.menuRecent_Files.addSeparator()
         self.menuRecent_Files.addAction(self.actionClear_Recent_File_Menu)
         self.menuFile.addAction(self.actionOpen_File)
@@ -174,6 +176,7 @@ class Ui_MainWindow(object):
         self.toolBar.addAction(self.actionSettings)
         self.toolBar.addSeparator()
         self.toolBar.addAction(self.actionShow_Hide_Account_Tree)
+        self.toolBar.addAction(self.actionShow_Hide_Transaction_Table)
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
@@ -228,3 +231,4 @@ class Ui_MainWindow(object):
         self.actionTag_Report_Annual.setText(_translate("MainWindow", "Annual"))
         self.actionPayee_Report_Monthly.setText(_translate("MainWindow", "Monthly"))
         self.actionPayee_Report_Annual.setText(_translate("MainWindow", "Annual"))
+        self.actionShow_Hide_Transaction_Table.setText(_translate("MainWindow", "Show/Hide Transaction Table"))

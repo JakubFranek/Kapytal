@@ -258,7 +258,7 @@ class SecurityTransactionDialogPresenter:
         price_per_share = self._dialog.price_per_share
         tag_names = self._dialog.tag_names
 
-        if not check_for_nonexistent_attributes(
+        if tag_names is not None and not check_for_nonexistent_attributes(
             tag_names, self._record_keeper.tags, self._dialog, "Tag"
         ):
             logging.debug("Dialog aborted")
