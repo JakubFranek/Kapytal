@@ -186,6 +186,7 @@ class MainPresenter:
         self._category_form_presenter.data_changed()
         self._payee_form_presenter.data_changed()
         self._tag_form_presenter.data_changed()
+        self._security_form_presenter.data_changed()
         self._file_presenter.update_unsaved_changes(unsaved_changes=True)
 
     def _base_currency_changed(self) -> None:
