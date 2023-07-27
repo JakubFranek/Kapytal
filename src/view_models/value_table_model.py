@@ -65,8 +65,6 @@ class ValueTableModel(QAbstractTableModel):
     def headerData(  # noqa: N802
         self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole = ...
     ) -> str | int | None:
-        if section == -1:  # FIXME: this should not be necessary
-            return None
         if role == Qt.ItemDataRole.DisplayRole:
             if orientation == Qt.Orientation.Horizontal:
                 return self.COLUMN_HEADERS[section]
