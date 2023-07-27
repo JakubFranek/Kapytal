@@ -155,6 +155,7 @@ class TransactionTableModel(QAbstractTableModel):
 
         # this effectively turns off sorting and dramatically decreases calls
         # to data() for sorting purposes during file load
+        # FIXME: this however also effectively disables dynamic sort filter...
         self._proxy_viewside.sort(-1)
 
         self.beginResetModel()

@@ -749,22 +749,61 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
         security_account: SecurityAccount,
         cash_account: CashAccount,
     ) -> None:
+        update_cash_account = False
+        update_security_account = False
+
         self._description = description
+
+        if hasattr(self, "_datetime"):
+            update_cash_account = self._datetime != datetime_
+            update_security_account = self._datetime != datetime_
         self._datetime = datetime_
         self._timestamp = datetime_.timestamp()
+
+        if hasattr(self, "_type"):
+            if not update_cash_account:
+                update_cash_account = self._type != type_
+            if not update_security_account:
+                update_security_account = self._type != type_
         self._type = type_
+
+        if hasattr(self, "_security"):
+            if not update_cash_account:
+                update_cash_account = self._security != security
+            if not update_security_account:
+                update_security_account = self._security != security
         self._security = security
+
+        if hasattr(self, "_shares"):
+            if not update_cash_account:
+                update_cash_account = self._shares != shares
+            if not update_security_account:
+                update_security_account = self._shares != shares
         self._shares = Decimal(shares).normalize()
+
+        if hasattr(self, "_price_per_share") and not update_cash_account:
+            update_cash_account = self._price_per_share != price_per_share
         self._price_per_share = price_per_share
+
         self._update_cached_data()
-        self._set_accounts(security_account, cash_account)
+        self._set_accounts(
+            security_account,
+            cash_account,
+            update_cash_account=update_cash_account,
+            update_security_account=update_security_account,
+        )
 
     def _update_cached_data(self) -> None:
         self._amount = self._shares * self._price_per_share
         self._amount_negative = -self._amount
 
     def _set_accounts(
-        self, security_account: SecurityAccount, cash_account: CashAccount
+        self,
+        security_account: SecurityAccount,
+        cash_account: CashAccount,
+        *,
+        update_cash_account: bool,
+        update_security_account: bool,
     ) -> None:
         add_security_account = True
         add_cash_account = True
@@ -773,13 +812,11 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
             if self._security_account != security_account:
                 self._security_account.remove_transaction(self)
             else:
-                self._security_account.update_securities()
                 add_security_account = False
         if hasattr(self, "_cash_account"):
             if self._cash_account != cash_account:
                 self._cash_account.remove_transaction(self)
             else:
-                self._cash_account.update_balance()
                 add_cash_account = False
 
         self._security_account = security_account
@@ -787,8 +824,13 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
 
         if add_security_account:
             self._security_account.add_transaction(self)
+        elif update_security_account:
+            self._security_account.update_securities()
+
         if add_cash_account:
             self._cash_account.add_transaction(self)
+        elif update_cash_account:
+            self._cash_account.update_balance()
 
     def _validate_type(self, type_: SecurityTransactionType) -> None:
         if not isinstance(type_, SecurityTransactionType):
@@ -1015,12 +1057,58 @@ class SecurityTransfer(SecurityRelatedTransaction):
         sender: SecurityAccount,
         recipient: SecurityAccount,
     ) -> None:
+        update_accounts = False
+
         self._description = description
+
+        if hasattr(self._datetime):
+            update_accounts = self._datetime != datetime_
         self._datetime = datetime_
         self._timestamp = datetime_.timestamp()
+
+        if hasattr(self._security) and not update_accounts:
+            update_accounts = self._security != security
         self._security = security
+
+        if hasattr(self._shares) and not update_accounts:
+            update_accounts = self._shares != shares
         self._shares = shares.normalize()
-        self._set_accounts(sender, recipient)
+
+        self._set_accounts(sender, recipient, update_accounts=update_accounts)
+
+    def _set_accounts(
+        self,
+        sender: SecurityAccount,
+        recipient: SecurityAccount,
+        *,
+        update_accounts: bool,
+    ) -> None:
+        add_sender = True
+        add_recipient = True
+
+        if hasattr(self, "_sender"):
+            if self._sender != sender:
+                self._sender.remove_transaction(self)
+            else:
+                add_sender = False
+        if hasattr(self, "_recipient"):
+            if self._recipient != recipient:
+                self._recipient.remove_transaction(self)
+            else:
+                add_recipient = False
+
+        self._sender = sender
+        self._recipient = recipient
+
+        if add_sender:
+            self._sender.add_transaction(self)
+        elif update_accounts:
+            self._sender.update_securities()
+
+        if add_recipient:
+            self._recipient.add_transaction(self)
+        elif update_accounts:
+            self._recipient.update_securities()
 
     def _validate_accounts(
         self, sender: SecurityAccount, recipient: SecurityAccount
@@ -1034,33 +1122,6 @@ class SecurityTransfer(SecurityRelatedTransaction):
                 "SecurityTransaction sender and recipient must be different "
                 "SecurityAccounts."
             )
-
-    def _set_accounts(
-        self, sender: SecurityAccount, recipient: SecurityAccount
-    ) -> None:
-        add_sender = True
-        add_recipient = True
-
-        if hasattr(self, "_sender"):
-            if self._sender != sender:
-                self._sender.remove_transaction(self)
-            else:
-                sender.update_securities()
-                add_sender = False
-        if hasattr(self, "_recipient"):
-            if self._recipient != recipient:
-                self._recipient.remove_transaction(self)
-            else:
-                recipient.update_securities()
-                add_recipient = False
-
-        self._sender = sender
-        self._recipient = recipient
-
-        if add_sender:
-            self._sender.add_transaction(self)
-        if add_recipient:
-            self._recipient.add_transaction(self)
 
     def _get_shares(self, account: SecurityAccount) -> Decimal:
         if account == self._sender:
