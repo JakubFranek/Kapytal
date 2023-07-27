@@ -84,6 +84,7 @@ class Ui_TransactionTableWidget(object):
         self.actionSecurity_Transfer = QtGui.QAction(TransactionTableWidget)
         self.actionSecurity_Transfer.setObjectName("actionSecurity_Transfer")
         self.actionDelete = QtGui.QAction(TransactionTableWidget)
+        self.actionDelete.setShortcutContext(QtCore.Qt.ShortcutContext.WidgetWithChildrenShortcut)
         self.actionDelete.setObjectName("actionDelete")
         self.actionEdit = QtGui.QAction(TransactionTableWidget)
         self.actionEdit.setObjectName("actionEdit")

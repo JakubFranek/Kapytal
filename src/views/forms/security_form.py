@@ -91,7 +91,8 @@ class SecurityForm(CustomWidget, Ui_SecurityForm):
             self.securityPriceVerticalLayout, 1
         )
 
-        self.securityTableView.setMinimumHeight(150)
+        height = self.tabWidget.currentWidget().height()
+        self.splitter.setSizes([150, height - 150])
 
         self.securityTableView.horizontalHeader().setSortIndicatorClearable(True)
         self.securityPriceTableView.horizontalHeader().setSortIndicatorClearable(True)

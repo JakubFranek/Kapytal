@@ -106,7 +106,7 @@ class Ui_CashTransactionDialog(object):
         self.amountLabel.setObjectName("amountLabel")
         self.formLayout.setWidget(5, QtWidgets.QFormLayout.ItemRole.LabelRole, self.amountLabel)
         self.amountDoubleSpinBox = QtWidgets.QDoubleSpinBox(CashTransactionDialog)
-        self.amountDoubleSpinBox.setAlignment(QtCore.Qt.AlignmentFlag.AlignLeading|QtCore.Qt.AlignmentFlag.AlignLeft|QtCore.Qt.AlignmentFlag.AlignVCenter)
+        self.amountDoubleSpinBox.setAlignment(QtCore.Qt.AlignmentFlag.AlignRight|QtCore.Qt.AlignmentFlag.AlignTrailing|QtCore.Qt.AlignmentFlag.AlignVCenter)
         self.amountDoubleSpinBox.setProperty("showGroupSeparator", True)
         self.amountDoubleSpinBox.setMaximum(1e+16)
         self.amountDoubleSpinBox.setObjectName("amountDoubleSpinBox")

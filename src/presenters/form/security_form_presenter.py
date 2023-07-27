@@ -63,44 +63,69 @@ class SecurityFormPresenter:
 
     def reset_models(self) -> None:
         self._security_table_model.pre_reset_model()
-        self._tree_model.pre_reset_model()
-        self._price_table_model.pre_reset_model()
-        self.update_model_data()
+        self.update_security_model_data()
         self._security_table_model.post_reset_model()
-        self._tree_model.post_reset_model()
+
+        self._overview_tree_model.pre_reset_model()
+        self.update_overview_model_data()
+        self._overview_tree_model.post_reset_model()
+
+        self._price_table_model.pre_reset_model()
+        self.update_price_model_data()
         self._price_table_model.post_reset_model()
 
         self._update_chart(None)
 
-    def update_model_data(self) -> None:
+    def update_security_model_data(self) -> None:
         self._security_table_model.load_securities(self._record_keeper.securities)
-        self._tree_model.load_data(
+
+    def update_overview_model_data(self) -> None:
+        self._overview_tree_model.load_data(
             self._record_keeper.security_accounts,
             self._record_keeper.base_currency,
         )
+
+    def update_price_model_data(self) -> None:
         self._price_table_model.load_data(())
 
+    def data_changed(self) -> None:
+        # skip this if data_changed is triggered by self via event chain
+        if not self.reset_self:
+            return
+
+        self._overview_tree_model.pre_reset_model()
+        self.update_overview_model_data()
+        self._overview_tree_model.post_reset_model()
+        self._view.treeView.expandAll()
+
+        security = self._security_table_model.get_selected_item()
+        if security is None:
+            return
+        self._price_table_model.pre_reset_model()
+        self._price_table_model.load_data(security.decimal_price_history_pairs)
+        self._price_table_model.set_unit(security.currency.code)
+        self._price_table_model.post_reset_model()
+        self._update_chart(security)
+
     def show_form(self) -> None:
-        self._busy_dialog = create_simple_busy_indicator(
+        self._busy_form_dialog = create_simple_busy_indicator(
             self._view, "Preparing Securities form, please wait..."
         )
-        self._busy_dialog.open()
+        self._busy_form_dialog.open()
         QApplication.processEvents()
 
-        self.reset_models()  # FIXME: code below still buggy, reset is brute solution
         if (
             self._security_table_model.get_selected_item() is None
             and self._security_table_model.rowCount() > 0
         ):
             self._view.securityTableView.selectRow(0)
-        else:
-            self._security_selection_changed()
+
         self._view.refresh_tree_view()
         self._view.treeView.sortByColumn(
             OwnedSecuritiesTreeColumn.AMOUNT_BASE, Qt.SortOrder.DescendingOrder
         )
         self._view.show_form()
-        self._busy_dialog.close()
+        self._busy_form_dialog.close()
 
     def _run_security_dialog(self, *, edit: bool) -> None:
         security_types = {security.type_ for security in self._record_keeper.securities}
@@ -149,10 +174,13 @@ class SecurityFormPresenter:
             return
 
         self._security_table_model.pre_add()
-        self.update_model_data()
+        self.update_security_model_data()
         self._security_table_model.post_add()
+        self._security_selection_changed()
         self._dialog.close()
+        self.reset_self = False
         self.event_data_changed()
+        self.reset_self = True
 
     def _edit_security(self) -> None:
         security = self._security_table_model.get_selected_item()
@@ -176,9 +204,11 @@ class SecurityFormPresenter:
             handle_exception(exception)
             return
 
-        self.update_model_data()
+        self.update_security_model_data()
         self._dialog.close()
+        self.reset_self = False
         self.event_data_changed()
+        self.reset_self = True
 
     def _remove_security(self) -> None:
         security = self._security_table_model.get_selected_item()
@@ -204,9 +234,11 @@ class SecurityFormPresenter:
             return
 
         self._security_table_model.pre_remove_item(security)
-        self.update_model_data()
+        self.update_security_model_data()
         self._security_table_model.post_remove_item()
+        self.reset_self = False
         self.event_data_changed()
+        self.reset_self = True
 
     def _run_add_price_dialog(self) -> None:
         security = self._security_table_model.get_selected_item()
@@ -289,7 +321,9 @@ class SecurityFormPresenter:
 
         self._dialog.close()
         self._update_chart(security)
+        self.reset_self = False
         self.event_data_changed()
+        self.reset_self = True
 
     def _remove_prices(self) -> None:
         selected_data_points = self._price_table_model.get_selected_values()
@@ -327,8 +361,10 @@ class SecurityFormPresenter:
                 return
 
         if any_deleted:
-            self._reset_model_and_update_chart(security)
+            self._update_price_table_and_chart(security)
+            self.reset_self = False
             self.event_data_changed()
+            self.reset_self = True
 
     def _run_load_data_dialog(self) -> None:
         security = self._security_table_model.get_selected_item()
@@ -387,9 +423,11 @@ class SecurityFormPresenter:
             f"(conflict_resolution_mode={conflict_resolution_mode.name})"
         )
 
-        self._reset_model_and_update_chart(security)
+        self._update_price_table_and_chart(security)
         self._dialog.close()
+        self.reset_self = False
         self.event_data_changed()
+        self.reset_self = True
 
     def _initialize_table_models(self) -> None:
         self._security_table_proxy = QSortFilterProxyModel(self._view.securityTableView)
@@ -422,11 +460,11 @@ class SecurityFormPresenter:
 
     def _initialize_tree_models(self) -> None:
         self._tree_proxy = QSortFilterProxyModel(self._view.treeView)
-        self._tree_model = OwnedSecuritiesTreeModel(
+        self._overview_tree_model = OwnedSecuritiesTreeModel(
             self._view.treeView,
             self._tree_proxy,
         )
-        self._tree_proxy.setSourceModel(self._tree_model)
+        self._tree_proxy.setSourceModel(self._overview_tree_model)
         self._tree_proxy.setSortRole(Qt.ItemDataRole.UserRole)
         self._tree_proxy.setSortCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
         self._tree_proxy.setRecursiveFilteringEnabled(True)  # noqa: FBT003
@@ -456,7 +494,7 @@ class SecurityFormPresenter:
         )
 
         if security is not None and self._security_selection != security:
-            self._reset_model_and_update_chart(security)
+            self._update_price_table_and_chart(security)
 
         self._security_selection = security
         self._price_selection_changed()
@@ -473,8 +511,8 @@ class SecurityFormPresenter:
             is_single_price_selected=is_single_price_selected,
         )
 
-    def _reset_model_and_update_chart(self, security: Security) -> None:
-        if not self._busy_dialog.isVisible():
+    def _update_price_table_and_chart(self, security: Security) -> None:
+        if not self._busy_form_dialog.isVisible():
             self._busy_chart_dialog = create_simple_busy_indicator(
                 self._view, "Updating Security price chart, please wait..."
             )
@@ -487,7 +525,7 @@ class SecurityFormPresenter:
         self._price_table_model.post_reset_model()
         self._update_chart(security)
 
-        if not self._busy_dialog.isVisible():
+        if not self._busy_form_dialog.isVisible():
             self._busy_chart_dialog.close()
 
     def _update_chart(self, security: Security | None) -> None:

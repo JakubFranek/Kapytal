@@ -165,6 +165,11 @@ class MainPresenter:
                 visible=checked
             )
         )
+        self._view.signal_show_transaction_table.connect(
+            lambda checked: self._transactions_presenter.set_widget_visibility(
+                visible=checked
+            )
+        )
 
     def _update_checked_accounts(self) -> None:
         self._transactions_presenter.load_account_tree_checked_items(
@@ -181,6 +186,7 @@ class MainPresenter:
         self._category_form_presenter.data_changed()
         self._payee_form_presenter.data_changed()
         self._tag_form_presenter.data_changed()
+        self._security_form_presenter.data_changed()
         self._file_presenter.update_unsaved_changes(unsaved_changes=True)
 
     def _base_currency_changed(self) -> None:

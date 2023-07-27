@@ -131,6 +131,14 @@ class TransactionsPresenter:
     def reapply_sort(self) -> None:
         self._proxy_regex_sort_filter.setDynamicSortFilter(True)  # noqa: FBT003
 
+    def set_widget_visibility(self, *, visible: bool) -> None:
+        if visible and self._view.isHidden():
+            logging.debug("Showing TransactionTableWidget")
+            self._view.show()
+        elif not visible and not self._view.isHidden():
+            logging.debug("Hiding TransactionTableWidget")
+            self._view.hide()
+
     def _reset_model(self) -> None:
         """Resets the TransactionTableModel only."""
         self._model.pre_reset_model()

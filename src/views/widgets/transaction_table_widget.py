@@ -1,14 +1,55 @@
 import logging
 
-from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QAction, QContextMenuEvent, QCursor
-from PyQt6.QtWidgets import QApplication, QLineEdit, QMenu, QWidget
+from PyQt6.QtCore import QEvent, QObject, Qt, pyqtSignal
+from PyQt6.QtGui import QAction, QContextMenuEvent, QCursor, QKeyEvent
+from PyQt6.QtWidgets import QApplication, QLineEdit, QMenu, QTableView, QWidget
 from src.views import icons
 from src.views.constants import TRANSACTION_TABLE_COLUMN_HEADERS, TransactionTableColumn
 from src.views.dialogs.busy_dialog import create_simple_busy_indicator
 from src.views.ui_files.widgets.Ui_transaction_table_widget import (
     Ui_TransactionTableWidget,
 )
+
+
+class EventFilter(QObject):
+    def __init__(self, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self.table = QTableView(parent)  # dummy QTableView to test events on
+
+    def eventFilter(self, source: QObject, event: QEvent) -> bool:
+        if isinstance(event, QKeyEvent):
+            text_cleared_event = QKeyEvent(
+                event.type(),
+                event.key(),
+                event.modifiers(),
+                event.nativeScanCode(),
+                event.nativeVirtualKey(),
+                event.nativeModifiers(),
+                "",
+                event.isAutoRepeat(),
+                event.count(),
+                event.device(),
+            )
+            original_event = QKeyEvent(
+                event.type(),
+                event.key(),
+                event.modifiers(),
+                event.nativeScanCode(),
+                event.nativeVirtualKey(),
+                event.nativeModifiers(),
+                event.text(),
+                event.isAutoRepeat(),
+                event.count(),
+                event.device(),
+            )
+            self.table.keyPressEvent(text_cleared_event)
+            self.table.keyPressEvent(original_event)
+            res_cleared = text_cleared_event.isAccepted()
+            res_original = original_event.isAccepted()
+            if res_original and not res_cleared:
+                return True
+            return False
+        return False
 
 
 class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
@@ -45,6 +86,13 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
         self._initialize_signals()
         self._setup_header()
         self._setup_table()
+
+        # this is necessary to make action shortcuts work
+        self.tableView.addAction(self.actionDelete)
+
+        # this filter disables keyboard search in QTableView
+        self.filter_ = EventFilter(parent=None)
+        self.tableView.installEventFilter(self.filter_)
 
     @property
     def search_bar_text(self) -> str:

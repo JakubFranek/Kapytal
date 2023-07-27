@@ -389,7 +389,7 @@ class AccountTreeModel(QAbstractItemModel):
         if column == AccountTreeColumn.NAME:
             if item.balance_base is None:
                 return None
-            if item.balance_base.value_normalized == 0:
+            if item.balance_base.value_rounded == 0:
                 return colors.get_gray_brush()
         if column == AccountTreeColumn.BALANCE_BASE:
             if item.balance_base is None:
@@ -405,7 +405,7 @@ class AccountTreeModel(QAbstractItemModel):
 
         if amount.is_negative():
             return colors.get_red_brush()
-        if amount.value_normalized == 0:
+        if amount.value_rounded == 0:
             return colors.get_gray_brush()
         return None
 

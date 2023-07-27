@@ -50,7 +50,7 @@
    <item row="4" column="1">
     <widget class="QDoubleSpinBox" name="sentDoubleSpinBox">
      <property name="alignment">
-      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
      </property>
      <property name="showGroupSeparator" stdset="0">
       <bool>true</bool>
@@ -69,6 +69,9 @@
    </item>
    <item row="5" column="1">
     <widget class="QDoubleSpinBox" name="receivedDoubleSpinBox">
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
      <property name="showGroupSeparator" stdset="0">
       <bool>true</bool>
      </property>
