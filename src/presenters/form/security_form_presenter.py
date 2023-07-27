@@ -32,6 +32,8 @@ class SecurityFormPresenter:
         self._view = view
         self._record_keeper = record_keeper
 
+        self.reset_self = True  # if True, models can be reset via data_changed
+
         self._initialize_table_models()
         self._initialize_tree_models()
 
