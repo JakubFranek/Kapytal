@@ -201,7 +201,6 @@ class Ui_CashFlowTotalReport(object):
         self.cashFlowLabel.setToolTip(_translate("CashFlowTotalReport", "<html><head/><body><p>Cash Flow is the difference between Total Inflow and Total Outflow. It does not reflect any Currency exchange rate or Security price fluctuations.</p></body></html>"))
         self.cashFlowLabel.setText(_translate("CashFlowTotalReport", "Cash Flow"))
         self.cashFlowAmountLabel.setText(_translate("CashFlowTotalReport", "TextLabel"))
-        self.gainLossLabel.setToolTip(_translate("CashFlowTotalReport", "<html><head/><body><p>Gain / Loss consists of the Currency exchange rate and Security price fluctuations.</p></body></html>"))
         self.gainLossLabel.setText(_translate("CashFlowTotalReport", "Total Gain / Loss"))
         self.gainLossAmountLabel.setText(_translate("CashFlowTotalReport", "TextLabel"))
         self.netGrowthLabel.setText(_translate("CashFlowTotalReport", "Net Growth"))
