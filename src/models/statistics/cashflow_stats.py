@@ -4,6 +4,7 @@ from datetime import timedelta
 from src.models.base_classes.account import Account
 from src.models.base_classes.transaction import Transaction
 from src.models.model_objects.cash_objects import (
+    CashAccount,
     CashTransaction,
     CashTransactionType,
     CashTransfer,
@@ -24,6 +25,7 @@ class CashFlowStats:
         "refunds",
         "inward_transfers",
         "outward_transfers",
+        "initial_balances",
         "delta_total",
         "delta_neutral",
         "delta_performance",
@@ -40,6 +42,7 @@ class CashFlowStats:
         self.refunds = base_currency.zero_amount
         self.inward_transfers = base_currency.zero_amount
         self.outward_transfers = base_currency.zero_amount
+        self.initial_balances = base_currency.zero_amount
 
         self.delta_total = base_currency.zero_amount
         self.delta_neutral = base_currency.zero_amount
@@ -64,22 +67,28 @@ def calculate_cash_flow(
     stats = CashFlowStats(base_currency)
 
     transactions = sorted(transactions, key=lambda x: x.timestamp)
-    earliest_date = transactions[0].datetime_.date() - timedelta(days=1)
-    latest_date = transactions[-1].datetime_.date()
+    start_date = transactions[0].datetime_.date() - timedelta(days=1)
+    final_date = transactions[-1].datetime_.date()
 
-    initial_balance = base_currency.zero_amount
+    start_balance = base_currency.zero_amount
     final_balance = base_currency.zero_amount
     for account in accounts:
-        initial_balance += account.get_balance(base_currency, earliest_date)
-        final_balance += account.get_balance(base_currency, latest_date)
+        start_balance += account.get_balance(base_currency, start_date)
+        final_balance += account.get_balance(base_currency, final_date)
+        if isinstance(account, CashAccount):
+            initial_balance_date = account.balance_history[0][0].date()
+            if start_date <= initial_balance_date <= final_date:
+                stats.initial_balances += account.initial_balance.convert(
+                    base_currency, initial_balance_date
+                )
 
     delta_security = base_currency.zero_amount
     security_accounts = [
         account for account in accounts if isinstance(account, SecurityAccount)
     ]
     for account in security_accounts:
-        delta_security -= account.get_balance(base_currency, earliest_date)
-        delta_security += account.get_balance(base_currency, latest_date)
+        delta_security -= account.get_balance(base_currency, start_date)
+        delta_security += account.get_balance(base_currency, final_date)
 
     for transaction in transactions:
         date_ = transaction.datetime_.date()
@@ -129,10 +138,12 @@ def calculate_cash_flow(
                     base_currency, date_
                 )
 
-    stats.inflows = stats.incomes + stats.inward_transfers + stats.refunds
+    stats.inflows = (
+        stats.incomes + stats.inward_transfers + stats.refunds + stats.initial_balances
+    )
     stats.outflows = stats.expenses + stats.outward_transfers
 
-    stats.delta_total = final_balance - initial_balance
+    stats.delta_total = final_balance - start_balance
     stats.delta_neutral = stats.inflows - stats.outflows
     stats.delta_performance = stats.delta_total - stats.delta_neutral
     stats.delta_performance_securities = delta_security
@@ -186,6 +197,7 @@ def calculate_average_cash_flow(
         average.incomes += stats.incomes
         average.inward_transfers += stats.inward_transfers
         average.refunds += stats.refunds
+        average.initial_balances += stats.initial_balances
         average.inflows += stats.inflows
         average.expenses += stats.expenses
         average.outward_transfers += stats.outward_transfers
@@ -199,6 +211,7 @@ def calculate_average_cash_flow(
     average.incomes /= periods
     average.inward_transfers /= periods
     average.refunds /= periods
+    average.initial_balances /= periods
     average.inflows /= periods
     average.expenses /= periods
     average.outward_transfers /= periods
@@ -221,6 +234,7 @@ def calculate_total_cash_flow(
         total.incomes += stats.incomes
         total.inward_transfers += stats.inward_transfers
         total.refunds += stats.refunds
+        total.initial_balances += stats.initial_balances
         total.inflows += stats.inflows
         total.expenses += stats.expenses
         total.outward_transfers += stats.outward_transfers

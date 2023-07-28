@@ -140,6 +140,8 @@ class CashAccount(Account):
             raise CurrencyError(
                 "CashAccount.initial_balance.currency must match CashAccount.currency."
             )
+        if amount.is_negative():
+            raise ValueError("CashAccount.initial_balance must not be negative.")
         self._initial_balance = amount
         if self.allow_update_balance:
             self.update_balance()
@@ -170,7 +172,7 @@ class CashAccount(Account):
                     amount = _balance
                     break
             else:
-                amount = self._initial_balance
+                amount = currency.zero_amount
         return amount.convert(currency, date_)
 
     def get_balance_after_transaction(

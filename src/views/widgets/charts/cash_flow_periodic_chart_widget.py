@@ -46,6 +46,7 @@ class CashFlowPeriodicChartWidget(ChartWidget):
         incomes = []
         inward_transfers = []
         refunds = []
+        initial_balances = []
         expenses = []
         outward_transfers = []
         cash_flow = []
@@ -57,6 +58,7 @@ class CashFlowPeriodicChartWidget(ChartWidget):
             incomes.append(stats.incomes.value_rounded)
             inward_transfers.append(stats.inward_transfers.value_rounded)
             refunds.append(stats.refunds.value_rounded)
+            initial_balances.append(stats.initial_balances.value_rounded)
             expenses.append(stats.expenses.value_rounded)
             outward_transfers.append(stats.outward_transfers.value_rounded)
             cash_flow.append(stats.delta_neutral.value_rounded)
@@ -91,6 +93,10 @@ class CashFlowPeriodicChartWidget(ChartWidget):
             )
 
         refund_bottom = [x + y for x, y in zip(incomes, inward_transfers, strict=True)]
+        initial_balances_bottom = [
+            x + y + z
+            for x, y, z in zip(incomes, inward_transfers, refunds, strict=True)
+        ]
 
         x1 = list(range(len(incomes)))
         _width = width if chart_data == ChartData.ALL else 0
@@ -100,13 +106,13 @@ class CashFlowPeriodicChartWidget(ChartWidget):
         x5 = [x + _width for x in x4]
 
         if chart_data == ChartData.ALL or chart_data == ChartData.INFLOWS:
-            axes.bar(x1, incomes, width=width, color="green", label="Income")
+            axes.bar(x1, incomes, width=width, color="darkgreen", label="Income")
             axes.bar(
                 x1,
                 inward_transfers,
                 width=width,
                 bottom=incomes,
-                color="limegreen",
+                color="green",
                 label="Inward Transfers",
             )
             axes.bar(
@@ -114,8 +120,16 @@ class CashFlowPeriodicChartWidget(ChartWidget):
                 refunds,
                 width=width,
                 bottom=refund_bottom,
-                color="lime",
+                color="limegreen",
                 label="Refunds",
+            )
+            axes.bar(
+                x1,
+                initial_balances,
+                width=width,
+                bottom=initial_balances_bottom,
+                color="lime",
+                label="Initial Balances",
             )
         if chart_data == ChartData.ALL or chart_data == ChartData.OUTFLOWS:
             axes.bar(x2, expenses, width=width, color="red", label="Expenses")
