@@ -353,17 +353,18 @@ class SecurityFormPresenter:
             logging.debug("User cancelled the data point deletion")
             return
 
-        any_deleted = False
-        for date_, _ in selected_data_points:
-            try:
+        try:
+            any_deleted = False
+            for date_, _ in selected_data_points:
                 security.delete_price(date_)
                 any_deleted = True
-            except Exception as exception:  # noqa: BLE001
-                handle_exception(exception)
-                return
+        except Exception as exception:  # noqa: BLE001
+            handle_exception(exception)
+            return
 
         if any_deleted:
             self._update_price_table_and_chart(security)
+            self._price_selection_changed()
             self.reset_self = False
             self.event_data_changed()
             self.reset_self = True
