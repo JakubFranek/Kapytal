@@ -323,6 +323,7 @@ class SecurityFormPresenter:
 
         self._dialog.close()
         self._update_chart(security)
+        self.update_overview_model_data()
         self.reset_self = False
         self.event_data_changed()
         self.reset_self = True
@@ -365,6 +366,7 @@ class SecurityFormPresenter:
         if any_deleted:
             self._update_price_table_and_chart(security)
             self._price_selection_changed()
+            self.update_overview_model_data()
             self.reset_self = False
             self.event_data_changed()
             self.reset_self = True
@@ -427,6 +429,7 @@ class SecurityFormPresenter:
         )
 
         self._update_price_table_and_chart(security)
+        self.update_overview_model_data()
         self._dialog.close()
         self.reset_self = False
         self.event_data_changed()
