@@ -2,8 +2,7 @@ import logging
 from collections.abc import Collection
 
 from PyQt6.QtWidgets import QWidget
-from src.models.model_objects.attributes import Attribute, Category, CategoryType
-from src.models.model_objects.cash_objects import CashTransactionType
+from src.models.model_objects.attributes import Attribute, Category
 from src.views.utilities.message_box_functions import ask_yes_no_question
 
 

@@ -16,7 +16,6 @@ from src.presenters.utilities.validate_inputs import validate_datetime
 from src.view_models.transaction_table_model import TransactionTableModel
 from src.views.dialogs.cash_transfer_dialog import CashTransferDialog, EditMode
 from src.views.utilities.handle_exception import display_error_message
-from src.views.utilities.message_box_functions import ask_yes_no_question
 
 
 class CashTransferDialogPresenter:
