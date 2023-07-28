@@ -281,7 +281,7 @@ class TransactionsPresenter:
         )
         self._view.signal_cash_transfer.connect(
             lambda: self._cash_transfer_dialog_presenter.run_add_dialog(
-                self._account_tree_shown_accounts, self._record_keeper.cash_accounts
+                self._account_tree_shown_accounts
             )
         )
         self._view.signal_buy.connect(

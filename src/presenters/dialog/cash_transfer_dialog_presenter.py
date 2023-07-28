@@ -3,6 +3,7 @@ from collections.abc import Collection, Sequence
 from datetime import datetime
 
 from PyQt6.QtWidgets import QWidget
+from src.models.base_classes.account import Account
 from src.models.model_objects.cash_objects import CashAccount, CashTransfer
 from src.models.record_keeper import RecordKeeper
 from src.models.user_settings import user_settings
@@ -37,12 +38,10 @@ class CashTransferDialogPresenter:
 
     def run_add_dialog(
         self,
-        shown_accounts: Collection[CashAccount],
-        all_accounts: Collection[CashAccount],
+        shown_accounts: Collection[Account],
     ) -> None:
-        # FIXME: the code below is still not perfect...
         logging.debug("Running CashTransferDialog (edit_mode=ADD)")
-        if len(all_accounts) <= 1:
+        if len(self._record_keeper.cash_accounts) <= 1:
             display_error_message(
                 "Create at least two Cash Accounts before creating a Cash Transfer.",
                 title="Warning",
@@ -50,17 +49,20 @@ class CashTransferDialogPresenter:
             return
 
         self._prepare_dialog(edit_mode=EditMode.ADD)
-        _shown_accounts = sorted(shown_accounts, key=lambda account: account.path)
-        _all_accounts = tuple(all_accounts)
+
+        _shown_accounts = sorted(
+            (account for account in shown_accounts if isinstance(account, CashAccount)),
+            key=lambda account: account.path.lower(),
+        )
         self._dialog.sender_path = (
             _shown_accounts[0].path
             if len(_shown_accounts) > 0
-            else _all_accounts[0].path
+            else self._record_keeper.cash_accounts[0].path
         )
         self._dialog.recipient_path = (
             _shown_accounts[1].path
             if len(_shown_accounts) > 1
-            else _all_accounts[1].path
+            else self._record_keeper.cash_accounts[1].path
         )
         self._dialog.datetime_ = datetime.now(user_settings.settings.time_zone)
 

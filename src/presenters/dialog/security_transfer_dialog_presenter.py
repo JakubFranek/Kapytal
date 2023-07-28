@@ -37,15 +37,10 @@ class SecurityTransferDialogPresenter:
 
     def run_add_dialog(
         self,
-        valid_accounts: Collection[Account],
+        shown_accounts: Collection[Account],
     ) -> None:
         logging.debug("Running SecurityTransferDialog (edit_mode=ADD)")
-        valid_security_accounts = [
-            account
-            for account in valid_accounts
-            if isinstance(account, SecurityAccount)
-        ]
-        if len(valid_security_accounts) < 2:  # noqa: PLR2004
+        if len(self._record_keeper.security_accounts) < 2:  # noqa: PLR2004
             display_error_message(
                 "Create at least two Security Accounts before creating a "
                 "Security transfer.",
@@ -55,8 +50,25 @@ class SecurityTransferDialogPresenter:
 
         self._prepare_dialog(edit_mode=EditMode.ADD)
 
-        self._dialog.sender_path = valid_security_accounts[0].path
-        self._dialog.recipient_path = valid_security_accounts[1].path
+        _shown_accounts = sorted(
+            (
+                account
+                for account in shown_accounts
+                if isinstance(account, SecurityAccount)
+            ),
+            key=lambda account: account.path.lower(),
+        )
+        self._dialog.sender_path = (
+            _shown_accounts[0].path
+            if len(_shown_accounts) > 0
+            else self._record_keeper.security_accounts[0].path
+        )
+        self._dialog.recipient_path = (
+            _shown_accounts[1].path
+            if len(_shown_accounts) > 1
+            else self._record_keeper.security_accounts[1].path
+        )
+
         self._dialog.datetime_ = datetime.now(user_settings.settings.time_zone)
 
         self._dialog.signal_do_and_close.connect(

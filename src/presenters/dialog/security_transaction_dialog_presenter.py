@@ -49,14 +49,6 @@ class SecurityTransactionDialogPresenter:
         valid_accounts: Collection[Account],
     ) -> None:
         logging.debug("Running SecurityTransactionDialog (edit_mode=ADD)")
-        valid_cash_accounts = [
-            account for account in valid_accounts if isinstance(account, CashAccount)
-        ]
-        valid_security_accounts = [
-            account
-            for account in valid_accounts
-            if isinstance(account, SecurityAccount)
-        ]
         if (
             len(self._record_keeper.cash_accounts) == 0
             or len(self._record_keeper.security_accounts) == 0
@@ -70,9 +62,30 @@ class SecurityTransactionDialogPresenter:
 
         self._prepare_dialog(edit_mode=EditMode.ADD)
 
+        valid_cash_accounts = sorted(
+            (account for account in valid_accounts if isinstance(account, CashAccount)),
+            key=lambda account: account.path.lower(),
+        )
+        valid_security_accounts = sorted(
+            (
+                account
+                for account in valid_accounts
+                if isinstance(account, SecurityAccount)
+            ),
+            key=lambda account: account.path.lower(),
+        )
+        self._dialog.cash_account_path = (
+            valid_cash_accounts[0].path
+            if len(valid_cash_accounts) > 0
+            else self._record_keeper.cash_accounts[0].path
+        )
+        self._dialog.security_account_path = (
+            valid_security_accounts[0].path
+            if len(valid_security_accounts) > 0
+            else self._record_keeper.security_accounts[0].path
+        )
+
         self._dialog.type_ = type_
-        self._dialog.cash_account_path = valid_cash_accounts[0].path
-        self._dialog.security_account_path = valid_security_accounts[0].path
         self._dialog.datetime_ = datetime.now(user_settings.settings.time_zone)
 
         self._dialog.signal_do_and_close.connect(

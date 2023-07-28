@@ -50,7 +50,15 @@ class RefundTransactionDialogPresenter:
         refunded_transaction = transactions[0]
         self._prepare_dialog(refunded_transaction, edited_refund=None)
 
-        self._dialog.account = tuple(valid_accounts)[0].path
+        _valid_accounts = sorted(
+            (account for account in valid_accounts if isinstance(account, CashAccount)),
+            key=lambda account: account.path.lower(),
+        )
+        self._dialog.account_path = (
+            _valid_accounts[0].path
+            if len(_valid_accounts) > 0
+            else self._record_keeper.cash_accounts[0].path
+        )
         self._dialog.datetime_ = datetime.now(user_settings.settings.time_zone)
 
         self._dialog.signal_do_and_close.connect(self._add_refund)
@@ -71,7 +79,7 @@ class RefundTransactionDialogPresenter:
     def _add_refund(
         self,
     ) -> None:
-        account = self._dialog.account
+        account = self._dialog.account_path
         payee = self._dialog.payee
         if not payee:
             display_error_message(
@@ -133,7 +141,7 @@ class RefundTransactionDialogPresenter:
     def _edit_refund(
         self,
     ) -> None:
-        account = self._dialog.account
+        account = self._dialog.account_path
         payee = self._dialog.payee
         if not payee:
             display_error_message(

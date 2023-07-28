@@ -66,11 +66,11 @@ class RefundTransactionDialog(CustomDialog, Ui_RefundTransactionDialog):
         self._set_tab_order()
 
     @property
-    def account(self) -> str:
+    def account_path(self) -> str:
         return self.accountsComboBox.currentText()
 
-    @account.setter
-    def account(self, value: str) -> None:
+    @account_path.setter
+    def account_path(self, value: str) -> None:
         self.accountsComboBox.setCurrentText(value)
 
     @property
@@ -270,7 +270,7 @@ class RefundTransactionDialog(CustomDialog, Ui_RefundTransactionDialog):
             "Select Account",
             icons.cash_account,
         )
-        self.account = account if account else self.account
+        self.account_path = account if account else self.account_path
 
     def _set_tab_order(self) -> None:
         self.setTabOrder(self.accountsComboBox, self.accountsToolButton)
@@ -301,7 +301,7 @@ class RefundTransactionDialog(CustomDialog, Ui_RefundTransactionDialog):
     def _initialize_values(self) -> None:
         if self._edited_refund is None:
             raise ValueError("Expected RefundTransaction, received None.")
-        self.account = self._edited_refund.account.path
+        self.account_path = self._edited_refund.account.path
         self.payee = self._edited_refund.payee.name
         self.datetime_ = self._edited_refund.datetime_
         self.description = self._edited_refund.description
