@@ -330,24 +330,12 @@ class SecurityAccount(Account):
             )
         i = bisect_right(self._securities_history, date_, key=lambda x: x[0].date())
         if i:
-            _datetime, security_dict = self._securities_history[i - 1]
-            _date = _datetime.date()
-            if i == 1 and date_ != _datetime.date():
-                logging.warning(
-                    f"{self!s}: no Security history found for "
-                    f"{date_.strftime('%Y-%m-%d')}, "
-                    f"using the earliest available Security history for "
-                    f"{_date.strftime('%Y-%m-%d')}"
-                )
+            _, security_dict = self._securities_history[i - 1]
             balances = self._calculate_balances(security_dict, date_)
             return sum(
-                (balance.convert(currency) for balance in balances),
+                (balance.convert(currency, date_) for balance in balances),
                 start=currency.zero_amount,
             )
-        logging.warning(
-            f"{self!s}: no earlier Security history found for {date_}, "
-            f"returning 0 {currency.code}"
-        )
         return CashAmount(0, currency)
 
     def _update_balances(self) -> None:

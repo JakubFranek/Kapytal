@@ -148,7 +148,8 @@ class Currency(CopyableMixin, JSONSerializableMixin):
             else:
                 rate = exchange_rate.get_rate(date_)
             factor = operation(factor, rate)
-        self._factor_cache[cache_key] = factor
+        if date_ is None:
+            self._factor_cache[cache_key] = factor
         return factor
 
     @staticmethod
