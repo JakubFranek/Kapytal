@@ -194,7 +194,7 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
             if len(self._price_history) >= 1:
                 _date, price = self._price_history_pairs[0]
                 logging.warning(
-                    f"{self!s}: no earlier price found for {date_},"
+                    f"{self!s}: no earlier price found for {date_}, "
                     f"returning {price} for {_date}"
                 )
                 return price

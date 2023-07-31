@@ -283,7 +283,7 @@ class ExchangeRate(CopyableMixin, JSONSerializableMixin):
             if len(self._rate_history_pairs) >= 1:
                 _date, rate = self._rate_history_pairs[0]
                 logging.warning(
-                    f"{self!s}: no earlier rate found for {date_},"
+                    f"{self!s}: no earlier rate found for {date_}, "
                     f"returning {rate} for {_date}"
                 )
                 return rate

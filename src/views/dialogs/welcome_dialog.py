@@ -58,10 +58,6 @@ class WelcomeDialog(CustomDialog, Ui_WelcomeDialog):
         self.openDemoFilePushButton.setEnabled(False)
         self.openQuickStartGuidePushButton.setEnabled(False)
 
-    def reject(self) -> None:
-        logging.debug(f"Closing {self.__class__.__name__}")
-        return super().reject()
-
     def set_open_recent_file_button(self, *, enabled: bool) -> None:
         self.openRecentFilePushButton.setEnabled(enabled)
 
