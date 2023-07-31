@@ -1,11 +1,13 @@
 from collections.abc import Collection
 
 from PyQt6.QtCore import QSortFilterProxyModel, Qt
-from PyQt6.QtWidgets import QComboBox, QWidget
+from PyQt6.QtWidgets import QApplication, QComboBox, QWidget
 from src.models.statistics.cashflow_stats import CashFlowStats
+from src.presenters.utilities.handle_exception import handle_exception
 from src.view_models.cash_flow_table_model import CashFlowTableModel
 from src.views import icons
 from src.views.base_classes.custom_widget import CustomWidget
+from src.views.dialogs.busy_dialog import create_simple_busy_indicator
 from src.views.ui_files.reports.Ui_cash_flow_periodic_report import (
     Ui_CashFlowPeriodicReport,
 )
@@ -65,8 +67,8 @@ class CashFlowPeriodicReport(CustomWidget, Ui_CashFlowPeriodicReport):
         self.dataSelectorComboBox.addItem("Net Growth")
         self.dataSelectorComboBox.setCurrentText("All data")
         self.dataSelectorComboBox.currentTextChanged.connect(
-            self._combobox_text_changed
-        )
+            lambda: self._combobox_text_changed(show_busy_indicator=True)
+        )  # show busy indicator when combo box has been changed by user
         self.chart_widget.horizontal_layout.addWidget(self.dataSelectorComboBox)
 
     def load_stats(self, stats: Collection[CashFlowStats]) -> None:
@@ -77,7 +79,8 @@ class CashFlowPeriodicReport(CustomWidget, Ui_CashFlowPeriodicReport):
         self.tableView.sortByColumn(-1, Qt.SortOrder.AscendingOrder)
 
         self._stats = stats
-        self._combobox_text_changed()
+        # don't show busy indicator when loading report
+        self._combobox_text_changed(show_busy_indicator=False)
 
         width, height = self._calculate_table_view_size()
         self.resize(width, height)
@@ -99,8 +102,25 @@ class CashFlowPeriodicReport(CustomWidget, Ui_CashFlowPeriodicReport):
             height = MAXIMUM_TABLE_HEIGHT
         return width, height
 
-    def _combobox_text_changed(self) -> None:
-        chart_data = STR_TO_CHART_DATA[self.dataSelectorComboBox.currentText()]
-        self.chart_widget.load_data(
-            self._stats[:-1], chart_data  # pass stats without Total
+    def _combobox_text_changed(self, *, show_busy_indicator: bool) -> None:
+        if not show_busy_indicator:
+            chart_data = STR_TO_CHART_DATA[self.dataSelectorComboBox.currentText()]
+            self.chart_widget.load_data(
+                self._stats[:-1], chart_data  # pass stats without Total
+            )
+            return
+
+        self._busy_dialog = create_simple_busy_indicator(
+            self, "Redrawing chart, please wait..."
         )
+        self._busy_dialog.open()
+        QApplication.processEvents()
+        try:
+            chart_data = STR_TO_CHART_DATA[self.dataSelectorComboBox.currentText()]
+            self.chart_widget.load_data(
+                self._stats[:-1], chart_data  # pass stats without Total
+            )
+        except Exception as exception:  # noqa: BLE001
+            handle_exception(exception)
+        finally:
+            self._busy_dialog.close()
