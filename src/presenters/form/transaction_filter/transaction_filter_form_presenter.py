@@ -222,8 +222,8 @@ class TransactionFilterFormPresenter:
             # reset cash amount filter if base currency changes
             if record_keeper.base_currency is not None:
                 self._transaction_filter.set_cash_amount_filter(
-                    CashAmount(0, record_keeper.base_currency),
-                    CashAmount(0, record_keeper.base_currency),
+                    record_keeper.base_currency.zero_amount,
+                    record_keeper.base_currency.zero_amount,
                     FilterMode.OFF,
                 )
             else:

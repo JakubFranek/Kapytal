@@ -260,10 +260,7 @@ class CurrencyFormPresenter:
         value = self._dialog.value.normalize()
         date_ = self._dialog.date_
         exchange_rate_code = self._dialog.exchange_rate_code
-        logging.info(
-            f"Setting ExchangeRate {exchange_rate_code}: "
-            f"{value!s} on {date_.strftime('%Y-%m-%d')}"
-        )
+        logging.info(f"Setting ExchangeRate {exchange_rate_code}: {value!s} on {date_}")
         try:
             exchange_rate.set_rate(date_, value)
         except Exception as exception:  # noqa: BLE001

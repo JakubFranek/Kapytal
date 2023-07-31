@@ -187,13 +187,18 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
         try:
             return self._price_history[date_]
         except KeyError:
-            i = bisect_right(self.price_history_pairs, date_, key=lambda x: x[0])
-            if i:
-                _, price = self.price_history_pairs[i - 1]
+            index = bisect_right(self.price_history_pairs, date_, key=lambda x: x[0])
+            if index:  # zero if date_ is earliest or history is empty
+                _, price = self.price_history_pairs[index - 1]
                 return price
-            logging.warning(
-                f"{self!s}: no earlier price found for {date_}, returning 'NaN'"
-            )
+            if len(self._price_history) >= 1:
+                _date, price = self._price_history_pairs[0]
+                logging.warning(
+                    f"{self!s}: no earlier price found for {date_},"
+                    f"returning {price} for {_date}"
+                )
+                return price
+            logging.warning(f"{self!s}: no price found, returning 'NaN'")
             return CashAmount(Decimal("NaN"), self._currency)
 
     def set_price(self, date_: date, price: CashAmount) -> None:
@@ -328,15 +333,15 @@ class SecurityAccount(Account):
                 (balance.convert(currency) for balance in self._balances),
                 start=currency.zero_amount,
             )
-        i = bisect_right(self._securities_history, date_, key=lambda x: x[0].date())
-        if i:
-            _, security_dict = self._securities_history[i - 1]
+        index = bisect_right(self._securities_history, date_, key=lambda x: x[0].date())
+        if index:
+            _, security_dict = self._securities_history[index - 1]
             balances = self._calculate_balances(security_dict, date_)
             return sum(
                 (balance.convert(currency, date_) for balance in balances),
                 start=currency.zero_amount,
             )
-        return CashAmount(0, currency)
+        return currency.zero_amount
 
     def _update_balances(self) -> None:
         if len(self._securities_history) == 0:
