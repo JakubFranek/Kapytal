@@ -1,6 +1,7 @@
 import logging
 import operator
 from abc import ABC, abstractmethod
+from bisect import bisect_right
 from collections.abc import Collection
 from datetime import date, datetime, timedelta
 from decimal import Decimal
@@ -166,11 +167,11 @@ class CashAccount(Account):
         if date_ is None:
             amount = self._balance_history[-1][1]
         else:
-            # TODO: improve performance using bisect
-            for _datetime, _balance, _ in reversed(self._balance_history):
-                if _datetime.date() <= date_:
-                    amount = _balance
-                    break
+            index = bisect_right(
+                self._balance_history, date_, key=lambda x: x[0].date()
+            )
+            if index:
+                _, amount, _ = self._balance_history[index - 1]
             else:
                 amount = currency.zero_amount
         return amount.convert(currency, date_)
