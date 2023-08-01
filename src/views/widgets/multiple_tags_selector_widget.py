@@ -16,8 +16,8 @@ class MultipleTagsSelectorWidget(QWidget):
         self._tag_names = tuple(tag_names)
 
         self.line_edit = QLineEdit(self)
-        self.line_edit.setPlaceholderText("Enter optional Tag names (separated by ';')")
-        self.line_edit.setToolTip("Both existing or new Tag names are valid")
+        self.line_edit.setPlaceholderText("Enter optional Tags (separated by ';')")
+        self.line_edit.setToolTip("Both existing or new Tags are valid")
         self._initialize_tags_completer()
 
         self.select_tool_button = QToolButton(self)

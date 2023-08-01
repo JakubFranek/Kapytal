@@ -745,7 +745,7 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
         update_cash_account = False
         update_security_account = False
 
-        self._description = description
+        self._description = description.strip()
 
         if hasattr(self, "_datetime"):
             update_cash_account = self._datetime != datetime_
@@ -1052,7 +1052,7 @@ class SecurityTransfer(SecurityRelatedTransaction):
     ) -> None:
         update_accounts = False
 
-        self._description = description
+        self._description = description.strip()
 
         if hasattr(self._datetime):
             update_accounts = self._datetime != datetime_

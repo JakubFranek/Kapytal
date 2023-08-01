@@ -246,8 +246,8 @@ class CashAccount(Account):
         logging.debug(f"Updating balance of {self}")
 
         transactions = sorted(self._transactions, key=lambda x: x.timestamp)
-        for i, transaction in enumerate(transactions):
-            if i > 0 and transaction.datetime_ == transactions[i - 1].datetime_:
+        for index, transaction in enumerate(transactions):
+            if index > 0 and transaction.datetime_ == transactions[index - 1].datetime_:
                 new_datetime = transaction.datetime_ + timedelta(seconds=1)
                 transaction.set_attributes(datetime_=new_datetime)
 
@@ -755,7 +755,7 @@ class CashTransaction(CashRelatedTransaction):
     ) -> None:
         update_account = False
 
-        self._description = description
+        self._description = description.strip()
         if hasattr(self, "_datetime"):
             update_account = datetime_ != self._datetime
         self._datetime = datetime_
@@ -1166,7 +1166,7 @@ class CashTransfer(CashRelatedTransaction):
         update_sender = False
         update_recipient = False
 
-        self._description = description
+        self._description = description.strip()
         if hasattr(self, "_datetime"):
             update_sender = self._datetime != datetime_
             update_recipient = self._datetime != datetime_
@@ -1551,7 +1551,7 @@ class RefundTransaction(CashRelatedTransaction):
     ) -> None:
         update_account = False
 
-        self._description = description
+        self._description = description.strip()
         if hasattr(self, "_datetime"):
             update_account = self._datetime != datetime_
 
