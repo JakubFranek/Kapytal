@@ -18,6 +18,7 @@ COLUMN_HEADERS = {
     CashFlowTableColumn.INCOME: "Income",
     CashFlowTableColumn.INWARD_TRANSFERS: "Inward Transfers",
     CashFlowTableColumn.REFUNDS: "Refunds",
+    CashFlowTableColumn.INITIAL_BALANCES: "Initial Balances",
     CashFlowTableColumn.TOTAL_INFLOW: "Total Inflow",
     CashFlowTableColumn.EXPENSES: "Expenses",
     CashFlowTableColumn.OUTWARD_TRANSFERS: "Outward Transfers",
@@ -131,6 +132,8 @@ class CashFlowTableModel(QAbstractTableModel):
             return stats.inward_transfers
         if column == CashFlowTableColumn.REFUNDS:
             return stats.refunds
+        if column == CashFlowTableColumn.INITIAL_BALANCES:
+            return stats.initial_balances
         if column == CashFlowTableColumn.TOTAL_INFLOW:
             return stats.inflows
         if column == CashFlowTableColumn.EXPENSES:

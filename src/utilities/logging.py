@@ -42,14 +42,14 @@ class DuplicateFilter(logging.Filter):
             self.last_dt = current_dt
             return True
 
+        # Same record
         if hasattr(self, "last_dt"):
-            # Same record
             time_delta = current_dt - self.last_dt
             if time_delta.microseconds > DuplicateFilter.DELAY_US:
                 # Same record with at least 100 ms interval
                 self.last_log = current_log
                 self.last_dt = current_dt
-            return True
+                return True
         return False
 
 

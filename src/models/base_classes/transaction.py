@@ -77,7 +77,7 @@ class Transaction(
             datetime_ = self._datetime
         self._validate_description(description)
         self._validate_datetime(datetime_)
-        self._description = description
+        self._description = description.strip()
         self._datetime = datetime_
         self._timestamp = datetime_.timestamp()
 

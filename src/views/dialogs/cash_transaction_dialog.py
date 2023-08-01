@@ -515,6 +515,7 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
             row.maximum_amount = self.amount
             row.currency_code = self._currency_code
             row.tag_name = tag
+            row.amount = self.amount
             self._tag_rows.append(row)
             self.split_tags_vertical_layout.addWidget(row)
 
@@ -540,6 +541,7 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
         row.amount_decimals = self._decimals
         row.currency_code = self._currency_code
         row.maximum_amount = self.amount
+        row.amount = self.amount
         self._tag_rows.append(row)
         index = self.split_tags_vertical_layout.count() - 1
         self.split_tags_vertical_layout.insertWidget(index, row)

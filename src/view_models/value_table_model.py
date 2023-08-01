@@ -145,5 +145,5 @@ class ValueTableModel(QAbstractTableModel):
                 row = index
                 break
         else:
-            raise ValueError(f"Date {date_.strftime('%Y-%m-%d')} not found")
+            raise ValueError(f"Date {date_} not found")
         return QAbstractTableModel.createIndex(self, row, 0)

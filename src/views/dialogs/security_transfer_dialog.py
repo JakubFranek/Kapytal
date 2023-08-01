@@ -1,3 +1,4 @@
+import unicodedata
 from collections.abc import Collection
 from datetime import date, datetime
 from decimal import Decimal
@@ -199,7 +200,11 @@ class SecurityTransferDialog(CustomDialog, Ui_SecurityTransferDialog):
     def _initialize_security_combobox(self, securities: Collection[Security]) -> None:
         if self._edit_mode == EditMode.EDIT_MULTIPLE:
             self.securityComboBox.addItem(self.KEEP_CURRENT_VALUES)
-        for security in securities:
+        _securities = sorted(
+            securities,
+            key=lambda security: unicodedata.normalize("NFD", security.name.lower()),
+        )
+        for security in _securities:
             text = SecurityTransferDialog._get_security_text(security)
             self.securityComboBox.addItem(icons.security, text, security)
 

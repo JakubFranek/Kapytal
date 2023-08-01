@@ -354,6 +354,11 @@ class AccountTreeModel(QAbstractItemModel):
             column == AccountTreeColumn.BALANCE_NATIVE
             and item.balance_native is not None
         ):
+            if (
+                item.balance_base is not None
+                and item.balance_native.currency == item.balance_base.currency
+            ):
+                return ""
             return item.balance_native.to_str_rounded()
         if column == AccountTreeColumn.BALANCE_BASE:
             if item.balance_base is not None:

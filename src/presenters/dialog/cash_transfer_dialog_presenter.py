@@ -3,6 +3,7 @@ from collections.abc import Collection, Sequence
 from datetime import datetime
 
 from PyQt6.QtWidgets import QWidget
+from src.models.base_classes.account import Account
 from src.models.model_objects.cash_objects import CashAccount, CashTransfer
 from src.models.record_keeper import RecordKeeper
 from src.models.user_settings import user_settings
@@ -15,7 +16,6 @@ from src.presenters.utilities.validate_inputs import validate_datetime
 from src.view_models.transaction_table_model import TransactionTableModel
 from src.views.dialogs.cash_transfer_dialog import CashTransferDialog, EditMode
 from src.views.utilities.handle_exception import display_error_message
-from src.views.utilities.message_box_functions import ask_yes_no_question
 
 
 class CashTransferDialogPresenter:
@@ -37,12 +37,10 @@ class CashTransferDialogPresenter:
 
     def run_add_dialog(
         self,
-        shown_accounts: Collection[CashAccount],
-        all_accounts: Collection[CashAccount],
+        shown_accounts: Collection[Account],
     ) -> None:
-        # FIXME: the code below is still not perfect...
         logging.debug("Running CashTransferDialog (edit_mode=ADD)")
-        if len(all_accounts) <= 1:
+        if len(self._record_keeper.cash_accounts) <= 1:
             display_error_message(
                 "Create at least two Cash Accounts before creating a Cash Transfer.",
                 title="Warning",
@@ -50,17 +48,20 @@ class CashTransferDialogPresenter:
             return
 
         self._prepare_dialog(edit_mode=EditMode.ADD)
-        _shown_accounts = tuple(shown_accounts)
-        _all_accounts = tuple(all_accounts)
+
+        _shown_accounts = sorted(
+            (account for account in shown_accounts if isinstance(account, CashAccount)),
+            key=lambda account: account.path.lower(),
+        )
         self._dialog.sender_path = (
             _shown_accounts[0].path
             if len(_shown_accounts) > 0
-            else _all_accounts[0].path
+            else self._record_keeper.cash_accounts[0].path
         )
         self._dialog.recipient_path = (
             _shown_accounts[1].path
             if len(_shown_accounts) > 1
-            else _all_accounts[1].path
+            else self._record_keeper.cash_accounts[1].path
         )
         self._dialog.datetime_ = datetime.now(user_settings.settings.time_zone)
 
@@ -182,24 +183,6 @@ class CashTransferDialogPresenter:
             logging.debug("Dialog aborted")
             return
 
-        sender = self._record_keeper.get_account(sender_path, CashAccount)
-        recipient = self._record_keeper.get_account(recipient_path, CashAccount)
-        if sender.currency == recipient.currency and amount_sent != amount_received:
-            logging.debug(
-                "Amounts have different values but the same currency, "
-                "asking the user for confirmation"
-            )
-            if not ask_yes_no_question(
-                self._dialog,
-                "The sent and received amounts have different values but the same "
-                " currency. Some monetary value is therefore created or lost. "
-                "This is not the intended use of Cash Transfer transaction type."
-                "Do you want to proceed anyway?",
-                "Are you sure?",
-            ):
-                logging.debug("User cancelled the CashTransfer creation")
-            return
-
         logging.info(
             f"Adding CashTransfer: {datetime_.strftime('%Y-%m-%d')}, "
             f"{description=}, sender={sender_path}, sent={amount_sent}, "
@@ -245,25 +228,6 @@ class CashTransferDialogPresenter:
         ):
             logging.debug("Dialog aborted")
             return
-
-        if sender_path is not None and recipient_path is not None:
-            sender = self._record_keeper.get_account(sender_path, CashAccount)
-            recipient = self._record_keeper.get_account(recipient_path, CashAccount)
-            if sender.currency == recipient.currency and amount_sent != amount_received:
-                logging.debug(
-                    "Amounts have different values but the same currency, "
-                    "asking the user for confirmation"
-                )
-                if not ask_yes_no_question(
-                    self._dialog,
-                    "The sent and received amounts have different values but the same "
-                    "currency. Some monetary value is therefore created or lost. "
-                    "This is not the intended use of the Cash Transfer transaction type. "
-                    "Do you want to proceed anyway?",
-                    "Are you sure?",
-                ):
-                    logging.debug("User cancelled the CashTransfer creation")
-                return
 
         log = []
         if description is not None:

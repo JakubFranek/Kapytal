@@ -148,7 +148,8 @@ class Currency(CopyableMixin, JSONSerializableMixin):
             else:
                 rate = exchange_rate.get_rate(date_)
             factor = operation(factor, rate)
-        self._factor_cache[cache_key] = factor
+        if date_ is None:
+            self._factor_cache[cache_key] = factor
         return factor
 
     @staticmethod
@@ -275,13 +276,18 @@ class ExchangeRate(CopyableMixin, JSONSerializableMixin):
         try:
             return self._rate_history[date_]
         except KeyError:
-            i = bisect_right(self.rate_history_pairs, date_, key=lambda x: x[0])
-            if i:
-                _, rate = self._rate_history_pairs[i - 1]
+            index = bisect_right(self.rate_history_pairs, date_, key=lambda x: x[0])
+            if index:
+                _, rate = self._rate_history_pairs[index - 1]
                 return rate
-            logging.warning(
-                f"{self!s}: no earlier rate found for {date_}, returning 'NaN'"
-            )
+            if len(self._rate_history_pairs) >= 1:
+                _date, rate = self._rate_history_pairs[0]
+                logging.warning(
+                    f"{self!s}: no earlier rate found for {date_}, "
+                    f"returning {rate} for {_date}"
+                )
+                return rate
+            logging.warning(f"{self!s}: no rate found, returning 'NaN'")
             return Decimal("NaN")
 
     def set_rate(self, date_: date, rate: Decimal | int | str) -> None:

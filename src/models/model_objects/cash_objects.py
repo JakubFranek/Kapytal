@@ -1,6 +1,7 @@
 import logging
 import operator
 from abc import ABC, abstractmethod
+from bisect import bisect_right
 from collections.abc import Collection
 from datetime import date, datetime, timedelta
 from decimal import Decimal
@@ -140,6 +141,8 @@ class CashAccount(Account):
             raise CurrencyError(
                 "CashAccount.initial_balance.currency must match CashAccount.currency."
             )
+        if amount.is_negative():
+            raise ValueError("CashAccount.initial_balance must not be negative.")
         self._initial_balance = amount
         if self.allow_update_balance:
             self.update_balance()
@@ -164,13 +167,13 @@ class CashAccount(Account):
         if date_ is None:
             amount = self._balance_history[-1][1]
         else:
-            # TODO: improve performance using bisect
-            for _datetime, _balance, _ in reversed(self._balance_history):
-                if _datetime.date() <= date_:
-                    amount = _balance
-                    break
+            index = bisect_right(
+                self._balance_history, date_, key=lambda x: x[0].date()
+            )
+            if index:
+                _, amount, _ = self._balance_history[index - 1]
             else:
-                amount = self._initial_balance
+                amount = currency.zero_amount
         return amount.convert(currency, date_)
 
     def get_balance_after_transaction(
@@ -243,8 +246,8 @@ class CashAccount(Account):
         logging.debug(f"Updating balance of {self}")
 
         transactions = sorted(self._transactions, key=lambda x: x.timestamp)
-        for i, transaction in enumerate(transactions):
-            if i > 0 and transaction.datetime_ == transactions[i - 1].datetime_:
+        for index, transaction in enumerate(transactions):
+            if index > 0 and transaction.datetime_ == transactions[index - 1].datetime_:
                 new_datetime = transaction.datetime_ + timedelta(seconds=1)
                 transaction.set_attributes(datetime_=new_datetime)
 
@@ -750,22 +753,27 @@ class CashTransaction(CashRelatedTransaction):
         tag_amount_pairs: Collection[tuple[Attribute, CashAmount]],
         payee: Attribute,
     ) -> None:
-        self._description = description
+        update_account = False
+
+        self._description = description.strip()
+        if hasattr(self, "_datetime"):
+            update_account = datetime_ != self._datetime
         self._datetime = datetime_
         self._timestamp = datetime_.timestamp()
+
+        if hasattr(self, "_type") and not update_account:
+            update_account = type_ != self._type
         self._type = type_
         self._payee = payee
 
         _category_amount_pairs = tuple(category_amount_pairs)
-        if hasattr(self, "_category_amount_pairs"):
-            balance_changed = self._category_amount_pairs != _category_amount_pairs
-        else:
-            balance_changed = False
+        if hasattr(self, "_category_amount_pairs") and not update_account:
+            update_account = self._category_amount_pairs != _category_amount_pairs
 
         self._category_amount_pairs = _category_amount_pairs
         self._tag_amount_pairs = tuple(tag_amount_pairs)
         self._update_cached_data(account)
-        self._set_account(account, balance_changed=balance_changed)
+        self._set_account(account, balance_changed=update_account)
 
     def _set_account(self, account: CashAccount, *, balance_changed: bool) -> None:
         if hasattr(self, "_account"):
@@ -1155,26 +1163,28 @@ class CashTransfer(CashRelatedTransaction):
         sender: CashAccount,
         recipient: CashAccount,
     ) -> None:
-        self._description = description
+        update_sender = False
+        update_recipient = False
+
+        self._description = description.strip()
+        if hasattr(self, "_datetime"):
+            update_sender = self._datetime != datetime_
+            update_recipient = self._datetime != datetime_
         self._datetime = datetime_
         self._timestamp = datetime_.timestamp()
 
-        if hasattr(self, "_amount_sent"):
-            amount_sent_changed = amount_sent != self._amount_sent
-        else:
-            amount_sent_changed = False
-        if hasattr(self, "_amount_received"):
-            amount_received_changed = amount_received != self._amount_received
-        else:
-            amount_received_changed = False
+        if hasattr(self, "_amount_sent") and not update_sender:
+            update_sender = amount_sent != self._amount_sent
+        if hasattr(self, "_amount_received") and not update_recipient:
+            update_recipient = amount_received != self._amount_received
 
         self._amount_sent = amount_sent
         self._amount_received = amount_received
         self._set_accounts(
             sender,
             recipient,
-            amount_sent_changed=amount_sent_changed,
-            amount_received_changed=amount_received_changed,
+            update_sender=update_sender,
+            update_recipient=update_recipient,
         )
 
     def _set_accounts(
@@ -1182,8 +1192,8 @@ class CashTransfer(CashRelatedTransaction):
         sender: CashAccount,
         recipient: CashAccount,
         *,
-        amount_sent_changed: bool,
-        amount_received_changed: bool,
+        update_sender: bool,
+        update_recipient: bool,
     ) -> None:
         add_sender = True
         add_recipient = True
@@ -1204,12 +1214,12 @@ class CashTransfer(CashRelatedTransaction):
 
         if add_sender:
             self._sender.add_transaction(self)
-        elif amount_sent_changed:
+        elif update_sender:
             self._sender.update_balance()
 
         if add_recipient:
             self._recipient.add_transaction(self)
-        elif amount_received_changed:
+        elif update_recipient:
             self._recipient.update_balance()
 
     def _validate_accounts(self, sender: CashAccount, recipient: CashAccount) -> None:
@@ -1539,15 +1549,19 @@ class RefundTransaction(CashRelatedTransaction):
         tag_amount_pairs: Collection[tuple[Attribute, CashAmount]],
         payee: Attribute,
     ) -> None:
-        self._description = description
+        update_account = False
+
+        self._description = description.strip()
+        if hasattr(self, "_datetime"):
+            update_account = self._datetime != datetime_
+
         self._datetime = datetime_
         self._timestamp = datetime_.timestamp()
 
         _category_amount_pairs = tuple(category_amount_pairs)
-        if hasattr(self, "_category_amount_pairs"):
-            balance_changed = self._category_amount_pairs != _category_amount_pairs
-        else:
-            balance_changed = False
+        if hasattr(self, "_category_amount_pairs") and not update_account:
+            update_account = self._category_amount_pairs != _category_amount_pairs
+
         self._category_amount_pairs = tuple(category_amount_pairs)
         self._categories = frozenset(
             category for category, _ in self._category_amount_pairs
@@ -1568,7 +1582,17 @@ class RefundTransaction(CashRelatedTransaction):
                 self._are_tags_split = True
         self._tags = frozenset(tags)
 
-        self._set_account(account, balance_changed=balance_changed)
+        self._set_account(account, update_account=update_account)
+
+    def _set_account(self, account: CashAccount, *, update_account: bool) -> None:
+        if hasattr(self, "_account"):
+            if self._account == account:
+                if update_account:
+                    self._account.update_balance()
+                return
+            self._account.remove_transaction(self)
+        self._account = account
+        self._account.add_transaction(self)
 
     def _validate_datetime(
         self, datetime_: datetime, refunded_transaction_datetime: datetime
@@ -1579,16 +1603,6 @@ class RefundTransaction(CashRelatedTransaction):
                 "Supplied RefundTransaction.datetime_ precedes this "
                 "CashTransaction.datetime_."
             )
-
-    def _set_account(self, account: CashAccount, *, balance_changed: bool) -> None:
-        if hasattr(self, "_account"):
-            if self._account == account:
-                if balance_changed:
-                    self._account.update_balance()
-                return
-            self._account.remove_transaction(self)
-        self._account = account
-        self._account.add_transaction(self)
 
     def _validate_account(
         self, account: CashAccount, refunded_transaction_currency: Currency

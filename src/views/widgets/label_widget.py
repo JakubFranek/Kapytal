@@ -14,7 +14,7 @@ class LabelWidget(QWidget):
         self.label = QLabel(text, self)
 
         self.spacer1 = QSpacerItem(
-            20, 5, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed
+            20, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed
         )
         self.spacer2 = QSpacerItem(
             20, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Maximum

@@ -179,6 +179,11 @@ class OwnedSecuritiesTreeModel(QAbstractItemModel):
                 return f"{item.total_shares:,}"
             return f"{item.shares:,}"
         if column == OwnedSecuritiesTreeColumn.AMOUNT_NATIVE:
+            if (
+                isinstance(item.base_amount, CashAmount)
+                and item.native_amount.currency == item.base_amount.currency
+            ):
+                return ""
             return item.native_amount.to_str_rounded()
         if column == OwnedSecuritiesTreeColumn.AMOUNT_BASE:
             if isinstance(item.base_amount, CashAmount):

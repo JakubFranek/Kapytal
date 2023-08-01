@@ -197,6 +197,7 @@ class CashTransferDialog(CustomDialog, Ui_CashTransferDialog):
         self.exchangeRateLineEdit.setVisible(sender.currency != recipient.currency)
 
         if sender.currency == recipient.currency:
+            self.receivedDoubleSpinBox.setValue(float(self.amount_sent))
             return
 
         try:
@@ -204,7 +205,6 @@ class CashTransferDialog(CustomDialog, Ui_CashTransferDialog):
             rate_secondary = self.amount_sent / self.amount_received
             rate_primary = round(rate_primary, recipient.currency.places)
             rate_secondary = round(rate_secondary, sender.currency.places)
-            # TODO: this can fail for large currency places value... maybe a better solution is fixed significant places rounding
         except (InvalidOperation, DivisionByZero, TypeError):
             self.exchangeRateLineEdit.setText("Undefined")
             return
@@ -272,8 +272,10 @@ class CashTransferDialog(CustomDialog, Ui_CashTransferDialog):
             self.tags_widget.set_placeholder_text("Leave empty to keep current values")
 
     def _set_spinbox_states(self) -> None:
-        sender_specified = self.sender_path is not None
-        recipient_specified = self.recipient_path is not None
+        sender_account = self._get_account(self.sender_path)
+        recipient_account = self._get_account(self.recipient_path)
+        sender_specified = sender_account is not None
+        recipient_specified = recipient_account is not None
 
         if self._edit_mode == EditMode.EDIT_MULTIPLE_SENDER_MIXED_CURRENCY:
             self.sentDoubleSpinBox.setEnabled(sender_specified)
@@ -282,6 +284,11 @@ class CashTransferDialog(CustomDialog, Ui_CashTransferDialog):
         elif self._edit_mode == EditMode.EDIT_MULTIPLE_MIXED_CURRENCY:
             self.sentDoubleSpinBox.setEnabled(sender_specified)
             self.receivedDoubleSpinBox.setEnabled(recipient_specified)
+
+        if sender_specified and recipient_specified:
+            self.receivedDoubleSpinBox.setEnabled(
+                sender_account.currency != recipient_account.currency
+            )
 
         if not sender_specified:
             self.sentDoubleSpinBox.setValue(0)

@@ -155,6 +155,7 @@ class TransactionTableModel(QAbstractTableModel):
 
         # this effectively turns off sorting and dramatically decreases calls
         # to data() for sorting purposes during file load
+        # FIXME: this however also effectively disables dynamic sort filter...
         self._proxy_viewside.sort(-1)
 
         self.beginResetModel()
@@ -475,9 +476,9 @@ class TransactionTableModel(QAbstractTableModel):
     @staticmethod
     def _get_transaction_shares_string(transaction: Transaction) -> str:
         if isinstance(transaction, SecurityTransaction):
-            return f"{transaction.get_shares(transaction.security_account):,}"
+            return f"{transaction.get_shares(transaction.security_account):,f}"
         if isinstance(transaction, SecurityTransfer):
-            return f"{transaction.get_shares(transaction.recipient):,}"
+            return f"{transaction.get_shares(transaction.recipient):,f}"
         return ""
 
     @staticmethod
@@ -489,7 +490,7 @@ class TransactionTableModel(QAbstractTableModel):
     @staticmethod
     def _get_transaction_price_per_share_string(transaction: Transaction) -> str:
         if isinstance(transaction, SecurityTransaction):
-            return f"{transaction.price_per_share.value_normalized:,}"
+            return f"{transaction.price_per_share.value_normalized:,f}"
         return ""
 
     def _get_transaction_amount_string(

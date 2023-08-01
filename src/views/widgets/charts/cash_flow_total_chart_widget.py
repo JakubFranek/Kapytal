@@ -16,18 +16,26 @@ class CashFlowTotalChartWidget(ChartWidget):
     def load_data(self, stats: CashFlowStats) -> None:
         self.chart.axes.clear()
         bar_incomes = self.chart.axes.bar(
-            "Inflows", stats.incomes.value_rounded, color="green"
+            "Inflows", stats.incomes.value_rounded, color="darkgreen"
         )
         bar_inward_transfers = self.chart.axes.bar(
             "Inflows",
             stats.inward_transfers.value_rounded,
             bottom=stats.incomes.value_rounded,
-            color="limegreen",
+            color="green",
         )
         bar_refunds = self.chart.axes.bar(
             "Inflows",
             stats.refunds.value_rounded,
             bottom=stats.incomes.value_rounded + stats.inward_transfers.value_rounded,
+            color="limegreen",
+        )
+        bar_initial_balances = self.chart.axes.bar(
+            "Inflows",
+            stats.initial_balances.value_rounded,
+            bottom=stats.incomes.value_rounded
+            + stats.inward_transfers.value_rounded
+            + stats.refunds.value_rounded,
             color="lime",
         )
 
@@ -52,7 +60,7 @@ class CashFlowTotalChartWidget(ChartWidget):
         )
 
         self.chart.axes.bar_label(
-            bar_refunds, labels=[f"{stats.inflows.value_rounded:,}"]
+            bar_initial_balances, labels=[f"{stats.inflows.value_rounded:,}"]
         )
         self.chart.axes.bar_label(
             bar_outward_transfers, labels=[f"{stats.outflows.value_rounded:,}"]
@@ -72,6 +80,7 @@ class CashFlowTotalChartWidget(ChartWidget):
             bar_incomes.patches
             + bar_inward_transfers.patches
             + bar_refunds.patches
+            + bar_initial_balances.patches
             + bar_expenses.patches
             + bar_outward_transfers.patches
             + bar_cash_flow.patches
@@ -80,6 +89,7 @@ class CashFlowTotalChartWidget(ChartWidget):
                 "Income",
                 "Inward Transfers",
                 "Refunds",
+                "Initial Balances",
                 "Expenses",
                 "Outward Transfers",
                 "Cash Flow",

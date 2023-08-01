@@ -260,10 +260,7 @@ class CurrencyFormPresenter:
         value = self._dialog.value.normalize()
         date_ = self._dialog.date_
         exchange_rate_code = self._dialog.exchange_rate_code
-        logging.info(
-            f"Setting ExchangeRate {exchange_rate_code}: "
-            f"{value!s} on {date_.strftime('%Y-%m-%d')}"
-        )
+        logging.info(f"Setting ExchangeRate {exchange_rate_code}: {value!s} on {date_}")
         try:
             exchange_rate.set_rate(date_, value)
         except Exception as exception:  # noqa: BLE001
@@ -299,7 +296,7 @@ class CurrencyFormPresenter:
         selected_data_points = self._exchange_rate_history_model.get_selected_values()
         if len(selected_data_points) == 0:
             raise InvalidOperationError(
-                "At least one data point must be selected for removal."
+                "At least one Exchange Range data point must be selected for removal."
             )
         exchange_rate = self._exchange_rate_table_model.get_selected_item()
         if exchange_rate is None:
@@ -308,7 +305,7 @@ class CurrencyFormPresenter:
             )
 
         logging.debug(
-            f"{exchange_rate!s} exchange rate data point deletion requested, "
+            f"{exchange_rate!s} Exchange Rate data point deletion requested, "
             "asking the user for confirmation"
         )
         if not ask_yes_no_question(
@@ -322,17 +319,18 @@ class CurrencyFormPresenter:
             logging.debug("User cancelled the data point deletion")
             return
 
-        any_deleted = False
-        for date_, _ in selected_data_points:
-            try:
+        try:
+            any_deleted = False
+            for date_, _ in selected_data_points:
                 exchange_rate.delete_rate(date_)
                 any_deleted = True
-            except Exception as exception:  # noqa: BLE001
-                handle_exception(exception)
-                return
+        except Exception as exception:  # noqa: BLE001
+            handle_exception(exception)
+            return
 
         if any_deleted:
             self._reset_model_and_update_chart(exchange_rate)
+            self._data_point_selection_changed()
             self.event_data_changed()
 
     def _run_load_data_dialog(self) -> None:

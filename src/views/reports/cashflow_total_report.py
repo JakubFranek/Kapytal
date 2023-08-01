@@ -35,6 +35,12 @@ class CashFlowTotalReport(CustomWidget, Ui_CashFlowTotalReport):
         if stats.refunds.is_positive():
             self.refundsAmountLabel.setStyleSheet(f"color: {colors.get_green().name()}")
 
+        self.initialBalancesAmountLabel.setText(stats.initial_balances.to_str_rounded())
+        if stats.initial_balances.is_positive():
+            self.initialBalancesAmountLabel.setStyleSheet(
+                f"color: {colors.get_green().name()}"
+            )
+
         self.inflowAmountLabel.setText(stats.inflows.to_str_rounded())
         if stats.inflows.is_positive():
             self.inflowAmountLabel.setStyleSheet(f"color: {colors.get_green().name()}")

@@ -1,3 +1,4 @@
+import unicodedata
 from collections.abc import Collection
 from datetime import date, datetime
 from decimal import Decimal
@@ -70,7 +71,7 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
         self.tags_label = QLabel("Tags", self)
         self.formLayout.addRow(self.tags_label, self.tags_widget)
 
-        self._fixed_spinboxes = []
+        self._fixed_spinbox: QDoubleSpinBox | None = None
 
         self._initialize_window()
         self._initialize_placeholders()
@@ -255,7 +256,11 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
     def _initialize_security_combobox(self, securities: Collection[Security]) -> None:
         if self._edit_mode in EditMode.get_multiple_edit_values():
             self.securityComboBox.addItem(self.KEEP_CURRENT_VALUES)
-        for security in securities:
+        _securities = sorted(
+            securities,
+            key=lambda security: unicodedata.normalize("NFD", security.name.lower()),
+        )
+        for security in _securities:
             text = SecurityTransactionDialog._get_security_text(security)
             self.securityComboBox.addItem(icons.security, text, security)
 
@@ -315,16 +320,12 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
         )
 
     def _update_spinbox_values(self, spinbox: QDoubleSpinBox) -> None:
-        if spinbox not in self._fixed_spinboxes:
-            self._fixed_spinboxes.append(spinbox)
-        if len(self._fixed_spinboxes) == 3:
-            self._fixed_spinboxes.pop(0)
-        elif len(self._fixed_spinboxes) == 2:
-            pass
-        else:
+        if spinbox is not self.sharesDoubleSpinBox:
+            self._fixed_spinbox = spinbox
+        if self._fixed_spinbox is None:
             return
 
-        if self.totalDoubleSpinBox not in self._fixed_spinboxes:
+        if self._fixed_spinbox is self.priceDoubleSpinBox:
             with QSignalBlocker(self.totalDoubleSpinBox):
                 shares = self.shares
                 price_per_share = self.price_per_share
@@ -333,7 +334,7 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
                     return
                 total = shares * price_per_share
                 self.totalDoubleSpinBox.setValue(total)
-        elif self.priceDoubleSpinBox not in self._fixed_spinboxes:
+        elif self._fixed_spinbox is self.totalDoubleSpinBox:
             with QSignalBlocker(self.priceDoubleSpinBox):
                 shares = self.shares
                 total = Decimal(self.totalDoubleSpinBox.cleanText().replace(",", ""))
@@ -341,14 +342,6 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
                     self.priceDoubleSpinBox.setValue(0)
                     return
                 self.priceDoubleSpinBox.setValue(total / shares)
-        elif self.sharesDoubleSpinBox not in self._fixed_spinboxes:
-            with QSignalBlocker(self.sharesDoubleSpinBox):
-                price_per_share = self.price_per_share
-                total = Decimal(self.totalDoubleSpinBox.cleanText().replace(",", ""))
-                if price_per_share is None or price_per_share == 0:
-                    self.sharesDoubleSpinBox.setValue(0)
-                    return
-                self.sharesDoubleSpinBox.setValue(total / price_per_share)
         else:
             raise ValueError("Invalid spinbox")
 
