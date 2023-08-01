@@ -8,6 +8,7 @@ from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtWidgets import (
     QAbstractButton,
     QDialogButtonBox,
+    QLabel,
     QVBoxLayout,
     QWidget,
 )
@@ -20,6 +21,7 @@ from src.views.ui_files.dialogs.Ui_cash_transaction_dialog import (
     Ui_CashTransactionDialog,
 )
 from src.views.widgets.add_attribute_row_widget import AddAttributeRowWidget
+from src.views.widgets.description_plain_text_edit import DescriptionPlainTextEdit
 from src.views.widgets.label_widget import LabelWidget
 from src.views.widgets.single_category_row_widget import SingleCategoryRowWidget
 from src.views.widgets.single_tag_row_widget import SingleTagRowWidget
@@ -55,6 +57,7 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
         categories_income: Collection[str],
         categories_expense: Collection[str],
         tag_names: Collection[str],
+        descriptions: Collection[str],
         *,
         edit_mode: EditMode,
     ) -> None:
@@ -66,6 +69,12 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
         self._edit_mode = edit_mode
         self._tag_names = tag_names
         self._accounts = accounts
+
+        self.descriptionPlainTextEdit = DescriptionPlainTextEdit(descriptions)
+        self.description_label = QLabel("Description")
+        self.formLayout.insertRow(
+            4, self.description_label, self.descriptionPlainTextEdit
+        )
 
         self._type = CashTransactionType.INCOME
         self.incomeRadioButton.setChecked(True)

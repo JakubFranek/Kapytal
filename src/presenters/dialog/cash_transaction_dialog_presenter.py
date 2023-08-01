@@ -398,5 +398,6 @@ class CashTransactionDialogPresenter:
             category_income_paths,
             category_expense_paths,
             tag_names,
+            self._record_keeper.descriptions,
             edit_mode=edit_mode,
         )
