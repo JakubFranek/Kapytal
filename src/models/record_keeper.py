@@ -1,4 +1,5 @@
 import logging
+from collections import defaultdict
 from collections.abc import Callable, Collection
 from datetime import datetime
 from decimal import Decimal
@@ -91,7 +92,7 @@ class RecordKeeper:
         self._security_transactions: list[SecurityTransaction] = []
         self._security_transfers: list[SecurityTransfer] = []
         self._transactions_uuid_dict: dict[UUID, Transaction] = {}
-        self._descriptions: list[str] = []
+        self._descriptions: defaultdict[str, int] = defaultdict(int)
         self._base_currency: Currency | None = None
 
     @property
@@ -375,7 +376,7 @@ class RecordKeeper:
         self._transactions.append(transaction)
         self._cash_transactions.append(transaction)
         self._transactions_uuid_dict[transaction.uuid] = transaction
-        self._update_descriptions()
+        self._add_description(transaction.description)
 
     def add_cash_transfer(  # noqa: PLR0913
         self,
@@ -406,7 +407,7 @@ class RecordKeeper:
             self.get_attribute(tag_name, AttributeType.TAG) for tag_name in tag_names
         ]
         transfer.add_tags(tags)
-        self._update_descriptions()
+        self._add_description(transfer.description)
 
     def add_refund(  # noqa: PLR0913
         self,
@@ -452,7 +453,7 @@ class RecordKeeper:
         self._transactions.append(refund)
         self._refund_transactions.append(refund)
         self._transactions_uuid_dict[refund.uuid] = refund
-        self._update_descriptions()
+        self._add_description(refund.description)
 
     def add_security_transaction(  # noqa: PLR0913
         self,
@@ -488,7 +489,7 @@ class RecordKeeper:
             self.get_attribute(tag_name, AttributeType.TAG) for tag_name in tag_names
         ]
         transaction.add_tags(tags)
-        self._update_descriptions()
+        self._add_description(transaction.description)
 
     def add_security_transfer(  # noqa: PLR0913
         self,
@@ -519,7 +520,7 @@ class RecordKeeper:
             self.get_attribute(tag_name, AttributeType.TAG) for tag_name in tag_names
         ]
         transaction.add_tags(tags)
-        self._update_descriptions()
+        self._add_description(transaction.description)
 
     def edit_cash_transactions(  # noqa: PLR0913
         self,
@@ -616,6 +617,7 @@ class RecordKeeper:
             )
 
         for transaction in transactions:
+            self._remove_description(transaction.description)
             transaction.set_attributes(
                 description=description,
                 datetime_=datetime_,
@@ -625,7 +627,7 @@ class RecordKeeper:
                 tag_amount_pairs=tag_amount_pairs,
                 payee=payee,
             )
-        self._update_descriptions()
+            self._add_description(transaction.description)
 
     def edit_cash_transfers(  # noqa: PLR0913
         self,
@@ -689,6 +691,7 @@ class RecordKeeper:
             )
 
         for transfer in transfers:
+            self._remove_description(transfer.description)
             transfer.set_attributes(
                 description=description,
                 datetime_=datetime_,
@@ -697,6 +700,7 @@ class RecordKeeper:
                 sender=sender,
                 recipient=recipient,
             )
+            self._add_description(transfer.description)
 
         if tag_names is not None:
             tags = [
@@ -706,8 +710,6 @@ class RecordKeeper:
             for transfer in transfers:
                 transfer.clear_tags()
                 transfer.add_tags(tags)
-
-        self._update_descriptions()
 
     def edit_refunds(  # noqa: PLR0913
         self,
@@ -764,6 +766,7 @@ class RecordKeeper:
             )
 
         for refund in refunds:
+            self._remove_description(refund.description)
             refund.set_attributes(
                 description=description,
                 datetime_=datetime_,
@@ -772,8 +775,7 @@ class RecordKeeper:
                 tag_amount_pairs=tag_amount_pairs,
                 payee=payee,
             )
-
-        self._update_descriptions()
+            self._add_description(refund.description)
 
     def edit_security_transactions(  # noqa: PLR0913
         self,
@@ -853,6 +855,7 @@ class RecordKeeper:
             )
 
         for transaction in transactions:
+            self._remove_description(transaction.description)
             transaction.set_attributes(
                 description=description,
                 datetime_=datetime_,
@@ -863,6 +866,7 @@ class RecordKeeper:
                 cash_account=cash_account,
                 security_account=security_account,
             )
+            self._add_description(transaction.description)
 
         if tag_names is not None:
             tags = [
@@ -872,8 +876,6 @@ class RecordKeeper:
             for transaction in transactions:
                 transaction.clear_tags()
                 transaction.add_tags(tags)
-
-        self._update_descriptions()
 
     def edit_security_transfers(  # noqa: PLR0913
         self,
@@ -914,6 +916,7 @@ class RecordKeeper:
             )
 
         for transaction in transactions:
+            self._remove_description(transaction.description)
             transaction.set_attributes(
                 description=description,
                 datetime_=datetime_,
@@ -922,6 +925,7 @@ class RecordKeeper:
                 shares=shares,
                 security=security,
             )
+            self._add_description(transaction.description)
 
         if tag_names is not None:
             tags = [
@@ -931,8 +935,6 @@ class RecordKeeper:
             for transaction in transactions:
                 transaction.clear_tags()
                 transaction.add_tags(tags)
-
-        self._update_descriptions()
 
     def edit_category(
         self, current_path: str, new_path: str, index: int | None = None
@@ -1130,7 +1132,7 @@ class RecordKeeper:
 
             # delete transaction from dictionary
             del self._transactions_uuid_dict[transaction.uuid]
-            self._update_descriptions()
+            self._remove_description(transaction.description)
 
     def remove_security(self, uuid: str) -> None:
         security = self.get_security_by_uuid(uuid)
@@ -1910,13 +1912,16 @@ class RecordKeeper:
         else:
             self._root_income_and_expense_categories.append(category)
 
+    def _add_description(self, description: str) -> None:
+        self._descriptions[description] += 1
+
+    def _remove_description(self, description: str) -> None:
+        self._descriptions[description] -= 1
+        if self._descriptions[description] == 0:
+            del self._descriptions[description]
+
     def _update_descriptions(self) -> None:
-        # REFACTOR: recalculating descriptions every time is bad performance wise
-        # for 5K transactions, this takes cca 8 ms (on my machine)
-        # IDEA: use a int-based defaultdict {description: count}, when count == 0, remove given description
-        descriptions = {
-            transaction.description
-            for transaction in self._transactions
-            if transaction.description
-        }
-        self._descriptions = sorted(descriptions, key=str.lower)
+        self._descriptions = defaultdict(int)
+        for transaction in self._transactions:
+            if transaction.description:
+                self._descriptions[transaction.description] += 1
