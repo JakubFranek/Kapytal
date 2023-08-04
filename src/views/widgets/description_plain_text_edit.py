@@ -1,7 +1,14 @@
 from collections.abc import Collection
 
 from PyQt6 import QtGui
-from PyQt6.QtCore import QEvent, QObject, QSignalBlocker, Qt, pyqtSignal
+from PyQt6.QtCore import (
+    QEvent,
+    QObject,
+    QSignalBlocker,
+    QStringListModel,
+    Qt,
+    pyqtSignal,
+)
 from PyQt6.QtGui import QKeyEvent, QTextCursor
 from PyQt6.QtWidgets import (
     QCompleter,
@@ -22,6 +29,32 @@ COMPLETER_KEYS = (
 )
 
 
+class DescriptionCompleter(QCompleter):
+    def __init__(
+        self, descriptions: Collection[str], parent: QWidget | None = None
+    ) -> None:
+        super().__init__(descriptions, parent)
+        self._descriptions: tuple[str] = tuple(sorted(descriptions, key=str.lower))
+        self._model = QStringListModel(descriptions)
+        self.setModel(self._model)
+
+    def update(self, text: str) -> None:
+        lowered_text = text.lower()
+        matches: list[str] = []
+        _not_start_with: list[str] = []
+        for description in self._descriptions:
+            lowered_description = description.lower()
+            if lowered_description.startswith(lowered_text):
+                matches.append(description)
+            elif lowered_text in lowered_description:
+                _not_start_with.append(description)
+
+        matches.extend(_not_start_with)
+
+        self._model.setStringList(matches)
+        self.complete()
+
+
 class DescriptionPlainTextEdit(QPlainTextEdit):
     def __init__(
         self,
@@ -34,9 +67,7 @@ class DescriptionPlainTextEdit(QPlainTextEdit):
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.setMinimumHeight(50)
 
-        self.completer = QCompleter(descriptions)
-        self.completer.setFilterMode(Qt.MatchFlag.MatchContains)
-        self.completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+        self.completer = DescriptionCompleter(descriptions)
         self.completer.setWidget(self)
         self.completer.activated.connect(self._handle_completion)
         self.textChanged.connect(self._handle_text_changed)
@@ -47,10 +78,8 @@ class DescriptionPlainTextEdit(QPlainTextEdit):
         if not self._completing:
             prefix = self.toPlainText()
             if len(prefix) > 0:
-                self.completer.setCompletionPrefix(prefix)
-                if self.completer.currentRow() >= 0:
-                    self.completer.complete()
-                    return
+                self.completer.update(prefix)
+                return
             self.completer.popup().hide()
 
     def _handle_completion(self, text: str) -> None:
