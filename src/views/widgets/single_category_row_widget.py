@@ -1,6 +1,6 @@
 from collections.abc import Collection
 
-from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtCore import QSignalBlocker, Qt, pyqtSignal
 from PyQt6.QtGui import QAction
 from PyQt6.QtWidgets import QComboBox, QCompleter, QHBoxLayout, QToolButton, QWidget
 from src.views import icons
@@ -42,7 +42,8 @@ class SingleCategoryRowWidget(QWidget):
 
     @category.setter
     def category(self, value: str) -> None:
-        self.combo_box.setCurrentText(value)
+        with QSignalBlocker(self.combo_box):
+            self.combo_box.setCurrentText(value)
 
     def enable_split(self, *, enable: bool) -> None:
         self._split_enabled = enable
@@ -76,17 +77,13 @@ class SingleCategoryRowWidget(QWidget):
         self.combo_box.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
         self.combo_box.editTextChanged.connect(self._handle_text_changed)
 
-        self._completing = False
-
     def _handle_text_changed(self) -> None:
-        if not self._completing:
-            prefix = self.combo_box.lineEdit().text()
-            if len(prefix) > 0:
-                self._completer.update(prefix)
-                return
-            self._completer.popup().hide()
+        prefix = self.combo_box.lineEdit().text()
+        if len(prefix) > 0:
+            self._completer.update(prefix)
+            return
+        self._completer.popup().hide()
 
     def _handle_completion(self, text: str) -> None:
-        self._completing = True
-        self.combo_box.setCurrentText(text)
-        self._completing = False
+        with QSignalBlocker(self.combo_box):
+            self.combo_box.setCurrentText(text)

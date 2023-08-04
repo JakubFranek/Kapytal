@@ -1,8 +1,8 @@
 from collections.abc import Collection
 
-from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtCore import QSignalBlocker, Qt, pyqtSignal
 from PyQt6.QtGui import QAction
-from PyQt6.QtWidgets import QCompleter, QHBoxLayout, QLineEdit, QToolButton, QWidget
+from PyQt6.QtWidgets import QHBoxLayout, QLineEdit, QToolButton, QWidget
 from src.views import icons
 from src.views.dialogs.select_item_dialog import ask_user_for_selection
 from src.views.widgets.smart_completer import SmartCompleter
@@ -71,20 +71,17 @@ class MultipleTagsSelectorWidget(QWidget):
         self._tags_completer.setWidget(self.line_edit)
         self._tags_completer.activated.connect(self._handle_tags_completion)
         self.line_edit.textEdited.connect(self._handle_tags_text_changed)
-        self._tags_completing = False
 
     def _handle_tags_text_changed(self, text: str) -> None:
-        if not self._tags_completing:
-            prefix = text.rpartition(";")[-1].strip()
-            if len(prefix) > 0:
-                self._prefix = prefix
-                self._tags_completer.update(prefix)
-            else:
-                self._tags_completer.popup().hide()
+        prefix = text.rpartition(";")[-1].strip()
+        if len(prefix) > 0:
+            self._prefix = prefix
+            self._tags_completer.update(prefix)
+        else:
+            self._tags_completer.popup().hide()
 
     def _handle_tags_completion(self, text: str) -> None:
-        if not self._tags_completing:
-            self._tags_completing = True
+        with QSignalBlocker(self.line_edit):
             prefix = self._prefix
             current_text = self.line_edit.text()
             completed_text = current_text[: -len(prefix)] + text
@@ -92,4 +89,3 @@ class MultipleTagsSelectorWidget(QWidget):
             tag_names = [tag_name.strip() for tag_name in tag_names]
             final_text = "; ".join(tag_names)
             self.line_edit.setText(final_text)
-            self._tags_completing = False

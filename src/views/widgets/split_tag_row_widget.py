@@ -1,7 +1,7 @@
 from collections.abc import Collection
 from decimal import Decimal
 
-from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtCore import QSignalBlocker, Qt, pyqtSignal
 from PyQt6.QtGui import QAction
 from PyQt6.QtWidgets import (
     QComboBox,
@@ -42,7 +42,6 @@ class SplitTagRowWidget(QWidget):
         self.combo_box.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
         self.combo_box.editTextChanged.connect(self._handle_text_changed)
 
-        self._completing = False
 
         self.double_spin_box = QDoubleSpinBox(self)
         self.double_spin_box.setMaximum(1e16)
@@ -106,7 +105,8 @@ class SplitTagRowWidget(QWidget):
 
     @tag_name.setter
     def tag_name(self, value: str) -> None:
-        self.combo_box.setCurrentText(value.strip())
+        with QSignalBlocker(self.combo_box):
+            self.combo_box.setCurrentText(value.strip())
 
     @property
     def amount(self) -> Decimal:
@@ -152,14 +152,12 @@ class SplitTagRowWidget(QWidget):
         self.amount = self._total * scale_factor
 
     def _handle_text_changed(self) -> None:
-        if not self._completing:
-            prefix = self.combo_box.lineEdit().text()
-            if len(prefix) > 0:
-                self._completer.update(prefix)
-                return
-            self._completer.popup().hide()
+        prefix = self.combo_box.lineEdit().text()
+        if len(prefix) > 0:
+            self._completer.update(prefix)
+            return
+        self._completer.popup().hide()
 
     def _handle_completion(self, text: str) -> None:
-        self._completing = True
-        self.combo_box.setCurrentText(text)
-        self._completing = False
+        with QSignalBlocker(self.combo_box):
+            self.combo_box.setCurrentText(text)

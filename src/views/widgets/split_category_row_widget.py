@@ -62,7 +62,8 @@ class SplitCategoryRowWidget(QWidget):
 
     @category.setter
     def category(self, value: str) -> None:
-        self.combo_box.setCurrentText(value)
+        with QSignalBlocker(self.combo_box):
+            self.combo_box.setCurrentText(value)
 
     @property
     def amount(self) -> Decimal:
@@ -118,21 +119,18 @@ class SplitCategoryRowWidget(QWidget):
         self._completer = SmartCompleter(self._categories, self)
         self._completer.setCompletionMode(QCompleter.CompletionMode.PopupCompletion)
         self._completer.activated.connect(self._handle_completion)
-        self._completer.setWidget(self.combo_box.lineEdit())
+        self._completer.setWidget(self.combo_box)
         self.combo_box.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
         self.combo_box.editTextChanged.connect(self._handle_text_changed)
-
-        self._completing = False
+        self.combo_box.setCompleter(None)
 
     def _handle_text_changed(self) -> None:
-        if not self._completing:
-            prefix = self.combo_box.lineEdit().text()
-            if len(prefix) > 0:
-                self._completer.update(prefix)
-                return
-            self._completer.popup().hide()
+        prefix = self.combo_box.lineEdit().text()
+        if len(prefix) > 0:
+            self._completer.update(prefix)
+            return
+        self._completer.popup().hide()
 
     def _handle_completion(self, text: str) -> None:
-        self._completing = True
-        self.combo_box.setCurrentText(text)
-        self._completing = False
+        with QSignalBlocker(self.combo_box):
+            self.combo_box.setCurrentText(text)

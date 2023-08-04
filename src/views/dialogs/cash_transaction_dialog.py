@@ -4,7 +4,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum, auto
 
-from PyQt6.QtCore import pyqtSignal
+from PyQt6.QtCore import QSignalBlocker, pyqtSignal
 from PyQt6.QtWidgets import (
     QAbstractButton,
     QComboBox,
@@ -111,8 +111,6 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
         self.payeeComboBox.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
         self.payeeComboBox.editTextChanged.connect(self._handle_payee_text_changed)
 
-        self._completing = False
-
         self._initialize_accounts_combobox(accounts)
         self._initialize_window()
         self._initialize_actions()
@@ -171,7 +169,8 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
 
     @payee.setter
     def payee(self, payee: str) -> None:
-        self.payeeComboBox.setCurrentText(payee)
+        with QSignalBlocker(self.payeeComboBox):
+            self.payeeComboBox.setCurrentText(payee)
 
     @property
     def datetime_(self) -> datetime | None:
@@ -753,14 +752,12 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
         self.amount_decimals = _account.currency.places
 
     def _handle_payee_text_changed(self) -> None:
-        if not self._completing:
-            prefix = self.payeeComboBox.lineEdit().text()
-            if len(prefix) > 0:
-                self._completer.update(prefix)
-                return
-            self._completer.popup().hide()
+        prefix = self.payeeComboBox.lineEdit().text()
+        if len(prefix) > 0:
+            self._completer.update(prefix)
+            return
+        self._completer.popup().hide()
 
     def _handle_payee_completion(self, text: str) -> None:
-        self._completing = True
-        self.payeeComboBox.setCurrentText(text)
-        self._completing = False
+        with QSignalBlocker(self.payeeComboBox):
+            self.payeeComboBox.setCurrentText(text)
