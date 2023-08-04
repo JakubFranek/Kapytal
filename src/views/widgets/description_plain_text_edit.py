@@ -1,24 +1,8 @@
 from collections.abc import Collection
 
-from PyQt6 import QtGui
-from PyQt6.QtCore import (
-    QEvent,
-    QObject,
-    QSignalBlocker,
-    QStringListModel,
-    Qt,
-    pyqtSignal,
-)
+from PyQt6.QtCore import QStringListModel, Qt
 from PyQt6.QtGui import QKeyEvent, QTextCursor
-from PyQt6.QtWidgets import (
-    QCompleter,
-    QLabel,
-    QPlainTextEdit,
-    QSizePolicy,
-    QSpacerItem,
-    QVBoxLayout,
-    QWidget,
-)
+from PyQt6.QtWidgets import QCompleter, QPlainTextEdit, QSizePolicy, QWidget
 
 COMPLETER_KEYS = (
     Qt.Key.Key_Enter,
@@ -40,6 +24,8 @@ class DescriptionCompleter(QCompleter):
         self.setModel(self._model)
 
     def update(self, text: str) -> None:
+        """Custom method (not a QCompleter override) for creating popup from text."""
+
         lowered_text = text.lower()
 
         if lowered_text in self._matches_cache:
@@ -101,7 +87,7 @@ class DescriptionPlainTextEdit(QPlainTextEdit):
         self.setTextCursor(cursor)
         self._completing = False
 
-    def keyPressEvent(self, e: QKeyEvent) -> None:
+    def keyPressEvent(self, e: QKeyEvent) -> None:  # noqa: N802
         if self.completer.popup().isVisible() and e.key() in COMPLETER_KEYS:
             e.ignore()  # have QCompleter handle these keys
             return None

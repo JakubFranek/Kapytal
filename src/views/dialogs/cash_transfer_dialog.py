@@ -18,6 +18,7 @@ from src.views import icons
 from src.views.base_classes.custom_dialog import CustomDialog
 from src.views.dialogs.select_item_dialog import ask_user_for_selection
 from src.views.ui_files.dialogs.Ui_cash_transfer_dialog import Ui_CashTransferDialog
+from src.views.widgets.description_plain_text_edit import DescriptionPlainTextEdit
 from src.views.widgets.multiple_tags_selector_widget import MultipleTagsSelectorWidget
 
 
@@ -53,11 +54,16 @@ class CashTransferDialog(CustomDialog, Ui_CashTransferDialog):
         parent: QWidget,
         accounts: Collection[CashAccount],
         tag_names: Collection[str],
+        descriptions: Collection[str],
         *,
         edit_mode: EditMode,
     ) -> None:
         super().__init__(parent)
         self.setupUi(self)
+
+        self.descriptionPlainTextEdit = DescriptionPlainTextEdit(descriptions)
+        self.description_label = QLabel("Description")
+        self.formLayout.addRow(self.description_label, self.descriptionPlainTextEdit)
 
         self.tags_widget = MultipleTagsSelectorWidget(self, tag_names)
         self.tags_label = QLabel("Tags", self)

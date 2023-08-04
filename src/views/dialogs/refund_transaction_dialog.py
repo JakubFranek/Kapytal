@@ -7,6 +7,7 @@ from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtWidgets import (
     QAbstractButton,
     QDialogButtonBox,
+    QLabel,
     QVBoxLayout,
     QWidget,
 )
@@ -24,6 +25,7 @@ from src.views.dialogs.select_item_dialog import ask_user_for_selection
 from src.views.ui_files.dialogs.Ui_refund_transaction_dialog import (
     Ui_RefundTransactionDialog,
 )
+from src.views.widgets.description_plain_text_edit import DescriptionPlainTextEdit
 from src.views.widgets.label_widget import LabelWidget
 from src.views.widgets.refund_row_widget import RefundRowWidget
 
@@ -37,6 +39,7 @@ class RefundTransactionDialog(CustomDialog, Ui_RefundTransactionDialog):
         refunded_transaction: CashTransaction,
         accounts: Collection[CashAccount],
         payees: Collection[str],
+        descriptions: Collection[str],
         edited_refund: RefundTransaction | None = None,
     ) -> None:
         super().__init__(parent=parent)
@@ -50,6 +53,12 @@ class RefundTransactionDialog(CustomDialog, Ui_RefundTransactionDialog):
             self.payeeComboBox.addItem(payee)
 
         self.amountDoubleSpinBox.setSuffix(" " + refunded_transaction.currency.code)
+
+        self.descriptionPlainTextEdit = DescriptionPlainTextEdit(descriptions)
+        self.description_label = QLabel("Description")
+        self.formLayout.insertRow(
+            3, self.description_label, self.descriptionPlainTextEdit
+        )
 
         self._initialize_category_rows()
         self._initialize_tag_rows()

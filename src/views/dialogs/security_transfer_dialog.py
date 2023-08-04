@@ -22,6 +22,7 @@ from src.views.base_classes.custom_dialog import CustomDialog
 from src.views.ui_files.dialogs.Ui_security_transfer_dialog import (
     Ui_SecurityTransferDialog,
 )
+from src.views.widgets.description_plain_text_edit import DescriptionPlainTextEdit
 from src.views.widgets.multiple_tags_selector_widget import MultipleTagsSelectorWidget
 
 
@@ -43,6 +44,7 @@ class SecurityTransferDialog(CustomDialog, Ui_SecurityTransferDialog):
         securities: Collection[Security],
         security_accounts: Collection[SecurityAccount],
         tag_names: Collection[str],
+        descriptions: Collection[str],
         *,
         edit_mode: EditMode,
     ) -> None:
@@ -52,6 +54,12 @@ class SecurityTransferDialog(CustomDialog, Ui_SecurityTransferDialog):
 
         self._security_accounts = security_accounts
         self._securities = securities
+
+        self.descriptionPlainTextEdit = DescriptionPlainTextEdit(descriptions)
+        self.description_label = QLabel("Description")
+        self.formLayout.insertRow(
+            5, self.description_label, self.descriptionPlainTextEdit
+        )
 
         self.tags_widget = MultipleTagsSelectorWidget(self, tag_names)
         self.tags_label = QLabel("Tags", self)
