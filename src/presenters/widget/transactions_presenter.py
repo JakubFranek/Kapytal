@@ -571,6 +571,7 @@ class TransactionsPresenter:
         self._view.set_shown_transactions(n_visible, n_total)
 
     def _reset_columns(self) -> None:
+        self._view.set_all_columns_visibility(show=True)
         self._view.set_column_visibility(TransactionTableColumn.UUID, show=False)
         self._view.set_column_visibility(
             TransactionTableColumn.DATETIME_CREATED, show=False
