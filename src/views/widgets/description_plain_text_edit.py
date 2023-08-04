@@ -35,14 +35,24 @@ class DescriptionCompleter(QCompleter):
     ) -> None:
         super().__init__(descriptions, parent)
         self._descriptions: tuple[str] = tuple(sorted(descriptions, key=str.lower))
+        self._matches_cache: dict[str, tuple[str]] = {}
         self._model = QStringListModel(descriptions)
         self.setModel(self._model)
 
     def update(self, text: str) -> None:
         lowered_text = text.lower()
+
+        if lowered_text in self._matches_cache:
+            matches = self._matches_cache[lowered_text]
+            self._model.setStringList(matches)
+            self.complete()
+            return
+
+        _descriptions = self._matches_cache.get(lowered_text[:-1], self._descriptions)
+
         matches: list[str] = []
         _not_start_with: list[str] = []
-        for description in self._descriptions:
+        for description in _descriptions:
             lowered_description = description.lower()
             if lowered_description.startswith(lowered_text):
                 matches.append(description)
@@ -50,6 +60,7 @@ class DescriptionCompleter(QCompleter):
                 _not_start_with.append(description)
 
         matches.extend(_not_start_with)
+        self._matches_cache[lowered_text] = tuple(matches)
 
         self._model.setStringList(matches)
         self.complete()
