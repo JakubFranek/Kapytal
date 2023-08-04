@@ -519,7 +519,7 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
         self.split_tags_vertical_layout = QVBoxLayout(None)
         self._tag_rows: list[SingleTagRowWidget | SplitTagRowWidget] = []
         for tag in current_tags:
-            row = SplitTagRowWidget(self, self._tag_names)
+            row = SplitTagRowWidget(self, self._tag_names, self.amount)
             row.amount_decimals = self._decimals
             row.maximum_amount = self.amount
             row.currency_code = self._currency_code
@@ -546,7 +546,7 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
         if self.split_tags_vertical_layout is None:
             raise ValueError("Vertical split Tags Layout is None.")
 
-        row = SplitTagRowWidget(self, self._tag_names)
+        row = SplitTagRowWidget(self, self._tag_names, self.amount)
         row.amount_decimals = self._decimals
         row.currency_code = self._currency_code
         row.maximum_amount = self.amount
@@ -651,6 +651,9 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
             self._set_maximum_amounts(new_amount)
         if len(self._category_rows) > 1:
             self._equalize_split_category_amounts()
+        if isinstance(self._tag_rows[0], SplitTagRowWidget):
+            for row in self._tag_rows:
+                row.set_total_amount(self.amount)
 
     def _split_category_amount_changed(self, row: SplitCategoryRowWidget) -> None:
         no_of_rows = len(self._category_rows)

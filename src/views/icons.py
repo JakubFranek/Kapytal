@@ -72,7 +72,6 @@ edit: QIcon | None = None
 remove: QIcon | None = None
 duplicate: QIcon | None = None
 transfer: QIcon | None = None
-reset_sort_order: QIcon | None = None
 hourglass: QIcon | None = None
 arrow_right: QIcon | None = None
 arrow_left: QIcon | None = None
@@ -87,6 +86,7 @@ document_clock: QIcon | None = None
 document_plus: QIcon | None = None
 book_question: QIcon | None = None
 table: QIcon | None = None
+percent: QIcon | None = None
 
 
 def setup() -> None:  # noqa: PLR0915
@@ -112,12 +112,11 @@ def setup() -> None:  # noqa: PLR0915
     global critical, warning  # noqa: PLW0603
     global add, edit, remove, duplicate  # noqa: PLW0603
     global transfer  # noqa: PLW0603
-    global reset_sort_order  # noqa: PLW0603
     global hourglass  # noqa: PLW0603
     global arrow_right, arrow_left, arrow_move, home, slider  # noqa: PLW0603
     global bar_chart, pie_chart, calendar  # noqa: PLW0603
     global document_smiley, document_clock, document_plus  # noqa: PLW0603
-    global book_question, table  # noqa: PLW0603
+    global book_question, table, percent  # noqa: PLW0603
 
     QDir.addSearchPath(
         "icons_24",
@@ -198,11 +197,6 @@ def setup() -> None:  # noqa: PLR0915
     remove = QIcon("icons_16:minus.png")
     duplicate = QIcon("icons_16:document-copy.png")
     transfer = QIcon("icons_16:arrow-curve-000-left.png")
-    reset_sort_order = (
-        QIcon("icons_custom:edit-list-order-white.png")
-        if colors.color_scheme == Qt.ColorScheme.Dark
-        else QIcon("icons_custom:edit-list-order.png")
-    )
     hourglass = QIcon("icons_16:hourglass.png")
     arrow_right = QIcon("icons_16:arrow.png")
     arrow_left = QIcon("icons_16:arrow-180.png")
@@ -217,3 +211,8 @@ def setup() -> None:  # noqa: PLR0915
     document_plus = QIcon("icons_16:document--plus.png")
     book_question = QIcon("icons_16:book-question.png")
     table = QIcon("icons_16:table.png")
+    percent = (
+        QIcon("icons_custom:percent_dark_mode.png")
+        if colors.color_scheme == Qt.ColorScheme.Dark
+        else QIcon("icons_custom:percent_light_mode.png")
+    )

@@ -3,7 +3,14 @@ from decimal import Decimal
 
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QAction
-from PyQt6.QtWidgets import QComboBox, QDoubleSpinBox, QHBoxLayout, QToolButton, QWidget
+from PyQt6.QtWidgets import (
+    QComboBox,
+    QDoubleSpinBox,
+    QHBoxLayout,
+    QMenu,
+    QToolButton,
+    QWidget,
+)
 from src.views import icons
 from src.views.dialogs.select_item_dialog import ask_user_for_selection
 
@@ -11,10 +18,13 @@ from src.views.dialogs.select_item_dialog import ask_user_for_selection
 class SplitTagRowWidget(QWidget):
     signal_remove_row = pyqtSignal(QWidget)
 
-    def __init__(self, parent: QWidget | None, tag_names: Collection[str]) -> None:
+    def __init__(
+        self, parent: QWidget | None, tag_names: Collection[str], total: Decimal
+    ) -> None:
         super().__init__(parent)
 
         self._tag_names = tuple(tag_names)
+        self._total = total
 
         self.combo_box = QComboBox(self)
         self.combo_box.setEditable(True)
@@ -39,6 +49,40 @@ class SplitTagRowWidget(QWidget):
             "Max amount assignable to a Tag is the total transaction amount."
         )
 
+        self.action25pct = QAction("25%", self)
+        self.action33pct = QAction("33%", self)
+        self.action50pct = QAction("50%", self)
+        self.action66pct = QAction("66%", self)
+        self.action75pct = QAction("75%", self)
+
+        self.action25pct.triggered.connect(lambda: self._scale_total(Decimal("0.25")))
+        self.action33pct.triggered.connect(lambda: self._scale_total(1 / Decimal(3)))
+        self.action50pct.triggered.connect(lambda: self._scale_total(Decimal("0.5")))
+        self.action66pct.triggered.connect(lambda: self._scale_total(2 / Decimal(3)))
+        self.action75pct.triggered.connect(lambda: self._scale_total(Decimal("0.75")))
+
+        self.divide_menu = QMenu(self)
+        self.divide_menu.addAction(self.action25pct)
+        self.divide_menu.addAction(self.action33pct)
+        self.divide_menu.addAction(self.action50pct)
+        self.divide_menu.addAction(self.action66pct)
+        self.divide_menu.addAction(self.action75pct)
+
+        font = self.font()
+        font_size = font.pointSize()
+        completer_font = self.divide_menu.font()
+        completer_font.setPointSize(font_size)
+        self.divide_menu.setFont(completer_font)
+
+        self.divide_amount_tool_button = QToolButton(self)
+        self.divide_amount_tool_button.setPopupMode(
+            QToolButton.ToolButtonPopupMode.InstantPopup
+        )
+        self.divide_amount_tool_button.setMenu(self.divide_menu)
+        self.actionDivide_Amount = QAction("Divide Tag Amount", self)
+        self.actionDivide_Amount.setIcon(icons.percent)
+        self.divide_amount_tool_button.setDefaultAction(self.actionDivide_Amount)
+
         self.remove_tool_button = QToolButton(self)
         self.actionRemove_Row = QAction("Remove", self)
         self.actionRemove_Row.setIcon(icons.remove)
@@ -51,11 +95,10 @@ class SplitTagRowWidget(QWidget):
         self.horizontal_layout.addWidget(self.combo_box)
         self.horizontal_layout.addWidget(self.select_tool_button)
         self.horizontal_layout.addWidget(self.double_spin_box)
+        self.horizontal_layout.addWidget(self.divide_amount_tool_button)
         self.horizontal_layout.addWidget(self.remove_tool_button)
 
         self.layout().setContentsMargins(0, 0, 0, 0)
-        self.horizontal_layout.setStretchFactor(self.combo_box, 66)
-        self.horizontal_layout.setStretchFactor(self.double_spin_box, 34)
 
         self.setFocusPolicy(Qt.FocusPolicy.TabFocus)
         self.setFocusProxy(self.combo_box)
@@ -105,6 +148,9 @@ class SplitTagRowWidget(QWidget):
     def __repr__(self) -> str:
         return f"SplitTagRowWidget('{self.tag_name}')"
 
+    def set_total_amount(self, total: Decimal) -> None:
+        self._total = total
+
     def _select_item(self) -> None:
         item = ask_user_for_selection(
             self,
@@ -114,3 +160,6 @@ class SplitTagRowWidget(QWidget):
         )
         if item:
             self.combo_box.setCurrentText(item)
+
+    def _scale_total(self, scale_factor: Decimal) -> None:
+        self.amount = self._total * scale_factor
