@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>250</width>
-    <height>176</height>
+    <width>218</width>
+    <height>174</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -26,14 +26,8 @@
    <locale language="English" country="UnitedKingdom"/>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
-   <property name="sizeConstraint">
-    <enum>QLayout::SetDefaultConstraint</enum>
-   </property>
    <item>
     <layout class="QFormLayout" name="formLayout">
-     <property name="fieldGrowthPolicy">
-      <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
-     </property>
      <item row="0" column="0">
       <widget class="QLabel" name="typeLabel">
        <property name="text">
@@ -114,25 +108,14 @@
       </widget>
      </item>
      <item row="2" column="1">
-      <layout class="QHBoxLayout" name="payeeHorizontalLayout" stretch="1,0">
-       <item>
-        <widget class="QComboBox" name="payeeComboBox">
-         <property name="editable">
-          <bool>true</bool>
-         </property>
-         <property name="insertPolicy">
-          <enum>QComboBox::NoInsert</enum>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QToolButton" name="payeeToolButton">
-         <property name="text">
-          <string>...</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
+      <widget class="QComboBox" name="payeeComboBox">
+       <property name="editable">
+        <bool>true</bool>
+       </property>
+       <property name="insertPolicy">
+        <enum>QComboBox::NoInsert</enum>
+       </property>
+      </widget>
      </item>
      <item row="3" column="0">
       <widget class="QLabel" name="dateLabel">
@@ -203,7 +186,6 @@
   <tabstop>accountsComboBox</tabstop>
   <tabstop>accountsToolButton</tabstop>
   <tabstop>payeeComboBox</tabstop>
-  <tabstop>payeeToolButton</tabstop>
   <tabstop>dateEdit</tabstop>
   <tabstop>amountDoubleSpinBox</tabstop>
  </tabstops>

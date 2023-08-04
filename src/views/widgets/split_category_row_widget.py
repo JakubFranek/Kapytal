@@ -3,9 +3,16 @@ from decimal import Decimal
 
 from PyQt6.QtCore import QSignalBlocker, Qt, pyqtSignal
 from PyQt6.QtGui import QAction
-from PyQt6.QtWidgets import QComboBox, QDoubleSpinBox, QHBoxLayout, QToolButton, QWidget
+from PyQt6.QtWidgets import (
+    QComboBox,
+    QCompleter,
+    QDoubleSpinBox,
+    QHBoxLayout,
+    QToolButton,
+    QWidget,
+)
 from src.views import icons
-from src.views.dialogs.select_item_dialog import ask_user_for_selection
+from src.views.widgets.smart_completer import SmartCompleter
 
 
 class SplitCategoryRowWidget(QWidget):
@@ -19,12 +26,6 @@ class SplitCategoryRowWidget(QWidget):
         self.combo_box.setEditable(True)
         self.combo_box.lineEdit().setPlaceholderText("Enter Category path")
         self.combo_box.setToolTip("Both existing or new Category paths are valid")
-
-        self.select_tool_button = QToolButton(self)
-        self.actionSelect_Item = QAction("Select Category", self)
-        self.actionSelect_Item.setIcon(icons.category)
-        self.actionSelect_Item.triggered.connect(self._select_item)
-        self.select_tool_button.setDefaultAction(self.actionSelect_Item)
 
         self.double_spin_box = QDoubleSpinBox(self)
         self.double_spin_box.setMaximum(1e16)
@@ -45,7 +46,6 @@ class SplitCategoryRowWidget(QWidget):
 
         self.horizontal_layout = QHBoxLayout(self)
         self.horizontal_layout.addWidget(self.combo_box)
-        self.horizontal_layout.addWidget(self.select_tool_button)
         self.horizontal_layout.addWidget(self.double_spin_box)
         self.horizontal_layout.addWidget(self.remove_tool_button)
 
@@ -102,23 +102,37 @@ class SplitCategoryRowWidget(QWidget):
     def __repr__(self) -> str:
         return f"SplitCategoryRowWidget('{self.category}')"
 
-    def load_categories(self, categories: Collection[str], *, keep_text: bool) -> None:
+    def load_categories(
+        self, categories: Collection[str], *, keep_current_text: bool
+    ) -> None:
         current_text = self.category
-        self._categories = categories
+        self._categories = sorted(categories, key=str.lower)
         self.combo_box.clear()
-        for item in categories:
+        for item in self._categories:
             self.combo_box.addItem(item)
-        if keep_text:
+        if keep_current_text:
             self.combo_box.setCurrentText(current_text)
         else:
             self.combo_box.setCurrentIndex(-1)
 
-    def _select_item(self) -> None:
-        item = ask_user_for_selection(
-            self,
-            self._categories,
-            "Select Category",
-            icons.category,
-        )
-        if item:
-            self.combo_box.setCurrentText(item)
+        self._completer = SmartCompleter(self._categories, self)
+        self._completer.setCompletionMode(QCompleter.CompletionMode.PopupCompletion)
+        self._completer.activated.connect(self._handle_completion)
+        self._completer.setWidget(self.combo_box.lineEdit())
+        self.combo_box.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
+        self.combo_box.editTextChanged.connect(self._handle_text_changed)
+
+        self._completing = False
+
+    def _handle_text_changed(self) -> None:
+        if not self._completing:
+            prefix = self.combo_box.lineEdit().text()
+            if len(prefix) > 0:
+                self._completer.update(prefix)
+                return
+            self._completer.popup().hide()
+
+    def _handle_completion(self, text: str) -> None:
+        self._completing = True
+        self.combo_box.setCurrentText(text)
+        self._completing = False

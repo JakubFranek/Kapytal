@@ -5,6 +5,7 @@ from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QAction
 from PyQt6.QtWidgets import (
     QComboBox,
+    QCompleter,
     QDoubleSpinBox,
     QHBoxLayout,
     QMenu,
@@ -12,7 +13,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 from src.views import icons
-from src.views.dialogs.select_item_dialog import ask_user_for_selection
+from src.views.widgets.smart_completer import SmartCompleter
 
 
 class SplitTagRowWidget(QWidget):
@@ -23,7 +24,7 @@ class SplitTagRowWidget(QWidget):
     ) -> None:
         super().__init__(parent)
 
-        self._tag_names = tuple(tag_names)
+        self._tag_names = tuple(sorted(tag_names, key=str.lower))
         self._total = total
 
         self.combo_box = QComboBox(self)
@@ -34,11 +35,14 @@ class SplitTagRowWidget(QWidget):
         self.combo_box.setCurrentIndex(-1)
         self.combo_box.setToolTip("Both existing or new Tag names are valid")
 
-        self.select_tool_button = QToolButton(self)
-        self.actionSelect_Item = QAction("Select Tag", self)
-        self.actionSelect_Item.setIcon(icons.tag)
-        self.actionSelect_Item.triggered.connect(self._select_item)
-        self.select_tool_button.setDefaultAction(self.actionSelect_Item)
+        self._completer = SmartCompleter(self._tag_names, self)
+        self._completer.setCompletionMode(QCompleter.CompletionMode.PopupCompletion)
+        self._completer.activated.connect(self._handle_completion)
+        self._completer.setWidget(self.combo_box.lineEdit())
+        self.combo_box.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
+        self.combo_box.editTextChanged.connect(self._handle_text_changed)
+
+        self._completing = False
 
         self.double_spin_box = QDoubleSpinBox(self)
         self.double_spin_box.setMaximum(1e16)
@@ -87,7 +91,6 @@ class SplitTagRowWidget(QWidget):
 
         self.horizontal_layout = QHBoxLayout(self)
         self.horizontal_layout.addWidget(self.combo_box)
-        self.horizontal_layout.addWidget(self.select_tool_button)
         self.horizontal_layout.addWidget(self.double_spin_box)
         self.horizontal_layout.addWidget(self.divide_amount_tool_button)
         self.horizontal_layout.addWidget(self.remove_tool_button)
@@ -145,15 +148,18 @@ class SplitTagRowWidget(QWidget):
     def set_total_amount(self, total: Decimal) -> None:
         self._total = total
 
-    def _select_item(self) -> None:
-        item = ask_user_for_selection(
-            self,
-            self._tag_names,
-            "Select Tag",
-            icons.tag,
-        )
-        if item:
-            self.combo_box.setCurrentText(item)
-
     def _scale_total(self, scale_factor: Decimal) -> None:
         self.amount = self._total * scale_factor
+
+    def _handle_text_changed(self) -> None:
+        if not self._completing:
+            prefix = self.combo_box.lineEdit().text()
+            if len(prefix) > 0:
+                self._completer.update(prefix)
+                return
+            self._completer.popup().hide()
+
+    def _handle_completion(self, text: str) -> None:
+        self._completing = True
+        self.combo_box.setCurrentText(text)
+        self._completing = False

@@ -5,6 +5,9 @@ from PyQt6.QtGui import QAction
 from PyQt6.QtWidgets import QCompleter, QHBoxLayout, QLineEdit, QToolButton, QWidget
 from src.views import icons
 from src.views.dialogs.select_item_dialog import ask_user_for_selection
+from src.views.widgets.smart_completer import SmartCompleter
+
+# TODO: improve completer (custom)
 
 
 class MultipleTagsSelectorWidget(QWidget):
@@ -13,7 +16,7 @@ class MultipleTagsSelectorWidget(QWidget):
     def __init__(self, parent: QWidget | None, tag_names: Collection[str]) -> None:
         super().__init__(parent)
 
-        self._tag_names = tuple(tag_names)
+        self._tag_names = tuple(sorted(tag_names, key=str.lower))
 
         self.line_edit = QLineEdit(self)
         self.line_edit.setPlaceholderText("Enter optional Tags (separated by ';')")
@@ -62,7 +65,7 @@ class MultipleTagsSelectorWidget(QWidget):
             self.tag_names = [tag]
 
     def _initialize_tags_completer(self) -> None:
-        self._tags_completer = QCompleter(self._tag_names)
+        self._tags_completer = SmartCompleter(self._tag_names, self)
         self._tags_completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
         self._tags_completer.setFilterMode(Qt.MatchFlag.MatchContains)
         self._tags_completer.setWidget(self.line_edit)
@@ -72,21 +75,17 @@ class MultipleTagsSelectorWidget(QWidget):
 
     def _handle_tags_text_changed(self, text: str) -> None:
         if not self._tags_completing:
-            found = False
             prefix = text.rpartition(";")[-1].strip()
             if len(prefix) > 0:
-                self._tags_completer.setCompletionPrefix(prefix)
-                if self._tags_completer.currentRow() >= 0:
-                    found = True
-            if found:
-                self._tags_completer.complete()
+                self._prefix = prefix
+                self._tags_completer.update(prefix)
             else:
                 self._tags_completer.popup().hide()
 
     def _handle_tags_completion(self, text: str) -> None:
         if not self._tags_completing:
             self._tags_completing = True
-            prefix = self._tags_completer.completionPrefix()
+            prefix = self._prefix
             current_text = self.line_edit.text()
             completed_text = current_text[: -len(prefix)] + text
             tag_names = completed_text.split(";")

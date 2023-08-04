@@ -7,6 +7,8 @@ from enum import Enum, auto
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtWidgets import (
     QAbstractButton,
+    QComboBox,
+    QCompleter,
     QDialogButtonBox,
     QLabel,
     QVBoxLayout,
@@ -25,6 +27,7 @@ from src.views.widgets.description_plain_text_edit import DescriptionPlainTextEd
 from src.views.widgets.label_widget import LabelWidget
 from src.views.widgets.single_category_row_widget import SingleCategoryRowWidget
 from src.views.widgets.single_tag_row_widget import SingleTagRowWidget
+from src.views.widgets.smart_completer import SmartCompleter
 from src.views.widgets.split_category_row_widget import SplitCategoryRowWidget
 from src.views.widgets.split_tag_row_widget import SplitTagRowWidget
 
@@ -97,9 +100,18 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
             self.dateEdit.setMinimumDate(date(1900, 1, 1))
             self.amountDoubleSpinBox.setSpecialValueText(self.KEEP_CURRENT_VALUES)
 
-        self._payees = payees
+        self._payees = sorted(payees, key=str.lower)
         for payee in payees:
             self.payeeComboBox.addItem(payee)
+
+        self._completer = SmartCompleter(self._payees, self)
+        self._completer.setCompletionMode(QCompleter.CompletionMode.PopupCompletion)
+        self._completer.activated.connect(self._handle_payee_completion)
+        self._completer.setWidget(self.payeeComboBox.lineEdit())
+        self.payeeComboBox.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
+        self.payeeComboBox.editTextChanged.connect(self._handle_payee_text_changed)
+
+        self._completing = False
 
         self._initialize_accounts_combobox(accounts)
         self._initialize_window()
@@ -347,10 +359,6 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
         self.buttonBox.addButton("Close", QDialogButtonBox.ButtonRole.RejectRole)
 
     def _initialize_actions(self) -> None:
-        self.actionSelect_Payee.setIcon(icons.payee)
-        self.actionSelect_Payee.triggered.connect(self._get_payee)
-        self.payeeToolButton.setDefaultAction(self.actionSelect_Payee)
-
         self.actionSelect_Account.setIcon(icons.cash_account)
         self.actionSelect_Account.triggered.connect(self._get_account)
         self.accountsToolButton.setDefaultAction(self.actionSelect_Account)
@@ -386,9 +394,13 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
     def _setup_categories_combobox(self, *, keep_text: bool) -> None:
         for row in self._category_rows:
             if self.type_ == CashTransactionType.INCOME:
-                row.load_categories(self._categories_income, keep_text=keep_text)
+                row.load_categories(
+                    self._categories_income, keep_current_text=keep_text
+                )
             else:
-                row.load_categories(self._categories_expense, keep_text=keep_text)
+                row.load_categories(
+                    self._categories_expense, keep_current_text=keep_text
+                )
 
     def _initialize_single_category_row(self) -> None:
         if hasattr(self, "_category_rows") and len(self._category_rows) == 1:
@@ -582,15 +594,6 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
         self.split_tags_vertical_layout = None
         self._tag_rows: list[SingleTagRowWidget | SplitTagRowWidget] = []
 
-    def _get_payee(self) -> None:
-        payee = ask_user_for_selection(
-            self,
-            self._payees,
-            "Select Payee",
-            icons.payee,
-        )
-        self.payee = payee if payee else self.payee
-
     def _get_account(self) -> None:
         account_paths = [account.path for account in self._accounts]
         account = ask_user_for_selection(
@@ -688,8 +691,7 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
         self.setTabOrder(self.expenseRadioButton, self.accountsComboBox)
         self.setTabOrder(self.accountsComboBox, self.accountsToolButton)
         self.setTabOrder(self.accountsToolButton, self.payeeComboBox)
-        self.setTabOrder(self.payeeComboBox, self.payeeToolButton)
-        self.setTabOrder(self.payeeToolButton, self.dateEdit)
+        self.setTabOrder(self.payeeComboBox, self.dateEdit)
         self.setTabOrder(self.dateEdit, self.descriptionPlainTextEdit)
         self.setTabOrder(self.descriptionPlainTextEdit, self.amountDoubleSpinBox)
 
@@ -749,3 +751,16 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
             raise ValueError(f"Invalid Account path: {account_path}")
         self.currency_code = _account.currency.code
         self.amount_decimals = _account.currency.places
+
+    def _handle_payee_text_changed(self) -> None:
+        if not self._completing:
+            prefix = self.payeeComboBox.lineEdit().text()
+            if len(prefix) > 0:
+                self._completer.update(prefix)
+                return
+            self._completer.popup().hide()
+
+    def _handle_payee_completion(self, text: str) -> None:
+        self._completing = True
+        self.payeeComboBox.setCurrentText(text)
+        self._completing = False
