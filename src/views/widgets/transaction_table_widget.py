@@ -199,8 +199,7 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
             )
             self.column_actions.append(action)
 
-    def _create_header_context_menu(self, event: QContextMenuEvent) -> None:
-        del event
+    def _create_header_context_menu(self, _: QContextMenuEvent) -> None:
         self.header_menu = QMenu(self)
         self.header_menu.addAction(self.actionShow_All_Columns)
         self.header_menu.addAction(self.actionHide_All_Columns)
@@ -216,8 +215,7 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
             self.header_menu.addAction(action)
         self.header_menu.popup(QCursor.pos())
 
-    def _create_table_context_menu(self, event: QContextMenuEvent) -> None:
-        del event
+    def _create_table_context_menu(self, _: QContextMenuEvent) -> None:
         self.table_menu = QMenu(self)
         self.table_menu.setToolTipsVisible(True)
         self.table_menu.addAction(self.actionEdit)

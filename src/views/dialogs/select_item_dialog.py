@@ -24,12 +24,6 @@ class SelectItemDialog(CustomDialog, Ui_SelectItemDialog):
         self.setWindowTitle(title)
         self.setWindowIcon(icon)
 
-        font = self.font()
-        font_size = font.pointSize()
-        list_font = self.listView.font()
-        list_font.setPointSize(font_size)
-        self.listView.setFont(list_font)
-
         self._proxy = QSortFilterProxyModel(self)
         self._model = SimpleListModel(self.listView, self._proxy)
         self._model.load_items(items)

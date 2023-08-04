@@ -68,12 +68,6 @@ class SplitTagRowWidget(QWidget):
         self.divide_menu.addAction(self.action66pct)
         self.divide_menu.addAction(self.action75pct)
 
-        font = self.font()
-        font_size = font.pointSize()
-        completer_font = self.divide_menu.font()
-        completer_font.setPointSize(font_size)
-        self.divide_menu.setFont(completer_font)
-
         self.divide_amount_tool_button = QToolButton(self)
         self.divide_amount_tool_button.setPopupMode(
             QToolButton.ToolButtonPopupMode.InstantPopup

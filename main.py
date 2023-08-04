@@ -50,9 +50,7 @@ def main() -> None:
     app.setApplicationVersion(constants.VERSION)
 
     logging.debug("Setting QApplication font size to 10 pts")
-    font = app.font()
-    font.setPointSize(10)
-    app.setFont(font)
+    app.setStyleSheet("QWidget{font-size: 10pt;}")
 
     color_scheme = app.styleHints().colorScheme()
     colors.color_scheme = color_scheme
