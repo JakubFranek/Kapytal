@@ -274,5 +274,6 @@ class CashTransferDialogPresenter:
             self._parent_view,
             self._record_keeper.cash_accounts,
             tag_names,
+            self._record_keeper.descriptions,
             edit_mode=edit_mode,
         )

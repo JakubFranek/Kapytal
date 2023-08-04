@@ -226,5 +226,10 @@ class RefundTransactionDialogPresenter:
 
         payees = sorted(payee.name for payee in self._record_keeper.payees)
         self._dialog = RefundTransactionDialog(
-            self._parent_view, refunded_transaction, accounts, payees, edited_refund
+            self._parent_view,
+            refunded_transaction,
+            accounts,
+            payees,
+            self._record_keeper.descriptions,
+            edited_refund,
         )

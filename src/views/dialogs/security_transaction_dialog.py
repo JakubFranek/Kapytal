@@ -26,6 +26,7 @@ from src.views.dialogs.select_item_dialog import ask_user_for_selection
 from src.views.ui_files.dialogs.Ui_security_transaction_dialog import (
     Ui_SecurityTransactionDialog,
 )
+from src.views.widgets.description_plain_text_edit import DescriptionPlainTextEdit
 from src.views.widgets.multiple_tags_selector_widget import MultipleTagsSelectorWidget
 
 
@@ -56,6 +57,7 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
         cash_accounts: Collection[CashAccount],
         security_accounts: Collection[SecurityAccount],
         tag_names: Collection[str],
+        descriptions: Collection[str],
         *,
         edit_mode: EditMode,
     ) -> None:
@@ -66,6 +68,12 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
         self._cash_accounts = cash_accounts
         self._security_accounts = security_accounts
         self._securities = securities
+
+        self.descriptionPlainTextEdit = DescriptionPlainTextEdit(descriptions)
+        self.description_label = QLabel("Description")
+        self.formLayout.insertRow(
+            5, self.description_label, self.descriptionPlainTextEdit
+        )
 
         self.tags_widget = MultipleTagsSelectorWidget(self, tag_names)
         self.tags_label = QLabel("Tags", self)

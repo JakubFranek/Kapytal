@@ -333,5 +333,6 @@ class SecurityTransactionDialogPresenter:
             self._record_keeper.cash_accounts,
             self._record_keeper.security_accounts,
             tag_names,
+            self._record_keeper.descriptions,
             edit_mode=edit_mode,
         )

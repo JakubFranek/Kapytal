@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>250</width>
-    <height>242</height>
+    <height>176</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -152,78 +152,13 @@
       </widget>
      </item>
      <item row="4" column="0">
-      <layout class="QVBoxLayout" name="descriptionLabelVerticalLayout">
-       <item>
-        <spacer name="descriptionLabelTopVerticalSpacer">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
-         </property>
-         <property name="sizeType">
-          <enum>QSizePolicy::Fixed</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>5</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-       <item>
-        <widget class="QLabel" name="descriptionLabel">
-         <property name="text">
-          <string>Description</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <spacer name="descriptionLabelBottomVerticalSpacer">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
-         </property>
-         <property name="sizeType">
-          <enum>QSizePolicy::MinimumExpanding</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>25</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-      </layout>
-     </item>
-     <item row="4" column="1">
-      <widget class="QPlainTextEdit" name="descriptionPlainTextEdit">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="minimumSize">
-        <size>
-         <width>0</width>
-         <height>30</height>
-        </size>
-       </property>
-       <property name="tabChangesFocus">
-        <bool>true</bool>
-       </property>
-       <property name="placeholderText">
-        <string>Enter optional description</string>
-       </property>
-      </widget>
-     </item>
-     <item row="5" column="0">
       <widget class="QLabel" name="amountLabel">
        <property name="text">
         <string>Amount</string>
        </property>
       </widget>
      </item>
-     <item row="5" column="1">
+     <item row="4" column="1">
       <widget class="QDoubleSpinBox" name="amountDoubleSpinBox">
        <property name="alignment">
         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -270,7 +205,6 @@
   <tabstop>payeeComboBox</tabstop>
   <tabstop>payeeToolButton</tabstop>
   <tabstop>dateEdit</tabstop>
-  <tabstop>descriptionPlainTextEdit</tabstop>
   <tabstop>amountDoubleSpinBox</tabstop>
  </tabstops>
  <resources/>

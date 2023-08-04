@@ -1,4 +1,5 @@
 import logging
+from collections import defaultdict
 from collections.abc import Callable, Collection
 from datetime import datetime
 from decimal import Decimal
@@ -65,6 +66,7 @@ class RecordKeeper:
         "_security_transactions",
         "_security_transfers",
         "_transactions_uuid_dict",
+        "_descriptions",
         "_base_currency",
     )
 
@@ -90,6 +92,7 @@ class RecordKeeper:
         self._security_transactions: list[SecurityTransaction] = []
         self._security_transfers: list[SecurityTransfer] = []
         self._transactions_uuid_dict: dict[UUID, Transaction] = {}
+        self._descriptions: defaultdict[str, int] = defaultdict(int)
         self._base_currency: Currency | None = None
 
     @property
@@ -198,6 +201,10 @@ class RecordKeeper:
     @property
     def security_transfers(self) -> tuple[SecurityTransfer, ...]:
         return tuple(self._security_transfers)
+
+    @property
+    def descriptions(self) -> tuple[str, ...]:
+        return tuple(self._descriptions)
 
     def __repr__(self) -> str:
         return "RecordKeeper"
@@ -369,6 +376,7 @@ class RecordKeeper:
         self._transactions.append(transaction)
         self._cash_transactions.append(transaction)
         self._transactions_uuid_dict[transaction.uuid] = transaction
+        self._add_description(transaction.description)
 
     def add_cash_transfer(  # noqa: PLR0913
         self,
@@ -399,6 +407,7 @@ class RecordKeeper:
             self.get_attribute(tag_name, AttributeType.TAG) for tag_name in tag_names
         ]
         transfer.add_tags(tags)
+        self._add_description(transfer.description)
 
     def add_refund(  # noqa: PLR0913
         self,
@@ -444,6 +453,7 @@ class RecordKeeper:
         self._transactions.append(refund)
         self._refund_transactions.append(refund)
         self._transactions_uuid_dict[refund.uuid] = refund
+        self._add_description(refund.description)
 
     def add_security_transaction(  # noqa: PLR0913
         self,
@@ -479,6 +489,7 @@ class RecordKeeper:
             self.get_attribute(tag_name, AttributeType.TAG) for tag_name in tag_names
         ]
         transaction.add_tags(tags)
+        self._add_description(transaction.description)
 
     def add_security_transfer(  # noqa: PLR0913
         self,
@@ -509,6 +520,7 @@ class RecordKeeper:
             self.get_attribute(tag_name, AttributeType.TAG) for tag_name in tag_names
         ]
         transaction.add_tags(tags)
+        self._add_description(transaction.description)
 
     def edit_cash_transactions(  # noqa: PLR0913
         self,
@@ -605,6 +617,7 @@ class RecordKeeper:
             )
 
         for transaction in transactions:
+            self._remove_description(transaction.description)
             transaction.set_attributes(
                 description=description,
                 datetime_=datetime_,
@@ -614,6 +627,7 @@ class RecordKeeper:
                 tag_amount_pairs=tag_amount_pairs,
                 payee=payee,
             )
+            self._add_description(transaction.description)
 
     def edit_cash_transfers(  # noqa: PLR0913
         self,
@@ -677,6 +691,7 @@ class RecordKeeper:
             )
 
         for transfer in transfers:
+            self._remove_description(transfer.description)
             transfer.set_attributes(
                 description=description,
                 datetime_=datetime_,
@@ -685,6 +700,7 @@ class RecordKeeper:
                 sender=sender,
                 recipient=recipient,
             )
+            self._add_description(transfer.description)
 
         if tag_names is not None:
             tags = [
@@ -750,6 +766,7 @@ class RecordKeeper:
             )
 
         for refund in refunds:
+            self._remove_description(refund.description)
             refund.set_attributes(
                 description=description,
                 datetime_=datetime_,
@@ -758,6 +775,7 @@ class RecordKeeper:
                 tag_amount_pairs=tag_amount_pairs,
                 payee=payee,
             )
+            self._add_description(refund.description)
 
     def edit_security_transactions(  # noqa: PLR0913
         self,
@@ -837,6 +855,7 @@ class RecordKeeper:
             )
 
         for transaction in transactions:
+            self._remove_description(transaction.description)
             transaction.set_attributes(
                 description=description,
                 datetime_=datetime_,
@@ -847,6 +866,7 @@ class RecordKeeper:
                 cash_account=cash_account,
                 security_account=security_account,
             )
+            self._add_description(transaction.description)
 
         if tag_names is not None:
             tags = [
@@ -896,6 +916,7 @@ class RecordKeeper:
             )
 
         for transaction in transactions:
+            self._remove_description(transaction.description)
             transaction.set_attributes(
                 description=description,
                 datetime_=datetime_,
@@ -904,6 +925,7 @@ class RecordKeeper:
                 shares=shares,
                 security=security,
             )
+            self._add_description(transaction.description)
 
         if tag_names is not None:
             tags = [
@@ -1110,6 +1132,7 @@ class RecordKeeper:
 
             # delete transaction from dictionary
             del self._transactions_uuid_dict[transaction.uuid]
+            self._remove_description(transaction.description)
 
     def remove_security(self, uuid: str) -> None:
         security = self.get_security_by_uuid(uuid)
@@ -1351,73 +1374,60 @@ class RecordKeeper:
         attributes.append(attribute)
         return attribute
 
-    def serialize(  # noqa: C901, PLR0912
+    def serialize(
         self,
         progress_callable: Callable[[int], None],
     ) -> dict[str, Any]:
-        serialized_currencies = []
-        for currency in self._currencies:
-            serialized_currencies.append(currency.serialize())
+        serialized_currencies = [currency.serialize() for currency in self._currencies]
         base_currency_code = (
             self._base_currency.code if self._base_currency is not None else None
         )
 
-        serialized_exchange_rates = []
-        for exchange_rate in self._exchange_rates:
-            serialized_exchange_rates.append(exchange_rate.serialize())
+        serialized_exchange_rates = [
+            exchange_rate.serialize() for exchange_rate in self._exchange_rates
+        ]
 
-        serialized_securities = []
-        for security in self._securities:
-            serialized_securities.append(security.serialize())
+        serialized_securities = [security.serialize() for security in self._securities]
 
         sorted_account_groups = sorted(self._account_groups, key=lambda x: x.path)
-        serialized_account_groups = []
-        for account_group in sorted_account_groups:
-            serialized_account_groups.append(account_group.serialize())
+        serialized_account_groups = [
+            account_group.serialize() for account_group in sorted_account_groups
+        ]
 
         sorted_categories = sorted(self._categories, key=lambda x: x.path)
-        serialized_categories = []
-        for category in sorted_categories:
-            serialized_categories.append(category.serialize())
+        serialized_categories = [category.serialize() for category in sorted_categories]
 
         sorted_accounts = sorted(self._accounts, key=lambda x: x.path)
-        serialized_accounts = []
-        for account in sorted_accounts:
-            serialized_accounts.append(account.serialize())
+        serialized_accounts = [account.serialize() for account in sorted_accounts]
 
         sorted_tags = sorted(self._tags, key=lambda x: x.name)
-        serialized_tags = []
-        for tag in sorted_tags:
-            serialized_tags.append(tag.name)
+        serialized_tags = [tag.name for tag in sorted_tags]
 
         sorted_payees = sorted(self._payees, key=lambda x: x.name)
-        serialized_payees = []
-        for payee in sorted_payees:
-            serialized_payees.append(payee.name)
+        serialized_payees = [payee.name for payee in sorted_payees]
 
-        root_item_references = []
-        for item in self._root_account_items:
-            root_item_references.append(
-                {"datatype": item.__class__.__name__, "path": item.path}
-            )
+        root_item_references = [
+            {"datatype": item.__class__.__name__, "path": item.path}
+            for item in self._root_account_items
+        ]
 
-        root_income_category_refs = []
-        for category in self._root_income_categories:
-            root_income_category_refs.append(category.path)
-        root_expense_category_refs = []
-        for category in self._root_expense_categories:
-            root_expense_category_refs.append(category.path)
-        root_income_and_expense_category_refs = []
-        for category in self._root_income_and_expense_categories:
-            root_income_and_expense_category_refs.append(category.path)
+        root_income_category_refs = [
+            category.path for category in self._root_income_categories
+        ]
+        root_expense_category_refs = [
+            category.path for category in self._root_expense_categories
+        ]
+        root_income_and_expense_category_refs = [
+            category.path for category in self._root_income_and_expense_categories
+        ]
 
         # Sorting transactions here speeds up sorting during deserialization
         sorted_transactions = sorted(self._transactions, key=lambda x: x.timestamp)
         serialized_transactions = []
         no_of_transactions = len(sorted_transactions)
         step = no_of_transactions // 100
-        if step == 0:
-            step = 1
+        step = 1 if step == 0 else step
+
         done = 0
         for transaction in sorted_transactions:
             serialized_transaction = transaction.serialize()
@@ -1580,6 +1590,7 @@ class RecordKeeper:
             key=lambda x: x.timestamp,
             reverse=True,
         )
+        obj._update_descriptions()  # noqa: SLF001
 
         return obj
 
@@ -1900,3 +1911,17 @@ class RecordKeeper:
             self._root_expense_categories.append(category)
         else:
             self._root_income_and_expense_categories.append(category)
+
+    def _add_description(self, description: str) -> None:
+        self._descriptions[description] += 1
+
+    def _remove_description(self, description: str) -> None:
+        self._descriptions[description] -= 1
+        if self._descriptions[description] == 0:
+            del self._descriptions[description]
+
+    def _update_descriptions(self) -> None:
+        self._descriptions = defaultdict(int)
+        for transaction in self._transactions:
+            if transaction.description:
+                self._descriptions[transaction.description] += 1
