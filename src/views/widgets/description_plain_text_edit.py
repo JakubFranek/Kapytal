@@ -1,8 +1,9 @@
 from collections.abc import Collection
 
-from PyQt6.QtCore import QStringListModel, Qt
+from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QKeyEvent, QTextCursor
-from PyQt6.QtWidgets import QCompleter, QPlainTextEdit, QSizePolicy, QWidget
+from PyQt6.QtWidgets import QPlainTextEdit, QSizePolicy, QWidget
+from src.views.widgets.smart_completer import SmartCompleter
 
 COMPLETER_KEYS = (
     Qt.Key.Key_Enter,
@@ -11,45 +12,6 @@ COMPLETER_KEYS = (
     Qt.Key.Key_Tab,
     Qt.Key.Key_Backtab,
 )
-
-
-class DescriptionCompleter(QCompleter):
-    def __init__(
-        self, descriptions: Collection[str], parent: QWidget | None = None
-    ) -> None:
-        super().__init__(descriptions, parent)
-        self._descriptions: tuple[str] = tuple(sorted(descriptions, key=str.lower))
-        self._matches_cache: dict[str, tuple[str]] = {}
-        self._model = QStringListModel(descriptions)
-        self.setModel(self._model)
-
-    def update(self, text: str) -> None:
-        """Custom method (not a QCompleter override) for creating popup from text."""
-
-        lowered_text = text.lower()
-
-        if lowered_text in self._matches_cache:
-            matches = self._matches_cache[lowered_text]
-            self._model.setStringList(matches)
-            self.complete()
-            return
-
-        _descriptions = self._matches_cache.get(lowered_text[:-1], self._descriptions)
-
-        matches: list[str] = []
-        _not_start_with: list[str] = []
-        for description in _descriptions:
-            lowered_description = description.lower()
-            if lowered_description.startswith(lowered_text):
-                matches.append(description)
-            elif lowered_text in lowered_description:
-                _not_start_with.append(description)
-
-        matches.extend(_not_start_with)
-        self._matches_cache[lowered_text] = tuple(matches)
-
-        self._model.setStringList(matches)
-        self.complete()
 
 
 class DescriptionPlainTextEdit(QPlainTextEdit):
@@ -64,7 +26,7 @@ class DescriptionPlainTextEdit(QPlainTextEdit):
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.setMinimumHeight(50)
 
-        self.completer = DescriptionCompleter(descriptions)
+        self.completer = SmartCompleter(descriptions)
         self.completer.setWidget(self)
         self.completer.activated.connect(self._handle_completion)
         self.textChanged.connect(self._handle_text_changed)
