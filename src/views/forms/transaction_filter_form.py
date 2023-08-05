@@ -48,6 +48,7 @@ class AccountFilterMode(Enum):
 class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
     signal_ok = pyqtSignal()
     signal_restore_defaults = pyqtSignal()
+    signal_close = pyqtSignal()
 
     signal_accounts_search_text_changed = pyqtSignal(str)
     signal_tags_search_text_changed = pyqtSignal(str)
@@ -607,7 +608,7 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
         elif role == QDialogButtonBox.ButtonRole.ResetRole:
             self.signal_restore_defaults.emit()
         elif role == QDialogButtonBox.ButtonRole.RejectRole:
-            self.close()
+            self.signal_close.emit()
         elif role == QDialogButtonBox.ButtonRole.HelpRole:
             self.signal_help.emit()
         else:

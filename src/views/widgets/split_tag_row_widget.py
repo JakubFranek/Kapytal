@@ -42,7 +42,6 @@ class SplitTagRowWidget(QWidget):
         self.combo_box.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
         self.combo_box.editTextChanged.connect(self._handle_text_changed)
 
-
         self.double_spin_box = QDoubleSpinBox(self)
         self.double_spin_box.setMaximum(1e16)
         self.double_spin_box.setGroupSeparatorShown(True)
@@ -76,7 +75,7 @@ class SplitTagRowWidget(QWidget):
             QToolButton.ToolButtonPopupMode.InstantPopup
         )
         self.divide_amount_tool_button.setMenu(self.divide_menu)
-        self.actionDivide_Amount = QAction("Divide Tag Amount", self)
+        self.actionDivide_Amount = QAction("Scale Tag Amount", self)
         self.actionDivide_Amount.setIcon(icons.percent)
         self.divide_amount_tool_button.setDefaultAction(self.actionDivide_Amount)
 

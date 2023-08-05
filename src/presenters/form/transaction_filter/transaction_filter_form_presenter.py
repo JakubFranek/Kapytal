@@ -146,9 +146,12 @@ class TransactionFilterFormPresenter:
         self._transaction_filter = self._get_default_filter()
 
         self._form.signal_ok.connect(self._form_accepted)
+        self._form.signal_close.connect(self._form_closed)
         self._form.signal_restore_defaults.connect(self._restore_defaults)
         self._form.signal_help.connect(self._show_help)
         self._update_form_from_filter(self._transaction_filter)
+
+        self._account_filter_mode = self._form.account_filter_mode
 
     @property
     def transaction_filter(self) -> TransactionFilter:
@@ -271,6 +274,11 @@ class TransactionFilterFormPresenter:
         except Exception as exception:  # noqa: BLE001
             handle_exception(exception)
             return
+        self._account_filter_mode = self._form.account_filter_mode
+        self._form.close()
+
+    def _form_closed(self) -> None:
+        self._form.account_filter_mode = self._account_filter_mode
         self._form.close()
 
     def _get_transaction_filter_from_form(self) -> TransactionFilter:
