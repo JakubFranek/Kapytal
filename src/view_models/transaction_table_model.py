@@ -510,6 +510,8 @@ class TransactionTableModel(QAbstractTableModel):
                 return amount.convert(self._base_currency).to_str_rounded()
             except ConversionFactorNotFoundError:
                 return "Error!"
+        elif amount.currency == self._base_currency:
+            return ""
         return amount.to_str_rounded()
 
     def _get_transaction_amount_value(
