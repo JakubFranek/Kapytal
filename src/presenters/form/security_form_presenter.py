@@ -62,6 +62,7 @@ class SecurityFormPresenter:
     def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
         self._record_keeper = record_keeper
         self.reset_models()
+        self._security_selection_changed()
 
     def reset_models(self) -> None:
         self._security_table_model.pre_reset_model()
