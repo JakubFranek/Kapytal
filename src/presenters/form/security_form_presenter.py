@@ -87,6 +87,13 @@ class SecurityFormPresenter:
             self._record_keeper.security_accounts,
             self._record_keeper.base_currency,
         )
+        hide_native_column = all(
+            security.currency == self._record_keeper.base_currency
+            for security in self._record_keeper.securities
+        )
+        self._view.treeView.setColumnHidden(
+            OwnedSecuritiesTreeColumn.AMOUNT_NATIVE, hide_native_column
+        )
 
     def update_price_model_data(self) -> None:
         self._price_table_model.load_data(())
