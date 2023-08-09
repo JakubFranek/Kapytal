@@ -79,7 +79,7 @@ class SingleCategoryRowWidget(QWidget):
 
     def _handle_text_changed(self) -> None:
         prefix = self.combo_box.lineEdit().text()
-        if len(prefix) > 0:
+        if len(prefix) > 0 and self.combo_box.hasFocus():
             self._completer.update(prefix)
             return
         self._completer.popup().hide()

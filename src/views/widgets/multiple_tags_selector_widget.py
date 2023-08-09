@@ -74,7 +74,7 @@ class MultipleTagsSelectorWidget(QWidget):
 
     def _handle_tags_text_changed(self, text: str) -> None:
         prefix = text.rpartition(";")[-1].strip()
-        if len(prefix) > 0:
+        if len(prefix) > 0 and self.line_edit.hasFocus():
             self._prefix = prefix
             self._tags_completer.update(prefix)
         else:

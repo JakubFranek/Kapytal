@@ -33,7 +33,7 @@ class DescriptionPlainTextEdit(QPlainTextEdit):
 
     def _handle_text_changed(self) -> None:
         prefix = self.toPlainText()
-        if len(prefix) > 0:
+        if len(prefix) > 0 and self.hasFocus():
             self.completer.update(prefix)
             return
         self.completer.popup().hide()

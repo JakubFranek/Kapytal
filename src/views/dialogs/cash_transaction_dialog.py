@@ -89,10 +89,10 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
         self._initialize_single_tag_row()
 
         self.incomeRadioButton.toggled.connect(
-            lambda: self._setup_categories_combobox(keep_text=False)
+            lambda: self._setup_all_categories_comboboxes(keep_text=False)
         )
         self.expenseRadioButton.toggled.connect(
-            lambda: self._setup_categories_combobox(keep_text=False)
+            lambda: self._setup_all_categories_comboboxes(keep_text=False)
         )
 
         if edit_mode != EditMode.ADD:
@@ -390,16 +390,17 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
             self.payeeComboBox.lineEdit().setPlaceholderText("Enter Payee name")
         self.payeeComboBox.setCurrentIndex(-1)
 
-    def _setup_categories_combobox(self, *, keep_text: bool) -> None:
+    def _setup_all_categories_comboboxes(self, *, keep_text: bool) -> None:
         for row in self._category_rows:
-            if self.type_ == CashTransactionType.INCOME:
-                row.load_categories(
-                    self._categories_income, keep_current_text=keep_text
-                )
-            else:
-                row.load_categories(
-                    self._categories_expense, keep_current_text=keep_text
-                )
+            self._setup_categories_combobox(row, keep_text=keep_text)
+
+    def _setup_categories_combobox(
+        self, row: SingleCategoryRowWidget | SplitCategoryRowWidget, *, keep_text: bool
+    ) -> None:
+        if self.type_ == CashTransactionType.INCOME:
+            row.load_categories(self._categories_income, keep_current_text=keep_text)
+        else:
+            row.load_categories(self._categories_expense, keep_current_text=keep_text)
 
     def _initialize_single_category_row(self) -> None:
         if hasattr(self, "_category_rows") and len(self._category_rows) == 1:
@@ -409,7 +410,7 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
         row = SingleCategoryRowWidget(self, edit=edit)
         self._category_rows = [row]
         self.formLayout.insertRow(6, LabelWidget(self, "Category"), row)
-        self._setup_categories_combobox(keep_text=True)
+        self._setup_categories_combobox(row, keep_text=True)
         row.signal_split_categories.connect(lambda: self._split_categories(user=True))
         self._set_tab_order()
 
@@ -438,7 +439,7 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
             6, LabelWidget(self, "Categories"), self.split_categories_vertical_layout
         )
 
-        self._setup_categories_combobox(keep_text=True)
+        self._setup_all_categories_comboboxes(keep_text=True)
         self._category_rows[0].category = current_category
 
         for row in self._category_rows:
@@ -466,7 +467,7 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
         self._category_rows.append(row)
         index = self.split_categories_vertical_layout.count() - 1
         self.split_categories_vertical_layout.insertWidget(index, row)
-        self._setup_categories_combobox(keep_text=True)
+        self._setup_categories_combobox(row, keep_text=True)
         row.signal_remove_row.connect(self._remove_split_category_row)
         row.signal_amount_changed.connect(self._split_category_amount_changed)
         self._equalize_split_category_amounts()
@@ -753,7 +754,7 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
 
     def _handle_payee_text_changed(self) -> None:
         prefix = self.payeeComboBox.lineEdit().text()
-        if len(prefix) > 0:
+        if len(prefix) > 0 and self.payeeComboBox.hasFocus():
             self._completer.update(prefix)
             return
         self._completer.popup().hide()
