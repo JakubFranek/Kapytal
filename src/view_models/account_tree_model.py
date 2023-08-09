@@ -408,7 +408,7 @@ class AccountTreeModel(QAbstractItemModel):
         else:
             return None
 
-        if amount.is_negative():
+        if amount.is_negative() or amount.is_nan():
             return colors.get_red_brush()
         if amount.value_rounded == 0:
             return colors.get_gray_brush()
