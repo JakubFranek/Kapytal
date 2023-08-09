@@ -61,11 +61,8 @@ class CashTransactionDialogPresenter:
             (account for account in valid_accounts if isinstance(account, CashAccount)),
             key=lambda account: account.path.lower(),
         )
-        self._dialog.account_path = (
-            _valid_accounts[0].path
-            if len(_valid_accounts) > 0
-            else self._record_keeper.cash_accounts[0].path
-        )
+        if len(_valid_accounts) == 1:
+            self._dialog.account_path = _valid_accounts[0].path
 
         self._dialog.type_ = type_
         self._dialog.datetime_ = datetime.now(user_settings.settings.time_zone)

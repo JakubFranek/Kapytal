@@ -21,11 +21,13 @@ class MultipleTagsSelectorWidget(QWidget):
         self.line_edit = QLineEdit(self)
         self.line_edit.setPlaceholderText("Enter optional Tags (separated by ';')")
         self.line_edit.setToolTip("Both existing or new Tags are valid")
+        self.line_edit.addAction(icons.tag, QLineEdit.ActionPosition.LeadingPosition)
+        self.line_edit.setMinimumWidth(250)
         self._initialize_tags_completer()
 
         self.select_tool_button = QToolButton(self)
-        self.actionSelect_Tag = QAction("Select Tag", self)
-        self.actionSelect_Tag.setIcon(icons.tag)
+        self.actionSelect_Tag = QAction("Find && Select Tag", self)
+        self.actionSelect_Tag.setIcon(icons.magnifier)
         self.actionSelect_Tag.triggered.connect(self._select_tag)
         self.select_tool_button.setDefaultAction(self.actionSelect_Tag)
 
@@ -60,7 +62,8 @@ class MultipleTagsSelectorWidget(QWidget):
             icons.tag,
         )
         if tag and self.tag_names != ("",):
-            self.tag_names = [*self.tag_names, tag]
+            if tag not in self.tag_names:
+                self.tag_names = [*self.tag_names, tag]
         elif tag:
             self.tag_names = [tag]
 
@@ -76,7 +79,7 @@ class MultipleTagsSelectorWidget(QWidget):
         prefix = text.rpartition(";")[-1].strip()
         if len(prefix) > 0 and self.line_edit.hasFocus():
             self._prefix = prefix
-            self._tags_completer.update(prefix)
+            self._tags_completer.popup_from_text(prefix)
         else:
             self._tags_completer.popup().hide()
 

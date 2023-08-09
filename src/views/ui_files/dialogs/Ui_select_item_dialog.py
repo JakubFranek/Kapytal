@@ -41,4 +41,4 @@ class Ui_SelectItemDialog(object):
         _translate = QtCore.QCoreApplication.translate
         SelectItemDialog.setWindowTitle(_translate("SelectItemDialog", "Select Item"))
         self.searchLineEdit.setToolTip(_translate("SelectItemDialog", "<html><head/><body><p>Special characters:</p><p>* matches zero or more of any characters<br/>? matches any single character<br/>[...] matches any character within square brackets</p></body></html>"))
-        self.searchLineEdit.setPlaceholderText(_translate("SelectItemDialog", "Search..."))
+        self.searchLineEdit.setPlaceholderText(_translate("SelectItemDialog", "Search"))

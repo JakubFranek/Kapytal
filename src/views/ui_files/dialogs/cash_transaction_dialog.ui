@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>218</width>
-    <height>174</height>
+    <height>142</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -67,64 +67,13 @@
       </layout>
      </item>
      <item row="1" column="0">
-      <widget class="QLabel" name="accountLabel">
-       <property name="text">
-        <string>Account</string>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="1">
-      <layout class="QHBoxLayout" name="accountHorizontalLayout">
-       <item>
-        <widget class="QComboBox" name="accountsComboBox">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="editable">
-          <bool>false</bool>
-         </property>
-         <property name="insertPolicy">
-          <enum>QComboBox::NoInsert</enum>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QToolButton" name="accountsToolButton">
-         <property name="text">
-          <string>...</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-     <item row="2" column="0">
-      <widget class="QLabel" name="payeeLabel">
-       <property name="text">
-        <string>Payee</string>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="1">
-      <widget class="QComboBox" name="payeeComboBox">
-       <property name="editable">
-        <bool>true</bool>
-       </property>
-       <property name="insertPolicy">
-        <enum>QComboBox::NoInsert</enum>
-       </property>
-      </widget>
-     </item>
-     <item row="3" column="0">
       <widget class="QLabel" name="dateLabel">
        <property name="text">
         <string>Date</string>
        </property>
       </widget>
      </item>
-     <item row="3" column="1">
+     <item row="1" column="1">
       <widget class="QDateEdit" name="dateEdit">
        <property name="calendarPopup">
         <bool>true</bool>
@@ -134,14 +83,14 @@
        </property>
       </widget>
      </item>
-     <item row="4" column="0">
+     <item row="2" column="0">
       <widget class="QLabel" name="amountLabel">
        <property name="text">
         <string>Amount</string>
        </property>
       </widget>
      </item>
-     <item row="4" column="1">
+     <item row="2" column="1">
       <widget class="QDoubleSpinBox" name="amountDoubleSpinBox">
        <property name="alignment">
         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -183,9 +132,6 @@
  <tabstops>
   <tabstop>incomeRadioButton</tabstop>
   <tabstop>expenseRadioButton</tabstop>
-  <tabstop>accountsComboBox</tabstop>
-  <tabstop>accountsToolButton</tabstop>
-  <tabstop>payeeComboBox</tabstop>
   <tabstop>dateEdit</tabstop>
   <tabstop>amountDoubleSpinBox</tabstop>
  </tabstops>

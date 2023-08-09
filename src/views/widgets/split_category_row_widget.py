@@ -4,15 +4,13 @@ from decimal import Decimal
 from PyQt6.QtCore import QSignalBlocker, Qt, pyqtSignal
 from PyQt6.QtGui import QAction
 from PyQt6.QtWidgets import (
-    QComboBox,
-    QCompleter,
     QDoubleSpinBox,
     QHBoxLayout,
     QToolButton,
     QWidget,
 )
 from src.views import icons
-from src.views.widgets.smart_completer import SmartCompleter
+from src.views.widgets.smart_combo_box import SmartComboBox
 
 
 class SplitCategoryRowWidget(QWidget):
@@ -22,10 +20,10 @@ class SplitCategoryRowWidget(QWidget):
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
 
-        self.combo_box = QComboBox(self)
-        self.combo_box.setEditable(True)
+        self.combo_box = SmartComboBox(parent=self)
         self.combo_box.lineEdit().setPlaceholderText("Enter Category path")
         self.combo_box.setToolTip("Both existing or new Category paths are valid")
+        self.combo_box.setMinimumWidth(175)
 
         self.double_spin_box = QDoubleSpinBox(self)
         self.double_spin_box.setMaximum(1e16)
@@ -106,31 +104,6 @@ class SplitCategoryRowWidget(QWidget):
     def load_categories(
         self, categories: Collection[str], *, keep_current_text: bool
     ) -> None:
-        current_text = self.category
-        self._categories = sorted(categories, key=str.lower)
-        self.combo_box.clear()
-        for item in self._categories:
-            self.combo_box.addItem(item)
-        if keep_current_text:
-            self.combo_box.setCurrentText(current_text)
-        else:
-            self.combo_box.setCurrentIndex(-1)
-
-        self._completer = SmartCompleter(self._categories, self)
-        self._completer.setCompletionMode(QCompleter.CompletionMode.PopupCompletion)
-        self._completer.activated.connect(self._handle_completion)
-        self._completer.setWidget(self.combo_box)
-        self.combo_box.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
-        self.combo_box.editTextChanged.connect(self._handle_text_changed)
-        self.combo_box.setCompleter(None)
-
-    def _handle_text_changed(self) -> None:
-        prefix = self.combo_box.lineEdit().text()
-        if len(prefix) > 0 and self.combo_box.hasFocus():
-            self._completer.update(prefix)
-            return
-        self._completer.popup().hide()
-
-    def _handle_completion(self, text: str) -> None:
-        with QSignalBlocker(self.combo_box):
-            self.combo_box.setCurrentText(text)
+        self.combo_box.load_items(
+            categories, icons.category, keep_current_text=keep_current_text
+        )
