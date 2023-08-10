@@ -1,12 +1,10 @@
 import logging
-from collections.abc import Collection, Sequence
+from collections.abc import Sequence
 from datetime import datetime
 
 from PyQt6.QtWidgets import QWidget
-from src.models.base_classes.account import Account
 from src.models.model_objects.cash_objects import CashAccount
 from src.models.model_objects.security_objects import (
-    SecurityAccount,
     SecurityTransaction,
     SecurityTransactionType,
 )
@@ -43,11 +41,7 @@ class SecurityTransactionDialogPresenter:
     def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
         self._record_keeper = record_keeper
 
-    def run_add_dialog(
-        self,
-        type_: SecurityTransactionType,
-        valid_accounts: Collection[Account],
-    ) -> None:
+    def run_add_dialog(self, type_: SecurityTransactionType) -> None:
         logging.debug("Running SecurityTransactionDialog (edit_mode=ADD)")
         if (
             len(self._record_keeper.cash_accounts) == 0
@@ -61,29 +55,6 @@ class SecurityTransactionDialogPresenter:
             return
 
         self._prepare_dialog(edit_mode=EditMode.ADD)
-
-        valid_cash_accounts = sorted(
-            (account for account in valid_accounts if isinstance(account, CashAccount)),
-            key=lambda account: account.path.lower(),
-        )
-        valid_security_accounts = sorted(
-            (
-                account
-                for account in valid_accounts
-                if isinstance(account, SecurityAccount)
-            ),
-            key=lambda account: account.path.lower(),
-        )
-        self._dialog.cash_account_path = (
-            valid_cash_accounts[0].path
-            if len(valid_cash_accounts) > 0
-            else self._record_keeper.cash_accounts[0].path
-        )
-        self._dialog.security_account_path = (
-            valid_security_accounts[0].path
-            if len(valid_security_accounts) > 0
-            else self._record_keeper.security_accounts[0].path
-        )
 
         self._dialog.type_ = type_
         self._dialog.datetime_ = datetime.now(user_settings.settings.time_zone)

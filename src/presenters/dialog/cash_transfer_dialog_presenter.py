@@ -1,10 +1,9 @@
 import logging
-from collections.abc import Collection, Sequence
+from collections.abc import Sequence
 from datetime import datetime
 
 from PyQt6.QtWidgets import QWidget
-from src.models.base_classes.account import Account
-from src.models.model_objects.cash_objects import CashAccount, CashTransfer
+from src.models.model_objects.cash_objects import CashTransfer
 from src.models.record_keeper import RecordKeeper
 from src.models.user_settings import user_settings
 from src.presenters.utilities.check_for_nonexistent_attributes import (

@@ -52,6 +52,8 @@ class SmartComboBox(QComboBox):
                 self.setCurrentText("")
             else:
                 self.setCurrentText(_items[0])
+        elif len(_items) == 0:
+            self.setCurrentText("")
 
         self._completer = SmartCompleter(_items, self)
         self._completer.setCompletionMode(QCompleter.CompletionMode.PopupCompletion)

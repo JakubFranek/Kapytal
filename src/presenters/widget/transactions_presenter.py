@@ -300,12 +300,12 @@ class TransactionsPresenter:
         )
         self._view.signal_buy.connect(
             lambda: self._security_transaction_dialog_presenter.run_add_dialog(
-                SecurityTransactionType.BUY, self._account_tree_shown_accounts
+                SecurityTransactionType.BUY
             )
         )
         self._view.signal_sell.connect(
             lambda: self._security_transaction_dialog_presenter.run_add_dialog(
-                SecurityTransactionType.SELL, self._account_tree_shown_accounts
+                SecurityTransactionType.SELL
             )
         )
         self._view.signal_security_transfer.connect(
