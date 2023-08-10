@@ -16,10 +16,10 @@ from src.models.model_objects.cash_objects import CashAccount
 from src.models.user_settings import user_settings
 from src.views import icons
 from src.views.base_classes.custom_dialog import CustomDialog
-from src.views.dialogs.select_item_dialog import ask_user_for_selection
 from src.views.ui_files.dialogs.Ui_cash_transfer_dialog import Ui_CashTransferDialog
 from src.views.widgets.description_plain_text_edit import DescriptionPlainTextEdit
 from src.views.widgets.multiple_tags_selector_widget import MultipleTagsSelectorWidget
+from src.views.widgets.smart_combo_box import SmartComboBox
 
 
 class EditMode(Enum):
@@ -38,9 +38,6 @@ class EditMode(Enum):
             EditMode.EDIT_MULTIPLE_RECIPIENT_MIXED_CURRENCY,
             EditMode.EDIT_MULTIPLE_MIXED_CURRENCY,
         )
-
-
-# FIXME: fix tab order
 
 
 class CashTransferDialog(CustomDialog, Ui_CashTransferDialog):
@@ -77,7 +74,7 @@ class CashTransferDialog(CustomDialog, Ui_CashTransferDialog):
         self._initialize_placeholders()
         self._set_spinbox_states()
         self._initialize_signals()
-        self._initialize_actions()
+        self._set_tab_order()
 
     @property
     def datetime_(self) -> datetime | None:
@@ -189,8 +186,6 @@ class CashTransferDialog(CustomDialog, Ui_CashTransferDialog):
         for account in self._accounts:
             if account.path == account_path:
                 return account
-        if self._edit_mode not in EditMode.get_multiple_edit_values():
-            raise ValueError(f"Invalid Account path: {account_path}")
         return None
 
     def _set_exchange_rate(self) -> None:
@@ -253,12 +248,20 @@ class CashTransferDialog(CustomDialog, Ui_CashTransferDialog):
     def _initialize_accounts_comboboxes(
         self, accounts: Collection[CashAccount]
     ) -> None:
+        items = [account.path for account in accounts]
+
         if self._edit_mode in EditMode.get_multiple_edit_values():
-            self.senderComboBox.addItem(self.KEEP_CURRENT_VALUES)
-            self.recipientComboBox.addItem(self.KEEP_CURRENT_VALUES)
-        for account in accounts:
-            self.senderComboBox.addItem(icons.cash_account, account.path)
-            self.recipientComboBox.addItem(icons.cash_account, account.path)
+            placeholder_text = "Leave empty to keep current values"
+        else:
+            placeholder_text = "Enter Account path"
+
+        self.senderComboBox = SmartComboBox(parent=self)
+        self.senderComboBox.load_items(items, icons.cash_account, placeholder_text)
+        self.formLayout.insertRow(0, "Sender", self.senderComboBox)
+
+        self.recipientComboBox = SmartComboBox(parent=self)
+        self.recipientComboBox.load_items(items, icons.cash_account, placeholder_text)
+        self.formLayout.insertRow(1, "Recipient", self.recipientComboBox)
 
         self.senderComboBox.currentTextChanged.connect(self._set_spinboxes_currencies)
         self.recipientComboBox.currentTextChanged.connect(
@@ -318,31 +321,10 @@ class CashTransferDialog(CustomDialog, Ui_CashTransferDialog):
         self.senderComboBox.currentTextChanged.connect(self._set_spinbox_states)
         self.recipientComboBox.currentTextChanged.connect(self._set_spinbox_states)
 
-    def _initialize_actions(self) -> None:
-        self.actionSelect_Sender.setIcon(icons.cash_account)
-        self.actionSelect_Sender.triggered.connect(self._select_sender)
-        self.senderToolButton.setDefaultAction(self.actionSelect_Sender)
-
-        self.actionSelect_Recipient.setIcon(icons.cash_account)
-        self.actionSelect_Recipient.triggered.connect(self._select_recipient)
-        self.recipientToolButton.setDefaultAction(self.actionSelect_Recipient)
-
-    def _select_sender(self) -> None:
-        account_paths = [account.path for account in self._accounts]
-        account = ask_user_for_selection(
-            self,
-            account_paths,
-            "Select Sender",
-            icons.cash_account,
-        )
-        self.sender_path = account if account else self.sender_path
-
-    def _select_recipient(self) -> None:
-        account_paths = [account.path for account in self._accounts]
-        account = ask_user_for_selection(
-            self,
-            account_paths,
-            "Select Recipient",
-            icons.cash_account,
-        )
-        self.recipient_path = account if account else self.recipient_path
+    def _set_tab_order(self) -> None:
+        self.setTabOrder(self.senderComboBox, self.recipientComboBox)
+        self.setTabOrder(self.recipientComboBox, self.sentDoubleSpinBox)
+        self.setTabOrder(self.sentDoubleSpinBox, self.receivedDoubleSpinBox)
+        self.setTabOrder(self.receivedDoubleSpinBox, self.dateEdit)
+        self.setTabOrder(self.dateEdit, self.descriptionPlainTextEdit)
+        self.setTabOrder(self.descriptionPlainTextEdit, self.tags_widget)

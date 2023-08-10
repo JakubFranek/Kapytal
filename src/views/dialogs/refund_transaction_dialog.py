@@ -21,7 +21,6 @@ from src.models.model_objects.currency_objects import CashAmount
 from src.models.user_settings import user_settings
 from src.views import icons
 from src.views.base_classes.custom_dialog import CustomDialog
-from src.views.dialogs.select_item_dialog import ask_user_for_selection
 from src.views.ui_files.dialogs.Ui_refund_transaction_dialog import (
     Ui_RefundTransactionDialog,
 )
@@ -259,25 +258,6 @@ class RefundTransactionDialog(CustomDialog, Ui_RefundTransactionDialog):
             row.set_min(tag_min)
             row.set_max(tag_max)
             row.set_spinbox_enabled(enable=tag_min != tag_max)
-
-    def _get_payee(self) -> None:
-        payee = ask_user_for_selection(
-            self,
-            self._payees,
-            "Select Payee",
-            icons.payee,
-        )
-        self.payee = payee if payee else self.payee
-
-    def _get_account(self) -> None:
-        account_paths = [account.path for account in self._accounts]
-        account = ask_user_for_selection(
-            self,
-            account_paths,
-            "Select Account",
-            icons.cash_account,
-        )
-        self.account_path = account if account else self.account_path
 
     def _set_tab_order(self) -> None:
         self.setTabOrder(self.accountsComboBox, self.payeeComboBox)

@@ -35,10 +35,7 @@ class CashTransferDialogPresenter:
     def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
         self._record_keeper = record_keeper
 
-    def run_add_dialog(
-        self,
-        shown_accounts: Collection[Account],
-    ) -> None:
+    def run_add_dialog(self) -> None:
         logging.debug("Running CashTransferDialog (edit_mode=ADD)")
         if len(self._record_keeper.cash_accounts) <= 1:
             display_error_message(
@@ -49,20 +46,6 @@ class CashTransferDialogPresenter:
 
         self._prepare_dialog(edit_mode=EditMode.ADD)
 
-        _shown_accounts = sorted(
-            (account for account in shown_accounts if isinstance(account, CashAccount)),
-            key=lambda account: account.path.lower(),
-        )
-        self._dialog.sender_path = (
-            _shown_accounts[0].path
-            if len(_shown_accounts) > 0
-            else self._record_keeper.cash_accounts[0].path
-        )
-        self._dialog.recipient_path = (
-            _shown_accounts[1].path
-            if len(_shown_accounts) > 1
-            else self._record_keeper.cash_accounts[1].path
-        )
         self._dialog.datetime_ = datetime.now(user_settings.settings.time_zone)
 
         self._dialog.signal_do_and_close.connect(
