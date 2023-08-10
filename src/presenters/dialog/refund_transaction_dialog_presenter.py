@@ -47,18 +47,15 @@ class RefundTransactionDialogPresenter:
         if len(transactions) > 1:
             raise ValueError("Cannot refund multiple transactions.")
 
-        refunded_transaction = transactions[0]
+        refunded_transaction: CashTransaction = transactions[0]
         self._prepare_dialog(refunded_transaction, edited_refund=None)
 
         _valid_accounts = sorted(
             (account for account in valid_accounts if isinstance(account, CashAccount)),
             key=lambda account: account.path.lower(),
         )
-        self._dialog.account_path = (
-            _valid_accounts[0].path
-            if len(_valid_accounts) > 0
-            else self._record_keeper.cash_accounts[0].path
-        )
+        self._dialog.account_path = refunded_transaction.account.path
+        self._dialog.payee = refunded_transaction.payee.name
         self._dialog.datetime_ = datetime.now(user_settings.settings.time_zone)
 
         self._dialog.signal_do_and_close.connect(self._add_refund)

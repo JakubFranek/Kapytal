@@ -72,10 +72,7 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
         self._currency_code = ""
 
         self._initialize_accounts_combobox(accounts)
-
-        self.payeeComboBox = SmartComboBox(parent=self)
-        self.payeeComboBox.load_items(payees, icons.payee, "Enter Payee name")
-        self.formLayout.insertRow(2, "Payee", self.payeeComboBox)
+        self._initialize_payees_combobox(payees)
 
         self.descriptionPlainTextEdit = DescriptionPlainTextEdit(descriptions)
         self.formLayout.insertRow(4, "Description", self.descriptionPlainTextEdit)
@@ -371,6 +368,11 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
 
         self.accountsComboBox.currentTextChanged.connect(self._account_changed)
         self._account_changed()
+
+    def _initialize_payees_combobox(self, payees: Collection[str]) -> None:
+        self.payeeComboBox = SmartComboBox(parent=self)
+        self.payeeComboBox.load_items(payees, icons.payee, "Enter Payee name")
+        self.formLayout.insertRow(2, "Payee", self.payeeComboBox)
 
     def _initialize_placeholders(self) -> None:
         if self._edit_mode in EditMode.get_multiple_edit_values():

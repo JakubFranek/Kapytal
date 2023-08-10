@@ -7,8 +7,6 @@ from src.views import icons
 from src.views.dialogs.select_item_dialog import ask_user_for_selection
 from src.views.widgets.smart_completer import SmartCompleter
 
-# TODO: improve completer (custom)
-
 
 class MultipleTagsSelectorWidget(QWidget):
     signal_split_tags = pyqtSignal()

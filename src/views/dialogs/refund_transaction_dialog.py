@@ -28,6 +28,7 @@ from src.views.ui_files.dialogs.Ui_refund_transaction_dialog import (
 from src.views.widgets.description_plain_text_edit import DescriptionPlainTextEdit
 from src.views.widgets.label_widget import LabelWidget
 from src.views.widgets.refund_row_widget import RefundRowWidget
+from src.views.widgets.smart_combo_box import SmartComboBox
 
 
 class RefundTransactionDialog(CustomDialog, Ui_RefundTransactionDialog):
@@ -49,8 +50,9 @@ class RefundTransactionDialog(CustomDialog, Ui_RefundTransactionDialog):
         self._refunded_transaction = refunded_transaction
         self._accounts = accounts
         self._payees = payees
-        for payee in payees:
-            self.payeeComboBox.addItem(payee)
+
+        self._initialize_accounts_combobox(accounts)
+        self._initialize_payees_combobox(payees)
 
         self.amountDoubleSpinBox.setSuffix(" " + refunded_transaction.currency.code)
 
@@ -64,10 +66,7 @@ class RefundTransactionDialog(CustomDialog, Ui_RefundTransactionDialog):
         self._initialize_tag_rows()
         self._amount_changed()  # recalculate limits
 
-        self._initialize_accounts_combobox(accounts)
         self._initialize_window()
-        self._initialize_actions()
-        self._initialize_placeholders()
 
         if edited_refund is not None:
             self._initialize_values()
@@ -176,29 +175,28 @@ class RefundTransactionDialog(CustomDialog, Ui_RefundTransactionDialog):
         self.buttonBox.clicked.connect(self._handle_button_box_click)
         self.buttonBox.addButton("Close", QDialogButtonBox.ButtonRole.RejectRole)
 
-    def _initialize_actions(self) -> None:
-        self.actionSelect_Payee.setIcon(icons.payee)
-        self.actionSelect_Payee.triggered.connect(self._get_payee)
-        self.payeeToolButton.setDefaultAction(self.actionSelect_Payee)
-
-        self.actionSelect_Account.setIcon(icons.cash_account)
-        self.actionSelect_Account.triggered.connect(self._get_account)
-        self.accountsToolButton.setDefaultAction(self.actionSelect_Account)
-
     def _initialize_accounts_combobox(self, accounts: Collection[Account]) -> None:
-        for account in accounts:
-            self.accountsComboBox.addItem(icons.cash_account, account.path)
+        items = [account.path for account in accounts]
 
-    def _initialize_placeholders(self) -> None:
-        self.payeeComboBox.lineEdit().setPlaceholderText("Enter Payee name")
-        self.payeeComboBox.setCurrentIndex(-1)
+        self.accountsComboBox = SmartComboBox(parent=self)
+        self.accountsComboBox.load_items(
+            items, icons.cash_account, "Enter Account path"
+        )
+        self.formLayout.insertRow(0, "Account", self.accountsComboBox)
+
+    def _initialize_payees_combobox(self, payees: Collection[str]) -> None:
+        self.payeeComboBox = SmartComboBox(parent=self)
+        self.payeeComboBox.load_items(payees, icons.payee, "Enter Payee name")
+        self.formLayout.insertRow(1, "Payee", self.payeeComboBox)
 
     def _initialize_category_rows(self) -> None:
         self.category_rows_vertical_layout = QVBoxLayout()
         self._category_rows: list[RefundRowWidget] = []
 
         for category, amount in self._refunded_transaction.category_amount_pairs:
-            row = RefundRowWidget(self, category.path, self.currency_code)
+            row = RefundRowWidget(
+                self, category.path, self.currency_code, icons.category
+            )
             row.set_min(0)
             max_amount = self._refunded_transaction.get_max_refundable_for_category(
                 category, self._edited_refund
@@ -219,7 +217,7 @@ class RefundTransactionDialog(CustomDialog, Ui_RefundTransactionDialog):
         self._tag_rows: list[RefundRowWidget] = []
 
         for tag, amount in self._refunded_transaction.tag_amount_pairs:
-            row = RefundRowWidget(self, tag.name, self.currency_code)
+            row = RefundRowWidget(self, tag.name, self.currency_code, icons.tag)
             row.amount = amount.value_rounded
             self._tag_rows.append(row)
             self.tag_rows_vertical_layout.addWidget(row)
@@ -282,10 +280,8 @@ class RefundTransactionDialog(CustomDialog, Ui_RefundTransactionDialog):
         self.account_path = account if account else self.account_path
 
     def _set_tab_order(self) -> None:
-        self.setTabOrder(self.accountsComboBox, self.accountsToolButton)
-        self.setTabOrder(self.accountsToolButton, self.payeeComboBox)
-        self.setTabOrder(self.payeeComboBox, self.payeeToolButton)
-        self.setTabOrder(self.payeeToolButton, self.dateEdit)
+        self.setTabOrder(self.accountsComboBox, self.payeeComboBox)
+        self.setTabOrder(self.payeeComboBox, self.dateEdit)
         self.setTabOrder(self.dateEdit, self.descriptionPlainTextEdit)
         self.setTabOrder(self.descriptionPlainTextEdit, self.amountDoubleSpinBox)
 
