@@ -1054,16 +1054,16 @@ class SecurityTransfer(SecurityRelatedTransaction):
 
         self._description = description.strip()
 
-        if hasattr(self._datetime):
+        if hasattr(self, "_datetime"):
             update_accounts = self._datetime != datetime_
         self._datetime = datetime_
         self._timestamp = datetime_.timestamp()
 
-        if hasattr(self._security) and not update_accounts:
+        if hasattr(self, "_security") and not update_accounts:
             update_accounts = self._security != security
         self._security = security
 
-        if hasattr(self._shares) and not update_accounts:
+        if hasattr(self, "_shares") and not update_accounts:
             update_accounts = self._shares != shares
         self._shares = shares.normalize()
 

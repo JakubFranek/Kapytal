@@ -309,9 +309,7 @@ class TransactionsPresenter:
             )
         )
         self._view.signal_security_transfer.connect(
-            lambda: self._security_transfer_dialog_presenter.run_add_dialog(
-                self._account_tree_shown_accounts
-            )
+            self._security_transfer_dialog_presenter.run_add_dialog
         )
 
         self._view.signal_delete.connect(self._delete_transactions)

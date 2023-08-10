@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>248</width>
-    <height>172</height>
+    <height>192</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -29,56 +29,13 @@
    <item>
     <layout class="QFormLayout" name="formLayout">
      <item row="0" column="0">
-      <widget class="QLabel" name="senderLabel">
-       <property name="text">
-        <string>Sender</string>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="1">
-      <widget class="QComboBox" name="senderComboBox">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="editable">
-        <bool>false</bool>
-       </property>
-       <property name="insertPolicy">
-        <enum>QComboBox::NoInsert</enum>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="0">
-      <widget class="QLabel" name="recipientLabel">
-       <property name="text">
-        <string>Recipient</string>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="1">
-      <widget class="QComboBox" name="recipientComboBox"/>
-     </item>
-     <item row="2" column="0">
-      <widget class="QLabel" name="securityLabel">
-       <property name="text">
-        <string>Security</string>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="1">
-      <widget class="QComboBox" name="securityComboBox"/>
-     </item>
-     <item row="3" column="0">
       <widget class="QLabel" name="sharesLabel">
        <property name="text">
         <string>Shares</string>
        </property>
       </widget>
      </item>
-     <item row="3" column="1">
+     <item row="0" column="1">
       <widget class="QDoubleSpinBox" name="sharesDoubleSpinBox">
        <property name="alignment">
         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -91,14 +48,14 @@
        </property>
       </widget>
      </item>
-     <item row="4" column="0">
+     <item row="1" column="0">
       <widget class="QLabel" name="dateLabel">
        <property name="text">
         <string>Date</string>
        </property>
       </widget>
      </item>
-     <item row="4" column="1">
+     <item row="1" column="1">
       <widget class="QDateEdit" name="dateEdit">
        <property name="calendarPopup">
         <bool>true</bool>
