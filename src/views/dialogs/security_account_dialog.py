@@ -1,10 +1,9 @@
 import logging
 from collections.abc import Collection
 
-from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtWidgets import (
     QAbstractButton,
-    QCompleter,
     QDialogButtonBox,
     QWidget,
 )
@@ -13,6 +12,7 @@ from src.views.base_classes.custom_dialog import CustomDialog
 from src.views.ui_files.dialogs.Ui_security_account_dialog import (
     Ui_SecurityAccountDialog,
 )
+from src.views.widgets.smart_combo_box import SmartComboBox
 
 
 class SecurityAccountDialog(CustomDialog, Ui_SecurityAccountDialog):
@@ -27,9 +27,11 @@ class SecurityAccountDialog(CustomDialog, Ui_SecurityAccountDialog):
         self._edit = edit
         self.currentPathLineEdit.setEnabled(False)
 
-        self.pathCompleter = QCompleter(paths)
-        self.pathCompleter.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
-        self.pathLineEdit.setCompleter(self.pathCompleter)
+        self.pathComboBox = SmartComboBox(parent=self)
+        self.pathComboBox.load_items(paths)
+        self.pathComboBox.setCurrentText("")
+        self.formLayout.insertRow(1, "Path", self.pathComboBox)
+        self.pathComboBox.setFocus()
 
         if edit:
             self.setWindowTitle("Edit Security Account")
@@ -42,15 +44,15 @@ class SecurityAccountDialog(CustomDialog, Ui_SecurityAccountDialog):
 
         self.positionSpinBox.setMinimum(1)
         self.buttonBox.clicked.connect(self._handle_button_box_click)
-        self.pathLineEdit.textChanged.connect(self.signal_path_changed.emit)
+        self.pathComboBox.currentTextChanged.connect(self.signal_path_changed.emit)
 
     @property
     def path(self) -> str:
-        return self.pathLineEdit.text()
+        return self.pathComboBox.currentText()
 
     @path.setter
     def path(self, text: str) -> None:
-        self.pathLineEdit.setText(text)
+        self.pathComboBox.setCurrentText(text)
 
     @property
     def current_path(self) -> str:

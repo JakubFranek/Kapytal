@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'd:\Coding\Kapytal\src\views\ui_files\account_group_dialog.ui'
+# Form implementation generated from reading ui file 'd:\Coding\Kapytal\src\views\ui_files\dialogs\account_group_dialog.ui'
 #
 # Created by: PyQt6 UI code generator 6.4.0
 #
@@ -31,20 +31,14 @@ class Ui_AccountGroupDialog(object):
         self.currentPathLineEdit = QtWidgets.QLineEdit(AccountGroupDialog)
         self.currentPathLineEdit.setObjectName("currentPathLineEdit")
         self.formLayout.setWidget(0, QtWidgets.QFormLayout.ItemRole.FieldRole, self.currentPathLineEdit)
-        self.pathLabel = QtWidgets.QLabel(AccountGroupDialog)
-        self.pathLabel.setObjectName("pathLabel")
-        self.formLayout.setWidget(1, QtWidgets.QFormLayout.ItemRole.LabelRole, self.pathLabel)
-        self.pathLineEdit = QtWidgets.QLineEdit(AccountGroupDialog)
-        self.pathLineEdit.setObjectName("pathLineEdit")
-        self.formLayout.setWidget(1, QtWidgets.QFormLayout.ItemRole.FieldRole, self.pathLineEdit)
         self.positionLabel = QtWidgets.QLabel(AccountGroupDialog)
         self.positionLabel.setObjectName("positionLabel")
-        self.formLayout.setWidget(2, QtWidgets.QFormLayout.ItemRole.LabelRole, self.positionLabel)
+        self.formLayout.setWidget(1, QtWidgets.QFormLayout.ItemRole.LabelRole, self.positionLabel)
         self.positionSpinBox = QtWidgets.QSpinBox(AccountGroupDialog)
         self.positionSpinBox.setAlignment(QtCore.Qt.AlignmentFlag.AlignLeading|QtCore.Qt.AlignmentFlag.AlignLeft|QtCore.Qt.AlignmentFlag.AlignVCenter)
         self.positionSpinBox.setMinimum(1)
         self.positionSpinBox.setObjectName("positionSpinBox")
-        self.formLayout.setWidget(2, QtWidgets.QFormLayout.ItemRole.FieldRole, self.positionSpinBox)
+        self.formLayout.setWidget(1, QtWidgets.QFormLayout.ItemRole.FieldRole, self.positionSpinBox)
         self.verticalLayout.addLayout(self.formLayout)
         self.buttonBox = QtWidgets.QDialogButtonBox(AccountGroupDialog)
         self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.StandardButton.Cancel|QtWidgets.QDialogButtonBox.StandardButton.Ok)
@@ -58,5 +52,4 @@ class Ui_AccountGroupDialog(object):
         _translate = QtCore.QCoreApplication.translate
         AccountGroupDialog.setWindowTitle(_translate("AccountGroupDialog", "Dialog"))
         self.currentPathLabel.setText(_translate("AccountGroupDialog", "Current path"))
-        self.pathLabel.setText(_translate("AccountGroupDialog", "Path"))
         self.positionLabel.setText(_translate("AccountGroupDialog", "Position"))

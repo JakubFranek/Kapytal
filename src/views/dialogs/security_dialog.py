@@ -2,16 +2,16 @@ import logging
 from collections.abc import Collection
 from decimal import Decimal
 
-from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtWidgets import (
     QAbstractButton,
-    QCompleter,
     QDialogButtonBox,
     QWidget,
 )
 from src.views import icons
 from src.views.base_classes.custom_dialog import CustomDialog
 from src.views.ui_files.dialogs.Ui_security_dialog import Ui_SecurityDialog
+from src.views.widgets.smart_combo_box import SmartComboBox
 
 
 class SecurityDialog(CustomDialog, Ui_SecurityDialog):
@@ -29,9 +29,10 @@ class SecurityDialog(CustomDialog, Ui_SecurityDialog):
         self.setupUi(self)
         self.resize(270, 105)
 
-        self.typeCompleter = QCompleter(security_types)
-        self.typeCompleter.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
-        self.typeLineEdit.setCompleter(self.typeCompleter)
+        self.typeComboBox = SmartComboBox(parent=self)
+        self.typeComboBox.load_items(security_types)
+        self.typeComboBox.setCurrentText("")
+        self.formLayout.insertRow(2, "Type", self.typeComboBox)
 
         if edit:
             self.setWindowTitle("Edit Security")
@@ -68,11 +69,11 @@ class SecurityDialog(CustomDialog, Ui_SecurityDialog):
 
     @property
     def type_(self) -> str:
-        return self.typeLineEdit.text()
+        return self.typeComboBox.currentText()
 
     @type_.setter
     def type_(self, text: str) -> None:
-        self.typeLineEdit.setText(text)
+        self.typeComboBox.setCurrentText(text)
 
     @property
     def currency_code(self) -> str:

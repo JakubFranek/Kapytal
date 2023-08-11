@@ -42,40 +42,16 @@
       <widget class="QLineEdit" name="currentPathLineEdit"/>
      </item>
      <item row="1" column="0">
-      <widget class="QLabel" name="pathLabel">
-       <property name="text">
-        <string>Path</string>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="1">
-      <widget class="QLineEdit" name="pathLineEdit"/>
-     </item>
-     <item row="4" column="0">
-      <widget class="QLabel" name="positionLabel">
-       <property name="text">
-        <string>Position</string>
-       </property>
-      </widget>
-     </item>
-     <item row="4" column="1">
-      <widget class="QSpinBox" name="positionSpinBox">
-       <property name="alignment">
-        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-       </property>
-       <property name="minimum">
-        <number>1</number>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="0">
       <widget class="QLabel" name="currencyLabel">
        <property name="text">
         <string>Currency</string>
        </property>
       </widget>
      </item>
-     <item row="3" column="0">
+     <item row="1" column="1">
+      <widget class="QComboBox" name="currencyComboBox"/>
+     </item>
+     <item row="2" column="0">
       <widget class="QLabel" name="initialBalanceLabel">
        <property name="text">
         <string>Initial balance</string>
@@ -83,15 +59,29 @@
       </widget>
      </item>
      <item row="2" column="1">
-      <widget class="QComboBox" name="currencyComboBox"/>
-     </item>
-     <item row="3" column="1">
       <widget class="QDoubleSpinBox" name="initialBalanceDoubleSpinBox">
        <property name="alignment">
         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
        </property>
        <property name="showGroupSeparator" stdset="0">
         <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="0">
+      <widget class="QLabel" name="positionLabel">
+       <property name="text">
+        <string>Position</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="1">
+      <widget class="QSpinBox" name="positionSpinBox">
+       <property name="alignment">
+        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+       </property>
+       <property name="minimum">
+        <number>1</number>
        </property>
       </widget>
      </item>
@@ -108,7 +98,6 @@
  </widget>
  <tabstops>
   <tabstop>currentPathLineEdit</tabstop>
-  <tabstop>pathLineEdit</tabstop>
   <tabstop>currencyComboBox</tabstop>
   <tabstop>initialBalanceDoubleSpinBox</tabstop>
   <tabstop>positionSpinBox</tabstop>
