@@ -125,7 +125,7 @@ class FilePresenter:
                 return False
 
         logging.debug(f"File path: {path}")
-        self._current_file_path = Path(path)
+        self._current_file_path = Path(path).absolute()
         self._open_file(self._current_file_path)
         return True
 

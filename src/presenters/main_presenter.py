@@ -14,6 +14,7 @@ from src.presenters.widget.account_tree_presenter import AccountTreePresenter
 from src.presenters.widget.transactions_presenter import (
     TransactionsPresenter,
 )
+from src.utilities import constants
 from src.views.dialogs.welcome_dialog import WelcomeDialog
 from src.views.forms.category_form import CategoryForm
 from src.views.forms.currency_form import CurrencyForm
@@ -41,6 +42,7 @@ class MainPresenter:
         self._welcome_dialog.signal_open_recent_file.connect(
             self._load_most_recent_file
         )
+        self._welcome_dialog.signal_open_demo_file.connect(self._load_demo_file)
         self._welcome_dialog.signal_quit.connect(self._quit)
         self._welcome_dialog.set_open_recent_file_button(
             enabled=len(self._file_presenter.recent_file_paths) > 0
@@ -53,6 +55,13 @@ class MainPresenter:
 
     def _load_file(self) -> None:
         if self._file_presenter.load_from_file():
+            self._welcome_dialog.close()
+
+    def _load_demo_file(self) -> None:
+        if (
+            self._file_presenter.load_from_file(constants.DEMO_FILE)
+            and self._welcome_dialog.isVisible()
+        ):
             self._welcome_dialog.close()
 
     def _quit(self) -> None:
@@ -152,6 +161,7 @@ class MainPresenter:
             lambda: self._file_presenter.save_to_file(self._record_keeper, save_as=True)
         )
         self._view.signal_open_file.connect(self._file_presenter.load_from_file)
+        self._view.signal_open_demo_file.connect(self._load_demo_file)
         self._view.signal_open_recent_file.connect(
             lambda path: self._file_presenter.load_from_file(path)
         )

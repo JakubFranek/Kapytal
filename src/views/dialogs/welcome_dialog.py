@@ -10,7 +10,7 @@ class WelcomeDialog(CustomDialog, Ui_WelcomeDialog):
     signal_new_file = pyqtSignal()
     signal_open_recent_file = pyqtSignal()
     signal_open_file = pyqtSignal()
-    signal_demo_file = pyqtSignal()
+    signal_open_demo_file = pyqtSignal()
     signal_open_guide = pyqtSignal()
     signal_quit = pyqtSignal()
 
@@ -47,13 +47,11 @@ class WelcomeDialog(CustomDialog, Ui_WelcomeDialog):
         self.createNewFilePushButton.clicked.connect(self.signal_new_file)
         self.openFilePushButton.clicked.connect(self.signal_open_file)
         self.openRecentFilePushButton.clicked.connect(self.signal_open_recent_file)
-        self.openDemoFilePushButton.clicked.connect(self.signal_demo_file)
+        self.openDemoFilePushButton.clicked.connect(self.signal_open_demo_file)
         self.openQuickStartGuidePushButton.clicked.connect(self.signal_open_guide)
         self.quitPushButton.clicked.connect(self.signal_quit)
 
-        # TODO: add a Demo file
         # TODO: add a Quick Start Guide
-        self.openDemoFilePushButton.setEnabled(False)
         self.openQuickStartGuidePushButton.setEnabled(False)
 
     def set_open_recent_file_button(self, *, enabled: bool) -> None:

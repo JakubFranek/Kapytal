@@ -46,6 +46,7 @@ class MainView(QMainWindow, Ui_MainWindow):
     signal_save_file = pyqtSignal()
     signal_save_file_as = pyqtSignal()
     signal_open_file = pyqtSignal()
+    signal_open_demo_file = pyqtSignal()
     signal_open_recent_file = pyqtSignal(str)
     signal_clear_recent_files = pyqtSignal()
     signal_close_file = pyqtSignal()
@@ -230,6 +231,7 @@ class MainView(QMainWindow, Ui_MainWindow):
         self.actionSave.triggered.connect(self.signal_save_file.emit)
         self.actionSave_As.triggered.connect(self.signal_save_file_as.emit)
         self.actionOpen_File.triggered.connect(self.signal_open_file.emit)
+        self.actionOpen_Demo_File.triggered.connect(self.signal_open_demo_file.emit)
         self.actionClear_Recent_File_Menu.triggered.connect(
             self.signal_clear_recent_files.emit
         )

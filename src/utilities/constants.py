@@ -13,6 +13,8 @@ LOGS_FOLDER_SUFFIX = "logs"
 LOGS_INFO_SUFFIX = "info"
 LOGS_DEBUG_SUFFIX = "debug"
 
+DEMO_FILE = "saved_data/demo.json"
+
 # Runtime constants
 app_root_path: Path
 settings_path: Path
