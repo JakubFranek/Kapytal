@@ -1,10 +1,9 @@
 import logging
-from collections.abc import Collection, Sequence
+from collections.abc import Sequence
 from datetime import datetime
 
 from PyQt6.QtWidgets import QWidget
-from src.models.base_classes.account import Account
-from src.models.model_objects.security_objects import SecurityAccount, SecurityTransfer
+from src.models.model_objects.security_objects import SecurityTransfer
 from src.models.record_keeper import RecordKeeper
 from src.models.user_settings import user_settings
 from src.presenters.utilities.check_for_nonexistent_attributes import (
@@ -35,10 +34,7 @@ class SecurityTransferDialogPresenter:
     def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
         self._record_keeper = record_keeper
 
-    def run_add_dialog(
-        self,
-        shown_accounts: Collection[Account],
-    ) -> None:
+    def run_add_dialog(self) -> None:
         logging.debug("Running SecurityTransferDialog (edit_mode=ADD)")
         if len(self._record_keeper.security_accounts) < 2:  # noqa: PLR2004
             display_error_message(
@@ -49,26 +45,6 @@ class SecurityTransferDialogPresenter:
             return
 
         self._prepare_dialog(edit_mode=EditMode.ADD)
-
-        _shown_accounts = sorted(
-            (
-                account
-                for account in shown_accounts
-                if isinstance(account, SecurityAccount)
-            ),
-            key=lambda account: account.path.lower(),
-        )
-        self._dialog.sender_path = (
-            _shown_accounts[0].path
-            if len(_shown_accounts) > 0
-            else self._record_keeper.security_accounts[0].path
-        )
-        self._dialog.recipient_path = (
-            _shown_accounts[1].path
-            if len(_shown_accounts) > 1
-            else self._record_keeper.security_accounts[1].path
-        )
-
         self._dialog.datetime_ = datetime.now(user_settings.settings.time_zone)
 
         self._dialog.signal_do_and_close.connect(
@@ -268,5 +244,6 @@ class SecurityTransferDialogPresenter:
             securities,
             self._record_keeper.security_accounts,
             tag_names,
+            self._record_keeper.descriptions,
             edit_mode=edit_mode,
         )

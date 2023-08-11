@@ -1,6 +1,6 @@
 import logging
 from collections.abc import Collection
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from PyQt6.QtWidgets import QWidget
 from src.models.model_objects.cash_objects import (
@@ -47,18 +47,15 @@ class RefundTransactionDialogPresenter:
         if len(transactions) > 1:
             raise ValueError("Cannot refund multiple transactions.")
 
-        refunded_transaction = transactions[0]
+        refunded_transaction: CashTransaction = transactions[0]
         self._prepare_dialog(refunded_transaction, edited_refund=None)
 
         _valid_accounts = sorted(
             (account for account in valid_accounts if isinstance(account, CashAccount)),
             key=lambda account: account.path.lower(),
         )
-        self._dialog.account_path = (
-            _valid_accounts[0].path
-            if len(_valid_accounts) > 0
-            else self._record_keeper.cash_accounts[0].path
-        )
+        self._dialog.account_path = refunded_transaction.account.path
+        self._dialog.payee = refunded_transaction.payee.name
         self._dialog.datetime_ = datetime.now(user_settings.settings.time_zone)
 
         self._dialog.signal_do_and_close.connect(self._add_refund)
@@ -92,11 +89,19 @@ class RefundTransactionDialogPresenter:
             logging.debug("Dialog aborted")
             return
 
+        refunded_transaction_uuid = self._dialog.refunded_transaction.uuid
+        refunded_transaction = self._dialog.refunded_transaction
+
         datetime_ = self._dialog.datetime_
         if datetime_ is None:
             raise ValueError("Expected datetime_, received None.")
         if not validate_datetime(datetime_, self._dialog):
             return
+        if (
+            datetime_.date() == refunded_transaction.datetime_.date()
+            and datetime_ <= refunded_transaction.datetime_
+        ):
+            datetime_ = refunded_transaction.datetime_ + timedelta(seconds=1)
         description = self._dialog.description
         total_amount = self._dialog.amount
         if total_amount <= 0:
@@ -109,8 +114,6 @@ class RefundTransactionDialogPresenter:
 
         categories = [category for category, _ in category_amount_pairs]
         tags = [tag for tag, _ in tag_amount_pairs]
-
-        refunded_transaction_uuid = self._dialog.refunded_transaction.uuid
 
         logging.info(
             f"Adding RefundTransaction: {datetime_.strftime('%Y-%m-%d')}, "
@@ -154,9 +157,17 @@ class RefundTransactionDialogPresenter:
             logging.debug("Dialog aborted")
             return
 
+        refunded_transaction = self._dialog.refunded_transaction
+
         datetime_ = self._dialog.datetime_
         if datetime_ is not None and not validate_datetime(datetime_, self._dialog):
             return
+        if (
+            datetime_.date() == refunded_transaction.datetime_.date()
+            and datetime_ <= refunded_transaction.datetime_
+        ):
+            datetime_ = refunded_transaction.datetime_ + timedelta(seconds=1)
+
         description = self._dialog.description
         total_amount = self._dialog.amount
         if total_amount <= 0:
@@ -226,5 +237,10 @@ class RefundTransactionDialogPresenter:
 
         payees = sorted(payee.name for payee in self._record_keeper.payees)
         self._dialog = RefundTransactionDialog(
-            self._parent_view, refunded_transaction, accounts, payees, edited_refund
+            self._parent_view,
+            refunded_transaction,
+            accounts,
+            payees,
+            self._record_keeper.descriptions,
+            edited_refund,
         )

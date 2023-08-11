@@ -1,18 +1,26 @@
 from decimal import Decimal
 
 from PyQt6.QtCore import QSignalBlocker, Qt, pyqtSignal
+from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QDoubleSpinBox, QHBoxLayout, QLineEdit, QWidget
 
 
 class RefundRowWidget(QWidget):
     signal_amount_changed = pyqtSignal()
 
-    def __init__(self, parent: QWidget | None, text: str, currency_code: str) -> None:
+    def __init__(
+        self, parent: QWidget | None, text: str, currency_code: str, icon: QIcon
+    ) -> None:
         super().__init__(parent)
 
         self.line_edit = QLineEdit(self)
         self.line_edit.setEnabled(False)
         self.line_edit.setText(text)
+        self.line_edit.setMinimumWidth(175)
+
+        # the following makes icons colourful even when QLineEdit is disabled
+        icon.addPixmap(icon.pixmap(16, 16), QIcon.Mode.Disabled)
+        self.line_edit.addAction(icon, QLineEdit.ActionPosition.LeadingPosition)
 
         self._currency_code = currency_code
 

@@ -242,11 +242,6 @@
     <string>Only Transactions of same type can be edited</string>
    </property>
   </action>
-  <action name="actionDuplicate">
-   <property name="text">
-    <string>Duplicate</string>
-   </property>
-  </action>
   <action name="actionFilter_Transactions">
    <property name="text">
     <string>Filter Transactions</string>
@@ -286,6 +281,19 @@
    </property>
    <property name="toolTip">
     <string>Show refunded Expense and its Refunds</string>
+   </property>
+  </action>
+  <action name="actionHide_All_Columns">
+   <property name="text">
+    <string>Hide All Columns</string>
+   </property>
+  </action>
+  <action name="actionDuplicate">
+   <property name="text">
+    <string>Duplicate</string>
+   </property>
+   <property name="shortcut">
+    <string>D</string>
    </property>
   </action>
  </widget>

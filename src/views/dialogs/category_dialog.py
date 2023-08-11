@@ -1,16 +1,16 @@
 import logging
 from collections.abc import Collection
 
-from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtWidgets import (
     QAbstractButton,
-    QCompleter,
     QDialogButtonBox,
     QWidget,
 )
 from src.views import icons
 from src.views.base_classes.custom_dialog import CustomDialog
 from src.views.ui_files.dialogs.Ui_category_dialog import Ui_CategoryDialog
+from src.views.widgets.smart_combo_box import SmartComboBox
 
 
 class CategoryDialog(CustomDialog, Ui_CategoryDialog):
@@ -34,9 +34,11 @@ class CategoryDialog(CustomDialog, Ui_CategoryDialog):
 
         self.currentPathLineEdit.setEnabled(False)
 
-        self.pathCompleter = QCompleter(paths)
-        self.pathCompleter.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
-        self.pathLineEdit.setCompleter(self.pathCompleter)
+        self.pathLineEdit = SmartComboBox(parent=self)
+        self.pathLineEdit.load_items(paths)
+        self.pathLineEdit.setCurrentText("")
+        self.formLayout.insertRow(1, "Path", self.pathLineEdit)
+        self.pathLineEdit.setFocus()
 
         self.typeLineEdit.setText(type_)
         self.typeLineEdit.setDisabled(True)
@@ -51,7 +53,7 @@ class CategoryDialog(CustomDialog, Ui_CategoryDialog):
             self.currentPathLineEdit.setVisible(False)
 
         self.buttonBox.clicked.connect(self._handle_button_box_click)
-        self.pathLineEdit.textChanged.connect(self.signal_path_changed.emit)
+        self.pathLineEdit.currentTextChanged.connect(self.signal_path_changed.emit)
 
     @property
     def type_(self) -> str:
@@ -59,11 +61,11 @@ class CategoryDialog(CustomDialog, Ui_CategoryDialog):
 
     @property
     def path(self) -> str:
-        return self.pathLineEdit.text()
+        return self.pathLineEdit.currentText()
 
     @path.setter
     def path(self, text: str) -> None:
-        self.pathLineEdit.setText(text)
+        self.pathLineEdit.setCurrentText(text)
 
     @property
     def current_path(self) -> str:

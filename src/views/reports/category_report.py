@@ -23,13 +23,6 @@ class CategoryReport(CustomWidget, Ui_CategoryReport):
         super().__init__(parent=parent)
         self.setupUi(self)
 
-        # BUG: figure out why this is needed at all
-        font = self.font()
-        font_size = font.pointSize()
-        tree_font = self.treeView.font()
-        tree_font.setPointSize(font_size)
-        self.treeView.setFont(tree_font)
-
         self.setWindowFlag(Qt.WindowType.Window)
         self.setWindowTitle(title)
         self.setWindowIcon(icons.category)

@@ -109,6 +109,8 @@ class CashFlowTotalChartWidget(ChartWidget):
             stats.delta_neutral,
             stats.delta_performance,
         )
+        if min_value.value_rounded >= 0:
+            min_value = min_value.currency.zero_amount
         yticks = self.chart.axes.get_yticks()
         step = abs(yticks[1] - yticks[0])
         ymax = math.ceil(float(max_value.value_rounded) / step) * step

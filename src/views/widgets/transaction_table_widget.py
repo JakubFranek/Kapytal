@@ -16,7 +16,7 @@ class EventFilter(QObject):
         super().__init__(parent)
         self.table = QTableView(parent)  # dummy QTableView to test events on
 
-    def eventFilter(self, source: QObject, event: QEvent) -> bool:
+    def eventFilter(self, source: QObject, event: QEvent) -> bool:  # noqa: ARG002, N802
         if isinstance(event, QKeyEvent):
             text_cleared_event = QKeyEvent(
                 event.type(),
@@ -89,6 +89,7 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
 
         # this is necessary to make action shortcuts work
         self.tableView.addAction(self.actionDelete)
+        self.tableView.addAction(self.actionDuplicate)
 
         # this filter disables keyboard search in QTableView
         self.filter_ = EventFilter(parent=None)
@@ -148,9 +149,9 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
         else:
             logging.debug(f"Hiding TransactionTable column {column.name}")
 
-    def show_all_columns(self) -> None:
+    def set_all_columns_visibility(self, *, show: bool) -> None:
         for column in TRANSACTION_TABLE_COLUMN_HEADERS:
-            self.set_column_visibility(column, show=True)
+            self.set_column_visibility(column, show=show)
         self.resize_table_to_contents()
 
     def set_actions(
@@ -199,10 +200,10 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
             )
             self.column_actions.append(action)
 
-    def _create_header_context_menu(self, event: QContextMenuEvent) -> None:
-        del event
+    def _create_header_context_menu(self, _: QContextMenuEvent) -> None:
         self.header_menu = QMenu(self)
         self.header_menu.addAction(self.actionShow_All_Columns)
+        self.header_menu.addAction(self.actionHide_All_Columns)
         self.header_menu.addAction(self.actionResize_Columns_to_Fit)
         self.header_menu.addAction(self.actionReset_Columns)
         self.header_menu.addSeparator()
@@ -215,20 +216,19 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
             self.header_menu.addAction(action)
         self.header_menu.popup(QCursor.pos())
 
-    def _create_table_context_menu(self, event: QContextMenuEvent) -> None:
-        del event
-        self.header_menu = QMenu(self)
-        self.header_menu.setToolTipsVisible(True)
-        self.header_menu.addAction(self.actionEdit)
-        self.header_menu.addAction(self.actionDuplicate)
-        self.header_menu.addAction(self.actionDelete)
-        self.header_menu.addSeparator()
-        self.header_menu.addAction(self.actionAdd_Tags)
-        self.header_menu.addAction(self.actionRemove_Tags)
-        self.header_menu.addSeparator()
-        self.header_menu.addAction(self.actionRefund)
-        self.header_menu.addAction(self.actionFind_Related)
-        self.header_menu.popup(QCursor.pos())
+    def _create_table_context_menu(self, _: QContextMenuEvent) -> None:
+        self.table_menu = QMenu(self)
+        self.table_menu.setToolTipsVisible(True)
+        self.table_menu.addAction(self.actionEdit)
+        self.table_menu.addAction(self.actionDuplicate)
+        self.table_menu.addAction(self.actionDelete)
+        self.table_menu.addSeparator()
+        self.table_menu.addAction(self.actionAdd_Tags)
+        self.table_menu.addAction(self.actionRemove_Tags)
+        self.table_menu.addSeparator()
+        self.table_menu.addAction(self.actionRefund)
+        self.table_menu.addAction(self.actionFind_Related)
+        self.table_menu.popup(QCursor.pos())
 
     def _set_icons(self) -> None:
         self.actionFilter_Transactions.setIcon(icons.filter_)
@@ -264,7 +264,12 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
         self.transferToolButton.addAction(self.actionCash_Transfer)
         self.transferToolButton.addAction(self.actionSecurity_Transfer)
 
-        self.actionShow_All_Columns.triggered.connect(self.show_all_columns)
+        self.actionShow_All_Columns.triggered.connect(
+            lambda: self.set_all_columns_visibility(show=True)
+        )
+        self.actionHide_All_Columns.triggered.connect(
+            lambda: self.set_all_columns_visibility(show=False)
+        )
         self.actionResize_Columns_to_Fit.triggered.connect(
             self.resize_table_to_contents
         )

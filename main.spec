@@ -13,6 +13,7 @@ a = Analysis(
         ("resources/icons", "resources/icons"),
         ("logs/README.md", "logs/."),
         ("saved_data/README.md", "saved_data/."),
+        ("saved_data/demo.json", "saved_data/."),
         ("saved_data/backups/README.md", "saved_data/backups/."),
     ],
     hiddenimports=[],

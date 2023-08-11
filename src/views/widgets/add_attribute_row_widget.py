@@ -10,7 +10,7 @@ class AddAttributeRowWidget(QWidget):
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
 
-        self.actionAdd_Row = QAction(icons.add, "Add a row", parent)
+        self.actionAdd_Row = QAction(icons.add, "Add row", parent)
         self.actionAdd_Row.triggered.connect(self.signal_add_row.emit)
 
         self.tool_button = QToolButton(self)

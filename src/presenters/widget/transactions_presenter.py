@@ -158,6 +158,7 @@ class TransactionsPresenter:
         any_security_related = False
         any_cash_transfers = False
         any_with_categories = False
+        any_non_base_amount = False
         for transaction in visible_transactions:
             if not any_security_related and isinstance(
                 transaction, SecurityTransaction
@@ -169,6 +170,19 @@ class TransactionsPresenter:
                 transaction, CashTransaction | RefundTransaction
             ):
                 any_with_categories = True
+            if (
+                not any_non_base_amount
+                and isinstance(transaction, CashTransaction | RefundTransaction)
+                and transaction.currency != self._record_keeper.base_currency
+            ):
+                any_non_base_amount = True
+            if (
+                any_security_related
+                and any_cash_transfers
+                and any_with_categories
+                and any_non_base_amount
+            ):
+                break
 
         shown_accounts = tuple(self._account_tree_shown_accounts)
         single_cash_account = len(shown_accounts) == 1 and isinstance(
@@ -191,6 +205,8 @@ class TransactionsPresenter:
                 self._view.set_column_visibility(column, show=any_with_categories)
             if column == TransactionTableColumn.BALANCE:
                 self._view.set_column_visibility(column, show=single_cash_account)
+            if column == TransactionTableColumn.AMOUNT_NATIVE:
+                self._view.set_column_visibility(column, show=any_non_base_amount)
 
     def _search_filter(self, pattern: str) -> None:
         if self._validate_regex(pattern) is False:
@@ -280,24 +296,20 @@ class TransactionsPresenter:
             )
         )
         self._view.signal_cash_transfer.connect(
-            lambda: self._cash_transfer_dialog_presenter.run_add_dialog(
-                self._account_tree_shown_accounts
-            )
+            self._cash_transfer_dialog_presenter.run_add_dialog
         )
         self._view.signal_buy.connect(
             lambda: self._security_transaction_dialog_presenter.run_add_dialog(
-                SecurityTransactionType.BUY, self._account_tree_shown_accounts
+                SecurityTransactionType.BUY
             )
         )
         self._view.signal_sell.connect(
             lambda: self._security_transaction_dialog_presenter.run_add_dialog(
-                SecurityTransactionType.SELL, self._account_tree_shown_accounts
+                SecurityTransactionType.SELL
             )
         )
         self._view.signal_security_transfer.connect(
-            lambda: self._security_transfer_dialog_presenter.run_add_dialog(
-                self._account_tree_shown_accounts
-            )
+            self._security_transfer_dialog_presenter.run_add_dialog
         )
 
         self._view.signal_delete.connect(self._delete_transactions)
@@ -393,6 +405,7 @@ class TransactionsPresenter:
                 handle_exception(exception)
         if any_deleted:
             self._update_number_of_shown_transactions()
+            self._update_table_columns()
             self.event_data_changed()
 
     def _duplicate_transaction(self) -> None:
@@ -560,6 +573,7 @@ class TransactionsPresenter:
             self._busy_dialog.close()
 
     def _data_changed(self) -> None:
+        self._update_table_columns()
         self._update_number_of_shown_transactions()
         self.event_data_changed()
 
@@ -568,9 +582,9 @@ class TransactionsPresenter:
         n_total = len(self._record_keeper.transactions)
         logging.debug(f"Visible transactions: {n_visible:,}/{n_total:,}")
         self._view.set_shown_transactions(n_visible, n_total)
-        self._view.set_shown_transactions(n_visible, n_total)
 
     def _reset_columns(self) -> None:
+        self._view.set_all_columns_visibility(show=True)
         self._view.set_column_visibility(TransactionTableColumn.UUID, show=False)
         self._view.set_column_visibility(
             TransactionTableColumn.DATETIME_CREATED, show=False

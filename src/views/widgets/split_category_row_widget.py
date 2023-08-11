@@ -3,9 +3,14 @@ from decimal import Decimal
 
 from PyQt6.QtCore import QSignalBlocker, Qt, pyqtSignal
 from PyQt6.QtGui import QAction
-from PyQt6.QtWidgets import QComboBox, QDoubleSpinBox, QHBoxLayout, QToolButton, QWidget
+from PyQt6.QtWidgets import (
+    QDoubleSpinBox,
+    QHBoxLayout,
+    QToolButton,
+    QWidget,
+)
 from src.views import icons
-from src.views.dialogs.select_item_dialog import ask_user_for_selection
+from src.views.widgets.smart_combo_box import SmartComboBox
 
 
 class SplitCategoryRowWidget(QWidget):
@@ -15,16 +20,10 @@ class SplitCategoryRowWidget(QWidget):
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
 
-        self.combo_box = QComboBox(self)
-        self.combo_box.setEditable(True)
+        self.combo_box = SmartComboBox(parent=self)
         self.combo_box.lineEdit().setPlaceholderText("Enter Category path")
         self.combo_box.setToolTip("Both existing or new Category paths are valid")
-
-        self.select_tool_button = QToolButton(self)
-        self.actionSelect_Item = QAction("Select Category", self)
-        self.actionSelect_Item.setIcon(icons.category)
-        self.actionSelect_Item.triggered.connect(self._select_item)
-        self.select_tool_button.setDefaultAction(self.actionSelect_Item)
+        self.combo_box.setMinimumWidth(175)
 
         self.double_spin_box = QDoubleSpinBox(self)
         self.double_spin_box.setMaximum(1e16)
@@ -45,7 +44,6 @@ class SplitCategoryRowWidget(QWidget):
 
         self.horizontal_layout = QHBoxLayout(self)
         self.horizontal_layout.addWidget(self.combo_box)
-        self.horizontal_layout.addWidget(self.select_tool_button)
         self.horizontal_layout.addWidget(self.double_spin_box)
         self.horizontal_layout.addWidget(self.remove_tool_button)
 
@@ -62,7 +60,8 @@ class SplitCategoryRowWidget(QWidget):
 
     @category.setter
     def category(self, value: str) -> None:
-        self.combo_box.setCurrentText(value)
+        with QSignalBlocker(self.combo_box):
+            self.combo_box.setCurrentText(value)
 
     @property
     def amount(self) -> Decimal:
@@ -102,23 +101,9 @@ class SplitCategoryRowWidget(QWidget):
     def __repr__(self) -> str:
         return f"SplitCategoryRowWidget('{self.category}')"
 
-    def load_categories(self, categories: Collection[str], *, keep_text: bool) -> None:
-        current_text = self.category
-        self._categories = categories
-        self.combo_box.clear()
-        for item in categories:
-            self.combo_box.addItem(item)
-        if keep_text:
-            self.combo_box.setCurrentText(current_text)
-        else:
-            self.combo_box.setCurrentIndex(-1)
-
-    def _select_item(self) -> None:
-        item = ask_user_for_selection(
-            self,
-            self._categories,
-            "Select Category",
-            icons.category,
+    def load_categories(
+        self, categories: Collection[str], *, keep_current_text: bool
+    ) -> None:
+        self.combo_box.load_items(
+            categories, icons.category, keep_current_text=keep_current_text
         )
-        if item:
-            self.combo_box.setCurrentText(item)

@@ -21,6 +21,7 @@ from src.views.dialogs.currency_dialog import CurrencyDialog
 from src.views.dialogs.load_data_dialog import ConflictResolutionMode, LoadDataDialog
 from src.views.dialogs.set_exchange_rate_dialog import SetExchangeRateDialog
 from src.views.forms.currency_form import CurrencyForm
+from src.views.utilities.handle_exception import display_error_message
 from src.views.utilities.message_box_functions import ask_yes_no_question
 
 
@@ -74,6 +75,7 @@ class CurrencyFormPresenter:
         self._exchange_rate_table_model.post_reset_model()
         self._exchange_rate_history_model.post_reset_model()
 
+        self._exchange_rate_selection_changed()
         self._update_chart(None)
 
     def show_form(self) -> None:
@@ -159,6 +161,12 @@ class CurrencyFormPresenter:
 
     def _run_add_exchange_rate_dialog(self) -> None:
         codes = [currency.code for currency in self._record_keeper.currencies]
+        if len(codes) < 2:
+            display_error_message(
+                "Create at least 2 Currencies before adding an ExchangeRate."
+            )
+            return
+
         self._dialog = AddExchangeRateDialog(currency_codes=codes, parent=self._view)
         self._dialog.signal_ok.connect(self._add_exchange_rate)
         logging.debug("Running AddExchangeRateDialog")

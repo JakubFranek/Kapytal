@@ -22,11 +22,12 @@ from src.models.model_objects.security_objects import (
 from src.models.user_settings import user_settings
 from src.views import icons
 from src.views.base_classes.custom_dialog import CustomDialog
-from src.views.dialogs.select_item_dialog import ask_user_for_selection
 from src.views.ui_files.dialogs.Ui_security_transaction_dialog import (
     Ui_SecurityTransactionDialog,
 )
+from src.views.widgets.description_plain_text_edit import DescriptionPlainTextEdit
 from src.views.widgets.multiple_tags_selector_widget import MultipleTagsSelectorWidget
+from src.views.widgets.smart_combo_box import SmartComboBox
 
 
 class EditMode(Enum):
@@ -56,6 +57,7 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
         cash_accounts: Collection[CashAccount],
         security_accounts: Collection[SecurityAccount],
         tag_names: Collection[str],
+        descriptions: Collection[str],
         *,
         edit_mode: EditMode,
     ) -> None:
@@ -74,12 +76,14 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
         self._fixed_spinbox: QDoubleSpinBox | None = None
 
         self._initialize_window()
-        self._initialize_placeholders()
-        self._initialize_signals()
-        self._initialize_actions()
         self._initialize_security_combobox(securities)
-        self._setup_security_account_combobox()
+        self._initialize_cash_account_combobox()
         self._setup_cash_account_combobox()
+        self._initialize_security_account_combobox()
+        self._initialize_description_plain_text_edit(descriptions)
+        self._initialize_signals()
+        self._initialize_placeholders()
+        self._set_tab_order()
 
     @property
     def type_(self) -> SecurityTransactionType:
@@ -101,10 +105,9 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
     @property
     def security_name(self) -> str | None:
         text = self.securityComboBox.currentText()
-        if text == self.KEEP_CURRENT_VALUES:
+        if not text or text == self.KEEP_CURRENT_VALUES:
             return None
-        security: Security = self.securityComboBox.currentData()
-        return security.name
+        return SecurityTransactionDialog._get_security_name_from_security_text(text)
 
     @security_name.setter
     def security_name(self, value: str) -> None:
@@ -146,7 +149,13 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
         return (
             self.dateEdit.dateTime()
             .toPyDateTime()
-            .replace(tzinfo=user_settings.settings.time_zone)
+            .replace(
+                tzinfo=user_settings.settings.time_zone,
+                hour=0,
+                minute=0,
+                second=0,
+                microsecond=0,
+            )
         )
 
     @datetime_.setter
@@ -158,7 +167,13 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
         return (
             self.dateEdit.minimumDateTime()
             .toPyDateTime()
-            .replace(tzinfo=user_settings.settings.time_zone)
+            .replace(
+                tzinfo=user_settings.settings.time_zone,
+                hour=0,
+                minute=0,
+                second=0,
+                microsecond=0,
+            )
         )
 
     @property
@@ -255,17 +270,23 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
 
     def _initialize_security_combobox(self, securities: Collection[Security]) -> None:
         if self._edit_mode in EditMode.get_multiple_edit_values():
-            self.securityComboBox.addItem(self.KEEP_CURRENT_VALUES)
+            placeholder_text = "Leave empty to keep current values"
+        else:
+            placeholder_text = "Enter Security name"
+
         _securities = sorted(
             securities,
             key=lambda security: unicodedata.normalize("NFD", security.name.lower()),
         )
-        for security in _securities:
-            text = SecurityTransactionDialog._get_security_text(security)
-            self.securityComboBox.addItem(icons.security, text, security)
+        _securities = [
+            SecurityTransactionDialog._get_security_text(security)
+            for security in _securities
+        ]
+        self.securityComboBox = SmartComboBox(parent=self)
+        self.securityComboBox.load_items(_securities, icons.security, placeholder_text)
+        self.formLayout.insertRow(1, "Security", self.securityComboBox)
 
         self.securityComboBox.currentTextChanged.connect(self._security_changed)
-        self._security_changed()
 
     @staticmethod
     def _get_security_text(security: Security) -> str:
@@ -273,15 +294,44 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
             f"{security.name} [{security.symbol}]" if security.symbol else security.name
         )
 
-    def _setup_security_account_combobox(
+    @staticmethod
+    def _get_security_name_from_security_text(text: str) -> str:
+        # return the string without the square brackets and its contents
+        return text.split("[")[0].strip()
+
+    def _initialize_description_plain_text_edit(
+        self, descriptions: Collection[str]
+    ) -> None:
+        self.descriptionPlainTextEdit = DescriptionPlainTextEdit(descriptions)
+        self.description_label = QLabel("Description")
+        self.formLayout.insertRow(
+            5, self.description_label, self.descriptionPlainTextEdit
+        )
+
+    def _initialize_cash_account_combobox(
         self,
     ) -> None:
+        self.cashAccountComboBox = SmartComboBox(parent=self)
+        self.formLayout.insertRow(2, "Cash Account", self.cashAccountComboBox)
+
+        self._security_changed()
+
+    def _initialize_security_account_combobox(
+        self,
+    ) -> None:
+        items = [account.path for account in self._security_accounts]
+
         if self._edit_mode in EditMode.get_multiple_edit_values():
-            self.securityAccountComboBox.addItem(self.KEEP_CURRENT_VALUES)
-        for security_account in self._security_accounts:
-            self.securityAccountComboBox.addItem(
-                icons.security_account, security_account.path
-            )
+            placeholder_text = "Leave empty to keep current values"
+        else:
+            placeholder_text = "Enter Account path"
+
+        self.securityAccountComboBox = SmartComboBox(parent=self)
+        self.securityAccountComboBox.load_items(
+            items, icons.security_account, placeholder_text
+        )
+        self.formLayout.insertRow(3, "Security Account", self.securityAccountComboBox)
+        self.securityAccountComboBox.setMinimumWidth(300)
 
     def _setup_cash_account_combobox(self) -> None:
         with QSignalBlocker(self.cashAccountComboBox):
@@ -293,15 +343,28 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
                 self._edit_mode == EditMode.EDIT_MULTIPLE_MIXED_CURRENCY
                 and security is None
             ):
-                self.cashAccountComboBox.addItem(self.KEEP_CURRENT_VALUES)
+                placeholder_text = "Leave empty to keep current values"
+            elif security is None:
+                placeholder_text = "Select valid Security"
+            else:
+                placeholder_text = "Enter Account path"
 
-            for cash_account in self._cash_accounts:
-                if security is not None and cash_account.currency == security.currency:
-                    self.cashAccountComboBox.addItem(
-                        icons.cash_account, cash_account.path
-                    )
-
-            self.cash_account_path = cash_account_path
+            if security is not None:
+                self.cashAccountComboBox.setEnabled(True)
+                items = [
+                    account.path
+                    for account in self._cash_accounts
+                    if account.currency == security.currency
+                ]
+                self.cashAccountComboBox.load_items(
+                    items, icons.cash_account, placeholder_text
+                )
+                self.cash_account_path = cash_account_path
+            else:
+                self.cashAccountComboBox.setEnabled(False)
+                self.cashAccountComboBox.load_items(
+                    [], icons.cash_account, placeholder_text
+                )
 
             self._set_spinboxes_currencies()
 
@@ -364,16 +427,12 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
         for account in self._cash_accounts:
             if account.path == account_path:
                 return account
-        if self._edit_mode not in EditMode.get_multiple_edit_values():
-            raise ValueError(f"Invalid Account path: {account_path}")
         return None
 
     def _get_security(self, security_name: str) -> Security | None:
         for security in self._securities:
             if security.name == security_name:
                 return security
-        if self._edit_mode not in EditMode.get_multiple_edit_values():
-            raise ValueError(f"Invalid Security name: {security_name}")
         return None
 
     def _handle_button_box_click(self, button: QAbstractButton) -> None:
@@ -409,42 +468,14 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
         self.sharesDoubleSpinBox.setDecimals(decimals)
         self.sharesDoubleSpinBox.setSingleStep(10**exponent)
 
-    def _initialize_actions(self) -> None:
-        self.actionSelect_Cash_Account.setIcon(icons.cash_account)
-        self.actionSelect_Cash_Account.triggered.connect(self._select_cash_account)
-        self.cashAccountToolButton.setDefaultAction(self.actionSelect_Cash_Account)
-
-        self.actionSelect_Security_Account.setIcon(icons.security_account)
-        self.actionSelect_Security_Account.triggered.connect(
-            self._select_security_account
-        )
-        self.securityAccountToolButton.setDefaultAction(
-            self.actionSelect_Security_Account
-        )
-
-    def _select_cash_account(self) -> None:
-        security = self._get_security(self.security_name)
-        if security is None:
-            return
-        account_paths = [
-            account.path
-            for account in self._cash_accounts
-            if account.currency == security.currency
-        ]
-        account = ask_user_for_selection(
-            self,
-            account_paths,
-            "Select Cash Account",
-            icons.cash_account,
-        )
-        self.cash_account_path = account if account else self.cash_account_path
-
-    def _select_security_account(self) -> None:
-        account_paths = [account.path for account in self._security_accounts]
-        account = ask_user_for_selection(
-            self,
-            account_paths,
-            "Select Security Account",
-            icons.cash_account,
-        )
-        self.security_account_path = account if account else self.security_account_path
+    def _set_tab_order(self) -> None:
+        self.setTabOrder(self.buyRadioButton, self.sellRadioButton)
+        self.setTabOrder(self.sellRadioButton, self.securityComboBox)
+        self.setTabOrder(self.securityComboBox, self.cashAccountComboBox)
+        self.setTabOrder(self.cashAccountComboBox, self.securityAccountComboBox)
+        self.setTabOrder(self.securityAccountComboBox, self.dateEdit)
+        self.setTabOrder(self.dateEdit, self.descriptionPlainTextEdit)
+        self.setTabOrder(self.descriptionPlainTextEdit, self.sharesDoubleSpinBox)
+        self.setTabOrder(self.sharesDoubleSpinBox, self.priceDoubleSpinBox)
+        self.setTabOrder(self.priceDoubleSpinBox, self.totalDoubleSpinBox)
+        self.setTabOrder(self.totalDoubleSpinBox, self.tags_widget)

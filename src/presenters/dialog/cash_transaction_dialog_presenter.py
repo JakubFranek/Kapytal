@@ -61,11 +61,8 @@ class CashTransactionDialogPresenter:
             (account for account in valid_accounts if isinstance(account, CashAccount)),
             key=lambda account: account.path.lower(),
         )
-        self._dialog.account_path = (
-            _valid_accounts[0].path
-            if len(_valid_accounts) > 0
-            else self._record_keeper.cash_accounts[0].path
-        )
+        if len(_valid_accounts) == 1:
+            self._dialog.account_path = _valid_accounts[0].path
 
         self._dialog.type_ = type_
         self._dialog.datetime_ = datetime.now(user_settings.settings.time_zone)
@@ -211,15 +208,11 @@ class CashTransactionDialogPresenter:
         type_ = self._dialog.type_
         account = self._dialog.account_path
         payee = self._dialog.payee
+
         if not payee:
             display_error_message(
                 "Payee name must be at least 1 character long.", title="Warning"
             )
-            return
-        if not check_for_nonexistent_attributes(
-            [payee], self._record_keeper.payees, self._dialog, "Payee"
-        ):
-            logging.debug("Dialog aborted")
             return
 
         datetime_ = self._dialog.datetime_
@@ -227,7 +220,9 @@ class CashTransactionDialogPresenter:
             raise ValueError("Expected datetime_, received None.")
         if not validate_datetime(datetime_, self._dialog):
             return
+
         description = self._dialog.description if self._dialog.description else ""
+
         total_amount = self._dialog.amount
         if total_amount is None:
             raise ValueError("Expected Decimal, received None.")
@@ -236,14 +231,8 @@ class CashTransactionDialogPresenter:
                 "Transaction amount must be positive.", title="Warning"
             )
             return
-        category_amount_pairs = self._dialog.category_amount_pairs
-        tag_amount_pairs = self._dialog.tag_amount_pairs
-        if tag_amount_pairs is None:
-            raise ValueError("Expected ((str, Decimal),...), received None.")
-        if any(amount <= 0 for _, amount in tag_amount_pairs):
-            display_error_message("Tag amounts must be positive.", title="Warning")
-            return
 
+        category_amount_pairs = self._dialog.category_amount_pairs
         if category_amount_pairs is None:
             raise ValueError("Expected ((str, Decimal),...), received None.")
         categories = [category for category, _ in category_amount_pairs]
@@ -251,19 +240,27 @@ class CashTransactionDialogPresenter:
             display_error_message("Empty Category paths are invalid.", title="Warning")
             return
 
-        if not check_for_nonexistent_categories(
-            categories, self._record_keeper.categories, self._dialog
-        ):
-            logging.debug("Dialog aborted")
+        tag_amount_pairs = self._dialog.tag_amount_pairs
+        if tag_amount_pairs is None:
+            raise ValueError("Expected ((str, Decimal),...), received None.")
+        if any(amount <= 0 for _, amount in tag_amount_pairs):
+            display_error_message("Tag amounts must be positive.", title="Warning")
             return
-
         tag_names = [tag for tag, _ in tag_amount_pairs]
         if any(not tag for tag in tag_names):
             display_error_message("Empty Tag names are invalid.", title="Warning")
             return
 
-        if not check_for_nonexistent_attributes(
-            tag_names, self._record_keeper.tags, self._dialog, "Tag"
+        if (
+            not check_for_nonexistent_attributes(
+                [payee], self._record_keeper.payees, self._dialog, "Payee"
+            )
+            or not check_for_nonexistent_categories(
+                categories, self._record_keeper.categories, self._dialog
+            )
+            or not check_for_nonexistent_attributes(
+                tag_names, self._record_keeper.tags, self._dialog, "Tag"
+            )
         ):
             logging.debug("Dialog aborted")
             return
@@ -305,16 +302,13 @@ class CashTransactionDialogPresenter:
         type_ = self._dialog.type_
         account = self._dialog.account_path
         payee = self._dialog.payee
-        if not check_for_nonexistent_attributes(
-            [payee], self._record_keeper.payees, self._dialog, "Payee"
-        ):
-            logging.debug("Dialog aborted")
-            return
 
         datetime_ = self._dialog.datetime_
         if datetime_ is not None and not validate_datetime(datetime_, self._dialog):
             return
+
         description = self._dialog.description
+
         category_amount_pairs = self._dialog.category_amount_pairs
         tag_amount_pairs = self._dialog.tag_amount_pairs
 
@@ -326,11 +320,6 @@ class CashTransactionDialogPresenter:
                 )
                 return
 
-            if not check_for_nonexistent_categories(
-                categories, self._record_keeper.categories, self._dialog
-            ):
-                logging.debug("Dialog aborted")
-                return
             for category, _ in category_amount_pairs:
                 if category is None:
                     display_error_message(
@@ -338,6 +327,18 @@ class CashTransactionDialogPresenter:
                         title="Warning",
                     )
                     return
+
+            if not check_for_nonexistent_categories(
+                categories, self._record_keeper.categories, self._dialog
+            ):
+                logging.debug("Dialog aborted")
+                return
+
+        if not check_for_nonexistent_attributes(
+            [payee], self._record_keeper.payees, self._dialog, "Payee"
+        ):
+            logging.debug("Dialog aborted")
+            return
 
         log = []
         if description is not None:
@@ -398,5 +399,6 @@ class CashTransactionDialogPresenter:
             category_income_paths,
             category_expense_paths,
             tag_names,
+            self._record_keeper.descriptions,
             edit_mode=edit_mode,
         )

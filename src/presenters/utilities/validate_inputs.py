@@ -11,7 +11,8 @@ def validate_datetime(datetime_: datetime, parent: QWidget) -> bool:
     date_now = datetime.now(tz=user_settings.settings.time_zone).date()
     if date_now < datetime_.date():
         logging.warning(
-            "Entered date is in the future, asking user if they want to proceed"
+            f"Entered date is in the future ({date_now}), "
+            "asking user whether to proceed"
         )
         answer = ask_yes_no_question(
             parent=parent,

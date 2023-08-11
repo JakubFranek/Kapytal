@@ -28,12 +28,6 @@ class AttributeReport(CustomWidget, Ui_AttributeReport):
         super().__init__(parent=parent)
         self.setupUi(self)
 
-        font = self.font()
-        font_size = font.pointSize()
-        table_font = self.tableView.font()
-        table_font.setPointSize(font_size)
-        self.tableView.setFont(table_font)
-
         self.setWindowFlag(Qt.WindowType.Window)
         self.setWindowTitle(title)
         if attribute_type == AttributeType.TAG:

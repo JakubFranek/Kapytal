@@ -4,7 +4,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum, auto
 
-from PyQt6.QtCore import pyqtSignal
+from PyQt6.QtCore import QSignalBlocker, pyqtSignal
 from PyQt6.QtWidgets import (
     QAbstractButton,
     QDialogButtonBox,
@@ -15,14 +15,15 @@ from src.models.model_objects.cash_objects import CashAccount, CashTransactionTy
 from src.models.user_settings import user_settings
 from src.views import icons
 from src.views.base_classes.custom_dialog import CustomDialog
-from src.views.dialogs.select_item_dialog import ask_user_for_selection
 from src.views.ui_files.dialogs.Ui_cash_transaction_dialog import (
     Ui_CashTransactionDialog,
 )
 from src.views.widgets.add_attribute_row_widget import AddAttributeRowWidget
+from src.views.widgets.description_plain_text_edit import DescriptionPlainTextEdit
 from src.views.widgets.label_widget import LabelWidget
 from src.views.widgets.single_category_row_widget import SingleCategoryRowWidget
 from src.views.widgets.single_tag_row_widget import SingleTagRowWidget
+from src.views.widgets.smart_combo_box import SmartComboBox
 from src.views.widgets.split_category_row_widget import SplitCategoryRowWidget
 from src.views.widgets.split_tag_row_widget import SplitTagRowWidget
 
@@ -55,6 +56,7 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
         categories_income: Collection[str],
         categories_expense: Collection[str],
         tag_names: Collection[str],
+        descriptions: Collection[str],
         *,
         edit_mode: EditMode,
     ) -> None:
@@ -66,6 +68,14 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
         self._edit_mode = edit_mode
         self._tag_names = tag_names
         self._accounts = accounts
+        self._decimals = 2  # default value (most currencies have 2 decimals)
+        self._currency_code = ""
+
+        self._initialize_accounts_combobox(accounts)
+        self._initialize_payees_combobox(payees)
+
+        self.descriptionPlainTextEdit = DescriptionPlainTextEdit(descriptions)
+        self.formLayout.insertRow(4, "Description", self.descriptionPlainTextEdit)
 
         self._type = CashTransactionType.INCOME
         self.incomeRadioButton.setChecked(True)
@@ -77,10 +87,10 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
         self._initialize_single_tag_row()
 
         self.incomeRadioButton.toggled.connect(
-            lambda: self._setup_categories_combobox(keep_text=False)
+            lambda: self._setup_all_categories_comboboxes(keep_text=False)
         )
         self.expenseRadioButton.toggled.connect(
-            lambda: self._setup_categories_combobox(keep_text=False)
+            lambda: self._setup_all_categories_comboboxes(keep_text=False)
         )
 
         if edit_mode != EditMode.ADD:
@@ -88,13 +98,7 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
             self.dateEdit.setMinimumDate(date(1900, 1, 1))
             self.amountDoubleSpinBox.setSpecialValueText(self.KEEP_CURRENT_VALUES)
 
-        self._payees = payees
-        for payee in payees:
-            self.payeeComboBox.addItem(payee)
-
-        self._initialize_accounts_combobox(accounts)
         self._initialize_window()
-        self._initialize_actions()
         self._initialize_placeholders()
 
         if edit_mode == EditMode.EDIT_MULTIPLE:
@@ -135,7 +139,7 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
     @property
     def account_path(self) -> str | None:
         text = self.accountsComboBox.currentText()
-        if text == self.KEEP_CURRENT_VALUES:
+        if not text and self._edit_mode in EditMode.get_multiple_edit_values():
             return None
         return text
 
@@ -150,7 +154,8 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
 
     @payee.setter
     def payee(self, payee: str) -> None:
-        self.payeeComboBox.setCurrentText(payee)
+        with QSignalBlocker(self.payeeComboBox):
+            self.payeeComboBox.setCurrentText(payee)
 
     @property
     def datetime_(self) -> datetime | None:
@@ -159,7 +164,13 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
         return (
             self.dateEdit.dateTime()
             .toPyDateTime()
-            .replace(tzinfo=user_settings.settings.time_zone)
+            .replace(
+                tzinfo=user_settings.settings.time_zone,
+                hour=0,
+                minute=0,
+                second=0,
+                microsecond=0,
+            )
         )
 
     @datetime_.setter
@@ -171,7 +182,13 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
         return (
             self.dateEdit.minimumDateTime()
             .toPyDateTime()
-            .replace(tzinfo=user_settings.settings.time_zone)
+            .replace(
+                tzinfo=user_settings.settings.time_zone,
+                hour=0,
+                minute=0,
+                second=0,
+                microsecond=0,
+            )
         )
 
     @property
@@ -208,20 +225,30 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
     def currency_code(self, code: str) -> None:
         self._currency_code = code
         self.amountDoubleSpinBox.setSuffix(" " + code)
-        if len(self._category_rows) > 1:
+        if hasattr(self, "_category_rows") and len(self._category_rows) > 1:
             for row in self._category_rows:
+                row.currency_code = code
+        if hasattr(self, "_tag_rows") and all(
+            isinstance(row, SplitTagRowWidget) for row in self._tag_rows
+        ):
+            for row in self._tag_rows:
                 row.currency_code = code
 
     @property
     def amount_decimals(self) -> int:
-        self.amountDoubleSpinBox.decimals()
+        return self.amountDoubleSpinBox.decimals()
 
     @amount_decimals.setter
     def amount_decimals(self, value: int) -> None:
         self._decimals = value
         self.amountDoubleSpinBox.setDecimals(value)
-        if len(self._category_rows) > 1:
+        if hasattr(self, "_category_rows") and len(self._category_rows) > 1:
             for row in self._category_rows:
+                row.amount_decimals = value
+        if hasattr(self, "_tag_rows") and all(
+            isinstance(row, SplitTagRowWidget) for row in self._tag_rows
+        ):
+            for row in self._tag_rows:
                 row.amount_decimals = value
 
     @property
@@ -337,26 +364,24 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
         self.buttonBox.clicked.connect(self._handle_button_box_click)
         self.buttonBox.addButton("Close", QDialogButtonBox.ButtonRole.RejectRole)
 
-    def _initialize_actions(self) -> None:
-        self.actionSelect_Payee.setIcon(icons.payee)
-        self.actionSelect_Payee.triggered.connect(self._get_payee)
-        self.payeeToolButton.setDefaultAction(self.actionSelect_Payee)
-
-        self.actionSelect_Account.setIcon(icons.cash_account)
-        self.actionSelect_Account.triggered.connect(self._get_account)
-        self.accountsToolButton.setDefaultAction(self.actionSelect_Account)
-
     def _initialize_accounts_combobox(self, accounts: Collection[CashAccount]) -> None:
-        if (
-            self._edit_mode == EditMode.EDIT_MULTIPLE
-            or self._edit_mode == EditMode.EDIT_MULTIPLE_MIXED_CURRENCY
-        ):
-            self.accountsComboBox.addItem(self.KEEP_CURRENT_VALUES)
-        for account in accounts:
-            self.accountsComboBox.addItem(icons.cash_account, account.path)
+        items = [account.path for account in accounts]
+        if self._edit_mode in EditMode.get_multiple_edit_values():
+            placeholder_text = "Leave empty to keep current values"
+        else:
+            placeholder_text = "Enter Account path"
+
+        self.accountsComboBox = SmartComboBox(parent=self)
+        self.accountsComboBox.load_items(items, icons.cash_account, placeholder_text)
+        self.formLayout.insertRow(1, "Account", self.accountsComboBox)
 
         self.accountsComboBox.currentTextChanged.connect(self._account_changed)
         self._account_changed()
+
+    def _initialize_payees_combobox(self, payees: Collection[str]) -> None:
+        self.payeeComboBox = SmartComboBox(parent=self)
+        self.payeeComboBox.load_items(payees, icons.payee, "Enter Payee name")
+        self.formLayout.insertRow(2, "Payee", self.payeeComboBox)
 
     def _initialize_placeholders(self) -> None:
         if self._edit_mode in EditMode.get_multiple_edit_values():
@@ -366,6 +391,8 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
             self.payeeComboBox.lineEdit().setPlaceholderText(
                 "Leave empty to keep current values"
             )
+            if len(self._category_rows) == 1:
+                self._category_rows[0].require_category(required=False)
             if len(self._tag_rows) == 1:
                 self._tag_rows[0].set_placeholder_text(
                     "Leave empty to keep current values"
@@ -374,22 +401,26 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
             self.payeeComboBox.lineEdit().setPlaceholderText("Enter Payee name")
         self.payeeComboBox.setCurrentIndex(-1)
 
-    def _setup_categories_combobox(self, *, keep_text: bool) -> None:
+    def _setup_all_categories_comboboxes(self, *, keep_text: bool) -> None:
         for row in self._category_rows:
-            if self.type_ == CashTransactionType.INCOME:
-                row.load_categories(self._categories_income, keep_text=keep_text)
-            else:
-                row.load_categories(self._categories_expense, keep_text=keep_text)
+            self._setup_categories_combobox(row, keep_text=keep_text)
+
+    def _setup_categories_combobox(
+        self, row: SingleCategoryRowWidget | SplitCategoryRowWidget, *, keep_text: bool
+    ) -> None:
+        if self.type_ == CashTransactionType.INCOME:
+            row.load_categories(self._categories_income, keep_current_text=keep_text)
+        else:
+            row.load_categories(self._categories_expense, keep_current_text=keep_text)
 
     def _initialize_single_category_row(self) -> None:
         if hasattr(self, "_category_rows") and len(self._category_rows) == 1:
             return
 
-        edit = self._edit_mode != EditMode.ADD
-        row = SingleCategoryRowWidget(self, edit=edit)
+        row = SingleCategoryRowWidget(self)
         self._category_rows = [row]
         self.formLayout.insertRow(6, LabelWidget(self, "Category"), row)
-        self._setup_categories_combobox(keep_text=True)
+        self._setup_categories_combobox(row, keep_text=True)
         row.signal_split_categories.connect(lambda: self._split_categories(user=True))
         self._set_tab_order()
 
@@ -418,7 +449,7 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
             6, LabelWidget(self, "Categories"), self.split_categories_vertical_layout
         )
 
-        self._setup_categories_combobox(keep_text=True)
+        self._setup_all_categories_comboboxes(keep_text=True)
         self._category_rows[0].category = current_category
 
         for row in self._category_rows:
@@ -446,7 +477,7 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
         self._category_rows.append(row)
         index = self.split_categories_vertical_layout.count() - 1
         self.split_categories_vertical_layout.insertWidget(index, row)
-        self._setup_categories_combobox(keep_text=True)
+        self._setup_categories_combobox(row, keep_text=True)
         row.signal_remove_row.connect(self._remove_split_category_row)
         row.signal_amount_changed.connect(self._split_category_amount_changed)
         self._equalize_split_category_amounts()
@@ -510,7 +541,7 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
         self.split_tags_vertical_layout = QVBoxLayout(None)
         self._tag_rows: list[SingleTagRowWidget | SplitTagRowWidget] = []
         for tag in current_tags:
-            row = SplitTagRowWidget(self, self._tag_names)
+            row = SplitTagRowWidget(self, self._tag_names, self.amount)
             row.amount_decimals = self._decimals
             row.maximum_amount = self.amount
             row.currency_code = self._currency_code
@@ -537,7 +568,7 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
         if self.split_tags_vertical_layout is None:
             raise ValueError("Vertical split Tags Layout is None.")
 
-        row = SplitTagRowWidget(self, self._tag_names)
+        row = SplitTagRowWidget(self, self._tag_names, self.amount)
         row.amount_decimals = self._decimals
         row.currency_code = self._currency_code
         row.maximum_amount = self.amount
@@ -572,25 +603,6 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
         self.formLayout.removeRow(7)
         self.split_tags_vertical_layout = None
         self._tag_rows: list[SingleTagRowWidget | SplitTagRowWidget] = []
-
-    def _get_payee(self) -> None:
-        payee = ask_user_for_selection(
-            self,
-            self._payees,
-            "Select Payee",
-            icons.payee,
-        )
-        self.payee = payee if payee else self.payee
-
-    def _get_account(self) -> None:
-        account_paths = [account.path for account in self._accounts]
-        account = ask_user_for_selection(
-            self,
-            account_paths,
-            "Select Account",
-            icons.cash_account,
-        )
-        self.account_path = account if account else self.account_path
 
     def _set_maximum_amounts(self, max_amount: Decimal) -> None:
         split_category_rows = [
@@ -642,6 +654,9 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
             self._set_maximum_amounts(new_amount)
         if len(self._category_rows) > 1:
             self._equalize_split_category_amounts()
+        if isinstance(self._tag_rows[0], SplitTagRowWidget):
+            for row in self._tag_rows:
+                row.set_total_amount(self.amount)
 
     def _split_category_amount_changed(self, row: SplitCategoryRowWidget) -> None:
         no_of_rows = len(self._category_rows)
@@ -674,10 +689,8 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
     def _set_tab_order(self) -> None:
         self.setTabOrder(self.incomeRadioButton, self.expenseRadioButton)
         self.setTabOrder(self.expenseRadioButton, self.accountsComboBox)
-        self.setTabOrder(self.accountsComboBox, self.accountsToolButton)
-        self.setTabOrder(self.accountsToolButton, self.payeeComboBox)
-        self.setTabOrder(self.payeeComboBox, self.payeeToolButton)
-        self.setTabOrder(self.payeeToolButton, self.dateEdit)
+        self.setTabOrder(self.accountsComboBox, self.payeeComboBox)
+        self.setTabOrder(self.payeeComboBox, self.dateEdit)
         self.setTabOrder(self.dateEdit, self.descriptionPlainTextEdit)
         self.setTabOrder(self.descriptionPlainTextEdit, self.amountDoubleSpinBox)
 
@@ -734,6 +747,6 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
                 _account = account
                 break
         else:
-            raise ValueError(f"Invalid Account path: {account_path}")
+            return
         self.currency_code = _account.currency.code
         self.amount_decimals = _account.currency.places

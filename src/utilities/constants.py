@@ -1,7 +1,7 @@
 from pathlib import Path
 
 # Literal constants
-VERSION = "0.4.0"
+VERSION = "0.5.0"
 
 TIMESTAMP_FORMAT = "%Y_%m_%d_%Hh%Mm%Ss"
 TIMESTAMP_EXAMPLE = "YYYY_mm_DD_HHhMMmSSs"
@@ -12,6 +12,8 @@ BACKUPS_FOLDER_SUFFIX = "saved_data/backups"
 LOGS_FOLDER_SUFFIX = "logs"
 LOGS_INFO_SUFFIX = "info"
 LOGS_DEBUG_SUFFIX = "debug"
+
+DEMO_FILE = "saved_data/demo.json"
 
 # Runtime constants
 app_root_path: Path

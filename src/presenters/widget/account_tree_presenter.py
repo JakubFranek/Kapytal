@@ -24,6 +24,7 @@ from src.presenters.form.security_account_form_presenter import (
 from src.presenters.utilities.event import Event
 from src.presenters.utilities.handle_exception import handle_exception
 from src.view_models.account_tree_model import AccountTreeModel
+from src.views.constants import AccountTreeColumn
 from src.views.widgets.account_tree_widget import AccountTreeWidget
 
 
@@ -93,6 +94,13 @@ class AccountTreePresenter:
     def update_model_data(self) -> None:
         self._model.load_data(
             self._record_keeper.account_items, self._record_keeper.base_currency
+        )
+        hide_native = all(
+            account.currency == self._record_keeper.base_currency
+            for account in self._record_keeper.cash_accounts
+        )
+        self._view.treeView.setColumnHidden(
+            AccountTreeColumn.BALANCE_NATIVE, hide_native
         )
         self.update_total_balance()
 

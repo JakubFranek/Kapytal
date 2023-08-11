@@ -62,6 +62,7 @@ class SecurityFormPresenter:
     def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
         self._record_keeper = record_keeper
         self.reset_models()
+        self._security_selection_changed()
 
     def reset_models(self) -> None:
         self._security_table_model.pre_reset_model()
@@ -85,6 +86,13 @@ class SecurityFormPresenter:
         self._overview_tree_model.load_data(
             self._record_keeper.security_accounts,
             self._record_keeper.base_currency,
+        )
+        hide_native_column = all(
+            security.currency == self._record_keeper.base_currency
+            for security in self._record_keeper.securities
+        )
+        self._view.treeView.setColumnHidden(
+            OwnedSecuritiesTreeColumn.AMOUNT_NATIVE, hide_native_column
         )
 
     def update_price_model_data(self) -> None:

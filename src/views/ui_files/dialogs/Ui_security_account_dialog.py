@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'd:\Coding\Kapytal\src\views\ui_files\security_account_dialog.ui'
+# Form implementation generated from reading ui file 'd:\Coding\Kapytal\src\views\ui_files\dialogs\security_account_dialog.ui'
 #
 # Created by: PyQt6 UI code generator 6.4.0
 #
@@ -14,69 +14,34 @@ class Ui_SecurityAccountDialog(object):
         SecurityAccountDialog.setObjectName("SecurityAccountDialog")
         SecurityAccountDialog.setWindowModality(QtCore.Qt.WindowModality.WindowModal)
         SecurityAccountDialog.resize(272, 135)
-        sizePolicy = QtWidgets.QSizePolicy(
-            QtWidgets.QSizePolicy.Policy.Preferred, QtWidgets.QSizePolicy.Policy.Minimum
-        )
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Preferred, QtWidgets.QSizePolicy.Policy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(
-            SecurityAccountDialog.sizePolicy().hasHeightForWidth()
-        )
+        sizePolicy.setHeightForWidth(SecurityAccountDialog.sizePolicy().hasHeightForWidth())
         SecurityAccountDialog.setSizePolicy(sizePolicy)
-        SecurityAccountDialog.setLocale(
-            QtCore.QLocale(
-                QtCore.QLocale.Language.English, QtCore.QLocale.Country.UnitedKingdom
-            )
-        )
+        SecurityAccountDialog.setLocale(QtCore.QLocale(QtCore.QLocale.Language.English, QtCore.QLocale.Country.UnitedKingdom))
         self.verticalLayout = QtWidgets.QVBoxLayout(SecurityAccountDialog)
-        self.verticalLayout.setSizeConstraint(
-            QtWidgets.QLayout.SizeConstraint.SetDefaultConstraint
-        )
+        self.verticalLayout.setSizeConstraint(QtWidgets.QLayout.SizeConstraint.SetDefaultConstraint)
         self.verticalLayout.setObjectName("verticalLayout")
         self.formLayout = QtWidgets.QFormLayout()
         self.formLayout.setObjectName("formLayout")
         self.currentPathLabel = QtWidgets.QLabel(SecurityAccountDialog)
         self.currentPathLabel.setObjectName("currentPathLabel")
-        self.formLayout.setWidget(
-            0, QtWidgets.QFormLayout.ItemRole.LabelRole, self.currentPathLabel
-        )
+        self.formLayout.setWidget(0, QtWidgets.QFormLayout.ItemRole.LabelRole, self.currentPathLabel)
         self.currentPathLineEdit = QtWidgets.QLineEdit(SecurityAccountDialog)
         self.currentPathLineEdit.setObjectName("currentPathLineEdit")
-        self.formLayout.setWidget(
-            0, QtWidgets.QFormLayout.ItemRole.FieldRole, self.currentPathLineEdit
-        )
-        self.pathLabel = QtWidgets.QLabel(SecurityAccountDialog)
-        self.pathLabel.setObjectName("pathLabel")
-        self.formLayout.setWidget(
-            1, QtWidgets.QFormLayout.ItemRole.LabelRole, self.pathLabel
-        )
-        self.pathLineEdit = QtWidgets.QLineEdit(SecurityAccountDialog)
-        self.pathLineEdit.setObjectName("pathLineEdit")
-        self.formLayout.setWidget(
-            1, QtWidgets.QFormLayout.ItemRole.FieldRole, self.pathLineEdit
-        )
+        self.formLayout.setWidget(0, QtWidgets.QFormLayout.ItemRole.FieldRole, self.currentPathLineEdit)
         self.positionLabel = QtWidgets.QLabel(SecurityAccountDialog)
         self.positionLabel.setObjectName("positionLabel")
-        self.formLayout.setWidget(
-            2, QtWidgets.QFormLayout.ItemRole.LabelRole, self.positionLabel
-        )
+        self.formLayout.setWidget(1, QtWidgets.QFormLayout.ItemRole.LabelRole, self.positionLabel)
         self.positionSpinBox = QtWidgets.QSpinBox(SecurityAccountDialog)
-        self.positionSpinBox.setAlignment(
-            QtCore.Qt.AlignmentFlag.AlignLeading
-            | QtCore.Qt.AlignmentFlag.AlignLeft
-            | QtCore.Qt.AlignmentFlag.AlignVCenter
-        )
+        self.positionSpinBox.setAlignment(QtCore.Qt.AlignmentFlag.AlignLeading|QtCore.Qt.AlignmentFlag.AlignLeft|QtCore.Qt.AlignmentFlag.AlignVCenter)
         self.positionSpinBox.setMinimum(1)
         self.positionSpinBox.setObjectName("positionSpinBox")
-        self.formLayout.setWidget(
-            2, QtWidgets.QFormLayout.ItemRole.FieldRole, self.positionSpinBox
-        )
+        self.formLayout.setWidget(1, QtWidgets.QFormLayout.ItemRole.FieldRole, self.positionSpinBox)
         self.verticalLayout.addLayout(self.formLayout)
         self.buttonBox = QtWidgets.QDialogButtonBox(SecurityAccountDialog)
-        self.buttonBox.setStandardButtons(
-            QtWidgets.QDialogButtonBox.StandardButton.Cancel
-            | QtWidgets.QDialogButtonBox.StandardButton.Ok
-        )
+        self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.StandardButton.Cancel|QtWidgets.QDialogButtonBox.StandardButton.Ok)
         self.buttonBox.setObjectName("buttonBox")
         self.verticalLayout.addWidget(self.buttonBox)
 
@@ -85,11 +50,6 @@ class Ui_SecurityAccountDialog(object):
 
     def retranslateUi(self, SecurityAccountDialog):
         _translate = QtCore.QCoreApplication.translate
-        SecurityAccountDialog.setWindowTitle(
-            _translate("SecurityAccountDialog", "Dialog")
-        )
-        self.currentPathLabel.setText(
-            _translate("SecurityAccountDialog", "Current path")
-        )
-        self.pathLabel.setText(_translate("SecurityAccountDialog", "Path"))
+        SecurityAccountDialog.setWindowTitle(_translate("SecurityAccountDialog", "Dialog"))
+        self.currentPathLabel.setText(_translate("SecurityAccountDialog", "Current path"))
         self.positionLabel.setText(_translate("SecurityAccountDialog", "Position"))

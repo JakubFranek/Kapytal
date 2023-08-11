@@ -15,6 +15,7 @@ from src.utilities import constants
 from src.utilities.general import backup_json_file
 from src.views.dialogs.busy_dialog import create_multi_step_busy_indicator
 from src.views.main_view import MainView
+from src.views.utilities.handle_exception import display_error_message
 
 
 class LoadFileWorker(QObject):
@@ -124,7 +125,7 @@ class FilePresenter:
                 return False
 
         logging.debug(f"File path: {path}")
-        self._current_file_path = Path(path)
+        self._current_file_path = Path(path).absolute()
         self._open_file(self._current_file_path)
         return True
 
@@ -183,6 +184,9 @@ class FilePresenter:
         self._busy_indicator = create_multi_step_busy_indicator(
             self._view, "Loading data, please wait...", 100, "Deserializing data..."
         )
+        if not path.exists():
+            display_error_message(f"File does not exist: {path}")
+            return
 
         backup_json_file(self._current_file_path)
         self._thread = QThread()

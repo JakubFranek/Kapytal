@@ -1,29 +1,21 @@
 from collections.abc import Collection
 
-from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtCore import QSignalBlocker, Qt, pyqtSignal
 from PyQt6.QtGui import QAction
-from PyQt6.QtWidgets import QComboBox, QHBoxLayout, QToolButton, QWidget
+from PyQt6.QtWidgets import QHBoxLayout, QToolButton, QWidget
 from src.views import icons
-from src.views.dialogs.select_item_dialog import ask_user_for_selection
+from src.views.widgets.smart_combo_box import SmartComboBox
 
 
 class SingleCategoryRowWidget(QWidget):
     signal_split_categories = pyqtSignal()
 
-    def __init__(self, parent: QWidget | None, *, edit: bool) -> None:
+    def __init__(self, parent: QWidget | None) -> None:
         super().__init__(parent)
-        self._edit = edit
 
-        self.combo_box = QComboBox(self)
-        self.combo_box.setEditable(True)
-        self.require_category(required=not edit)
+        self.combo_box = SmartComboBox(parent=self)
         self.combo_box.setToolTip("Both existing or new Category paths are valid")
-
-        self.select_tool_button = QToolButton(self)
-        self.actionSelect_Category = QAction("Select Category", self)
-        self.actionSelect_Category.setIcon(icons.category)
-        self.actionSelect_Category.triggered.connect(self._select_category)
-        self.select_tool_button.setDefaultAction(self.actionSelect_Category)
+        self.require_category(required=True)  # default value
 
         self.split_tool_button = QToolButton(self)
         self.actionSplit_Categories = QAction("Split Categories", self)
@@ -33,7 +25,6 @@ class SingleCategoryRowWidget(QWidget):
 
         self.horizontal_layout = QHBoxLayout(self)
         self.horizontal_layout.addWidget(self.combo_box)
-        self.horizontal_layout.addWidget(self.select_tool_button)
         self.horizontal_layout.addWidget(self.split_tool_button)
 
         self.layout().setContentsMargins(0, 0, 0, 0)
@@ -45,11 +36,12 @@ class SingleCategoryRowWidget(QWidget):
     @property
     def category(self) -> str | None:
         text = self.combo_box.currentText()
-        return text if text or not self._edit else None
+        return text if text else None
 
     @category.setter
     def category(self, value: str) -> None:
-        self.combo_box.setCurrentText(value)
+        with QSignalBlocker(self.combo_box):
+            self.combo_box.setCurrentText(value)
 
     def enable_split(self, *, enable: bool) -> None:
         self._split_enabled = enable
@@ -57,29 +49,18 @@ class SingleCategoryRowWidget(QWidget):
 
     def require_category(self, *, required: bool) -> None:
         if not required:
-            self.combo_box.lineEdit().setPlaceholderText(
-                "Leave empty to keep current values"
-            )
+            self._set_placeholder_text("Leave empty to keep current values")
         else:
-            self.combo_box.lineEdit().setPlaceholderText("Enter Category path")
+            self._set_placeholder_text("Enter Category path")
 
-    def load_categories(self, categories: Collection[str], *, keep_text: bool) -> None:
-        current_text = self.category
-        self._combo_box_items = categories
-        self.combo_box.clear()
-        for item in categories:
-            self.combo_box.addItem(item)
-        if keep_text:
-            self.combo_box.setCurrentText(current_text)
-        else:
-            self.combo_box.setCurrentIndex(-1)
-
-    def _select_category(self) -> None:
-        category = ask_user_for_selection(
-            self,
-            self._combo_box_items,
-            "Select Category",
+    def load_categories(
+        self, categories: Collection[str], *, keep_current_text: bool
+    ) -> None:
+        self.combo_box.load_items(
+            categories,
             icons.category,
+            keep_current_text=keep_current_text,
         )
-        if category:
-            self.combo_box.setCurrentText(category)
+
+    def _set_placeholder_text(self, text: str) -> None:
+        self.combo_box.lineEdit().setPlaceholderText(text)

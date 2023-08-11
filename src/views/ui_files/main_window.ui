@@ -47,6 +47,7 @@
     </widget>
     <addaction name="actionOpen_File"/>
     <addaction name="menuRecent_Files"/>
+    <addaction name="actionOpen_Demo_File"/>
     <addaction name="separator"/>
     <addaction name="actionSave"/>
     <addaction name="actionSave_As"/>
@@ -329,6 +330,11 @@
   <action name="actionShow_Hide_Transaction_Table">
    <property name="text">
     <string>Show/Hide Transaction Table</string>
+   </property>
+  </action>
+  <action name="actionOpen_Demo_File">
+   <property name="text">
+    <string>Open Demo File</string>
    </property>
   </action>
  </widget>
