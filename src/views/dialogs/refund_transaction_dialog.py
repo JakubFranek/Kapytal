@@ -93,7 +93,13 @@ class RefundTransactionDialog(CustomDialog, Ui_RefundTransactionDialog):
         return (
             self.dateEdit.dateTime()
             .toPyDateTime()
-            .replace(tzinfo=user_settings.settings.time_zone)
+            .replace(
+                tzinfo=user_settings.settings.time_zone,
+                hour=0,
+                minute=0,
+                second=0,
+                microsecond=0,
+            )
         )
 
     @datetime_.setter
@@ -105,7 +111,13 @@ class RefundTransactionDialog(CustomDialog, Ui_RefundTransactionDialog):
         return (
             self.dateEdit.minimumDateTime()
             .toPyDateTime()
-            .replace(tzinfo=user_settings.settings.time_zone)
+            .replace(
+                tzinfo=user_settings.settings.time_zone,
+                hour=0,
+                minute=0,
+                second=0,
+                microsecond=0,
+            )
         )
 
     @property

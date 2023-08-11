@@ -1,6 +1,6 @@
 import logging
 from collections.abc import Collection
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from PyQt6.QtWidgets import QWidget
 from src.models.model_objects.cash_objects import (
@@ -89,11 +89,19 @@ class RefundTransactionDialogPresenter:
             logging.debug("Dialog aborted")
             return
 
+        refunded_transaction_uuid = self._dialog.refunded_transaction.uuid
+        refunded_transaction = self._dialog.refunded_transaction
+
         datetime_ = self._dialog.datetime_
         if datetime_ is None:
             raise ValueError("Expected datetime_, received None.")
         if not validate_datetime(datetime_, self._dialog):
             return
+        if (
+            datetime_.date() == refunded_transaction.datetime_.date()
+            and datetime_ <= refunded_transaction.datetime_
+        ):
+            datetime_ = refunded_transaction.datetime_ + timedelta(seconds=1)
         description = self._dialog.description
         total_amount = self._dialog.amount
         if total_amount <= 0:
@@ -106,8 +114,6 @@ class RefundTransactionDialogPresenter:
 
         categories = [category for category, _ in category_amount_pairs]
         tags = [tag for tag, _ in tag_amount_pairs]
-
-        refunded_transaction_uuid = self._dialog.refunded_transaction.uuid
 
         logging.info(
             f"Adding RefundTransaction: {datetime_.strftime('%Y-%m-%d')}, "
@@ -151,9 +157,17 @@ class RefundTransactionDialogPresenter:
             logging.debug("Dialog aborted")
             return
 
+        refunded_transaction = self._dialog.refunded_transaction
+
         datetime_ = self._dialog.datetime_
         if datetime_ is not None and not validate_datetime(datetime_, self._dialog):
             return
+        if (
+            datetime_.date() == refunded_transaction.datetime_.date()
+            and datetime_ <= refunded_transaction.datetime_
+        ):
+            datetime_ = refunded_transaction.datetime_ + timedelta(seconds=1)
+
         description = self._dialog.description
         total_amount = self._dialog.amount
         if total_amount <= 0:

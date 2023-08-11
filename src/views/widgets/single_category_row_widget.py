@@ -36,7 +36,7 @@ class SingleCategoryRowWidget(QWidget):
     @property
     def category(self) -> str | None:
         text = self.combo_box.currentText()
-        return text if text or not self._edit else None
+        return text if text else None
 
     @category.setter
     def category(self, value: str) -> None:

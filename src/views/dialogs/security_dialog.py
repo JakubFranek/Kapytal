@@ -50,6 +50,7 @@ class SecurityDialog(CustomDialog, Ui_SecurityDialog):
         self.currencyComboBox.setCurrentIndex(0)
 
         self.buttonBox.clicked.connect(self._handle_button_box_click)
+        self._set_tab_order()
 
     @property
     def name(self) -> str:
@@ -103,3 +104,9 @@ class SecurityDialog(CustomDialog, Ui_SecurityDialog):
     def reject(self) -> None:
         logging.debug(f"Closing {self.__class__.__name__}")
         return super().reject()
+
+    def _set_tab_order(self) -> None:
+        self.setTabOrder(self.nameLineEdit, self.symbolLineEdit)
+        self.setTabOrder(self.symbolLineEdit, self.typeComboBox)
+        self.setTabOrder(self.typeComboBox, self.unitDoubleSpinBox)
+        self.setTabOrder(self.unitDoubleSpinBox, self.currencyComboBox)
