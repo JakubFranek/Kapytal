@@ -344,6 +344,8 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
                 and security is None
             ):
                 placeholder_text = "Leave empty to keep current values"
+            elif security is None:
+                placeholder_text = "Select valid Security"
             else:
                 placeholder_text = "Enter Account path"
 
@@ -361,7 +363,7 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
             else:
                 self.cashAccountComboBox.setEnabled(False)
                 self.cashAccountComboBox.load_items(
-                    [], icons.cash_account, "Select valid Security"
+                    [], icons.cash_account, placeholder_text
                 )
 
             self._set_spinboxes_currencies()

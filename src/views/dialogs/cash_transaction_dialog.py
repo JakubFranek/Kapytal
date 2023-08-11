@@ -139,7 +139,7 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
     @property
     def account_path(self) -> str | None:
         text = self.accountsComboBox.currentText()
-        if text == self.KEEP_CURRENT_VALUES:
+        if not text and self._edit_mode in EditMode.get_multiple_edit_values():
             return None
         return text
 
@@ -366,16 +366,13 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
 
     def _initialize_accounts_combobox(self, accounts: Collection[CashAccount]) -> None:
         items = [account.path for account in accounts]
-        if (
-            self._edit_mode == EditMode.EDIT_MULTIPLE
-            or self._edit_mode == EditMode.EDIT_MULTIPLE_MIXED_CURRENCY
-        ):
-            items.insert(0, self.KEEP_CURRENT_VALUES)
+        if self._edit_mode in EditMode.get_multiple_edit_values():
+            placeholder_text = "Leave empty to keep current values"
+        else:
+            placeholder_text = "Enter Account path"
 
         self.accountsComboBox = SmartComboBox(parent=self)
-        self.accountsComboBox.load_items(
-            items, icons.cash_account, "Enter Account path"
-        )
+        self.accountsComboBox.load_items(items, icons.cash_account, placeholder_text)
         self.formLayout.insertRow(1, "Account", self.accountsComboBox)
 
         self.accountsComboBox.currentTextChanged.connect(self._account_changed)
