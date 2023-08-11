@@ -45,12 +45,14 @@ class SplitTagRowWidget(QWidget):
         self.action50pct = QAction("50%", self)
         self.action66pct = QAction("66%", self)
         self.action75pct = QAction("75%", self)
+        self.action100pct = QAction("100%", self)
 
         self.action25pct.triggered.connect(lambda: self._scale_total(Decimal("0.25")))
         self.action33pct.triggered.connect(lambda: self._scale_total(1 / Decimal(3)))
         self.action50pct.triggered.connect(lambda: self._scale_total(Decimal("0.5")))
         self.action66pct.triggered.connect(lambda: self._scale_total(2 / Decimal(3)))
         self.action75pct.triggered.connect(lambda: self._scale_total(Decimal("0.75")))
+        self.action100pct.triggered.connect(lambda: self._scale_total(Decimal(1)))
 
         self.divide_menu = QMenu(self)
         self.divide_menu.addAction(self.action25pct)
@@ -58,6 +60,7 @@ class SplitTagRowWidget(QWidget):
         self.divide_menu.addAction(self.action50pct)
         self.divide_menu.addAction(self.action66pct)
         self.divide_menu.addAction(self.action75pct)
+        self.divide_menu.addAction(self.action100pct)
 
         self.divide_amount_tool_button = QToolButton(self)
         self.divide_amount_tool_button.setPopupMode(
