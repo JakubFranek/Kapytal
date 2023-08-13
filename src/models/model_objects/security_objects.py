@@ -181,7 +181,7 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
     def __str__(self) -> str:
         return self._name
 
-    def get_price(self, date_: date | None) -> CashAmount:
+    def get_price(self, date_: date | None = None) -> CashAmount:
         if date_ is None:
             return self.price
         try:
@@ -585,7 +585,7 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
         )
 
     def is_account_related(self, account: Account) -> bool:
-        return account == self._cash_account or account == self._security_account
+        return account in {self._security_account, self._cash_account}
 
     def is_accounts_related(self, accounts: Collection[Account]) -> bool:
         return self._security_account in accounts or self._cash_account in accounts
@@ -921,7 +921,7 @@ class SecurityTransfer(SecurityRelatedTransaction):
         )
 
     def is_account_related(self, account: Account) -> bool:
-        return account == self._sender or account == self._recipient
+        return account in {self._sender, self._recipient}
 
     def is_accounts_related(self, accounts: Collection[Account]) -> bool:
         return self._sender in accounts or self._recipient in accounts
@@ -1017,7 +1017,7 @@ class SecurityTransfer(SecurityRelatedTransaction):
         description: str | None = None,
         datetime_: datetime | None = None,
         security: Security | None = None,
-        shares: Decimal | None = None,
+        shares: int | Decimal | str | None = None,
         sender: SecurityAccount | None = None,
         recipient: SecurityAccount | None = None,
     ) -> None:
@@ -1046,7 +1046,7 @@ class SecurityTransfer(SecurityRelatedTransaction):
         description: str,
         datetime_: datetime,
         security: Security,
-        shares: Decimal,
+        shares: Decimal | int | str,
         sender: SecurityAccount,
         recipient: SecurityAccount,
     ) -> None:
@@ -1065,7 +1065,7 @@ class SecurityTransfer(SecurityRelatedTransaction):
 
         if hasattr(self, "_shares") and not update_accounts:
             update_accounts = self._shares != shares
-        self._shares = shares.normalize()
+        self._shares = Decimal(shares).normalize()
 
         self._set_accounts(sender, recipient, update_accounts=update_accounts)
 

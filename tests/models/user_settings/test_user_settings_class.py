@@ -1,7 +1,6 @@
 import shutil
 from pathlib import Path
 from typing import Any
-from zoneinfo import ZoneInfo, available_timezones
 
 import pytest
 from hypothesis import given
@@ -9,6 +8,7 @@ from hypothesis import strategies as st
 from src.models.user_settings.user_settings_class import UserSettings
 from tests.models.test_assets.composites import everything_except
 from tzlocal import get_localzone_name
+from zoneinfo import ZoneInfo, available_timezones
 
 available_time_zone_keys = tuple(available_timezones())
 

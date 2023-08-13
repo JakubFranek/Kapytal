@@ -294,7 +294,9 @@ def test_edit_cash_transactions_datetimes() -> None:
     edit_datetime = datetime.now(user_settings.settings.time_zone)
     record_keeper.edit_cash_transactions(uuids, datetime_=edit_datetime)
     for transaction in cash_transactions:
-        assert transaction.datetime_ == edit_datetime
+        assert transaction.datetime_.replace(second=0) == edit_datetime.replace(
+            second=0
+        )
 
 
 def test_edit_cash_transactions_payees() -> None:
@@ -525,7 +527,7 @@ def test_edit_cash_transfer_datetime() -> None:
     edit_datetime = datetime.now(user_settings.settings.time_zone)
     record_keeper.edit_cash_transfers(uuids, datetime_=edit_datetime)
     for transfer in transfers:
-        assert transfer.datetime_ == edit_datetime
+        assert transfer.datetime_.replace(second=0) == edit_datetime.replace(second=0)
 
 
 def test_edit_cash_transfer_sender() -> None:

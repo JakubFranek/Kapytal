@@ -69,10 +69,10 @@ class AttributeTableModel(QAbstractTableModel):
                 index.column(), self._attribute_stats[index.row()]
             )
         column = index.column()
-        if role == Qt.ItemDataRole.TextAlignmentRole and (
-            column == AttributeTableColumn.TRANSACTIONS
-            or column == AttributeTableColumn.BALANCE
-        ):
+        if role == Qt.ItemDataRole.TextAlignmentRole and column in {
+            AttributeTableColumn.TRANSACTIONS,
+            AttributeTableColumn.BALANCE,
+        }:
             return ALIGNMENT_RIGHT
         if role == Qt.ItemDataRole.ForegroundRole:
             return self._get_foreground_role_data(

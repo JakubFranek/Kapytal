@@ -190,16 +190,16 @@ class TransactionsPresenter:
         )
 
         for column in TransactionTableColumn:
-            if (
-                column == TransactionTableColumn.SECURITY
-                or column == TransactionTableColumn.SHARES
-                or column == TransactionTableColumn.PRICE_PER_SHARE
-            ):
+            if column in {
+                TransactionTableColumn.SECURITY,
+                TransactionTableColumn.SHARES,
+                TransactionTableColumn.PRICE_PER_SHARE,
+            }:
                 self._view.set_column_visibility(column, show=any_security_related)
-            if (
-                column == TransactionTableColumn.AMOUNT_RECEIVED
-                or column == TransactionTableColumn.AMOUNT_SENT
-            ):
+            if column in {
+                TransactionTableColumn.AMOUNT_RECEIVED,
+                TransactionTableColumn.AMOUNT_SENT,
+            }:
                 self._view.set_column_visibility(column, show=any_cash_transfers)
             if column == TransactionTableColumn.CATEGORY:
                 self._view.set_column_visibility(column, show=any_with_categories)

@@ -367,25 +367,25 @@ class TransactionTableModel(QAbstractTableModel):
 
     @staticmethod
     def _get_text_alignment_data(column: int) -> Qt.AlignmentFlag | None:
-        if (
-            column == TransactionTableColumn.AMOUNT_NATIVE
-            or column == TransactionTableColumn.AMOUNT_BASE
-            or column == TransactionTableColumn.AMOUNT_SENT
-            or column == TransactionTableColumn.AMOUNT_RECEIVED
-            or column == TransactionTableColumn.SHARES
-            or column == TransactionTableColumn.PRICE_PER_SHARE
-            or column == TransactionTableColumn.BALANCE
-        ):
+        if column in {
+            TransactionTableColumn.AMOUNT_NATIVE,
+            TransactionTableColumn.AMOUNT_BASE,
+            TransactionTableColumn.AMOUNT_SENT,
+            TransactionTableColumn.AMOUNT_RECEIVED,
+            TransactionTableColumn.SHARES,
+            TransactionTableColumn.PRICE_PER_SHARE,
+            TransactionTableColumn.BALANCE,
+        }:
             return ALIGNMENT_RIGHT
         return None
 
     def _get_foreground_data(  # noqa: PLR0911, C901
         self, transaction: Transaction, column: int
     ) -> QBrush | None:
-        if (
-            column == TransactionTableColumn.AMOUNT_NATIVE
-            or column == TransactionTableColumn.AMOUNT_BASE
-        ):
+        if column in {
+            TransactionTableColumn.AMOUNT_NATIVE,
+            TransactionTableColumn.AMOUNT_BASE,
+        }:
             if isinstance(transaction, CashTransaction):
                 if transaction.type_ == CashTransactionType.INCOME:
                     return colors.get_green_brush()
@@ -396,10 +396,10 @@ class TransactionTableModel(QAbstractTableModel):
                 if transaction.type_ == SecurityTransactionType.BUY:
                     return colors.get_red_brush()
                 return colors.get_green_brush()
-        if (
-            column == TransactionTableColumn.AMOUNT_SENT
-            or column == TransactionTableColumn.AMOUNT_RECEIVED
-        ):
+        if column in {
+            TransactionTableColumn.AMOUNT_SENT,
+            TransactionTableColumn.AMOUNT_RECEIVED,
+        }:
             return colors.get_blue_brush()
         if column == TransactionTableColumn.SHARES:
             if isinstance(transaction, SecurityTransaction):

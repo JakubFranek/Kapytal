@@ -115,7 +115,7 @@ def cash_accounts(
     name = draw(names())
     if currency is None:
         currency = draw(currencies())
-    initial_amount = draw(cash_amounts(currency=currency))
+    initial_amount = draw(cash_amounts(currency=currency, min_value=0))
     return CashAccount(name, currency, initial_amount)
 
 

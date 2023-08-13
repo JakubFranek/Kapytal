@@ -172,10 +172,10 @@ class CategoryTreeModel(QAbstractItemModel):
             return self._get_user_role_data(column, node)
         if role == Qt.ItemDataRole.UserRole + 1 and column == CategoryTreeColumn.NAME:
             return node.path
-        if role == Qt.ItemDataRole.TextAlignmentRole and (
-            column == CategoryTreeColumn.TRANSACTIONS
-            or column == CategoryTreeColumn.BALANCE
-        ):
+        if role == Qt.ItemDataRole.TextAlignmentRole and column in {
+            CategoryTreeColumn.TRANSACTIONS,
+            CategoryTreeColumn.BALANCE,
+        }:
             return ALIGNMENT_RIGHT
         if (
             role == Qt.ItemDataRole.ToolTipRole

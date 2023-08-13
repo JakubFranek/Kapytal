@@ -253,6 +253,9 @@ def test_set_get_price(
     data: st.DataObject,
 ) -> None:
     security = get_security()
+
+    assert security.get_price().is_nan()
+
     currency = security.currency
     price = CashAmount(data.draw(valid_decimals()), currency)
     date_ = data.draw(st.dates())
@@ -264,7 +267,7 @@ def test_set_get_price(
     assert security.latest_date == date_
     assert security.get_price(None) == price
     assert security.get_price(date_) == price
-    assert security.get_price(date_ - timedelta(days=1)).is_nan()
+    assert security.get_price(date_ - timedelta(days=1)) == price
 
     price_2 = CashAmount(data.draw(valid_decimals()), currency)
     date_2 = data.draw(st.dates())

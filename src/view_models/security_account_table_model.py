@@ -94,12 +94,12 @@ class SecurityAccountTableModel(QAbstractTableModel):
             security = self._securities[row][0]
             shares = self._securities[row][1]
             return self._get_user_role_data(column, security, shares)
-        if role == Qt.ItemDataRole.TextAlignmentRole and (
-            column == SecurityAccountTableColumn.PRICE
-            or column == SecurityAccountTableColumn.AMOUNT_NATIVE
-            or column == SecurityAccountTableColumn.AMOUNT_BASE
-            or column == SecurityAccountTableColumn.SHARES
-        ):
+        if role == Qt.ItemDataRole.TextAlignmentRole and column in {
+            SecurityAccountTableColumn.PRICE,
+            SecurityAccountTableColumn.AMOUNT_NATIVE,
+            SecurityAccountTableColumn.AMOUNT_BASE,
+            SecurityAccountTableColumn.SHARES,
+        }:
             return ALIGNMENT_RIGHT
         return None
 

@@ -137,10 +137,7 @@ class AttributeReportPresenter:
         # keep only stats which are are non-zero in at least one period
         _periodic_stats: dict[str, list[AttributeStats]] = {}
         for period, stats in periodic_stats.items():
-            _stats = []
-            for item in stats:
-                if item.balance.value_rounded != 0:
-                    _stats.append(item)
+            _stats = [item for item in stats if item.balance.value_rounded != 0]
             _periodic_stats[period] = _stats
 
         (

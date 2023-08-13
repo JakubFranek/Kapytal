@@ -611,7 +611,7 @@ def get_buy() -> SecurityTransaction:
     datetime_ = datetime.now(user_settings.settings.time_zone)
     type_ = SecurityTransactionType.BUY
     security = get_security()
-    shares = Decimal("10")
+    shares = 10
     price_per_share = CashAmount("99.77", security.currency)
     security_account = SecurityAccount("Interactive Brokers")
     cash_account = CashAccount(
