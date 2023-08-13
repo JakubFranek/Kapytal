@@ -1,6 +1,6 @@
 {
-  "version": "0.4.0", 
-  "datetime_saved": "2023-08-11T20:31:17.687526+02:00", 
+  "version": "0.5.0", 
+  "datetime_saved": "2023-08-13T10:35:58.658657+02:00", 
   "data": {
     "datatype": "RecordKeeper", 
     "currencies": [
@@ -408,6 +408,12 @@
       }, 
       {
         "datatype": "AccountGroup", 
+        "path": "Adam/Investments/XTBroker", 
+        "index": 3, 
+        "uuid": "bc72c86a-0010-4f0e-b8fa-8232e7daf5b7"
+      }, 
+      {
+        "datatype": "AccountGroup", 
         "path": "Adam/Savings Accounts", 
         "index": 1, 
         "uuid": "71326d3b-0d51-4971-9040-2ccb1c1bad60"
@@ -504,6 +510,20 @@
       }, 
       {
         "datatype": "CashAccount", 
+        "path": "Adam/Investments/XTBroker/EUR", 
+        "index": 0, 
+        "currency_code": "EUR", 
+        "initial_balance": "1000.00", 
+        "uuid": "f5de16b3-e0a3-4853-90c3-cb1d2a64c03a"
+      }, 
+      {
+        "datatype": "SecurityAccount", 
+        "path": "Adam/Investments/XTBroker/Securities", 
+        "index": 1, 
+        "uuid": "abd67e91-a1bc-4bcb-a68f-054b7b70207d"
+      }, 
+      {
+        "datatype": "CashAccount", 
         "path": "Adam/Savings Accounts/Alpha Bank", 
         "index": 0, 
         "currency_code": "EUR", 
@@ -566,35 +586,35 @@
       }
     ], 
     "payees": [
+      "Adam's Employer", 
       "Alpha Bank", 
-      "Amazon", 
       "Aquapark", 
+      "Bizzair", 
       "Brookside Bank", 
+      "Buyzone", 
       "Cinema World", 
       "City Transport", 
-      "Company A", 
-      "Company B", 
       "Cool Bank", 
+      "Eve's Employer", 
+      "Freshco", 
       "Hairdresser", 
       "Intelligent Brokers", 
       "Landlord", 
-      "Netflix", 
+      "Movieflix", 
       "Petřín tower", 
       "Prague Castle", 
       "Prague ZOO", 
       "Pražský hotel", 
       "Public Transport Prague", 
-      "Ryanair", 
       "SafeLife", 
       "Shoelocker", 
-      "Tesco", 
+      "Studyon", 
       "The Bear", 
       "The Bookstore", 
-      "The Phone Company", 
       "The Pub", 
       "The Winery", 
       "Tourist Agency", 
-      "Udemy", 
+      "V-Mobile", 
       "museum", 
       "pub", 
       "restaurant", 
@@ -1166,12 +1186,25 @@
     ], 
     "transactions": [
       {
+        "datatype": "SecurityTransaction", 
+        "description": "", 
+        "datetime": "2023-05-02T00:00:00+02:00", 
+        "type": "BUY", 
+        "security_name": "Vanguard FTSE All-World", 
+        "shares": "1E+1", 
+        "price_per_share": "94.43 EUR", 
+        "security_account_path": "Adam/Investments/XTBroker/Securities", 
+        "cash_account_path": "Adam/Investments/XTBroker/EUR", 
+        "datetime_created": "2023-08-13T10:13:48+02:00", 
+        "uuid": "d2779d7c-1330-4e7e-8b9f-64648f8507fb"
+      }, 
+      {
         "datatype": "CashTransaction", 
         "description": "April salary (w/ bonus)", 
         "datetime": "2023-05-07T00:00:00+02:00", 
         "type": "INCOME", 
         "account_path": "Eve/Current Accounts/Brookside Bank", 
-        "payee_name": "Company B", 
+        "payee_name": "Eve's Employer", 
         "category_amount_pairs": [
           "Employment/Salary:2,160.00 EUR", 
           "Employment/Benefits:90.00 EUR", 
@@ -1209,7 +1242,7 @@
         "datetime": "2023-05-09T00:00:00+02:00", 
         "type": "EXPENSE", 
         "account_path": "Eve/Current Accounts/Brookside Bank", 
-        "payee_name": "Tesco", 
+        "payee_name": "Freshco", 
         "category_amount_pairs": [
           "Food and Drinks/Groceries:46.95 EUR", 
           "Drugstore goods/Hygiene:10.95 EUR"
@@ -1237,7 +1270,7 @@
         "datetime": "2023-05-15T00:00:00+02:00", 
         "type": "INCOME", 
         "account_path": "Adam/Investments/Pension Plan/EUR", 
-        "payee_name": "Company A", 
+        "payee_name": "Adam's Employer", 
         "category_amount_pairs": [
           "Employment/Benefits:100.00 EUR"
         ], 
@@ -1262,7 +1295,7 @@
         "datetime": "2023-05-15T00:00:02+02:00", 
         "type": "INCOME", 
         "account_path": "Adam/Current Accounts/Alpha Bank", 
-        "payee_name": "Company A", 
+        "payee_name": "Adam's Employer", 
         "category_amount_pairs": [
           "Employment/Salary:1,800.00 EUR", 
           "Employment/Benefits:150.00 EUR"
@@ -1329,7 +1362,7 @@
         "datetime": "2023-05-16T00:00:03+02:00", 
         "type": "EXPENSE", 
         "account_path": "Shared/Savings Accounts/Cool Bank", 
-        "payee_name": "The Phone Company", 
+        "payee_name": "V-Mobile", 
         "category_amount_pairs": [
           "Bills/Phone:15.00 EUR", 
           "Bills/Internet:25.00 EUR"
@@ -1371,13 +1404,14 @@
         "datetime": "2023-05-18T00:00:00+02:00", 
         "type": "EXPENSE", 
         "account_path": "Eve/Current Accounts/Brookside Bank", 
-        "payee_name": "Ryanair", 
+        "payee_name": "Bizzair", 
         "category_amount_pairs": [
           "Transport/Flight:128.70 EUR"
         ], 
         "tag_amount_pairs": [
           "vacation Prague 7/2023:128.70 EUR", 
-          "Adam owes Eve:64.35 EUR"
+          "Adam owes Eve:64.35 EUR", 
+          "together:128.70 EUR"
         ], 
         "datetime_created": "2023-08-08T20:36:33+02:00", 
         "uuid": "ef9d5cfa-9312-47ea-b8e8-6d16080b1b9f"
@@ -1394,7 +1428,8 @@
         ], 
         "tag_amount_pairs": [
           "vacation Prague 7/2023:279.90 EUR", 
-          "Adam owes Eve:139.95 EUR"
+          "Adam owes Eve:139.95 EUR", 
+          "together:279.90 EUR"
         ], 
         "datetime_created": "2023-08-08T20:37:54+02:00", 
         "uuid": "2ded618a-543f-44c9-93de-59d80b1298bd"
@@ -1418,7 +1453,7 @@
         "datetime": "2023-05-21T00:00:00+02:00", 
         "type": "EXPENSE", 
         "account_path": "Eve/Current Accounts/Brookside Bank", 
-        "payee_name": "Tesco", 
+        "payee_name": "Freshco", 
         "category_amount_pairs": [
           "Food and Drinks/Groceries:61.90 EUR"
         ], 
@@ -1504,7 +1539,7 @@
         "datetime": "2023-05-31T00:00:00+02:00", 
         "type": "EXPENSE", 
         "account_path": "Eve/Current Accounts/Brookside Bank", 
-        "payee_name": "Tesco", 
+        "payee_name": "Freshco", 
         "category_amount_pairs": [
           "Food and Drinks/Groceries:31.90 EUR"
         ], 
@@ -1515,21 +1550,33 @@
         "uuid": "328ede7a-8893-42c2-819b-46f6e6106873"
       }, 
       {
+        "datatype": "CashTransfer", 
+        "description": "end of month expense reimbursement", 
+        "datetime": "2023-05-31T00:00:01+02:00", 
+        "sender_path": "Adam/Savings Accounts/Alpha Bank", 
+        "recipient_path": "Eve/Savings Accounts/Brookside Bank", 
+        "amount_sent": "262.75 EUR", 
+        "amount_received": "262.75 EUR", 
+        "datetime_created": "2023-08-13T10:28:41+02:00", 
+        "uuid": "5c79c4fe-6ee5-4d1e-b28e-634bf4b48d68"
+      }, 
+      {
         "datatype": "RefundTransaction", 
         "description": "cancelled flight", 
         "datetime": "2023-06-01T00:00:00+02:00", 
         "account_path": "Eve/Current Accounts/Brookside Bank", 
         "refunded_transaction_uuid": "ef9d5cfa-9312-47ea-b8e8-6d16080b1b9f", 
-        "payee_name": "Ryanair", 
+        "payee_name": "Bizzair", 
         "category_amount_pairs": [
           "Transport/Flight:128.70 EUR"
         ], 
         "tag_amount_pairs": [
           "vacation Prague 7/2023:128.70 EUR", 
-          "Adam owes Eve:64.35 EUR"
+          "Adam owes Eve:64.35 EUR", 
+          "together:128.70 EUR"
         ], 
-        "datetime_created": "2023-08-11T17:48:40+02:00", 
-        "uuid": "c69b98aa-e5f0-412d-92dd-2723a92e5f1c"
+        "datetime_created": "2023-08-13T10:33:44+02:00", 
+        "uuid": "3ca3b7a9-4f9f-440e-b708-e7f8453791a6"
       }, 
       {
         "datatype": "CashTransaction", 
@@ -1537,13 +1584,14 @@
         "datetime": "2023-06-02T00:00:00+02:00", 
         "type": "EXPENSE", 
         "account_path": "Eve/Current Accounts/Brookside Bank", 
-        "payee_name": "Ryanair", 
+        "payee_name": "Bizzair", 
         "category_amount_pairs": [
           "Transport/Flight:137.80 EUR"
         ], 
         "tag_amount_pairs": [
           "vacation Prague 7/2023:137.80 EUR", 
-          "Adam owes Eve:68.90 EUR"
+          "Adam owes Eve:68.90 EUR", 
+          "together:137.80 EUR"
         ], 
         "datetime_created": "2023-08-11T17:49:39+02:00", 
         "uuid": "f740cada-a522-4e88-a05f-2fec6e1ffdba"
@@ -1611,7 +1659,7 @@
         "datetime": "2023-06-07T00:00:01+02:00", 
         "type": "INCOME", 
         "account_path": "Eve/Current Accounts/Brookside Bank", 
-        "payee_name": "Company B", 
+        "payee_name": "Eve's Employer", 
         "category_amount_pairs": [
           "Employment/Salary:2,160.00 EUR", 
           "Employment/Benefits:90.00 EUR"
@@ -1637,7 +1685,7 @@
         "datetime": "2023-06-09T00:00:00+02:00", 
         "type": "EXPENSE", 
         "account_path": "Eve/Current Accounts/Brookside Bank", 
-        "payee_name": "Tesco", 
+        "payee_name": "Freshco", 
         "category_amount_pairs": [
           "Food and Drinks/Groceries:72.90 EUR"
         ], 
@@ -1653,7 +1701,7 @@
         "datetime": "2023-06-13T00:00:00+02:00", 
         "type": "EXPENSE", 
         "account_path": "Eve/Current Accounts/Brookside Bank", 
-        "payee_name": "Udemy", 
+        "payee_name": "Studyon", 
         "category_amount_pairs": [
           "Education/Courses:49.00 EUR"
         ], 
@@ -1678,7 +1726,7 @@
         "datetime": "2023-06-15T00:00:01+02:00", 
         "type": "INCOME", 
         "account_path": "Adam/Current Accounts/Alpha Bank", 
-        "payee_name": "Company A", 
+        "payee_name": "Adam's Employer", 
         "category_amount_pairs": [
           "Employment/Salary:2,100.00 EUR", 
           "Employment/Benefits:150.00 EUR"
@@ -1693,7 +1741,7 @@
         "datetime": "2023-06-15T00:00:01+02:00", 
         "type": "INCOME", 
         "account_path": "Adam/Investments/Pension Plan/EUR", 
-        "payee_name": "Company A", 
+        "payee_name": "Adam's Employer", 
         "category_amount_pairs": [
           "Employment/Benefits:125.00 EUR"
         ], 
@@ -1762,7 +1810,7 @@
         "datetime": "2023-06-16T00:00:03+02:00", 
         "type": "EXPENSE", 
         "account_path": "Shared/Savings Accounts/Cool Bank", 
-        "payee_name": "The Phone Company", 
+        "payee_name": "V-Mobile", 
         "category_amount_pairs": [
           "Bills/Phone:15.00 EUR", 
           "Bills/Internet:25.00 EUR"
@@ -1795,6 +1843,28 @@
         "tag_amount_pairs": [], 
         "datetime_created": "2023-08-07T21:19:02+02:00", 
         "uuid": "a348bacd-4ce1-442d-a8d0-57e64fe380e5"
+      }, 
+      {
+        "datatype": "SecurityTransfer", 
+        "description": "moving VWCE shares to new broker", 
+        "datetime": "2023-06-18T00:00:00+02:00", 
+        "security_name": "Vanguard FTSE All-World", 
+        "shares": "1E+1", 
+        "sender_path": "Adam/Investments/XTBroker/Securities", 
+        "recipient_path": "Adam/Investments/Intelligent Brokers/Securities", 
+        "datetime_created": "2023-08-13T10:14:33+02:00", 
+        "uuid": "f89f31a3-cb8a-4e21-adda-4e1bf2f4fce4"
+      }, 
+      {
+        "datatype": "CashTransfer", 
+        "description": "", 
+        "datetime": "2023-06-18T00:00:00+02:00", 
+        "sender_path": "Adam/Investments/XTBroker/EUR", 
+        "recipient_path": "Adam/Savings Accounts/Alpha Bank", 
+        "amount_sent": "55.70 EUR", 
+        "amount_received": "55.70 EUR", 
+        "datetime_created": "2023-08-13T10:15:44+02:00", 
+        "uuid": "c5de86a0-d971-4354-8c36-832d8dac8945"
       }, 
       {
         "datatype": "CashTransaction", 
@@ -1842,7 +1912,7 @@
         "datetime": "2023-06-21T00:00:00+02:00", 
         "type": "EXPENSE", 
         "account_path": "Eve/Current Accounts/Brookside Bank", 
-        "payee_name": "Tesco", 
+        "payee_name": "Freshco", 
         "category_amount_pairs": [
           "Food and Drinks/Groceries:47.90 EUR"
         ], 
@@ -1911,6 +1981,17 @@
         "uuid": "6a0dbcb5-f294-4219-9b8f-cbb362c0ef70"
       }, 
       {
+        "datatype": "CashTransfer", 
+        "description": "end of month expense reimbursement", 
+        "datetime": "2023-06-30T00:00:01+02:00", 
+        "sender_path": "Adam/Savings Accounts/Alpha Bank", 
+        "recipient_path": "Eve/Savings Accounts/Brookside Bank", 
+        "amount_sent": "83.45 EUR", 
+        "amount_received": "83.45 EUR", 
+        "datetime_created": "2023-08-13T10:28:54+02:00", 
+        "uuid": "f8e5f1b2-72a9-4a0a-984d-8f65f2dec41d"
+      }, 
+      {
         "datatype": "CashTransaction", 
         "description": "first dinner in Prague", 
         "datetime": "2023-07-01T00:00:00+02:00", 
@@ -1922,7 +2003,8 @@
         ], 
         "tag_amount_pairs": [
           "vacation Prague 7/2023:749.80 CZK", 
-          "Adam owes Eve:374.90 CZK"
+          "Adam owes Eve:374.90 CZK", 
+          "together:749.80 CZK"
         ], 
         "datetime_created": "2023-08-11T17:52:44+02:00", 
         "uuid": "a83bafb8-ec89-47e6-81a9-2907598a8613"
@@ -1968,7 +2050,8 @@
         ], 
         "tag_amount_pairs": [
           "vacation Prague 7/2023:815.00 CZK", 
-          "Adam owes Eve:407.50 CZK"
+          "Adam owes Eve:407.50 CZK", 
+          "together:815.00 CZK"
         ], 
         "datetime_created": "2023-08-11T17:54:19+02:00", 
         "uuid": "6beee9ff-0adb-4937-827c-a95b3779def4"
@@ -1985,7 +2068,8 @@
         ], 
         "tag_amount_pairs": [
           "vacation Prague 7/2023:400.00 CZK", 
-          "Adam owes Eve:200.00 CZK"
+          "Adam owes Eve:200.00 CZK", 
+          "together:400.00 CZK"
         ], 
         "datetime_created": "2023-08-11T18:04:32+02:00", 
         "uuid": "acf1dcdc-6446-45b5-b63a-2ce185438f3a"
@@ -2002,7 +2086,8 @@
         ], 
         "tag_amount_pairs": [
           "vacation Prague 7/2023:240.00 CZK", 
-          "Adam owes Eve:120.00 CZK"
+          "Adam owes Eve:120.00 CZK", 
+          "together:240.00 CZK"
         ], 
         "datetime_created": "2023-08-11T18:07:57+02:00", 
         "uuid": "08f93840-4390-49b2-b1ed-94d8728952e5"
@@ -2019,7 +2104,8 @@
         ], 
         "tag_amount_pairs": [
           "vacation Prague 7/2023:700.00 CZK", 
-          "Adam owes Eve:350.00 CZK"
+          "Adam owes Eve:350.00 CZK", 
+          "together:700.00 CZK"
         ], 
         "datetime_created": "2023-08-11T18:36:24+02:00", 
         "uuid": "46eeaf03-4aaa-4717-b251-965d6e5bcc82"
@@ -2052,7 +2138,8 @@
         ], 
         "tag_amount_pairs": [
           "vacation Prague 7/2023:460.00 CZK", 
-          "Adam owes Eve:230.00 CZK"
+          "Adam owes Eve:230.00 CZK", 
+          "together:460.00 CZK"
         ], 
         "datetime_created": "2023-08-11T17:57:32+02:00", 
         "uuid": "83b3fd39-ed1d-4461-a37d-b11eef36126e"
@@ -2069,7 +2156,8 @@
         ], 
         "tag_amount_pairs": [
           "vacation Prague 7/2023:260.00 CZK", 
-          "Adam owes Eve:130.00 CZK"
+          "Adam owes Eve:130.00 CZK", 
+          "together:260.00 CZK"
         ], 
         "datetime_created": "2023-08-11T18:08:11+02:00", 
         "uuid": "b35dd9cb-69a9-4e67-90ef-06aa3c086851"
@@ -2086,7 +2174,8 @@
         ], 
         "tag_amount_pairs": [
           "vacation Prague 7/2023:140.00 CZK", 
-          "Adam owes Eve:70.00 CZK"
+          "Adam owes Eve:70.00 CZK", 
+          "together:140.00 CZK"
         ], 
         "datetime_created": "2023-08-11T18:35:04+02:00", 
         "uuid": "f6f140d6-fa0d-4cdc-8751-78a164d81276"
@@ -2103,7 +2192,8 @@
         ], 
         "tag_amount_pairs": [
           "vacation Prague 7/2023:180.00 CZK", 
-          "Adam owes Eve:90.00 CZK"
+          "Adam owes Eve:90.00 CZK", 
+          "together:180.00 CZK"
         ], 
         "datetime_created": "2023-08-11T18:08:37+02:00", 
         "uuid": "ce6354db-01d7-45d9-b152-3b8a010cc17d"
@@ -2120,7 +2210,8 @@
         ], 
         "tag_amount_pairs": [
           "vacation Prague 7/2023:500.00 CZK", 
-          "Adam owes Eve:250.00 CZK"
+          "Adam owes Eve:250.00 CZK", 
+          "together:500.00 CZK"
         ], 
         "datetime_created": "2023-08-11T18:05:39+02:00", 
         "uuid": "e78e3a2b-89cf-4b79-9168-0b2f3839b6d9"
@@ -2137,7 +2228,8 @@
         ], 
         "tag_amount_pairs": [
           "vacation Prague 7/2023:2,400.00 CZK", 
-          "Adam owes Eve:1,200.00 CZK"
+          "Adam owes Eve:1,200.00 CZK", 
+          "together:2,400.00 CZK"
         ], 
         "datetime_created": "2023-08-11T18:07:25+02:00", 
         "uuid": "e41b6801-11fd-4c8a-b9ec-47273d84299b"
@@ -2154,7 +2246,8 @@
         ], 
         "tag_amount_pairs": [
           "vacation Prague 7/2023:210.00 CZK", 
-          "Adam owes Eve:105.00 CZK"
+          "Adam owes Eve:105.00 CZK", 
+          "together:210.00 CZK"
         ], 
         "datetime_created": "2023-08-11T18:30:14+02:00", 
         "uuid": "d5c6c9c5-68ad-4c50-91f9-c296d0a866a0"
@@ -2172,7 +2265,8 @@
         ], 
         "tag_amount_pairs": [
           "vacation Prague 7/2023:980.00 CZK", 
-          "Adam owes Eve:490.00 CZK"
+          "Adam owes Eve:490.00 CZK", 
+          "together:980.00 CZK"
         ], 
         "datetime_created": "2023-08-11T18:40:09+02:00", 
         "uuid": "f8d00d29-7163-4116-8528-73e41d709025"
@@ -2189,7 +2283,8 @@
         ], 
         "tag_amount_pairs": [
           "vacation Prague 7/2023:300.00 CZK", 
-          "Adam owes Eve:150.00 CZK"
+          "Adam owes Eve:150.00 CZK", 
+          "together:300.00 CZK"
         ], 
         "datetime_created": "2023-08-11T18:38:48+02:00", 
         "uuid": "1b46aff6-ebd0-4811-b3b9-94ddbe42aa88"
@@ -2200,7 +2295,7 @@
         "datetime": "2023-07-07T00:00:00+02:00", 
         "type": "INCOME", 
         "account_path": "Eve/Current Accounts/Brookside Bank", 
-        "payee_name": "Company B", 
+        "payee_name": "Eve's Employer", 
         "category_amount_pairs": [
           "Employment/Salary:2,160.00 EUR", 
           "Employment/Benefits:90.00 EUR"
@@ -2248,7 +2343,7 @@
         "datetime": "2023-07-13T00:00:00+02:00", 
         "type": "EXPENSE", 
         "account_path": "Adam/Current Accounts/Alpha Bank", 
-        "payee_name": "Netflix", 
+        "payee_name": "Movieflix", 
         "category_amount_pairs": [
           "Digital goods/Subscriptions:12.00 EUR"
         ], 
@@ -2265,7 +2360,7 @@
         "datetime": "2023-07-15T00:00:00+02:00", 
         "type": "INCOME", 
         "account_path": "Adam/Investments/Pension Plan/EUR", 
-        "payee_name": "Company A", 
+        "payee_name": "Adam's Employer", 
         "category_amount_pairs": [
           "Employment/Benefits:125.00 EUR"
         ], 
@@ -2290,7 +2385,7 @@
         "datetime": "2023-07-15T00:00:02+02:00", 
         "type": "INCOME", 
         "account_path": "Adam/Current Accounts/Alpha Bank", 
-        "payee_name": "Company A", 
+        "payee_name": "Adam's Employer", 
         "category_amount_pairs": [
           "Employment/Salary:2,100.00 EUR", 
           "Employment/Benefits:150.00 EUR"
@@ -2368,7 +2463,7 @@
         "datetime": "2023-07-16T00:00:03+02:00", 
         "type": "EXPENSE", 
         "account_path": "Shared/Savings Accounts/Cool Bank", 
-        "payee_name": "The Phone Company", 
+        "payee_name": "V-Mobile", 
         "category_amount_pairs": [
           "Bills/Phone:15.00 EUR", 
           "Bills/Internet:25.00 EUR"
@@ -2396,7 +2491,7 @@
         "datetime": "2023-07-17T00:00:00+02:00", 
         "type": "EXPENSE", 
         "account_path": "Eve/Current Accounts/Brookside Bank", 
-        "payee_name": "Tesco", 
+        "payee_name": "Freshco", 
         "category_amount_pairs": [
           "Food and Drinks/Groceries:69.90 EUR"
         ], 
@@ -2443,7 +2538,7 @@
         "datetime": "2023-07-18T00:00:00+02:00", 
         "account_path": "Eve/Wallet/EUR", 
         "refunded_transaction_uuid": "d46857a1-e026-48bf-bcfc-25b7a0a12235", 
-        "payee_name": "Tesco", 
+        "payee_name": "Freshco", 
         "category_amount_pairs": [
           "Food and Drinks/Groceries:10.90 EUR"
         ], 
@@ -2525,7 +2620,7 @@
         "datetime": "2023-07-26T00:00:00+02:00", 
         "type": "EXPENSE", 
         "account_path": "Adam/Current Accounts/Alpha Bank", 
-        "payee_name": "Amazon", 
+        "payee_name": "Buyzone", 
         "category_amount_pairs": [
           "Stationery:37.90 EUR"
         ], 
@@ -2610,6 +2705,17 @@
         "tag_amount_pairs": [], 
         "datetime_created": "2023-08-11T19:18:00+02:00", 
         "uuid": "129d273f-a445-4064-a0f6-93984bef2c8c"
+      }, 
+      {
+        "datatype": "CashTransfer", 
+        "description": "end of month expense reimbursement", 
+        "datetime": "2023-07-31T00:00:01+02:00", 
+        "sender_path": "Adam/Savings Accounts/Alpha Bank", 
+        "recipient_path": "Eve/Savings Accounts/Brookside Bank", 
+        "amount_sent": "158.36 EUR", 
+        "amount_received": "158.36 EUR", 
+        "datetime_created": "2023-08-13T10:29:02+02:00", 
+        "uuid": "64be73b6-63d9-45f1-ade5-8fca7146f745"
       }
     ]
   }
