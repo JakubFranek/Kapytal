@@ -311,17 +311,24 @@ class AccountTreePresenter:
 
     def _set_native_balance_column_visibility(self) -> None:
         show_native_balance_column = False
-        for item in self._record_keeper.account_groups:
-            if any(
-                isinstance(child, CashAccount)
-                and child.currency != self._record_keeper.base_currency
-                for child in item.children
-            ):
-                index = self._model.get_index_from_item(item)
-                index = self._proxy.mapFromSource(index)
-                if self._view.treeView.isExpanded(index):
-                    show_native_balance_column = True
-                    break
+        non_native_cash_accounts = [
+            account
+            for account in self._record_keeper.cash_accounts
+            if account.currency != self._record_keeper.base_currency
+        ]
+        for account in non_native_cash_accounts:
+            show_native_balance_column = self._is_item_visible(account)
+            if show_native_balance_column:
+                break
         self._view.treeView.setColumnHidden(
             AccountTreeColumn.BALANCE_NATIVE, not show_native_balance_column
         )
+
+    def _is_item_visible(self, item: Account | AccountGroup) -> bool:
+        if item.parent is None:
+            return True
+        index = self._model.get_index_from_item(item.parent)
+        index = self._proxy.mapFromSource(index)
+        if self._view.treeView.isExpanded(index):
+            return self._is_item_visible(item.parent)
+        return False
