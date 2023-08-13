@@ -557,15 +557,32 @@ class TransactionTableModel(QAbstractTableModel):
     @staticmethod
     def _get_transaction_category(transaction: Transaction) -> str:
         if isinstance(transaction, CashTransaction | RefundTransaction):
-            category_paths = sorted(
-                category.path for category in transaction.categories
-            )
-            return ", ".join(category_paths)
+            if not transaction.are_categories_split:
+                category_strings = sorted(
+                    category.path for category in transaction.categories
+                )
+            else:
+                category_strings = sorted(
+                    category.path + f" ({amount.to_str_rounded()})"
+                    for category, amount in transaction.category_amount_pairs
+                )
+            return ", ".join(category_strings)
         return ""
 
     @staticmethod
     def _get_transaction_tags(transaction: Transaction) -> str:
-        tag_names = sorted(tag.name for tag in transaction.tags)
+        if isinstance(transaction, CashTransaction | RefundTransaction):
+            if transaction.are_tags_split:
+                tag_names: list[str] = []
+                for tag, amount in transaction.tag_amount_pairs:
+                    if amount != transaction.amount:
+                        tag_names.append(f"{tag.name} ({amount.to_str_rounded()})")
+                    else:
+                        tag_names.append(tag.name)
+            else:
+                tag_names = sorted(tag.name for tag in transaction.tags)
+        else:
+            tag_names = sorted(tag.name for tag in transaction.tags)
         return ", ".join(tag_names)
 
     def _get_account_balance(self, transaction: Transaction) -> CashAmount:
