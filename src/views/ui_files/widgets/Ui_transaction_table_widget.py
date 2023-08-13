@@ -13,6 +13,11 @@ class Ui_TransactionTableWidget(object):
     def setupUi(self, TransactionTableWidget):
         TransactionTableWidget.setObjectName("TransactionTableWidget")
         TransactionTableWidget.resize(454, 415)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Preferred)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(TransactionTableWidget.sizePolicy().hasHeightForWidth())
+        TransactionTableWidget.setSizePolicy(sizePolicy)
         TransactionTableWidget.setLocale(QtCore.QLocale(QtCore.QLocale.Language.English, QtCore.QLocale.Country.UnitedKingdom))
         self.verticalLayout = QtWidgets.QVBoxLayout(TransactionTableWidget)
         self.verticalLayout.setContentsMargins(0, 0, 0, 0)

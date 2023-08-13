@@ -84,6 +84,7 @@ class AccountTreePresenter:
         self._security_account_dialog_presenter.load_record_keeper(record_keeper)
         self._selection_changed()
         self.event_check_state_changed()
+        self._set_native_balance_column_visibility()
 
     def refresh_view(self) -> None:
         self._view.refresh()
@@ -200,6 +201,14 @@ class AccountTreePresenter:
 
         self._model.signal_check_state_changed.connect(self.event_check_state_changed)
 
+        self._view.treeView.expanded.connect(self._set_native_balance_column_visibility)
+        self._view.treeView.collapsed.connect(
+            self._set_native_balance_column_visibility
+        )
+        self._view.signal_tree_expanded_state_changed.connect(
+            self._set_native_balance_column_visibility
+        )
+
         self._selection_changed()  # called to ensure context menu is OK at start of run
 
     def _initialize_events(self) -> None:
@@ -298,3 +307,20 @@ class AccountTreePresenter:
             self._cash_account_dialog_presenter.run_edit_dialog()
         if isinstance(selected_item, SecurityAccount):
             self._security_account_dialog_presenter.run_edit_dialog()
+
+    def _set_native_balance_column_visibility(self) -> None:
+        show_native_balance_column = False
+        for item in self._record_keeper.account_groups:
+            if any(
+                isinstance(child, CashAccount)
+                and child.currency != self._record_keeper.base_currency
+                for child in item.children
+            ):
+                index = self._model.get_index_from_item(item)
+                index = self._proxy.mapFromSource(index)
+                if self._view.treeView.isExpanded(index):
+                    show_native_balance_column = True
+                    break
+        self._view.treeView.setColumnHidden(
+            AccountTreeColumn.BALANCE_NATIVE, not show_native_balance_column
+        )

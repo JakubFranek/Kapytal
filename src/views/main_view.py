@@ -135,7 +135,7 @@ class MainView(QMainWindow, Ui_MainWindow):
             before_action = actions[0] if actions else None
             self.menuRecent_Files.insertAction(before_action, action)
 
-    def closeEvent(self, event: QCloseEvent) -> None:  # noqa: N802
+    def closeEvent(self, event: QCloseEvent) -> None:
         self.signal_exit.emit()
         event.ignore()
 
@@ -152,6 +152,7 @@ class MainView(QMainWindow, Ui_MainWindow):
         self.transaction_table_widget = TransactionTableWidget(self)
         self.horizontalLayout.addWidget(self.account_tree_widget)
         self.horizontalLayout.addWidget(self.transaction_table_widget)
+        self.horizontalLayout.setStretch(0, 0)
         self.horizontalLayout.setStretch(1, 1)
 
         app_icon = QIcon()
@@ -258,7 +259,7 @@ class MainView(QMainWindow, Ui_MainWindow):
             self.signal_net_worth_time_report.emit
         )
 
-    def keyPressEvent(self, a0: QKeyEvent) -> None:  # noqa: N802
+    def keyPressEvent(self, a0: QKeyEvent) -> None:
         if a0.key() == Qt.Key.Key_Escape:
             logging.debug(f"Closing {self.__class__.__name__}")
             self.close()

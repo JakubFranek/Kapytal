@@ -45,7 +45,7 @@ class DescriptionPlainTextEdit(QPlainTextEdit):
             cursor.movePosition(QTextCursor.MoveOperation.End)
             self.setTextCursor(cursor)
 
-    def keyPressEvent(self, e: QKeyEvent) -> None:  # noqa: N802
+    def keyPressEvent(self, e: QKeyEvent) -> None:
         if self.completer.popup().isVisible() and e.key() in COMPLETER_KEYS:
             e.ignore()  # have QCompleter handle these keys
             return None

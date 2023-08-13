@@ -1,11 +1,12 @@
 import logging
 
-from PyQt6.QtCore import QEvent, QObject, Qt, pyqtSignal
+from PyQt6.QtCore import QEvent, QObject, QSignalBlocker, Qt, pyqtSignal
 from PyQt6.QtGui import QContextMenuEvent, QCursor, QKeyEvent, QMouseEvent
 from PyQt6.QtWidgets import QHeaderView, QLineEdit, QMenu, QWidget
 from src.views import icons
 from src.views.constants import AccountTreeColumn
 from src.views.ui_files.widgets.Ui_account_tree_widget import Ui_AccountTreeWidget
+from src.views.widgets.small_line_edit import SmallLineEdit
 
 
 class AccountTreeWidget(QWidget, Ui_AccountTreeWidget):
@@ -27,11 +28,16 @@ class AccountTreeWidget(QWidget, Ui_AccountTreeWidget):
     signal_delete_item = pyqtSignal()
 
     signal_search_text_changed = pyqtSignal(str)
+    signal_tree_expanded_state_changed = pyqtSignal()
 
     def __init__(self, parent: QWidget | None) -> None:
         super().__init__(parent)
         self.setupUi(self)
         self.controlsHorizontalLayout.setContentsMargins(0, 0, 0, 0)
+
+        self.searchLineEdit = SmallLineEdit(self)
+        self.searchLineEdit.setPlaceholderText("Search Accounts")
+        self.controlsHorizontalLayout.addWidget(self.searchLineEdit)
 
         self._set_action_icons()
         self._connect_actions()
@@ -64,7 +70,7 @@ class AccountTreeWidget(QWidget, Ui_AccountTreeWidget):
     def set_total_base_balance(self, total_base_balance: str) -> None:
         self.totalBaseBalanceAmountLabel.setText(total_base_balance)
 
-    def eventFilter(self, source: QObject, event: QEvent) -> bool:  # noqa: N802
+    def eventFilter(self, source: QObject, event: QEvent) -> bool:
         if (
             source is self.treeView
             and isinstance(event, QKeyEvent)
@@ -87,11 +93,19 @@ class AccountTreeWidget(QWidget, Ui_AccountTreeWidget):
 
     def expand_all(self) -> None:
         logging.debug("Expanding all AccountTree nodes")
-        self.treeView.expandAll()
+        with QSignalBlocker(self.treeView):
+            # blocking so AccountTreepresenter._set_native_balance_column_visibility
+            # is not called too many times
+            self.treeView.expandAll()
+        self.signal_tree_expanded_state_changed.emit()
 
     def collapse_all(self) -> None:
         logging.debug("Collapsing all AccountTree nodes")
-        self.treeView.collapseAll()
+        with QSignalBlocker(self.treeView):
+            # blocking so AccountTreepresenter._set_native_balance_column_visibility
+            # is not called too many times
+            self.treeView.collapseAll()
+        self.signal_tree_expanded_state_changed.emit()
 
     def enable_actions(
         self,
