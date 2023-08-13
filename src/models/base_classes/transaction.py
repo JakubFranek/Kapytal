@@ -3,6 +3,7 @@ from collections.abc import Collection
 from datetime import datetime
 from typing import TYPE_CHECKING
 
+from src.models.custom_exceptions import NotFoundError
 from src.models.mixins.copyable_mixin import CopyableMixin
 
 if TYPE_CHECKING:
@@ -28,7 +29,7 @@ class Transaction(
 
     def __init__(self) -> None:
         super().__init__()
-        self._tags = []
+        self._tags: frozenset[Attribute] = frozenset()
         self._datetime: datetime
 
     @property
@@ -58,8 +59,8 @@ class Transaction(
         return self._timestamp
 
     @property
-    def tags(self) -> tuple[Attribute, ...]:
-        return tuple(self._tags)
+    def tags(self) -> frozenset[Attribute]:
+        return self._tags
 
     def _validate_datetime(self, value: datetime) -> None:
         if not isinstance(value, datetime):
@@ -83,18 +84,26 @@ class Transaction(
 
     def add_tags(self, tags: Collection[Attribute]) -> None:
         self._validate_tags(tags)
-        for tag in tags:
-            if tag not in self._tags:
-                self._tags.append(tag)
+        self._tags = self._tags.union(tags)
 
     def remove_tags(self, tags: Collection[Attribute]) -> None:
         self._validate_tags(tags)
-        for tag in tags:
-            if tag in self._tags:
-                self._tags.remove(tag)
+        self._tags = self._tags.difference(tags)
+
+    def replace_tag(self, replaced_tag: Attribute, replacement_tag: Attribute) -> None:
+        self._validate_tags((replaced_tag, replacement_tag))
+        if replaced_tag not in self._tags:
+            raise NotFoundError(
+                f"Tag '{replaced_tag.name}' not found in this "
+                f"{self.__class__.__name__}'s Tags."
+            )
+        tags = set(self._tags)
+        tags.remove(replaced_tag)
+        tags.add(replacement_tag)
+        self._tags = frozenset(tags)
 
     def clear_tags(self) -> None:
-        self._tags.clear()
+        self._tags = frozenset()
 
     def _validate_tags(self, tags: Collection[Attribute]) -> None:
         if not isinstance(tags, Collection):

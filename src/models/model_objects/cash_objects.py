@@ -15,6 +15,7 @@ from src.models.base_classes.transaction import Transaction
 from src.models.custom_exceptions import (
     AlreadyExistsError,
     InvalidOperationError,
+    NotFoundError,
     TransferSameAccountError,
 )
 from src.models.model_objects.account_group import AccountGroup
@@ -491,15 +492,6 @@ class CashTransaction(CashRelatedTransaction):
         self._refunds.remove(refund)
         self._update_refunded_ratio()
 
-    def _update_refunded_ratio(self) -> None:
-        self._refunded_ratio = (
-            sum(
-                (refund.amount for refund in self.refunds),
-                start=self.currency.zero_amount,
-            )
-            / self._amount
-        )
-
     def get_max_refundable_for_category(
         self, category: Category, ignore_refund: "RefundTransaction|None"
     ) -> CashAmount:
@@ -617,7 +609,7 @@ class CashTransaction(CashRelatedTransaction):
             tag_amount_pairs.append(tup)
         self._validate_tag_amount_pairs(tag_amount_pairs, self._amount, self.currency)
         self._tag_amount_pairs = tuple(tag_amount_pairs)
-        self._tags = tuple(tag for tag, _ in tag_amount_pairs)
+        self._tags = frozenset(tag for tag, _ in tag_amount_pairs)
 
     def remove_tags(self, tags: Collection[Attribute]) -> None:
         if self.is_refunded:
@@ -633,7 +625,50 @@ class CashTransaction(CashRelatedTransaction):
         ]
         self._validate_tag_amount_pairs(tag_amount_pairs, self._amount, self.currency)
         self._tag_amount_pairs = tuple(tag_amount_pairs)
-        self._tags = tuple(tag for tag, _ in tag_amount_pairs)
+        self._tags = frozenset(tag for tag, _ in tag_amount_pairs)
+
+    def replace_tag(self, replaced_tag: Attribute, replacement_tag: Attribute) -> None:
+        self._validate_tags((replaced_tag, replacement_tag))
+        if replaced_tag not in self._tags:
+            raise NotFoundError(
+                f"Tag '{replaced_tag.name}' not found in this CashTransaction's Tags."
+            )
+        tag_amount_pairs = list(self._tag_amount_pairs)
+        if replacement_tag not in self._tags:
+            for tag, amount in self._tag_amount_pairs:
+                if tag == replaced_tag:
+                    tag_amount_pairs[self._tag_amount_pairs.index((tag, amount))] = (
+                        replacement_tag,
+                        amount,
+                    )
+        else:
+            replaced_amount = abs(self.get_amount_for_tag(replaced_tag))
+            replacement_amount = abs(self.get_amount_for_tag(replacement_tag))
+            new_amount = min(self.amount, replaced_amount + replacement_amount)
+            for tag, amount in self._tag_amount_pairs:
+                if tag == replacement_tag:
+                    tag_amount_pairs[self._tag_amount_pairs.index((tag, amount))] = (
+                        replacement_tag,
+                        new_amount,
+                    )
+            tag_amount_pairs.remove((replaced_tag, replaced_amount))
+        self._validate_tag_amount_pairs(tag_amount_pairs, self._amount, self.currency)
+        self._tag_amount_pairs = tuple(tag_amount_pairs)
+        self._tags = frozenset(tag for tag, _ in tag_amount_pairs)
+
+    def replace_payee(
+        self, replaced_payee: Attribute, replacement_payee: Attribute
+    ) -> None:
+        if replaced_payee.type_ != AttributeType.PAYEE:
+            raise ValueError(f"{replaced_payee} is not a Payee.")
+        if replacement_payee.type_ != AttributeType.PAYEE:
+            raise ValueError(f"{replacement_payee} is not a Payee.")
+        if replaced_payee != self._payee:
+            raise ValueError(
+                f"Payee '{replaced_payee.name}' does not match this "
+                f"CashTransaction's payee '{self._payee.name}'."
+            )
+        self._payee = replacement_payee
 
     def set_attributes(
         self,
@@ -965,6 +1000,15 @@ class CashTransaction(CashRelatedTransaction):
         if self.type_ == CashTransactionType.INCOME:
             return self._amount
         return self._amount_negative
+
+    def _update_refunded_ratio(self) -> None:
+        self._refunded_ratio = (
+            sum(
+                (refund.amount for refund in self.refunds),
+                start=self.currency.zero_amount,
+            )
+            / self._amount
+        )
 
 
 class CashTransfer(CashRelatedTransaction):
@@ -1459,6 +1503,49 @@ class RefundTransaction(CashRelatedTransaction):
         raise InvalidOperationError(
             "Removing tags from RefundTransaction is forbidden."
         )
+
+    def replace_tag(self, replaced_tag: Attribute, replacement_tag: Attribute) -> None:
+        self._validate_tags((replaced_tag, replacement_tag))
+        if replaced_tag not in self._tags:
+            raise NotFoundError(
+                f"Tag '{replaced_tag.name}' not found in this RefundTransaction's Tags."
+            )
+        tag_amount_pairs = list(self._tag_amount_pairs)
+        if replacement_tag not in self._tags:
+            for tag, amount in self._tag_amount_pairs:
+                if tag == replaced_tag:
+                    tag_amount_pairs[self._tag_amount_pairs.index((tag, amount))] = (
+                        replacement_tag,
+                        amount,
+                    )
+        else:
+            replaced_amount = abs(self.get_amount_for_tag(replaced_tag))
+            replacement_amount = abs(self.get_amount_for_tag(replacement_tag))
+            new_amount = min(self.amount, replaced_amount + replacement_amount)
+            for tag, amount in self._tag_amount_pairs:
+                if tag == replacement_tag:
+                    tag_amount_pairs[self._tag_amount_pairs.index((tag, amount))] = (
+                        replacement_tag,
+                        new_amount,
+                    )
+            tag_amount_pairs.remove((replaced_tag, replaced_amount))
+        self._validate_tag_amount_pairs(tag_amount_pairs, self._amount, self.currency)
+        self._tag_amount_pairs = tuple(tag_amount_pairs)
+        self._tags = frozenset(tag for tag, _ in tag_amount_pairs)
+
+    def replace_payee(
+        self, replaced_payee: Attribute, replacement_payee: Attribute
+    ) -> None:
+        if replaced_payee.type_ != AttributeType.PAYEE:
+            raise ValueError(f"{replaced_payee} is not a Payee.")
+        if replacement_payee.type_ != AttributeType.PAYEE:
+            raise ValueError(f"{replacement_payee} is not a Payee.")
+        if replaced_payee != self._payee:
+            raise ValueError(
+                f"Payee '{replaced_payee.name}' does not match this "
+                f"RefundTransaction's payee '{self._payee.name}'."
+            )
+        self._payee = replacement_payee
 
     def set_attributes(
         self,
