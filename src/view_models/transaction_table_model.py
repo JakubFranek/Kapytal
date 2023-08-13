@@ -36,6 +36,24 @@ from src.views.constants import (
 
 ALIGNMENT_RIGHT = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
 
+COLUMNS_ALIGNED_RIGHT = {
+    TransactionTableColumn.AMOUNT_NATIVE,
+    TransactionTableColumn.AMOUNT_BASE,
+    TransactionTableColumn.AMOUNT_SENT,
+    TransactionTableColumn.AMOUNT_RECEIVED,
+    TransactionTableColumn.SHARES,
+    TransactionTableColumn.PRICE_PER_SHARE,
+    TransactionTableColumn.BALANCE,
+}
+COLUMNS_TRANSACTION_AMOUNTS = {
+    TransactionTableColumn.AMOUNT_NATIVE,
+    TransactionTableColumn.AMOUNT_BASE,
+}
+COLUMNS_TRANSFER_AMOUNTS = {
+    TransactionTableColumn.AMOUNT_SENT,
+    TransactionTableColumn.AMOUNT_RECEIVED,
+}
+
 
 class TransactionTableModel(QAbstractTableModel):
     def __init__(
@@ -51,6 +69,7 @@ class TransactionTableModel(QAbstractTableModel):
 
         self._transaction_uuid_dict: dict[UUID, Transaction] = {}
         self._transactions: tuple[Transaction] = ()
+        self._row_count = 0
         self._base_currency: Currency | None = None
         self._valid_accounts = ()
 
@@ -90,11 +109,12 @@ class TransactionTableModel(QAbstractTableModel):
         self._base_currency = base_currency
         self._transactions = tuple(transactions)
         self._transaction_uuid_dict = transaction_uuid_dict
+        self._row_count = len(self._transactions)
 
     def rowCount(self, index: QModelIndex = ...) -> int:  # noqa: N802
         if isinstance(index, QModelIndex) and index.isValid():
             return 0
-        return len(self._transactions)
+        return self._row_count
 
     def columnCount(self, index: QModelIndex = ...) -> int:  # noqa: N802, ARG002
         if not hasattr(self, "_column_count"):
@@ -367,25 +387,14 @@ class TransactionTableModel(QAbstractTableModel):
 
     @staticmethod
     def _get_text_alignment_data(column: int) -> Qt.AlignmentFlag | None:
-        if column in {
-            TransactionTableColumn.AMOUNT_NATIVE,
-            TransactionTableColumn.AMOUNT_BASE,
-            TransactionTableColumn.AMOUNT_SENT,
-            TransactionTableColumn.AMOUNT_RECEIVED,
-            TransactionTableColumn.SHARES,
-            TransactionTableColumn.PRICE_PER_SHARE,
-            TransactionTableColumn.BALANCE,
-        }:
+        if column in COLUMNS_ALIGNED_RIGHT:
             return ALIGNMENT_RIGHT
         return None
 
     def _get_foreground_data(  # noqa: PLR0911, C901
         self, transaction: Transaction, column: int
     ) -> QBrush | None:
-        if column in {
-            TransactionTableColumn.AMOUNT_NATIVE,
-            TransactionTableColumn.AMOUNT_BASE,
-        }:
+        if column in COLUMNS_TRANSACTION_AMOUNTS:
             if isinstance(transaction, CashTransaction):
                 if transaction.type_ == CashTransactionType.INCOME:
                     return colors.get_green_brush()
@@ -396,10 +405,7 @@ class TransactionTableModel(QAbstractTableModel):
                 if transaction.type_ == SecurityTransactionType.BUY:
                     return colors.get_red_brush()
                 return colors.get_green_brush()
-        if column in {
-            TransactionTableColumn.AMOUNT_SENT,
-            TransactionTableColumn.AMOUNT_RECEIVED,
-        }:
+        if column in COLUMNS_TRANSFER_AMOUNTS:
             return colors.get_blue_brush()
         if column == TransactionTableColumn.SHARES:
             if isinstance(transaction, SecurityTransaction):

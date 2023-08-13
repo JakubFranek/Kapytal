@@ -41,6 +41,11 @@ COLUMN_HEADERS = {
     AccountTreeColumn.SHOW: "",
 }
 
+COLUMNS_BALANCE = {
+    AccountTreeColumn.BALANCE_NATIVE,
+    AccountTreeColumn.BALANCE_BASE,
+}
+
 
 def convert_bool_to_checkstate(*, checked: bool) -> Qt.CheckState:
     return Qt.CheckState.Checked if checked else Qt.CheckState.Unchecked
@@ -323,10 +328,7 @@ class AccountTreeModel(QAbstractItemModel):
             return index.internalPointer().check_state
         if role == Qt.ItemDataRole.TextAlignmentRole:
             column = index.column()
-            if column in {
-                AccountTreeColumn.BALANCE_NATIVE,
-                AccountTreeColumn.BALANCE_BASE,
-            }:
+            if column in COLUMNS_BALANCE:
                 return TEXT_ALIGNMENT_BALANCE
         if role == Qt.ItemDataRole.ForegroundRole:
             return self._get_foreground_role_data(

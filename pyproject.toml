@@ -3,6 +3,8 @@ pythonpath = "."
 
 [tool.pyright]
 reportGeneralTypeIssues = "none"
+reportOptionalMemberAccess = "none"
+exclude = ["src/views", ".venv", "aux_stuff"]
 
 [tool.coverage.report]
 exclude_lines = [
