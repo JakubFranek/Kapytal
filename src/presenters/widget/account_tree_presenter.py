@@ -104,6 +104,7 @@ class AccountTreePresenter:
             AccountTreeColumn.BALANCE_NATIVE, hide_native
         )
         self.update_total_balance()
+        self._set_native_balance_column_visibility()
 
     def update_total_balance(self) -> None:
         if self._record_keeper.base_currency is not None:

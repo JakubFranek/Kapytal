@@ -251,7 +251,9 @@ class CashAccount(Account):
         for index, transaction in enumerate(transactions):
             if index > 0 and transaction.datetime_ == transactions[index - 1].datetime_:
                 new_datetime = transaction.datetime_ + timedelta(seconds=1)
-                transaction.set_attributes(datetime_=new_datetime)
+                transaction.set_attributes(
+                    datetime_=new_datetime, block_account_update=True
+                )
 
         if len(self._transactions) > 0:
             oldest_datetime = transactions[0].datetime_
@@ -681,6 +683,7 @@ class CashTransaction(CashRelatedTransaction):
         payee: Attribute | None = None,
         description: str | None = None,
         datetime_: datetime | None = None,
+        block_account_update: bool = False,
     ) -> None:
         if self.is_refunded and (
             type_ is not None
@@ -725,6 +728,7 @@ class CashTransaction(CashRelatedTransaction):
             category_amount_pairs=valid_category_amount_pairs,
             tag_amount_pairs=valid_tag_amount_pairs,
             payee=payee,
+            block_account_update=block_account_update,
         )
 
     def validate_attributes(
@@ -788,22 +792,27 @@ class CashTransaction(CashRelatedTransaction):
         category_amount_pairs: Collection[tuple[Category, CashAmount]],
         tag_amount_pairs: Collection[tuple[Attribute, CashAmount]],
         payee: Attribute,
+        block_account_update: bool = False,
     ) -> None:
         update_account = False
 
         self._description = description.strip()
-        if hasattr(self, "_datetime"):
+        if not block_account_update and hasattr(self, "_datetime"):
             update_account = datetime_ != self._datetime
         self._datetime = datetime_
         self._timestamp = datetime_.timestamp()
 
-        if hasattr(self, "_type") and not update_account:
+        if not block_account_update and hasattr(self, "_type") and not update_account:
             update_account = type_ != self._type
         self._type = type_
         self._payee = payee
 
         _category_amount_pairs = tuple(category_amount_pairs)
-        if hasattr(self, "_category_amount_pairs") and not update_account:
+        if (
+            not block_account_update
+            and hasattr(self, "_category_amount_pairs")
+            and not update_account
+        ):
             update_account = self._category_amount_pairs != _category_amount_pairs
 
         self._category_amount_pairs = _category_amount_pairs
@@ -1137,6 +1146,7 @@ class CashTransfer(CashRelatedTransaction):
         amount_received: CashAmount | None = None,
         sender: CashAccount | None = None,
         recipient: CashAccount | None = None,
+        block_account_update: bool = False,
     ) -> None:
         if description is None:
             description = self._description
@@ -1167,6 +1177,7 @@ class CashTransfer(CashRelatedTransaction):
             amount_received=amount_received,
             sender=sender,
             recipient=recipient,
+            block_account_update=block_account_update,
         )
 
     def validate_attributes(
@@ -1207,20 +1218,29 @@ class CashTransfer(CashRelatedTransaction):
         amount_received: CashAmount,
         sender: CashAccount,
         recipient: CashAccount,
+        block_account_update: bool = False,
     ) -> None:
         update_sender = False
         update_recipient = False
 
         self._description = description.strip()
-        if hasattr(self, "_datetime"):
+        if not block_account_update and hasattr(self, "_datetime"):
             update_sender = self._datetime != datetime_
             update_recipient = self._datetime != datetime_
         self._datetime = datetime_
         self._timestamp = datetime_.timestamp()
 
-        if hasattr(self, "_amount_sent") and not update_sender:
+        if (
+            not block_account_update
+            and hasattr(self, "_amount_sent")
+            and not update_sender
+        ):
             update_sender = amount_sent != self._amount_sent
-        if hasattr(self, "_amount_received") and not update_recipient:
+        if (
+            not block_account_update
+            and hasattr(self, "_amount_received")
+            and not update_recipient
+        ):
             update_recipient = amount_received != self._amount_received
 
         self._amount_sent = amount_sent
@@ -1556,6 +1576,7 @@ class RefundTransaction(CashRelatedTransaction):
         category_amount_pairs: Collection[tuple[Category, CashAmount]] | None = None,
         tag_amount_pairs: Collection[tuple[Attribute, CashAmount]] | None = None,
         payee: Attribute | None = None,
+        block_account_update: bool = False,
     ) -> None:
         if description is None:
             description = self._description
@@ -1586,6 +1607,7 @@ class RefundTransaction(CashRelatedTransaction):
             category_amount_pairs=category_amount_pairs,
             tag_amount_pairs=tag_amount_pairs,
             payee=payee,
+            block_account_update=block_account_update,
         )
 
     def validate_attributes(
@@ -1636,18 +1658,23 @@ class RefundTransaction(CashRelatedTransaction):
         category_amount_pairs: Collection[tuple[Category, CashAmount]],
         tag_amount_pairs: Collection[tuple[Attribute, CashAmount]],
         payee: Attribute,
+        block_account_update: bool = False,
     ) -> None:
         update_account = False
 
         self._description = description.strip()
-        if hasattr(self, "_datetime"):
+        if not block_account_update and hasattr(self, "_datetime"):
             update_account = self._datetime != datetime_
 
         self._datetime = datetime_
         self._timestamp = datetime_.timestamp()
 
         _category_amount_pairs = tuple(category_amount_pairs)
-        if hasattr(self, "_category_amount_pairs") and not update_account:
+        if (
+            not block_account_update
+            and hasattr(self, "_category_amount_pairs")
+            and not update_account
+        ):
             update_account = self._category_amount_pairs != _category_amount_pairs
 
         self._category_amount_pairs = tuple(category_amount_pairs)

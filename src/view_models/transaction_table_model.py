@@ -175,15 +175,18 @@ class TransactionTableModel(QAbstractTableModel):
 
         # this effectively turns off sorting and dramatically decreases calls
         # to data() for sorting purposes during file load
-        # FIXME: this however also effectively disables dynamic sort filter...
         self._proxy_viewside.sort(-1)
 
         self.beginResetModel()
 
     def post_reset_model(self) -> None:
         self.endResetModel()
+
         self._proxy_viewside.setDynamicSortFilter(True)  # noqa: FBT003
         self._proxy_sourceside.setDynamicSortFilter(True)  # noqa: FBT003
+
+        # this slows down file load but enables dynamic sort filter
+        self._proxy_viewside.sort(0, Qt.SortOrder.DescendingOrder)
 
     def pre_remove_item(self, item: Transaction) -> None:
         index = self.get_index_from_item(item)

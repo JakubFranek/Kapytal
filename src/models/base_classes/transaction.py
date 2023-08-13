@@ -66,8 +66,12 @@ class Transaction(
         if not isinstance(value, datetime):
             raise TypeError(f"{self.__class__.__name__}.datetime_ must be a datetime.")
 
+    # TODO: create base _set_attributes version to use for description and datetime set
     def set_attributes(
-        self, description: str | None = None, datetime_: datetime | None = None
+        self,
+        description: str | None = None,
+        datetime_: datetime | None = None,
+        block_account_update: bool = False,
     ) -> None:
         """Validates and sets provided attributes if they are all valid.
         Parameters set to None keep their value."""

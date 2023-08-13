@@ -388,7 +388,9 @@ class SecurityAccount(Account):
         for i, transaction in enumerate(self._transactions):
             if i > 0 and transaction.datetime_ == self._transactions[i - 1].datetime_:
                 new_datetime = transaction.datetime_ + timedelta(seconds=1)
-                transaction.set_attributes(datetime_=new_datetime)
+                transaction.set_attributes(
+                    datetime_=new_datetime, block_account_update=True
+                )
 
         for transaction in self._transactions:
             security_dict = (
@@ -652,6 +654,7 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
         price_per_share: CashAmount | None = None,
         security_account: SecurityAccount | None = None,
         cash_account: CashAccount | None = None,
+        block_account_update: bool = False,
     ) -> None:
         if description is None:
             description = self._description
@@ -690,6 +693,7 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
             price_per_share=price_per_share,
             security_account=security_account,
             cash_account=cash_account,
+            block_account_update=block_account_update,
         )
 
     def validate_attributes(
@@ -741,40 +745,45 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
         price_per_share: CashAmount,
         security_account: SecurityAccount,
         cash_account: CashAccount,
+        block_account_update: bool = False,
     ) -> None:
         update_cash_account = False
         update_security_account = False
 
         self._description = description.strip()
 
-        if hasattr(self, "_datetime"):
+        if not block_account_update and hasattr(self, "_datetime"):
             update_cash_account = self._datetime != datetime_
             update_security_account = self._datetime != datetime_
         self._datetime = datetime_
         self._timestamp = datetime_.timestamp()
 
-        if hasattr(self, "_type"):
+        if not block_account_update and hasattr(self, "_type"):
             if not update_cash_account:
                 update_cash_account = self._type != type_
             if not update_security_account:
                 update_security_account = self._type != type_
         self._type = type_
 
-        if hasattr(self, "_security"):
+        if not block_account_update and hasattr(self, "_security"):
             if not update_cash_account:
                 update_cash_account = self._security != security
             if not update_security_account:
                 update_security_account = self._security != security
         self._security = security
 
-        if hasattr(self, "_shares"):
+        if not block_account_update and hasattr(self, "_shares"):
             if not update_cash_account:
                 update_cash_account = self._shares != shares
             if not update_security_account:
                 update_security_account = self._shares != shares
         self._shares = Decimal(shares).normalize()
 
-        if hasattr(self, "_price_per_share") and not update_cash_account:
+        if (
+            not block_account_update
+            and hasattr(self, "_price_per_share")
+            and not update_cash_account
+        ):
             update_cash_account = self._price_per_share != price_per_share
         self._price_per_share = price_per_share
 
@@ -979,6 +988,7 @@ class SecurityTransfer(SecurityRelatedTransaction):
         shares: Decimal | None = None,
         sender: SecurityAccount | None = None,
         recipient: SecurityAccount | None = None,
+        block_account_update: bool = False,
     ) -> None:
         if description is None:
             description = self._description
@@ -1009,6 +1019,7 @@ class SecurityTransfer(SecurityRelatedTransaction):
             shares=shares,
             sender=sender,
             recipient=recipient,
+            block_account_update=block_account_update,
         )
 
     def validate_attributes(
@@ -1049,21 +1060,30 @@ class SecurityTransfer(SecurityRelatedTransaction):
         shares: Decimal | int | str,
         sender: SecurityAccount,
         recipient: SecurityAccount,
+        block_account_update: bool = False,
     ) -> None:
         update_accounts = False
 
         self._description = description.strip()
 
-        if hasattr(self, "_datetime"):
+        if not block_account_update and hasattr(self, "_datetime"):
             update_accounts = self._datetime != datetime_
         self._datetime = datetime_
         self._timestamp = datetime_.timestamp()
 
-        if hasattr(self, "_security") and not update_accounts:
+        if (
+            not block_account_update
+            and hasattr(self, "_security")
+            and not update_accounts
+        ):
             update_accounts = self._security != security
         self._security = security
 
-        if hasattr(self, "_shares") and not update_accounts:
+        if (
+            not block_account_update
+            and hasattr(self, "_shares")
+            and not update_accounts
+        ):
             update_accounts = self._shares != shares
         self._shares = Decimal(shares).normalize()
 
