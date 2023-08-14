@@ -253,13 +253,13 @@ class CashTransactionDialogPresenter:
 
         if (
             not check_for_nonexistent_attributes(
-                [payee], self._record_keeper.payees, self._dialog, "Payee"
+                [payee], self._record_keeper.payees, self._dialog
             )
             or not check_for_nonexistent_categories(
                 categories, self._record_keeper.categories, self._dialog
             )
             or not check_for_nonexistent_attributes(
-                tag_names, self._record_keeper.tags, self._dialog, "Tag"
+                tag_names, self._record_keeper.tags, self._dialog
             )
         ):
             logging.debug("Dialog aborted")
@@ -310,7 +310,6 @@ class CashTransactionDialogPresenter:
         description = self._dialog.description
 
         category_amount_pairs = self._dialog.category_amount_pairs
-        tag_amount_pairs = self._dialog.tag_amount_pairs
 
         if category_amount_pairs is not None:
             categories = [category for category, _ in category_amount_pairs]
@@ -334,8 +333,23 @@ class CashTransactionDialogPresenter:
                 logging.debug("Dialog aborted")
                 return
 
+        tag_amount_pairs = self._dialog.tag_amount_pairs
+        if tag_amount_pairs is not None:
+            if any(amount <= 0 for _, amount in tag_amount_pairs):
+                display_error_message("Tag amounts must be positive.", title="Warning")
+                return
+            tag_names = [tag for tag, _ in tag_amount_pairs]
+            if any(not tag for tag in tag_names):
+                display_error_message("Empty Tag names are invalid.", title="Warning")
+                return
+            if not check_for_nonexistent_attributes(
+                tag_names, self._record_keeper.tags, self._dialog
+            ):
+                logging.debug("Dialog aborted")
+                return
+
         if not check_for_nonexistent_attributes(
-            [payee], self._record_keeper.payees, self._dialog, "Payee"
+            [payee], self._record_keeper.payees, self._dialog
         ):
             logging.debug("Dialog aborted")
             return

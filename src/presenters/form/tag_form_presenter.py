@@ -131,7 +131,7 @@ class TagFormPresenter:
         current_name = tag.name
         new_name = self._dialog.name
 
-        logging.info(f"Renaming Tag name={current_name}: new name='{new_name}'")
+        logging.info(f"Renaming Tag '{current_name}' to '{new_name}'")
         try:
             self._record_keeper.edit_attribute(
                 current_name, new_name, AttributeType.TAG
@@ -140,12 +140,13 @@ class TagFormPresenter:
         except AlreadyExistsError:
             if not ask_yes_no_question(
                 self._dialog,
-                f"<html>Tag <b>'{new_name}'</b> already exists. Do you want to merge "
-                f"<b>'{current_name}'</b> into <b>'{new_name}'</b>?</html>",
+                f"<html>Tag <b><i>{new_name}</i></b> already exists.<br/>"
+                f"Do you want to merge <b><i>{current_name}</i></b> into "
+                f"<b><i>{new_name}</i></b>?</html>",
                 "Merge Tags?",
             ):
                 logging.debug(
-                    f"User cancelled Payee merge ('{current_name}' into '{new_name}')"
+                    f"User cancelled Tag merge ('{current_name}' into '{new_name}')"
                 )
                 return
             self._model.pre_remove_item(tag)

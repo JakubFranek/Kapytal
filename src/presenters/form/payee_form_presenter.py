@@ -133,7 +133,7 @@ class PayeeFormPresenter:
         current_name = payee.name
         new_name = self._dialog.name
 
-        logging.info(f"Renaming Payee name='{current_name}': new name='{new_name=}'")
+        logging.info(f"Renaming Payee '{current_name}' to '{new_name=}'")
         try:
             self._record_keeper.edit_attribute(
                 current_name, new_name, AttributeType.PAYEE
@@ -142,8 +142,9 @@ class PayeeFormPresenter:
         except AlreadyExistsError:
             if not ask_yes_no_question(
                 self._dialog,
-                f"<html>Payee <b>'{new_name}'</b> already exists. Do you want to merge "
-                f"<b>'{current_name}'</b> into <b>'{new_name}'</b>?</html>",
+                f"<html>Payee <b><i>{new_name}</i></b> already exists.<br/>"
+                f"Do you want to merge <b><i>{current_name}</i></b> into "
+                f"<b><i>{new_name}</i></b>?</html>",
                 "Merge Payees?",
             ):
                 logging.debug(

@@ -1399,7 +1399,7 @@ class RecordKeeper:
             if attribute.name == name:
                 return attribute
         # Attribute not found! Making a new one.
-        logging.info("Creating Attribute")
+        logging.info(f"Creating {type_.name.title()}: '{name}'")
         attribute = Attribute(name, type_)
         attributes.append(attribute)
         return attribute

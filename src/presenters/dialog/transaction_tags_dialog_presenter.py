@@ -56,7 +56,7 @@ class TransactionTagsDialogPresenter:
         tag_names = self._dialog.tags
 
         if not check_for_nonexistent_attributes(
-            tag_names, self._record_keeper.tags, self._dialog, "Tag"
+            tag_names, self._record_keeper.tags, self._dialog
         ):
             logging.debug("Dialog aborted")
             return
@@ -74,7 +74,7 @@ class TransactionTagsDialogPresenter:
         tag_names = self._dialog.tags
 
         if not check_for_nonexistent_attributes(
-            tag_names, self._record_keeper.tags, self._dialog, "Tag"
+            tag_names, self._record_keeper.tags, self._dialog
         ):
             logging.debug("Dialog aborted")
             return
