@@ -37,6 +37,7 @@ class Ui_TreeAndSunburstReport(object):
         sizePolicy.setHeightForWidth(self.treeView.sizePolicy().hasHeightForWidth())
         self.treeView.setSizePolicy(sizePolicy)
         self.treeView.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
+        self.treeView.setUniformRowHeights(True)
         self.treeView.setSortingEnabled(True)
         self.treeView.setObjectName("treeView")
         self.treeView.header().setStretchLastSection(False)
