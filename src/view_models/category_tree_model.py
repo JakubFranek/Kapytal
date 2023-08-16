@@ -19,6 +19,10 @@ COLUMN_HEADERS = {
     CategoryTreeColumn.TRANSACTIONS: "Transactions",
     CategoryTreeColumn.BALANCE: "Balance",
 }
+COLUMNS_NUMBERS = {
+    CategoryTreeColumn.TRANSACTIONS,
+    CategoryTreeColumn.BALANCE,
+}
 
 
 @dataclass
@@ -172,10 +176,7 @@ class CategoryTreeModel(QAbstractItemModel):
             return self._get_user_role_data(column, node)
         if role == Qt.ItemDataRole.UserRole + 1 and column == CategoryTreeColumn.NAME:
             return node.path
-        if role == Qt.ItemDataRole.TextAlignmentRole and (
-            column == CategoryTreeColumn.TRANSACTIONS
-            or column == CategoryTreeColumn.BALANCE
-        ):
+        if role == Qt.ItemDataRole.TextAlignmentRole and column in COLUMNS_NUMBERS:
             return ALIGNMENT_RIGHT
         if (
             role == Qt.ItemDataRole.ToolTipRole

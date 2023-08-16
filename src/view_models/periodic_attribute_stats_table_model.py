@@ -61,9 +61,9 @@ class PeriodicAttributeStatsTableModel(QAbstractTableModel):
             row.append(attribute_totals[attribute].value_rounded)
             self._rows.append(row)
 
-        periodic_totals_row: list[Decimal] = []
-        for period in periodic_totals:
-            periodic_totals_row.append(periodic_totals[period].value_rounded)
+        periodic_totals_row = [
+            periodic_totals[period].value_rounded for period in periodic_totals
+        ]
         average_sum = sum(row[-2] for row in self._rows)
         total_sum = sum(row[-1] for row in self._rows)
         periodic_totals_row.append(average_sum)

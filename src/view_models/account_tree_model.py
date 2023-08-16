@@ -41,6 +41,11 @@ COLUMN_HEADERS = {
     AccountTreeColumn.SHOW: "",
 }
 
+COLUMNS_BALANCE = {
+    AccountTreeColumn.BALANCE_NATIVE,
+    AccountTreeColumn.BALANCE_BASE,
+}
+
 
 def convert_bool_to_checkstate(*, checked: bool) -> Qt.CheckState:
     return Qt.CheckState.Checked if checked else Qt.CheckState.Unchecked
@@ -228,8 +233,8 @@ class AccountTreeModel(QAbstractItemModel):
         uuids = {
             node.uuid
             for node in self._node_dict.values()
-            if node.check_state == Qt.CheckState.Checked
-            or node.check_state == Qt.CheckState.PartiallyChecked
+            if node.check_state
+            in {Qt.CheckState.Checked, Qt.CheckState.PartiallyChecked}
         }
         items = [self._item_dict[uuid] for uuid in uuids]
         return frozenset(items)
@@ -323,10 +328,7 @@ class AccountTreeModel(QAbstractItemModel):
             return index.internalPointer().check_state
         if role == Qt.ItemDataRole.TextAlignmentRole:
             column = index.column()
-            if (
-                column == AccountTreeColumn.BALANCE_NATIVE
-                or column == AccountTreeColumn.BALANCE_BASE
-            ):
+            if column in COLUMNS_BALANCE:
                 return TEXT_ALIGNMENT_BALANCE
         if role == Qt.ItemDataRole.ForegroundRole:
             return self._get_foreground_role_data(

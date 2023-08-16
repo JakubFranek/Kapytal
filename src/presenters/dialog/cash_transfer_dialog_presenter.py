@@ -160,7 +160,7 @@ class CashTransferDialogPresenter:
         tag_names = self._dialog.tag_names
 
         if not check_for_nonexistent_attributes(
-            tag_names, self._record_keeper.tags, self._dialog, "Tag"
+            tag_names, self._record_keeper.tags, self._dialog
         ):
             logging.debug("Dialog aborted")
             return
@@ -206,7 +206,7 @@ class CashTransferDialogPresenter:
         tag_names = self._dialog.tag_names
 
         if tag_names is not None and not check_for_nonexistent_attributes(
-            tag_names, self._record_keeper.tags, self._dialog, "Tag"
+            tag_names, self._record_keeper.tags, self._dialog
         ):
             logging.debug("Dialog aborted")
             return

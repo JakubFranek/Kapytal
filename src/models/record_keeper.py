@@ -964,19 +964,49 @@ class RecordKeeper:
         )
 
     def edit_attribute(
-        self, current_name: str, new_name: str, type_: AttributeType
+        self,
+        current_name: str,
+        new_name: str,
+        type_: AttributeType,
+        *,
+        merge: bool = False,
     ) -> None:
         attributes = self._payees if type_ == AttributeType.PAYEE else self._tags
 
+        edited_attribute = None
+        existing_attribute = None
         for attribute in attributes:
             if attribute.name == current_name:
                 edited_attribute = attribute
-                break
-        else:
+            elif attribute.name == new_name:
+                existing_attribute = attribute
+
+        if edited_attribute is None:
             raise NotFoundError(
                 f"Attribute of name='{current_name}' and type_={type_} does not exist."
             )
-        edited_attribute.name = new_name
+        if not merge and existing_attribute is not None:
+            raise AlreadyExistsError(
+                f"Attribute of name='{new_name}' and type_={type_} already exists."
+            )
+
+        if existing_attribute is None:
+            edited_attribute.name = new_name
+            return
+        if merge:
+            if type_ == AttributeType.PAYEE:
+                for transaction in self._cash_transactions:
+                    if transaction.payee == edited_attribute:
+                        transaction.replace_payee(edited_attribute, existing_attribute)
+                for transaction in self._refund_transactions:
+                    if transaction.payee == edited_attribute:
+                        transaction.replace_payee(edited_attribute, existing_attribute)
+                self._payees.remove(edited_attribute)
+            else:
+                for transaction in self._transactions:
+                    if edited_attribute in transaction.tags:
+                        transaction.replace_tag(edited_attribute, existing_attribute)
+                self._tags.remove(edited_attribute)
 
     def edit_security(
         self,
@@ -1369,7 +1399,7 @@ class RecordKeeper:
             if attribute.name == name:
                 return attribute
         # Attribute not found! Making a new one.
-        logging.info("Creating Attribute")
+        logging.info(f"Creating {type_.name.title()}: '{name}'")
         attribute = Attribute(name, type_)
         attributes.append(attribute)
         return attribute

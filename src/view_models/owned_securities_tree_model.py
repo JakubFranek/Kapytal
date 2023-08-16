@@ -21,6 +21,11 @@ COLUMN_HEADERS = {
     OwnedSecuritiesTreeColumn.AMOUNT_NATIVE: "Native total",
     OwnedSecuritiesTreeColumn.AMOUNT_BASE: "Base total",
 }
+COLUMNS_NUMBERS = {
+    OwnedSecuritiesTreeColumn.SHARES,
+    OwnedSecuritiesTreeColumn.AMOUNT_NATIVE,
+    OwnedSecuritiesTreeColumn.AMOUNT_BASE,
+}
 
 
 class SecurityItem:
@@ -157,11 +162,7 @@ class OwnedSecuritiesTreeModel(QAbstractItemModel):
             return self._get_display_role_data(column, item)
         if role == Qt.ItemDataRole.UserRole:  # sort role
             return self._get_sort_data(column, item)
-        if role == Qt.ItemDataRole.TextAlignmentRole and (
-            column == OwnedSecuritiesTreeColumn.SHARES
-            or column == OwnedSecuritiesTreeColumn.AMOUNT_NATIVE
-            or column == OwnedSecuritiesTreeColumn.AMOUNT_BASE
-        ):
+        if role == Qt.ItemDataRole.TextAlignmentRole and column in COLUMNS_NUMBERS:
             return ALIGNMENT_AMOUNTS
         if role == Qt.ItemDataRole.DecorationRole:
             return self._get_decoration_role_data(column, item)

@@ -15,6 +15,7 @@ from src.models.base_classes.transaction import Transaction
 from src.models.custom_exceptions import (
     AlreadyExistsError,
     InvalidOperationError,
+    NotFoundError,
     TransferSameAccountError,
 )
 from src.models.model_objects.account_group import AccountGroup
@@ -56,6 +57,7 @@ class InvalidCashTransactionTypeError(ValueError):
 class CashRelatedTransaction(Transaction, ABC):
     __slots__ = ()
 
+    # REFACTOR: account parameter could be optional for CashTransactions
     def get_amount(self, account: "CashAccount") -> CashAmount:
         if not isinstance(account, CashAccount):
             raise TypeError("Parameter 'account' must be a CashAccount.")
@@ -249,7 +251,9 @@ class CashAccount(Account):
         for index, transaction in enumerate(transactions):
             if index > 0 and transaction.datetime_ == transactions[index - 1].datetime_:
                 new_datetime = transaction.datetime_ + timedelta(seconds=1)
-                transaction.set_attributes(datetime_=new_datetime)
+                transaction.set_attributes(
+                    datetime_=new_datetime, block_account_update=True
+                )
 
         if len(self._transactions) > 0:
             oldest_datetime = transactions[0].datetime_
@@ -490,15 +494,6 @@ class CashTransaction(CashRelatedTransaction):
         self._refunds.remove(refund)
         self._update_refunded_ratio()
 
-    def _update_refunded_ratio(self) -> None:
-        self._refunded_ratio = (
-            sum(
-                (refund.amount for refund in self.refunds),
-                start=self.currency.zero_amount,
-            )
-            / self._amount
-        )
-
     def get_max_refundable_for_category(
         self, category: Category, ignore_refund: "RefundTransaction|None"
     ) -> CashAmount:
@@ -616,7 +611,7 @@ class CashTransaction(CashRelatedTransaction):
             tag_amount_pairs.append(tup)
         self._validate_tag_amount_pairs(tag_amount_pairs, self._amount, self.currency)
         self._tag_amount_pairs = tuple(tag_amount_pairs)
-        self._tags = tuple(tag for tag, _ in tag_amount_pairs)
+        self._tags = frozenset(tag for tag, _ in tag_amount_pairs)
 
     def remove_tags(self, tags: Collection[Attribute]) -> None:
         if self.is_refunded:
@@ -632,7 +627,50 @@ class CashTransaction(CashRelatedTransaction):
         ]
         self._validate_tag_amount_pairs(tag_amount_pairs, self._amount, self.currency)
         self._tag_amount_pairs = tuple(tag_amount_pairs)
-        self._tags = tuple(tag for tag, _ in tag_amount_pairs)
+        self._tags = frozenset(tag for tag, _ in tag_amount_pairs)
+
+    def replace_tag(self, replaced_tag: Attribute, replacement_tag: Attribute) -> None:
+        self._validate_tags((replaced_tag, replacement_tag))
+        if replaced_tag not in self._tags:
+            raise NotFoundError(
+                f"Tag '{replaced_tag.name}' not found in this CashTransaction's Tags."
+            )
+        tag_amount_pairs = list(self._tag_amount_pairs)
+        if replacement_tag not in self._tags:
+            for tag, amount in self._tag_amount_pairs:
+                if tag == replaced_tag:
+                    tag_amount_pairs[self._tag_amount_pairs.index((tag, amount))] = (
+                        replacement_tag,
+                        amount,
+                    )
+        else:
+            replaced_amount = abs(self.get_amount_for_tag(replaced_tag))
+            replacement_amount = abs(self.get_amount_for_tag(replacement_tag))
+            new_amount = min(self.amount, replaced_amount + replacement_amount)
+            for tag, amount in self._tag_amount_pairs:
+                if tag == replacement_tag:
+                    tag_amount_pairs[self._tag_amount_pairs.index((tag, amount))] = (
+                        replacement_tag,
+                        new_amount,
+                    )
+            tag_amount_pairs.remove((replaced_tag, replaced_amount))
+        self._validate_tag_amount_pairs(tag_amount_pairs, self._amount, self.currency)
+        self._tag_amount_pairs = tuple(tag_amount_pairs)
+        self._tags = frozenset(tag for tag, _ in tag_amount_pairs)
+
+    def replace_payee(
+        self, replaced_payee: Attribute, replacement_payee: Attribute
+    ) -> None:
+        if replaced_payee.type_ != AttributeType.PAYEE:
+            raise ValueError(f"{replaced_payee} is not a Payee.")
+        if replacement_payee.type_ != AttributeType.PAYEE:
+            raise ValueError(f"{replacement_payee} is not a Payee.")
+        if replaced_payee != self._payee:
+            raise ValueError(
+                f"Payee '{replaced_payee.name}' does not match this "
+                f"CashTransaction's payee '{self._payee.name}'."
+            )
+        self._payee = replacement_payee
 
     def set_attributes(
         self,
@@ -645,6 +683,7 @@ class CashTransaction(CashRelatedTransaction):
         payee: Attribute | None = None,
         description: str | None = None,
         datetime_: datetime | None = None,
+        block_account_update: bool = False,
     ) -> None:
         if self.is_refunded and (
             type_ is not None
@@ -689,6 +728,7 @@ class CashTransaction(CashRelatedTransaction):
             category_amount_pairs=valid_category_amount_pairs,
             tag_amount_pairs=valid_tag_amount_pairs,
             payee=payee,
+            block_account_update=block_account_update,
         )
 
     def validate_attributes(
@@ -752,22 +792,27 @@ class CashTransaction(CashRelatedTransaction):
         category_amount_pairs: Collection[tuple[Category, CashAmount]],
         tag_amount_pairs: Collection[tuple[Attribute, CashAmount]],
         payee: Attribute,
+        block_account_update: bool = False,
     ) -> None:
         update_account = False
 
         self._description = description.strip()
-        if hasattr(self, "_datetime"):
+        if not block_account_update and hasattr(self, "_datetime"):
             update_account = datetime_ != self._datetime
         self._datetime = datetime_
         self._timestamp = datetime_.timestamp()
 
-        if hasattr(self, "_type") and not update_account:
+        if not block_account_update and hasattr(self, "_type") and not update_account:
             update_account = type_ != self._type
         self._type = type_
         self._payee = payee
 
         _category_amount_pairs = tuple(category_amount_pairs)
-        if hasattr(self, "_category_amount_pairs") and not update_account:
+        if (
+            not block_account_update
+            and hasattr(self, "_category_amount_pairs")
+            and not update_account
+        ):
             update_account = self._category_amount_pairs != _category_amount_pairs
 
         self._category_amount_pairs = _category_amount_pairs
@@ -965,6 +1010,15 @@ class CashTransaction(CashRelatedTransaction):
             return self._amount
         return self._amount_negative
 
+    def _update_refunded_ratio(self) -> None:
+        self._refunded_ratio = (
+            sum(
+                (refund.amount for refund in self.refunds),
+                start=self.currency.zero_amount,
+            )
+            / self._amount
+        )
+
 
 class CashTransfer(CashRelatedTransaction):
     __slots__ = (
@@ -1092,6 +1146,7 @@ class CashTransfer(CashRelatedTransaction):
         amount_received: CashAmount | None = None,
         sender: CashAccount | None = None,
         recipient: CashAccount | None = None,
+        block_account_update: bool = False,
     ) -> None:
         if description is None:
             description = self._description
@@ -1122,6 +1177,7 @@ class CashTransfer(CashRelatedTransaction):
             amount_received=amount_received,
             sender=sender,
             recipient=recipient,
+            block_account_update=block_account_update,
         )
 
     def validate_attributes(
@@ -1162,20 +1218,29 @@ class CashTransfer(CashRelatedTransaction):
         amount_received: CashAmount,
         sender: CashAccount,
         recipient: CashAccount,
+        block_account_update: bool = False,
     ) -> None:
         update_sender = False
         update_recipient = False
 
         self._description = description.strip()
-        if hasattr(self, "_datetime"):
+        if not block_account_update and hasattr(self, "_datetime"):
             update_sender = self._datetime != datetime_
             update_recipient = self._datetime != datetime_
         self._datetime = datetime_
         self._timestamp = datetime_.timestamp()
 
-        if hasattr(self, "_amount_sent") and not update_sender:
+        if (
+            not block_account_update
+            and hasattr(self, "_amount_sent")
+            and not update_sender
+        ):
             update_sender = amount_sent != self._amount_sent
-        if hasattr(self, "_amount_received") and not update_recipient:
+        if (
+            not block_account_update
+            and hasattr(self, "_amount_received")
+            and not update_recipient
+        ):
             update_recipient = amount_received != self._amount_received
 
         self._amount_sent = amount_sent
@@ -1459,6 +1524,49 @@ class RefundTransaction(CashRelatedTransaction):
             "Removing tags from RefundTransaction is forbidden."
         )
 
+    def replace_tag(self, replaced_tag: Attribute, replacement_tag: Attribute) -> None:
+        self._validate_tags((replaced_tag, replacement_tag))
+        if replaced_tag not in self._tags:
+            raise NotFoundError(
+                f"Tag '{replaced_tag.name}' not found in this RefundTransaction's Tags."
+            )
+        tag_amount_pairs = list(self._tag_amount_pairs)
+        if replacement_tag not in self._tags:
+            for tag, amount in self._tag_amount_pairs:
+                if tag == replaced_tag:
+                    tag_amount_pairs[self._tag_amount_pairs.index((tag, amount))] = (
+                        replacement_tag,
+                        amount,
+                    )
+        else:
+            replaced_amount = abs(self.get_amount_for_tag(replaced_tag))
+            replacement_amount = abs(self.get_amount_for_tag(replacement_tag))
+            new_amount = min(self.amount, replaced_amount + replacement_amount)
+            for tag, amount in self._tag_amount_pairs:
+                if tag == replacement_tag:
+                    tag_amount_pairs[self._tag_amount_pairs.index((tag, amount))] = (
+                        replacement_tag,
+                        new_amount,
+                    )
+            tag_amount_pairs.remove((replaced_tag, replaced_amount))
+        self._validate_tag_amount_pairs(tag_amount_pairs, self._amount, self.currency)
+        self._tag_amount_pairs = tuple(tag_amount_pairs)
+        self._tags = frozenset(tag for tag, _ in tag_amount_pairs)
+
+    def replace_payee(
+        self, replaced_payee: Attribute, replacement_payee: Attribute
+    ) -> None:
+        if replaced_payee.type_ != AttributeType.PAYEE:
+            raise ValueError(f"{replaced_payee} is not a Payee.")
+        if replacement_payee.type_ != AttributeType.PAYEE:
+            raise ValueError(f"{replacement_payee} is not a Payee.")
+        if replaced_payee != self._payee:
+            raise ValueError(
+                f"Payee '{replaced_payee.name}' does not match this "
+                f"RefundTransaction's payee '{self._payee.name}'."
+            )
+        self._payee = replacement_payee
+
     def set_attributes(
         self,
         *,
@@ -1468,6 +1576,7 @@ class RefundTransaction(CashRelatedTransaction):
         category_amount_pairs: Collection[tuple[Category, CashAmount]] | None = None,
         tag_amount_pairs: Collection[tuple[Attribute, CashAmount]] | None = None,
         payee: Attribute | None = None,
+        block_account_update: bool = False,
     ) -> None:
         if description is None:
             description = self._description
@@ -1498,6 +1607,7 @@ class RefundTransaction(CashRelatedTransaction):
             category_amount_pairs=category_amount_pairs,
             tag_amount_pairs=tag_amount_pairs,
             payee=payee,
+            block_account_update=block_account_update,
         )
 
     def validate_attributes(
@@ -1548,18 +1658,23 @@ class RefundTransaction(CashRelatedTransaction):
         category_amount_pairs: Collection[tuple[Category, CashAmount]],
         tag_amount_pairs: Collection[tuple[Attribute, CashAmount]],
         payee: Attribute,
+        block_account_update: bool = False,
     ) -> None:
         update_account = False
 
         self._description = description.strip()
-        if hasattr(self, "_datetime"):
+        if not block_account_update and hasattr(self, "_datetime"):
             update_account = self._datetime != datetime_
 
         self._datetime = datetime_
         self._timestamp = datetime_.timestamp()
 
         _category_amount_pairs = tuple(category_amount_pairs)
-        if hasattr(self, "_category_amount_pairs") and not update_account:
+        if (
+            not block_account_update
+            and hasattr(self, "_category_amount_pairs")
+            and not update_account
+        ):
             update_account = self._category_amount_pairs != _category_amount_pairs
 
         self._category_amount_pairs = tuple(category_amount_pairs)

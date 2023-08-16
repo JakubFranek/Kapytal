@@ -481,6 +481,12 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
         obj._currency = self._currency  # noqa: SLF001
         return obj
 
+    def __abs__(self) -> Self:
+        obj = object.__new__(CashAmount)
+        obj._raw_value = abs(self._raw_value)  # noqa: SLF001
+        obj._currency = self._currency  # noqa: SLF001
+        return obj
+
     def __add__(self, __o: object) -> Self:
         if not isinstance(__o, CashAmount):
             return NotImplemented

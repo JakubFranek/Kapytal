@@ -29,7 +29,7 @@ class DuplicateFilter(logging.Filter):
         super().__init__(name)
         self.formatter = formatter
 
-    def filter(self, record: logging.LogRecord) -> bool:  # noqa: A003
+    def filter(self, record: logging.LogRecord) -> bool:
         self.formatter.format(record)
         current_log = (record.module, record.levelno, record.msg)
         current_dt = datetime.strptime(  # noqa: DTZ007

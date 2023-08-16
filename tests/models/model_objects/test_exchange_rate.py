@@ -178,6 +178,11 @@ def test_get_rate() -> None:
     primary = Currency("EUR", 2)
     secondary = Currency("CZK", 2)
     exchange_rate = ExchangeRate(primary, secondary)
+
+    assert exchange_rate.get_rate(
+        datetime.now(tz=user_settings.settings.time_zone)
+    ).is_nan()
+
     date_1 = datetime.now(tz=user_settings.settings.time_zone) - timedelta(days=2)
     date_2 = datetime.now(tz=user_settings.settings.time_zone) - timedelta(days=1)
     date_3 = datetime.now(tz=user_settings.settings.time_zone)
@@ -198,7 +203,7 @@ def test_get_rate() -> None:
     assert exchange_rate.get_rate(date_2) == rate_2
     assert exchange_rate.get_rate(date_3) == rate_3
     assert exchange_rate.get_rate(date_3 + timedelta(days=1)) == rate_3
-    assert exchange_rate.get_rate(date_1 - timedelta(days=1)).is_nan()
+    assert exchange_rate.get_rate(date_1 - timedelta(days=1)) == rate_1
 
 
 @given(

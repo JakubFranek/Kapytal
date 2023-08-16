@@ -16,7 +16,7 @@ class EventFilter(QObject):
         super().__init__(parent)
         self.table = QTableView(parent)  # dummy QTableView to test events on
 
-    def eventFilter(self, source: QObject, event: QEvent) -> bool:  # noqa: ARG002, N802
+    def eventFilter(self, source: QObject, event: QEvent) -> bool:  # noqa: ARG002
         if isinstance(event, QKeyEvent):
             text_cleared_event = QKeyEvent(
                 event.type(),

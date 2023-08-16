@@ -1,13 +1,13 @@
 import logging
-import sys
 from collections.abc import Collection
 from pathlib import Path
 
-from PyQt6.QtCore import PYQT_VERSION_STR, QT_VERSION_STR, QSize, Qt, pyqtSignal
+from PyQt6.QtCore import QSize, Qt, pyqtSignal
 from PyQt6.QtGui import QAction, QCloseEvent, QIcon, QKeyEvent
 from PyQt6.QtWidgets import QFileDialog, QMainWindow, QMessageBox
 from src.utilities import constants
 from src.views import icons
+from src.views.dialogs.about_dialog import AboutDialog
 from src.views.ui_files.Ui_main_window import Ui_MainWindow
 from src.views.widgets.account_tree_widget import AccountTreeWidget
 from src.views.widgets.transaction_table_widget import TransactionTableWidget
@@ -135,43 +135,14 @@ class MainView(QMainWindow, Ui_MainWindow):
             before_action = actions[0] if actions else None
             self.menuRecent_Files.insertAction(before_action, action)
 
-    def closeEvent(self, event: QCloseEvent) -> None:  # noqa: N802
+    def closeEvent(self, event: QCloseEvent) -> None:
         self.signal_exit.emit()
         event.ignore()
 
     def show_about(self) -> None:
         logging.debug("Showing About dialog")
-        text = (
-            "<html>"
-            "<b>Kapytal</b> - <em>a tool for personal finance management</em><br/>"
-            "Source code and documentation available on "
-            "<a href=https://github.com/JakubFranek/Kapytal>"
-            "Kapytal GitHub repository</a><br/>"
-            "Published under <a href=https://www.gnu.org/licenses/gpl-3.0.html>"
-            "GNU General Public Licence v3.0</a><br/>"
-            "<br/>"
-            "<b>Version info</b><br/>"
-            f"Kapytal {constants.VERSION}<br/>"
-            f"Python {sys.version}<br/>"
-            f"Qt {QT_VERSION_STR}<br/>"
-            f"PyQt {PYQT_VERSION_STR}<br/>"
-            "<br/>"
-            "<b>Icons info</b><br/>"
-            "<a href=https://p.yusukekamiyamane.com>Fugue Icons set</a> by "
-            "Yusuke Kamiyamane.<br/>"
-            "Custom icons located in <tt>Kapytal/resources/icons/icons-custom</tt> "
-            "are modifications of existing Fugue Icons.<br/><br/>"
-            "<em>Dedicated to my wife Soňa</em>"
-            "</html>"
-        )
-        message_box = QMessageBox(self)
-        message_box.setWindowTitle("About Kapytal")
-        message_box.setIcon(QMessageBox.Icon.Information)
-        message_box.setTextFormat(Qt.TextFormat.RichText)
-        message_box.setText(text)
-        message_box.setStandardButtons(QMessageBox.StandardButton.Ok)
-        message_box.exec()
-        logging.debug("Closing About dialog")
+        about_dialog = AboutDialog(self)
+        about_dialog.exec()
 
     def _initial_setup(self) -> None:
         icons.setup()
@@ -181,6 +152,7 @@ class MainView(QMainWindow, Ui_MainWindow):
         self.transaction_table_widget = TransactionTableWidget(self)
         self.horizontalLayout.addWidget(self.account_tree_widget)
         self.horizontalLayout.addWidget(self.transaction_table_widget)
+        self.horizontalLayout.setStretch(0, 0)
         self.horizontalLayout.setStretch(1, 1)
 
         app_icon = QIcon()
@@ -287,7 +259,7 @@ class MainView(QMainWindow, Ui_MainWindow):
             self.signal_net_worth_time_report.emit
         )
 
-    def keyPressEvent(self, a0: QKeyEvent) -> None:  # noqa: N802
+    def keyPressEvent(self, a0: QKeyEvent) -> None:
         if a0.key() == Qt.Key.Key_Escape:
             logging.debug(f"Closing {self.__class__.__name__}")
             self.close()

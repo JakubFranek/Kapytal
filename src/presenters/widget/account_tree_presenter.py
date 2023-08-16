@@ -84,6 +84,7 @@ class AccountTreePresenter:
         self._security_account_dialog_presenter.load_record_keeper(record_keeper)
         self._selection_changed()
         self.event_check_state_changed()
+        self._set_native_balance_column_visibility()
 
     def refresh_view(self) -> None:
         self._view.refresh()
@@ -103,6 +104,7 @@ class AccountTreePresenter:
             AccountTreeColumn.BALANCE_NATIVE, hide_native
         )
         self.update_total_balance()
+        self._set_native_balance_column_visibility()
 
     def update_total_balance(self) -> None:
         if self._record_keeper.base_currency is not None:
@@ -199,6 +201,14 @@ class AccountTreePresenter:
         self._view.signal_search_text_changed.connect(self._filter)
 
         self._model.signal_check_state_changed.connect(self.event_check_state_changed)
+
+        self._view.treeView.expanded.connect(self._set_native_balance_column_visibility)
+        self._view.treeView.collapsed.connect(
+            self._set_native_balance_column_visibility
+        )
+        self._view.signal_tree_expanded_state_changed.connect(
+            self._set_native_balance_column_visibility
+        )
 
         self._selection_changed()  # called to ensure context menu is OK at start of run
 
@@ -298,3 +308,27 @@ class AccountTreePresenter:
             self._cash_account_dialog_presenter.run_edit_dialog()
         if isinstance(selected_item, SecurityAccount):
             self._security_account_dialog_presenter.run_edit_dialog()
+
+    def _set_native_balance_column_visibility(self) -> None:
+        show_native_balance_column = False
+        non_native_cash_accounts = [
+            account
+            for account in self._record_keeper.cash_accounts
+            if account.currency != self._record_keeper.base_currency
+        ]
+        for account in non_native_cash_accounts:
+            show_native_balance_column = self._is_item_visible(account)
+            if show_native_balance_column:
+                break
+        self._view.treeView.setColumnHidden(
+            AccountTreeColumn.BALANCE_NATIVE, not show_native_balance_column
+        )
+
+    def _is_item_visible(self, item: Account | AccountGroup) -> bool:
+        if item.parent is None:
+            return True
+        index = self._model.get_index_from_item(item.parent)
+        index = self._proxy.mapFromSource(index)
+        if self._view.treeView.isExpanded(index):
+            return self._is_item_visible(item.parent)
+        return False

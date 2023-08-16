@@ -36,6 +36,24 @@ from src.views.constants import (
 
 ALIGNMENT_RIGHT = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
 
+COLUMNS_ALIGNED_RIGHT = {
+    TransactionTableColumn.AMOUNT_NATIVE,
+    TransactionTableColumn.AMOUNT_BASE,
+    TransactionTableColumn.AMOUNT_SENT,
+    TransactionTableColumn.AMOUNT_RECEIVED,
+    TransactionTableColumn.SHARES,
+    TransactionTableColumn.PRICE_PER_SHARE,
+    TransactionTableColumn.BALANCE,
+}
+COLUMNS_TRANSACTION_AMOUNTS = {
+    TransactionTableColumn.AMOUNT_NATIVE,
+    TransactionTableColumn.AMOUNT_BASE,
+}
+COLUMNS_TRANSFER_AMOUNTS = {
+    TransactionTableColumn.AMOUNT_SENT,
+    TransactionTableColumn.AMOUNT_RECEIVED,
+}
+
 
 class TransactionTableModel(QAbstractTableModel):
     def __init__(
@@ -51,6 +69,7 @@ class TransactionTableModel(QAbstractTableModel):
 
         self._transaction_uuid_dict: dict[UUID, Transaction] = {}
         self._transactions: tuple[Transaction] = ()
+        self._row_count = 0
         self._base_currency: Currency | None = None
         self._valid_accounts = ()
 
@@ -90,11 +109,12 @@ class TransactionTableModel(QAbstractTableModel):
         self._base_currency = base_currency
         self._transactions = tuple(transactions)
         self._transaction_uuid_dict = transaction_uuid_dict
+        self._row_count = len(self._transactions)
 
     def rowCount(self, index: QModelIndex = ...) -> int:  # noqa: N802
         if isinstance(index, QModelIndex) and index.isValid():
             return 0
-        return len(self._transactions)
+        return self._row_count
 
     def columnCount(self, index: QModelIndex = ...) -> int:  # noqa: N802, ARG002
         if not hasattr(self, "_column_count"):
@@ -155,15 +175,18 @@ class TransactionTableModel(QAbstractTableModel):
 
         # this effectively turns off sorting and dramatically decreases calls
         # to data() for sorting purposes during file load
-        # FIXME: this however also effectively disables dynamic sort filter...
         self._proxy_viewside.sort(-1)
 
         self.beginResetModel()
 
     def post_reset_model(self) -> None:
         self.endResetModel()
+
         self._proxy_viewside.setDynamicSortFilter(True)  # noqa: FBT003
         self._proxy_sourceside.setDynamicSortFilter(True)  # noqa: FBT003
+
+        # this slows down file load but enables dynamic sort filter
+        self._proxy_viewside.sort(0, Qt.SortOrder.DescendingOrder)
 
     def pre_remove_item(self, item: Transaction) -> None:
         index = self.get_index_from_item(item)
@@ -367,25 +390,14 @@ class TransactionTableModel(QAbstractTableModel):
 
     @staticmethod
     def _get_text_alignment_data(column: int) -> Qt.AlignmentFlag | None:
-        if (
-            column == TransactionTableColumn.AMOUNT_NATIVE
-            or column == TransactionTableColumn.AMOUNT_BASE
-            or column == TransactionTableColumn.AMOUNT_SENT
-            or column == TransactionTableColumn.AMOUNT_RECEIVED
-            or column == TransactionTableColumn.SHARES
-            or column == TransactionTableColumn.PRICE_PER_SHARE
-            or column == TransactionTableColumn.BALANCE
-        ):
+        if column in COLUMNS_ALIGNED_RIGHT:
             return ALIGNMENT_RIGHT
         return None
 
     def _get_foreground_data(  # noqa: PLR0911, C901
         self, transaction: Transaction, column: int
     ) -> QBrush | None:
-        if (
-            column == TransactionTableColumn.AMOUNT_NATIVE
-            or column == TransactionTableColumn.AMOUNT_BASE
-        ):
+        if column in COLUMNS_TRANSACTION_AMOUNTS:
             if isinstance(transaction, CashTransaction):
                 if transaction.type_ == CashTransactionType.INCOME:
                     return colors.get_green_brush()
@@ -396,10 +408,7 @@ class TransactionTableModel(QAbstractTableModel):
                 if transaction.type_ == SecurityTransactionType.BUY:
                     return colors.get_red_brush()
                 return colors.get_green_brush()
-        if (
-            column == TransactionTableColumn.AMOUNT_SENT
-            or column == TransactionTableColumn.AMOUNT_RECEIVED
-        ):
+        if column in COLUMNS_TRANSFER_AMOUNTS:
             return colors.get_blue_brush()
         if column == TransactionTableColumn.SHARES:
             if isinstance(transaction, SecurityTransaction):
@@ -551,15 +560,32 @@ class TransactionTableModel(QAbstractTableModel):
     @staticmethod
     def _get_transaction_category(transaction: Transaction) -> str:
         if isinstance(transaction, CashTransaction | RefundTransaction):
-            category_paths = sorted(
-                category.path for category in transaction.categories
-            )
-            return ", ".join(category_paths)
+            if not transaction.are_categories_split:
+                category_strings = sorted(
+                    category.path for category in transaction.categories
+                )
+            else:
+                category_strings = sorted(
+                    category.path + f" ({amount.to_str_rounded()})"
+                    for category, amount in transaction.category_amount_pairs
+                )
+            return ", ".join(category_strings)
         return ""
 
     @staticmethod
     def _get_transaction_tags(transaction: Transaction) -> str:
-        tag_names = sorted(tag.name for tag in transaction.tags)
+        if isinstance(transaction, CashTransaction | RefundTransaction):
+            if transaction.are_tags_split:
+                tag_names: list[str] = []
+                for tag, amount in transaction.tag_amount_pairs:
+                    if amount != transaction.amount:
+                        tag_names.append(f"{tag.name} ({amount.to_str_rounded()})")
+                    else:
+                        tag_names.append(tag.name)
+            else:
+                tag_names = sorted(tag.name for tag in transaction.tags)
+        else:
+            tag_names = sorted(tag.name for tag in transaction.tags)
         return ", ".join(tag_names)
 
     def _get_account_balance(self, transaction: Transaction) -> CashAmount:

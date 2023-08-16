@@ -2,10 +2,10 @@ import logging
 from collections.abc import Collection
 from pathlib import Path
 from typing import Any, Self
-from zoneinfo import ZoneInfo
 
 from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
 from tzlocal import get_localzone_name
+from zoneinfo import ZoneInfo
 
 # TODO: add setting for default datetime filter?
 

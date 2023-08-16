@@ -117,7 +117,7 @@ def calculate_periodic_category_stats(
 def calculate_average_per_period_category_stats(
     periodic_stats: dict[str, tuple[CategoryStats]],
 ) -> dict[Category, CategoryStats]:
-    base_currency = list(periodic_stats.values())[0][0].balance.currency
+    base_currency = next(iter(periodic_stats.values()))[0].balance.currency
     all_stats = list(itertools.chain(*periodic_stats.values()))
     periods = len(periodic_stats)
 

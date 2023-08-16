@@ -3,7 +3,7 @@
 ProjectFileVersion = 1.1
 [General]
 Program name = Kapytal
-Program version = 0.5.0
+Program version = 0.6.0
 Windows XP = 0
 Windows Server 2003 = 0
 Windows Vista = 0
@@ -57,7 +57,7 @@ Time = 2
 PlaySound = 0
 Allow = 0
 [Build]
-File = D:\Coding\Kapytal\installer\kapytal_v0.5.0_win64.exe
+File = D:\Coding\Kapytal\installer\kapytal_v0.6.0_win64.exe
 SetupIconPath = ..\icons\ancient.ico
 UninstallIconPath = ..\icons\ancient.ico
 CompressionMethod = 0
@@ -247,8 +247,8 @@ dll
 D:\Coding\Kapytal\dist\main\libffi-8.dll
 37.3 KB
 dll
-D:\Coding\Kapytal\dist\main\libopenblas64__v0.3.23-gcc_10_3_0.dll
-34.4 MB
+D:\Coding\Kapytal\dist\main\libopenblas64__v0.3.23-246-g3d31191b-gcc_10_3_0.dll
+36.4 MB
 dll
 D:\Coding\Kapytal\dist\main\libssl-1_1.dll
 686.8 KB

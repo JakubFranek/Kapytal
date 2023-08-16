@@ -55,6 +55,16 @@ from src.views.utilities.handle_exception import display_error_message
 from src.views.utilities.message_box_functions import ask_yes_no_question
 from src.views.widgets.transaction_table_widget import TransactionTableWidget
 
+COLUMNS_SECURITY_RELATED = {
+    TransactionTableColumn.SECURITY,
+    TransactionTableColumn.SHARES,
+    TransactionTableColumn.PRICE_PER_SHARE,
+}
+COLUMNS_CASH_TRANSFERS = {
+    TransactionTableColumn.AMOUNT_RECEIVED,
+    TransactionTableColumn.AMOUNT_SENT,
+}
+
 
 class TransactionsPresenter:
     event_data_changed = Event()
@@ -190,16 +200,9 @@ class TransactionsPresenter:
         )
 
         for column in TransactionTableColumn:
-            if (
-                column == TransactionTableColumn.SECURITY
-                or column == TransactionTableColumn.SHARES
-                or column == TransactionTableColumn.PRICE_PER_SHARE
-            ):
+            if column in COLUMNS_SECURITY_RELATED:
                 self._view.set_column_visibility(column, show=any_security_related)
-            if (
-                column == TransactionTableColumn.AMOUNT_RECEIVED
-                or column == TransactionTableColumn.AMOUNT_SENT
-            ):
+            if column in COLUMNS_CASH_TRANSFERS:
                 self._view.set_column_visibility(column, show=any_cash_transfers)
             if column == TransactionTableColumn.CATEGORY:
                 self._view.set_column_visibility(column, show=any_with_categories)

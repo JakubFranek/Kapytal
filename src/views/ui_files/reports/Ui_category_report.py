@@ -52,6 +52,7 @@ class Ui_CategoryReport(object):
         sizePolicy.setHeightForWidth(self.treeView.sizePolicy().hasHeightForWidth())
         self.treeView.setSizePolicy(sizePolicy)
         self.treeView.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.SizeAdjustPolicy.AdjustIgnored)
+        self.treeView.setUniformRowHeights(True)
         self.treeView.setSortingEnabled(True)
         self.treeView.setObjectName("treeView")
         self.treeView.header().setStretchLastSection(False)

@@ -15,6 +15,10 @@ COLUMN_HEADERS = {
     AssetTypeTreeColumn.BALANCE_NATIVE: "Native balance",
     AssetTypeTreeColumn.BALANCE_BASE: "Base balance",
 }
+COLUMNS_BALANCE = {
+    AssetTypeTreeColumn.BALANCE_NATIVE,
+    AssetTypeTreeColumn.BALANCE_BASE,
+}
 
 
 class AssetTypeTreeModel(QAbstractItemModel):
@@ -89,10 +93,7 @@ class AssetTypeTreeModel(QAbstractItemModel):
             return self._get_display_role_data(column, item)
         if role == Qt.ItemDataRole.UserRole:  # sort role
             return self._get_sort_data(column, item)
-        if role == Qt.ItemDataRole.TextAlignmentRole and (
-            column == AssetTypeTreeColumn.BALANCE_NATIVE
-            or column == AssetTypeTreeColumn.BALANCE_BASE
-        ):
+        if role == Qt.ItemDataRole.TextAlignmentRole and column in COLUMNS_BALANCE:
             return ALIGNMENT_AMOUNTS
         if role == Qt.ItemDataRole.DecorationRole:
             return self._get_decoration_role_data(column, item)

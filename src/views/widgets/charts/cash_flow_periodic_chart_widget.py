@@ -105,7 +105,7 @@ class CashFlowPeriodicChartWidget(ChartWidget):
         x4 = [x + _width for x in x3]
         x5 = [x + _width for x in x4]
 
-        if chart_data == ChartData.ALL or chart_data == ChartData.INFLOWS:
+        if chart_data in {ChartData.ALL, ChartData.INFLOWS}:
             axes.bar(x1, incomes, width=width, color="darkgreen", label="Income")
             axes.bar(
                 x1,
@@ -131,7 +131,7 @@ class CashFlowPeriodicChartWidget(ChartWidget):
                 color="lime",
                 label="Initial Balances",
             )
-        if chart_data == ChartData.ALL or chart_data == ChartData.OUTFLOWS:
+        if chart_data in {ChartData.ALL, ChartData.OUTFLOWS}:
             axes.bar(x2, expenses, width=width, color="red", label="Expenses")
             axes.bar(
                 x2,
@@ -141,9 +141,9 @@ class CashFlowPeriodicChartWidget(ChartWidget):
                 color="salmon",
                 label="Outward Transfers",
             )
-        if chart_data == ChartData.ALL or chart_data == ChartData.CASH_FLOW:
+        if chart_data in {ChartData.ALL, ChartData.CASH_FLOW}:
             axes.bar(x3, cash_flow, width=width, color="royalblue", label="Cash Flow")
-        if chart_data == ChartData.ALL or chart_data == ChartData.GAIN_LOSS:
+        if chart_data in {ChartData.ALL, ChartData.GAIN_LOSS}:
             axes.bar(
                 x4, gain_loss, width=width, color="orange", label="Total Gain / Loss"
             )

@@ -84,7 +84,7 @@ class RefundTransactionDialogPresenter:
             )
             return
         if not check_for_nonexistent_attributes(
-            [payee], self._record_keeper.payees, self._dialog, "Payee"
+            [payee], self._record_keeper.payees, self._dialog
         ):
             logging.debug("Dialog aborted")
             return
@@ -152,7 +152,7 @@ class RefundTransactionDialogPresenter:
             )
             return
         if not check_for_nonexistent_attributes(
-            [payee], self._record_keeper.payees, self._dialog, "Payee"
+            [payee], self._record_keeper.payees, self._dialog
         ):
             logging.debug("Dialog aborted")
             return
