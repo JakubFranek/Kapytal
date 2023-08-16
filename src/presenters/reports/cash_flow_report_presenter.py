@@ -20,7 +20,8 @@ from src.views.reports.cashflow_total_report import CashFlowTotalReport
 from src.views.utilities.handle_exception import display_error_message
 from src.views.utilities.message_box_functions import ask_yes_no_question
 
-N_TRANSACTIONS_THRESHOLD = 500
+N_TRANSACTIONS_THRESHOLD_TOTAL = 50_000
+N_TRANSACTIONS_THRESHOLD_PERIODIC = 5_000
 
 
 class CashFlowReportPresenter:
@@ -94,10 +95,10 @@ class CashFlowReportPresenter:
                 title="Warning",
             )
             return
-        if n_transactions > N_TRANSACTIONS_THRESHOLD and not ask_yes_no_question(
+        if n_transactions > N_TRANSACTIONS_THRESHOLD_TOTAL and not ask_yes_no_question(
             self._busy_dialog,
             "The report will be generated from a large number of Transactions "
-            f"({n_transactions}). This may take a while. "
+            f"({n_transactions:,}). This may take a while. "
             "Proceed anyway?",
             "Are you sure?",
         ):
@@ -162,6 +163,26 @@ class CashFlowReportPresenter:
         )
 
         transactions = self._transactions_presenter.get_visible_transactions()
+        n_transactions = len(transactions)
+        if n_transactions == 0:
+            display_error_message(
+                "This report cannot be run because there are no Transactions passing "
+                "Transaction filter.",
+                title="Warning",
+            )
+            return
+        if (
+            n_transactions > N_TRANSACTIONS_THRESHOLD_PERIODIC
+            and not ask_yes_no_question(
+                self._busy_dialog,
+                "The report will be generated from a large number of Transactions "
+                f"({n_transactions:,}). This may take a while. "
+                "Proceed anyway?",
+                "Are you sure?",
+            )
+        ):
+            logging.debug("User cancelled the report creation")
+            return
 
         datetime_filter = (
             self._transactions_presenter.transaction_filter_form_presenter.transaction_filter.datetime_filter

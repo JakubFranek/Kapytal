@@ -21,7 +21,7 @@ from src.views.reports.category_report import CategoryReport
 from src.views.utilities.handle_exception import display_error_message
 from src.views.utilities.message_box_functions import ask_yes_no_question
 
-N_TRANSACTIONS_THRESHOLD = 500
+N_TRANSACTIONS_THRESHOLD = 1_000
 
 
 class CategoryReportPresenter:
@@ -82,7 +82,7 @@ class CategoryReportPresenter:
         if n_transactions > N_TRANSACTIONS_THRESHOLD and not ask_yes_no_question(
             self._busy_dialog,
             "The report will be generated from a large number of Transactions "
-            f"({n_transactions}). This may take a while. "
+            f"({n_transactions:,}). This may take a while. "
             "Proceed anyway?",
             "Are you sure?",
         ):
