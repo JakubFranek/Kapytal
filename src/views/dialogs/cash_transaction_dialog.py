@@ -166,8 +166,6 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
             .toPyDateTime()
             .replace(
                 tzinfo=user_settings.settings.time_zone,
-                hour=0,
-                minute=0,
                 second=0,
                 microsecond=0,
             )
@@ -184,8 +182,6 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
             .toPyDateTime()
             .replace(
                 tzinfo=user_settings.settings.time_zone,
-                hour=0,
-                minute=0,
                 second=0,
                 microsecond=0,
             )

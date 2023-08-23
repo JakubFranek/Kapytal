@@ -154,7 +154,7 @@ class CashTransactionDialogPresenter:
         self._dialog.payee = payees.pop() if len(payees) == 1 else ""
 
         datetimes = {
-            transaction.datetime_.replace(hour=0, minute=0, second=0, microsecond=0)
+            transaction.datetime_.replace(second=0, microsecond=0)
             for transaction in transactions
         }
         self._dialog.datetime_ = (

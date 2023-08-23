@@ -104,7 +104,7 @@ class CashTransferDialogPresenter:
         )
 
         datetimes = {
-            transfer.datetime_.replace(hour=0, minute=0, second=0, microsecond=0)
+            transfer.datetime_.replace(second=0, microsecond=0)
             for transfer in transfers
         }
         self._dialog.datetime_ = (
