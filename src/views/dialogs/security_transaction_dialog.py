@@ -144,15 +144,13 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
 
     @property
     def datetime_(self) -> datetime | None:
-        if self.dateEdit.text() == self.KEEP_CURRENT_VALUES:
+        if self.dateTimeEdit.text() == self.KEEP_CURRENT_VALUES:
             return None
         return (
-            self.dateEdit.dateTime()
+            self.dateTimeEdit.dateTime()
             .toPyDateTime()
             .replace(
                 tzinfo=user_settings.settings.time_zone,
-                hour=0,
-                minute=0,
                 second=0,
                 microsecond=0,
             )
@@ -160,17 +158,15 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
 
     @datetime_.setter
     def datetime_(self, datetime_: datetime) -> None:
-        self.dateEdit.setDateTime(datetime_)
+        self.dateTimeEdit.setDateTime(datetime_)
 
     @property
     def min_datetime(self) -> datetime:
         return (
-            self.dateEdit.minimumDateTime()
+            self.dateTimeEdit.minimumDateTime()
             .toPyDateTime()
             .replace(
                 tzinfo=user_settings.settings.time_zone,
-                hour=0,
-                minute=0,
                 second=0,
                 microsecond=0,
             )
@@ -261,8 +257,8 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
             self.descriptionPlainTextEdit.setPlaceholderText(
                 "Leave empty to keep current values"
             )
-            self.dateEdit.setSpecialValueText(self.KEEP_CURRENT_VALUES)
-            self.dateEdit.setMinimumDate(date(1900, 1, 1))
+            self.dateTimeEdit.setSpecialValueText(self.KEEP_CURRENT_VALUES)
+            self.dateTimeEdit.setMinimumDate(date(1900, 1, 1))
             self.sharesDoubleSpinBox.setSpecialValueText(self.KEEP_CURRENT_VALUES)
             self.priceDoubleSpinBox.setSpecialValueText(self.KEEP_CURRENT_VALUES)
             self.totalDoubleSpinBox.setSpecialValueText(self.KEEP_CURRENT_VALUES)
@@ -473,8 +469,8 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
         self.setTabOrder(self.sellRadioButton, self.securityComboBox)
         self.setTabOrder(self.securityComboBox, self.cashAccountComboBox)
         self.setTabOrder(self.cashAccountComboBox, self.securityAccountComboBox)
-        self.setTabOrder(self.securityAccountComboBox, self.dateEdit)
-        self.setTabOrder(self.dateEdit, self.descriptionPlainTextEdit)
+        self.setTabOrder(self.securityAccountComboBox, self.dateTimeEdit)
+        self.setTabOrder(self.dateTimeEdit, self.descriptionPlainTextEdit)
         self.setTabOrder(self.descriptionPlainTextEdit, self.sharesDoubleSpinBox)
         self.setTabOrder(self.sharesDoubleSpinBox, self.priceDoubleSpinBox)
         self.setTabOrder(self.priceDoubleSpinBox, self.totalDoubleSpinBox)
