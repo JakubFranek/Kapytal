@@ -65,6 +65,7 @@ class Ui_RefundTransactionDialog(object):
         _translate = QtCore.QCoreApplication.translate
         RefundTransactionDialog.setWindowTitle(_translate("RefundTransactionDialog", "Dialog"))
         self.dateLabel.setText(_translate("RefundTransactionDialog", "Date"))
+        self.dateEdit.setDisplayFormat(_translate("RefundTransactionDialog", "dd.MM.yyyy hh:mm"))
         self.amountLabel.setText(_translate("RefundTransactionDialog", "Amount"))
         self.actionSelect_Payee.setText(_translate("RefundTransactionDialog", "Select Payee"))
         self.actionSelect_Tag.setText(_translate("RefundTransactionDialog", "Select Tag"))

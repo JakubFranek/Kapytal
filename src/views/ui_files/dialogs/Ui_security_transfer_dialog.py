@@ -55,3 +55,4 @@ class Ui_SecurityTransferDialog(object):
         SecurityTransferDialog.setWindowTitle(_translate("SecurityTransferDialog", "Dialog"))
         self.sharesLabel.setText(_translate("SecurityTransferDialog", "Shares"))
         self.dateLabel.setText(_translate("SecurityTransferDialog", "Date"))
+        self.dateEdit.setDisplayFormat(_translate("SecurityTransferDialog", "dd.MM.yyyy hh:mm"))

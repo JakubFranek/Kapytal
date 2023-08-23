@@ -75,6 +75,12 @@
      </item>
      <item row="1" column="1">
       <widget class="QDateEdit" name="dateEdit">
+       <property name="currentSection">
+        <enum>QDateTimeEdit::DaySection</enum>
+       </property>
+       <property name="displayFormat">
+        <string>dd.MM.yyyy hh:mm</string>
+       </property>
        <property name="calendarPopup">
         <bool>true</bool>
        </property>

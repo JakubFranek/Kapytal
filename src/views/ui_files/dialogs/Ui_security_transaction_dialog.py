@@ -103,6 +103,7 @@ class Ui_SecurityTransactionDialog(object):
         self.buyRadioButton.setText(_translate("SecurityTransactionDialog", "Buy"))
         self.sellRadioButton.setText(_translate("SecurityTransactionDialog", "Sell"))
         self.dateLabel.setText(_translate("SecurityTransactionDialog", "Date"))
+        self.dateEdit.setDisplayFormat(_translate("SecurityTransactionDialog", "dd.MM.yyyy hh:mm"))
         self.sharesLabel.setText(_translate("SecurityTransactionDialog", "Shares"))
         self.priceLabel.setText(_translate("SecurityTransactionDialog", "Price per share"))
         self.totalLabel.setText(_translate("SecurityTransactionDialog", "Total"))

@@ -72,5 +72,6 @@ class Ui_CashTransferDialog(object):
         self.receivedLabel.setText(_translate("CashTransferDialog", "Received"))
         self.exchangeRateLabel.setText(_translate("CashTransferDialog", "Exchange Rate"))
         self.dateLabel.setText(_translate("CashTransferDialog", "Date"))
+        self.dateEdit.setDisplayFormat(_translate("CashTransferDialog", "dd.MM.yyyy hh:mm"))
         self.actionSelect_Sender.setText(_translate("CashTransferDialog", "Select Sender"))
         self.actionSelect_Recipient.setText(_translate("CashTransferDialog", "Select Recipient"))
