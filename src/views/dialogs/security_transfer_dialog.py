@@ -109,10 +109,10 @@ class SecurityTransferDialog(CustomDialog, Ui_SecurityTransferDialog):
 
     @property
     def datetime_(self) -> datetime | None:
-        if self.dateEdit.text() == self.KEEP_CURRENT_VALUES:
+        if self.dateTimeEdit.text() == self.KEEP_CURRENT_VALUES:
             return None
         return (
-            self.dateEdit.dateTime()
+            self.dateTimeEdit.dateTime()
             .toPyDateTime()
             .replace(
                 tzinfo=user_settings.settings.time_zone,
@@ -123,12 +123,12 @@ class SecurityTransferDialog(CustomDialog, Ui_SecurityTransferDialog):
 
     @datetime_.setter
     def datetime_(self, datetime_: datetime) -> None:
-        self.dateEdit.setDateTime(datetime_)
+        self.dateTimeEdit.setDateTime(datetime_)
 
     @property
     def min_datetime(self) -> datetime:
         return (
-            self.dateEdit.minimumDateTime()
+            self.dateTimeEdit.minimumDateTime()
             .toPyDateTime()
             .replace(
                 tzinfo=user_settings.settings.time_zone,
@@ -204,8 +204,8 @@ class SecurityTransferDialog(CustomDialog, Ui_SecurityTransferDialog):
             self.descriptionPlainTextEdit.setPlaceholderText(
                 "Leave empty to keep current values"
             )
-            self.dateEdit.setSpecialValueText(self.KEEP_CURRENT_VALUES)
-            self.dateEdit.setMinimumDate(date(1900, 1, 1))
+            self.dateTimeEdit.setSpecialValueText(self.KEEP_CURRENT_VALUES)
+            self.dateTimeEdit.setMinimumDate(date(1900, 1, 1))
             self.sharesDoubleSpinBox.setSpecialValueText(self.KEEP_CURRENT_VALUES)
             self.tags_widget.set_placeholder_text("Leave empty to keep current values")
 
@@ -305,6 +305,6 @@ class SecurityTransferDialog(CustomDialog, Ui_SecurityTransferDialog):
         self.setTabOrder(self.securityComboBox, self.senderComboBox)
         self.setTabOrder(self.senderComboBox, self.recipientComboBox)
         self.setTabOrder(self.recipientComboBox, self.sharesDoubleSpinBox)
-        self.setTabOrder(self.sharesDoubleSpinBox, self.dateEdit)
-        self.setTabOrder(self.dateEdit, self.descriptionPlainTextEdit)
+        self.setTabOrder(self.sharesDoubleSpinBox, self.dateTimeEdit)
+        self.setTabOrder(self.dateTimeEdit, self.descriptionPlainTextEdit)
         self.setTabOrder(self.descriptionPlainTextEdit, self.tags_widget)

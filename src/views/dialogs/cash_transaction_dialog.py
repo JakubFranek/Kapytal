@@ -94,8 +94,8 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
         )
 
         if edit_mode != EditMode.ADD:
-            self.dateEdit.setSpecialValueText(self.KEEP_CURRENT_VALUES)
-            self.dateEdit.setMinimumDate(date(1900, 1, 1))
+            self.dateTimeEdit.setSpecialValueText(self.KEEP_CURRENT_VALUES)
+            self.dateTimeEdit.setMinimumDate(date(1900, 1, 1))
             self.amountDoubleSpinBox.setSpecialValueText(self.KEEP_CURRENT_VALUES)
 
         self._initialize_window()
@@ -159,10 +159,10 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
 
     @property
     def datetime_(self) -> datetime | None:
-        if self.dateEdit.text() == self.KEEP_CURRENT_VALUES:
+        if self.dateTimeEdit.text() == self.KEEP_CURRENT_VALUES:
             return None
         return (
-            self.dateEdit.dateTime()
+            self.dateTimeEdit.dateTime()
             .toPyDateTime()
             .replace(
                 tzinfo=user_settings.settings.time_zone,
@@ -173,12 +173,12 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
 
     @datetime_.setter
     def datetime_(self, datetime_: datetime) -> None:
-        self.dateEdit.setDateTime(datetime_)
+        self.dateTimeEdit.setDateTime(datetime_)
 
     @property
     def min_datetime(self) -> datetime:
         return (
-            self.dateEdit.minimumDateTime()
+            self.dateTimeEdit.minimumDateTime()
             .toPyDateTime()
             .replace(
                 tzinfo=user_settings.settings.time_zone,
@@ -686,8 +686,8 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
         self.setTabOrder(self.incomeRadioButton, self.expenseRadioButton)
         self.setTabOrder(self.expenseRadioButton, self.accountsComboBox)
         self.setTabOrder(self.accountsComboBox, self.payeeComboBox)
-        self.setTabOrder(self.payeeComboBox, self.dateEdit)
-        self.setTabOrder(self.dateEdit, self.descriptionPlainTextEdit)
+        self.setTabOrder(self.payeeComboBox, self.dateTimeEdit)
+        self.setTabOrder(self.dateTimeEdit, self.descriptionPlainTextEdit)
         self.setTabOrder(self.descriptionPlainTextEdit, self.amountDoubleSpinBox)
 
         if hasattr(self, "_category_rows"):

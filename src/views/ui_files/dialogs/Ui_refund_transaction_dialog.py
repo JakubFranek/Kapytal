@@ -28,11 +28,6 @@ class Ui_RefundTransactionDialog(object):
         self.dateLabel = QtWidgets.QLabel(RefundTransactionDialog)
         self.dateLabel.setObjectName("dateLabel")
         self.formLayout.setWidget(0, QtWidgets.QFormLayout.ItemRole.LabelRole, self.dateLabel)
-        self.dateEdit = QtWidgets.QDateEdit(RefundTransactionDialog)
-        self.dateEdit.setCalendarPopup(True)
-        self.dateEdit.setTimeSpec(QtCore.Qt.TimeSpec.LocalTime)
-        self.dateEdit.setObjectName("dateEdit")
-        self.formLayout.setWidget(0, QtWidgets.QFormLayout.ItemRole.FieldRole, self.dateEdit)
         self.amountLabel = QtWidgets.QLabel(RefundTransactionDialog)
         self.amountLabel.setObjectName("amountLabel")
         self.formLayout.setWidget(1, QtWidgets.QFormLayout.ItemRole.LabelRole, self.amountLabel)
@@ -45,6 +40,10 @@ class Ui_RefundTransactionDialog(object):
         self.amountDoubleSpinBox.setMaximum(1e+16)
         self.amountDoubleSpinBox.setObjectName("amountDoubleSpinBox")
         self.formLayout.setWidget(1, QtWidgets.QFormLayout.ItemRole.FieldRole, self.amountDoubleSpinBox)
+        self.dateTimeEdit = QtWidgets.QDateTimeEdit(RefundTransactionDialog)
+        self.dateTimeEdit.setCalendarPopup(True)
+        self.dateTimeEdit.setObjectName("dateTimeEdit")
+        self.formLayout.setWidget(0, QtWidgets.QFormLayout.ItemRole.FieldRole, self.dateTimeEdit)
         self.verticalLayout.addLayout(self.formLayout)
         self.buttonBox = QtWidgets.QDialogButtonBox(RefundTransactionDialog)
         self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.StandardButton.NoButton)
@@ -59,14 +58,13 @@ class Ui_RefundTransactionDialog(object):
 
         self.retranslateUi(RefundTransactionDialog)
         QtCore.QMetaObject.connectSlotsByName(RefundTransactionDialog)
-        RefundTransactionDialog.setTabOrder(self.dateEdit, self.amountDoubleSpinBox)
 
     def retranslateUi(self, RefundTransactionDialog):
         _translate = QtCore.QCoreApplication.translate
         RefundTransactionDialog.setWindowTitle(_translate("RefundTransactionDialog", "Dialog"))
         self.dateLabel.setText(_translate("RefundTransactionDialog", "Date"))
-        self.dateEdit.setDisplayFormat(_translate("RefundTransactionDialog", "dd.MM.yyyy hh:mm"))
         self.amountLabel.setText(_translate("RefundTransactionDialog", "Amount"))
+        self.dateTimeEdit.setDisplayFormat(_translate("RefundTransactionDialog", "dd.MM.yyyy hh:mm"))
         self.actionSelect_Payee.setText(_translate("RefundTransactionDialog", "Select Payee"))
         self.actionSelect_Tag.setText(_translate("RefundTransactionDialog", "Select Tag"))
         self.actionSelect_Account.setText(_translate("RefundTransactionDialog", "Select Account"))

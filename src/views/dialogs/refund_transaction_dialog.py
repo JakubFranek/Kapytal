@@ -91,7 +91,7 @@ class RefundTransactionDialog(CustomDialog, Ui_RefundTransactionDialog):
     @property
     def datetime_(self) -> datetime:
         return (
-            self.dateEdit.dateTime()
+            self.dateTimeEdit.dateTime()
             .toPyDateTime()
             .replace(
                 tzinfo=user_settings.settings.time_zone,
@@ -102,12 +102,12 @@ class RefundTransactionDialog(CustomDialog, Ui_RefundTransactionDialog):
 
     @datetime_.setter
     def datetime_(self, value: datetime) -> None:
-        self.dateEdit.setDateTime(value)
+        self.dateTimeEdit.setDateTime(value)
 
     @property
     def min_datetime(self) -> datetime:
         return (
-            self.dateEdit.minimumDateTime()
+            self.dateTimeEdit.minimumDateTime()
             .toPyDateTime()
             .replace(
                 tzinfo=user_settings.settings.time_zone,
@@ -269,8 +269,8 @@ class RefundTransactionDialog(CustomDialog, Ui_RefundTransactionDialog):
 
     def _set_tab_order(self) -> None:
         self.setTabOrder(self.accountsComboBox, self.payeeComboBox)
-        self.setTabOrder(self.payeeComboBox, self.dateEdit)
-        self.setTabOrder(self.dateEdit, self.descriptionPlainTextEdit)
+        self.setTabOrder(self.payeeComboBox, self.dateTimeEdit)
+        self.setTabOrder(self.dateTimeEdit, self.descriptionPlainTextEdit)
         self.setTabOrder(self.descriptionPlainTextEdit, self.amountDoubleSpinBox)
 
         self.setTabOrder(self.amountDoubleSpinBox, self._category_rows[0])
