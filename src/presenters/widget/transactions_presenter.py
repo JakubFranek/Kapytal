@@ -64,6 +64,10 @@ COLUMNS_CASH_TRANSFERS = {
     TransactionTableColumn.AMOUNT_RECEIVED,
     TransactionTableColumn.AMOUNT_SENT,
 }
+COLUMNS_HIDDEN_BY_DEFAULT = {
+    TransactionTableColumn.UUID,
+    TransactionTableColumn.DATETIME_CREATED,
+}
 
 
 class TransactionsPresenter:
@@ -585,10 +589,9 @@ class TransactionsPresenter:
         self._view.set_shown_transactions(n_visible, n_total)
 
     def _reset_columns(self) -> None:
-        self._view.set_all_columns_visibility(show=True)
-        self._view.set_column_visibility(TransactionTableColumn.UUID, show=False)
-        self._view.set_column_visibility(
-            TransactionTableColumn.DATETIME_CREATED, show=False
-        )
+        for column in TransactionTableColumn:
+            if column in COLUMNS_HIDDEN_BY_DEFAULT:
+                continue
+            self._view.set_column_visibility(column, show=True)
         self._update_table_columns()
         self._view.reset_column_order()
