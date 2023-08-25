@@ -22,6 +22,7 @@ from src.views.base_classes.custom_dialog import CustomDialog
 from src.views.ui_files.dialogs.Ui_security_transfer_dialog import (
     Ui_SecurityTransferDialog,
 )
+from src.views.utilities.helper_functions import convert_datetime_format_to_qt
 from src.views.widgets.description_plain_text_edit import DescriptionPlainTextEdit
 from src.views.widgets.multiple_tags_selector_widget import MultipleTagsSelectorWidget
 from src.views.widgets.smart_combo_box import SmartComboBox
@@ -66,6 +67,12 @@ class SecurityTransferDialog(CustomDialog, Ui_SecurityTransferDialog):
         self._initialize_description_plain_text_edit(descriptions)
         self._initialize_placeholders()
         self._set_tab_order()
+
+        display_format = (
+            convert_datetime_format_to_qt(user_settings.settings.general_date_format)
+            + " hh:mm"
+        )
+        self.dateTimeEdit.setDisplayFormat(display_format)
 
     @property
     def security_name(self) -> str | None:

@@ -3,6 +3,7 @@ from collections.abc import Collection
 from PyQt6.QtCore import QAbstractTableModel, QModelIndex, QSortFilterProxyModel, Qt
 from PyQt6.QtWidgets import QTableView
 from src.models.model_objects.currency_objects import ExchangeRate
+from src.models.user_settings import user_settings
 from src.views.constants import ExchangeRateTableColumn, monospace_font
 
 ALIGNMENT_RIGHT = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
@@ -81,7 +82,7 @@ class ExchangeRateTableModel(QAbstractTableModel):
             latest_date = exchange_rate.latest_date
             if latest_date is None:
                 return "None"
-            return latest_date.strftime("%d.%m.%Y")
+            return latest_date.strftime(user_settings.settings.general_date_format)
         return None
 
     def _get_sort_role_data(

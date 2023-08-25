@@ -65,7 +65,9 @@ class CashTransactionDialogPresenter:
             self._dialog.account_path = _valid_accounts[0].path
 
         self._dialog.type_ = type_
-        self._dialog.datetime_ = datetime.now(user_settings.settings.time_zone)
+        self._dialog.datetime_ = datetime.now(user_settings.settings.time_zone).replace(
+            hour=0, minute=0, second=0, microsecond=0
+        )
 
         self._dialog.signal_do_and_close.connect(
             lambda: self._add_cash_transaction(close=True)

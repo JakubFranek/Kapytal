@@ -24,6 +24,7 @@ from src.views.base_classes.custom_dialog import CustomDialog
 from src.views.ui_files.dialogs.Ui_refund_transaction_dialog import (
     Ui_RefundTransactionDialog,
 )
+from src.views.utilities.helper_functions import convert_datetime_format_to_qt
 from src.views.widgets.description_plain_text_edit import DescriptionPlainTextEdit
 from src.views.widgets.label_widget import LabelWidget
 from src.views.widgets.refund_row_widget import RefundRowWidget
@@ -71,6 +72,12 @@ class RefundTransactionDialog(CustomDialog, Ui_RefundTransactionDialog):
             self._initialize_values()
 
         self._set_tab_order()
+
+        display_format = (
+            convert_datetime_format_to_qt(user_settings.settings.general_date_format)
+            + " hh:mm"
+        )
+        self.dateTimeEdit.setDisplayFormat(display_format)
 
     @property
     def account_path(self) -> str:

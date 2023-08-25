@@ -27,6 +27,7 @@ from src.models.model_objects.security_objects import (
     SecurityTransactionType,
     SecurityTransfer,
 )
+from src.models.user_settings import user_settings
 from src.views import colors, icons
 from src.views.constants import (
     TRANSACTION_TABLE_COLUMN_HEADERS,
@@ -229,7 +230,9 @@ class TransactionTableModel(QAbstractTableModel):
         self, transaction: Transaction, column: int
     ) -> str | None:
         if column == TransactionTableColumn.DATETIME:
-            return transaction.datetime_.strftime("%d.%m.%Y")
+            return transaction.datetime_.strftime(
+                user_settings.settings.transaction_date_format
+            )
         if column == TransactionTableColumn.DESCRIPTION:
             return transaction.description
         if column == TransactionTableColumn.TYPE:
@@ -289,7 +292,7 @@ class TransactionTableModel(QAbstractTableModel):
         if column == TransactionTableColumn.UUID:
             return str(transaction.uuid)
         if column == TransactionTableColumn.DATETIME_CREATED:
-            return transaction.datetime_created.strftime("%d.%m.%Y %H:%M:%S")
+            return transaction.datetime_created.strftime("%Y-%m-%d %H:%M:%S")
         return None
 
     def _get_decoration_role_data(  # noqa: PLR0911, PLR0912, C901

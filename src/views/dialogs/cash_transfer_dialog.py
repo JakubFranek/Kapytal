@@ -17,6 +17,7 @@ from src.models.user_settings import user_settings
 from src.views import icons
 from src.views.base_classes.custom_dialog import CustomDialog
 from src.views.ui_files.dialogs.Ui_cash_transfer_dialog import Ui_CashTransferDialog
+from src.views.utilities.helper_functions import convert_datetime_format_to_qt
 from src.views.widgets.description_plain_text_edit import DescriptionPlainTextEdit
 from src.views.widgets.multiple_tags_selector_widget import MultipleTagsSelectorWidget
 from src.views.widgets.smart_combo_box import SmartComboBox
@@ -75,6 +76,12 @@ class CashTransferDialog(CustomDialog, Ui_CashTransferDialog):
         self._set_spinbox_states()
         self._initialize_signals()
         self._set_tab_order()
+
+        display_format = (
+            convert_datetime_format_to_qt(user_settings.settings.general_date_format)
+            + " hh:mm"
+        )
+        self.dateTimeEdit.setDisplayFormat(display_format)
 
     @property
     def datetime_(self) -> datetime | None:

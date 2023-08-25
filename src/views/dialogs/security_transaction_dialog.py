@@ -25,6 +25,7 @@ from src.views.base_classes.custom_dialog import CustomDialog
 from src.views.ui_files.dialogs.Ui_security_transaction_dialog import (
     Ui_SecurityTransactionDialog,
 )
+from src.views.utilities.helper_functions import convert_datetime_format_to_qt
 from src.views.widgets.description_plain_text_edit import DescriptionPlainTextEdit
 from src.views.widgets.multiple_tags_selector_widget import MultipleTagsSelectorWidget
 from src.views.widgets.smart_combo_box import SmartComboBox
@@ -84,6 +85,12 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
         self._initialize_signals()
         self._initialize_placeholders()
         self._set_tab_order()
+
+        display_format = (
+            convert_datetime_format_to_qt(user_settings.settings.general_date_format)
+            + " hh:mm"
+        )
+        self.dateTimeEdit.setDisplayFormat(display_format)
 
     @property
     def type_(self) -> SecurityTransactionType:

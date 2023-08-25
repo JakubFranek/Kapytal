@@ -464,9 +464,7 @@ class TransactionsPresenter:
         )
 
     def _refund_transaction(self) -> None:
-        self._refund_transaction_dialog_presenter.run_add_dialog(
-            self._account_tree_shown_accounts
-        )
+        self._refund_transaction_dialog_presenter.run_add_dialog()
 
     def _add_tags(self) -> None:
         transactions = self._model.get_selected_items()

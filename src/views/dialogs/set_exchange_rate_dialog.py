@@ -4,11 +4,13 @@ from decimal import Decimal
 
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtWidgets import QAbstractButton, QDialogButtonBox, QWidget
+from src.models.user_settings import user_settings
 from src.views import icons
 from src.views.base_classes.custom_dialog import CustomDialog
 from src.views.ui_files.dialogs.Ui_set_exchange_rate_dialog import (
     Ui_SetExchangeRateDialog,
 )
+from src.views.utilities.helper_functions import convert_datetime_format_to_qt
 
 
 class SetExchangeRateDialog(CustomDialog, Ui_SetExchangeRateDialog):
@@ -44,6 +46,11 @@ class SetExchangeRateDialog(CustomDialog, Ui_SetExchangeRateDialog):
         self.dateEdit.setMaximumDate(date_)
 
         self.buttonBox.clicked.connect(self._handle_button_box_click)
+
+        display_format = convert_datetime_format_to_qt(
+            user_settings.settings.general_date_format
+        )
+        self.dateEdit.setDisplayFormat(display_format)
 
     @property
     def value(self) -> Decimal:

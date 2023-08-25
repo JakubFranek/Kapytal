@@ -29,6 +29,7 @@ from src.view_models.checkable_category_tree_model import CategorySelectionMode
 from src.views import icons
 from src.views.base_classes.custom_widget import CustomWidget
 from src.views.ui_files.forms.Ui_transaction_filter_form import Ui_TransactionFilterForm
+from src.views.utilities.helper_functions import convert_datetime_format_to_qt
 
 CASH_RELATED_TRANSACTION_TYPES = (
     CashTransactionType.INCOME,
@@ -357,6 +358,10 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
     @multiple_categories_filter_mode.setter
     def multiple_categories_filter_mode(self, mode: FilterMode) -> None:
         self.multipleCategoriesFilterModeComboBox.setCurrentText(mode.name)
+
+    def show_form(self) -> None:
+        self._update_date_edit_display_format()
+        super().show_form()
 
     def _update_cash_amount_filter_state(self) -> None:
         if self._base_currency_code:
@@ -700,3 +705,10 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
         self.categoriesTypeTabWidget.setTabText(0, income_text)
         self.categoriesTypeTabWidget.setTabText(1, expense_text)
         self.categoriesTypeTabWidget.setTabText(2, income_and_expense_text)
+
+    def _update_date_edit_display_format(self) -> None:
+        display_format = convert_datetime_format_to_qt(
+            user_settings.settings.general_date_format
+        )
+        self.dateFilterStartDateEdit.setDisplayFormat(display_format)
+        self.dateFilterEndDateEdit.setDisplayFormat(display_format)

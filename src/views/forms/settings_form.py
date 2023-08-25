@@ -1,4 +1,3 @@
-
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtWidgets import QAbstractButton, QDialogButtonBox, QFileDialog, QWidget
 from src.views import icons
@@ -35,6 +34,10 @@ class SettingsForm(CustomWidget, Ui_SettingsForm):
 
         self.logsSizeLimitSpinBox.valueChanged.connect(self.signal_data_changed.emit)
         self.backupsSizeLimitSpinBox.valueChanged.connect(self.signal_data_changed.emit)
+        self.generalDateFormatLineEdit.textEdited.connect(self.signal_data_changed.emit)
+        self.transactionTableDateFormatLineEdit.textEdited.connect(
+            self.signal_data_changed.emit
+        )
 
     @property
     def backups_max_size_kb(self) -> int:
@@ -51,6 +54,22 @@ class SettingsForm(CustomWidget, Ui_SettingsForm):
     @logs_max_size_kb.setter
     def logs_max_size_kb(self, value: int) -> None:
         self.logsSizeLimitSpinBox.setValue(value)
+
+    @property
+    def general_date_format(self) -> str:
+        return self.generalDateFormatLineEdit.text()
+
+    @general_date_format.setter
+    def general_date_format(self, value: str) -> None:
+        self.generalDateFormatLineEdit.setText(value)
+
+    @property
+    def transaction_date_format(self) -> str:
+        return self.transactionTableDateFormatLineEdit.text()
+
+    @transaction_date_format.setter
+    def transaction_date_format(self, value: str) -> None:
+        self.transactionTableDateFormatLineEdit.setText(value)
 
     def get_directory_path(self) -> str:
         return QFileDialog.getExistingDirectory(self)

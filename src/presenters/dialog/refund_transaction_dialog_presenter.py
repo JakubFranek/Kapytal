@@ -40,7 +40,6 @@ class RefundTransactionDialogPresenter:
 
     def run_add_dialog(
         self,
-        valid_accounts: Collection[CashAccount],
     ) -> None:
         logging.debug("Running RefundTransactionDialog (adding)")
         transactions = self._model.get_selected_items()
@@ -50,13 +49,11 @@ class RefundTransactionDialogPresenter:
         refunded_transaction: CashTransaction = transactions[0]
         self._prepare_dialog(refunded_transaction, edited_refund=None)
 
-        _valid_accounts = sorted(
-            (account for account in valid_accounts if isinstance(account, CashAccount)),
-            key=lambda account: account.path.lower(),
-        )
         self._dialog.account_path = refunded_transaction.account.path
         self._dialog.payee = refunded_transaction.payee.name
-        self._dialog.datetime_ = datetime.now(user_settings.settings.time_zone)
+        self._dialog.datetime_ = datetime.now(user_settings.settings.time_zone).replace(
+            hour=0, minute=0, second=0, microsecond=0
+        )
 
         self._dialog.signal_do_and_close.connect(self._add_refund)
         self._dialog.exec()

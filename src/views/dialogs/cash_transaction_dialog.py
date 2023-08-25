@@ -18,6 +18,7 @@ from src.views.base_classes.custom_dialog import CustomDialog
 from src.views.ui_files.dialogs.Ui_cash_transaction_dialog import (
     Ui_CashTransactionDialog,
 )
+from src.views.utilities.helper_functions import convert_datetime_format_to_qt
 from src.views.widgets.add_attribute_row_widget import AddAttributeRowWidget
 from src.views.widgets.description_plain_text_edit import DescriptionPlainTextEdit
 from src.views.widgets.label_widget import LabelWidget
@@ -117,6 +118,12 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
 
         self._set_maximum_amounts(0)
         self._set_tab_order()
+
+        display_format = (
+            convert_datetime_format_to_qt(user_settings.settings.general_date_format)
+            + " hh:mm"
+        )
+        self.dateTimeEdit.setDisplayFormat(display_format)
 
     @property
     def type_(self) -> CashTransactionType:

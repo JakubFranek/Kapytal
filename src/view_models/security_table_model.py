@@ -4,6 +4,7 @@ from collections.abc import Collection
 from PyQt6.QtCore import QAbstractTableModel, QModelIndex, QSortFilterProxyModel, Qt
 from PyQt6.QtWidgets import QTableView
 from src.models.model_objects.security_objects import Security
+from src.models.user_settings import user_settings
 from src.views.constants import SecurityTableColumn
 
 ALIGNMENT_LEFT = Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
@@ -91,7 +92,9 @@ class SecurityTableModel(QAbstractTableModel):
         if column == SecurityTableColumn.LAST_DATE:
             latest_date = security.latest_date
             return (
-                latest_date.strftime("%d.%m.%Y") if latest_date is not None else "None"
+                latest_date.strftime(user_settings.settings.general_date_format)
+                if latest_date is not None
+                else "None"
             )
         return None
 
