@@ -3,7 +3,7 @@ from datetime import date, datetime
 from decimal import Decimal, DivisionByZero, InvalidOperation
 from enum import Enum, auto
 
-from PyQt6.QtCore import pyqtSignal
+from PyQt6.QtCore import QSignalBlocker, pyqtSignal
 from PyQt6.QtWidgets import (
     QAbstractButton,
     QDialogButtonBox,
@@ -346,7 +346,13 @@ class CashTransferDialog(CustomDialog, Ui_CashTransferDialog):
         recipient = self.recipient_path
         sent = self.amount_sent
         received = self.amount_received
-        self.sender_path = recipient
-        self.recipient_path = sender
-        self.amount_sent = received
-        self.amount_received = sent
+        with QSignalBlocker(self.senderComboBox):
+            self.senderComboBox.setCurrentText(recipient)
+        with QSignalBlocker(self.recipientComboBox):
+            self.recipientComboBox.setCurrentText(sender)
+        with QSignalBlocker(self.sentDoubleSpinBox):
+            self.sentDoubleSpinBox.setValue(received)
+        with QSignalBlocker(self.receivedDoubleSpinBox):
+            self.receivedDoubleSpinBox.setValue(sent)
+        self._set_spinboxes_currencies()
+        self._set_spinbox_states()

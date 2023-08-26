@@ -1,9 +1,10 @@
 import logging
-from collections.abc import Sequence
+from collections.abc import Collection, Sequence
 from datetime import datetime
 
 from PyQt6.QtWidgets import QWidget
-from src.models.model_objects.cash_objects import CashTransfer
+from src.models.base_classes.account import Account
+from src.models.model_objects.cash_objects import CashAccount, CashTransfer
 from src.models.record_keeper import RecordKeeper
 from src.models.user_settings import user_settings
 from src.presenters.utilities.check_for_nonexistent_attributes import (
@@ -34,7 +35,7 @@ class CashTransferDialogPresenter:
     def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
         self._record_keeper = record_keeper
 
-    def run_add_dialog(self) -> None:
+    def run_add_dialog(self, selected_accounts: Collection[Account]) -> None:
         logging.debug("Running CashTransferDialog (edit_mode=ADD)")
         if len(self._record_keeper.cash_accounts) <= 1:
             display_error_message(
@@ -44,6 +45,15 @@ class CashTransferDialogPresenter:
             return
 
         self._prepare_dialog(edit_mode=EditMode.ADD)
+
+        _selected_cash_accounts = tuple(
+            account for account in selected_accounts if isinstance(account, CashAccount)
+        )
+        if len(_selected_cash_accounts) == 1:
+            self._dialog.sender_path = _selected_cash_accounts[0].path
+        elif len(_selected_cash_accounts) == 2:
+            self._dialog.sender_path = _selected_cash_accounts[0].path
+            self._dialog.recipient_path = _selected_cash_accounts[1].path
 
         self._dialog.datetime_ = datetime.now(user_settings.settings.time_zone).replace(
             hour=0, minute=0, second=0, microsecond=0

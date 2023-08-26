@@ -303,7 +303,9 @@ class TransactionsPresenter:
             )
         )
         self._view.signal_cash_transfer.connect(
-            self._cash_transfer_dialog_presenter.run_add_dialog
+            lambda: self._cash_transfer_dialog_presenter.run_add_dialog(
+                self._account_tree_shown_accounts
+            )
         )
         self._view.signal_buy.connect(
             lambda: self._security_transaction_dialog_presenter.run_add_dialog(
@@ -316,7 +318,9 @@ class TransactionsPresenter:
             )
         )
         self._view.signal_security_transfer.connect(
-            self._security_transfer_dialog_presenter.run_add_dialog
+            lambda: self._security_transfer_dialog_presenter.run_add_dialog(
+                self._account_tree_shown_accounts
+            )
         )
 
         self._view.signal_delete.connect(self._delete_transactions)

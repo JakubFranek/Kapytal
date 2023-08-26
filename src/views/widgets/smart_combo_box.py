@@ -1,3 +1,4 @@
+import unicodedata
 from collections.abc import Collection
 
 from PyQt6.QtGui import QAction, QIcon
@@ -27,7 +28,7 @@ class SmartComboBox(QComboBox):
         keep_current_text: bool = False
     ) -> None:
         current_text = self.currentText()
-        _items = sorted(items, key=str.lower)
+        _items = sorted(items, key=lambda s: unicodedata.normalize("NFD", s).lower())
         self.clear()
         for item in _items:
             self.addItem(item)
