@@ -8,8 +8,6 @@ from PyQt6.QtWidgets import (
     QAbstractButton,
     QDialogButtonBox,
     QDoubleSpinBox,
-    QFormLayout,
-    QLabel,
     QWidget,
 )
 from src.models.model_objects.cash_objects import CashAccount
@@ -60,12 +58,10 @@ class CashTransferDialog(CustomDialog, Ui_CashTransferDialog):
         self.setupUi(self)
 
         self.descriptionPlainTextEdit = DescriptionPlainTextEdit(descriptions)
-        self.description_label = QLabel("Description")
-        self.formLayout.addRow(self.description_label, self.descriptionPlainTextEdit)
+        self.gridLayout.addWidget(self.descriptionPlainTextEdit, 6, 1, 1, -1)
 
         self.tags_widget = MultipleTagsSelectorWidget(self, tag_names)
-        self.tags_label = QLabel("Tags", self)
-        self.formLayout.addRow(self.tags_label, self.tags_widget)
+        self.gridLayout.addWidget(self.tags_widget, 7, 1, 1, -1)
 
         self._accounts = accounts
         self._edit_mode = edit_mode
@@ -75,6 +71,7 @@ class CashTransferDialog(CustomDialog, Ui_CashTransferDialog):
         self._initialize_placeholders()
         self._set_spinbox_states()
         self._initialize_signals()
+        self._initialize_actions()
         self._set_tab_order()
 
         display_format = (
@@ -189,10 +186,12 @@ class CashTransferDialog(CustomDialog, Ui_CashTransferDialog):
         self, account_path: str | None, spinbox: QDoubleSpinBox
     ) -> None:
         if account_path is None:
+            spinbox.setSuffix("")
             return
 
         account = self._get_account(account_path)
         if account is None:
+            spinbox.setSuffix("")
             return
         spinbox.setSuffix(" " + account.currency.code)
         spinbox.setDecimals(account.currency.places)
@@ -207,6 +206,8 @@ class CashTransferDialog(CustomDialog, Ui_CashTransferDialog):
         sender = self._get_account(self.sender_path)
         recipient = self._get_account(self.recipient_path)
         if sender is None or recipient is None:
+            self.exchangeRateLabel.hide()
+            self.exchangeRateLineEdit.hide()
             return
 
         self.exchangeRateLabel.setVisible(sender.currency != recipient.currency)
@@ -254,11 +255,7 @@ class CashTransferDialog(CustomDialog, Ui_CashTransferDialog):
             )
         self.buttonBox.clicked.connect(self._handle_button_box_click)
         self.buttonBox.addButton("Close", QDialogButtonBox.ButtonRole.RejectRole)
-        self.formLayout.setWidget(
-            self.formLayout.count() - 1,
-            QFormLayout.ItemRole.SpanningRole,
-            self.buttonBox,
-        )
+        self.gridLayout.addWidget(self.buttonBox, 8, 1, 1, -1)
 
     def _initialize_accounts_comboboxes(
         self, accounts: Collection[CashAccount]
@@ -272,11 +269,11 @@ class CashTransferDialog(CustomDialog, Ui_CashTransferDialog):
 
         self.senderComboBox = SmartComboBox(parent=self)
         self.senderComboBox.load_items(items, icons.cash_account, placeholder_text)
-        self.formLayout.insertRow(0, "Sender", self.senderComboBox)
+        self.gridLayout.addWidget(self.senderComboBox, 0, 1, 1, 1)
 
         self.recipientComboBox = SmartComboBox(parent=self)
         self.recipientComboBox.load_items(items, icons.cash_account, placeholder_text)
-        self.formLayout.insertRow(1, "Recipient", self.recipientComboBox)
+        self.gridLayout.addWidget(self.recipientComboBox, 1, 1, 1, 1)
 
         self.senderComboBox.currentTextChanged.connect(self._set_spinboxes_currencies)
         self.recipientComboBox.currentTextChanged.connect(
@@ -314,11 +311,6 @@ class CashTransferDialog(CustomDialog, Ui_CashTransferDialog):
                 sender_account.currency != recipient_account.currency
             )
 
-        if not sender_specified:
-            self.sentDoubleSpinBox.setValue(0)
-        if not recipient_specified:
-            self.receivedDoubleSpinBox.setValue(0)
-
     def _handle_button_box_click(self, button: QAbstractButton) -> None:
         role = self.buttonBox.buttonRole(button)
         if role == QDialogButtonBox.ButtonRole.AcceptRole:
@@ -336,6 +328,11 @@ class CashTransferDialog(CustomDialog, Ui_CashTransferDialog):
         self.senderComboBox.currentTextChanged.connect(self._set_spinbox_states)
         self.recipientComboBox.currentTextChanged.connect(self._set_spinbox_states)
 
+    def _initialize_actions(self) -> None:
+        self.actionSwap_Accounts.setIcon(icons.swap)
+        self.actionSwap_Accounts.triggered.connect(self._swap_accounts)
+        self.swapAccountsToolButton.setDefaultAction(self.actionSwap_Accounts)
+
     def _set_tab_order(self) -> None:
         self.setTabOrder(self.senderComboBox, self.recipientComboBox)
         self.setTabOrder(self.recipientComboBox, self.sentDoubleSpinBox)
@@ -343,3 +340,13 @@ class CashTransferDialog(CustomDialog, Ui_CashTransferDialog):
         self.setTabOrder(self.receivedDoubleSpinBox, self.dateTimeEdit)
         self.setTabOrder(self.dateTimeEdit, self.descriptionPlainTextEdit)
         self.setTabOrder(self.descriptionPlainTextEdit, self.tags_widget)
+
+    def _swap_accounts(self) -> None:
+        sender = self.sender_path
+        recipient = self.recipient_path
+        sent = self.amount_sent
+        received = self.amount_received
+        self.sender_path = recipient
+        self.recipient_path = sender
+        self.amount_sent = received
+        self.amount_received = sent
