@@ -126,6 +126,7 @@ class CashFlowTableColumn(IntEnum):
     DELTA_PERFORMANCE_CURRENCIES = 10
     DELTA_PERFORMANCE = 11
     DELTA_TOTAL = 12
+    SAVINGS_RATE = 13
 
 
 class AssetTypeTreeColumn(IntEnum):

@@ -28,6 +28,7 @@ COLUMN_HEADERS = {
     CashFlowTableColumn.DELTA_PERFORMANCE_CURRENCIES: "Currencies Gain / Loss",
     CashFlowTableColumn.DELTA_PERFORMANCE: "Total Gain / Loss",
     CashFlowTableColumn.DELTA_TOTAL: "Net Growth",
+    CashFlowTableColumn.SAVINGS_RATE: "Savings Rate",
 }
 
 
@@ -100,14 +101,25 @@ class CashFlowTableModel(QAbstractTableModel):
         return None
 
     def _get_display_role_data(self, column: int, stats: CashFlowStats) -> str:
+        if column == CashFlowTableColumn.SAVINGS_RATE:
+            return f"{stats.savings_rate:.2%}"
         return f"{self._get_cash_amount_for_column(stats, column).value_rounded:,}"
 
     def _get_user_role_data(self, column: int, stats: CashFlowStats) -> float:
+        if column == CashFlowTableColumn.SAVINGS_RATE:
+            return float(stats.savings_rate)
         return float(self._get_cash_amount_for_column(stats, column).value_rounded)
 
     def _get_foreground_role_data(
         self, column: int, stats: CashFlowStats
     ) -> QBrush | None:
+        if column == CashFlowTableColumn.SAVINGS_RATE:
+            if stats.savings_rate.is_nan() or stats.savings_rate == 0:
+                return colors.get_gray_brush()
+            if stats.savings_rate > 0:
+                return colors.get_green_brush()
+            if stats.savings_rate < 0:
+                return colors.get_red_brush()
         amount = self._get_cash_amount_for_column(stats, column)
         if amount.is_positive():
             return colors.get_green_brush()

@@ -1,6 +1,7 @@
 from collections.abc import Collection
 from dataclasses import dataclass
 from datetime import date, timedelta
+from decimal import Decimal
 from enum import Enum, auto
 
 from src.models.base_classes.account import Account
@@ -61,6 +62,7 @@ class CashFlowStats:
         "delta_performance_currencies",
         "inflows",
         "outflows",
+        "savings_rate",
         "period",
     )
 
@@ -80,6 +82,8 @@ class CashFlowStats:
 
         self.inflows = base_currency.zero_amount
         self.outflows = base_currency.zero_amount
+
+        self.savings_rate = Decimal(0)
 
         self.period = ""
 
@@ -185,6 +189,14 @@ def calculate_cash_flow(
         stats.delta_performance - stats.delta_performance_securities
     )
 
+    savings_rate_eligible_inflow = (
+        stats.incomes + stats.inward_transfers + stats.initial_balances
+    )
+    if savings_rate_eligible_inflow.value_normalized != 0:
+        stats.savings_rate = stats.delta_neutral / savings_rate_eligible_inflow
+    else:
+        stats.savings_rate = Decimal("NaN")
+
     return stats
 
 
@@ -251,6 +263,8 @@ def calculate_average_cash_flow(
         average.delta_performance += stats.delta_performance
         average.delta_performance_securities += stats.delta_performance_securities
         average.delta_performance_currencies += stats.delta_performance_currencies
+        if not stats.savings_rate.is_nan():
+            average.savings_rate += stats.savings_rate
 
     average.incomes /= periods
     average.inward_transfers /= periods
@@ -265,6 +279,7 @@ def calculate_average_cash_flow(
     average.delta_performance /= periods
     average.delta_performance_securities /= periods
     average.delta_performance_currencies /= periods
+    average.savings_rate /= periods
 
     return average
 
@@ -289,6 +304,7 @@ def calculate_total_cash_flow(
         total.delta_performance_securities += stats.delta_performance_securities
         total.delta_performance_currencies += stats.delta_performance_currencies
 
+    total.savings_rate = Decimal("NaN")
     return total
 
 

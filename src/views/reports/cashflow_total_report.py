@@ -99,6 +99,16 @@ class CashFlowTotalReport(CustomWidget, Ui_CashFlowTotalReport):
         elif stats.delta_neutral.is_negative():
             self.cashFlowAmountLabel.setStyleSheet(f"color: {colors.get_red().name()}")
 
+        self.savingsRateAmountLabel.setText(f"{100 * stats.savings_rate:.2f}%")
+        if stats.savings_rate > 0:
+            self.savingsRateAmountLabel.setStyleSheet(
+                f"color: {colors.get_green().name()}"
+            )
+        elif stats.delta_neutral < 0:
+            self.savingsRateAmountLabel.setStyleSheet(
+                f"color: {colors.get_red().name()}"
+            )
+
         self.netGrowthAmountLabel.setText(stats.delta_total.to_str_rounded())
         if stats.delta_total.is_positive():
             self.netGrowthAmountLabel.setStyleSheet(

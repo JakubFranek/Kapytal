@@ -23,6 +23,7 @@ STR_TO_CHART_DATA = {
     "Cash Flow": ChartData.CASH_FLOW,
     "Total Gain / Loss": ChartData.GAIN_LOSS,
     "Net Growth": ChartData.NET_GROWTH,
+    "Savings Rate": ChartData.SAVINGS_RATE,
 }
 
 MINIMUM_TABLE_HEIGHT = 600
@@ -37,7 +38,6 @@ class CashFlowPeriodicReport(CustomWidget, Ui_CashFlowPeriodicReport):
     ) -> None:
         super().__init__(parent=parent)
         self.setupUi(self)
-
 
         self.setWindowFlag(Qt.WindowType.Window)
         self.setWindowTitle(title)
@@ -60,6 +60,7 @@ class CashFlowPeriodicReport(CustomWidget, Ui_CashFlowPeriodicReport):
         self.dataSelectorComboBox.addItem("Cash Flow")
         self.dataSelectorComboBox.addItem("Total Gain / Loss")
         self.dataSelectorComboBox.addItem("Net Growth")
+        self.dataSelectorComboBox.addItem("Savings Rate")
         self.dataSelectorComboBox.setCurrentText("All data")
         self.dataSelectorComboBox.currentTextChanged.connect(
             lambda: self._combobox_text_changed(show_busy_indicator=True)
