@@ -422,9 +422,9 @@ class TransactionTableModel(QAbstractTableModel):
                 return colors.get_blue_brush()
         if column == TransactionTableColumn.BALANCE:
             balance = self._get_account_balance(transaction)
-            if balance.is_negative():
+            if balance.value_rounded < 0:
                 return colors.get_red_brush()
-            if balance.is_positive():
+            if balance.value_rounded > 0:
                 return None
             return colors.get_gray_brush()
         return None

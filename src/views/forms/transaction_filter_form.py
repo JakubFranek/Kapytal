@@ -1,4 +1,4 @@
-from datetime import datetime, time
+from datetime import datetime, time, timedelta
 from decimal import Decimal
 from enum import Enum, auto
 
@@ -100,7 +100,7 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
 
         self._initialize_window()
         self._initialize_search_boxes()
-        self._initialize_tool_buttons()
+        self._initialize_buttons()
         self._initialize_signals()
         self._initialize_mode_comboboxes()
         self._initialize_account_filter_actions()
@@ -539,7 +539,12 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
             for mode in FilterMode:
                 combobox.addItem(mode.name)
 
-    def _initialize_tool_buttons(self) -> None:
+    def _initialize_buttons(self) -> None:
+        self.thisMonthPushButton.clicked.connect(self._set_this_month)
+        self.lastMonthPushButton.clicked.connect(self._set_last_month)
+        self.thisYearPushButton.clicked.connect(self._set_this_year)
+        self.lastYearPushButton.clicked.connect(self._set_last_year)
+
         self.actionExpandAllAccounts = QAction("Expand All", self)
         self.actionExpandAllIncomeCategories = QAction("Expand All", self)
         self.actionExpandAllExpenseCategories = QAction("Expand All", self)
@@ -623,6 +628,10 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
         mode = self.date_filter_mode
         self.dateFilterStartDateEdit.setEnabled(mode != FilterMode.OFF)
         self.dateFilterEndDateEdit.setEnabled(mode != FilterMode.OFF)
+        self.thisMonthPushButton.setEnabled(mode != FilterMode.OFF)
+        self.lastMonthPushButton.setEnabled(mode != FilterMode.OFF)
+        self.thisYearPushButton.setEnabled(mode != FilterMode.OFF)
+        self.lastYearPushButton.setEnabled(mode != FilterMode.OFF)
 
     def _description_filter_mode_changed(self) -> None:
         mode = self.description_filter_mode
@@ -712,3 +721,27 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
         )
         self.dateFilterStartDateEdit.setDisplayFormat(display_format)
         self.dateFilterEndDateEdit.setDisplayFormat(display_format)
+
+    def _set_this_month(self) -> None:
+        today = datetime.now(user_settings.settings.time_zone)
+        self.dateFilterStartDateEdit.setDate(today.replace(day=1))
+        self.dateFilterEndDateEdit.setDate(today)
+
+    def _set_last_month(self) -> None:
+        today = datetime.now(user_settings.settings.time_zone)
+        last_day_of_last_month = today.replace(day=1) - timedelta(days=1)
+        first_day_of_last_month = last_day_of_last_month.replace(day=1)
+        self.dateFilterStartDateEdit.setDate(first_day_of_last_month)
+        self.dateFilterEndDateEdit.setDate(last_day_of_last_month)
+
+    def _set_this_year(self) -> None:
+        today = datetime.now(user_settings.settings.time_zone)
+        self.dateFilterStartDateEdit.setDate(today.replace(month=1, day=1))
+        self.dateFilterEndDateEdit.setDate(today)
+
+    def _set_last_year(self) -> None:
+        today = datetime.now(user_settings.settings.time_zone)
+        last_day_of_last_year = today.replace(day=1, month=1) - timedelta(days=1)
+        first_day_of_last_year = last_day_of_last_year.replace(day=1, month=1)
+        self.dateFilterStartDateEdit.setDate(first_day_of_last_year)
+        self.dateFilterEndDateEdit.setDate(last_day_of_last_year)
