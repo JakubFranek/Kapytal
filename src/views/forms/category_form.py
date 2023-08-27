@@ -197,8 +197,7 @@ class CategoryForm(CustomWidget, Ui_CategoryForm):
         else:
             self.incomeAndExpenseTreeView.collapseAll()
 
-    def _create_context_menu(self, event: QContextMenuEvent) -> None:
-        del event
+    def _create_context_menu(self, event: QContextMenuEvent) -> None:  # noqa: ARG002
         self.menu = QMenu(self)
         self.menu.addAction(self.actionAdd)
         self.menu.addAction(self.actionEdit)

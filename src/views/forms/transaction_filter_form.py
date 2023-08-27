@@ -673,8 +673,9 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
             self.signal_accounts_expand_all_below.emit
         )
 
-    def _create_account_filter_context_menu(self, event: QContextMenuEvent) -> None:
-        del event
+    def _create_account_filter_context_menu(
+        self, event: QContextMenuEvent  # noqa: ARG002
+    ) -> None:
         self.menu = QMenu(self)
         self.menu.addAction(self.actionSelectAllCashAccountsBelow)
         self.menu.addAction(self.actionSelectAllSecurityAccountsBelow)

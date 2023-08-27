@@ -1,6 +1,6 @@
 import itertools
 from collections.abc import Collection, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from src.models.model_objects.attributes import Category, CategoryType
 from src.models.model_objects.cash_objects import (
@@ -16,6 +16,7 @@ class CategoryStats:
     transactions_self: int | float
     transactions_total: int | float
     balance: CashAmount
+    transactions: set[CashTransaction | RefundTransaction] = field(default_factory=set)
 
 
 def calculate_periodic_totals_and_averages(
@@ -123,12 +124,14 @@ def calculate_average_per_period_category_stats(
 
     average_stats: dict[Category, CategoryStats] = {}
     for stats in all_stats:
+        _average_stats = average_stats[stats.category]
         if stats.category in average_stats:
-            average_stats[stats.category].balance += stats.balance
-            average_stats[stats.category].transactions_self += stats.transactions_self
-            average_stats[stats.category].transactions_total += stats.transactions_total
+            _average_stats.balance += stats.balance
+            _average_stats.transactions_self += stats.transactions_self
+            _average_stats.transactions_total += stats.transactions_total
+            _average_stats.transactions.add(*stats.transactions)
         else:
-            average_stats[stats.category] = CategoryStats(
+            _average_stats = CategoryStats(
                 stats.category, 0, 0, base_currency.zero_amount
             )
 
@@ -155,6 +158,7 @@ def calculate_category_stats(
         date_ = transaction.datetime_.date()
         for category in transaction.categories:
             stats = stats_dict[category]
+            stats.transactions.add(transaction)
 
             stats.balance += transaction.get_amount_for_category(
                 category, total=False
@@ -165,6 +169,7 @@ def calculate_category_stats(
             ancestors = category.ancestors
             for ancestor in ancestors:
                 ancestor_stats = stats_dict[ancestor]
+                ancestor_stats.transactions.add(transaction)
                 if (
                     ancestor not in transaction.categories
                     and ancestor not in already_counted_ancestors
