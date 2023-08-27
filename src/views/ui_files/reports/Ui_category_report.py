@@ -64,6 +64,8 @@ class Ui_CategoryReport(object):
         self.actionCollapse_All.setObjectName("actionCollapse_All")
         self.actionShow_Hide_Period_Columns = QtGui.QAction(CategoryReport)
         self.actionShow_Hide_Period_Columns.setObjectName("actionShow_Hide_Period_Columns")
+        self.actionShow_Transactions = QtGui.QAction(CategoryReport)
+        self.actionShow_Transactions.setObjectName("actionShow_Transactions")
 
         self.retranslateUi(CategoryReport)
         QtCore.QMetaObject.connectSlotsByName(CategoryReport)
@@ -79,3 +81,4 @@ class Ui_CategoryReport(object):
         self.actionCollapse_All.setText(_translate("CategoryReport", "Collapse All"))
         self.actionShow_Hide_Period_Columns.setText(_translate("CategoryReport", "Show/Hide Period Columns"))
         self.actionShow_Hide_Period_Columns.setToolTip(_translate("CategoryReport", "Show/Hide Period Columns"))
+        self.actionShow_Transactions.setText(_translate("CategoryReport", "Show Transactions"))

@@ -1,7 +1,15 @@
 from collections.abc import Collection
 
-from PyQt6.QtCore import QSignalBlocker, Qt
-from PyQt6.QtWidgets import QApplication, QComboBox, QHBoxLayout, QHeaderView, QWidget
+from PyQt6.QtCore import QSignalBlocker, Qt, pyqtSignal
+from PyQt6.QtGui import QContextMenuEvent, QCursor
+from PyQt6.QtWidgets import (
+    QApplication,
+    QComboBox,
+    QHBoxLayout,
+    QHeaderView,
+    QMenu,
+    QWidget,
+)
 from src.models.statistics.category_stats import CategoryStats
 from src.views import icons
 from src.views.base_classes.custom_widget import CustomWidget
@@ -14,6 +22,8 @@ from src.views.widgets.charts.sunburst_chart_widget import (
 
 
 class CategoryReport(CustomWidget, Ui_CategoryReport):
+    signal_show_transactions = pyqtSignal()
+
     def __init__(
         self,
         title: str,
@@ -34,10 +44,14 @@ class CategoryReport(CustomWidget, Ui_CategoryReport):
         self.actionExpand_All.setIcon(icons.expand)
         self.actionCollapse_All.setIcon(icons.collapse)
         self.actionShow_Hide_Period_Columns.setIcon(icons.calendar)
+        self.actionShow_Transactions.setIcon(icons.table)
 
         self.actionExpand_All.triggered.connect(self.treeView.expandAll)
         self.actionCollapse_All.triggered.connect(self.treeView.collapseAll)
         self.actionShow_Hide_Period_Columns.triggered.connect(self._show_hide_periods)
+        self.actionShow_Transactions.triggered.connect(
+            self.signal_show_transactions.emit
+        )
 
         self.actionShow_Hide_Period_Columns.setCheckable(True)
         self.actionShow_Hide_Period_Columns.setChecked(True)
@@ -59,6 +73,7 @@ class CategoryReport(CustomWidget, Ui_CategoryReport):
         self.combo_box_horizontal_layout.addWidget(self.typeComboBox)
         self.combo_box_horizontal_layout.addWidget(self.periodComboBox)
         self.chart_widget.horizontal_layout.addLayout(self.combo_box_horizontal_layout)
+        self.treeView.contextMenuEvent = self._create_context_menu
 
     def finalize_setup(self) -> None:
         for column in range(self.treeView.model().columnCount()):
@@ -118,6 +133,11 @@ class CategoryReport(CustomWidget, Ui_CategoryReport):
             raise
         finally:
             self._busy_dialog.close()
+
+    def _create_context_menu(self, event: QContextMenuEvent) -> None:  # noqa: ARG002
+        self.menu = QMenu(self)
+        self.menu.addAction(self.actionShow_Transactions)
+        self.menu.popup(QCursor.pos())
 
 
 def _convert_category_stats_to_sunburst_data(

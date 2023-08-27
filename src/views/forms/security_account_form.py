@@ -1,13 +1,12 @@
-
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QHeaderView, QTableView, QWidget
 from src.views import icons
 from src.views.base_classes.custom_widget import CustomWidget
 from src.views.constants import SecurityAccountTableColumn
-from src.views.ui_files.forms.Ui_security_account_form import Ui_SecurityAccountForm
+from src.views.ui_files.forms.Ui_table_view_form import Ui_TableViewForm
 
 
-class SecurityAccountForm(CustomWidget, Ui_SecurityAccountForm):
+class SecurityAccountForm(CustomWidget, Ui_TableViewForm):
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent=parent)
         self.setupUi(self)
@@ -19,7 +18,7 @@ class SecurityAccountForm(CustomWidget, Ui_SecurityAccountForm):
         return self.tableView
 
     def set_account_path(self, account_path: str) -> None:
-        self.setWindowTitle(f"{account_path}")
+        self.setWindowTitle(account_path)
 
     def finalize_setup(self) -> None:
         self.tableView.horizontalHeader().setStretchLastSection(False)

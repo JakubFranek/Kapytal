@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'd:\Coding\Kapytal\src\views\ui_files\forms\security_account_form.ui'
+# Form implementation generated from reading ui file 'd:\Coding\Kapytal\src\views\ui_files\forms\table_view_form.ui'
 #
 # Created by: PyQt6 UI code generator 6.4.0
 #
@@ -9,16 +9,16 @@
 from PyQt6 import QtCore, QtGui, QtWidgets
 
 
-class Ui_SecurityAccountForm(object):
-    def setupUi(self, SecurityAccountForm):
-        SecurityAccountForm.setObjectName("SecurityAccountForm")
-        SecurityAccountForm.setWindowModality(QtCore.Qt.WindowModality.WindowModal)
-        SecurityAccountForm.resize(700, 200)
-        SecurityAccountForm.setWindowTitle("")
-        SecurityAccountForm.setLocale(QtCore.QLocale(QtCore.QLocale.Language.English, QtCore.QLocale.Country.UnitedKingdom))
-        self.verticalLayout = QtWidgets.QVBoxLayout(SecurityAccountForm)
+class Ui_TableViewForm(object):
+    def setupUi(self, TableViewForm):
+        TableViewForm.setObjectName("TableViewForm")
+        TableViewForm.setWindowModality(QtCore.Qt.WindowModality.WindowModal)
+        TableViewForm.resize(700, 200)
+        TableViewForm.setWindowTitle("")
+        TableViewForm.setLocale(QtCore.QLocale(QtCore.QLocale.Language.English, QtCore.QLocale.Country.UnitedKingdom))
+        self.verticalLayout = QtWidgets.QVBoxLayout(TableViewForm)
         self.verticalLayout.setObjectName("verticalLayout")
-        self.tableView = QtWidgets.QTableView(SecurityAccountForm)
+        self.tableView = QtWidgets.QTableView(TableViewForm)
         self.tableView.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.SizeAdjustPolicy.AdjustIgnored)
         self.tableView.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.NoSelection)
         self.tableView.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)
@@ -29,8 +29,8 @@ class Ui_SecurityAccountForm(object):
         self.tableView.verticalHeader().setVisible(False)
         self.verticalLayout.addWidget(self.tableView)
 
-        self.retranslateUi(SecurityAccountForm)
-        QtCore.QMetaObject.connectSlotsByName(SecurityAccountForm)
+        self.retranslateUi(TableViewForm)
+        QtCore.QMetaObject.connectSlotsByName(TableViewForm)
 
-    def retranslateUi(self, SecurityAccountForm):
+    def retranslateUi(self, TableViewForm):
         pass
