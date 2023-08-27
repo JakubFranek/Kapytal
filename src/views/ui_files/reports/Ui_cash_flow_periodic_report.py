@@ -23,6 +23,9 @@ class Ui_CashFlowPeriodicReport(object):
         self.tableTab.setObjectName("tableTab")
         self.tableTabVerticalLayout = QtWidgets.QVBoxLayout(self.tableTab)
         self.tableTabVerticalLayout.setObjectName("tableTabVerticalLayout")
+        self.currencyNoteLabel = QtWidgets.QLabel(self.tableTab)
+        self.currencyNoteLabel.setObjectName("currencyNoteLabel")
+        self.tableTabVerticalLayout.addWidget(self.currencyNoteLabel)
         self.tableView = QtWidgets.QTableView(self.tableTab)
         self.tableView.setSortingEnabled(True)
         self.tableView.setObjectName("tableView")
@@ -45,5 +48,6 @@ class Ui_CashFlowPeriodicReport(object):
     def retranslateUi(self, CashFlowPeriodicReport):
         _translate = QtCore.QCoreApplication.translate
         CashFlowPeriodicReport.setWindowTitle(_translate("CashFlowPeriodicReport", "Cash Flow Report"))
+        self.currencyNoteLabel.setText(_translate("CashFlowPeriodicReport", "All values in XXX"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tableTab), _translate("CashFlowPeriodicReport", "Table"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.chartTab), _translate("CashFlowPeriodicReport", "Chart"))

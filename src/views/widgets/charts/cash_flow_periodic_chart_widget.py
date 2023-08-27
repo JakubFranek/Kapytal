@@ -166,7 +166,7 @@ class CashFlowPeriodicChartWidget(ChartWidget):
             axes.set_ylabel(currency.code)
             axes.yaxis.set_major_formatter(StrMethodFormatter("{x:,.0f}"))
         else:
-            axes.set_ylabel(currency.code)
+            axes.set_ylabel("Savings Rate")
             axes.yaxis.set_major_formatter(PercentFormatter(xmax=1))
         axes.grid(visible=True, axis="y")
 

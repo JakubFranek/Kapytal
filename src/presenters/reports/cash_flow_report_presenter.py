@@ -230,6 +230,6 @@ class CashFlowReportPresenter:
         cash_flow_stats = calculate_periodic_cash_flow(
             transactions, accounts, base_currency, period_type, start_date, end_date
         )
-        self.report = CashFlowPeriodicReport(title, self._main_view)
+        self.report = CashFlowPeriodicReport(title, base_currency.code, self._main_view)
         self.report.load_stats(cash_flow_stats)
         self.report.show_form()

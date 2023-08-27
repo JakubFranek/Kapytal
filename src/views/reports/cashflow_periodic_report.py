@@ -34,6 +34,7 @@ class CashFlowPeriodicReport(CustomWidget, Ui_CashFlowPeriodicReport):
     def __init__(
         self,
         title: str,
+        currency_code: str,
         parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent=parent)
@@ -42,6 +43,8 @@ class CashFlowPeriodicReport(CustomWidget, Ui_CashFlowPeriodicReport):
         self.setWindowFlag(Qt.WindowType.Window)
         self.setWindowTitle(title)
         self.setWindowIcon(icons.bar_chart)
+
+        self.currencyNoteLabel.setText(f"All values in {currency_code}")
 
         self.chart_widget = CashFlowPeriodicChartWidget(self)
         self.chartTabVerticalLayout.addWidget(self.chart_widget)
