@@ -11,6 +11,15 @@ from src.models.model_objects.currency_objects import CashAmount, Currency
 
 
 @dataclass
+class TransactionBalance:
+    """Dataclass of a CashAmount balance and a set of CashTransactions and
+    RefundTransactions related to that balance."""
+
+    balance: CashAmount
+    transactions: set[CashTransaction | RefundTransaction] = field(default_factory=set)
+
+
+@dataclass
 class CategoryStats:
     category: Category
     transactions_self: int | float
@@ -22,62 +31,69 @@ class CategoryStats:
 def calculate_periodic_totals_and_averages(
     periodic_stats: dict[str, Sequence[CategoryStats]], currency: Currency
 ) -> tuple[
-    dict[str, CashAmount],
-    dict[str, CashAmount],
-    dict[str, CashAmount],
-    dict[Category, CashAmount],
-    dict[Category, CashAmount],
+    dict[str, TransactionBalance],
+    dict[str, TransactionBalance],
+    dict[str, TransactionBalance],
+    dict[Category, TransactionBalance],
+    dict[Category, TransactionBalance],
 ]:
     """Returns a tuple of (period_totals, period_income_totals, period_expense_totals,
     category_averages, category_totals)"""
 
-    category_totals: dict[Category, CashAmount] = {}
-    period_totals: dict[str, CashAmount] = {}
-    period_income_totals: dict[str, CashAmount] = {}
-    period_expense_totals: dict[str, CashAmount] = {}
-    category_averages: dict[Category, CashAmount] = {}
+    period_totals: dict[str, TransactionBalance] = {}
+    period_income_totals: dict[str, TransactionBalance] = {}
+    period_expense_totals: dict[str, TransactionBalance] = {}
+    category_averages: dict[Category, TransactionBalance] = {}
+    category_totals: dict[Category, TransactionBalance] = {}
 
     for period in periodic_stats:
-        period_income_totals[period] = sum(
-            (
-                stats.balance
-                for stats in periodic_stats[period]
-                if (
-                    stats.category.type_ == CategoryType.INCOME
-                    or (
-                        stats.category.type_ == CategoryType.INCOME_AND_EXPENSE
-                        and stats.balance.value_rounded > 0
-                    )
-                )
-                and stats.category.parent is None
-            ),
-            start=currency.zero_amount,
-        )
-        period_expense_totals[period] = sum(
-            (
-                stats.balance
-                for stats in periodic_stats[period]
-                if (
-                    stats.category.type_ == CategoryType.EXPENSE
-                    or (
-                        stats.category.type_ == CategoryType.INCOME_AND_EXPENSE
-                        and stats.balance.value_rounded < 0
-                    )
-                )
-                and stats.category.parent is None
-            ),
-            start=currency.zero_amount,
-        )
-        period_totals[period] = (
-            period_income_totals[period] + period_expense_totals[period]
-        )
+        income_balance = TransactionBalance(currency.zero_amount)
+        expense_balance = TransactionBalance(currency.zero_amount)
+        total_balance = TransactionBalance(currency.zero_amount)
+
         for stats in periodic_stats[period]:
-            category_totals[stats.category] = (
-                category_totals.get(stats.category, currency.zero_amount)
-                + stats.balance
+            total_balance.transactions = total_balance.transactions.union(
+                stats.transactions
             )
+
+            if stats.category.parent is None:
+                total_balance.balance += stats.balance
+                if stats.category.type_ == CategoryType.INCOME or (
+                    stats.category.type_ == CategoryType.INCOME_AND_EXPENSE
+                    and stats.balance.value_rounded > 0
+                ):
+                    income_balance.balance += stats.balance
+                    income_balance.transactions = income_balance.transactions.union(
+                        stats.transactions
+                    )
+                elif stats.category.type_ == CategoryType.EXPENSE or (
+                    stats.category.type_ == CategoryType.INCOME_AND_EXPENSE
+                    and stats.balance.value_rounded < 0
+                ):
+                    expense_balance.balance += stats.balance
+                    expense_balance.transactions = expense_balance.transactions.union(
+                        stats.transactions
+                    )
+
+            category_totals[stats.category] = TransactionBalance(
+                category_totals.get(
+                    stats.category, TransactionBalance(currency.zero_amount)
+                ).balance
+                + stats.balance,
+                category_totals.get(
+                    stats.category, TransactionBalance(currency.zero_amount)
+                ).transactions.union(stats.transactions),
+            )
+
+        period_income_totals[period] = income_balance
+        period_expense_totals[period] = expense_balance
+        period_totals[period] = total_balance
+
     category_averages = {
-        category: category_totals[category] / len(periodic_stats)
+        category: TransactionBalance(
+            category_totals[category].balance / len(periodic_stats),
+            category_totals[category].transactions,
+        )
         for category in category_totals
     }
     return (

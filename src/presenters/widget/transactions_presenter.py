@@ -43,6 +43,9 @@ from src.presenters.dialog.transaction_tags_dialog_presenter import (
 from src.presenters.form.transaction_filter.transaction_filter_form_presenter import (
     TransactionFilterFormPresenter,
 )
+from src.presenters.form.transaction_table_form_presenter import (
+    TransactionTableFormPresenter,
+)
 from src.presenters.utilities.event import Event
 from src.presenters.utilities.handle_exception import handle_exception
 from src.view_models.proxy_models.transaction_table_proxy_model import (
@@ -93,6 +96,10 @@ class TransactionsPresenter:
         return self._transaction_filter_form_presenter
 
     @property
+    def transaction_table_form_presenter(self) -> TransactionTableFormPresenter:
+        return self._transaction_table_form_presenter
+
+    @property
     def checked_accounts(self) -> frozenset[Account]:
         return self._transaction_filter_form_presenter.checked_accounts
 
@@ -124,6 +131,7 @@ class TransactionsPresenter:
         self._refund_transaction_dialog_presenter.load_record_keeper(record_keeper)
         self._transaction_tags_dialog_presenter.load_record_keeper(record_keeper)
         self._transaction_filter_form_presenter.load_record_keeper(record_keeper)
+        self._transaction_table_form_presenter.load_record_keeper(record_keeper)
         self._account_tree_shown_accounts = record_keeper.accounts
         self._reset_model()
         self._update_number_of_shown_transactions()
@@ -281,6 +289,9 @@ class TransactionsPresenter:
         self._transaction_filter_form_presenter = TransactionFilterFormPresenter(
             self._view, self._record_keeper, self._account_tree_shown_accounts
         )
+        self._transaction_table_form_presenter = TransactionTableFormPresenter(
+            self._record_keeper
+        )
 
     def _initialize_view(self) -> None:
         self._view.resize_table_to_contents()
@@ -381,6 +392,10 @@ class TransactionsPresenter:
 
         self._transaction_filter_form_presenter.event_filter_changed.append(
             self._filter_changed
+        )
+
+        self._transaction_table_form_presenter.event_data_changed.append(
+            self._data_changed
         )
 
     def _delete_transactions(self) -> None:

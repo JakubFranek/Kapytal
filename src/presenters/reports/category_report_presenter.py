@@ -120,10 +120,14 @@ class CategoryReportPresenter:
             category_totals,
         ) = calculate_periodic_totals_and_averages(periodic_stats, base_currency)
 
-        self.report = CategoryReport(title, base_currency.code, self._main_view)
+        self._report = CategoryReport(title, base_currency.code, self._main_view)
+        self._report.signal_show_transactions.connect(self._show_transactions)
+        self._report.signal_recalculate_report.connect(
+            lambda: self._recalculate_report(period_format, title)
+        )
 
-        self._proxy = QSortFilterProxyModel(self.report)
-        self._model = PeriodicCategoryStatsTreeModel(self.report.treeView, self._proxy)
+        self._proxy = QSortFilterProxyModel(self._report)
+        self._model = PeriodicCategoryStatsTreeModel(self._report.treeView, self._proxy)
         self._model.load_periodic_category_stats(
             periodic_stats,
             period_totals,
@@ -135,9 +139,9 @@ class CategoryReportPresenter:
         )
         self._proxy.setSourceModel(self._model)
         self._proxy.setSortRole(Qt.ItemDataRole.UserRole)
-        self.report.treeView.setModel(self._proxy)
-        self.report.treeView.header().setSortIndicatorClearable(True)  # noqa: FBT003
-        self.report.treeView.sortByColumn(-1, Qt.SortOrder.AscendingOrder)
+        self._report.treeView.setModel(self._proxy)
+        self._report.treeView.header().setSortIndicatorClearable(True)  # noqa: FBT003
+        self._report.treeView.sortByColumn(-1, Qt.SortOrder.AscendingOrder)
 
         income_periodic_stats: dict[str, list[CategoryStats]] = {}
         expense_periodic_stats: dict[str, list[CategoryStats]] = {}
@@ -153,21 +157,37 @@ class CategoryReportPresenter:
             expense_periodic_stats[period] = expense_stats
 
         income_average_stats = [
-            CategoryStats(category, 0, 0, balance)
-            for category, balance in category_averages.items()
-            if balance.value_rounded > 0
+            CategoryStats(category, 0, 0, transactions_balance.balance)
+            for category, transactions_balance in category_averages.items()
+            if transactions_balance.balance.value_rounded > 0
         ]
         expense_average_stats = [
-            CategoryStats(category, 0, 0, balance)
-            for category, balance in category_averages.items()
-            if balance.value_rounded < 0
+            CategoryStats(category, 0, 0, transactions_balance.balance)
+            for category, transactions_balance in category_averages.items()
+            if transactions_balance.balance.value_rounded < 0
         ]
         income_periodic_stats["Average / Total"] = income_average_stats
         expense_periodic_stats["Average / Total"] = expense_average_stats
 
-        self.report.load_stats(income_periodic_stats, expense_periodic_stats)
-        self.report.finalize_setup()
-        self.report.show_form()
+        self._report.load_stats(income_periodic_stats, expense_periodic_stats)
+        self._report.finalize_setup()
+        self._report.show_form()
+
+    def _show_transactions(self) -> None:
+        transactions, period, path = self._model.get_selected_transactions()
+        title = f"Category Report - {path}, {period}"
+        transaction_table_form_presenter = (
+            self._transactions_presenter.transaction_table_form_presenter
+        )
+        transaction_table_form_presenter.event_data_changed.append(
+            lambda: self._report.set_recalculate_report_action_state(enabled=True)
+        )
+        transaction_table_form_presenter.load_data(transactions, title)
+        transaction_table_form_presenter.show_form(self._report)
+
+    def _recalculate_report(self, period_format: str, title: str) -> None:
+        self._report.close()
+        self._create_periodic_report_with_busy_dialog(period_format, title)
 
 
 def _filter_transactions(

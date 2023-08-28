@@ -20,7 +20,7 @@ class Ui_TableViewForm(object):
         self.verticalLayout.setObjectName("verticalLayout")
         self.tableView = QtWidgets.QTableView(TableViewForm)
         self.tableView.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.SizeAdjustPolicy.AdjustIgnored)
-        self.tableView.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.NoSelection)
+        self.tableView.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.SingleSelection)
         self.tableView.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)
         self.tableView.setSortingEnabled(True)
         self.tableView.setObjectName("tableView")
