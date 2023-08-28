@@ -19,9 +19,6 @@ from src.views.utilities.handle_exception import display_error_message
 
 
 class SecurityTransferDialogPresenter:
-    event_update_model = Event()
-    event_data_changed = Event()
-
     def __init__(
         self,
         parent_view: QWidget,
@@ -31,6 +28,8 @@ class SecurityTransferDialogPresenter:
         self._parent_view = parent_view
         self._record_keeper = record_keeper
         self._model = model
+        self.event_update_model = Event()
+        self.event_data_changed = Event()
 
     def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
         self._record_keeper = record_keeper

@@ -13,8 +13,6 @@ from src.views.dialogs.transaction_tags_dialog import TransactionTagsDialog
 
 
 class TransactionTagsDialogPresenter:
-    event_data_changed = Event()
-
     def __init__(
         self,
         parent_view: QWidget,
@@ -22,6 +20,7 @@ class TransactionTagsDialogPresenter:
     ) -> None:
         self._parent_view = parent_view
         self._record_keeper = record_keeper
+        self.event_data_changed = Event()
 
     def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
         self._record_keeper = record_keeper
