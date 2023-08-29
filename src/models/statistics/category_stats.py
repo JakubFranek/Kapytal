@@ -8,15 +8,7 @@ from src.models.model_objects.cash_objects import (
     RefundTransaction,
 )
 from src.models.model_objects.currency_objects import CashAmount, Currency
-
-
-@dataclass
-class TransactionBalance:
-    """Dataclass of a CashAmount balance and a set of CashTransactions and
-    RefundTransactions related to that balance."""
-
-    balance: CashAmount
-    transactions: set[CashTransaction | RefundTransaction] = field(default_factory=set)
+from src.models.statistics.common_classes import TransactionBalance
 
 
 @dataclass
@@ -44,7 +36,11 @@ def calculate_periodic_totals_and_averages(
     period_income_totals: dict[str, TransactionBalance] = {}
     period_expense_totals: dict[str, TransactionBalance] = {}
     category_averages: dict[Category, TransactionBalance] = {}
-    category_totals: dict[Category, TransactionBalance] = {}
+    category_totals: dict[Category, TransactionBalance] = {
+        stat.category: TransactionBalance(currency.zero_amount)
+        for stats in periodic_stats.values()
+        for stat in stats
+    }
 
     for period in periodic_stats:
         income_balance = TransactionBalance(currency.zero_amount)
@@ -62,27 +58,19 @@ def calculate_periodic_totals_and_averages(
                     stats.category.type_ == CategoryType.INCOME_AND_EXPENSE
                     and stats.balance.value_rounded > 0
                 ):
-                    income_balance.balance += stats.balance
-                    income_balance.transactions = income_balance.transactions.union(
-                        stats.transactions
+                    income_balance.add_transaction_balance(
+                        stats.transactions, stats.balance
                     )
                 elif stats.category.type_ == CategoryType.EXPENSE or (
                     stats.category.type_ == CategoryType.INCOME_AND_EXPENSE
                     and stats.balance.value_rounded < 0
                 ):
-                    expense_balance.balance += stats.balance
-                    expense_balance.transactions = expense_balance.transactions.union(
-                        stats.transactions
+                    expense_balance.add_transaction_balance(
+                        stats.transactions, stats.balance
                     )
 
-            category_totals[stats.category] = TransactionBalance(
-                category_totals.get(
-                    stats.category, TransactionBalance(currency.zero_amount)
-                ).balance
-                + stats.balance,
-                category_totals.get(
-                    stats.category, TransactionBalance(currency.zero_amount)
-                ).transactions.union(stats.transactions),
+            category_totals[stats.category].add_transaction_balance(
+                stats.transactions, stats.balance
             )
 
         period_income_totals[period] = income_balance
@@ -140,14 +128,14 @@ def calculate_average_per_period_category_stats(
 
     average_stats: dict[Category, CategoryStats] = {}
     for stats in all_stats:
-        _average_stats = average_stats[stats.category]
         if stats.category in average_stats:
+            _average_stats = average_stats[stats.category]
             _average_stats.balance += stats.balance
             _average_stats.transactions_self += stats.transactions_self
             _average_stats.transactions_total += stats.transactions_total
             _average_stats.transactions.add(*stats.transactions)
         else:
-            _average_stats = CategoryStats(
+            average_stats[stats.category] = CategoryStats(
                 stats.category, 0, 0, base_currency.zero_amount
             )
 

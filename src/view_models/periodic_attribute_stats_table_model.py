@@ -1,12 +1,15 @@
 from collections.abc import Collection
+from dataclasses import dataclass, field
 from decimal import Decimal
+from typing import Self
 
 from PyQt6.QtCore import QAbstractTableModel, QModelIndex, QSortFilterProxyModel, Qt
 from PyQt6.QtGui import QBrush, QFont
 from PyQt6.QtWidgets import QTableView
 from src.models.model_objects.attributes import Attribute
-from src.models.model_objects.currency_objects import CashAmount, Currency
+from src.models.model_objects.cash_objects import CashTransaction, RefundTransaction
 from src.models.statistics.attribute_stats import AttributeStats
+from src.models.statistics.common_classes import TransactionBalance
 from src.views import colors
 
 overline_font = QFont()
@@ -18,6 +21,20 @@ overline_bold_font.setOverline(True)  # noqa: FBT003
 overline_bold_font.setBold(True)  # noqa: FBT003
 
 ALIGNMENT_RIGHT = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+
+
+@dataclass
+class Cell:
+    value: Decimal
+    transactions: set[CashTransaction | RefundTransaction] = field(default_factory=set)
+
+    def __add__(self, other: Self) -> Self:
+        if other == 0:
+            return self
+        return Cell(
+            self.value + other.value,
+            self.transactions.union(other.transactions),
+        )
 
 
 class PeriodicAttributeStatsTableModel(QAbstractTableModel):
@@ -33,12 +50,11 @@ class PeriodicAttributeStatsTableModel(QAbstractTableModel):
     def load_periodic_attribute_stats(
         self,
         periodic_stats: dict[str, tuple[AttributeStats]],
-        periodic_totals: dict[str, CashAmount],
-        attribute_averages: dict[Attribute, CashAmount],
-        attribute_totals: dict[Attribute, CashAmount],
-        base_currency: Currency,
+        periodic_totals: dict[str, TransactionBalance],
+        attribute_averages: dict[Attribute, TransactionBalance],
+        attribute_totals: dict[Attribute, TransactionBalance],
     ) -> None:
-        self._rows: list[list[Decimal]] = []
+        self._rows: list[list[Cell]] = []
         periods = list(periodic_stats.keys())
         self._column_headers = (*periods, "Average", "Σ Total")
 
@@ -50,22 +66,36 @@ class PeriodicAttributeStatsTableModel(QAbstractTableModel):
             [attribute.name for attribute in attributes] + ["Σ Total"]
         )
         for attribute in attributes:
-            row: list[Decimal] = []
+            row: list[Cell] = []
             for period in periodic_stats:
                 stats = _get_attribute_stats(periodic_stats[period], attribute.name)
                 if stats is not None:
-                    row.append(stats.balance.value_rounded)
+                    row.append(Cell(stats.balance.value_rounded, stats.transactions))
                 else:
-                    row.append(base_currency.zero_amount.value_rounded)
-            row.append(attribute_averages[attribute].value_rounded)
-            row.append(attribute_totals[attribute].value_rounded)
+                    row.append(Cell(Decimal(0)))
+            row.append(
+                Cell(
+                    attribute_averages[attribute].balance.value_rounded,
+                    attribute_averages[attribute].transactions,
+                )
+            )
+            row.append(
+                Cell(
+                    attribute_totals[attribute].balance.value_rounded,
+                    attribute_totals[attribute].transactions,
+                )
+            )
             self._rows.append(row)
 
         periodic_totals_row = [
-            periodic_totals[period].value_rounded for period in periodic_totals
+            Cell(
+                periodic_totals[period].balance.value_rounded,
+                periodic_totals[period].transactions,
+            )
+            for period in periodic_totals
         ]
-        average_sum = sum(row[-2] for row in self._rows)
-        total_sum = sum(row[-1] for row in self._rows)
+        average_sum = sum((row[-2] for row in self._rows), Cell(Decimal(0)))
+        total_sum = sum((row[-1] for row in self._rows), Cell(Decimal(0)))
         periodic_totals_row.append(average_sum)
         periodic_totals_row.append(total_sum)
         self._rows.append(periodic_totals_row)
@@ -115,11 +145,11 @@ class PeriodicAttributeStatsTableModel(QAbstractTableModel):
         if role == Qt.ItemDataRole.DisplayRole:
             return self._get_display_role_data(row, column)
         if role == Qt.ItemDataRole.UserRole:
-            return float(self._rows[row][column])
+            return float(self._rows[row][column].value)
         if role == Qt.ItemDataRole.TextAlignmentRole:
             return ALIGNMENT_RIGHT
         if role == Qt.ItemDataRole.ForegroundRole:
-            return self._get_foreground_role_data(self._rows[row][column])
+            return self._get_foreground_role_data(self._rows[row][column].value)
         if role == Qt.ItemDataRole.FontRole:
             return self._get_font_role_data(row, column)
         return None
@@ -129,7 +159,7 @@ class PeriodicAttributeStatsTableModel(QAbstractTableModel):
             prefix = "Σ "
         else:
             prefix = ""
-        return prefix + f"{self._rows[row][column]:,}"
+        return prefix + f"{self._rows[row][column].value:,}"
 
     def _get_foreground_role_data(self, amount: Decimal) -> QBrush | None:
         if amount > 0:
@@ -156,6 +186,24 @@ class PeriodicAttributeStatsTableModel(QAbstractTableModel):
     def post_reset_model(self) -> None:
         self.endResetModel()
         self._view.setSortingEnabled(True)  # noqa: FBT003
+
+    def get_selected_transactions(
+        self,
+    ) -> tuple[tuple[CashTransaction | RefundTransaction, ...], str, str]:
+        """Returns a tuple of selected Transactions, period and name."""
+        indexes = self._view.selectedIndexes()
+        if len(indexes) != 1:
+            return None
+        index = indexes[0]
+        if self._proxy:
+            index = self._proxy.mapToSource(index)
+
+        cell: Cell = self._rows[index.row()][index.column()]
+        return (
+            tuple(cell.transactions),
+            self._column_headers[index.column()],
+            self._row_headers[index.row()],
+        )
 
 
 def _get_attribute_stats(

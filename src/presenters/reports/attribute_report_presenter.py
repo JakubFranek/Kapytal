@@ -144,27 +144,34 @@ class AttributeReportPresenter:
             period_totals,
             attribute_averages,
             attribute_totals,
-        ) = calculate_periodic_totals_and_averages(_periodic_stats)
-
-        self.report = AttributeReport(
-            title, base_currency.code, attribute_type, self._main_view
+        ) = calculate_periodic_totals_and_averages(
+            _periodic_stats, self._record_keeper.base_currency
         )
 
-        self._proxy = QSortFilterProxyModel(self.report)
+        self._report = AttributeReport(
+            title, base_currency.code, attribute_type, self._main_view
+        )
+        self._report.signal_show_transactions.connect(
+            lambda: self._show_transactions(attribute_type)
+        )
+        self._report.signal_recalculate_report.connect(
+            lambda: self._recalculate_report(period_format, title, attribute_type)
+        )
+
+        self._proxy = QSortFilterProxyModel(self._report)
         self._model = PeriodicAttributeStatsTableModel(
-            self.report.tableView, self._proxy
+            self._report.tableView, self._proxy
         )
         self._model.load_periodic_attribute_stats(
             _periodic_stats,
             period_totals,
             attribute_averages,
             attribute_totals,
-            base_currency,
         )
         self._proxy.setSourceModel(self._model)
         self._proxy.setSortRole(Qt.ItemDataRole.UserRole)
-        self.report.tableView.setModel(self._proxy)
-        self.report.tableView.sortByColumn(
+        self._report.tableView.setModel(self._proxy)
+        self._report.tableView.sortByColumn(
             self._model.AVERAGE_COLUMN_INDEX, Qt.SortOrder.DescendingOrder
         )
 
@@ -180,21 +187,41 @@ class AttributeReportPresenter:
                     expense_periodic_stats[period].append(stats)
 
         income_average_stats = [
-            AttributeStats(attribute, 0, balance)
-            for attribute, balance in attribute_averages.items()
-            if balance.value_rounded > 0
+            AttributeStats(attribute, 0, transaction_balance.balance)
+            for attribute, transaction_balance in attribute_averages.items()
+            if transaction_balance.balance.value_rounded > 0
         ]
         expense_average_stats = [
-            AttributeStats(attribute, 0, balance)
-            for attribute, balance in attribute_averages.items()
-            if balance.value_rounded < 0
+            AttributeStats(attribute, 0, transaction_balance.balance)
+            for attribute, transaction_balance in attribute_averages.items()
+            if transaction_balance.balance.value_rounded < 0
         ]
         income_periodic_stats["Average / Total"] = income_average_stats
         expense_periodic_stats["Average / Total"] = expense_average_stats
 
-        self.report.load_stats(income_periodic_stats, expense_periodic_stats)
-        self.report.finalize_setup()
-        self.report.show_form()
+        self._report.load_stats(income_periodic_stats, expense_periodic_stats)
+        self._report.finalize_setup()
+        self._report.show_form()
+
+    def _show_transactions(self, attribute_type: AttributeType) -> None:
+        transactions, period, path = self._model.get_selected_transactions()
+        title = f"{attribute_type.name.title()} Report - {path}, {period}"
+        transaction_table_form_presenter = (
+            self._transactions_presenter.transaction_table_form_presenter
+        )
+        transaction_table_form_presenter.event_data_changed.append(
+            lambda: self._report.set_recalculate_report_action_state(enabled=True)
+        )
+        transaction_table_form_presenter.load_data(transactions, title)
+        transaction_table_form_presenter.show_form(self._report)
+
+    def _recalculate_report(
+        self, period_format: str, title: str, attribute_type: AttributeType
+    ) -> None:
+        self._report.close()
+        self._create_periodic_report_with_busy_dialog(
+            period_format, title, attribute_type
+        )
 
 
 def _filter_transactions(

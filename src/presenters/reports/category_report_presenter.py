@@ -135,7 +135,6 @@ class CategoryReportPresenter:
             period_expense_totals,
             category_averages,
             category_totals,
-            base_currency,
         )
         self._proxy.setSourceModel(self._model)
         self._proxy.setSortRole(Qt.ItemDataRole.UserRole)
