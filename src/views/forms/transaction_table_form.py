@@ -8,6 +8,8 @@ from src.views.ui_files.forms.Ui_table_view_form import Ui_TableViewForm
 
 class TransactionTableForm(CustomWidget, Ui_TableViewForm):
     signal_edit = pyqtSignal()
+    signal_add_tags = pyqtSignal()
+    signal_remove_tags = pyqtSignal()
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent=parent)
@@ -19,6 +21,14 @@ class TransactionTableForm(CustomWidget, Ui_TableViewForm):
         self.actionEdit = QAction("Edit", self)
         self.actionEdit.setIcon(icons.edit)
         self.actionEdit.triggered.connect(self.signal_edit.emit)
+
+        self.actionAddTags = QAction("Add Tags", self)
+        self.actionAddTags.setIcon(icons.add_tag)
+        self.actionAddTags.triggered.connect(self.signal_add_tags.emit)
+
+        self.actionRemoveTags = QAction("Remove Tags", self)
+        self.actionRemoveTags.setIcon(icons.remove_tag)
+        self.actionRemoveTags.triggered.connect(self.signal_remove_tags.emit)
 
         self.tableView.doubleClicked.connect(self.signal_edit.emit)
 
@@ -32,4 +42,6 @@ class TransactionTableForm(CustomWidget, Ui_TableViewForm):
     def _create_context_menu(self, event: QContextMenuEvent) -> None:  # noqa: ARG002
         self.menu = QMenu(self)
         self.menu.addAction(self.actionEdit)
+        self.menu.addAction(self.actionAddTags)
+        self.menu.addAction(self.actionRemoveTags)
         self.menu.popup(QCursor.pos())

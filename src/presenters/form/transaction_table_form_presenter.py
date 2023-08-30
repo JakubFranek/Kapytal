@@ -75,6 +75,8 @@ class TransactionTableFormPresenter:
         self._proxy.setSourceModel(self._model)
         self._form.table_view.setModel(self._proxy)
         self._form.signal_edit.connect(self._edit_transactions)
+        self._form.signal_add_tags.connect(self._add_tags)
+        self._form.signal_remove_tags.connect(self._remove_tags)
 
         self._initialize_presenters()
         self._connect_events()
@@ -166,6 +168,7 @@ class TransactionTableFormPresenter:
         self._refund_transaction_dialog_presenter = RefundTransactionDialogPresenter(
             self._form, self._record_keeper
         )
+
         self._transaction_tags_dialog_presenter = TransactionTagsDialogPresenter(
             self._form, self._record_keeper
         )
@@ -221,6 +224,32 @@ class TransactionTableFormPresenter:
         display_error_message(
             "All edited Transactions must be of the same type.", title="Warning"
         )
+
+    def _add_tags(self) -> None:
+        transactions = self._model.get_selected_items()
+        if len(transactions) == 0:
+            raise InvalidOperationError("Cannot add Tags to zero Transactions.")
+
+        if any(
+            isinstance(transaction, RefundTransaction) for transaction in transactions
+        ):
+            display_error_message("Cannot add Tags to a Refund.", title="Warning")
+            return
+
+        self._transaction_tags_dialog_presenter.run_add_dialog(transactions)
+
+    def _remove_tags(self) -> None:
+        transactions = self._model.get_selected_items()
+        if len(transactions) == 0:
+            raise InvalidOperationError("Cannot remove Tags from zero Transactions.")
+
+        if any(
+            isinstance(transaction, RefundTransaction) for transaction in transactions
+        ):
+            display_error_message("Cannot remove Tags from a Refund.", title="Warning")
+            return
+
+        self._transaction_tags_dialog_presenter.run_remove_dialog(transactions)
 
     def _data_changed(self, uuids: Collection[UUID] | None = None) -> None:
         if uuids is not None:
