@@ -140,6 +140,8 @@ class Ui_CategoryForm(object):
         self.actionCollapse_All.setObjectName("actionCollapse_All")
         self.actionExpand_All_Below = QtGui.QAction(CategoryForm)
         self.actionExpand_All_Below.setObjectName("actionExpand_All_Below")
+        self.actionShow_Transactions = QtGui.QAction(CategoryForm)
+        self.actionShow_Transactions.setObjectName("actionShow_Transactions")
 
         self.retranslateUi(CategoryForm)
         self.tabWidget.setCurrentIndex(0)
@@ -180,3 +182,4 @@ class Ui_CategoryForm(object):
         self.actionCollapse_All.setText(_translate("CategoryForm", "Collapse All"))
         self.actionCollapse_All.setToolTip(_translate("CategoryForm", "Collapse All"))
         self.actionExpand_All_Below.setText(_translate("CategoryForm", "Expand All Below"))
+        self.actionShow_Transactions.setText(_translate("CategoryForm", "Show Transactions"))

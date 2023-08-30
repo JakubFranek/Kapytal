@@ -15,6 +15,7 @@ class CategoryForm(CustomWidget, Ui_CategoryForm):
 
     signal_tree_selection_changed = pyqtSignal()
     signal_expand_all_below = pyqtSignal()
+    signal_show_transactions = pyqtSignal()
 
     signal_income_search_text_changed = pyqtSignal(str)
     signal_expense_search_text_changed = pyqtSignal(str)
@@ -150,6 +151,7 @@ class CategoryForm(CustomWidget, Ui_CategoryForm):
         self.actionAdd.setIcon(icons.add)
         self.actionEdit.setIcon(icons.edit)
         self.actionRemove.setIcon(icons.remove)
+        self.actionShow_Transactions.setIcon(icons.table)
 
         self.actionExpand_All.triggered.connect(self._expand_all)
         self.actionCollapse_All.triggered.connect(self._collapse_all)
@@ -158,6 +160,9 @@ class CategoryForm(CustomWidget, Ui_CategoryForm):
         self.actionAdd.triggered.connect(self.signal_add.emit)
         self.actionEdit.triggered.connect(self.signal_edit.emit)
         self.actionRemove.triggered.connect(self.signal_delete.emit)
+        self.actionShow_Transactions.triggered.connect(
+            self.signal_show_transactions.emit
+        )
 
         self.incomeExpandAllToolButton.setDefaultAction(self.actionExpand_All)
         self.incomeCollapseAllToolButton.setDefaultAction(self.actionCollapse_All)
@@ -204,4 +209,6 @@ class CategoryForm(CustomWidget, Ui_CategoryForm):
         self.menu.addAction(self.actionRemove)
         self.menu.addSeparator()
         self.menu.addAction(self.actionExpand_All_Below)
+        self.menu.addSeparator()
+        self.menu.addAction(self.actionShow_Transactions)
         self.menu.popup(QCursor.pos())

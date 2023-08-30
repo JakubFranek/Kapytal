@@ -66,6 +66,7 @@ class TransactionTableFormPresenter:
         self._record_keeper = record_keeper
 
         self.event_data_changed = Event()
+        self.event_form_closed = Event()
 
         self._form = TransactionTableForm(None)
         self._proxy = QSortFilterProxyModel(self._form)
@@ -77,6 +78,7 @@ class TransactionTableFormPresenter:
         self._form.signal_edit.connect(self._edit_transactions)
         self._form.signal_add_tags.connect(self._add_tags)
         self._form.signal_remove_tags.connect(self._remove_tags)
+        self._form.signal_widget_closed.connect(self.event_form_closed)
 
         self._initialize_presenters()
         self._connect_events()

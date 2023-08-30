@@ -283,6 +283,11 @@
     <string>Expand All Below</string>
    </property>
   </action>
+  <action name="actionShow_Transactions">
+   <property name="text">
+    <string>Show Transactions</string>
+   </property>
+  </action>
  </widget>
  <resources/>
  <connections/>
