@@ -75,6 +75,7 @@ class AttributeReport(CustomWidget, Ui_AttributeReport):
         )
 
         self.actionRecalculate_Report.setIcon(icons.refresh)
+        self.actionRecalculate_Report.setEnabled(False)
         self.actionRecalculate_Report.triggered.connect(self.signal_recalculate_report)
 
         self.recalculateReportToolButton.setDefaultAction(self.actionRecalculate_Report)

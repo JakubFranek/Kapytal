@@ -2,21 +2,20 @@ import logging
 from collections.abc import Sequence
 from datetime import datetime
 
-from PyQt6.QtWidgets import QWidget
 from src.models.model_objects.cash_objects import CashAccount
 from src.models.model_objects.security_objects import (
     SecurityTransaction,
     SecurityTransactionType,
 )
-from src.models.record_keeper import RecordKeeper
 from src.models.user_settings import user_settings
+from src.presenters.dialog.transaction_dialog_presenter import (
+    TransactionDialogPresenter,
+)
 from src.presenters.utilities.check_for_nonexistent_attributes import (
     check_for_nonexistent_attributes,
 )
-from src.presenters.utilities.event import Event
 from src.presenters.utilities.handle_exception import handle_exception
 from src.presenters.utilities.validate_inputs import validate_datetime
-from src.view_models.transaction_table_model import TransactionTableModel
 from src.views.dialogs.security_transaction_dialog import (
     EditMode,
     SecurityTransactionDialog,
@@ -24,22 +23,7 @@ from src.views.dialogs.security_transaction_dialog import (
 from src.views.utilities.handle_exception import display_error_message
 
 
-class SecurityTransactionDialogPresenter:
-    def __init__(
-        self,
-        parent_view: QWidget,
-        record_keeper: RecordKeeper,
-        model: TransactionTableModel,
-    ) -> None:
-        self._parent_view = parent_view
-        self._record_keeper = record_keeper
-        self._model = model
-        self.event_update_model = Event()
-        self.event_data_changed = Event()
-
-    def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
-        self._record_keeper = record_keeper
-
+class SecurityTransactionDialogPresenter(TransactionDialogPresenter):
     def run_add_dialog(self, type_: SecurityTransactionType) -> None:
         logging.debug("Running SecurityTransactionDialog (edit_mode=ADD)")
         if (
@@ -167,7 +151,9 @@ class SecurityTransactionDialogPresenter:
             sorted(tag_names_frozensets.pop()) if len(tag_names_frozensets) == 1 else ()
         )
 
-        self._dialog.signal_do_and_close.connect(self._edit_security_transactions)
+        self._dialog.signal_do_and_close.connect(
+            lambda: self._edit_security_transactions(transactions)
+        )
         self._dialog.exec()
 
     def _add_security_transaction(self, *, close: bool) -> None:
@@ -219,15 +205,16 @@ class SecurityTransactionDialogPresenter:
             handle_exception(exception)
             return
 
-        self._model.pre_add()
+        self.event_pre_add()
         self.event_update_model()
-        self._model.post_add()
+        self.event_post_add()
         if close:
             self._dialog.close()
         self.event_data_changed()
 
-    def _edit_security_transactions(self) -> None:
-        transactions: list[SecurityTransaction] = self._model.get_selected_items()
+    def _edit_security_transactions(
+        self, transactions: Sequence[SecurityTransaction]
+    ) -> None:
         uuids = [transaction.uuid for transaction in transactions]
 
         datetime_ = self._dialog.datetime_
@@ -293,8 +280,7 @@ class SecurityTransactionDialogPresenter:
 
         self._dialog.close()
         self.event_update_model()
-        self._model.emit_data_changed_for_uuids(uuids)
-        self.event_data_changed()
+        self.event_data_changed(uuids)
 
     def _prepare_dialog(self, edit_mode: EditMode) -> bool:
         securities = self._record_keeper.securities

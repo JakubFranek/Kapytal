@@ -1,4 +1,6 @@
 from collections.abc import Collection
+from typing import TYPE_CHECKING
+from uuid import UUID
 
 from PyQt6.QtCore import QSortFilterProxyModel, Qt
 from PyQt6.QtWidgets import QWidget
@@ -37,6 +39,11 @@ from src.view_models.transaction_table_model import TransactionTableModel
 from src.views.constants import TransactionTableColumn
 from src.views.forms.transaction_table_form import TransactionTableForm
 from src.views.utilities.handle_exception import display_error_message
+
+if TYPE_CHECKING:
+    from presenters.dialog.transaction_dialog_presenter import (
+        TransactionDialogPresenter,
+    )
 
 COLUMNS_SECURITY_RELATED = {
     TransactionTableColumn.SECURITY,
@@ -145,24 +152,41 @@ class TransactionTableFormPresenter:
 
     def _initialize_presenters(self) -> None:
         self._cash_transaction_dialog_presenter = CashTransactionDialogPresenter(
-            self._form, self._record_keeper, self._model
+            self._form, self._record_keeper
         )
         self._cash_transfer_dialog_presenter = CashTransferDialogPresenter(
-            self._form, self._record_keeper, self._model
+            self._form, self._record_keeper
         )
         self._security_transaction_dialog_presenter = (
-            SecurityTransactionDialogPresenter(
-                self._form, self._record_keeper, self._model
-            )
+            SecurityTransactionDialogPresenter(self._form, self._record_keeper)
         )
         self._security_transfer_dialog_presenter = SecurityTransferDialogPresenter(
-            self._form, self._record_keeper, self._model
+            self._form, self._record_keeper
         )
         self._refund_transaction_dialog_presenter = RefundTransactionDialogPresenter(
-            self._form, self._record_keeper, self._model
+            self._form, self._record_keeper
         )
         self._transaction_tags_dialog_presenter = TransactionTagsDialogPresenter(
             self._form, self._record_keeper
+        )
+
+        self._transaction_dialog_presenters: tuple[TransactionDialogPresenter] = (
+            self._cash_transaction_dialog_presenter,
+            self._cash_transfer_dialog_presenter,
+            self._security_transaction_dialog_presenter,
+            self._security_transfer_dialog_presenter,
+            self._refund_transaction_dialog_presenter,
+        )
+
+    def _connect_events(self) -> None:
+        for presenter in self._transaction_dialog_presenters:
+            presenter.event_update_model.append(self._update_model_data)
+            presenter.event_data_changed.append(self._data_changed)
+            presenter.event_pre_add.append(self._model.pre_add)
+            presenter.event_post_add.append(self._model.post_add)
+
+        self._transaction_tags_dialog_presenter.event_data_changed.append(
+            self._data_changed
         )
 
     def _edit_transactions(self) -> None:
@@ -198,51 +222,13 @@ class TransactionTableFormPresenter:
             "All edited Transactions must be of the same type.", title="Warning"
         )
 
-    def _connect_events(self) -> None:
-        self._cash_transaction_dialog_presenter.event_update_model.append(
-            self._update_model_data
-        )
-        self._cash_transaction_dialog_presenter.event_data_changed.append(
-            self._data_changed
-        )
+    def _data_changed(self, uuids: Collection[UUID] | None = None) -> None:
+        if uuids is not None:
+            self._model.emit_data_changed_for_uuids(uuids)
 
-        self._cash_transfer_dialog_presenter.event_update_model.append(
-            self._update_model_data
-        )
-        self._cash_transfer_dialog_presenter.event_data_changed.append(
-            self._data_changed
-        )
-
-        self._security_transaction_dialog_presenter.event_update_model.append(
-            self._update_model_data
-        )
-        self._security_transaction_dialog_presenter.event_data_changed.append(
-            self._data_changed
-        )
-
-        self._security_transfer_dialog_presenter.event_update_model.append(
-            self._update_model_data
-        )
-        self._security_transfer_dialog_presenter.event_data_changed.append(
-            self._data_changed
-        )
-
-        self._transaction_tags_dialog_presenter.event_data_changed.append(
-            self._data_changed
-        )
-
-        self._refund_transaction_dialog_presenter.event_update_model.append(
-            self._update_model_data
-        )
-        self._refund_transaction_dialog_presenter.event_data_changed.append(
-            self._data_changed
-        )
-
-    def _data_changed(self) -> None:
         self._update_table_columns()
-        self.event_data_changed()
+        self.event_data_changed(uuids)
 
     def _update_model_data(self) -> None:
         self._update_table_columns()
         self._form.table_view.resizeColumnsToContents()
-        # TODO: double check this
