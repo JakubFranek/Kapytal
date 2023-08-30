@@ -63,7 +63,7 @@ class CategoryReport(CustomWidget, Ui_CategoryReport):
         self.expandAllToolButton.setDefaultAction(self.actionExpand_All)
         self.collapseAllToolButton.setDefaultAction(self.actionCollapse_All)
         self.hidePeriodsToolButton.setDefaultAction(self.actionShow_Hide_Period_Columns)
-        self.recalculateToolButton.setDefaultAction(self.actionRecalculate_Report)
+        self.recalculateReportToolButton.setDefaultAction(self.actionRecalculate_Report)
 
         self.typeComboBox = QComboBox(self)
         self.typeComboBox.addItem("Income")
@@ -106,7 +106,7 @@ class CategoryReport(CustomWidget, Ui_CategoryReport):
     def set_recalculate_report_action_state(self, *, enabled: bool) -> None:
         self.actionRecalculate_Report.setEnabled(enabled)
         if enabled:
-            self.recalculateToolButton.setToolButtonStyle(
+            self.recalculateReportToolButton.setToolButtonStyle(
                 Qt.ToolButtonStyle.ToolButtonTextBesideIcon
             )
         else:

@@ -42,7 +42,7 @@ class CashFlowPeriodicChartWidget(ChartWidget):
         axes = self.chart.axes
         axes.clear()
 
-        currency = stats_sequence[0].inflows.currency
+        currency = stats_sequence[0].inflows.balance.currency
 
         incomes = []
         inward_transfers = []
@@ -57,13 +57,13 @@ class CashFlowPeriodicChartWidget(ChartWidget):
         max_value = 0
         min_value = 0
         for stats in stats_sequence:
-            incomes.append(stats.incomes.value_rounded)
-            inward_transfers.append(stats.inward_transfers.value_rounded)
-            refunds.append(stats.refunds.value_rounded)
+            incomes.append(stats.incomes.balance.value_rounded)
+            inward_transfers.append(stats.inward_transfers.balance.value_rounded)
+            refunds.append(stats.refunds.balance.value_rounded)
             initial_balances.append(stats.initial_balances.value_rounded)
-            expenses.append(stats.expenses.value_rounded)
-            outward_transfers.append(stats.outward_transfers.value_rounded)
-            cash_flow.append(stats.delta_neutral.value_rounded)
+            expenses.append(stats.expenses.balance.value_rounded)
+            outward_transfers.append(stats.outward_transfers.balance.value_rounded)
+            cash_flow.append(stats.delta_neutral.balance.value_rounded)
             gain_loss.append(stats.delta_performance.value_rounded)
             net_growth.append(stats.delta_total.value_rounded)
             if stats.savings_rate.is_nan():
@@ -73,17 +73,17 @@ class CashFlowPeriodicChartWidget(ChartWidget):
 
             if chart_data == ChartData.ALL:
                 value_set = [
-                    stats.inflows.value_rounded,
-                    stats.outflows.value_rounded,
-                    stats.delta_neutral.value_rounded,
+                    stats.inflows.balance.value_rounded,
+                    stats.outflows.balance.value_rounded,
+                    stats.delta_neutral.balance.value_rounded,
                     stats.delta_performance.value_rounded,
                 ]
             elif chart_data == ChartData.INFLOWS:
-                value_set = [stats.inflows.value_rounded]
+                value_set = [stats.inflows.balance.value_rounded]
             elif chart_data == ChartData.OUTFLOWS:
-                value_set = [stats.outflows.value_rounded]
+                value_set = [stats.outflows.balance.value_rounded]
             elif chart_data == ChartData.CASH_FLOW:
-                value_set = [stats.delta_neutral.value_rounded]
+                value_set = [stats.delta_neutral.balance.value_rounded]
             elif chart_data == ChartData.GAIN_LOSS:
                 value_set = [stats.delta_performance.value_rounded]
             elif chart_data == ChartData.NET_GROWTH:

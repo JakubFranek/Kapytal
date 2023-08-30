@@ -18,6 +18,7 @@ from src.models.model_objects.security_objects import (
     SecurityTransaction,
     SecurityTransactionType,
 )
+from src.models.statistics.common_classes import TransactionBalance
 
 
 class PeriodType(Enum):
@@ -67,28 +68,28 @@ class CashFlowStats:
     )
 
     def __init__(self, base_currency: Currency) -> None:
-        self.incomes = base_currency.zero_amount
-        self.expenses = base_currency.zero_amount
-        self.refunds = base_currency.zero_amount
-        self.inward_transfers = base_currency.zero_amount
-        self.outward_transfers = base_currency.zero_amount
+        self.incomes = TransactionBalance(base_currency.zero_amount)
+        self.expenses = TransactionBalance(base_currency.zero_amount)
+        self.refunds = TransactionBalance(base_currency.zero_amount)
+        self.inward_transfers = TransactionBalance(base_currency.zero_amount)
+        self.outward_transfers = TransactionBalance(base_currency.zero_amount)
         self.initial_balances = base_currency.zero_amount
 
         self.delta_total = base_currency.zero_amount
-        self.delta_neutral = base_currency.zero_amount
+        self.delta_neutral = TransactionBalance(base_currency.zero_amount)
         self.delta_performance = base_currency.zero_amount
         self.delta_performance_securities = base_currency.zero_amount
         self.delta_performance_currencies = base_currency.zero_amount
 
-        self.inflows = base_currency.zero_amount
-        self.outflows = base_currency.zero_amount
+        self.inflows = TransactionBalance(base_currency.zero_amount)
+        self.outflows = TransactionBalance(base_currency.zero_amount)
 
         self.savings_rate = Decimal(0)
 
         self.period = ""
 
     def __repr__(self) -> str:
-        return "CashFlowStats"
+        return f"CashFlowStats({self.period})"
 
 
 def calculate_cash_flow(
@@ -133,22 +134,31 @@ def calculate_cash_flow(
             raise ValueError(f"Unexpected Transaction date: {date_}")
         if isinstance(transaction, CashTransaction):
             if transaction.type_ == CashTransactionType.INCOME:
-                stats.incomes += transaction.amount.convert(base_currency, date_)
+                stats.incomes.balance += transaction.amount.convert(
+                    base_currency, date_
+                )
+                stats.incomes.transactions.add(transaction)
             else:
-                stats.expenses += transaction.amount.convert(base_currency, date_)
+                stats.expenses.balance += transaction.amount.convert(
+                    base_currency, date_
+                )
+                stats.expenses.transactions.add(transaction)
         elif isinstance(transaction, RefundTransaction):
-            stats.refunds += transaction.amount.convert(base_currency, date_)
+            stats.refunds.balance += transaction.amount.convert(base_currency, date_)
+            stats.refunds.transactions.add(transaction)
         elif isinstance(transaction, CashTransfer):
             if transaction.sender in accounts and transaction.recipient in accounts:
                 continue
             if transaction.sender in accounts:
-                stats.outward_transfers += transaction.amount_sent.convert(
+                stats.outward_transfers.balance += transaction.amount_sent.convert(
                     base_currency, date_
                 )
+                stats.outward_transfers.transactions.add(transaction)
             if transaction.recipient in accounts:
-                stats.inward_transfers += transaction.amount_received.convert(
+                stats.inward_transfers.balance += transaction.amount_received.convert(
                     base_currency, date_
                 )
+                stats.inward_transfers.transactions.add(transaction)
         elif isinstance(transaction, SecurityTransaction):
             if (
                 transaction.cash_account in accounts
@@ -160,40 +170,46 @@ def calculate_cash_flow(
                     delta_security += transaction.amount.convert(base_currency, date_)
             elif transaction.cash_account in accounts:
                 if transaction.type_ == SecurityTransactionType.BUY:
-                    stats.outward_transfers += transaction.amount.convert(
+                    stats.outward_transfers.balance += transaction.amount.convert(
                         base_currency, date_
                     )
+                    stats.outward_transfers.transactions.add(transaction)
                 else:
-                    stats.inward_transfers += transaction.amount.convert(
+                    stats.inward_transfers.balance += transaction.amount.convert(
                         base_currency, date_
                     )
+                    stats.inward_transfers.transactions.add(transaction)
             elif transaction.type_ == SecurityTransactionType.BUY:
-                stats.inward_transfers += transaction.amount.convert(
+                stats.inward_transfers.balance += transaction.amount.convert(
                     base_currency, date_
                 )
+                stats.inward_transfers.transactions.add(transaction)
             else:
-                stats.outward_transfers += transaction.amount.convert(
+                stats.outward_transfers.balance += transaction.amount.convert(
                     base_currency, date_
                 )
+                stats.outward_transfers.transactions.add(transaction)
+            # TODO: handle SecurityTransfers
 
-    stats.inflows = (
-        stats.incomes + stats.inward_transfers + stats.refunds + stats.initial_balances
-    )
+    stats.inflows = stats.incomes + stats.inward_transfers + stats.refunds
+    stats.inflows.balance += stats.initial_balances
     stats.outflows = stats.expenses + stats.outward_transfers
 
     stats.delta_total = end_balance - start_balance  # net growth
     stats.delta_neutral = stats.inflows - stats.outflows  # cash flow
-    stats.delta_performance = stats.delta_total - stats.delta_neutral  # gain/loss
+    stats.delta_performance = (  # gain/loss
+        stats.delta_total - stats.delta_neutral.balance
+    )
     stats.delta_performance_securities = delta_security
     stats.delta_performance_currencies = (
         stats.delta_performance - stats.delta_performance_securities
     )
 
     savings_rate_eligible_inflow = (
-        stats.incomes + stats.inward_transfers + stats.initial_balances
+        stats.incomes.balance + stats.inward_transfers.balance + stats.initial_balances
     )
     if savings_rate_eligible_inflow.value_normalized != 0:
-        stats.savings_rate = stats.delta_neutral / savings_rate_eligible_inflow
+        stats.savings_rate = stats.delta_neutral.balance / savings_rate_eligible_inflow
     else:
         stats.savings_rate = Decimal("NaN")
 
