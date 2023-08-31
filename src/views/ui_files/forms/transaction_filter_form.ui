@@ -671,42 +671,45 @@
           <string>Specific Tags Filter</string>
          </property>
          <property name="checkable">
-          <bool>true</bool>
+          <bool>false</bool>
          </property>
          <property name="checked">
           <bool>false</bool>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_14">
           <item>
-           <widget class="QLineEdit" name="tagsSearchLineEdit">
-            <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Special characters:&lt;/p&gt;&lt;p&gt;* matches zero or more of any characters&lt;br/&gt;? matches any single character&lt;br/&gt;[...] matches any character within square brackets&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-            </property>
-            <property name="placeholderText">
-             <string>Search Tags</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QListView" name="tagsListView"/>
-          </item>
-          <item>
-           <layout class="QHBoxLayout" name="tagsButtonsHorizontalLayout">
+           <layout class="QHBoxLayout" name="specificTagsFilterControlsHorizontalLayout">
             <item>
-             <widget class="QPushButton" name="tagsSelectAllPushButton">
+             <widget class="QComboBox" name="specificTagsFilterModeComboBox"/>
+            </item>
+            <item>
+             <widget class="QToolButton" name="specificTagsFilterSelectAllToolButton">
               <property name="text">
-               <string>Select All</string>
+               <string>...</string>
               </property>
              </widget>
             </item>
             <item>
-             <widget class="QPushButton" name="tagsUnselectAllPushButton">
+             <widget class="QToolButton" name="specificTagsFilterUnselectAllToolButton">
               <property name="text">
-               <string>Unselect All</string>
+               <string>...</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="tagsSearchLineEdit">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Special characters:&lt;/p&gt;&lt;p&gt;* matches zero or more of any characters&lt;br/&gt;? matches any single character&lt;br/&gt;[...] matches any character within square brackets&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
+              <property name="placeholderText">
+               <string>Search Tags</string>
               </property>
              </widget>
             </item>
            </layout>
+          </item>
+          <item>
+           <widget class="QListView" name="tagsListView"/>
           </item>
          </layout>
         </widget>
