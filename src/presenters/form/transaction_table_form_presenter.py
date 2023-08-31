@@ -96,11 +96,19 @@ class TransactionTableFormPresenter:
         transaction_uuid_dict = {
             transaction.uuid: transaction for transaction in transactions
         }
+
         self._model.pre_reset_model()
         self._model.load_data(
             transactions, transaction_uuid_dict, self._record_keeper.base_currency
         )
-        self._model.post_reset_model()
+
+        header = self._form.table_view.horizontalHeader()
+        if header.isSortIndicatorShown():
+            sort_column = header.sortIndicatorSection()
+            sort_order = header.sortIndicatorOrder()
+            self._model.post_reset_model(sort_column, sort_order)
+        else:
+            self._model.post_reset_model()
 
         self._update_table_columns()
         self._form.table_view.resizeColumnsToContents()
