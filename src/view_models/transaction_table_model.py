@@ -583,6 +583,7 @@ class TransactionTableModel(QAbstractTableModel):
                         tag_names.append(f"{tag.name} ({amount.to_str_rounded()})")
                     else:
                         tag_names.append(tag.name)
+                tag_names = sorted(tag_name for tag_name in tag_names)
             else:
                 tag_names = sorted(tag.name for tag in transaction.tags)
         else:

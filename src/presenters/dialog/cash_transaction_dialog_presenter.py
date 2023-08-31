@@ -321,7 +321,7 @@ class CashTransactionDialogPresenter(TransactionDialogPresenter):
 
         tag_amount_pairs = self._dialog.tag_amount_pairs
         if tag_amount_pairs is not None:
-            if any(amount <= 0 for _, amount in tag_amount_pairs):
+            if any(amount <= 0 for _, amount in tag_amount_pairs if amount is not None):
                 display_error_message("Tag amounts must be positive.", title="Warning")
                 return
             tag_names = [tag for tag, _ in tag_amount_pairs]
