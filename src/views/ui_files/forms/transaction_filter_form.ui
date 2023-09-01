@@ -665,7 +665,7 @@
        <item>
         <widget class="QGroupBox" name="specificTagsFilterGroupBox">
          <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Filter Transactions (which have at least 1 Tag) based on specific Tags.&lt;/p&gt;&lt;p&gt;Transactions with no Tags are filtered separately via &amp;quot;Tag-less Transaction Filter&amp;quot;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Filter Transactions (which have at least 1 Tag) based on specific Tags.&lt;/p&gt;&lt;p&gt;Transactions with no Tags are filtered separately via &amp;quot;Tag-less Transaction Filter&amp;quot;.&lt;br/&gt;&lt;br/&gt;KEEP: Only Transactions including one of the selected Tags are kept.&lt;/p&gt;&lt;p&gt;DISCARD: Transactions including one of the selected Tags are discarded.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
          <property name="title">
           <string>Specific Tags Filter</string>

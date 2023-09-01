@@ -69,6 +69,7 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
 
     signal_tags_select_all = pyqtSignal()
     signal_tags_unselect_all = pyqtSignal()
+    signal_tags_update_number_selected = pyqtSignal()
 
     signal_payees_select_all = pyqtSignal()
     signal_payees_unselect_all = pyqtSignal()
@@ -669,6 +670,7 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
         self.specificTagsFilterUnselectAllToolButton.setEnabled(mode != FilterMode.OFF)
         self.tagsSearchLineEdit.setEnabled(mode != FilterMode.OFF)
         self.tagsListView.setEnabled(mode != FilterMode.OFF)
+        self.signal_tags_update_number_selected.emit()
 
     def _initialize_account_filter_actions(self) -> None:
         self.actionSelectAllCashAccountsBelow = QAction(

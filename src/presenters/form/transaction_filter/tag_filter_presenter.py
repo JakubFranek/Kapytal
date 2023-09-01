@@ -96,6 +96,9 @@ class TagFilterPresenter:
         self._form.signal_tags_unselect_all.connect(
             lambda: self._set_all_checks(checked=False)
         )
+        self._form.signal_tags_update_number_selected.connect(
+            self._update_checked_tags_number
+        )
 
     def _update_checked_tags_number(self) -> None:
         selected = len(self._model.checked_items)

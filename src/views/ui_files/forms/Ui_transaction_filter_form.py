@@ -557,7 +557,7 @@ class Ui_TransactionFilterForm(object):
         self.tagLessFilterGroupBox.setToolTip(_translate("TransactionFilterForm", "<html><head/><body><p>Filter Tag-less Transactions</p><p>KEEP: Only Tag-less Transactions will be kept</p><p>DISCARD: Tag-less Transactions will be discarded</p></body></html>"))
         self.tagLessFilterGroupBox.setTitle(_translate("TransactionFilterForm", "Tag-less Transaction Filter"))
         self.tagLessFilterModeLabel.setText(_translate("TransactionFilterForm", "Mode"))
-        self.specificTagsFilterGroupBox.setToolTip(_translate("TransactionFilterForm", "<html><head/><body><p>Filter Transactions (which have at least 1 Tag) based on specific Tags.</p><p>Transactions with no Tags are filtered separately via &quot;Tag-less Transaction Filter&quot;.</p></body></html>"))
+        self.specificTagsFilterGroupBox.setToolTip(_translate("TransactionFilterForm", "<html><head/><body><p>Filter Transactions (which have at least 1 Tag) based on specific Tags.</p><p>Transactions with no Tags are filtered separately via &quot;Tag-less Transaction Filter&quot;.<br/><br/>KEEP: Only Transactions including one of the selected Tags are kept.</p><p>DISCARD: Transactions including one of the selected Tags are discarded.</p></body></html>"))
         self.specificTagsFilterGroupBox.setTitle(_translate("TransactionFilterForm", "Specific Tags Filter"))
         self.specificTagsFilterSelectAllToolButton.setText(_translate("TransactionFilterForm", "..."))
         self.specificTagsFilterUnselectAllToolButton.setText(_translate("TransactionFilterForm", "..."))
