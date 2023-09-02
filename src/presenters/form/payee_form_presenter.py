@@ -1,11 +1,15 @@
 import logging
+from typing import Any
 
 from PyQt6.QtCore import QSortFilterProxyModel, Qt
 from PyQt6.QtWidgets import QApplication
-from src.models.custom_exceptions import AlreadyExistsError
+from src.models.custom_exceptions import AlreadyExistsError, InvalidOperationError
 from src.models.model_objects.attributes import AttributeType
 from src.models.record_keeper import RecordKeeper
 from src.models.statistics.attribute_stats import calculate_attribute_stats
+from src.presenters.form.transaction_table_form_presenter import (
+    TransactionTableFormPresenter,
+)
 from src.presenters.utilities.event import Event
 from src.presenters.utilities.handle_exception import handle_exception
 from src.view_models.attribute_table_model import AttributeTableModel
@@ -20,9 +24,15 @@ BUSY_DIALOG_TRANSACTION_LIMIT = 20_000
 class PayeeFormPresenter:
     event_data_changed = Event()
 
-    def __init__(self, view: PayeeForm, record_keeper: RecordKeeper) -> None:
+    def __init__(
+        self,
+        view: PayeeForm,
+        record_keeper: RecordKeeper,
+        transaction_table_form_presenter: TransactionTableFormPresenter,
+    ) -> None:
         self._view = view
         self._record_keeper = record_keeper
+        self._transaction_table_form_presenter = transaction_table_form_presenter
 
         self._proxy_model = QSortFilterProxyModel(self._view.tableView)
         self._model = AttributeTableModel(self._view.tableView, self._proxy_model)
@@ -38,6 +48,7 @@ class PayeeFormPresenter:
         self._view.signal_rename_payee.connect(
             lambda: self._run_payee_dialog(edit=True)
         )
+        self._view.signal_show_transactions.connect(self._show_transactions)
         self._view.signal_search_text_changed.connect(self._filter)
 
         self._view.finalize_setup()
@@ -193,9 +204,45 @@ class PayeeFormPresenter:
 
     def _selection_changed(self) -> None:
         payees = self._model.get_selected_items()
+        transactions = self._model.get_selected_attribute_transactions()
         is_payee_selected = len(payees) > 0
         is_one_payee_selected = len(payees) == 1
+        show_transactions = transactions is not None and len(transactions) > 0
         self._view.enable_actions(
             is_payee_selected=is_payee_selected,
             is_one_payee_selected=is_one_payee_selected,
+            show_transactions=show_transactions,
+        )
+
+    def _show_transactions(self) -> None:
+        payees = self._model.get_selected_items()
+        transactions = self._model.get_selected_attribute_transactions()
+        if transactions is None or len(payees) != 1:
+            raise InvalidOperationError(
+                "Transactions can be shown for only for exactly one Tag."
+            )
+        payee = payees[0]
+        title = f"Payee Transactions - {payee.name}"
+        self._transaction_table_form_presenter.event_data_changed.append(
+            self._transaction_table_form_data_changed
+        )
+        self._transaction_table_form_presenter.event_form_closed.append(
+            self._transaction_table_form_closed
+        )
+        self._transaction_table_form_presenter.load_data(transactions, title)
+        self._transaction_table_form_presenter.show_form(self._view)
+
+    def _transaction_table_form_data_changed(
+        self, *_: Any, **__: Any  # noqa: ANN401
+    ) -> None:
+        self._recalculate_data = True
+
+    def _transaction_table_form_closed(self) -> None:
+        if self._recalculate_data:
+            self.reset_model()
+        self._transaction_table_form_presenter.event_data_changed.remove(
+            self._transaction_table_form_data_changed
+        )
+        self._transaction_table_form_presenter.event_form_closed.remove(
+            self._transaction_table_form_closed
         )

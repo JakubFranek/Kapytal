@@ -439,4 +439,3 @@ class CategoryFormPresenter:
         self._transaction_table_form_presenter.event_form_closed.remove(
             self._transaction_table_form_closed
         )
-        pass

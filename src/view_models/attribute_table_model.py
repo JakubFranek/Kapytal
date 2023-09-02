@@ -4,6 +4,7 @@ from collections.abc import Collection
 from PyQt6.QtCore import QAbstractTableModel, QModelIndex, QSortFilterProxyModel, Qt
 from PyQt6.QtGui import QBrush
 from PyQt6.QtWidgets import QTableView
+from src.models.base_classes.transaction import Transaction
 from src.models.model_objects.attributes import Attribute
 from src.models.statistics.attribute_stats import AttributeStats
 from src.views import colors
@@ -147,6 +148,15 @@ class AttributeTableModel(QAbstractTableModel):
             for index in source_indexes
             if index.column() == 0
         )
+
+    def get_selected_attribute_transactions(self) -> set[Transaction] | None:
+        proxy_indexes = self._view.selectedIndexes()
+        source_indexes = [self._proxy.mapToSource(index) for index in proxy_indexes]
+        source_indexes = [index for index in source_indexes if index.column() == 0]
+        if len(source_indexes) != 1:
+            return None
+        index = source_indexes[0]
+        return self._attribute_stats[index.row()].transactions
 
     def get_index_from_item(self, item: Attribute | None) -> QModelIndex:
         if item is None:
