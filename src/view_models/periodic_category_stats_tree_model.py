@@ -352,7 +352,7 @@ class PeriodicCategoryStatsTreeModel(QAbstractItemModel):
         indexes = self._view.selectedIndexes()
         if len(indexes) != 1:
             raise InvalidOperationError(
-                "Transactions can be shown for only for exactly one Attribute."
+                "Transactions can be shown for only for exactly one Category."
             )
         index = indexes[0]
         if self._proxy:

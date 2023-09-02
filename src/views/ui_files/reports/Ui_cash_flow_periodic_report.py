@@ -25,6 +25,9 @@ class Ui_CashFlowPeriodicReport(object):
         self.tableTabVerticalLayout.setObjectName("tableTabVerticalLayout")
         self.tableControlsHorizontalLayout = QtWidgets.QHBoxLayout()
         self.tableControlsHorizontalLayout.setObjectName("tableControlsHorizontalLayout")
+        self.showTransactionsToolButton = QtWidgets.QToolButton(self.tableTab)
+        self.showTransactionsToolButton.setObjectName("showTransactionsToolButton")
+        self.tableControlsHorizontalLayout.addWidget(self.showTransactionsToolButton)
         self.recalculateReportToolButton = QtWidgets.QToolButton(self.tableTab)
         self.recalculateReportToolButton.setObjectName("recalculateReportToolButton")
         self.tableControlsHorizontalLayout.addWidget(self.recalculateReportToolButton)
@@ -58,6 +61,7 @@ class Ui_CashFlowPeriodicReport(object):
     def retranslateUi(self, CashFlowPeriodicReport):
         _translate = QtCore.QCoreApplication.translate
         CashFlowPeriodicReport.setWindowTitle(_translate("CashFlowPeriodicReport", "Cash Flow Report"))
+        self.showTransactionsToolButton.setText(_translate("CashFlowPeriodicReport", "..."))
         self.recalculateReportToolButton.setText(_translate("CashFlowPeriodicReport", "..."))
         self.currencyNoteLabel.setText(_translate("CashFlowPeriodicReport", "All values in XXX"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tableTab), _translate("CashFlowPeriodicReport", "Table"))

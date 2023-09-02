@@ -4,6 +4,7 @@ from PyQt6.QtCore import QAbstractTableModel, QModelIndex, QSortFilterProxyModel
 from PyQt6.QtGui import QBrush, QFont
 from PyQt6.QtWidgets import QTableView
 from src.models.base_classes.transaction import Transaction
+from src.models.custom_exceptions import InvalidOperationError
 from src.models.model_objects.currency_objects import CashAmount
 from src.models.statistics.cashflow_stats import CashFlowStats
 from src.views import colors
@@ -142,7 +143,9 @@ class CashFlowTableModel(QAbstractTableModel):
         """Returns a tuple of selected Transactions, type and period."""
         indexes = self._view.selectedIndexes()
         if len(indexes) != 1:
-            return None
+            raise InvalidOperationError(
+                "Transactions can be shown for only for exactly one selection."
+            )
         index = indexes[0]
         if self._proxy:
             index = self._proxy.mapToSource(index)

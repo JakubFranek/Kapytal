@@ -32,9 +32,12 @@ MINIMUM_TABLE_HEIGHT = 600
 MAXIMUM_TABLE_HEIGHT = 800
 
 
+# REFACTOR: this view has a different model philosophy than the others
+# (model is initialized here instead of in the presenter)
 class CashFlowPeriodicReport(CustomWidget, Ui_CashFlowPeriodicReport):
     signal_show_transactions = pyqtSignal()
     signal_recalculate_report = pyqtSignal()
+    signal_selection_changed = pyqtSignal()
 
     def __init__(
         self,
@@ -59,6 +62,9 @@ class CashFlowPeriodicReport(CustomWidget, Ui_CashFlowPeriodicReport):
         self._table_model = CashFlowTableModel(self.tableView, self._proxy_model)
         self._proxy_model.setSourceModel(self._table_model)
         self.tableView.setModel(self._proxy_model)
+        self.tableView.selectionModel().selectionChanged.connect(
+            self.signal_selection_changed
+        )
         self.tableView.horizontalHeader().setSortIndicatorClearable(True)
 
         self.dataSelectorComboBox = QComboBox(self)
@@ -82,9 +88,12 @@ class CashFlowPeriodicReport(CustomWidget, Ui_CashFlowPeriodicReport):
             self.signal_show_transactions.emit
         )
         self.actionRecalculate_Report.triggered.connect(self.signal_recalculate_report)
+
         self.recalculateReportToolButton.setDefaultAction(self.actionRecalculate_Report)
+        self.showTransactionsToolButton.setDefaultAction(self.actionShow_Transactions)
+
         self.tableView.contextMenuEvent = self._create_context_menu
-        self.tableView.doubleClicked.connect(self.signal_show_transactions.emit)
+        self.tableView.doubleClicked.connect(self._table_view_double_clicked)
 
     def load_stats(self, stats: Collection[CashFlowStats]) -> None:
         self._table_model.pre_reset_model()
@@ -108,6 +117,9 @@ class CashFlowPeriodicReport(CustomWidget, Ui_CashFlowPeriodicReport):
             )
         else:
             self.actionRecalculate_Report.setIcon(Qt.ToolButtonStyle.ToolButtonIconOnly)
+
+    def set_show_transactions_action_state(self, *, enable: bool) -> None:
+        self.actionShow_Transactions.setEnabled(enable)
 
     def get_selected_transactions(self) -> tuple[list[Transaction], str, str]:
         return self._table_model.get_selected_transactions()
@@ -156,3 +168,7 @@ class CashFlowPeriodicReport(CustomWidget, Ui_CashFlowPeriodicReport):
         self.menu = QMenu(self)
         self.menu.addAction(self.actionShow_Transactions)
         self.menu.popup(QCursor.pos())
+
+    def _table_view_double_clicked(self) -> None:
+        if self.actionShow_Transactions.isEnabled():
+            self.signal_show_transactions.emit()

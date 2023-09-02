@@ -33,6 +33,13 @@
        <item>
         <layout class="QHBoxLayout" name="tableControlsHorizontalLayout">
          <item>
+          <widget class="QToolButton" name="showTransactionsToolButton">
+           <property name="text">
+            <string>...</string>
+           </property>
+          </widget>
+         </item>
+         <item>
           <widget class="QToolButton" name="recalculateReportToolButton">
            <property name="text">
             <string>...</string>
