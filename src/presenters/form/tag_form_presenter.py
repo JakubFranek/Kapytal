@@ -226,8 +226,9 @@ class TagFormPresenter:
         self._transaction_table_form_presenter.event_form_closed.append(
             self._transaction_table_form_closed
         )
-        self._transaction_table_form_presenter.load_data(transactions, title)
-        self._transaction_table_form_presenter.show_form(self._view)
+        self._transaction_table_form_presenter.show_data(
+            transactions, title, self._view
+        )
 
     def _transaction_table_form_data_changed(
         self, *_: Any, **__: Any  # noqa: ANN401

@@ -215,8 +215,7 @@ class AttributeReportPresenter:
         transaction_table_form_presenter.event_data_changed.append(
             lambda _: self._report.set_recalculate_report_action_state(enabled=True)
         )
-        transaction_table_form_presenter.load_data(transactions, title)
-        transaction_table_form_presenter.show_form(self._report)
+        transaction_table_form_presenter.show_data(transactions, title, self._report)
 
     def _recalculate_report(
         self, period_format: str, title: str, attribute_type: AttributeType

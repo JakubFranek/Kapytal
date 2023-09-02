@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from uuid import UUID
 
 from PyQt6.QtCore import QSortFilterProxyModel, Qt
-from PyQt6.QtWidgets import QWidget
+from PyQt6.QtWidgets import QApplication, QWidget
 from src.models.base_classes.transaction import Transaction
 from src.models.custom_exceptions import InvalidOperationError
 from src.models.model_objects.cash_objects import (
@@ -37,6 +37,7 @@ from src.presenters.dialog.transaction_tags_dialog_presenter import (
 from src.presenters.utilities.event import Event
 from src.view_models.transaction_table_model import TransactionTableModel
 from src.views.constants import TransactionTableColumn
+from src.views.dialogs.busy_dialog import create_simple_busy_indicator
 from src.views.forms.transaction_table_form import TransactionTableForm
 from src.views.utilities.handle_exception import display_error_message
 
@@ -92,31 +93,43 @@ class TransactionTableFormPresenter:
         self._refund_transaction_dialog_presenter.load_record_keeper(record_keeper)
         self._transaction_tags_dialog_presenter.load_record_keeper(record_keeper)
 
-    def load_data(self, transactions: Collection[Transaction], title: str) -> None:
-        transaction_uuid_dict = {
-            transaction.uuid: transaction for transaction in transactions
-        }
-
-        self._model.pre_reset_model()
-        self._model.load_data(
-            transactions, transaction_uuid_dict, self._record_keeper.base_currency
+    def show_data(
+        self, transactions: Collection[Transaction], title: str, parent: QWidget
+    ) -> None:
+        self._busy_dialog = create_simple_busy_indicator(
+            parent, "Preparing Transactions, please wait..."
         )
+        self._busy_dialog.open()
+        QApplication.processEvents()
 
-        header = self._form.table_view.horizontalHeader()
-        if header.isSortIndicatorShown():
-            sort_column = header.sortIndicatorSection()
-            sort_order = header.sortIndicatorOrder()
-            self._model.post_reset_model(sort_column, sort_order)
-        else:
-            self._model.post_reset_model()
+        try:
+            transaction_uuid_dict = {
+                transaction.uuid: transaction for transaction in transactions
+            }
 
-        self._update_table_columns()
-        self._form.table_view.resizeColumnsToContents()
-        self._form.set_window_title(title)
+            self._model.pre_reset_model()
+            self._model.load_data(
+                transactions, transaction_uuid_dict, self._record_keeper.base_currency
+            )
 
-    def show_form(self, parent: QWidget) -> None:
-        self._form.setParent(parent, Qt.WindowType.Window)
-        self._form.show_form()
+            header = self._form.table_view.horizontalHeader()
+            if header.isSortIndicatorShown():
+                sort_column = header.sortIndicatorSection()
+                sort_order = header.sortIndicatorOrder()
+                self._model.post_reset_model(sort_column, sort_order)
+            else:
+                self._model.post_reset_model()
+
+            self._update_table_columns()
+            self._form.table_view.resizeColumnsToContents()
+            self._form.set_window_title(title)
+
+            self._form.setParent(parent, Qt.WindowType.Window)
+            self._form.show_form()
+        except:  # noqa: TRY302
+            raise
+        finally:
+            self._busy_dialog.close()
 
     def _update_table_columns(self) -> None:
         visible_transactions = self._model.get_visible_items()
