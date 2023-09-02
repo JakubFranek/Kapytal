@@ -182,7 +182,11 @@ class TransactionTableModel(QAbstractTableModel):
 
         self.beginResetModel()
 
-    def post_reset_model(self) -> None:
+    def post_reset_model(
+        self,
+        sort_column: int = 0,
+        sort_order: Qt.SortOrder = Qt.SortOrder.DescendingOrder,
+    ) -> None:
         self.endResetModel()
 
         if self._proxy_sourceside is not None:
@@ -190,7 +194,7 @@ class TransactionTableModel(QAbstractTableModel):
 
         self._proxy_viewside.setDynamicSortFilter(True)  # noqa: FBT003
         # this slows down file load but enables dynamic sort filter
-        self._proxy_viewside.sort(0, Qt.SortOrder.DescendingOrder)
+        self._view.sortByColumn(sort_column, sort_order)
 
     def pre_remove_item(self, item: Transaction) -> None:
         index = self.get_index_from_item(item)
@@ -420,6 +424,8 @@ class TransactionTableModel(QAbstractTableModel):
                 return colors.get_blue_brush()
         if column == TransactionTableColumn.BALANCE:
             balance = self._get_account_balance(transaction)
+            if not balance.is_finite():
+                return None
             if balance.value_rounded < 0:
                 return colors.get_red_brush()
             if balance.value_rounded > 0:

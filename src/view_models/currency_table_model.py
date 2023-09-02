@@ -73,10 +73,7 @@ class CurrencyTableModel(QAbstractTableModel):
             and currency == self._base_currency
         ):
             return icons.base_currency
-        if (
-            role == Qt.ItemDataRole.TextAlignmentRole
-            and column == CurrencyTableColumn.CODE
-        ):
+        if role == Qt.ItemDataRole.TextAlignmentRole:
             return ALIGN_RIGHT
         if role == Qt.ItemDataRole.FontRole and column == CurrencyTableColumn.CODE:
             return monospace_font
