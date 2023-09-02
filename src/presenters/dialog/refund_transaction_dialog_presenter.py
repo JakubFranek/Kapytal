@@ -2,51 +2,32 @@ import logging
 from collections.abc import Collection
 from datetime import datetime, timedelta
 
-from PyQt6.QtWidgets import QWidget
 from src.models.model_objects.cash_objects import (
-    CashAccount,
     CashTransaction,
     RefundTransaction,
 )
-from src.models.record_keeper import RecordKeeper
 from src.models.user_settings import user_settings
+from src.presenters.dialog.transaction_dialog_presenter import (
+    TransactionDialogPresenter,
+)
 from src.presenters.utilities.check_for_nonexistent_attributes import (
     check_for_nonexistent_attributes,
 )
-from src.presenters.utilities.event import Event
 from src.presenters.utilities.handle_exception import handle_exception
 from src.presenters.utilities.validate_inputs import validate_datetime
-from src.view_models.transaction_table_model import TransactionTableModel
 from src.views.dialogs.refund_transaction_dialog import RefundTransactionDialog
 from src.views.utilities.handle_exception import display_error_message
 
 
-class RefundTransactionDialogPresenter:
-    event_update_model = Event()
-    event_data_changed = Event()
-
-    def __init__(
-        self,
-        parent_view: QWidget,
-        record_keeper: RecordKeeper,
-        model: TransactionTableModel,
-    ) -> None:
-        self._parent_view = parent_view
-        self._record_keeper = record_keeper
-        self._model = model
-
-    def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
-        self._record_keeper = record_keeper
-
+class RefundTransactionDialogPresenter(TransactionDialogPresenter):
     def run_add_dialog(
-        self,
+        self, selected_transactions: Collection[CashTransaction]
     ) -> None:
         logging.debug("Running RefundTransactionDialog (adding)")
-        transactions = self._model.get_selected_items()
-        if len(transactions) > 1:
+        if len(selected_transactions) > 1:
             raise ValueError("Cannot refund multiple transactions.")
 
-        refunded_transaction: CashTransaction = transactions[0]
+        refunded_transaction: CashTransaction = selected_transactions[0]
         self._prepare_dialog(refunded_transaction, edited_refund=None)
 
         self._dialog.account_path = refunded_transaction.account.path
@@ -58,14 +39,15 @@ class RefundTransactionDialogPresenter:
         self._dialog.signal_do_and_close.connect(self._add_refund)
         self._dialog.exec()
 
-    def run_edit_dialog(self) -> None:
+    def run_edit_dialog(
+        self, selected_transactions: Collection[RefundTransaction]
+    ) -> None:
         logging.debug("Running RefundTransactionDialog (editing)")
-        transactions = self._model.get_selected_items()
-        if len(transactions) > 1:
+        if len(selected_transactions) > 1:
             display_error_message("Cannot edit multiple Refunds.", title="Warning")
             return
 
-        refund: RefundTransaction = transactions[0]
+        refund: RefundTransaction = selected_transactions[0]
         self._prepare_dialog(refund.refunded_transaction, edited_refund=refund)
         self._dialog.signal_do_and_close.connect(self._edit_refund)
         self._dialog.exec()
@@ -132,9 +114,9 @@ class RefundTransactionDialogPresenter:
             handle_exception(exception)
             return
 
-        self._model.pre_add()
+        self.event_pre_add()
         self.event_update_model()
-        self._model.post_add()
+        self.event_post_add()
         self.event_data_changed()
         self._dialog.close()
 
@@ -217,8 +199,7 @@ class RefundTransactionDialogPresenter:
             return
 
         self.event_update_model()
-        self._model.emit_data_changed_for_uuids([refund_uuid])
-        self.event_data_changed()
+        self.event_data_changed([refund_uuid])
         self._dialog.close()
 
     def _prepare_dialog(

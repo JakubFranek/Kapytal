@@ -7,6 +7,7 @@ from uuid import UUID
 from PyQt6.QtCore import QAbstractItemModel, QModelIndex, QSortFilterProxyModel, Qt
 from PyQt6.QtGui import QBrush
 from PyQt6.QtWidgets import QTreeView
+from src.models.base_classes.transaction import Transaction
 from src.models.model_objects.attributes import Category
 from src.models.model_objects.currency_objects import CashAmount
 from src.models.statistics.category_stats import CategoryStats
@@ -25,12 +26,14 @@ COLUMNS_NUMBERS = {
 }
 
 
+# TODO: simplify CategoryTreeNode by directly using CategoryStats within
 @dataclass
 class CategoryTreeNode:
     name: str
     path: str
     transactions_self: int
     transactions_total: int
+    transactions: set[Transaction]
     balance: CashAmount
     parent: Self | None
     children: list[Self]
@@ -57,6 +60,7 @@ def sync_nodes(
                 category.path,
                 stats.transactions_self,
                 stats.transactions_total,
+                stats.transactions,
                 stats.balance,
                 parent_node,
                 [],
@@ -67,6 +71,7 @@ def sync_nodes(
             node.path = category.path
             node.transactions_self = stats.transactions_self
             node.transactions_total = stats.transactions_total
+            node.transactions = stats.transactions
             node.balance = stats.balance
             node.parent = parent_node
             node.children = []
@@ -186,7 +191,7 @@ class CategoryTreeModel(QAbstractItemModel):
                 "Number outside of parentheses is the number of Transactions\n"
                 "containing the Category and/or its children Categories.\n"
                 "Number in parentheses is the number of Transactions containing\n"
-                "the Category directly, not counting its children."
+                "the Category directly, excluding its children."
             )
         if role == Qt.ItemDataRole.ForegroundRole:
             return self._get_foreground_role_data(column, node)
@@ -277,13 +282,13 @@ class CategoryTreeModel(QAbstractItemModel):
     def post_move_item(self) -> None:
         self.endMoveRows()
 
-    def get_selected_item(self) -> Category | None:
-        proxy_indexes = self._tree_view.selectedIndexes()
-        source_indexes = [self._proxy.mapToSource(index) for index in proxy_indexes]
-        if len(source_indexes) == 0:
-            return None
-        node = source_indexes[0].internalPointer()
-        return self._get_item_from_node(node)
+    def get_selected_category(self) -> Category | None:
+        node = self._get_selected_node()
+        return self._get_item_from_node(node) if node is not None else None
+
+    def get_selected_category_transactions(self) -> set[Transaction] | None:
+        node = self._get_selected_node()
+        return node.transactions if node is not None else None
 
     def get_index_from_item(self, item: Category | None) -> QModelIndex:
         if item is None:
@@ -311,3 +316,10 @@ class CategoryTreeModel(QAbstractItemModel):
             raise ValueError(
                 f"Node for Category path='{item.path}' not found."
             ) from exc
+
+    def _get_selected_node(self) -> CategoryTreeNode | None:
+        proxy_indexes = self._tree_view.selectedIndexes()
+        source_indexes = [self._proxy.mapToSource(index) for index in proxy_indexes]
+        if len(source_indexes) == 0:
+            return None
+        return source_indexes[0].internalPointer()

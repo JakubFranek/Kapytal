@@ -1514,12 +1514,10 @@ class RefundTransaction(CashRelatedTransaction):
         )
         return obj
 
-    def add_tags(self, tags: Collection[Attribute]) -> None:
-        del tags
+    def add_tags(self, tags: Collection[Attribute]) -> None:  # noqa: ARG002
         raise InvalidOperationError("Adding tags to RefundTransaction is forbidden.")
 
-    def remove_tags(self, tags: Collection[Attribute]) -> None:
-        del tags
+    def remove_tags(self, tags: Collection[Attribute]) -> None:  # noqa: ARG002
         raise InvalidOperationError(
             "Removing tags from RefundTransaction is forbidden."
         )
@@ -1813,8 +1811,7 @@ class RefundTransaction(CashRelatedTransaction):
                     f"{min_value} and {max_value}."
                 )
 
-    def _get_amount(self, account: CashAccount) -> CashAmount:
-        del account
+    def _get_amount(self, account: CashAccount) -> CashAmount:  # noqa: ARG002
         return self._amount
 
 

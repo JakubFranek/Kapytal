@@ -3,22 +3,21 @@ from collections.abc import Collection, Sequence
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from PyQt6.QtWidgets import QWidget
 from src.models.model_objects.cash_objects import (
     CashAccount,
     CashTransaction,
     CashTransactionType,
 )
-from src.models.record_keeper import RecordKeeper
 from src.models.user_settings import user_settings
+from src.presenters.dialog.transaction_dialog_presenter import (
+    TransactionDialogPresenter,
+)
 from src.presenters.utilities.check_for_nonexistent_attributes import (
     check_for_nonexistent_attributes,
     check_for_nonexistent_categories,
 )
-from src.presenters.utilities.event import Event
 from src.presenters.utilities.handle_exception import handle_exception
 from src.presenters.utilities.validate_inputs import validate_datetime
-from src.view_models.transaction_table_model import TransactionTableModel
 from src.views.dialogs.cash_transaction_dialog import CashTransactionDialog, EditMode
 from src.views.utilities.handle_exception import display_error_message
 
@@ -26,23 +25,7 @@ if TYPE_CHECKING:
     from src.models.model_objects.attributes import Category
 
 
-class CashTransactionDialogPresenter:
-    event_update_model = Event()
-    event_data_changed = Event()
-
-    def __init__(
-        self,
-        parent_view: QWidget,
-        record_keeper: RecordKeeper,
-        model: TransactionTableModel,
-    ) -> None:
-        self._parent_view = parent_view
-        self._record_keeper = record_keeper
-        self._model = model
-
-    def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
-        self._record_keeper = record_keeper
-
+class CashTransactionDialogPresenter(TransactionDialogPresenter):
     def run_add_dialog(
         self, type_: CashTransactionType, valid_accounts: Collection[CashAccount]
     ) -> None:
@@ -203,7 +186,9 @@ class CashTransactionDialogPresenter:
             tag_amount_pairs = ()
         self._dialog.tag_amount_pairs = tag_amount_pairs
 
-        self._dialog.signal_do_and_close.connect(self._edit_cash_transactions)
+        self._dialog.signal_do_and_close.connect(
+            lambda: self._edit_cash_transactions(transactions)
+        )
         self._dialog.exec()
 
     def _add_cash_transaction(self, *, close: bool) -> None:
@@ -287,15 +272,14 @@ class CashTransactionDialogPresenter:
             handle_exception(exception)
             return
 
-        self._model.pre_add()
+        self.event_pre_add()
         self.event_update_model()
-        self._model.post_add()
+        self.event_post_add()
         if close:
             self._dialog.close()
         self.event_data_changed()
 
-    def _edit_cash_transactions(self) -> None:
-        transactions: list[CashTransaction] = self._model.get_selected_items()
+    def _edit_cash_transactions(self, transactions: Sequence[CashTransaction]) -> None:
         uuids = [transaction.uuid for transaction in transactions]
         change_type = any(
             transaction.type_ != transactions[0].type_ for transaction in transactions
@@ -337,7 +321,7 @@ class CashTransactionDialogPresenter:
 
         tag_amount_pairs = self._dialog.tag_amount_pairs
         if tag_amount_pairs is not None:
-            if any(amount <= 0 for _, amount in tag_amount_pairs):
+            if any(amount <= 0 for _, amount in tag_amount_pairs if amount is not None):
                 display_error_message("Tag amounts must be positive.", title="Warning")
                 return
             tag_names = [tag for tag, _ in tag_amount_pairs]
@@ -392,8 +376,7 @@ class CashTransactionDialogPresenter:
 
         self._dialog.close()
         self.event_update_model()
-        self._model.emit_data_changed_for_uuids(uuids)
-        self.event_data_changed()
+        self.event_data_changed(uuids)
 
     def _prepare_dialog(self, edit_mode: EditMode) -> bool:
         payees = sorted(payee.name for payee in self._record_keeper.payees)

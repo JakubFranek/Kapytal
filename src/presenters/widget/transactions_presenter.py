@@ -1,6 +1,8 @@
 import logging
 import re
 from collections.abc import Collection
+from typing import TYPE_CHECKING
+from uuid import UUID
 
 from PyQt6.QtCore import QSortFilterProxyModel, Qt
 from PyQt6.QtWidgets import QApplication
@@ -43,6 +45,9 @@ from src.presenters.dialog.transaction_tags_dialog_presenter import (
 from src.presenters.form.transaction_filter.transaction_filter_form_presenter import (
     TransactionFilterFormPresenter,
 )
+from src.presenters.form.transaction_table_form_presenter import (
+    TransactionTableFormPresenter,
+)
 from src.presenters.utilities.event import Event
 from src.presenters.utilities.handle_exception import handle_exception
 from src.view_models.proxy_models.transaction_table_proxy_model import (
@@ -54,6 +59,11 @@ from src.views.dialogs.busy_dialog import create_simple_busy_indicator
 from src.views.utilities.handle_exception import display_error_message
 from src.views.utilities.message_box_functions import ask_yes_no_question
 from src.views.widgets.transaction_table_widget import TransactionTableWidget
+
+if TYPE_CHECKING:
+    from src.presenters.dialog.transaction_dialog_presenter import (
+        TransactionDialogPresenter,
+    )
 
 COLUMNS_SECURITY_RELATED = {
     TransactionTableColumn.SECURITY,
@@ -93,6 +103,10 @@ class TransactionsPresenter:
         return self._transaction_filter_form_presenter
 
     @property
+    def transaction_table_form_presenter(self) -> TransactionTableFormPresenter:
+        return self._transaction_table_form_presenter
+
+    @property
     def checked_accounts(self) -> frozenset[Account]:
         return self._transaction_filter_form_presenter.checked_accounts
 
@@ -124,6 +138,7 @@ class TransactionsPresenter:
         self._refund_transaction_dialog_presenter.load_record_keeper(record_keeper)
         self._transaction_tags_dialog_presenter.load_record_keeper(record_keeper)
         self._transaction_filter_form_presenter.load_record_keeper(record_keeper)
+        self._transaction_table_form_presenter.load_record_keeper(record_keeper)
         self._account_tree_shown_accounts = record_keeper.accounts
         self._reset_model()
         self._update_number_of_shown_transactions()
@@ -259,27 +274,36 @@ class TransactionsPresenter:
 
     def _initialize_presenters(self) -> None:
         self._cash_transaction_dialog_presenter = CashTransactionDialogPresenter(
-            self._view, self._record_keeper, self._model
+            self._view, self._record_keeper
         )
         self._cash_transfer_dialog_presenter = CashTransferDialogPresenter(
-            self._view, self._record_keeper, self._model
+            self._view, self._record_keeper
         )
         self._security_transaction_dialog_presenter = (
-            SecurityTransactionDialogPresenter(
-                self._view, self._record_keeper, self._model
-            )
+            SecurityTransactionDialogPresenter(self._view, self._record_keeper)
         )
         self._security_transfer_dialog_presenter = SecurityTransferDialogPresenter(
-            self._view, self._record_keeper, self._model
+            self._view, self._record_keeper
         )
         self._refund_transaction_dialog_presenter = RefundTransactionDialogPresenter(
-            self._view, self._record_keeper, self._model
+            self._view, self._record_keeper
         )
         self._transaction_tags_dialog_presenter = TransactionTagsDialogPresenter(
             self._view, self._record_keeper
         )
         self._transaction_filter_form_presenter = TransactionFilterFormPresenter(
             self._view, self._record_keeper, self._account_tree_shown_accounts
+        )
+        self._transaction_table_form_presenter = TransactionTableFormPresenter(
+            self._record_keeper
+        )
+
+        self._transaction_dialog_presenters: tuple[TransactionDialogPresenter] = (
+            self._cash_transaction_dialog_presenter,
+            self._cash_transfer_dialog_presenter,
+            self._security_transaction_dialog_presenter,
+            self._security_transfer_dialog_presenter,
+            self._refund_transaction_dialog_presenter,
         )
 
     def _initialize_view(self) -> None:
@@ -340,33 +364,11 @@ class TransactionsPresenter:
         self._view.signal_reset_columns.connect(self._reset_columns)
 
     def _connect_events(self) -> None:
-        self._cash_transaction_dialog_presenter.event_update_model.append(
-            self._update_model_data
-        )
-        self._cash_transaction_dialog_presenter.event_data_changed.append(
-            self._data_changed
-        )
-
-        self._cash_transfer_dialog_presenter.event_update_model.append(
-            self._update_model_data
-        )
-        self._cash_transfer_dialog_presenter.event_data_changed.append(
-            self._data_changed
-        )
-
-        self._security_transaction_dialog_presenter.event_update_model.append(
-            self._update_model_data
-        )
-        self._security_transaction_dialog_presenter.event_data_changed.append(
-            self._data_changed
-        )
-
-        self._security_transfer_dialog_presenter.event_update_model.append(
-            self._update_model_data
-        )
-        self._security_transfer_dialog_presenter.event_data_changed.append(
-            self._data_changed
-        )
+        for presenter in self._transaction_dialog_presenters:
+            presenter.event_update_model.append(self._update_model_data)
+            presenter.event_data_changed.append(self._data_changed)
+            presenter.event_pre_add.append(self._model.pre_add)
+            presenter.event_post_add.append(self._model.post_add)
 
         self._transaction_tags_dialog_presenter.event_data_changed.append(
             self._data_changed
@@ -381,6 +383,10 @@ class TransactionsPresenter:
 
         self._transaction_filter_form_presenter.event_filter_changed.append(
             self._filter_changed
+        )
+
+        self._transaction_table_form_presenter.event_data_changed.append(
+            self._data_changed
         )
 
     def _delete_transactions(self) -> None:
@@ -581,7 +587,10 @@ class TransactionsPresenter:
         finally:
             self._busy_dialog.close()
 
-    def _data_changed(self) -> None:
+    def _data_changed(self, uuids: Collection[UUID] | None = None) -> None:
+        if uuids is not None:
+            self._model.emit_data_changed_for_uuids(uuids)
+
         self._update_table_columns()
         self._update_number_of_shown_transactions()
         self.event_data_changed()

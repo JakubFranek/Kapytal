@@ -2,39 +2,22 @@ import logging
 from collections.abc import Collection, Sequence
 from datetime import datetime
 
-from PyQt6.QtWidgets import QWidget
 from src.models.base_classes.account import Account
 from src.models.model_objects.cash_objects import CashAccount, CashTransfer
-from src.models.record_keeper import RecordKeeper
 from src.models.user_settings import user_settings
+from src.presenters.dialog.transaction_dialog_presenter import (
+    TransactionDialogPresenter,
+)
 from src.presenters.utilities.check_for_nonexistent_attributes import (
     check_for_nonexistent_attributes,
 )
-from src.presenters.utilities.event import Event
 from src.presenters.utilities.handle_exception import handle_exception
 from src.presenters.utilities.validate_inputs import validate_datetime
-from src.view_models.transaction_table_model import TransactionTableModel
 from src.views.dialogs.cash_transfer_dialog import CashTransferDialog, EditMode
 from src.views.utilities.handle_exception import display_error_message
 
 
-class CashTransferDialogPresenter:
-    event_update_model = Event()
-    event_data_changed = Event()
-
-    def __init__(
-        self,
-        parent_view: QWidget,
-        record_keeper: RecordKeeper,
-        model: TransactionTableModel,
-    ) -> None:
-        self._parent_view = parent_view
-        self._record_keeper = record_keeper
-        self._model = model
-
-    def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
-        self._record_keeper = record_keeper
-
+class CashTransferDialogPresenter(TransactionDialogPresenter):
     def run_add_dialog(self, selected_accounts: Collection[Account]) -> None:
         logging.debug("Running CashTransferDialog (edit_mode=ADD)")
         if len(self._record_keeper.cash_accounts) <= 1:
@@ -144,7 +127,9 @@ class CashTransferDialogPresenter:
             sorted(tag_names_frozensets.pop()) if len(tag_names_frozensets) == 1 else ()
         )
 
-        self._dialog.signal_do_and_close.connect(self._edit_cash_transfers)
+        self._dialog.signal_do_and_close.connect(
+            lambda: self._edit_cash_transfers(transfers)
+        )
         self._dialog.exec()
 
     def _add_cash_transfer(self, *, close: bool) -> None:
@@ -196,15 +181,14 @@ class CashTransferDialogPresenter:
             handle_exception(exception)
             return
 
-        self._model.pre_add()
+        self.event_pre_add()
         self.event_update_model()
-        self._model.post_add()
+        self.event_post_add()
         if close:
             self._dialog.close()
         self.event_data_changed()
 
-    def _edit_cash_transfers(self) -> None:
-        transactions: list[CashTransfer] = self._model.get_selected_items()
+    def _edit_cash_transfers(self, transactions: Sequence[CashTransfer]) -> None:
         uuids = [transaction.uuid for transaction in transactions]
 
         sender_path = self._dialog.sender_path
@@ -259,8 +243,7 @@ class CashTransferDialogPresenter:
 
         self._dialog.close()
         self.event_update_model()
-        self._model.emit_data_changed_for_uuids(uuids)
-        self.event_data_changed()
+        self.event_data_changed(uuids)
 
     def _prepare_dialog(self, edit_mode: EditMode) -> bool:
         tag_names = sorted(tag.name for tag in self._record_keeper.tags)

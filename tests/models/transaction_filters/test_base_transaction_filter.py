@@ -18,12 +18,10 @@ class ConcreteTransactionFilter(BaseTransactionFilter):
     def members(self) -> tuple[Any, ...]:
         return super().members
 
-    def _keep_in_keep_mode(self, transaction: Transaction) -> bool:
-        del transaction
+    def _keep_in_keep_mode(self, transaction: Transaction) -> bool:  # noqa: ARG002
         return None
 
-    def _keep_in_discard_mode(self, transaction: Transaction) -> bool:
-        del transaction
+    def _keep_in_discard_mode(self, transaction: Transaction) -> bool:  # noqa: ARG002
         return False
 
 

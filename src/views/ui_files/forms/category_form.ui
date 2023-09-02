@@ -75,6 +75,13 @@
           </widget>
          </item>
          <item>
+          <widget class="QToolButton" name="incomeShowTransactionsToolButton">
+           <property name="text">
+            <string>...</string>
+           </property>
+          </widget>
+         </item>
+         <item>
           <widget class="QLineEdit" name="incomeSearchLineEdit">
            <property name="placeholderText">
             <string>Search Categories</string>
@@ -139,6 +146,13 @@
          </item>
          <item>
           <widget class="QToolButton" name="expenseRemoveToolButton">
+           <property name="text">
+            <string>...</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QToolButton" name="expenseShowTransactionsToolButton">
            <property name="text">
             <string>...</string>
            </property>
@@ -215,6 +229,13 @@
           </widget>
          </item>
          <item>
+          <widget class="QToolButton" name="incomeAndExpenseShowTransactionsToolButton">
+           <property name="text">
+            <string>...</string>
+           </property>
+          </widget>
+         </item>
+         <item>
           <widget class="QLineEdit" name="incomeAndExpenseSearchLineEdit">
            <property name="placeholderText">
             <string>Search Categories</string>
@@ -281,6 +302,11 @@
   <action name="actionExpand_All_Below">
    <property name="text">
     <string>Expand All Below</string>
+   </property>
+  </action>
+  <action name="actionShow_Transactions">
+   <property name="text">
+    <string>Show Transactions</string>
    </property>
   </action>
  </widget>

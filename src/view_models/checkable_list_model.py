@@ -4,6 +4,7 @@ from typing import Any
 
 from PyQt6.QtCore import QAbstractListModel, QModelIndex, QSortFilterProxyModel, Qt
 from PyQt6.QtWidgets import QListView
+from src.presenters.utilities.event import Event
 
 FLAGS_CHECKABLE = (
     Qt.ItemFlag.ItemIsSelectable
@@ -22,6 +23,7 @@ class CheckableListModel(QAbstractListModel):
         self._checked_items = ()
         self._proxy = proxy
         self._sort = sort
+        self.event_checked_items_changed = Event()
 
     @property
     def items(self) -> tuple[Any]:
@@ -36,6 +38,7 @@ class CheckableListModel(QAbstractListModel):
 
     def load_checked_items(self, values: Collection[Any]) -> None:
         self._checked_items = sorted(values, key=str) if self._sort else list(values)
+        self.event_checked_items_changed()
 
     def rowCount(self, index: QModelIndex = ...) -> int:  # noqa: N802
         if isinstance(index, QModelIndex) and index.isValid():
@@ -66,8 +69,10 @@ class CheckableListModel(QAbstractListModel):
             checked = value == Qt.CheckState.Checked.value
             if checked and item not in self._checked_items:
                 self._checked_items.append(item)
+                self.event_checked_items_changed()
             elif not checked and item in self._checked_items:
                 self._checked_items.remove(item)
+                self.event_checked_items_changed()
             return True
         return None
 
@@ -76,7 +81,7 @@ class CheckableListModel(QAbstractListModel):
             return Qt.ItemFlag.NoItemFlags
         return FLAGS_CHECKABLE
 
-    def get_selected_item(self) -> Any | None:
+    def get_selected_item(self) -> Any | None:  # noqa: ANN401
         indexes = self._list_view.selectedIndexes()
         if self._proxy:
             indexes = [self._proxy.mapToSource(index) for index in indexes]

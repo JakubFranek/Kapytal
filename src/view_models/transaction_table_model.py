@@ -61,7 +61,7 @@ class TransactionTableModel(QAbstractTableModel):
         self,
         view: QTableView,
         proxy_viewside: QSortFilterProxyModel,
-        proxy_sourceside: QSortFilterProxyModel,
+        proxy_sourceside: QSortFilterProxyModel | None,
     ) -> None:
         super().__init__()
         self._view = view
@@ -171,8 +171,10 @@ class TransactionTableModel(QAbstractTableModel):
         self._view.setSortingEnabled(True)  # noqa: FBT003
 
     def pre_reset_model(self) -> None:
+        if self._proxy_sourceside is not None:
+            self._proxy_sourceside.setDynamicSortFilter(False)  # noqa: FBT003
+
         self._proxy_viewside.setDynamicSortFilter(False)  # noqa: FBT003
-        self._proxy_sourceside.setDynamicSortFilter(False)  # noqa: FBT003
 
         # this effectively turns off sorting and dramatically decreases calls
         # to data() for sorting purposes during file load
@@ -180,14 +182,19 @@ class TransactionTableModel(QAbstractTableModel):
 
         self.beginResetModel()
 
-    def post_reset_model(self) -> None:
+    def post_reset_model(
+        self,
+        sort_column: int = 0,
+        sort_order: Qt.SortOrder = Qt.SortOrder.DescendingOrder,
+    ) -> None:
         self.endResetModel()
 
-        self._proxy_viewside.setDynamicSortFilter(True)  # noqa: FBT003
-        self._proxy_sourceside.setDynamicSortFilter(True)  # noqa: FBT003
+        if self._proxy_sourceside is not None:
+            self._proxy_sourceside.setDynamicSortFilter(True)  # noqa: FBT003
 
+        self._proxy_viewside.setDynamicSortFilter(True)  # noqa: FBT003
         # this slows down file load but enables dynamic sort filter
-        self._proxy_viewside.sort(0, Qt.SortOrder.DescendingOrder)
+        self._view.sortByColumn(sort_column, sort_order)
 
     def pre_remove_item(self, item: Transaction) -> None:
         index = self.get_index_from_item(item)
@@ -197,26 +204,21 @@ class TransactionTableModel(QAbstractTableModel):
         self.endRemoveRows()
 
     def get_selected_items(self) -> tuple[Transaction, ...]:
-        proxy_viewside_indexes = self._view.selectedIndexes()
-        proxy_sourceside_indexes = [
-            self._proxy_viewside.mapToSource(index) for index in proxy_viewside_indexes
-        ]
-        source_indexes = [
-            self._proxy_sourceside.mapToSource(index)
-            for index in proxy_sourceside_indexes
-        ]
+        indexes = self._view.selectedIndexes()
+        indexes = [self._proxy_viewside.mapToSource(index) for index in indexes]
+        if self._proxy_sourceside is not None:
+            indexes = [self._proxy_sourceside.mapToSource(index) for index in indexes]
         return tuple(
-            self._transactions[index.row()]
-            for index in source_indexes
-            if index.column() == 0
+            self._transactions[index.row()] for index in indexes if index.column() == 0
         )
 
     def get_visible_items(self) -> tuple[Transaction, ...]:
         items: list[Transaction] = []
-        for row in range(self._proxy_viewside.rowCount()):
+        for row in range(self._view.model().rowCount()):
             index = self._proxy_viewside.index(row, 0)
             index = self._proxy_viewside.mapToSource(index)
-            index = self._proxy_sourceside.mapToSource(index)
+            if self._proxy_sourceside is not None:
+                index = self._proxy_sourceside.mapToSource(index)
             items.append(self._transactions[index.row()])
         return tuple(items)
 
@@ -422,6 +424,8 @@ class TransactionTableModel(QAbstractTableModel):
                 return colors.get_blue_brush()
         if column == TransactionTableColumn.BALANCE:
             balance = self._get_account_balance(transaction)
+            if not balance.is_finite():
+                return None
             if balance.value_rounded < 0:
                 return colors.get_red_brush()
             if balance.value_rounded > 0:
@@ -585,6 +589,7 @@ class TransactionTableModel(QAbstractTableModel):
                         tag_names.append(f"{tag.name} ({amount.to_str_rounded()})")
                     else:
                         tag_names.append(tag.name)
+                tag_names = sorted(tag_name for tag_name in tag_names)
             else:
                 tag_names = sorted(tag.name for tag in transaction.tags)
         else:

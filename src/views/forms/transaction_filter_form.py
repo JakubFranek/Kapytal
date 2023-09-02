@@ -69,6 +69,7 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
 
     signal_tags_select_all = pyqtSignal()
     signal_tags_unselect_all = pyqtSignal()
+    signal_tags_update_number_selected = pyqtSignal()
 
     signal_payees_select_all = pyqtSignal()
     signal_payees_unselect_all = pyqtSignal()
@@ -110,6 +111,7 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
         self._date_filter_mode_changed()
         self._account_filter_mode_changed()
         self._tagless_filter_mode_changed()
+        self._specific_tags_filter_mode_changed()
 
     @property
     def types_list_view(self) -> QListView:
@@ -146,14 +148,6 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
     @property
     def security_list_view(self) -> QListView:
         return self.securityListView
-
-    @property
-    def specific_tags_filter_active(self) -> bool:
-        return self.specificTagsFilterGroupBox.isChecked()
-
-    @specific_tags_filter_active.setter
-    def specific_tags_filter_active(self, value: bool) -> None:
-        self.specificTagsFilterGroupBox.setChecked(value)
 
     @property
     def payee_filter_active(self) -> bool:
@@ -284,6 +278,16 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
     @tagless_filter_mode.setter
     def tagless_filter_mode(self, mode: FilterMode) -> None:
         self.tagLessFilterModeComboBox.setCurrentText(mode.name)
+
+    @property
+    def specific_tags_filter_mode(self) -> FilterMode:
+        return TransactionFilterForm._get_filter_mode_from_combobox(
+            self.specificTagsFilterModeComboBox
+        )
+
+    @specific_tags_filter_mode.setter
+    def specific_tags_filter_mode(self, mode: FilterMode) -> None:
+        self.specificTagsFilterModeComboBox.setCurrentText(mode.name)
 
     @property
     def split_tags_filter_mode(self) -> FilterMode:
@@ -433,11 +437,6 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
             self.signal_accounts_unselect_all.emit
         )
 
-        self.tagsSelectAllPushButton.clicked.connect(self.signal_tags_select_all.emit)
-        self.tagsUnselectAllPushButton.clicked.connect(
-            self.signal_tags_unselect_all.emit
-        )
-
         self.payeesSelectAllPushButton.clicked.connect(
             self.signal_payees_select_all.emit
         )
@@ -492,6 +491,9 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
         self.tagLessFilterModeComboBox.currentTextChanged.connect(
             self._tagless_filter_mode_changed
         )
+        self.specificTagsFilterModeComboBox.currentTextChanged.connect(
+            self._specific_tags_filter_mode_changed
+        )
 
         self.cashAmountFilterModeComboBox.currentTextChanged.connect(
             self._update_cash_amount_filter_state
@@ -532,6 +534,7 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
         self._initialize_mode_combobox(self.splitTagsFilterModeComboBox)
         self._initialize_mode_combobox(self.multipleCategoriesFilterModeComboBox)
         self._initialize_mode_combobox(self.cashAmountFilterModeComboBox)
+        self._initialize_mode_combobox(self.specificTagsFilterModeComboBox)
 
     @staticmethod
     def _initialize_mode_combobox(combobox: QComboBox) -> None:
@@ -553,6 +556,8 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
         self.actionCollapseAllIncomeCategories = QAction("Collapse All", self)
         self.actionCollapseAllExpenseCategories = QAction("Collapse All", self)
         self.actionCollapseAllIncomeAndExpenseCategories = QAction("Collapse All", self)
+        self.actionSelectAllTags = QAction("Select All", self)
+        self.actionUnselectAllTags = QAction("Unselect All", self)
 
         self.actionExpandAllAccounts.setIcon(icons.expand)
         self.actionExpandAllIncomeCategories.setIcon(icons.expand)
@@ -562,6 +567,8 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
         self.actionCollapseAllIncomeCategories.setIcon(icons.collapse)
         self.actionCollapseAllExpenseCategories.setIcon(icons.collapse)
         self.actionCollapseAllIncomeAndExpenseCategories.setIcon(icons.collapse)
+        self.actionSelectAllTags.setIcon(icons.select_all)
+        self.actionUnselectAllTags.setIcon(icons.unselect_all)
 
         self.actionExpandAllAccounts.triggered.connect(self.accountsTreeView.expandAll)
         self.actionExpandAllIncomeCategories.triggered.connect(
@@ -585,6 +592,8 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
         self.actionCollapseAllIncomeAndExpenseCategories.triggered.connect(
             self.incomeAndExpenseCategoriesTreeView.collapseAll
         )
+        self.actionSelectAllTags.triggered.connect(self.signal_tags_select_all.emit)
+        self.actionUnselectAllTags.triggered.connect(self.signal_tags_unselect_all.emit)
 
         self.accountsFilterExpandAllToolButton.setDefaultAction(
             self.actionExpandAllAccounts
@@ -609,6 +618,12 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
         )
         self.incomeAndExpenseCategoriesCollapseAllToolButton.setDefaultAction(
             self.actionCollapseAllIncomeAndExpenseCategories
+        )
+        self.specificTagsFilterSelectAllToolButton.setDefaultAction(
+            self.actionSelectAllTags
+        )
+        self.specificTagsFilterUnselectAllToolButton.setDefaultAction(
+            self.actionUnselectAllTags
         )
 
     def _handle_button_box_click(self, button: QAbstractButton) -> None:
@@ -636,6 +651,7 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
     def _description_filter_mode_changed(self) -> None:
         mode = self.description_filter_mode
         self.descriptionFilterPatternLineEdit.setEnabled(mode != FilterMode.OFF)
+        self.descriptionFilterMatchCaseCheckBox.setEnabled(mode != FilterMode.OFF)
 
     def _account_filter_mode_changed(self) -> None:
         mode = self.account_filter_mode
@@ -647,6 +663,14 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
         if mode == FilterMode.KEEP:
             self.splitTagsFilterModeComboBox.setCurrentText(FilterMode.OFF.name)
         self.splitTagsFilterModeComboBox.setEnabled(mode != FilterMode.KEEP)
+
+    def _specific_tags_filter_mode_changed(self) -> None:
+        mode = self.specific_tags_filter_mode
+        self.specificTagsFilterSelectAllToolButton.setEnabled(mode != FilterMode.OFF)
+        self.specificTagsFilterUnselectAllToolButton.setEnabled(mode != FilterMode.OFF)
+        self.tagsSearchLineEdit.setEnabled(mode != FilterMode.OFF)
+        self.tagsListView.setEnabled(mode != FilterMode.OFF)
+        self.signal_tags_update_number_selected.emit()
 
     def _initialize_account_filter_actions(self) -> None:
         self.actionSelectAllCashAccountsBelow = QAction(
@@ -673,8 +697,9 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
             self.signal_accounts_expand_all_below.emit
         )
 
-    def _create_account_filter_context_menu(self, event: QContextMenuEvent) -> None:
-        del event
+    def _create_account_filter_context_menu(
+        self, event: QContextMenuEvent  # noqa: ARG002
+    ) -> None:
         self.menu = QMenu(self)
         self.menu.addAction(self.actionSelectAllCashAccountsBelow)
         self.menu.addAction(self.actionSelectAllSecurityAccountsBelow)
@@ -714,6 +739,14 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
         self.categoriesTypeTabWidget.setTabText(0, income_text)
         self.categoriesTypeTabWidget.setTabText(1, expense_text)
         self.categoriesTypeTabWidget.setTabText(2, income_and_expense_text)
+
+    def set_selected_tags_numbers(self, selected: int, total: int) -> None:
+        if self.specific_tags_filter_mode != FilterMode.OFF:
+            self.specificTagsFilterGroupBox.setTitle(
+                f"Specific Tags Filter ({selected:,} / {total:,})"
+            )
+        else:
+            self.specificTagsFilterGroupBox.setTitle("Specific Tags Filter")
 
     def _update_date_edit_display_format(self) -> None:
         display_format = convert_datetime_format_to_qt(

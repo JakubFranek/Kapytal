@@ -16,41 +16,42 @@ class CashFlowTotalChartWidget(ChartWidget):
     def load_data(self, stats: CashFlowStats) -> None:
         self.chart.axes.clear()
         bar_incomes = self.chart.axes.bar(
-            "Inflows", stats.incomes.value_rounded, color="darkgreen"
+            "Inflows", stats.incomes.balance.value_rounded, color="darkgreen"
         )
         bar_inward_transfers = self.chart.axes.bar(
             "Inflows",
-            stats.inward_transfers.value_rounded,
-            bottom=stats.incomes.value_rounded,
+            stats.inward_transfers.balance.value_rounded,
+            bottom=stats.incomes.balance.value_rounded,
             color="green",
         )
         bar_refunds = self.chart.axes.bar(
             "Inflows",
-            stats.refunds.value_rounded,
-            bottom=stats.incomes.value_rounded + stats.inward_transfers.value_rounded,
+            stats.refunds.balance.value_rounded,
+            bottom=stats.incomes.balance.value_rounded
+            + stats.inward_transfers.balance.value_rounded,
             color="limegreen",
         )
         bar_initial_balances = self.chart.axes.bar(
             "Inflows",
             stats.initial_balances.value_rounded,
-            bottom=stats.incomes.value_rounded
-            + stats.inward_transfers.value_rounded
-            + stats.refunds.value_rounded,
+            bottom=stats.incomes.balance.value_rounded
+            + stats.inward_transfers.balance.value_rounded
+            + stats.refunds.balance.value_rounded,
             color="lime",
         )
 
         bar_expenses = self.chart.axes.bar(
-            "Outflows", stats.expenses.value_rounded, color="red"
+            "Outflows", stats.expenses.balance.value_rounded, color="red"
         )
         bar_outward_transfers = self.chart.axes.bar(
             "Outflows",
-            stats.outward_transfers.value_rounded,
-            bottom=stats.expenses.value_rounded,
+            stats.outward_transfers.balance.value_rounded,
+            bottom=stats.expenses.balance.value_rounded,
             color="salmon",
         )
 
         bar_cash_flow = self.chart.axes.bar(
-            "Cash Flow", stats.delta_neutral.value_rounded, color="royalblue"
+            "Cash Flow", stats.delta_neutral.balance.value_rounded, color="royalblue"
         )
 
         bar_delta_performance = self.chart.axes.bar(
@@ -60,13 +61,13 @@ class CashFlowTotalChartWidget(ChartWidget):
         )
 
         self.chart.axes.bar_label(
-            bar_initial_balances, labels=[f"{stats.inflows.value_rounded:,}"]
+            bar_initial_balances, labels=[f"{stats.inflows.balance.value_rounded:,}"]
         )
         self.chart.axes.bar_label(
-            bar_outward_transfers, labels=[f"{stats.outflows.value_rounded:,}"]
+            bar_outward_transfers, labels=[f"{stats.outflows.balance.value_rounded:,}"]
         )
         self.chart.axes.bar_label(
-            bar_cash_flow, labels=[f"{stats.delta_neutral.value_rounded:,}"]
+            bar_cash_flow, labels=[f"{stats.delta_neutral.balance.value_rounded:,}"]
         )
         self.chart.axes.bar_label(
             bar_delta_performance, labels=[f"{stats.delta_performance.value_rounded:,}"]
@@ -98,15 +99,15 @@ class CashFlowTotalChartWidget(ChartWidget):
         )
 
         max_value = max(
-            stats.inflows,
-            stats.outflows,
-            stats.delta_neutral,
+            stats.inflows.balance,
+            stats.outflows.balance,
+            stats.delta_neutral.balance,
             stats.delta_performance,
         )
         min_value = min(
-            stats.inflows,
-            stats.outflows,
-            stats.delta_neutral,
+            stats.inflows.balance,
+            stats.outflows.balance,
+            stats.delta_neutral.balance,
             stats.delta_performance,
         )
         if min_value.value_rounded >= 0:
@@ -116,4 +117,4 @@ class CashFlowTotalChartWidget(ChartWidget):
         ymax = math.ceil(float(max_value.value_rounded) / step) * step
         ymin = math.floor(float(min_value.value_rounded) / step) * step
         self.chart.axes.set_ylim(ymin, ymax)
-        self.chart.axes.set_ylabel(stats.inflows.currency.code)
+        self.chart.axes.set_ylabel(stats.inflows.balance.currency.code)

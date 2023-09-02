@@ -10,7 +10,8 @@ class PayeeForm(CustomWidget, Ui_PayeeForm):
     signal_add_payee = pyqtSignal()
     signal_rename_payee = pyqtSignal()
     signal_remove_payee = pyqtSignal()
-    signal_select_payee = pyqtSignal()
+    signal_show_transactions = pyqtSignal()
+
     signal_search_text_changed = pyqtSignal(str)
     signal_selection_changed = pyqtSignal()
 
@@ -28,10 +29,15 @@ class PayeeForm(CustomWidget, Ui_PayeeForm):
         )
 
     def enable_actions(
-        self, *, is_payee_selected: bool, is_one_payee_selected: bool
+        self,
+        *,
+        is_payee_selected: bool,
+        is_one_payee_selected: bool,
+        show_transactions: bool
     ) -> None:
         self.actionRename_Payee.setEnabled(is_one_payee_selected)
         self.actionRemove_Payee.setEnabled(is_payee_selected)
+        self.actionShow_Transactions.setEnabled(show_transactions)
 
     def finalize_setup(self) -> None:
         self.tableView.horizontalHeader().setStretchLastSection(False)
@@ -69,11 +75,16 @@ class PayeeForm(CustomWidget, Ui_PayeeForm):
         self.actionAdd_Payee.setIcon(icons.add)
         self.actionRename_Payee.setIcon(icons.edit)
         self.actionRemove_Payee.setIcon(icons.remove)
+        self.actionShow_Transactions.setIcon(icons.table)
 
         self.actionAdd_Payee.triggered.connect(self.signal_add_payee.emit)
         self.actionRename_Payee.triggered.connect(self.signal_rename_payee.emit)
         self.actionRemove_Payee.triggered.connect(self.signal_remove_payee.emit)
+        self.actionShow_Transactions.triggered.connect(
+            self.signal_show_transactions.emit
+        )
 
         self.addToolButton.setDefaultAction(self.actionAdd_Payee)
         self.renameToolButton.setDefaultAction(self.actionRename_Payee)
         self.removeToolButton.setDefaultAction(self.actionRemove_Payee)
+        self.showTransactionsToolButton.setDefaultAction(self.actionShow_Transactions)

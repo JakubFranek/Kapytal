@@ -10,7 +10,8 @@ class TagForm(CustomWidget, Ui_TagForm):
     signal_add_tag = pyqtSignal()
     signal_rename_tag = pyqtSignal()
     signal_remove_tag = pyqtSignal()
-    signal_select_tag = pyqtSignal()
+    signal_show_transactions = pyqtSignal()
+
     signal_search_text_changed = pyqtSignal(str)
     signal_selection_changed = pyqtSignal()
 
@@ -28,10 +29,15 @@ class TagForm(CustomWidget, Ui_TagForm):
         )
 
     def enable_actions(
-        self, *, is_tag_selected: bool, is_one_tag_selected: bool
+        self,
+        *,
+        is_tag_selected: bool,
+        is_one_tag_selected: bool,
+        show_transactions: bool
     ) -> None:
         self.actionRename_Tag.setEnabled(is_one_tag_selected)
         self.actionRemove_Tag.setEnabled(is_tag_selected)
+        self.actionShow_Transactions.setEnabled(show_transactions)
 
     def finalize_setup(self) -> None:
         self.tableView.horizontalHeader().setStretchLastSection(False)
@@ -69,11 +75,16 @@ class TagForm(CustomWidget, Ui_TagForm):
         self.actionAdd_Tag.setIcon(icons.add)
         self.actionRename_Tag.setIcon(icons.edit)
         self.actionRemove_Tag.setIcon(icons.remove)
+        self.actionShow_Transactions.setIcon(icons.table)
 
         self.actionAdd_Tag.triggered.connect(self.signal_add_tag.emit)
         self.actionRename_Tag.triggered.connect(self.signal_rename_tag.emit)
         self.actionRemove_Tag.triggered.connect(self.signal_remove_tag.emit)
+        self.actionShow_Transactions.triggered.connect(
+            self.signal_show_transactions.emit
+        )
 
         self.addToolButton.setDefaultAction(self.actionAdd_Tag)
         self.renameToolButton.setDefaultAction(self.actionRename_Tag)
         self.removeToolButton.setDefaultAction(self.actionRemove_Tag)
+        self.showTransactionsToolButton.setDefaultAction(self.actionShow_Transactions)

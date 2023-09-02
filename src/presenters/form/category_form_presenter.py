@@ -1,4 +1,5 @@
 import logging
+from typing import Any
 
 from PyQt6.QtCore import QSortFilterProxyModel, Qt
 from PyQt6.QtWidgets import QApplication
@@ -7,6 +8,9 @@ from src.models.model_objects.attributes import Category, CategoryType
 from src.models.record_keeper import RecordKeeper
 from src.models.statistics.category_stats import (
     calculate_category_stats,
+)
+from src.presenters.form.transaction_table_form_presenter import (
+    TransactionTableFormPresenter,
 )
 from src.presenters.utilities.event import Event
 from src.presenters.utilities.handle_exception import handle_exception
@@ -19,14 +23,20 @@ BUSY_DIALOG_TRANSACTION_LIMIT = 20_000
 
 
 class CategoryFormPresenter:
-    event_data_changed = Event()
-
-    def __init__(self, view: CategoryForm, record_keeper: RecordKeeper) -> None:
+    def __init__(
+        self,
+        view: CategoryForm,
+        record_keeper: RecordKeeper,
+        transaction_table_form_presenter: TransactionTableFormPresenter,
+    ) -> None:
         self._view = view
         self._record_keeper = record_keeper
+        self._transaction_table_form_presenter = transaction_table_form_presenter
+
+        self.event_data_changed = Event()
 
         self._initialize_models()
-        self._setup_signals()
+        self._initialize_signals()
         self._view.finalize_setup()
         self._update_model_data()
 
@@ -41,9 +51,6 @@ class CategoryFormPresenter:
         if self._recalculate_data:
             self._reset_model()
 
-        self._view.incomeTreeView.expandAll()
-        self._view.expenseTreeView.expandAll()
-        self._view.incomeAndExpenseTreeView.expandAll()
         self._view.show_form()
 
     def _reset_model(self) -> None:
@@ -103,7 +110,7 @@ class CategoryFormPresenter:
 
     def _run_dialog(self, *, edit: bool) -> None:
         model = self._get_current_model()
-        selected_item = model.get_selected_item()
+        selected_item = model.get_selected_category()
         type_ = self._view.category_type
         flat_categories = self._get_flat_categories_for_type(type_)
         paths = [category.path + "/" for category in flat_categories]
@@ -159,7 +166,7 @@ class CategoryFormPresenter:
 
     def _edit_category(self) -> None:
         model = self._get_current_model()
-        item: Category = model.get_selected_item()
+        item: Category = model.get_selected_category()
         previous_parent = item.parent
         previous_path = self._dialog.current_path
         previous_index = self._get_category_index(item)
@@ -201,7 +208,7 @@ class CategoryFormPresenter:
 
     def _delete_category(self) -> None:
         model = self._get_current_model()
-        item = model.get_selected_item()
+        item = model.get_selected_category()
         if item is None:
             raise ValueError("Cannot delete non-existent item.")
 
@@ -218,13 +225,14 @@ class CategoryFormPresenter:
         self.event_data_changed()
         self._recalculate_data = False
 
-    def _setup_signals(self) -> None:
+    def _initialize_signals(self) -> None:
         self._view.signal_tree_selection_changed.connect(self._tree_selection_changed)
         self._view.signal_tab_changed.connect(self._tree_selection_changed)
         self._view.signal_expand_all_below.connect(self._expand_all_below)
         self._view.signal_add.connect(lambda: self._run_dialog(edit=False))
         self._view.signal_edit.connect(lambda: self._run_dialog(edit=True))
         self._view.signal_delete.connect(self._delete_category)
+        self._view.signal_show_transactions.connect(self._show_transactions)
         self._view.signal_income_search_text_changed.connect(
             self._filter_income_categories
         )
@@ -239,15 +247,18 @@ class CategoryFormPresenter:
 
     def _tree_selection_changed(self) -> None:
         model = self._get_current_model()
-        item = model.get_selected_item()
+        item = model.get_selected_category()
+        transactions = model.get_selected_category_transactions()
 
         enable_modify_object = item is not None
         enable_add_objects = True
         enable_expand_below = isinstance(item, Category) and len(item.children) > 0
+        enable_show_transactions = transactions is not None and len(transactions) > 0
 
         self._view.enable_actions(
             enable_add_objects=enable_add_objects,
             enable_modify_object=enable_modify_object,
+            enable_show_transactions=enable_show_transactions,
             enable_expand_below=enable_expand_below,
         )
 
@@ -397,3 +408,34 @@ class CategoryFormPresenter:
             return self._record_keeper.get_category(parent_path)
         except NotFoundError:
             return None
+
+    def _show_transactions(self) -> None:
+        model = self._get_current_model()
+        category = model.get_selected_category()
+        transactions = model.get_selected_category_transactions()
+        if transactions is None:
+            return
+        title = f"Category Transactions - {category.path}"
+        self._transaction_table_form_presenter.event_data_changed.append(
+            self._transaction_table_form_data_changed
+        )
+        self._transaction_table_form_presenter.event_form_closed.append(
+            self._transaction_table_form_closed
+        )
+        self._transaction_table_form_presenter.load_data(transactions, title)
+        self._transaction_table_form_presenter.show_form(self._view)
+
+    def _transaction_table_form_data_changed(
+        self, *_: Any, **__: Any  # noqa: ANN401
+    ) -> None:
+        self._recalculate_data = True
+
+    def _transaction_table_form_closed(self) -> None:
+        if self._recalculate_data:
+            self._reset_model()
+        self._transaction_table_form_presenter.event_data_changed.remove(
+            self._transaction_table_form_data_changed
+        )
+        self._transaction_table_form_presenter.event_form_closed.remove(
+            self._transaction_table_form_closed
+        )

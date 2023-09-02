@@ -6,9 +6,11 @@ from typing import Self
 from PyQt6.QtCore import QAbstractItemModel, QModelIndex, QSortFilterProxyModel, Qt
 from PyQt6.QtGui import QBrush, QFont
 from PyQt6.QtWidgets import QTreeView
+from src.models.custom_exceptions import InvalidOperationError
 from src.models.model_objects.attributes import Category
-from src.models.model_objects.currency_objects import CashAmount, Currency
-from src.models.statistics.category_stats import CategoryStats
+from src.models.model_objects.cash_objects import CashTransaction, RefundTransaction
+from src.models.model_objects.currency_objects import Currency
+from src.models.statistics.category_stats import CategoryStats, TransactionBalance
 from src.views import colors
 
 overline_font = QFont()
@@ -26,11 +28,19 @@ ALIGNMENT_LEFT = Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
 
 class RowObject:
     def __init__(
-        self, name: str, path: str, data: Sequence[Decimal], parent: Self | None
+        self,
+        name: str,
+        path: str,
+        amounts: Sequence[Decimal],
+        transactions: Sequence[Sequence[CashTransaction | RefundTransaction]],
+        parent: Self | None,
     ) -> None:
         self.name = name
         self.path = path
-        self.data = tuple(data)
+        self.data = tuple(amounts)
+        self.transactions: tuple[
+            tuple[CashTransaction | RefundTransaction, ...], ...
+        ] = tuple(tuple(transaction_sequence) for transaction_sequence in transactions)
         self.parent = parent
         self.children: list[Self] = []
 
@@ -51,12 +61,11 @@ class PeriodicCategoryStatsTreeModel(QAbstractItemModel):
     def load_periodic_category_stats(
         self,
         periodic_stats: dict[str, tuple[CategoryStats]],
-        periodic_totals: dict[str, CashAmount],
-        periodic_income_totals: dict[str, CashAmount],
-        periodic_expense_totals: dict[str, CashAmount],
-        category_averages: dict[Category, CashAmount],
-        category_totals: dict[Category, CashAmount],
-        base_currency: Currency,
+        periodic_totals: dict[str, TransactionBalance],
+        periodic_income_totals: dict[str, TransactionBalance],
+        periodic_expense_totals: dict[str, TransactionBalance],
+        category_averages: dict[Category, TransactionBalance],
+        category_totals: dict[Category, TransactionBalance],
     ) -> None:
         self._root_row_objects: list[RowObject] = []
         self._flat_row_objects: list[RowObject] = []
@@ -66,74 +75,139 @@ class PeriodicCategoryStatsTreeModel(QAbstractItemModel):
         categories = frozenset(
             item.category for stats in periodic_stats.values() for item in stats
         )
+        # sorting by path ensures parents are processed before their children
         categories = sorted(categories, key=lambda x: x.path)
         for category in categories:
             row_data: list[Decimal] = []
+            row_transactions: list[tuple[CashTransaction | RefundTransaction]] = []
+
             for period in periodic_stats:
                 stats = _get_category_stats(periodic_stats[period], category.path)
                 if stats is not None:
                     row_data.append(stats.balance.value_rounded)
+                    row_transactions.append(tuple(stats.transactions))
                 else:
-                    row_data.append(Decimal(base_currency.zero_amount.value_rounded))
+                    row_data.append(Decimal(0))
+                    row_transactions.append(())
 
             if all(balance == 0 for balance in row_data):
                 continue
-            row_data.append(category_averages[category].value_rounded)
-            row_data.append(category_totals[category].value_rounded)
+            row_data.append(category_averages[category].balance.value_rounded)
+            row_data.append(category_totals[category].balance.value_rounded)
+            row_transactions.append(tuple(category_averages[category].transactions))
+            row_transactions.append(tuple(category_totals[category].transactions))
 
             if category.parent is None:
-                row_object = RowObject(category.name, category.path, row_data, None)
+                row_object = RowObject(
+                    category.name, category.path, row_data, row_transactions, None
+                )
                 self._root_row_objects.append(row_object)
             else:
                 parent_row = _get_row_object_by_path(
                     self._flat_row_objects, category.parent.path
                 )
                 row_object = RowObject(
-                    category.name, category.path, row_data, parent_row
+                    category.name, category.path, row_data, row_transactions, parent_row
                 )
                 parent_row.children.append(row_object)
             self._flat_row_objects.append(row_object)
 
-        periodic_totals_row: list[Decimal] = []
-        periodic_income_totals_row: list[Decimal] = []
-        periodic_expense_totals_row: list[Decimal] = []
+        periodic_totals_row_data: list[Decimal] = []
+        periodic_income_totals_row_data: list[Decimal] = []
+        periodic_expense_totals_row_data: list[Decimal] = []
+        periodic_totals_transactions: list[
+            list[CashTransaction | RefundTransaction]
+        ] = []
+        periodic_income_totals_transactions: list[
+            list[CashTransaction | RefundTransaction]
+        ] = []
+        periodic_expense_totals_transactions: list[
+            list[CashTransaction | RefundTransaction]
+        ] = []
         for period in periodic_totals:
-            periodic_totals_row.append(periodic_totals[period].value_rounded)
-            periodic_income_totals_row.append(
-                periodic_income_totals[period].value_rounded
+            periodic_totals_row_data.append(
+                periodic_totals[period].balance.value_rounded
             )
-            periodic_expense_totals_row.append(
-                periodic_expense_totals[period].value_rounded
+            periodic_income_totals_row_data.append(
+                periodic_income_totals[period].balance.value_rounded
+            )
+            periodic_expense_totals_row_data.append(
+                periodic_expense_totals[period].balance.value_rounded
+            )
+            periodic_totals_transactions.append(
+                tuple(periodic_totals[period].transactions)
+            )
+            periodic_income_totals_transactions.append(
+                tuple(periodic_income_totals[period].transactions)
+            )
+            periodic_expense_totals_transactions.append(
+                tuple(periodic_expense_totals[period].transactions)
             )
 
-        total_sum = sum(periodic_totals_row)
-        average_sum = round(total_sum / len(periodic_totals_row), base_currency.places)
-        periodic_totals_row.append(average_sum)
-        periodic_totals_row.append(total_sum)
-
-        income_sum = sum(periodic_income_totals_row)
-        average_income_sum = round(
-            income_sum / len(periodic_income_totals_row), base_currency.places
+        all_transactions = tuple(
+            transaction
+            for transactions_balance in periodic_totals.values()
+            for transaction in transactions_balance.transactions
         )
-        periodic_income_totals_row.append(average_income_sum)
-        periodic_income_totals_row.append(income_sum)
-
-        expense_sum = sum(periodic_expense_totals_row)
-        average_expense_sum = round(
-            expense_sum / len(periodic_expense_totals_row), base_currency.places
+        all_income_transactions = tuple(
+            transaction
+            for transactions_balance in periodic_income_totals.values()
+            for transaction in transactions_balance.transactions
         )
-        periodic_expense_totals_row.append(average_expense_sum)
-        periodic_expense_totals_row.append(expense_sum)
+        all_expense_transactions = tuple(
+            transaction
+            for transactions_balance in periodic_expense_totals.values()
+            for transaction in transactions_balance.transactions
+        )
+
+        total_sum = sum(periodic_totals_row_data)
+        average_sum = round(total_sum / len(periodic_totals_row_data))
+        periodic_totals_row_data.append(average_sum)
+        periodic_totals_row_data.append(total_sum)
+        periodic_totals_transactions.append(all_transactions)
+        periodic_totals_transactions.append(all_transactions)
+
+        income_sum = sum(periodic_income_totals_row_data)
+        average_income_sum = round(income_sum / len(periodic_income_totals_row_data))
+        periodic_income_totals_row_data.append(average_income_sum)
+        periodic_income_totals_row_data.append(income_sum)
+        periodic_income_totals_transactions.append(all_income_transactions)
+        periodic_income_totals_transactions.append(all_income_transactions)
+
+        expense_sum = sum(periodic_expense_totals_row_data)
+        average_expense_sum = round(expense_sum / len(periodic_expense_totals_row_data))
+        periodic_expense_totals_row_data.append(average_expense_sum)
+        periodic_expense_totals_row_data.append(expense_sum)
+        periodic_expense_totals_transactions.append(all_expense_transactions)
+        periodic_expense_totals_transactions.append(all_expense_transactions)
 
         self._root_row_objects.sort(key=lambda x: x.data[-1], reverse=True)
         self._root_row_objects.append(
-            RowObject("Σ Income", "Σ Income", periodic_income_totals_row, None)
+            RowObject(
+                "Σ Income",
+                "Σ Income",
+                periodic_income_totals_row_data,
+                periodic_income_totals_transactions,
+                None,
+            )
         )
         self._root_row_objects.append(
-            RowObject("Σ Expense", "Σ Expense", periodic_expense_totals_row, None)
+            RowObject(
+                "Σ Expense",
+                "Σ Expense",
+                periodic_expense_totals_row_data,
+                periodic_expense_totals_transactions,
+                None,
+            )
         )
         self._root_row_objects.append(
-            RowObject("Σ Total", "Σ Total", periodic_totals_row, None)
+            RowObject(
+                "Σ Total",
+                "Σ Total",
+                periodic_totals_row_data,
+                periodic_totals_transactions,
+                None,
+            )
         )
 
         self.TOTAL_COLUMN_INDEX = len(self._column_headers) - 1
@@ -270,6 +344,26 @@ class PeriodicCategoryStatsTreeModel(QAbstractItemModel):
     def post_reset_model(self) -> None:
         self.endResetModel()
         self._view.setSortingEnabled(True)  # noqa: FBT003
+
+    def get_selected_transactions(
+        self,
+    ) -> tuple[tuple[CashTransaction | RefundTransaction, ...], str, str]:
+        """Returns a tuple of selected Transactions, period and name."""
+        indexes = self._view.selectedIndexes()
+        if len(indexes) != 1:
+            raise InvalidOperationError(
+                "Transactions can be shown for only for exactly one Category."
+            )
+        index = indexes[0]
+        if self._proxy:
+            index = self._proxy.mapToSource(index)
+
+        row_object: RowObject = index.internalPointer()
+        return (
+            row_object.transactions[index.column() - 1],
+            self._column_headers[index.column()],
+            row_object.path,
+        )
 
 
 def _get_category_stats(
