@@ -81,6 +81,7 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
     signal_expense_categories_unselect_all = pyqtSignal()
     signal_income_and_expense_categories_select_all = pyqtSignal()
     signal_income_and_expense_categories_unselect_all = pyqtSignal()
+    signal_categories_update_number_selected = pyqtSignal()
 
     signal_currencies_select_all = pyqtSignal()
     signal_currencies_unselect_all = pyqtSignal()
@@ -104,12 +105,14 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
         self._initialize_buttons()
         self._initialize_signals()
         self._initialize_mode_comboboxes()
+        self._initialize_category_filter_selection_mode_combobox()
         self._initialize_account_filter_actions()
         self._initialize_context_menu_events()
         self.base_currency_code = base_currency_code
         self._description_filter_mode_changed()
         self._date_filter_mode_changed()
         self._account_filter_mode_changed()
+        self._specific_categories_filter_mode_changed()
         self._tagless_filter_mode_changed()
         self._specific_tags_filter_mode_changed()
 
@@ -156,14 +159,6 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
     @payee_filter_active.setter
     def payee_filter_active(self, value: bool) -> None:
         self.payeeFilterGroupBox.setChecked(value)
-
-    @property
-    def category_filters_active(self) -> bool:
-        return self.categoryFiltersGroupBox.isChecked()
-
-    @category_filters_active.setter
-    def category_filters_active(self, value: bool) -> None:
-        self.categoryFiltersGroupBox.setChecked(value)
 
     @property
     def currency_filter_active(self) -> bool:
@@ -339,19 +334,39 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
         self.cashAmountFilterMaximumDoubleSpinBox.setValue(amount)
 
     @property
+    def specific_categories_filter_mode(self) -> FilterMode:
+        return TransactionFilterForm._get_filter_mode_from_combobox(
+            self.specificCategoryFilterModeComboBox
+        )
+
+    @specific_categories_filter_mode.setter
+    def specific_categories_filter_mode(self, mode: FilterMode) -> None:
+        self.specificCategoryFilterModeComboBox.setCurrentText(mode.name)
+
+    @property
     def category_selection_mode(self) -> CategorySelectionMode:
-        if self.hierarchicalSelectionModeRadioButton.isChecked():
+        if (
+            self.specificCategoryFilterSelectionModeComboBox.currentText()
+            == "Hierarchical"
+        ):
             return CategorySelectionMode.HIERARCHICAL
-        if self.individualSelectionModeRadioButton.isChecked():
+        if (
+            self.specificCategoryFilterSelectionModeComboBox.currentText()
+            == "Individual"
+        ):
             return CategorySelectionMode.INDIVIDUAL
         raise ValueError("Unknown selection mode")
 
     @category_selection_mode.setter
     def category_selection_mode(self, mode: CategorySelectionMode) -> None:
         if mode == CategorySelectionMode.HIERARCHICAL:
-            self.hierarchicalSelectionModeRadioButton.setChecked(True)
+            self.specificCategoryFilterSelectionModeComboBox.setCurrentText(
+                "Hierarchical"
+            )
         else:
-            self.individualSelectionModeRadioButton.setChecked(True)
+            self.specificCategoryFilterSelectionModeComboBox.setCurrentText(
+                "Individual"
+            )
 
     @property
     def multiple_categories_filter_mode(self) -> FilterMode:
@@ -444,15 +459,11 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
             self.signal_payees_unselect_all.emit
         )
 
-        self.specificCategoryFilterSelectionModeRadioButtonGroup = QButtonGroup()
-        self.specificCategoryFilterSelectionModeRadioButtonGroup.addButton(
-            self.hierarchicalSelectionModeRadioButton
-        )
-        self.specificCategoryFilterSelectionModeRadioButtonGroup.addButton(
-            self.individualSelectionModeRadioButton
-        )
-        self.specificCategoryFilterSelectionModeRadioButtonGroup.buttonClicked.connect(
+        self.specificCategoryFilterSelectionModeComboBox.currentTextChanged.connect(
             self.signal_category_selection_mode_changed.emit
+        )
+        self.specificCategoryFilterModeComboBox.currentTextChanged.connect(
+            self._specific_categories_filter_mode_changed
         )
 
         self.incomeCategoriesSelectAllPushButton.clicked.connect(
@@ -535,6 +546,11 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
         self._initialize_mode_combobox(self.multipleCategoriesFilterModeComboBox)
         self._initialize_mode_combobox(self.cashAmountFilterModeComboBox)
         self._initialize_mode_combobox(self.specificTagsFilterModeComboBox)
+        self._initialize_mode_combobox(self.specificCategoryFilterModeComboBox)
+
+    def _initialize_category_filter_selection_mode_combobox(self) -> None:
+        self.specificCategoryFilterSelectionModeComboBox.addItem("Hierarchical")
+        self.specificCategoryFilterSelectionModeComboBox.addItem("Individual")
 
     @staticmethod
     def _initialize_mode_combobox(combobox: QComboBox) -> None:
@@ -657,6 +673,15 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
         mode = self.account_filter_mode
         self.accountsFilterGroupBox.setEnabled(mode == AccountFilterMode.SELECTION)
 
+    def _specific_categories_filter_mode_changed(self) -> None:
+        mode = self.specific_categories_filter_mode
+        self.specificCategoryFilterSelectionModeLabel.setEnabled(mode != FilterMode.OFF)
+        self.specificCategoryFilterSelectionModeComboBox.setEnabled(
+            mode != FilterMode.OFF
+        )
+        self.categoriesTypeTabWidget.setEnabled(mode != FilterMode.OFF)
+        self.signal_categories_update_number_selected.emit()
+
     def _tagless_filter_mode_changed(self) -> None:
         mode = self.tagless_filter_mode
         self.specificTagsFilterGroupBox.setEnabled(mode != FilterMode.KEEP)
@@ -723,18 +748,28 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
         self.cashAmountFilterMinimumDoubleSpinBox.setMaximum(maximum)
 
     def set_selected_category_numbers(
-        self, income: int, expense: int, income_and_expense: int
+        self,
+        income_selected: int,
+        income_total: int,
+        expense_selected: int,
+        expense_total: int,
+        income_and_expense_selected: int,
+        income_and_expense_total: int,
     ) -> None:
         """Set the number of currently selected categories in tab names.
         Pass a negative number if no number is to be shown."""
 
-        income_text = f"Income ({income})" if income >= 0 else "Income"
-        expense_text = f"Expense ({expense})" if expense >= 0 else "Expense"
-        income_and_expense_text = (
-            f"Income and Expense ({income_and_expense})"
-            if (income_and_expense >= 0)
-            else "Income and Expense"
-        )
+        if self.specific_categories_filter_mode != FilterMode.OFF:
+            income_text = f"Income ({income_selected} / {income_total})"
+            expense_text = f"Expense ({expense_selected} / {expense_total})"
+            income_and_expense_text = (
+                f"Income and Expense ({income_and_expense_selected} "
+                f"/ {income_and_expense_total})"
+            )
+        else:
+            income_text = "Income"
+            expense_text = "Expense"
+            income_and_expense_text = "Income and Expense"
 
         self.categoriesTypeTabWidget.setTabText(0, income_text)
         self.categoriesTypeTabWidget.setTabText(1, expense_text)

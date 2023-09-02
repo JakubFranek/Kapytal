@@ -25,13 +25,13 @@ class CategoryFilterPresenter:
 
     @property
     def specific_categories_filter_mode(self) -> FilterMode:
-        return FilterMode.KEEP if self._form.category_filters_active else FilterMode.OFF
+        return self._form.specific_categories_filter_mode
 
     @property
     def multiple_categories_filter_mode(self) -> FilterMode:
         return (
             self._form.multiple_categories_filter_mode
-            if self._form.category_filters_active
+            if self._form.specific_categories_filter_mode != FilterMode.OFF
             else FilterMode.OFF
         )
 
@@ -70,13 +70,7 @@ class CategoryFilterPresenter:
         self._expense_categories_model.pre_reset_model()
         self._income_and_expense_categories_model.pre_reset_model()
 
-        self._form.category_filters_active = (
-            specific_categories_filter.mode != FilterMode.OFF
-            or multiple_categories_filter.mode != FilterMode.OFF
-        )
-        if specific_categories_filter.mode == FilterMode.OFF:
-            pass
-        elif specific_categories_filter.mode == FilterMode.KEEP:
+        if specific_categories_filter.mode != FilterMode.OFF:
             self._income_categories_model.load_checked_categories(
                 specific_categories_filter.income_categories
             )
@@ -86,34 +80,13 @@ class CategoryFilterPresenter:
             self._income_and_expense_categories_model.load_checked_categories(
                 specific_categories_filter.income_and_expense_categories
             )
-        else:
-            self._income_categories_model.load_checked_categories(
-                [
-                    category
-                    for category in self._record_keeper.income_categories
-                    if category not in specific_categories_filter.income_categories
-                ]
-            )
-            self._expense_categories_model.load_checked_categories(
-                [
-                    category
-                    for category in self._record_keeper.expense_categories
-                    if category not in specific_categories_filter.expense_categories
-                ]
-            )
-            self._income_and_expense_categories_model.load_checked_categories(
-                [
-                    category
-                    for category in self._record_keeper.income_and_expense_categories
-                    if category
-                    not in specific_categories_filter.income_and_expense_categories
-                ]
-            )
+
         self._income_categories_model.post_reset_model()
         self._expense_categories_model.post_reset_model()
         self._income_and_expense_categories_model.post_reset_model()
 
         self._form.multiple_categories_filter_mode = multiple_categories_filter.mode
+        self._form.specific_categories_filter_mode = specific_categories_filter.mode
 
     def _filter(self, pattern: str, proxy: QSortFilterProxyModel) -> None:
         if ("[" in pattern and "]" not in pattern) or "[]" in pattern:
@@ -193,6 +166,9 @@ class CategoryFilterPresenter:
         self._form.signal_category_selection_mode_changed.connect(
             self._selection_mode_changed
         )
+        self._form.signal_categories_update_number_selected.connect(
+            self._update_checked_categories_number
+        )
 
         self._form.signal_income_categories_select_all.connect(
             self._income_categories_model.select_all
@@ -233,32 +209,22 @@ class CategoryFilterPresenter:
         logging.debug(f"Category selection mode changed: {selection_mode.name}")
 
     def _update_checked_categories_number(self) -> None:
-        n_selected_income_categories = len(
-            self._income_categories_model.checked_categories
-        )
-        n_selected_expense_categories = len(
-            self._expense_categories_model.checked_categories
-        )
-        n_selected_income_and_expense_categories = len(
+        income = len(self._income_categories_model.checked_categories)
+        expense = len(self._expense_categories_model.checked_categories)
+        income_and_expense = len(
             self._income_and_expense_categories_model.checked_categories
         )
 
-        income = (
-            n_selected_income_categories
-            if len(self._record_keeper.income_categories)
-            != n_selected_income_categories
-            else -1
+        income_total = len(self._record_keeper.income_categories)
+        expense_total = len(self._record_keeper.expense_categories)
+        income_and_expense_total = len(
+            self._record_keeper.income_and_expense_categories
         )
-        expense = (
-            n_selected_expense_categories
-            if len(self._record_keeper.expense_categories)
-            != n_selected_expense_categories
-            else -1
+        self._form.set_selected_category_numbers(
+            income,
+            income_total,
+            expense,
+            expense_total,
+            income_and_expense,
+            income_and_expense_total,
         )
-        income_and_expense = (
-            n_selected_income_and_expense_categories
-            if len(self._record_keeper.income_and_expense_categories)
-            != n_selected_income_and_expense_categories
-            else -1
-        )
-        self._form.set_selected_category_numbers(income, expense, income_and_expense)

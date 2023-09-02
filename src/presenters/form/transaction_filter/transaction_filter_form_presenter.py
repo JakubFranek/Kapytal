@@ -546,7 +546,7 @@ class TransactionFilterFormPresenter:
             ("Payee Filter", self._form.payee_filter_active, payee_related_types),
             (
                 "Category Filter",
-                self._form.category_filters_active,
+                self._form.specific_categories_filter_mode != FilterMode.OFF,
                 category_related_types,
             ),
             (
