@@ -61,6 +61,8 @@ class CategoryFilterPresenter:
         self._expense_categories_model.post_reset_model()
         self._income_and_expense_categories_model.post_reset_model()
 
+        self._update_checked_categories_number()
+
     def load_from_category_filters(
         self,
         specific_categories_filter: SpecificCategoriesFilter,
@@ -87,6 +89,8 @@ class CategoryFilterPresenter:
 
         self._form.multiple_categories_filter_mode = multiple_categories_filter.mode
         self._form.specific_categories_filter_mode = specific_categories_filter.mode
+
+        self._update_checked_categories_number()
 
     def _filter(self, pattern: str, proxy: QSortFilterProxyModel) -> None:
         if ("[" in pattern and "]" not in pattern) or "[]" in pattern:

@@ -260,7 +260,7 @@ class TransactionFilterFormPresenter:
         self._update_form_from_filter(self._transaction_filter)
         self._form.show_form()
 
-    def _update_filter(self) -> None:
+    def _update_filter_from_form(self) -> None:
         new_filter = self._get_transaction_filter_from_form()
         if self._transaction_filter != new_filter:
             self._log_filter_differences(new_filter)
@@ -271,7 +271,7 @@ class TransactionFilterFormPresenter:
         if not self._check_filter_form_sanity():
             return
         try:
-            self._update_filter()
+            self._update_filter_from_form()
         except Exception as exception:  # noqa: BLE001
             handle_exception(exception)
             return
