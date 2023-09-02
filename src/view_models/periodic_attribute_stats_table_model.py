@@ -6,6 +6,7 @@ from typing import Self
 from PyQt6.QtCore import QAbstractTableModel, QModelIndex, QSortFilterProxyModel, Qt
 from PyQt6.QtGui import QBrush, QFont
 from PyQt6.QtWidgets import QTableView
+from src.models.custom_exceptions import InvalidOperationError
 from src.models.model_objects.attributes import Attribute
 from src.models.model_objects.cash_objects import CashTransaction, RefundTransaction
 from src.models.statistics.attribute_stats import AttributeStats
@@ -193,7 +194,9 @@ class PeriodicAttributeStatsTableModel(QAbstractTableModel):
         """Returns a tuple of selected Transactions, period and name."""
         indexes = self._view.selectedIndexes()
         if len(indexes) != 1:
-            return None
+            raise InvalidOperationError(
+                "Transactions can be shown for only for exactly one Attribute."
+            )
         index = indexes[0]
         if self._proxy:
             index = self._proxy.mapToSource(index)

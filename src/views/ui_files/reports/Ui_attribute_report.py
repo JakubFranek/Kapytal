@@ -27,6 +27,9 @@ class Ui_AttributeReport(object):
         self.verticalLayout.setObjectName("verticalLayout")
         self.controlsHorizontalLayout = QtWidgets.QHBoxLayout()
         self.controlsHorizontalLayout.setObjectName("controlsHorizontalLayout")
+        self.showTransactionsToolButton = QtWidgets.QToolButton(self.verticalLayoutWidget)
+        self.showTransactionsToolButton.setObjectName("showTransactionsToolButton")
+        self.controlsHorizontalLayout.addWidget(self.showTransactionsToolButton)
         self.showHidePeriodColumnsToolButton = QtWidgets.QToolButton(self.verticalLayoutWidget)
         self.showHidePeriodColumnsToolButton.setObjectName("showHidePeriodColumnsToolButton")
         self.controlsHorizontalLayout.addWidget(self.showHidePeriodColumnsToolButton)
@@ -56,6 +59,7 @@ class Ui_AttributeReport(object):
     def retranslateUi(self, AttributeReport):
         _translate = QtCore.QCoreApplication.translate
         AttributeReport.setWindowTitle(_translate("AttributeReport", "Category Report"))
+        self.showTransactionsToolButton.setText(_translate("AttributeReport", "..."))
         self.showHidePeriodColumnsToolButton.setText(_translate("AttributeReport", "..."))
         self.recalculateReportToolButton.setText(_translate("AttributeReport", "..."))
         self.currencyNoteLabel.setText(_translate("AttributeReport", "All values in XXX"))

@@ -23,6 +23,7 @@ from src.views.widgets.charts.pie_chart_widget import PieChartWidget
 
 
 class AttributeReport(CustomWidget, Ui_AttributeReport):
+    signal_selection_changed = pyqtSignal()
     signal_show_transactions = pyqtSignal()
     signal_recalculate_report = pyqtSignal()
 
@@ -73,6 +74,7 @@ class AttributeReport(CustomWidget, Ui_AttributeReport):
         self.actionShow_Transactions.triggered.connect(
             self.signal_show_transactions.emit
         )
+        self.showTransactionsToolButton.setDefaultAction(self.actionShow_Transactions)
 
         self.actionRecalculate_Report.setIcon(icons.refresh)
         self.actionRecalculate_Report.setEnabled(False)
@@ -81,7 +83,7 @@ class AttributeReport(CustomWidget, Ui_AttributeReport):
         self.recalculateReportToolButton.setDefaultAction(self.actionRecalculate_Report)
 
         self.tableView.contextMenuEvent = self._create_context_menu
-        self.tableView.doubleClicked.connect(self.signal_show_transactions)
+        self.tableView.doubleClicked.connect(self._table_view_double_clicked)
 
     def finalize_setup(self) -> None:
         for column in range(self.tableView.model().columnCount()):
@@ -89,6 +91,9 @@ class AttributeReport(CustomWidget, Ui_AttributeReport):
                 column,
                 QHeaderView.ResizeMode.ResizeToContents,
             )
+        self.tableView.selectionModel().selectionChanged.connect(
+            self.signal_selection_changed
+        )
 
     def show_form(self) -> None:
         super().show_form()
@@ -114,6 +119,9 @@ class AttributeReport(CustomWidget, Ui_AttributeReport):
             )
         else:
             self.actionRecalculate_Report.setIcon(Qt.ToolButtonStyle.ToolButtonIconOnly)
+
+    def set_show_transactions_action_state(self, *, enable: bool) -> None:
+        self.actionShow_Transactions.setEnabled(enable)
 
     def _setup_comboboxes(self, periods: Collection[str]) -> None:
         with QSignalBlocker(self.periodComboBox):
@@ -161,3 +169,7 @@ class AttributeReport(CustomWidget, Ui_AttributeReport):
         self.menu = QMenu(self)
         self.menu.addAction(self.actionShow_Transactions)
         self.menu.popup(QCursor.pos())
+
+    def _table_view_double_clicked(self) -> None:
+        if self.actionShow_Transactions.isEnabled():
+            self.signal_show_transactions.emit()
