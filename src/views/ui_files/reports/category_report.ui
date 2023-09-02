@@ -57,6 +57,13 @@
           </widget>
          </item>
          <item>
+          <widget class="QToolButton" name="showTransactionsToolButton">
+           <property name="text">
+            <string>...</string>
+           </property>
+          </widget>
+         </item>
+         <item>
           <widget class="QToolButton" name="hidePeriodsToolButton">
            <property name="text">
             <string>...</string>

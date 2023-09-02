@@ -24,6 +24,7 @@ from src.views.widgets.charts.sunburst_chart_widget import (
 class CategoryReport(CustomWidget, Ui_CategoryReport):
     signal_show_transactions = pyqtSignal()
     signal_recalculate_report = pyqtSignal()
+    signal_selection_changed = pyqtSignal()
 
     def __init__(
         self,
@@ -64,6 +65,7 @@ class CategoryReport(CustomWidget, Ui_CategoryReport):
         self.collapseAllToolButton.setDefaultAction(self.actionCollapse_All)
         self.hidePeriodsToolButton.setDefaultAction(self.actionShow_Hide_Period_Columns)
         self.recalculateReportToolButton.setDefaultAction(self.actionRecalculate_Report)
+        self.showTransactionsToolButton.setDefaultAction(self.actionShow_Transactions)
 
         self.typeComboBox = QComboBox(self)
         self.typeComboBox.addItem("Income")
@@ -79,13 +81,16 @@ class CategoryReport(CustomWidget, Ui_CategoryReport):
         self.combo_box_horizontal_layout.addWidget(self.periodComboBox)
         self.chart_widget.horizontal_layout.addLayout(self.combo_box_horizontal_layout)
         self.treeView.contextMenuEvent = self._create_context_menu
-        self.treeView.doubleClicked.connect(self.signal_show_transactions.emit)
+        self.treeView.doubleClicked.connect(self._tree_view_double_clicked)
 
     def finalize_setup(self) -> None:
         for column in range(self.treeView.model().columnCount()):
             self.treeView.header().setSectionResizeMode(
                 column, QHeaderView.ResizeMode.ResizeToContents
             )
+        self.treeView.selectionModel().selectionChanged.connect(
+            self.signal_selection_changed
+        )
 
     def show_form(self) -> None:
         super().show_form()
@@ -111,6 +116,9 @@ class CategoryReport(CustomWidget, Ui_CategoryReport):
             )
         else:
             self.actionRecalculate_Report.setIcon(Qt.ToolButtonStyle.ToolButtonIconOnly)
+
+    def set_show_transactions_action_state(self, *, enable: bool) -> None:
+        self.actionShow_Transactions.setEnabled(enable)
 
     def _setup_comboboxes(self, periods: Collection[str]) -> None:
         with QSignalBlocker(self.periodComboBox):
@@ -153,6 +161,10 @@ class CategoryReport(CustomWidget, Ui_CategoryReport):
         self.menu = QMenu(self)
         self.menu.addAction(self.actionShow_Transactions)
         self.menu.popup(QCursor.pos())
+
+    def _tree_view_double_clicked(self) -> None:
+        if self.actionShow_Transactions.isEnabled():
+            self.signal_show_transactions.emit()
 
 
 def _convert_category_stats_to_sunburst_data(

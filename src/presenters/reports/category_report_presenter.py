@@ -4,6 +4,7 @@ from collections.abc import Collection
 from PyQt6.QtCore import QSortFilterProxyModel, Qt
 from PyQt6.QtWidgets import QApplication
 from src.models.base_classes.transaction import Transaction
+from src.models.custom_exceptions import InvalidOperationError
 from src.models.model_objects.cash_objects import CashTransaction, RefundTransaction
 from src.models.record_keeper import RecordKeeper
 from src.models.statistics.category_stats import (
@@ -125,6 +126,7 @@ class CategoryReportPresenter:
         self._report.signal_recalculate_report.connect(
             lambda: self._recalculate_report(period_format, title)
         )
+        self._report.signal_selection_changed.connect(self._selection_changed)
 
         self._proxy = QSortFilterProxyModel(self._report)
         self._model = PeriodicCategoryStatsTreeModel(self._report.treeView, self._proxy)
@@ -170,6 +172,7 @@ class CategoryReportPresenter:
 
         self._report.load_stats(income_periodic_stats, expense_periodic_stats)
         self._report.finalize_setup()
+        self._selection_changed()
         self._report.show_form()
 
     def _show_transactions(self) -> None:
@@ -187,6 +190,17 @@ class CategoryReportPresenter:
     def _recalculate_report(self, period_format: str, title: str) -> None:
         self._report.close()
         self._create_periodic_report_with_busy_dialog(period_format, title)
+
+    def _selection_changed(
+        self,
+    ) -> None:
+        try:
+            transactions, _, _ = self._model.get_selected_transactions()
+        except InvalidOperationError:
+            enabled = False
+        else:
+            enabled = len(transactions) > 0
+        self._report.set_show_transactions_action_state(enable=enabled)
 
 
 def _filter_transactions(
