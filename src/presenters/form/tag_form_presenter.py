@@ -102,7 +102,7 @@ class TagFormPresenter:
     def _run_tag_dialog(self, *, edit: bool) -> None:
         self._dialog = TagDialog(self._view, edit=edit)
         if edit:
-            tags = self._model.get_selected_items()
+            tags = self._model.get_selected_attributes()
             if len(tags) == 0:
                 raise ValueError("Cannot edit an unselected item.")
             if len(tags) > 1:
@@ -133,7 +133,7 @@ class TagFormPresenter:
         self._recalculate_data = False
 
     def _rename_tag(self) -> None:
-        tags = self._model.get_selected_items()
+        tags = self._model.get_selected_attributes()
         if len(tags) == 0:
             raise ValueError("Cannot edit an unselected item.")
         if len(tags) > 1:
@@ -175,7 +175,7 @@ class TagFormPresenter:
         self._recalculate_data = False
 
     def _remove_tag(self) -> None:
-        tags = self._model.get_selected_items()
+        tags = self._model.get_selected_attributes()
         if len(tags) == 0:
             raise ValueError("Cannot remove an unselected item.")
 
@@ -201,11 +201,15 @@ class TagFormPresenter:
         self._proxy_model.setFilterWildcard(pattern)
 
     def _selection_changed(self) -> None:
-        tags = self._model.get_selected_items()
-        transactions = self._model.get_selected_attribute_transactions()
+        tags = self._model.get_selected_attributes()
+        try:
+            transactions = self._model.get_selected_attribute_transactions()
+        except InvalidOperationError:
+            show_transactions = False
+        else:
+            show_transactions = len(transactions) > 0
         is_tag_selected = len(tags) > 0
         is_one_tag_selected = len(tags) == 1
-        show_transactions = transactions is not None and len(transactions) > 0
         self._view.enable_actions(
             is_tag_selected=is_tag_selected,
             is_one_tag_selected=is_one_tag_selected,
@@ -213,13 +217,8 @@ class TagFormPresenter:
         )
 
     def _show_transactions(self) -> None:
-        tags = self._model.get_selected_items()
+        tag = self._model.get_selected_attributes()[0]
         transactions = self._model.get_selected_attribute_transactions()
-        if transactions is None or len(tags) != 1:
-            raise InvalidOperationError(
-                "Transactions can be shown for only for exactly one Tag."
-            )
-        tag = tags[0]
         title = f"Tag Transactions - {tag.name}"
         self._transaction_table_form_presenter.event_data_changed.append(
             self._transaction_table_form_data_changed

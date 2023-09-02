@@ -104,7 +104,7 @@ class PayeeFormPresenter:
     def _run_payee_dialog(self, *, edit: bool) -> None:
         self._dialog = PayeeDialog(self._view, edit=edit)
         if edit:
-            payees = self._model.get_selected_items()
+            payees = self._model.get_selected_attributes()
             if len(payees) == 0:
                 raise ValueError("Cannot edit an unselected item.")
             if len(payees) > 1:
@@ -135,7 +135,7 @@ class PayeeFormPresenter:
         self._recalculate_data = False
 
     def _rename_payee(self) -> None:
-        payees = self._model.get_selected_items()
+        payees = self._model.get_selected_attributes()
         if len(payees) == 0:
             raise ValueError("Cannot edit an unselected item.")
         if len(payees) > 1:
@@ -177,7 +177,7 @@ class PayeeFormPresenter:
         self._recalculate_data = False
 
     def _remove_payee(self) -> None:
-        payees = self._model.get_selected_items()
+        payees = self._model.get_selected_attributes()
         if len(payees) == 0:
             raise ValueError("Cannot remove an unselected item.")
 
@@ -203,11 +203,15 @@ class PayeeFormPresenter:
         self._proxy_model.setFilterWildcard(pattern)
 
     def _selection_changed(self) -> None:
-        payees = self._model.get_selected_items()
-        transactions = self._model.get_selected_attribute_transactions()
+        payees = self._model.get_selected_attributes()
+        try:
+            transactions = self._model.get_selected_attribute_transactions()
+        except InvalidOperationError:
+            show_transactions = False
+        else:
+            show_transactions = len(transactions) > 0
         is_payee_selected = len(payees) > 0
         is_one_payee_selected = len(payees) == 1
-        show_transactions = transactions is not None and len(transactions) > 0
         self._view.enable_actions(
             is_payee_selected=is_payee_selected,
             is_one_payee_selected=is_one_payee_selected,
@@ -215,13 +219,8 @@ class PayeeFormPresenter:
         )
 
     def _show_transactions(self) -> None:
-        payees = self._model.get_selected_items()
+        payee = self._model.get_selected_attributes()[0]
         transactions = self._model.get_selected_attribute_transactions()
-        if transactions is None or len(payees) != 1:
-            raise InvalidOperationError(
-                "Transactions can be shown for only for exactly one Tag."
-            )
-        payee = payees[0]
         title = f"Payee Transactions - {payee.name}"
         self._transaction_table_form_presenter.event_data_changed.append(
             self._transaction_table_form_data_changed
