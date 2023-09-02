@@ -37,7 +37,7 @@ class CategoryDialog(CustomDialog, Ui_CategoryDialog):
         self.pathLineEdit = SmartComboBox(parent=self)
         self.pathLineEdit.load_items(paths)
         self.pathLineEdit.setCurrentText("")
-        self.formLayout.insertRow(1, "Path", self.pathLineEdit)
+        self.formLayout.insertRow(2, "Path", self.pathLineEdit)
         self.pathLineEdit.setFocus()
 
         self.typeLineEdit.setText(type_)

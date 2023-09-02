@@ -248,14 +248,17 @@ class CategoryFormPresenter:
     def _tree_selection_changed(self) -> None:
         model = self._get_current_model()
         item = model.get_selected_category()
+        transactions = model.get_selected_category_transactions()
 
         enable_modify_object = item is not None
         enable_add_objects = True
         enable_expand_below = isinstance(item, Category) and len(item.children) > 0
+        enable_show_transactions = transactions is not None and len(transactions) > 0
 
         self._view.enable_actions(
             enable_add_objects=enable_add_objects,
             enable_modify_object=enable_modify_object,
+            enable_show_transactions=enable_show_transactions,
             enable_expand_below=enable_expand_below,
         )
 

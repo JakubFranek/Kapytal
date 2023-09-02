@@ -56,11 +56,13 @@ class CategoryForm(CustomWidget, Ui_CategoryForm):
         *,
         enable_add_objects: bool,
         enable_modify_object: bool,
+        enable_show_transactions: bool,
         enable_expand_below: bool,
     ) -> None:
         self.actionAdd.setEnabled(enable_add_objects)
         self.actionEdit.setEnabled(enable_modify_object)
         self.actionRemove.setEnabled(enable_modify_object)
+        self.actionShow_Transactions.setEnabled(enable_show_transactions)
         self.actionExpand_All_Below.setEnabled(enable_expand_below)
 
     def get_current_tree_view(self) -> QTreeView:
@@ -169,12 +171,18 @@ class CategoryForm(CustomWidget, Ui_CategoryForm):
         self.incomeAddToolButton.setDefaultAction(self.actionAdd)
         self.incomeEditToolButton.setDefaultAction(self.actionEdit)
         self.incomeRemoveToolButton.setDefaultAction(self.actionRemove)
+        self.incomeShowTransactionsToolButton.setDefaultAction(
+            self.actionShow_Transactions
+        )
 
         self.expenseExpandAllToolButton.setDefaultAction(self.actionExpand_All)
         self.expenseCollapseAllToolButton.setDefaultAction(self.actionCollapse_All)
         self.expenseAddToolButton.setDefaultAction(self.actionAdd)
         self.expenseEditToolButton.setDefaultAction(self.actionEdit)
         self.expenseRemoveToolButton.setDefaultAction(self.actionRemove)
+        self.expenseShowTransactionsToolButton.setDefaultAction(
+            self.actionShow_Transactions
+        )
 
         self.incomeAndExpenseExpandAllToolButton.setDefaultAction(self.actionExpand_All)
         self.incomeAndExpenseCollapseAllToolButton.setDefaultAction(
@@ -183,6 +191,9 @@ class CategoryForm(CustomWidget, Ui_CategoryForm):
         self.incomeAndExpenseAddToolButton.setDefaultAction(self.actionAdd)
         self.incomeAndExpenseEditToolButton.setDefaultAction(self.actionEdit)
         self.incomeAndExpenseRemoveToolButton.setDefaultAction(self.actionRemove)
+        self.incomeAndExpenseShowTransactionsToolButton.setDefaultAction(
+            self.actionShow_Transactions
+        )
 
     def _expand_all(self) -> None:
         category_type = self.category_type
