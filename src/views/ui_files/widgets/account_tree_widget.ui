@@ -125,16 +125,16 @@
     </widget>
    </item>
    <item>
-    <layout class="QFormLayout" name="totalBalanceFormLayout">
+    <layout class="QFormLayout" name="checkedAccountBalanceFormLayout">
      <item row="0" column="0">
-      <widget class="QLabel" name="totalBaseBalanceLabel">
+      <widget class="QLabel" name="checkedAccountBalanceLabel">
        <property name="text">
-        <string>Total base balance:</string>
+        <string>Checked Account balance:</string>
        </property>
       </widget>
      </item>
      <item row="0" column="1">
-      <widget class="QLabel" name="totalBaseBalanceAmountLabel">
+      <widget class="QLabel" name="checkedAccountBalanceAmountLabel">
        <property name="text">
         <string/>
        </property>

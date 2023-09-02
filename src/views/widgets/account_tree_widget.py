@@ -67,8 +67,8 @@ class AccountTreeWidget(QWidget, Ui_AccountTreeWidget):
         else:
             logging.debug("Sorting off")
 
-    def set_total_base_balance(self, total_base_balance: str) -> None:
-        self.totalBaseBalanceAmountLabel.setText(total_base_balance)
+    def set_checked_account_balance(self, balance: str) -> None:
+        self.checkedAccountBalanceAmountLabel.setText(balance)
 
     def eventFilter(self, source: QObject, event: QEvent) -> bool:
         if (
