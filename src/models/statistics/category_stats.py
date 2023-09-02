@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 from src.models.model_objects.attributes import Category, CategoryType
 from src.models.model_objects.cash_objects import (
     CashTransaction,
+    CashTransactionType,
     RefundTransaction,
 )
 from src.models.model_objects.currency_objects import CashAmount, Currency
@@ -58,16 +59,28 @@ def calculate_periodic_totals_and_averages(
                     stats.category.type_ == CategoryType.INCOME_AND_EXPENSE
                     and stats.balance.value_rounded > 0
                 ):
-                    income_balance.add_transaction_balance(
-                        stats.transactions, stats.balance
-                    )
+                    transactions = {
+                        transaction
+                        for transaction in stats.transactions
+                        if (
+                            isinstance(transaction, CashTransaction)
+                            and transaction.type_ == CashTransactionType.INCOME
+                        )
+                    }
+                    income_balance.add_transaction_balance(transactions, stats.balance)
                 elif stats.category.type_ == CategoryType.EXPENSE or (
                     stats.category.type_ == CategoryType.INCOME_AND_EXPENSE
                     and stats.balance.value_rounded < 0
                 ):
-                    expense_balance.add_transaction_balance(
-                        stats.transactions, stats.balance
-                    )
+                    transactions = {
+                        transaction
+                        for transaction in stats.transactions
+                        if (
+                            isinstance(transaction, RefundTransaction)
+                            or transaction.type_ == CashTransactionType.EXPENSE
+                        )
+                    }
+                    expense_balance.add_transaction_balance(transactions, stats.balance)
 
             category_totals[stats.category].add_transaction_balance(
                 stats.transactions, stats.balance
