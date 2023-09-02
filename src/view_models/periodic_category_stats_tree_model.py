@@ -210,6 +210,11 @@ class PeriodicCategoryStatsTreeModel(QAbstractItemModel):
             )
         )
 
+        for row in self._flat_row_objects:
+            if len(row.children) == 0:
+                continue
+            row.children.sort(key=lambda x: abs(x.data[-1]), reverse=True)
+
         self.TOTAL_COLUMN_INDEX = len(self._column_headers) - 1
         self.AVERAGE_COLUMN_INDEX = len(self._column_headers) - 2
         self.TOTAL_ROWS_INDEXES = (
