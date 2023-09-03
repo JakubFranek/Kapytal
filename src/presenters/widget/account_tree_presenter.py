@@ -2,6 +2,7 @@ import logging
 
 from PyQt6.QtCore import QSortFilterProxyModel, Qt
 from src.models.base_classes.account import Account
+from src.models.custom_exceptions import InvalidOperationError
 from src.models.model_objects.account_group import AccountGroup
 from src.models.model_objects.cash_objects import CashAccount
 from src.models.model_objects.currency_objects import (
@@ -25,6 +26,7 @@ from src.presenters.utilities.event import Event
 from src.presenters.utilities.handle_exception import handle_exception
 from src.view_models.account_tree_model import AccountTreeModel
 from src.views.constants import AccountTreeColumn
+from src.views.utilities.message_box_functions import ask_yes_no_question
 from src.views.widgets.account_tree_widget import AccountTreeWidget
 
 
@@ -108,7 +110,7 @@ class AccountTreePresenter:
     def expand_all_below(self) -> None:
         indexes = self._view.treeView.selectedIndexes()
         if len(indexes) == 0:
-            raise ValueError("No index to expand recursively selected.")
+            raise InvalidOperationError("No index to expand recursively selected.")
         item = self._model.get_selected_item()
         logging.debug(f"Expanding all nodes below {item}")
         self._view.treeView.expandRecursively(indexes[0])  # view index required here
@@ -116,7 +118,21 @@ class AccountTreePresenter:
     def remove_item(self) -> None:
         item = self._model.get_selected_item()
         if item is None:
-            raise ValueError("Cannot delete non-existent item.")
+            raise InvalidOperationError("Cannot delete non-existent item.")
+
+        if isinstance(item, CashAccount) and item.initial_balance.value_normalized > 0:
+            logging.debug(
+                "Deletion of CashAccount with non-zero initial balance"
+                "requested, asking the user for confirmation"
+            )
+            if not ask_yes_no_question(
+                self._view,
+                f"<html>Cash Account <b>{item.path}</b> has non-zero initial balance "
+                f"({item.initial_balance.to_str_rounded()}).<br/>Delete anyway?</html>",
+                "Are you sure?",
+            ):
+                logging.debug("User cancelled the CashAccount deletion")
+                return
 
         logging.info(f"Removing {item.__class__.__name__} at path='{item.path}'")
         try:
