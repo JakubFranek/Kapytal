@@ -67,8 +67,8 @@ class AccountTreeWidget(QWidget, Ui_AccountTreeWidget):
         else:
             logging.debug("Sorting off")
 
-    def set_total_base_balance(self, total_base_balance: str) -> None:
-        self.totalBaseBalanceAmountLabel.setText(total_base_balance)
+    def set_checked_account_balance(self, balance: str) -> None:
+        self.checkedAccountBalanceAmountLabel.setText(balance)
 
     def eventFilter(self, source: QObject, event: QEvent) -> bool:
         if (
@@ -131,8 +131,7 @@ class AccountTreeWidget(QWidget, Ui_AccountTreeWidget):
         self._enable_expand_below = enable_expand_below
         self._enable_show_securities = enable_show_securities
 
-    def _create_context_menu(self, event: QContextMenuEvent) -> None:
-        del event
+    def _create_context_menu(self, event: QContextMenuEvent) -> None:  # noqa: ARG002
         self.menu = QMenu(self)
         if self._enable_add_objects:
             self.menu.addAction(self.actionAdd_Account_Group)

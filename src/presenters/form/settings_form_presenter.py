@@ -1,3 +1,4 @@
+import copy
 import logging
 import os
 from pathlib import Path
@@ -42,6 +43,10 @@ class SettingsFormPresenter:
             user_settings.settings.backups_max_size_bytes // 1000
         )
         self._view.logs_max_size_kb = user_settings.settings.logs_max_size_bytes // 1000
+        self._view.general_date_format = user_settings.settings.general_date_format
+        self._view.transaction_date_format = (
+            user_settings.settings.transaction_date_format
+        )
         self._backup_paths = list(user_settings.settings.backup_paths)
         self._backup_paths_list_model.pre_reset_model()
         self.update_model_data()
@@ -96,9 +101,19 @@ class SettingsFormPresenter:
         backup_size_limit_bytes = self._view.backups_max_size_kb * 1000
         logs_size_limit_bytes = self._view.logs_max_size_kb * 1000
 
-        user_settings.settings.backups_max_size_bytes = backup_size_limit_bytes
-        user_settings.settings.logs_max_size_bytes = logs_size_limit_bytes
-        user_settings.settings.backup_paths = self._backup_paths
+        settings_copy = copy.copy(user_settings.settings)
+        try:
+            user_settings.settings.backups_max_size_bytes = backup_size_limit_bytes
+            user_settings.settings.logs_max_size_bytes = logs_size_limit_bytes
+            user_settings.settings.backup_paths = self._backup_paths
+            user_settings.settings.general_date_format = self._view.general_date_format
+            user_settings.settings.transaction_date_format = (
+                self._view.transaction_date_format
+            )
+        except Exception as exception:  # noqa: BLE001
+            handle_exception(exception)
+            user_settings.settings = settings_copy
+            return
 
         user_settings.save()
         self._set_unsaved_changes(unsaved=False)

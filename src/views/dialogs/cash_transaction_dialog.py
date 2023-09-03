@@ -18,6 +18,7 @@ from src.views.base_classes.custom_dialog import CustomDialog
 from src.views.ui_files.dialogs.Ui_cash_transaction_dialog import (
     Ui_CashTransactionDialog,
 )
+from src.views.utilities.helper_functions import convert_datetime_format_to_qt
 from src.views.widgets.add_attribute_row_widget import AddAttributeRowWidget
 from src.views.widgets.description_plain_text_edit import DescriptionPlainTextEdit
 from src.views.widgets.label_widget import LabelWidget
@@ -94,8 +95,8 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
         )
 
         if edit_mode != EditMode.ADD:
-            self.dateEdit.setSpecialValueText(self.KEEP_CURRENT_VALUES)
-            self.dateEdit.setMinimumDate(date(1900, 1, 1))
+            self.dateTimeEdit.setSpecialValueText(self.KEEP_CURRENT_VALUES)
+            self.dateTimeEdit.setMinimumDate(date(1900, 1, 1))
             self.amountDoubleSpinBox.setSpecialValueText(self.KEEP_CURRENT_VALUES)
 
         self._initialize_window()
@@ -117,6 +118,12 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
 
         self._set_maximum_amounts(0)
         self._set_tab_order()
+
+        display_format = (
+            convert_datetime_format_to_qt(user_settings.settings.general_date_format)
+            + " hh:mm"
+        )
+        self.dateTimeEdit.setDisplayFormat(display_format)
 
     @property
     def type_(self) -> CashTransactionType:
@@ -159,15 +166,13 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
 
     @property
     def datetime_(self) -> datetime | None:
-        if self.dateEdit.text() == self.KEEP_CURRENT_VALUES:
+        if self.dateTimeEdit.text() == self.KEEP_CURRENT_VALUES:
             return None
         return (
-            self.dateEdit.dateTime()
+            self.dateTimeEdit.dateTime()
             .toPyDateTime()
             .replace(
                 tzinfo=user_settings.settings.time_zone,
-                hour=0,
-                minute=0,
                 second=0,
                 microsecond=0,
             )
@@ -175,17 +180,15 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
 
     @datetime_.setter
     def datetime_(self, datetime_: datetime) -> None:
-        self.dateEdit.setDateTime(datetime_)
+        self.dateTimeEdit.setDateTime(datetime_)
 
     @property
     def min_datetime(self) -> datetime:
         return (
-            self.dateEdit.minimumDateTime()
+            self.dateTimeEdit.minimumDateTime()
             .toPyDateTime()
             .replace(
                 tzinfo=user_settings.settings.time_zone,
-                hour=0,
-                minute=0,
                 second=0,
                 microsecond=0,
             )
@@ -690,8 +693,8 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
         self.setTabOrder(self.incomeRadioButton, self.expenseRadioButton)
         self.setTabOrder(self.expenseRadioButton, self.accountsComboBox)
         self.setTabOrder(self.accountsComboBox, self.payeeComboBox)
-        self.setTabOrder(self.payeeComboBox, self.dateEdit)
-        self.setTabOrder(self.dateEdit, self.descriptionPlainTextEdit)
+        self.setTabOrder(self.payeeComboBox, self.dateTimeEdit)
+        self.setTabOrder(self.dateTimeEdit, self.descriptionPlainTextEdit)
         self.setTabOrder(self.descriptionPlainTextEdit, self.amountDoubleSpinBox)
 
         if hasattr(self, "_category_rows"):

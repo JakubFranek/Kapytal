@@ -1,7 +1,9 @@
 from collections.abc import Collection
 
-from PyQt6.QtCore import QSortFilterProxyModel, Qt
-from PyQt6.QtWidgets import QApplication, QComboBox, QWidget
+from PyQt6.QtCore import QSortFilterProxyModel, Qt, pyqtSignal
+from PyQt6.QtGui import QContextMenuEvent, QCursor
+from PyQt6.QtWidgets import QApplication, QComboBox, QMenu, QWidget
+from src.models.base_classes.transaction import Transaction
 from src.models.statistics.cashflow_stats import CashFlowStats
 from src.presenters.utilities.handle_exception import handle_exception
 from src.view_models.cash_flow_table_model import CashFlowTableModel
@@ -23,25 +25,34 @@ STR_TO_CHART_DATA = {
     "Cash Flow": ChartData.CASH_FLOW,
     "Total Gain / Loss": ChartData.GAIN_LOSS,
     "Net Growth": ChartData.NET_GROWTH,
+    "Savings Rate": ChartData.SAVINGS_RATE,
 }
 
 MINIMUM_TABLE_HEIGHT = 600
 MAXIMUM_TABLE_HEIGHT = 800
 
 
+# REFACTOR: this view has a different model philosophy than the others
+# (model is initialized here instead of in the presenter)
 class CashFlowPeriodicReport(CustomWidget, Ui_CashFlowPeriodicReport):
+    signal_show_transactions = pyqtSignal()
+    signal_recalculate_report = pyqtSignal()
+    signal_selection_changed = pyqtSignal()
+
     def __init__(
         self,
         title: str,
+        currency_code: str,
         parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent=parent)
         self.setupUi(self)
 
-
         self.setWindowFlag(Qt.WindowType.Window)
         self.setWindowTitle(title)
         self.setWindowIcon(icons.bar_chart)
+
+        self.currencyNoteLabel.setText(f"All values in {currency_code}")
 
         self.chart_widget = CashFlowPeriodicChartWidget(self)
         self.chartTabVerticalLayout.addWidget(self.chart_widget)
@@ -51,6 +62,9 @@ class CashFlowPeriodicReport(CustomWidget, Ui_CashFlowPeriodicReport):
         self._table_model = CashFlowTableModel(self.tableView, self._proxy_model)
         self._proxy_model.setSourceModel(self._table_model)
         self.tableView.setModel(self._proxy_model)
+        self.tableView.selectionModel().selectionChanged.connect(
+            self.signal_selection_changed
+        )
         self.tableView.horizontalHeader().setSortIndicatorClearable(True)
 
         self.dataSelectorComboBox = QComboBox(self)
@@ -60,11 +74,26 @@ class CashFlowPeriodicReport(CustomWidget, Ui_CashFlowPeriodicReport):
         self.dataSelectorComboBox.addItem("Cash Flow")
         self.dataSelectorComboBox.addItem("Total Gain / Loss")
         self.dataSelectorComboBox.addItem("Net Growth")
+        self.dataSelectorComboBox.addItem("Savings Rate")
         self.dataSelectorComboBox.setCurrentText("All data")
         self.dataSelectorComboBox.currentTextChanged.connect(
             lambda: self._combobox_text_changed(show_busy_indicator=True)
         )  # show busy indicator when combo box has been changed by user
         self.chart_widget.horizontal_layout.addWidget(self.dataSelectorComboBox)
+
+        self.actionShow_Transactions.setIcon(icons.table)
+        self.actionRecalculate_Report.setIcon(icons.refresh)
+        self.actionRecalculate_Report.setEnabled(False)
+        self.actionShow_Transactions.triggered.connect(
+            self.signal_show_transactions.emit
+        )
+        self.actionRecalculate_Report.triggered.connect(self.signal_recalculate_report)
+
+        self.recalculateReportToolButton.setDefaultAction(self.actionRecalculate_Report)
+        self.showTransactionsToolButton.setDefaultAction(self.actionShow_Transactions)
+
+        self.tableView.contextMenuEvent = self._create_context_menu
+        self.tableView.doubleClicked.connect(self._table_view_double_clicked)
 
     def load_stats(self, stats: Collection[CashFlowStats]) -> None:
         self._table_model.pre_reset_model()
@@ -79,6 +108,21 @@ class CashFlowPeriodicReport(CustomWidget, Ui_CashFlowPeriodicReport):
 
         width, height = self._calculate_table_view_size()
         self.resize(width, height)
+
+    def set_recalculate_report_action_state(self, *, enabled: bool) -> None:
+        self.actionRecalculate_Report.setEnabled(enabled)
+        if enabled:
+            self.recalculateReportToolButton.setToolButtonStyle(
+                Qt.ToolButtonStyle.ToolButtonTextBesideIcon
+            )
+        else:
+            self.actionRecalculate_Report.setIcon(Qt.ToolButtonStyle.ToolButtonIconOnly)
+
+    def set_show_transactions_action_state(self, *, enable: bool) -> None:
+        self.actionShow_Transactions.setEnabled(enable)
+
+    def get_selected_transactions(self) -> tuple[list[Transaction], str, str]:
+        return self._table_model.get_selected_transactions()
 
     def _calculate_table_view_size(self) -> tuple[int, int]:
         """Calculates a good size for the table view which
@@ -119,3 +163,12 @@ class CashFlowPeriodicReport(CustomWidget, Ui_CashFlowPeriodicReport):
             handle_exception(exception)
         finally:
             self._busy_dialog.close()
+
+    def _create_context_menu(self, event: QContextMenuEvent) -> None:  # noqa: ARG002
+        self.menu = QMenu(self)
+        self.menu.addAction(self.actionShow_Transactions)
+        self.menu.popup(QCursor.pos())
+
+    def _table_view_double_clicked(self) -> None:
+        if self.actionShow_Transactions.isEnabled():
+            self.signal_show_transactions.emit()

@@ -41,11 +41,10 @@ class Ui_CashTransactionDialog(object):
         self.dateLabel = QtWidgets.QLabel(CashTransactionDialog)
         self.dateLabel.setObjectName("dateLabel")
         self.formLayout.setWidget(1, QtWidgets.QFormLayout.ItemRole.LabelRole, self.dateLabel)
-        self.dateEdit = QtWidgets.QDateEdit(CashTransactionDialog)
-        self.dateEdit.setCalendarPopup(True)
-        self.dateEdit.setTimeSpec(QtCore.Qt.TimeSpec.LocalTime)
-        self.dateEdit.setObjectName("dateEdit")
-        self.formLayout.setWidget(1, QtWidgets.QFormLayout.ItemRole.FieldRole, self.dateEdit)
+        self.dateTimeEdit = QtWidgets.QDateTimeEdit(CashTransactionDialog)
+        self.dateTimeEdit.setCalendarPopup(True)
+        self.dateTimeEdit.setObjectName("dateTimeEdit")
+        self.formLayout.setWidget(1, QtWidgets.QFormLayout.ItemRole.FieldRole, self.dateTimeEdit)
         self.amountLabel = QtWidgets.QLabel(CashTransactionDialog)
         self.amountLabel.setObjectName("amountLabel")
         self.formLayout.setWidget(2, QtWidgets.QFormLayout.ItemRole.LabelRole, self.amountLabel)
@@ -70,8 +69,7 @@ class Ui_CashTransactionDialog(object):
         self.retranslateUi(CashTransactionDialog)
         QtCore.QMetaObject.connectSlotsByName(CashTransactionDialog)
         CashTransactionDialog.setTabOrder(self.incomeRadioButton, self.expenseRadioButton)
-        CashTransactionDialog.setTabOrder(self.expenseRadioButton, self.dateEdit)
-        CashTransactionDialog.setTabOrder(self.dateEdit, self.amountDoubleSpinBox)
+        CashTransactionDialog.setTabOrder(self.expenseRadioButton, self.amountDoubleSpinBox)
 
     def retranslateUi(self, CashTransactionDialog):
         _translate = QtCore.QCoreApplication.translate
@@ -80,6 +78,7 @@ class Ui_CashTransactionDialog(object):
         self.incomeRadioButton.setText(_translate("CashTransactionDialog", "Income"))
         self.expenseRadioButton.setText(_translate("CashTransactionDialog", "Expense"))
         self.dateLabel.setText(_translate("CashTransactionDialog", "Date"))
+        self.dateTimeEdit.setDisplayFormat(_translate("CashTransactionDialog", "dd.MM.yyyy hh:mm"))
         self.amountLabel.setText(_translate("CashTransactionDialog", "Amount"))
         self.actionSelect_Payee.setText(_translate("CashTransactionDialog", "Select Payee"))
         self.actionSelect_Tag.setText(_translate("CashTransactionDialog", "Select Tag"))

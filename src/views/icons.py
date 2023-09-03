@@ -87,6 +87,8 @@ document_plus: QIcon | None = None
 book_question: QIcon | None = None
 table: QIcon | None = None
 percent: QIcon | None = None
+swap: QIcon | None = None
+refresh: QIcon | None = None
 
 
 def setup() -> None:  # noqa: PLR0915
@@ -117,6 +119,8 @@ def setup() -> None:  # noqa: PLR0915
     global bar_chart, pie_chart, calendar  # noqa: PLW0603
     global document_smiley, document_clock, document_plus  # noqa: PLW0603
     global book_question, table, percent  # noqa: PLW0603
+    global swap  # noqa: PLW0603
+    global refresh  # noqa: PLW0603
 
     QDir.addSearchPath(
         "icons_24",
@@ -216,3 +220,5 @@ def setup() -> None:  # noqa: PLR0915
         if colors.color_scheme == Qt.ColorScheme.Dark
         else QIcon("icons_custom:percent_light_mode.png")
     )
+    swap = QIcon("icons_16:arrow-switch.png")
+    refresh = QIcon("icons_16:arrow-circle-double.png")

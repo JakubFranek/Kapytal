@@ -102,13 +102,26 @@ class MainPresenter:
             security_form, self._record_keeper
         )
         payee_form = PayeeForm(parent=self._view)
-        self._payee_form_presenter = PayeeFormPresenter(payee_form, self._record_keeper)
+        self._payee_form_presenter = PayeeFormPresenter(
+            payee_form,
+            self._record_keeper,
+            self._transactions_presenter.transaction_table_form_presenter,
+        )
+
         tag_form = TagForm(parent=self._view)
-        self._tag_form_presenter = TagFormPresenter(tag_form, self._record_keeper)
+        self._tag_form_presenter = TagFormPresenter(
+            tag_form,
+            self._record_keeper,
+            self._transactions_presenter.transaction_table_form_presenter,
+        )
+
         category_form = CategoryForm(parent=self._view)
         self._category_form_presenter = CategoryFormPresenter(
-            category_form, self._record_keeper
+            category_form,
+            self._record_keeper,
+            self._transactions_presenter.transaction_table_form_presenter,
         )
+
         settings_form = SettingsForm(parent=self._view)
         self._settings_form_presenter = SettingsFormPresenter(settings_form)
 

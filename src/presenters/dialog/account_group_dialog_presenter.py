@@ -12,10 +12,6 @@ from src.views.widgets.account_tree_widget import AccountTreeWidget
 
 
 class AccountGroupDialogPresenter:
-    event_update_model = Event()
-    event_selection_changed = Event()
-    event_data_changed = Event()
-
     def __init__(
         self,
         view: AccountTreeWidget,
@@ -25,6 +21,9 @@ class AccountGroupDialogPresenter:
         self._view = view
         self._record_keeper = record_keeper
         self._model = model
+        self.event_update_model = Event()
+        self.event_selection_changed = Event()
+        self.event_data_changed = Event()
 
     def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
         self._record_keeper = record_keeper

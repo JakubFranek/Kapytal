@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 
 import mplcursors
 from matplotlib.container import BarContainer
-from matplotlib.ticker import StrMethodFormatter
+from matplotlib.ticker import PercentFormatter, StrMethodFormatter
 from mplcursors import Selection
 from PyQt6.QtWidgets import QWidget
 from src.models.statistics.cashflow_stats import CashFlowStats
@@ -22,6 +22,7 @@ class ChartData(Enum):
     CASH_FLOW = auto()
     GAIN_LOSS = auto()
     NET_GROWTH = auto()
+    SAVINGS_RATE = auto()
 
 
 BAR_WIDTH_4 = 0.15
@@ -41,7 +42,7 @@ class CashFlowPeriodicChartWidget(ChartWidget):
         axes = self.chart.axes
         axes.clear()
 
-        currency = stats_sequence[0].inflows.currency
+        currency = stats_sequence[0].inflows.balance.currency
 
         incomes = []
         inward_transfers = []
@@ -52,36 +53,43 @@ class CashFlowPeriodicChartWidget(ChartWidget):
         cash_flow = []
         gain_loss = []
         net_growth = []
+        savings_rate = []
         max_value = 0
         min_value = 0
         for stats in stats_sequence:
-            incomes.append(stats.incomes.value_rounded)
-            inward_transfers.append(stats.inward_transfers.value_rounded)
-            refunds.append(stats.refunds.value_rounded)
+            incomes.append(stats.incomes.balance.value_rounded)
+            inward_transfers.append(stats.inward_transfers.balance.value_rounded)
+            refunds.append(stats.refunds.balance.value_rounded)
             initial_balances.append(stats.initial_balances.value_rounded)
-            expenses.append(stats.expenses.value_rounded)
-            outward_transfers.append(stats.outward_transfers.value_rounded)
-            cash_flow.append(stats.delta_neutral.value_rounded)
+            expenses.append(stats.expenses.balance.value_rounded)
+            outward_transfers.append(stats.outward_transfers.balance.value_rounded)
+            cash_flow.append(stats.delta_neutral.balance.value_rounded)
             gain_loss.append(stats.delta_performance.value_rounded)
             net_growth.append(stats.delta_total.value_rounded)
+            if stats.savings_rate.is_nan():
+                savings_rate.append(0)
+            else:
+                savings_rate.append(stats.savings_rate)
 
             if chart_data == ChartData.ALL:
                 value_set = [
-                    stats.inflows.value_rounded,
-                    stats.outflows.value_rounded,
-                    stats.delta_neutral.value_rounded,
+                    stats.inflows.balance.value_rounded,
+                    stats.outflows.balance.value_rounded,
+                    stats.delta_neutral.balance.value_rounded,
                     stats.delta_performance.value_rounded,
                 ]
             elif chart_data == ChartData.INFLOWS:
-                value_set = [stats.inflows.value_rounded]
+                value_set = [stats.inflows.balance.value_rounded]
             elif chart_data == ChartData.OUTFLOWS:
-                value_set = [stats.outflows.value_rounded]
+                value_set = [stats.outflows.balance.value_rounded]
             elif chart_data == ChartData.CASH_FLOW:
-                value_set = [stats.delta_neutral.value_rounded]
+                value_set = [stats.delta_neutral.balance.value_rounded]
             elif chart_data == ChartData.GAIN_LOSS:
                 value_set = [stats.delta_performance.value_rounded]
             elif chart_data == ChartData.NET_GROWTH:
                 value_set = [stats.delta_total.value_rounded]
+            elif chart_data == ChartData.SAVINGS_RATE:
+                value_set = [0] if stats.savings_rate.is_nan() else [stats.savings_rate]
 
             max_value = max(
                 *value_set,
@@ -103,7 +111,6 @@ class CashFlowPeriodicChartWidget(ChartWidget):
         x2 = [x + _width for x in x1]
         x3 = [x + _width for x in x2]
         x4 = [x + _width for x in x3]
-        x5 = [x + _width for x in x4]
 
         if chart_data in {ChartData.ALL, ChartData.INFLOWS}:
             axes.bar(x1, incomes, width=width, color="darkgreen", label="Income")
@@ -148,20 +155,28 @@ class CashFlowPeriodicChartWidget(ChartWidget):
                 x4, gain_loss, width=width, color="orange", label="Total Gain / Loss"
             )
         if chart_data == ChartData.NET_GROWTH:
-            axes.bar(x5, net_growth, width=width, color="deeppink", label="Net Growth")
+            axes.bar(x1, net_growth, width=width, color="deeppink", label="Net Growth")
+        if chart_data == ChartData.SAVINGS_RATE:
+            axes.bar(
+                x1, savings_rate, width=width, color="purple", label="Savings Rate"
+            )
 
         axes.set_axisbelow(True)
-        axes.yaxis.set_major_formatter(StrMethodFormatter("{x:,.0f}"))
-        axes.grid(visible=True, axis="y")
-        axes.set_ylabel(currency.code)
-
-        tick_labels = [stats.period for stats in stats_sequence]
-        if chart_data == ChartData.ALL:
-            axes.set_xticks([x + 1.5 * width for x in x1], tick_labels)
+        if chart_data != ChartData.SAVINGS_RATE:
+            axes.set_ylabel(currency.code)
+            axes.yaxis.set_major_formatter(StrMethodFormatter("{x:,.0f}"))
         else:
-            axes.set_xticks(x1, tick_labels)
-        if len(tick_labels) > 10:
-            axes.set_xticklabels(tick_labels, rotation=45, ha="right")
+            axes.set_ylabel("Savings Rate")
+            axes.yaxis.set_major_formatter(PercentFormatter(xmax=1))
+        axes.grid(visible=True, axis="y")
+
+        x_tick_labels = [stats.period for stats in stats_sequence]
+        if chart_data == ChartData.ALL:
+            axes.set_xticks([x + 1.5 * width for x in x1], x_tick_labels)
+        else:
+            axes.set_xticks(x1, x_tick_labels)
+        if len(x_tick_labels) > 10:
+            axes.set_xticklabels(x_tick_labels, rotation=45, ha="right")
 
         yticks = axes.get_yticks()
         step = abs(yticks[1] - yticks[0])
@@ -173,11 +188,16 @@ class CashFlowPeriodicChartWidget(ChartWidget):
             if type(sel.artist) == BarContainer:
                 bar = sel.artist[sel.index]
                 annotation: Annotation = sel.annotation
-                annotation.set_text(
-                    f"{sel.artist.get_label()}: "
-                    f"{round(bar.get_height(),currency.places):,.{currency.places}f} "
-                    f"{currency.code}"
-                )
+                if chart_data != ChartData.SAVINGS_RATE:
+                    annotation.set_text(
+                        f"{sel.artist.get_label()}: "
+                        f"{round(bar.get_height(),currency.places):,.{currency.places}f} "
+                        f"{currency.code}"
+                    )
+                else:
+                    annotation.set_text(
+                        f"{sel.artist.get_label()}: {bar.get_height():.2%}"
+                    )
                 annotation.xy = (
                     bar.get_x() + bar.get_width() / 2,
                     bar.get_y() + bar.get_height() / 2,

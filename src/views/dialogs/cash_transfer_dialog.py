@@ -3,13 +3,11 @@ from datetime import date, datetime
 from decimal import Decimal, DivisionByZero, InvalidOperation
 from enum import Enum, auto
 
-from PyQt6.QtCore import pyqtSignal
+from PyQt6.QtCore import QSignalBlocker, pyqtSignal
 from PyQt6.QtWidgets import (
     QAbstractButton,
     QDialogButtonBox,
     QDoubleSpinBox,
-    QFormLayout,
-    QLabel,
     QWidget,
 )
 from src.models.model_objects.cash_objects import CashAccount
@@ -17,6 +15,7 @@ from src.models.user_settings import user_settings
 from src.views import icons
 from src.views.base_classes.custom_dialog import CustomDialog
 from src.views.ui_files.dialogs.Ui_cash_transfer_dialog import Ui_CashTransferDialog
+from src.views.utilities.helper_functions import convert_datetime_format_to_qt
 from src.views.widgets.description_plain_text_edit import DescriptionPlainTextEdit
 from src.views.widgets.multiple_tags_selector_widget import MultipleTagsSelectorWidget
 from src.views.widgets.smart_combo_box import SmartComboBox
@@ -59,12 +58,10 @@ class CashTransferDialog(CustomDialog, Ui_CashTransferDialog):
         self.setupUi(self)
 
         self.descriptionPlainTextEdit = DescriptionPlainTextEdit(descriptions)
-        self.description_label = QLabel("Description")
-        self.formLayout.addRow(self.description_label, self.descriptionPlainTextEdit)
+        self.gridLayout.addWidget(self.descriptionPlainTextEdit, 6, 1, 1, -1)
 
         self.tags_widget = MultipleTagsSelectorWidget(self, tag_names)
-        self.tags_label = QLabel("Tags", self)
-        self.formLayout.addRow(self.tags_label, self.tags_widget)
+        self.gridLayout.addWidget(self.tags_widget, 7, 1, 1, -1)
 
         self._accounts = accounts
         self._edit_mode = edit_mode
@@ -74,19 +71,24 @@ class CashTransferDialog(CustomDialog, Ui_CashTransferDialog):
         self._initialize_placeholders()
         self._set_spinbox_states()
         self._initialize_signals()
+        self._initialize_actions()
         self._set_tab_order()
+
+        display_format = (
+            convert_datetime_format_to_qt(user_settings.settings.general_date_format)
+            + " hh:mm"
+        )
+        self.dateTimeEdit.setDisplayFormat(display_format)
 
     @property
     def datetime_(self) -> datetime | None:
-        if self.dateEdit.text() == self.KEEP_CURRENT_VALUES:
+        if self.dateTimeEdit.text() == self.KEEP_CURRENT_VALUES:
             return None
         return (
-            self.dateEdit.dateTime()
+            self.dateTimeEdit.dateTime()
             .toPyDateTime()
             .replace(
                 tzinfo=user_settings.settings.time_zone,
-                hour=0,
-                minute=0,
                 second=0,
                 microsecond=0,
             )
@@ -94,17 +96,15 @@ class CashTransferDialog(CustomDialog, Ui_CashTransferDialog):
 
     @datetime_.setter
     def datetime_(self, datetime_: datetime) -> None:
-        self.dateEdit.setDateTime(datetime_)
+        self.dateTimeEdit.setDateTime(datetime_)
 
     @property
     def min_datetime(self) -> datetime:
         return (
-            self.dateEdit.minimumDateTime()
+            self.dateTimeEdit.minimumDateTime()
             .toPyDateTime()
             .replace(
                 tzinfo=user_settings.settings.time_zone,
-                hour=0,
-                minute=0,
                 second=0,
                 microsecond=0,
             )
@@ -186,10 +186,12 @@ class CashTransferDialog(CustomDialog, Ui_CashTransferDialog):
         self, account_path: str | None, spinbox: QDoubleSpinBox
     ) -> None:
         if account_path is None:
+            spinbox.setSuffix("")
             return
 
         account = self._get_account(account_path)
         if account is None:
+            spinbox.setSuffix("")
             return
         spinbox.setSuffix(" " + account.currency.code)
         spinbox.setDecimals(account.currency.places)
@@ -204,6 +206,8 @@ class CashTransferDialog(CustomDialog, Ui_CashTransferDialog):
         sender = self._get_account(self.sender_path)
         recipient = self._get_account(self.recipient_path)
         if sender is None or recipient is None:
+            self.exchangeRateLabel.hide()
+            self.exchangeRateLineEdit.hide()
             return
 
         self.exchangeRateLabel.setVisible(sender.currency != recipient.currency)
@@ -251,11 +255,7 @@ class CashTransferDialog(CustomDialog, Ui_CashTransferDialog):
             )
         self.buttonBox.clicked.connect(self._handle_button_box_click)
         self.buttonBox.addButton("Close", QDialogButtonBox.ButtonRole.RejectRole)
-        self.formLayout.setWidget(
-            self.formLayout.count() - 1,
-            QFormLayout.ItemRole.SpanningRole,
-            self.buttonBox,
-        )
+        self.gridLayout.addWidget(self.buttonBox, 8, 1, 1, -1)
 
     def _initialize_accounts_comboboxes(
         self, accounts: Collection[CashAccount]
@@ -269,11 +269,11 @@ class CashTransferDialog(CustomDialog, Ui_CashTransferDialog):
 
         self.senderComboBox = SmartComboBox(parent=self)
         self.senderComboBox.load_items(items, icons.cash_account, placeholder_text)
-        self.formLayout.insertRow(0, "Sender", self.senderComboBox)
+        self.gridLayout.addWidget(self.senderComboBox, 0, 1, 1, 1)
 
         self.recipientComboBox = SmartComboBox(parent=self)
         self.recipientComboBox.load_items(items, icons.cash_account, placeholder_text)
-        self.formLayout.insertRow(1, "Recipient", self.recipientComboBox)
+        self.gridLayout.addWidget(self.recipientComboBox, 1, 1, 1, 1)
 
         self.senderComboBox.currentTextChanged.connect(self._set_spinboxes_currencies)
         self.recipientComboBox.currentTextChanged.connect(
@@ -286,8 +286,8 @@ class CashTransferDialog(CustomDialog, Ui_CashTransferDialog):
             self.descriptionPlainTextEdit.setPlaceholderText(
                 "Leave empty to keep current values"
             )
-            self.dateEdit.setSpecialValueText(self.KEEP_CURRENT_VALUES)
-            self.dateEdit.setMinimumDate(date(1900, 1, 1))
+            self.dateTimeEdit.setSpecialValueText(self.KEEP_CURRENT_VALUES)
+            self.dateTimeEdit.setMinimumDate(date(1900, 1, 1))
             self.sentDoubleSpinBox.setSpecialValueText(self.KEEP_CURRENT_VALUES)
             self.receivedDoubleSpinBox.setSpecialValueText(self.KEEP_CURRENT_VALUES)
             self.tags_widget.set_placeholder_text("Leave empty to keep current values")
@@ -311,11 +311,6 @@ class CashTransferDialog(CustomDialog, Ui_CashTransferDialog):
                 sender_account.currency != recipient_account.currency
             )
 
-        if not sender_specified:
-            self.sentDoubleSpinBox.setValue(0)
-        if not recipient_specified:
-            self.receivedDoubleSpinBox.setValue(0)
-
     def _handle_button_box_click(self, button: QAbstractButton) -> None:
         role = self.buttonBox.buttonRole(button)
         if role == QDialogButtonBox.ButtonRole.AcceptRole:
@@ -333,10 +328,31 @@ class CashTransferDialog(CustomDialog, Ui_CashTransferDialog):
         self.senderComboBox.currentTextChanged.connect(self._set_spinbox_states)
         self.recipientComboBox.currentTextChanged.connect(self._set_spinbox_states)
 
+    def _initialize_actions(self) -> None:
+        self.actionSwap_Accounts.setIcon(icons.swap)
+        self.actionSwap_Accounts.triggered.connect(self._swap_accounts)
+        self.swapAccountsToolButton.setDefaultAction(self.actionSwap_Accounts)
+
     def _set_tab_order(self) -> None:
         self.setTabOrder(self.senderComboBox, self.recipientComboBox)
         self.setTabOrder(self.recipientComboBox, self.sentDoubleSpinBox)
         self.setTabOrder(self.sentDoubleSpinBox, self.receivedDoubleSpinBox)
-        self.setTabOrder(self.receivedDoubleSpinBox, self.dateEdit)
-        self.setTabOrder(self.dateEdit, self.descriptionPlainTextEdit)
+        self.setTabOrder(self.receivedDoubleSpinBox, self.dateTimeEdit)
+        self.setTabOrder(self.dateTimeEdit, self.descriptionPlainTextEdit)
         self.setTabOrder(self.descriptionPlainTextEdit, self.tags_widget)
+
+    def _swap_accounts(self) -> None:
+        sender = self.sender_path
+        recipient = self.recipient_path
+        sent = self.amount_sent
+        received = self.amount_received
+        with QSignalBlocker(self.senderComboBox):
+            self.senderComboBox.setCurrentText(recipient)
+        with QSignalBlocker(self.recipientComboBox):
+            self.recipientComboBox.setCurrentText(sender)
+        with QSignalBlocker(self.sentDoubleSpinBox):
+            self.sentDoubleSpinBox.setValue(received)
+        with QSignalBlocker(self.receivedDoubleSpinBox):
+            self.receivedDoubleSpinBox.setValue(sent)
+        self._set_spinboxes_currencies()
+        self._set_spinbox_states()

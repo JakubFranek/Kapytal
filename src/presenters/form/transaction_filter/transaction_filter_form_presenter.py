@@ -51,7 +51,7 @@ from src.views.forms.transaction_filter_form import (
     TransactionFilterForm,
 )
 from src.views.utilities.handle_exception import display_error_message
-from src.views.utilities.message_box_functions import ask_yes_no_question
+from src.views.utilities.message_box_functions import ask_yes_no_cancel_question
 
 currency_related_types = {
     CashTransactionType.EXPENSE,
@@ -260,7 +260,7 @@ class TransactionFilterFormPresenter:
         self._update_form_from_filter(self._transaction_filter)
         self._form.show_form()
 
-    def _update_filter(self) -> None:
+    def _update_filter_from_form(self) -> None:
         new_filter = self._get_transaction_filter_from_form()
         if self._transaction_filter != new_filter:
             self._log_filter_differences(new_filter)
@@ -268,9 +268,10 @@ class TransactionFilterFormPresenter:
             self.event_filter_changed()
 
     def _form_accepted(self) -> None:
-        self._check_filter_form_sanity()
+        if not self._check_filter_form_sanity():
+            return
         try:
-            self._update_filter()
+            self._update_filter_from_form()
         except Exception as exception:  # noqa: BLE001
             handle_exception(exception)
             return
@@ -508,7 +509,9 @@ class TransactionFilterFormPresenter:
                     f"max={new_filter.cash_amount_filter.maximum}"
                 )
 
-    def _check_filter_form_sanity(self) -> None:
+    def _check_filter_form_sanity(self) -> bool:
+        """Checks if the form is sane. Returns True if acceptance should proceed."""
+
         types = self._type_filter_presenter.checked_types
         if not types:
             display_error_message(
@@ -529,18 +532,36 @@ class TransactionFilterFormPresenter:
                     title="Warning",
                 )
 
-        if self._form.currency_filter_active:
-            self._check_filter_related_types("Currency Filter", currency_related_types)
-        if self._form.security_filter_active:
-            self._check_filter_related_types("Security Filter", security_related_types)
-        if self._form.payee_filter_active:
-            self._check_filter_related_types("Payee Filter", payee_related_types)
-        if self._form.category_filters_active:
-            self._check_filter_related_types("Category Filter", category_related_types)
-        if self._form.cash_amount_filter_mode != FilterMode.OFF:
-            self._check_filter_related_types(
-                "Cash Amount Filter", currency_related_types
-            )
+        filter_types: list[tuple[str, bool, set]] = [
+            (
+                "Currency Filter",
+                self._form.currency_filter_active,
+                currency_related_types,
+            ),
+            (
+                "Security Filter",
+                self._form.security_filter_active,
+                security_related_types,
+            ),
+            ("Payee Filter", self._form.payee_filter_active, payee_related_types),
+            (
+                "Category Filter",
+                self._form.specific_categories_filter_mode != FilterMode.OFF,
+                category_related_types,
+            ),
+            (
+                "Cash Amount Filter",
+                self._form.cash_amount_filter_mode != FilterMode.OFF,
+                currency_related_types,
+            ),
+        ]
+
+        for filter_name, filter_active, related_types in filter_types:
+            if filter_active and not self._check_filter_related_types(
+                filter_name, related_types
+            ):
+                return False
+        return True
 
     def _check_filter_related_types(
         self,
@@ -548,7 +569,11 @@ class TransactionFilterFormPresenter:
         related_types: set[
             type[Transaction] | CashTransactionType | SecurityTransactionType
         ],
-    ) -> None:
+    ) -> bool:
+        """Checks if only related types are selected in the Type Filter. Asks user to
+        unselect unrelated types if not. Returns True if Transaction Filter acceptance
+        should proceed."""
+
         types = self._type_filter_presenter.checked_types
         field_name = filter_name.removesuffix(" Filter")
         unrelated_types = types.difference(related_types)
@@ -567,13 +592,18 @@ class TransactionFilterFormPresenter:
                 f"{filter_name} activated with unrelated types, "
                 "asking user to unselect them"
             )
-            answer = ask_yes_no_question(self._form, question, title, warning=True)
-            if answer:
+            answer = ask_yes_no_cancel_question(
+                self._form, question, title, warning=True
+            )
+            if answer is True:
                 logging.info("User chose to unselect unrelated types in Type Filter")
                 self._type_filter_presenter.checked_types = types - unrelated_types
                 types = self._type_filter_presenter.checked_types
-            else:
+            elif answer is False:
                 logging.info("User chose to keep unrelated types in Type Filter")
+            else:
+                logging.info("User chose to cancel Transaction Filter acceptance")
+                return False
         related_types = types.intersection(related_types)
         if not related_types:
             display_error_message(
@@ -584,6 +614,7 @@ class TransactionFilterFormPresenter:
                 ),
                 title="Warning",
             )
+        return True
 
     def _show_help(self) -> None:
         filter_ = self._get_transaction_filter_from_form()

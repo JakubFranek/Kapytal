@@ -21,18 +21,20 @@ class CashFlowTotalReport(CustomWidget, Ui_CashFlowTotalReport):
         self.horizontalLayout.addWidget(self.chart_widget)
 
     def load_stats(self, stats: CashFlowStats) -> None:
-        self.incomeAmountLabel.setText(stats.incomes.to_str_rounded())
-        if stats.incomes.is_positive():
+        self.incomeAmountLabel.setText(stats.incomes.balance.to_str_rounded())
+        if stats.incomes.balance.is_positive():
             self.incomeAmountLabel.setStyleSheet(f"color: {colors.get_green().name()}")
 
-        self.inwardTransfersAmountLabel.setText(stats.inward_transfers.to_str_rounded())
-        if stats.inward_transfers.is_positive():
+        self.inwardTransfersAmountLabel.setText(
+            stats.inward_transfers.balance.to_str_rounded()
+        )
+        if stats.inward_transfers.balance.is_positive():
             self.inwardTransfersAmountLabel.setStyleSheet(
                 f"color: {colors.get_green().name()}"
             )
 
-        self.refundsAmountLabel.setText(stats.refunds.to_str_rounded())
-        if stats.refunds.is_positive():
+        self.refundsAmountLabel.setText(stats.refunds.balance.to_str_rounded())
+        if stats.refunds.balance.is_positive():
             self.refundsAmountLabel.setStyleSheet(f"color: {colors.get_green().name()}")
 
         self.initialBalancesAmountLabel.setText(stats.initial_balances.to_str_rounded())
@@ -41,22 +43,22 @@ class CashFlowTotalReport(CustomWidget, Ui_CashFlowTotalReport):
                 f"color: {colors.get_green().name()}"
             )
 
-        self.inflowAmountLabel.setText(stats.inflows.to_str_rounded())
-        if stats.inflows.is_positive():
+        self.inflowAmountLabel.setText(stats.inflows.balance.to_str_rounded())
+        if stats.inflows.balance.is_positive():
             self.inflowAmountLabel.setStyleSheet(f"color: {colors.get_green().name()}")
 
-        self.expensesAmountLabel.setText("-" + stats.expenses.to_str_rounded())
-        if stats.expenses.is_positive():
+        self.expensesAmountLabel.setText("-" + stats.expenses.balance.to_str_rounded())
+        if stats.expenses.balance.is_positive():
             self.expensesAmountLabel.setStyleSheet(f"color: {colors.get_red().name()}")
         self.outwardTransfersAmountLabel.setText(
-            "-" + stats.outward_transfers.to_str_rounded()
+            "-" + stats.outward_transfers.balance.to_str_rounded()
         )
-        if stats.outward_transfers.is_positive():
+        if stats.outward_transfers.balance.is_positive():
             self.outwardTransfersAmountLabel.setStyleSheet(
                 f"color: {colors.get_red().name()}"
             )
-        self.outflowAmountLabel.setText("-" + stats.outflows.to_str_rounded())
-        if stats.outflows.is_positive():
+        self.outflowAmountLabel.setText("-" + stats.outflows.balance.to_str_rounded())
+        if stats.outflows.balance.is_positive():
             self.outflowAmountLabel.setStyleSheet(f"color: {colors.get_red().name()}")
 
         self.gainLossSecuritiesAmountLabel.setText(
@@ -91,13 +93,23 @@ class CashFlowTotalReport(CustomWidget, Ui_CashFlowTotalReport):
         elif stats.delta_performance.is_negative():
             self.gainLossAmountLabel.setStyleSheet(f"color: {colors.get_red().name()}")
 
-        self.cashFlowAmountLabel.setText(stats.delta_neutral.to_str_rounded())
-        if stats.delta_neutral.is_positive():
+        self.cashFlowAmountLabel.setText(stats.delta_neutral.balance.to_str_rounded())
+        if stats.delta_neutral.balance.is_positive():
             self.cashFlowAmountLabel.setStyleSheet(
                 f"color: {colors.get_green().name()}"
             )
-        elif stats.delta_neutral.is_negative():
+        elif stats.delta_neutral.balance.is_negative():
             self.cashFlowAmountLabel.setStyleSheet(f"color: {colors.get_red().name()}")
+
+        self.savingsRateAmountLabel.setText(f"{100 * stats.savings_rate:.2f}%")
+        if stats.savings_rate > 0:
+            self.savingsRateAmountLabel.setStyleSheet(
+                f"color: {colors.get_green().name()}"
+            )
+        elif stats.delta_neutral < 0:
+            self.savingsRateAmountLabel.setStyleSheet(
+                f"color: {colors.get_red().name()}"
+            )
 
         self.netGrowthAmountLabel.setText(stats.delta_total.to_str_rounded())
         if stats.delta_total.is_positive():

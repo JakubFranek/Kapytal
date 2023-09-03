@@ -8,8 +8,6 @@ from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtWidgets import (
     QAbstractButton,
     QDialogButtonBox,
-    QFormLayout,
-    QLabel,
     QWidget,
 )
 from src.models.model_objects.security_objects import (
@@ -22,6 +20,7 @@ from src.views.base_classes.custom_dialog import CustomDialog
 from src.views.ui_files.dialogs.Ui_security_transfer_dialog import (
     Ui_SecurityTransferDialog,
 )
+from src.views.utilities.helper_functions import convert_datetime_format_to_qt
 from src.views.widgets.description_plain_text_edit import DescriptionPlainTextEdit
 from src.views.widgets.multiple_tags_selector_widget import MultipleTagsSelectorWidget
 from src.views.widgets.smart_combo_box import SmartComboBox
@@ -57,15 +56,21 @@ class SecurityTransferDialog(CustomDialog, Ui_SecurityTransferDialog):
         self._securities = securities
 
         self.tags_widget = MultipleTagsSelectorWidget(self, tag_names)
-        self.tags_label = QLabel("Tags", self)
-        self.formLayout.addRow(self.tags_label, self.tags_widget)
+        self.gridLayout.addWidget(self.tags_widget, 6, 1, 1, -1)
 
         self._initialize_window()
         self._initialize_security_combobox(securities)
         self._initialize_security_account_comboboxes()
         self._initialize_description_plain_text_edit(descriptions)
         self._initialize_placeholders()
+        self._initialize_actions()
         self._set_tab_order()
+
+        display_format = (
+            convert_datetime_format_to_qt(user_settings.settings.general_date_format)
+            + " hh:mm"
+        )
+        self.dateTimeEdit.setDisplayFormat(display_format)
 
     @property
     def security_name(self) -> str | None:
@@ -109,15 +114,13 @@ class SecurityTransferDialog(CustomDialog, Ui_SecurityTransferDialog):
 
     @property
     def datetime_(self) -> datetime | None:
-        if self.dateEdit.text() == self.KEEP_CURRENT_VALUES:
+        if self.dateTimeEdit.text() == self.KEEP_CURRENT_VALUES:
             return None
         return (
-            self.dateEdit.dateTime()
+            self.dateTimeEdit.dateTime()
             .toPyDateTime()
             .replace(
                 tzinfo=user_settings.settings.time_zone,
-                hour=0,
-                minute=0,
                 second=0,
                 microsecond=0,
             )
@@ -125,17 +128,15 @@ class SecurityTransferDialog(CustomDialog, Ui_SecurityTransferDialog):
 
     @datetime_.setter
     def datetime_(self, datetime_: datetime) -> None:
-        self.dateEdit.setDateTime(datetime_)
+        self.dateTimeEdit.setDateTime(datetime_)
 
     @property
     def min_datetime(self) -> datetime:
         return (
-            self.dateEdit.minimumDateTime()
+            self.dateTimeEdit.minimumDateTime()
             .toPyDateTime()
             .replace(
                 tzinfo=user_settings.settings.time_zone,
-                hour=0,
-                minute=0,
                 second=0,
                 microsecond=0,
             )
@@ -197,30 +198,28 @@ class SecurityTransferDialog(CustomDialog, Ui_SecurityTransferDialog):
             )
         self.buttonBox.clicked.connect(self._handle_button_box_click)
         self.buttonBox.addButton("Close", QDialogButtonBox.ButtonRole.RejectRole)
-        self.formLayout.setWidget(
-            self.formLayout.count() - 1,
-            QFormLayout.ItemRole.SpanningRole,
-            self.buttonBox,
-        )
+        self.gridLayout.addWidget(self.buttonBox, 7, 1, 1, -1)
 
     def _initialize_placeholders(self) -> None:
         if self._edit_mode == EditMode.EDIT_MULTIPLE:
             self.descriptionPlainTextEdit.setPlaceholderText(
                 "Leave empty to keep current values"
             )
-            self.dateEdit.setSpecialValueText(self.KEEP_CURRENT_VALUES)
-            self.dateEdit.setMinimumDate(date(1900, 1, 1))
+            self.dateTimeEdit.setSpecialValueText(self.KEEP_CURRENT_VALUES)
+            self.dateTimeEdit.setMinimumDate(date(1900, 1, 1))
             self.sharesDoubleSpinBox.setSpecialValueText(self.KEEP_CURRENT_VALUES)
             self.tags_widget.set_placeholder_text("Leave empty to keep current values")
+
+    def _initialize_actions(self) -> None:
+        self.actionSwap_Accounts.setIcon(icons.swap)
+        self.actionSwap_Accounts.triggered.connect(self._swap_accounts)
+        self.swapAccountsToolButton.setDefaultAction(self.actionSwap_Accounts)
 
     def _initialize_description_plain_text_edit(
         self, descriptions: Collection[str]
     ) -> None:
         self.descriptionPlainTextEdit = DescriptionPlainTextEdit(descriptions)
-        self.description_label = QLabel("Description")
-        self.formLayout.insertRow(
-            5, self.description_label, self.descriptionPlainTextEdit
-        )
+        self.gridLayout.addWidget(self.descriptionPlainTextEdit, 5, 1, 1, -1)
 
     def _initialize_security_combobox(self, securities: Collection[Security]) -> None:
         if self._edit_mode == EditMode.EDIT_MULTIPLE:
@@ -238,7 +237,7 @@ class SecurityTransferDialog(CustomDialog, Ui_SecurityTransferDialog):
         ]
         self.securityComboBox = SmartComboBox(parent=self)
         self.securityComboBox.load_items(_securities, icons.security, placeholder_text)
-        self.formLayout.insertRow(0, "Security", self.securityComboBox)
+        self.gridLayout.addWidget(self.securityComboBox, 0, 1, 1, -1)
 
         self.securityComboBox.currentTextChanged.connect(self._security_changed)
         self._security_changed()
@@ -266,14 +265,14 @@ class SecurityTransferDialog(CustomDialog, Ui_SecurityTransferDialog):
 
         self.senderComboBox = SmartComboBox(parent=self)
         self.senderComboBox.load_items(items, icons.security_account, placeholder_text)
-        self.formLayout.insertRow(1, "Sender", self.senderComboBox)
+        self.gridLayout.addWidget(self.senderComboBox, 1, 1, 1, 1)
         self.senderComboBox.setMinimumWidth(300)
 
         self.recipientComboBox = SmartComboBox(parent=self)
         self.recipientComboBox.load_items(
             items, icons.security_account, placeholder_text
         )
-        self.formLayout.insertRow(2, "Recipient", self.recipientComboBox)
+        self.gridLayout.addWidget(self.recipientComboBox, 2, 1, 1, 1)
         self.recipientComboBox.setMinimumWidth(300)
 
     def _get_security(self, security_name: str) -> Security | None:
@@ -309,6 +308,12 @@ class SecurityTransferDialog(CustomDialog, Ui_SecurityTransferDialog):
         self.setTabOrder(self.securityComboBox, self.senderComboBox)
         self.setTabOrder(self.senderComboBox, self.recipientComboBox)
         self.setTabOrder(self.recipientComboBox, self.sharesDoubleSpinBox)
-        self.setTabOrder(self.sharesDoubleSpinBox, self.dateEdit)
-        self.setTabOrder(self.dateEdit, self.descriptionPlainTextEdit)
+        self.setTabOrder(self.sharesDoubleSpinBox, self.dateTimeEdit)
+        self.setTabOrder(self.dateTimeEdit, self.descriptionPlainTextEdit)
         self.setTabOrder(self.descriptionPlainTextEdit, self.tags_widget)
+
+    def _swap_accounts(self) -> None:
+        sender = self.sender_path
+        recipient = self.recipient_path
+        self.sender_path = recipient
+        self.recipient_path = sender

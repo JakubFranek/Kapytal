@@ -9,7 +9,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>475</width>
+    <width>580</width>
     <height>600</height>
    </rect>
   </property>
@@ -107,26 +107,15 @@
          <property name="title">
           <string>Date Filter</string>
          </property>
-         <layout class="QFormLayout" name="formLayout">
-          <item row="0" column="0">
-           <widget class="QLabel" name="dateFilterModeLabel">
-            <property name="text">
-             <string>Mode</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1">
-           <widget class="QComboBox" name="dateFilterModeComboBox"/>
-          </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="dateFilterStartLabel">
-            <property name="text">
-             <string>Start date</string>
-            </property>
-           </widget>
-          </item>
+         <layout class="QGridLayout" name="gridLayout">
           <item row="1" column="1">
            <widget class="QDateEdit" name="dateFilterStartDateEdit">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
             <property name="calendarPopup">
              <bool>true</bool>
             </property>
@@ -134,6 +123,12 @@
           </item>
           <item row="2" column="0">
            <widget class="QLabel" name="dateFilterEndLabel">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
             <property name="text">
              <string>End date</string>
             </property>
@@ -141,8 +136,78 @@
           </item>
           <item row="2" column="1">
            <widget class="QDateEdit" name="dateFilterEndDateEdit">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
             <property name="calendarPopup">
              <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="dateFilterModeLabel">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>Mode</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="2" rowspan="2">
+           <widget class="Line" name="line">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="3">
+           <widget class="QPushButton" name="thisMonthPushButton">
+            <property name="text">
+             <string>This month</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="dateFilterStartLabel">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>Start date</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1" colspan="4">
+           <widget class="QComboBox" name="dateFilterModeComboBox"/>
+          </item>
+          <item row="1" column="4">
+           <widget class="QPushButton" name="lastMonthPushButton">
+            <property name="text">
+             <string>Last month</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="3">
+           <widget class="QPushButton" name="thisYearPushButton">
+            <property name="text">
+             <string>This year</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="4">
+           <widget class="QPushButton" name="lastYearPushButton">
+            <property name="text">
+             <string>Last year</string>
             </property>
            </widget>
           </item>
@@ -313,257 +378,261 @@
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_10">
        <item>
-        <widget class="QGroupBox" name="categoryFiltersGroupBox">
+        <widget class="QGroupBox" name="specificCategoryFilterGroupBox">
          <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Filter Transactions based on Categories. &lt;/p&gt;&lt;p&gt;Only Incomes, Expenses and Refunds have a Category attribute. Other Transaction types are unaffected by these filters.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Filter Income, Expense and Refund Transactions based on specific Categories. Other Transaction types are unaffected by this Filter.&lt;/p&gt;&lt;p&gt;KEEP: Only Transactions including one of the selected Categories are kept.&lt;/p&gt;&lt;p&gt;DISCARD: Transactions including one or more of the selected Categories are discarded.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
          <property name="title">
-          <string>Category Filters</string>
+          <string>Specific Category Filter</string>
          </property>
-         <property name="checkable">
-          <bool>true</bool>
-         </property>
-         <property name="checked">
-          <bool>false</bool>
-         </property>
-         <layout class="QVBoxLayout" name="verticalLayout_17">
+         <layout class="QVBoxLayout" name="verticalLayout_16">
           <item>
-           <widget class="QGroupBox" name="specificCategoryFilterGroupBox">
-            <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Filter Income, Expense and Refund Transactions based on specific Categories. Other Transaction types are unaffected by this Filter.&lt;/p&gt;&lt;p&gt;If a Transaction contains multiple Categories, this Filter keeps it if at least one of its Categories is checked.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           <layout class="QHBoxLayout" name="specificCategoryFilterControlsHorizontalLayout">
+            <item>
+             <widget class="QLabel" name="specificCategoryFilterModeLabel">
+              <property name="text">
+               <string>Mode</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QComboBox" name="specificCategoryFilterModeComboBox"/>
+            </item>
+            <item>
+             <widget class="Line" name="line_2">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="specificCategoryFilterSelectionModeLabel">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Hierarchical selection: checking or unchecking a Category automatically checks or unchecks all its sub-Categories&lt;/p&gt;&lt;p&gt;Individual selection: checking a Category does not change the state of its sub-Categories&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
+              <property name="text">
+               <string>Selection</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QComboBox" name="specificCategoryFilterSelectionModeComboBox">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Hierarchical selection: checking or unchecking a Category automatically checks or unchecks all its sub-Categories&lt;/p&gt;&lt;p&gt;Individual selection: checking a Category does not change the state of its sub-Categories&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer_2">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="QTabWidget" name="categoriesTypeTabWidget">
+            <property name="currentIndex">
+             <number>0</number>
             </property>
-            <property name="title">
-             <string>Specific Category Filter</string>
-            </property>
-            <layout class="QVBoxLayout" name="verticalLayout_16">
-             <item>
-              <widget class="QTabWidget" name="categoriesTypeTabWidget">
-               <property name="currentIndex">
-                <number>0</number>
-               </property>
-               <widget class="QWidget" name="incomeCategoriesTab">
-                <attribute name="title">
-                 <string>Income</string>
-                </attribute>
-                <layout class="QVBoxLayout" name="verticalLayout_11">
-                 <item>
-                  <widget class="QLineEdit" name="incomeCategoriesSearchLineEdit">
-                   <property name="placeholderText">
-                    <string>Search Categories</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QTreeView" name="incomeCategoriesTreeView">
-                   <property name="uniformRowHeights">
-                    <bool>true</bool>
-                   </property>
-                   <attribute name="headerVisible">
-                    <bool>false</bool>
-                   </attribute>
-                  </widget>
-                 </item>
-                 <item>
-                  <layout class="QHBoxLayout" name="incomeCategoriesButtonHorizontalLayout">
-                   <item>
-                    <widget class="QToolButton" name="incomeCategoriesExpandAllToolButton">
-                     <property name="text">
-                      <string>...</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
-                    <widget class="QToolButton" name="incomeCategoriesCollapseAllToolButton">
-                     <property name="text">
-                      <string>...</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
-                    <widget class="QPushButton" name="incomeCategoriesSelectAllPushButton">
-                     <property name="text">
-                      <string>Select All</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
-                    <widget class="QPushButton" name="incomeCategoriesUnselectAllPushButton">
-                     <property name="text">
-                      <string>Unselect All</string>
-                     </property>
-                    </widget>
-                   </item>
-                  </layout>
-                 </item>
-                </layout>
+            <widget class="QWidget" name="incomeCategoriesTab">
+             <attribute name="title">
+              <string>Income</string>
+             </attribute>
+             <layout class="QVBoxLayout" name="verticalLayout_11">
+              <item>
+               <widget class="QLineEdit" name="incomeCategoriesSearchLineEdit">
+                <property name="placeholderText">
+                 <string>Search Categories</string>
+                </property>
                </widget>
-               <widget class="QWidget" name="expenseCategoriesTab">
-                <attribute name="title">
-                 <string>Expense</string>
+              </item>
+              <item>
+               <widget class="QTreeView" name="incomeCategoriesTreeView">
+                <property name="uniformRowHeights">
+                 <bool>true</bool>
+                </property>
+                <attribute name="headerVisible">
+                 <bool>false</bool>
                 </attribute>
-                <layout class="QVBoxLayout" name="verticalLayout_12">
-                 <item>
-                  <widget class="QLineEdit" name="expenseCategoriesSearchLineEdit">
-                   <property name="placeholderText">
-                    <string>Search Categories</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QTreeView" name="expenseCategoriesTreeView">
-                   <property name="uniformRowHeights">
-                    <bool>true</bool>
-                   </property>
-                   <attribute name="headerVisible">
-                    <bool>false</bool>
-                   </attribute>
-                  </widget>
-                 </item>
-                 <item>
-                  <layout class="QHBoxLayout" name="expenseCategoriesButtonHorizontalLayout">
-                   <item>
-                    <widget class="QToolButton" name="expenseCategoriesExpandAllToolButton">
-                     <property name="text">
-                      <string>...</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
-                    <widget class="QToolButton" name="expenseCategoriesCollapseAllToolButton">
-                     <property name="text">
-                      <string>...</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
-                    <widget class="QPushButton" name="expenseCategoriesSelectAllPushButton">
-                     <property name="text">
-                      <string>Select All</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
-                    <widget class="QPushButton" name="expenseCategoriesUnselectAllPushButton">
-                     <property name="text">
-                      <string>Unselect All</string>
-                     </property>
-                    </widget>
-                   </item>
-                  </layout>
-                 </item>
-                </layout>
                </widget>
-               <widget class="QWidget" name="incomeAndExpenseCategoriesTab">
-                <attribute name="title">
-                 <string>Income and Expense</string>
-                </attribute>
-                <layout class="QVBoxLayout" name="verticalLayout_13">
-                 <item>
-                  <widget class="QLineEdit" name="incomeAndExpenseCategoriesSearchLineEdit">
-                   <property name="placeholderText">
-                    <string>Search Categories</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QTreeView" name="incomeAndExpenseCategoriesTreeView">
-                   <property name="uniformRowHeights">
-                    <bool>true</bool>
-                   </property>
-                   <attribute name="headerVisible">
-                    <bool>false</bool>
-                   </attribute>
-                  </widget>
-                 </item>
-                 <item>
-                  <layout class="QHBoxLayout" name="incomeAndExpenseCategoriesButtonHorizontalLayout">
-                   <item>
-                    <widget class="QToolButton" name="incomeAndExpenseCategoriesExpandAllToolButton">
-                     <property name="text">
-                      <string>...</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
-                    <widget class="QToolButton" name="incomeAndExpenseCategoriesCollapseAllToolButton">
-                     <property name="text">
-                      <string>...</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
-                    <widget class="QPushButton" name="incomeAndExpenseCategoriesSelectAllPushButton">
-                     <property name="text">
-                      <string>Select All</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
-                    <widget class="QPushButton" name="incomeAndExpenseCategoriesUnselectAllPushButton">
-                     <property name="text">
-                      <string>Unselect All</string>
-                     </property>
-                    </widget>
-                   </item>
-                  </layout>
-                 </item>
-                </layout>
-               </widget>
-              </widget>
-             </item>
-             <item>
-              <widget class="QGroupBox" name="selectionModeRadioButtonGroupBox">
-               <property name="toolTip">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Hierarchical: checking or unchecking a Category automatically checks or unchecks all its sub-Categories&lt;/p&gt;&lt;p&gt;Individual: checking a Category does not change the state of its sub-Categories&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-               </property>
-               <property name="title">
-                <string>Selection Mode</string>
-               </property>
-               <layout class="QVBoxLayout" name="verticalLayout_19">
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="incomeCategoriesButtonHorizontalLayout">
                 <item>
-                 <widget class="QRadioButton" name="hierarchicalSelectionModeRadioButton">
+                 <widget class="QToolButton" name="incomeCategoriesExpandAllToolButton">
                   <property name="text">
-                   <string>Hierarchical</string>
-                  </property>
-                  <property name="checked">
-                   <bool>true</bool>
+                   <string>...</string>
                   </property>
                  </widget>
                 </item>
                 <item>
-                 <widget class="QRadioButton" name="individualSelectionModeRadioButton">
+                 <widget class="QToolButton" name="incomeCategoriesCollapseAllToolButton">
                   <property name="text">
-                   <string>Individual</string>
+                   <string>...</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="incomeCategoriesSelectAllPushButton">
+                  <property name="text">
+                   <string>Select All</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="incomeCategoriesUnselectAllPushButton">
+                  <property name="text">
+                   <string>Unselect All</string>
                   </property>
                  </widget>
                 </item>
                </layout>
-              </widget>
-             </item>
-            </layout>
+              </item>
+             </layout>
+            </widget>
+            <widget class="QWidget" name="expenseCategoriesTab">
+             <attribute name="title">
+              <string>Expense</string>
+             </attribute>
+             <layout class="QVBoxLayout" name="verticalLayout_12">
+              <item>
+               <widget class="QLineEdit" name="expenseCategoriesSearchLineEdit">
+                <property name="placeholderText">
+                 <string>Search Categories</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QTreeView" name="expenseCategoriesTreeView">
+                <property name="uniformRowHeights">
+                 <bool>true</bool>
+                </property>
+                <attribute name="headerVisible">
+                 <bool>false</bool>
+                </attribute>
+               </widget>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="expenseCategoriesButtonHorizontalLayout">
+                <item>
+                 <widget class="QToolButton" name="expenseCategoriesExpandAllToolButton">
+                  <property name="text">
+                   <string>...</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QToolButton" name="expenseCategoriesCollapseAllToolButton">
+                  <property name="text">
+                   <string>...</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="expenseCategoriesSelectAllPushButton">
+                  <property name="text">
+                   <string>Select All</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="expenseCategoriesUnselectAllPushButton">
+                  <property name="text">
+                   <string>Unselect All</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+             </layout>
+            </widget>
+            <widget class="QWidget" name="incomeAndExpenseCategoriesTab">
+             <attribute name="title">
+              <string>Income and Expense</string>
+             </attribute>
+             <layout class="QVBoxLayout" name="verticalLayout_13">
+              <item>
+               <widget class="QLineEdit" name="incomeAndExpenseCategoriesSearchLineEdit">
+                <property name="placeholderText">
+                 <string>Search Categories</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QTreeView" name="incomeAndExpenseCategoriesTreeView">
+                <property name="uniformRowHeights">
+                 <bool>true</bool>
+                </property>
+                <attribute name="headerVisible">
+                 <bool>false</bool>
+                </attribute>
+               </widget>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="incomeAndExpenseCategoriesButtonHorizontalLayout">
+                <item>
+                 <widget class="QToolButton" name="incomeAndExpenseCategoriesExpandAllToolButton">
+                  <property name="text">
+                   <string>...</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QToolButton" name="incomeAndExpenseCategoriesCollapseAllToolButton">
+                  <property name="text">
+                   <string>...</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="incomeAndExpenseCategoriesSelectAllPushButton">
+                  <property name="text">
+                   <string>Select All</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="incomeAndExpenseCategoriesUnselectAllPushButton">
+                  <property name="text">
+                   <string>Unselect All</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+             </layout>
+            </widget>
            </widget>
           </item>
-          <item>
-           <widget class="QGroupBox" name="multipleCategoriesFilterGroupBox">
-            <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Filter Incomes, Expenses and Refunds with multiple Categories. Other Transaction types are unaffected by this Filter.&lt;/p&gt;&lt;p&gt;KEEP: Only Transactions with multiple Categories are kept&lt;/p&gt;&lt;p&gt;DISCARD: Transactions with multiple Categories are discarded&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="multipleCategoriesFilterGroupBox">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Filter Incomes, Expenses and Refunds with multiple Categories. Other Transaction types are unaffected by this Filter.&lt;/p&gt;&lt;p&gt;KEEP: Only Transactions with multiple Categories are kept&lt;/p&gt;&lt;p&gt;DISCARD: Transactions with multiple Categories are discarded&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="title">
+          <string>Multiple Categories Filter</string>
+         </property>
+         <layout class="QFormLayout" name="formLayout_3">
+          <item row="0" column="0">
+           <widget class="QLabel" name="multipleCategoriesFilterModeLabel">
+            <property name="text">
+             <string>Mode</string>
             </property>
-            <property name="title">
-             <string>Multiple Categories Filter</string>
-            </property>
-            <layout class="QFormLayout" name="formLayout_3">
-             <item row="0" column="0">
-              <widget class="QLabel" name="multipleCategoriesFilterModeLabel">
-               <property name="text">
-                <string>Mode</string>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="1">
-              <widget class="QComboBox" name="multipleCategoriesFilterModeComboBox"/>
-             </item>
-            </layout>
            </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QComboBox" name="multipleCategoriesFilterModeComboBox"/>
           </item>
          </layout>
         </widget>
@@ -600,48 +669,51 @@
        <item>
         <widget class="QGroupBox" name="specificTagsFilterGroupBox">
          <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Filter Transactions (which have at least 1 Tag) based on specific Tags.&lt;/p&gt;&lt;p&gt;Transactions with no Tags are filtered separately via &amp;quot;Tag-less Transaction Filter&amp;quot;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Filter Transactions (which have at least 1 Tag) based on specific Tags.&lt;/p&gt;&lt;p&gt;Transactions with no Tags are filtered separately via &amp;quot;Tag-less Transaction Filter&amp;quot;.&lt;br/&gt;&lt;br/&gt;KEEP: Only Transactions including one of the selected Tags are kept.&lt;/p&gt;&lt;p&gt;DISCARD: Transactions including one or more of the selected Tags are discarded.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
          <property name="title">
           <string>Specific Tags Filter</string>
          </property>
          <property name="checkable">
-          <bool>true</bool>
+          <bool>false</bool>
          </property>
          <property name="checked">
           <bool>false</bool>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_14">
           <item>
-           <widget class="QLineEdit" name="tagsSearchLineEdit">
-            <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Special characters:&lt;/p&gt;&lt;p&gt;* matches zero or more of any characters&lt;br/&gt;? matches any single character&lt;br/&gt;[...] matches any character within square brackets&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-            </property>
-            <property name="placeholderText">
-             <string>Search Tags</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QListView" name="tagsListView"/>
-          </item>
-          <item>
-           <layout class="QHBoxLayout" name="tagsButtonsHorizontalLayout">
+           <layout class="QHBoxLayout" name="specificTagsFilterControlsHorizontalLayout">
             <item>
-             <widget class="QPushButton" name="tagsSelectAllPushButton">
+             <widget class="QComboBox" name="specificTagsFilterModeComboBox"/>
+            </item>
+            <item>
+             <widget class="QToolButton" name="specificTagsFilterSelectAllToolButton">
               <property name="text">
-               <string>Select All</string>
+               <string>...</string>
               </property>
              </widget>
             </item>
             <item>
-             <widget class="QPushButton" name="tagsUnselectAllPushButton">
+             <widget class="QToolButton" name="specificTagsFilterUnselectAllToolButton">
               <property name="text">
-               <string>Unselect All</string>
+               <string>...</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="tagsSearchLineEdit">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Special characters:&lt;/p&gt;&lt;p&gt;* matches zero or more of any characters&lt;br/&gt;? matches any single character&lt;br/&gt;[...] matches any character within square brackets&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
+              <property name="placeholderText">
+               <string>Search Tags</string>
               </property>
              </widget>
             </item>
            </layout>
+          </item>
+          <item>
+           <widget class="QListView" name="tagsListView"/>
           </item>
          </layout>
         </widget>

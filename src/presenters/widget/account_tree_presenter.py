@@ -2,6 +2,7 @@ import logging
 
 from PyQt6.QtCore import QSortFilterProxyModel, Qt
 from src.models.base_classes.account import Account
+from src.models.custom_exceptions import InvalidOperationError
 from src.models.model_objects.account_group import AccountGroup
 from src.models.model_objects.cash_objects import CashAccount
 from src.models.model_objects.currency_objects import (
@@ -25,6 +26,7 @@ from src.presenters.utilities.event import Event
 from src.presenters.utilities.handle_exception import handle_exception
 from src.view_models.account_tree_model import AccountTreeModel
 from src.views.constants import AccountTreeColumn
+from src.views.utilities.message_box_functions import ask_yes_no_question
 from src.views.widgets.account_tree_widget import AccountTreeWidget
 
 
@@ -55,7 +57,7 @@ class AccountTreePresenter:
         self._initialize_events()
         self._view.finalize_setup()
         self._view.treeView.sortByColumn(-1, Qt.SortOrder.AscendingOrder)
-        self.event_check_state_changed()
+        self._check_state_changed()
 
     @property
     def checked_accounts(self) -> frozenset[Account]:
@@ -83,7 +85,7 @@ class AccountTreePresenter:
         self._cash_account_dialog_presenter.load_record_keeper(record_keeper)
         self._security_account_dialog_presenter.load_record_keeper(record_keeper)
         self._selection_changed()
-        self.event_check_state_changed()
+        self._check_state_changed()
         self._set_native_balance_column_visibility()
 
     def refresh_view(self) -> None:
@@ -103,30 +105,12 @@ class AccountTreePresenter:
         self._view.treeView.setColumnHidden(
             AccountTreeColumn.BALANCE_NATIVE, hide_native
         )
-        self.update_total_balance()
         self._set_native_balance_column_visibility()
-
-    def update_total_balance(self) -> None:
-        if self._record_keeper.base_currency is not None:
-            try:
-                total = sum(
-                    (
-                        item.get_balance(self._record_keeper.base_currency)
-                        for item in self._record_keeper.root_account_items
-                    ),
-                    start=self._record_keeper.base_currency.zero_amount,
-                )
-                total = total.to_str_rounded()
-            except ConversionFactorNotFoundError:
-                total = "Error!"
-        else:
-            total = "Error!"
-        self._view.set_total_base_balance(total)
 
     def expand_all_below(self) -> None:
         indexes = self._view.treeView.selectedIndexes()
         if len(indexes) == 0:
-            raise ValueError("No index to expand recursively selected.")
+            raise InvalidOperationError("No index to expand recursively selected.")
         item = self._model.get_selected_item()
         logging.debug(f"Expanding all nodes below {item}")
         self._view.treeView.expandRecursively(indexes[0])  # view index required here
@@ -134,7 +118,21 @@ class AccountTreePresenter:
     def remove_item(self) -> None:
         item = self._model.get_selected_item()
         if item is None:
-            raise ValueError("Cannot delete non-existent item.")
+            raise InvalidOperationError("Cannot delete non-existent item.")
+
+        if isinstance(item, CashAccount) and item.initial_balance.value_normalized > 0:
+            logging.debug(
+                "Deletion of CashAccount with non-zero initial balance"
+                "requested, asking the user for confirmation"
+            )
+            if not ask_yes_no_question(
+                self._view,
+                f"<html>Cash Account <b>{item.path}</b> has non-zero initial balance "
+                f"({item.initial_balance.to_str_rounded()}).<br/>Delete anyway?</html>",
+                "Are you sure?",
+            ):
+                logging.debug("User cancelled the CashAccount deletion")
+                return
 
         logging.info(f"Removing {item.__class__.__name__} at path='{item.path}'")
         try:
@@ -200,7 +198,7 @@ class AccountTreePresenter:
 
         self._view.signal_search_text_changed.connect(self._filter)
 
-        self._model.signal_check_state_changed.connect(self.event_check_state_changed)
+        self._model.signal_check_state_changed.connect(self._check_state_changed)
 
         self._view.treeView.expanded.connect(self._set_native_balance_column_visibility)
         self._view.treeView.collapsed.connect(
@@ -258,15 +256,32 @@ class AccountTreePresenter:
             enable_show_securities=enable_show_securities,
         )
 
+    def _update_checked_account_balance(self) -> None:
+        if self._record_keeper.base_currency is not None:
+            try:
+                total = sum(
+                    (
+                        item.get_balance(self._record_keeper.base_currency)
+                        for item in self.checked_accounts
+                    ),
+                    start=self._record_keeper.base_currency.zero_amount,
+                )
+                total = total.to_str_rounded()
+            except ConversionFactorNotFoundError:
+                total = "Error!"
+        else:
+            total = "Error!"
+        self._view.set_checked_account_balance(total)
+
     def _set_check_state_all(self, *, visible: bool) -> None:
         self._model.set_check_state_all(checked=visible)
         self._view.refresh()
-        self.event_check_state_changed()
+        self._check_state_changed()
 
     def _set_check_state_only(self) -> None:
         self._model.set_selected_check_state(checked=True, only=True)
         self._view.refresh()
-        self.event_check_state_changed()
+        self._check_state_changed()
 
     def _check_all_cash_accounts_below(self) -> None:
         account_group = self._model.get_selected_item()
@@ -274,7 +289,7 @@ class AccountTreePresenter:
             raise TypeError(f"Selected item is not an AccountGroup: {account_group}")
         logging.debug(f"Selecting all Cash Accounts below path='{account_group.path}'")
         self._model.select_all_cash_accounts_below(account_group)
-        self.event_check_state_changed()
+        self._check_state_changed()
 
     def _check_all_security_accounts_below(self) -> None:
         account_group = self._model.get_selected_item()
@@ -284,7 +299,7 @@ class AccountTreePresenter:
             f"Selecting all Security Accounts below path='{account_group.path}'"
         )
         self._model.select_all_security_accounts_below(account_group)
-        self.event_check_state_changed()
+        self._check_state_changed()
 
     def _filter(self, pattern: str) -> None:
         if ("[" in pattern and "]" not in pattern) or "[]" in pattern:
@@ -332,3 +347,7 @@ class AccountTreePresenter:
         if self._view.treeView.isExpanded(index):
             return self._is_item_visible(item.parent)
         return False
+
+    def _check_state_changed(self) -> None:
+        self._update_checked_account_balance()
+        self.event_check_state_changed()

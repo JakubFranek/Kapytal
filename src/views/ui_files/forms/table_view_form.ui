@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>SecurityAccountForm</class>
- <widget class="QWidget" name="SecurityAccountForm">
+ <class>TableViewForm</class>
+ <widget class="QWidget" name="TableViewForm">
   <property name="windowModality">
    <enum>Qt::WindowModal</enum>
   </property>
@@ -26,7 +26,7 @@
       <enum>QAbstractScrollArea::AdjustIgnored</enum>
      </property>
      <property name="selectionMode">
-      <enum>QAbstractItemView::NoSelection</enum>
+      <enum>QAbstractItemView::SingleSelection</enum>
      </property>
      <property name="selectionBehavior">
       <enum>QAbstractItemView::SelectRows</enum>

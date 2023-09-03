@@ -863,14 +863,12 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
         if amount.currency != currency:
             raise CurrencyError("Invalid CashAmount currency.")
 
-    def _get_amount(self, account: CashAccount) -> CashAmount:
-        del account
+    def _get_amount(self, account: CashAccount) -> CashAmount:  # noqa: ARG002
         if self._type == SecurityTransactionType.BUY:
             return self._amount_negative
         return self._amount
 
-    def _get_shares(self, account: SecurityAccount) -> Decimal:
-        del account
+    def _get_shares(self, account: SecurityAccount) -> Decimal:  # noqa: ARG002
         if self._type == SecurityTransactionType.BUY:
             return self._shares
         return -self._shares

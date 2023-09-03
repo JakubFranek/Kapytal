@@ -1,40 +1,24 @@
 import logging
-from collections.abc import Sequence
+from collections.abc import Collection, Sequence
 from datetime import datetime
 
-from PyQt6.QtWidgets import QWidget
-from src.models.model_objects.security_objects import SecurityTransfer
-from src.models.record_keeper import RecordKeeper
+from src.models.base_classes.account import Account
+from src.models.model_objects.security_objects import SecurityAccount, SecurityTransfer
 from src.models.user_settings import user_settings
+from src.presenters.dialog.transaction_dialog_presenter import (
+    TransactionDialogPresenter,
+)
 from src.presenters.utilities.check_for_nonexistent_attributes import (
     check_for_nonexistent_attributes,
 )
-from src.presenters.utilities.event import Event
 from src.presenters.utilities.handle_exception import handle_exception
 from src.presenters.utilities.validate_inputs import validate_datetime
-from src.view_models.transaction_table_model import TransactionTableModel
 from src.views.dialogs.security_transfer_dialog import EditMode, SecurityTransferDialog
 from src.views.utilities.handle_exception import display_error_message
 
 
-class SecurityTransferDialogPresenter:
-    event_update_model = Event()
-    event_data_changed = Event()
-
-    def __init__(
-        self,
-        parent_view: QWidget,
-        record_keeper: RecordKeeper,
-        model: TransactionTableModel,
-    ) -> None:
-        self._parent_view = parent_view
-        self._record_keeper = record_keeper
-        self._model = model
-
-    def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
-        self._record_keeper = record_keeper
-
-    def run_add_dialog(self) -> None:
+class SecurityTransferDialogPresenter(TransactionDialogPresenter):
+    def run_add_dialog(self, selected_accounts: Collection[Account]) -> None:
         logging.debug("Running SecurityTransferDialog (edit_mode=ADD)")
         if len(self._record_keeper.security_accounts) < 2:  # noqa: PLR2004
             display_error_message(
@@ -45,7 +29,21 @@ class SecurityTransferDialogPresenter:
             return
 
         self._prepare_dialog(edit_mode=EditMode.ADD)
-        self._dialog.datetime_ = datetime.now(user_settings.settings.time_zone)
+
+        _selected_security_accounts = tuple(
+            account
+            for account in selected_accounts
+            if isinstance(account, SecurityAccount)
+        )
+        if len(_selected_security_accounts) == 1:
+            self._dialog.sender_path = _selected_security_accounts[0].path
+        elif len(_selected_security_accounts) == 2:
+            self._dialog.sender_path = _selected_security_accounts[0].path
+            self._dialog.recipient_path = _selected_security_accounts[1].path
+
+        self._dialog.datetime_ = datetime.now(user_settings.settings.time_zone).replace(
+            hour=0, minute=0, second=0, microsecond=0
+        )
 
         self._dialog.signal_do_and_close.connect(
             lambda: self._add_security_transfer(close=True)
@@ -91,7 +89,7 @@ class SecurityTransferDialogPresenter:
         self._prepare_dialog(edit_mode=edit_mode)
 
         datetimes = {
-            transaction.datetime_.replace(hour=0, minute=0, second=0, microsecond=0)
+            transaction.datetime_.replace(second=0, microsecond=0)
             for transaction in transfers
         }
         self._dialog.datetime_ = (
@@ -126,7 +124,9 @@ class SecurityTransferDialogPresenter:
             sorted(tag_names_frozensets.pop()) if len(tag_names_frozensets) == 1 else ()
         )
 
-        self._dialog.signal_do_and_close.connect(self._edit_security_transfers)
+        self._dialog.signal_do_and_close.connect(
+            lambda: self._edit_security_transfers(transfers)
+        )
         self._dialog.exec()
 
     def _add_security_transfer(self, *, close: bool) -> None:
@@ -169,15 +169,16 @@ class SecurityTransferDialogPresenter:
             handle_exception(exception)
             return
 
-        self._model.pre_add()
+        self.event_pre_add()
         self.event_update_model()
-        self._model.post_add()
+        self.event_post_add()
         if close:
             self._dialog.close()
         self.event_data_changed()
 
-    def _edit_security_transfers(self) -> None:
-        transactions: list[SecurityTransfer] = self._model.get_selected_items()
+    def _edit_security_transfers(
+        self, transactions: Sequence[SecurityTransfer]
+    ) -> None:
         uuids = [transaction.uuid for transaction in transactions]
 
         datetime_ = self._dialog.datetime_
@@ -233,8 +234,7 @@ class SecurityTransferDialogPresenter:
 
         self._dialog.close()
         self.event_update_model()
-        self._model.emit_data_changed_for_uuids(uuids)
-        self.event_data_changed()
+        self.event_data_changed(uuids)
 
     def _prepare_dialog(self, edit_mode: EditMode) -> bool:
         securities = self._record_keeper.securities

@@ -5,6 +5,7 @@ from enum import Enum, auto
 
 from PyQt6.QtCore import QAbstractTableModel, QModelIndex, QSortFilterProxyModel, Qt
 from PyQt6.QtWidgets import QTableView
+from src.models.user_settings import user_settings
 from src.views.constants import ValueTableColumn
 
 ALIGNMENT_RIGHT = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
@@ -92,7 +93,7 @@ class ValueTableModel(QAbstractTableModel):
         self, column: int, data: tuple[date, Decimal]
     ) -> str | int | None:
         if column == ValueTableColumn.DATE:
-            return data[0].strftime("%d.%m.%Y")
+            return data[0].strftime(user_settings.settings.general_date_format)
         if column == ValueTableColumn.VALUE:
             return f"{data[1]:,}"
         return None

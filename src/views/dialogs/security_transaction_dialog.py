@@ -25,6 +25,7 @@ from src.views.base_classes.custom_dialog import CustomDialog
 from src.views.ui_files.dialogs.Ui_security_transaction_dialog import (
     Ui_SecurityTransactionDialog,
 )
+from src.views.utilities.helper_functions import convert_datetime_format_to_qt
 from src.views.widgets.description_plain_text_edit import DescriptionPlainTextEdit
 from src.views.widgets.multiple_tags_selector_widget import MultipleTagsSelectorWidget
 from src.views.widgets.smart_combo_box import SmartComboBox
@@ -85,6 +86,12 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
         self._initialize_placeholders()
         self._set_tab_order()
 
+        display_format = (
+            convert_datetime_format_to_qt(user_settings.settings.general_date_format)
+            + " hh:mm"
+        )
+        self.dateTimeEdit.setDisplayFormat(display_format)
+
     @property
     def type_(self) -> SecurityTransactionType:
         if self.buyRadioButton.isChecked():
@@ -144,15 +151,13 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
 
     @property
     def datetime_(self) -> datetime | None:
-        if self.dateEdit.text() == self.KEEP_CURRENT_VALUES:
+        if self.dateTimeEdit.text() == self.KEEP_CURRENT_VALUES:
             return None
         return (
-            self.dateEdit.dateTime()
+            self.dateTimeEdit.dateTime()
             .toPyDateTime()
             .replace(
                 tzinfo=user_settings.settings.time_zone,
-                hour=0,
-                minute=0,
                 second=0,
                 microsecond=0,
             )
@@ -160,17 +165,15 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
 
     @datetime_.setter
     def datetime_(self, datetime_: datetime) -> None:
-        self.dateEdit.setDateTime(datetime_)
+        self.dateTimeEdit.setDateTime(datetime_)
 
     @property
     def min_datetime(self) -> datetime:
         return (
-            self.dateEdit.minimumDateTime()
+            self.dateTimeEdit.minimumDateTime()
             .toPyDateTime()
             .replace(
                 tzinfo=user_settings.settings.time_zone,
-                hour=0,
-                minute=0,
                 second=0,
                 microsecond=0,
             )
@@ -261,8 +264,8 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
             self.descriptionPlainTextEdit.setPlaceholderText(
                 "Leave empty to keep current values"
             )
-            self.dateEdit.setSpecialValueText(self.KEEP_CURRENT_VALUES)
-            self.dateEdit.setMinimumDate(date(1900, 1, 1))
+            self.dateTimeEdit.setSpecialValueText(self.KEEP_CURRENT_VALUES)
+            self.dateTimeEdit.setMinimumDate(date(1900, 1, 1))
             self.sharesDoubleSpinBox.setSpecialValueText(self.KEEP_CURRENT_VALUES)
             self.priceDoubleSpinBox.setSpecialValueText(self.KEEP_CURRENT_VALUES)
             self.totalDoubleSpinBox.setSpecialValueText(self.KEEP_CURRENT_VALUES)
@@ -473,8 +476,8 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
         self.setTabOrder(self.sellRadioButton, self.securityComboBox)
         self.setTabOrder(self.securityComboBox, self.cashAccountComboBox)
         self.setTabOrder(self.cashAccountComboBox, self.securityAccountComboBox)
-        self.setTabOrder(self.securityAccountComboBox, self.dateEdit)
-        self.setTabOrder(self.dateEdit, self.descriptionPlainTextEdit)
+        self.setTabOrder(self.securityAccountComboBox, self.dateTimeEdit)
+        self.setTabOrder(self.dateTimeEdit, self.descriptionPlainTextEdit)
         self.setTabOrder(self.descriptionPlainTextEdit, self.sharesDoubleSpinBox)
         self.setTabOrder(self.sharesDoubleSpinBox, self.priceDoubleSpinBox)
         self.setTabOrder(self.priceDoubleSpinBox, self.totalDoubleSpinBox)

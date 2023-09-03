@@ -1,3 +1,4 @@
+import unicodedata
 from collections.abc import Collection
 
 from PyQt6.QtCore import QStringListModel
@@ -7,7 +8,9 @@ from PyQt6.QtWidgets import QCompleter, QWidget
 class SmartCompleter(QCompleter):
     def __init__(self, strings: Collection[str], parent: QWidget | None = None) -> None:
         super().__init__(strings, parent)
-        self._strings: tuple[str] = tuple(sorted(strings, key=str.lower))
+        self._strings: tuple[str] = tuple(
+            sorted(strings, key=lambda s: unicodedata.normalize("NFD", s).lower())
+        )
         self._matches_cache: dict[str, tuple[str]] = {}
         self._model = QStringListModel(strings)
         self.setModel(self._model)

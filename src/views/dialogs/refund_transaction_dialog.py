@@ -24,6 +24,7 @@ from src.views.base_classes.custom_dialog import CustomDialog
 from src.views.ui_files.dialogs.Ui_refund_transaction_dialog import (
     Ui_RefundTransactionDialog,
 )
+from src.views.utilities.helper_functions import convert_datetime_format_to_qt
 from src.views.widgets.description_plain_text_edit import DescriptionPlainTextEdit
 from src.views.widgets.label_widget import LabelWidget
 from src.views.widgets.refund_row_widget import RefundRowWidget
@@ -72,6 +73,12 @@ class RefundTransactionDialog(CustomDialog, Ui_RefundTransactionDialog):
 
         self._set_tab_order()
 
+        display_format = (
+            convert_datetime_format_to_qt(user_settings.settings.general_date_format)
+            + " hh:mm"
+        )
+        self.dateTimeEdit.setDisplayFormat(display_format)
+
     @property
     def account_path(self) -> str:
         return self.accountsComboBox.currentText()
@@ -91,12 +98,10 @@ class RefundTransactionDialog(CustomDialog, Ui_RefundTransactionDialog):
     @property
     def datetime_(self) -> datetime:
         return (
-            self.dateEdit.dateTime()
+            self.dateTimeEdit.dateTime()
             .toPyDateTime()
             .replace(
                 tzinfo=user_settings.settings.time_zone,
-                hour=0,
-                minute=0,
                 second=0,
                 microsecond=0,
             )
@@ -104,17 +109,15 @@ class RefundTransactionDialog(CustomDialog, Ui_RefundTransactionDialog):
 
     @datetime_.setter
     def datetime_(self, value: datetime) -> None:
-        self.dateEdit.setDateTime(value)
+        self.dateTimeEdit.setDateTime(value)
 
     @property
     def min_datetime(self) -> datetime:
         return (
-            self.dateEdit.minimumDateTime()
+            self.dateTimeEdit.minimumDateTime()
             .toPyDateTime()
             .replace(
                 tzinfo=user_settings.settings.time_zone,
-                hour=0,
-                minute=0,
                 second=0,
                 microsecond=0,
             )
@@ -273,8 +276,8 @@ class RefundTransactionDialog(CustomDialog, Ui_RefundTransactionDialog):
 
     def _set_tab_order(self) -> None:
         self.setTabOrder(self.accountsComboBox, self.payeeComboBox)
-        self.setTabOrder(self.payeeComboBox, self.dateEdit)
-        self.setTabOrder(self.dateEdit, self.descriptionPlainTextEdit)
+        self.setTabOrder(self.payeeComboBox, self.dateTimeEdit)
+        self.setTabOrder(self.dateTimeEdit, self.descriptionPlainTextEdit)
         self.setTabOrder(self.descriptionPlainTextEdit, self.amountDoubleSpinBox)
 
         self.setTabOrder(self.amountDoubleSpinBox, self._category_rows[0])

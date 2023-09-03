@@ -15,6 +15,7 @@ class CategoryForm(CustomWidget, Ui_CategoryForm):
 
     signal_tree_selection_changed = pyqtSignal()
     signal_expand_all_below = pyqtSignal()
+    signal_show_transactions = pyqtSignal()
 
     signal_income_search_text_changed = pyqtSignal(str)
     signal_expense_search_text_changed = pyqtSignal(str)
@@ -55,11 +56,13 @@ class CategoryForm(CustomWidget, Ui_CategoryForm):
         *,
         enable_add_objects: bool,
         enable_modify_object: bool,
+        enable_show_transactions: bool,
         enable_expand_below: bool,
     ) -> None:
         self.actionAdd.setEnabled(enable_add_objects)
         self.actionEdit.setEnabled(enable_modify_object)
         self.actionRemove.setEnabled(enable_modify_object)
+        self.actionShow_Transactions.setEnabled(enable_show_transactions)
         self.actionExpand_All_Below.setEnabled(enable_expand_below)
 
     def get_current_tree_view(self) -> QTreeView:
@@ -150,6 +153,7 @@ class CategoryForm(CustomWidget, Ui_CategoryForm):
         self.actionAdd.setIcon(icons.add)
         self.actionEdit.setIcon(icons.edit)
         self.actionRemove.setIcon(icons.remove)
+        self.actionShow_Transactions.setIcon(icons.table)
 
         self.actionExpand_All.triggered.connect(self._expand_all)
         self.actionCollapse_All.triggered.connect(self._collapse_all)
@@ -158,18 +162,27 @@ class CategoryForm(CustomWidget, Ui_CategoryForm):
         self.actionAdd.triggered.connect(self.signal_add.emit)
         self.actionEdit.triggered.connect(self.signal_edit.emit)
         self.actionRemove.triggered.connect(self.signal_delete.emit)
+        self.actionShow_Transactions.triggered.connect(
+            self.signal_show_transactions.emit
+        )
 
         self.incomeExpandAllToolButton.setDefaultAction(self.actionExpand_All)
         self.incomeCollapseAllToolButton.setDefaultAction(self.actionCollapse_All)
         self.incomeAddToolButton.setDefaultAction(self.actionAdd)
         self.incomeEditToolButton.setDefaultAction(self.actionEdit)
         self.incomeRemoveToolButton.setDefaultAction(self.actionRemove)
+        self.incomeShowTransactionsToolButton.setDefaultAction(
+            self.actionShow_Transactions
+        )
 
         self.expenseExpandAllToolButton.setDefaultAction(self.actionExpand_All)
         self.expenseCollapseAllToolButton.setDefaultAction(self.actionCollapse_All)
         self.expenseAddToolButton.setDefaultAction(self.actionAdd)
         self.expenseEditToolButton.setDefaultAction(self.actionEdit)
         self.expenseRemoveToolButton.setDefaultAction(self.actionRemove)
+        self.expenseShowTransactionsToolButton.setDefaultAction(
+            self.actionShow_Transactions
+        )
 
         self.incomeAndExpenseExpandAllToolButton.setDefaultAction(self.actionExpand_All)
         self.incomeAndExpenseCollapseAllToolButton.setDefaultAction(
@@ -178,6 +191,9 @@ class CategoryForm(CustomWidget, Ui_CategoryForm):
         self.incomeAndExpenseAddToolButton.setDefaultAction(self.actionAdd)
         self.incomeAndExpenseEditToolButton.setDefaultAction(self.actionEdit)
         self.incomeAndExpenseRemoveToolButton.setDefaultAction(self.actionRemove)
+        self.incomeAndExpenseShowTransactionsToolButton.setDefaultAction(
+            self.actionShow_Transactions
+        )
 
     def _expand_all(self) -> None:
         category_type = self.category_type
@@ -197,12 +213,13 @@ class CategoryForm(CustomWidget, Ui_CategoryForm):
         else:
             self.incomeAndExpenseTreeView.collapseAll()
 
-    def _create_context_menu(self, event: QContextMenuEvent) -> None:
-        del event
+    def _create_context_menu(self, event: QContextMenuEvent) -> None:  # noqa: ARG002
         self.menu = QMenu(self)
         self.menu.addAction(self.actionAdd)
         self.menu.addAction(self.actionEdit)
         self.menu.addAction(self.actionRemove)
         self.menu.addSeparator()
         self.menu.addAction(self.actionExpand_All_Below)
+        self.menu.addSeparator()
+        self.menu.addAction(self.actionShow_Transactions)
         self.menu.popup(QCursor.pos())

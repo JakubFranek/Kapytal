@@ -1,8 +1,10 @@
 import logging
 from collections.abc import Collection
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Self
 
+from src.models.mixins.copyable_mixin import CopyableMixin
 from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
 from tzlocal import get_localzone_name
 from zoneinfo import ZoneInfo
@@ -10,7 +12,7 @@ from zoneinfo import ZoneInfo
 # TODO: add setting for default datetime filter?
 
 
-class UserSettings(JSONSerializableMixin):
+class UserSettings(JSONSerializableMixin, CopyableMixin):
     """This class is intended to be instantiated only once, within user_settings."""
 
     __slots__ = (
@@ -18,6 +20,8 @@ class UserSettings(JSONSerializableMixin):
         "_logs_max_size_bytes",
         "_backups_max_size_bytes",
         "_backup_paths",
+        "_general_date_format",
+        "_transaction_date_format",
     )
 
     LOGS_DEFAULT_MAX_SIZE = 1_000_000
@@ -28,6 +32,9 @@ class UserSettings(JSONSerializableMixin):
 
         self._logs_max_size_bytes = UserSettings.LOGS_DEFAULT_MAX_SIZE
         self._backups_max_size_bytes = UserSettings.BACKUPS_DEFAULT_MAX_SIZE
+
+        self._general_date_format = "%d.%m.%Y"
+        self._transaction_date_format = "%d.%m.%Y"
 
         self._backup_paths = []
 
@@ -117,6 +124,56 @@ class UserSettings(JSONSerializableMixin):
 
         self._backup_paths: list[Path] = list(values)
 
+    @property
+    def transaction_date_format(self) -> str:
+        return self._transaction_date_format
+
+    @transaction_date_format.setter
+    def transaction_date_format(self, value: str) -> None:
+        if not isinstance(value, str):
+            raise TypeError("UserSettings.transaction_date_format must be a str.")
+
+        try:
+            datetime.now(tz=self._time_zone).strftime(value)
+        except ValueError as exception:
+            raise ValueError(
+                "UserSettings.transaction_date_format must be a valid format."
+            ) from exception
+
+        if self._transaction_date_format == value:
+            return
+
+        logging.info(
+            "Changing UserSettings.transaction_date_format from "
+            f"{self._transaction_date_format} to {value}"
+        )
+        self._transaction_date_format = value
+
+    @property
+    def general_date_format(self) -> str:
+        return self._general_date_format
+
+    @general_date_format.setter
+    def general_date_format(self, value: str) -> None:
+        if not isinstance(value, str):
+            raise TypeError("UserSettings.general_date_format must be a str.")
+
+        try:
+            datetime.now(tz=self._time_zone).strftime(value)
+        except ValueError as exception:
+            raise ValueError(
+                "UserSettings.general_date_format must be a valid format."
+            ) from exception
+
+        if self._general_date_format == value:
+            return
+
+        logging.info(
+            "Changing UserSettings.transaction_date_format from "
+            f"{self._general_date_format} to {value}"
+        )
+        self._general_date_format = value
+
     def __repr__(self) -> str:
         return "UserSettings"
 
@@ -128,6 +185,8 @@ class UserSettings(JSONSerializableMixin):
             "logs_max_size_bytes": self._logs_max_size_bytes,
             "backups_max_size_bytes": self._backups_max_size_bytes,
             "backup_paths": backup_paths,
+            "general_date_format": self._general_date_format,
+            "transaction_date_format": self._transaction_date_format,
         }
 
     @staticmethod
@@ -139,10 +198,18 @@ class UserSettings(JSONSerializableMixin):
         backup_path_strings: list[str] = data["backup_paths"]
         backup_paths = [Path(string) for string in backup_path_strings]
 
+        general_date_format: str = data.get("general_date_format", None)
+        transaction_date_format: str = data.get("transaction_date_format", None)
+
         obj = UserSettings()
         obj._time_zone = time_zone  # noqa: SLF001
         obj._logs_max_size_bytes = logs_max_size_bytes  # noqa: SLF001
         obj._backups_max_size_bytes = backups_max_size_bytes  # noqa: SLF001
         obj._backup_paths = backup_paths  # noqa: SLF001
+
+        if general_date_format is not None:
+            obj._general_date_format = general_date_format  # noqa: SLF001
+        if transaction_date_format is not None:
+            obj._transaction_date_format = transaction_date_format  # noqa: SLF001
 
         return obj
