@@ -145,6 +145,7 @@
    <addaction name="separator"/>
    <addaction name="actionCurrencies_and_Exchange_Rates"/>
    <addaction name="actionSecurities"/>
+   <addaction name="actionUpdate_Quotes"/>
    <addaction name="separator"/>
    <addaction name="actionCategories"/>
    <addaction name="actionTags"/>
@@ -335,6 +336,14 @@
   <action name="actionOpen_Demo_File">
    <property name="text">
     <string>Open Demo File</string>
+   </property>
+  </action>
+  <action name="actionUpdate_Quotes">
+   <property name="text">
+    <string>Update Quotes</string>
+   </property>
+   <property name="toolTip">
+    <string>Update Quotes</string>
    </property>
   </action>
  </widget>

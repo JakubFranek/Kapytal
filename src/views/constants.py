@@ -133,3 +133,9 @@ class AssetTypeTreeColumn(IntEnum):
     NAME = 0
     BALANCE_NATIVE = 1
     BALANCE_BASE = 2
+
+
+class QuotesUpdateTableColumn(IntEnum):
+    ITEM = 0
+    LATEST_DATE = 1
+    LATEST_QUOTE = 2
