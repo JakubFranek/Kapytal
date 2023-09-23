@@ -1,6 +1,10 @@
 from PyQt6.QtWidgets import QMessageBox, QWidget
 
 
+def show_info_box(parent: QWidget, text: str, title: str) -> None:
+    QMessageBox.information(parent, title, text)
+
+
 def ask_yes_no_question(
     parent: QWidget, question: str, title: str, *, warning: bool = False
 ) -> bool:

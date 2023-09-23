@@ -63,6 +63,8 @@ class QuotesUpdateTableModel(QAbstractTableModel):
 
     def load_checked_items(self, values: Collection[ExchangeRate | Security]) -> None:
         self._checked_items = list(values)
+        for row in range(len(self._items)):
+            self.dataChanged.emit(self.createIndex(row, 0), self.createIndex(row, 0))
         self.event_checked_items_changed()
 
     def rowCount(self, index: QModelIndex = ...) -> int:

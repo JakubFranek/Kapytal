@@ -155,6 +155,7 @@ class MainPresenter:
         self._tag_form_presenter.event_data_changed.append(self._data_changed)
         self._category_form_presenter.event_data_changed.append(self._data_changed)
         self._transactions_presenter.event_data_changed.append(self._data_changed)
+        self._quotes_update_form_presenter.event_data_changed.append(self._data_changed)
 
     def _connect_view_signals(self) -> None:
         self._view.signal_exit.connect(self._quit)

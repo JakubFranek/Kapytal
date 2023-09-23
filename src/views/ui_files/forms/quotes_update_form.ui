@@ -48,22 +48,46 @@
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
+      <widget class="QToolButton" name="selectAllToolButton">
+       <property name="text">
+        <string>...</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QToolButton" name="unselectAllToolButton">
+       <property name="text">
+        <string>...</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QPushButton" name="downloadQuotesPushButton">
        <property name="text">
-        <string>Download quotes</string>
+        <string>Download selected</string>
        </property>
       </widget>
      </item>
      <item>
       <widget class="QPushButton" name="saveQuotesPushButton">
        <property name="text">
-        <string>Save quotes</string>
+        <string>Save selected</string>
        </property>
       </widget>
      </item>
     </layout>
    </item>
   </layout>
+  <action name="actionSelect_All">
+   <property name="text">
+    <string>Select All</string>
+   </property>
+  </action>
+  <action name="actionUnselect_All">
+   <property name="text">
+    <string>Unselect All</string>
+   </property>
+  </action>
  </widget>
  <resources/>
  <connections/>
