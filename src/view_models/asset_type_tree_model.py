@@ -35,7 +35,7 @@ class AssetTypeTreeModel(QAbstractItemModel):
     def load_data(self, collection: Collection[AssetStats]) -> None:
         self._tree_items = collection
 
-    def rowCount(self, index: QModelIndex = ...) -> int:  # noqa: N802
+    def rowCount(self, index: QModelIndex = ...) -> int:
         if index.isValid():
             if index.column() != 0:
                 return 0
@@ -43,7 +43,7 @@ class AssetTypeTreeModel(QAbstractItemModel):
             return len(item.children)
         return len(self._tree_items)
 
-    def columnCount(self, index: QModelIndex = ...) -> int:  # noqa: N802
+    def columnCount(self, index: QModelIndex = ...) -> int:
         return 3 if not index.isValid() or index.column() == 0 else 0
 
     def index(self, row: int, column: int, _parent: QModelIndex = ...) -> QModelIndex:
@@ -71,7 +71,7 @@ class AssetTypeTreeModel(QAbstractItemModel):
         row = self._tree_items.index(parent)
         return QAbstractItemModel.createIndex(self, row, 0, parent)
 
-    def headerData(  # noqa: N802
+    def headerData(
         self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole = ...
     ) -> str | int | None:
         if role == Qt.ItemDataRole.DisplayRole:

@@ -166,7 +166,7 @@ class CheckableAccountTreeModel(QAbstractItemModel):
         for node in self._flat_nodes:
             node.set_check_state(checked=node.item in checked_accounts)
 
-    def rowCount(self, index: QModelIndex = ...) -> int:  # noqa: N802
+    def rowCount(self, index: QModelIndex = ...) -> int:
         if index.isValid():
             if index.column() != 0:
                 return 0
@@ -174,7 +174,7 @@ class CheckableAccountTreeModel(QAbstractItemModel):
             return len(node.children)
         return len(self._root_nodes)
 
-    def columnCount(self, index: QModelIndex = ...) -> int:  # noqa: N802
+    def columnCount(self, index: QModelIndex = ...) -> int:
         return 1 if not index.isValid() or index.column() == 0 else 0
 
     def index(self, row: int, column: int, _parent: QModelIndex = ...) -> QModelIndex:
@@ -232,7 +232,7 @@ class CheckableAccountTreeModel(QAbstractItemModel):
             return item.path
         return None
 
-    def setData(  # noqa: N802
+    def setData(
         self, index: QModelIndex, value: Any, role: int = ...  # noqa: ANN401
     ) -> bool | None:
         if role == Qt.ItemDataRole.CheckStateRole:

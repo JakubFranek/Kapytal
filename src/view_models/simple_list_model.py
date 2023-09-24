@@ -15,7 +15,7 @@ class SimpleListModel(QAbstractListModel):
     def load_items(self, items: Collection[str]) -> None:
         self._items = tuple(items)
 
-    def rowCount(self, index: QModelIndex = ...) -> int:  # noqa: N802
+    def rowCount(self, index: QModelIndex = ...) -> int:
         if isinstance(index, QModelIndex) and index.isValid():
             return 0
         return len(self._items)

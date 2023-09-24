@@ -158,8 +158,7 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
     @property
     def price_history_pairs(self) -> tuple[tuple[date, CashAmount], ...]:
         if self._recalculate_price_history_pairs:
-            pairs = [(date_, price) for date_, price in self._price_history.items()]
-            pairs.sort()
+            pairs = sorted(self._price_history.items())
             self._price_history_pairs = tuple(pairs)
             self._recalculate_price_history_pairs = False
         return self._price_history_pairs

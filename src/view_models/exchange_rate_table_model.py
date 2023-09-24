@@ -32,17 +32,17 @@ class ExchangeRateTableModel(QAbstractTableModel):
     def load_exchange_rates(self, exchange_rates: Collection[ExchangeRate]) -> None:
         self._exchange_rates = tuple(exchange_rates)
 
-    def rowCount(self, index: QModelIndex = ...) -> int:  # noqa: N802
+    def rowCount(self, index: QModelIndex = ...) -> int:
         if isinstance(index, QModelIndex) and index.isValid():
             return 0
         return len(self._exchange_rates)
 
-    def columnCount(self, index: QModelIndex = ...) -> int:  # noqa: N802, ARG002
+    def columnCount(self, index: QModelIndex = ...) -> int:  # noqa: ARG002
         if not hasattr(self, "_column_count"):
             self._column_count = len(COLUMN_HEADERS)
         return self._column_count
 
-    def headerData(  # noqa: N802
+    def headerData(
         self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole = ...
     ) -> str | int | None:
         if role == Qt.ItemDataRole.DisplayRole:

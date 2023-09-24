@@ -1,6 +1,5 @@
-import logging
-from datetime import date
-from decimal import Decimal
+
+from typing import TYPE_CHECKING
 
 from src.models.model_objects.currency_objects import CashAmount, ExchangeRate
 from src.models.model_objects.security_objects import Security
@@ -12,6 +11,10 @@ from src.presenters.utilities.handle_exception import handle_exception
 from src.view_models.quotes_update_table_model import QuotesUpdateTableModel
 from src.views.forms.quotes_update_form import QuotesUpdateForm
 from src.views.utilities.message_box_functions import show_info_box
+
+if TYPE_CHECKING:
+    from datetime import date
+    from decimal import Decimal
 
 
 class QuotesUpdateFormPresenter:

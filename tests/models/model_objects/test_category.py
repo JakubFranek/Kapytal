@@ -89,7 +89,7 @@ def test_invalid_parent_type(category: Category, parent: Category) -> None:
 def test_path(first_category: Category, length: int, data: st.DataObject) -> None:
     type_ = first_category.type_
     categories = [first_category]
-    for i in range(0, length):
+    for i in range(length):
         category = Category(data.draw(names()), type_)
         category.parent = categories[i]
         categories.append(category)

@@ -102,7 +102,7 @@ class OwnedSecuritiesTreeModel(QAbstractItemModel):
         for item in self._tree_items:
             item.calculate_amounts(base_currency)
 
-    def rowCount(self, index: QModelIndex = ...) -> int:  # noqa: N802
+    def rowCount(self, index: QModelIndex = ...) -> int:
         if index.isValid():
             if index.column() != 0:
                 return 0
@@ -112,7 +112,7 @@ class OwnedSecuritiesTreeModel(QAbstractItemModel):
             return len(item.accounts)
         return len(self._tree_items)
 
-    def columnCount(self, index: QModelIndex = ...) -> int:  # noqa: N802
+    def columnCount(self, index: QModelIndex = ...) -> int:
         return 4 if not index.isValid() or index.column() == 0 else 0
 
     def index(self, row: int, column: int, _parent: QModelIndex = ...) -> QModelIndex:
@@ -140,7 +140,7 @@ class OwnedSecuritiesTreeModel(QAbstractItemModel):
         row = self._tree_items.index(parent)
         return QAbstractItemModel.createIndex(self, row, 0, parent)
 
-    def headerData(  # noqa: N802
+    def headerData(
         self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole = ...
     ) -> str | int | None:
         if role == Qt.ItemDataRole.DisplayRole:

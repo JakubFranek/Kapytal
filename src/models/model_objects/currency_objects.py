@@ -12,7 +12,7 @@ from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
 from src.models.user_settings import user_settings
 
 quantizers: dict[int, Decimal] = {}
-for i in range(0, 18 + 1):
+for i in range(18 + 1):
     quantizers[i] = Decimal(f"1e-{i}")
 
 
@@ -123,7 +123,7 @@ class Currency(CopyableMixin, JSONSerializableMixin):
             if factor is not None:
                 return 1 / factor
 
-        exchange_rates = Currency._get_exchange_rates(  # noqa: SLF001
+        exchange_rates = Currency._get_exchange_rates(
             self, target_currency
         )
         if exchange_rates is None:
@@ -175,7 +175,7 @@ class Currency(CopyableMixin, JSONSerializableMixin):
         # Ignore these currencies in future deeper searches (no need to go back).
         ignore_currencies = ignore_currencies | current_currency.convertible_to
         for loop_currency in iterable_currencies:
-            exchange_rates = Currency._get_exchange_rates(  # noqa: SLF001
+            exchange_rates = Currency._get_exchange_rates(
                 loop_currency, target_currency, ignore_currencies
             )
             if exchange_rates is None:
@@ -243,9 +243,7 @@ class ExchangeRate(CopyableMixin, JSONSerializableMixin):
     @property
     def rate_history_pairs(self) -> tuple[tuple[date, Decimal]]:
         if self._recalculate_rate_history_pairs:
-            pairs: list[tuple[date, Decimal]] = [
-                (date_, rate) for date_, rate in self._rate_history.items()
-            ]
+            pairs: list[tuple[date, Decimal]] = list(self._rate_history.items())
             pairs.sort(key=lambda x: x[0])
             self._rate_history_pairs = tuple(pairs)
             self._recalculate_rate_history_pairs = False

@@ -9,7 +9,6 @@ from PyQt6.QtWidgets import QTreeView
 from src.models.custom_exceptions import InvalidOperationError
 from src.models.model_objects.attributes import Category
 from src.models.model_objects.cash_objects import CashTransaction, RefundTransaction
-from src.models.model_objects.currency_objects import Currency
 from src.models.statistics.category_stats import CategoryStats, TransactionBalance
 from src.views import colors
 
@@ -223,7 +222,7 @@ class PeriodicCategoryStatsTreeModel(QAbstractItemModel):
             len(self._root_row_objects) - 3,
         )
 
-    def rowCount(self, index: QModelIndex = ...) -> int:  # noqa: N802
+    def rowCount(self, index: QModelIndex = ...) -> int:
         if index.isValid():
             if index.column() != 0:
                 return 0
@@ -231,7 +230,7 @@ class PeriodicCategoryStatsTreeModel(QAbstractItemModel):
             return len(item.children)
         return len(self._root_row_objects)
 
-    def columnCount(self, index: QModelIndex = ...) -> int:  # noqa: N802, ARG002
+    def columnCount(self, index: QModelIndex = ...) -> int:  # noqa: ARG002
         if not hasattr(self, "_column_count"):
             self._column_count = len(self._column_headers)
         return self._column_count
@@ -265,7 +264,7 @@ class PeriodicCategoryStatsTreeModel(QAbstractItemModel):
             row = grandparent.children.index(parent)
         return QAbstractItemModel.createIndex(self, row, 0, parent)
 
-    def headerData(  # noqa: N802
+    def headerData(
         self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole = ...
     ) -> str | int | None:
         if (

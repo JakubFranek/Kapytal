@@ -117,7 +117,7 @@ class CategoryTreeModel(QAbstractItemModel):
         self._category_dict = {category.uuid: category for category in flat_categories}
         self._node_dict = {node.uuid: node for node in nodes}
 
-    def rowCount(self, index: QModelIndex = ...) -> int:  # noqa: N802
+    def rowCount(self, index: QModelIndex = ...) -> int:
         if index.isValid():
             if index.column() != 0:
                 return 0
@@ -125,7 +125,7 @@ class CategoryTreeModel(QAbstractItemModel):
             return len(node.children)
         return len(self._root_nodes)
 
-    def columnCount(self, index: QModelIndex = ...) -> int:  # noqa: N802
+    def columnCount(self, index: QModelIndex = ...) -> int:
         return 3 if not index.isValid() or index.column() == 0 else 0
 
     def index(self, row: int, column: int, _parent: QModelIndex = ...) -> QModelIndex:
@@ -157,7 +157,7 @@ class CategoryTreeModel(QAbstractItemModel):
             parent_row = grandparent.children.index(parent)
         return QAbstractItemModel.createIndex(self, parent_row, 0, parent)
 
-    def headerData(  # noqa: N802
+    def headerData(
         self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole = ...
     ) -> str | int | None:
         if role == Qt.ItemDataRole.TextAlignmentRole:

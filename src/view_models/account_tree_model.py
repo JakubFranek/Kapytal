@@ -242,7 +242,7 @@ class AccountTreeModel(QAbstractItemModel):
         items = [self._item_dict[uuid] for uuid in uuids]
         return frozenset(items)
 
-    def rowCount(self, index: QModelIndex = ...) -> int:  # noqa: N802
+    def rowCount(self, index: QModelIndex = ...) -> int:
         if index.isValid():
             if index.column() != 0:
                 return 0
@@ -250,7 +250,7 @@ class AccountTreeModel(QAbstractItemModel):
             return len(node.children)
         return len(self._root_nodes)
 
-    def columnCount(self, index: QModelIndex = ...) -> int:  # noqa: N802
+    def columnCount(self, index: QModelIndex = ...) -> int:
         return 4 if not index.isValid() or index.column() == 0 else 0
 
     def index(self, row: int, column: int, parent: QModelIndex = ...) -> QModelIndex:
@@ -290,7 +290,7 @@ class AccountTreeModel(QAbstractItemModel):
             return FLAGS_SHOW
         return FLAGS_DEFAULT
 
-    def setData(  # noqa: N802
+    def setData(
         self, index: QModelIndex, value: Any, role: int = ...  # noqa: ANN401
     ) -> bool | None:
         if role == Qt.ItemDataRole.CheckStateRole:
@@ -301,7 +301,7 @@ class AccountTreeModel(QAbstractItemModel):
             return True
         return None
 
-    def headerData(  # noqa: N802
+    def headerData(
         self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole = ...
     ) -> str | int | None:
         if role == Qt.ItemDataRole.DisplayRole:
