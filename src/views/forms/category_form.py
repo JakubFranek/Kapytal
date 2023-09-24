@@ -42,6 +42,10 @@ class CategoryForm(CustomWidget, Ui_CategoryForm):
 
         self.tabWidget.currentChanged.connect(self.signal_tab_changed.emit)
 
+        self.incomeTreeView.doubleClicked.connect(self.signal_edit.emit)
+        self.expenseTreeView.doubleClicked.connect(self.signal_edit.emit)
+        self.incomeAndExpenseTreeView.doubleClicked.connect(self.signal_edit.emit)
+
     @property
     def category_type(self) -> CategoryType:
         current_index = self.tabWidget.currentIndex()

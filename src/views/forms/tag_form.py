@@ -28,6 +28,8 @@ class TagForm(CustomWidget, Ui_TagForm):
             icons.magnifier, QLineEdit.ActionPosition.LeadingPosition
         )
 
+        self.tableView.doubleClicked.connect(self.signal_rename_tag.emit)
+
     def enable_actions(
         self,
         *,
