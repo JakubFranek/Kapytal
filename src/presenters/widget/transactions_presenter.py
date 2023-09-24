@@ -142,6 +142,7 @@ class TransactionsPresenter:
         self._account_tree_shown_accounts = record_keeper.accounts
         self._reset_model()
         self._update_number_of_shown_transactions()
+        self._selection_changed()
         self._update_table_columns()
         self._view.resize_table_to_contents()
 
@@ -531,6 +532,8 @@ class TransactionsPresenter:
             enable_duplicate=enable_duplicate,
         )
 
+        self._update_selected_transactions_amount(transactions)
+
     def _find_related(self) -> None:
         transactions = self._model.get_selected_items()
         if len(transactions) > 1:
@@ -601,6 +604,22 @@ class TransactionsPresenter:
         n_total = len(self._record_keeper.transactions)
         logging.debug(f"Visible transactions: {n_visible:,}/{n_total:,}")
         self._view.set_shown_transactions(n_visible, n_total)
+
+    def _update_selected_transactions_amount(
+        self, transactions: Collection[Transaction]
+    ) -> None:
+        base_currency = self._record_keeper.base_currency
+        if base_currency is None:
+            self._view.set_selected_amount("Error!")
+            return
+
+        amount = base_currency.zero_amount
+        for transaction in transactions:
+            if isinstance(transaction, CashTransaction | RefundTransaction):
+                _amount = transaction.get_amount(transaction.account)
+                amount += _amount.convert(base_currency)
+
+        self._view.set_selected_amount(amount.to_str_rounded())
 
     def _reset_columns(self) -> None:
         for column in TransactionTableColumn:

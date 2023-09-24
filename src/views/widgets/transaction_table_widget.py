@@ -118,7 +118,14 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
         self.signal_selection_changed.emit()
 
     def set_shown_transactions(self, shown: int, total: int) -> None:
-        self.transactionsLabel.setText(f"Showing Transactions: {shown:,} / {total:,}")
+        self.shownTransactionsLabel.setText(
+            f"Showing Transactions: {shown:,} / {total:,}"
+        )
+
+    def set_selected_amount(self, amount: str) -> None:
+        self.selectedTransactionsTotalLabel.setText(
+            f"Selected Transactions Total: {amount}"
+        )
 
     def resize_table_to_contents(self) -> None:
         self.tableView.horizontalHeader().setStretchLastSection(False)
