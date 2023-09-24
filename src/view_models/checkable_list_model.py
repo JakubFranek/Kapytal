@@ -38,9 +38,12 @@ class CheckableListModel(QAbstractListModel):
 
     def load_checked_items(self, values: Collection[Any]) -> None:
         self._checked_items = sorted(values, key=str) if self._sort else list(values)
+        for row in range(len(self._items)):
+            index = self.createIndex(row, 0)
+            self.dataChanged.emit(index, index, [Qt.ItemDataRole.CheckStateRole])
         self.event_checked_items_changed()
 
-    def rowCount(self, index: QModelIndex = ...) -> int:  # noqa: N802
+    def rowCount(self, index: QModelIndex = ...) -> int:
         if isinstance(index, QModelIndex) and index.isValid():
             return 0
         return len(self._items)
@@ -61,7 +64,7 @@ class CheckableListModel(QAbstractListModel):
             return unicodedata.normalize("NFD", str(item))
         return None
 
-    def setData(  # noqa: N802
+    def setData(
         self, index: QModelIndex, value: Any, role: int = ...  # noqa: ANN401
     ) -> bool | None:
         if role == Qt.ItemDataRole.CheckStateRole:

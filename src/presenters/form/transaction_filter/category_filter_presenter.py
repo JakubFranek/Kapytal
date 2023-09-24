@@ -68,10 +68,6 @@ class CategoryFilterPresenter:
         specific_categories_filter: SpecificCategoriesFilter,
         multiple_categories_filter: MultipleCategoriesFilter,
     ) -> None:
-        self._income_categories_model.pre_reset_model()
-        self._expense_categories_model.pre_reset_model()
-        self._income_and_expense_categories_model.pre_reset_model()
-
         if specific_categories_filter.mode != FilterMode.OFF:
             self._income_categories_model.load_checked_categories(
                 specific_categories_filter.income_categories
@@ -82,10 +78,6 @@ class CategoryFilterPresenter:
             self._income_and_expense_categories_model.load_checked_categories(
                 specific_categories_filter.income_and_expense_categories
             )
-
-        self._income_categories_model.post_reset_model()
-        self._expense_categories_model.post_reset_model()
-        self._income_and_expense_categories_model.post_reset_model()
 
         self._form.multiple_categories_filter_mode = multiple_categories_filter.mode
         self._form.specific_categories_filter_mode = specific_categories_filter.mode
