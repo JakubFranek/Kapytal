@@ -26,6 +26,8 @@ class MainView(QMainWindow, Ui_MainWindow):
     signal_open_category_form = pyqtSignal()
     signal_open_settings_form = pyqtSignal()
 
+    signal_update_quotes = pyqtSignal()
+
     signal_cash_flow_montly_report = pyqtSignal()
     signal_cash_flow_annual_report = pyqtSignal()
     signal_cash_flow_total_report = pyqtSignal()
@@ -181,6 +183,7 @@ class MainView(QMainWindow, Ui_MainWindow):
         self.actionAbout.setIcon(icons.about)
         self.actionShow_Hide_Account_Tree.setIcon(icons.account_tree)
         self.actionShow_Hide_Transaction_Table.setIcon(icons.table)
+        self.actionUpdate_Quotes.setIcon(icons.refresh)
 
         self.menuNet_Worth.setIcon(icons.pie_chart)
         self.menuCash_Flow.setIcon(icons.bar_chart)
@@ -258,6 +261,8 @@ class MainView(QMainWindow, Ui_MainWindow):
         self.actionNet_Worth_Time_Report.triggered.connect(
             self.signal_net_worth_time_report.emit
         )
+
+        self.actionUpdate_Quotes.triggered.connect(self.signal_update_quotes.emit)
 
     def keyPressEvent(self, a0: QKeyEvent) -> None:
         if a0.key() == Qt.Key.Key_Escape:
