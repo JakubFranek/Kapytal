@@ -587,7 +587,7 @@ class Ui_TransactionFilterForm(object):
         self.cashAmountFilterModeLabel.setText(_translate("TransactionFilterForm", "Mode"))
         self.cashAmountFilterMinimumLabel.setText(_translate("TransactionFilterForm", "Minimum"))
         self.cashAmountFilterMaximumLabel.setText(_translate("TransactionFilterForm", "Maximum"))
-        self.currencyFilterGroupBox.setToolTip(_translate("TransactionFilterForm", "<html><head/><body><p>Filter Transactions based on their Currency.</p><p>All Transaction types except Security Transfer have an associated Currency (or up to two Currencies in the case of Cash Transfers). This Filter does not discard Security Transfers.</p><p>This Filter keeps Cash Transfers if at least one of their Currencies is checked.</p></body></html>"))
+        self.currencyFilterGroupBox.setToolTip(_translate("TransactionFilterForm", "<html><head/><body><p>Filter Transactions based on their Currency.</p><p>All Transaction types except Security Transfer have an associated Currency (or up to two Currencies in the case of Cash Transfers). This Filter ignores Security Transfers.</p><p>KEEP: Only Transactions including any of the selected Currencies are kept.</p><p>DISCARD: Transactions including any of the selected Currencies are discarded.</p></body></html>"))
         self.currencyFilterGroupBox.setTitle(_translate("TransactionFilterForm", "Currency Filter"))
         self.currencyFilterSelectAllToolButton.setText(_translate("TransactionFilterForm", "..."))
         self.currencyFilterUnselectAllToolButton.setText(_translate("TransactionFilterForm", "..."))

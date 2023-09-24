@@ -50,6 +50,7 @@ pytz-deprecation-shim==0.1.0.post0
 pywin32-ctypes==0.2.2
 quiffen==2.0.9
 requests==2.31.0
+ruff==0.0.291
 six==1.16.0
 snakeviz==2.2.0
 sortedcontainers==2.4.0

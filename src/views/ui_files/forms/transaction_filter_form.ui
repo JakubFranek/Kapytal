@@ -883,7 +883,7 @@
        <item>
         <widget class="QGroupBox" name="currencyFilterGroupBox">
          <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Filter Transactions based on their Currency.&lt;/p&gt;&lt;p&gt;All Transaction types except Security Transfer have an associated Currency (or up to two Currencies in the case of Cash Transfers). This Filter does not discard Security Transfers.&lt;/p&gt;&lt;p&gt;This Filter keeps Cash Transfers if at least one of their Currencies is checked.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Filter Transactions based on their Currency.&lt;/p&gt;&lt;p&gt;All Transaction types except Security Transfer have an associated Currency (or up to two Currencies in the case of Cash Transfers). This Filter ignores Security Transfers.&lt;/p&gt;&lt;p&gt;KEEP: Only Transactions including any of the selected Currencies are kept.&lt;/p&gt;&lt;p&gt;DISCARD: Transactions including any of the selected Currencies are discarded.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
          <property name="title">
           <string>Currency Filter</string>
