@@ -546,8 +546,8 @@ class AccountTreeModel(QAbstractItemModel):
             return
         if only:
             check_state = convert_bool_to_checkstate(checked=not checked)
-            for node in self._node_dict.values():
-                node.check_state = check_state
+            for _node in self._node_dict.values():
+                _node.check_state = check_state
             node.set_check_state(checked=checked)
             logging.debug(
                 f"Set exclusive check state: {node.check_state.name}, path={node.path}"
