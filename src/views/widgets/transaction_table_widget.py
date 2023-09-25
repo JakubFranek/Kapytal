@@ -149,12 +149,12 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
 
         self.tableView.setColumnHidden(column, not show)
         if show:
-            logging.debug(f"Showing TransactionTable column {column.name}")
+            logging.debug(f"Showing column {column.name}")
             if resize:
                 self.resize_table_to_contents()
                 self.tableView.viewport().update()
         else:
-            logging.debug(f"Hiding TransactionTable column {column.name}")
+            logging.debug(f"Hiding column {column.name}")
 
     def set_all_columns_visibility(self, *, show: bool) -> None:
         for column in TRANSACTION_TABLE_COLUMN_HEADERS:

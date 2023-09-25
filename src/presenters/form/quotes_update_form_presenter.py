@@ -1,4 +1,4 @@
-
+import logging
 from typing import TYPE_CHECKING
 
 from src.models.model_objects.currency_objects import CashAmount, ExchangeRate
@@ -58,12 +58,73 @@ class QuotesUpdateFormPresenter:
         self._model.event_checked_items_changed.append(self._check_state_changed)
 
     def _connect_to_signals(self) -> None:
-        self._view.signal_save.connect(self._save)
+        self._view.signal_save.connect(self._save_quotes)
         self._view.signal_download.connect(self._download_quotes)
         self._view.signal_select_all.connect(self._select_all)
         self._view.signal_unselect_all.connect(self._unselect_all)
 
-    def _save(self) -> None:
+    def _download_quotes(self) -> None:
+        logging.info("Downloading quotes...")
+        checked_items = self._model.checked_items
+        for item in checked_items:
+            data = (item, "Fetching...", "Fetching...")
+            self._model.load_single_data(data)
+            if isinstance(item, ExchangeRate):
+                self._download_exchange_rate_quote(item)
+            elif isinstance(item, Security):
+                self._download_security_quote(item)
+        self._view.set_button_state(download=True, save=True)
+
+    def _download_security_quote(self, security: Security) -> None:
+        try:
+            date_, price = get_latest_quote(security.symbol)
+            price = CashAmount(price, security.currency)
+            logging.debug(
+                f"Downloaded {security.symbol} quote: "
+                f"{price.to_str_normalized()} on {date_}"
+            )
+        except Exception as exception:  # noqa: BLE001
+            handle_exception(exception)
+            return
+
+        data = (
+            security,
+            date_.strftime(user_settings.settings.general_date_format),
+            price.to_str_normalized(),
+        )
+        self._model.load_single_data(data)
+        self._quotes[str(security)] = (date_, price)
+
+    def _download_exchange_rate_quote(self, exchange_rate: ExchangeRate) -> None:
+        exchange_rate_ticker = (
+            exchange_rate.primary_currency.code
+            + exchange_rate.secondary_currency.code
+            + "=X"
+        )
+        try:
+            date_, rate = get_latest_quote(exchange_rate_ticker)
+            logging.debug(f"Downloaded {exchange_rate} quote: {rate} on {date_}")
+        except Exception:  # noqa: BLE001
+            try:
+                exchange_rate_ticker = (
+                    exchange_rate.primary_currency.code
+                    + "-"
+                    + exchange_rate.secondary_currency.code
+                )
+                date_, rate = get_latest_quote(exchange_rate_ticker)
+            except Exception as exception:  # noqa: BLE001
+                handle_exception(exception)
+                return
+
+        data = (
+            exchange_rate,
+            date_.strftime(user_settings.settings.general_date_format),
+            f"{rate:,}",
+        )
+        self._model.load_single_data(data)
+        self._quotes[str(exchange_rate)] = (date_, rate)
+
+    def _save_quotes(self) -> None:
         checked_items = self._model.checked_items
         text = "The selected quotes have been saved:\n"
         for item in checked_items:
@@ -85,62 +146,9 @@ class QuotesUpdateFormPresenter:
                 pass
         self._view.set_button_state(download=True, save=False)
         self.event_data_changed()
+        logging.info("Downloaded quotes saved")
         show_info_box(self._view, text.strip(), "Quotes saved")
         self._view.close()
-
-    def _download_quotes(self) -> None:
-        checked_items = self._model.checked_items
-        for item in checked_items:
-            data = (item, "Fetching...", "Fetching...")
-            self._model.load_single_data(data)
-            if isinstance(item, ExchangeRate):
-                self._download_exchange_rate_quote(item)
-            elif isinstance(item, Security):
-                self._download_security_quote(item)
-        self._view.set_button_state(download=True, save=True)
-
-    def _download_security_quote(self, security: Security) -> None:
-        try:
-            date_, price = get_latest_quote(security.symbol)
-        except Exception as exception:  # noqa: BLE001
-            handle_exception(exception)
-            return
-
-        data = (
-            security,
-            date_.strftime(user_settings.settings.general_date_format),
-            f"{price:,} {security.currency.code}",
-        )
-        self._model.load_single_data(data)
-        self._quotes[str(security)] = (date_, CashAmount(price, security.currency))
-
-    def _download_exchange_rate_quote(self, exchange_rate: ExchangeRate) -> None:
-        exchange_rate_ticker = (
-            exchange_rate.primary_currency.code
-            + exchange_rate.secondary_currency.code
-            + "=X"
-        )
-        try:
-            date_, rate = get_latest_quote(exchange_rate_ticker)
-        except Exception:  # noqa: BLE001
-            try:
-                exchange_rate_ticker = (
-                    exchange_rate.primary_currency.code
-                    + "-"
-                    + exchange_rate.secondary_currency.code
-                )
-                date_, rate = get_latest_quote(exchange_rate_ticker)
-            except Exception as exception:  # noqa: BLE001
-                handle_exception(exception)
-                return
-
-        data = (
-            exchange_rate,
-            date_.strftime(user_settings.settings.general_date_format),
-            f"{rate:,}",
-        )
-        self._model.load_single_data(data)
-        self._quotes[str(exchange_rate)] = (date_, rate)
 
     def _select_all(self) -> None:
         self._model.load_checked_items(self._model.items)

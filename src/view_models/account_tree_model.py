@@ -297,6 +297,10 @@ class AccountTreeModel(QAbstractItemModel):
             node: AccountTreeNode = index.internalPointer()
             checked = value == Qt.CheckState.Checked.value
             node.set_check_state(checked=checked)
+            logging.debug(
+                f"Changing Account Tree item '{node.path}' state: "
+                f"{node.check_state.name}"
+            )
             self.signal_check_state_changed.emit()
             return True
         return None
@@ -541,7 +545,9 @@ class AccountTreeModel(QAbstractItemModel):
         if node is None:
             return
         if only:
-            self.set_check_state_all(checked=not checked)
+            check_state = convert_bool_to_checkstate(checked=not checked)
+            for node in self._node_dict.values():
+                node.check_state = check_state
             node.set_check_state(checked=checked)
             logging.debug(
                 f"Set exclusive check state: {node.check_state.name}, path={node.path}"
@@ -550,7 +556,7 @@ class AccountTreeModel(QAbstractItemModel):
             node.set_check_state(checked=checked)
             logging.debug(f"Set check state: {node.check_state.name}, path={node.path}")
 
-    def select_all_cash_accounts_below(self, account_group: AccountGroup) -> None:
+    def check_all_cash_accounts_below(self, account_group: AccountGroup) -> None:
         parent_node = get_node(account_group, self._node_dict)
         if parent_node is None:
             raise ValueError(f"Node with path='{account_group.path}' not found.")
@@ -558,7 +564,7 @@ class AccountTreeModel(QAbstractItemModel):
             if parent_node.path in node.path and node.type_ == CashAccount:
                 node.set_check_state(checked=True)
 
-    def select_all_security_accounts_below(self, account_group: AccountGroup) -> None:
+    def check_all_security_accounts_below(self, account_group: AccountGroup) -> None:
         parent_node = get_node(account_group, self._node_dict)
         if parent_node is None:
             raise ValueError(f"Node with path='{account_group.path}' not found.")

@@ -288,7 +288,7 @@ class AccountTreePresenter:
         if not isinstance(account_group, AccountGroup):
             raise TypeError(f"Selected item is not an AccountGroup: {account_group}")
         logging.debug(f"Selecting all Cash Accounts below path='{account_group.path}'")
-        self._model.select_all_cash_accounts_below(account_group)
+        self._model.check_all_cash_accounts_below(account_group)
         self._check_state_changed()
 
     def _check_all_security_accounts_below(self) -> None:
@@ -298,7 +298,7 @@ class AccountTreePresenter:
         logging.debug(
             f"Selecting all Security Accounts below path='{account_group.path}'"
         )
-        self._model.select_all_security_accounts_below(account_group)
+        self._model.check_all_security_accounts_below(account_group)
         self._check_state_changed()
 
     def _filter(self, pattern: str) -> None:
