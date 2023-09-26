@@ -1,3 +1,4 @@
+from collections.abc import Collection
 from datetime import datetime, time, timedelta
 from decimal import Decimal
 from enum import Enum, auto
@@ -408,7 +409,7 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
         return tuple(uuids)
 
     @uuids.setter
-    def uuids(self, uuids: tuple[str]) -> None:
+    def uuids(self, uuids: Collection[str]) -> None:
         self.uuidFilterPlainTextEdit.setPlainText(",\n".join(uuids))
 
     def show_form(self) -> None:

@@ -1,6 +1,7 @@
 import logging
 from collections.abc import Collection, Iterable
 from copy import copy
+from uuid import UUID
 
 from PyQt6.QtWidgets import QMessageBox, QWidget
 from src.models.base_classes.account import Account
@@ -354,6 +355,10 @@ class TransactionFilterFormPresenter:
                 self._form.cash_amount_filter_mode,
             )
 
+        uuid_strings = self._form.uuids
+        uuids = [UUID(uuid_string) for uuid_string in uuid_strings]
+        filter_.set_uuid_filter(uuids, self._form.uuid_filter_mode)
+
         return filter_
 
     def _update_form_from_filter(self, filter_: TransactionFilter) -> None:
@@ -394,6 +399,8 @@ class TransactionFilterFormPresenter:
             self._form.cash_amount_filter_maximum = (
                 filter_.cash_amount_filter.maximum.value_rounded
             )
+        self._form.uuid_filter_mode = filter_.uuid_filter.mode
+        self._form.uuids = [str(uuid) for uuid in filter_.uuid_filter.uuids]
 
     def _restore_defaults(self) -> None:
         logging.info("Restoring TransactionFilterForm to default")
@@ -508,6 +515,12 @@ class TransactionFilterFormPresenter:
                     f"min={new_filter.cash_amount_filter.minimum}, "
                     f"max={new_filter.cash_amount_filter.maximum}"
                 )
+        if old_filter.uuid_filter != new_filter.uuid_filter:
+            logging.info(
+                "UUIDFilter changed: "
+                f"mode={new_filter.uuid_filter.mode.name}, "
+                f"uuids={new_filter.uuid_filter.uuids}"
+            )
 
     def _check_filter_form_sanity(self) -> bool:
         """Checks if the form is sane. Returns True if acceptance should proceed."""
@@ -561,6 +574,18 @@ class TransactionFilterFormPresenter:
                 filter_name, related_types
             ):
                 return False
+
+        for uuid_string in self._form.uuids:
+            try:
+                UUID(uuid_string)
+            except Exception:  # noqa: BLE001
+                display_error_message(
+                    "<html>Invalid UUID format specified in UUID Filter:<br/>"
+                    f"<tt>{uuid_string}</tt>",
+                    title="Warning",
+                )
+                return False
+
         return True
 
     def _check_filter_related_types(
