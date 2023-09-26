@@ -39,6 +39,8 @@ class BaseTransactionFilter(ABC):
     @property
     def is_all_pass(self) -> bool:
         return self._mode == FilterMode.OFF
+        # IDEA: maybe DISCARD mode and zero attributes to discard is also all pass?
+        # the above would be relevant only for Filters with some attributes
 
     def __hash__(self) -> int:
         return hash(self.members)
