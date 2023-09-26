@@ -25,61 +25,70 @@ class SecurityFilterPresenter:
 
     @property
     def checked_securities(self) -> tuple[Security, ...]:
-        return self._security_list_model.checked_items
+        return self._model.checked_items
 
     def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
         self._record_keeper = record_keeper
-        self._security_list_model.pre_reset_model()
-        self._security_list_model.load_items(record_keeper.securities)
-        self._security_list_model.load_checked_items(record_keeper.securities)
-        self._security_list_model.post_reset_model()
+        self._model.pre_reset_model()
+        self._model.load_items(record_keeper.securities)
+        self._model.load_checked_items(record_keeper.securities)
+        self._model.post_reset_model()
 
     def load_from_security_filter(
         self,
         security_filter: SecurityFilter,
     ) -> None:
-        self._security_list_model.pre_reset_model()
         if security_filter.mode == FilterMode.OFF:
             self._form.security_filter_active = False
         elif security_filter.mode == FilterMode.KEEP:
-            self._security_list_model.load_checked_items(security_filter.securities)
+            self._model.load_checked_items(security_filter.securities)
         else:
-            self._security_list_model.load_checked_items(
+            self._model.load_checked_items(
                 [
                     security
                     for security in self._record_keeper.securities
                     if security not in security_filter.securities
                 ]
             )
-        self._security_list_model.post_reset_model()
 
     def _select_all(self) -> None:
-        self._security_list_model.pre_reset_model()
-        self._security_list_model.load_checked_items(self._record_keeper.securities)
-        self._security_list_model.post_reset_model()
+        self._model.load_checked_items(self._record_keeper.securities)
 
     def _unselect_all(self) -> None:
-        self._security_list_model.pre_reset_model()
-        self._security_list_model.load_checked_items(())
-        self._security_list_model.post_reset_model()
+        self._model.load_checked_items(())
+
+    def _filter(self, pattern: str) -> None:
+        if ("[" in pattern and "]" not in pattern) or "[]" in pattern:
+            return
+        self._proxy.setFilterWildcard(pattern)
 
     def _initialize_model_and_proxy(self) -> None:
-        self._security_list_proxy = QSortFilterProxyModel()
-        self._security_list_proxy.setSortRole(Qt.ItemDataRole.UserRole)
-        self._security_list_proxy.setSortCaseSensitivity(
-            Qt.CaseSensitivity.CaseInsensitive
-        )
+        self._proxy = QSortFilterProxyModel()
+        self._proxy.setSortRole(Qt.ItemDataRole.UserRole)
+        self._proxy.setSortCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+        self._proxy.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
 
-        self._security_list_model = CheckableListModel(
+        self._model = CheckableListModel(
             self._form.security_list_view,
-            self._security_list_proxy,
+            self._proxy,
         )
+        self._model.event_checked_items_changed.append(self._update_checked_number)
 
-        self._security_list_proxy.sort(0, Qt.SortOrder.AscendingOrder)
-        self._security_list_proxy.setSourceModel(self._security_list_model)
+        self._proxy.sort(0, Qt.SortOrder.AscendingOrder)
+        self._proxy.setSourceModel(self._model)
 
-        self._form.security_list_view.setModel(self._security_list_proxy)
+        self._form.security_list_view.setModel(self._proxy)
+        self._update_checked_number()
 
     def _connect_to_signals(self) -> None:
+        self._form.signal_securities_search_text_changed.connect(self._filter)
         self._form.signal_securities_select_all.connect(self._select_all)
         self._form.signal_securities_unselect_all.connect(self._unselect_all)
+        self._form.signal_securities_update_number_selected.connect(
+            self._update_checked_number
+        )
+
+    def _update_checked_number(self) -> None:
+        selected = len(self._model.checked_items)
+        total = len(self._record_keeper.securities)
+        self._form.set_selected_securities_number(selected, total)

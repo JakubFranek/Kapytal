@@ -118,7 +118,14 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
         self.signal_selection_changed.emit()
 
     def set_shown_transactions(self, shown: int, total: int) -> None:
-        self.transactionsLabel.setText(f"Showing Transactions: {shown:,} / {total:,}")
+        self.shownTransactionsLabel.setText(
+            f"Showing Transactions: {shown:,} / {total:,}"
+        )
+
+    def set_selected_amount(self, amount: str) -> None:
+        self.selectedTransactionsTotalLabel.setText(
+            f"Selected Transactions Total: {amount}"
+        )
 
     def resize_table_to_contents(self) -> None:
         self.tableView.horizontalHeader().setStretchLastSection(False)
@@ -142,12 +149,12 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
 
         self.tableView.setColumnHidden(column, not show)
         if show:
-            logging.debug(f"Showing TransactionTable column {column.name}")
+            logging.debug(f"Showing column {column.name}")
             if resize:
                 self.resize_table_to_contents()
                 self.tableView.viewport().update()
         else:
-            logging.debug(f"Hiding TransactionTable column {column.name}")
+            logging.debug(f"Hiding column {column.name}")
 
     def set_all_columns_visibility(self, *, show: bool) -> None:
         for column in TRANSACTION_TABLE_COLUMN_HEADERS:

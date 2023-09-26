@@ -21,7 +21,7 @@ class TransactionTableProxyModel(QSortFilterProxyModel):
         self._transaction_filter = transaction_filter
         self.invalidateFilter()
 
-    def filterAcceptsRow(  # noqa: N802
+    def filterAcceptsRow(
         self, source_row: int, source_parent: QModelIndex  # noqa: ARG002
     ) -> bool:
         source_model: TransactionTableModel = self.sourceModel()

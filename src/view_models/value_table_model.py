@@ -53,17 +53,17 @@ class ValueTableModel(QAbstractTableModel):
         elif self._type == ValueType.NET_WORTH:
             self.COLUMN_HEADERS[ValueTableColumn.VALUE] = f"Net Worth ({unit})"
 
-    def rowCount(self, index: QModelIndex = ...) -> int:  # noqa: N802
+    def rowCount(self, index: QModelIndex = ...) -> int:
         if isinstance(index, QModelIndex) and index.isValid():
             return 0
         return len(self._data)
 
-    def columnCount(self, index: QModelIndex = ...) -> int:  # noqa: N802, ARG002
+    def columnCount(self, index: QModelIndex = ...) -> int:  # noqa: ARG002
         if not hasattr(self, "_column_count"):
             self._column_count = len(self.COLUMN_HEADERS)
         return self._column_count
 
-    def headerData(  # noqa: N802
+    def headerData(
         self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole = ...
     ) -> str | int | None:
         if role == Qt.ItemDataRole.DisplayRole:

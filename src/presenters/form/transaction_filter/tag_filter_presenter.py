@@ -51,9 +51,7 @@ class TagFilterPresenter:
         split_tags_filter: SplitTagsFilter,
     ) -> None:
         if specific_tag_filter.mode != FilterMode.OFF:
-            self._model.pre_reset_model()
             self._model.load_checked_items(specific_tag_filter.tags)
-            self._model.post_reset_model()
 
         self._form.specific_tags_filter_mode = specific_tag_filter.mode
         self._form.tagless_filter_mode = tagless_filter.mode
@@ -66,9 +64,7 @@ class TagFilterPresenter:
 
     def _set_all_checks(self, *, checked: bool) -> None:
         checks = self._record_keeper.tags if checked else ()
-        self._model.pre_reset_model()
         self._model.load_checked_items(checks)
-        self._model.post_reset_model()
 
     def _initialize_model_and_proxy(self) -> None:
         self._proxy = QSortFilterProxyModel()
@@ -80,13 +76,13 @@ class TagFilterPresenter:
             self._form.tags_list_view,
             self._proxy,
         )
-        self._model.event_checked_items_changed.append(self._update_checked_tags_number)
+        self._model.event_checked_items_changed.append(self._update_checked_number)
 
         self._proxy.sort(0, Qt.SortOrder.AscendingOrder)
         self._proxy.setSourceModel(self._model)
 
         self._form.tags_list_view.setModel(self._proxy)
-        self._update_checked_tags_number()
+        self._update_checked_number()
 
     def _connect_to_signals(self) -> None:
         self._form.signal_tags_search_text_changed.connect(self._filter)
@@ -97,10 +93,10 @@ class TagFilterPresenter:
             lambda: self._set_all_checks(checked=False)
         )
         self._form.signal_tags_update_number_selected.connect(
-            self._update_checked_tags_number
+            self._update_checked_number
         )
 
-    def _update_checked_tags_number(self) -> None:
+    def _update_checked_number(self) -> None:
         selected = len(self._model.checked_items)
         total = len(self._record_keeper.tags)
-        self._form.set_selected_tags_numbers(selected, total)
+        self._form.set_selected_tags_number(selected, total)

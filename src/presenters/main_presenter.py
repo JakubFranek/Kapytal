@@ -6,6 +6,7 @@ from src.presenters.file_presenter import FilePresenter
 from src.presenters.form.category_form_presenter import CategoryFormPresenter
 from src.presenters.form.currency_form_presenter import CurrencyFormPresenter
 from src.presenters.form.payee_form_presenter import PayeeFormPresenter
+from src.presenters.form.quotes_update_form_presenter import QuotesUpdateFormPresenter
 from src.presenters.form.security_form_presenter import SecurityFormPresenter
 from src.presenters.form.settings_form_presenter import SettingsFormPresenter
 from src.presenters.form.tag_form_presenter import TagFormPresenter
@@ -19,6 +20,7 @@ from src.views.dialogs.welcome_dialog import WelcomeDialog
 from src.views.forms.category_form import CategoryForm
 from src.views.forms.currency_form import CurrencyForm
 from src.views.forms.payee_form import PayeeForm
+from src.views.forms.quotes_update_form import QuotesUpdateForm
 from src.views.forms.security_form import SecurityForm
 from src.views.forms.settings_form import SettingsForm
 from src.views.forms.tag_form import TagForm
@@ -83,6 +85,7 @@ class MainPresenter:
         self._category_form_presenter.load_record_keeper(record_keeper)
 
         self._report_presenter.load_record_keeper(record_keeper)
+        self._quotes_update_form_presenter.load_record_keeper(record_keeper)
 
     def _initialize_presenters(self) -> None:
         self._file_presenter = FilePresenter(self._view, self._record_keeper)
@@ -129,6 +132,11 @@ class MainPresenter:
             self._view, self._transactions_presenter, self._record_keeper
         )
 
+        quotes_update_form = QuotesUpdateForm(parent=self._view)
+        self._quotes_update_form_presenter = QuotesUpdateFormPresenter(
+            quotes_update_form, self._record_keeper
+        )
+
     def _setup_event_observers(self) -> None:
         self._file_presenter.event_load_record_keeper.append(
             lambda record_keeper: self._load_record_keeper(record_keeper)
@@ -147,6 +155,7 @@ class MainPresenter:
         self._tag_form_presenter.event_data_changed.append(self._data_changed)
         self._category_form_presenter.event_data_changed.append(self._data_changed)
         self._transactions_presenter.event_data_changed.append(self._data_changed)
+        self._quotes_update_form_presenter.event_data_changed.append(self._data_changed)
 
     def _connect_view_signals(self) -> None:
         self._view.signal_exit.connect(self._quit)
@@ -192,6 +201,9 @@ class MainPresenter:
             lambda checked: self._transactions_presenter.set_widget_visibility(
                 visible=checked
             )
+        )
+        self._view.signal_update_quotes.connect(
+            self._quotes_update_form_presenter.show_form
         )
 
     def _update_checked_accounts(self) -> None:

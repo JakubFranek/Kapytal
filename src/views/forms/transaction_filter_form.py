@@ -57,6 +57,8 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
     signal_income_categories_search_text_changed = pyqtSignal(str)
     signal_expense_categories_search_text_changed = pyqtSignal(str)
     signal_income_and_expense_categories_search_text_changed = pyqtSignal(str)
+    signal_currencies_search_text_changed = pyqtSignal(str)
+    signal_securities_search_text_changed = pyqtSignal(str)
 
     signal_types_select_all = pyqtSignal()
     signal_types_unselect_all = pyqtSignal()
@@ -73,6 +75,7 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
 
     signal_payees_select_all = pyqtSignal()
     signal_payees_unselect_all = pyqtSignal()
+    signal_payees_update_number_selected = pyqtSignal()
 
     signal_category_selection_mode_changed = pyqtSignal()
     signal_income_categories_select_all = pyqtSignal()
@@ -85,9 +88,11 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
 
     signal_currencies_select_all = pyqtSignal()
     signal_currencies_unselect_all = pyqtSignal()
+    signal_currencies_update_number_selected = pyqtSignal()
 
     signal_securities_select_all = pyqtSignal()
     signal_securities_unselect_all = pyqtSignal()
+    signal_securities_update_number_selected = pyqtSignal()
 
     signal_help = pyqtSignal()
 
@@ -115,6 +120,8 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
         self._specific_categories_filter_mode_changed()
         self._tagless_filter_mode_changed()
         self._specific_tags_filter_mode_changed()
+        self._payee_filter_active_changed()
+        self._currency_filter_mode_changed()
 
     @property
     def types_list_view(self) -> QListView:
@@ -159,14 +166,6 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
     @payee_filter_active.setter
     def payee_filter_active(self, value: bool) -> None:
         self.payeeFilterGroupBox.setChecked(value)
-
-    @property
-    def currency_filter_active(self) -> bool:
-        return self.currencyFilterGroupBox.isChecked()
-
-    @currency_filter_active.setter
-    def currency_filter_active(self, value: bool) -> None:
-        self.currencyFilterGroupBox.setChecked(value)
 
     @property
     def security_filter_active(self) -> bool:
@@ -334,6 +333,16 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
         self.cashAmountFilterMaximumDoubleSpinBox.setValue(amount)
 
     @property
+    def currency_filter_mode(self) -> FilterMode:
+        return TransactionFilterForm._get_filter_mode_from_combobox(
+            self.currencyFilterModeComboBox
+        )
+
+    @currency_filter_mode.setter
+    def currency_filter_mode(self, mode: FilterMode) -> None:
+        self.currencyFilterModeComboBox.setCurrentText(mode.name)
+
+    @property
     def specific_categories_filter_mode(self) -> FilterMode:
         return TransactionFilterForm._get_filter_mode_from_combobox(
             self.specificCategoryFilterModeComboBox
@@ -437,26 +446,18 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
         self.incomeAndExpenseCategoriesSearchLineEdit.textChanged.connect(
             self.signal_income_and_expense_categories_search_text_changed.emit
         )
+        self.currencyFilterSearchLineEdit.textChanged.connect(
+            self.signal_currencies_search_text_changed.emit
+        )
+        self.securityFilterSearchLineEdit.textChanged.connect(
+            self.signal_securities_search_text_changed.emit
+        )
 
         self.typeFilterSelectAllPushButton.clicked.connect(
             self.signal_types_select_all.emit
         )
         self.typeFilterUnselectAllPushButton.clicked.connect(
             self.signal_types_unselect_all.emit
-        )
-
-        self.accountsFilterSelectAllPushButton.clicked.connect(
-            self.signal_accounts_select_all.emit
-        )
-        self.accountsFilterUnselectAllPushButton.clicked.connect(
-            self.signal_accounts_unselect_all.emit
-        )
-
-        self.payeesSelectAllPushButton.clicked.connect(
-            self.signal_payees_select_all.emit
-        )
-        self.payeesUnselectAllPushButton.clicked.connect(
-            self.signal_payees_unselect_all.emit
         )
 
         self.specificCategoryFilterSelectionModeComboBox.currentTextChanged.connect(
@@ -466,39 +467,6 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
             self._specific_categories_filter_mode_changed
         )
 
-        self.incomeCategoriesSelectAllPushButton.clicked.connect(
-            self.signal_income_categories_select_all.emit
-        )
-        self.incomeCategoriesUnselectAllPushButton.clicked.connect(
-            self.signal_income_categories_unselect_all.emit
-        )
-        self.expenseCategoriesSelectAllPushButton.clicked.connect(
-            self.signal_expense_categories_select_all.emit
-        )
-        self.expenseCategoriesUnselectAllPushButton.clicked.connect(
-            self.signal_expense_categories_unselect_all.emit
-        )
-        self.incomeAndExpenseCategoriesSelectAllPushButton.clicked.connect(
-            self.signal_income_and_expense_categories_select_all.emit
-        )
-        self.incomeAndExpenseCategoriesUnselectAllPushButton.clicked.connect(
-            self.signal_income_and_expense_categories_unselect_all.emit
-        )
-
-        self.currencyFilterSelectAllPushButton.clicked.connect(
-            self.signal_currencies_select_all.emit
-        )
-        self.currencyFilterUnselectAllPushButton.clicked.connect(
-            self.signal_currencies_unselect_all.emit
-        )
-
-        self.securityFilterSelectAllPushButton.clicked.connect(
-            self.signal_securities_select_all.emit
-        )
-        self.securityFilterUnselectAllPushButton.clicked.connect(
-            self.signal_securities_unselect_all.emit
-        )
-
         self.tagLessFilterModeComboBox.currentTextChanged.connect(
             self._tagless_filter_mode_changed
         )
@@ -506,11 +474,20 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
             self._specific_tags_filter_mode_changed
         )
 
+        self.payeeFilterGroupBox.toggled.connect(self._payee_filter_active_changed)
+
         self.cashAmountFilterModeComboBox.currentTextChanged.connect(
             self._update_cash_amount_filter_state
         )
         self.cashAmountFilterMaximumDoubleSpinBox.valueChanged.connect(
             self._update_cash_amount_filter_minimum
+        )
+
+        self.currencyFilterModeComboBox.currentTextChanged.connect(
+            self._currency_filter_mode_changed
+        )
+        self.securityFilterGroupBox.toggled.connect(
+            self._security_filter_active_changed
         )
 
     def _initialize_window(self) -> None:
@@ -537,6 +514,12 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
         self.incomeAndExpenseCategoriesSearchLineEdit.addAction(
             icons.magnifier, QLineEdit.ActionPosition.LeadingPosition
         )
+        self.currencyFilterSearchLineEdit.addAction(
+            icons.magnifier, QLineEdit.ActionPosition.LeadingPosition
+        )
+        self.securityFilterSearchLineEdit.addAction(
+            icons.magnifier, QLineEdit.ActionPosition.LeadingPosition
+        )
 
     def _initialize_mode_comboboxes(self) -> None:
         self._initialize_mode_combobox(self.dateFilterModeComboBox)
@@ -547,6 +530,7 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
         self._initialize_mode_combobox(self.cashAmountFilterModeComboBox)
         self._initialize_mode_combobox(self.specificTagsFilterModeComboBox)
         self._initialize_mode_combobox(self.specificCategoryFilterModeComboBox)
+        self._initialize_mode_combobox(self.currencyFilterModeComboBox)
 
     def _initialize_category_filter_selection_mode_combobox(self) -> None:
         self.specificCategoryFilterSelectionModeComboBox.addItem("Hierarchical")
@@ -564,6 +548,8 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
         self.thisYearPushButton.clicked.connect(self._set_this_year)
         self.lastYearPushButton.clicked.connect(self._set_last_year)
 
+        self.actionSelectAllAccounts = QAction("Select All", self)
+        self.actionUnselectAllAccounts = QAction("Unselect All", self)
         self.actionExpandAllAccounts = QAction("Expand All", self)
         self.actionExpandAllIncomeCategories = QAction("Expand All", self)
         self.actionExpandAllExpenseCategories = QAction("Expand All", self)
@@ -572,9 +558,23 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
         self.actionCollapseAllIncomeCategories = QAction("Collapse All", self)
         self.actionCollapseAllExpenseCategories = QAction("Collapse All", self)
         self.actionCollapseAllIncomeAndExpenseCategories = QAction("Collapse All", self)
+        self.actionSelectAllIncomeCategories = QAction("Select All", self)
+        self.actionUnselectAllIncomeCategories = QAction("Unselect All", self)
+        self.actionSelectAllExpenseCategories = QAction("Select All", self)
+        self.actionUnselectAllExpenseCategories = QAction("Unselect All", self)
+        self.actionSelectAllIncomeAndExpenseCategories = QAction("Select All", self)
+        self.actionUnselectAllIncomeAndExpenseCategories = QAction("Unselect All", self)
         self.actionSelectAllTags = QAction("Select All", self)
         self.actionUnselectAllTags = QAction("Unselect All", self)
+        self.actionSelectAllPayees = QAction("Select All", self)
+        self.actionUnselectAllPayees = QAction("Unselect All", self)
+        self.actionSelectAllCurrencies = QAction("Select All", self)
+        self.actionUnselectAllCurrencies = QAction("Unselect All", self)
+        self.actionSelectAllSecurities = QAction("Select All", self)
+        self.actionUnselectAllSecurities = QAction("Unselect All", self)
 
+        self.actionSelectAllAccounts.setIcon(icons.select_all)
+        self.actionUnselectAllAccounts.setIcon(icons.unselect_all)
         self.actionExpandAllAccounts.setIcon(icons.expand)
         self.actionExpandAllIncomeCategories.setIcon(icons.expand)
         self.actionExpandAllExpenseCategories.setIcon(icons.expand)
@@ -583,9 +583,29 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
         self.actionCollapseAllIncomeCategories.setIcon(icons.collapse)
         self.actionCollapseAllExpenseCategories.setIcon(icons.collapse)
         self.actionCollapseAllIncomeAndExpenseCategories.setIcon(icons.collapse)
+        self.actionSelectAllIncomeCategories.setIcon(icons.select_all)
+        self.actionUnselectAllIncomeCategories.setIcon(icons.unselect_all)
+        self.actionSelectAllExpenseCategories.setIcon(icons.select_all)
+        self.actionUnselectAllExpenseCategories.setIcon(icons.unselect_all)
+        self.actionSelectAllIncomeAndExpenseCategories.setIcon(icons.select_all)
+        self.actionUnselectAllIncomeAndExpenseCategories.setIcon(icons.unselect_all)
         self.actionSelectAllTags.setIcon(icons.select_all)
         self.actionUnselectAllTags.setIcon(icons.unselect_all)
+        self.actionSelectAllPayees.setIcon(icons.select_all)
+        self.actionUnselectAllPayees.setIcon(icons.unselect_all)
+        self.typeFilterSelectAllPushButton.setIcon(icons.select_all)
+        self.typeFilterUnselectAllPushButton.setIcon(icons.unselect_all)
+        self.actionSelectAllCurrencies.setIcon(icons.select_all)
+        self.actionUnselectAllCurrencies.setIcon(icons.unselect_all)
+        self.actionSelectAllSecurities.setIcon(icons.select_all)
+        self.actionUnselectAllSecurities.setIcon(icons.unselect_all)
 
+        self.actionSelectAllAccounts.triggered.connect(
+            self.signal_accounts_select_all.emit
+        )
+        self.actionUnselectAllAccounts.triggered.connect(
+            self.signal_accounts_unselect_all.emit
+        )
         self.actionExpandAllAccounts.triggered.connect(self.accountsTreeView.expandAll)
         self.actionExpandAllIncomeCategories.triggered.connect(
             self.incomeCategoriesTreeView.expandAll
@@ -608,9 +628,49 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
         self.actionCollapseAllIncomeAndExpenseCategories.triggered.connect(
             self.incomeAndExpenseCategoriesTreeView.collapseAll
         )
+        self.actionSelectAllIncomeCategories.triggered.connect(
+            self.signal_income_categories_select_all.emit
+        )
+        self.actionUnselectAllIncomeCategories.triggered.connect(
+            self.signal_income_categories_unselect_all.emit
+        )
+        self.actionSelectAllExpenseCategories.triggered.connect(
+            self.signal_expense_categories_select_all.emit
+        )
+        self.actionUnselectAllExpenseCategories.triggered.connect(
+            self.signal_expense_categories_unselect_all.emit
+        )
+        self.actionSelectAllIncomeAndExpenseCategories.triggered.connect(
+            self.signal_income_and_expense_categories_select_all.emit
+        )
+        self.actionUnselectAllIncomeAndExpenseCategories.triggered.connect(
+            self.signal_income_and_expense_categories_unselect_all.emit
+        )
         self.actionSelectAllTags.triggered.connect(self.signal_tags_select_all.emit)
         self.actionUnselectAllTags.triggered.connect(self.signal_tags_unselect_all.emit)
+        self.actionSelectAllPayees.triggered.connect(self.signal_payees_select_all.emit)
+        self.actionUnselectAllPayees.triggered.connect(
+            self.signal_payees_unselect_all.emit
+        )
+        self.actionSelectAllCurrencies.triggered.connect(
+            self.signal_currencies_select_all.emit
+        )
+        self.actionUnselectAllCurrencies.triggered.connect(
+            self.signal_currencies_unselect_all.emit
+        )
+        self.actionSelectAllSecurities.triggered.connect(
+            self.signal_securities_select_all.emit
+        )
+        self.actionUnselectAllSecurities.triggered.connect(
+            self.signal_securities_unselect_all.emit
+        )
 
+        self.accountsFilterSelectAllToolButton.setDefaultAction(
+            self.actionSelectAllAccounts
+        )
+        self.accountsFilterUnselectAllToolButton.setDefaultAction(
+            self.actionUnselectAllAccounts
+        )
         self.accountsFilterExpandAllToolButton.setDefaultAction(
             self.actionExpandAllAccounts
         )
@@ -635,11 +695,43 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
         self.incomeAndExpenseCategoriesCollapseAllToolButton.setDefaultAction(
             self.actionCollapseAllIncomeAndExpenseCategories
         )
+        self.incomeCategoriesSelectAllToolButton.setDefaultAction(
+            self.actionSelectAllIncomeCategories
+        )
+        self.incomeCategoriesUnselectAllToolButton.setDefaultAction(
+            self.actionUnselectAllIncomeCategories
+        )
+        self.expenseCategoriesSelectAllToolButton.setDefaultAction(
+            self.actionSelectAllExpenseCategories
+        )
+        self.expenseCategoriesUnselectAllToolButton.setDefaultAction(
+            self.actionUnselectAllExpenseCategories
+        )
+        self.incomeAndExpenseCategoriesSelectAllToolButton.setDefaultAction(
+            self.actionSelectAllIncomeAndExpenseCategories
+        )
+        self.incomeAndExpenseCategoriesUnselectAllToolButton.setDefaultAction(
+            self.actionUnselectAllIncomeAndExpenseCategories
+        )
         self.specificTagsFilterSelectAllToolButton.setDefaultAction(
             self.actionSelectAllTags
         )
         self.specificTagsFilterUnselectAllToolButton.setDefaultAction(
             self.actionUnselectAllTags
+        )
+        self.payeesSelectAllToolButton.setDefaultAction(self.actionSelectAllPayees)
+        self.payeesUnselectAllToolButton.setDefaultAction(self.actionUnselectAllPayees)
+        self.currencyFilterSelectAllToolButton.setDefaultAction(
+            self.actionSelectAllCurrencies
+        )
+        self.currencyFilterUnselectAllToolButton.setDefaultAction(
+            self.actionUnselectAllCurrencies
+        )
+        self.securityFilterSelectAllToolButton.setDefaultAction(
+            self.actionSelectAllSecurities
+        )
+        self.securityFilterUnselectAllToolButton.setDefaultAction(
+            self.actionUnselectAllSecurities
         )
 
     def _handle_button_box_click(self, button: QAbstractButton) -> None:
@@ -691,11 +783,31 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
 
     def _specific_tags_filter_mode_changed(self) -> None:
         mode = self.specific_tags_filter_mode
-        self.specificTagsFilterSelectAllToolButton.setEnabled(mode != FilterMode.OFF)
-        self.specificTagsFilterUnselectAllToolButton.setEnabled(mode != FilterMode.OFF)
+        self.actionSelectAllTags.setEnabled(mode != FilterMode.OFF)
+        self.actionUnselectAllTags.setEnabled(mode != FilterMode.OFF)
         self.tagsSearchLineEdit.setEnabled(mode != FilterMode.OFF)
         self.tagsListView.setEnabled(mode != FilterMode.OFF)
         self.signal_tags_update_number_selected.emit()
+
+    def _payee_filter_active_changed(self) -> None:
+        active = self.payee_filter_active
+        self.actionSelectAllPayees.setEnabled(active)
+        self.actionUnselectAllPayees.setEnabled(active)
+        self.signal_payees_update_number_selected.emit()
+
+    def _currency_filter_mode_changed(self) -> None:
+        mode = self.currency_filter_mode
+        self.actionSelectAllCurrencies.setEnabled(mode != FilterMode.OFF)
+        self.actionUnselectAllCurrencies.setEnabled(mode != FilterMode.OFF)
+        self.currencyFilterSearchLineEdit.setEnabled(mode != FilterMode.OFF)
+        self.currencyListView.setEnabled(mode != FilterMode.OFF)
+        self.signal_currencies_update_number_selected.emit()
+
+    def _security_filter_active_changed(self) -> None:
+        active = self.security_filter_active
+        self.actionSelectAllSecurities.setEnabled(active)
+        self.actionUnselectAllSecurities.setEnabled(active)
+        self.signal_securities_update_number_selected.emit()
 
     def _initialize_account_filter_actions(self) -> None:
         self.actionSelectAllCashAccountsBelow = QAction(
@@ -775,13 +887,37 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
         self.categoriesTypeTabWidget.setTabText(1, expense_text)
         self.categoriesTypeTabWidget.setTabText(2, income_and_expense_text)
 
-    def set_selected_tags_numbers(self, selected: int, total: int) -> None:
+    def set_selected_tags_number(self, selected: int, total: int) -> None:
         if self.specific_tags_filter_mode != FilterMode.OFF:
             self.specificTagsFilterGroupBox.setTitle(
                 f"Specific Tags Filter ({selected:,} / {total:,})"
             )
         else:
             self.specificTagsFilterGroupBox.setTitle("Specific Tags Filter")
+
+    def set_selected_payees_number(self, selected: int, total: int) -> None:
+        if self.payee_filter_active:
+            self.payeeFilterGroupBox.setTitle(
+                f"Payee Filter ({selected:,} / {total:,})"
+            )
+        else:
+            self.payeeFilterGroupBox.setTitle("Payee Filter")
+
+    def set_selected_currencies_number(self, selected: int, total: int) -> None:
+        if self.currency_filter_mode != FilterMode.OFF:
+            self.currencyFilterGroupBox.setTitle(
+                f"Currency Filter ({selected:,} / {total:,})"
+            )
+        else:
+            self.currencyFilterGroupBox.setTitle("Currency Filter")
+
+    def set_selected_securities_number(self, selected: int, total: int) -> None:
+        if self.security_filter_active:
+            self.securityFilterGroupBox.setTitle(
+                f"Security Filter ({selected:,} / {total:,})"
+            )
+        else:
+            self.securityFilterGroupBox.setTitle("Security Filter")
 
     def _update_date_edit_display_format(self) -> None:
         display_format = convert_datetime_format_to_qt(

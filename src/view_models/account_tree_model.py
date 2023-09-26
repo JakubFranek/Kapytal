@@ -220,6 +220,9 @@ class AccountTreeModel(QAbstractItemModel):
                 lambda uuid_string: self._node_check_state_changed(uuid_string)
             )
 
+        # alert presenter check state could have changed (i.e. after adding items)
+        self.signal_check_state_changed.emit()
+
     def get_checked_accounts(self) -> frozenset[Account]:
         uuids = {
             node.uuid
@@ -239,7 +242,7 @@ class AccountTreeModel(QAbstractItemModel):
         items = [self._item_dict[uuid] for uuid in uuids]
         return frozenset(items)
 
-    def rowCount(self, index: QModelIndex = ...) -> int:  # noqa: N802
+    def rowCount(self, index: QModelIndex = ...) -> int:
         if index.isValid():
             if index.column() != 0:
                 return 0
@@ -247,7 +250,7 @@ class AccountTreeModel(QAbstractItemModel):
             return len(node.children)
         return len(self._root_nodes)
 
-    def columnCount(self, index: QModelIndex = ...) -> int:  # noqa: N802
+    def columnCount(self, index: QModelIndex = ...) -> int:
         return 4 if not index.isValid() or index.column() == 0 else 0
 
     def index(self, row: int, column: int, parent: QModelIndex = ...) -> QModelIndex:
@@ -287,18 +290,22 @@ class AccountTreeModel(QAbstractItemModel):
             return FLAGS_SHOW
         return FLAGS_DEFAULT
 
-    def setData(  # noqa: N802
+    def setData(
         self, index: QModelIndex, value: Any, role: int = ...  # noqa: ANN401
     ) -> bool | None:
         if role == Qt.ItemDataRole.CheckStateRole:
             node: AccountTreeNode = index.internalPointer()
             checked = value == Qt.CheckState.Checked.value
             node.set_check_state(checked=checked)
+            logging.debug(
+                f"Changing Account Tree item '{node.path}' state: "
+                f"{node.check_state.name}"
+            )
             self.signal_check_state_changed.emit()
             return True
         return None
 
-    def headerData(  # noqa: N802
+    def headerData(
         self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole = ...
     ) -> str | int | None:
         if role == Qt.ItemDataRole.DisplayRole:
@@ -538,7 +545,9 @@ class AccountTreeModel(QAbstractItemModel):
         if node is None:
             return
         if only:
-            self.set_check_state_all(checked=not checked)
+            check_state = convert_bool_to_checkstate(checked=not checked)
+            for _node in self._node_dict.values():
+                _node.check_state = check_state
             node.set_check_state(checked=checked)
             logging.debug(
                 f"Set exclusive check state: {node.check_state.name}, path={node.path}"
@@ -547,7 +556,7 @@ class AccountTreeModel(QAbstractItemModel):
             node.set_check_state(checked=checked)
             logging.debug(f"Set check state: {node.check_state.name}, path={node.path}")
 
-    def select_all_cash_accounts_below(self, account_group: AccountGroup) -> None:
+    def check_all_cash_accounts_below(self, account_group: AccountGroup) -> None:
         parent_node = get_node(account_group, self._node_dict)
         if parent_node is None:
             raise ValueError(f"Node with path='{account_group.path}' not found.")
@@ -555,7 +564,7 @@ class AccountTreeModel(QAbstractItemModel):
             if parent_node.path in node.path and node.type_ == CashAccount:
                 node.set_check_state(checked=True)
 
-    def select_all_security_accounts_below(self, account_group: AccountGroup) -> None:
+    def check_all_security_accounts_below(self, account_group: AccountGroup) -> None:
         parent_node = get_node(account_group, self._node_dict)
         if parent_node is None:
             raise ValueError(f"Node with path='{account_group.path}' not found.")

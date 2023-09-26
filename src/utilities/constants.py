@@ -1,7 +1,7 @@
 from pathlib import Path
 
 # Literal constants
-VERSION = "0.7.1"
+VERSION = "0.8.0"
 
 TIMESTAMP_FORMAT = "%Y_%m_%d_%Hh%Mm%Ss"
 TIMESTAMP_EXAMPLE = "YYYY_mm_DD_HHhMMmSSs"

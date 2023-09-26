@@ -81,13 +81,15 @@ def setup_logging() -> None:
     handler_debug.setFormatter(formatter)
     handler_info.setFormatter(formatter)
 
-    logger = logging.getLogger()  # this is the root logger
+    root_logger = logging.getLogger()  # this is the root logger
     logging.getLogger("matplotlib.font_manager").disabled = True
     logging.getLogger("pyplot.switch_backend").disabled = True
-    logger.addFilter(DuplicateFilter(formatter))
-    logger.setLevel(logging.DEBUG)
-    logger.addHandler(handler_debug)
-    logger.addHandler(handler_info)
+    logging.getLogger("yfinance").disabled = True
+    logging.getLogger("urllib3.connectionpool").disabled = True
+    root_logger.addFilter(DuplicateFilter(formatter))
+    root_logger.setLevel(logging.DEBUG)
+    root_logger.addHandler(handler_debug)
+    root_logger.addHandler(handler_info)
     logging.logThreads = False
     logging.logProcesses = False
     logging.logMultiprocessing = False

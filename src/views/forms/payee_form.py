@@ -28,6 +28,8 @@ class PayeeForm(CustomWidget, Ui_PayeeForm):
             icons.magnifier, QLineEdit.ActionPosition.LeadingPosition
         )
 
+        self.tableView.doubleClicked.connect(self.signal_rename_payee.emit)
+
     def enable_actions(
         self,
         *,

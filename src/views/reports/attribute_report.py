@@ -1,5 +1,4 @@
 from collections.abc import Collection
-from typing import TYPE_CHECKING
 
 from PyQt6.QtCore import QSignalBlocker, Qt, pyqtSignal
 from PyQt6.QtGui import QContextMenuEvent, QCursor

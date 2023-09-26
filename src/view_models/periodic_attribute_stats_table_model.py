@@ -105,17 +105,17 @@ class PeriodicAttributeStatsTableModel(QAbstractTableModel):
         self.AVERAGE_COLUMN_INDEX = len(self._column_headers) - 2
         self.TOTAL_ROW_INDEX = len(self._row_headers) - 1
 
-    def rowCount(self, index: QModelIndex = ...) -> int:  # noqa: N802
+    def rowCount(self, index: QModelIndex = ...) -> int:
         if isinstance(index, QModelIndex) and index.isValid():
             return 0
         return len(self._rows)
 
-    def columnCount(self, index: QModelIndex = ...) -> int:  # noqa: N802, ARG002
+    def columnCount(self, index: QModelIndex = ...) -> int:  # noqa: ARG002
         if not hasattr(self, "_column_count"):
             self._column_count = len(self._column_headers)
         return self._column_count
 
-    def headerData(  # noqa: N802
+    def headerData(
         self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole = ...
     ) -> str | int | None:
         if role == Qt.ItemDataRole.DisplayRole:

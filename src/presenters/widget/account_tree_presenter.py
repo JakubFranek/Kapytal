@@ -84,8 +84,7 @@ class AccountTreePresenter:
         self._account_group_dialog_presenter.load_record_keeper(record_keeper)
         self._cash_account_dialog_presenter.load_record_keeper(record_keeper)
         self._security_account_dialog_presenter.load_record_keeper(record_keeper)
-        self._selection_changed()
-        self._check_state_changed()
+        self._set_check_state_all(visible=True)
         self._set_native_balance_column_visibility()
 
     def refresh_view(self) -> None:
@@ -106,6 +105,7 @@ class AccountTreePresenter:
             AccountTreeColumn.BALANCE_NATIVE, hide_native
         )
         self._set_native_balance_column_visibility()
+        self._update_checked_account_balance()
 
     def expand_all_below(self) -> None:
         indexes = self._view.treeView.selectedIndexes()
@@ -288,7 +288,7 @@ class AccountTreePresenter:
         if not isinstance(account_group, AccountGroup):
             raise TypeError(f"Selected item is not an AccountGroup: {account_group}")
         logging.debug(f"Selecting all Cash Accounts below path='{account_group.path}'")
-        self._model.select_all_cash_accounts_below(account_group)
+        self._model.check_all_cash_accounts_below(account_group)
         self._check_state_changed()
 
     def _check_all_security_accounts_below(self) -> None:
@@ -298,7 +298,7 @@ class AccountTreePresenter:
         logging.debug(
             f"Selecting all Security Accounts below path='{account_group.path}'"
         )
-        self._model.select_all_security_accounts_below(account_group)
+        self._model.check_all_security_accounts_below(account_group)
         self._check_state_changed()
 
     def _filter(self, pattern: str) -> None:

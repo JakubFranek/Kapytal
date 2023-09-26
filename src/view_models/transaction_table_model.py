@@ -112,12 +112,12 @@ class TransactionTableModel(QAbstractTableModel):
         self._transaction_uuid_dict = transaction_uuid_dict
         self._row_count = len(self._transactions)
 
-    def rowCount(self, index: QModelIndex = ...) -> int:  # noqa: N802
+    def rowCount(self, index: QModelIndex = ...) -> int:
         if isinstance(index, QModelIndex) and index.isValid():
             return 0
         return self._row_count
 
-    def columnCount(self, index: QModelIndex = ...) -> int:  # noqa: N802, ARG002
+    def columnCount(self, index: QModelIndex = ...) -> int:  # noqa: ARG002
         if not hasattr(self, "_column_count"):
             self._column_count = len(TRANSACTION_TABLE_COLUMN_HEADERS)
         return self._column_count
@@ -153,7 +153,7 @@ class TransactionTableModel(QAbstractTableModel):
             return monospace_font
         return None
 
-    def headerData(  # noqa: N802
+    def headerData(
         self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole = ...
     ) -> str | int | None:
         if role == Qt.ItemDataRole.DisplayRole:
@@ -602,9 +602,9 @@ class TransactionTableModel(QAbstractTableModel):
             and len(self._valid_accounts) == 1
         ):
             account = self._valid_accounts[0]
-            if not isinstance(account, CashAccount):
-                raise TypeError(f"Expected CashAccount, got {type(account)}.")
-            if transaction.is_account_related(account):
+            if isinstance(account, CashAccount) and transaction.is_account_related(
+                account
+            ):
                 return account.get_balance_after_transaction(
                     account.currency, transaction
                 )
@@ -617,9 +617,9 @@ class TransactionTableModel(QAbstractTableModel):
             and len(self._valid_accounts) == 1
         ):
             account = self._valid_accounts[0]
-            if not isinstance(account, CashAccount):
-                raise TypeError(f"Expected CashAccount, got {type(account)}.")
-            if transaction.is_account_related(account):
+            if isinstance(account, CashAccount) and transaction.is_account_related(
+                account
+            ):
                 balance = account.get_balance_after_transaction(
                     account.currency, transaction
                 )

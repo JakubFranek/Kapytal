@@ -18,68 +18,67 @@ class CurrencyFilterPresenter:
 
     @property
     def currency_filter_mode(self) -> FilterMode:
-        return FilterMode.KEEP if self._form.currency_filter_active else FilterMode.OFF
+        return self._form.currency_filter_mode
 
     @property
     def checked_currencies(self) -> tuple[Currency, ...]:
-        return self._currency_list_model.checked_items
+        return self._model.checked_items
 
     def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
         self._record_keeper = record_keeper
-        self._currency_list_model.pre_reset_model()
-        self._currency_list_model.load_items(record_keeper.currencies)
-        self._currency_list_model.load_checked_items(record_keeper.currencies)
-        self._currency_list_model.post_reset_model()
+        self._model.pre_reset_model()
+        self._model.load_items(record_keeper.currencies)
+        self._model.load_checked_items(record_keeper.currencies)
+        self._model.post_reset_model()
 
     def load_from_currency_filter(
         self,
         currency_filter: CurrencyFilter,
     ) -> None:
-        self._form.currency_filter_active = currency_filter.mode != FilterMode.OFF
+        self._form.currency_filter_mode = currency_filter.mode
         if currency_filter.mode == FilterMode.OFF:
             return
 
-        self._currency_list_model.pre_reset_model()
-        if currency_filter.mode == FilterMode.KEEP:
-            self._form.currency_filter_active = True
-            self._currency_list_model.load_checked_items(currency_filter.currencies)
-        else:
-            self._currency_list_model.load_checked_items(
-                [
-                    currency
-                    for currency in self._record_keeper.currencies
-                    if currency not in currency_filter.currencies
-                ]
-            )
-        self._currency_list_model.post_reset_model()
+        self._model.load_checked_items(currency_filter.currencies)
 
     def _select_all(self) -> None:
-        self._currency_list_model.pre_reset_model()
-        self._currency_list_model.load_checked_items(self._record_keeper.currencies)
-        self._currency_list_model.post_reset_model()
+        self._model.load_checked_items(self._record_keeper.currencies)
 
     def _unselect_all(self) -> None:
-        self._currency_list_model.pre_reset_model()
-        self._currency_list_model.load_checked_items(())
-        self._currency_list_model.post_reset_model()
+        self._model.load_checked_items(())
+
+    def _filter(self, pattern: str) -> None:
+        if ("[" in pattern and "]" not in pattern) or "[]" in pattern:
+            return
+        self._proxy.setFilterWildcard(pattern)
 
     def _initialize_model_and_proxy(self) -> None:
-        self._currency_list_proxy = QSortFilterProxyModel()
-        self._currency_list_proxy.setSortRole(Qt.ItemDataRole.UserRole)
-        self._currency_list_proxy.setSortCaseSensitivity(
-            Qt.CaseSensitivity.CaseInsensitive
-        )
+        self._proxy = QSortFilterProxyModel()
+        self._proxy.setSortRole(Qt.ItemDataRole.UserRole)
+        self._proxy.setSortCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+        self._proxy.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
 
-        self._currency_list_model = CheckableListModel(
+        self._model = CheckableListModel(
             self._form.currency_list_view,
-            self._currency_list_proxy,
+            self._proxy,
         )
+        self._model.event_checked_items_changed.append(self._update_checked_number)
 
-        self._currency_list_proxy.sort(0, Qt.SortOrder.AscendingOrder)
-        self._currency_list_proxy.setSourceModel(self._currency_list_model)
+        self._proxy.sort(0, Qt.SortOrder.AscendingOrder)
+        self._proxy.setSourceModel(self._model)
 
-        self._form.currency_list_view.setModel(self._currency_list_proxy)
+        self._form.currency_list_view.setModel(self._proxy)
+        self._update_checked_number()
 
     def _connect_to_signals(self) -> None:
+        self._form.signal_currencies_search_text_changed.connect(self._filter)
         self._form.signal_currencies_select_all.connect(self._select_all)
         self._form.signal_currencies_unselect_all.connect(self._unselect_all)
+        self._form.signal_currencies_update_number_selected.connect(
+            self._update_checked_number
+        )
+
+    def _update_checked_number(self) -> None:
+        selected = len(self._model.checked_items)
+        total = len(self._record_keeper.currencies)
+        self._form.set_selected_currencies_number(selected, total)

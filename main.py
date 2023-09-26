@@ -52,6 +52,9 @@ def main() -> None:
     logging.debug("Setting QApplication font size to 10 pts")
     app.setStyleSheet("QWidget{font-size: 10pt;}")
 
+    logging.debug("Setting Fusion style")
+    app.setStyle(QStyleFactory.create("Fusion"))
+
     color_scheme = app.styleHints().colorScheme()
     colors.color_scheme = color_scheme
     logging.debug(f"QApplication color scheme: '{color_scheme.name}'")
@@ -63,10 +66,9 @@ def main() -> None:
     main_presenter = MainPresenter(main_view, app)
 
     logging.debug("Showing MainView")
-    main_view.show()
+    main_view.showMaximized()
 
-    logging.debug("Setting Fusion style")
-    app.setStyle(QStyleFactory.create("Fusion"))
+    app.processEvents()  # draw MainView so WelcomeDialog can be properly centered
 
     logging.debug("Showing Welcome dialog")
     main_presenter.show_welcome_dialog()

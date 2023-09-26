@@ -535,7 +535,7 @@ class TransactionFilterFormPresenter:
         filter_types: list[tuple[str, bool, set]] = [
             (
                 "Currency Filter",
-                self._form.currency_filter_active,
+                self._form.currency_filter_mode != FilterMode.OFF,
                 currency_related_types,
             ),
             (
