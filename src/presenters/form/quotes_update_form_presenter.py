@@ -3,13 +3,14 @@ from typing import TYPE_CHECKING
 
 from src.models.model_objects.currency_objects import CashAmount, ExchangeRate
 from src.models.model_objects.security_objects import Security
-from src.models.online_quotes.functions import get_latest_quote
+from src.models.online_quotes.functions import QuoteUpdateError, get_latest_quote
 from src.models.record_keeper import RecordKeeper
 from src.models.user_settings import user_settings
 from src.presenters.utilities.event import Event
 from src.presenters.utilities.handle_exception import handle_exception
 from src.view_models.quotes_update_table_model import QuotesUpdateTableModel
 from src.views.forms.quotes_update_form import QuotesUpdateForm
+from src.views.utilities.handle_exception import display_error_message
 from src.views.utilities.message_box_functions import show_info_box
 
 if TYPE_CHECKING:
@@ -30,7 +31,7 @@ class QuotesUpdateFormPresenter:
         self._quotes: dict[str, tuple[date, Decimal | CashAmount]] = {}
         self._initialize_models()
         self._connect_to_signals()
-        self._view.set_button_state(download=True, save=False)
+        self._update_button_states()
 
     def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
         self._record_keeper = record_keeper
@@ -55,7 +56,7 @@ class QuotesUpdateFormPresenter:
     def _initialize_models(self) -> None:
         self._model = QuotesUpdateTableModel(self._view.table_view)
         self._view.table_view.setModel(self._model)
-        self._model.event_checked_items_changed.append(self._check_state_changed)
+        self._model.event_checked_items_changed.append(self._update_button_states)
 
     def _connect_to_signals(self) -> None:
         self._view.signal_save.connect(self._save_quotes)
@@ -73,7 +74,7 @@ class QuotesUpdateFormPresenter:
                 self._download_exchange_rate_quote(item)
             elif isinstance(item, Security):
                 self._download_security_quote(item)
-        self._view.set_button_state(download=True, save=True)
+        self._update_button_states()
 
     def _download_security_quote(self, security: Security) -> None:
         try:
@@ -83,6 +84,15 @@ class QuotesUpdateFormPresenter:
                 f"Downloaded {security.symbol} quote: "
                 f"{price.to_str_normalized()} on {date_}"
             )
+        except QuoteUpdateError:
+            display_error_message(
+                f"Download failed for Security symbol {security.symbol}.\n"
+                "Please ensure the symbol is correct and your internet connection is "
+                "stable."
+            )
+            data = (security, "Error!", "Error!")
+            self._model.load_single_data(data)
+            return
         except Exception as exception:  # noqa: BLE001
             handle_exception(exception)
             return
@@ -112,6 +122,15 @@ class QuotesUpdateFormPresenter:
                     + exchange_rate.secondary_currency.code
                 )
                 date_, rate = get_latest_quote(exchange_rate_ticker)
+            except QuoteUpdateError:
+                display_error_message(
+                    f"Download failed for Exchange Rate {exchange_rate}.\n"
+                    "Please ensure the Currency codes are correct and your internet "
+                    "connection is stable."
+                )
+                data = (exchange_rate, "Error!", "Error!")
+                self._model.load_single_data(data)
+                return
             except Exception as exception:  # noqa: BLE001
                 handle_exception(exception)
                 return
@@ -156,7 +175,7 @@ class QuotesUpdateFormPresenter:
     def _unselect_all(self) -> None:
         self._model.load_checked_items([])
 
-    def _check_state_changed(self) -> None:
+    def _update_button_states(self) -> None:
         if len(self._model.checked_items) > 0:
             if all(str(item) in self._quotes for item in self._model.checked_items):
                 self._view.set_button_state(download=True, save=True)
