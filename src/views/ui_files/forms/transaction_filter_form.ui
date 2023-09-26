@@ -9,7 +9,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>580</width>
+    <width>600</width>
     <height>600</height>
    </rect>
   </property>
@@ -974,6 +974,35 @@
           </item>
           <item>
            <widget class="QListView" name="securityListView"/>
+          </item>
+         </layout>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="uuidsTab">
+      <attribute name="title">
+       <string>UUIDs</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_17">
+       <item>
+        <widget class="QGroupBox" name="uuidFilterGroupBox">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Filter Transactions based on their UUID.&lt;/p&gt;&lt;p&gt;All Transactions have a UUID (Universal Unique IDentifier version 4), which is a 36-character string (for example '9507ae40-8252-4178-a8cb-34bc300f484d').&lt;br/&gt;&lt;br/&gt;The UUIDs can be viewed in the UUID column of the Transaction Table (hidden by default, but can be shown by right-clicking on the Transaction Table column headers).&lt;br/&gt;Transaction UUIDs can be copied by right-clicking Transactions and selecting Copy UUIDs action from the context menu.&lt;/p&gt;&lt;p&gt;KEEP: Only Transactions whose UUID matches any of the listed UUIDs are kept.&lt;/p&gt;&lt;p&gt;DISCARD: Transactions whose UUID matches any of the listed UUIDs are discarded.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="title">
+          <string>UUID Filter</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_19">
+          <item>
+           <widget class="QComboBox" name="uuidFilterModeComboBox"/>
+          </item>
+          <item>
+           <widget class="QPlainTextEdit" name="uuidFilterPlainTextEdit">
+            <property name="placeholderText">
+             <string>Enter comma separated UUIDs</string>
+            </property>
+           </widget>
           </item>
          </layout>
         </widget>
