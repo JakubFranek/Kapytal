@@ -3,6 +3,7 @@ from PyQt6.QtWidgets import QTableView, QWidget
 from src.views import icons
 from src.views.base_classes.custom_widget import CustomWidget
 from src.views.ui_files.forms.Ui_quotes_update_form import Ui_QuotesUpdateForm
+from src.views.utilities.message_box_functions import show_info_box
 
 
 class QuotesUpdateForm(CustomWidget, Ui_QuotesUpdateForm):
@@ -29,6 +30,8 @@ class QuotesUpdateForm(CustomWidget, Ui_QuotesUpdateForm):
         self.selectAllToolButton.setDefaultAction(self.actionSelect_All)
         self.unselectAllToolButton.setDefaultAction(self.actionUnselect_All)
 
+        self.helpPushButton.clicked.connect(self._show_help)
+
     @property
     def table_view(self) -> QTableView:
         return self.tableView
@@ -36,3 +39,37 @@ class QuotesUpdateForm(CustomWidget, Ui_QuotesUpdateForm):
     def set_button_state(self, *, download: bool, save: bool) -> None:
         self.downloadQuotesPushButton.setEnabled(download)
         self.saveQuotesPushButton.setEnabled(save)
+
+    def _show_help(self) -> None:
+        text = (
+            "<html>"
+            "To update quotes, first select the Exchange Rates and Securities you wish "
+            "to update, and then click the <b>Download selected</b> button."
+            "<br/>"
+            "Review the downloaded quotes, deselect the quotes you do not wish to "
+            "save, and finally click the <b>Save selected</b> button."
+            "<br/>"
+            "You can always view, edit or delete the quotes in the <b>Currencies and "
+            "Exchange Rates</b> form or in the <b>Securities</b> form respectively."
+            "<br/><br/>"
+            "Quotes are downloaded from Yahoo Finance."
+            "<br/>"
+            "If you encounter issues with the quote update, make sure the Exchange "
+            "Rates and Securities you selected are available on Yahoo Finance."
+            "<br/><br/>"
+            "When querying Security prices from Yahoo Finance API, the Security Symbol "
+            "strings are used. Securities with empty Symbol string are not eligible "
+            "for quote update."
+            "<br/><br/>"
+            "When querying Exchange Rates, two attempts are made. "
+            "<br/>"
+            "First, ticker <tt>AAABBB=X</tt> is attempted (where <tt>AAA</tt> is the "
+            "primary Currency code and <tt>BBB</tt> is the secondary Currency code). "
+            "This ticker format usually works for Exchange Rates between government "
+            "issued currencies."
+            "<br/>"
+            "If the first attempt fails, ticker <tt>AAA-BBB</tt> is attempted. "
+            "This ticker format usually works for cryptocurrencies."
+            "</html>"
+        )
+        show_info_box(self, text, "Update Quotes Help")
