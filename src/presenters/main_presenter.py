@@ -142,6 +142,10 @@ class MainPresenter:
             lambda record_keeper: self._load_record_keeper(record_keeper)
         )
 
+        self._transactions_presenter.event_account_tree_check_all_items.append(
+            lambda: self._account_tree_presenter.set_check_state_all(visible=True)
+        )
+
         self._account_tree_presenter.event_data_changed.append(self._data_changed)
         self._account_tree_presenter.event_check_state_changed.append(
             self._update_checked_accounts

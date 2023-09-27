@@ -339,6 +339,14 @@
     <string>D</string>
    </property>
   </action>
+  <action name="actionCopy_UUIDs">
+   <property name="text">
+    <string>Copy UUIDs</string>
+   </property>
+   <property name="toolTip">
+    <string>Copy UUIDs of selected Transactions to clipboard</string>
+   </property>
+  </action>
  </widget>
  <resources/>
  <connections/>

@@ -52,7 +52,10 @@ from src.views.forms.transaction_filter_form import (
     TransactionFilterForm,
 )
 from src.views.utilities.handle_exception import display_error_message
-from src.views.utilities.message_box_functions import ask_yes_no_cancel_question
+from src.views.utilities.message_box_functions import (
+    ask_yes_no_cancel_question,
+    ask_yes_no_question,
+)
 
 currency_related_types = {
     CashTransactionType.EXPENSE,
@@ -110,6 +113,7 @@ def order_subset(reference_list: Iterable, subset_list: list) -> list:
 
 class TransactionFilterFormPresenter:
     event_filter_changed = Event()
+    event_account_tree_check_all_items = Event()
 
     def __init__(
         self,
@@ -261,6 +265,34 @@ class TransactionFilterFormPresenter:
         self._update_form_from_filter(self._transaction_filter)
         self._form.show_form()
 
+    def show_only_uuids(self, uuids: Collection[UUID]) -> None:
+        if self._transaction_filter != self._default_filter:
+            logging.info(
+                "Transaction Filter is not default, "
+                "asking user whether to overwrite current Filter settings"
+            )
+            answer = ask_yes_no_question(
+                self._parent_view,
+                (
+                    "This will overwrite current Transaction Filter settings. "
+                    "Proceed anyway?"
+                ),
+                "Are you sure?",
+            )
+            if not answer:
+                logging.info("User cancelled Transaction Filter overwrite")
+                return
+
+        logging.debug(
+            "Restoring Transaction Filter to default and showing only UUIDs: "
+            f"{tuple(uuids)}"
+        )
+        self._transaction_filter = self._get_default_filter()
+        self._form.account_filter_mode = AccountFilterMode.ACCOUNT_TREE
+        self.event_account_tree_check_all_items()
+        self._transaction_filter.set_uuid_filter(uuids, FilterMode.KEEP)
+        self.event_filter_changed()
+
     def _update_filter_from_form(self) -> None:
         new_filter = self._get_transaction_filter_from_form()
         if self._transaction_filter != new_filter:
@@ -400,7 +432,8 @@ class TransactionFilterFormPresenter:
                 filter_.cash_amount_filter.maximum.value_rounded
             )
         self._form.uuid_filter_mode = filter_.uuid_filter.mode
-        self._form.uuids = [str(uuid) for uuid in filter_.uuid_filter.uuids]
+        if filter_.uuid_filter.mode != FilterMode.OFF:
+            self._form.uuids = [str(uuid) for uuid in filter_.uuid_filter.uuids]
 
     def _restore_defaults(self) -> None:
         logging.info("Restoring TransactionFilterForm to default")

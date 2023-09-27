@@ -15,7 +15,7 @@ class UUIDFilter(BaseTransactionFilter):
         super().__init__(mode=mode)
         for _uuid in uuids:
             if not isinstance(_uuid, UUID):
-                raise TypeError("Parameter 'uuids' must be a Collection of Accounts.")
+                raise TypeError("Parameter 'uuids' must be a Collection of UUIDs.")
         self._uuids = tuple(uuids)
         self._uuids_set = frozenset(uuids)
 
