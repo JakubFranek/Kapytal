@@ -84,7 +84,7 @@ class AccountTreePresenter:
         self._account_group_dialog_presenter.load_record_keeper(record_keeper)
         self._cash_account_dialog_presenter.load_record_keeper(record_keeper)
         self._security_account_dialog_presenter.load_record_keeper(record_keeper)
-        self._set_check_state_all(visible=True)
+        self.set_check_state_all(visible=True)
         self._set_native_balance_column_visibility()
 
     def refresh_view(self) -> None:
@@ -168,11 +168,11 @@ class AccountTreePresenter:
         self._view.signal_expand_below.connect(self.expand_all_below)
 
         self._view.signal_show_all.connect(
-            lambda: self._set_check_state_all(visible=True)
+            lambda: self.set_check_state_all(visible=True)
         )
         self._view.signal_show_selection_only.connect(self._set_check_state_only)
         self._view.signal_hide_all.connect(
-            lambda: self._set_check_state_all(visible=False)
+            lambda: self.set_check_state_all(visible=False)
         )
         self._view.signal_select_all_cash_accounts_below.connect(
             self._check_all_cash_accounts_below
@@ -273,7 +273,7 @@ class AccountTreePresenter:
             total = "Error!"
         self._view.set_checked_account_balance(total)
 
-    def _set_check_state_all(self, *, visible: bool) -> None:
+    def set_check_state_all(self, *, visible: bool) -> None:
         self._model.set_check_state_all(checked=visible)
         self._view.refresh()
         self._check_state_changed()

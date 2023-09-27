@@ -1,3 +1,4 @@
+from collections.abc import Collection
 from datetime import datetime, time, timedelta
 from decimal import Decimal
 from enum import Enum, auto
@@ -28,6 +29,7 @@ from src.models.user_settings import user_settings
 from src.view_models.checkable_category_tree_model import CategorySelectionMode
 from src.views import icons
 from src.views.base_classes.custom_widget import CustomWidget
+from src.views.constants import monospace_font
 from src.views.ui_files.forms.Ui_transaction_filter_form import Ui_TransactionFilterForm
 from src.views.utilities.helper_functions import convert_datetime_format_to_qt
 
@@ -103,7 +105,7 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
     ) -> None:
         super().__init__(parent=parent)
         self.setupUi(self)
-        self.resize(475, 600)
+        self.resize(550, 600)
 
         self._initialize_window()
         self._initialize_search_boxes()
@@ -122,6 +124,9 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
         self._specific_tags_filter_mode_changed()
         self._payee_filter_active_changed()
         self._currency_filter_mode_changed()
+        self._security_filter_active_changed()
+        self._uuid_filter_mode_changed()
+        self.uuidFilterPlainTextEdit.setFont(monospace_font)
 
     @property
     def types_list_view(self) -> QListView:
@@ -387,6 +392,26 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
     def multiple_categories_filter_mode(self, mode: FilterMode) -> None:
         self.multipleCategoriesFilterModeComboBox.setCurrentText(mode.name)
 
+    @property
+    def uuid_filter_mode(self) -> FilterMode:
+        return TransactionFilterForm._get_filter_mode_from_combobox(
+            self.uuidFilterModeComboBox
+        )
+
+    @uuid_filter_mode.setter
+    def uuid_filter_mode(self, mode: FilterMode) -> None:
+        self.uuidFilterModeComboBox.setCurrentText(mode.name)
+
+    @property
+    def uuids(self) -> tuple[str]:
+        uuids = self.uuidFilterPlainTextEdit.toPlainText().split(",")
+        uuids = [uuid.strip() for uuid in uuids if uuid.strip()]
+        return tuple(uuids)
+
+    @uuids.setter
+    def uuids(self, uuids: Collection[str]) -> None:
+        self.uuidFilterPlainTextEdit.setPlainText(",\n".join(uuids))
+
     def show_form(self) -> None:
         self._update_date_edit_display_format()
         super().show_form()
@@ -489,6 +514,9 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
         self.securityFilterGroupBox.toggled.connect(
             self._security_filter_active_changed
         )
+        self.uuidFilterModeComboBox.currentTextChanged.connect(
+            self._uuid_filter_mode_changed
+        )
 
     def _initialize_window(self) -> None:
         self.setWindowFlag(Qt.WindowType.Window)
@@ -531,6 +559,7 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
         self._initialize_mode_combobox(self.specificTagsFilterModeComboBox)
         self._initialize_mode_combobox(self.specificCategoryFilterModeComboBox)
         self._initialize_mode_combobox(self.currencyFilterModeComboBox)
+        self._initialize_mode_combobox(self.uuidFilterModeComboBox)
 
     def _initialize_category_filter_selection_mode_combobox(self) -> None:
         self.specificCategoryFilterSelectionModeComboBox.addItem("Hierarchical")
@@ -808,6 +837,10 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
         self.actionSelectAllSecurities.setEnabled(active)
         self.actionUnselectAllSecurities.setEnabled(active)
         self.signal_securities_update_number_selected.emit()
+
+    def _uuid_filter_mode_changed(self) -> None:
+        mode = self.uuid_filter_mode
+        self.uuidFilterPlainTextEdit.setEnabled(mode != FilterMode.OFF)
 
     def _initialize_account_filter_actions(self) -> None:
         self.actionSelectAllCashAccountsBelow = QAction(

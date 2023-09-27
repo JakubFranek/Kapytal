@@ -1,6 +1,7 @@
 import logging
 from collections.abc import Collection, Iterable
 from copy import copy
+from uuid import UUID
 
 from PyQt6.QtWidgets import QMessageBox, QWidget
 from src.models.base_classes.account import Account
@@ -51,7 +52,10 @@ from src.views.forms.transaction_filter_form import (
     TransactionFilterForm,
 )
 from src.views.utilities.handle_exception import display_error_message
-from src.views.utilities.message_box_functions import ask_yes_no_cancel_question
+from src.views.utilities.message_box_functions import (
+    ask_yes_no_cancel_question,
+    ask_yes_no_question,
+)
 
 currency_related_types = {
     CashTransactionType.EXPENSE,
@@ -109,6 +113,7 @@ def order_subset(reference_list: Iterable, subset_list: list) -> list:
 
 class TransactionFilterFormPresenter:
     event_filter_changed = Event()
+    event_account_tree_check_all_items = Event()
 
     def __init__(
         self,
@@ -260,6 +265,34 @@ class TransactionFilterFormPresenter:
         self._update_form_from_filter(self._transaction_filter)
         self._form.show_form()
 
+    def show_only_uuids(self, uuids: Collection[UUID]) -> None:
+        if self._transaction_filter != self._default_filter:
+            logging.info(
+                "Transaction Filter is not default, "
+                "asking user whether to overwrite current Filter settings"
+            )
+            answer = ask_yes_no_question(
+                self._parent_view,
+                (
+                    "This will overwrite current Transaction Filter settings. "
+                    "Proceed anyway?"
+                ),
+                "Are you sure?",
+            )
+            if not answer:
+                logging.info("User cancelled Transaction Filter overwrite")
+                return
+
+        logging.debug(
+            "Restoring Transaction Filter to default and showing only UUIDs: "
+            f"{tuple(uuids)}"
+        )
+        self._transaction_filter = self._get_default_filter()
+        self._form.account_filter_mode = AccountFilterMode.ACCOUNT_TREE
+        self.event_account_tree_check_all_items()
+        self._transaction_filter.set_uuid_filter(uuids, FilterMode.KEEP)
+        self.event_filter_changed()
+
     def _update_filter_from_form(self) -> None:
         new_filter = self._get_transaction_filter_from_form()
         if self._transaction_filter != new_filter:
@@ -354,6 +387,10 @@ class TransactionFilterFormPresenter:
                 self._form.cash_amount_filter_mode,
             )
 
+        uuid_strings = self._form.uuids
+        uuids = [UUID(uuid_string) for uuid_string in uuid_strings]
+        filter_.set_uuid_filter(uuids, self._form.uuid_filter_mode)
+
         return filter_
 
     def _update_form_from_filter(self, filter_: TransactionFilter) -> None:
@@ -394,6 +431,9 @@ class TransactionFilterFormPresenter:
             self._form.cash_amount_filter_maximum = (
                 filter_.cash_amount_filter.maximum.value_rounded
             )
+        self._form.uuid_filter_mode = filter_.uuid_filter.mode
+        if filter_.uuid_filter.mode != FilterMode.OFF:
+            self._form.uuids = [str(uuid) for uuid in filter_.uuid_filter.uuids]
 
     def _restore_defaults(self) -> None:
         logging.info("Restoring TransactionFilterForm to default")
@@ -508,6 +548,12 @@ class TransactionFilterFormPresenter:
                     f"min={new_filter.cash_amount_filter.minimum}, "
                     f"max={new_filter.cash_amount_filter.maximum}"
                 )
+        if old_filter.uuid_filter != new_filter.uuid_filter:
+            logging.info(
+                "UUIDFilter changed: "
+                f"mode={new_filter.uuid_filter.mode.name}, "
+                f"uuids={new_filter.uuid_filter.uuids}"
+            )
 
     def _check_filter_form_sanity(self) -> bool:
         """Checks if the form is sane. Returns True if acceptance should proceed."""
@@ -561,6 +607,18 @@ class TransactionFilterFormPresenter:
                 filter_name, related_types
             ):
                 return False
+
+        for uuid_string in self._form.uuids:
+            try:
+                UUID(uuid_string)
+            except Exception:  # noqa: BLE001
+                display_error_message(
+                    "<html>Invalid UUID format specified in UUID Filter:<br/>"
+                    f"<tt>{uuid_string}</tt>",
+                    title="Warning",
+                )
+                return False
+
         return True
 
     def _check_filter_related_types(

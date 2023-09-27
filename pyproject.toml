@@ -32,6 +32,7 @@ extend-ignore = [
   "FIX001",
   "FIX002",
   "FA102",
+  "PERF203",
 ]
 
 [tool.ruff.per-file-ignores]
