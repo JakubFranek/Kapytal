@@ -578,32 +578,36 @@ class TransactionFilterFormPresenter:
                     title="Warning",
                 )
 
-        filter_types: list[tuple[str, bool, set]] = [
+        filter_types: list[tuple[str, FilterMode, set]] = [
             (
                 "Currency Filter",
-                self._form.currency_filter_mode != FilterMode.OFF,
+                self._form.currency_filter_mode,
                 currency_related_types,
             ),
             (
                 "Security Filter",
-                self._form.security_filter_active,
+                self._form.security_filter_mode,
                 security_related_types,
             ),
-            ("Payee Filter", self._form.payee_filter_active, payee_related_types),
+            (
+                "Payee Filter",
+                self._form.payee_filter_mode,
+                payee_related_types,
+            ),
             (
                 "Category Filter",
-                self._form.specific_categories_filter_mode != FilterMode.OFF,
+                self._form.specific_categories_filter_mode,
                 category_related_types,
             ),
             (
                 "Cash Amount Filter",
-                self._form.cash_amount_filter_mode != FilterMode.OFF,
+                self._form.cash_amount_filter_mode,
                 currency_related_types,
             ),
         ]
 
-        for filter_name, filter_active, related_types in filter_types:
-            if filter_active and not self._check_filter_related_types(
+        for filter_name, filter_mode, related_types in filter_types:
+            if filter_mode != FilterMode.OFF and not self._check_filter_related_types(
                 filter_name, related_types
             ):
                 return False

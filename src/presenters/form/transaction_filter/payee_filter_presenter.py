@@ -21,7 +21,7 @@ class PayeeFilterPresenter:
 
     @property
     def payee_filter_mode(self) -> FilterMode:
-        return FilterMode.KEEP if self._form.payee_filter_active else FilterMode.OFF
+        return self._form.payee_filter_mode
 
     @property
     def checked_payees(self) -> tuple[Attribute, ...]:
@@ -38,20 +38,11 @@ class PayeeFilterPresenter:
         self,
         payee_filter: PayeeFilter,
     ) -> None:
-        self._form.payee_filter_active = payee_filter.mode != FilterMode.OFF
+        self._form.payee_filter_mode = payee_filter.mode
         if payee_filter.mode == FilterMode.OFF:
             return
 
-        if payee_filter.mode == FilterMode.KEEP:
-            self._model.load_checked_items(payee_filter.payees)
-        else:
-            self._model.load_checked_items(
-                [
-                    payee
-                    for payee in self._record_keeper.payees
-                    if payee not in payee_filter.payees
-                ]
-            )
+        self._model.load_checked_items(payee_filter.payees)
 
     def _filter(self, pattern: str) -> None:
         if ("[" in pattern and "]" not in pattern) or "[]" in pattern:

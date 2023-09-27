@@ -122,9 +122,9 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
         self._specific_categories_filter_mode_changed()
         self._tagless_filter_mode_changed()
         self._specific_tags_filter_mode_changed()
-        self._payee_filter_active_changed()
+        self._payee_filter_mode_changed()
         self._currency_filter_mode_changed()
-        self._security_filter_active_changed()
+        self._security_filter_mode_changed()
         self._uuid_filter_mode_changed()
         self.uuidFilterPlainTextEdit.setFont(monospace_font)
 
@@ -163,22 +163,6 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
     @property
     def security_list_view(self) -> QListView:
         return self.securityListView
-
-    @property
-    def payee_filter_active(self) -> bool:
-        return self.payeeFilterGroupBox.isChecked()
-
-    @payee_filter_active.setter
-    def payee_filter_active(self, value: bool) -> None:
-        self.payeeFilterGroupBox.setChecked(value)
-
-    @property
-    def security_filter_active(self) -> bool:
-        return self.securityFilterGroupBox.isChecked()
-
-    @security_filter_active.setter
-    def security_filter_active(self, value: bool) -> None:
-        self.securityFilterGroupBox.setChecked(value)
 
     @property
     def date_filter_mode(self) -> FilterMode:
@@ -297,6 +281,26 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
     @split_tags_filter_mode.setter
     def split_tags_filter_mode(self, mode: FilterMode) -> None:
         self.splitTagsFilterModeComboBox.setCurrentText(mode.name)
+
+    @property
+    def payee_filter_mode(self) -> bool:
+        return TransactionFilterForm._get_filter_mode_from_combobox(
+            self.payeesFilterModeComboBox
+        )
+
+    @payee_filter_mode.setter
+    def payee_filter_mode(self, mode: FilterMode) -> None:
+        self.payeesFilterModeComboBox.setCurrentText(mode.name)
+
+    @property
+    def security_filter_mode(self) -> bool:
+        return TransactionFilterForm._get_filter_mode_from_combobox(
+            self.securityFilterModeComboBox
+        )
+
+    @security_filter_mode.setter
+    def security_filter_mode(self, mode: FilterMode) -> None:
+        self.securityFilterModeComboBox.setCurrentText(mode.name)
 
     @property
     def base_currency_code(self) -> str:
@@ -499,7 +503,9 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
             self._specific_tags_filter_mode_changed
         )
 
-        self.payeeFilterGroupBox.toggled.connect(self._payee_filter_active_changed)
+        self.payeesFilterModeComboBox.currentTextChanged.connect(
+            self._payee_filter_mode_changed
+        )
 
         self.cashAmountFilterModeComboBox.currentTextChanged.connect(
             self._update_cash_amount_filter_state
@@ -511,8 +517,8 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
         self.currencyFilterModeComboBox.currentTextChanged.connect(
             self._currency_filter_mode_changed
         )
-        self.securityFilterGroupBox.toggled.connect(
-            self._security_filter_active_changed
+        self.securityFilterModeComboBox.currentTextChanged.connect(
+            self._security_filter_mode_changed
         )
         self.uuidFilterModeComboBox.currentTextChanged.connect(
             self._uuid_filter_mode_changed
@@ -560,6 +566,8 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
         self._initialize_mode_combobox(self.specificCategoryFilterModeComboBox)
         self._initialize_mode_combobox(self.currencyFilterModeComboBox)
         self._initialize_mode_combobox(self.uuidFilterModeComboBox)
+        self._initialize_mode_combobox(self.securityFilterModeComboBox)
+        self._initialize_mode_combobox(self.payeesFilterModeComboBox)
 
     def _initialize_category_filter_selection_mode_combobox(self) -> None:
         self.specificCategoryFilterSelectionModeComboBox.addItem("Hierarchical")
@@ -818,10 +826,12 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
         self.tagsListView.setEnabled(mode != FilterMode.OFF)
         self.signal_tags_update_number_selected.emit()
 
-    def _payee_filter_active_changed(self) -> None:
-        active = self.payee_filter_active
-        self.actionSelectAllPayees.setEnabled(active)
-        self.actionUnselectAllPayees.setEnabled(active)
+    def _payee_filter_mode_changed(self) -> None:
+        mode = self.payee_filter_mode
+        self.actionSelectAllPayees.setEnabled(mode != FilterMode.OFF)
+        self.actionUnselectAllPayees.setEnabled(mode != FilterMode.OFF)
+        self.payeesListView.setEnabled(mode != FilterMode.OFF)
+        self.payeesSearchLineEdit.setEnabled(mode != FilterMode.OFF)
         self.signal_payees_update_number_selected.emit()
 
     def _currency_filter_mode_changed(self) -> None:
@@ -832,10 +842,12 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
         self.currencyListView.setEnabled(mode != FilterMode.OFF)
         self.signal_currencies_update_number_selected.emit()
 
-    def _security_filter_active_changed(self) -> None:
-        active = self.security_filter_active
-        self.actionSelectAllSecurities.setEnabled(active)
-        self.actionUnselectAllSecurities.setEnabled(active)
+    def _security_filter_mode_changed(self) -> None:
+        mode = self.security_filter_mode
+        self.actionSelectAllSecurities.setEnabled(mode != FilterMode.OFF)
+        self.actionUnselectAllSecurities.setEnabled(mode != FilterMode.OFF)
+        self.securityListView.setEnabled(mode != FilterMode.OFF)
+        self.securityFilterSearchLineEdit.setEnabled(mode != FilterMode.OFF)
         self.signal_securities_update_number_selected.emit()
 
     def _uuid_filter_mode_changed(self) -> None:
@@ -929,7 +941,7 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
             self.specificTagsFilterGroupBox.setTitle("Specific Tags Filter")
 
     def set_selected_payees_number(self, selected: int, total: int) -> None:
-        if self.payee_filter_active:
+        if self.payee_filter_mode != FilterMode.OFF:
             self.payeeFilterGroupBox.setTitle(
                 f"Payee Filter ({selected:,} / {total:,})"
             )
@@ -945,7 +957,7 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
             self.currencyFilterGroupBox.setTitle("Currency Filter")
 
     def set_selected_securities_number(self, selected: int, total: int) -> None:
-        if self.security_filter_active:
+        if self.security_filter_mode != FilterMode.OFF:
             self.securityFilterGroupBox.setTitle(
                 f"Security Filter ({selected:,} / {total:,})"
             )
