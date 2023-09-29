@@ -106,7 +106,7 @@ class CashFlowTotalReport(CustomWidget, Ui_CashFlowTotalReport):
             self.savingsRateAmountLabel.setStyleSheet(
                 f"color: {colors.get_green().name()}"
             )
-        elif stats.delta_neutral < 0:
+        elif stats.savings_rate < 0:
             self.savingsRateAmountLabel.setStyleSheet(
                 f"color: {colors.get_red().name()}"
             )
