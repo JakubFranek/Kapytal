@@ -161,7 +161,7 @@ class QuotesUpdateFormPresenter:
                         f"- {item}: {value:,} on "
                         f"{date_.strftime(user_settings.settings.general_date_format)}\n"
                     )
-            except KeyError:  # noqa: PERF203
+            except KeyError:
                 pass
         self._view.set_button_state(download=True, save=False)
         self.event_data_changed()

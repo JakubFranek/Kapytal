@@ -1,9 +1,9 @@
 # REFACTOR: refactor the icons module
 
-from pathlib import Path
 
 from PyQt6.QtCore import QDir, Qt
 from PyQt6.QtGui import QIcon
+from src.utilities import constants
 from src.views import colors
 
 folder_open: QIcon | None = None
@@ -124,15 +124,15 @@ def setup() -> None:  # noqa: PLR0915
 
     QDir.addSearchPath(
         "icons_24",
-        str(Path(QDir.currentPath() + "/resources/icons/icons-24")),
+        str(constants.app_root_path / "resources/icons/icons-24"),
     )
     QDir.addSearchPath(
         "icons_16",
-        str(Path(QDir.currentPath() + "/resources/icons/icons-16")),
+        str(constants.app_root_path / "resources/icons/icons-16"),
     )
     QDir.addSearchPath(
         "icons_custom",
-        str(Path(QDir.currentPath() + "/resources/icons/icons-custom")),
+        str(constants.app_root_path / "resources/icons/icons-custom"),
     )
 
     folder_open = QIcon("icons_16:folder-open.png")

@@ -61,7 +61,7 @@ class MainPresenter:
 
     def _load_demo_file(self) -> None:
         if (
-            self._file_presenter.load_from_file(constants.DEMO_FILE)
+            self._file_presenter.load_from_file(constants.demo_file_path)
             and self._welcome_dialog.isVisible()
         ):
             self._welcome_dialog.close()

@@ -1,6 +1,7 @@
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QIcon, QPixmap
 from PyQt6.QtWidgets import QGridLayout, QLabel, QPushButton, QWidget
+from src.utilities import constants
 from src.views import colors, icons
 from src.views.base_classes.custom_dialog import CustomDialog
 from src.views.ui_files.dialogs.Ui_welcome_dialog import Ui_WelcomeDialog
@@ -20,9 +21,13 @@ class WelcomeDialog(CustomDialog, Ui_WelcomeDialog):
         self.setWindowFlag(Qt.WindowType.MSWindowsFixedSizeDialogHint)
 
         if colors.color_scheme == Qt.ColorScheme.Dark:
-            self.pixmap = QPixmap("resources/images/welcome_dark_mode.png")
+            self.pixmap = QPixmap(
+                str(constants.app_root_path / "resources/images/welcome_dark_mode.png")
+            )
         else:
-            self.pixmap = QPixmap("resources/images/welcome_light_mode.png")
+            self.pixmap = QPixmap(
+                str(constants.app_root_path / "resources/images/welcome_light_mode.png")
+            )
         self.label.setPixmap(self.pixmap)
 
         self._setup_button(
