@@ -82,6 +82,7 @@ COLUMNS_HIDDEN_BY_DEFAULT = {
 
 class TransactionsPresenter:
     event_data_changed = Event()
+    event_account_tree_check_all_items = Event()
 
     def __init__(
         self, view: TransactionTableWidget, record_keeper: RecordKeeper
@@ -351,6 +352,7 @@ class TransactionsPresenter:
         self._view.signal_delete.connect(self._delete_transactions)
         self._view.signal_duplicate.connect(self._duplicate_transaction)
         self._view.signal_edit.connect(self._edit_transactions)
+        self._view.signal_copy_uuids.connect(self._copy_uuids)
 
         self._view.signal_filter_transactions.connect(
             self._show_filter_transactions_form
@@ -384,6 +386,9 @@ class TransactionsPresenter:
 
         self._transaction_filter_form_presenter.event_filter_changed.append(
             self._filter_changed
+        )
+        self._transaction_filter_form_presenter.event_account_tree_check_all_items.append(
+            self.event_account_tree_check_all_items
         )
 
         self._transaction_table_form_presenter.event_data_changed.append(
@@ -461,7 +466,7 @@ class TransactionsPresenter:
         if all(
             isinstance(transaction, RefundTransaction) for transaction in transactions
         ):
-            self._refund_transaction_dialog_presenter.run_edit_dialog()
+            self._refund_transaction_dialog_presenter.run_edit_dialog(transactions)
             return
         if all(
             isinstance(transaction, SecurityTransaction) for transaction in transactions
@@ -550,17 +555,17 @@ class TransactionsPresenter:
                 "CashTransaction nor a RefundTransaction."
             )
 
+        logging.info(
+            f"User requested to find Transactions related to: {transaction.uuid}"
+        )
         if isinstance(transaction, RefundTransaction):
             refunded_transaction = transaction.refunded_transaction
         else:
             refunded_transaction = transaction
 
         refunds = refunded_transaction.refunds
-        uuids = [str(refund.uuid) for refund in refunds] + [
-            str(refunded_transaction.uuid)
-        ]
-        pattern = "|".join(uuids)
-        self._view.search_bar_text = pattern
+        uuids = [refund.uuid for refund in refunds] + [refunded_transaction.uuid]
+        self._transaction_filter_form_presenter.show_only_uuids(uuids)
 
     def _show_filter_transactions_form(self) -> None:
         self._transaction_filter_form_presenter.show_form()
@@ -628,3 +633,8 @@ class TransactionsPresenter:
             self._view.set_column_visibility(column, show=True)
         self._update_table_columns()
         self._view.reset_column_order()
+
+    def _copy_uuids(self) -> None:
+        selected_transactions = self._model.get_selected_items()
+        uuids = [str(transaction.uuid) for transaction in selected_transactions]
+        QApplication.clipboard().setText(",\n".join(uuids))

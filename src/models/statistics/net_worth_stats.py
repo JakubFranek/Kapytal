@@ -10,9 +10,10 @@ from src.models.model_objects.currency_objects import CashAmount, Currency
 from src.models.model_objects.security_objects import SecurityAccount
 
 
-class RootAssetType(Enum):
+class AssetType(Enum):
     CURRENCY = auto()
     SECURITY = auto()
+    ACCOUNT = auto()
 
 
 @dataclass
@@ -20,7 +21,7 @@ class AssetStats:
     name: str
     amount_base: CashAmount
     amount_native: CashAmount | None
-    root_asset_type: RootAssetType
+    asset_type: AssetType
     children: list[Self]
     parent: Self | None
 
@@ -36,7 +37,7 @@ def calculate_asset_stats(
         name="Currencies",
         amount_base=base_currency.zero_amount,
         amount_native=None,
-        root_asset_type=RootAssetType.CURRENCY,
+        asset_type=AssetType.CURRENCY,
         children=[],
         parent=None,
     )
@@ -44,7 +45,7 @@ def calculate_asset_stats(
         name="Securities",
         amount_base=base_currency.zero_amount,
         amount_native=None,
-        root_asset_type=RootAssetType.SECURITY,
+        asset_type=AssetType.SECURITY,
         children=[],
         parent=None,
     )
@@ -58,58 +59,95 @@ def calculate_asset_stats(
 
     for account in cash_accounts:
         currency = account.currency
-        amount = account.get_balance(base_currency)
+
+        amount_native = account.get_balance(currency)
+        if amount_native.value_rounded == 0:
+            continue
+        amount_base = account.get_balance(base_currency)
+        amount_native_account = (
+            amount_native if amount_native.currency != base_currency else None
+        )
+
+        account_stats = AssetStats(
+            name=account.path,
+            amount_base=amount_base,
+            amount_native=amount_native_account,
+            asset_type=AssetType.ACCOUNT,
+            children=[],
+            parent=None,
+        )
+
         if currency.code not in stats:
             stats[currency.code] = AssetStats(
                 name=currency.code,
-                amount_base=amount,
-                amount_native=account.get_balance(account.currency),
-                root_asset_type=RootAssetType.CURRENCY,
+                amount_base=base_currency.zero_amount,
+                amount_native=currency.zero_amount
+                if currency != base_currency
+                else None,
+                asset_type=AssetType.CURRENCY,
                 children=[],
                 parent=stats["Currencies"],
             )
-        else:
-            stats[currency.code].amount_base += amount
-            stats[currency.code].amount_native += account.get_balance(account.currency)
+
+        stats[currency.code].amount_base += amount_base
+        if amount_native.currency != base_currency:
+            stats[currency.code].amount_native += amount_native
+        stats[currency.code].children.append(account_stats)
+        account_stats.parent = stats[currency.code]
 
         if stats[currency.code] not in stats["Currencies"].children:
             stats["Currencies"].children.append(stats[currency.code])
-        stats["Currencies"].amount_base += amount
+        stats["Currencies"].amount_base += amount_base
 
     for account in security_accounts:
         for security in account.securities:
-            amount = account.securities[security] * security.price.convert(
+            amount_native = account.securities[security] * security.price
+            amount_base = account.securities[security] * security.price.convert(
                 base_currency
             )
+            amount_native_account = (
+                amount_native if amount_native.currency != base_currency else None
+            )
+
+            account_stats = AssetStats(
+                name=account.path,
+                amount_base=amount_base,
+                amount_native=amount_native_account,
+                asset_type=AssetType.ACCOUNT,
+                children=[],
+                parent=None,
+            )
+
             if security.type_ not in stats:
                 stats[security.type_] = AssetStats(
                     name=security.type_,
-                    amount_base=amount,
+                    amount_base=base_currency.zero_amount,
                     amount_native=None,
-                    root_asset_type=RootAssetType.SECURITY,
+                    asset_type=AssetType.SECURITY,
                     children=[],
                     parent=stats["Securities"],
                 )
                 stats["Securities"].children.append(stats[security.type_])
-            else:
-                stats[security.type_].amount_base += amount
+            stats[security.type_].amount_base += amount_base
 
             if security.name not in stats:
                 stats[security.name] = AssetStats(
                     name=security.name,
-                    amount_base=amount,
-                    amount_native=account.securities[security] * security.price,
-                    root_asset_type=RootAssetType.SECURITY,
+                    amount_base=base_currency.zero_amount,
+                    amount_native=security.currency.zero_amount
+                    if security.currency != base_currency
+                    else None,
+                    asset_type=AssetType.SECURITY,
                     children=[],
                     parent=stats[security.type_],
                 )
                 stats[security.type_].children.append(stats[security.name])
-            else:
-                stats[security.name].amount_base += amount
-                stats[security.name].amount_native += (
-                    account.securities[security] * security.price
-                )
-            stats["Securities"].amount_base += amount
+            stats[security.name].children.append(account_stats)
+            account_stats.parent = stats[security.name]
+            stats[security.name].amount_base += amount_base
+            if security.currency != base_currency:
+                stats[security.name].amount_native += amount_native
+            stats["Securities"].amount_base += amount_base
 
     return tuple(item for item in stats.values() if item.parent is None)
 

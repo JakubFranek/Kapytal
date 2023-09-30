@@ -124,6 +124,8 @@ class Ui_TransactionTableWidget(object):
         self.actionHide_All_Columns.setObjectName("actionHide_All_Columns")
         self.actionDuplicate = QtGui.QAction(TransactionTableWidget)
         self.actionDuplicate.setObjectName("actionDuplicate")
+        self.actionCopy_UUIDs = QtGui.QAction(TransactionTableWidget)
+        self.actionCopy_UUIDs.setObjectName("actionCopy_UUIDs")
 
         self.retranslateUi(TransactionTableWidget)
         QtCore.QMetaObject.connectSlotsByName(TransactionTableWidget)
@@ -172,3 +174,5 @@ class Ui_TransactionTableWidget(object):
         self.actionHide_All_Columns.setText(_translate("TransactionTableWidget", "Hide All Columns"))
         self.actionDuplicate.setText(_translate("TransactionTableWidget", "Duplicate"))
         self.actionDuplicate.setShortcut(_translate("TransactionTableWidget", "D"))
+        self.actionCopy_UUIDs.setText(_translate("TransactionTableWidget", "Copy UUIDs"))
+        self.actionCopy_UUIDs.setToolTip(_translate("TransactionTableWidget", "Copy UUIDs of selected Transactions to clipboard"))

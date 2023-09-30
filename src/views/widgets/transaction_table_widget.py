@@ -75,6 +75,8 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
     signal_remove_tags = pyqtSignal()
     signal_selection_changed = pyqtSignal()
 
+    signal_copy_uuids = pyqtSignal()
+
     def __init__(self, parent: QWidget | None) -> None:
         super().__init__(parent)
         self.setupUi(self)
@@ -229,6 +231,7 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
         self.table_menu.addAction(self.actionEdit)
         self.table_menu.addAction(self.actionDuplicate)
         self.table_menu.addAction(self.actionDelete)
+        self.table_menu.addAction(self.actionCopy_UUIDs)
         self.table_menu.addSeparator()
         self.table_menu.addAction(self.actionAdd_Tags)
         self.table_menu.addAction(self.actionRemove_Tags)
@@ -247,7 +250,7 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
         self.actionSecurity_Transfer.setIcon(icons.security_transfer)
         self.actionRefund.setIcon(icons.refund)
         self.actionFind_Related.setIcon(icons.magnifier)
-
+        self.actionCopy_UUIDs.setIcon(icons.clipboard_text)
         self.actionEdit.setIcon(icons.edit)
         self.actionDelete.setIcon(icons.remove)
         self.actionDuplicate.setIcon(icons.duplicate)
@@ -306,6 +309,7 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
         self.actionFilter_Transactions.triggered.connect(
             self.signal_filter_transactions.emit
         )
+        self.actionCopy_UUIDs.triggered.connect(self.signal_copy_uuids.emit)
 
         self.searchLineEdit.textChanged.connect(self.signal_search_text_changed.emit)
 

@@ -21,7 +21,7 @@ class SecurityFilterPresenter:
 
     @property
     def security_filter_mode(self) -> FilterMode:
-        return FilterMode.KEEP if self._form.security_filter_active else FilterMode.OFF
+        return self._form.security_filter_mode
 
     @property
     def checked_securities(self) -> tuple[Security, ...]:
@@ -38,18 +38,11 @@ class SecurityFilterPresenter:
         self,
         security_filter: SecurityFilter,
     ) -> None:
+        self._form.security_filter_mode = security_filter.mode
         if security_filter.mode == FilterMode.OFF:
-            self._form.security_filter_active = False
-        elif security_filter.mode == FilterMode.KEEP:
-            self._model.load_checked_items(security_filter.securities)
-        else:
-            self._model.load_checked_items(
-                [
-                    security
-                    for security in self._record_keeper.securities
-                    if security not in security_filter.securities
-                ]
-            )
+            return
+
+        self._model.load_checked_items(security_filter.securities)
 
     def _select_all(self) -> None:
         self._model.load_checked_items(self._record_keeper.securities)

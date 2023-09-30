@@ -1,6 +1,7 @@
 import logging
 from collections.abc import Collection
 from datetime import datetime, time
+from uuid import UUID
 
 from src.models.base_classes.account import Account
 from src.models.base_classes.transaction import Transaction
@@ -38,6 +39,7 @@ from src.models.transaction_filters.specific_tags_filter import SpecificTagsFilt
 from src.models.transaction_filters.split_tags_filter import SplitTagsFilter
 from src.models.transaction_filters.tagless_filter import TaglessFilter
 from src.models.transaction_filters.type_filter import TypeFilter
+from src.models.transaction_filters.uuid_filter import UUIDFilter
 from src.models.user_settings import user_settings
 
 all_transaction_types = (
@@ -73,6 +75,7 @@ def set_maximum_time(datetime_: datetime) -> datetime:
 
 class TransactionFilter(CopyableMixin):
     __slots__ = (
+        "_uuid_filter",
         "_type_filter",
         "_datetime_filter",
         "_description_filter",
@@ -91,6 +94,10 @@ class TransactionFilter(CopyableMixin):
 
     def __init__(self) -> None:
         self.restore_defaults()
+
+    @property
+    def uuid_filter(self) -> UUIDFilter:
+        return self._uuid_filter
 
     @property
     def type_filter(self) -> TypeFilter:
@@ -149,6 +156,7 @@ class TransactionFilter(CopyableMixin):
         self,
     ) -> tuple[BaseTransactionFilter, ...]:
         return (
+            self._uuid_filter,
             self._type_filter,
             self._datetime_filter,
             self._description_filter,
@@ -180,6 +188,7 @@ class TransactionFilter(CopyableMixin):
             return True
         return all(
             (
+                self._uuid_filter.validate_transaction(transaction),
                 self._type_filter.validate_transaction(transaction),
                 self._datetime_filter.validate_transaction(transaction),
                 self._description_filter.validate_transaction(transaction),
@@ -203,6 +212,7 @@ class TransactionFilter(CopyableMixin):
             return tuple(transactions)
 
         _transactions = tuple(transactions)
+        _transactions = self._uuid_filter.filter_transactions(_transactions)
         _transactions = self._type_filter.filter_transactions(_transactions)
         _transactions = self._datetime_filter.filter_transactions(_transactions)
         _transactions = self._description_filter.filter_transactions(_transactions)
@@ -224,6 +234,7 @@ class TransactionFilter(CopyableMixin):
         return _transactions
 
     def restore_defaults(self) -> None:
+        self._uuid_filter = UUIDFilter(uuids=(), mode=FilterMode.OFF)
         self._type_filter = TypeFilter(
             types=all_transaction_types, mode=FilterMode.KEEP
         )
@@ -248,6 +259,10 @@ class TransactionFilter(CopyableMixin):
         self._security_filter = SecurityFilter(securities=(), mode=FilterMode.OFF)
         self._cash_amount_filter = CashAmountFilter(None, None, FilterMode.OFF)
 
+        self._calculate_all_pass_attribute()
+
+    def set_uuid_filter(self, uuids: Collection[UUID], mode: FilterMode) -> None:
+        self._uuid_filter = UUIDFilter(uuids, mode)
         self._calculate_all_pass_attribute()
 
     def set_type_filter(

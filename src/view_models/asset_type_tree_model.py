@@ -5,7 +5,7 @@ from decimal import Decimal
 from PyQt6.QtCore import QAbstractItemModel, QModelIndex, QSortFilterProxyModel, Qt
 from PyQt6.QtGui import QBrush, QIcon
 from PyQt6.QtWidgets import QTreeView
-from src.models.statistics.net_worth_stats import AssetStats, RootAssetType
+from src.models.statistics.net_worth_stats import AssetStats, AssetType
 from src.views import colors, icons
 from src.views.constants import AssetTypeTreeColumn
 
@@ -68,7 +68,11 @@ class AssetTypeTreeModel(QAbstractItemModel):
         parent = child.parent
         if parent is None:
             return QModelIndex()
-        row = self._tree_items.index(parent)
+        grandparent = parent.parent
+        if grandparent is None:
+            row = self._tree_items.index(parent)
+        else:
+            row = grandparent.children.index(parent)
         return QAbstractItemModel.createIndex(self, row, 0, parent)
 
     def headerData(
@@ -132,10 +136,14 @@ class AssetTypeTreeModel(QAbstractItemModel):
     def _get_decoration_role_data(self, column: int, item: AssetStats) -> QIcon | None:
         if column != AssetTypeTreeColumn.NAME:
             return None
-        if item.root_asset_type == RootAssetType.CURRENCY:
+        if item.asset_type == AssetType.CURRENCY:
             return QIcon(icons.currency)
-        if item.root_asset_type == RootAssetType.SECURITY:
+        if item.asset_type == AssetType.SECURITY:
             return QIcon(icons.security)
+        if item.asset_type == AssetType.ACCOUNT:
+            if item.parent.asset_type == AssetType.SECURITY:
+                return QIcon(icons.security_account)
+            return QIcon(icons.cash_account)
         return None
 
     def _get_foreground_role_data(self, column: int, item: AssetStats) -> QBrush | None:
@@ -144,13 +152,11 @@ class AssetTypeTreeModel(QAbstractItemModel):
                 return None
             if item.amount_native.is_negative():
                 return colors.get_red_brush()
-            if item.amount_native.value_normalized == 0:
-                return colors.get_gray_brush()
-        if column == AssetTypeTreeColumn.BALANCE_BASE:
-            if item.amount_base.is_negative():
-                return colors.get_red_brush()
-            if item.amount_base.value_normalized == 0:
-                return colors.get_gray_brush()
+        if (
+            column == AssetTypeTreeColumn.BALANCE_BASE
+            and item.amount_base.is_negative()
+        ):
+            return colors.get_red_brush()
         return None
 
     def pre_reset_model(self) -> None:

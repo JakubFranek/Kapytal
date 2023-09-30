@@ -1,9 +1,9 @@
 # REFACTOR: refactor the icons module
 
-from pathlib import Path
 
 from PyQt6.QtCore import QDir, Qt
 from PyQt6.QtGui import QIcon
+from src.utilities import constants
 from src.views import colors
 
 folder_open: QIcon | None = None
@@ -89,6 +89,7 @@ table: QIcon | None = None
 percent: QIcon | None = None
 swap: QIcon | None = None
 refresh: QIcon | None = None
+clipboard_text: QIcon | None = None
 
 
 def setup() -> None:  # noqa: PLR0915
@@ -119,20 +120,19 @@ def setup() -> None:  # noqa: PLR0915
     global bar_chart, pie_chart, calendar  # noqa: PLW0603
     global document_smiley, document_clock, document_plus  # noqa: PLW0603
     global book_question, table, percent  # noqa: PLW0603
-    global swap  # noqa: PLW0603
-    global refresh  # noqa: PLW0603
+    global swap, refresh, clipboard_text  # noqa: PLW0603
 
     QDir.addSearchPath(
         "icons_24",
-        str(Path(QDir.currentPath() + "/resources/icons/icons-24")),
+        str(constants.app_root_path / "resources/icons/icons-24"),
     )
     QDir.addSearchPath(
         "icons_16",
-        str(Path(QDir.currentPath() + "/resources/icons/icons-16")),
+        str(constants.app_root_path / "resources/icons/icons-16"),
     )
     QDir.addSearchPath(
         "icons_custom",
-        str(Path(QDir.currentPath() + "/resources/icons/icons-custom")),
+        str(constants.app_root_path / "resources/icons/icons-custom"),
     )
 
     folder_open = QIcon("icons_16:folder-open.png")
@@ -222,3 +222,4 @@ def setup() -> None:  # noqa: PLR0915
     )
     swap = QIcon("icons_16:arrow-switch.png")
     refresh = QIcon("icons_16:arrow-circle-double.png")
+    clipboard_text = QIcon("icons_16:clipboard-text.png")

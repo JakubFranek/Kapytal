@@ -61,7 +61,7 @@ class MainPresenter:
 
     def _load_demo_file(self) -> None:
         if (
-            self._file_presenter.load_from_file(constants.DEMO_FILE)
+            self._file_presenter.load_from_file(constants.demo_file_path)
             and self._welcome_dialog.isVisible()
         ):
             self._welcome_dialog.close()
@@ -140,6 +140,10 @@ class MainPresenter:
     def _setup_event_observers(self) -> None:
         self._file_presenter.event_load_record_keeper.append(
             lambda record_keeper: self._load_record_keeper(record_keeper)
+        )
+
+        self._transactions_presenter.event_account_tree_check_all_items.append(
+            lambda: self._account_tree_presenter.set_check_state_all(visible=True)
         )
 
         self._account_tree_presenter.event_data_changed.append(self._data_changed)
