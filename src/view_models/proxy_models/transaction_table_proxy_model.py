@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from PyQt6.QtCore import QModelIndex, QObject, QSortFilterProxyModel
+from PyQt6.QtCore import QModelIndex, QModelRoleDataSpan, QObject, QSortFilterProxyModel
 from src.models.transaction_filters.transaction_filter import TransactionFilter
 
 if TYPE_CHECKING:
@@ -28,3 +28,8 @@ class TransactionTableProxyModel(QSortFilterProxyModel):
         transaction = source_model._transactions[source_row]  # noqa: SLF001
 
         return self._transaction_filter.validate_transaction(transaction)
+
+    def multiData(
+        self, index: QModelIndex, roleDataSpan: QModelRoleDataSpan  # noqa: N803
+    ) -> None:
+        self.sourceModel().multiData(self.mapToSource(index), roleDataSpan)

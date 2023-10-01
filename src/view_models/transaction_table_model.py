@@ -3,7 +3,14 @@ from collections.abc import Collection
 from decimal import Decimal
 from uuid import UUID
 
-from PyQt6.QtCore import QAbstractTableModel, QModelIndex, QSortFilterProxyModel, Qt
+from PyQt6.QtCore import (
+    QAbstractTableModel,
+    QModelIndex,
+    QModelRoleData,
+    QModelRoleDataSpan,
+    QSortFilterProxyModel,
+    Qt,
+)
 from PyQt6.QtGui import QBrush, QIcon
 from PyQt6.QtWidgets import QTableView
 from src.models.base_classes.account import Account
@@ -122,36 +129,49 @@ class TransactionTableModel(QAbstractTableModel):
             self._column_count = len(TRANSACTION_TABLE_COLUMN_HEADERS)
         return self._column_count
 
-    def data(  # noqa: PLR0911
+    def multiData(
+        self, index: QModelIndex, roleDataSpan: QModelRoleDataSpan  # noqa: N803
+    ) -> None:
+        if not index.isValid():
+            return
+
+        transaction = self._transactions[index.row()]
+        column = index.column()
+        for role_data in roleDataSpan:
+            role = role_data.role()
+            if role == Qt.ItemDataRole.DisplayRole:
+                role_data.setData(self._get_display_data(transaction, column))
+            elif role == Qt.ItemDataRole.UserRole:
+                role_data.setData(self._get_sort_data(transaction, column))
+            elif role == Qt.ItemDataRole.DecorationRole:
+                role_data.setData(self._get_decoration_data(transaction, column))
+            elif role == Qt.ItemDataRole.TextAlignmentRole:
+                role_data.setData(
+                    TransactionTableModel._get_text_alignment_data(column)
+                )
+            elif role == Qt.ItemDataRole.ForegroundRole:
+                role_data.setData(self._get_foreground_data(transaction, column))
+            elif (
+                role == Qt.ItemDataRole.FontRole
+                and column == TransactionTableColumn.UUID
+            ):
+                role_data.setData(monospace_font)
+            else:
+                role_data.clearData()
+
+    def data(
         self, index: QModelIndex, role: Qt.ItemDataRole = ...
     ) -> str | float | QIcon | Qt.AlignmentFlag | QBrush | None:
         if not index.isValid():
             return None
 
-        if role == Qt.ItemDataRole.DisplayRole:
-            return self._get_display_role_data(
-                self._transactions[index.row()], index.column()
-            )
-        if role == Qt.ItemDataRole.UserRole:
-            return self._get_user_role_data(
-                self._transactions[index.row()], index.column()
-            )
-        if role == Qt.ItemDataRole.DecorationRole:
-            return self._get_decoration_role_data(
-                self._transactions[index.row()], index.column()
-            )
-        if role == Qt.ItemDataRole.TextAlignmentRole:
-            return TransactionTableModel._get_text_alignment_data(index.column())
-        if role == Qt.ItemDataRole.ForegroundRole:
-            return self._get_foreground_data(
-                self._transactions[index.row()], index.column()
-            )
-        if (
-            role == Qt.ItemDataRole.FontRole
-            and index.column() == TransactionTableColumn.UUID
-        ):
-            return monospace_font
-        return None
+        if role == Qt.ItemDataRole.UserRole:  # fast sort
+            return self._get_sort_data(self._transactions[index.row()], index.column())
+
+        role_data = QModelRoleData(role)
+        role_data_span = QModelRoleDataSpan(role_data)
+        self.multiData(index, role_data_span)
+        return role_data.data()
 
     def headerData(
         self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole = ...
@@ -228,7 +248,7 @@ class TransactionTableModel(QAbstractTableModel):
         row = self._transactions.index(item)
         return QAbstractTableModel.createIndex(self, row, 0)
 
-    def _get_display_role_data(  # noqa: PLR0911, PLR0912, C901
+    def _get_display_data(  # noqa: PLR0911, PLR0912, C901
         self, transaction: Transaction, column: int
     ) -> str | None:
         if column == TransactionTableColumn.DATETIME:
@@ -297,7 +317,7 @@ class TransactionTableModel(QAbstractTableModel):
             return transaction.datetime_created.strftime("%Y-%m-%d %H:%M:%S")
         return None
 
-    def _get_decoration_role_data(  # noqa: PLR0911, PLR0912, C901
+    def _get_decoration_data(  # noqa: PLR0911, PLR0912, C901
         self, transaction: Transaction, column: int
     ) -> QIcon | None:
         if column == TransactionTableColumn.TYPE:
@@ -359,7 +379,7 @@ class TransactionTableModel(QAbstractTableModel):
             return icons.split_attribute
         return None
 
-    def _get_user_role_data(  # noqa: PLR0911
+    def _get_sort_data(  # noqa: PLR0911
         self, transaction: Transaction, column: int
     ) -> float | str:
         if column == TransactionTableColumn.DATETIME:
@@ -389,9 +409,7 @@ class TransactionTableModel(QAbstractTableModel):
         if column == TransactionTableColumn.BALANCE:
             balance = self._get_account_balance(transaction)
             return float(balance.value_normalized)
-        return unicodedata.normalize(
-            "NFD", self._get_display_role_data(transaction, column)
-        )
+        return unicodedata.normalize("NFD", self._get_display_data(transaction, column))
 
     @staticmethod
     def _get_text_alignment_data(column: int) -> Qt.AlignmentFlag | None:

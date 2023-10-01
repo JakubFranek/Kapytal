@@ -4,7 +4,7 @@ from collections.abc import Collection
 from typing import TYPE_CHECKING
 from uuid import UUID
 
-from PyQt6.QtCore import QSortFilterProxyModel, Qt
+from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QApplication
 from src.models.base_classes.account import Account
 from src.models.base_classes.transaction import Transaction
@@ -50,6 +50,7 @@ from src.presenters.form.transaction_table_form_presenter import (
 )
 from src.presenters.utilities.event import Event
 from src.presenters.utilities.handle_exception import handle_exception
+from src.view_models.proxy_models.multi_data_proxy_model import MultiDataProxyModel
 from src.view_models.proxy_models.transaction_table_proxy_model import (
     TransactionTableProxyModel,
 )
@@ -252,7 +253,7 @@ class TransactionsPresenter:
         self._proxy_transaction_filter = TransactionTableProxyModel(
             self._view, TransactionFilter()
         )
-        self._proxy_regex_sort_filter = QSortFilterProxyModel(self._view)
+        self._proxy_regex_sort_filter = MultiDataProxyModel(self._view)
 
         self._model = TransactionTableModel(
             self._view.tableView,
