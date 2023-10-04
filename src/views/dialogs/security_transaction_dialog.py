@@ -3,6 +3,7 @@ from collections.abc import Collection
 from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum, auto
+from typing import TypeVar
 
 from PyQt6.QtCore import QSignalBlocker, pyqtSignal
 from PyQt6.QtWidgets import (
@@ -84,6 +85,7 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
         self._initialize_description_plain_text_edit(descriptions)
         self._initialize_signals()
         self._initialize_placeholders()
+        self._initialize_events()
         self._set_tab_order()
 
         display_format = (
@@ -270,6 +272,12 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
             self.priceDoubleSpinBox.setSpecialValueText(self.KEEP_CURRENT_VALUES)
             self.totalDoubleSpinBox.setSpecialValueText(self.KEEP_CURRENT_VALUES)
             self.tags_widget.set_placeholder_text("Leave empty to keep current values")
+
+    def _initialize_events(self) -> None:
+        self.securityAccountComboBox.currentTextChanged.connect(
+            self._update_shares_spinbox_suffix
+        )
+        self.buyRadioButton.toggled.connect(self._update_shares_spinbox_suffix)
 
     def _initialize_security_combobox(self, securities: Collection[Security]) -> None:
         if self._edit_mode in EditMode.get_multiple_edit_values():
@@ -470,6 +478,27 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
         decimals = -exponent if exponent < 0 else 0
         self.sharesDoubleSpinBox.setDecimals(decimals)
         self.sharesDoubleSpinBox.setSingleStep(10**exponent)
+        self._update_shares_spinbox_suffix()
+
+    def _update_shares_spinbox_suffix(self) -> None:
+        if self.type_ == SecurityTransactionType.BUY:
+            self.sharesDoubleSpinBox.setSuffix("")
+            return
+
+        try:
+            security_account = self._find_item(
+                self.security_account_path, "path", self._security_accounts
+            )
+            security = self._find_item(self.security_name, "name", self._securities)
+
+            shares = security_account.securities[security]
+        except (KeyError, ValueError):
+            self.sharesDoubleSpinBox.setSuffix("")
+            return
+
+        self.sharesDoubleSpinBox.setSuffix(
+            f" / {shares.quantize(security.shares_unit)}"
+        )
 
     def _set_tab_order(self) -> None:
         self.setTabOrder(self.buyRadioButton, self.sellRadioButton)
@@ -482,3 +511,11 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
         self.setTabOrder(self.sharesDoubleSpinBox, self.priceDoubleSpinBox)
         self.setTabOrder(self.priceDoubleSpinBox, self.totalDoubleSpinBox)
         self.setTabOrder(self.totalDoubleSpinBox, self.tags_widget)
+
+    T = TypeVar("T")
+
+    def _find_item(self, item: str, attribute: str, items: Collection[T]) -> T:
+        for i in items:
+            if getattr(i, attribute) == item:
+                return i
+        raise ValueError(f"Item '{item}' not found.")

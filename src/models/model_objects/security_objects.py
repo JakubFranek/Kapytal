@@ -170,6 +170,7 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
             (date_, price.value_normalized) for date_, price in self.price_history_pairs
         )
 
+    # TODO: replace with decimals?
     @property
     def shares_unit(self) -> Decimal:
         return self._shares_unit
