@@ -17,7 +17,7 @@ class SmartComboBox(QComboBox):
         self.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
         self.setCompleter(None)
 
-        self.editTextChanged.connect(self._handle_text_changed)
+        self.lineEdit().textEdited.connect(self._handle_text_changed)
 
     def load_items(
         self,
