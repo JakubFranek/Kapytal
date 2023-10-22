@@ -37,20 +37,20 @@ In Czech, capybara is spelled "kapybara". My friend mentioned the similarity wit
 Mortgage is a loan, but its also an investment, as you are buying an asset that can be reasonably expected to grow in value over time. To capture this, I propose the following:
 
 1. One-time preparation
-    1. create a [Security](./glossary.md#security-icon) for your real estate
+    1. create a [Security](./glossary.md#security-) for your real estate
         - set the number of share decimals to zero (there will only ever be 1 share)
         - set the price of your real estate Security to whatever price you bought it for
     1. create a Security for your mortgage
         - set a high number of share decimals, as you want a fine grained resolution of shares here
         - set the price of your mortgage Security to the amount of money you borrowed
-    1. create a [Security Account](./glossary.md#security-account-icon) for your real estate and mortgage [Securities](./glossary.md#security-icon)
-    1. create a [Sell](./glossary.md#sell-icon) [Transaction](./glossary.md#transaction) to get your loaned amount
+    1. create a [Security Account](./glossary.md#security-account-) for your real estate and mortgage [Securities](./glossary.md#security-)
+    1. create a [Sell](./glossary.md#sell-) [Transaction](./glossary.md#transaction) to get your loaned amount
         - set the newly created real estate Security Account
         - set the [Cash Account](./glossary.md#transaction) you want to receive the borrowed money
         - sell exactly 1 share of your mortgage Security
         - price per share is the amount of money you borrowed
         - after this Sell Transaction, your real estate Security Account will contain exactly -1 (minus one!) share of your Mortgage, while your Cash Account will contain the money you borrowed
-    1. create a [Buy](./glossary.md#buy-icon) Transaction to buy your real estate
+    1. create a [Buy](./glossary.md#buy-) Transaction to buy your real estate
         - set the newly created real estate Security Account again
         - set the Cash Account you want to buy the real estate from
         - buy exactly 1 share of your real estate Security
@@ -60,14 +60,14 @@ Mortgage is a loan, but its also an investment, as you are buying an asset that 
     1. find out what part of your monthly annuity/payment is loan interest and what part is the capital repayment
         - this changes every month!
         - you can use online annuity calculators if you do not have the precise amounts from your lender yet
-    1. create the payment of the loan interest as an [Expense](./glossary.md#expense-icon)
-        - the [Category](./glossary.md#category-icon) could be something like "Housing/Mortgage Interest"
-    1. create the capital repayment as a [Buy](./glossary.md#buy-icon) from your bank account to a fictituous real estate Security Account
+    1. create the payment of the loan interest as an [Expense](./glossary.md#expense-)
+        - the [Category](./glossary.md#category-) could be something like "Housing/Mortgage Interest"
+    1. create the capital repayment as a [Buy](./glossary.md#buy-) from your bank account to a fictituous real estate Security Account
         - price per share is the amount of money you borrowed
         - total is the current month's capital repayment amount
         - the number of mortgage shares is capital repayment amount divided by the borrowed amount (should be a positive number smaller than 1)
 
-The advantage of this approach is that when your real estate appreciates in value, your net worth grows by the same exact amount. It allows you to easily handle refinancing your mortgage, as the only thing that would change after refinancing is the monthly interest and capital repayment amounts, as well as early mortgage payoff, as you can easily model that via special [Buy](./glossary.md#buy-icon) Transaction which would pay a significant part of your mortgage off.
+The advantage of this approach is that when your real estate appreciates in value, your net worth grows by the same exact amount. It allows you to easily handle refinancing your mortgage, as the only thing that would change after refinancing is the monthly interest and capital repayment amounts, as well as early mortgage payoff, as you can easily model that via special [Buy](./glossary.md#buy-) Transaction which would pay a significant part of your mortgage off.
 
 ## How to reorder Transactions with the same date?
 
