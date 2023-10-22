@@ -30,7 +30,7 @@ Account Tree can be hidden by toggling the ![Icon](../resources/icons/icons-16/f
 
 ## Backups
 
-Kapytal is creating backups of user JSON data file every time the file is opened or saved. Backups are created in all the directories listed within the Backups tab in [Settings Form](#settings-form). Once the total size of all backups within a directory exceeds the size limit specified within the Settings Form Backups tab, Kapytal starts deleting old backups until the limit is satisfied again.
+Kapytal is creating backups of user JSON data file every time the file is opened or saved. Backups are created in all the directories listed within the Backups tab in [Settings Form](#settings-form-). Once the total size of all backups within a directory exceeds the size limit specified within the Settings Form Backups tab, Kapytal starts deleting old backups until the limit is satisfied again.
 
 ## Base Currency
 
@@ -137,7 +137,7 @@ To represent Currency exchange, use [Cash Transfers](#cash-transfer-), as sendin
 
 All [Transactions](#transaction) contain date attribute, as well as [Security](#security-) price and [Exchange Rate](#exchange-rate-) quotes.
 
-The user can set the format of date attributes in [Settings Form](#settings-form), separately for Transactions and for other purposes. This is because under the hood, Transaction dates also contain hours, minutes and seconds, which are hidden by default. Setting a date format which contains hours, minutes or seconds can show them within the Transaction Table. This can be useful when reordering Transactions using the hours and minutes, as Transaction creation/edit dialogs date widgets contain hours and minutes. Seconds are not editable, as they are reserved for Kapytal's internal purposes.
+The user can set the format of date attributes in [Settings Form](#settings-form-), separately for Transactions and for other purposes. This is because under the hood, Transaction dates also contain hours, minutes and seconds, which are hidden by default. Setting a date format which contains hours, minutes or seconds can show them within the Transaction Table. This can be useful when reordering Transactions using the hours and minutes, as Transaction creation/edit dialogs date widgets contain hours and minutes. Seconds are not editable, as they are reserved for Kapytal's internal purposes.
 
 ## Demo File
 
@@ -172,7 +172,7 @@ These are some of the Forms in Kapytal:
 - [Payee](#payee-) Form
 - [Update Quotes Form](#update-quotes-form-)
 - [Securities Form](#securities-form)
-- [Settings Form](#settings-form)
+- [Settings Form](#settings-form-)
 - [Tags](#tag-) Form
 - [Transaction Filter](#transaction-filters-) Form
 
@@ -184,7 +184,7 @@ Income is a sub-type of [Cash Transaction](#cash-transaction), which represents 
 
 Most operations the user makes within Kapytal are logged in a log file. These files are used for debugging purposes and can be found within `<installation_directory>/Kapytal/_internal/logs/`.
 
-The user can set the maximum logs directory size in [Settings Form](#settings-form). Once exceeded, Kapytal will start deleting logs upon startup, starting from the oldest logs, until the limit is satisfied.
+The user can set the maximum logs directory size in [Settings Form](#settings-form-). Once exceeded, Kapytal will start deleting logs upon startup, starting from the oldest logs, until the limit is satisfied.
 
 ## Native Currency/Amount
 
@@ -310,7 +310,7 @@ Sell is a sub-type of [Security Transaction](#security-transaction) that represe
 
 Note Kapytal allows negative shares of a Security within Security Account, i.e. it is possible to use Sell to sell shares of Security from a Security Account that does not contain any shares of that Security at all. This can be leveraged for [modelling mortgages](./faq.md#how-to-handle-a-mortgage-in-kapytal).
 
-## Settings Form
+## Settings Form ![Icon](../resources/icons/icons-16/gear.png)
 
 Settings Form is used to change internal Kapytal settings, such as the date formats, backup file sizes and paths, and log sizes.
 

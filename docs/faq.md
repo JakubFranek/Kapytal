@@ -2,7 +2,7 @@
 
 ## What's the backstory behind Kapytal?
 
-I started tracking my financial life in 2018 as I started investing. It seemed natural to extend the tracking from investments to day-to-day expenses as well (I think Quantified Self aka "self-knowledge through numbers" is quite cool), and I looked for a suitable tool for this purpose. I eventually settled on using MoneyWiz 3, which fulfilled most of my criteria. However, the program was retired in 2021 or so and it slowly started to break down. I was not able to find a suitable alternative and in October 2022 I eventually decided to make one myself. I have been using Kapytal to track my financial life since July 2023.
+I started tracking my financial life in 2018 as I started investing. It seemed natural to extend the tracking from investments to day-to-day expenses as well (I think Quantified Self aka "self-knowledge through numbers" is quite cool), and I looked for a suitable tool for this purpose. I eventually settled on using MoneyWiz 3, which fulfilled most of my criteria. However, the program was retired in 2021 or so and it slowly started to break down. I was not able to find a suitable alternative and in October 2022 I eventually decided to make one myself. My goal was to create a tool which could also handle tracking finances of multiple people, as well as their common finances. Me and my wife have been using Kapytal to track our financial life since July 2023.
 
 ## What's the meaning of the name?
 
@@ -69,6 +69,8 @@ Mortgage is a loan, but its also an investment, as you are buying an asset that 
 
 The advantage of this approach is that when your real estate appreciates in value, your net worth grows by the same exact amount. It allows you to easily handle refinancing your mortgage, as the only thing that would change after refinancing is the monthly interest and capital repayment amounts, as well as early mortgage payoff, as you can easily model that via special [Buy](./glossary.md#buy-) Transaction which would pay a significant part of your mortgage off.
 
+A data file with an example of the setup described above is available: [mortgage_demo.json](../saved_data/mortgage_demo.json)
+
 ## How to reorder Transactions with the same date?
 
-Edit the hours or minutes of the [Transactions](./glossary.md#transaction). You can show hours, minutes or even seconds of Transaction dates within [Transaction Table](./glossary.md#transaction) by editing the Transaction Table date format within [Settings Form](./glossary.md#settings-form) accordingly.
+Edit the hours or minutes of the [Transactions](./glossary.md#transaction). You can show hours, minutes or even seconds of Transaction dates within [Transaction Table](./glossary.md#transaction) by editing the Transaction Table date format within [Settings Form](./glossary.md#settings-form-) accordingly.
