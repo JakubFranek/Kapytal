@@ -27,6 +27,7 @@ class NameMixin:
         self._allow_slash = allow_slash
         # colons always forbidden, as they are used for Attribute:Amount pairs
         # in JSON de/serialization
+        # TODO: allow colons and solve this in a more elegant way?
         self._allow_colon = False
 
         self.name = name
