@@ -2,13 +2,14 @@ import logging
 from collections.abc import Collection
 
 from PyQt6.QtWidgets import QWidget
-from src.models.model_objects.attributes import Attribute, Category
+from src.models.model_objects.attributes import Attribute, AttributeType, Category
 from src.views.utilities.message_box_functions import ask_yes_no_question
 
 
 def check_for_nonexistent_attributes(
     attribute_names: Collection[str],
     attributes: Collection[Attribute],
+    attribute_type: AttributeType,
     parent: QWidget,
 ) -> bool:
     """Check whether any name in 'attribute_names' is not found in 'attributes'.
@@ -24,9 +25,9 @@ def check_for_nonexistent_attributes(
     ]
 
     if nonexistent_names:
-        attr_type = next(iter(attributes)).type_.name.title()
+        attribute_type_name = attribute_type.name.title()
         logging.info(
-            f"Nonexistent {attr_type} names entered, asking user whether to proceed"
+            f"Nonexistent {attribute_type_name} names entered, asking user whether to proceed"
         )
 
         existing_names_dict: dict[str, set[str]] = {}
@@ -49,14 +50,18 @@ def check_for_nonexistent_attributes(
                 if not ask_yes_no_question(
                     parent,
                     (
-                        f"<html>{attr_type} <b><i>{name}</i></b> does not exist, but "
-                        f"the following {attr_type}s are similar:<br/>"
+                        f"<html>{attribute_type_name} <b><i>{name}</i></b> does not "
+                        f"exist, but the following {attribute_type_name}s are similar:"
+                        "<br/>"
                         f"{bullet_points}<br/>"
-                        f"Create {attr_type} <b><i>{name}</i></b> anyway?<br/></html>"
+                        f"Create {attribute_type_name} <b><i>{name}</i></b> anyway?"
+                        "<br/></html>"
                     ),
-                    title=f"Create new {attr_type}?",
+                    title=f"Create new {attribute_type_name}?",
                 ):
-                    logging.debug(f"User cancelled {attr_type} creation for '{name}'")
+                    logging.debug(
+                        f"User cancelled {attribute_type_name} creation for '{name}'"
+                    )
                     return False
                 _nonexistent_names.remove(name)
 
@@ -67,11 +72,11 @@ def check_for_nonexistent_attributes(
         return ask_yes_no_question(
             parent,
             (
-                f"<html>The following {attr_type}s do not exist:<br/>"
+                f"<html>The following {attribute_type_name}s do not exist:<br/>"
                 f"<b><i>{nonexistent_attributes_str}</i></b><br/><br/>"
-                f"Create new {attr_type}s and proceed?</html>"
+                f"Create new {attribute_type_name}s and proceed?</html>"
             ),
-            title=f"Create new {attr_type}s?",
+            title=f"Create new {attribute_type_name}s?",
         )
     return True
 

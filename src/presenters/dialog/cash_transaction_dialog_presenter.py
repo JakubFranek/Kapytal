@@ -3,6 +3,7 @@ from collections.abc import Collection, Sequence
 from datetime import datetime
 from typing import TYPE_CHECKING
 
+from src.models.model_objects.attributes import AttributeType
 from src.models.model_objects.cash_objects import (
     CashAccount,
     CashTransaction,
@@ -240,13 +241,13 @@ class CashTransactionDialogPresenter(TransactionDialogPresenter):
 
         if (
             not check_for_nonexistent_attributes(
-                [payee], self._record_keeper.payees, self._dialog
+                [payee], self._record_keeper.payees, AttributeType.PAYEE, self._dialog
             )
             or not check_for_nonexistent_categories(
                 categories, self._record_keeper.categories, self._dialog
             )
             or not check_for_nonexistent_attributes(
-                tag_names, self._record_keeper.tags, self._dialog
+                tag_names, self._record_keeper.tags, AttributeType.TAG, self._dialog
             )
         ):
             logging.debug("Dialog aborted")
@@ -329,13 +330,13 @@ class CashTransactionDialogPresenter(TransactionDialogPresenter):
                 display_error_message("Empty Tag names are invalid.", title="Warning")
                 return
             if not check_for_nonexistent_attributes(
-                tag_names, self._record_keeper.tags, self._dialog
+                tag_names, self._record_keeper.tags, AttributeType.TAG, self._dialog
             ):
                 logging.debug("Dialog aborted")
                 return
 
         if not check_for_nonexistent_attributes(
-            [payee], self._record_keeper.payees, self._dialog
+            [payee], self._record_keeper.payees, AttributeType.PAYEE, self._dialog
         ):
             logging.debug("Dialog aborted")
             return
