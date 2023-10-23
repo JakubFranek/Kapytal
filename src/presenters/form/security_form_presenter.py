@@ -177,7 +177,7 @@ class SecurityFormPresenter:
                 symbol=symbol,
                 type_=type_,
                 currency_code=currency_code,
-                unit=unit,
+                shares_decimals=unit,
             )
         except Exception as exception:  # noqa: BLE001
             handle_exception(exception)

@@ -257,7 +257,7 @@ class RecordKeeper:
         symbol: str,
         type_: str,
         currency_code: str,
-        unit: Decimal | int | str,
+        shares_decimals: int,
     ) -> None:
         if any(security.name == name for security in self._securities):
             raise AlreadyExistsError(f"A Security with name='{name}' already exists.")
@@ -270,7 +270,7 @@ class RecordKeeper:
             )
 
         currency = self.get_currency(currency_code)
-        security = Security(name, symbol, type_, currency, unit)
+        security = Security(name, symbol, type_, currency, shares_decimals)
         self._securities.append(security)
 
     def add_category(

@@ -186,7 +186,7 @@ def test_security() -> None:
     assert decoded.symbol == security.symbol
     assert decoded.currency == security.currency
     assert decoded.type_ == security.type_
-    assert decoded.shares_unit == security.shares_unit
+    assert decoded.shares_decimals == security.shares_decimals
     assert decoded.uuid == security.uuid
     assert decoded.price == security.price
 
@@ -509,7 +509,7 @@ def test_record_keeper_transactions() -> None:
     record_keeper.add_currency("EUR", 2)
     record_keeper.add_exchange_rate("EUR", "CZK")
     record_keeper.add_security(
-        "ČSOB Dynamický penzijní fond", "CSOB.DYN", "Pension Fund", "CZK", 1
+        "ČSOB Dynamický penzijní fond", "CSOB.DYN", "Pension Fund", "CZK", 0
     )
     record_keeper.add_account_group("Bank Accounts", None)
     record_keeper.add_cash_account("Bank Accounts/Raiffeisen", "CZK", 15000)

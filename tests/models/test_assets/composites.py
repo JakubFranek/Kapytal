@@ -355,13 +355,13 @@ def securities(draw: st.DrawFn, currency: Currency | None = None) -> Security:
     type_ = draw(names(min_size=1, max_size=32))
     if currency is None:
         currency = draw(currencies())
-    shares_unit = draw(decimal_powers_of_10())
+    shares_decimals = draw(st.integers(min_value=0, max_value=18))
     return Security(
         name,
         symbol,
         type_,
         currency,
-        shares_unit,
+        shares_decimals,
     )
 
 
@@ -417,7 +417,7 @@ def security_transactions(  # noqa: PLR0913
     if max_shares == 0:
         max_shares = 1
     shares = draw(
-        share_decimals(shares_unit=security.shares_unit, max_value=max_shares)
+        share_decimals(decimals=security.shares_decimals, max_value=max_shares)
     )
 
     return SecurityTransaction(
@@ -441,7 +441,7 @@ def security_transfers(draw: st.DrawFn) -> SecurityTransfer:
     description = draw(st.text(min_size=1, max_size=256))
     datetime_ = draw(st.datetimes(timezones=st.just(user_settings.settings.time_zone)))
     security = draw(securities())
-    shares = draw(share_decimals(security.shares_unit))
+    shares = draw(share_decimals(security.shares_decimals))
 
     return SecurityTransfer(
         description, datetime_, security, shares, account_sender, account_recipient
@@ -450,10 +450,11 @@ def security_transfers(draw: st.DrawFn) -> SecurityTransfer:
 
 @st.composite
 def share_decimals(
-    draw: st.DrawFn, shares_unit: Decimal, max_value: int = 1e6
+    draw: st.DrawFn, decimals: int, min_value: int = 1, max_value: int = 1e6
 ) -> Decimal:
-    integer = draw(st.integers(min_value=1, max_value=max_value))
-    return shares_unit * integer
+    unit = Decimal(10 ** (-decimals))
+    multiplier = draw(st.integers(min_value=min_value, max_value=max_value))
+    return unit * multiplier
 
 
 @st.composite
