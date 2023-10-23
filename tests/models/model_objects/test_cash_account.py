@@ -131,7 +131,7 @@ def test_validate_transaction_invalid_account(
     account: CashAccount, transaction: CashTransaction, transfer: CashTransfer
 ) -> None:
     assume(transaction.account != account)
-    assume(transfer.recipient != account and transfer.sender != account)
+    assume(account not in transfer.accounts)
 
     with pytest.raises(UnrelatedAccountError):
         account._validate_transaction(transaction)

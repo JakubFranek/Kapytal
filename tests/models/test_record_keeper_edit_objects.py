@@ -654,7 +654,7 @@ def test_edit_cash_transfer_tags() -> None:
         if isinstance(transaction, CashTransfer)
     ]
     uuids = [transfer.uuid for transfer in transfers]
-    tags = (record_keeper.tags[0], record_keeper.tags[1])
+    tags = frozenset((record_keeper.tags[0], record_keeper.tags[1]))
     tag_names = [tag.name for tag in tags]
     record_keeper.edit_cash_transfers(uuids, tag_names=tag_names)
     for transfer in transfers:
@@ -895,7 +895,7 @@ def test_edit_security_transactions_tags() -> None:
         if isinstance(transaction, SecurityTransaction)
     ]
     uuids = [transaction.uuid for transaction in transactions]
-    tags = (record_keeper.tags[0], record_keeper.tags[1])
+    tags = frozenset((record_keeper.tags[0], record_keeper.tags[1]))
     tag_names = [tag.name for tag in tags]
     record_keeper.edit_security_transactions(uuids, tag_names=tag_names)
     for transaction in transactions:
@@ -965,7 +965,7 @@ def test_edit_security_transfer_tags() -> None:
         if isinstance(transaction, SecurityTransfer)
     ]
     uuids = [transfer.uuid for transfer in transfers]
-    tags = (record_keeper.tags[0], record_keeper.tags[1])
+    tags = frozenset((record_keeper.tags[0], record_keeper.tags[1]))
     tag_names = [tag.name for tag in tags]
     record_keeper.edit_security_transfers(uuids, tag_names=tag_names)
     for transfer in transfers:

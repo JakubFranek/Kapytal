@@ -108,7 +108,8 @@ def test_add_exchange_rate_invalid_type(currency: Currency, exchange_rate: Any) 
 def test_add_exchange_rate_unrelated_currency(
     currency: Currency, other_1: Currency, other_2: Currency
 ) -> None:
-    assume(currency != other_1 and currency != other_2 and other_1 != other_2)
+    assume(currency not in {other_1, other_2})
+    assume(other_1 != other_2)
     exchange_rate = ExchangeRate(other_1, other_2)
     with pytest.raises(CurrencyError):
         currency.add_exchange_rate(exchange_rate)

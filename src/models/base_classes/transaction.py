@@ -71,7 +71,8 @@ class Transaction(
         self,
         description: str | None = None,
         datetime_: datetime | None = None,
-        block_account_update: bool = False,
+        *,
+        block_account_update: bool = False,  # noqa: ARG002
     ) -> None:
         """Validates and sets provided attributes if they are all valid.
         Parameters set to None keep their value."""

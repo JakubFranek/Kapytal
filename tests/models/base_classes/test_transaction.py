@@ -122,7 +122,7 @@ def test_clear_tags() -> None:
     transaction = ConcreteTransaction(
         "test", datetime.now(user_settings.settings.time_zone)
     )
-    transaction._tags = ["TEST TAG"]
-    assert transaction.tags == ("TEST TAG",)
+    transaction._tags = frozenset(("TEST TAG",))
+    assert transaction.tags == frozenset(("TEST TAG",))
     transaction.clear_tags()
-    assert transaction.tags == ()
+    assert transaction.tags == frozenset()
