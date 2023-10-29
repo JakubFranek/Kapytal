@@ -2,12 +2,14 @@ import unicodedata
 from decimal import Decimal
 
 from PyQt6.QtCore import QAbstractTableModel, QModelIndex, QSortFilterProxyModel, Qt
+from PyQt6.QtGui import QBrush
 from PyQt6.QtWidgets import QTableView
 from src.models.model_objects.currency_objects import (
     ConversionFactorNotFoundError,
     Currency,
 )
 from src.models.model_objects.security_objects import Security, SecurityAccount
+from src.views import colors
 from src.views.constants import SecurityAccountTableColumn
 
 ALIGNMENT_RIGHT = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
@@ -89,16 +91,15 @@ class SecurityAccountTableModel(QAbstractTableModel):
             return None
 
         column = index.column()
+        row = index.row()
+        security = self._securities[row][0]
+        shares = self._securities[row][1]
 
         if role == Qt.ItemDataRole.DisplayRole:
-            row = index.row()
-            security = self._securities[row][0]
-            shares = self._securities[row][1]
             return self._get_display_role_data(column, security, shares)
+        if role == Qt.ItemDataRole.ForegroundRole:
+            return self._get_foreground_role_data(column, security, shares)
         if role == Qt.ItemDataRole.UserRole:
-            row = index.row()
-            security = self._securities[row][0]
-            shares = self._securities[row][1]
             return self._get_user_role_data(column, security, shares)
         if role == Qt.ItemDataRole.TextAlignmentRole and column in COLUMNS_NUMBERS:
             return ALIGNMENT_RIGHT
@@ -106,7 +107,7 @@ class SecurityAccountTableModel(QAbstractTableModel):
 
     def _get_display_role_data(  # noqa: PLR0911
         self, column: int, security: Security, shares: Decimal
-    ) -> str | None:
+    ) -> str | QBrush | None:
         if column == SecurityAccountTableColumn.SECURITY_NAME:
             return security.name
         if column == SecurityAccountTableColumn.SYMBOL:
@@ -126,6 +127,27 @@ class SecurityAccountTableModel(QAbstractTableModel):
                 return amount.to_str_rounded()
             except ConversionFactorNotFoundError:
                 return "Error!"
+        return None
+
+    def _get_foreground_role_data(  # noqa: PLR0911
+        self, column: int, security: Security, shares: Decimal
+    ) -> QBrush | None:
+        if column == SecurityAccountTableColumn.SHARES:
+            if shares < 0:
+                return colors.get_red_brush()
+            if shares > 0:
+                return colors.get_green_brush()
+            return None
+        if column in {
+            SecurityAccountTableColumn.AMOUNT_NATIVE,
+            SecurityAccountTableColumn.AMOUNT_BASE,
+        }:
+            native_amount = security.price.value_normalized * shares
+            if native_amount < 0:
+                return colors.get_red_brush()
+            if native_amount > 0:
+                return colors.get_green_brush()
+            return None
         return None
 
     def _get_user_role_data(  # noqa: PLR0911
