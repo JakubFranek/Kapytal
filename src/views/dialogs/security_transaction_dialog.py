@@ -474,10 +474,8 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
             return
         self.actionSelect_Cash_Account.setEnabled(True)
 
-        exponent = security.shares_unit.as_tuple().exponent
-        decimals = -exponent if exponent < 0 else 0
-        self.sharesDoubleSpinBox.setDecimals(decimals)
-        self.sharesDoubleSpinBox.setSingleStep(10**exponent)
+        self.sharesDoubleSpinBox.setDecimals(security.shares_decimals)
+        self.sharesDoubleSpinBox.setSingleStep(10 ** (-security.shares_decimals))
         self._update_shares_spinbox_suffix()
 
     def _update_shares_spinbox_suffix(self) -> None:

@@ -58,21 +58,11 @@
      </item>
      <item row="2" column="0">
       <widget class="QLabel" name="unitLabel">
-       <property name="text">
-        <string>Unit</string>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="1">
-      <widget class="QDoubleSpinBox" name="unitDoubleSpinBox">
        <property name="toolTip">
-        <string>Enter smallest unit of Security (for example 1 share, or 0.01 for 1 percent etc)</string>
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Number of decimals of Security shares.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;For example:&lt;/p&gt;&lt;p&gt;0 decimals - Security shares are multiples of 1&lt;/p&gt;&lt;p&gt;1 decimals - Security shares are multiples of 0.1&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
-       <property name="decimals">
-        <number>9</number>
-       </property>
-       <property name="maximum">
-        <double>1000000.000000000000000</double>
+       <property name="text">
+        <string>Shares decimals</string>
        </property>
       </widget>
      </item>
@@ -85,6 +75,19 @@
      </item>
      <item row="3" column="1">
       <widget class="QComboBox" name="currencyComboBox"/>
+     </item>
+     <item row="2" column="1">
+      <widget class="QSpinBox" name="decimalsSpinBox">
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Number of decimals of Security shares.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;For example:&lt;/p&gt;&lt;p&gt;0 decimals - Security shares are multiples of 1&lt;/p&gt;&lt;p&gt;1 decimals - Security shares are multiples of 0.1&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+       </property>
+       <property name="maximum">
+        <number>18</number>
+       </property>
+      </widget>
      </item>
     </layout>
    </item>

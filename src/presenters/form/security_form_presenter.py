@@ -146,7 +146,6 @@ class SecurityFormPresenter:
             currency_codes=currency_codes,
             edit=edit,
         )
-        self._dialog.unit = Decimal(1)
         if edit:
             security = self._security_table_model.get_selected_item()
             if security is None:
@@ -165,11 +164,11 @@ class SecurityFormPresenter:
         symbol = self._dialog.symbol
         type_ = self._dialog.type_
         currency_code = self._dialog.currency_code
-        unit = self._dialog.unit
+        shares_decimals = self._dialog.decimals
 
         logging.info(
             f"Adding Security: {name=}, {symbol=}, type={type_}, "
-            f"currency={currency_code}, unit={unit!s}"
+            f"currency={currency_code}, shares_decimals={shares_decimals!s}"
         )
         try:
             self._record_keeper.add_security(
@@ -177,7 +176,7 @@ class SecurityFormPresenter:
                 symbol=symbol,
                 type_=type_,
                 currency_code=currency_code,
-                shares_decimals=unit,
+                shares_decimals=shares_decimals,
             )
         except Exception as exception:  # noqa: BLE001
             handle_exception(exception)

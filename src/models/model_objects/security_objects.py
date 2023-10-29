@@ -170,9 +170,8 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
             (date_, price.value_normalized) for date_, price in self.price_history_pairs
         )
 
-    # TODO: replace with decimals?
     @property
-    def shares_decimals(self) -> Decimal:
+    def shares_decimals(self) -> int:
         return self._shares_decimals
 
     def __repr__(self) -> str:
@@ -234,7 +233,7 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
             "symbol": self._symbol,
             "type": self._type,
             "currency_code": self._currency.code,
-            "shares_unit": self._shares_decimals,
+            "shares_decimals": self._shares_decimals,
             "uuid": str(self._uuid),
             "date_price_pairs": date_price_pairs,
         }
@@ -248,7 +247,7 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
         symbol = data["symbol"]
         type_ = data["type"]
         security_currency = currencies[data["currency_code"]]
-        shares_decimals = data["shares_unit"]
+        shares_decimals = data["shares_decimals"]
 
         obj = Security(name, symbol, type_, security_currency, shares_decimals)
 
