@@ -180,7 +180,13 @@ class SecurityTransactionDialogPresenter(TransactionDialogPresenter):
             logging.debug("Dialog aborted")
             return
 
-        cash_account = self._record_keeper.get_account(cash_account_path, CashAccount)
+        try:
+            cash_account = self._record_keeper.get_account(
+                cash_account_path, CashAccount
+            )
+        except Exception as exception:  # noqa: BLE001
+            handle_exception(exception)
+            return
 
         logging.info(
             f"Adding SecurityTransaction: {datetime_.strftime('%Y-%m-%d')}, "
