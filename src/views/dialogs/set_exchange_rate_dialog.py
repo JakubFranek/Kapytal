@@ -40,7 +40,9 @@ class SetExchangeRateDialog(CustomDialog, Ui_SetExchangeRateDialog):
         self.exchangeRateLabel.setText(f"1 {primary_code} =")
         self.exchangeRateDoubleSpinBox.setMaximum(1_000_000_000_000)
         self.exchangeRateDoubleSpinBox.setValue(value)
-        self.exchangeRateDoubleSpinBox.setDecimals(9)
+        self.exchangeRateDoubleSpinBox.setDecimals(
+            user_settings.settings.exchange_rate_decimals
+        )
         self.exchangeRateDoubleSpinBox.setSuffix(f" {secondary_code}")
         self.dateEdit.setDate(date_)
         self.dateEdit.setMaximumDate(date_)

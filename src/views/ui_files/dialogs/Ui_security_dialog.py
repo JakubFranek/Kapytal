@@ -13,7 +13,7 @@ class Ui_SecurityDialog(object):
     def setupUi(self, SecurityDialog):
         SecurityDialog.setObjectName("SecurityDialog")
         SecurityDialog.setWindowModality(QtCore.Qt.WindowModality.WindowModal)
-        SecurityDialog.resize(285, 207)
+        SecurityDialog.resize(300, 165)
         SecurityDialog.setLocale(QtCore.QLocale(QtCore.QLocale.Language.English, QtCore.QLocale.Country.UnitedKingdom))
         self.verticalLayout = QtWidgets.QVBoxLayout(SecurityDialog)
         self.verticalLayout.setObjectName("verticalLayout")
@@ -63,7 +63,7 @@ class Ui_SecurityDialog(object):
         self.nameLabel.setText(_translate("SecurityDialog", "Name"))
         self.symbolLabel.setText(_translate("SecurityDialog", "Symbol"))
         self.symbolLineEdit.setPlaceholderText(_translate("SecurityDialog", "Optional field"))
-        self.unitLabel.setToolTip(_translate("SecurityDialog", "<html><head/><body><p>Number of decimals of Security shares.</p><p><br/>For example:</p><p>0 decimals - Security shares are multiples of 1</p><p>1 decimals - Security shares are multiples of 0.1</p></body></html>"))
+        self.unitLabel.setToolTip(_translate("SecurityDialog", "<html><head/><body><p>Number of decimals of Security shares.</p><p><br/>For example:</p><p>0 decimals - shares are multiples of 1</p><p>1 decimals - shares are multiples of 0.1</p></body></html>"))
         self.unitLabel.setText(_translate("SecurityDialog", "Shares decimals"))
         self.currencyLabel.setText(_translate("SecurityDialog", "Currency"))
-        self.decimalsSpinBox.setToolTip(_translate("SecurityDialog", "<html><head/><body><p>Number of decimals of Security shares.</p><p><br/>For example:</p><p>0 decimals - Security shares are multiples of 1</p><p>1 decimals - Security shares are multiples of 0.1</p></body></html>"))
+        self.decimalsSpinBox.setToolTip(_translate("SecurityDialog", "<html><head/><body><p>Number of decimals of Security shares.</p><p><br/>For example:</p><p>0 decimals - shares are multiples of 1</p><p>1 decimals - shares are multiples of 0.1</p></body></html>"))

@@ -40,20 +40,20 @@ class SettingsForm(CustomWidget, Ui_SettingsForm):
         )
 
     @property
-    def backups_max_size_kb(self) -> int:
-        return self.backupsSizeLimitSpinBox.value()
+    def exchange_rate_decimals(self) -> int:
+        return self.exchangeRateDecimalsSpinBox.value()
 
-    @backups_max_size_kb.setter
-    def backups_max_size_kb(self, value: int) -> None:
-        self.backupsSizeLimitSpinBox.setValue(value)
+    @exchange_rate_decimals.setter
+    def exchange_rate_decimals(self, value: int) -> None:
+        self.exchangeRateDecimalsSpinBox.setValue(value)
 
     @property
-    def logs_max_size_kb(self) -> int:
-        return self.logsSizeLimitSpinBox.value()
+    def price_per_share_decimals(self) -> int:
+        return self.pricePerShareDecimalsSpinBox.value()
 
-    @logs_max_size_kb.setter
-    def logs_max_size_kb(self, value: int) -> None:
-        self.logsSizeLimitSpinBox.setValue(value)
+    @price_per_share_decimals.setter
+    def price_per_share_decimals(self, value: int) -> None:
+        self.pricePerShareDecimalsSpinBox.setValue(value)
 
     @property
     def general_date_format(self) -> str:
@@ -70,6 +70,22 @@ class SettingsForm(CustomWidget, Ui_SettingsForm):
     @transaction_date_format.setter
     def transaction_date_format(self, value: str) -> None:
         self.transactionTableDateFormatLineEdit.setText(value)
+
+    @property
+    def backups_max_size_kb(self) -> int:
+        return self.backupsSizeLimitSpinBox.value()
+
+    @backups_max_size_kb.setter
+    def backups_max_size_kb(self, value: int) -> None:
+        self.backupsSizeLimitSpinBox.setValue(value)
+
+    @property
+    def logs_max_size_kb(self) -> int:
+        return self.logsSizeLimitSpinBox.value()
+
+    @logs_max_size_kb.setter
+    def logs_max_size_kb(self, value: int) -> None:
+        self.logsSizeLimitSpinBox.setValue(value)
 
     def get_directory_path(self) -> str:
         return QFileDialog.getExistingDirectory(self)
