@@ -114,16 +114,6 @@ class CashTransactionDialogPresenter(TransactionDialogPresenter):
             )
             return
 
-        if any(transaction.is_refunded for transaction in transactions):
-            display_error_message(
-                (
-                    "Cannot edit Cash Transactions that have been refunded. "
-                    "Remove the corresponding Refunds first."
-                ),
-                title="Warning",
-            )
-            return
-
         self._prepare_dialog(edit_mode=edit_mode)
 
         self._dialog.type_ = transactions[0].type_
@@ -190,6 +180,15 @@ class CashTransactionDialogPresenter(TransactionDialogPresenter):
         self._dialog.signal_do_and_close.connect(
             lambda: self._edit_cash_transactions(transactions)
         )
+
+        if any(transaction.is_refunded for transaction in transactions):
+            self._dialog.disable_all_widgets()
+            display_error_message(
+                "Cannot edit Cash Transactions that have been refunded. "
+                "Remove the corresponding Refunds first.",
+                title="Warning",
+            )
+
         self._dialog.exec()
 
     def _add_cash_transaction(self, *, close: bool) -> None:

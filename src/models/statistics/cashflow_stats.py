@@ -189,7 +189,7 @@ def calculate_cash_flow(
                     base_currency, date_
                 )
                 stats.outward_transfers.transactions.add(transaction)
-            # TODO: handle SecurityTransfers
+            # TODO: handle SecurityTransfers (take price for given date)
 
     stats.inflows = stats.incomes + stats.inward_transfers + stats.refunds
     stats.inflows.balance += stats.initial_balances

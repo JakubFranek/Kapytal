@@ -322,8 +322,6 @@ class AccountTreeModel(QAbstractItemModel):
         if not index.isValid():
             return None
 
-        # TODO: add tooltip role with normalized balances
-
         if role == Qt.ItemDataRole.DisplayRole:
             return self._get_display_role_data(index.column(), index.internalPointer())
         if role == Qt.ItemDataRole.DecorationRole:
