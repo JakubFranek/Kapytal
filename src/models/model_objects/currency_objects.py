@@ -120,9 +120,7 @@ class Currency(CopyableMixin, JSONSerializableMixin):
             if factor is not None:
                 return 1 / factor
 
-        exchange_rates = Currency._get_exchange_rates(
-            self, target_currency
-        )
+        exchange_rates = Currency._get_exchange_rates(self, target_currency)
         if exchange_rates is None:
             logging.warning(
                 f"No path from {self._code} to {target_currency.code} found."

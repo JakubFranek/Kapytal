@@ -299,10 +299,8 @@ class SecurityTransferDialog(CustomDialog, Ui_SecurityTransferDialog):
             self.sharesDoubleSpinBox.setDecimals(0)  # default value
             return
 
-        exponent = security.shares_unit.as_tuple().exponent
-        decimals = -exponent if exponent < 0 else 0
-        self.sharesDoubleSpinBox.setDecimals(decimals)
-        self.sharesDoubleSpinBox.setSingleStep(10**exponent)
+        self.sharesDoubleSpinBox.setDecimals(security.shares_decimals)
+        self.sharesDoubleSpinBox.setSingleStep(10 ** (-security.shares_decimals))
 
     def _set_tab_order(self) -> None:
         self.setTabOrder(self.securityComboBox, self.senderComboBox)

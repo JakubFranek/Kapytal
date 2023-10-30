@@ -22,6 +22,8 @@ class UserSettings(JSONSerializableMixin, CopyableMixin):
         "_backup_paths",
         "_general_date_format",
         "_transaction_date_format",
+        "_exchange_rate_decimals",
+        "_price_per_share_decimals",
     )
 
     LOGS_DEFAULT_MAX_SIZE = 1_000_000
@@ -35,6 +37,9 @@ class UserSettings(JSONSerializableMixin, CopyableMixin):
 
         self._general_date_format = "%d.%m.%Y"
         self._transaction_date_format = "%d.%m.%Y"
+
+        self._exchange_rate_decimals = 9
+        self._price_per_share_decimals = 9
 
         self._backup_paths = []
 
@@ -174,6 +179,48 @@ class UserSettings(JSONSerializableMixin, CopyableMixin):
         )
         self._general_date_format = value
 
+    @property
+    def exchange_rate_decimals(self) -> int:
+        return self._exchange_rate_decimals
+
+    @exchange_rate_decimals.setter
+    def exchange_rate_decimals(self, value: int) -> None:
+        if not isinstance(value, int):
+            raise TypeError("UserSettings.exchange_rate_decimals must be an int.")
+        if value < 0:
+            raise ValueError(
+                "UserSettings.exchange_rate_decimals must not be negative."
+            )
+        if self._exchange_rate_decimals == value:
+            return
+
+        logging.info(
+            "Changing UserSettings.exchange_rate_decimals from "
+            f"{self._exchange_rate_decimals} to {value}"
+        )
+        self._exchange_rate_decimals = value
+
+    @property
+    def price_per_share_decimals(self) -> int:
+        return self._price_per_share_decimals
+
+    @price_per_share_decimals.setter
+    def price_per_share_decimals(self, value: int) -> None:
+        if not isinstance(value, int):
+            raise TypeError("UserSettings.price_per_share_decimals must be an int.")
+        if value < 0:
+            raise ValueError(
+                "UserSettings.price_per_share_decimals must not be negative."
+            )
+        if self._price_per_share_decimals == value:
+            return
+
+        logging.info(
+            "Changing UserSettings.price_per_share_decimals from "
+            f"{self._price_per_share_decimals} to {value}"
+        )
+        self._price_per_share_decimals = value
+
     def __repr__(self) -> str:
         return "UserSettings"
 
@@ -187,6 +234,8 @@ class UserSettings(JSONSerializableMixin, CopyableMixin):
             "backup_paths": backup_paths,
             "general_date_format": self._general_date_format,
             "transaction_date_format": self._transaction_date_format,
+            "exchange_rate_decimals": self._exchange_rate_decimals,
+            "price_per_share_decimals": self._price_per_share_decimals,
         }
 
     @staticmethod
@@ -198,18 +247,20 @@ class UserSettings(JSONSerializableMixin, CopyableMixin):
         backup_path_strings: list[str] = data["backup_paths"]
         backup_paths = [Path(string) for string in backup_path_strings]
 
-        general_date_format: str = data.get("general_date_format", None)
-        transaction_date_format: str = data.get("transaction_date_format", None)
+        general_date_format: str = data.get("general_date_format", "%d.%m.%Y")
+        transaction_date_format: str = data.get("transaction_date_format", "%d.%m.%Y")
+
+        exchange_rate_decimals: int = data.get("exchange_rate_decimals", 9)
+        price_per_share_decimals: int = data.get("price_per_share_decimals", 9)
 
         obj = UserSettings()
         obj._time_zone = time_zone  # noqa: SLF001
         obj._logs_max_size_bytes = logs_max_size_bytes  # noqa: SLF001
         obj._backups_max_size_bytes = backups_max_size_bytes  # noqa: SLF001
         obj._backup_paths = backup_paths  # noqa: SLF001
-
-        if general_date_format is not None:
-            obj._general_date_format = general_date_format  # noqa: SLF001
-        if transaction_date_format is not None:
-            obj._transaction_date_format = transaction_date_format  # noqa: SLF001
+        obj._general_date_format = general_date_format  # noqa: SLF001
+        obj._transaction_date_format = transaction_date_format  # noqa: SLF001
+        obj._exchange_rate_decimals = exchange_rate_decimals  # noqa: SLF001
+        obj._price_per_share_decimals = price_per_share_decimals  # noqa: SLF001
 
         return obj

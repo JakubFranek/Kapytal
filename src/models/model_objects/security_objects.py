@@ -45,7 +45,7 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
         "_symbol",
         "_type",
         "_currency",
-        "_shares_unit",
+        "_shares_decimals",
         "_price_history",
         "_price_history_pairs",
         "_latest_date",
@@ -63,6 +63,7 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
     SYMBOL_MIN_LENGTH = 0
     SYMBOL_MAX_LENGTH = 8
     SYMBOL_ALLOWED_CHARS = string.ascii_letters + string.digits + "."
+    SHARES_DECIMALS_MAX = 18
 
     def __init__(  # noqa: PLR0913
         self,
@@ -70,7 +71,7 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
         symbol: str,
         type_: str,
         currency: Currency,
-        shares_unit: Decimal | int | str,
+        shares_decimals: int,
     ) -> None:
         super().__init__(name=name, allow_slash=True)
         self.symbol = symbol
@@ -80,17 +81,16 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
             raise TypeError("Security.currency must be a Currency.")
         self._currency = currency
 
-        if not isinstance(shares_unit, Decimal | int | str):
-            raise TypeError(
-                "Security.shares_unit must be a Decimal, integer or a string "
-                "containing a number."
+        if not isinstance(shares_decimals, int):
+            raise TypeError("Security.shares_decimals must be an integer.")
+        if shares_decimals < 0:
+            raise ValueError("Security.shares_decimals must not be negative.")
+        if shares_decimals > self.SHARES_DECIMALS_MAX:
+            raise ValueError(
+                "Security.shares_decimals must be less than or equal to "
+                f"{self.SHARES_DECIMALS_MAX}."
             )
-        _shares_unit = Decimal(shares_unit)
-        if not _shares_unit.is_finite() or _shares_unit <= 0:
-            raise ValueError("Security.shares_unit must be finite and positive.")
-        if _shares_unit.log10() % 1 != 0:
-            raise ValueError("Security.shares_unit must be a power of 10.")
-        self._shares_unit = _shares_unit
+        self._shares_decimals = shares_decimals
 
         self._price_history: dict[date, CashAmount] = {}
         self._price_history_pairs: tuple[tuple[date, CashAmount], ...] = ()
@@ -170,10 +170,9 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
             (date_, price.value_normalized) for date_, price in self.price_history_pairs
         )
 
-    # TODO: replace with decimals?
     @property
-    def shares_unit(self) -> Decimal:
-        return self._shares_unit
+    def shares_decimals(self) -> int:
+        return self._shares_decimals
 
     def __repr__(self) -> str:
         return f"Security('{self._name}')"
@@ -234,7 +233,7 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
             "symbol": self._symbol,
             "type": self._type,
             "currency_code": self._currency.code,
-            "shares_unit": str(self._shares_unit.normalize()),
+            "shares_decimals": self._shares_decimals,
             "uuid": str(self._uuid),
             "date_price_pairs": date_price_pairs,
         }
@@ -248,10 +247,9 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
         symbol = data["symbol"]
         type_ = data["type"]
         security_currency = currencies[data["currency_code"]]
+        shares_decimals = data["shares_decimals"]
 
-        shares_unit = Decimal(data["shares_unit"])
-
-        obj = Security(name, symbol, type_, security_currency, shares_unit)
+        obj = Security(name, symbol, type_, security_currency, shares_decimals)
 
         date_price_pairs: list[list[str, str]] = data["date_price_pairs"]
         for date_, price in date_price_pairs:
@@ -483,7 +481,7 @@ class SecurityRelatedTransaction(Transaction, ABC):
             raise TypeError(f"{self.__class__.__name__}.security must be a Security.")
 
     def _validate_shares(
-        self, value: Decimal | int | str, shares_unit: Decimal
+        self, value: Decimal | int | str, shares_decimals: int
     ) -> None:
         if not isinstance(value, Decimal | int | str):
             raise TypeError(
@@ -495,10 +493,11 @@ class SecurityRelatedTransaction(Transaction, ABC):
             raise ValueError(
                 f"{self.__class__.__name__}.shares must be a finite positive number."
             )
-        if _value % shares_unit != 0:
+        _value_decimals = -_value.as_tuple().exponent
+        if _value_decimals > shares_decimals:
             raise ValueError(
-                f"{self.__class__.__name__}.shares must be a multiple of "
-                f"{shares_unit}."
+                f"{self.__class__.__name__}.shares must have maximum "
+                f"{shares_decimals} decimals."
             )
 
     @abstractmethod
@@ -729,7 +728,7 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
         self._validate_description(description)
         self._validate_datetime(datetime_)
         self._validate_security(security)
-        self._validate_shares(shares, security.shares_unit)
+        self._validate_shares(shares, security.shares_decimals)
         self._validate_cash_account(cash_account, security.currency)
         self._validate_security_account(security_account)
         self._validate_amount(price_per_share, cash_account.currency)
@@ -1046,7 +1045,7 @@ class SecurityTransfer(SecurityRelatedTransaction):
         self._validate_description(description)
         self._validate_datetime(datetime_)
         self._validate_security(security)
-        self._validate_shares(shares, security.shares_unit)
+        self._validate_shares(shares, security.shares_decimals)
         self._validate_accounts(sender, recipient)
 
     def _set_attributes(

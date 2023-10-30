@@ -197,6 +197,7 @@ class AccountTreePresenter:
         self._view.signal_show_securities.connect(self._show_security_account_contents)
 
         self._view.signal_search_text_changed.connect(self._filter)
+        self._view.signal_tree_double_clicked.connect(self._double_clicked)
 
         self._model.signal_check_state_changed.connect(self._check_state_changed)
 
@@ -351,3 +352,8 @@ class AccountTreePresenter:
     def _check_state_changed(self) -> None:
         self._update_checked_account_balance()
         self.event_check_state_changed()
+
+    def _double_clicked(self) -> None:
+        selection = self._model.get_selected_item()
+        if isinstance(selection, SecurityAccount):
+            self._security_account_form_presenter.show(selection)

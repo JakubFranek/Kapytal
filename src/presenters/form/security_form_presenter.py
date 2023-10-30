@@ -37,27 +37,7 @@ class SecurityFormPresenter:
         self._initialize_table_models()
         self._initialize_tree_models()
 
-        self._view.signal_add_security.connect(
-            lambda: self._run_security_dialog(edit=False)
-        )
-        self._view.signal_remove_security.connect(self._remove_security)
-        self._view.signal_edit_security.connect(
-            lambda: self._run_security_dialog(edit=True)
-        )
-        self._view.signal_add_price.connect(self._run_add_price_dialog)
-        self._view.signal_edit_price.connect(self._run_edit_price_dialog)
-        self._view.signal_remove_prices.connect(self._remove_prices)
-        self._view.signal_load_price_data.connect(self._run_load_data_dialog)
-
-        self._view.signal_manage_search_text_changed.connect(self._filter_table)
-        self._view.signal_overview_search_text_changed.connect(self._filter_tree)
-
-        self._view.finalize_setup()
-        self._view.signal_security_selection_changed.connect(
-            self._security_selection_changed
-        )
-        self._view.signal_price_selection_changed.connect(self._price_selection_changed)
-        self._security_selection_changed()
+        self._connect_to_signals()
 
     def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
         self._record_keeper = record_keeper
@@ -146,7 +126,6 @@ class SecurityFormPresenter:
             currency_codes=currency_codes,
             edit=edit,
         )
-        self._dialog.unit = Decimal(1)
         if edit:
             security = self._security_table_model.get_selected_item()
             if security is None:
@@ -155,6 +134,8 @@ class SecurityFormPresenter:
             self._dialog.name = security.name
             self._dialog.symbol = security.symbol
             self._dialog.type_ = security.type_
+            self._dialog.currency_code = security.currency.code
+            self._dialog.decimals = security.shares_decimals
         else:
             self._dialog.signal_ok.connect(self._add_security)
         logging.debug(f"Running SecurityDialog ({edit=})")
@@ -165,11 +146,11 @@ class SecurityFormPresenter:
         symbol = self._dialog.symbol
         type_ = self._dialog.type_
         currency_code = self._dialog.currency_code
-        unit = self._dialog.unit
+        shares_decimals = self._dialog.decimals
 
         logging.info(
             f"Adding Security: {name=}, {symbol=}, type={type_}, "
-            f"currency={currency_code}, unit={unit!s}"
+            f"currency={currency_code}, shares_decimals={shares_decimals!s}"
         )
         try:
             self._record_keeper.add_security(
@@ -177,7 +158,7 @@ class SecurityFormPresenter:
                 symbol=symbol,
                 type_=type_,
                 currency_code=currency_code,
-                unit=unit,
+                shares_decimals=shares_decimals,
             )
         except Exception as exception:  # noqa: BLE001
             handle_exception(exception)
@@ -488,6 +469,35 @@ class SecurityFormPresenter:
         self._tree_proxy.setFilterKeyColumn(-1)
         self._tree_proxy.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
         self._view.treeView.setModel(self._tree_proxy)
+
+    def _connect_to_signals(self) -> None:
+        self._view.signal_add_security.connect(
+            lambda: self._run_security_dialog(edit=False)
+        )
+        self._view.signal_remove_security.connect(self._remove_security)
+        self._view.signal_edit_security.connect(
+            lambda: self._run_security_dialog(edit=True)
+        )
+        self._view.signal_add_price.connect(self._run_add_price_dialog)
+        self._view.signal_edit_price.connect(self._run_edit_price_dialog)
+        self._view.signal_remove_prices.connect(self._remove_prices)
+        self._view.signal_load_price_data.connect(self._run_load_data_dialog)
+
+        self._view.signal_manage_search_text_changed.connect(self._filter_table)
+        self._view.signal_overview_search_text_changed.connect(self._filter_tree)
+
+        self._view.finalize_setup()
+        self._view.signal_security_selection_changed.connect(
+            self._security_selection_changed
+        )
+        self._view.signal_price_selection_changed.connect(self._price_selection_changed)
+        self._security_selection_changed()
+        self._view.signal_security_table_double_clicked.connect(
+            lambda: self._run_security_dialog(edit=True)
+        )
+        self._view.signal_price_table_double_clicked.connect(
+            self._run_edit_price_dialog
+        )
 
     def _filter_table(self, pattern: str) -> None:
         if ("[" in pattern and "]" not in pattern) or "[]" in pattern:

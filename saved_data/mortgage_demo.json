@@ -1,6 +1,6 @@
 {
   "version": "0.9.0", 
-  "datetime_saved": "2023-10-19T21:49:36.480742+02:00", 
+  "datetime_saved": "2023-10-29T14:05:59.372313+01:00", 
   "data": {
     "datatype": "RecordKeeper", 
     "currencies": [
@@ -19,7 +19,7 @@
         "symbol": "", 
         "type": "Real Estate", 
         "currency_code": "CZK", 
-        "shares_unit": "1", 
+        "shares_decimals": 0, 
         "uuid": "ee5e8a9c-048c-4670-afb6-c9898652c8ec", 
         "date_price_pairs": [
           [
@@ -34,7 +34,7 @@
         "symbol": "", 
         "type": "Mortgage", 
         "currency_code": "CZK", 
-        "shares_unit": "1E-9", 
+        "shares_decimals": 9, 
         "uuid": "f3259522-cc6c-4e1c-bc44-58ecf153a1a0", 
         "date_price_pairs": [
           [
@@ -178,8 +178,8 @@
         "datetime": "2022-02-15T00:04:00+01:00", 
         "type": "BUY", 
         "security_name": "My Mortgage", 
-        "shares": "0.000925925", 
-        "price_per_share": "5,400,005.4000054 CZK", 
+        "shares": "0.000925926", 
+        "price_per_share": "5,399,999.568000034 CZK", 
         "security_account_path": "Real Estate", 
         "cash_account_path": "Bank Account", 
         "datetime_created": "2023-10-16T21:00:18+02:00", 
