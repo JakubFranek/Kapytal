@@ -239,8 +239,11 @@ class SecurityFormPresenter:
         last_value = security.price.value_normalized
         if last_value.is_nan():
             last_value = Decimal(0)
+        today = datetime.now(user_settings.settings.time_zone).date()
+
         self._dialog = SetSecurityPriceDialog(
-            date_=datetime.now(user_settings.settings.time_zone).date(),
+            date_=today,
+            max_date=today,
             value=last_value,
             security_name=security.name,
             parent=self._view,
@@ -260,8 +263,10 @@ class SecurityFormPresenter:
             raise ValueError("A Security must be selected to set its price.")
 
         date_, value = selected_data_points[0]
+
         self._dialog = SetSecurityPriceDialog(
             date_=date_,
+            max_date=datetime.now(user_settings.settings.time_zone).date(),
             value=value,
             security_name=security.name,
             parent=self._view,
@@ -279,30 +284,36 @@ class SecurityFormPresenter:
 
         value = self._dialog.value.normalize()
         date_ = self._dialog.date_
+        if self._dialog.edit:
+            date_edited = self._dialog.original_date != date_
+        else:
+            date_edited = False
+
         logging.info(
             f"Setting {security} price: {value} on {date_.strftime('%Y-%m-%d')}"
         )
         try:
             security.set_price(date_, CashAmount(value, security.currency))
+            if date_edited:
+                security.delete_price(self._dialog.original_date)
         except Exception as exception:  # noqa: BLE001
             handle_exception(exception)
             return
 
         previous_data_points = self._price_table_model.data_points
         new_data_points = security.decimal_price_history_pairs
-        if len(previous_data_points) != len(new_data_points):
+        if date_edited:  # REFACTOR: not optimal - model reset is a dirty fix
+            self._price_table_model.pre_reset_model()
+            self._price_table_model.load_data(new_data_points)
+            self._price_table_model.set_unit(security.currency.code)
+            self._price_table_model.post_reset_model()
+        elif len(previous_data_points) != len(new_data_points):
             for _index, _data in enumerate(new_data_points):
                 if date_ == _data[0]:
                     index = _index
                     break
             else:
                 raise ValueError("No data point found for the given date.")
-            add = True
-        else:
-            add = False
-            index = None
-
-        if add:
             self._price_table_model.pre_add(index)
             self._price_table_model.load_data(new_data_points)
             self._price_table_model.set_unit(security.currency.code)
