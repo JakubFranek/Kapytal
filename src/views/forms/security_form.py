@@ -28,6 +28,8 @@ class SecurityForm(CustomWidget, Ui_SecurityForm):
     signal_overview_search_text_changed = pyqtSignal(str)
     signal_security_selection_changed = pyqtSignal()
     signal_price_selection_changed = pyqtSignal()
+    signal_security_table_double_clicked = pyqtSignal()
+    signal_price_table_double_clicked = pyqtSignal()
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent=parent)
@@ -97,6 +99,13 @@ class SecurityForm(CustomWidget, Ui_SecurityForm):
         self.securityTableView.horizontalHeader().setSortIndicatorClearable(True)
         self.securityPriceTableView.horizontalHeader().setSortIndicatorClearable(True)
         self.treeView.header().setSortIndicatorClearable(True)
+
+        self.securityTableView.doubleClicked.connect(
+            self.signal_security_table_double_clicked.emit
+        )
+        self.securityPriceTableView.doubleClicked.connect(
+            self.signal_price_table_double_clicked.emit
+        )
 
     def load_chart_data(
         self, x: Collection, y: Collection, title: str, ylabel: str

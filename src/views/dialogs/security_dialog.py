@@ -34,18 +34,20 @@ class SecurityDialog(CustomDialog, Ui_SecurityDialog):
         self.typeComboBox.setCurrentText("")
         self.formLayout.insertRow(2, "Type", self.typeComboBox)
 
+        for code in currency_codes:
+            self.currencyComboBox.addItem(code)
+
         if edit:
             self.setWindowTitle("Edit Security")
             self.setWindowIcon(icons.edit_security)
-            self.currencyComboBox.setVisible(False)
-            self.currencyLabel.setVisible(False)
-            self.decimalsSpinBox.setVisible(False)
-            self.unitLabel.setVisible(False)
+            self.currencyComboBox.setEnabled(False)
+            self.currencyLabel.setEnabled(False)
+            self.decimalsSpinBox.setEnabled(False)
+            self.decimalsLabel.setEnabled(False)
+
         else:
             self.setWindowTitle("Add Security")
             self.setWindowIcon(icons.add_security)
-            for code in currency_codes:
-                self.currencyComboBox.addItem(code)
 
         self.currencyComboBox.setCurrentIndex(0)
 
