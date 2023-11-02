@@ -27,16 +27,16 @@ from tests.models.test_assets.composites import (
     symbol=st.text(alphabet=Security.SYMBOL_ALLOWED_CHARS, min_size=1, max_size=8),
     type_=names(min_size=1, max_size=32),
     currency=currencies(),
-    shares_unit=decimal_powers_of_10(),
+    shares_decimals=st.integers(min_value=0, max_value=18),
 )
 def test_creation(
     name: str,
     symbol: str,
     type_: str,
     currency: Currency,
-    shares_unit: Decimal,
+    shares_decimals: int,
 ) -> None:
-    security = Security(name, symbol, type_, currency, shares_unit)
+    security = Security(name, symbol, type_, currency, shares_decimals)
     assert security.name == name
     assert security.symbol == symbol.upper()
     assert security.type_ == type_
@@ -49,7 +49,7 @@ def test_creation(
     assert security.__repr__() == f"Security('{security.name}')"
     assert security.__str__() == security.name
     assert isinstance(security.__hash__(), int)
-    assert security.shares_unit == shares_unit
+    assert security.shares_decimals == shares_decimals
 
 
 @given(
@@ -192,13 +192,13 @@ def test_currency_invalid_type(
     symbol=st.text(alphabet=Security.SYMBOL_ALLOWED_CHARS, min_size=1, max_size=8),
     type_=names(min_size=1, max_size=32),
     currency=currencies(),
-    shares_unit=everything_except((Decimal, str, int)),
+    shares_decimals=everything_except(int),
 )
-def test_shares_unit_invalid_type(
-    name: str, symbol: str, type_: str, currency: Currency, shares_unit: Any
+def test_shares_decimals_invalid_type(
+    name: str, symbol: str, type_: str, currency: Currency, shares_decimals: Any
 ) -> None:
-    with pytest.raises(TypeError, match="Security.shares_unit must be"):
-        Security(name, symbol, type_, currency, shares_unit)
+    with pytest.raises(TypeError, match="Security.shares_decimals must be"):
+        Security(name, symbol, type_, currency, shares_decimals)
 
 
 @given(
@@ -206,44 +206,13 @@ def test_shares_unit_invalid_type(
     symbol=st.text(alphabet=Security.SYMBOL_ALLOWED_CHARS, min_size=1, max_size=8),
     type_=names(min_size=1, max_size=32),
     currency=currencies(),
-    shares_unit=st.sampled_from(
-        [
-            Decimal("NaN"),
-            Decimal("sNan"),
-            Decimal("-Infinity"),
-            Decimal("Infinity"),
-            0,
-            -1,
-        ]
-    ),
+    shares_decimals=st.one_of(st.integers(max_value=-1), st.integers(min_value=19)),
 )
-def test_shares_unit_invalid_value(
-    name: str, symbol: str, type_: str, currency: Currency, shares_unit: Any
+def test_shares_decimals_invalid_value(
+    name: str, symbol: str, type_: str, currency: Currency, shares_decimals: Any
 ) -> None:
-    with pytest.raises(
-        ValueError, match="Security.shares_unit must be finite and positive."
-    ):
-        Security(name, symbol, type_, currency, shares_unit)
-
-
-@given(
-    data=st.data(),
-    name=names(min_size=1, max_size=64),
-    symbol=st.text(alphabet=Security.SYMBOL_ALLOWED_CHARS, min_size=1, max_size=8),
-    type_=names(min_size=1, max_size=32),
-    currency=currencies(),
-)
-def test_shares_unit_not_power_of_10(
-    data: st.DataObject,
-    name: str,
-    symbol: str,
-    type_: str,
-    currency: Currency,
-) -> None:
-    shares_unit = data.draw(valid_decimals(min_value=1e-10))
-    assume(shares_unit.log10() % 1 != 0)
-    with pytest.raises(ValueError, match="Security.shares_unit must be a power of 10."):
-        Security(name, symbol, type_, currency, shares_unit)
+    with pytest.raises(ValueError, match="Security.shares_decimals must"):
+        Security(name, symbol, type_, currency, shares_decimals)
 
 
 @given(
@@ -383,5 +352,5 @@ def get_security() -> Security:
         "VWCE.DE",
         "ETF",
         Currency("EUR", 2),
-        shares_unit=1,
+        shares_decimals=1,
     )

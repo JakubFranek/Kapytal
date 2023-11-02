@@ -345,15 +345,8 @@ class AccountTreeModel(QAbstractItemModel):
             return self._get_sort_data(index.column(), index.internalPointer())
         if role == Qt.ItemDataRole.UserRole + 1:
             return self._get_filter_data(index.column(), index.internalPointer())
-        if (
-            role == Qt.ItemDataRole.ToolTipRole
-            and index.column() == AccountTreeColumn.SHOW
-        ):
-            return (
-                "Only Transactions related to checked Accounts will be shown in "
-                "the Transaction Table"
-            )
-
+        if role == Qt.ItemDataRole.ToolTipRole:
+            return self._get_tooltip_role_data(index.column(), index.internalPointer())
         return None
 
     def _get_display_role_data(self, column: int, item: AccountTreeNode) -> str | None:
@@ -389,7 +382,10 @@ class AccountTreeModel(QAbstractItemModel):
             if item.type_ == SecurityAccount:
                 return icons.security_account
             if item.type_ == CashAccount:
-                if item.balance_base is not None and item.balance_base.is_positive():
+                if (
+                    item.balance_base is not None
+                    and item.balance_base.value_rounded > 0
+                ):
                     return icons.cash_account
                 return icons.cash_account_empty
         return None
@@ -403,7 +399,7 @@ class AccountTreeModel(QAbstractItemModel):
         if column == AccountTreeColumn.NAME:
             if item.balance_base is None:
                 return None
-            if item.balance_base.value_rounded == 0:
+            if abs(item.balance_base.value_rounded) == 0:
                 return colors.get_gray_brush()
         if column == AccountTreeColumn.BALANCE_BASE:
             if item.balance_base is None:
@@ -417,9 +413,9 @@ class AccountTreeModel(QAbstractItemModel):
         else:
             return None
 
-        if amount.is_negative() or amount.is_nan():
+        if amount.value_rounded < 0 or amount.is_nan():
             return colors.get_red_brush()
-        if amount.value_rounded == 0:
+        if abs(amount.value_rounded) == 0:
             return colors.get_gray_brush()
         return None
 
@@ -440,6 +436,18 @@ class AccountTreeModel(QAbstractItemModel):
                 return float(item.balance_base.value_normalized)
             except ConversionFactorNotFoundError:
                 return None
+        return None
+
+    def _get_tooltip_role_data(self, column: int, item: AccountTreeNode) -> str | None:
+        if column == AccountTreeColumn.BALANCE_NATIVE:
+            return item.balance_native.to_str_normalized()
+        if column == AccountTreeColumn.BALANCE_BASE:
+            return item.balance_base.to_str_normalized()
+        if column == AccountTreeColumn.SHOW:
+            return (
+                "Only Transactions related to checked Accounts will be shown in "
+                "the Transaction Table"
+            )
         return None
 
     def _get_filter_data(self, column: int, item: AccountTreeNode) -> str | None:

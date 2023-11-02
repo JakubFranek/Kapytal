@@ -1025,6 +1025,7 @@ class CashTransfer(CashRelatedTransaction):
         "_uuid",
         "_sender",
         "_recipient",
+        "_accounts",
         "_amount_sent",
         "_amount_received",
         "_description",
@@ -1065,6 +1066,10 @@ class CashTransfer(CashRelatedTransaction):
         return self._recipient
 
     @property
+    def accounts(self) -> frozenset[Account]:
+        return self._accounts
+
+    @property
     def amount_sent(self) -> CashAmount:
         return self._amount_sent
 
@@ -1086,10 +1091,10 @@ class CashTransfer(CashRelatedTransaction):
         )
 
     def is_account_related(self, account: Account) -> bool:
-        return self._sender == account or self._recipient == account
+        return account in self._accounts
 
     def is_accounts_related(self, accounts: Collection[Account]) -> bool:
-        return self._sender in accounts or self._recipient in accounts
+        return not self._accounts.isdisjoint(accounts)
 
     def prepare_for_deletion(self) -> None:
         self._sender.remove_transaction(self)
@@ -1276,6 +1281,7 @@ class CashTransfer(CashRelatedTransaction):
 
         self._sender = sender
         self._recipient = recipient
+        self._accounts = frozenset((self._sender, self._recipient))
 
         if add_sender:
             self._sender.add_transaction(self)

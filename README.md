@@ -1,6 +1,8 @@
 # Kapytal
 
-Kapytal is an upcoming PyQt-based desktop tool for managing personal or household finances. Log your income and expenses, track your investments, analyse the data and take control of your financial life.
+Kapytal is an upcoming PyQt-based desktop tool for managing personal or household finances.
+
+Log your income and expenses, track your investments, analyse the data and take control of your financial life.
 
 ## Kapytal supports
 
@@ -34,4 +36,7 @@ Kapytal is an upcoming PyQt-based desktop tool for managing personal or househol
 - Windows 8 or newer
 - around 200 MB of disk space
 
-You can read more about the features [here](/docs/features.md).
+## Documentation
+
+- [Glossary](/docs/glossary.md)
+- [FAQ](/docs/faq.md)

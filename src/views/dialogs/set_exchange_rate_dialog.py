@@ -19,6 +19,7 @@ class SetExchangeRateDialog(CustomDialog, Ui_SetExchangeRateDialog):
     def __init__(  # noqa: PLR0913
         self,
         date_: date,
+        max_date: date,
         exchange_rate: str,
         value: Decimal,
         parent: QWidget | None,
@@ -28,9 +29,11 @@ class SetExchangeRateDialog(CustomDialog, Ui_SetExchangeRateDialog):
         super().__init__(parent)
         self.setupUi(self)
         self.setWindowIcon(icons.exchange_rate)
+
+        self._edit = edit
         if edit:
             self.setWindowTitle(f"Edit {exchange_rate} data point")
-            self.dateEdit.setEnabled(False)
+            self._original_date = date_
         else:
             self.setWindowTitle(f"Add {exchange_rate} data point")
 
@@ -40,10 +43,12 @@ class SetExchangeRateDialog(CustomDialog, Ui_SetExchangeRateDialog):
         self.exchangeRateLabel.setText(f"1 {primary_code} =")
         self.exchangeRateDoubleSpinBox.setMaximum(1_000_000_000_000)
         self.exchangeRateDoubleSpinBox.setValue(value)
-        self.exchangeRateDoubleSpinBox.setDecimals(9)
+        self.exchangeRateDoubleSpinBox.setDecimals(
+            user_settings.settings.exchange_rate_decimals
+        )
         self.exchangeRateDoubleSpinBox.setSuffix(f" {secondary_code}")
         self.dateEdit.setDate(date_)
-        self.dateEdit.setMaximumDate(date_)
+        self.dateEdit.setMaximumDate(max_date)
 
         self.buttonBox.clicked.connect(self._handle_button_box_click)
 
@@ -59,6 +64,14 @@ class SetExchangeRateDialog(CustomDialog, Ui_SetExchangeRateDialog):
     @property
     def date_(self) -> date:
         return self.dateEdit.date().toPyDate()
+
+    @property
+    def original_date(self) -> date:
+        return self._original_date
+
+    @property
+    def edit(self) -> bool:
+        return self._edit
 
     @property
     def exchange_rate_code(self) -> str:

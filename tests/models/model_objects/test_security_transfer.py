@@ -37,7 +37,7 @@ def test_creation(  # noqa: PLR0913
     account_recipient: SecurityAccount,
     data: st.DataObject,
 ) -> None:
-    shares = data.draw(share_decimals(security.shares_unit))
+    shares = data.draw(share_decimals(security.shares_decimals))
     transfer = SecurityTransfer(
         description, datetime_, security, shares, account_sender, account_recipient
     )
@@ -72,7 +72,7 @@ def test_invalid_account_sender_type(  # noqa: PLR0913
     account_recipient: SecurityAccount,
     data: st.DataObject,
 ) -> None:
-    shares = data.draw(share_decimals(shares_unit=security.shares_unit))
+    shares = data.draw(share_decimals(decimals=security.shares_decimals))
     with pytest.raises(
         TypeError, match="SecurityTransfer.sender must be a SecurityAccount."
     ):
@@ -97,7 +97,7 @@ def test_invalid_account_recipient_type(  # noqa: PLR0913
     account_recipient: Any,
     data: st.DataObject,
 ) -> None:
-    shares = data.draw(share_decimals(shares_unit=security.shares_unit))
+    shares = data.draw(share_decimals(decimals=security.shares_decimals))
     with pytest.raises(
         TypeError,
         match="SecurityTransfer.recipient must be a SecurityAccount.",

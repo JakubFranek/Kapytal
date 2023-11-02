@@ -27,6 +27,7 @@ class CurrencyForm(CustomWidget, Ui_CurrencyForm):
     signal_currency_selection_changed = pyqtSignal()
     signal_exchange_rate_selection_changed = pyqtSignal()
     signal_data_point_selection_changed = pyqtSignal()
+    signal_data_point_double_clicked = pyqtSignal()
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent=parent)
@@ -41,6 +42,9 @@ class CurrencyForm(CustomWidget, Ui_CurrencyForm):
         self.currencyTable.horizontalHeader().setSortIndicatorClearable(True)
         self.exchangeRateTable.horizontalHeader().setSortIndicatorClearable(True)
         self.exchangeRateHistoryTable.horizontalHeader().setSortIndicatorClearable(True)
+        self.exchangeRateHistoryTable.doubleClicked.connect(
+            self.signal_data_point_double_clicked.emit
+        )
 
     def load_chart_data(self, x: Collection, y: Collection, title: str) -> None:
         self.chart_widget.load_data(x, y, title)

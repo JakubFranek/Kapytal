@@ -2,6 +2,7 @@ import logging
 from collections.abc import Collection
 from datetime import datetime, timedelta
 
+from src.models.model_objects.attributes import AttributeType
 from src.models.model_objects.cash_objects import (
     CashTransaction,
     RefundTransaction,
@@ -63,7 +64,7 @@ class RefundTransactionDialogPresenter(TransactionDialogPresenter):
             )
             return
         if not check_for_nonexistent_attributes(
-            [payee], self._record_keeper.payees, self._dialog
+            [payee], self._record_keeper.payees, AttributeType.PAYEE, self._dialog
         ):
             logging.debug("Dialog aborted")
             return
@@ -131,7 +132,7 @@ class RefundTransactionDialogPresenter(TransactionDialogPresenter):
             )
             return
         if not check_for_nonexistent_attributes(
-            [payee], self._record_keeper.payees, self._dialog
+            [payee], self._record_keeper.payees, AttributeType.PAYEE, self._dialog
         ):
             logging.debug("Dialog aborted")
             return

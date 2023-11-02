@@ -34,18 +34,20 @@ class SecurityDialog(CustomDialog, Ui_SecurityDialog):
         self.typeComboBox.setCurrentText("")
         self.formLayout.insertRow(2, "Type", self.typeComboBox)
 
+        for code in currency_codes:
+            self.currencyComboBox.addItem(code)
+
         if edit:
             self.setWindowTitle("Edit Security")
             self.setWindowIcon(icons.edit_security)
-            self.currencyComboBox.setVisible(False)
-            self.currencyLabel.setVisible(False)
-            self.unitDoubleSpinBox.setVisible(False)
-            self.unitLabel.setVisible(False)
+            self.currencyComboBox.setEnabled(False)
+            self.currencyLabel.setEnabled(False)
+            self.decimalsSpinBox.setEnabled(False)
+            self.decimalsLabel.setEnabled(False)
+
         else:
             self.setWindowTitle("Add Security")
             self.setWindowIcon(icons.add_security)
-            for code in currency_codes:
-                self.currencyComboBox.addItem(code)
 
         self.currencyComboBox.setCurrentIndex(0)
 
@@ -85,12 +87,12 @@ class SecurityDialog(CustomDialog, Ui_SecurityDialog):
         self.currencyComboBox.setCurrentText(text)
 
     @property
-    def unit(self) -> Decimal:
-        return Decimal(self.unitDoubleSpinBox.cleanText().replace(",", ""))
+    def decimals(self) -> int:
+        return self.decimalsSpinBox.value()
 
-    @unit.setter
-    def unit(self, value: Decimal) -> None:
-        self.unitDoubleSpinBox.setValue(value)
+    @decimals.setter
+    def decimals(self, value: int) -> None:
+        self.decimalsSpinBox.setValue(value)
 
     def _handle_button_box_click(self, button: QAbstractButton) -> None:
         role = self.buttonBox.buttonRole(button)
@@ -108,5 +110,5 @@ class SecurityDialog(CustomDialog, Ui_SecurityDialog):
     def _set_tab_order(self) -> None:
         self.setTabOrder(self.nameLineEdit, self.symbolLineEdit)
         self.setTabOrder(self.symbolLineEdit, self.typeComboBox)
-        self.setTabOrder(self.typeComboBox, self.unitDoubleSpinBox)
-        self.setTabOrder(self.unitDoubleSpinBox, self.currencyComboBox)
+        self.setTabOrder(self.typeComboBox, self.decimalsSpinBox)
+        self.setTabOrder(self.decimalsSpinBox, self.currencyComboBox)

@@ -29,6 +29,7 @@ class AccountTreeWidget(QWidget, Ui_AccountTreeWidget):
 
     signal_search_text_changed = pyqtSignal(str)
     signal_tree_expanded_state_changed = pyqtSignal()
+    signal_tree_double_clicked = pyqtSignal()
 
     def __init__(self, parent: QWidget | None) -> None:
         super().__init__(parent)
@@ -52,6 +53,7 @@ class AccountTreeWidget(QWidget, Ui_AccountTreeWidget):
         self.treeView.header().sortIndicatorChanged.connect(
             self._sort_indicator_changed
         )
+        self.treeView.doubleClicked.connect(self.signal_tree_double_clicked.emit)
 
         self.searchLineEdit.textChanged.connect(self.signal_search_text_changed)
 

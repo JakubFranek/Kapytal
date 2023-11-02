@@ -324,6 +324,22 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
         logging.debug(f"Closing {self.__class__.__name__}")
         return super().reject()
 
+    def disable_all_widgets(self) -> None:
+        self.incomeRadioButton.setEnabled(False)
+        self.expenseRadioButton.setEnabled(False)
+        self.accountsComboBox.setEnabled(False)
+        self.payeeComboBox.setEnabled(False)
+        self.dateTimeEdit.setEnabled(False)
+        self.descriptionPlainTextEdit.setEnabled(False)
+        self.amountDoubleSpinBox.setEnabled(False)
+        for row in self._category_rows:
+            row.setEnabled(False)
+        for row in self._tag_rows:
+            row.setEnabled(False)
+        for button in self.buttonBox.buttons():
+            if button.text() == "OK":
+                button.setEnabled(False)
+
     def _handle_button_box_click(self, button: QAbstractButton) -> None:
         role = self.buttonBox.buttonRole(button)
         if role == QDialogButtonBox.ButtonRole.AcceptRole:

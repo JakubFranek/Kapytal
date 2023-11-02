@@ -2,6 +2,7 @@ import logging
 from collections.abc import Sequence
 from datetime import datetime
 
+from src.models.model_objects.attributes import AttributeType
 from src.models.model_objects.cash_objects import CashAccount
 from src.models.model_objects.security_objects import (
     SecurityTransaction,
@@ -174,12 +175,18 @@ class SecurityTransactionDialogPresenter(TransactionDialogPresenter):
         tag_names = self._dialog.tag_names
 
         if not check_for_nonexistent_attributes(
-            tag_names, self._record_keeper.tags, self._dialog
+            tag_names, self._record_keeper.tags, AttributeType.TAG, self._dialog
         ):
             logging.debug("Dialog aborted")
             return
 
-        cash_account = self._record_keeper.get_account(cash_account_path, CashAccount)
+        try:
+            cash_account = self._record_keeper.get_account(
+                cash_account_path, CashAccount
+            )
+        except Exception as exception:  # noqa: BLE001
+            handle_exception(exception)
+            return
 
         logging.info(
             f"Adding SecurityTransaction: {datetime_.strftime('%Y-%m-%d')}, "
@@ -231,7 +238,7 @@ class SecurityTransactionDialogPresenter(TransactionDialogPresenter):
         tag_names = self._dialog.tag_names
 
         if tag_names is not None and not check_for_nonexistent_attributes(
-            tag_names, self._record_keeper.tags, self._dialog
+            tag_names, self._record_keeper.tags, AttributeType.TAG, self._dialog
         ):
             logging.debug("Dialog aborted")
             return

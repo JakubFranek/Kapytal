@@ -56,6 +56,9 @@ class CurrencyFormPresenter:
         self._view.signal_data_point_selection_changed.connect(
             self._data_point_selection_changed
         )
+        self._view.signal_data_point_double_clicked.connect(
+            self._run_edit_data_point_dialog
+        )
         self._exchange_rate_selection_changed()
         self._currency_selection_changed()
 
@@ -226,10 +229,16 @@ class CurrencyFormPresenter:
         if exchange_rate is None:
             raise ValueError("An ExchangeRate must be selected to set its value.")
         exchange_rate_code = str(exchange_rate)
-        last_value = exchange_rate.latest_rate
-        last_value = last_value if last_value.is_finite() else Decimal(1)
+        last_value = (
+            exchange_rate.latest_rate
+            if exchange_rate.latest_rate.is_finite()
+            else Decimal(1)
+        )
+
+        today = datetime.now(user_settings.settings.time_zone).date()
         self._dialog = SetExchangeRateDialog(
-            date_=datetime.now(user_settings.settings.time_zone).date(),
+            date_=today,
+            max_date=today,
             exchange_rate=exchange_rate_code,
             value=last_value,
             parent=self._view,
@@ -251,6 +260,7 @@ class CurrencyFormPresenter:
         date_, value = selected_data_points[0]
         self._dialog = SetExchangeRateDialog(
             date_=date_,
+            max_date=datetime.now(user_settings.settings.time_zone).date(),
             exchange_rate=exchange_rate_code,
             value=value,
             parent=self._view,
@@ -268,28 +278,33 @@ class CurrencyFormPresenter:
         value = self._dialog.value.normalize()
         date_ = self._dialog.date_
         exchange_rate_code = self._dialog.exchange_rate_code
+        if self._dialog.edit:
+            date_edited = self._dialog.original_date != date_
+        else:
+            date_edited = False
+
         logging.info(f"Setting ExchangeRate {exchange_rate_code}: {value!s} on {date_}")
         try:
             exchange_rate.set_rate(date_, value)
+            if date_edited:
+                exchange_rate.delete_rate(self._dialog.original_date)
         except Exception as exception:  # noqa: BLE001
             handle_exception(exception)
             return
 
         previous_data_points = self._exchange_rate_history_model.data_points
         new_data_points = exchange_rate.rate_history_pairs
-        if len(previous_data_points) != len(new_data_points):
+        if date_edited:  # REFACTOR: not optimal - model reset is a dirty fix
+            self._exchange_rate_history_model.pre_reset_model()
+            self._exchange_rate_history_model.load_data(new_data_points)
+            self._exchange_rate_history_model.post_reset_model()
+        elif len(previous_data_points) != len(new_data_points):
             for _index, _data in enumerate(new_data_points):
                 if date_ == _data[0]:
                     index = _index
                     break
             else:
                 raise ValueError("No data point found for the given date.")
-            add = True
-        else:
-            add = False
-            index = None
-
-        if add:
             self._exchange_rate_history_model.pre_add(index)
             self._exchange_rate_history_model.load_data(new_data_points)
             self._exchange_rate_history_model.post_add()

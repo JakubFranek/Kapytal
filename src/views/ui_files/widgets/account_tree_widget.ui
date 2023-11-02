@@ -129,7 +129,7 @@
      <item row="0" column="0">
       <widget class="QLabel" name="checkedAccountBalanceLabel">
        <property name="text">
-        <string>Checked Account balance:</string>
+        <string>Checked Account Balance:</string>
        </property>
       </widget>
      </item>

@@ -3,6 +3,7 @@ from collections.abc import Collection
 
 from PyQt6.QtWidgets import QWidget
 from src.models.base_classes.transaction import Transaction
+from src.models.model_objects.attributes import AttributeType
 from src.models.record_keeper import RecordKeeper
 from src.presenters.utilities.check_for_nonexistent_attributes import (
     check_for_nonexistent_attributes,
@@ -55,7 +56,7 @@ class TransactionTagsDialogPresenter:
         tag_names = self._dialog.tags
 
         if not check_for_nonexistent_attributes(
-            tag_names, self._record_keeper.tags, self._dialog
+            tag_names, self._record_keeper.tags, AttributeType.TAG, self._dialog
         ):
             logging.debug("Dialog aborted")
             return
@@ -73,7 +74,7 @@ class TransactionTagsDialogPresenter:
         tag_names = self._dialog.tags
 
         if not check_for_nonexistent_attributes(
-            tag_names, self._record_keeper.tags, self._dialog
+            tag_names, self._record_keeper.tags, AttributeType.TAG, self._dialog
         ):
             logging.debug("Dialog aborted")
             return

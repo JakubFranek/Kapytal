@@ -517,8 +517,8 @@ class Ui_TransactionFilterForm(object):
 
         self.retranslateUi(TransactionFilterForm)
         self.mainTabWidget.setCurrentIndex(0)
-        self.categoriesTypeTabWidget.setCurrentIndex(0)
-        QtCore.QMetaObject.connectSlotsByName(TransactionFilterForm)
+        self.categoriesTypeTabWidget.setCurrentIndex(0) 
+        # QtCore.QMetaObject.connectSlotsByName(TransactionFilterForm) # FIXME: this line caused some harmless exceptions at program start
 
     def retranslateUi(self, TransactionFilterForm):
         _translate = QtCore.QCoreApplication.translate

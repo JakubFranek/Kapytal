@@ -85,10 +85,7 @@ class Currency(CopyableMixin, JSONSerializableMixin):
     def add_exchange_rate(self, exchange_rate: "ExchangeRate") -> None:
         if not isinstance(exchange_rate, ExchangeRate):
             raise TypeError("Parameter 'exchange_rate' must be an ExchangeRate.")
-        if (
-            exchange_rate.primary_currency != self
-            and exchange_rate.secondary_currency != self
-        ):
+        if self not in exchange_rate.currencies:
             raise CurrencyError(
                 f"Provided ExchangeRate ({exchange_rate}) "
                 f"does not relate to this Currency ({self.code})."
@@ -123,9 +120,7 @@ class Currency(CopyableMixin, JSONSerializableMixin):
             if factor is not None:
                 return 1 / factor
 
-        exchange_rates = Currency._get_exchange_rates(
-            self, target_currency
-        )
+        exchange_rates = Currency._get_exchange_rates(self, target_currency)
         if exchange_rates is None:
             logging.warning(
                 f"No path from {self._code} to {target_currency.code} found."

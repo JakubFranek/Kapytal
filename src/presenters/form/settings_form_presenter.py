@@ -47,6 +47,12 @@ class SettingsFormPresenter:
         self._view.transaction_date_format = (
             user_settings.settings.transaction_date_format
         )
+        self._view.exchange_rate_decimals = (
+            user_settings.settings.exchange_rate_decimals
+        )
+        self._view.price_per_share_decimals = (
+            user_settings.settings.price_per_share_decimals
+        )
         self._backup_paths = list(user_settings.settings.backup_paths)
         self._backup_paths_list_model.pre_reset_model()
         self.update_model_data()
@@ -109,6 +115,12 @@ class SettingsFormPresenter:
             user_settings.settings.general_date_format = self._view.general_date_format
             user_settings.settings.transaction_date_format = (
                 self._view.transaction_date_format
+            )
+            user_settings.settings.exchange_rate_decimals = (
+                self._view.exchange_rate_decimals
+            )
+            user_settings.settings.price_per_share_decimals = (
+                self._view.price_per_share_decimals
             )
         except Exception as exception:  # noqa: BLE001
             handle_exception(exception)

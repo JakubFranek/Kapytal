@@ -116,7 +116,7 @@ class Ui_AccountTreeWidget(object):
         self.showAllToolButton.setText(_translate("AccountTreeWidget", "..."))
         self.hideAllToolButton.setText(_translate("AccountTreeWidget", "..."))
         self.treeView.setStatusTip(_translate("AccountTreeWidget", "Account Tree: right-click to open the context menu"))
-        self.checkedAccountBalanceLabel.setText(_translate("AccountTreeWidget", "Checked Account balance:"))
+        self.checkedAccountBalanceLabel.setText(_translate("AccountTreeWidget", "Checked Account Balance:"))
         self.actionAdd_Account_Group.setText(_translate("AccountTreeWidget", "Add Account Group"))
         self.actionAdd_Security_Account.setText(_translate("AccountTreeWidget", "Add Security Account"))
         self.actionAdd_Cash_Account.setText(_translate("AccountTreeWidget", "Add Cash Account"))

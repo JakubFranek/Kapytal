@@ -19,6 +19,7 @@ class SetSecurityPriceDialog(CustomDialog, Ui_SetSecurityPriceDialog):
     def __init__(  # noqa: PLR0913
         self,
         date_: date,
+        max_date: date,
         value: Decimal,
         security_name: str,
         currency_code: str,
@@ -30,9 +31,10 @@ class SetSecurityPriceDialog(CustomDialog, Ui_SetSecurityPriceDialog):
         self.setupUi(self)
         self.setWindowIcon(icons.set_security_price)
 
+        self._edit = edit
         if edit:
             self.setWindowTitle(f"Edit {security_name} price")
-            self.dateEdit.setEnabled(False)
+            self._original_date = date_
         else:
             self.setWindowTitle(f"Add {security_name} price")
 
@@ -41,7 +43,7 @@ class SetSecurityPriceDialog(CustomDialog, Ui_SetSecurityPriceDialog):
         self.priceDoubleSpinBox.setDecimals(9)
         self.priceDoubleSpinBox.setSuffix(" " + currency_code)
         self.dateEdit.setDate(date_)
-        self.dateEdit.setMaximumDate(date_)
+        self.dateEdit.setMaximumDate(max_date)
 
         self.buttonBox.clicked.connect(self._handle_button_box_click)
 
@@ -57,6 +59,14 @@ class SetSecurityPriceDialog(CustomDialog, Ui_SetSecurityPriceDialog):
     @property
     def date_(self) -> date:
         return self.dateEdit.date().toPyDate()
+
+    @property
+    def original_date(self) -> date:
+        return self._original_date
+
+    @property
+    def edit(self) -> bool:
+        return self._edit
 
     def _handle_button_box_click(self, button: QAbstractButton) -> None:
         role = self.buttonBox.buttonRole(button)
