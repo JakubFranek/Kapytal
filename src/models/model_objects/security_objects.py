@@ -150,7 +150,6 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
             return self._latest_date
         return None
 
-    # TODO: review whether the following property is really needed
     @property
     def price_history(self) -> dict[date, CashAmount]:
         return self._price_history
@@ -163,7 +162,6 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
             self._recalculate_price_history_pairs = False
         return self._price_history_pairs
 
-    # TODO: review whether the following property is really needed
     @property
     def decimal_price_history_pairs(self) -> tuple[tuple[date, Decimal]]:
         return tuple(
