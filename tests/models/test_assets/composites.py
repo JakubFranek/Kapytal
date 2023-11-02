@@ -452,7 +452,7 @@ def security_transfers(draw: st.DrawFn) -> SecurityTransfer:
 def share_decimals(
     draw: st.DrawFn, decimals: int, min_value: int = 1, max_value: int = 1e6
 ) -> Decimal:
-    unit = Decimal(10 ** (-decimals))
+    unit = Decimal(f"1e{-decimals}")
     multiplier = draw(st.integers(min_value=min_value, max_value=max_value))
     return unit * multiplier
 
