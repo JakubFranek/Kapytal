@@ -15,10 +15,6 @@ from src.views import colors
 from src.views.main_view import MainView
 from src.views.utilities.handle_exception import handle_uncaught_exception
 
-# BUG: sometimes the following error appears
-# QWindowsWindow::setMouseGrabEnabled: Not setting mouse grab for invisible window
-# QWidgetWindow/'menuReportsWindow'
-
 
 def main() -> None:
     # The following three lines are needed to make sure task bar icon works on Windows

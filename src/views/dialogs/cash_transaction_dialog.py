@@ -104,14 +104,12 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
 
         if edit_mode == EditMode.EDIT_MULTIPLE:
             self._disable_type()
-            pass
         elif edit_mode == EditMode.EDIT_MULTIPLE_MIXED_CURRENCY:
             self._disable_type()
             self._disable_account()
             self._disable_amount()
             self._category_rows[0].enable_split(enable=False)
             self._tag_rows[0].enable_split(enable=False)
-            pass
 
         self.amountDoubleSpinBox.valueChanged.connect(self._amount_changed)
         self._amount_changed()

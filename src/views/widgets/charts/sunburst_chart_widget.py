@@ -79,7 +79,6 @@ def create_sunburst_chart(
         try:
             cmap = mpl.colors.LinearSegmentedColormap.from_list("", [color, "white"])
             colors = [cmap(i) for i in get_color_map_ratios(len(nodes))]
-            pass
         except ValueError:
             colors = color
 

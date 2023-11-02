@@ -57,7 +57,7 @@ class InvalidCashTransactionTypeError(ValueError):
 class CashRelatedTransaction(Transaction, ABC):
     __slots__ = ()
 
-    # REFACTOR: account parameter could be optional for CashTransactions
+    # REFACTOR: account parameter could be optional for CashTransaction and RefundTransaction
     def get_amount(self, account: "CashAccount") -> CashAmount:
         if not isinstance(account, CashAccount):
             raise TypeError("Parameter 'account' must be a CashAccount.")

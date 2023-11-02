@@ -27,7 +27,6 @@ from tests.models.test_assets.composites import (
     securities,
     security_accounts,
     share_decimals,
-    valid_decimals,
 )
 
 

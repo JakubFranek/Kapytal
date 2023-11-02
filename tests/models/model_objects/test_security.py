@@ -14,7 +14,6 @@ from src.models.model_objects.currency_objects import (
 from src.models.model_objects.security_objects import InvalidCharacterError, Security
 from tests.models.test_assets.composites import (
     currencies,
-    decimal_powers_of_10,
     everything_except,
     names,
     securities,
