@@ -68,13 +68,8 @@ class CashFlowPeriodicReport(CustomWidget, Ui_CashFlowPeriodicReport):
         self.tableView.horizontalHeader().setSortIndicatorClearable(True)
 
         self.dataSelectorComboBox = QComboBox(self)
-        self.dataSelectorComboBox.addItem("All data")
-        self.dataSelectorComboBox.addItem("Inflows")
-        self.dataSelectorComboBox.addItem("Outflows")
-        self.dataSelectorComboBox.addItem("Cash Flow")
-        self.dataSelectorComboBox.addItem("Total Gain / Loss")
-        self.dataSelectorComboBox.addItem("Net Growth")
-        self.dataSelectorComboBox.addItem("Savings Rate")
+        for key in STR_TO_CHART_DATA:
+            self.dataSelectorComboBox.addItem(key)
         self.dataSelectorComboBox.setCurrentText("All data")
         self.dataSelectorComboBox.currentTextChanged.connect(
             lambda: self._combobox_text_changed(show_busy_indicator=True)
