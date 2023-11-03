@@ -26,7 +26,6 @@ COLUMNS_NUMBERS = {
 }
 
 
-# TODO: simplify CategoryTreeNode by directly using CategoryStats within
 @dataclass
 class CategoryTreeNode:
     name: str
