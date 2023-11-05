@@ -43,8 +43,13 @@ class ValueTableModel(QAbstractTableModel):
     def data_points(self) -> tuple[date, Decimal]:
         return self._data
 
-    def load_data(self, date_value_pairs: Sequence[tuple[date, Decimal]]) -> None:
+    def load_data(
+        self,
+        date_value_pairs: Sequence[tuple[date, Decimal]],
+        decimals: int | None = None,
+    ) -> None:
         self._data = tuple(date_value_pairs)
+        self._decimals = decimals
 
     def set_unit(self, unit: str) -> None:
         self._unit = unit
@@ -95,6 +100,8 @@ class ValueTableModel(QAbstractTableModel):
         if column == ValueTableColumn.DATE:
             return data[0].strftime(user_settings.settings.general_date_format)
         if column == ValueTableColumn.VALUE:
+            if self._decimals is not None:
+                return f"{data[1]:,.{self._decimals}f}"
             return f"{data[1]:,}"
         return None
 

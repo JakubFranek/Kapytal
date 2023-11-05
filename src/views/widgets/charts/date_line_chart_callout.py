@@ -1,4 +1,4 @@
-from PyQt6.QtCharts import QChart
+from PyQt6.QtCharts import QChart, QDateTimeAxis
 from PyQt6.QtCore import QPoint, QPointF, QRect, QRectF, Qt
 from PyQt6.QtGui import (
     QColor,
@@ -15,9 +15,9 @@ from PyQt6.QtWidgets import (
 )
 
 
-class LineCallout(QGraphicsItem):
+class DateLineChartCallout(QGraphicsItem):
     def __init__(self, chart: QChart) -> None:
-        super().__init__(self, chart)
+        super().__init__(chart)
         self._chart = chart
         self._text = ""
         self._textRect = QRectF()
@@ -70,8 +70,8 @@ class LineCallout(QGraphicsItem):
             on_right = anchor.x() > self._rect.right()
 
             # get the nearest _rect corner.
-            x = (on_right + right_of_center) * self._rect.width()
-            y = (below + below_center) * self._rect.height()
+            x = (on_right + right_of_center) * self._rect.width() + self._rect.left()
+            y = (below + below_center) * self._rect.height() + self._rect.top()
             corner_case = (
                 (above and on_left)
                 or (above and on_right)
@@ -116,6 +116,8 @@ class LineCallout(QGraphicsItem):
             path = path.simplified()
 
         painter.setBrush(QColor(255, 255, 255))
+        painter.setPen(QColor(0, 0, 0))
+        painter.setFont(self._font)
         painter.drawPath(path)
         painter.drawText(self._textRect, self._text)
 
@@ -141,7 +143,21 @@ class LineCallout(QGraphicsItem):
                 QRect(0, 0, 150, 150), Qt.AlignmentFlag.AlignLeft, self._text
             )
         )
-        self._textRect.translate(5, 5)
+        # QFontMetrics.boundingRect is broken, extra padding is needed
+        self._textRect.adjust(0, 0, 10, 2)
+
+        x_axis: QDateTimeAxis = self._chart.axes(Qt.Orientation.Horizontal)[0]
+        x_min = x_axis.min().toMSecsSinceEpoch()
+        x_max = x_axis.max().toMSecsSinceEpoch()
+        x_anchor = self._anchor.x()
+
+        # if the anchor point is close to the right edge of the chart,
+        # move text rectangle to the left
+        if 3 * abs(x_anchor - x_max) < abs(x_anchor - x_min):
+            self._textRect.translate(-1.35 * self._textRect.width(), 5)
+        else:
+            self._textRect.translate(5, 5)
+
         self.prepareGeometryChange()
         self._rect = self._textRect.adjusted(-5, -5, 5, 5)
 

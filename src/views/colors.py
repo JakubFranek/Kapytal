@@ -11,6 +11,9 @@ _red_light_mode = QColor("red")
 _red_dark_mode = QColor(255, 0, 191, 255)  # "shocking pink"
 _gray = QColor("gray")
 
+_tab_widget_background_dark_mode = QColor(75, 75, 75, 255)
+_tab_widget_background_light_mode = QColor(252, 252, 252, 255)
+
 _brush_blue_light_mode = QBrush(_blue_light_mode)
 _brush_blue_dark_mode = QBrush(_blue_dark_mode)
 _brush_green_light_mode = QBrush(_green_light_mode)
@@ -36,6 +39,12 @@ def get_red() -> QColor:
 
 def get_gray() -> QColor:
     return _gray
+
+
+def get_tab_widget_background() -> QColor:
+    if color_scheme == Qt.ColorScheme.Dark:
+        return _tab_widget_background_dark_mode
+    return _tab_widget_background_light_mode
 
 
 def get_blue_brush() -> QBrush:

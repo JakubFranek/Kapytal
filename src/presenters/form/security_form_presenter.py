@@ -92,7 +92,9 @@ class SecurityFormPresenter:
         if security is None:
             return
         self._price_table_model.pre_reset_model()
-        self._price_table_model.load_data(security.decimal_price_history_pairs)
+        self._price_table_model.load_data(
+            security.decimal_price_history_pairs, security.price_decimals
+        )
         self._price_table_model.set_unit(security.currency.code)
         self._price_table_model.post_reset_model()
         self._update_chart(security)
@@ -304,7 +306,7 @@ class SecurityFormPresenter:
         new_data_points = security.decimal_price_history_pairs
         if date_edited:  # REFACTOR: not optimal - model reset is a dirty fix
             self._price_table_model.pre_reset_model()
-            self._price_table_model.load_data(new_data_points)
+            self._price_table_model.load_data(new_data_points, security.price_decimals)
             self._price_table_model.set_unit(security.currency.code)
             self._price_table_model.post_reset_model()
         elif len(previous_data_points) != len(new_data_points):
@@ -315,11 +317,11 @@ class SecurityFormPresenter:
             else:
                 raise ValueError("No data point found for the given date.")
             self._price_table_model.pre_add(index)
-            self._price_table_model.load_data(new_data_points)
+            self._price_table_model.load_data(new_data_points, security.price_decimals)
             self._price_table_model.set_unit(security.currency.code)
             self._price_table_model.post_add()
         else:
-            self._price_table_model.load_data(new_data_points)
+            self._price_table_model.load_data(new_data_points, security.price_decimals)
 
         self._dialog.close()
         self._update_chart(security)
@@ -555,7 +557,9 @@ class SecurityFormPresenter:
             QApplication.processEvents()
 
         self._price_table_model.pre_reset_model()
-        self._price_table_model.load_data(security.decimal_price_history_pairs)
+        self._price_table_model.load_data(
+            security.decimal_price_history_pairs, security.price_decimals
+        )
         self._price_table_model.set_unit(security.currency.code)
         self._price_table_model.post_reset_model()
         self._update_chart(security)
@@ -565,9 +569,14 @@ class SecurityFormPresenter:
 
     def _update_chart(self, security: Security | None) -> None:
         if security is None or len(security.decimal_price_history_pairs) == 0:
-            self._view.load_chart_data((), (), "", "")
+            self._view.load_chart_data((), (), "", "", "", 0)
             return
         dates, rates = zip(*security.decimal_price_history_pairs, strict=True)
         self._view.load_chart_data(
-            dates, rates, security.name, f"Price ({security.currency.code})"
+            dates,
+            rates,
+            security.name,
+            f"Price [{security.currency.code}]",
+            security.currency.code,
+            security.price_decimals,
         )
