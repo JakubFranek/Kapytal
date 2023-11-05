@@ -46,8 +46,10 @@ class CurrencyForm(CustomWidget, Ui_CurrencyForm):
             self.signal_data_point_double_clicked.emit
         )
 
-    def load_chart_data(self, x: Collection, y: Collection, title: str) -> None:
-        self.chart_widget.load_data(x, y, title)
+    def load_chart_data(
+        self, x: Collection, y: Collection, title: str, y_decimals: int
+    ) -> None:
+        self.chart_widget.load_data(x, y, title, y_decimals=y_decimals)
         self.update_history_table_width()
 
     def set_currency_actions(self, *, is_currency_selected: bool) -> None:

@@ -296,7 +296,9 @@ class CurrencyFormPresenter:
         new_data_points = exchange_rate.rate_history_pairs
         if date_edited:  # REFACTOR: not optimal - model reset is a dirty fix
             self._exchange_rate_history_model.pre_reset_model()
-            self._exchange_rate_history_model.load_data(new_data_points)
+            self._exchange_rate_history_model.load_data(
+                new_data_points, exchange_rate.rate_decimals
+            )
             self._exchange_rate_history_model.post_reset_model()
         elif len(previous_data_points) != len(new_data_points):
             for _index, _data in enumerate(new_data_points):
@@ -306,10 +308,14 @@ class CurrencyFormPresenter:
             else:
                 raise ValueError("No data point found for the given date.")
             self._exchange_rate_history_model.pre_add(index)
-            self._exchange_rate_history_model.load_data(new_data_points)
+            self._exchange_rate_history_model.load_data(
+                new_data_points, exchange_rate.rate_decimals
+            )
             self._exchange_rate_history_model.post_add()
         else:
-            self._exchange_rate_history_model.load_data(new_data_points)
+            self._exchange_rate_history_model.load_data(
+                new_data_points, exchange_rate.rate_decimals
+            )
 
         self._dialog.close()
         self._update_chart(exchange_rate)
@@ -457,7 +463,9 @@ class CurrencyFormPresenter:
             QApplication.processEvents()
 
         self._exchange_rate_history_model.pre_reset_model()
-        self._exchange_rate_history_model.load_data(exchange_rate.rate_history_pairs)
+        self._exchange_rate_history_model.load_data(
+            exchange_rate.rate_history_pairs, exchange_rate.rate_decimals
+        )
         self._exchange_rate_history_model.post_reset_model()
         self._update_chart(exchange_rate)
 
@@ -466,10 +474,12 @@ class CurrencyFormPresenter:
 
     def _update_chart(self, exchange_rate: ExchangeRate | None) -> None:
         if exchange_rate is None or len(exchange_rate.rate_history_pairs) == 0:
-            self._view.load_chart_data((), (), "")
+            self._view.load_chart_data((), (), "", 0)
             return
         dates, rates = zip(*exchange_rate.rate_history_pairs, strict=True)
-        self._view.load_chart_data(dates, rates, str(exchange_rate))
+        self._view.load_chart_data(
+            dates, rates, str(exchange_rate), exchange_rate.rate_decimals
+        )
 
     def _initialize_models(self) -> None:
         self._currency_table_proxy = QSortFilterProxyModel(self._view)
