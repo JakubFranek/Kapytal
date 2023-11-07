@@ -7,7 +7,7 @@ from src.views.base_classes.custom_widget import CustomWidget
 from src.views.ui_files.reports.Ui_table_and_line_chart_report import (
     Ui_TableAndLineChartReport,
 )
-from src.views.widgets.charts.line_chart_widget import LineChartWidget
+from src.views.widgets.charts.date_line_chart_view import DateLineChartView
 
 
 class TableAndLineChartReport(CustomWidget, Ui_TableAndLineChartReport):
@@ -24,7 +24,7 @@ class TableAndLineChartReport(CustomWidget, Ui_TableAndLineChartReport):
         self.setWindowTitle(title)
         self.setWindowIcon(icons.pie_chart)
 
-        self.chart_widget = LineChartWidget(self)
+        self.chart_widget = DateLineChartView(self)
         self.verticalLayout.insertWidget(0, self.chart_widget)
 
         if label_text:
@@ -35,16 +35,19 @@ class TableAndLineChartReport(CustomWidget, Ui_TableAndLineChartReport):
         self.verticalLayout.setStretch(0, 1)
         self.verticalLayout.setStretch(1, 0)
 
-    def load_data(
+    def load_data(  # noqa: PLR0913
         self,
         x: Sequence,
         y: Sequence,
         title: str = "",
-        ylabel: str = "",
-        xlabel: str = "",
-        format_: str = "",
+        y_label: str = "",
+        x_label: str = "",
+        y_unit: str = "",
+        y_decimals: int = 0,
     ) -> None:
-        self.chart_widget.load_data(x, y, title, ylabel, xlabel, format_)
+        self.chart_widget.load_data(
+            x, y, title, y_label, x_label, y_unit=y_unit, y_decimals=y_decimals
+        )
 
     def finalize_setup(self) -> None:
         self.tableView.horizontalHeader().setSectionResizeMode(

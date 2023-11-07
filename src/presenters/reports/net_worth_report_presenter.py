@@ -246,12 +246,12 @@ class NetWorthReportPresenter:
             if base_currency.places >= 2  # noqa: PLR2004
             else 0
         )
-        format_ = "{x:,." + str(places) + "f}"
         self.report.load_data(
             x,
             y,
-            ylabel="Net Worth (CZK)",
-            format_=format_,
+            y_label=f"Net Worth [{base_currency.code}]",
+            y_unit=base_currency.code,
+            y_decimals=places,
         )
         self.report.show_form()
 
@@ -300,7 +300,7 @@ def _create_account_item_node(
     no_label_threshold: float,
     level: int,
     *,
-    parent_label_visible: bool
+    parent_label_visible: bool,
 ) -> SunburstNode:
     children: list[SunburstNode] = []
     balance = 0
@@ -369,7 +369,7 @@ def _create_asset_node(
     no_label_threshold: float,
     level: int,
     *,
-    parent_label_visible: bool
+    parent_label_visible: bool,
 ) -> SunburstNode:
     balance = 0
     name = stats.name
