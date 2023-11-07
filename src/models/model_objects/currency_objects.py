@@ -195,6 +195,7 @@ class ExchangeRate(CopyableMixin, JSONSerializableMixin):
         "_secondary_currency",
         "_rate_history",
         "_rate_history_pairs",
+        "_rate_decimals",
         "_latest_rate",
         "_latest_date",
         "_recalculate_rate_history_pairs",
@@ -217,6 +218,7 @@ class ExchangeRate(CopyableMixin, JSONSerializableMixin):
 
         self._rate_history: dict[date, Decimal] = {}
         self._rate_history_pairs: tuple[tuple[date, Decimal]] = ()
+        self._rate_decimals = 0
         self._recalculate_rate_history_pairs = False
 
     @property
@@ -245,10 +247,14 @@ class ExchangeRate(CopyableMixin, JSONSerializableMixin):
         return self._rate_history_pairs
 
     @property
+    def rate_decimals(self) -> int:
+        return self._rate_decimals
+
+    @property
     def latest_rate(self) -> Decimal:
         if len(self._rate_history) == 0:
             return Decimal("NaN")
-        return self._latest_rate
+        return round(self._latest_rate, self._rate_decimals)
 
     @property
     def latest_date(self) -> date | None:
@@ -364,6 +370,10 @@ class ExchangeRate(CopyableMixin, JSONSerializableMixin):
         else:
             self._latest_date = max(date_ for date_ in self._rate_history)
             self._latest_rate = self._rate_history[self._latest_date]
+
+        self._rate_decimals = 0
+        for rate in self._rate_history.values():
+            self._rate_decimals = max(self._rate_decimals, -rate.as_tuple().exponent)
 
         self.primary_currency.reset_cache()
         self.secondary_currency.reset_cache()

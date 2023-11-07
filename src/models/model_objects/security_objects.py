@@ -48,6 +48,7 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
         "_shares_decimals",
         "_price_history",
         "_price_history_pairs",
+        "_price_decimals",
         "_latest_date",
         "_latest_price",
         "_allow_slash",
@@ -94,6 +95,7 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
 
         self._price_history: dict[date, CashAmount] = {}
         self._price_history_pairs: tuple[tuple[date, CashAmount], ...] = ()
+        self._price_decimals = 0
         self._recalculate_price_history_pairs = False
         self.event_price_updated = Event()
 
@@ -171,6 +173,10 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
     @property
     def shares_decimals(self) -> int:
         return self._shares_decimals
+
+    @property
+    def price_decimals(self) -> int:
+        return self._price_decimals
 
     def __repr__(self) -> str:
         return f"Security('{self._name}')"
@@ -276,6 +282,13 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
         self._latest_price = latest_price
         if previous_latest_price != latest_price:
             self.event_price_updated()
+
+        self._price_decimals = 0
+        for price in self._price_history.values():
+            value_normalized = price.value_normalized
+            decimals = -value_normalized.as_tuple().exponent
+            if decimals > self._price_decimals:
+                self._price_decimals = decimals
 
         self._recalculate_price_history_pairs = True
 
