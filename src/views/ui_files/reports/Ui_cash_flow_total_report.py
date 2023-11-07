@@ -177,11 +177,6 @@ class Ui_CashFlowTotalReport(object):
         spacerItem = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Expanding)
         self.verticalLayout.addItem(spacerItem)
         self.horizontalLayout.addLayout(self.verticalLayout)
-        self.line = QtWidgets.QFrame(CashFlowTotalReport)
-        self.line.setFrameShape(QtWidgets.QFrame.Shape.VLine)
-        self.line.setFrameShadow(QtWidgets.QFrame.Shadow.Sunken)
-        self.line.setObjectName("line")
-        self.horizontalLayout.addWidget(self.line)
 
         self.retranslateUi(CashFlowTotalReport)
         QtCore.QMetaObject.connectSlotsByName(CashFlowTotalReport)

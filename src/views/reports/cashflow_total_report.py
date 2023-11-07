@@ -4,8 +4,8 @@ from src.models.statistics.cashflow_stats import CashFlowStats
 from src.views import colors, icons
 from src.views.base_classes.custom_widget import CustomWidget
 from src.views.ui_files.reports.Ui_cash_flow_total_report import Ui_CashFlowTotalReport
-from src.views.widgets.charts.cash_flow_total_chart_widget import (
-    CashFlowTotalChartWidget,
+from src.views.widgets.charts.cash_flow_total_chart_view import (
+    CashFlowTotalChartView,
 )
 
 
@@ -17,8 +17,10 @@ class CashFlowTotalReport(CustomWidget, Ui_CashFlowTotalReport):
         self.setWindowTitle("Cash Flow Report - Total")
         self.setWindowIcon(icons.bar_chart)
 
-        self.chart_widget = CashFlowTotalChartWidget(self)
+        self.chart_widget = CashFlowTotalChartView(self)
         self.horizontalLayout.addWidget(self.chart_widget)
+
+        self.resize(1100, 600)
 
     def load_stats(self, stats: CashFlowStats) -> None:
         self.incomeAmountLabel.setText(stats.incomes.balance.to_str_rounded())

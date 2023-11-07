@@ -1,7 +1,6 @@
 from collections.abc import Collection
 
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QPalette
 from PyQt6.QtWidgets import QHeaderView, QLineEdit, QWidget
 from src.views import colors, icons
 from src.views.base_classes.custom_widget import CustomWidget
@@ -13,7 +12,6 @@ from src.views.constants import (
 from src.views.ui_files.forms.Ui_security_form import Ui_SecurityForm
 from src.views.utilities.helper_functions import calculate_table_width
 from src.views.widgets.charts.date_line_chart_view import DateLineChartView
-from src.views.widgets.charts.line_chart_widget import LineChartWidget
 
 
 class SecurityForm(CustomWidget, Ui_SecurityForm):

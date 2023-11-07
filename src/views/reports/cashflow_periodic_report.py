@@ -31,6 +31,12 @@ STR_TO_CHART_DATA = {
 MINIMUM_TABLE_HEIGHT = 600
 MAXIMUM_TABLE_HEIGHT = 800
 
+# FIXME: this report is not centered to parent on show
+# maybe try this?    move(
+# parentWidget()->window()->frameGeometry().topLeft() +
+# parentWidget()->window()->rect().center() -
+# rect().center());
+
 
 # REFACTOR: this view has a different model philosophy than the others
 # (model is initialized here instead of in the presenter)
