@@ -110,6 +110,12 @@ class CashFlowPeriodicReport(CustomWidget, Ui_CashFlowPeriodicReport):
         width, height = self._calculate_table_view_size()
         self.resize(width, height)
 
+        self.move(
+            self.parent().window().frameGeometry().topLeft()
+            + self.parent().window().rect().center()
+            - self.rect().center()
+        )
+
     def set_recalculate_report_action_state(self, *, enabled: bool) -> None:
         self.actionRecalculate_Report.setEnabled(enabled)
         if enabled:

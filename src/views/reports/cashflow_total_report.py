@@ -20,7 +20,7 @@ class CashFlowTotalReport(CustomWidget, Ui_CashFlowTotalReport):
         self.chart_widget = CashFlowTotalChartView(self)
         self.horizontalLayout.addWidget(self.chart_widget)
 
-        self.resize(1100, 600)
+        self.resize(1115, 600)
 
     def load_stats(self, stats: CashFlowStats) -> None:
         self.incomeAmountLabel.setText(stats.incomes.balance.to_str_rounded())
