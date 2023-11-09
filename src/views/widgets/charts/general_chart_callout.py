@@ -131,7 +131,7 @@ class GeneralChartCallout(QGraphicsItem):
             painter.drawPath(path)
             painter.drawText(self._textRect, self._text)
 
-    def set_text(self, text: str) -> None:
+    def set_text(self, text: str, *, left: bool = True) -> None:
         self._text = text
         metrics = QFontMetrics(self._font)
         self._textRect = QRectF(
@@ -140,11 +140,15 @@ class GeneralChartCallout(QGraphicsItem):
             )
         )
         # QFontMetrics.boundingRect is broken, extra padding is needed
-        self._textRect.adjust(0, 0, 10, 2)
+        # more vertical padding is needed for taller text rectangles
+        self._textRect.adjust(0, 0, 15, int(self._textRect.height() / 8))
 
-        self._textRect.translate(
-            -self._textRect.width() - 20, -self._textRect.height() - 10
-        )
+        if not left:
+            self._textRect.moveTopLeft(QPointF(20, -self._textRect.height() - 10))
+        else:
+            self._textRect.translate(
+                -self._textRect.width() - 20, -self._textRect.height() - 10
+            )
         self.prepareGeometryChange()
         self._rect = self._textRect.adjusted(-5, -5, 5, 5)
 
