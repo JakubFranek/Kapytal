@@ -111,10 +111,27 @@ class ColorRanges(Enum):
 def get_color_range(color: ColorRanges, steps: int) -> tuple[QColor]:
     match color:
         case ColorRanges.BLUE:
-            return interpolate_colors(QColor(187, 232, 255), QColor(0, 47, 72), steps)
+            return interpolate_colors(QColor(0, 47, 72), QColor(187, 232, 255), steps)
         case ColorRanges.GREEN:
-            return interpolate_colors(QColor(213, 237, 175), QColor(49, 72, 17), steps)
+            return interpolate_colors(QColor(49, 72, 17), QColor(213, 237, 175), steps)
         case ColorRanges.RED:
-            return interpolate_colors(QColor(247, 215, 206), QColor(72, 24, 13), steps)
+            return interpolate_colors(QColor(72, 24, 13), QColor(247, 215, 206), steps)
         case _:
             raise ValueError("Invalid color range.")
+
+
+def get_deep_tab10_palette(*, reverse: bool = False) -> tuple[QColor]:
+    """Returns the deep version of the tab10 palette, as used in seaborn."""
+    palette = (
+        QColor(76, 114, 176),
+        QColor(221, 132, 82),
+        QColor(85, 168, 104),
+        QColor(196, 78, 82),
+        QColor(129, 114, 179),
+        QColor(147, 120, 96),
+        QColor(218, 139, 195),
+        QColor(140, 140, 140),
+        QColor(204, 185, 116),
+        QColor(100, 181, 205),
+    )
+    return palette[::-1] if reverse else palette

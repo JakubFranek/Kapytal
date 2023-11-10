@@ -24,7 +24,7 @@ from src.views.main_view import MainView
 from src.views.reports.table_and_line_chart_report import TableAndLineChartReport
 from src.views.reports.tree_and_sunburst_report import TreeAndSunburstReport
 from src.views.utilities.handle_exception import display_error_message
-from src.views.widgets.charts.sunburst_chart_widget import SunburstNode
+from src.views.widgets.charts.sunburst_chart_view import SunburstNode
 
 
 class NetWorthReportPresenter:

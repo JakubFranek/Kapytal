@@ -7,7 +7,7 @@ from src.views.base_classes.custom_widget import CustomWidget
 from src.views.ui_files.reports.Ui_tree_and_sunburst_report import (
     Ui_TreeAndSunburstReport,
 )
-from src.views.widgets.charts.sunburst_chart_widget import SunburstChartWidget
+from src.views.widgets.charts.sunburst_chart_view import SunburstChartView, SunburstNode
 
 
 class TreeAndSunburstReport(CustomWidget, Ui_TreeAndSunburstReport):
@@ -24,7 +24,7 @@ class TreeAndSunburstReport(CustomWidget, Ui_TreeAndSunburstReport):
         self.setWindowTitle(title)
         self.setWindowIcon(icons.pie_chart)
 
-        self.chart_widget = SunburstChartWidget(self)
+        self.chart_widget = SunburstChartView(self)
         self.verticalLayout.insertWidget(0, self.chart_widget)
 
         if label_text:
@@ -42,7 +42,7 @@ class TreeAndSunburstReport(CustomWidget, Ui_TreeAndSunburstReport):
         self.expandAllToolButton.setDefaultAction(self.actionExpand_All)
         self.collapseAllToolButton.setDefaultAction(self.actionCollapse_All)
 
-    def load_data(self, data: Sequence) -> None:
+    def load_data(self, data: Sequence[SunburstNode]) -> None:
         self.chart_widget.load_data(data)
 
     def finalize_setup(self) -> None:

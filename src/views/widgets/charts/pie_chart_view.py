@@ -34,12 +34,12 @@ class PieChartView(QChartView):
         total = sum(x[0] for x in _data)
         others = 0
         data_ = []
-        for size, label in sorted(_data, key=lambda x: x[0]):
+        for size, label in sorted(_data, key=lambda x: x[0], reverse=True):
             if size > total * 0.012:
                 data_.append((size, label))
             else:
                 others += size
-        data_.insert(0, (others, "Others"))
+        data_.append((others, "Others"))
 
         colors_ = colors.get_color_range(color, len(data_))
 
@@ -53,6 +53,7 @@ class PieChartView(QChartView):
             _slice.setColor(colors_[data_.index(data_point)])
 
             _slice.hovered[bool].connect(partial(self.on_hover, slice_=_slice))
+            # TODO: show transactions on double click, change cursor on hover
 
         chart = QChart()
         chart.setAnimationOptions(QChart.AnimationOption.AllAnimations)

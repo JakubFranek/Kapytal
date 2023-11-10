@@ -136,13 +136,19 @@ class AttributeReport(CustomWidget, Ui_AttributeReport):
             (abs(item.balance.value_rounded), item.attribute.name)
             for item in _periodic_stats[selected_period]
         ]
-        currency: Currency = _periodic_stats[selected_period][0].balance.currency
+        try:
+            currency: Currency = _periodic_stats[selected_period][0].balance.currency
+            places = currency.places
+            currency_code = currency.code
+        except IndexError:
+            places = 0
+            currency_code = ""
 
         color = (
             colors.ColorRanges.GREEN if type_ == "Income" else colors.ColorRanges.RED
         )
 
-        self.chart_view.load_data(data, currency.places, currency.code, color)
+        self.chart_view.load_data(data, places, currency_code, color)
 
     def _show_hide_periods(self) -> None:
         state = self.actionShow_Hide_Period_Columns.isChecked()

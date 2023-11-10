@@ -15,8 +15,8 @@ from src.views import icons
 from src.views.base_classes.custom_widget import CustomWidget
 from src.views.dialogs.busy_dialog import create_simple_busy_indicator
 from src.views.ui_files.reports.Ui_category_report import Ui_CategoryReport
-from src.views.widgets.charts.sunburst_chart_widget import (
-    SunburstChartWidget,
+from src.views.widgets.charts.sunburst_chart_view import (
+    SunburstChartView,
     SunburstNode,
 )
 
@@ -40,8 +40,8 @@ class CategoryReport(CustomWidget, Ui_CategoryReport):
         self.setWindowIcon(icons.category)
         self.currencyNoteLabel.setText(f"All values in {currency_code}")
 
-        self.chart_widget = SunburstChartWidget(self)
-        self.splitter.addWidget(self.chart_widget)
+        self.chart_widget = SunburstChartView(self)
+        self.chartVerticalLayout.addWidget(self.chart_widget)
 
         self.actionExpand_All.setIcon(icons.expand)
         self.actionCollapse_All.setIcon(icons.collapse)
@@ -67,19 +67,13 @@ class CategoryReport(CustomWidget, Ui_CategoryReport):
         self.recalculateReportToolButton.setDefaultAction(self.actionRecalculate_Report)
         self.showTransactionsToolButton.setDefaultAction(self.actionShow_Transactions)
 
-        self.typeComboBox = QComboBox(self)
         self.typeComboBox.addItem("Income")
         self.typeComboBox.addItem("Expense")
         self.typeComboBox.setCurrentText("Income")
         self.typeComboBox.currentTextChanged.connect(self._combobox_text_changed)
 
-        self.periodComboBox = QComboBox(self)
         self.periodComboBox.currentTextChanged.connect(self._combobox_text_changed)
 
-        self.combo_box_horizontal_layout = QHBoxLayout()
-        self.combo_box_horizontal_layout.addWidget(self.typeComboBox)
-        self.combo_box_horizontal_layout.addWidget(self.periodComboBox)
-        self.chart_widget.horizontal_layout.addLayout(self.combo_box_horizontal_layout)
         self.treeView.contextMenuEvent = self._create_context_menu
         self.treeView.doubleClicked.connect(self._tree_view_double_clicked)
 
@@ -170,20 +164,14 @@ class CategoryReport(CustomWidget, Ui_CategoryReport):
 def _convert_category_stats_to_sunburst_data(
     stats: Collection[CategoryStats],
 ) -> tuple[SunburstNode]:
-    total = sum((stats.balance.value_rounded) for stats in stats)
-    no_label_threshold = abs(float(total) * 0.4 / 100)
     balance = 0.0
     level = 1
     children: list[SunburstNode] = []
     for item in stats:
         if item.category.parent is not None:
             continue
-        node = _create_node(
-            item, stats, no_label_threshold, level + 1, parent_label_visible=True
-        )
+        node = _create_node(item, stats, level + 1)
         balance += node.value
-        if abs(node.value) < no_label_threshold:
-            node.clear_label()
         children.append(node)
     children.sort(key=lambda x: abs(x.value), reverse=True)
     return (SunburstNode("", balance, children),)
@@ -192,33 +180,21 @@ def _convert_category_stats_to_sunburst_data(
 def _create_node(
     stats: CategoryStats,
     all_stats: Collection[CategoryStats],
-    no_label_threshold: float,  # abs value
     level: int,
-    *,
-    parent_label_visible: bool,
 ) -> SunburstNode:
     node = SunburstNode(
         stats.category.name,
         abs(float(stats.balance.value_rounded)),
         [],
     )
-    label_visible = abs(node.value) >= no_label_threshold / (level - 1)
 
     for item in all_stats:
         if item.category in stats.category.children:
             child_node = _create_node(
                 item,
                 all_stats,
-                no_label_threshold,
                 level + 1,
-                parent_label_visible=label_visible,
             )
-            if (
-                abs(child_node.value) < no_label_threshold / level
-                or not parent_label_visible
-                or not label_visible
-            ):
-                child_node.clear_label()
             node.children.append(child_node)
     child_value_sum = sum(child.value for child in node.children)
     if child_value_sum > node.value:
