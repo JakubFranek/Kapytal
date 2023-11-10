@@ -1,3 +1,5 @@
+from enum import Enum, auto
+
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QBrush, QColor
 
@@ -73,3 +75,46 @@ def get_red_brush() -> QBrush:
 
 def get_gray_brush() -> QBrush:
     return _brush_gray
+
+
+def interpolate_colors(start: QColor, end: QColor, steps: int) -> tuple[QColor]:
+    # get the total difference between each color channel
+    red_difference = end.red() - start.red()
+    green_difference = end.green() - start.green()
+    blue_difference = end.blue() - start.blue()
+
+    # divide the difference by the number of rows
+    red_delta = red_difference / steps
+    green_delta = green_difference / steps
+    blue_delta = blue_difference / steps
+
+    # display the color for each row
+    colors = []
+    for i in range(steps):
+        # apply the delta to the red, green and blue channels
+        interpolated_color = (
+            int(start.red() + (red_delta * i)),
+            int(start.green() + (green_delta * i)),
+            int(start.blue() + (blue_delta * i)),
+        )
+        colors.append(QColor(*interpolated_color))
+
+    return tuple(colors)
+
+
+class ColorRanges(Enum):
+    BLUE = auto()
+    GREEN = auto()
+    RED = auto()
+
+
+def get_color_range(color: ColorRanges, steps: int) -> tuple[QColor]:
+    match color:
+        case ColorRanges.BLUE:
+            return interpolate_colors(QColor(187, 232, 255), QColor(0, 47, 72), steps)
+        case ColorRanges.GREEN:
+            return interpolate_colors(QColor(213, 237, 175), QColor(49, 72, 17), steps)
+        case ColorRanges.RED:
+            return interpolate_colors(QColor(247, 215, 206), QColor(72, 24, 13), steps)
+        case _:
+            raise ValueError("Invalid color range.")
