@@ -11,6 +11,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 from src.models.model_objects.attributes import AttributeType
+from src.models.model_objects.currency_objects import Currency
 from src.models.statistics.attribute_stats import AttributeStats
 from src.views import icons
 from src.views.base_classes.custom_widget import CustomWidget
@@ -18,7 +19,7 @@ from src.views.dialogs.busy_dialog import create_simple_busy_indicator
 from src.views.ui_files.reports.Ui_attribute_report import (
     Ui_AttributeReport,
 )
-from src.views.widgets.charts.pie_chart_widget import PieChartWidget
+from src.views.widgets.charts.pie_chart_view import PieChartView
 
 
 class AttributeReport(CustomWidget, Ui_AttributeReport):
@@ -44,22 +45,15 @@ class AttributeReport(CustomWidget, Ui_AttributeReport):
             self.setWindowIcon(icons.payee)
         self.currencyNoteLabel.setText(f"All values in {currency_code}")
 
-        self.chart_widget = PieChartWidget(self)
-        self.splitter.addWidget(self.chart_widget)
+        self.chart_view = PieChartView(self)
+        self.chartVerticalLayout.addWidget(self.chart_view)
 
-        self.typeComboBox = QComboBox(self)
         self.typeComboBox.addItem("Income")
         self.typeComboBox.addItem("Expense")
         self.typeComboBox.setCurrentText("Income")
         self.typeComboBox.currentTextChanged.connect(self._combobox_text_changed)
 
-        self.periodComboBox = QComboBox(self)
         self.periodComboBox.currentTextChanged.connect(self._combobox_text_changed)
-
-        self.combobox_horizontal_layout = QHBoxLayout()
-        self.combobox_horizontal_layout.addWidget(self.typeComboBox)
-        self.combobox_horizontal_layout.addWidget(self.periodComboBox)
-        self.chart_widget.horizontal_layout.addLayout(self.combobox_horizontal_layout)
 
         self.actionShow_Hide_Period_Columns.setIcon(icons.calendar)
         self.actionShow_Hide_Period_Columns.triggered.connect(self._show_hide_periods)
@@ -141,8 +135,9 @@ class AttributeReport(CustomWidget, Ui_AttributeReport):
             (abs(item.balance.value_rounded), item.attribute.name)
             for item in _periodic_stats[selected_period]
         ]
+        currency: Currency = _periodic_stats[selected_period][0].balance.currency
 
-        self.chart_widget.load_data(data)
+        self.chart_view.load_data(data, currency.places, currency.code)
 
     def _show_hide_periods(self) -> None:
         state = self.actionShow_Hide_Period_Columns.isChecked()
