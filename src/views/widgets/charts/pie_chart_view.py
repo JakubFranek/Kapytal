@@ -1,13 +1,12 @@
-import sys
 from collections.abc import Sequence
-from decimal import Decimal
 from functools import partial
 from numbers import Real
 
 from PyQt6.QtCharts import QChart, QChartView, QPieSeries, QPieSlice
 from PyQt6.QtCore import QPointF, Qt, pyqtSignal
-from PyQt6.QtGui import QColor, QCursor, QFont, QMouseEvent, QPainter
-from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget
+from PyQt6.QtGui import QCursor, QFont, QMouseEvent, QPainter
+from PyQt6.QtWidgets import QWidget
+from src.views import colors
 from src.views.widgets.charts.general_chart_callout import GeneralChartCallout
 
 
@@ -17,8 +16,15 @@ class PieChartView(QChartView):
     def __init__(self, parent: QWidget | None) -> None:
         super().__init__(parent)
 
+        self._font = QFont()
+        self._font.setPointSize(10)
+
     def load_data(
-        self, data: Sequence[tuple[Real, str]], places: int, currency_code: str
+        self,
+        data: Sequence[tuple[Real, str]],
+        places: int,
+        currency_code: str,
+        color: colors.ColorRanges,
     ) -> None:
         self._places = places
         self._currency_code = currency_code
@@ -29,18 +35,22 @@ class PieChartView(QChartView):
         others = 0
         data_ = []
         for size, label in sorted(_data, key=lambda x: x[0]):
-            if size > total * 0.01:
+            if size > total * 0.012:
                 data_.append((size, label))
             else:
                 others += size
         data_.insert(0, (others, "Others"))
 
+        colors_ = colors.get_color_range(color, len(data_))
+
         series = QPieSeries()
         series.setPieSize(0.6)
         for data_point in data_:
             _slice = series.append(data_point[1], data_point[0])
-            _slice.setLabelVisible(data_point[0] > total * 0.0125)
+            _slice.setLabelVisible(data_point[0] > total * 0.012)
             _slice.setLabelPosition(QPieSlice.LabelPosition.LabelOutside)
+            _slice.setLabelFont(self._font)
+            _slice.setColor(colors_[data_.index(data_point)])
 
             _slice.hovered[bool].connect(partial(self.on_hover, slice_=_slice))
 

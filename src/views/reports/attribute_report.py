@@ -1,25 +1,26 @@
 from collections.abc import Collection
+from typing import TYPE_CHECKING
 
 from PyQt6.QtCore import QSignalBlocker, Qt, pyqtSignal
 from PyQt6.QtGui import QContextMenuEvent, QCursor
 from PyQt6.QtWidgets import (
     QApplication,
-    QComboBox,
-    QHBoxLayout,
     QHeaderView,
     QMenu,
     QWidget,
 )
 from src.models.model_objects.attributes import AttributeType
-from src.models.model_objects.currency_objects import Currency
 from src.models.statistics.attribute_stats import AttributeStats
-from src.views import icons
+from src.views import colors, icons
 from src.views.base_classes.custom_widget import CustomWidget
 from src.views.dialogs.busy_dialog import create_simple_busy_indicator
 from src.views.ui_files.reports.Ui_attribute_report import (
     Ui_AttributeReport,
 )
 from src.views.widgets.charts.pie_chart_view import PieChartView
+
+if TYPE_CHECKING:
+    from src.models.model_objects.currency_objects import Currency
 
 
 class AttributeReport(CustomWidget, Ui_AttributeReport):
@@ -137,7 +138,11 @@ class AttributeReport(CustomWidget, Ui_AttributeReport):
         ]
         currency: Currency = _periodic_stats[selected_period][0].balance.currency
 
-        self.chart_view.load_data(data, currency.places, currency.code)
+        color = (
+            colors.ColorRanges.GREEN if type_ == "Income" else colors.ColorRanges.RED
+        )
+
+        self.chart_view.load_data(data, currency.places, currency.code, color)
 
     def _show_hide_periods(self) -> None:
         state = self.actionShow_Hide_Period_Columns.isChecked()

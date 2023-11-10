@@ -198,8 +198,21 @@ class AttributeReportPresenter:
             for attribute, transaction_balance in attribute_averages.items()
             if transaction_balance.balance.value_rounded < 0
         ]
-        income_periodic_stats["Average / Total"] = income_average_stats
-        expense_periodic_stats["Average / Total"] = expense_average_stats
+        income_periodic_stats["Average"] = income_average_stats
+        expense_periodic_stats["Average"] = expense_average_stats
+
+        income_total_stats = [
+            AttributeStats(attribute, 0, transaction_balance.balance)
+            for attribute, transaction_balance in attribute_totals.items()
+            if transaction_balance.balance.value_rounded > 0
+        ]
+        expense_total_stats = [
+            AttributeStats(attribute, 0, transaction_balance.balance)
+            for attribute, transaction_balance in attribute_totals.items()
+            if transaction_balance.balance.value_rounded < 0
+        ]
+        income_periodic_stats["Total"] = income_total_stats
+        expense_periodic_stats["Total"] = expense_total_stats
 
         self._report.load_stats(income_periodic_stats, expense_periodic_stats)
         self._report.finalize_setup()
