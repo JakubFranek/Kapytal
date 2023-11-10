@@ -13,8 +13,8 @@ from src.views.dialogs.busy_dialog import create_simple_busy_indicator
 from src.views.ui_files.reports.Ui_cash_flow_periodic_report import (
     Ui_CashFlowPeriodicReport,
 )
-from src.views.widgets.charts.cash_flow_periodic_chart_widget import (
-    CashFlowPeriodicChartWidget,
+from src.views.widgets.charts.cash_flow_periodic_chart_view import (
+    CashFlowPeriodicChartView,
     ChartData,
 )
 
@@ -54,8 +54,8 @@ class CashFlowPeriodicReport(CustomWidget, Ui_CashFlowPeriodicReport):
 
         self.currencyNoteLabel.setText(f"All values in {currency_code}")
 
-        self.chart_widget = CashFlowPeriodicChartWidget(self)
-        self.chartTabVerticalLayout.addWidget(self.chart_widget)
+        self.chart_widget = CashFlowPeriodicChartView(self)
+        self.chartVerticalLayout.addWidget(self.chart_widget)
 
         self._proxy_model = QSortFilterProxyModel(self)
         self._proxy_model.setSortRole(Qt.ItemDataRole.UserRole)
@@ -67,14 +67,12 @@ class CashFlowPeriodicReport(CustomWidget, Ui_CashFlowPeriodicReport):
         )
         self.tableView.horizontalHeader().setSortIndicatorClearable(True)
 
-        self.dataSelectorComboBox = QComboBox(self)
         for key in STR_TO_CHART_DATA:
             self.dataSelectorComboBox.addItem(key)
         self.dataSelectorComboBox.setCurrentText("All data")
         self.dataSelectorComboBox.currentTextChanged.connect(
             lambda: self._combobox_text_changed(show_busy_indicator=True)
         )  # show busy indicator when combo box has been changed by user
-        self.chart_widget.horizontal_layout.addWidget(self.dataSelectorComboBox)
 
         self.actionShow_Transactions.setIcon(icons.table)
         self.actionRecalculate_Report.setIcon(icons.refresh)
@@ -103,6 +101,12 @@ class CashFlowPeriodicReport(CustomWidget, Ui_CashFlowPeriodicReport):
 
         width, height = self._calculate_table_view_size()
         self.resize(width, height)
+
+        self.move(
+            self.parent().window().frameGeometry().topLeft()
+            + self.parent().window().rect().center()
+            - self.rect().center()
+        )
 
     def set_recalculate_report_action_state(self, *, enabled: bool) -> None:
         self.actionRecalculate_Report.setEnabled(enabled)

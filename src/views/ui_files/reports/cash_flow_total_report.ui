@@ -108,6 +108,9 @@
        </item>
        <item row="3" column="0">
         <widget class="QLabel" name="initialBalancesLabel">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Cash Account Initial Balances are deemed &amp;quot;effective&amp;quot; the day before first Transaction related to the given Cash Account.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
          <property name="text">
           <string>Cash Account Initial Balances</string>
          </property>
@@ -115,6 +118,9 @@
        </item>
        <item row="3" column="1">
         <widget class="QLabel" name="initialBalancesAmountLabel">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Cash Account Initial Balances are deemed &amp;quot;effective&amp;quot; the day before first Transaction related to the given Cash Account.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
          <property name="text">
           <string>TextLabel</string>
          </property>
@@ -236,6 +242,9 @@
            <bold>false</bold>
           </font>
          </property>
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Cash Flow is the difference between Total Inflow and Total Outflow. It does not reflect any Currency exchange rate or Security price fluctuations.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
          <property name="text">
           <string>TextLabel</string>
          </property>
@@ -282,6 +291,9 @@
            <bold>true</bold>
           </font>
          </property>
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Net Growth is the sum of Cash Flow and Total Gain / Loss&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
          <property name="text">
           <string>Net Growth</string>
          </property>
@@ -293,6 +305,9 @@
           <font>
            <bold>true</bold>
           </font>
+         </property>
+         <property name="toolTip">
+          <string>Net Growth is the sum of Cash Flow and Total Gain / Loss</string>
          </property>
          <property name="text">
           <string>TextLabel</string>
@@ -375,13 +390,6 @@
       </spacer>
      </item>
     </layout>
-   </item>
-   <item>
-    <widget class="Line" name="line">
-     <property name="orientation">
-      <enum>Qt::Vertical</enum>
-     </property>
-    </widget>
    </item>
   </layout>
  </widget>

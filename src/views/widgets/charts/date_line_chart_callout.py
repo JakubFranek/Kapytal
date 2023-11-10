@@ -151,12 +151,16 @@ class DateLineChartCallout(QGraphicsItem):
         x_max = x_axis.max().toMSecsSinceEpoch()
         x_anchor = self._anchor.x()
 
-        # if the anchor point is close to the right edge of the chart,
-        # move text rectangle to the left
-        if 3 * abs(x_anchor - x_max) < abs(x_anchor - x_min):
-            self._textRect.translate(-1.35 * self._textRect.width(), 5)
+        # if the anchor point is close to the left edge of the chart,
+        # move text rectangle to the right
+        if abs(x_anchor - x_max) < 4 * abs(x_anchor - x_min):
+            # self._textRect.translate(-1.35 * self._textRect.width(), 5)
+            self._textRect.translate(
+                -self._textRect.width() - 20, -self._textRect.height() - 10
+            )
         else:
-            self._textRect.translate(5, 5)
+            self._textRect.moveTopLeft(QPointF(20, -self._textRect.height() - 10))
+            # self._textRect.translate(5, 5)
 
         self.prepareGeometryChange()
         self._rect = self._textRect.adjusted(-5, -5, 5, 5)
@@ -166,4 +170,4 @@ class DateLineChartCallout(QGraphicsItem):
 
     def update_geometry(self) -> None:
         self.prepareGeometryChange()
-        self.setPos(self._chart.mapToPosition(self._anchor) + QPointF(10, -50))
+        self.setPos(self._chart.mapToPosition(self._anchor))

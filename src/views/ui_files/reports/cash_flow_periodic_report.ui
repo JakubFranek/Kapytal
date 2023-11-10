@@ -77,7 +77,32 @@
       <attribute name="title">
        <string>Chart</string>
       </attribute>
-      <layout class="QVBoxLayout" name="chartTabVerticalLayout"/>
+      <layout class="QVBoxLayout" name="chartTabVerticalLayout">
+       <item>
+        <layout class="QVBoxLayout" name="chartVerticalLayout">
+         <item>
+          <layout class="QHBoxLayout" name="chartControlsLayout">
+           <item>
+            <widget class="QComboBox" name="dataSelectorComboBox"/>
+           </item>
+           <item>
+            <spacer name="chartControlsHorizontalSpacer">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </item>
+      </layout>
      </widget>
     </widget>
    </item>
