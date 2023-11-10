@@ -47,6 +47,7 @@ class CashFlowPeriodicChartView(QChartView):
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.setRenderHint(QPainter.RenderHint.Antialiasing)
         self.setMouseTracking(True)
+        self.setRubberBand(QChartView.RubberBand.RectangleRubberBand)
 
         self.setBackgroundBrush(colors.get_tab_widget_background())
 
@@ -221,3 +222,11 @@ class CashFlowPeriodicChartView(QChartView):
     def mouseMoveEvent(self, event: QMouseEvent | None) -> None:
         self.signal_mouse_move.emit()
         return super().mouseMoveEvent(event)
+
+    def mouseReleaseEvent(self, event: QMouseEvent | None) -> None:
+        if event.button() == Qt.MouseButton.RightButton:
+            self.chart().zoomReset()
+            self._tooltip.hide()
+            return
+        self._tooltip.hide()
+        super().mouseReleaseEvent(event)
