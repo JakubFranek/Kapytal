@@ -3,7 +3,7 @@ from functools import partial
 from numbers import Real
 
 from PyQt6.QtCharts import QChart, QChartView, QPieSeries, QPieSlice
-from PyQt6.QtCore import QPointF, Qt, pyqtSignal
+from PyQt6.QtCore import QPointF, pyqtSignal
 from PyQt6.QtGui import QCursor, QFont, QMouseEvent, QPainter
 from PyQt6.QtWidgets import QWidget
 from src.views import colors

@@ -80,6 +80,7 @@ class SunburstChartView(QChartView):
         # TODO: add smart algorithm for shortening long labels
         # for example: Adam/Investments/Interactive Brokers/Securities
         #              Adam/Inv./Int.Bro./Securities
+        # shorten words >4 to 3+dot, except for last word (?)
         slice_ = QPieSlice(node.label, node.value)
         if empty:
             slice_.setLabelVisible(False)

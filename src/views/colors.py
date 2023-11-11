@@ -78,20 +78,20 @@ def get_gray_brush() -> QBrush:
     return _brush_gray
 
 
-def interpolate_colors(start: QColor, end: QColor, steps: int) -> tuple[QColor]:
+def get_linear_color_sequence(start: QColor, end: QColor, length: int) -> tuple[QColor]:
     # get the total difference between each color channel
     red_difference = end.red() - start.red()
     green_difference = end.green() - start.green()
     blue_difference = end.blue() - start.blue()
 
     # divide the difference by the number of rows
-    red_delta = red_difference / steps
-    green_delta = green_difference / steps
-    blue_delta = blue_difference / steps
+    red_delta = red_difference / (length - 1)
+    green_delta = green_difference / (length - 1)
+    blue_delta = blue_difference / (length - 1)
 
     # display the color for each row
     colors = []
-    for i in range(steps):
+    for i in range(length):
         # apply the delta to the red, green and blue channels
         interpolated_color = (
             int(start.red() + (red_delta * i)),
@@ -103,20 +103,65 @@ def interpolate_colors(start: QColor, end: QColor, steps: int) -> tuple[QColor]:
     return tuple(colors)
 
 
+def get_bezier_color_sequence(
+    start: QColor, end: QColor, control: QColor, length: int
+) -> tuple[QColor]:
+    step = 1 / (length - 1)
+
+    start_red = start.red()
+    start_green = start.green()
+    start_blue = start.blue()
+
+    control_red = control.red()
+    control_green = control.green()
+    control_blue = control.blue()
+
+    end_red = end.red()
+    end_green = end.green()
+    end_blue = end.blue()
+
+    colors = []
+    for i in range(length):
+        x = i * step
+        red = int(
+            (1 - x**2) * start_red + 2 * (1 - x) * x * control_red + x**2 * end_red
+        )
+        green = int(
+            (1 - x**2) * start_green
+            + 2 * (1 - x) * x * control_green
+            + x**2 * end_green
+        )
+        blue = int(
+            (1 - x**2) * start_blue
+            + 2 * (1 - x) * x * control_blue
+            + x**2 * end_blue
+        )
+        colors.append(QColor(red, green, blue))
+
+    return tuple(colors)
+
+
 class ColorRanges(Enum):
-    BLUE = auto()
     GREEN = auto()
     RED = auto()
 
 
 def get_color_range(color: ColorRanges, steps: int) -> tuple[QColor]:
     match color:
-        case ColorRanges.BLUE:
-            return interpolate_colors(QColor(0, 47, 72), QColor(187, 232, 255), steps)
         case ColorRanges.GREEN:
-            return interpolate_colors(QColor(49, 72, 17), QColor(213, 237, 175), steps)
+            return get_bezier_color_sequence(
+                QColor(42, 84, 52),
+                QColor(193, 232, 202),
+                QColor(85, 168, 104),
+                steps,
+            )
         case ColorRanges.RED:
-            return interpolate_colors(QColor(72, 24, 13), QColor(247, 215, 206), steps)
+            return get_bezier_color_sequence(
+                QColor(103, 34, 37),
+                QColor(237, 202, 203),
+                QColor(196, 78, 82),
+                steps,
+            )
         case _:
             raise ValueError("Invalid color range.")
 
