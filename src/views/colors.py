@@ -1,3 +1,4 @@
+import math
 from enum import Enum, auto
 
 from PyQt6.QtCore import Qt
@@ -135,3 +136,22 @@ def get_deep_tab10_palette(*, reverse: bool = False) -> tuple[QColor]:
         QColor(100, 181, 205),
     )
     return palette[::-1] if reverse else palette
+
+
+_LIGHTNESS_DENOMINATOR = 255 * (3**0.5)
+_LIGHTNESS_THRESHOLD = 0.38  # empirical value
+
+
+def get_font_color_for_background(background: QColor) -> QColor:
+    """Returns white or black font color based on 'weighted Euclidean norm'
+    of the RGB vector."""
+
+    lightness = (
+        math.sqrt(
+            0.299 * (background.red() ** 2)
+            + 0.587 * (background.green() ** 2)
+            + 0.111 * (background.blue() ** 2)
+        )
+        / _LIGHTNESS_DENOMINATOR
+    )
+    return QColor("white") if lightness < _LIGHTNESS_THRESHOLD else QColor("black")

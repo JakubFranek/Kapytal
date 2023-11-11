@@ -57,16 +57,15 @@ class SunburstChartView(QChartView):
         self.series_dict = {}
 
         self.total_levels = max(node.depth() for node in data)
+        self.lighter_coefficient = int(100 + 100 / self.total_levels)
 
         for node in data:
             self.create_series(node, parent_slice=None, level=0, index=0)
 
-        levels = len(self.series_dict)
+        size = (self.max_size - self.min_size) / (self.total_levels - 0.5)
         for level, series in self.series_dict.items():
-            size = (self.max_size - self.min_size) / levels
-            series.setHoleSize(self.min_size + size * level)
-            # TODO: make central pie narrower to have more space for labels?
-            series.setPieSize(self.min_size + size * (level + 1))
+            series.setHoleSize(self.min_size + size * max(level - 0.5, 0))
+            series.setPieSize(self.min_size + size * (level + 0.5))
             self._chart.addSeries(series)
 
     def create_series(  # noqa: PLR0913
@@ -78,6 +77,9 @@ class SunburstChartView(QChartView):
         *,
         empty: bool = False,
     ) -> None:
+        # TODO: add smart algorithm for shortening long labels
+        # for example: Adam/Investments/Interactive Brokers/Securities
+        #              Adam/Inv./Int.Bro./Securities
         slice_ = QPieSlice(node.label, node.value)
         if empty:
             slice_.setLabelVisible(False)
@@ -88,16 +90,15 @@ class SunburstChartView(QChartView):
         elif level == 1:
             slice_.setColor(colors.get_deep_tab10_palette()[index % 10])
         elif parent_slice is not None:
-            slice_.setColor(parent_slice.color().lighter(120))
+            slice_.setColor(parent_slice.color().lighter(self.lighter_coefficient))
 
         if not empty:
             if node.value > self.total * 0.012 and len(node.label) < 20:
                 slice_.setLabelVisible(True)
                 slice_.setLabelFont(self.font)
-                if level > 2:  # TODO: add smart way to decide font color
-                    slice_.setLabelColor(QColor("black"))
-                else:
-                    slice_.setLabelColor(QColor("white"))
+                slice_.setLabelColor(
+                    colors.get_font_color_for_background(slice_.color())
+                )
                 slice_.setLabelPosition(QPieSlice.LabelPosition.LabelInsideNormal)
             slice_.hovered[bool].connect(partial(self.show_callout, slice_=slice_))
             # TODO: show transactions on double click, change cursor on hover
