@@ -106,7 +106,10 @@ def get_linear_color_sequence(start: QColor, end: QColor, length: int) -> tuple[
 def get_bezier_color_sequence(
     start: QColor, end: QColor, control: QColor, length: int
 ) -> tuple[QColor]:
-    step = 1 / (length - 1)
+    if length > 1:
+        step = 1 / (length - 1)
+    else:
+        return (control,)
 
     start_red = start.red()
     start_green = start.green()

@@ -39,7 +39,7 @@ class PieChartView(QChartView):
                 data_.append((size, label))
             else:
                 others += size
-        data_.append((others, "Others"))
+        data_.append((others, "(other)"))
 
         colors_ = colors.get_color_range(color, len(data_))
 
@@ -69,13 +69,16 @@ class PieChartView(QChartView):
     def on_hover(self, state: bool, slice_: QPieSlice) -> None:  # noqa: FBT001
         label = slice_.label()
         value = slice_.value()
+        percentage = 100 * slice_.percentage()
 
         cursor_pos = QCursor.pos()
         view_pos = self.mapFromGlobal(cursor_pos)
         scene_pos = self.mapToScene(view_pos)
 
         self._tooltip.set_text(
-            f"{label}\n{value:,.{self._places}f} {self._currency_code}"
+            f"{label}\n"
+            f"{value:,.{self._places}f} {self._currency_code}\n"
+            f"{percentage:.2f}% of Total"
         )
         self._tooltip.set_anchor(scene_pos)
         self._tooltip.setZValue(11)

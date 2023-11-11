@@ -1,11 +1,9 @@
-from collections.abc import Collection
+from collections.abc import Collection, Sequence
 
 from PyQt6.QtCore import QSignalBlocker, Qt, pyqtSignal
 from PyQt6.QtGui import QContextMenuEvent, QCursor
 from PyQt6.QtWidgets import (
     QApplication,
-    QComboBox,
-    QHBoxLayout,
     QHeaderView,
     QMenu,
     QWidget,
@@ -93,8 +91,8 @@ class CategoryReport(CustomWidget, Ui_CategoryReport):
 
     def load_stats(
         self,
-        income_periodic_stats: dict[str, Collection[CategoryStats]],
-        expense_periodic_stats: dict[str, Collection[CategoryStats]],
+        income_periodic_stats: dict[str, Sequence[CategoryStats]],
+        expense_periodic_stats: dict[str, Sequence[CategoryStats]],
     ) -> None:
         self._income_periodic_stats = income_periodic_stats
         self._expense_periodic_stats = expense_periodic_stats
@@ -162,39 +160,54 @@ class CategoryReport(CustomWidget, Ui_CategoryReport):
 
 
 def _convert_category_stats_to_sunburst_data(
-    stats: Collection[CategoryStats],
+    stats: Sequence[CategoryStats],
 ) -> tuple[SunburstNode]:
     balance = 0.0
     level = 1
+
+    try:
+        currency = stats[0].balance.currency
+        currency_code = currency.code
+        currency_places = currency.places
+    except IndexError:
+        currency_code = ""
+        currency_places = 0
+
     children: list[SunburstNode] = []
+    root_node = SunburstNode(
+        "Total", "Total", 0, currency_code, currency_places, [], None
+    )
     for item in stats:
         if item.category.parent is not None:
             continue
-        node = _create_node(item, stats, level + 1)
+        node = _create_node(item, stats, level + 1, root_node)
         balance += node.value
         children.append(node)
     children.sort(key=lambda x: abs(x.value), reverse=True)
-    return (SunburstNode("", balance, children),)
+    root_node.children = children
+    root_node.value = balance
+    return (root_node,)
 
 
 def _create_node(
     stats: CategoryStats,
     all_stats: Collection[CategoryStats],
     level: int,
+    parent: SunburstNode,
 ) -> SunburstNode:
     node = SunburstNode(
         stats.category.name,
+        stats.category.path,
         abs(float(stats.balance.value_rounded)),
+        parent.unit,
+        parent.decimals,
         [],
+        parent,
     )
 
     for item in all_stats:
         if item.category in stats.category.children:
-            child_node = _create_node(
-                item,
-                all_stats,
-                level + 1,
-            )
+            child_node = _create_node(item, all_stats, level + 1, node)
             node.children.append(child_node)
     child_value_sum = sum(child.value for child in node.children)
     if child_value_sum > node.value:

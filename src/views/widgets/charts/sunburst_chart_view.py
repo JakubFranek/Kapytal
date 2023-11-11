@@ -12,12 +12,16 @@ from src.views import colors
 from src.views.widgets.charts.general_chart_callout import GeneralChartCallout
 
 
+# TODO: add parent property
 @dataclass
 class SunburstNode:
-    # TODO: add full path property for callout
     label: str
+    path: str
     value: Real
+    unit: str
+    decimals: int
     children: list[Self]
+    parent: Self | None
 
     def clear_label(self) -> None:
         self.label = ""
@@ -26,6 +30,32 @@ class SunburstNode:
 
     def depth(self) -> int:
         return 1 + max((child.depth() for child in self.children), default=0)
+
+    def get_root_node(self) -> Self:
+        return self if self.parent is None else self.parent.get_root_node()
+
+    def get_callout_text(self) -> str:
+        text = f"{self.path}\n{self.value:,.{self.decimals}f}"
+        text = text + f" {self.unit}" if self.unit else text
+        for ancestor in self.get_ancestors():
+            text += f"\n{100*self.value/ancestor.value:.2f}% of {ancestor.path}"
+
+        return text
+
+    def get_ancestors(self) -> tuple[Self, ...]:
+        if self.parent is None:
+            return ()
+        return self.parent, *self.parent.get_ancestors()
+
+
+class SunburstSlice(QPieSlice):
+    def __init__(
+        self,
+        node: SunburstNode,
+        parent: QWidget | None = None,
+    ) -> None:
+        super().__init__(label=node.label, value=node.value, parent=parent)
+        self.node = node
 
 
 class SunburstChartView(QChartView):
@@ -81,7 +111,7 @@ class SunburstChartView(QChartView):
         # for example: Adam/Investments/Interactive Brokers/Securities
         #              Adam/Inv./Int.Bro./Securities
         # shorten words >4 to 3+dot, except for last word (?)
-        slice_ = QPieSlice(node.label, node.value)
+        slice_ = SunburstSlice(node)
         if empty:
             slice_.setLabelVisible(False)
             slice_.setColor(QColor("white"))
@@ -100,7 +130,12 @@ class SunburstChartView(QChartView):
                 slice_.setLabelColor(
                     colors.get_font_color_for_background(slice_.color())
                 )
-                slice_.setLabelPosition(QPieSlice.LabelPosition.LabelInsideNormal)
+                if level == 0:
+                    slice_.setLabelPosition(
+                        QPieSlice.LabelPosition.LabelInsideHorizontal
+                    )
+                else:
+                    slice_.setLabelPosition(QPieSlice.LabelPosition.LabelInsideNormal)
             slice_.hovered[bool].connect(partial(self.show_callout, slice_=slice_))
             # TODO: show transactions on double click, change cursor on hover
 
@@ -114,7 +149,15 @@ class SunburstChartView(QChartView):
         sum_children = sum(child.value for child in node.children)
         if len(node.children) > 0 and sum_children < node.value:
             self.create_series(
-                SunburstNode(label="", value=node.value - sum_children, children=[]),
+                SunburstNode(
+                    label="",
+                    path="",
+                    value=node.value - sum_children,
+                    unit="",
+                    decimals=0,
+                    children=[],
+                    parent=node,
+                ),
                 parent_slice=slice_,
                 level=level + 1,
                 index=len(node.children),
@@ -123,23 +166,33 @@ class SunburstChartView(QChartView):
 
         if level < self.total_levels - 1 and len(node.children) == 0:
             self.create_series(
-                SunburstNode(label="", value=node.value, children=[]),
+                SunburstNode(
+                    label="",
+                    path="",
+                    value=node.value,
+                    unit="",
+                    decimals=0,
+                    children=[],
+                    parent=node,
+                ),
                 parent_slice=slice_,
                 level=level + 1,
                 index=len(node.children),
                 empty=True,
             )
 
-    def show_callout(self, enter: bool, slice_: QPieSlice) -> None:  # noqa: FBT001
-        label = slice_.label()
-        value = slice_.value()
+    def show_callout(self, enter: bool, slice_: SunburstSlice) -> None:  # noqa: FBT001
+        node = slice_.node
 
         cursor_pos = QCursor.pos()
         view_pos = self.mapFromGlobal(cursor_pos)
         scene_pos = self.mapToScene(view_pos)
 
+        center_x = self.rect().center().x()
+        left = scene_pos.x() > center_x
+
         # TODO: add unit, decimal places rounding
-        self.callout.set_text(f"{label}\n{value:,}")
+        self.callout.set_text(node.get_callout_text(), left=left)
         self.callout.set_anchor(scene_pos)
         self.callout.setZValue(11)
         self.callout.update_geometry()
