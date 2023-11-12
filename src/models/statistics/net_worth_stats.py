@@ -28,6 +28,12 @@ class AssetStats:
     def __repr__(self) -> str:
         return f"AssetStats({self.name}, {self.amount_base.to_str_normalized()})"
 
+    @property
+    def path(self) -> str:
+        if self.parent is None:
+            return self.name
+        return self.parent.path + "/" + self.name
+
 
 def calculate_asset_stats(
     accounts: Collection[Account], base_currency: Currency

@@ -12,7 +12,6 @@ from src.views import colors
 from src.views.widgets.charts.general_chart_callout import GeneralChartCallout
 
 
-# TODO: add parent property
 @dataclass
 class SunburstNode:
     label: str
@@ -191,7 +190,6 @@ class SunburstChartView(QChartView):
         center_x = self.rect().center().x()
         left = scene_pos.x() > center_x
 
-        # TODO: add unit, decimal places rounding
         self.callout.set_text(node.get_callout_text(), left=left)
         self.callout.set_anchor(scene_pos)
         self.callout.setZValue(11)

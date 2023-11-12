@@ -140,8 +140,9 @@ class GeneralChartCallout(QGraphicsItem):
             )
         )
         # QFontMetrics.boundingRect is broken, extra padding is needed
-        # more vertical padding is needed for taller text rectangles
-        self._textRect.adjust(0, 0, 15, int(self._textRect.height() / 8))
+        self._textRect.adjust(
+            0, 0, int(self._textRect.width() / 9), int(self._textRect.height() / 8)
+        )
 
         if not left:
             self._textRect.moveTopLeft(QPointF(20, -self._textRect.height() - 10))

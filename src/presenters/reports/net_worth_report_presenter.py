@@ -1,5 +1,5 @@
 import logging
-from collections.abc import Collection
+from collections.abc import Collection, Sequence
 from datetime import datetime
 
 from PyQt6.QtCore import QSortFilterProxyModel, Qt
@@ -259,134 +259,112 @@ class NetWorthReportPresenter:
 def calculate_accounts_sunburst_data(
     account_items: Collection[Account | AccountGroup], base_currency: Currency
 ) -> tuple[SunburstNode]:
-    balances = tuple(
-        item.get_balance(base_currency)
-        for item in account_items
-        if item.parent not in account_items
-    )
-    total = sum(
-        (balance for balance in balances if balance.value_rounded > 0),
-        start=base_currency.zero_amount,
-    )
-    no_label_threshold = abs(float(total.value_rounded) * 0.4 / 100)
     balance = 0.0
     level = 1
     nodes: list[SunburstNode] = []
+    root_node = SunburstNode(
+        "Total", "Total", 0, base_currency.code, base_currency.places, [], None
+    )
     for account in account_items:
         if account.parent is not None:
             continue
         child_node = _create_account_item_node(
-            account,
-            account_items,
-            base_currency,
-            no_label_threshold,
-            level + 1,
-            parent_label_visible=True,
+            account, account_items, base_currency, level + 1, root_node
         )
         if child_node.value == 0 and len(child_node.children) == 0:
             continue
-        if child_node.value < no_label_threshold:
-            child_node.clear_label()
         balance += child_node.value
         nodes.append(child_node)
     nodes.sort(key=lambda x: abs(x.value), reverse=True)
-    return (SunburstNode("", balance, nodes),)
+    root_node.children = nodes
+    root_node.value = balance
+    return (root_node,)
 
 
 def _create_account_item_node(
     account_item: Account,
     account_items: Collection[Account | AccountGroup],
     currency: Currency,
-    no_label_threshold: float,
     level: int,
-    *,
-    parent_label_visible: bool,
+    parent: SunburstNode,
 ) -> SunburstNode:
     children: list[SunburstNode] = []
     balance = 0
 
-    _balance = float(account_item.get_balance(currency).value_rounded)
-    label_visible = _balance >= no_label_threshold / (level - 1)
+    node = SunburstNode(
+        account_item.name,
+        account_item.path,
+        0,
+        currency.code,
+        currency.places,
+        [],
+        parent,
+    )
 
     if isinstance(account_item, AccountGroup):
         for _account_item in account_items:
             if _account_item in account_item.children:
                 child_node = _create_account_item_node(
-                    _account_item,
-                    account_items,
-                    currency,
-                    no_label_threshold,
-                    level + 1,
-                    parent_label_visible=label_visible,
+                    _account_item, account_items, currency, level + 1, node
                 )
                 if child_node.value == 0 and len(child_node.children) == 0:
                     continue
-                if (
-                    child_node.value < no_label_threshold / level
-                    or not parent_label_visible
-                    or not label_visible
-                ):
-                    child_node.clear_label()
                 children.append(child_node)
                 balance += child_node.value
     else:
         balance = float(account_item.get_balance(currency).value_rounded)
         balance = balance if balance > 0 else 0
 
-    node = SunburstNode(
-        account_item.name,
-        balance,
-        children,
-    )
-
-    node.children.sort(key=lambda x: abs(x.value), reverse=True)
+    children.sort(key=lambda x: abs(x.value), reverse=True)
+    node.children = children
+    node.value = balance
     return node
 
 
 def calculate_asset_type_sunburst_data(
-    stats: Collection[AssetStats],
+    stats: Sequence[AssetStats],
 ) -> tuple[SunburstNode]:
+    try:
+        currency = stats[0].amount_base.currency
+        currency_code = currency.code
+        currency_places = currency.places
+    except IndexError:
+        currency_code = ""
+        currency_places = 0
+
     total = sum(_stats.amount_base.value_rounded for _stats in stats)
     no_label_threshold = abs(float(total) * 0.4 / 100)
     balance = 0.0
     level = 1
     children: list[SunburstNode] = []
+    root_node = SunburstNode(
+        "Total", "Total", 0, currency_code, currency_places, [], None
+    )
     for item in stats:
-        child_node = _create_asset_node(
-            item, no_label_threshold, level + 1, parent_label_visible=True
-        )
+        child_node = _create_asset_node(item, no_label_threshold, level + 1, root_node)
         if child_node.value > 0:
             if child_node.value < no_label_threshold:
                 child_node.clear_label()
             balance += child_node.value
             children.append(child_node)
     children.sort(key=lambda x: abs(x.value), reverse=True)
-    return (SunburstNode("", balance, children),)
+    root_node.children = children
+    root_node.value = balance
+    return (root_node,)
 
 
 def _create_asset_node(
-    stats: AssetStats,
-    no_label_threshold: float,
-    level: int,
-    *,
-    parent_label_visible: bool,
+    stats: AssetStats, no_label_threshold: float, level: int, parent: SunburstNode
 ) -> SunburstNode:
     balance = 0
-    name = stats.name
+    node = SunburstNode(
+        stats.name, stats.path, 0, parent.unit, parent.decimals, [], parent
+    )
     children: list[SunburstNode] = []
-    label_visible = stats.amount_base.value_rounded > no_label_threshold / (level - 1)
     if stats.children:
         for item in stats.children:
-            child_node = _create_asset_node(
-                item, no_label_threshold, level + 1, parent_label_visible=label_visible
-            )
+            child_node = _create_asset_node(item, no_label_threshold, level + 1, node)
             if child_node.value > 0:
-                if (
-                    child_node.value < no_label_threshold / level
-                    or not parent_label_visible
-                    or not label_visible
-                ):
-                    child_node.clear_label()
                 children.append(child_node)
                 balance += child_node.value
     else:
@@ -396,4 +374,6 @@ def _create_asset_node(
             else 0
         )
     children.sort(key=lambda x: abs(x.value), reverse=True)
-    return SunburstNode(name, balance, children)
+    node.children = children
+    node.value = balance
+    return node
