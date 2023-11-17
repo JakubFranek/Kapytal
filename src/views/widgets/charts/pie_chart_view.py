@@ -39,7 +39,7 @@ class PieChartView(QChartView):
                 data_.append((size, label))
             else:
                 others += size
-        data_.append((others, "(other)"))
+        data_.append((others, "(others)"))
 
         colors_ = colors.get_color_range(color, len(data_))
 

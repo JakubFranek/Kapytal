@@ -440,7 +440,12 @@ class AccountTreeModel(QAbstractItemModel):
 
     def _get_tooltip_role_data(self, column: int, item: AccountTreeNode) -> str | None:
         if column == AccountTreeColumn.BALANCE_NATIVE:
-            return item.balance_native.to_str_normalized()
+            if (
+                item.type_ == CashAccount
+                and item.balance_base.currency != item.balance_native.currency
+            ):
+                return item.balance_native.to_str_normalized()
+            return None
         if column == AccountTreeColumn.BALANCE_BASE:
             return item.balance_base.to_str_normalized()
         if column == AccountTreeColumn.SHOW:
