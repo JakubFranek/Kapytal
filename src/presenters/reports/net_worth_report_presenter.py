@@ -332,8 +332,6 @@ def calculate_asset_type_sunburst_data(
         currency_code = ""
         currency_places = 0
 
-    total = sum(_stats.amount_base.value_rounded for _stats in stats)
-    no_label_threshold = abs(float(total) * 0.4 / 100)
     balance = 0.0
     level = 1
     children: list[SunburstNode] = []
@@ -341,10 +339,8 @@ def calculate_asset_type_sunburst_data(
         "Total", "Total", 0, currency_code, currency_places, [], None
     )
     for item in stats:
-        child_node = _create_asset_node(item, no_label_threshold, level + 1, root_node)
+        child_node = _create_asset_node(item, level + 1, root_node)
         if child_node.value > 0:
-            if child_node.value < no_label_threshold:
-                child_node.clear_label()
             balance += child_node.value
             children.append(child_node)
     children.sort(key=lambda x: abs(x.value), reverse=True)
@@ -354,7 +350,7 @@ def calculate_asset_type_sunburst_data(
 
 
 def _create_asset_node(
-    stats: AssetStats, no_label_threshold: float, level: int, parent: SunburstNode
+    stats: AssetStats, level: int, parent: SunburstNode
 ) -> SunburstNode:
     balance = 0
     node = SunburstNode(
@@ -362,9 +358,13 @@ def _create_asset_node(
     )
     children: list[SunburstNode] = []
     if stats.children:
-        for item in stats.children:
-            child_node = _create_asset_node(item, no_label_threshold, level + 1, node)
-            if child_node.value > 0:
+        if any(child.amount_base.value_rounded < 0 for child in stats.children):
+            balance = float(
+                sum(child.amount_base.value_rounded for child in stats.children)
+            )
+        else:
+            for item in stats.children:
+                child_node = _create_asset_node(item, level + 1, node)
                 children.append(child_node)
                 balance += child_node.value
     else:

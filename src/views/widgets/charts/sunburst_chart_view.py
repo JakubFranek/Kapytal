@@ -56,6 +56,11 @@ class SunburstSlice(QPieSlice):
         super().__init__(label=node.label, value=node.value, parent=parent)
         self.node = node
 
+        # TODO: add smart algorithm for shortening long labels
+        # for example: Adam/Investments/Interactive Brokers/Securities
+        #              Adam/Inv./Int.Bro./Securities
+        # shorten words >4 to 3+dot, except for last word (?)
+
 
 class SunburstChartView(QChartView):
     signal_mouse_move = pyqtSignal()
@@ -108,10 +113,6 @@ class SunburstChartView(QChartView):
         *,
         empty: bool = False,
     ) -> None:
-        # TODO: add smart algorithm for shortening long labels
-        # for example: Adam/Investments/Interactive Brokers/Securities
-        #              Adam/Inv./Int.Bro./Securities
-        # shorten words >4 to 3+dot, except for last word (?)
         slice_ = SunburstSlice(node)
         if empty:
             slice_.setLabelVisible(False)
