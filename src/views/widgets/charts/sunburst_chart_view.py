@@ -149,6 +149,7 @@ class SunburstChartView(QChartView):
 
         sum_children = sum(child.value for child in node.children)
         if len(node.children) > 0 and sum_children < node.value:
+            # create empty slice to fill remaining space among child nodes
             self.create_series(
                 SunburstNode(
                     label="",
@@ -166,6 +167,7 @@ class SunburstChartView(QChartView):
             )
 
         if level < self.total_levels - 1 and len(node.children) == 0:
+            # create empty slice to fill space in unused levels
             self.create_series(
                 SunburstNode(
                     label="",
