@@ -24,7 +24,7 @@ class TreeAndSunburstReport(CustomWidget, Ui_TreeAndSunburstReport):
         self.setWindowTitle(title)
         self.setWindowIcon(icons.pie_chart)
 
-        self.chart_widget = SunburstChartView(self)
+        self.chart_widget = SunburstChartView(self, clickable_slices=False)
         self.verticalLayout.insertWidget(0, self.chart_widget)
 
         if label_text:

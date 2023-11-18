@@ -61,8 +61,9 @@ class SunburstChartView(QChartView):
     signal_mouse_move = pyqtSignal()
     signal_slice_clicked = pyqtSignal(str)
 
-    def __init__(self, parent: QWidget | None) -> None:
+    def __init__(self, parent: QWidget | None, *, clickable_slices: bool) -> None:
         super().__init__(parent)
+        self._clickable_slices = clickable_slices
 
         self.setRenderHint(QPainter.RenderHint.Antialiasing)
 
@@ -76,8 +77,8 @@ class SunburstChartView(QChartView):
 
         self.signal_mouse_move.connect(self.update_callout)
 
-        self.font = QFont()
-        self.font.setPointSize(10)
+        self._font = QFont()
+        self._font.setPointSize(10)
 
     def load_data(self, data: Sequence[SunburstNode]) -> None:
         self._chart = QChart()
@@ -126,7 +127,7 @@ class SunburstChartView(QChartView):
         if not empty:
             if node.value > self.total * 0.012 and len(node.label) < 20:
                 slice_.setLabelVisible(True)
-                slice_.setLabelFont(self.font)
+                slice_.setLabelFont(self._font)
                 slice_.setLabelColor(
                     colors.get_font_color_for_background(slice_.color())
                 )
@@ -187,10 +188,12 @@ class SunburstChartView(QChartView):
         self._update_callout(node.get_callout_text())
         if enter:
             self.callout.show()
-            self.setCursor(Qt.CursorShape.PointingHandCursor)
+            if self._clickable_slices:
+                self.setCursor(Qt.CursorShape.PointingHandCursor)
         else:
             self.callout.hide()
-            self.setCursor(Qt.CursorShape.ArrowCursor)
+            if self._clickable_slices:
+                self.setCursor(Qt.CursorShape.ArrowCursor)
 
     def update_callout(self) -> None:
         if self.callout.isVisible():
@@ -210,6 +213,8 @@ class SunburstChartView(QChartView):
         self.callout.update_geometry()
 
     def slice_clicked(self, slice_: SunburstSlice) -> None:
+        if not self._clickable_slices:
+            return
         self.signal_slice_clicked.emit(slice_.node.path)
 
     def mouseMoveEvent(self, event: QMouseEvent | None) -> None:

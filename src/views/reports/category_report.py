@@ -45,7 +45,7 @@ class CategoryReport(CustomWidget, Ui_CategoryReport):
         self.setWindowIcon(icons.category)
         self.currencyNoteLabel.setText(f"All values in {currency_code}")
 
-        self.chart_view = SunburstChartView(self)
+        self.chart_view = SunburstChartView(self, clickable_slices=True)
         self.chartVerticalLayout.addWidget(self.chart_view)
 
         self.actionExpand_All.setIcon(icons.expand)
