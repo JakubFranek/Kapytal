@@ -36,8 +36,8 @@ FLAGS_SHOW = (
 FLAGS_DEFAULT = Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsEnabled
 COLUMN_HEADERS = {
     AccountTreeColumn.NAME: "Name",
-    AccountTreeColumn.BALANCE_NATIVE: "Native balance",
-    AccountTreeColumn.BALANCE_BASE: "Base balance",
+    AccountTreeColumn.BALANCE_NATIVE: "Native Balance",
+    AccountTreeColumn.BALANCE_BASE: "Base Balance",
     AccountTreeColumn.SHOW: "",
 }
 
