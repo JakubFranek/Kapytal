@@ -21,6 +21,10 @@ class CategoryStats:
     transactions: set[CashTransaction | RefundTransaction] = field(default_factory=set)
 
 
+# TODO: add all-encompassing class which would store all stats, averages,
+# totals etc. and would cleanly interface with the view model
+
+
 def calculate_periodic_totals_and_averages(
     periodic_stats: dict[str, Sequence[CategoryStats]], currency: Currency
 ) -> tuple[

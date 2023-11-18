@@ -5,7 +5,7 @@ from numbers import Real
 from typing import Self
 
 from PyQt6.QtCharts import QChart, QChartView, QPieSeries, QPieSlice
-from PyQt6.QtCore import QPointF, pyqtSignal
+from PyQt6.QtCore import QPointF, Qt, pyqtSignal
 from PyQt6.QtGui import QColor, QCursor, QFont, QMouseEvent, QPainter
 from PyQt6.QtWidgets import QWidget
 from src.views import colors
@@ -59,6 +59,7 @@ class SunburstSlice(QPieSlice):
 
 class SunburstChartView(QChartView):
     signal_mouse_move = pyqtSignal()
+    signal_slice_clicked = pyqtSignal(str)
 
     def __init__(self, parent: QWidget | None) -> None:
         super().__init__(parent)
@@ -135,8 +136,8 @@ class SunburstChartView(QChartView):
                     )
                 else:
                     slice_.setLabelPosition(QPieSlice.LabelPosition.LabelInsideNormal)
-            slice_.hovered[bool].connect(partial(self.show_callout, slice_=slice_))
-            # TODO: show transactions on double click, change cursor on hover
+            slice_.hovered[bool].connect(partial(self.slice_hovered, slice_=slice_))
+            slice_.clicked.connect(partial(self.slice_clicked, slice_=slice_))
 
         if level not in self.series_dict:
             self.series_dict[level] = QPieSeries()
@@ -180,9 +181,22 @@ class SunburstChartView(QChartView):
                 empty=True,
             )
 
-    def show_callout(self, enter: bool, slice_: SunburstSlice) -> None:  # noqa: FBT001
+    def slice_hovered(self, enter: bool, slice_: SunburstSlice) -> None:  # noqa: FBT001
         node = slice_.node
 
+        self._update_callout(node.get_callout_text())
+        if enter:
+            self.callout.show()
+            self.setCursor(Qt.CursorShape.PointingHandCursor)
+        else:
+            self.callout.hide()
+            self.setCursor(Qt.CursorShape.ArrowCursor)
+
+    def update_callout(self) -> None:
+        if self.callout.isVisible():
+            self._update_callout(self.callout.text)
+
+    def _update_callout(self, text: str) -> None:
         cursor_pos = QCursor.pos()
         view_pos = self.mapFromGlobal(cursor_pos)
         scene_pos = self.mapToScene(view_pos)
@@ -190,22 +204,13 @@ class SunburstChartView(QChartView):
         center_x = self.rect().center().x()
         left = scene_pos.x() > center_x
 
-        self.callout.set_text(node.get_callout_text(), left=left)
+        self.callout.set_text(text, left=left)
         self.callout.set_anchor(scene_pos)
         self.callout.setZValue(11)
         self.callout.update_geometry()
-        if enter:
-            self.callout.show()
-        else:
-            self.callout.hide()
 
-    def update_callout(self) -> None:
-        if self.callout.isVisible():
-            cursor_pos = QCursor.pos()
-            view_pos = self.mapFromGlobal(cursor_pos)
-            scene_pos = self.mapToScene(view_pos)
-            self.callout.set_anchor(scene_pos)
-            self.callout.update_geometry()
+    def slice_clicked(self, slice_: SunburstSlice) -> None:
+        self.signal_slice_clicked.emit(slice_.node.path)
 
     def mouseMoveEvent(self, event: QMouseEvent | None) -> None:
         self.signal_mouse_move.emit()

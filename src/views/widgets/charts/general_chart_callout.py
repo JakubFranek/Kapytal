@@ -28,6 +28,10 @@ class GeneralChartCallout(QGraphicsItem):
         self._rect = QRectF()
         self.setVisible(False)
 
+    @property
+    def text(self) -> str:
+        return self._text
+
     def boundingRect(self):  # noqa: ANN201
         anchor = self._local_anchor
         rect = QRectF()

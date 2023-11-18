@@ -21,6 +21,15 @@ class TransactionBalance:
         else:
             self.transactions = set()
 
+    def __repr__(self) -> str:
+        return (
+            f"TransactionBalance({self.balance.to_str_normalized()}, "
+            f"len={len(self)})"
+        )
+
+    def __len__(self) -> int:
+        return len(self.transactions)
+
     def __add__(self, other: Self) -> Self:
         return TransactionBalance(
             self.balance + other.balance, self.transactions.union(other.transactions)

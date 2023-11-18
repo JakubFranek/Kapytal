@@ -1,4 +1,5 @@
 from collections.abc import Collection, Sequence
+from enum import Enum, auto
 
 from PyQt6.QtCore import QSignalBlocker, Qt, pyqtSignal
 from PyQt6.QtGui import QContextMenuEvent, QCursor
@@ -19,10 +20,16 @@ from src.views.widgets.charts.sunburst_chart_view import (
 )
 
 
+class StatsType(Enum):
+    INCOME = auto()
+    EXPENSE = auto()
+
+
 class CategoryReport(CustomWidget, Ui_CategoryReport):
     signal_show_transactions = pyqtSignal()
     signal_recalculate_report = pyqtSignal()
     signal_selection_changed = pyqtSignal()
+    signal_sunburst_slice_clicked = pyqtSignal(str)
 
     def __init__(
         self,
@@ -38,8 +45,8 @@ class CategoryReport(CustomWidget, Ui_CategoryReport):
         self.setWindowIcon(icons.category)
         self.currencyNoteLabel.setText(f"All values in {currency_code}")
 
-        self.chart_widget = SunburstChartView(self)
-        self.chartVerticalLayout.addWidget(self.chart_widget)
+        self.chart_view = SunburstChartView(self)
+        self.chartVerticalLayout.addWidget(self.chart_view)
 
         self.actionExpand_All.setIcon(icons.expand)
         self.actionCollapse_All.setIcon(icons.collapse)
@@ -74,6 +81,18 @@ class CategoryReport(CustomWidget, Ui_CategoryReport):
 
         self.treeView.contextMenuEvent = self._create_context_menu
         self.treeView.doubleClicked.connect(self._tree_view_double_clicked)
+
+        self.chart_view.signal_slice_clicked.connect(self.signal_sunburst_slice_clicked)
+
+    @property
+    def stats_type(self) -> StatsType:
+        if self.typeComboBox.currentText() == "Income":
+            return StatsType.INCOME
+        return StatsType.EXPENSE
+
+    @property
+    def period(self) -> str:
+        return self.periodComboBox.currentText()
 
     def finalize_setup(self) -> None:
         for column in range(self.treeView.model().columnCount()):
@@ -127,7 +146,7 @@ class CategoryReport(CustomWidget, Ui_CategoryReport):
         )
         selected_period = self.periodComboBox.currentText()
         sunburst_data = _convert_category_stats_to_sunburst_data(data[selected_period])
-        self.chart_widget.load_data(sunburst_data)
+        self.chart_view.load_data(sunburst_data)
 
     def _show_hide_periods(self) -> None:
         state = self.actionShow_Hide_Period_Columns.isChecked()

@@ -2,7 +2,7 @@ import logging
 from collections.abc import Collection
 
 from PyQt6.QtCore import QSortFilterProxyModel, Qt
-from PyQt6.QtWidgets import QApplication
+from PyQt6.QtWidgets import QApplication, QWidget
 from src.models.base_classes.transaction import Transaction
 from src.models.custom_exceptions import InvalidOperationError
 from src.models.model_objects.cash_objects import CashTransaction, RefundTransaction
@@ -18,7 +18,7 @@ from src.view_models.periodic_category_stats_tree_model import (
 )
 from src.views.dialogs.busy_dialog import create_simple_busy_indicator
 from src.views.main_view import MainView
-from src.views.reports.category_report import CategoryReport
+from src.views.reports.category_report import CategoryReport, StatsType
 from src.views.utilities.handle_exception import display_error_message
 from src.views.utilities.message_box_functions import ask_yes_no_question
 
@@ -122,11 +122,12 @@ class CategoryReportPresenter:
         ) = calculate_periodic_totals_and_averages(periodic_stats, base_currency)
 
         self._report = CategoryReport(title, base_currency.code, self._main_view)
-        self._report.signal_show_transactions.connect(self._show_transactions)
+        self._report.signal_show_transactions.connect(self._show_selected_transactions)
         self._report.signal_recalculate_report.connect(
             lambda: self._recalculate_report(period_format, title)
         )
         self._report.signal_selection_changed.connect(self._selection_changed)
+        self._report.signal_sunburst_slice_clicked.connect(self._sunburst_slice_clicked)
 
         self._proxy = QSortFilterProxyModel(self._report)
         self._model = PeriodicCategoryStatsTreeModel(self._report.treeView, self._proxy)
@@ -157,40 +158,79 @@ class CategoryReportPresenter:
             income_periodic_stats[period] = income_stats
             expense_periodic_stats[period] = expense_stats
 
-        income_average_stats = [
-            CategoryStats(category, 0, 0, transactions_balance.balance)
-            for category, transactions_balance in category_averages.items()
-            if transactions_balance.balance.value_rounded > 0
-        ]
-        expense_average_stats = [
-            CategoryStats(category, 0, 0, transactions_balance.balance)
-            for category, transactions_balance in category_averages.items()
-            if transactions_balance.balance.value_rounded < 0
-        ]
-        income_periodic_stats["Average"] = income_average_stats
-        expense_periodic_stats["Average"] = expense_average_stats
+        income_periodic_stats["Average"] = []
+        expense_periodic_stats["Average"] = []
+        for category, transactions_balance in category_averages.items():
+            stats = CategoryStats(
+                category,
+                0,
+                0,
+                transactions_balance.balance,
+                transactions_balance.transactions,
+            )
+            if transactions_balance.balance.value_rounded > 0:
+                income_periodic_stats["Average"].append(stats)
+            elif transactions_balance.balance.value_rounded < 0:
+                expense_periodic_stats["Average"].append(stats)
 
-        income_total_stats = [
-            CategoryStats(category, 0, 0, transactions_balance.balance)
-            for category, transactions_balance in category_totals.items()
-            if transactions_balance.balance.value_rounded > 0
-        ]
-        expense_total_stats = [
-            CategoryStats(category, 0, 0, transactions_balance.balance)
-            for category, transactions_balance in category_totals.items()
-            if transactions_balance.balance.value_rounded < 0
-        ]
-        income_periodic_stats["Total"] = income_total_stats
-        expense_periodic_stats["Total"] = expense_total_stats
+        income_periodic_stats["Total"] = []
+        expense_periodic_stats["Total"] = []
+        for category, transactions_balance in category_totals.items():
+            stats = CategoryStats(
+                category,
+                0,
+                0,
+                transactions_balance.balance,
+                transactions_balance.transactions,
+            )
+            if transactions_balance.balance.value_rounded > 0:
+                income_periodic_stats["Total"].append(stats)
+            elif transactions_balance.balance.value_rounded < 0:
+                expense_periodic_stats["Total"].append(stats)
+
+        self._income_stats = (
+            income_periodic_stats  # saved to retrieve data when slice is clicked
+        )
+        self._expense_stats = expense_periodic_stats
 
         self._report.load_stats(income_periodic_stats, expense_periodic_stats)
         self._report.finalize_setup()
         self._selection_changed()
         self._report.show_form()
 
-    def _show_transactions(self) -> None:
+    def _show_selected_transactions(self) -> None:
         transactions, period, path = self._model.get_selected_transactions()
         title = f"Category Report - {path}, {period}"
+        self._show_transaction_table(transactions, title)
+
+    def _sunburst_slice_clicked(self, path: str) -> None:
+        stats_type = self._report.stats_type
+        period = self._report.period
+        title = f"Category Report - {path}, {period}"
+
+        data = (
+            self._income_stats[period]
+            if stats_type == StatsType.INCOME
+            else self._expense_stats[period]
+        )
+
+        transactions = None
+        if path == "Total":
+            transactions = []
+            for category_stats in data:
+                transactions.extend(category_stats.transactions)
+        for category_stats in data:
+            if category_stats.category.path == path:
+                transactions = category_stats.transactions
+                break
+        if transactions is None:
+            return
+
+        self._show_transaction_table(transactions, title)
+
+    def _show_transaction_table(
+        self, transactions: Collection[Transaction], title: str
+    ) -> None:
         transaction_table_form_presenter = (
             self._transactions_presenter.transaction_table_form_presenter
         )
