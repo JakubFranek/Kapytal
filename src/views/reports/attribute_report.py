@@ -1,4 +1,5 @@
 from collections.abc import Collection
+from enum import Enum, auto
 from typing import TYPE_CHECKING
 
 from PyQt6.QtCore import QSignalBlocker, Qt, pyqtSignal
@@ -23,10 +24,16 @@ if TYPE_CHECKING:
     from src.models.model_objects.currency_objects import Currency
 
 
+class StatsType(Enum):
+    INCOME = auto()
+    EXPENSE = auto()
+
+
 class AttributeReport(CustomWidget, Ui_AttributeReport):
     signal_selection_changed = pyqtSignal()
     signal_show_transactions = pyqtSignal()
     signal_recalculate_report = pyqtSignal()
+    signal_pie_slice_clicked = pyqtSignal(str)
 
     def __init__(
         self,
@@ -46,7 +53,7 @@ class AttributeReport(CustomWidget, Ui_AttributeReport):
             self.setWindowIcon(icons.payee)
         self.currencyNoteLabel.setText(f"All values in {currency_code}")
 
-        self.chart_view = PieChartView(self)
+        self.chart_view = PieChartView(self, clickable_slices=True)
         self.chartVerticalLayout.addWidget(self.chart_view)
 
         self.typeComboBox.addItem("Income")
@@ -78,6 +85,18 @@ class AttributeReport(CustomWidget, Ui_AttributeReport):
 
         self.tableView.contextMenuEvent = self._create_context_menu
         self.tableView.doubleClicked.connect(self._table_view_double_clicked)
+
+        self.chart_view.signal_slice_clicked.connect(self.signal_pie_slice_clicked.emit)
+
+    @property
+    def stats_type(self) -> StatsType:
+        if self.typeComboBox.currentText() == "Income":
+            return StatsType.INCOME
+        return StatsType.EXPENSE
+
+    @property
+    def period(self) -> str:
+        return self.periodComboBox.currentText()
 
     def finalize_setup(self) -> None:
         for column in range(self.tableView.model().columnCount()):
