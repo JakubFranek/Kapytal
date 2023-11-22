@@ -147,6 +147,8 @@ class PeriodicAttributeStatsTableModel(QAbstractTableModel):
             return self._get_display_role_data(row, column)
         if role == Qt.ItemDataRole.UserRole:
             return float(self._rows[row][column].value)
+        if role == Qt.ItemDataRole.UserRole + 1:
+            return self._row_headers[row]
         if role == Qt.ItemDataRole.TextAlignmentRole:
             return ALIGNMENT_RIGHT
         if role == Qt.ItemDataRole.ForegroundRole:

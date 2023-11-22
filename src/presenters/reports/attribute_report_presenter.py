@@ -158,6 +158,10 @@ class AttributeReportPresenter:
         )
         self._report.signal_selection_changed.connect(self._selection_changed)
         self._report.signal_pie_slice_clicked.connect(self._pie_slice_clicked)
+        self._report.signal_search_text_changed.connect(self._filter)
+        self._report.searchLineEdit.setPlaceholderText(
+            f"Search {attribute_type.name.title()}s"
+        )
 
         self._proxy = QSortFilterProxyModel(self._report)
         self._model = PeriodicAttributeStatsTableModel(
@@ -171,6 +175,8 @@ class AttributeReportPresenter:
         )
         self._proxy.setSourceModel(self._model)
         self._proxy.setSortRole(Qt.ItemDataRole.UserRole)
+        self._proxy.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+        self._proxy.setFilterRole(Qt.ItemDataRole.UserRole + 1)
         self._report.tableView.setModel(self._proxy)
         self._report.tableView.sortByColumn(
             self._model.AVERAGE_COLUMN_INDEX, Qt.SortOrder.DescendingOrder
@@ -279,6 +285,11 @@ class AttributeReportPresenter:
         else:
             enabled = len(transactions) > 0
         self._report.set_show_transactions_action_state(enable=enabled)
+
+    def _filter(self, pattern: str) -> None:
+        if ("[" in pattern and "]" not in pattern) or "[]" in pattern:
+            return
+        self._proxy.setFilterWildcard(pattern)
 
 
 def _filter_transactions(

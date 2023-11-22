@@ -4,12 +4,7 @@ from typing import TYPE_CHECKING
 
 from PyQt6.QtCore import QSignalBlocker, Qt, pyqtSignal
 from PyQt6.QtGui import QContextMenuEvent, QCursor
-from PyQt6.QtWidgets import (
-    QApplication,
-    QHeaderView,
-    QMenu,
-    QWidget,
-)
+from PyQt6.QtWidgets import QApplication, QHeaderView, QLineEdit, QMenu, QWidget
 from src.models.model_objects.attributes import AttributeType
 from src.models.statistics.attribute_stats import AttributeStats
 from src.views import colors, icons
@@ -34,6 +29,7 @@ class AttributeReport(CustomWidget, Ui_AttributeReport):
     signal_show_transactions = pyqtSignal()
     signal_recalculate_report = pyqtSignal()
     signal_pie_slice_clicked = pyqtSignal(str)
+    signal_search_text_changed = pyqtSignal(str)
 
     def __init__(
         self,
@@ -87,6 +83,11 @@ class AttributeReport(CustomWidget, Ui_AttributeReport):
         self.tableView.doubleClicked.connect(self._table_view_double_clicked)
 
         self.chart_view.signal_slice_clicked.connect(self.signal_pie_slice_clicked.emit)
+
+        self.searchLineEdit.textChanged.connect(self.signal_search_text_changed)
+        self.searchLineEdit.addAction(
+            icons.magnifier, QLineEdit.ActionPosition.LeadingPosition
+        )
 
     @property
     def stats_type(self) -> StatsType:
