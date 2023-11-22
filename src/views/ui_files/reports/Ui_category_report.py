@@ -59,7 +59,7 @@ class Ui_CategoryReport(object):
         self.currencyNoteLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignLeading|QtCore.Qt.AlignmentFlag.AlignLeft|QtCore.Qt.AlignmentFlag.AlignVCenter)
         self.currencyNoteLabel.setObjectName("currencyNoteLabel")
         self.treeControlsHorizontalLayout.addWidget(self.currencyNoteLabel)
-        spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Minimum)
+        spacerItem = QtWidgets.QSpacerItem(20, 20, QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Minimum)
         self.treeControlsHorizontalLayout.addItem(spacerItem)
         self.treeVerticalLayout.addLayout(self.treeControlsHorizontalLayout)
         self.treeView = QtWidgets.QTreeView(self.layoutWidget)

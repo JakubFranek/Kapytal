@@ -123,6 +123,9 @@ class NetWorthReportPresenter:
         self._proxy = QSortFilterProxyModel(self._report)
         self._proxy.setSortRole(Qt.ItemDataRole.UserRole)
         self._proxy.setSortCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+        self._proxy.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+        self._proxy.setRecursiveFilteringEnabled(True)  # noqa: FBT003
+        self._proxy.setFilterRole(Qt.ItemDataRole.UserRole + 1)
         self._model = AccountTreeModel(self._report.treeView, self._proxy)
         self._model.pre_reset_model()
         self._model.load_data(ordered_account_items, base_currency)
@@ -139,6 +142,8 @@ class NetWorthReportPresenter:
         self._report.signal_tree_expanded_state_changed.connect(
             self._set_account_tree_native_balance_column_visibility
         )
+        self._report.signal_search_text_changed.connect(self._filter)
+        self._report.searchLineEdit.setPlaceholderText("Search Accounts")
         self._report.finalize_setup()
         self._set_account_tree_native_balance_column_visibility()
 
@@ -176,6 +181,9 @@ class NetWorthReportPresenter:
         self._proxy = QSortFilterProxyModel(self._report)
         self._proxy.setSortRole(Qt.ItemDataRole.UserRole)
         self._proxy.setSortCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+        self._proxy.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+        self._proxy.setRecursiveFilteringEnabled(True)  # noqa: FBT003
+        self._proxy.setFilterRole(Qt.ItemDataRole.UserRole + 1)
         self._model = AssetTypeTreeModel(self._report.treeView, self._proxy)
         self._model.pre_reset_model()
         self._model.load_data(root_stats)
@@ -191,6 +199,8 @@ class NetWorthReportPresenter:
         self._report.signal_tree_expanded_state_changed.connect(
             self._set_asset_tree_native_balance_column_visibility
         )
+        self._report.signal_search_text_changed.connect(self._filter)
+        self._report.searchLineEdit.setPlaceholderText("Search Assets")
         self._report.finalize_setup()
         self._set_asset_tree_native_balance_column_visibility()
 
@@ -317,6 +327,12 @@ class NetWorthReportPresenter:
         self._report.treeView.setColumnHidden(
             AccountTreeColumn.BALANCE_NATIVE, not show_native_balance_column
         )
+
+    def _filter(self, pattern: str) -> None:
+        if ("[" in pattern and "]" not in pattern) or "[]" in pattern:
+            return
+        self._proxy.setFilterWildcard(pattern)
+        self._report.treeView.expandAll()
 
 
 def calculate_accounts_sunburst_data(

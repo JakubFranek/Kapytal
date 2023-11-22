@@ -97,6 +97,8 @@ class AssetTypeTreeModel(QAbstractItemModel):
             return self._get_display_role_data(column, item)
         if role == Qt.ItemDataRole.UserRole:  # sort role
             return self._get_sort_data(column, item)
+        if role == Qt.ItemDataRole.UserRole + 1:  # sort role
+            return self._get_filter_data(column, item)
         if role == Qt.ItemDataRole.TextAlignmentRole and column in COLUMNS_BALANCE:
             return ALIGNMENT_AMOUNTS
         if role == Qt.ItemDataRole.DecorationRole:
@@ -131,6 +133,11 @@ class AssetTypeTreeModel(QAbstractItemModel):
             )
         if column == AssetTypeTreeColumn.BALANCE_BASE:
             return float(item.amount_base.value_rounded)
+        return None
+
+    def _get_filter_data(self, column: int, item: AssetStats) -> str | Decimal | None:
+        if column == AssetTypeTreeColumn.NAME:
+            return unicodedata.normalize("NFD", item.path)
         return None
 
     def _get_decoration_role_data(self, column: int, item: AssetStats) -> QIcon | None:

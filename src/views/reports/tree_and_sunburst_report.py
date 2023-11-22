@@ -1,7 +1,7 @@
 from collections.abc import Sequence
 
 from PyQt6.QtCore import QSignalBlocker, Qt, pyqtSignal
-from PyQt6.QtWidgets import QHeaderView, QWidget
+from PyQt6.QtWidgets import QHeaderView, QLineEdit, QWidget
 from src.views import icons
 from src.views.base_classes.custom_widget import CustomWidget
 from src.views.ui_files.reports.Ui_tree_and_sunburst_report import (
@@ -12,6 +12,7 @@ from src.views.widgets.charts.sunburst_chart_view import SunburstChartView, Sunb
 
 class TreeAndSunburstReport(CustomWidget, Ui_TreeAndSunburstReport):
     signal_tree_expanded_state_changed = pyqtSignal()
+    signal_search_text_changed = pyqtSignal(str)
 
     def __init__(
         self,
@@ -43,6 +44,11 @@ class TreeAndSunburstReport(CustomWidget, Ui_TreeAndSunburstReport):
         self.actionCollapse_All.triggered.connect(self.treeView.collapseAll)
         self.expandAllToolButton.setDefaultAction(self.actionExpand_All)
         self.collapseAllToolButton.setDefaultAction(self.actionCollapse_All)
+
+        self.searchLineEdit.textChanged.connect(self.signal_search_text_changed)
+        self.searchLineEdit.addAction(
+            icons.magnifier, QLineEdit.ActionPosition.LeadingPosition
+        )
 
     def load_data(self, data: Sequence[SunburstNode]) -> None:
         self.chart_widget.load_data(data)
