@@ -10,6 +10,7 @@ from src.models.model_objects.currency_objects import Currency
 from src.models.record_keeper import RecordKeeper
 from src.models.statistics.net_worth_stats import (
     AssetStats,
+    AssetType,
     calculate_asset_stats,
     calculate_net_worth_over_time,
 )
@@ -112,8 +113,8 @@ class NetWorthReportPresenter:
 
         data = calculate_accounts_sunburst_data(account_items, base_currency)
         label_text = (
-            "NOTE: this chart does not display Accounts and Account Groups with "
-            "zero or negative balance."
+            "NOTE: Sunburst charts are not able to display negative values. "
+            "Hierarchy levels containing Accounts with negative balance are not shown."
         )
         self.report = TreeAndSunburstReport(
             "Net Worth Report - Accounts", label_text, self._main_view
@@ -155,7 +156,8 @@ class NetWorthReportPresenter:
         stats = calculate_asset_stats(accounts, base_currency)
         data = calculate_asset_type_sunburst_data(stats)
         label_text = (
-            "NOTE: this chart does not display assets with zero or negative balance."
+            "NOTE: Sunburst charts are not able to display negative values. "
+            "Hierarchy levels containing assets with negative balance are not shown."
         )
         self.report = TreeAndSunburstReport(
             "Net Worth Report - Asset Types", label_text, self._main_view
@@ -356,6 +358,8 @@ def _create_asset_node(
     node = SunburstNode(
         stats.name, stats.path, 0, parent.unit, parent.decimals, [], parent
     )
+    if stats.short_name is not None:
+        node.set_short_label(stats.short_name)
     children: list[SunburstNode] = []
     if stats.children:
         if any(child.amount_base.value_rounded < 0 for child in stats.children):

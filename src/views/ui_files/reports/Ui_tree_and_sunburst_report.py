@@ -47,6 +47,7 @@ class Ui_TreeAndSunburstReport(object):
         self.verticalLayout.setObjectName("verticalLayout")
         self.label = QtWidgets.QLabel(TreeAndSunburstReport)
         self.label.setText("")
+        self.label.setWordWrap(True)
         self.label.setObjectName("label")
         self.verticalLayout.addWidget(self.label)
         self.horizontalLayout.addLayout(self.verticalLayout)

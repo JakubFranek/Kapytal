@@ -1,5 +1,4 @@
 from collections.abc import Sequence
-from dataclasses import dataclass
 from functools import partial
 from numbers import Real
 from typing import Self
@@ -11,16 +10,69 @@ from PyQt6.QtWidgets import QWidget
 from src.views import colors
 from src.views.widgets.charts.general_chart_callout import GeneralChartCallout
 
+MAX_SLICE_LABEL_LENGTH = 16
 
-@dataclass
+
+def shorten_path(path: str, max_word_length: int) -> str:
+    segments = path.split("/")
+    new_string = ""
+    for segment in segments:
+        if len(new_string) > 0:
+            new_string += "/"
+        new_string += shorten_words(segment, max_word_length)
+    return new_string
+
+
+def shorten_words(text: str, max_word_length: int) -> str:
+    words = text.split(" ")
+    new_string = ""
+    for word in words:
+        if len(new_string) > 0 and max_word_length > 1:
+            new_string += " "
+        if word.isupper():
+            new_string += word
+        elif len(word) > max_word_length:
+            if max_word_length == 1:
+                new_string += word[:max_word_length].capitalize()
+            else:
+                new_string += word[:max_word_length]
+        else:
+            new_string += word
+    return new_string
+
+
 class SunburstNode:
-    label: str
-    path: str
-    value: Real
-    unit: str
-    decimals: int
-    children: list[Self]
-    parent: Self | None
+    def __init__(
+        self,
+        label: str,
+        path: str,
+        value: Real,
+        unit: str,
+        decimals: int,
+        children: list[Self],
+        parent: Self | None,
+    ) -> None:
+        self.label = label
+        self.path = path
+        self.value = value
+        self.unit = unit
+        self.decimals = decimals
+        self.children = children
+        self.parent = parent
+
+        self._short_label = None
+        self._has_short_label = False
+
+    def get_short_label(self, *, force: bool = False) -> str | None:
+        if self._has_short_label:
+            return self._short_label
+        if force:
+            return self._create_short_label()
+        return None
+
+    def set_short_label(self, short_label: str) -> None:
+        self._short_label = short_label
+        self._has_short_label = True
 
     def clear_label(self) -> None:
         self.label = ""
@@ -46,6 +98,17 @@ class SunburstNode:
             return ()
         return self.parent, *self.parent.get_ancestors()
 
+    def _create_short_label(self) -> str:
+        """Returns a shortened version of the label."""
+        max_word_length = 6
+        while True:
+            new_string = shorten_path(self.label, max_word_length)
+            if len(new_string) <= MAX_SLICE_LABEL_LENGTH:
+                return new_string
+            if max_word_length == 1:
+                return new_string
+            max_word_length -= 1
+
 
 class SunburstSlice(QPieSlice):
     def __init__(
@@ -53,13 +116,14 @@ class SunburstSlice(QPieSlice):
         node: SunburstNode,
         parent: QWidget | None = None,
     ) -> None:
-        super().__init__(label=node.label, value=node.value, parent=parent)
+        if node.get_short_label(force=False) is not None:
+            _label = node.get_short_label(force=False)
+        elif len(node.label) <= MAX_SLICE_LABEL_LENGTH:
+            _label = node.label
+        else:
+            _label = node.get_short_label(force=True)
+        super().__init__(label=_label, value=node.value, parent=parent)
         self.node = node
-
-        # TODO: add smart algorithm for shortening long labels
-        # for example: Adam/Investments/Interactive Brokers/Securities
-        #              Adam/Inv./Int.Bro./Securities
-        # shorten words >4 to 3+dot, except for last word (?)
 
 
 class SunburstChartView(QChartView):
@@ -93,7 +157,7 @@ class SunburstChartView(QChartView):
         self.series_dict = {}
 
         self.total_levels = max(node.depth() for node in data)
-        self.lighter_coefficient = int(100 + 100 / self.total_levels)
+        self.lighter_coefficient = int(100 + 90 / self.total_levels)
 
         for node in data:
             self.create_series(node, parent_slice=None, level=0, index=0)
@@ -126,7 +190,7 @@ class SunburstChartView(QChartView):
             slice_.setColor(parent_slice.color().lighter(self.lighter_coefficient))
 
         if not empty:
-            if node.value > self.total * 0.012 and len(node.label) < 20:
+            if node.value > self.total * 0.012:
                 slice_.setLabelVisible(True)
                 slice_.setLabelFont(self._font)
                 slice_.setLabelColor(
