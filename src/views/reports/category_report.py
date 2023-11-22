@@ -9,6 +9,7 @@ from PyQt6.QtWidgets import (
     QMenu,
     QWidget,
 )
+from src.models.model_objects.currency_objects import Currency
 from src.models.statistics.category_stats import CategoryStats
 from src.views import icons
 from src.views.base_classes.custom_widget import CustomWidget
@@ -112,9 +113,11 @@ class CategoryReport(CustomWidget, Ui_CategoryReport):
         self,
         income_periodic_stats: dict[str, Sequence[CategoryStats]],
         expense_periodic_stats: dict[str, Sequence[CategoryStats]],
+        base_currency: Currency,
     ) -> None:
         self._income_periodic_stats = income_periodic_stats
         self._expense_periodic_stats = expense_periodic_stats
+        self._base_currency = base_currency
 
         periods = list(income_periodic_stats.keys())
         self._setup_comboboxes(periods)
@@ -145,7 +148,9 @@ class CategoryReport(CustomWidget, Ui_CategoryReport):
             else self._expense_periodic_stats
         )
         selected_period = self.periodComboBox.currentText()
-        sunburst_data = _convert_category_stats_to_sunburst_data(data[selected_period])
+        sunburst_data = _convert_category_stats_to_sunburst_data(
+            data[selected_period], self._base_currency
+        )
         self.chart_view.load_data(sunburst_data)
 
     def _show_hide_periods(self) -> None:
@@ -179,22 +184,14 @@ class CategoryReport(CustomWidget, Ui_CategoryReport):
 
 
 def _convert_category_stats_to_sunburst_data(
-    stats: Sequence[CategoryStats],
+    stats: Sequence[CategoryStats], currency: Currency
 ) -> tuple[SunburstNode]:
     balance = 0.0
     level = 1
 
-    try:
-        currency = stats[0].balance.currency
-        currency_code = currency.code
-        currency_places = currency.places
-    except IndexError:
-        currency_code = ""
-        currency_places = 0
-
     children: list[SunburstNode] = []
     root_node = SunburstNode(
-        "Total", "Total", 0, currency_code, currency_places, [], None
+        "Total", "Total", 0, currency.code, currency.places, [], None
     )
     for item in stats:
         if item.category.parent is not None:
@@ -230,6 +227,9 @@ def _create_node(
             node.children.append(child_node)
     child_value_sum = sum(child.value for child in node.children)
     if child_value_sum > node.value:
+        # this is needed because CategoryStats can report a different number than
+        # the sum of children (due to refunds), as children are pre-separated by whether
+        # they are positive or negative but CategoryStats sum all balances together
         node.value = child_value_sum
     node.children.sort(key=lambda x: abs(x.value), reverse=True)
     return node

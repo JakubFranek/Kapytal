@@ -5,6 +5,7 @@ from PyQt6.QtCore import QSortFilterProxyModel, Qt
 from PyQt6.QtWidgets import QApplication, QWidget
 from src.models.base_classes.transaction import Transaction
 from src.models.custom_exceptions import InvalidOperationError
+from src.models.model_objects.attributes import Category
 from src.models.model_objects.cash_objects import CashTransaction, RefundTransaction
 from src.models.record_keeper import RecordKeeper
 from src.models.statistics.category_stats import (
@@ -12,6 +13,7 @@ from src.models.statistics.category_stats import (
     calculate_periodic_category_stats,
     calculate_periodic_totals_and_averages,
 )
+from src.models.statistics.common_classes import TransactionBalance
 from src.presenters.widget.transactions_presenter import TransactionsPresenter
 from src.view_models.periodic_category_stats_tree_model import (
     PeriodicCategoryStatsTreeModel,
@@ -138,6 +140,7 @@ class CategoryReportPresenter:
             period_expense_totals,
             category_averages,
             category_totals,
+            base_currency,
         )
         self._proxy.setSourceModel(self._model)
         self._proxy.setSortRole(Qt.ItemDataRole.UserRole)
@@ -158,42 +161,26 @@ class CategoryReportPresenter:
             income_periodic_stats[period] = income_stats
             expense_periodic_stats[period] = expense_stats
 
-        income_periodic_stats["Average"] = []
-        expense_periodic_stats["Average"] = []
-        for category, transactions_balance in category_averages.items():
-            stats = CategoryStats(
-                category,
-                0,
-                0,
-                transactions_balance.balance,
-                transactions_balance.transactions,
-            )
-            if transactions_balance.balance.value_rounded > 0:
-                income_periodic_stats["Average"].append(stats)
-            elif transactions_balance.balance.value_rounded < 0:
-                expense_periodic_stats["Average"].append(stats)
-
-        income_periodic_stats["Total"] = []
-        expense_periodic_stats["Total"] = []
-        for category, transactions_balance in category_totals.items():
-            stats = CategoryStats(
-                category,
-                0,
-                0,
-                transactions_balance.balance,
-                transactions_balance.transactions,
-            )
-            if transactions_balance.balance.value_rounded > 0:
-                income_periodic_stats["Total"].append(stats)
-            elif transactions_balance.balance.value_rounded < 0:
-                expense_periodic_stats["Total"].append(stats)
-
-        self._income_stats = (
-            income_periodic_stats  # saved to retrieve data when slice is clicked
+        income_averages, expense_averages = create_income_and_expense_stats(
+            category_averages
         )
+        income_periodic_stats["Average"] = income_averages
+        expense_periodic_stats["Average"] = expense_averages
+
+        income_totals, expense_totals = create_income_and_expense_stats(category_totals)
+        income_periodic_stats["Total"] = income_totals
+        expense_periodic_stats["Total"] = expense_totals
+
+        add_missing_parent_category_stats(income_periodic_stats)
+        add_missing_parent_category_stats(expense_periodic_stats)
+
+        # saved to retrieve data when slice is clicked
+        self._income_stats = income_periodic_stats
         self._expense_stats = expense_periodic_stats
 
-        self._report.load_stats(income_periodic_stats, expense_periodic_stats)
+        self._report.load_stats(
+            income_periodic_stats, expense_periodic_stats, base_currency
+        )
         self._report.finalize_setup()
         self._selection_changed()
         self._report.show_form()
@@ -263,3 +250,49 @@ def _filter_transactions(
         for transaction in transactions
         if isinstance(transaction, CashTransaction | RefundTransaction)
     )
+
+
+def create_income_and_expense_stats(
+    category_stats: dict[Category, TransactionBalance]
+) -> tuple[tuple[CategoryStats, ...], tuple[CategoryStats, ...]]:
+    income_stats = []
+    expense_stats = []
+    for category, transactions_balance in category_stats.items():
+        stats = CategoryStats(
+            category,
+            0,
+            0,
+            transactions_balance.balance,
+            transactions_balance.transactions,
+        )
+        if transactions_balance.balance.value_rounded > 0:
+            income_stats.append(stats)
+        elif transactions_balance.balance.value_rounded < 0:
+            expense_stats.append(stats)
+
+    return income_stats, expense_stats
+
+
+def add_missing_parent_category_stats(
+    periodic_category_stats: dict[str, list[CategoryStats]]
+) -> tuple[CategoryStats, ...]:
+    stats_to_add = []
+    for period, stats_sequence in periodic_category_stats.items():
+        categories = {s.category for s in stats_sequence}
+        for stats in stats_sequence:
+            if stats.category.parent is not None:
+                parent = stats.category.parent
+                while parent is not None and parent not in categories:
+                    _stats = CategoryStats(
+                        stats.category.parent,
+                        0,
+                        0,
+                        stats.balance,
+                        stats.transactions,
+                    )
+                    stats_to_add.append((period, _stats))
+                    categories.add(parent)
+                    parent = parent.parent
+
+    for period, stats in stats_to_add:
+        periodic_category_stats[period].append(stats)
