@@ -36,8 +36,8 @@ FLAGS_SHOW = (
 FLAGS_DEFAULT = Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsEnabled
 COLUMN_HEADERS = {
     AccountTreeColumn.NAME: "Name",
-    AccountTreeColumn.BALANCE_NATIVE: "Native balance",
-    AccountTreeColumn.BALANCE_BASE: "Base balance",
+    AccountTreeColumn.BALANCE_NATIVE: "Native Balance",
+    AccountTreeColumn.BALANCE_BASE: "Base Balance",
     AccountTreeColumn.SHOW: "",
 }
 
@@ -440,7 +440,12 @@ class AccountTreeModel(QAbstractItemModel):
 
     def _get_tooltip_role_data(self, column: int, item: AccountTreeNode) -> str | None:
         if column == AccountTreeColumn.BALANCE_NATIVE:
-            return item.balance_native.to_str_normalized()
+            if (
+                item.type_ == CashAccount
+                and item.balance_base.currency != item.balance_native.currency
+            ):
+                return item.balance_native.to_str_normalized()
+            return None
         if column == AccountTreeColumn.BALANCE_BASE:
             return item.balance_base.to_str_normalized()
         if column == AccountTreeColumn.SHOW:

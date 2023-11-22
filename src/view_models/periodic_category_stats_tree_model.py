@@ -9,6 +9,7 @@ from PyQt6.QtWidgets import QTreeView
 from src.models.custom_exceptions import InvalidOperationError
 from src.models.model_objects.attributes import Category
 from src.models.model_objects.cash_objects import CashTransaction, RefundTransaction
+from src.models.model_objects.currency_objects import Currency
 from src.models.statistics.category_stats import CategoryStats, TransactionBalance
 from src.views import colors
 
@@ -65,6 +66,7 @@ class PeriodicCategoryStatsTreeModel(QAbstractItemModel):
         periodic_expense_totals: dict[str, TransactionBalance],
         category_averages: dict[Category, TransactionBalance],
         category_totals: dict[Category, TransactionBalance],
+        base_currency: Currency,
     ) -> None:
         self._root_row_objects: list[RowObject] = []
         self._flat_row_objects: list[RowObject] = []
@@ -160,21 +162,27 @@ class PeriodicCategoryStatsTreeModel(QAbstractItemModel):
         )
 
         total_sum = sum(periodic_totals_row_data)
-        average_sum = round(total_sum / len(periodic_totals_row_data))
+        average_sum = round(
+            total_sum / len(periodic_totals_row_data), base_currency.places
+        )
         periodic_totals_row_data.append(average_sum)
         periodic_totals_row_data.append(total_sum)
         periodic_totals_transactions.append(all_transactions)
         periodic_totals_transactions.append(all_transactions)
 
         income_sum = sum(periodic_income_totals_row_data)
-        average_income_sum = round(income_sum / len(periodic_income_totals_row_data))
+        average_income_sum = round(
+            income_sum / len(periodic_income_totals_row_data), base_currency.places
+        )
         periodic_income_totals_row_data.append(average_income_sum)
         periodic_income_totals_row_data.append(income_sum)
         periodic_income_totals_transactions.append(all_income_transactions)
         periodic_income_totals_transactions.append(all_income_transactions)
 
         expense_sum = sum(periodic_expense_totals_row_data)
-        average_expense_sum = round(expense_sum / len(periodic_expense_totals_row_data))
+        average_expense_sum = round(
+            expense_sum / len(periodic_expense_totals_row_data), base_currency.places
+        )
         periodic_expense_totals_row_data.append(average_expense_sum)
         periodic_expense_totals_row_data.append(expense_sum)
         periodic_expense_totals_transactions.append(all_expense_transactions)

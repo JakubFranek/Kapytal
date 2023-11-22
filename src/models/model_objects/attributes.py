@@ -35,6 +35,8 @@ class Attribute(NameMixin, JSONSerializableMixin):
 
     def __init__(self, name: str, type_: AttributeType) -> None:
         super().__init__(name=name, allow_slash=True)
+        if name == "Total":
+            raise ValueError("The word 'Total' is reserved for Category Reports.")
 
         if not isinstance(type_, AttributeType):
             raise TypeError("Attribute.type_ must be an AttributeType.")

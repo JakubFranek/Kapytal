@@ -1,4 +1,5 @@
 from collections.abc import Collection
+from enum import Enum, auto
 from typing import TYPE_CHECKING
 
 from PyQt6.QtCore import QSignalBlocker, Qt, pyqtSignal
@@ -23,10 +24,16 @@ if TYPE_CHECKING:
     from src.models.model_objects.currency_objects import Currency
 
 
+class StatsType(Enum):
+    INCOME = auto()
+    EXPENSE = auto()
+
+
 class AttributeReport(CustomWidget, Ui_AttributeReport):
     signal_selection_changed = pyqtSignal()
     signal_show_transactions = pyqtSignal()
     signal_recalculate_report = pyqtSignal()
+    signal_pie_slice_clicked = pyqtSignal(str)
 
     def __init__(
         self,
@@ -46,7 +53,7 @@ class AttributeReport(CustomWidget, Ui_AttributeReport):
             self.setWindowIcon(icons.payee)
         self.currencyNoteLabel.setText(f"All values in {currency_code}")
 
-        self.chart_view = PieChartView(self)
+        self.chart_view = PieChartView(self, clickable_slices=True)
         self.chartVerticalLayout.addWidget(self.chart_view)
 
         self.typeComboBox.addItem("Income")
@@ -78,6 +85,18 @@ class AttributeReport(CustomWidget, Ui_AttributeReport):
 
         self.tableView.contextMenuEvent = self._create_context_menu
         self.tableView.doubleClicked.connect(self._table_view_double_clicked)
+
+        self.chart_view.signal_slice_clicked.connect(self.signal_pie_slice_clicked.emit)
+
+    @property
+    def stats_type(self) -> StatsType:
+        if self.typeComboBox.currentText() == "Income":
+            return StatsType.INCOME
+        return StatsType.EXPENSE
+
+    @property
+    def period(self) -> str:
+        return self.periodComboBox.currentText()
 
     def finalize_setup(self) -> None:
         for column in range(self.tableView.model().columnCount()):
@@ -136,13 +155,19 @@ class AttributeReport(CustomWidget, Ui_AttributeReport):
             (abs(item.balance.value_rounded), item.attribute.name)
             for item in _periodic_stats[selected_period]
         ]
-        currency: Currency = _periodic_stats[selected_period][0].balance.currency
+        try:
+            currency: Currency = _periodic_stats[selected_period][0].balance.currency
+            places = currency.places
+            currency_code = currency.code
+        except IndexError:
+            places = 0
+            currency_code = ""
 
         color = (
             colors.ColorRanges.GREEN if type_ == "Income" else colors.ColorRanges.RED
         )
 
-        self.chart_view.load_data(data, currency.places, currency.code, color)
+        self.chart_view.load_data(data, places, currency_code, color)
 
     def _show_hide_periods(self) -> None:
         state = self.actionShow_Hide_Period_Columns.isChecked()

@@ -82,8 +82,6 @@ def setup_logging() -> None:
     handler_info.setFormatter(formatter)
 
     root_logger = logging.getLogger()  # this is the root logger
-    logging.getLogger("matplotlib.font_manager").disabled = True
-    logging.getLogger("pyplot.switch_backend").disabled = True
     logging.getLogger("yfinance").disabled = True
     logging.getLogger("urllib3.connectionpool").disabled = True
     root_logger.addFilter(DuplicateFilter(formatter))

@@ -19,7 +19,6 @@ idna==3.4
 iniconfig==2.0.0
 kiwisolver==1.4.5
 lxml==4.9.3
-matplotlib==3.8.1
 mplcursors==0.5.2
 multitasking==0.0.11
 mypy==1.6.1
@@ -40,6 +39,8 @@ pyinstaller==6.1.0
 pyinstaller-hooks-contrib==2023.10
 pyparsing==3.1.1
 PyQt6==6.6.0
+PyQt6-Charts==6.6.0
+PyQt6-Charts-Qt6==6.6.0
 PyQt6-Qt6==6.6.0
 PyQt6-sip==13.6.0
 pytest==7.4.3

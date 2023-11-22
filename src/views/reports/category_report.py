@@ -1,30 +1,36 @@
-from collections.abc import Collection
+from collections.abc import Collection, Sequence
+from enum import Enum, auto
 
 from PyQt6.QtCore import QSignalBlocker, Qt, pyqtSignal
 from PyQt6.QtGui import QContextMenuEvent, QCursor
 from PyQt6.QtWidgets import (
     QApplication,
-    QComboBox,
-    QHBoxLayout,
     QHeaderView,
     QMenu,
     QWidget,
 )
+from src.models.model_objects.currency_objects import Currency
 from src.models.statistics.category_stats import CategoryStats
 from src.views import icons
 from src.views.base_classes.custom_widget import CustomWidget
 from src.views.dialogs.busy_dialog import create_simple_busy_indicator
 from src.views.ui_files.reports.Ui_category_report import Ui_CategoryReport
-from src.views.widgets.charts.sunburst_chart_widget import (
-    SunburstChartWidget,
+from src.views.widgets.charts.sunburst_chart_view import (
+    SunburstChartView,
     SunburstNode,
 )
+
+
+class StatsType(Enum):
+    INCOME = auto()
+    EXPENSE = auto()
 
 
 class CategoryReport(CustomWidget, Ui_CategoryReport):
     signal_show_transactions = pyqtSignal()
     signal_recalculate_report = pyqtSignal()
     signal_selection_changed = pyqtSignal()
+    signal_sunburst_slice_clicked = pyqtSignal(str)
 
     def __init__(
         self,
@@ -40,8 +46,8 @@ class CategoryReport(CustomWidget, Ui_CategoryReport):
         self.setWindowIcon(icons.category)
         self.currencyNoteLabel.setText(f"All values in {currency_code}")
 
-        self.chart_widget = SunburstChartWidget(self)
-        self.splitter.addWidget(self.chart_widget)
+        self.chart_view = SunburstChartView(self, clickable_slices=True)
+        self.chartVerticalLayout.addWidget(self.chart_view)
 
         self.actionExpand_All.setIcon(icons.expand)
         self.actionCollapse_All.setIcon(icons.collapse)
@@ -67,21 +73,27 @@ class CategoryReport(CustomWidget, Ui_CategoryReport):
         self.recalculateReportToolButton.setDefaultAction(self.actionRecalculate_Report)
         self.showTransactionsToolButton.setDefaultAction(self.actionShow_Transactions)
 
-        self.typeComboBox = QComboBox(self)
         self.typeComboBox.addItem("Income")
         self.typeComboBox.addItem("Expense")
         self.typeComboBox.setCurrentText("Income")
         self.typeComboBox.currentTextChanged.connect(self._combobox_text_changed)
 
-        self.periodComboBox = QComboBox(self)
         self.periodComboBox.currentTextChanged.connect(self._combobox_text_changed)
 
-        self.combo_box_horizontal_layout = QHBoxLayout()
-        self.combo_box_horizontal_layout.addWidget(self.typeComboBox)
-        self.combo_box_horizontal_layout.addWidget(self.periodComboBox)
-        self.chart_widget.horizontal_layout.addLayout(self.combo_box_horizontal_layout)
         self.treeView.contextMenuEvent = self._create_context_menu
         self.treeView.doubleClicked.connect(self._tree_view_double_clicked)
+
+        self.chart_view.signal_slice_clicked.connect(self.signal_sunburst_slice_clicked)
+
+    @property
+    def stats_type(self) -> StatsType:
+        if self.typeComboBox.currentText() == "Income":
+            return StatsType.INCOME
+        return StatsType.EXPENSE
+
+    @property
+    def period(self) -> str:
+        return self.periodComboBox.currentText()
 
     def finalize_setup(self) -> None:
         for column in range(self.treeView.model().columnCount()):
@@ -99,11 +111,13 @@ class CategoryReport(CustomWidget, Ui_CategoryReport):
 
     def load_stats(
         self,
-        income_periodic_stats: dict[str, Collection[CategoryStats]],
-        expense_periodic_stats: dict[str, Collection[CategoryStats]],
+        income_periodic_stats: dict[str, Sequence[CategoryStats]],
+        expense_periodic_stats: dict[str, Sequence[CategoryStats]],
+        base_currency: Currency,
     ) -> None:
         self._income_periodic_stats = income_periodic_stats
         self._expense_periodic_stats = expense_periodic_stats
+        self._base_currency = base_currency
 
         periods = list(income_periodic_stats.keys())
         self._setup_comboboxes(periods)
@@ -134,8 +148,10 @@ class CategoryReport(CustomWidget, Ui_CategoryReport):
             else self._expense_periodic_stats
         )
         selected_period = self.periodComboBox.currentText()
-        sunburst_data = _convert_category_stats_to_sunburst_data(data[selected_period])
-        self.chart_widget.load_data(sunburst_data)
+        sunburst_data = _convert_category_stats_to_sunburst_data(
+            data[selected_period], self._base_currency
+        )
+        self.chart_view.load_data(sunburst_data)
 
     def _show_hide_periods(self) -> None:
         state = self.actionShow_Hide_Period_Columns.isChecked()
@@ -168,60 +184,52 @@ class CategoryReport(CustomWidget, Ui_CategoryReport):
 
 
 def _convert_category_stats_to_sunburst_data(
-    stats: Collection[CategoryStats],
+    stats: Sequence[CategoryStats], currency: Currency
 ) -> tuple[SunburstNode]:
-    total = sum((stats.balance.value_rounded) for stats in stats)
-    no_label_threshold = abs(float(total) * 0.4 / 100)
     balance = 0.0
     level = 1
+
     children: list[SunburstNode] = []
+    root_node = SunburstNode(
+        "Total", "Total", 0, currency.code, currency.places, [], None
+    )
     for item in stats:
         if item.category.parent is not None:
             continue
-        node = _create_node(
-            item, stats, no_label_threshold, level + 1, parent_label_visible=True
-        )
+        node = _create_node(item, stats, level + 1, root_node)
         balance += node.value
-        if abs(node.value) < no_label_threshold:
-            node.clear_label()
         children.append(node)
     children.sort(key=lambda x: abs(x.value), reverse=True)
-    return (SunburstNode("", balance, children),)
+    root_node.children = children
+    root_node.value = balance
+    return (root_node,)
 
 
 def _create_node(
     stats: CategoryStats,
     all_stats: Collection[CategoryStats],
-    no_label_threshold: float,  # abs value
     level: int,
-    *,
-    parent_label_visible: bool,
+    parent: SunburstNode,
 ) -> SunburstNode:
     node = SunburstNode(
         stats.category.name,
+        stats.category.path,
         abs(float(stats.balance.value_rounded)),
+        parent.unit,
+        parent.decimals,
         [],
+        parent,
     )
-    label_visible = abs(node.value) >= no_label_threshold / (level - 1)
 
     for item in all_stats:
         if item.category in stats.category.children:
-            child_node = _create_node(
-                item,
-                all_stats,
-                no_label_threshold,
-                level + 1,
-                parent_label_visible=label_visible,
-            )
-            if (
-                abs(child_node.value) < no_label_threshold / level
-                or not parent_label_visible
-                or not label_visible
-            ):
-                child_node.clear_label()
+            child_node = _create_node(item, all_stats, level + 1, node)
             node.children.append(child_node)
     child_value_sum = sum(child.value for child in node.children)
     if child_value_sum > node.value:
+        # this is needed because CategoryStats can report a different number than
+        # the sum of children (due to refunds), as children are pre-separated by whether
+        # they are positive or negative but CategoryStats sum all balances together
         node.value = child_value_sum
     node.children.sort(key=lambda x: abs(x.value), reverse=True)
     return node

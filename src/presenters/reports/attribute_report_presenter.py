@@ -19,7 +19,7 @@ from src.view_models.periodic_attribute_stats_table_model import (
 )
 from src.views.dialogs.busy_dialog import create_simple_busy_indicator
 from src.views.main_view import MainView
-from src.views.reports.attribute_report import AttributeReport
+from src.views.reports.attribute_report import AttributeReport, StatsType
 from src.views.utilities.handle_exception import display_error_message
 from src.views.utilities.message_box_functions import ask_yes_no_question
 
@@ -152,13 +152,12 @@ class AttributeReportPresenter:
         self._report = AttributeReport(
             title, base_currency.code, attribute_type, self._main_view
         )
-        self._report.signal_show_transactions.connect(
-            lambda: self._show_transactions(attribute_type)
-        )
+        self._report.signal_show_transactions.connect(self._show_selected_transactions)
         self._report.signal_recalculate_report.connect(
             lambda: self._recalculate_report(period_format, title, attribute_type)
         )
         self._report.signal_selection_changed.connect(self._selection_changed)
+        self._report.signal_pie_slice_clicked.connect(self._pie_slice_clicked)
 
         self._proxy = QSortFilterProxyModel(self._report)
         self._model = PeriodicAttributeStatsTableModel(
@@ -188,40 +187,72 @@ class AttributeReportPresenter:
                 elif stats.balance.value_rounded < 0:
                     expense_periodic_stats[period].append(stats)
 
-        income_average_stats = [
-            AttributeStats(attribute, 0, transaction_balance.balance)
-            for attribute, transaction_balance in attribute_averages.items()
-            if transaction_balance.balance.value_rounded > 0
-        ]
-        expense_average_stats = [
-            AttributeStats(attribute, 0, transaction_balance.balance)
-            for attribute, transaction_balance in attribute_averages.items()
-            if transaction_balance.balance.value_rounded < 0
-        ]
-        income_periodic_stats["Average"] = income_average_stats
-        expense_periodic_stats["Average"] = expense_average_stats
+        income_periodic_stats["Average"] = []
+        expense_periodic_stats["Average"] = []
+        for attribute, transaction_balance in attribute_averages.items():
+            stats = AttributeStats(
+                attribute,
+                0,
+                transaction_balance.balance,
+                transaction_balance.transactions,
+            )
+            if transaction_balance.balance.value_rounded > 0:
+                income_periodic_stats["Average"].append(stats)
+            elif transaction_balance.balance.value_rounded < 0:
+                expense_periodic_stats["Average"].append(stats)
 
-        income_total_stats = [
-            AttributeStats(attribute, 0, transaction_balance.balance)
-            for attribute, transaction_balance in attribute_totals.items()
-            if transaction_balance.balance.value_rounded > 0
-        ]
-        expense_total_stats = [
-            AttributeStats(attribute, 0, transaction_balance.balance)
-            for attribute, transaction_balance in attribute_totals.items()
-            if transaction_balance.balance.value_rounded < 0
-        ]
-        income_periodic_stats["Total"] = income_total_stats
-        expense_periodic_stats["Total"] = expense_total_stats
+        income_periodic_stats["Total"] = []
+        expense_periodic_stats["Total"] = []
+        for attribute, transaction_balance in attribute_totals.items():
+            stats = AttributeStats(
+                attribute,
+                0,
+                transaction_balance.balance,
+                transaction_balance.transactions,
+            )
+            if transaction_balance.balance.value_rounded > 0:
+                income_periodic_stats["Total"].append(stats)
+            elif transaction_balance.balance.value_rounded < 0:
+                expense_periodic_stats["Total"].append(stats)
+
+        self._income_stats = income_periodic_stats
+        self._expense_stats = expense_periodic_stats
+        self._attribute_type = attribute_type
 
         self._report.load_stats(income_periodic_stats, expense_periodic_stats)
         self._report.finalize_setup()
         self._selection_changed()
         self._report.show_form()
 
-    def _show_transactions(self, attribute_type: AttributeType) -> None:
+    def _show_selected_transactions(self) -> None:
         transactions, period, path = self._model.get_selected_transactions()
-        title = f"{attribute_type.name.title()} Report - {path}, {period}"
+        title = f"{self._attribute_type.name.title()} Report - {path}, {period}"
+        self._show_transaction_table(transactions, title)
+
+    def _pie_slice_clicked(self, name: str) -> None:
+        stats_type = self._report.stats_type
+        period = self._report.period
+        title = f"{self._attribute_type.name.title()} Report - {name}, {period}"
+
+        data = (
+            self._income_stats[period]
+            if stats_type == StatsType.INCOME
+            else self._expense_stats[period]
+        )
+
+        transactions = None
+        for stats in data:
+            if stats.attribute.name == name:
+                transactions = stats.transactions
+                break
+        if transactions is None:
+            return
+
+        self._show_transaction_table(transactions, title)
+
+    def _show_transaction_table(
+        self, transactions: Collection[Transaction], title: str
+    ) -> None:
         transaction_table_form_presenter = (
             self._transactions_presenter.transaction_table_form_presenter
         )

@@ -17,6 +17,7 @@ from src.models.model_objects.currency_objects import Currency
 from src.models.model_objects.security_objects import (
     SecurityTransaction,
     SecurityTransactionType,
+    SecurityTransfer,
 )
 from src.models.statistics.common_classes import TransactionBalance
 
@@ -189,7 +190,21 @@ def calculate_cash_flow(
                     base_currency, date_
                 )
                 stats.outward_transfers.transactions.add(transaction)
-            # TODO: handle SecurityTransfers (take price for given date)
+        elif isinstance(transaction, SecurityTransfer):
+            if transaction.sender in accounts and transaction.recipient in accounts:
+                pass
+            elif transaction.sender in accounts:
+                shares = transaction.shares
+                security = transaction.security
+                amount = shares * security.get_price(transaction.datetime_.date())
+                stats.outward_transfers.balance += amount
+                stats.outward_transfers.transactions.add(transaction)
+            else:
+                shares = transaction.shares
+                security = transaction.security
+                amount = shares * security.get_price(transaction.datetime_.date())
+                stats.inward_transfers.balance += amount
+                stats.inward_transfers.transactions.add(transaction)
 
     stats.inflows = stats.incomes + stats.inward_transfers + stats.refunds
     stats.inflows.balance += stats.initial_balances

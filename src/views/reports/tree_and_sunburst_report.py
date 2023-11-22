@@ -1,16 +1,18 @@
 from collections.abc import Sequence
 
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import QSignalBlocker, Qt, pyqtSignal
 from PyQt6.QtWidgets import QHeaderView, QWidget
 from src.views import icons
 from src.views.base_classes.custom_widget import CustomWidget
 from src.views.ui_files.reports.Ui_tree_and_sunburst_report import (
     Ui_TreeAndSunburstReport,
 )
-from src.views.widgets.charts.sunburst_chart_widget import SunburstChartWidget
+from src.views.widgets.charts.sunburst_chart_view import SunburstChartView, SunburstNode
 
 
 class TreeAndSunburstReport(CustomWidget, Ui_TreeAndSunburstReport):
+    signal_tree_expanded_state_changed = pyqtSignal()
+
     def __init__(
         self,
         title: str,
@@ -24,7 +26,7 @@ class TreeAndSunburstReport(CustomWidget, Ui_TreeAndSunburstReport):
         self.setWindowTitle(title)
         self.setWindowIcon(icons.pie_chart)
 
-        self.chart_widget = SunburstChartWidget(self)
+        self.chart_widget = SunburstChartView(self, clickable_slices=False)
         self.verticalLayout.insertWidget(0, self.chart_widget)
 
         if label_text:
@@ -42,7 +44,7 @@ class TreeAndSunburstReport(CustomWidget, Ui_TreeAndSunburstReport):
         self.expandAllToolButton.setDefaultAction(self.actionExpand_All)
         self.collapseAllToolButton.setDefaultAction(self.actionCollapse_All)
 
-    def load_data(self, data: Sequence) -> None:
+    def load_data(self, data: Sequence[SunburstNode]) -> None:
         self.chart_widget.load_data(data)
 
     def finalize_setup(self) -> None:
@@ -60,3 +62,17 @@ class TreeAndSunburstReport(CustomWidget, Ui_TreeAndSunburstReport):
         )
 
         self.treeView.sortByColumn(2, Qt.SortOrder.DescendingOrder)
+
+    def expand_all(self) -> None:
+        with QSignalBlocker(self.treeView):
+            # blocking so AccountTreepresenter._set_native_balance_column_visibility
+            # is not called too many times
+            self.treeView.expandAll()
+        self.signal_tree_expanded_state_changed.emit()
+
+    def collapse_all(self) -> None:
+        with QSignalBlocker(self.treeView):
+            # blocking so AccountTreepresenter._set_native_balance_column_visibility
+            # is not called too many times
+            self.treeView.collapseAll()
+        self.signal_tree_expanded_state_changed.emit()
