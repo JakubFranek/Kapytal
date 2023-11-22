@@ -13,8 +13,8 @@ COLUMN_HEADERS = {
     SecurityTableColumn.NAME: "Name",
     SecurityTableColumn.SYMBOL: "Symbol",
     SecurityTableColumn.TYPE: "Type",
-    SecurityTableColumn.PRICE: "Latest price",
-    SecurityTableColumn.LAST_DATE: "Latest date",
+    SecurityTableColumn.PRICE: "Latest Price",
+    SecurityTableColumn.LAST_DATE: "Latest Date",
 }
 
 

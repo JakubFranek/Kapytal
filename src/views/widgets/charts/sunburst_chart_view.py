@@ -10,7 +10,7 @@ from PyQt6.QtWidgets import QWidget
 from src.views import colors
 from src.views.widgets.charts.general_chart_callout import GeneralChartCallout
 
-MAX_SLICE_LABEL_LENGTH = 16
+MAX_SLICE_LABEL_LENGTH = 17
 
 
 def shorten_path(path: str, max_word_length: int) -> str:

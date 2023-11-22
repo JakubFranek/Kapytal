@@ -12,8 +12,8 @@ from src.views.constants import AssetTypeTreeColumn
 ALIGNMENT_AMOUNTS = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
 COLUMN_HEADERS = {
     AssetTypeTreeColumn.NAME: "Name",
-    AssetTypeTreeColumn.BALANCE_NATIVE: "Native balance",
-    AssetTypeTreeColumn.BALANCE_BASE: "Base balance",
+    AssetTypeTreeColumn.BALANCE_NATIVE: "Native Balance",
+    AssetTypeTreeColumn.BALANCE_BASE: "Base Balance",
 }
 COLUMNS_BALANCE = {
     AssetTypeTreeColumn.BALANCE_NATIVE,
