@@ -6,6 +6,7 @@ from PyQt6.QtGui import QContextMenuEvent, QCursor
 from PyQt6.QtWidgets import (
     QApplication,
     QHeaderView,
+    QLineEdit,
     QMenu,
     QWidget,
 )
@@ -31,6 +32,7 @@ class CategoryReport(CustomWidget, Ui_CategoryReport):
     signal_recalculate_report = pyqtSignal()
     signal_selection_changed = pyqtSignal()
     signal_sunburst_slice_clicked = pyqtSignal(str)
+    signal_search_text_changed = pyqtSignal(str)
 
     def __init__(
         self,
@@ -84,6 +86,11 @@ class CategoryReport(CustomWidget, Ui_CategoryReport):
         self.treeView.doubleClicked.connect(self._tree_view_double_clicked)
 
         self.chart_view.signal_slice_clicked.connect(self.signal_sunburst_slice_clicked)
+
+        self.searchLineEdit.textChanged.connect(self.signal_search_text_changed)
+        self.searchLineEdit.addAction(
+            icons.magnifier, QLineEdit.ActionPosition.LeadingPosition
+        )
 
     @property
     def stats_type(self) -> StatsType:

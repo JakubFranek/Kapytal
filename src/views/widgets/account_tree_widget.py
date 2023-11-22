@@ -38,6 +38,12 @@ class AccountTreeWidget(QWidget, Ui_AccountTreeWidget):
 
         self.searchLineEdit = SmallLineEdit(self)
         self.searchLineEdit.setPlaceholderText("Search Accounts")
+        self.searchLineEdit.setToolTip(
+            "Special characters:\n\n"
+            "* matches zero or more of any characters\n"
+            "? matches any single character\n"
+            "[...] matches any character within square brackets"
+        )
         self.controlsHorizontalLayout.addWidget(self.searchLineEdit)
 
         self._set_action_icons()
