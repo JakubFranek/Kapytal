@@ -10,12 +10,12 @@ from src.models.model_objects.currency_objects import Currency
 from src.models.record_keeper import RecordKeeper
 from src.models.statistics.net_worth_stats import (
     AssetStats,
-    AssetType,
     calculate_asset_stats,
     calculate_net_worth_over_time,
 )
 from src.models.user_settings import user_settings
 from src.presenters.widget.transactions_presenter import TransactionsPresenter
+from src.utilities.general import flatten_tree
 from src.view_models.account_tree_model import AccountTreeModel
 from src.view_models.asset_type_tree_model import AssetTypeTreeModel
 from src.view_models.value_table_model import ValueTableModel, ValueType
@@ -116,24 +116,34 @@ class NetWorthReportPresenter:
             "NOTE: Sunburst charts are not able to display negative values. "
             "Hierarchy levels containing Accounts with negative balance are not shown."
         )
-        self.report = TreeAndSunburstReport(
+        self._report = TreeAndSunburstReport(
             "Net Worth Report - Accounts", label_text, self._main_view
         )
         ordered_account_items = sorted(account_items, key=lambda item: item.path)
-        self._proxy = QSortFilterProxyModel(self.report)
+        self._proxy = QSortFilterProxyModel(self._report)
         self._proxy.setSortRole(Qt.ItemDataRole.UserRole)
         self._proxy.setSortCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
-        self._model = AccountTreeModel(self.report.treeView, self._proxy)
+        self._model = AccountTreeModel(self._report.treeView, self._proxy)
         self._model.pre_reset_model()
         self._model.load_data(ordered_account_items, base_currency)
         self._model.post_reset_model()
         self._proxy.setSourceModel(self._model)
-        self.report.treeView.setModel(self._proxy)
-        self.report.treeView.hideColumn(AccountTreeColumn.SHOW)
-        self.report.finalize_setup()
+        self._report.treeView.setModel(self._proxy)
+        self._report.treeView.hideColumn(AccountTreeColumn.SHOW)
+        self._report.treeView.expanded.connect(
+            self._set_account_tree_native_balance_column_visibility
+        )
+        self._report.treeView.collapsed.connect(
+            self._set_account_tree_native_balance_column_visibility
+        )
+        self._report.signal_tree_expanded_state_changed.connect(
+            self._set_account_tree_native_balance_column_visibility
+        )
+        self._report.finalize_setup()
+        self._set_account_tree_native_balance_column_visibility()
 
-        self.report.load_data(data)
-        self.report.show_form()
+        self._report.load_data(data)
+        self._report.show_form()
 
     def _create_asset_type_report(self) -> None:
         logging.debug("Net Worth Asset Type Report requested")
@@ -153,28 +163,39 @@ class NetWorthReportPresenter:
             )
             return
 
-        stats = calculate_asset_stats(accounts, base_currency)
-        data = calculate_asset_type_sunburst_data(stats)
+        root_stats = calculate_asset_stats(accounts, base_currency)
+        self._flat_asset_stats = flatten_tree(root_stats)
+        data = calculate_asset_type_sunburst_data(root_stats)
         label_text = (
             "NOTE: Sunburst charts are not able to display negative values. "
             "Hierarchy levels containing assets with negative balance are not shown."
         )
-        self.report = TreeAndSunburstReport(
+        self._report = TreeAndSunburstReport(
             "Net Worth Report - Asset Types", label_text, self._main_view
         )
-        self._proxy = QSortFilterProxyModel(self.report)
+        self._proxy = QSortFilterProxyModel(self._report)
         self._proxy.setSortRole(Qt.ItemDataRole.UserRole)
         self._proxy.setSortCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
-        self._model = AssetTypeTreeModel(self.report.treeView, self._proxy)
+        self._model = AssetTypeTreeModel(self._report.treeView, self._proxy)
         self._model.pre_reset_model()
-        self._model.load_data(stats)
+        self._model.load_data(root_stats)
         self._model.post_reset_model()
         self._proxy.setSourceModel(self._model)
-        self.report.treeView.setModel(self._proxy)
-        self.report.finalize_setup()
+        self._report.treeView.setModel(self._proxy)
+        self._report.treeView.expanded.connect(
+            self._set_asset_tree_native_balance_column_visibility
+        )
+        self._report.treeView.collapsed.connect(
+            self._set_asset_tree_native_balance_column_visibility
+        )
+        self._report.signal_tree_expanded_state_changed.connect(
+            self._set_asset_tree_native_balance_column_visibility
+        )
+        self._report.finalize_setup()
+        self._set_asset_tree_native_balance_column_visibility()
 
-        self.report.load_data(data)
-        self.report.show_form()
+        self._report.load_data(data)
+        self._report.show_form()
 
     def _create_time_report(self) -> None:
         logging.debug("Net Worth Time Report requested")
@@ -218,14 +239,14 @@ class NetWorthReportPresenter:
             "NOTE: to change the date range, use the Date & Time Filter. "
             "Net Worth is calculated based on Account Filter settings."
         )
-        self.report = TableAndLineChartReport(
+        self._report = TableAndLineChartReport(
             "Net Worth Report - Time", label_text, self._main_view
         )
-        self._proxy = QSortFilterProxyModel(self.report)
+        self._proxy = QSortFilterProxyModel(self._report)
         self._proxy.setSortRole(Qt.ItemDataRole.UserRole)
         self._proxy.setSortCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
         self._model = ValueTableModel(
-            self.report.tableView,
+            self._report.tableView,
             self._proxy,
             ValueType.NET_WORTH,
             base_currency.code,
@@ -234,8 +255,8 @@ class NetWorthReportPresenter:
         self._model.load_data(data)
         self._model.post_reset_model()
         self._proxy.setSourceModel(self._model)
-        self.report.tableView.setModel(self._proxy)
-        self.report.finalize_setup()
+        self._report.tableView.setModel(self._proxy)
+        self._report.finalize_setup()
 
         x = []
         y = []
@@ -248,14 +269,54 @@ class NetWorthReportPresenter:
             if base_currency.places >= 2  # noqa: PLR2004
             else 0
         )
-        self.report.load_data(
+        self._report.load_data(
             x,
             y,
             y_label=f"Net Worth [{base_currency.code}]",
             y_unit=base_currency.code,
             y_decimals=places,
         )
-        self.report.show_form()
+        self._report.show_form()
+
+    def _set_account_tree_native_balance_column_visibility(self) -> None:
+        show_native_balance_column = False
+        non_native_cash_accounts = [
+            account
+            for account in self._record_keeper.cash_accounts
+            if account.currency != self._record_keeper.base_currency
+        ]
+        for account in non_native_cash_accounts:
+            show_native_balance_column = self._is_tree_item_visible(account)
+            if show_native_balance_column:
+                break
+        self._report.treeView.setColumnHidden(
+            AccountTreeColumn.BALANCE_NATIVE, not show_native_balance_column
+        )
+
+    def _is_tree_item_visible(self, item: Account | AccountGroup | AssetStats) -> bool:
+        if item.parent is None:
+            return True
+        index = self._model.get_index_from_item(item.parent)
+        index = self._proxy.mapFromSource(index)
+        if self._report.treeView.isExpanded(index):
+            return self._is_tree_item_visible(item.parent)
+        return False
+
+    def _set_asset_tree_native_balance_column_visibility(self) -> None:
+        show_native_balance_column = False
+        non_native_assets = [
+            asset_stats
+            for asset_stats in self._flat_asset_stats
+            if asset_stats.amount_native is not None
+        ]
+
+        for account in non_native_assets:
+            show_native_balance_column = self._is_tree_item_visible(account)
+            if show_native_balance_column:
+                break
+        self._report.treeView.setColumnHidden(
+            AccountTreeColumn.BALANCE_NATIVE, not show_native_balance_column
+        )
 
 
 def calculate_accounts_sunburst_data(

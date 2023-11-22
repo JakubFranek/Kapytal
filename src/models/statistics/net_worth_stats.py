@@ -47,6 +47,8 @@ class AssetStats:
 def calculate_asset_stats(
     accounts: Collection[Account], base_currency: Currency
 ) -> tuple[AssetStats]:
+    """Returns root AssetStats only."""
+
     stats: dict[str, AssetStats] = {}
     stats["Currencies"] = AssetStats(
         name="Currencies",

@@ -1,6 +1,6 @@
 from collections.abc import Sequence
 
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import QSignalBlocker, Qt, pyqtSignal
 from PyQt6.QtWidgets import QHeaderView, QWidget
 from src.views import icons
 from src.views.base_classes.custom_widget import CustomWidget
@@ -11,6 +11,8 @@ from src.views.widgets.charts.sunburst_chart_view import SunburstChartView, Sunb
 
 
 class TreeAndSunburstReport(CustomWidget, Ui_TreeAndSunburstReport):
+    signal_tree_expanded_state_changed = pyqtSignal()
+
     def __init__(
         self,
         title: str,
@@ -60,3 +62,17 @@ class TreeAndSunburstReport(CustomWidget, Ui_TreeAndSunburstReport):
         )
 
         self.treeView.sortByColumn(2, Qt.SortOrder.DescendingOrder)
+
+    def expand_all(self) -> None:
+        with QSignalBlocker(self.treeView):
+            # blocking so AccountTreepresenter._set_native_balance_column_visibility
+            # is not called too many times
+            self.treeView.expandAll()
+        self.signal_tree_expanded_state_changed.emit()
+
+    def collapse_all(self) -> None:
+        with QSignalBlocker(self.treeView):
+            # blocking so AccountTreepresenter._set_native_balance_column_visibility
+            # is not called too many times
+            self.treeView.collapseAll()
+        self.signal_tree_expanded_state_changed.emit()

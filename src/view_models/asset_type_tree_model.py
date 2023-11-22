@@ -30,10 +30,10 @@ class AssetTypeTreeModel(QAbstractItemModel):
         super().__init__()
         self._tree_view = tree_view
         self._proxy = proxy
-        self._tree_items = ()
+        self._root_items = ()
 
     def load_data(self, collection: Collection[AssetStats]) -> None:
-        self._tree_items = collection
+        self._root_items = collection
 
     def rowCount(self, index: QModelIndex = ...) -> int:
         if index.isValid():
@@ -41,7 +41,7 @@ class AssetTypeTreeModel(QAbstractItemModel):
                 return 0
             item: AssetStats = index.internalPointer()
             return len(item.children)
-        return len(self._tree_items)
+        return len(self._root_items)
 
     def columnCount(self, index: QModelIndex = ...) -> int:
         return 3 if not index.isValid() or index.column() == 0 else 0
@@ -55,7 +55,7 @@ class AssetTypeTreeModel(QAbstractItemModel):
         else:
             parent: AssetStats = _parent.internalPointer()
 
-        child = self._tree_items[row] if parent is None else parent.children[row]
+        child = self._root_items[row] if parent is None else parent.children[row]
         if child:
             return QAbstractItemModel.createIndex(self, row, column, child)
         return QModelIndex()
@@ -70,7 +70,7 @@ class AssetTypeTreeModel(QAbstractItemModel):
             return QModelIndex()
         grandparent = parent.parent
         if grandparent is None:
-            row = self._tree_items.index(parent)
+            row = self._root_items.index(parent)
         else:
             row = grandparent.children.index(parent)
         return QAbstractItemModel.createIndex(self, row, 0, parent)
@@ -164,3 +164,13 @@ class AssetTypeTreeModel(QAbstractItemModel):
 
     def post_reset_model(self) -> None:
         self.endResetModel()
+
+    def get_index_from_item(self, item: AssetStats | None) -> QModelIndex:
+        if item is None:
+            return QModelIndex()
+        parent = item.parent
+        if parent is None:
+            row = self._root_items.index(item)
+        else:
+            row = parent.children.index(item)
+        return QAbstractItemModel.createIndex(self, row, 0, item)
