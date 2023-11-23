@@ -121,6 +121,8 @@
     <property name="title">
      <string>Help</string>
     </property>
+    <addaction name="actionOpen_Kapytal_GitHub_page"/>
+    <addaction name="actionCheck_for_Updates"/>
     <addaction name="actionAbout"/>
    </widget>
    <addaction name="menuFile"/>
@@ -344,6 +346,16 @@
    </property>
    <property name="toolTip">
     <string>Update Quotes</string>
+   </property>
+  </action>
+  <action name="actionCheck_for_Updates">
+   <property name="text">
+    <string>Check for Updates</string>
+   </property>
+  </action>
+  <action name="actionOpen_Kapytal_GitHub_page">
+   <property name="text">
+    <string>Open Kapytal GitHub page</string>
    </property>
   </action>
  </widget>

@@ -90,6 +90,7 @@ percent: QIcon | None = None
 swap: QIcon | None = None
 refresh: QIcon | None = None
 clipboard_text: QIcon | None = None
+globe: QIcon | None = None
 
 
 def setup() -> None:  # noqa: PLR0915
@@ -120,7 +121,7 @@ def setup() -> None:  # noqa: PLR0915
     global bar_chart, pie_chart, calendar  # noqa: PLW0603
     global document_smiley, document_clock, document_plus  # noqa: PLW0603
     global book_question, table, percent  # noqa: PLW0603
-    global swap, refresh, clipboard_text  # noqa: PLW0603
+    global swap, refresh, clipboard_text, globe  # noqa: PLW0603
 
     QDir.addSearchPath(
         "icons_24",
@@ -223,3 +224,4 @@ def setup() -> None:  # noqa: PLR0915
     swap = QIcon("icons_16:arrow-switch.png")
     refresh = QIcon("icons_16:arrow-circle-double.png")
     clipboard_text = QIcon("icons_16:clipboard-text.png")
+    globe = QIcon("icons_16:globe-green.png")

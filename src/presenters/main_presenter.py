@@ -1,4 +1,5 @@
 import logging
+import webbrowser
 
 from PyQt6.QtWidgets import QApplication
 from src.models.record_keeper import RecordKeeper
@@ -11,6 +12,7 @@ from src.presenters.form.security_form_presenter import SecurityFormPresenter
 from src.presenters.form.settings_form_presenter import SettingsFormPresenter
 from src.presenters.form.tag_form_presenter import TagFormPresenter
 from src.presenters.reports.report_presenter import ReportPresenter
+from src.presenters.update_presenter import UpdatePresenter
 from src.presenters.widget.account_tree_presenter import AccountTreePresenter
 from src.presenters.widget.transactions_presenter import (
     TransactionsPresenter,
@@ -36,6 +38,9 @@ class MainPresenter:
         self._initialize_presenters()
         self._setup_event_observers()
         self._connect_view_signals()
+
+    def check_for_updates(self, *, silent: bool = True) -> None:
+        self._update_presenter.check_for_updates(silent=silent)
 
     def show_welcome_dialog(self) -> None:
         self._welcome_dialog = WelcomeDialog(self._view)
@@ -89,6 +94,7 @@ class MainPresenter:
 
     def _initialize_presenters(self) -> None:
         self._file_presenter = FilePresenter(self._view, self._record_keeper)
+        self._update_presenter = UpdatePresenter(self._view)
 
         self._account_tree_presenter = AccountTreePresenter(
             self._view.account_tree_widget, self._record_keeper
@@ -210,6 +216,12 @@ class MainPresenter:
             self._quotes_update_form_presenter.show_form
         )
 
+        self._view.signal_check_updates.connect(
+            lambda: self._update_presenter.check_for_updates(silent=False, timeout=10)
+        )
+
+        self._view.signal_open_github.connect(self._open_github)
+
     def _update_checked_accounts(self) -> None:
         self._transactions_presenter.load_account_tree_checked_items(
             self._account_tree_presenter.checked_account_items
@@ -232,3 +244,6 @@ class MainPresenter:
         self._transactions_presenter.update_base_currency()
         self._transactions_presenter.resize_table_to_contents()
         self._data_changed()
+
+    def _open_github(self) -> None:
+        webbrowser.open(constants.GITHUB_URL)
