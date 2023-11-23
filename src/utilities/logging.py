@@ -91,7 +91,7 @@ def setup_logging() -> None:
     logging.logThreads = False
     logging.logProcesses = False
     logging.logMultiprocessing = False
-    logging.debug("Logging setup complete")
+    logging.debug(f"Kapytal v{constants.VERSION}: logging setup complete")
 
 
 def remove_old_logs() -> None:

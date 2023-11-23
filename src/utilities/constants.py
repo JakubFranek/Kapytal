@@ -3,6 +3,9 @@ from pathlib import Path
 # Literal constants
 VERSION = "0.10.0"
 
+GITHUB_URL = "https://github.com/JakubFranek/Kapytal"
+GITHUB_API_URL = "https://api.github.com/repos/JakubFranek/Kapytal"
+
 TIMESTAMP_FORMAT = "%Y_%m_%d_%Hh%Mm%Ss"
 TIMESTAMP_EXAMPLE = "YYYY_mm_DD_HHhMMmSSs"
 

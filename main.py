@@ -66,6 +66,9 @@ def main() -> None:
 
     app.processEvents()  # draw MainView so WelcomeDialog can be properly centered
 
+    logging.debug("Checking for updates")
+    main_presenter.check_for_updates()
+
     logging.debug("Showing Welcome dialog")
     main_presenter.show_welcome_dialog()
 
