@@ -238,6 +238,7 @@ class CategoryReportPresenter:
         self,
     ) -> None:
         try:
+            self._model.update_selected_row_objects()
             transactions, _, _ = self._model.get_selected_transactions()
         except InvalidOperationError:
             enabled = False
