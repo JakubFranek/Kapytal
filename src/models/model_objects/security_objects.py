@@ -447,6 +447,43 @@ class SecurityAccount(Account):
             obj._parent = parent  # noqa: SLF001
         return obj
 
+    def get_average_price(
+        self, security: Security, date_: date | None = None
+    ) -> CashAmount:
+        if not isinstance(security, Security):
+            raise TypeError("Parameter 'security' must be a Security.")
+        if security not in self._securities_history[-1][1]:
+            raise ValueError(
+                f"Security {security.name} is not in this SecurityAccount."
+            )
+
+        shares_price_pairs: list[tuple[int, CashAmount]] = []
+        for transaction in self._transactions:
+            _transaction_date = transaction.datetime_.date()
+            if date_ is not None and _transaction_date > date_:
+                continue
+            if transaction.security != security:
+                continue
+            if isinstance(transaction, SecurityTransaction):
+                shares_price_pairs.append(
+                    (transaction.shares, transaction.price_per_share)
+                )
+            elif (
+                isinstance(transaction, SecurityTransfer)
+                and transaction.recipient == self
+            ):
+                avg_price = transaction.sender.get_average_price(
+                    security, _transaction_date
+                )
+                shares_price_pairs.append((transaction.shares, avg_price))
+
+        total_shares = 0
+        total_price = CashAmount(0, security.currency)
+        for shares, price in shares_price_pairs:
+            total_price += price * shares
+            total_shares += shares
+        return total_price / total_shares
+
     def _validate_transaction(self, transaction: "SecurityRelatedTransaction") -> None:
         if not isinstance(transaction, SecurityRelatedTransaction):
             raise TypeError(
