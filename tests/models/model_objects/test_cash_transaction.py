@@ -365,29 +365,6 @@ def test_get_amount(transaction: CashTransaction) -> None:
 
 @given(
     transaction=cash_transactions(),
-    account=everything_except(CashAccount),
-)
-def test_get_amount_invalid_account_type(
-    transaction: CashTransaction, account: Any
-) -> None:
-    with pytest.raises(TypeError, match="Parameter 'account' must be a CashAccount."):
-        transaction.get_amount(account)
-
-
-@given(
-    transaction=cash_transactions(),
-    account=cash_accounts(),
-)
-def test_get_amount_invalid_account_value(
-    transaction: CashTransaction, account: CashAccount
-) -> None:
-    assume(transaction.account != account)
-    with pytest.raises(UnrelatedAccountError):
-        transaction.get_amount(account)
-
-
-@given(
-    transaction=cash_transactions(),
     category_amount_pairs=everything_except((Collection, NoneType)),
 )
 def test_category_amount_pairs_invalid_type(

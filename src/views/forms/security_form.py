@@ -2,7 +2,7 @@ from collections.abc import Collection
 
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtWidgets import QHeaderView, QLineEdit, QWidget
-from src.views import icons
+from src.views import colors, icons
 from src.views.base_classes.custom_widget import CustomWidget
 from src.views.constants import (
     OwnedSecuritiesTreeColumn,
@@ -11,7 +11,7 @@ from src.views.constants import (
 )
 from src.views.ui_files.forms.Ui_security_form import Ui_SecurityForm
 from src.views.utilities.helper_functions import calculate_table_width
-from src.views.widgets.charts.line_chart_widget import LineChartWidget
+from src.views.widgets.charts.date_line_chart_view import DateLineChartView
 
 
 class SecurityForm(CustomWidget, Ui_SecurityForm):
@@ -86,7 +86,9 @@ class SecurityForm(CustomWidget, Ui_SecurityForm):
         self.expandAllToolButton.setDefaultAction(self.actionExpand_All)
         self.collapseAllToolButton.setDefaultAction(self.actionCollapse_All)
 
-        self.chart_widget = LineChartWidget(self)
+        background = colors.get_tab_widget_background()
+
+        self.chart_widget = DateLineChartView(self, background)
         self.securityPriceHorizontalLayout.addWidget(self.chart_widget)
         self.securityPriceHorizontalLayout.setStretchFactor(self.chart_widget, 100)
         self.securityPriceHorizontalLayout.setStretchFactor(
@@ -94,7 +96,7 @@ class SecurityForm(CustomWidget, Ui_SecurityForm):
         )
 
         height = self.tabWidget.currentWidget().height()
-        self.splitter.setSizes([150, height - 150])
+        self.splitter.setSizes([200, height - 200])
 
         self.securityTableView.horizontalHeader().setSortIndicatorClearable(True)
         self.securityPriceTableView.horizontalHeader().setSortIndicatorClearable(True)
@@ -107,10 +109,18 @@ class SecurityForm(CustomWidget, Ui_SecurityForm):
             self.signal_price_table_double_clicked.emit
         )
 
-    def load_chart_data(
-        self, x: Collection, y: Collection, title: str, ylabel: str
+    def load_chart_data(  # noqa: PLR0913
+        self,
+        x: Collection,
+        y: Collection,
+        title: str,
+        y_label: str,
+        y_unit: str,
+        y_decimals: int,
     ) -> None:
-        self.chart_widget.load_data(x, y, title, ylabel)
+        self.chart_widget.load_data(
+            x, y, title, y_label, y_unit=y_unit, y_decimals=y_decimals
+        )
         self.update_price_table_width()
 
     def enable_security_table_actions(self, *, is_security_selected: bool) -> None:
@@ -122,7 +132,7 @@ class SecurityForm(CustomWidget, Ui_SecurityForm):
         *,
         is_security_selected: bool,
         is_price_selected: bool,
-        is_single_price_selected: bool
+        is_single_price_selected: bool,
     ) -> None:
         self.actionAdd_Price.setEnabled(is_security_selected)
         self.actionEdit_Price.setEnabled(

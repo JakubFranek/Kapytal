@@ -40,9 +40,6 @@ class EditMode(Enum):
         return (EditMode.EDIT_MULTIPLE, EditMode.EDIT_MULTIPLE_MIXED_CURRENCY)
 
 
-# REFACTOR: refactor this dialog (messy code)
-
-
 class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
     KEEP_CURRENT_VALUES = "Keep current values"
 
@@ -104,14 +101,12 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
 
         if edit_mode == EditMode.EDIT_MULTIPLE:
             self._disable_type()
-            pass
         elif edit_mode == EditMode.EDIT_MULTIPLE_MIXED_CURRENCY:
             self._disable_type()
             self._disable_account()
             self._disable_amount()
             self._category_rows[0].enable_split(enable=False)
             self._tag_rows[0].enable_split(enable=False)
-            pass
 
         self.amountDoubleSpinBox.valueChanged.connect(self._amount_changed)
         self._amount_changed()
@@ -753,8 +748,6 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
                     vertical_layout_count - 1
                 ).widget()
                 self.setTabOrder(self._tag_rows[index], last_widget)
-
-        # FIXME: tab order is stuck at the end in the dialog buttons
 
     def _account_changed(self) -> None:
         account_path = self.account_path

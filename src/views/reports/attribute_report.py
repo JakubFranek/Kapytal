@@ -1,30 +1,35 @@
 from collections.abc import Collection
+from enum import Enum, auto
+from typing import TYPE_CHECKING
 
 from PyQt6.QtCore import QSignalBlocker, Qt, pyqtSignal
 from PyQt6.QtGui import QContextMenuEvent, QCursor
-from PyQt6.QtWidgets import (
-    QApplication,
-    QComboBox,
-    QHBoxLayout,
-    QHeaderView,
-    QMenu,
-    QWidget,
-)
+from PyQt6.QtWidgets import QApplication, QHeaderView, QLineEdit, QMenu, QWidget
 from src.models.model_objects.attributes import AttributeType
 from src.models.statistics.attribute_stats import AttributeStats
-from src.views import icons
+from src.views import colors, icons
 from src.views.base_classes.custom_widget import CustomWidget
 from src.views.dialogs.busy_dialog import create_simple_busy_indicator
 from src.views.ui_files.reports.Ui_attribute_report import (
     Ui_AttributeReport,
 )
-from src.views.widgets.charts.pie_chart_widget import PieChartWidget
+from src.views.widgets.charts.pie_chart_view import PieChartView
+
+if TYPE_CHECKING:
+    from src.models.model_objects.currency_objects import Currency
+
+
+class StatsType(Enum):
+    INCOME = auto()
+    EXPENSE = auto()
 
 
 class AttributeReport(CustomWidget, Ui_AttributeReport):
     signal_selection_changed = pyqtSignal()
     signal_show_transactions = pyqtSignal()
     signal_recalculate_report = pyqtSignal()
+    signal_pie_slice_clicked = pyqtSignal(str)
+    signal_search_text_changed = pyqtSignal(str)
 
     def __init__(
         self,
@@ -44,22 +49,15 @@ class AttributeReport(CustomWidget, Ui_AttributeReport):
             self.setWindowIcon(icons.payee)
         self.currencyNoteLabel.setText(f"All values in {currency_code}")
 
-        self.chart_widget = PieChartWidget(self)
-        self.splitter.addWidget(self.chart_widget)
+        self.chart_view = PieChartView(self, clickable_slices=True)
+        self.chartVerticalLayout.addWidget(self.chart_view)
 
-        self.typeComboBox = QComboBox(self)
         self.typeComboBox.addItem("Income")
         self.typeComboBox.addItem("Expense")
         self.typeComboBox.setCurrentText("Income")
         self.typeComboBox.currentTextChanged.connect(self._combobox_text_changed)
 
-        self.periodComboBox = QComboBox(self)
         self.periodComboBox.currentTextChanged.connect(self._combobox_text_changed)
-
-        self.combobox_horizontal_layout = QHBoxLayout()
-        self.combobox_horizontal_layout.addWidget(self.typeComboBox)
-        self.combobox_horizontal_layout.addWidget(self.periodComboBox)
-        self.chart_widget.horizontal_layout.addLayout(self.combobox_horizontal_layout)
 
         self.actionShow_Hide_Period_Columns.setIcon(icons.calendar)
         self.actionShow_Hide_Period_Columns.triggered.connect(self._show_hide_periods)
@@ -83,6 +81,23 @@ class AttributeReport(CustomWidget, Ui_AttributeReport):
 
         self.tableView.contextMenuEvent = self._create_context_menu
         self.tableView.doubleClicked.connect(self._table_view_double_clicked)
+
+        self.chart_view.signal_slice_clicked.connect(self.signal_pie_slice_clicked.emit)
+
+        self.searchLineEdit.textChanged.connect(self.signal_search_text_changed)
+        self.searchLineEdit.addAction(
+            icons.magnifier, QLineEdit.ActionPosition.LeadingPosition
+        )
+
+    @property
+    def stats_type(self) -> StatsType:
+        if self.typeComboBox.currentText() == "Income":
+            return StatsType.INCOME
+        return StatsType.EXPENSE
+
+    @property
+    def period(self) -> str:
+        return self.periodComboBox.currentText()
 
     def finalize_setup(self) -> None:
         for column in range(self.tableView.model().columnCount()):
@@ -141,8 +156,19 @@ class AttributeReport(CustomWidget, Ui_AttributeReport):
             (abs(item.balance.value_rounded), item.attribute.name)
             for item in _periodic_stats[selected_period]
         ]
+        try:
+            currency: Currency = _periodic_stats[selected_period][0].balance.currency
+            places = currency.places
+            currency_code = currency.code
+        except IndexError:
+            places = 0
+            currency_code = ""
 
-        self.chart_widget.load_data(data)
+        color = (
+            colors.ColorRanges.GREEN if type_ == "Income" else colors.ColorRanges.RED
+        )
+
+        self.chart_view.load_data(data, places, currency_code, color)
 
     def _show_hide_periods(self) -> None:
         state = self.actionShow_Hide_Period_Columns.isChecked()

@@ -2,9 +2,11 @@ import logging
 import shutil
 import sys
 import traceback
+from collections.abc import Collection
 from datetime import datetime
 from pathlib import Path
 from types import TracebackType
+from typing import Protocol, Self, TypeVar
 
 from src.models.user_settings import user_settings
 from src.utilities import constants
@@ -121,3 +123,26 @@ def get_exception_info(
     file_name = Path(file_name).name
 
     return file_name, line, exc_details
+
+
+class TreeItem(Protocol):
+    @property
+    def children(self) -> Collection[Self]:
+        ...
+
+    @property
+    def parent(self) -> Self | None:
+        ...
+
+
+TreeItemType = TypeVar("TreeItemType", bound=TreeItem)
+
+
+def flatten_tree(root_items: Collection[TreeItemType]) -> list[TreeItemType]:
+    """Flattens any tree, as long as the root items have a children property."""
+    flat_stats: list[TreeItemType] = []
+    for stats in root_items:
+        flat_stats.append(stats)
+        if len(stats.children) > 0:
+            flat_stats = flat_stats + flatten_tree(stats.children)
+    return flat_stats

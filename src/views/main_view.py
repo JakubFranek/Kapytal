@@ -53,6 +53,9 @@ class MainView(QMainWindow, Ui_MainWindow):
     signal_clear_recent_files = pyqtSignal()
     signal_close_file = pyqtSignal()
 
+    signal_open_github = pyqtSignal()
+    signal_check_updates = pyqtSignal()
+
     def __init__(self) -> None:
         super().__init__()
         self._initial_setup()
@@ -191,6 +194,8 @@ class MainView(QMainWindow, Ui_MainWindow):
         self.menuTags.setIcon(icons.tag)
         self.menuPayees.setIcon(icons.payee)
 
+        self.actionOpen_Kapytal_GitHub_page.setIcon(icons.globe)
+
         self._connect_actions_to_signals()
 
     def _connect_actions_to_signals(self) -> None:
@@ -263,6 +268,14 @@ class MainView(QMainWindow, Ui_MainWindow):
         )
 
         self.actionUpdate_Quotes.triggered.connect(self.signal_update_quotes.emit)
+
+        self.actionOpen_Kapytal_GitHub_page.triggered.connect(
+            self.signal_open_github.emit
+        )
+
+        self.actionCheck_for_Updates.triggered.connect(
+            lambda: self.signal_check_updates.emit()
+        )
 
     def keyPressEvent(self, a0: QKeyEvent) -> None:
         if a0.key() == Qt.Key.Key_Escape:

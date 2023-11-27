@@ -98,7 +98,7 @@ class TransactionTableModel(QAbstractTableModel):
     def valid_accounts(self, accounts: Collection[Account]) -> None:
         self._valid_accounts = tuple(accounts)
 
-    # FIXME: this is really hacky
+    # FIXME: it feels hacky to rely on transactions being pre-sorted descending
     def load_data(
         self,
         transactions: Collection[Transaction],
@@ -512,18 +512,16 @@ class TransactionTableModel(QAbstractTableModel):
     def _get_transaction_amount_string(
         self, transaction: Transaction, *, base: bool
     ) -> str:
-        amount = None
-        if isinstance(transaction, CashTransaction | RefundTransaction):
-            amount = transaction.get_amount(transaction.account)
-        if isinstance(transaction, SecurityTransaction):
-            amount = transaction.get_amount(transaction.cash_account)
-
-        if amount is None:
-            return ""
+        try:
+            amount: CashAmount = transaction.get_amount()
+        except Exception:  # noqa: BLE001
+            return ""  # probably a CashTransfer or SecurityTransfer
 
         if base:
             try:
-                return amount.convert(self._base_currency).to_str_rounded()
+                return amount.convert(
+                    self._base_currency, transaction.datetime_.date()
+                ).to_str_rounded()
             except ConversionFactorNotFoundError:
                 return "Error!"
         elif amount.currency == self._base_currency:
@@ -543,7 +541,11 @@ class TransactionTableModel(QAbstractTableModel):
             return float("-inf")
 
         if base:
-            return float(amount.convert(self._base_currency).value_rounded)
+            return float(
+                amount.convert(
+                    self._base_currency, transaction.datetime_.date()
+                ).value_rounded
+            )
         return float(amount.value_rounded)
 
     @staticmethod

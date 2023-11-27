@@ -39,6 +39,13 @@
         </widget>
        </item>
        <item>
+        <widget class="QLineEdit" name="searchLineEdit">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Special characters:&lt;/p&gt;&lt;p&gt;* matches zero or more of any characters&lt;br/&gt;? matches any single character&lt;br/&gt;[...] matches any character within square brackets&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <spacer name="horizontalSpacer">
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
@@ -83,6 +90,9 @@
       <widget class="QLabel" name="label">
        <property name="text">
         <string/>
+       </property>
+       <property name="wordWrap">
+        <bool>true</bool>
        </property>
       </widget>
      </item>

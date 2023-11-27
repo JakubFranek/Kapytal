@@ -15,10 +15,6 @@ from src.views import colors
 from src.views.main_view import MainView
 from src.views.utilities.handle_exception import handle_uncaught_exception
 
-# BUG: sometimes the following error appears
-# QWindowsWindow::setMouseGrabEnabled: Not setting mouse grab for invisible window
-# QWidgetWindow/'menuReportsWindow'
-
 
 def main() -> None:
     # The following three lines are needed to make sure task bar icon works on Windows
@@ -69,6 +65,9 @@ def main() -> None:
     main_view.showMaximized()
 
     app.processEvents()  # draw MainView so WelcomeDialog can be properly centered
+
+    logging.debug("Checking for updates")
+    main_presenter.check_for_updates()
 
     logging.debug("Showing Welcome dialog")
     main_presenter.show_welcome_dialog()

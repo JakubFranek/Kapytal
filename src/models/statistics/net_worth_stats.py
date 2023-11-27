@@ -28,10 +28,27 @@ class AssetStats:
     def __repr__(self) -> str:
         return f"AssetStats({self.name}, {self.amount_base.to_str_normalized()})"
 
+    @property
+    def path(self) -> str:
+        if self.parent is None:
+            return self.name
+        return self.parent.path + "/" + self.name
+
+    @property
+    def short_name(self) -> str | None:
+        if hasattr(self, "_short_name"):
+            return self._short_name
+        return None
+
+    def set_short_name(self, short_name: str) -> None:
+        self._short_name = short_name
+
 
 def calculate_asset_stats(
     accounts: Collection[Account], base_currency: Currency
 ) -> tuple[AssetStats]:
+    """Returns root AssetStats only."""
+
     stats: dict[str, AssetStats] = {}
     stats["Currencies"] = AssetStats(
         name="Currencies",
@@ -141,6 +158,8 @@ def calculate_asset_stats(
                     children=[],
                     parent=stats[security.type_],
                 )
+                if security.symbol:
+                    stats[security.name].set_short_name(security.symbol)
                 stats[security.type_].children.append(stats[security.name])
             stats[security.name].children.append(account_stats)
             account_stats.parent = stats[security.name]

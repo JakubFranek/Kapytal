@@ -1,6 +1,5 @@
 import logging
 from collections.abc import Collection
-from decimal import Decimal
 
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtWidgets import (

@@ -56,7 +56,6 @@ class WelcomeDialog(CustomDialog, Ui_WelcomeDialog):
         self.openQuickStartGuidePushButton.clicked.connect(self.signal_open_guide)
         self.quitPushButton.clicked.connect(self.signal_quit)
 
-        # TODO: add a Quick Start Guide
         self.openQuickStartGuidePushButton.setEnabled(False)
 
     def set_open_recent_file_button(self, *, enabled: bool) -> None:

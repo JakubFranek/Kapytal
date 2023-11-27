@@ -26,7 +26,6 @@ COLUMNS_NUMBERS = {
 }
 
 
-# TODO: simplify CategoryTreeNode by directly using CategoryStats within
 @dataclass
 class CategoryTreeNode:
     name: str
@@ -178,9 +177,9 @@ class CategoryTreeModel(QAbstractItemModel):
         if role == Qt.ItemDataRole.DisplayRole:
             return self._get_display_role_data(column, node)
         if role == Qt.ItemDataRole.UserRole:
-            return self._get_user_role_data(column, node)
+            return self._get_user_role_data(column, node)  # sort role
         if role == Qt.ItemDataRole.UserRole + 1 and column == CategoryTreeColumn.NAME:
-            return node.path
+            return node.path  # filter role
         if role == Qt.ItemDataRole.TextAlignmentRole and column in COLUMNS_NUMBERS:
             return ALIGNMENT_RIGHT
         if (

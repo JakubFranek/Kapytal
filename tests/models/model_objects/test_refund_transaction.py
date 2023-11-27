@@ -573,22 +573,6 @@ def test_multi_refund() -> None:
     assert refund_2 in refunded_transaction.refunds
 
 
-@given(
-    account=everything_except(CashAccount),
-)
-def test_get_amount_invalid_account_type(account: Any) -> None:
-    refund = get_preloaded_refund()
-    with pytest.raises(TypeError, match="Parameter 'account' must be a CashAccount."):
-        refund.get_amount(account)
-
-
-@given(account=cash_accounts())
-def test_get_amount_unrelated_account(account: CashAccount) -> None:
-    refund = get_preloaded_refund()
-    with pytest.raises(UnrelatedAccountError):
-        refund.get_amount(account)
-
-
 def test_remove_refund() -> None:
     refunded_transaction = get_preloaded_expense()
     refunded_account = get_refunded_account()

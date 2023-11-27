@@ -102,8 +102,8 @@
            </item>
           </layout>
          </widget>
-         <widget class="QWidget" name="">
-          <layout class="QHBoxLayout" name="securityPriceHorizontalLayout" stretch="0,0">
+         <widget class="QWidget" name="layoutWidget">
+          <layout class="QHBoxLayout" name="securityPriceHorizontalLayout" stretch="0">
            <item>
             <layout class="QVBoxLayout" name="securityPriceVerticalLayout">
              <item>
@@ -174,13 +174,6 @@
               </widget>
              </item>
             </layout>
-           </item>
-           <item>
-            <widget class="Line" name="line">
-             <property name="orientation">
-              <enum>Qt::Vertical</enum>
-             </property>
-            </widget>
            </item>
           </layout>
          </widget>

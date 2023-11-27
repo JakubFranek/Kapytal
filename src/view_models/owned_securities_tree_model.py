@@ -18,8 +18,8 @@ ALIGNMENT_AMOUNTS = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
 COLUMN_HEADERS = {
     OwnedSecuritiesTreeColumn.NAME: "Name",
     OwnedSecuritiesTreeColumn.SHARES: "Shares",
-    OwnedSecuritiesTreeColumn.AMOUNT_NATIVE: "Native total",
-    OwnedSecuritiesTreeColumn.AMOUNT_BASE: "Base total",
+    OwnedSecuritiesTreeColumn.AMOUNT_NATIVE: "Native Total",
+    OwnedSecuritiesTreeColumn.AMOUNT_BASE: "Base Total",
 }
 COLUMNS_NUMBERS = {
     OwnedSecuritiesTreeColumn.SHARES,

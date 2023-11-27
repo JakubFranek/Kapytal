@@ -9,6 +9,7 @@ from PyQt6.QtWidgets import QTreeView
 from src.models.custom_exceptions import InvalidOperationError
 from src.models.model_objects.attributes import Category
 from src.models.model_objects.cash_objects import CashTransaction, RefundTransaction
+from src.models.model_objects.currency_objects import Currency
 from src.models.statistics.category_stats import CategoryStats, TransactionBalance
 from src.views import colors
 
@@ -57,6 +58,8 @@ class PeriodicCategoryStatsTreeModel(QAbstractItemModel):
         self._view = view
         self._proxy = proxy
 
+        self._selected_row_object: RowObject | None = None
+
     def load_periodic_category_stats(
         self,
         periodic_stats: dict[str, tuple[CategoryStats]],
@@ -65,6 +68,7 @@ class PeriodicCategoryStatsTreeModel(QAbstractItemModel):
         periodic_expense_totals: dict[str, TransactionBalance],
         category_averages: dict[Category, TransactionBalance],
         category_totals: dict[Category, TransactionBalance],
+        base_currency: Currency,
     ) -> None:
         self._root_row_objects: list[RowObject] = []
         self._flat_row_objects: list[RowObject] = []
@@ -160,21 +164,27 @@ class PeriodicCategoryStatsTreeModel(QAbstractItemModel):
         )
 
         total_sum = sum(periodic_totals_row_data)
-        average_sum = round(total_sum / len(periodic_totals_row_data))
+        average_sum = round(
+            total_sum / len(periodic_totals_row_data), base_currency.places
+        )
         periodic_totals_row_data.append(average_sum)
         periodic_totals_row_data.append(total_sum)
         periodic_totals_transactions.append(all_transactions)
         periodic_totals_transactions.append(all_transactions)
 
         income_sum = sum(periodic_income_totals_row_data)
-        average_income_sum = round(income_sum / len(periodic_income_totals_row_data))
+        average_income_sum = round(
+            income_sum / len(periodic_income_totals_row_data), base_currency.places
+        )
         periodic_income_totals_row_data.append(average_income_sum)
         periodic_income_totals_row_data.append(income_sum)
         periodic_income_totals_transactions.append(all_income_transactions)
         periodic_income_totals_transactions.append(all_income_transactions)
 
         expense_sum = sum(periodic_expense_totals_row_data)
-        average_expense_sum = round(expense_sum / len(periodic_expense_totals_row_data))
+        average_expense_sum = round(
+            expense_sum / len(periodic_expense_totals_row_data), base_currency.places
+        )
         periodic_expense_totals_row_data.append(average_expense_sum)
         periodic_expense_totals_row_data.append(expense_sum)
         periodic_expense_totals_transactions.append(all_expense_transactions)
@@ -293,8 +303,10 @@ class PeriodicCategoryStatsTreeModel(QAbstractItemModel):
         column = index.column()
         if role == Qt.ItemDataRole.DisplayRole:
             return self._get_display_role_data(row, column, row_object)
-        if role == Qt.ItemDataRole.UserRole:
+        if role == Qt.ItemDataRole.UserRole:  # sort role
             return self._get_user_role_data(column, row_object)
+        if role == Qt.ItemDataRole.UserRole + 1:  # filter role
+            return self._get_filter_role_data(column, row_object)
         if role == Qt.ItemDataRole.TextAlignmentRole:
             if column == 0:
                 return ALIGNMENT_LEFT
@@ -302,7 +314,7 @@ class PeriodicCategoryStatsTreeModel(QAbstractItemModel):
         if role == Qt.ItemDataRole.ForegroundRole:
             return self._get_foreground_role_data(column, row_object.data[column - 1])
         if role == Qt.ItemDataRole.FontRole:
-            return self._get_font_role_data(row, column)
+            return self._get_font_role_data(row, column, row_object)
         return None
 
     def _get_display_role_data(
@@ -321,6 +333,11 @@ class PeriodicCategoryStatsTreeModel(QAbstractItemModel):
             return unicodedata.normalize("NFD", row_object.name)
         return float(row_object.data[column - 1])
 
+    def _get_filter_role_data(self, column: int, row_object: RowObject) -> str | None:
+        if column == 0:
+            return unicodedata.normalize("NFD", row_object.path)
+        return None
+
     def _get_foreground_role_data(self, column: int, amount: Decimal) -> QBrush | None:
         if column == 0:
             return None
@@ -330,7 +347,9 @@ class PeriodicCategoryStatsTreeModel(QAbstractItemModel):
             return colors.get_red_brush()
         return colors.get_gray_brush()
 
-    def _get_font_role_data(self, row: int, column: int) -> QFont | None:
+    def _get_font_role_data(
+        self, row: int, column: int, row_object: RowObject
+    ) -> QFont | None:
         if row in self.TOTAL_ROWS_INDEXES:
             if column == self.AVERAGE_COLUMN_INDEX:
                 return overline_bold_font
@@ -339,6 +358,10 @@ class PeriodicCategoryStatsTreeModel(QAbstractItemModel):
             return bold_font
         if column == self.AVERAGE_COLUMN_INDEX:
             return overline_font
+
+        if row_object == self._selected_row_object and column == 0:
+            return bold_font
+
         return None
 
     def pre_reset_model(self) -> None:
@@ -349,25 +372,68 @@ class PeriodicCategoryStatsTreeModel(QAbstractItemModel):
         self.endResetModel()
         self._view.setSortingEnabled(True)  # noqa: FBT003
 
+    def get_selected_index(self) -> QModelIndex | None:
+        indexes = self._view.selectedIndexes()
+        if len(indexes) == 0:
+            return None
+        if len(indexes) != 1:
+            raise ValueError("More than one index selected.")
+        index = indexes[0]
+        if self._proxy:
+            index = self._proxy.mapToSource(index)
+        return index
+
+    def get_selected_row_object(self) -> RowObject | None:
+        index = self.get_selected_index()
+        if index is None:
+            return None
+        return index.internalPointer()
+
+    def get_index_from_row_object(self, row_object: RowObject | None) -> QModelIndex:
+        if row_object is None:
+            return QModelIndex()
+        parent = row_object.parent
+        if parent is None:
+            row = self._root_row_objects.index(row_object)
+        else:
+            row = parent.children.index(row_object)
+        return QAbstractItemModel.createIndex(self, row, 0, row_object)
+
     def get_selected_transactions(
         self,
     ) -> tuple[tuple[CashTransaction | RefundTransaction, ...], str, str]:
         """Returns a tuple of selected Transactions, period and name."""
-        indexes = self._view.selectedIndexes()
-        if len(indexes) != 1:
-            raise InvalidOperationError(
-                "Transactions can be shown for only for exactly one Category."
-            )
-        index = indexes[0]
-        if self._proxy:
-            index = self._proxy.mapToSource(index)
-
+        index = self.get_selected_index()
+        if index is None:
+            raise InvalidOperationError("No index selected.")
         row_object: RowObject = index.internalPointer()
         return (
             row_object.transactions[index.column() - 1],
             self._column_headers[index.column()],
             row_object.path,
         )
+
+    def update_selected_row_objects(self) -> None:
+        selected_row_object = self.get_selected_row_object()
+        if selected_row_object == self._selected_row_object:
+            return
+
+        previous_index = self.get_index_from_row_object(self._selected_row_object)
+        if self._selected_row_object is not None:
+            self.dataChanged.emit(
+                previous_index,
+                previous_index,
+                [Qt.ItemDataRole.FontRole],
+            )
+
+        new_index = self.get_index_from_row_object(selected_row_object)
+        self.dataChanged.emit(
+            new_index,
+            new_index,
+            [Qt.ItemDataRole.FontRole],
+        )
+
+        self._selected_row_object = selected_row_object
 
 
 def _get_category_stats(

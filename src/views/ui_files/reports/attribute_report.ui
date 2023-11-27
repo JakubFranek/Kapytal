@@ -19,14 +19,14 @@
   <property name="locale">
    <locale language="English" country="UnitedKingdom"/>
   </property>
-  <layout class="QHBoxLayout" name="horizontalLayout">
+  <layout class="QVBoxLayout" name="verticalLayout_3">
    <item>
     <widget class="QSplitter" name="splitter">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
      </property>
      <widget class="QWidget" name="verticalLayoutWidget">
-      <layout class="QVBoxLayout" name="verticalLayout">
+      <layout class="QVBoxLayout" name="tableVerticalLayout">
        <item>
         <layout class="QHBoxLayout" name="controlsHorizontalLayout">
          <item>
@@ -51,6 +51,13 @@
           </widget>
          </item>
          <item>
+          <widget class="QLineEdit" name="searchLineEdit">
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Special characters:&lt;/p&gt;&lt;p&gt;* matches zero or more of any characters&lt;br/&gt;? matches any single character&lt;br/&gt;[...] matches any character within square brackets&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+          </widget>
+         </item>
+         <item>
           <widget class="QLabel" name="currencyNoteLabel">
            <property name="text">
             <string>All values in XXX</string>
@@ -60,6 +67,19 @@
            </property>
           </widget>
          </item>
+         <item>
+          <spacer name="horizontalSpacer">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
         </layout>
        </item>
        <item>
@@ -68,6 +88,63 @@
           <bool>true</bool>
          </property>
         </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="verticalLayoutWidget_2">
+      <layout class="QVBoxLayout" name="chartVerticalLayout">
+       <item>
+        <layout class="QHBoxLayout" name="chartControlsHorizontalLayout">
+         <item>
+          <widget class="QLabel" name="typeLabel">
+           <property name="text">
+            <string>Type</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="typeComboBox"/>
+         </item>
+         <item>
+          <spacer name="chartControlsHorizontalSpacer_1">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeType">
+            <enum>QSizePolicy::Fixed</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>10</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item>
+          <widget class="QLabel" name="periodLabel">
+           <property name="text">
+            <string>Period</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="periodComboBox"/>
+         </item>
+         <item>
+          <spacer name="chartControlsHorizontalSpacer_2">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
        </item>
       </layout>
      </widget>

@@ -57,19 +57,21 @@ class InvalidCashTransactionTypeError(ValueError):
 class CashRelatedTransaction(Transaction, ABC):
     __slots__ = ()
 
-    # REFACTOR: account parameter could be optional for CashTransactions
-    def get_amount(self, account: "CashAccount") -> CashAmount:
-        if not isinstance(account, CashAccount):
-            raise TypeError("Parameter 'account' must be a CashAccount.")
-        if not self.is_account_related(account):
-            raise UnrelatedAccountError(
-                f"CashAccount '{account.name}' is not related to this "
-                f"{self.__class__.__name__}."
-            )
+    def get_amount(self, account: "CashAccount | None" = None) -> CashAmount:
+        """Parameter 'account' is only mandatory for CashTransfer."""
+
+        if isinstance(self, CashTransfer):
+            if not isinstance(account, CashAccount):
+                raise TypeError("Parameter 'account' must be a CashAccount.")
+            if not self.is_account_related(account):
+                raise UnrelatedAccountError(
+                    f"CashAccount '{account.name}' is not related to this "
+                    f"{self.__class__.__name__}."
+                )
         return self._get_amount(account)
 
     @abstractmethod
-    def _get_amount(self, account: "CashAccount") -> CashAmount:
+    def _get_amount(self, account: "CashAccount | None") -> CashAmount:
         raise NotImplementedError
 
     @property

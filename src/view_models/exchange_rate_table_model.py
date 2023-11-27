@@ -9,8 +9,8 @@ from src.views.constants import ExchangeRateTableColumn, monospace_font
 ALIGNMENT_RIGHT = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
 COLUMN_HEADERS = {
     ExchangeRateTableColumn.CODE: "Code",
-    ExchangeRateTableColumn.RATE: "Latest rate",
-    ExchangeRateTableColumn.LAST_DATE: "Latest date",
+    ExchangeRateTableColumn.RATE: "Latest Rate",
+    ExchangeRateTableColumn.LAST_DATE: "Latest Date",
 }
 
 
