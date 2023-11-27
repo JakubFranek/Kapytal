@@ -19,10 +19,10 @@ In Czech, capybara is spelled "kapybara". My friend mentioned the similarity wit
 - knowing where your money goes is useful for telling whether you can afford that expensive gadget you want
 - knowing what your cashflow is like is absolutely critical when making big life decisions like taking a mortgage or planning kids
 - you can see how much money you have and how it is distributed across your accounts, wallets, investments and safes in one place without having to check all of those places manually
-- transaction history usually disappears after a few months from your bank's internet banking interface
+- transaction history usually disappears from your bank's internet banking interface after a few months
 - logging your transactions is a must if you are splitting expenses with your partner
 - like photos, your financial transactions are memories or snapshots of your life
-- it doesn't take that much time (cca 15 minutes per week) and Kapytal has a few quality of life features to make it as easy for you as possible
+- it doesn't take that much time (cca 15 minutes per week) and Kapytal has several quality of life features to make it as easy for you as possible
 
 ## Why won't you support automated imports?
 
@@ -74,3 +74,7 @@ A data file with an example of the setup described above is available: [mortgage
 ## How to reorder Transactions with the same date?
 
 Edit the hours or minutes of the [Transactions](./glossary.md#transaction). You can show hours, minutes or even seconds of Transaction dates within [Transaction Table](./glossary.md#transaction) by editing the Transaction Table date format within [Settings Form](./glossary.md#settings-form-) accordingly.
+
+## Should I model cryptocurrencies as Currencies or Securities?
+
+Kapytal allows you to use both approaches, so it is up to you. However, if you ever expect to buy a pizza or get salary in the given cryptocurrency, it is necessary to model it as a [Currency](./glossary.md#currency-). On the other hand, if the crypto you buy is intended purely as an investment to be bought and sold eventually, [Security](./glossary.md#security-) might be the way to go. If you are unsure, go down the Currency path.
