@@ -3,7 +3,7 @@ from collections.abc import Collection
 from decimal import Decimal
 
 from PyQt6.QtCore import QAbstractItemModel, QModelIndex, QSortFilterProxyModel, Qt
-from PyQt6.QtGui import QIcon
+from PyQt6.QtGui import QBrush, QIcon
 from PyQt6.QtWidgets import QTreeView
 from src.models.model_objects.currency_objects import (
     CashAmount,
@@ -11,18 +11,28 @@ from src.models.model_objects.currency_objects import (
     Currency,
 )
 from src.models.model_objects.security_objects import Security, SecurityAccount
-from src.views import icons
+from src.views import colors, icons
 from src.views.constants import OwnedSecuritiesTreeColumn
 
 ALIGNMENT_AMOUNTS = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
 COLUMN_HEADERS = {
     OwnedSecuritiesTreeColumn.NAME: "Name",
     OwnedSecuritiesTreeColumn.SHARES: "Shares",
-    OwnedSecuritiesTreeColumn.AMOUNT_NATIVE: "Native Total",
-    OwnedSecuritiesTreeColumn.AMOUNT_BASE: "Base Total",
+    OwnedSecuritiesTreeColumn.PRICE_MARKET: "Price",
+    OwnedSecuritiesTreeColumn.PRICE_AVERAGE: "Avg. Price",
+    OwnedSecuritiesTreeColumn.GAIN_NATIVE: "Native Gain",
+    OwnedSecuritiesTreeColumn.GAIN_BASE: "Base Gain",
+    OwnedSecuritiesTreeColumn.ABSOLUTE_RETURN: "Abs. Return",
+    OwnedSecuritiesTreeColumn.AMOUNT_NATIVE: "Native Value",
+    OwnedSecuritiesTreeColumn.AMOUNT_BASE: "Base Value",
 }
 COLUMNS_NUMBERS = {
     OwnedSecuritiesTreeColumn.SHARES,
+    OwnedSecuritiesTreeColumn.PRICE_MARKET,
+    OwnedSecuritiesTreeColumn.PRICE_AVERAGE,
+    OwnedSecuritiesTreeColumn.GAIN_NATIVE,
+    OwnedSecuritiesTreeColumn.GAIN_BASE,
+    OwnedSecuritiesTreeColumn.ABSOLUTE_RETURN,
     OwnedSecuritiesTreeColumn.AMOUNT_NATIVE,
     OwnedSecuritiesTreeColumn.AMOUNT_BASE,
 }
@@ -31,23 +41,34 @@ COLUMNS_NUMBERS = {
 class SecurityItem:
     def __init__(self, security: Security) -> None:
         self.security = security
-        self.total_shares = Decimal(0)
+        self.shares = Decimal(0)
         self.accounts: list[AccountItem] = []
+        self.native_currency = security.currency
 
     def __repr__(self) -> str:
-        return f"SecurityItem(security={self.security})"
+        return f"SecurityItem(security={self.security.name})"
 
     def calculate_amounts(self, base_currency: Currency) -> None:
-        self.native_amount = self.total_shares * self.security.price
+        self.native_amount = self.shares * self.security.price
         if base_currency is not None:
             try:
-                self.base_amount = self.total_shares * self.security.price.convert(
+                self.base_amount = self.shares * self.security.price.convert(
                     base_currency
                 )
             except ConversionFactorNotFoundError:
                 self.base_amount = "Error!"
         else:
             self.base_amount = "Error!"
+
+        avg_price = CashAmount(0, self.security.currency)
+        for account in self.accounts:
+            avg_price += account.avg_price * account.shares
+        avg_price = avg_price / self.shares
+        self.avg_price = avg_price
+
+        self.gain_native = self.native_amount - avg_price * self.shares
+        self.gain_base = self.gain_native.convert(base_currency)
+        self.gain_pct = round(100 * self.gain_native / (avg_price * self.shares), 2)
 
 
 class AccountItem:
@@ -56,11 +77,14 @@ class AccountItem:
         parent: SecurityItem,
         account: SecurityAccount,
         shares: Decimal,
+        avg_price: CashAmount,
         base_currency: Currency | None,
     ) -> None:
         self.parent = parent
         self.account = account
         self.shares = shares
+        self.avg_price = avg_price
+        self.security = parent.security
 
         self.native_amount = shares * parent.security.price
         if base_currency is not None:
@@ -71,8 +95,17 @@ class AccountItem:
         else:
             self.base_amount = "Error!"
 
+        self.gain_native = self.native_amount - avg_price * shares
+        self.gain_base = self.gain_native.convert(base_currency)
+        self.gain_pct = round(100 * self.gain_native / (avg_price * shares), 2)
+
+        self.native_currency = parent.security.currency
+
     def __repr__(self) -> str:
-        return f"AccountItem(account={self.account.path}, shares={self.shares})"
+        return (
+            f"AccountItem(account={self.account.path}, "
+            f"security={self.security.name}, shares={self.shares})"
+        )
 
 
 class OwnedSecuritiesTreeModel(QAbstractItemModel):
@@ -94,9 +127,15 @@ class OwnedSecuritiesTreeModel(QAbstractItemModel):
             for security, shares in account.securities.items():
                 if security not in tree_items:
                     tree_items[security] = SecurityItem(security)
-                tree_items[security].total_shares += shares
+                tree_items[security].shares += shares
                 tree_items[security].accounts.append(
-                    AccountItem(tree_items[security], account, shares, base_currency)
+                    AccountItem(
+                        tree_items[security],
+                        account,
+                        shares,
+                        account.get_average_price(security),
+                        base_currency,
+                    )
                 )
         self._tree_items = tuple(tree_items.values())
         for item in self._tree_items:
@@ -113,7 +152,11 @@ class OwnedSecuritiesTreeModel(QAbstractItemModel):
         return len(self._tree_items)
 
     def columnCount(self, index: QModelIndex = ...) -> int:
-        return 4 if not index.isValid() or index.column() == 0 else 0
+        return (
+            len(OwnedSecuritiesTreeColumn)
+            if not index.isValid() or index.column() == 0
+            else 0
+        )
 
     def index(self, row: int, column: int, _parent: QModelIndex = ...) -> QModelIndex:
         if _parent.isValid() and _parent.column() != 0:
@@ -166,6 +209,8 @@ class OwnedSecuritiesTreeModel(QAbstractItemModel):
             return ALIGNMENT_AMOUNTS
         if role == Qt.ItemDataRole.DecorationRole:
             return self._get_decoration_role_data(column, item)
+        if role == Qt.ItemDataRole.ForegroundRole:
+            return self._get_foreground_role_data(column, item)
         return None
 
     def _get_display_role_data(  # noqa: PLR0911
@@ -177,8 +222,20 @@ class OwnedSecuritiesTreeModel(QAbstractItemModel):
             return item.account.path
         if column == OwnedSecuritiesTreeColumn.SHARES:
             if isinstance(item, SecurityItem):
-                return f"{item.total_shares:,}"
+                return f"{item.shares:,}"
             return f"{item.shares:,}"
+        if column == OwnedSecuritiesTreeColumn.PRICE_MARKET:
+            if isinstance(item, SecurityItem):
+                return item.security.price.to_str_rounded(item.security.price_decimals)
+            return None
+        if column == OwnedSecuritiesTreeColumn.PRICE_AVERAGE:
+            return item.avg_price.to_str_rounded(item.security.price_decimals)
+        if column == OwnedSecuritiesTreeColumn.GAIN_NATIVE:
+            return item.gain_native.to_str_rounded()
+        if column == OwnedSecuritiesTreeColumn.GAIN_BASE:
+            return item.gain_base.to_str_rounded()
+        if column == OwnedSecuritiesTreeColumn.ABSOLUTE_RETURN:
+            return f"{item.gain_pct:,} %"
         if column == OwnedSecuritiesTreeColumn.AMOUNT_NATIVE:
             if (
                 isinstance(item.base_amount, CashAmount)
@@ -200,9 +257,17 @@ class OwnedSecuritiesTreeModel(QAbstractItemModel):
                 return unicodedata.normalize("NFD", item.security.name)
             return unicodedata.normalize("NFD", item.account.path)
         if column == OwnedSecuritiesTreeColumn.SHARES:
-            if isinstance(item, SecurityItem):
-                return float(item.total_shares)
             return float(item.shares)
+        if column == OwnedSecuritiesTreeColumn.PRICE_MARKET:
+            return float(item.security.price.value_rounded)
+        if column == OwnedSecuritiesTreeColumn.PRICE_AVERAGE:
+            return float(item.avg_price.value_rounded)
+        if column == OwnedSecuritiesTreeColumn.GAIN_NATIVE:
+            return float(item.gain_native.value_rounded)
+        if column == OwnedSecuritiesTreeColumn.GAIN_BASE:
+            return float(item.gain_base.value_rounded)
+        if column == OwnedSecuritiesTreeColumn.ABSOLUTE_RETURN:
+            return float(item.gain_pct)
         if column == OwnedSecuritiesTreeColumn.AMOUNT_NATIVE:
             return float(item.native_amount.value_rounded)
         if column == OwnedSecuritiesTreeColumn.AMOUNT_BASE:
@@ -219,6 +284,32 @@ class OwnedSecuritiesTreeModel(QAbstractItemModel):
         if isinstance(item, SecurityItem):
             return QIcon(icons.security)
         return QIcon(icons.security_account)
+
+    def _get_foreground_role_data(
+        self, column: int, item: SecurityItem | AccountItem
+    ) -> QBrush | None:
+        if column == OwnedSecuritiesTreeColumn.SHARES and item.shares < 0:
+            return colors.get_red_brush()
+        if column in {
+            OwnedSecuritiesTreeColumn.GAIN_NATIVE,
+            OwnedSecuritiesTreeColumn.GAIN_BASE,
+            OwnedSecuritiesTreeColumn.ABSOLUTE_RETURN,
+        }:
+            if item.gain_pct > 0:
+                return colors.get_green_brush()
+            if item.gain_pct < 0:
+                return colors.get_red_brush()
+            return colors.get_gray_brush()
+        if (
+            column
+            in {
+                OwnedSecuritiesTreeColumn.AMOUNT_NATIVE,
+                OwnedSecuritiesTreeColumn.AMOUNT_BASE,
+            }
+            and item.base_amount.value_rounded < 0
+        ):
+            return colors.get_red_brush()
+        return None
 
     def pre_reset_model(self) -> None:
         self.beginResetModel()

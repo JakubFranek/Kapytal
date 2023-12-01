@@ -5,7 +5,7 @@ from collections.abc import Collection
 from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
 from functools import total_ordering
-from typing import Any, Self
+from typing import Any, Self, overload
 
 from src.models.mixins.copyable_mixin import CopyableMixin
 from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
@@ -534,6 +534,14 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
     def __rmul__(self, __o: object) -> Self:
         return self.__mul__(__o)
 
+    @overload
+    def __truediv__(self, __o: Self) -> Decimal:
+        ...
+
+    @overload
+    def __truediv__(self, __o: int | Decimal) -> Self:
+        ...
+
     def __truediv__(self, __o: object) -> Decimal | Self:
         if isinstance(__o, CashAmount):
             if self._currency != __o._currency:
@@ -553,6 +561,15 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
             raise CurrencyError("CashAmount.currency of operands must match.")
         return __o._raw_value / self._raw_value
 
+    def __round__(self, ndigits: int = 0) -> Decimal:
+        _value_rounded = round(self._raw_value, ndigits)
+        min_places = min(ndigits, 4)
+        if -_value_rounded.as_tuple().exponent > min_places:
+            _value_rounded = _value_rounded.normalize()
+            if -_value_rounded.as_tuple().exponent < min_places:
+                _value_rounded = _value_rounded.quantize(quantizers[min_places])
+        return _value_rounded
+
     def is_positive(self) -> bool:
         if self._raw_value.is_nan():
             return False
@@ -569,10 +586,12 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
     def is_finite(self) -> bool:
         return self._raw_value.is_finite()
 
-    def to_str_rounded(self) -> str:
-        if not hasattr(self, "_str_rounded"):
+    def to_str_rounded(self, decimals: int | None = None) -> str:
+        if decimals is None and not hasattr(self, "_str_rounded"):
             self._str_rounded = f"{self.value_rounded:,} {self._currency.code}"
-        return self._str_rounded
+            return self._str_rounded
+        value_rounded = round(self._raw_value, decimals)
+        return f"{value_rounded:,} {self._currency.code}"
 
     def to_str_normalized(self) -> str:
         if not hasattr(self, "_str_normalized"):

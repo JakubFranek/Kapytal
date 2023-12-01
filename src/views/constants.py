@@ -61,8 +61,13 @@ class SecurityAccountTableColumn(IntEnum):
 class OwnedSecuritiesTreeColumn(IntEnum):
     NAME = 0
     SHARES = 1
-    AMOUNT_NATIVE = 2
-    AMOUNT_BASE = 3
+    PRICE_MARKET = 2
+    PRICE_AVERAGE = 3
+    GAIN_NATIVE = 4
+    GAIN_BASE = 5
+    ABSOLUTE_RETURN = 6
+    AMOUNT_NATIVE = 7
+    AMOUNT_BASE = 8
 
 
 class CategoryTreeColumn(IntEnum):

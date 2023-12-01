@@ -88,7 +88,7 @@ class SecurityTableModel(QAbstractTableModel):
         if column == SecurityTableColumn.TYPE:
             return security.type_
         if column == SecurityTableColumn.PRICE:
-            return security.price.to_str_normalized()
+            return security.price.to_str_rounded(security.price_decimals)
         if column == SecurityTableColumn.LAST_DATE:
             latest_date = security.latest_date
             return (
