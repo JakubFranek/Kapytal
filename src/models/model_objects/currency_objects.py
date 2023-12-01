@@ -587,8 +587,9 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
         return self._raw_value.is_finite()
 
     def to_str_rounded(self, decimals: int | None = None) -> str:
-        if decimals is None and not hasattr(self, "_str_rounded"):
-            self._str_rounded = f"{self.value_rounded:,} {self._currency.code}"
+        if decimals is None:
+            if not hasattr(self, "_str_rounded"):
+                self._str_rounded = f"{self.value_rounded:,} {self._currency.code}"
             return self._str_rounded
         value_rounded = round(self._raw_value, decimals)
         return f"{value_rounded:,} {self._currency.code}"
