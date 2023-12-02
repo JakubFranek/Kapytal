@@ -634,37 +634,24 @@ class TransactionTableModel(QAbstractTableModel):
 def _get_split_category_string(
     category_amount_pairs: Sequence[tuple[Category, CashAmount]]
 ) -> str:
-    pairs_source = list(category_amount_pairs)
-    pairs_source_reference = copy.copy(pairs_source)
-    pairs_target: list[list[tuple[Category, CashAmount]]] = []
+    remaining_pairs = list(category_amount_pairs)
+    grouped_pairs: list[list[tuple[Category, CashAmount]]] = []
 
-    for pair in pairs_source_reference:
-        if pair not in pairs_source:
-            continue
+    while remaining_pairs:
+        pair = remaining_pairs.pop(0)
+        group = [pair] + [
+            _pair for _pair in remaining_pairs if pair[0].parent == _pair[0].parent
+        ]
+        remaining_pairs = [p for p in remaining_pairs if p not in group]
+        grouped_pairs.append(group)
 
-        if pair[0].parent is None:
-            pairs_target.append([pair])
-            pairs_source.remove(pair)
-            continue
-
-        _group = [pair]
-        pairs_source.remove(pair)
-        _group += [_pair for _pair in pairs_source if pair[0].parent == _pair[0].parent]
-
-        for _pair in _group:
-            if _pair in pairs_source:
-                pairs_source.remove(_pair)
-        pairs_target.append(_group)
-
-    strings: list[str] = []
-    for group in pairs_target:
+    strings = []
+    for group in grouped_pairs:
         if len(group) == 1:
             strings.append(f"{group[0][0].path} ({group[0][1].to_str_rounded()})")
         else:
-            string = group[0][0].parent.path + "/["
-            _strings = [
-                f"{pair[0].name} ({pair[1].to_str_rounded()})" for pair in group
-            ]
-            string += " + ".join(_strings) + "]"
+            string_inner = [f"{p[0].name} ({p[1].to_str_rounded()})" for p in group]
+            string = f"{group[0][0].parent.path}/[{' + '.join(string_inner)}]"
             strings.append(string)
+
     return ", ".join(strings)
