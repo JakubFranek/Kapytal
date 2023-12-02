@@ -20,6 +20,9 @@ def calculate_irr(security: Security, accounts: list[SecurityAccount]) -> Decima
     ]
     transactions.sort(key=lambda t: t.datetime_)
 
+    if len(transactions) == 0:
+        return Decimal("NaN")
+
     dates = []
     cashflows = []
     for transaction in transactions:
@@ -38,9 +41,14 @@ def calculate_irr(security: Security, accounts: list[SecurityAccount]) -> Decima
         sell_all_amount += account.securities[security] * price.value_normalized
         if sell_all_amount.is_zero():
             return Decimal("NaN")
-
-    dates.append(datetime.now(user_settings.settings.time_zone).date())
-    cashflows.append(sell_all_amount)
+    today = datetime.now(user_settings.settings.time_zone).date()
+    if today > dates[-1]:
+        dates.append(today)
+        cashflows.append(sell_all_amount)
+    elif today == dates[-1]:
+        cashflows[-1] += sell_all_amount
+    else:
+        raise ValueError("Unable to calculate IRR based on future prices.")
 
     irr = xirr(dates, cashflows)
     if irr is None:  # solution not found
