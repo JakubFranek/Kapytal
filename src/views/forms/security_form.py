@@ -143,38 +143,11 @@ class SecurityForm(CustomWidget, Ui_SecurityForm):
 
     def finalize_setup(self) -> None:
         self.securityTableView.horizontalHeader().setStretchLastSection(False)
-        self.securityTableView.horizontalHeader().setSectionResizeMode(
-            SecurityTableColumn.NAME,
-            QHeaderView.ResizeMode.ResizeToContents,
-        )
-        self.securityTableView.horizontalHeader().setSectionResizeMode(
-            SecurityTableColumn.SYMBOL,
-            QHeaderView.ResizeMode.ResizeToContents,
-        )
-        self.securityTableView.horizontalHeader().setSectionResizeMode(
-            SecurityTableColumn.TYPE,
-            QHeaderView.ResizeMode.ResizeToContents,
-        )
-        self.securityTableView.horizontalHeader().setSectionResizeMode(
-            SecurityTableColumn.PRICE,
-            QHeaderView.ResizeMode.ResizeToContents,
-        )
-        self.securityTableView.horizontalHeader().setSectionResizeMode(
-            SecurityTableColumn.LAST_DATE,
-            QHeaderView.ResizeMode.Stretch,
-        )
-
-        style = self.style()
-        last_section_text = self.securityTableView.model().headerData(
-            SecurityTableColumn.LAST_DATE,
-            Qt.Orientation.Horizontal,
-            Qt.ItemDataRole.DisplayRole,
-        )
-        self.securityTableView.horizontalHeader().setMinimumSectionSize(
-            style.pixelMetric(style.PixelMetric.PM_HeaderMarkSize)
-            + style.pixelMetric(style.PixelMetric.PM_HeaderGripMargin) * 2
-            + self.fontMetrics().horizontalAdvance(last_section_text)
-        )
+        for column in SecurityTableColumn:
+            self.securityTableView.horizontalHeader().setSectionResizeMode(
+                column,
+                QHeaderView.ResizeMode.ResizeToContents,
+            )
 
         self.securityTableView.selectionModel().selectionChanged.connect(
             self.signal_security_selection_changed.emit
@@ -182,22 +155,11 @@ class SecurityForm(CustomWidget, Ui_SecurityForm):
         self.securityTableView.sortByColumn(0, Qt.SortOrder.AscendingOrder)
 
         self.treeView.header().setStretchLastSection(False)
-        self.treeView.header().setSectionResizeMode(
-            OwnedSecuritiesTreeColumn.NAME,
-            QHeaderView.ResizeMode.Stretch,
-        )
-        self.treeView.header().setSectionResizeMode(
-            OwnedSecuritiesTreeColumn.SHARES,
-            QHeaderView.ResizeMode.ResizeToContents,
-        )
-        self.treeView.header().setSectionResizeMode(
-            OwnedSecuritiesTreeColumn.AMOUNT_NATIVE,
-            QHeaderView.ResizeMode.ResizeToContents,
-        )
-        self.treeView.header().setSectionResizeMode(
-            OwnedSecuritiesTreeColumn.AMOUNT_BASE,
-            QHeaderView.ResizeMode.ResizeToContents,
-        )
+        for column in OwnedSecuritiesTreeColumn:
+            self.treeView.header().setSectionResizeMode(
+                column,
+                QHeaderView.ResizeMode.ResizeToContents,
+            )
 
         self.securityPriceTableView.horizontalHeader().setStretchLastSection(False)
         self.securityPriceTableView.horizontalHeader().setSectionResizeMode(

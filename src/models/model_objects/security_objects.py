@@ -49,6 +49,7 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
         "_price_history",
         "_price_history_pairs",
         "_price_decimals",
+        "_earliest_date",
         "_latest_date",
         "_latest_price",
         "_allow_slash",
@@ -147,6 +148,12 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
         return CashAmount(Decimal("NaN"), self._currency)
 
     @property
+    def earliest_date(self) -> date | None:
+        if hasattr(self, "_earliest_date"):
+            return self._earliest_date
+        return None
+
+    @property
     def latest_date(self) -> date | None:
         if hasattr(self, "_latest_date"):
             return self._latest_date
@@ -201,7 +208,7 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
                     f"returning {price} for {_date}"
                 )
                 return price
-            logging.warning(f"{self!s}: no price found, returning 'NaN'")
+            logging.warning(f"{self!s}: no price found, returning CashAmount('NaN')")
             return CashAmount(Decimal("NaN"), self._currency)
 
     def set_price(self, date_: date, price: CashAmount) -> None:
@@ -222,6 +229,22 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
     def delete_price(self, date_: date) -> None:
         del self._price_history[date_]
         self._update_values()
+
+    def calculate_return(
+        self, start: date | None = None, end: date | None = None
+    ) -> Decimal:
+        """Returns the Security return as a percentage."""
+        if start is None:
+            start = self._earliest_date
+        if start < self._earliest_date:
+            return Decimal("NaN")
+
+        price_end = self.get_price(end).value_normalized
+        price_start = self.get_price(start).value_normalized
+        if price_start.is_nan() or price_end.is_nan():
+            return Decimal("NaN")
+
+        return Decimal(100 * (price_end / price_start - 1))
 
     def serialize(self) -> dict[str, Any]:
         date_price_pairs = [
@@ -269,9 +292,11 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
 
     def _update_values(self) -> None:
         if len(self._price_history) == 0:
+            self._earliest_date = None
             self._latest_date = None
             latest_price = CashAmount(Decimal("NaN"), self._currency)
         else:
+            self._earliest_date = min(date_ for date_ in self._price_history)
             self._latest_date = max(date_ for date_ in self._price_history)
             latest_price = self._price_history[self._latest_date]
         if hasattr(self, "_latest_price"):

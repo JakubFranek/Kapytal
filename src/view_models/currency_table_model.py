@@ -9,7 +9,7 @@ from src.views.constants import CurrencyTableColumn, monospace_font
 
 ALIGN_RIGHT = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
 COLUMN_HEADERS = {
-    CurrencyTableColumn.CODE: "Currency",
+    CurrencyTableColumn.CODE: "Code",
     CurrencyTableColumn.PLACES: "Decimals",
 }
 

@@ -46,6 +46,19 @@ class SecurityTableColumn(IntEnum):
     TYPE = 2
     PRICE = 3
     LAST_DATE = 4
+    D1 = 5
+    D7 = 6
+    M1 = 7
+    M3 = 8
+    M6 = 9
+    Y1 = 10
+    Y2 = 11
+    Y3 = 12
+    Y5 = 13
+    Y7 = 14
+    Y10 = 15
+    TOTAL = 16
+    TOTAL_ANNUALIZED = 17
 
 
 class SecurityAccountTableColumn(IntEnum):

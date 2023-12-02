@@ -1,10 +1,13 @@
 import unicodedata
 from collections.abc import Collection
+from decimal import Decimal
 
 from PyQt6.QtCore import QAbstractTableModel, QModelIndex, QSortFilterProxyModel, Qt
+from PyQt6.QtGui import QBrush
 from PyQt6.QtWidgets import QTableView
 from src.models.model_objects.security_objects import Security
 from src.models.user_settings import user_settings
+from src.views import colors
 from src.views.constants import SecurityTableColumn
 
 ALIGNMENT_LEFT = Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
@@ -13,8 +16,38 @@ COLUMN_HEADERS = {
     SecurityTableColumn.NAME: "Name",
     SecurityTableColumn.SYMBOL: "Symbol",
     SecurityTableColumn.TYPE: "Type",
-    SecurityTableColumn.PRICE: "Latest Price",
+    SecurityTableColumn.PRICE: "Price",
     SecurityTableColumn.LAST_DATE: "Latest Date",
+    SecurityTableColumn.D1: "1D",
+    SecurityTableColumn.D7: "7D",
+    SecurityTableColumn.M1: "1M",
+    SecurityTableColumn.M3: "3M",
+    SecurityTableColumn.M6: "6M",
+    SecurityTableColumn.Y1: "1Y",
+    SecurityTableColumn.Y2: "2Y",
+    SecurityTableColumn.Y3: "3Y",
+    SecurityTableColumn.Y5: "5Y",
+    SecurityTableColumn.Y7: "7Y",
+    SecurityTableColumn.Y10: "10Y",
+    SecurityTableColumn.TOTAL: "Total",
+    SecurityTableColumn.TOTAL_ANNUALIZED: "Total p.a.",
+}
+COLUMNS_ALIGNED_RIGHT = {
+    SecurityTableColumn.PRICE,
+    SecurityTableColumn.LAST_DATE,
+    SecurityTableColumn.D1,
+    SecurityTableColumn.D7,
+    SecurityTableColumn.M1,
+    SecurityTableColumn.M3,
+    SecurityTableColumn.M6,
+    SecurityTableColumn.Y1,
+    SecurityTableColumn.Y2,
+    SecurityTableColumn.Y3,
+    SecurityTableColumn.Y5,
+    SecurityTableColumn.Y7,
+    SecurityTableColumn.Y10,
+    SecurityTableColumn.TOTAL,
+    SecurityTableColumn.TOTAL_ANNUALIZED,
 }
 
 
@@ -33,8 +66,13 @@ class SecurityTableModel(QAbstractTableModel):
     def securities(self) -> tuple[Security, ...]:
         return self._securities
 
-    def load_securities(self, securities: Collection[Security]) -> None:
+    def load_securities(
+        self,
+        securities: Collection[Security],
+        returns: dict[Security, dict[str, Decimal]],
+    ) -> None:
         self._securities = tuple(securities)
+        self._returns = returns
 
     def rowCount(self, index: QModelIndex = ...) -> int:
         if isinstance(index, QModelIndex) and index.isValid():
@@ -43,7 +81,7 @@ class SecurityTableModel(QAbstractTableModel):
 
     def columnCount(self, index: QModelIndex = ...) -> int:  # noqa: ARG002
         if not hasattr(self, "_column_count"):
-            self._column_count = len(COLUMN_HEADERS)
+            self._column_count = len(SecurityTableColumn)
         return self._column_count
 
     def headerData(
@@ -53,11 +91,6 @@ class SecurityTableModel(QAbstractTableModel):
             if orientation == Qt.Orientation.Horizontal:
                 return COLUMN_HEADERS[section]
             return str(section)
-        if (
-            role == Qt.ItemDataRole.TextAlignmentRole
-            and section == SecurityTableColumn.LAST_DATE
-        ):
-            return ALIGNMENT_LEFT
         return None
 
     def data(
@@ -75,9 +108,11 @@ class SecurityTableModel(QAbstractTableModel):
             return self._get_user_role_data(column, security)
         if (
             role == Qt.ItemDataRole.TextAlignmentRole
-            and column == SecurityTableColumn.PRICE
+            and column in COLUMNS_ALIGNED_RIGHT
         ):
             return ALIGNMENT_RIGHT
+        if role == Qt.ItemDataRole.ForegroundRole:
+            return self._get_foreground_role_data(column, security)
         return None
 
     def _get_display_role_data(self, column: int, security: Security) -> str | None:
@@ -96,6 +131,14 @@ class SecurityTableModel(QAbstractTableModel):
                 if latest_date is not None
                 else "None"
             )
+        if (
+            column >= SecurityTableColumn.D1
+            and column <= SecurityTableColumn.TOTAL_ANNUALIZED
+        ):
+            _return = self._returns[security][COLUMN_HEADERS[column]]
+            if _return.is_nan():
+                return None
+            return f"{_return:.2f} %"
         return None
 
     def _get_user_role_data(  # noqa: PLR0911
@@ -117,6 +160,31 @@ class SecurityTableModel(QAbstractTableModel):
             if latest_date is not None:
                 return latest_date.toordinal()
             return None
+        if (
+            column >= SecurityTableColumn.D1
+            and column <= SecurityTableColumn.TOTAL_ANNUALIZED
+        ):
+            _return = self._returns[security][COLUMN_HEADERS[column]]
+            if _return.is_nan():
+                return float("-inf")
+            return float(_return)
+        return None
+
+    def _get_foreground_role_data(
+        self, column: int, security: Security
+    ) -> QBrush | None:
+        if (
+            column >= SecurityTableColumn.D1
+            and column <= SecurityTableColumn.TOTAL_ANNUALIZED
+        ):
+            _return = self._returns[security][COLUMN_HEADERS[column]]
+            if _return.is_nan():
+                return None
+            if _return == 0:
+                return colors.get_gray_brush()
+            if _return < 0:
+                return colors.get_red_brush()
+            return colors.get_green_brush()
         return None
 
     def pre_add(self) -> None:
@@ -156,3 +224,10 @@ class SecurityTableModel(QAbstractTableModel):
             return QModelIndex()
         row = self.securities.index(item)
         return QAbstractTableModel.createIndex(self, row, 0)
+
+    def is_column_empty(self, column: int) -> bool:
+        for row in range(self.rowCount()):
+            text = self.index(row, column).data(Qt.ItemDataRole.DisplayRole)
+            if text is not None and text != "":
+                return False
+        return True

@@ -4,6 +4,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from pathlib import Path
 
+from dateutil.relativedelta import relativedelta
 from PyQt6.QtCore import QSortFilterProxyModel, Qt
 from PyQt6.QtWidgets import QApplication
 from src.models.custom_exceptions import InvalidOperationError
@@ -49,9 +50,7 @@ class SecurityFormPresenter:
         self.update_security_model_data()
         self._security_table_model.post_reset_model()
 
-        self._overview_tree_model.pre_reset_model()
-        self.update_overview_model_data()
-        self._overview_tree_model.post_reset_model()
+        self.reset_overview_model_data()
 
         self._price_table_model.pre_reset_model()
         self.update_price_model_data()
@@ -60,7 +59,18 @@ class SecurityFormPresenter:
         self._update_chart(None)
 
     def update_security_model_data(self) -> None:
-        self._security_table_model.load_securities(self._record_keeper.securities)
+        returns = self._calculate_security_returns(self._record_keeper.securities)
+        self._security_table_model.load_securities(
+            self._record_keeper.securities, returns
+        )
+        self._set_security_table_column_visibility()
+
+    def reset_overview_model_data(self) -> None:
+        # REFACTOR: resetting model for every update is necessary because the model
+        # cannot synchronize id's during model updates
+        self._overview_tree_model.pre_reset_model()
+        self.update_overview_model_data()
+        self._overview_tree_model.post_reset_model()
 
     def update_overview_model_data(self) -> None:
         self._overview_tree_model.load_data(
@@ -83,10 +93,11 @@ class SecurityFormPresenter:
         if not self.reset_self:
             return
 
+        self.update_security_model_data()
+
         self._overview_tree_model.pre_reset_model()
         self.update_overview_model_data()
         self._overview_tree_model.post_reset_model()
-        self._view.treeView.expandAll()
 
         security = self._security_table_model.get_selected_item()
         if security is None:
@@ -325,7 +336,8 @@ class SecurityFormPresenter:
 
         self._dialog.close()
         self._update_chart(security)
-        self.update_overview_model_data()
+        self.update_security_model_data()
+        self.reset_overview_model_data()
         self.reset_self = False
         self.event_data_changed()
         self.reset_self = True
@@ -368,7 +380,8 @@ class SecurityFormPresenter:
         if any_deleted:
             self._update_price_table_and_chart(security)
             self._price_selection_changed()
-            self.update_overview_model_data()
+            self.update_security_model_data()
+            self.reset_overview_model_data()
             self.reset_self = False
             self.event_data_changed()
             self.reset_self = True
@@ -431,7 +444,8 @@ class SecurityFormPresenter:
         )
 
         self._update_price_table_and_chart(security)
-        self.update_overview_model_data()
+        self.update_security_model_data()
+        self.reset_overview_model_data()
         self._dialog.close()
         self.reset_self = False
         self.event_data_changed()
@@ -580,3 +594,50 @@ class SecurityFormPresenter:
             security.currency.code,
             security.price_decimals,
         )
+
+    def _calculate_security_returns(
+        self, securities: list[Security]
+    ) -> dict[Security, dict[str, Decimal]]:
+        today = datetime.now(user_settings.settings.time_zone).date()
+        periods = {
+            "1D": (today - relativedelta(days=1), today),
+            "7D": (today - relativedelta(days=7), today),
+            "1M": (today - relativedelta(months=1), today),
+            "3M": (today - relativedelta(months=3), today),
+            "6M": (today - relativedelta(months=6), today),
+            "1Y": (today - relativedelta(years=1), today),
+            "2Y": (today - relativedelta(years=2), today),
+            "3Y": (today - relativedelta(years=3), today),
+            "5Y": (today - relativedelta(years=5), today),
+            "7Y": (today - relativedelta(years=7), today),
+            "10Y": (today - relativedelta(years=10), today),
+            "Total": (None, today),
+        }
+
+        returns = {
+            security: {
+                period: security.calculate_return(start, end)
+                for period, (start, end) in periods.items()
+            }
+            for security in securities
+        }
+
+        # add annualized Total period to returns
+        for security in securities:
+            return_total = returns[security]["Total"] / 100
+            # calculate number of days between security.latest_date and security.earliest_date
+            days = (security.latest_date - security.earliest_date).days
+            if days == 0:
+                returns[security]["Total p.a."] = Decimal(0)
+                continue
+            exponent = Decimal(365) / Decimal(days)
+            returns[security]["Total p.a."] = 100 * (
+                ((1 + return_total) ** exponent) - 1
+            )
+
+        return returns
+
+    def _set_security_table_column_visibility(self) -> None:
+        for column in range(self._security_table_model.columnCount()):
+            column_empty = self._security_table_model.is_column_empty(column)
+            self._view.securityTableView.setColumnHidden(column, column_empty)

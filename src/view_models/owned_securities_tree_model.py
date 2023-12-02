@@ -37,6 +37,8 @@ COLUMNS_NUMBERS = {
     OwnedSecuritiesTreeColumn.AMOUNT_BASE,
 }
 
+# TODO: add sync_nodes function
+
 
 class SecurityItem:
     def __init__(self, security: Security) -> None:
@@ -231,7 +233,9 @@ class OwnedSecuritiesTreeModel(QAbstractItemModel):
         if column == OwnedSecuritiesTreeColumn.PRICE_AVERAGE:
             return item.avg_price.to_str_rounded(item.security.price_decimals)
         if column == OwnedSecuritiesTreeColumn.GAIN_NATIVE:
-            return item.gain_native.to_str_rounded()
+            if item.gain_native.currency != item.gain_base.currency:
+                return item.gain_native.to_str_rounded()
+            return None
         if column == OwnedSecuritiesTreeColumn.GAIN_BASE:
             return item.gain_base.to_str_rounded()
         if column == OwnedSecuritiesTreeColumn.ABSOLUTE_RETURN:
