@@ -79,8 +79,9 @@ class OwnedSecuritiesTreeColumn(IntEnum):
     GAIN_NATIVE = 4
     GAIN_BASE = 5
     ABSOLUTE_RETURN = 6
-    AMOUNT_NATIVE = 7
-    AMOUNT_BASE = 8
+    IRR = 7
+    AMOUNT_NATIVE = 8
+    AMOUNT_BASE = 9
 
 
 class CategoryTreeColumn(IntEnum):

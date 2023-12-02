@@ -9,8 +9,9 @@ from PyQt6.QtCore import QSortFilterProxyModel, Qt
 from PyQt6.QtWidgets import QApplication
 from src.models.custom_exceptions import InvalidOperationError
 from src.models.model_objects.currency_objects import CashAmount
-from src.models.model_objects.security_objects import Security
+from src.models.model_objects.security_objects import Security, SecurityAccount
 from src.models.record_keeper import RecordKeeper
+from src.models.statistics.security_stats import calculate_irr
 from src.models.user_settings import user_settings
 from src.presenters.utilities.event import Event
 from src.presenters.utilities.handle_exception import handle_exception
@@ -73,8 +74,10 @@ class SecurityFormPresenter:
         self._overview_tree_model.post_reset_model()
 
     def update_overview_model_data(self) -> None:
+        irrs = self._calculate_irrs()
         self._overview_tree_model.load_data(
             self._record_keeper.security_accounts,
+            irrs,
             self._record_keeper.base_currency,
         )
         hide_native_column = all(
@@ -641,3 +644,17 @@ class SecurityFormPresenter:
         for column in range(self._security_table_model.columnCount()):
             column_empty = self._security_table_model.is_column_empty(column)
             self._view.securityTableView.setColumnHidden(column, column_empty)
+
+    def _calculate_irrs(self) -> dict[Security, dict[SecurityAccount | None, Decimal]]:
+        irrs: dict[Security, dict[SecurityAccount | None, Decimal]] = {}
+        for security in self._record_keeper.securities:
+            accounts = [
+                account
+                for account in self._record_keeper.security_accounts
+                if account.is_security_related(security)
+            ]
+            irrs[security] = {None: calculate_irr(security, accounts)}
+            for account in accounts:
+                irrs[security][account] = calculate_irr(security, [account])
+
+        return irrs

@@ -355,7 +355,7 @@ class SecurityAccount(Account):
     def securities(self) -> dict[Security, Decimal]:
         if len(self._securities_history) == 0:
             return {}
-        return self._securities_history[-1][1]
+        return copy.copy(self._securities_history[-1][1])
 
     @property
     def transactions(self) -> tuple["SecurityRelatedTransaction", ...]:
@@ -435,7 +435,11 @@ class SecurityAccount(Account):
             security_dict[transaction.security] += transaction.get_shares(self)
             security_dict = defaultdict(
                 lambda: Decimal(0),
-                {key: value for key, value in security_dict.items() if value != 0},
+                {
+                    key: value
+                    for key, value in security_dict.items()
+                    if not value.is_zero()
+                },
             )
             self._securities_history.append((transaction.datetime_, security_dict))
 
@@ -443,6 +447,12 @@ class SecurityAccount(Account):
             for security in self._securities_history[-1][1]:
                 security.event_price_updated.append(self._update_balances)
         self._update_balances()
+
+    def is_security_related(self, security: Security) -> bool:
+        for _, security_dict in self._securities_history:
+            if security in security_dict:
+                return True
+        return False
 
     def serialize(self) -> dict[str, Any]:
         index = self._parent.children.index(self) if self._parent is not None else None

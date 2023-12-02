@@ -1,3 +1,4 @@
+import numbers
 import unicodedata
 from collections.abc import Collection
 from decimal import Decimal
@@ -23,6 +24,7 @@ COLUMN_HEADERS = {
     OwnedSecuritiesTreeColumn.GAIN_NATIVE: "Native Gain",
     OwnedSecuritiesTreeColumn.GAIN_BASE: "Base Gain",
     OwnedSecuritiesTreeColumn.ABSOLUTE_RETURN: "Abs. Return",
+    OwnedSecuritiesTreeColumn.IRR: "IRR p.a.",
     OwnedSecuritiesTreeColumn.AMOUNT_NATIVE: "Native Value",
     OwnedSecuritiesTreeColumn.AMOUNT_BASE: "Base Value",
 }
@@ -33,6 +35,7 @@ COLUMNS_NUMBERS = {
     OwnedSecuritiesTreeColumn.GAIN_NATIVE,
     OwnedSecuritiesTreeColumn.GAIN_BASE,
     OwnedSecuritiesTreeColumn.ABSOLUTE_RETURN,
+    OwnedSecuritiesTreeColumn.IRR,
     OwnedSecuritiesTreeColumn.AMOUNT_NATIVE,
     OwnedSecuritiesTreeColumn.AMOUNT_BASE,
 }
@@ -41,11 +44,12 @@ COLUMNS_NUMBERS = {
 
 
 class SecurityItem:
-    def __init__(self, security: Security) -> None:
+    def __init__(self, security: Security, irr: Decimal) -> None:
         self.security = security
         self.shares = Decimal(0)
         self.accounts: list[AccountItem] = []
         self.native_currency = security.currency
+        self.irr = round(100 * irr, 2)
 
     def __repr__(self) -> str:
         return f"SecurityItem(security={self.security.name})"
@@ -80,6 +84,7 @@ class AccountItem:
         account: SecurityAccount,
         shares: Decimal,
         avg_price: CashAmount,
+        irr: Decimal,
         base_currency: Currency | None,
     ) -> None:
         self.parent = parent
@@ -87,6 +92,7 @@ class AccountItem:
         self.shares = shares
         self.avg_price = avg_price
         self.security = parent.security
+        self.irr = round(100 * irr, 2)
 
         self.native_amount = shares * parent.security.price
         if base_currency is not None:
@@ -99,7 +105,10 @@ class AccountItem:
 
         self.gain_native = self.native_amount - avg_price * shares
         self.gain_base = self.gain_native.convert(base_currency)
-        self.gain_pct = round(100 * self.gain_native / (avg_price * shares), 2)
+        try:
+            self.gain_pct = round(100 * self.gain_native / (avg_price * shares), 2)
+        except Exception:
+            pass
 
         self.native_currency = parent.security.currency
 
@@ -122,13 +131,16 @@ class OwnedSecuritiesTreeModel(QAbstractItemModel):
         self._tree_items = ()
 
     def load_data(
-        self, accounts: Collection[SecurityAccount], base_currency: Currency | None
+        self,
+        accounts: Collection[SecurityAccount],
+        irrs: dict[Security, dict[SecurityAccount | None, Decimal]],
+        base_currency: Currency | None,
     ) -> None:
         tree_items: dict[Security, SecurityItem] = {}
         for account in accounts:
             for security, shares in account.securities.items():
                 if security not in tree_items:
-                    tree_items[security] = SecurityItem(security)
+                    tree_items[security] = SecurityItem(security, irrs[security][None])
                 tree_items[security].shares += shares
                 tree_items[security].accounts.append(
                     AccountItem(
@@ -136,6 +148,7 @@ class OwnedSecuritiesTreeModel(QAbstractItemModel):
                         account,
                         shares,
                         account.get_average_price(security),
+                        irrs[security][account],
                         base_currency,
                     )
                 )
@@ -240,6 +253,8 @@ class OwnedSecuritiesTreeModel(QAbstractItemModel):
             return item.gain_base.to_str_rounded()
         if column == OwnedSecuritiesTreeColumn.ABSOLUTE_RETURN:
             return f"{item.gain_pct:,} %"
+        if column == OwnedSecuritiesTreeColumn.IRR:
+            return f"{item.irr:,} %"
         if column == OwnedSecuritiesTreeColumn.AMOUNT_NATIVE:
             if (
                 isinstance(item.base_amount, CashAmount)
@@ -272,6 +287,8 @@ class OwnedSecuritiesTreeModel(QAbstractItemModel):
             return float(item.gain_base.value_rounded)
         if column == OwnedSecuritiesTreeColumn.ABSOLUTE_RETURN:
             return float(item.gain_pct)
+        if column == OwnedSecuritiesTreeColumn.IRR:
+            return float(item.irr)
         if column == OwnedSecuritiesTreeColumn.AMOUNT_NATIVE:
             return float(item.native_amount.value_rounded)
         if column == OwnedSecuritiesTreeColumn.AMOUNT_BASE:
@@ -299,11 +316,9 @@ class OwnedSecuritiesTreeModel(QAbstractItemModel):
             OwnedSecuritiesTreeColumn.GAIN_BASE,
             OwnedSecuritiesTreeColumn.ABSOLUTE_RETURN,
         }:
-            if item.gain_pct > 0:
-                return colors.get_green_brush()
-            if item.gain_pct < 0:
-                return colors.get_red_brush()
-            return colors.get_gray_brush()
+            return _get_brush_color_from_number(item.gain_pct)
+        if column == OwnedSecuritiesTreeColumn.IRR:
+            return _get_brush_color_from_number(item.irr)
         if (
             column
             in {
@@ -320,3 +335,11 @@ class OwnedSecuritiesTreeModel(QAbstractItemModel):
 
     def post_reset_model(self) -> None:
         self.endResetModel()
+
+
+def _get_brush_color_from_number(number: numbers.Real) -> QBrush:
+    if number > 0:
+        return colors.get_green_brush()
+    if number < 0:
+        return colors.get_red_brush()
+    return colors.get_gray_brush()
