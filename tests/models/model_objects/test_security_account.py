@@ -1,19 +1,22 @@
 from collections import defaultdict
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import pytest
 from hypothesis import assume, given
 from hypothesis import strategies as st
 from src.models.base_classes.account import UnrelatedAccountError
 from src.models.model_objects.account_group import AccountGroup
+from src.models.model_objects.cash_objects import CashAccount
 from src.models.model_objects.currency_objects import CashAmount, Currency, ExchangeRate
 from src.models.model_objects.security_objects import (
     Security,
     SecurityAccount,
     SecurityRelatedTransaction,
     SecurityTransaction,
+    SecurityTransactionType,
+    SecurityTransfer,
 )
 from src.models.user_settings import user_settings
 from tests.models.test_assets.composites import (
@@ -27,9 +30,6 @@ from tests.models.test_assets.composites import (
     security_transfers,
     valid_decimals,
 )
-
-if TYPE_CHECKING:
-    from src.models.model_objects.cash_objects import CashAccount
 
 
 @given(name=names(), parent=st.none() | account_groups())
@@ -230,3 +230,94 @@ def test_get_balance_same_currency_securities(
     assert round(balance_b.value_normalized, 10) == round(
         expected_b.value_normalized, 10
     )
+
+
+def test_get_average_price() -> None:
+    account = SecurityAccount("Test")
+    usd = Currency("USD", 2)
+    cash_account = CashAccount("Test", usd, CashAmount(0, usd))
+    security = Security("Alphabet", "ABC", "Stock", usd, 1)
+
+    t1 = SecurityTransaction(
+        "test",
+        datetime.now(user_settings.settings.time_zone),
+        SecurityTransactionType.BUY,
+        security,
+        1,
+        CashAmount(1, usd),
+        account,
+        cash_account,
+    )
+    t2 = SecurityTransaction(
+        "test",
+        datetime.now(user_settings.settings.time_zone),
+        SecurityTransactionType.BUY,
+        security,
+        2,
+        CashAmount(2, usd),
+        account,
+        cash_account,
+    )
+    t3 = SecurityTransaction(
+        "test",
+        datetime.now(user_settings.settings.time_zone),
+        SecurityTransactionType.BUY,
+        security,
+        4,
+        CashAmount(4, usd),
+        account,
+        cash_account,
+    )
+
+    avg_price = account.get_average_price(security)
+    assert avg_price == CashAmount(3, usd)
+
+
+def test_get_average_price_with_transfers() -> None:
+    account = SecurityAccount("Test")
+    account_2 = SecurityAccount("Original Buyer")
+    usd = Currency("USD", 2)
+    cash_account = CashAccount("Test", usd, CashAmount(0, usd))
+    security = Security("Alphabet", "ABC", "Stock", usd, 1)
+
+    t1 = SecurityTransaction(
+        "test",
+        datetime.now(user_settings.settings.time_zone),
+        SecurityTransactionType.BUY,
+        security,
+        5,
+        CashAmount(5, usd),
+        account_2,
+        cash_account,
+    )
+    t2 = SecurityTransaction(
+        "test",
+        datetime.now(user_settings.settings.time_zone),
+        SecurityTransactionType.BUY,
+        security,
+        5,
+        CashAmount(3, usd),
+        account_2,
+        cash_account,
+    )
+    t3 = SecurityTransfer(
+        "transfer",
+        datetime.now(user_settings.settings.time_zone),
+        security,
+        5,
+        account_2,
+        account,
+    )
+    t4 = SecurityTransaction(
+        "test",
+        datetime.now(user_settings.settings.time_zone),
+        SecurityTransactionType.BUY,
+        security,
+        5,
+        CashAmount(6, usd),
+        account,
+        cash_account,
+    )
+
+    avg_price = account.get_average_price(security)
+    assert avg_price == CashAmount(5, usd)

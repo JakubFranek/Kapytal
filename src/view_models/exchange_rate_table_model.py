@@ -62,10 +62,10 @@ class ExchangeRateTableModel(QAbstractTableModel):
             return self._get_display_role_data(column, exchange_rate)
         if role == Qt.ItemDataRole.UserRole:
             return self._get_sort_role_data(column, exchange_rate)
-        if (
-            role == Qt.ItemDataRole.TextAlignmentRole
-            and column == ExchangeRateTableColumn.RATE
-        ):
+        if role == Qt.ItemDataRole.TextAlignmentRole and column in {
+            ExchangeRateTableColumn.RATE,
+            ExchangeRateTableColumn.LAST_DATE,
+        }:
             return ALIGNMENT_RIGHT
         if role == Qt.ItemDataRole.FontRole and column == ExchangeRateTableColumn.CODE:
             return monospace_font

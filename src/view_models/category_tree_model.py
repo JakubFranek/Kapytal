@@ -37,6 +37,7 @@ class CategoryTreeNode:
     parent: Self | None
     children: list[Self]
     uuid: UUID
+    # TODO: replace stats attributes with CategoryStats attribute directly
 
     def __repr__(self) -> str:
         return f"CategoryTreeNode({self.path})"
