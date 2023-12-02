@@ -11,7 +11,7 @@ from src.presenters.utilities.handle_exception import handle_exception
 from src.view_models.quotes_update_table_model import QuotesUpdateTableModel
 from src.views.forms.quotes_update_form import QuotesUpdateForm
 from src.views.utilities.handle_exception import display_error_message
-from src.views.utilities.message_box_functions import show_info_box
+from src.views.utilities.message_box_functions import ask_yes_no_question, show_info_box
 
 if TYPE_CHECKING:
     from datetime import date
@@ -27,6 +27,7 @@ class QuotesUpdateFormPresenter:
         record_keeper: RecordKeeper,
     ) -> None:
         self._view = view
+        self._unsaved_quotes = False
         self._record_keeper = record_keeper
         self._quotes: dict[str, tuple[date, Decimal | CashAmount]] = {}
         self._initialize_models()
@@ -63,6 +64,7 @@ class QuotesUpdateFormPresenter:
         self._view.signal_download.connect(self._download_quotes)
         self._view.signal_select_all.connect(self._select_all)
         self._view.signal_unselect_all.connect(self._unselect_all)
+        self._view.signal_exit.connect(self._close_attempted)
 
     def _download_quotes(self) -> None:
         logging.info("Downloading quotes...")
@@ -75,6 +77,7 @@ class QuotesUpdateFormPresenter:
             elif isinstance(item, Security):
                 self._download_security_quote(item)
         self._update_button_states()
+        self._unsaved_quotes = True
 
     def _download_security_quote(self, security: Security) -> None:
         try:
@@ -166,6 +169,7 @@ class QuotesUpdateFormPresenter:
         self._view.set_button_state(download=True, save=False)
         self.event_data_changed()
         logging.info("Downloaded quotes saved")
+        self._unsaved_quotes = False
         show_info_box(self._view, text.strip(), "Quotes saved")
         self._view.close()
 
@@ -183,3 +187,19 @@ class QuotesUpdateFormPresenter:
                 self._view.set_button_state(download=True, save=False)
         else:
             self._view.set_button_state(download=False, save=False)
+
+    def _close_attempted(self) -> None:
+        if not self._unsaved_quotes:
+            self._view.set_close_allowed(allowed=True)
+            return
+        if ask_yes_no_question(
+            self._view,
+            question=(
+                "The downloaded quotes have not been saved yet.\n"
+                "Do you want to close without saving?"
+            ),
+            title="Close without saving?",
+        ):
+            self._view.set_close_allowed(allowed=True)
+            return
+        self._view.set_close_allowed(allowed=False)
