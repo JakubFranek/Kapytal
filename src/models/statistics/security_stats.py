@@ -36,6 +36,8 @@ def calculate_irr(security: Security, accounts: list[SecurityAccount]) -> Decima
     price = security.price
     for account in accounts:
         sell_all_amount += account.securities[security] * price.value_normalized
+        if sell_all_amount.is_zero():
+            return Decimal("NaN")
 
     dates.append(datetime.now(user_settings.settings.time_zone).date())
     cashflows.append(sell_all_amount)

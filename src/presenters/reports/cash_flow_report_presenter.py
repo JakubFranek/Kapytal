@@ -1,5 +1,6 @@
 import logging
 from datetime import datetime
+from typing import Any
 
 from PyQt6.QtWidgets import QApplication
 from src.models.custom_exceptions import InvalidOperationError
@@ -253,7 +254,10 @@ class CashFlowReportPresenter:
             self._transactions_presenter.transaction_table_form_presenter
         )
         transaction_table_form_presenter.event_data_changed.append(
-            lambda _: self._report.set_recalculate_report_action_state(enabled=True)
+            self._activate_recalculate_action
+        )
+        transaction_table_form_presenter.event_form_closed.append(
+            self._on_transaction_table_form_close
         )
         transaction_table_form_presenter.show_data(transactions, title, self._report)
 
@@ -271,3 +275,23 @@ class CashFlowReportPresenter:
         else:
             enabled = len(transactions) > 0
         self._report.set_show_transactions_action_state(enable=enabled)
+
+    def _activate_recalculate_action(
+        self,
+        *_: Any,  # noqa: ANN401
+    ) -> None:
+        # *_ due to event_data_changed being called with argument UUIDs
+        self._report.set_recalculate_report_action_state(enabled=True)
+
+    def _on_transaction_table_form_close(self) -> None:
+        # cleanup method
+        transaction_table_form_presenter = (
+            self._transactions_presenter.transaction_table_form_presenter
+        )
+        if (
+            self._activate_recalculate_action
+            in transaction_table_form_presenter.event_data_changed
+        ):
+            transaction_table_form_presenter.event_data_changed.remove(
+                self._activate_recalculate_action
+            )

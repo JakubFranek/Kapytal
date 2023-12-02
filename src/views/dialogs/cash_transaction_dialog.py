@@ -315,10 +315,6 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
                 self._tag_rows[index].tag_name = pairs[index][0]
                 self._tag_rows[index].amount = pairs[index][1]
 
-    def reject(self) -> None:
-        logging.debug(f"Closing {self.__class__.__name__}")
-        return super().reject()
-
     def disable_all_widgets(self) -> None:
         self.incomeRadioButton.setEnabled(False)
         self.expenseRadioButton.setEnabled(False)
