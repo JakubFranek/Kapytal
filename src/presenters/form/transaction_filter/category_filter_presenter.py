@@ -29,11 +29,7 @@ class CategoryFilterPresenter:
 
     @property
     def multiple_categories_filter_mode(self) -> FilterMode:
-        return (
-            self._form.multiple_categories_filter_mode
-            if self._form.specific_categories_filter_mode != FilterMode.OFF
-            else FilterMode.OFF
-        )
+        return self._form.multiple_categories_filter_mode
 
     @property
     def checked_categories(self) -> tuple[Category, ...]:

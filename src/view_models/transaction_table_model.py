@@ -640,7 +640,9 @@ def _get_split_category_string(
     while remaining_pairs:
         pair = remaining_pairs.pop(0)
         group = [pair] + [
-            _pair for _pair in remaining_pairs if pair[0].parent == _pair[0].parent
+            _pair
+            for _pair in remaining_pairs
+            if pair[0].parent == _pair[0].parent and pair[0].parent is not None
         ]
         remaining_pairs = [p for p in remaining_pairs if p not in group]
         grouped_pairs.append(group)
