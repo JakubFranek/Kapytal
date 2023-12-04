@@ -24,6 +24,13 @@ In Czech, capybara is spelled "kapybara". My friend mentioned the similarity wit
 - like photos, your financial transactions are memories or snapshots of your life
 - it doesn't take that much time (cca 15 minutes per week) and Kapytal has several quality of life features to make it as easy for you as possible
 
+## Does Kapytal need an internet connection?
+
+Kapytal currently requires internet connection for two **optional** functionalities:
+
+- checking for its own updates
+- downloading [Security](./glossary.md#security-) and [Exchange Rate](./glossary.md#exchange-rate-) quotes from [Update Quotes Form](./glossary.md#update-quotes-form-)
+
 ## Why won't you support automated imports?
 
 - there are way too many bank APIs and statement formats
@@ -77,4 +84,4 @@ Edit the hours or minutes of the [Transactions](./glossary.md#transaction). You 
 
 ## Should I model cryptocurrencies as Currencies or Securities?
 
-Kapytal allows you to use both approaches, so it is up to you. However, if you ever expect to buy a pizza or get salary in the given cryptocurrency, it is necessary to model it as a [Currency](./glossary.md#currency-). On the other hand, if the crypto you buy is intended purely as an investment to be bought and sold eventually, [Security](./glossary.md#security-) might be the way to go. If you are unsure, go down the Currency path.
+Kapytal allows you to use both approaches, so it is up to you. However, if you ever expect to buy a pizza or get salary in the given cryptocurrency, it is necessary to model it as a [Currency](./glossary.md#currency-). On the other hand, if the crypto you buy is intended purely as an investment to be bought and sold eventually, [Security](./glossary.md#security-) might be the way to go, as Securities offer better investment performance stats in [Securitites Form](./glossary.md#securities-). If you are unsure, go down the Currency path.
