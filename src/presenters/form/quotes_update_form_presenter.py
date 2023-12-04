@@ -1,6 +1,7 @@
 import logging
 from typing import TYPE_CHECKING
 
+from PyQt6.QtCore import QSortFilterProxyModel, Qt
 from src.models.model_objects.currency_objects import CashAmount, ExchangeRate
 from src.models.model_objects.security_objects import Security
 from src.models.online_quotes.functions import QuoteUpdateError, get_latest_quote
@@ -48,6 +49,7 @@ class QuotesUpdateFormPresenter:
         ]
         items = exchange_rates + securities
         data = [(item, "", "") for item in items]
+        self._unsaved_quotes = False
         self._quotes = {}
         self._model.pre_reset_model()
         self._model.load_data(data)
@@ -55,9 +57,14 @@ class QuotesUpdateFormPresenter:
         self._unselect_all()
 
     def _initialize_models(self) -> None:
+        self._proxy = QSortFilterProxyModel()
+        self._proxy.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+
         self._model = QuotesUpdateTableModel(self._view.table_view)
-        self._view.table_view.setModel(self._model)
+        self._view.table_view.setModel(self._proxy)
         self._model.event_checked_items_changed.append(self._update_button_states)
+
+        self._proxy.setSourceModel(self._model)
 
     def _connect_to_signals(self) -> None:
         self._view.signal_save.connect(self._save_quotes)
@@ -65,6 +72,7 @@ class QuotesUpdateFormPresenter:
         self._view.signal_select_all.connect(self._select_all)
         self._view.signal_unselect_all.connect(self._unselect_all)
         self._view.signal_exit.connect(self._close_attempted)
+        self._view.signal_search_text_changed.connect(self._filter)
 
     def _download_quotes(self) -> None:
         logging.info("Downloading quotes...")
@@ -203,3 +211,8 @@ class QuotesUpdateFormPresenter:
             self._view.set_close_allowed(allowed=True)
             return
         self._view.set_close_allowed(allowed=False)
+
+    def _filter(self, pattern: str) -> None:
+        if ("[" in pattern and "]" not in pattern) or "[]" in pattern:
+            return
+        self._proxy.setFilterWildcard(pattern)

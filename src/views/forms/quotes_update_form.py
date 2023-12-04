@@ -1,6 +1,6 @@
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QCloseEvent
-from PyQt6.QtWidgets import QTableView, QWidget
+from PyQt6.QtWidgets import QLineEdit, QTableView, QWidget
 from src.views import icons
 from src.views.base_classes.custom_widget import CustomWidget
 from src.views.ui_files.forms.Ui_quotes_update_form import Ui_QuotesUpdateForm
@@ -13,6 +13,7 @@ class QuotesUpdateForm(CustomWidget, Ui_QuotesUpdateForm):
     signal_select_all = pyqtSignal()
     signal_unselect_all = pyqtSignal()
     signal_exit = pyqtSignal()
+    signal_search_text_changed = pyqtSignal(str)
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -35,6 +36,12 @@ class QuotesUpdateForm(CustomWidget, Ui_QuotesUpdateForm):
         self.unselectAllToolButton.setDefaultAction(self.actionUnselect_All)
 
         self.helpPushButton.clicked.connect(self._show_help)
+
+        self.searchLineEdit.textChanged.connect(self.signal_search_text_changed.emit)
+
+        self.searchLineEdit.addAction(
+            icons.magnifier, QLineEdit.ActionPosition.LeadingPosition
+        )
 
     @property
     def table_view(self) -> QTableView:
