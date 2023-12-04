@@ -198,6 +198,7 @@ class ExchangeRate(CopyableMixin, JSONSerializableMixin):
         "_rate_decimals",
         "_latest_rate",
         "_latest_date",
+        "_earliest_date",
         "_recalculate_rate_history_pairs",
     )
 
@@ -262,6 +263,12 @@ class ExchangeRate(CopyableMixin, JSONSerializableMixin):
             return None
         return self._latest_date
 
+    @property
+    def earliest_date(self) -> date | None:
+        if len(self._rate_history) == 0:
+            return None
+        return self._earliest_date
+
     def __repr__(self) -> str:
         return (
             "ExchangeRate("
@@ -313,6 +320,22 @@ class ExchangeRate(CopyableMixin, JSONSerializableMixin):
         self.primary_currency.reset_cache()
         self.secondary_currency.remove_exchange_rate(self)
         self.secondary_currency.reset_cache()
+
+    def calculate_return(
+        self, start: date | None = None, end: date | None = None
+    ) -> Decimal:
+        """Returns the Security return as a percentage."""
+        if start is None:
+            start = self._earliest_date
+        if start < self._earliest_date:
+            return Decimal("NaN")
+
+        rate_end = self.get_rate(end)
+        rate_start = self.get_rate(start)
+        if rate_start.is_nan() or rate_end.is_nan():
+            return Decimal("NaN")
+
+        return Decimal(100 * (rate_end / rate_start - 1))
 
     def serialize(self) -> dict:
         date_rate_pairs = [
@@ -366,9 +389,11 @@ class ExchangeRate(CopyableMixin, JSONSerializableMixin):
     def _update_values(self) -> None:
         if len(self._rate_history) == 0:
             self._latest_date = None
+            self._earliest_date = None
             self._latest_rate = Decimal("NaN")
         else:
             self._latest_date = max(date_ for date_ in self._rate_history)
+            self._earliest_date = min(date_ for date_ in self._rate_history)
             self._latest_rate = self._rate_history[self._latest_date]
 
         self._rate_decimals = 0

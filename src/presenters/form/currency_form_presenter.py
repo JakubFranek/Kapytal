@@ -4,6 +4,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from pathlib import Path
 
+from dateutil.relativedelta import relativedelta
 from PyQt6.QtCore import QSortFilterProxyModel, Qt
 from PyQt6.QtWidgets import QApplication
 from src.models.custom_exceptions import InvalidOperationError
@@ -70,9 +71,7 @@ class CurrencyFormPresenter:
         self._currency_table_model.load_data(
             record_keeper.currencies, record_keeper.base_currency
         )
-        self._exchange_rate_table_model.load_exchange_rates(
-            record_keeper.exchange_rates
-        )
+        self.update_exchange_rate_table_data()
         self._exchange_rate_history_model.load_data(())
         self._currency_table_model.post_reset_model()
         self._exchange_rate_table_model.post_reset_model()
@@ -80,6 +79,13 @@ class CurrencyFormPresenter:
 
         self._exchange_rate_selection_changed()
         self._update_chart(None)
+
+    def update_exchange_rate_table_data(self) -> None:
+        stats = self._calculate_exchange_rate_stats(self._record_keeper.exchange_rates)
+        self._exchange_rate_table_model.load_data(
+            self._record_keeper.exchange_rates, stats
+        )
+        self._set_exchange_rate_table_column_visibility()
 
     def show_form(self) -> None:
         self._busy_dialog = create_simple_busy_indicator(
@@ -187,9 +193,7 @@ class CurrencyFormPresenter:
             return
 
         self._exchange_rate_table_model.pre_add()
-        self._exchange_rate_table_model.load_exchange_rates(
-            self._record_keeper.exchange_rates
-        )
+        self.update_exchange_rate_table_data()
         self._exchange_rate_table_model.post_add()
         self._dialog.close()
         self.event_data_changed()
@@ -218,9 +222,7 @@ class CurrencyFormPresenter:
             return
 
         self._exchange_rate_table_model.pre_remove_item(exchange_rate)
-        self._exchange_rate_table_model.load_exchange_rates(
-            self._record_keeper.exchange_rates
-        )
+        self.update_exchange_rate_table_data()
         self._exchange_rate_table_model.post_remove_item()
         self.event_data_changed()
 
@@ -510,3 +512,49 @@ class CurrencyFormPresenter:
             self._exchange_rate_history_model
         )
         self._view.exchangeRateHistoryTable.setModel(self._exchange_rate_history_proxy)
+
+    def _set_exchange_rate_table_column_visibility(self) -> None:
+        for column in range(self._exchange_rate_table_model.columnCount()):
+            column_empty = self._exchange_rate_table_model.is_column_empty(column)
+            self._view.exchangeRateTable.setColumnHidden(column, column_empty)
+
+    def _calculate_exchange_rate_stats(
+        self, exchange_rates: list[ExchangeRate]
+    ) -> dict[ExchangeRate, dict[str, Decimal]]:
+        today = datetime.now(user_settings.settings.time_zone).date()
+        periods = {
+            "1D": (today - relativedelta(days=1), today),
+            "7D": (today - relativedelta(days=7), today),
+            "1M": (today - relativedelta(months=1), today),
+            "3M": (today - relativedelta(months=3), today),
+            "6M": (today - relativedelta(months=6), today),
+            "1Y": (today - relativedelta(years=1), today),
+            "2Y": (today - relativedelta(years=2), today),
+            "3Y": (today - relativedelta(years=3), today),
+            "5Y": (today - relativedelta(years=5), today),
+            "7Y": (today - relativedelta(years=7), today),
+            "10Y": (today - relativedelta(years=10), today),
+            "Total": (None, today),
+        }
+
+        returns = {
+            exchange_rate: {
+                period: exchange_rate.calculate_return(start, end)
+                for period, (start, end) in periods.items()
+            }
+            for exchange_rate in exchange_rates
+        }
+
+        # add annualized Total period to returns
+        for exchange_rate in exchange_rates:
+            return_total = returns[exchange_rate]["Total"] / 100
+            days = (exchange_rate.latest_date - exchange_rate.earliest_date).days
+            if days == 0:
+                returns[exchange_rate]["Total p.a."] = Decimal(0)
+                continue
+            exponent = Decimal(365) / Decimal(days)
+            returns[exchange_rate]["Total p.a."] = 100 * (
+                ((1 + return_total) ** exponent) - 1
+            )
+
+        return returns

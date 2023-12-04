@@ -37,7 +37,7 @@ class CurrencyForm(CustomWidget, Ui_CurrencyForm):
         self._initialize_actions()
 
         self.chart_widget = DateLineChartView(self)
-        self.exchangeRateHistoryGroupBoxHorizontalLayout.addWidget(self.chart_widget)
+        self.exchangeRateHistoryTableHorizontalLayout.addWidget(self.chart_widget)
 
         self.currencyTable.horizontalHeader().setSortIndicatorClearable(True)
         self.exchangeRateTable.horizontalHeader().setSortIndicatorClearable(True)
@@ -83,38 +83,22 @@ class CurrencyForm(CustomWidget, Ui_CurrencyForm):
 
     def finalize_setup(self) -> None:
         self.currencyTable.horizontalHeader().setStretchLastSection(False)
-        self.currencyTable.horizontalHeader().setSectionResizeMode(
-            CurrencyTableColumn.CODE,
-            QHeaderView.ResizeMode.ResizeToContents,
-        )
-        self.currencyTable.horizontalHeader().setSectionResizeMode(
-            CurrencyTableColumn.PLACES,
-            QHeaderView.ResizeMode.Stretch,
-        )
+        for column in CurrencyTableColumn:
+            self.currencyTable.horizontalHeader().setSectionResizeMode(
+                column, QHeaderView.ResizeMode.ResizeToContents
+            )
 
         self.exchangeRateTable.horizontalHeader().setStretchLastSection(False)
-        self.exchangeRateTable.horizontalHeader().setSectionResizeMode(
-            ExchangeRateTableColumn.CODE,
-            QHeaderView.ResizeMode.ResizeToContents,
-        )
-        self.exchangeRateTable.horizontalHeader().setSectionResizeMode(
-            ExchangeRateTableColumn.RATE,
-            QHeaderView.ResizeMode.ResizeToContents,
-        )
-        self.exchangeRateTable.horizontalHeader().setSectionResizeMode(
-            ExchangeRateTableColumn.LAST_DATE,
-            QHeaderView.ResizeMode.Stretch,
-        )
+        for column in ExchangeRateTableColumn:
+            self.exchangeRateTable.horizontalHeader().setSectionResizeMode(
+                column, QHeaderView.ResizeMode.ResizeToContents
+            )
 
         self.exchangeRateHistoryTable.horizontalHeader().setStretchLastSection(False)
-        self.exchangeRateHistoryTable.horizontalHeader().setSectionResizeMode(
-            ValueTableColumn.DATE,
-            QHeaderView.ResizeMode.ResizeToContents,
-        )
-        self.exchangeRateHistoryTable.horizontalHeader().setSectionResizeMode(
-            ValueTableColumn.VALUE,
-            QHeaderView.ResizeMode.Stretch,
-        )
+        for column in ValueTableColumn:
+            self.exchangeRateHistoryTable.horizontalHeader().setSectionResizeMode(
+                column, QHeaderView.ResizeMode.ResizeToContents
+            )
 
         self.exchangeRateTable.selectionModel().selectionChanged.connect(
             self.signal_exchange_rate_selection_changed.emit
@@ -178,26 +162,18 @@ class CurrencyForm(CustomWidget, Ui_CurrencyForm):
         self.update_table_widths()
 
     def update_table_widths(self) -> None:
-        self.currencyTable.resizeColumnsToContents()
         self.exchangeRateTable.resizeColumnsToContents()
+        self.update_currency_table_width()
+        self.update_history_table_width()
 
+    def update_currency_table_width(self) -> None:
+        self.currencyTable.resizeColumnsToContents()
         currency_table_width = calculate_table_width(self.currencyTable)
-        exchange_rate_table_width = calculate_table_width(self.exchangeRateTable)
-        larger_width = max(currency_table_width, exchange_rate_table_width)
-
-        self.currencyGroupBox.setFixedWidth(larger_width + 30)
-        self.exchangeRateGroupBox.setFixedWidth(larger_width + 30)
-
+        self.currencyGroupBox.setFixedWidth(currency_table_width + 30)
         self.currencyTable.horizontalHeader().setSectionResizeMode(
             CurrencyTableColumn.PLACES,
             QHeaderView.ResizeMode.Stretch,
         )
-        self.exchangeRateTable.horizontalHeader().setSectionResizeMode(
-            ExchangeRateTableColumn.LAST_DATE,
-            QHeaderView.ResizeMode.Stretch,
-        )
-
-        self.update_history_table_width()
 
     def update_history_table_width(self) -> None:
         self.exchangeRateHistoryTable.resizeColumnsToContents()

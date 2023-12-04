@@ -15,6 +15,6 @@ def test_exchange_rate_table_model(qtbot: QtBot, qtmodeltester: ModelTester) -> 
     record_keeper = get_preloaded_record_keeper_with_various_transactions()
     proxy = QSortFilterProxyModel(tree_view)
     model = ExchangeRateTableModel(view=tree_view, proxy=proxy)
-    model.load_exchange_rates(record_keeper.exchange_rates)
+    model.load_data(record_keeper.exchange_rates)
 
     qtmodeltester.check(model)

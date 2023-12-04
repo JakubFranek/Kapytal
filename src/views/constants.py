@@ -21,6 +21,19 @@ class ExchangeRateTableColumn(IntEnum):
     CODE = 0
     RATE = 1
     LAST_DATE = 2
+    D1 = 3
+    D7 = 4
+    M1 = 5
+    M3 = 6
+    M6 = 7
+    Y1 = 8
+    Y2 = 9
+    Y3 = 10
+    Y5 = 11
+    Y7 = 12
+    Y10 = 13
+    TOTAL = 14
+    TOTAL_ANNUALIZED = 15
 
 
 class ValueTableColumn(IntEnum):
