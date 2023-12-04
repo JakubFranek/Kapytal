@@ -87,6 +87,9 @@ class SecurityFormPresenter:
         self._view.treeView.setColumnHidden(
             OwnedSecuritiesTreeColumn.AMOUNT_NATIVE, hide_native_column
         )
+        self._view.treeView.setColumnHidden(
+            OwnedSecuritiesTreeColumn.GAIN_NATIVE, hide_native_column
+        )
 
     def update_price_model_data(self) -> None:
         self._price_table_model.load_data(())
