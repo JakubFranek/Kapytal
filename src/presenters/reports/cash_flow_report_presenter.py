@@ -17,7 +17,10 @@ from src.presenters.widget.transactions_presenter import TransactionsPresenter
 from src.views.dialogs.busy_dialog import create_simple_busy_indicator
 from src.views.main_view import MainView
 from src.views.reports.cashflow_periodic_report import CashFlowPeriodicReport
-from src.views.reports.cashflow_total_report import CashFlowTotalReport
+from src.views.reports.cashflow_total_report import (
+    CashFlowTotalReport,
+    TransactionGroup,
+)
 from src.views.utilities.handle_exception import display_error_message
 from src.views.utilities.message_box_functions import ask_yes_no_question
 
@@ -152,7 +155,10 @@ class CashFlowReportPresenter:
         cash_flow_stats = calculate_cash_flow(
             transactions, accounts, base_currency, start_date, end_date
         )
+        self._total_stats = cash_flow_stats
+
         self._report = CashFlowTotalReport(self._main_view)
+        self._report.event_show_transactions.append(self._show_total_transactions)
         self._report.load_stats(cash_flow_stats)
         self._report.show_form()
 
@@ -250,6 +256,47 @@ class CashFlowReportPresenter:
             path,
         ) = self._report.get_selected_transactions()
         title = f"Cash Flow Report - {path}, {period}"
+        transaction_table_form_presenter = (
+            self._transactions_presenter.transaction_table_form_presenter
+        )
+        transaction_table_form_presenter.event_data_changed.append(
+            self._activate_recalculate_action
+        )
+        transaction_table_form_presenter.event_form_closed.append(
+            self._on_transaction_table_form_close
+        )
+        transaction_table_form_presenter.show_data(transactions, title, self._report)
+
+    def _show_total_transactions(self, group: TransactionGroup) -> None:
+        match group:
+            case TransactionGroup.INCOME:
+                transactions = self._total_stats.incomes.transactions
+                path = "Income"
+            case TransactionGroup.INWARD_TRANSFER:
+                transactions = self._total_stats.inward_transfers.transactions
+                path = "Inward Transfers"
+            case TransactionGroup.REFUND:
+                transactions = self._total_stats.refunds.transactions
+                path = "Refunds"
+            case TransactionGroup.INFLOWS:
+                transactions = self._total_stats.inflows.transactions
+                path = "Inflows"
+            case TransactionGroup.OUTWARD_TRANSFER:
+                transactions = self._total_stats.outward_transfers.transactions
+                path = "Outward Transfers"
+            case TransactionGroup.EXPENSE:
+                transactions = self._total_stats.expenses.transactions
+                path = "Expenses"
+            case TransactionGroup.OUTFLOWS:
+                transactions = self._total_stats.outflows.transactions
+                path = "Outflows"
+            case TransactionGroup.CASHFLOW:
+                transactions = self._total_stats.delta_neutral.transactions
+                path = "Cash Flow"
+            case _:
+                raise ValueError(f"Unsupported TransactionGroup: {group}")
+
+        title = f"Cash Flow Report - {path}"
         transaction_table_form_presenter = (
             self._transactions_presenter.transaction_table_form_presenter
         )

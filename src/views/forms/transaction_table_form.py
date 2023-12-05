@@ -16,6 +16,9 @@ class TransactionTableForm(CustomWidget, Ui_TableViewForm):
         self.setupUi(self)
         self.setWindowFlag(Qt.WindowType.Window)
         self.setWindowIcon(icons.table)
+
+        self.resize(600, 600)
+
         self.tableView.contextMenuEvent = self._create_context_menu
 
         self.actionEdit = QAction("Edit", self)
