@@ -631,7 +631,6 @@ class SecurityFormPresenter:
         # add annualized Total period to returns
         for security in securities:
             return_total = returns[security]["Total"] / 100
-            # calculate number of days between security.latest_date and security.earliest_date
             days = (security.latest_date - security.earliest_date).days
             if days == 0:
                 returns[security]["Total p.a."] = Decimal(0)

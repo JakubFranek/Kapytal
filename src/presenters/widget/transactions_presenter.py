@@ -615,7 +615,7 @@ class TransactionsPresenter:
     ) -> None:
         base_currency = self._record_keeper.base_currency
         if base_currency is None:
-            self._view.set_selected_amount("Error!")
+            self._view.set_selected_amount("N/A")
             return
 
         amount = base_currency.zero_amount
