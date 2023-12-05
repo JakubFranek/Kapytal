@@ -2,6 +2,7 @@ import logging
 from typing import TYPE_CHECKING
 
 from PyQt6.QtCore import QSortFilterProxyModel, Qt
+from PyQt6.QtWidgets import QWidget
 from src.models.model_objects.currency_objects import CashAmount, ExchangeRate
 from src.models.model_objects.security_objects import Security
 from src.models.online_quotes.functions import QuoteUpdateError, get_latest_quote
@@ -38,11 +39,14 @@ class QuotesUpdateFormPresenter:
     def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
         self._record_keeper = record_keeper
 
-    def show_form(self) -> None:
-        self._update_model_data()
+    def show_form(self, parent_widget: QWidget | None = None) -> None:
+        if parent_widget is not None:
+            self._view.setParent(parent_widget)
+        self._view.setWindowFlag(Qt.WindowType.Window)
+        self._reset_model_data()
         self._view.show_form()
 
-    def _update_model_data(self) -> None:
+    def _reset_model_data(self) -> None:
         exchange_rates = list(self._record_keeper.exchange_rates)
         securities = [
             security for security in self._record_keeper.securities if security.symbol

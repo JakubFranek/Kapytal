@@ -28,6 +28,7 @@ class CurrencyForm(CustomWidget, Ui_CurrencyForm):
     signal_exchange_rate_selection_changed = pyqtSignal()
     signal_data_point_selection_changed = pyqtSignal()
     signal_data_point_double_clicked = pyqtSignal()
+    signal_update_quotes = pyqtSignal()
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent=parent)
@@ -121,6 +122,7 @@ class CurrencyForm(CustomWidget, Ui_CurrencyForm):
 
         self.actionAdd_Exchange_Rate.setIcon(icons.add)
         self.actionRemove_Exchange_Rate.setIcon(icons.remove)
+        self.actionUpdate_Quotes.setIcon(icons.refresh)
 
         self.actionAdd_data.setIcon(icons.add)
         self.actionEdit_data.setIcon(icons.edit)
@@ -139,6 +141,7 @@ class CurrencyForm(CustomWidget, Ui_CurrencyForm):
         self.actionRemove_Exchange_Rate.triggered.connect(
             self.signal_remove_exchange_rate.emit
         )
+        self.actionUpdate_Quotes.triggered.connect(self.signal_update_quotes.emit)
 
         self.actionAdd_data.triggered.connect(self.signal_add_data.emit)
         self.actionEdit_data.triggered.connect(self.signal_edit_data.emit)
@@ -156,6 +159,7 @@ class CurrencyForm(CustomWidget, Ui_CurrencyForm):
         self.editRateToolButton.setDefaultAction(self.actionEdit_data)
         self.removeRateToolButton.setDefaultAction(self.actionRemove_data)
         self.loadToolButton.setDefaultAction(self.actionLoad_data)
+        self.updateQuotesToolButton.setDefaultAction(self.actionUpdate_Quotes)
 
     def show_form(self) -> None:
         super().show_form()

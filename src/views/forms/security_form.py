@@ -30,6 +30,7 @@ class SecurityForm(CustomWidget, Ui_SecurityForm):
     signal_price_selection_changed = pyqtSignal()
     signal_security_table_double_clicked = pyqtSignal()
     signal_price_table_double_clicked = pyqtSignal()
+    signal_update_quotes = pyqtSignal()
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent=parent)
@@ -48,6 +49,7 @@ class SecurityForm(CustomWidget, Ui_SecurityForm):
         self.actionAdd_Security.setIcon(icons.add)
         self.actionRemove_Security.setIcon(icons.remove)
         self.actionEdit_Security.setIcon(icons.edit)
+        self.actionUpdate_Quotes.setIcon(icons.refresh)
 
         self.actionAdd_Price.setIcon(icons.add)
         self.actionEdit_Price.setIcon(icons.edit)
@@ -58,11 +60,13 @@ class SecurityForm(CustomWidget, Ui_SecurityForm):
         self.actionEdit_Price.triggered.connect(self.signal_edit_price.emit)
         self.actionRemove_Price.triggered.connect(self.signal_remove_prices.emit)
         self.actionLoad_Price_Data.triggered.connect(self.signal_load_price_data.emit)
+        self.actionUpdate_Quotes.triggered.connect(self.signal_update_quotes.emit)
 
         self.addPriceToolButton.setDefaultAction(self.actionAdd_Price)
         self.editPriceToolButton.setDefaultAction(self.actionEdit_Price)
         self.removePriceToolButton.setDefaultAction(self.actionRemove_Price)
         self.loadPriceDataToolButton.setDefaultAction(self.actionLoad_Price_Data)
+        self.updateQuotesToolButton.setDefaultAction(self.actionUpdate_Quotes)
 
         self.manageSearchLineEdit.addAction(
             icons.magnifier, QLineEdit.ActionPosition.LeadingPosition
