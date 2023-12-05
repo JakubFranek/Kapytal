@@ -64,7 +64,7 @@ class SecurityItem:
             except ConversionFactorNotFoundError:
                 self.base_amount = "Error!"
         else:
-            self.base_amount = "Error!"
+            self.base_amount = "N/A"
 
         avg_price = CashAmount(0, self.security.currency)
         for account in self.accounts:
@@ -101,7 +101,7 @@ class AccountItem:
             except ConversionFactorNotFoundError:
                 self.base_amount = "Error!"
         else:
-            self.base_amount = "Error!"
+            self.base_amount = "N/A"
 
         self.gain_native = self.native_amount - avg_price * shares
         self.gain_base = self.gain_native.convert(base_currency)

@@ -271,7 +271,7 @@ class AccountTreePresenter:
             except ConversionFactorNotFoundError:
                 total = "Error!"
         else:
-            total = "Error!"
+            total = "N/A"
         self._view.set_checked_account_balance(total)
 
     def set_check_state_all(self, *, visible: bool) -> None:

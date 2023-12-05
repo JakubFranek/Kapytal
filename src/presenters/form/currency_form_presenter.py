@@ -64,21 +64,29 @@ class CurrencyFormPresenter:
         self._currency_selection_changed()
 
     def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
-        self._currency_table_model.pre_reset_model()
-        self._exchange_rate_table_model.pre_reset_model()
-        self._exchange_rate_history_model.pre_reset_model()
         self._record_keeper = record_keeper
+
+        self._currency_table_model.pre_reset_model()
         self._currency_table_model.load_data(
             record_keeper.currencies, record_keeper.base_currency
         )
-        self.update_exchange_rate_table_data()
-        self._exchange_rate_history_model.load_data(())
         self._currency_table_model.post_reset_model()
+
+        self._exchange_rate_table_model.pre_reset_model()
+        self.update_exchange_rate_table_data()
         self._exchange_rate_table_model.post_reset_model()
+
+        self._exchange_rate_history_model.pre_reset_model()
+        self._exchange_rate_history_model.load_data(())
         self._exchange_rate_history_model.post_reset_model()
 
         self._exchange_rate_selection_changed()
         self._update_chart(None)
+
+    def data_changed(self) -> None:
+        self._exchange_rate_table_model.pre_reset_model()
+        self.update_exchange_rate_table_data()
+        self._exchange_rate_table_model.post_reset_model()
 
     def update_exchange_rate_table_data(self) -> None:
         stats = self._calculate_exchange_rate_stats(self._record_keeper.exchange_rates)
