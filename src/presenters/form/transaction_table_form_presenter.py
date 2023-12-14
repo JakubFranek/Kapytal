@@ -78,15 +78,21 @@ class TransactionTableFormPresenter:
         self._proxy.setFilterKeyColumn(-1)
         self._model = TransactionTableModel(self._form.table_view, self._proxy, None)
         self._proxy.setSourceModel(self._model)
+
         self._form.table_view.setModel(self._proxy)
+
         self._form.signal_edit.connect(self._edit_transactions)
         self._form.signal_add_tags.connect(self._add_tags)
         self._form.signal_remove_tags.connect(self._remove_tags)
         self._form.signal_widget_closed.connect(self.event_form_closed)
         self._form.signal_search_text_changed.connect(self._filter)
+        self._form.signal_selection_changed.connect(
+            self._update_selected_transactions_amount
+        )
 
         self._initialize_presenters()
         self._connect_events()
+        self._form.finalize_setup()
 
     def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
         self._record_keeper = record_keeper
@@ -127,6 +133,9 @@ class TransactionTableFormPresenter:
             self._update_table_columns()
             self._form.table_view.resizeColumnsToContents()
             self._form.set_window_title(title)
+
+            self._update_number_of_shown_transactions()
+            self._update_selected_transactions_amount()
 
             self._form.setParent(parent, Qt.WindowType.Window)
             self._form.show_form()
@@ -288,8 +297,32 @@ class TransactionTableFormPresenter:
     def _update_model_data(self) -> None:
         self._update_table_columns()
         self._form.table_view.resizeColumnsToContents()
+        self._update_number_of_shown_transactions()
+        self._update_selected_transactions_amount()
 
     def _filter(self, pattern: str) -> None:
         if ("[" in pattern and "]" not in pattern) or "[]" in pattern:
             return
         self._proxy.setFilterWildcard(pattern)
+        self._update_number_of_shown_transactions()
+
+    def _update_number_of_shown_transactions(self) -> None:
+        n_visible = self._proxy.rowCount()
+        n_total = self._model.rowCount()
+        self._form.set_shown_transactions(n_visible, n_total)
+
+    def _update_selected_transactions_amount(self) -> None:
+        transactions = self._model.get_selected_items()
+
+        base_currency = self._record_keeper.base_currency
+        if base_currency is None:
+            self._form.set_selected_amount("N/A")
+            return
+
+        amount = base_currency.zero_amount
+        for transaction in transactions:
+            if isinstance(transaction, CashTransaction | RefundTransaction):
+                _amount = transaction.get_amount(transaction.account)
+                amount += _amount.convert(base_currency, transaction.datetime_.date())
+
+        self._form.set_selected_amount(amount.to_str_rounded())

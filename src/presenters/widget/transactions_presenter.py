@@ -622,7 +622,7 @@ class TransactionsPresenter:
         for transaction in transactions:
             if isinstance(transaction, CashTransaction | RefundTransaction):
                 _amount = transaction.get_amount(transaction.account)
-                amount += _amount.convert(base_currency)
+                amount += _amount.convert(base_currency, transaction.datetime_.date())
 
         self._view.set_selected_amount(amount.to_str_rounded())
 

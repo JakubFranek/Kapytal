@@ -31,9 +31,29 @@ class Ui_TableViewForm(object):
         self.tableView.horizontalHeader().setStretchLastSection(True)
         self.tableView.verticalHeader().setVisible(False)
         self.verticalLayout.addWidget(self.tableView)
+        self.horizontalLayout = QtWidgets.QHBoxLayout()
+        self.horizontalLayout.setObjectName("horizontalLayout")
+        self.shownTransactionsLabel = QtWidgets.QLabel(TableViewForm)
+        self.shownTransactionsLabel.setObjectName("shownTransactionsLabel")
+        self.horizontalLayout.addWidget(self.shownTransactionsLabel)
+        self.line = QtWidgets.QFrame(TableViewForm)
+        self.line.setFrameShape(QtWidgets.QFrame.Shape.VLine)
+        self.line.setFrameShadow(QtWidgets.QFrame.Shadow.Sunken)
+        self.line.setObjectName("line")
+        self.horizontalLayout.addWidget(self.line)
+        self.selectedTransactionsTotalLabel = QtWidgets.QLabel(TableViewForm)
+        self.selectedTransactionsTotalLabel.setObjectName("selectedTransactionsTotalLabel")
+        self.horizontalLayout.addWidget(self.selectedTransactionsTotalLabel)
+        spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Minimum)
+        self.horizontalLayout.addItem(spacerItem)
+        self.verticalLayout.addLayout(self.horizontalLayout)
 
         self.retranslateUi(TableViewForm)
         QtCore.QMetaObject.connectSlotsByName(TableViewForm)
 
     def retranslateUi(self, TableViewForm):
-        pass
+        _translate = QtCore.QCoreApplication.translate
+        self.shownTransactionsLabel.setToolTip(_translate("TableViewForm", "<html><head/><body><p>Shows how many Transactions have passed the Transaction Filter and are listed in Transaction Table.</p></body></html>"))
+        self.shownTransactionsLabel.setText(_translate("TableViewForm", "Showing Transactions: 0 / 0"))
+        self.selectedTransactionsTotalLabel.setToolTip(_translate("TableViewForm", "<html><head/><body><p>Only Income, Expense and Refund Transaction amounts are used in the calculation.</p></body></html>"))
+        self.selectedTransactionsTotalLabel.setText(_translate("TableViewForm", "Selected Transactions Total: ??? XXX "))

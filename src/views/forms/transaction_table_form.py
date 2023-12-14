@@ -11,6 +11,7 @@ class TransactionTableForm(CustomWidget, Ui_TableViewForm):
     signal_add_tags = pyqtSignal()
     signal_remove_tags = pyqtSignal()
     signal_search_text_changed = pyqtSignal(str)
+    signal_selection_changed = pyqtSignal()
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent=parent)
@@ -42,12 +43,27 @@ class TransactionTableForm(CustomWidget, Ui_TableViewForm):
 
         self.tableView.doubleClicked.connect(self.signal_edit.emit)
 
+    def finalize_setup(self) -> None:
+        self.tableView.selectionModel().selectionChanged.connect(
+            self.signal_selection_changed.emit
+        )
+
     @property
     def table_view(self) -> QTableView:
         return self.tableView
 
     def set_window_title(self, window_title: str) -> None:
         self.setWindowTitle(window_title)
+
+    def set_shown_transactions(self, shown: int, total: int) -> None:
+        self.shownTransactionsLabel.setText(
+            f"Showing Transactions: {shown:,} / {total:,}"
+        )
+
+    def set_selected_amount(self, amount: str) -> None:
+        self.selectedTransactionsTotalLabel.setText(
+            f"Selected Transactions Total: {amount}"
+        )
 
     def _create_context_menu(self, event: QContextMenuEvent) -> None:  # noqa: ARG002
         self.menu = QMenu(self)
