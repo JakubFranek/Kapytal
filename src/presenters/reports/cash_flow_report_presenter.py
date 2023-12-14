@@ -159,6 +159,7 @@ class CashFlowReportPresenter:
 
         self._report = CashFlowTotalReport(self._main_view)
         self._report.event_show_transactions.append(self._show_total_transactions)
+        self._report.signal_recalculate_report.connect(self._recalculate_total_report)
         self._report.load_stats(cash_flow_stats)
         self._report.show_form()
 
@@ -242,7 +243,7 @@ class CashFlowReportPresenter:
         )
         self._report.signal_show_transactions.connect(self._show_transactions)
         self._report.signal_recalculate_report.connect(
-            lambda: self._recalculate_report(period_type, title)
+            lambda: self._recalculate_periodic_report(period_type, title)
         )
         self._report.signal_selection_changed.connect(self._selection_changed)
         self._report.load_stats(cash_flow_stats)
@@ -256,6 +257,7 @@ class CashFlowReportPresenter:
             path,
         ) = self._report.get_selected_transactions()
         title = f"Cash Flow Report - {path}, {period}"
+
         transaction_table_form_presenter = (
             self._transactions_presenter.transaction_table_form_presenter
         )
@@ -265,6 +267,7 @@ class CashFlowReportPresenter:
         transaction_table_form_presenter.event_form_closed.append(
             self._on_transaction_table_form_close
         )
+
         transaction_table_form_presenter.show_data(transactions, title, self._report)
 
     def _show_total_transactions(self, group: TransactionGroup) -> None:
@@ -308,9 +311,13 @@ class CashFlowReportPresenter:
         )
         transaction_table_form_presenter.show_data(transactions, title, self._report)
 
-    def _recalculate_report(self, period_type: PeriodType, title: str) -> None:
+    def _recalculate_periodic_report(self, period_type: PeriodType, title: str) -> None:
         self._report.close()
         self._create_periodic_cash_flow_report_with_busy_dialog(period_type, title)
+
+    def _recalculate_total_report(self) -> None:
+        self._report.close()
+        self._create_total_cash_flow_report_with_busy_dialog()
 
     def _selection_changed(
         self,

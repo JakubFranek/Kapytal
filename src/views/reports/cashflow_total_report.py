@@ -1,6 +1,6 @@
 from enum import Enum, auto
 
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtWidgets import QWidget
 from src.models.statistics.cashflow_stats import CashFlowStats
 from src.presenters.utilities.event import Event
@@ -25,6 +25,7 @@ class TransactionGroup(Enum):
 
 class CashFlowTotalReport(CustomWidget, Ui_CashFlowTotalReport):
     event_show_transactions = Event()  # called with TransactionGroup argument
+    signal_recalculate_report = pyqtSignal()
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent=parent)
@@ -37,8 +38,9 @@ class CashFlowTotalReport(CustomWidget, Ui_CashFlowTotalReport):
         self.horizontalLayout.addWidget(self.chart_widget)
 
         self._initialize_actions()
+        self.set_recalculate_report_action_state(enabled=False)
 
-        self.resize(1120, 600)
+        self.resize(1130, 600)
 
     def load_stats(self, stats: CashFlowStats) -> None:
         self.incomeAmountLabel.setText(stats.incomes.balance.to_str_rounded())
@@ -164,6 +166,10 @@ class CashFlowTotalReport(CustomWidget, Ui_CashFlowTotalReport):
 
         self.chart_widget.load_data(stats)
 
+    def set_recalculate_report_action_state(self, *, enabled: bool) -> None:
+        self.actionRecalculate_Report.setEnabled(enabled)
+        self.recalculateToolButton.setVisible(enabled)
+
     def _initialize_actions(self) -> None:
         self.actionShow_Income_Transactions.setIcon(icons.table)
         self.actionShow_Inward_Transfers.setIcon(icons.table)
@@ -173,6 +179,7 @@ class CashFlowTotalReport(CustomWidget, Ui_CashFlowTotalReport):
         self.actionShow_Outward_Transfers.setIcon(icons.table)
         self.actionShow_Outflow_Transactions.setIcon(icons.table)
         self.actionShow_All_Transactions.setIcon(icons.table)
+        self.actionRecalculate_Report.setIcon(icons.refresh)
 
         self.actionShow_Income_Transactions.triggered.connect(
             lambda: self.event_show_transactions(TransactionGroup.INCOME)
@@ -198,6 +205,9 @@ class CashFlowTotalReport(CustomWidget, Ui_CashFlowTotalReport):
         self.actionShow_All_Transactions.triggered.connect(
             lambda: self.event_show_transactions(TransactionGroup.CASHFLOW)
         )
+        self.actionRecalculate_Report.triggered.connect(
+            self.signal_recalculate_report.emit
+        )
 
         self.incomeToolButton.setDefaultAction(self.actionShow_Income_Transactions)
         self.inwardTransfersToolButton.setDefaultAction(
@@ -213,3 +223,4 @@ class CashFlowTotalReport(CustomWidget, Ui_CashFlowTotalReport):
             self.actionShow_Outflow_Transactions
         )
         self.cashflowToolButton.setDefaultAction(self.actionShow_All_Transactions)
+        self.recalculateToolButton.setDefaultAction(self.actionRecalculate_Report)
