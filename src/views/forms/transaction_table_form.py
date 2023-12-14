@@ -1,6 +1,6 @@
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QAction, QContextMenuEvent, QCursor
-from PyQt6.QtWidgets import QMenu, QTableView, QWidget
+from PyQt6.QtWidgets import QLineEdit, QMenu, QTableView, QWidget
 from src.views import icons
 from src.views.base_classes.custom_widget import CustomWidget
 from src.views.ui_files.forms.Ui_table_view_form import Ui_TableViewForm
@@ -10,6 +10,7 @@ class TransactionTableForm(CustomWidget, Ui_TableViewForm):
     signal_edit = pyqtSignal()
     signal_add_tags = pyqtSignal()
     signal_remove_tags = pyqtSignal()
+    signal_search_text_changed = pyqtSignal(str)
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent=parent)
@@ -17,7 +18,7 @@ class TransactionTableForm(CustomWidget, Ui_TableViewForm):
         self.setWindowFlag(Qt.WindowType.Window)
         self.setWindowIcon(icons.table)
 
-        self.resize(600, 600)
+        self.resize(800, 500)
 
         self.tableView.contextMenuEvent = self._create_context_menu
 
@@ -32,6 +33,12 @@ class TransactionTableForm(CustomWidget, Ui_TableViewForm):
         self.actionRemoveTags = QAction("Remove Tags", self)
         self.actionRemoveTags.setIcon(icons.remove_tag)
         self.actionRemoveTags.triggered.connect(self.signal_remove_tags.emit)
+
+        self.searchLineEdit.addAction(
+            icons.magnifier, QLineEdit.ActionPosition.LeadingPosition
+        )
+        self.searchLineEdit.setPlaceholderText("Search Transactions")
+        self.searchLineEdit.textChanged.connect(self.signal_search_text_changed.emit)
 
         self.tableView.doubleClicked.connect(self.signal_edit.emit)
 

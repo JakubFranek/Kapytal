@@ -73,6 +73,9 @@ class TransactionTableFormPresenter:
         self._proxy = QSortFilterProxyModel(self._form)
         self._proxy.setSortRole(Qt.ItemDataRole.UserRole)
         self._proxy.setSortCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+        self._proxy.setFilterRole(Qt.ItemDataRole.DisplayRole)
+        self._proxy.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+        self._proxy.setFilterKeyColumn(-1)
         self._model = TransactionTableModel(self._form.table_view, self._proxy, None)
         self._proxy.setSourceModel(self._model)
         self._form.table_view.setModel(self._proxy)
@@ -80,6 +83,7 @@ class TransactionTableFormPresenter:
         self._form.signal_add_tags.connect(self._add_tags)
         self._form.signal_remove_tags.connect(self._remove_tags)
         self._form.signal_widget_closed.connect(self.event_form_closed)
+        self._form.signal_search_text_changed.connect(self._filter)
 
         self._initialize_presenters()
         self._connect_events()
@@ -284,3 +288,8 @@ class TransactionTableFormPresenter:
     def _update_model_data(self) -> None:
         self._update_table_columns()
         self._form.table_view.resizeColumnsToContents()
+
+    def _filter(self, pattern: str) -> None:
+        if ("[" in pattern and "]" not in pattern) or "[]" in pattern:
+            return
+        self._proxy.setFilterWildcard(pattern)
