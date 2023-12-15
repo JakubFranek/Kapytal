@@ -4,6 +4,7 @@ from PyQt6.QtCore import QSortFilterProxyModel
 from PyQt6.QtWidgets import QWidget
 from pytestqt.modeltest import ModelTester
 from pytestqt.qtbot import QtBot
+from src.presenters.form.security_form_presenter import SecurityFormPresenter
 from src.utilities import constants
 from src.view_models.security_table_model import SecurityTableModel
 from src.views import icons
@@ -23,10 +24,13 @@ def test_security_table_model(qtbot: QtBot, qtmodeltester: ModelTester) -> None:
     security_form = SecurityForm(parent)
     record_keeper = get_preloaded_record_keeper_with_various_transactions()
 
+    presenter = SecurityFormPresenter(view=security_form, record_keeper=record_keeper)
+    returns = presenter._calculate_security_returns(record_keeper.securities)
+
     model = SecurityTableModel(
         view=security_form.securityTableView,
         proxy=QSortFilterProxyModel(),
     )
-    model.load_securities(record_keeper.securities)
+    model.load_securities(record_keeper.securities, returns)
 
     qtmodeltester.check(model)

@@ -95,7 +95,7 @@ def test_creation(  # noqa: PLR0913
 
     dt_created_diff = cash_transaction.datetime_created - dt_start
 
-    assert cash_transaction.description == description
+    assert cash_transaction.description == description.strip()
     assert cash_transaction.datetime_ == datetime_
     assert cash_transaction.type_ == type_
     assert cash_transaction.account == account
