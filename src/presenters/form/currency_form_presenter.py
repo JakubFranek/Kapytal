@@ -4,6 +4,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from pathlib import Path
 
+from dateutil.relativedelta import relativedelta
 from PyQt6.QtCore import QSortFilterProxyModel, Qt
 from PyQt6.QtWidgets import QApplication
 from src.models.custom_exceptions import InvalidOperationError
@@ -28,73 +29,89 @@ from src.views.utilities.message_box_functions import ask_yes_no_question
 class CurrencyFormPresenter:
     event_data_changed = Event()
     event_base_currency_changed = Event()
+    event_update_quotes = Event()
 
     def __init__(self, view: CurrencyForm, record_keeper: RecordKeeper) -> None:
-        self._view = view
+        self.view = view
         self._record_keeper = record_keeper
 
         self._initialize_models()
 
-        self._view.signal_add_currency.connect(self._run_add_currency_dialog)
-        self._view.signal_set_base_currency.connect(self._set_base_currency)
-        self._view.signal_remove_currency.connect(self._remove_currency)
-        self._view.signal_add_exchange_rate.connect(self._run_add_exchange_rate_dialog)
-        self._view.signal_remove_exchange_rate.connect(self._remove_exchange_rate)
-        self._view.signal_add_data.connect(self._run_add_data_point_dialog)
-        self._view.signal_edit_data.connect(self._run_edit_data_point_dialog)
-        self._view.signal_remove_data.connect(self._remove_data_points)
-        self._view.signal_load_data.connect(self._run_load_data_dialog)
+        self.view.signal_add_currency.connect(self._run_add_currency_dialog)
+        self.view.signal_set_base_currency.connect(self._set_base_currency)
+        self.view.signal_remove_currency.connect(self._remove_currency)
+        self.view.signal_add_exchange_rate.connect(self._run_add_exchange_rate_dialog)
+        self.view.signal_remove_exchange_rate.connect(self._remove_exchange_rate)
+        self.view.signal_add_data.connect(self._run_add_data_point_dialog)
+        self.view.signal_edit_data.connect(self._run_edit_data_point_dialog)
+        self.view.signal_remove_data.connect(self._remove_data_points)
+        self.view.signal_load_data.connect(self._run_load_data_dialog)
 
-        self._view.finalize_setup()
+        self.view.finalize_setup()
 
-        self._view.signal_exchange_rate_selection_changed.connect(
+        self.view.signal_exchange_rate_selection_changed.connect(
             self._exchange_rate_selection_changed
         )
-        self._view.signal_currency_selection_changed.connect(
+        self.view.signal_currency_selection_changed.connect(
             self._currency_selection_changed
         )
-        self._view.signal_data_point_selection_changed.connect(
+        self.view.signal_data_point_selection_changed.connect(
             self._data_point_selection_changed
         )
-        self._view.signal_data_point_double_clicked.connect(
+        self.view.signal_data_point_double_clicked.connect(
             self._run_edit_data_point_dialog
         )
+        self.view.signal_update_quotes.connect(self.event_update_quotes)
+
         self._exchange_rate_selection_changed()
         self._currency_selection_changed()
 
     def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
-        self._currency_table_model.pre_reset_model()
-        self._exchange_rate_table_model.pre_reset_model()
-        self._exchange_rate_history_model.pre_reset_model()
         self._record_keeper = record_keeper
+
+        self._currency_table_model.pre_reset_model()
         self._currency_table_model.load_data(
             record_keeper.currencies, record_keeper.base_currency
         )
-        self._exchange_rate_table_model.load_exchange_rates(
-            record_keeper.exchange_rates
-        )
-        self._exchange_rate_history_model.load_data(())
         self._currency_table_model.post_reset_model()
+
+        self._exchange_rate_table_model.pre_reset_model()
+        self.update_exchange_rate_table_data()
         self._exchange_rate_table_model.post_reset_model()
+
+        self._exchange_rate_history_model.pre_reset_model()
+        self._exchange_rate_history_model.load_data(())
         self._exchange_rate_history_model.post_reset_model()
 
         self._exchange_rate_selection_changed()
         self._update_chart(None)
 
+    def data_changed(self) -> None:
+        self._exchange_rate_table_model.pre_reset_model()
+        self.update_exchange_rate_table_data()
+        self._exchange_rate_table_model.post_reset_model()
+
+    def update_exchange_rate_table_data(self) -> None:
+        stats = self._calculate_exchange_rate_stats(self._record_keeper.exchange_rates)
+        self._exchange_rate_table_model.load_data(
+            self._record_keeper.exchange_rates, stats
+        )
+        self._set_exchange_rate_table_column_visibility()
+
     def show_form(self) -> None:
         self._busy_dialog = create_simple_busy_indicator(
-            self._view, "Preparing Currencies and Exchange Rates form, please wait..."
+            self.view, "Preparing Currencies and Exchange Rates form, please wait..."
         )
         self._busy_dialog.open()
         QApplication.processEvents()
 
         if self._exchange_rate_table_model.get_selected_item() is None:
-            self._view.exchangeRateTable.selectRow(0)
-        self._view.show_form()
+            self.view.exchangeRateTable.selectRow(0)
+        self.view.show_form()
         self._busy_dialog.close()
 
     def _run_add_currency_dialog(self) -> None:
-        self._dialog = CurrencyDialog(self._view)
+        self._dialog = CurrencyDialog(self.view)
         self._dialog.signal_ok.connect(self._add_currency)
         logging.debug("Running CurrencyDialog")
         self._dialog.exec()
@@ -138,7 +155,7 @@ class CurrencyFormPresenter:
         )
         self.event_base_currency_changed()
         self.event_data_changed()
-        self._view.refresh_currency_table()
+        self.view.refresh_currency_table()
 
     def _remove_currency(self) -> None:
         previous_base_currency = self._record_keeper.base_currency
@@ -170,7 +187,7 @@ class CurrencyFormPresenter:
             )
             return
 
-        self._dialog = AddExchangeRateDialog(currency_codes=codes, parent=self._view)
+        self._dialog = AddExchangeRateDialog(currency_codes=codes, parent=self.view)
         self._dialog.signal_ok.connect(self._add_exchange_rate)
         logging.debug("Running AddExchangeRateDialog")
         self._dialog.exec()
@@ -187,9 +204,7 @@ class CurrencyFormPresenter:
             return
 
         self._exchange_rate_table_model.pre_add()
-        self._exchange_rate_table_model.load_exchange_rates(
-            self._record_keeper.exchange_rates
-        )
+        self.update_exchange_rate_table_data()
         self._exchange_rate_table_model.post_add()
         self._dialog.close()
         self.event_data_changed()
@@ -203,7 +218,7 @@ class CurrencyFormPresenter:
             "ExchangeRate deletion requested, asking the user for confirmation"
         )
         if not ask_yes_no_question(
-            self._view,
+            self.view,
             question=f"Do you want to delete the {exchange_rate!s} exchange rate?",
             title="Are you sure?",
         ):
@@ -218,9 +233,7 @@ class CurrencyFormPresenter:
             return
 
         self._exchange_rate_table_model.pre_remove_item(exchange_rate)
-        self._exchange_rate_table_model.load_exchange_rates(
-            self._record_keeper.exchange_rates
-        )
+        self.update_exchange_rate_table_data()
         self._exchange_rate_table_model.post_remove_item()
         self.event_data_changed()
 
@@ -241,7 +254,7 @@ class CurrencyFormPresenter:
             max_date=today,
             exchange_rate=exchange_rate_code,
             value=last_value,
-            parent=self._view,
+            parent=self.view,
             edit=False,
         )
         self._dialog.signal_ok.connect(self._set_exchange_rate)
@@ -263,7 +276,7 @@ class CurrencyFormPresenter:
             max_date=datetime.now(user_settings.settings.time_zone).date(),
             exchange_rate=exchange_rate_code,
             value=value,
-            parent=self._view,
+            parent=self.view,
             edit=True,
         )
         self._dialog.signal_ok.connect(self._set_exchange_rate)
@@ -338,7 +351,7 @@ class CurrencyFormPresenter:
             "asking the user for confirmation"
         )
         if not ask_yes_no_question(
-            self._view,
+            self.view,
             question=(
                 f"Do you want to delete {len(selected_data_points):,} data point(s) "
                 f"for {exchange_rate!s} exchange rate?"
@@ -368,7 +381,7 @@ class CurrencyFormPresenter:
             raise InvalidOperationError(
                 "An ExchangeRate must be selected to load data points."
             )
-        self._dialog = LoadDataDialog(self._view, str(exchange_rate))
+        self._dialog = LoadDataDialog(self.view, str(exchange_rate))
         self._dialog.signal_ok.connect(self._load_data)
         logging.info(f"Running LoadDataDialog: {exchange_rate!s}")
         self._dialog.exec()
@@ -426,12 +439,12 @@ class CurrencyFormPresenter:
     def _exchange_rate_selection_changed(self) -> None:
         item = self._exchange_rate_table_model.get_selected_item()
         is_exchange_rate_selected = item is not None
-        self._view.set_exchange_rate_actions(
+        self.view.set_exchange_rate_actions(
             is_exchange_rate_selected=is_exchange_rate_selected
         )
 
         if item is not None and self._exchange_rate_selection != item:
-            self._view.set_history_group_box_title(str(item) + " history")
+            self.view.set_history_group_box_title(str(item) + " history")
             self._reset_model_and_update_chart(item)
 
         self._exchange_rate_selection = item
@@ -440,7 +453,7 @@ class CurrencyFormPresenter:
     def _currency_selection_changed(self) -> None:
         item = self._currency_table_model.get_selected_item()
         is_currency_selected = item is not None
-        self._view.set_currency_actions(is_currency_selected=is_currency_selected)
+        self.view.set_currency_actions(is_currency_selected=is_currency_selected)
 
     def _data_point_selection_changed(self) -> None:
         exchange_rate = self._exchange_rate_table_model.get_selected_item()
@@ -448,7 +461,7 @@ class CurrencyFormPresenter:
         data_points = self._exchange_rate_history_model.get_selected_values()
         is_data_point_selected = len(data_points) > 0
         is_single_data_point_selected = len(data_points) == 1
-        self._view.set_data_point_actions(
+        self.view.set_data_point_actions(
             is_exchange_rate_selected=is_exchange_rate_selected,
             is_data_point_selected=is_data_point_selected,
             is_single_data_point_selected=is_single_data_point_selected,
@@ -457,7 +470,7 @@ class CurrencyFormPresenter:
     def _reset_model_and_update_chart(self, exchange_rate: ExchangeRate) -> None:
         if not self._busy_dialog.isVisible():
             self._busy_chart_dialog = create_simple_busy_indicator(
-                self._view, "Updating Exchange Rate chart, please wait..."
+                self.view, "Updating Exchange Rate chart, please wait..."
             )
             self._busy_chart_dialog.open()
             QApplication.processEvents()
@@ -474,39 +487,85 @@ class CurrencyFormPresenter:
 
     def _update_chart(self, exchange_rate: ExchangeRate | None) -> None:
         if exchange_rate is None or len(exchange_rate.rate_history_pairs) == 0:
-            self._view.load_chart_data((), (), "", 0)
+            self.view.load_chart_data((), (), "", 0)
             return
         dates, rates = zip(*exchange_rate.rate_history_pairs, strict=True)
-        self._view.load_chart_data(
+        self.view.load_chart_data(
             dates, rates, str(exchange_rate), exchange_rate.rate_decimals
         )
 
     def _initialize_models(self) -> None:
-        self._currency_table_proxy = QSortFilterProxyModel(self._view)
+        self._currency_table_proxy = QSortFilterProxyModel(self.view)
         self._currency_table_model = CurrencyTableModel(
-            self._view.currencyTable,
+            self.view.currencyTable,
             self._currency_table_proxy,
         )
         self._currency_table_proxy.setSourceModel(self._currency_table_model)
-        self._view.currencyTable.setModel(self._currency_table_proxy)
+        self.view.currencyTable.setModel(self._currency_table_proxy)
 
-        self._exchange_rate_table_proxy = QSortFilterProxyModel(self._view)
+        self._exchange_rate_table_proxy = QSortFilterProxyModel(self.view)
         self._exchange_rate_table_proxy.setSortRole(Qt.ItemDataRole.UserRole)
         self._exchange_rate_table_model = ExchangeRateTableModel(
-            self._view.exchangeRateTable,
+            self.view.exchangeRateTable,
             self._exchange_rate_table_proxy,
         )
         self._exchange_rate_table_proxy.setSourceModel(self._exchange_rate_table_model)
-        self._view.exchangeRateTable.setModel(self._exchange_rate_table_proxy)
+        self.view.exchangeRateTable.setModel(self._exchange_rate_table_proxy)
 
-        self._exchange_rate_history_proxy = QSortFilterProxyModel(self._view)
+        self._exchange_rate_history_proxy = QSortFilterProxyModel(self.view)
         self._exchange_rate_history_proxy.setSortRole(Qt.ItemDataRole.UserRole)
         self._exchange_rate_history_model = ValueTableModel(
-            self._view.exchangeRateHistoryTable,
+            self.view.exchangeRateHistoryTable,
             self._exchange_rate_history_proxy,
             ValueType.EXCHANGE_RATE,
         )
         self._exchange_rate_history_proxy.setSourceModel(
             self._exchange_rate_history_model
         )
-        self._view.exchangeRateHistoryTable.setModel(self._exchange_rate_history_proxy)
+        self.view.exchangeRateHistoryTable.setModel(self._exchange_rate_history_proxy)
+
+    def _set_exchange_rate_table_column_visibility(self) -> None:
+        for column in range(self._exchange_rate_table_model.columnCount()):
+            column_empty = self._exchange_rate_table_model.is_column_empty(column)
+            self.view.exchangeRateTable.setColumnHidden(column, column_empty)
+
+    def _calculate_exchange_rate_stats(
+        self, exchange_rates: list[ExchangeRate]
+    ) -> dict[ExchangeRate, dict[str, Decimal]]:
+        today = datetime.now(user_settings.settings.time_zone).date()
+        periods = {
+            "1D": (today - relativedelta(days=1), today),
+            "7D": (today - relativedelta(days=7), today),
+            "1M": (today - relativedelta(months=1), today),
+            "3M": (today - relativedelta(months=3), today),
+            "6M": (today - relativedelta(months=6), today),
+            "1Y": (today - relativedelta(years=1), today),
+            "2Y": (today - relativedelta(years=2), today),
+            "3Y": (today - relativedelta(years=3), today),
+            "5Y": (today - relativedelta(years=5), today),
+            "7Y": (today - relativedelta(years=7), today),
+            "10Y": (today - relativedelta(years=10), today),
+            "Total": (None, today),
+        }
+
+        returns = {
+            exchange_rate: {
+                period: exchange_rate.calculate_return(start, end)
+                for period, (start, end) in periods.items()
+            }
+            for exchange_rate in exchange_rates
+        }
+
+        # add annualized Total period to returns
+        for exchange_rate in exchange_rates:
+            return_total = returns[exchange_rate]["Total"] / 100
+            days = (exchange_rate.latest_date - exchange_rate.earliest_date).days
+            if days == 0:
+                returns[exchange_rate]["Total p.a."] = Decimal(0)
+                continue
+            exponent = Decimal(365) / Decimal(days)
+            returns[exchange_rate]["Total p.a."] = 100 * (
+                ((1 + return_total) ** exponent) - 1
+            )
+
+        return returns

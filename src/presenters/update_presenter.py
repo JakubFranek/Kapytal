@@ -48,6 +48,17 @@ class UpdatePresenter:
                     title="No response from GitHub",
                 )
             return
+        except ConnectionError:
+            logging.warning("Connection error while checking for updates")
+            if not silent:
+                display_error_message(
+                    text=(
+                        "Connection error occured while checking for updates. Please "
+                        "make sure you have an internet connection and try again."
+                    ),
+                    title="No response from GitHub",
+                )
+            return
 
         response_json = response.json()
         if response.status_code != API_STATUS_SUCCESS:

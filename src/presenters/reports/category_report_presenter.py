@@ -249,7 +249,15 @@ class CategoryReportPresenter:
     def _filter(self, pattern: str) -> None:
         if ("[" in pattern and "]" not in pattern) or "[]" in pattern:
             return
+
+        # needed to prevent crash when filtering when any cell is selected
+        self._report.treeView.selectionModel().clearSelection()
+
         self._proxy.setFilterWildcard(pattern)
+
+        # needed to prevent selecting cells when filtering unpredictably
+        self._report.treeView.selectionModel().clearSelection()
+
         self._report.treeView.expandAll()
 
 

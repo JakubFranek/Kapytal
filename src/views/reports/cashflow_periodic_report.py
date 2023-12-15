@@ -2,7 +2,7 @@ from collections.abc import Collection
 
 from PyQt6.QtCore import QSortFilterProxyModel, Qt, pyqtSignal
 from PyQt6.QtGui import QContextMenuEvent, QCursor
-from PyQt6.QtWidgets import QApplication, QComboBox, QMenu, QWidget
+from PyQt6.QtWidgets import QApplication, QMenu, QWidget
 from src.models.base_classes.transaction import Transaction
 from src.models.statistics.cashflow_stats import CashFlowStats
 from src.presenters.utilities.handle_exception import handle_exception

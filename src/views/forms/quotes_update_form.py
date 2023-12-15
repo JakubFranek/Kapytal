@@ -1,5 +1,6 @@
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtWidgets import QTableView, QWidget
+from PyQt6.QtGui import QCloseEvent
+from PyQt6.QtWidgets import QLineEdit, QTableView, QWidget
 from src.views import icons
 from src.views.base_classes.custom_widget import CustomWidget
 from src.views.ui_files.forms.Ui_quotes_update_form import Ui_QuotesUpdateForm
@@ -11,12 +12,16 @@ class QuotesUpdateForm(CustomWidget, Ui_QuotesUpdateForm):
     signal_save = pyqtSignal()
     signal_select_all = pyqtSignal()
     signal_unselect_all = pyqtSignal()
+    signal_exit = pyqtSignal()
+    signal_search_text_changed = pyqtSignal(str)
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.setupUi(self)
         self.setWindowFlag(Qt.WindowType.Window)
         self.setWindowIcon(icons.refresh)
+
+        self._close_allowed = False
 
         self.downloadQuotesPushButton.clicked.connect(self.signal_download.emit)
         self.saveQuotesPushButton.clicked.connect(self.signal_save.emit)
@@ -32,9 +37,25 @@ class QuotesUpdateForm(CustomWidget, Ui_QuotesUpdateForm):
 
         self.helpPushButton.clicked.connect(self._show_help)
 
+        self.searchLineEdit.textChanged.connect(self.signal_search_text_changed.emit)
+
+        self.searchLineEdit.addAction(
+            icons.magnifier, QLineEdit.ActionPosition.LeadingPosition
+        )
+
     @property
     def table_view(self) -> QTableView:
         return self.tableView
+
+    def closeEvent(self, event: QCloseEvent) -> None:
+        self.signal_exit.emit()
+        if not self._close_allowed:
+            event.ignore()
+        else:
+            super().closeEvent(event)
+
+    def set_close_allowed(self, *, allowed: bool) -> None:
+        self._close_allowed = allowed
 
     def set_button_state(self, *, download: bool, save: bool) -> None:
         self.downloadQuotesPushButton.setEnabled(download)

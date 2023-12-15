@@ -615,14 +615,14 @@ class TransactionsPresenter:
     ) -> None:
         base_currency = self._record_keeper.base_currency
         if base_currency is None:
-            self._view.set_selected_amount("Error!")
+            self._view.set_selected_amount("N/A")
             return
 
         amount = base_currency.zero_amount
         for transaction in transactions:
             if isinstance(transaction, CashTransaction | RefundTransaction):
                 _amount = transaction.get_amount(transaction.account)
-                amount += _amount.convert(base_currency)
+                amount += _amount.convert(base_currency, transaction.datetime_.date())
 
         self._view.set_selected_amount(amount.to_str_rounded())
 

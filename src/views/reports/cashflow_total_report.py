@@ -1,6 +1,9 @@
-from PyQt6.QtCore import Qt
+from enum import Enum, auto
+
+from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtWidgets import QWidget
 from src.models.statistics.cashflow_stats import CashFlowStats
+from src.presenters.utilities.event import Event
 from src.views import colors, icons
 from src.views.base_classes.custom_widget import CustomWidget
 from src.views.ui_files.reports.Ui_cash_flow_total_report import Ui_CashFlowTotalReport
@@ -9,7 +12,21 @@ from src.views.widgets.charts.cash_flow_total_chart_view import (
 )
 
 
+class TransactionGroup(Enum):
+    INCOME = auto()
+    INWARD_TRANSFER = auto()
+    REFUND = auto()
+    INFLOWS = auto()
+    OUTWARD_TRANSFER = auto()
+    EXPENSE = auto()
+    OUTFLOWS = auto()
+    CASHFLOW = auto()
+
+
 class CashFlowTotalReport(CustomWidget, Ui_CashFlowTotalReport):
+    event_show_transactions = Event()  # called with TransactionGroup argument
+    signal_recalculate_report = pyqtSignal()
+
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent=parent)
         self.setupUi(self)
@@ -20,7 +37,10 @@ class CashFlowTotalReport(CustomWidget, Ui_CashFlowTotalReport):
         self.chart_widget = CashFlowTotalChartView(self)
         self.horizontalLayout.addWidget(self.chart_widget)
 
-        self.resize(1115, 600)
+        self._initialize_actions()
+        self.set_recalculate_report_action_state(enabled=False)
+
+        self.resize(1130, 600)
 
     def load_stats(self, stats: CashFlowStats) -> None:
         self.incomeAmountLabel.setText(stats.incomes.balance.to_str_rounded())
@@ -121,4 +141,86 @@ class CashFlowTotalReport(CustomWidget, Ui_CashFlowTotalReport):
         elif stats.delta_total.is_negative():
             self.netGrowthAmountLabel.setStyleSheet(f"color: {colors.get_red().name()}")
 
+        self.actionShow_Income_Transactions.setEnabled(
+            len(stats.incomes.transactions) > 0
+        )
+        self.actionShow_Inward_Transfers.setEnabled(
+            len(stats.inward_transfers.transactions) > 0
+        )
+        self.actionShow_Refunds.setEnabled(len(stats.refunds.transactions) > 0)
+        self.actionShow_Inflow_Transactions.setEnabled(
+            len(stats.inflows.transactions) > 0
+        )
+        self.actionShow_Expense_Transactions.setEnabled(
+            len(stats.expenses.transactions) > 0
+        )
+        self.actionShow_Outward_Transfers.setEnabled(
+            len(stats.outward_transfers.transactions) > 0
+        )
+        self.actionShow_Outflow_Transactions.setEnabled(
+            len(stats.outflows.transactions) > 0
+        )
+        self.actionShow_All_Transactions.setEnabled(
+            len(stats.inflows) > 0 or len(stats.outflows) > 0
+        )
+
         self.chart_widget.load_data(stats)
+
+    def set_recalculate_report_action_state(self, *, enabled: bool) -> None:
+        self.actionRecalculate_Report.setEnabled(enabled)
+        self.recalculateToolButton.setVisible(enabled)
+
+    def _initialize_actions(self) -> None:
+        self.actionShow_Income_Transactions.setIcon(icons.table)
+        self.actionShow_Inward_Transfers.setIcon(icons.table)
+        self.actionShow_Refunds.setIcon(icons.table)
+        self.actionShow_Inflow_Transactions.setIcon(icons.table)
+        self.actionShow_Expense_Transactions.setIcon(icons.table)
+        self.actionShow_Outward_Transfers.setIcon(icons.table)
+        self.actionShow_Outflow_Transactions.setIcon(icons.table)
+        self.actionShow_All_Transactions.setIcon(icons.table)
+        self.actionRecalculate_Report.setIcon(icons.refresh)
+
+        self.actionShow_Income_Transactions.triggered.connect(
+            lambda: self.event_show_transactions(TransactionGroup.INCOME)
+        )
+        self.actionShow_Inward_Transfers.triggered.connect(
+            lambda: self.event_show_transactions(TransactionGroup.INWARD_TRANSFER)
+        )
+        self.actionShow_Refunds.triggered.connect(
+            lambda: self.event_show_transactions(TransactionGroup.REFUND)
+        )
+        self.actionShow_Inflow_Transactions.triggered.connect(
+            lambda: self.event_show_transactions(TransactionGroup.INFLOWS)
+        )
+        self.actionShow_Expense_Transactions.triggered.connect(
+            lambda: self.event_show_transactions(TransactionGroup.EXPENSE)
+        )
+        self.actionShow_Outward_Transfers.triggered.connect(
+            lambda: self.event_show_transactions(TransactionGroup.OUTWARD_TRANSFER)
+        )
+        self.actionShow_Outflow_Transactions.triggered.connect(
+            lambda: self.event_show_transactions(TransactionGroup.OUTFLOWS)
+        )
+        self.actionShow_All_Transactions.triggered.connect(
+            lambda: self.event_show_transactions(TransactionGroup.CASHFLOW)
+        )
+        self.actionRecalculate_Report.triggered.connect(
+            self.signal_recalculate_report.emit
+        )
+
+        self.incomeToolButton.setDefaultAction(self.actionShow_Income_Transactions)
+        self.inwardTransfersToolButton.setDefaultAction(
+            self.actionShow_Inward_Transfers
+        )
+        self.refundsToolButton.setDefaultAction(self.actionShow_Refunds)
+        self.totalInflowToolButton.setDefaultAction(self.actionShow_Inflow_Transactions)
+        self.expensesToolButton.setDefaultAction(self.actionShow_Expense_Transactions)
+        self.outwardTransfersToolButton.setDefaultAction(
+            self.actionShow_Outward_Transfers
+        )
+        self.totalOutflowToolButton.setDefaultAction(
+            self.actionShow_Outflow_Transactions
+        )
+        self.cashflowToolButton.setDefaultAction(self.actionShow_All_Transactions)
+        self.recalculateToolButton.setDefaultAction(self.actionRecalculate_Report)

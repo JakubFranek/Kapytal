@@ -49,6 +49,7 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
         "_price_history",
         "_price_history_pairs",
         "_price_decimals",
+        "_earliest_date",
         "_latest_date",
         "_latest_price",
         "_allow_slash",
@@ -147,6 +148,12 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
         return CashAmount(Decimal("NaN"), self._currency)
 
     @property
+    def earliest_date(self) -> date | None:
+        if hasattr(self, "_earliest_date"):
+            return self._earliest_date
+        return None
+
+    @property
     def latest_date(self) -> date | None:
         if hasattr(self, "_latest_date"):
             return self._latest_date
@@ -201,7 +208,7 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
                     f"returning {price} for {_date}"
                 )
                 return price
-            logging.warning(f"{self!s}: no price found, returning 'NaN'")
+            logging.warning(f"{self!s}: no price found, returning CashAmount('NaN')")
             return CashAmount(Decimal("NaN"), self._currency)
 
     def set_price(self, date_: date, price: CashAmount) -> None:
@@ -222,6 +229,24 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
     def delete_price(self, date_: date) -> None:
         del self._price_history[date_]
         self._update_values()
+
+    def calculate_return(
+        self, start: date | None = None, end: date | None = None
+    ) -> Decimal:
+        """Returns the Security return as a percentage."""
+        if not hasattr(self, "_earliest_date"):
+            return Decimal("NaN")
+        if start is None:
+            start = self._earliest_date
+        if start < self._earliest_date:
+            return Decimal("NaN")
+
+        price_end = self.get_price(end).value_normalized
+        price_start = self.get_price(start).value_normalized
+        if price_start.is_nan() or price_end.is_nan():
+            return Decimal("NaN")
+
+        return Decimal(100 * (price_end / price_start - 1))
 
     def serialize(self) -> dict[str, Any]:
         date_price_pairs = [
@@ -269,9 +294,11 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
 
     def _update_values(self) -> None:
         if len(self._price_history) == 0:
+            self._earliest_date = None
             self._latest_date = None
             latest_price = CashAmount(Decimal("NaN"), self._currency)
         else:
+            self._earliest_date = min(date_ for date_ in self._price_history)
             self._latest_date = max(date_ for date_ in self._price_history)
             latest_price = self._price_history[self._latest_date]
         if hasattr(self, "_latest_price"):
@@ -330,7 +357,7 @@ class SecurityAccount(Account):
     def securities(self) -> dict[Security, Decimal]:
         if len(self._securities_history) == 0:
             return {}
-        return self._securities_history[-1][1]
+        return copy.copy(self._securities_history[-1][1])
 
     @property
     def transactions(self) -> tuple["SecurityRelatedTransaction", ...]:
@@ -410,7 +437,11 @@ class SecurityAccount(Account):
             security_dict[transaction.security] += transaction.get_shares(self)
             security_dict = defaultdict(
                 lambda: Decimal(0),
-                {key: value for key, value in security_dict.items() if value != 0},
+                {
+                    key: value
+                    for key, value in security_dict.items()
+                    if not value.is_zero()
+                },
             )
             self._securities_history.append((transaction.datetime_, security_dict))
 
@@ -418,6 +449,12 @@ class SecurityAccount(Account):
             for security in self._securities_history[-1][1]:
                 security.event_price_updated.append(self._update_balances)
         self._update_balances()
+
+    def is_security_related(self, security: Security) -> bool:
+        for _, security_dict in self._securities_history:
+            if security in security_dict:
+                return True
+        return False
 
     def serialize(self) -> dict[str, Any]:
         index = self._parent.children.index(self) if self._parent is not None else None
@@ -446,6 +483,54 @@ class SecurityAccount(Account):
             obj.event_balance_updated.append(parent._update_balances)  # noqa: SLF001
             obj._parent = parent  # noqa: SLF001
         return obj
+
+    def get_average_price(
+        self, security: Security, date_: date | None = None
+    ) -> CashAmount:
+        if not isinstance(security, Security):
+            raise TypeError("Parameter 'security' must be a Security.")
+        if date_ is None and security not in self._securities_history[-1][1]:
+            raise ValueError(
+                f"Security {security.name} is not in this SecurityAccount."
+            )
+        if date_ is not None:
+            for _datetime, security_dict in reversed(self._securities_history):
+                if _datetime.date() < date_ and security not in security_dict:
+                    raise ValueError(
+                        f"Security {security.name} is not in this SecurityAccount."
+                    )
+
+        shares_price_pairs: list[tuple[int, CashAmount]] = []
+        for transaction in self._transactions:
+            _transaction_date = transaction.datetime_.date()
+            if date_ is not None and _transaction_date > date_:
+                continue
+            if transaction.security != security:
+                continue
+            if isinstance(transaction, SecurityTransaction):
+                shares_price_pairs.append(
+                    (transaction.shares, transaction.price_per_share)
+                )
+            elif (
+                isinstance(transaction, SecurityTransfer)
+                and transaction.recipient == self
+            ):
+                avg_price = transaction.sender.get_average_price(
+                    security, _transaction_date
+                )
+                shares_price_pairs.append((transaction.shares, avg_price))
+
+        total_shares = 0
+        total_price = CashAmount(0, security.currency)
+        for shares, price in shares_price_pairs:
+            total_price += price * shares
+            total_shares += shares
+
+        return (
+            total_price / total_shares
+            if total_shares != 0
+            else CashAmount("NaN", security.currency)
+        )
 
     def _validate_transaction(self, transaction: "SecurityRelatedTransaction") -> None:
         if not isinstance(transaction, SecurityRelatedTransaction):

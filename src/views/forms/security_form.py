@@ -30,6 +30,7 @@ class SecurityForm(CustomWidget, Ui_SecurityForm):
     signal_price_selection_changed = pyqtSignal()
     signal_security_table_double_clicked = pyqtSignal()
     signal_price_table_double_clicked = pyqtSignal()
+    signal_update_quotes = pyqtSignal()
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent=parent)
@@ -48,6 +49,7 @@ class SecurityForm(CustomWidget, Ui_SecurityForm):
         self.actionAdd_Security.setIcon(icons.add)
         self.actionRemove_Security.setIcon(icons.remove)
         self.actionEdit_Security.setIcon(icons.edit)
+        self.actionUpdate_Quotes.setIcon(icons.refresh)
 
         self.actionAdd_Price.setIcon(icons.add)
         self.actionEdit_Price.setIcon(icons.edit)
@@ -58,11 +60,13 @@ class SecurityForm(CustomWidget, Ui_SecurityForm):
         self.actionEdit_Price.triggered.connect(self.signal_edit_price.emit)
         self.actionRemove_Price.triggered.connect(self.signal_remove_prices.emit)
         self.actionLoad_Price_Data.triggered.connect(self.signal_load_price_data.emit)
+        self.actionUpdate_Quotes.triggered.connect(self.signal_update_quotes.emit)
 
         self.addPriceToolButton.setDefaultAction(self.actionAdd_Price)
         self.editPriceToolButton.setDefaultAction(self.actionEdit_Price)
         self.removePriceToolButton.setDefaultAction(self.actionRemove_Price)
         self.loadPriceDataToolButton.setDefaultAction(self.actionLoad_Price_Data)
+        self.updateQuotesToolButton.setDefaultAction(self.actionUpdate_Quotes)
 
         self.manageSearchLineEdit.addAction(
             icons.magnifier, QLineEdit.ActionPosition.LeadingPosition
@@ -143,38 +147,11 @@ class SecurityForm(CustomWidget, Ui_SecurityForm):
 
     def finalize_setup(self) -> None:
         self.securityTableView.horizontalHeader().setStretchLastSection(False)
-        self.securityTableView.horizontalHeader().setSectionResizeMode(
-            SecurityTableColumn.NAME,
-            QHeaderView.ResizeMode.ResizeToContents,
-        )
-        self.securityTableView.horizontalHeader().setSectionResizeMode(
-            SecurityTableColumn.SYMBOL,
-            QHeaderView.ResizeMode.ResizeToContents,
-        )
-        self.securityTableView.horizontalHeader().setSectionResizeMode(
-            SecurityTableColumn.TYPE,
-            QHeaderView.ResizeMode.ResizeToContents,
-        )
-        self.securityTableView.horizontalHeader().setSectionResizeMode(
-            SecurityTableColumn.PRICE,
-            QHeaderView.ResizeMode.ResizeToContents,
-        )
-        self.securityTableView.horizontalHeader().setSectionResizeMode(
-            SecurityTableColumn.LAST_DATE,
-            QHeaderView.ResizeMode.Stretch,
-        )
-
-        style = self.style()
-        last_section_text = self.securityTableView.model().headerData(
-            SecurityTableColumn.LAST_DATE,
-            Qt.Orientation.Horizontal,
-            Qt.ItemDataRole.DisplayRole,
-        )
-        self.securityTableView.horizontalHeader().setMinimumSectionSize(
-            style.pixelMetric(style.PixelMetric.PM_HeaderMarkSize)
-            + style.pixelMetric(style.PixelMetric.PM_HeaderGripMargin) * 2
-            + self.fontMetrics().horizontalAdvance(last_section_text)
-        )
+        for column in SecurityTableColumn:
+            self.securityTableView.horizontalHeader().setSectionResizeMode(
+                column,
+                QHeaderView.ResizeMode.ResizeToContents,
+            )
 
         self.securityTableView.selectionModel().selectionChanged.connect(
             self.signal_security_selection_changed.emit
@@ -182,22 +159,11 @@ class SecurityForm(CustomWidget, Ui_SecurityForm):
         self.securityTableView.sortByColumn(0, Qt.SortOrder.AscendingOrder)
 
         self.treeView.header().setStretchLastSection(False)
-        self.treeView.header().setSectionResizeMode(
-            OwnedSecuritiesTreeColumn.NAME,
-            QHeaderView.ResizeMode.Stretch,
-        )
-        self.treeView.header().setSectionResizeMode(
-            OwnedSecuritiesTreeColumn.SHARES,
-            QHeaderView.ResizeMode.ResizeToContents,
-        )
-        self.treeView.header().setSectionResizeMode(
-            OwnedSecuritiesTreeColumn.AMOUNT_NATIVE,
-            QHeaderView.ResizeMode.ResizeToContents,
-        )
-        self.treeView.header().setSectionResizeMode(
-            OwnedSecuritiesTreeColumn.AMOUNT_BASE,
-            QHeaderView.ResizeMode.ResizeToContents,
-        )
+        for column in OwnedSecuritiesTreeColumn:
+            self.treeView.header().setSectionResizeMode(
+                column,
+                QHeaderView.ResizeMode.ResizeToContents,
+            )
 
         self.securityPriceTableView.horizontalHeader().setStretchLastSection(False)
         self.securityPriceTableView.horizontalHeader().setSectionResizeMode(

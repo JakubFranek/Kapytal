@@ -5,7 +5,7 @@ from collections.abc import Collection
 from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
 from functools import total_ordering
-from typing import Any, Self
+from typing import Any, Self, overload
 
 from src.models.mixins.copyable_mixin import CopyableMixin
 from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
@@ -198,6 +198,7 @@ class ExchangeRate(CopyableMixin, JSONSerializableMixin):
         "_rate_decimals",
         "_latest_rate",
         "_latest_date",
+        "_earliest_date",
         "_recalculate_rate_history_pairs",
     )
 
@@ -262,6 +263,12 @@ class ExchangeRate(CopyableMixin, JSONSerializableMixin):
             return None
         return self._latest_date
 
+    @property
+    def earliest_date(self) -> date | None:
+        if len(self._rate_history) == 0:
+            return None
+        return self._earliest_date
+
     def __repr__(self) -> str:
         return (
             "ExchangeRate("
@@ -313,6 +320,22 @@ class ExchangeRate(CopyableMixin, JSONSerializableMixin):
         self.primary_currency.reset_cache()
         self.secondary_currency.remove_exchange_rate(self)
         self.secondary_currency.reset_cache()
+
+    def calculate_return(
+        self, start: date | None = None, end: date | None = None
+    ) -> Decimal:
+        """Returns the Security return as a percentage."""
+        if start is None:
+            start = self._earliest_date
+        if start < self._earliest_date:
+            return Decimal("NaN")
+
+        rate_end = self.get_rate(end)
+        rate_start = self.get_rate(start)
+        if rate_start.is_nan() or rate_end.is_nan():
+            return Decimal("NaN")
+
+        return Decimal(100 * (rate_end / rate_start - 1))
 
     def serialize(self) -> dict:
         date_rate_pairs = [
@@ -366,9 +389,11 @@ class ExchangeRate(CopyableMixin, JSONSerializableMixin):
     def _update_values(self) -> None:
         if len(self._rate_history) == 0:
             self._latest_date = None
+            self._earliest_date = None
             self._latest_rate = Decimal("NaN")
         else:
             self._latest_date = max(date_ for date_ in self._rate_history)
+            self._earliest_date = min(date_ for date_ in self._rate_history)
             self._latest_rate = self._rate_history[self._latest_date]
 
         self._rate_decimals = 0
@@ -534,6 +559,14 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
     def __rmul__(self, __o: object) -> Self:
         return self.__mul__(__o)
 
+    @overload
+    def __truediv__(self, __o: Self) -> Decimal:
+        ...
+
+    @overload
+    def __truediv__(self, __o: int | Decimal) -> Self:
+        ...
+
     def __truediv__(self, __o: object) -> Decimal | Self:
         if isinstance(__o, CashAmount):
             if self._currency != __o._currency:
@@ -553,6 +586,15 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
             raise CurrencyError("CashAmount.currency of operands must match.")
         return __o._raw_value / self._raw_value
 
+    def __round__(self, ndigits: int = 0) -> Decimal:
+        _value_rounded = round(self._raw_value, ndigits)
+        min_places = min(ndigits, 4)
+        if -_value_rounded.as_tuple().exponent > min_places:
+            _value_rounded = _value_rounded.normalize()
+            if -_value_rounded.as_tuple().exponent < min_places:
+                _value_rounded = _value_rounded.quantize(quantizers[min_places])
+        return _value_rounded
+
     def is_positive(self) -> bool:
         if self._raw_value.is_nan():
             return False
@@ -569,10 +611,13 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
     def is_finite(self) -> bool:
         return self._raw_value.is_finite()
 
-    def to_str_rounded(self) -> str:
-        if not hasattr(self, "_str_rounded"):
-            self._str_rounded = f"{self.value_rounded:,} {self._currency.code}"
-        return self._str_rounded
+    def to_str_rounded(self, decimals: int | None = None) -> str:
+        if decimals is None:
+            if not hasattr(self, "_str_rounded"):
+                self._str_rounded = f"{self.value_rounded:,} {self._currency.code}"
+            return self._str_rounded
+        value_rounded = round(self._raw_value, decimals)
+        return f"{value_rounded:,} {self._currency.code}"
 
     def to_str_normalized(self) -> str:
         if not hasattr(self, "_str_normalized"):

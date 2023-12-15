@@ -1,5 +1,6 @@
+import copy
 import unicodedata
-from collections.abc import Collection
+from collections.abc import Collection, Sequence
 from decimal import Decimal
 from uuid import UUID
 
@@ -8,6 +9,7 @@ from PyQt6.QtGui import QBrush, QIcon
 from PyQt6.QtWidgets import QTableView
 from src.models.base_classes.account import Account
 from src.models.base_classes.transaction import Transaction
+from src.models.model_objects.attributes import Category
 from src.models.model_objects.cash_objects import (
     CashAccount,
     CashRelatedTransaction,
@@ -570,15 +572,8 @@ class TransactionTableModel(QAbstractTableModel):
     def _get_transaction_category(transaction: Transaction) -> str:
         if isinstance(transaction, CashTransaction | RefundTransaction):
             if not transaction.are_categories_split:
-                category_strings = sorted(
-                    category.path for category in transaction.categories
-                )
-            else:
-                category_strings = sorted(
-                    category.path + f" ({amount.to_str_rounded()})"
-                    for category, amount in transaction.category_amount_pairs
-                )
-            return ", ".join(category_strings)
+                return transaction.category_amount_pairs[0][0].path
+            return _get_split_category_string(transaction.category_amount_pairs)
         return ""
 
     @staticmethod
@@ -634,3 +629,31 @@ class TransactionTableModel(QAbstractTableModel):
             item = self._transaction_uuid_dict[uuid_]
             index = self.get_index_from_item(item)
             self.dataChanged.emit(index, index)
+
+
+def _get_split_category_string(
+    category_amount_pairs: Sequence[tuple[Category, CashAmount]]
+) -> str:
+    remaining_pairs = list(category_amount_pairs)
+    grouped_pairs: list[list[tuple[Category, CashAmount]]] = []
+
+    while remaining_pairs:
+        pair = remaining_pairs.pop(0)
+        group = [pair] + [
+            _pair
+            for _pair in remaining_pairs
+            if pair[0].parent == _pair[0].parent and pair[0].parent is not None
+        ]
+        remaining_pairs = [p for p in remaining_pairs if p not in group]
+        grouped_pairs.append(group)
+
+    strings = []
+    for group in grouped_pairs:
+        if len(group) == 1:
+            strings.append(f"{group[0][0].path} ({group[0][1].to_str_rounded()})")
+        else:
+            string_inner = [f"{p[0].name} ({p[1].to_str_rounded()})" for p in group]
+            string = f"{group[0][0].parent.path}/[{' + '.join(string_inner)}]"
+            strings.append(string)
+
+    return ", ".join(strings)

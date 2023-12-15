@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>357</width>
-    <height>250</height>
+    <height>350</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -20,6 +20,16 @@
    <locale language="English" country="UnitedKingdom"/>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QLineEdit" name="searchLineEdit">
+     <property name="toolTip">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Special characters:&lt;/p&gt;&lt;p&gt;* matches zero or more of any characters&lt;br/&gt;? matches any single character&lt;br/&gt;[...] matches any character within square brackets&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+     <property name="placeholderText">
+      <string>Search Quotes</string>
+     </property>
+    </widget>
+   </item>
    <item>
     <widget class="QTableView" name="tableView">
      <property name="sizeAdjustPolicy">

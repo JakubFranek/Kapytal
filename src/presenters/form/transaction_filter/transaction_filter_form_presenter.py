@@ -595,8 +595,13 @@ class TransactionFilterFormPresenter:
                 payee_related_types,
             ),
             (
-                "Category Filter",
+                "Specific Categories Filter",
                 self._form.specific_categories_filter_mode,
+                category_related_types,
+            ),
+            (
+                "Multiple Categories Filter",
+                self._form.multiple_categories_filter_mode,
                 category_related_types,
             ),
             (

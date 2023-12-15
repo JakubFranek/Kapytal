@@ -21,6 +21,19 @@ class ExchangeRateTableColumn(IntEnum):
     CODE = 0
     RATE = 1
     LAST_DATE = 2
+    D1 = 3
+    D7 = 4
+    M1 = 5
+    M3 = 6
+    M6 = 7
+    Y1 = 8
+    Y2 = 9
+    Y3 = 10
+    Y5 = 11
+    Y7 = 12
+    Y10 = 13
+    TOTAL = 14
+    TOTAL_ANNUALIZED = 15
 
 
 class ValueTableColumn(IntEnum):
@@ -46,6 +59,19 @@ class SecurityTableColumn(IntEnum):
     TYPE = 2
     PRICE = 3
     LAST_DATE = 4
+    D1 = 5
+    D7 = 6
+    M1 = 7
+    M3 = 8
+    M6 = 9
+    Y1 = 10
+    Y2 = 11
+    Y3 = 12
+    Y5 = 13
+    Y7 = 14
+    Y10 = 15
+    TOTAL = 16
+    TOTAL_ANNUALIZED = 17
 
 
 class SecurityAccountTableColumn(IntEnum):
@@ -61,8 +87,14 @@ class SecurityAccountTableColumn(IntEnum):
 class OwnedSecuritiesTreeColumn(IntEnum):
     NAME = 0
     SHARES = 1
-    AMOUNT_NATIVE = 2
-    AMOUNT_BASE = 3
+    PRICE_MARKET = 2
+    PRICE_AVERAGE = 3
+    GAIN_NATIVE = 4
+    GAIN_BASE = 5
+    ABSOLUTE_RETURN = 6
+    IRR = 7
+    AMOUNT_NATIVE = 8
+    AMOUNT_BASE = 9
 
 
 class CategoryTreeColumn(IntEnum):

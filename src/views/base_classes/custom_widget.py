@@ -10,14 +10,14 @@ class CustomWidget(QWidget):
 
     signal_widget_closed = pyqtSignal()
 
-    def keyPressEvent(self, a0: QKeyEvent) -> None:
-        if a0.key() == Qt.Key.Key_Escape:
+    def keyPressEvent(self, event: QKeyEvent) -> None:
+        if event.key() == Qt.Key.Key_Escape:
             self.close()
-        return super().keyPressEvent(a0)
+        return super().keyPressEvent(event)
 
-    def closeEvent(self, a0: QCloseEvent) -> None:
+    def closeEvent(self, event: QCloseEvent) -> None:
         logging.debug(f"Closing {self.__class__.__name__}")
-        super().closeEvent(a0)
+        super().closeEvent(event)
         self.signal_widget_closed.emit()
 
     def show_form(self) -> None:

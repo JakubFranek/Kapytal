@@ -9,7 +9,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>700</width>
+    <width>800</width>
     <height>600</height>
    </rect>
   </property>
@@ -58,6 +58,13 @@
              </item>
              <item>
               <widget class="QToolButton" name="removeToolButton">
+               <property name="text">
+                <string>...</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QToolButton" name="updateQuotesToolButton">
                <property name="text">
                 <string>...</string>
                </property>
@@ -221,6 +228,16 @@
          </property>
         </widget>
        </item>
+       <item>
+        <widget class="QLabel" name="label">
+         <property name="text">
+          <string>NOTE: Absolute Return and Internal Rate of Return (IRR) calculations do NOT take Currency Exchange Rate fluctuation into account. They are calculated using the native Currency of the given Security. Returns can differ in other Currencies as Exchange Rates fluctuate over time.</string>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
       </layout>
      </widget>
     </widget>
@@ -269,6 +286,11 @@
   <action name="actionLoad_Price_Data">
    <property name="text">
     <string>Load Price Data</string>
+   </property>
+  </action>
+  <action name="actionUpdate_Quotes">
+   <property name="text">
+    <string>Update Quotes</string>
    </property>
   </action>
  </widget>

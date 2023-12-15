@@ -1,9 +1,12 @@
 from collections.abc import Collection
+from decimal import Decimal
 
 from PyQt6.QtCore import QAbstractTableModel, QModelIndex, QSortFilterProxyModel, Qt
+from PyQt6.QtGui import QBrush
 from PyQt6.QtWidgets import QTableView
 from src.models.model_objects.currency_objects import ExchangeRate
 from src.models.user_settings import user_settings
+from src.views import colors
 from src.views.constants import ExchangeRateTableColumn, monospace_font
 
 ALIGNMENT_RIGHT = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
@@ -11,6 +14,19 @@ COLUMN_HEADERS = {
     ExchangeRateTableColumn.CODE: "Code",
     ExchangeRateTableColumn.RATE: "Latest Rate",
     ExchangeRateTableColumn.LAST_DATE: "Latest Date",
+    ExchangeRateTableColumn.D1: "1D",
+    ExchangeRateTableColumn.D7: "7D",
+    ExchangeRateTableColumn.M1: "1M",
+    ExchangeRateTableColumn.M3: "3M",
+    ExchangeRateTableColumn.M6: "6M",
+    ExchangeRateTableColumn.Y1: "1Y",
+    ExchangeRateTableColumn.Y2: "2Y",
+    ExchangeRateTableColumn.Y3: "3Y",
+    ExchangeRateTableColumn.Y5: "5Y",
+    ExchangeRateTableColumn.Y7: "7Y",
+    ExchangeRateTableColumn.Y10: "10Y",
+    ExchangeRateTableColumn.TOTAL: "Total",
+    ExchangeRateTableColumn.TOTAL_ANNUALIZED: "Total p.a.",
 }
 
 
@@ -29,8 +45,13 @@ class ExchangeRateTableModel(QAbstractTableModel):
     def exchange_rates(self) -> tuple[ExchangeRate, ...]:
         return self._exchange_rates
 
-    def load_exchange_rates(self, exchange_rates: Collection[ExchangeRate]) -> None:
+    def load_data(
+        self,
+        exchange_rates: Collection[ExchangeRate],
+        stats: dict[ExchangeRate, dict[str, Decimal]],
+    ) -> None:
         self._exchange_rates = tuple(exchange_rates)
+        self._stats = stats
 
     def rowCount(self, index: QModelIndex = ...) -> int:
         if isinstance(index, QModelIndex) and index.isValid():
@@ -62,13 +83,15 @@ class ExchangeRateTableModel(QAbstractTableModel):
             return self._get_display_role_data(column, exchange_rate)
         if role == Qt.ItemDataRole.UserRole:
             return self._get_sort_role_data(column, exchange_rate)
-        if (
-            role == Qt.ItemDataRole.TextAlignmentRole
-            and column == ExchangeRateTableColumn.RATE
-        ):
+        if role == Qt.ItemDataRole.TextAlignmentRole and column in {
+            ExchangeRateTableColumn.RATE,
+            ExchangeRateTableColumn.LAST_DATE,
+        }:
             return ALIGNMENT_RIGHT
         if role == Qt.ItemDataRole.FontRole and column == ExchangeRateTableColumn.CODE:
             return monospace_font
+        if role == Qt.ItemDataRole.ForegroundRole:
+            return self._get_foreground_role_data(column, exchange_rate)
         return None
 
     def _get_display_role_data(
@@ -83,6 +106,14 @@ class ExchangeRateTableModel(QAbstractTableModel):
             if latest_date is None:
                 return "None"
             return latest_date.strftime(user_settings.settings.general_date_format)
+        if (
+            column >= ExchangeRateTableColumn.D1
+            and column <= ExchangeRateTableColumn.TOTAL_ANNUALIZED
+        ):
+            _return = self._stats[exchange_rate][COLUMN_HEADERS[column]]
+            if _return.is_nan():
+                return None
+            return f"{_return:.2f} %"
         return None
 
     def _get_sort_role_data(
@@ -97,6 +128,31 @@ class ExchangeRateTableModel(QAbstractTableModel):
             if latest_date is None:
                 return 0
             return latest_date.toordinal()
+        if (
+            column >= ExchangeRateTableColumn.D1
+            and column <= ExchangeRateTableColumn.TOTAL_ANNUALIZED
+        ):
+            _return = self._stats[exchange_rate][COLUMN_HEADERS[column]]
+            if _return.is_nan():
+                return float("-inf")
+            return float(_return)
+        return None
+
+    def _get_foreground_role_data(
+        self, column: int, exchange_rate: ExchangeRate
+    ) -> QBrush | None:
+        if (
+            column >= ExchangeRateTableColumn.D1
+            and column <= ExchangeRateTableColumn.TOTAL_ANNUALIZED
+        ):
+            _return = self._stats[exchange_rate][COLUMN_HEADERS[column]]
+            if _return.is_nan():
+                return None
+            if _return == 0:
+                return colors.get_gray_brush()
+            if _return < 0:
+                return colors.get_red_brush()
+            return colors.get_green_brush()
         return None
 
     def pre_add(self) -> None:
@@ -134,3 +190,10 @@ class ExchangeRateTableModel(QAbstractTableModel):
             return QModelIndex()
         row = self.exchange_rates.index(item)
         return QAbstractTableModel.createIndex(self, row, 0)
+
+    def is_column_empty(self, column: int) -> bool:
+        for row in range(self.rowCount()):
+            text = self.index(row, column).data(Qt.ItemDataRole.DisplayRole)
+            if text is not None and text != "":
+                return False
+        return True

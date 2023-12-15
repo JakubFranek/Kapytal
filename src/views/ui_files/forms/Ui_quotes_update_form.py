@@ -13,10 +13,13 @@ class Ui_QuotesUpdateForm(object):
     def setupUi(self, QuotesUpdateForm):
         QuotesUpdateForm.setObjectName("QuotesUpdateForm")
         QuotesUpdateForm.setWindowModality(QtCore.Qt.WindowModality.WindowModal)
-        QuotesUpdateForm.resize(357, 250)
+        QuotesUpdateForm.resize(357, 350)
         QuotesUpdateForm.setLocale(QtCore.QLocale(QtCore.QLocale.Language.English, QtCore.QLocale.Country.UnitedKingdom))
         self.verticalLayout = QtWidgets.QVBoxLayout(QuotesUpdateForm)
         self.verticalLayout.setObjectName("verticalLayout")
+        self.searchLineEdit = QtWidgets.QLineEdit(QuotesUpdateForm)
+        self.searchLineEdit.setObjectName("searchLineEdit")
+        self.verticalLayout.addWidget(self.searchLineEdit)
         self.tableView = QtWidgets.QTableView(QuotesUpdateForm)
         self.tableView.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.SizeAdjustPolicy.AdjustIgnored)
         self.tableView.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.SingleSelection)
@@ -56,6 +59,8 @@ class Ui_QuotesUpdateForm(object):
     def retranslateUi(self, QuotesUpdateForm):
         _translate = QtCore.QCoreApplication.translate
         QuotesUpdateForm.setWindowTitle(_translate("QuotesUpdateForm", "Update Quotes"))
+        self.searchLineEdit.setToolTip(_translate("QuotesUpdateForm", "<html><head/><body><p>Special characters:</p><p>* matches zero or more of any characters<br/>? matches any single character<br/>[...] matches any character within square brackets</p></body></html>"))
+        self.searchLineEdit.setPlaceholderText(_translate("QuotesUpdateForm", "Search Quotes"))
         self.selectAllToolButton.setText(_translate("QuotesUpdateForm", "..."))
         self.unselectAllToolButton.setText(_translate("QuotesUpdateForm", "..."))
         self.downloadQuotesPushButton.setText(_translate("QuotesUpdateForm", "Download selected"))

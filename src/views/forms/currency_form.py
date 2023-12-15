@@ -28,6 +28,7 @@ class CurrencyForm(CustomWidget, Ui_CurrencyForm):
     signal_exchange_rate_selection_changed = pyqtSignal()
     signal_data_point_selection_changed = pyqtSignal()
     signal_data_point_double_clicked = pyqtSignal()
+    signal_update_quotes = pyqtSignal()
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent=parent)
@@ -37,7 +38,7 @@ class CurrencyForm(CustomWidget, Ui_CurrencyForm):
         self._initialize_actions()
 
         self.chart_widget = DateLineChartView(self)
-        self.exchangeRateHistoryGroupBoxHorizontalLayout.addWidget(self.chart_widget)
+        self.exchangeRateHistoryTableHorizontalLayout.addWidget(self.chart_widget)
 
         self.currencyTable.horizontalHeader().setSortIndicatorClearable(True)
         self.exchangeRateTable.horizontalHeader().setSortIndicatorClearable(True)
@@ -83,38 +84,22 @@ class CurrencyForm(CustomWidget, Ui_CurrencyForm):
 
     def finalize_setup(self) -> None:
         self.currencyTable.horizontalHeader().setStretchLastSection(False)
-        self.currencyTable.horizontalHeader().setSectionResizeMode(
-            CurrencyTableColumn.CODE,
-            QHeaderView.ResizeMode.ResizeToContents,
-        )
-        self.currencyTable.horizontalHeader().setSectionResizeMode(
-            CurrencyTableColumn.PLACES,
-            QHeaderView.ResizeMode.Stretch,
-        )
+        for column in CurrencyTableColumn:
+            self.currencyTable.horizontalHeader().setSectionResizeMode(
+                column, QHeaderView.ResizeMode.ResizeToContents
+            )
 
         self.exchangeRateTable.horizontalHeader().setStretchLastSection(False)
-        self.exchangeRateTable.horizontalHeader().setSectionResizeMode(
-            ExchangeRateTableColumn.CODE,
-            QHeaderView.ResizeMode.ResizeToContents,
-        )
-        self.exchangeRateTable.horizontalHeader().setSectionResizeMode(
-            ExchangeRateTableColumn.RATE,
-            QHeaderView.ResizeMode.ResizeToContents,
-        )
-        self.exchangeRateTable.horizontalHeader().setSectionResizeMode(
-            ExchangeRateTableColumn.LAST_DATE,
-            QHeaderView.ResizeMode.Stretch,
-        )
+        for column in ExchangeRateTableColumn:
+            self.exchangeRateTable.horizontalHeader().setSectionResizeMode(
+                column, QHeaderView.ResizeMode.ResizeToContents
+            )
 
         self.exchangeRateHistoryTable.horizontalHeader().setStretchLastSection(False)
-        self.exchangeRateHistoryTable.horizontalHeader().setSectionResizeMode(
-            ValueTableColumn.DATE,
-            QHeaderView.ResizeMode.ResizeToContents,
-        )
-        self.exchangeRateHistoryTable.horizontalHeader().setSectionResizeMode(
-            ValueTableColumn.VALUE,
-            QHeaderView.ResizeMode.Stretch,
-        )
+        for column in ValueTableColumn:
+            self.exchangeRateHistoryTable.horizontalHeader().setSectionResizeMode(
+                column, QHeaderView.ResizeMode.ResizeToContents
+            )
 
         self.exchangeRateTable.selectionModel().selectionChanged.connect(
             self.signal_exchange_rate_selection_changed.emit
@@ -137,6 +122,7 @@ class CurrencyForm(CustomWidget, Ui_CurrencyForm):
 
         self.actionAdd_Exchange_Rate.setIcon(icons.add)
         self.actionRemove_Exchange_Rate.setIcon(icons.remove)
+        self.actionUpdate_Quotes.setIcon(icons.refresh)
 
         self.actionAdd_data.setIcon(icons.add)
         self.actionEdit_data.setIcon(icons.edit)
@@ -155,6 +141,7 @@ class CurrencyForm(CustomWidget, Ui_CurrencyForm):
         self.actionRemove_Exchange_Rate.triggered.connect(
             self.signal_remove_exchange_rate.emit
         )
+        self.actionUpdate_Quotes.triggered.connect(self.signal_update_quotes.emit)
 
         self.actionAdd_data.triggered.connect(self.signal_add_data.emit)
         self.actionEdit_data.triggered.connect(self.signal_edit_data.emit)
@@ -172,32 +159,25 @@ class CurrencyForm(CustomWidget, Ui_CurrencyForm):
         self.editRateToolButton.setDefaultAction(self.actionEdit_data)
         self.removeRateToolButton.setDefaultAction(self.actionRemove_data)
         self.loadToolButton.setDefaultAction(self.actionLoad_data)
+        self.updateQuotesToolButton.setDefaultAction(self.actionUpdate_Quotes)
 
     def show_form(self) -> None:
         super().show_form()
         self.update_table_widths()
 
     def update_table_widths(self) -> None:
-        self.currencyTable.resizeColumnsToContents()
         self.exchangeRateTable.resizeColumnsToContents()
+        self.update_currency_table_width()
+        self.update_history_table_width()
 
+    def update_currency_table_width(self) -> None:
+        self.currencyTable.resizeColumnsToContents()
         currency_table_width = calculate_table_width(self.currencyTable)
-        exchange_rate_table_width = calculate_table_width(self.exchangeRateTable)
-        larger_width = max(currency_table_width, exchange_rate_table_width)
-
-        self.currencyGroupBox.setFixedWidth(larger_width + 30)
-        self.exchangeRateGroupBox.setFixedWidth(larger_width + 30)
-
+        self.currencyGroupBox.setFixedWidth(currency_table_width + 30)
         self.currencyTable.horizontalHeader().setSectionResizeMode(
             CurrencyTableColumn.PLACES,
             QHeaderView.ResizeMode.Stretch,
         )
-        self.exchangeRateTable.horizontalHeader().setSectionResizeMode(
-            ExchangeRateTableColumn.LAST_DATE,
-            QHeaderView.ResizeMode.Stretch,
-        )
-
-        self.update_history_table_width()
 
     def update_history_table_width(self) -> None:
         self.exchangeRateHistoryTable.resizeColumnsToContents()

@@ -167,6 +167,17 @@ class MainPresenter:
         self._transactions_presenter.event_data_changed.append(self._data_changed)
         self._quotes_update_form_presenter.event_data_changed.append(self._data_changed)
 
+        self._currency_form_presenter.event_update_quotes.append(
+            lambda: self._quotes_update_form_presenter.show_form(
+                self._currency_form_presenter.view
+            )
+        )
+        self._security_form_presenter.event_update_quotes.append(
+            lambda: self._quotes_update_form_presenter.show_form(
+                self._security_form_presenter.view
+            )
+        )
+
     def _connect_view_signals(self) -> None:
         self._view.signal_exit.connect(self._quit)
         self._view.signal_open_currency_form.connect(
@@ -213,7 +224,7 @@ class MainPresenter:
             )
         )
         self._view.signal_update_quotes.connect(
-            self._quotes_update_form_presenter.show_form
+            lambda: self._quotes_update_form_presenter.show_form(self._view)
         )
 
         self._view.signal_check_updates.connect(
@@ -237,6 +248,7 @@ class MainPresenter:
         self._payee_form_presenter.data_changed()
         self._tag_form_presenter.data_changed()
         self._security_form_presenter.data_changed()
+        self._currency_form_presenter.data_changed()
         self._file_presenter.update_unsaved_changes(unsaved_changes=True)
 
     def _base_currency_changed(self) -> None:

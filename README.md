@@ -24,8 +24,9 @@ Log your income and expenses, track your investments, analyse the data and take 
 - importing and exporting data from other financial software
 - importing data from your bank statements
 - calling your bank's API to import your latest transactions
-- analyzing performance of your investments
-  - complementing Kapytal with [Portfolio Performance](https://www.portfolio-performance.info/en/) for advanced investment analytics is recommended
+- advanced investment performance analysis
+  - Kapytal offers only basic performance indicators (absolute return and IRR)
+  - complementing Kapytal with [Portfolio Performance](https://www.portfolio-performance.info/en/) for advanced analytics is recommended
 - synchronizing your data with any web or mobile apps
 - scheduled Transactions
 - budgets
@@ -35,6 +36,7 @@ Log your income and expenses, track your investments, analyse the data and take 
 
 - Windows 8 or newer
 - around 200 MB of disk space
+- internet connection is optional
 
 ## Documentation
 
