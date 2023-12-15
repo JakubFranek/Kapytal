@@ -234,6 +234,8 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
         self, start: date | None = None, end: date | None = None
     ) -> Decimal:
         """Returns the Security return as a percentage."""
+        if not hasattr(self, "_earliest_date"):
+            return Decimal("NaN")
         if start is None:
             start = self._earliest_date
         if start < self._earliest_date:
@@ -523,7 +525,12 @@ class SecurityAccount(Account):
         for shares, price in shares_price_pairs:
             total_price += price * shares
             total_shares += shares
-        return total_price / total_shares
+
+        return (
+            total_price / total_shares
+            if total_shares != 0
+            else CashAmount("NaN", security.currency)
+        )
 
     def _validate_transaction(self, transaction: "SecurityRelatedTransaction") -> None:
         if not isinstance(transaction, SecurityRelatedTransaction):

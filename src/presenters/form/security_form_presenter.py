@@ -632,15 +632,18 @@ class SecurityFormPresenter:
 
         # add annualized Total period to returns
         for security in securities:
-            return_total = returns[security]["Total"] / 100
-            days = (security.latest_date - security.earliest_date).days
-            if days == 0:
-                returns[security]["Total p.a."] = Decimal(0)
-                continue
-            exponent = Decimal(365) / Decimal(days)
-            returns[security]["Total p.a."] = 100 * (
-                ((1 + return_total) ** exponent) - 1
-            )
+            try:
+                return_total = returns[security]["Total"] / 100
+                days = (security.latest_date - security.earliest_date).days
+                if days == 0:
+                    returns[security]["Total p.a."] = Decimal(0)
+                    continue
+                exponent = Decimal(365) / Decimal(days)
+                returns[security]["Total p.a."] = 100 * (
+                    ((1 + return_total) ** exponent) - 1
+                )
+            except TypeError:
+                returns[security]["Total p.a."] = Decimal("NaN")
 
         return returns
 

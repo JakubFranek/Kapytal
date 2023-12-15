@@ -1,7 +1,7 @@
 from datetime import datetime
 from decimal import Decimal
 
-from pyxirr import xirr
+from pyxirr import InvalidPaymentsError, xirr
 from src.models.model_objects.security_objects import (
     Security,
     SecurityAccount,
@@ -51,6 +51,9 @@ def calculate_irr(security: Security, accounts: list[SecurityAccount]) -> Decima
             dates.append(_date)
             cashflows.append(amount)
 
+    if len(dates) == 0:
+        return Decimal("NaN")
+
     # add last fictitious outflow as if all investment was liquidated
     sell_all_amount = Decimal(0)
     price = security.price
@@ -67,7 +70,10 @@ def calculate_irr(security: Security, accounts: list[SecurityAccount]) -> Decima
     else:
         raise ValueError("Unable to calculate IRR based on future prices.")
 
-    irr = xirr(dates, cashflows)
+    try:
+        irr = xirr(dates, cashflows)
+    except InvalidPaymentsError:
+        return Decimal("NaN")
     if irr is None:  # solution not found
         return Decimal("NaN")
     return Decimal(irr)
