@@ -26,7 +26,7 @@ class ConcreteTransaction(Transaction):
 
     @staticmethod
     def deserialize(data: dict[str, Any]) -> "ConcreteTransaction":
-        return super().deserialize(data)
+        return Transaction().deserialize(data)
 
 
 class ConcreteAccount(Account):
@@ -42,4 +42,4 @@ class ConcreteAccount(Account):
 
     @staticmethod
     def deserialize(data: dict[str, Any]) -> Self:
-        return super().deserialize(data)
+        return Account().deserialize(data)

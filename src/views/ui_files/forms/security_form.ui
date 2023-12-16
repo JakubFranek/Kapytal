@@ -212,7 +212,7 @@
          <item>
           <widget class="QLineEdit" name="overviewSearchLineEdit">
            <property name="placeholderText">
-            <string>Search</string>
+            <string>Search Securities and Security Accounts</string>
            </property>
           </widget>
          </item>

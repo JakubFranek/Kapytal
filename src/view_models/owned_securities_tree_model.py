@@ -12,6 +12,7 @@ from src.models.model_objects.currency_objects import (
     Currency,
 )
 from src.models.model_objects.security_objects import Security, SecurityAccount
+from src.utilities.formatting import get_short_percentage_string
 from src.views import colors, icons
 from src.views.constants import OwnedSecuritiesTreeColumn
 
@@ -252,9 +253,9 @@ class OwnedSecuritiesTreeModel(QAbstractItemModel):
         if column == OwnedSecuritiesTreeColumn.GAIN_BASE:
             return item.gain_base.to_str_rounded()
         if column == OwnedSecuritiesTreeColumn.ABSOLUTE_RETURN:
-            return f"{item.gain_pct:,} %"
+            return get_short_percentage_string(item.gain_pct)
         if column == OwnedSecuritiesTreeColumn.IRR:
-            return f"{item.irr:,} %"
+            return get_short_percentage_string(item.irr)
         if column == OwnedSecuritiesTreeColumn.AMOUNT_NATIVE:
             if (
                 isinstance(item.base_amount, CashAmount)
