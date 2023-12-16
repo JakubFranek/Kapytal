@@ -3,10 +3,10 @@ from PyQt6.QtGui import QAction, QContextMenuEvent, QCursor
 from PyQt6.QtWidgets import QLineEdit, QMenu, QTableView, QWidget
 from src.views import icons
 from src.views.base_classes.custom_widget import CustomWidget
-from src.views.ui_files.forms.Ui_table_view_form import Ui_TableViewForm
+from src.views.ui_files.forms.Ui_transaction_table_form import Ui_TransactionTableForm
 
 
-class TransactionTableForm(CustomWidget, Ui_TableViewForm):
+class TransactionTableForm(CustomWidget, Ui_TransactionTableForm):
     signal_edit = pyqtSignal()
     signal_add_tags = pyqtSignal()
     signal_remove_tags = pyqtSignal()
