@@ -164,7 +164,7 @@ class Ui_SecurityForm(object):
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.manageSecuritiesTab), _translate("SecurityForm", "Manage"))
         self.expandAllToolButton.setText(_translate("SecurityForm", "..."))
         self.collapseAllToolButton.setText(_translate("SecurityForm", "..."))
-        self.overviewSearchLineEdit.setPlaceholderText(_translate("SecurityForm", "Search"))
+        self.overviewSearchLineEdit.setPlaceholderText(_translate("SecurityForm", "Search Securities and Security Accounts"))
         self.label.setText(_translate("SecurityForm", "NOTE: Absolute Return and Internal Rate of Return (IRR) calculations do NOT take Currency Exchange Rate fluctuation into account. They are calculated using the native Currency of the given Security. Returns can differ in other Currencies as Exchange Rates fluctuate over time."))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.securitiesOverviewTab), _translate("SecurityForm", "Overview"))
         self.actionAdd_Security.setText(_translate("SecurityForm", "Add Security"))
