@@ -75,9 +75,7 @@ class CurrencyFormPresenter:
         )
         self._currency_table_model.post_reset_model()
 
-        self._exchange_rate_table_model.pre_reset_model()
-        self.update_exchange_rate_table_data()
-        self._exchange_rate_table_model.post_reset_model()
+        self.reset_and_update_exchange_rate_table()
 
         self._exchange_rate_history_model.pre_reset_model()
         self._exchange_rate_history_model.load_data(())
@@ -87,9 +85,17 @@ class CurrencyFormPresenter:
         self._update_chart(None)
 
     def data_changed(self) -> None:
+        self.reset_and_update_exchange_rate_table()
+
+    def reset_and_update_exchange_rate_table(self) -> None:
+        selected_index = self.view.exchangeRateTable.currentIndex()
+
         self._exchange_rate_table_model.pre_reset_model()
         self.update_exchange_rate_table_data()
         self._exchange_rate_table_model.post_reset_model()
+
+        if selected_index.isValid():
+            self.view.exchangeRateTable.selectRow(selected_index.row())
 
     def update_exchange_rate_table_data(self) -> None:
         stats = self._calculate_exchange_rate_stats(self._record_keeper.exchange_rates)
@@ -183,7 +189,7 @@ class CurrencyFormPresenter:
         codes = [currency.code for currency in self._record_keeper.currencies]
         if len(codes) < 2:
             display_error_message(
-                "Create at least 2 Currencies before adding an ExchangeRate."
+                "Create at least 2 Currencies before adding an Exchange Rate."
             )
             return
 
@@ -558,14 +564,17 @@ class CurrencyFormPresenter:
 
         # add annualized Total period to returns
         for exchange_rate in exchange_rates:
-            return_total = returns[exchange_rate]["Total"] / 100
-            days = (exchange_rate.latest_date - exchange_rate.earliest_date).days
-            if days == 0:
-                returns[exchange_rate]["Total p.a."] = Decimal(0)
-                continue
-            exponent = Decimal(365) / Decimal(days)
-            returns[exchange_rate]["Total p.a."] = 100 * (
-                ((1 + return_total) ** exponent) - 1
-            )
+            try:
+                return_total = returns[exchange_rate]["Total"] / 100
+                days = (exchange_rate.latest_date - exchange_rate.earliest_date).days
+                if days == 0:
+                    returns[exchange_rate]["Total p.a."] = Decimal(0)
+                    continue
+                exponent = Decimal(365) / Decimal(days)
+                returns[exchange_rate]["Total p.a."] = 100 * (
+                    ((1 + return_total) ** exponent) - 1
+                )
+            except TypeError:
+                returns[exchange_rate]["Total p.a."] = Decimal("NaN")
 
         return returns

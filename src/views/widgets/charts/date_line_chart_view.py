@@ -171,7 +171,10 @@ class DateLineChartView(QChartView):
         super().mouseReleaseEvent(event)
 
     def _find_nearest_point(self, x: float, y: float) -> QPointF | None:
-        x_axis: QDateTimeAxis = self._chart.axes(Qt.Orientation.Horizontal)[0]
+        horizontal_axes = self._chart.axes(Qt.Orientation.Horizontal)
+        if len(horizontal_axes) == 0:
+            return None
+        x_axis: QDateTimeAxis = horizontal_axes[0]
         x_range = x_axis.max().toMSecsSinceEpoch() - x_axis.min().toMSecsSinceEpoch()
         x_dist_max = x_range / 50
 
