@@ -532,7 +532,10 @@ class CurrencyFormPresenter:
 
     def _set_exchange_rate_table_column_visibility(self) -> None:
         for column in range(self._exchange_rate_table_model.columnCount()):
-            column_empty = self._exchange_rate_table_model.is_column_empty(column)
+            column_empty = (
+                self._exchange_rate_table_model.is_column_empty(column)
+                and len(self._record_keeper.exchange_rates) != 0  # show all when empty
+            )
             self.view.exchangeRateTable.setColumnHidden(column, column_empty)
 
     def _calculate_exchange_rate_stats(
