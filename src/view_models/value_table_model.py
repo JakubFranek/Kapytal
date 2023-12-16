@@ -33,7 +33,7 @@ class ValueTableModel(QAbstractTableModel):
 
         self.COLUMN_HEADERS = {ValueTableColumn.DATE: "Date"}
         if type_ == ValueType.EXCHANGE_RATE:
-            self.COLUMN_HEADERS[ValueTableColumn.VALUE] = "Rate"
+            self.COLUMN_HEADERS[ValueTableColumn.VALUE] = "Quote"
         elif type_ == ValueType.SECURITY_PRICE:
             self.COLUMN_HEADERS[ValueTableColumn.VALUE] = f"Price ({unit})"
         else:
