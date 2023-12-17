@@ -22,7 +22,6 @@ from src.models.model_objects.cash_objects import (
     InvalidCashTransactionTypeError,
     RefundPrecedesTransactionError,
     RefundTransaction,
-    UnrelatedAccountError,
     UnrelatedTransactionError,
 )
 from src.models.model_objects.currency_objects import (

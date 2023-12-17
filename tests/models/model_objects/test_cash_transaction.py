@@ -20,7 +20,6 @@ from src.models.model_objects.cash_objects import (
     CashTransactionType,
     InvalidCategoryTypeError,
     RefundTransaction,
-    UnrelatedAccountError,
 )
 from src.models.model_objects.currency_objects import (
     CashAmount,

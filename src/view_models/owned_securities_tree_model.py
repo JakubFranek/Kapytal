@@ -1,3 +1,4 @@
+import contextlib
 import numbers
 import unicodedata
 from collections.abc import Collection
@@ -106,10 +107,8 @@ class AccountItem:
 
         self.gain_native = self.native_amount - avg_price * shares
         self.gain_base = self.gain_native.convert(base_currency)
-        try:
+        with contextlib.suppress(Exception):
             self.gain_pct = round(100 * self.gain_native / (avg_price * shares), 2)
-        except Exception:
-            pass
 
         self.native_currency = parent.security.currency
 

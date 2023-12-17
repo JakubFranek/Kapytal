@@ -2,7 +2,7 @@ import logging
 from collections.abc import Collection
 
 from PyQt6.QtCore import QSortFilterProxyModel, Qt
-from PyQt6.QtWidgets import QApplication, QWidget
+from PyQt6.QtWidgets import QApplication
 from src.models.base_classes.transaction import Transaction
 from src.models.custom_exceptions import InvalidOperationError
 from src.models.model_objects.attributes import Category

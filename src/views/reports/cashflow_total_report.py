@@ -40,7 +40,7 @@ class CashFlowTotalReport(CustomWidget, Ui_CashFlowTotalReport):
         self._initialize_actions()
         self.set_recalculate_report_action_state(enabled=False)
 
-        self.resize(1130, 600)
+        self.resize(1135, 600)
 
     def load_stats(self, stats: CashFlowStats) -> None:
         self.incomeAmountLabel.setText(stats.incomes.balance.to_str_rounded())

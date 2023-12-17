@@ -114,9 +114,6 @@ class MainView(QMainWindow, Ui_MainWindow):
                 f"Kapytal v{constants.VERSION} - " + str(current_file_path) + star_str
             )
 
-    def show_status_message(self, message: str, msecs: int) -> None:
-        self.statusBar().showMessage(message, msecs)
-
     def set_recent_files_menu(self, recent_files: Collection[str]) -> None:
         if len(recent_files) == 0:
             self.menuRecent_Files.setEnabled(False)

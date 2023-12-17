@@ -203,6 +203,7 @@ class FilePresenter:
 
     def _update_load_progress(self, progress: int) -> None:
         self._busy_indicator.set_value(progress)
+        QApplication.processEvents()
 
     def _file_load_completed(self) -> None:
         self._busy_indicator.set_progress_bar_range(0, 0)
@@ -218,7 +219,6 @@ class FilePresenter:
 
         self.event_load_record_keeper(record_keeper)
 
-        self._view.show_status_message(f"File loaded: {self._current_file_path}", 3000)
         self.update_unsaved_changes(unsaved_changes=False)
 
         self._add_recent_path(self._current_file_path)
@@ -271,12 +271,15 @@ class FilePresenter:
 
     def _update_file_save_progress(self, progress: int) -> None:
         self._busy_indicator.set_value(progress)
+        QApplication.processEvents()
 
     def _update_file_save_status_text(self, text: str) -> None:
         self._busy_indicator.set_lower_text(text)
+        QApplication.processEvents()
 
     def _update_file_save_progress_bar_range(self) -> None:
         self._busy_indicator.set_progress_bar_range(0, 0)
+        QApplication.processEvents()
 
     def _file_save_completed(self) -> None:
         self._busy_indicator.close()
@@ -287,7 +290,6 @@ class FilePresenter:
         self._thread.deleteLater()
 
         self.update_unsaved_changes(unsaved_changes=False)
-        self._view.show_status_message(f"File saved: {self._current_file_path}", 3000)
 
         logging.info(f"File saved: {self._current_file_path}")
         backup_json_file(self._current_file_path)

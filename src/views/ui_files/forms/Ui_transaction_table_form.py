@@ -33,6 +33,8 @@ class Ui_TransactionTableForm(object):
         self.verticalLayout.addWidget(self.tableView)
         self.horizontalLayout = QtWidgets.QHBoxLayout()
         self.horizontalLayout.setObjectName("horizontalLayout")
+        spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Minimum)
+        self.horizontalLayout.addItem(spacerItem)
         self.shownTransactionsLabel = QtWidgets.QLabel(TransactionTableForm)
         self.shownTransactionsLabel.setObjectName("shownTransactionsLabel")
         self.horizontalLayout.addWidget(self.shownTransactionsLabel)
@@ -44,8 +46,6 @@ class Ui_TransactionTableForm(object):
         self.selectedTransactionsTotalLabel = QtWidgets.QLabel(TransactionTableForm)
         self.selectedTransactionsTotalLabel.setObjectName("selectedTransactionsTotalLabel")
         self.horizontalLayout.addWidget(self.selectedTransactionsTotalLabel)
-        spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Minimum)
-        self.horizontalLayout.addItem(spacerItem)
         self.verticalLayout.addLayout(self.horizontalLayout)
 
         self.retranslateUi(TransactionTableForm)
