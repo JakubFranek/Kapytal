@@ -296,20 +296,27 @@ class ExchangeRate(CopyableMixin, JSONSerializableMixin):
             logging.warning(f"{self!s}: no rate found, returning 'NaN'")
             return Decimal("NaN")
 
-    def set_rate(self, date_: date, rate: Decimal | int | str) -> None:
+    def set_rate(
+        self, date_: date, rate: Decimal | int | str, *, update: bool = True
+    ) -> None:
         self._validate_date(date_)
         _rate = self._validate_rate(rate)
         self._rate_history[date_] = _rate.normalize()
-        self.update_values()
+        if update:
+            self.update_values()
 
     def set_rates(
-        self, date_rate_tuples: Collection[tuple[date, Decimal | int | str]]
+        self,
+        date_rate_tuples: Collection[tuple[date, Decimal | int | str]],
+        *,
+        update: bool = True,
     ) -> None:
         for date_, rate in date_rate_tuples:
             self._validate_date(date_)
             _rate = self._validate_rate(rate)
             self._rate_history[date_] = _rate.normalize()
-        self.update_values()
+        if update:
+            self.update_values()
 
     def delete_rate(self, date_: date, *, update: bool = True) -> None:
         del self._rate_history[date_]
@@ -370,7 +377,9 @@ class ExchangeRate(CopyableMixin, JSONSerializableMixin):
                 .replace(tzinfo=user_settings.settings.time_zone)
                 .date(),
                 rate,
+                update=False,
             )
+        obj.update_values()
 
         return obj
 

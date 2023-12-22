@@ -211,20 +211,25 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
             logging.warning(f"{self!s}: no price found, returning CashAmount('NaN')")
             return CashAmount(Decimal("NaN"), self._currency)
 
-    def set_price(self, date_: date, price: CashAmount) -> None:
+    def set_price(self, date_: date, price: CashAmount, *, update: bool = True) -> None:
         self._validate_date(date_)
         self._validate_price(price)
         self._price_history[date_] = price
-        self.update_values()
+        if update:
+            self.update_values()
 
     def set_prices(
-        self, date_price_tuples: Collection[tuple[date, CashAmount]]
+        self,
+        date_price_tuples: Collection[tuple[date, CashAmount]],
+        *,
+        update: bool = True,
     ) -> None:
         for date_, price in date_price_tuples:
             self._validate_date(date_)
             self._validate_price(price)
             self._price_history[date_] = price
-        self.update_values()
+        if update:
+            self.update_values()
 
     def delete_price(self, date_: date, *, update: bool = True) -> None:
         del self._price_history[date_]
@@ -288,8 +293,9 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
                 .replace(tzinfo=user_settings.settings.time_zone)
                 .date(),
                 CashAmount(price, obj.currency),
+                update=False,
             )
-
+        obj.update_values()
         obj._uuid = UUID(data["uuid"])  # noqa: SLF001
         return obj
 
