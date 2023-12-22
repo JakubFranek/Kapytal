@@ -55,6 +55,7 @@ def test_creation() -> None:
     assert record_keeper.base_currency is None
     assert record_keeper.exchange_rates == ()
     assert record_keeper.securities == ()
+    assert record_keeper.descriptions == ()
     assert record_keeper.__repr__() == "RecordKeeper"
 
 
@@ -398,7 +399,7 @@ def test_add_cash_transfer(
     transfer = record_keeper.transactions[0]
     assert transfer in record_keeper.cash_transfers
     assert transfer.datetime_ == datetime_
-    assert transfer.description == description
+    assert transfer.description == description.strip()
 
 
 @given(

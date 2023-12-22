@@ -25,6 +25,7 @@ from tests.models.test_assets.composites import (
     currencies,
     everything_except,
     names,
+    securities,
     security_accounts,
     security_transactions,
     security_transfers,
@@ -232,47 +233,6 @@ def test_get_balance_same_currency_securities(
     )
 
 
-def test_get_average_price() -> None:
-    account = SecurityAccount("Test")
-    usd = Currency("USD", 2)
-    cash_account = CashAccount("Test", usd, CashAmount(0, usd))
-    security = Security("Alphabet", "ABC", "Stock", usd, 1)
-
-    t1 = SecurityTransaction(
-        "test",
-        datetime.now(user_settings.settings.time_zone),
-        SecurityTransactionType.BUY,
-        security,
-        1,
-        CashAmount(1, usd),
-        account,
-        cash_account,
-    )
-    t2 = SecurityTransaction(
-        "test",
-        datetime.now(user_settings.settings.time_zone),
-        SecurityTransactionType.BUY,
-        security,
-        2,
-        CashAmount(2, usd),
-        account,
-        cash_account,
-    )
-    t3 = SecurityTransaction(
-        "test",
-        datetime.now(user_settings.settings.time_zone),
-        SecurityTransactionType.BUY,
-        security,
-        4,
-        CashAmount(4, usd),
-        account,
-        cash_account,
-    )
-
-    avg_price = account.get_average_price(security)
-    assert avg_price == CashAmount(3, usd)
-
-
 def test_get_average_price_with_transfers() -> None:
     account = SecurityAccount("Test")
     account_2 = SecurityAccount("Original Buyer")
@@ -280,7 +240,7 @@ def test_get_average_price_with_transfers() -> None:
     cash_account = CashAccount("Test", usd, CashAmount(0, usd))
     security = Security("Alphabet", "ABC", "Stock", usd, 1)
 
-    t1 = SecurityTransaction(
+    SecurityTransaction(
         "test",
         datetime.now(user_settings.settings.time_zone),
         SecurityTransactionType.BUY,
@@ -290,7 +250,7 @@ def test_get_average_price_with_transfers() -> None:
         account_2,
         cash_account,
     )
-    t2 = SecurityTransaction(
+    SecurityTransaction(
         "test",
         datetime.now(user_settings.settings.time_zone),
         SecurityTransactionType.BUY,
@@ -300,7 +260,7 @@ def test_get_average_price_with_transfers() -> None:
         account_2,
         cash_account,
     )
-    t3 = SecurityTransfer(
+    SecurityTransfer(
         "transfer",
         datetime.now(user_settings.settings.time_zone),
         security,
@@ -308,7 +268,7 @@ def test_get_average_price_with_transfers() -> None:
         account_2,
         account,
     )
-    t4 = SecurityTransaction(
+    SecurityTransaction(
         "test",
         datetime.now(user_settings.settings.time_zone),
         SecurityTransactionType.BUY,
@@ -321,3 +281,107 @@ def test_get_average_price_with_transfers() -> None:
 
     avg_price = account.get_average_price(security)
     assert avg_price == CashAmount(5, usd)
+
+
+@given(security=everything_except(Security))
+def test_get_average_price_invalid_type(security: Any) -> None:
+    account = SecurityAccount("Test")
+    with pytest.raises(TypeError, match="Parameter 'security' must be a Security."):
+        account.get_average_price(security)
+
+
+@given(security=securities())
+def test_get_average_price_invalid_security(security: Security) -> None:
+    account = SecurityAccount("Test")
+    with pytest.raises(ValueError, match="not in this SecurityAccount."):
+        account.get_average_price(security)
+
+
+def test_get_average_price_specific_date() -> None:
+    account = SecurityAccount("Test")
+    account_2 = SecurityAccount("Original Buyer")
+    usd = Currency("USD", 2)
+    cash_account = CashAccount("Test", usd, CashAmount(0, usd))
+    security = Security("Alphabet", "ABC", "Stock", usd, 1)
+    security_dummy = Security("Dummy", "DUMMY", "Stock", usd, 1)
+    today = datetime.now(user_settings.settings.time_zone)
+
+    SecurityTransaction(
+        "test",
+        today - timedelta(days=5),
+        SecurityTransactionType.BUY,
+        security,
+        5,
+        CashAmount(5, usd),
+        account_2,
+        cash_account,
+    )
+    SecurityTransaction(
+        "test",
+        today - timedelta(days=4),
+        SecurityTransactionType.BUY,
+        security,
+        5,
+        CashAmount(3, usd),
+        account_2,
+        cash_account,
+    )
+    SecurityTransfer(
+        "transfer",
+        today - timedelta(days=3),
+        security_dummy,
+        5,
+        account_2,
+        account,
+    )
+    SecurityTransfer(
+        "transfer",
+        today - timedelta(days=3),
+        security,
+        5,
+        account_2,
+        account,
+    )
+    SecurityTransaction(
+        "test",
+        today - timedelta(days=2),
+        SecurityTransactionType.BUY,
+        security,
+        5,
+        CashAmount(6, usd),
+        account,
+        cash_account,
+    )
+    SecurityTransaction(
+        "test",
+        today - timedelta(days=1),
+        SecurityTransactionType.BUY,
+        security_dummy,
+        5,
+        CashAmount(6, usd),
+        account,
+        cash_account,
+    )
+    SecurityTransaction(
+        "test",
+        today,
+        SecurityTransactionType.BUY,
+        security,
+        5,
+        CashAmount(6, usd),
+        account,
+        cash_account,
+    )
+
+    avg_price = account.get_average_price(security, today.date() - timedelta(days=2))
+    assert avg_price == CashAmount(5, usd)
+
+
+def test_get_average_price_invalid_date() -> None:
+    account = SecurityAccount("Test")
+    usd = Currency("USD", 2)
+    security = Security("Alphabet", "ABC", "Stock", usd, 1)
+    today = datetime.now(user_settings.settings.time_zone)
+
+    with pytest.raises(ValueError, match="not in this SecurityAccount"):
+        account.get_average_price(security, today.date() - timedelta(days=7))

@@ -109,6 +109,23 @@ def test_initial_balance_invalid_currency(
 
 
 @given(
+    name=st.just("Valid Name"),
+    currency=currencies(),
+    data=st.data(),
+)
+def test_initial_balance_invalid_value(
+    name: str,
+    currency: Currency,
+    data: st.DataObject,
+) -> None:
+    initial_balance = data.draw(cash_amounts(currency, max_value=-1))
+    with pytest.raises(
+        ValueError, match="CashAccount.initial_balance must not be negative."
+    ):
+        CashAccount(name, currency, initial_balance)
+
+
+@given(
     account=cash_accounts(),
     transaction=everything_except((CashTransaction, CashTransfer)),
 )

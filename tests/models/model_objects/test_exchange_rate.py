@@ -29,12 +29,15 @@ def test_creation(primary: Currency, secondary: Currency) -> None:
     assert exchange_rate.rate_history_pairs == ()
     assert exchange_rate.latest_rate.is_nan()
     assert exchange_rate.latest_date is None
+    assert exchange_rate.earliest_date is None
+    assert exchange_rate.rate_decimals == 0
     assert exchange_rate.__repr__() == (
         f"ExchangeRate({primary.code}/{secondary.code})"
     )
     assert exchange_rate.__str__() == f"{primary.code}/{secondary.code}"
     assert secondary in primary.convertible_to
     assert primary in secondary.convertible_to
+    assert exchange_rate.calculate_return(None).is_nan()
 
 
 @given(
@@ -192,6 +195,7 @@ def test_get_rate() -> None:
 
     exchange_rate.set_rate(date_1, rate_1)
     assert exchange_rate.latest_rate == rate_1
+    assert exchange_rate.get_rate() == rate_1
     assert exchange_rate.get_rate(date_1) == rate_1
     assert exchange_rate.get_rate(date_1 + timedelta(days=1)) == rate_1
 
@@ -199,6 +203,7 @@ def test_get_rate() -> None:
     exchange_rate.set_rate(date_3, rate_3)
 
     assert exchange_rate.latest_rate == rate_3
+    assert exchange_rate.get_rate() == rate_3
     assert exchange_rate.get_rate(date_1) == rate_1
     assert exchange_rate.get_rate(date_2) == rate_2
     assert exchange_rate.get_rate(date_3) == rate_3
@@ -219,7 +224,10 @@ def test_set_rates(primary: Currency, secondary: Currency, data: st.DataObject) 
             st.tuples(
                 st.dates(),
                 st.decimals(
-                    min_value=0.01, max_value=1e6, allow_infinity=False, allow_nan=False
+                    min_value="0.01",
+                    max_value=1_000_000,
+                    allow_infinity=False,
+                    allow_nan=False,
                 ),
             ),
             min_size=0,

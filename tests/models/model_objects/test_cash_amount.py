@@ -476,6 +476,52 @@ def test_nan() -> None:
     assert nan_amount.value_normalized.is_nan()
 
 
+def test_round() -> None:
+    amount = CashAmount(Decimal("1.23456789"), Currency("EUR", 2))
+
+    assert amount.value_normalized == Decimal("1.23456789")
+    assert amount.value_rounded == Decimal("1.23")
+    assert round(amount, 0) == Decimal(1)
+    assert round(amount, 1) == Decimal("1.2")
+    assert round(amount, 2) == Decimal("1.23")
+    assert round(amount, 3) == Decimal("1.235")
+    assert round(amount, 4) == Decimal("1.2346")
+    assert round(amount, 5) == Decimal("1.23457")
+    assert round(amount, 6) == Decimal("1.234568")
+
+    assert amount.to_str_rounded() == "1.23 EUR"
+    assert amount.to_str_rounded(0) == "1 EUR"
+    assert amount.to_str_rounded(1) == "1.2 EUR"
+    assert amount.to_str_rounded(2) == "1.23 EUR"
+    assert amount.to_str_rounded(3) == "1.235 EUR"
+    assert amount.to_str_rounded(4) == "1.2346 EUR"
+    assert amount.to_str_rounded(5) == "1.23457 EUR"
+    assert amount.to_str_rounded(6) == "1.234568 EUR"
+
+
+def test_round_quantization() -> None:
+    amount = CashAmount(Decimal("1.0000"), Currency("EUR", 2))
+
+    assert amount.value_normalized == Decimal("1.0000")
+    assert amount.value_rounded == Decimal("1.00")
+    assert round(amount, 0) == Decimal(1)
+    assert round(amount, 1) == Decimal("1.0")
+    assert round(amount, 2) == Decimal("1.00")
+    assert round(amount, 3) == Decimal("1.000")
+    assert round(amount, 4) == Decimal("1.0000")
+    assert round(amount, 5) == Decimal("1.00000")
+    assert round(amount, 6) == Decimal("1.000000")
+
+    assert amount.to_str_rounded() == "1.00 EUR"
+    assert amount.to_str_rounded(0) == "1 EUR"
+    assert amount.to_str_rounded(1) == "1.0 EUR"
+    assert amount.to_str_rounded(2) == "1.00 EUR"
+    assert amount.to_str_rounded(3) == "1.000 EUR"
+    assert amount.to_str_rounded(4) == "1.0000 EUR"
+    assert amount.to_str_rounded(5) == "1.00000 EUR"
+    assert amount.to_str_rounded(6) == "1.000000 EUR"
+
+
 def get_currencies() -> dict[str, Currency]:
     btc = Currency("BTC", 8)
     usd = Currency("USD", 2)

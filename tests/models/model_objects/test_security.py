@@ -1,4 +1,4 @@
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 from typing import Any
 
@@ -12,6 +12,7 @@ from src.models.model_objects.currency_objects import (
     CurrencyError,
 )
 from src.models.model_objects.security_objects import InvalidCharacterError, Security
+from src.models.user_settings import user_settings
 from tests.models.test_assets.composites import (
     currencies,
     everything_except,
@@ -42,6 +43,8 @@ def test_creation(
     assert security.currency == currency
     assert security.price.is_nan()
     assert security.latest_date is None
+    assert security.earliest_date is None
+    assert security.price_decimals == 0
     assert security.price_history == {}
     assert security.price_history_pairs == ()
     assert security.decimal_price_history_pairs == ()
@@ -205,7 +208,7 @@ def test_shares_decimals_invalid_type(
     symbol=st.text(alphabet=Security.SYMBOL_ALLOWED_CHARS, min_size=1, max_size=8),
     type_=names(min_size=1, max_size=32),
     currency=currencies(),
-    shares_decimals=st.one_of(st.integers(max_value=-1), st.integers(min_value=19)),
+    shares_decimals=st.sampled_from([-10, -1, 19, 100, 1000]),
 )
 def test_shares_decimals_invalid_value(
     name: str, symbol: str, type_: str, currency: Currency, shares_decimals: Any
@@ -223,6 +226,9 @@ def test_set_get_price(
     security = get_security()
 
     assert security.get_price().is_nan()
+    assert security.get_price(
+        datetime.now(tz=user_settings.settings.time_zone)
+    ).is_nan()
 
     currency = security.currency
     price = CashAmount(data.draw(valid_decimals()), currency)
@@ -235,7 +241,7 @@ def test_set_get_price(
     assert security.latest_date == date_
     assert security.get_price(None) == price
     assert security.get_price(date_) == price
-    assert security.get_price(date_ - timedelta(days=1)) == price
+    assert security.get_price(date_ - timedelta(days=1)).is_nan()
 
     price_2 = CashAmount(data.draw(valid_decimals()), currency)
     date_2 = data.draw(st.dates())
@@ -262,10 +268,12 @@ def test_set_and_delete_price(
     assert security.price_history[date_].value_normalized == price.value_normalized
     assert security.price == price
     assert security.latest_date == date_
+    assert security.earliest_date == date_
 
     security.delete_price(date_)
     assert security.price.is_nan()
     assert security.latest_date is None
+    assert security.earliest_date is None
 
 
 @given(
@@ -343,6 +351,28 @@ def test_set_prices(currency: Currency, data: st.DataObject) -> None:
         assert security._latest_price.is_nan()
 
     assert security.latest_date == latest_date
+
+
+def test_calculate_return() -> None:
+    security = get_security()
+    today = datetime.now(tz=user_settings.settings.time_zone).date()
+
+    security.set_price(today - timedelta(days=1), CashAmount(100, security.currency))
+    security.set_price(today, CashAmount(150, security.currency))
+
+    returns = security.calculate_return()
+    assert returns == Decimal(50)
+
+
+def test_calculate_return_before_earliest_date() -> None:
+    security = get_security()
+    today = datetime.now(tz=user_settings.settings.time_zone).date()
+
+    security.set_price(today - timedelta(days=1), CashAmount(100, security.currency))
+    security.set_price(today, CashAmount(150, security.currency))
+
+    returns = security.calculate_return(today - timedelta(days=2))
+    assert returns.is_nan()
 
 
 def get_security() -> Security:

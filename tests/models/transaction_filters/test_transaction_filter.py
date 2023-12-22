@@ -1,6 +1,7 @@
 import re
 from datetime import timedelta
 from typing import Any
+from uuid import UUID
 
 from hypothesis import assume, given
 from hypothesis import strategies as st
@@ -283,6 +284,23 @@ def test_set_cash_amount_filter(
 
     filter_.filter_transactions(transaction_list)
     filter_.validate_transaction(transaction_list[0])
+
+
+@given(
+    uuids=st.lists(
+        st.sampled_from([transaction.uuid for transaction in transaction_list])
+    ),
+    mode=st.sampled_from(FilterMode),
+)
+def test_set_uuid_filter(
+    uuids: list[UUID],
+    mode: FilterMode,
+) -> None:
+    filter_ = TransactionFilter()
+    filter_.set_uuid_filter(uuids, mode)
+    assert filter_.uuid_filter.uuids == tuple(uuids)
+    assert filter_.uuid_filter.uuids_set == frozenset(uuids)
+    assert filter_.uuid_filter.mode == mode
 
 
 @given(transactions=transactions())

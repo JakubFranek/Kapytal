@@ -37,6 +37,7 @@ from tests.models.test_record_keeper import (
     get_preloaded_record_keeper_with_cash_transfers,
     get_preloaded_record_keeper_with_refunds,
     get_preloaded_record_keeper_with_security_transactions,
+    get_preloaded_record_keeper_with_various_transactions,
 )
 
 
@@ -127,6 +128,32 @@ def test_edit_attribute_does_not_exist() -> None:
     record_keeper = RecordKeeper()
     with pytest.raises(NotFoundError):
         record_keeper.edit_attribute("abc", "def", AttributeType.PAYEE)
+
+
+def test_edit_attribute_already_exists() -> None:
+    record_keeper = RecordKeeper()
+    record_keeper.add_tag("ABC")
+    record_keeper.add_tag("DEF")
+    with pytest.raises(AlreadyExistsError):
+        record_keeper.edit_attribute("ABC", "DEF", AttributeType.TAG)
+
+
+def test_edit_attribute_merge_tags() -> None:
+    record_keeper = get_preloaded_record_keeper_with_various_transactions()
+    tag_1 = record_keeper.tags[0]
+    tag_2 = record_keeper.tags[1]
+    record_keeper.edit_attribute(tag_1.name, tag_2.name, AttributeType.TAG, merge=True)
+    assert tag_1 not in record_keeper.tags
+
+
+def test_edit_attribute_merge_payees() -> None:
+    record_keeper = get_preloaded_record_keeper_with_various_transactions()
+    payee_1 = record_keeper.payees[0]
+    payee_2 = record_keeper.payees[1]
+    record_keeper.edit_attribute(
+        payee_1.name, payee_2.name, AttributeType.PAYEE, merge=True
+    )
+    assert payee_1 not in record_keeper.payees
 
 
 def test_edit_security() -> None:

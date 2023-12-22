@@ -20,6 +20,15 @@ def test_creation(name: str, category_type: CategoryType) -> None:
 
 
 @given(
+    type_=st.sampled_from(CategoryType),
+)
+def test_name_invalid_value(type_: CategoryType) -> None:
+    name = "Total"
+    with pytest.raises(ValueError, match="The word 'Total' is reserved for Reports."):
+        Category(name, type_)
+
+
+@given(
     name=st.just(""),
     type_=st.sampled_from(CategoryType),
 )

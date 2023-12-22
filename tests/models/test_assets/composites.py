@@ -1,9 +1,11 @@
 import numbers
 import re
 import string
+from collections.abc import Collection
 from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import Any
+from uuid import UUID
 
 from hypothesis import assume
 from hypothesis import strategies as st
@@ -30,6 +32,7 @@ from src.models.model_objects.security_objects import (
     SecurityTransactionType,
     SecurityTransfer,
 )
+from src.models.statistics.common_classes import TransactionBalance
 from src.models.transaction_filters.account_filter import AccountFilter
 from src.models.transaction_filters.cash_amount_filter import CashAmountFilter
 from src.models.transaction_filters.currency_filter import CurrencyFilter
@@ -47,6 +50,7 @@ from src.models.transaction_filters.specific_tags_filter import SpecificTagsFilt
 from src.models.transaction_filters.split_tags_filter import SplitTagsFilter
 from src.models.transaction_filters.tagless_filter import TaglessFilter
 from src.models.transaction_filters.transaction_filter import FilterMode, TypeFilter
+from src.models.transaction_filters.uuid_filter import UUIDFilter
 from src.models.user_settings import user_settings
 from tests.models.test_assets.constants import MIN_DATETIME
 
@@ -99,10 +103,17 @@ def cash_amounts(
 
 
 @st.composite
-def cash_amount_filters(draw: st.DrawFn) -> CashAmountFilter:
-    mode = draw(st.sampled_from(FilterMode))
-    currency = draw(currencies())
-    minimum = draw(cash_amounts(currency=currency, min_value=0))
+def cash_amount_filters(
+    draw: st.DrawFn,
+    currency: Currency | None = None,
+    mode: FilterMode | None = None,
+    min_value: numbers.Real | str | None = 0,
+) -> CashAmountFilter:
+    if mode is None:
+        mode = draw(st.sampled_from(FilterMode))
+    if currency is None:
+        currency = draw(currencies())
+    minimum = draw(cash_amounts(currency=currency, min_value=min_value))
     maximum = draw(cash_amounts(currency=currency, min_value=minimum.value_normalized))
     return CashAmountFilter(minimum, maximum, mode)
 
@@ -537,6 +548,15 @@ def transactions(draw: st.DrawFn) -> tuple[Transaction]:
 
 
 @st.composite
+def transaction_balances(
+    draw: st.DrawFn, currency: Currency | None = None
+) -> TransactionBalance:
+    balance = draw(cash_amounts(currency=currency))
+    _transactions = draw(st.lists(transactions()))
+    return TransactionBalance(balance, _transactions)
+
+
+@st.composite
 def type_filters(draw: st.DrawFn) -> TypeFilter:
     mode = draw(st.sampled_from(FilterMode))
     types = draw(
@@ -577,3 +597,20 @@ def valid_decimals(
             min_value, max_value, places=places, allow_infinity=False, allow_nan=False
         )
     )
+
+
+@st.composite
+def uuid_filters(
+    draw: st.DrawFn, uuids_to_draw_from: Collection[UUID] | None = None
+) -> AccountFilter:
+    mode = draw(st.sampled_from(FilterMode))
+    if uuids_to_draw_from is not None and len(uuids_to_draw_from) > 0:
+        uuids = draw(
+            st.lists(
+                st.sampled_from(uuids_to_draw_from),
+                max_size=len(uuids_to_draw_from),
+            )
+        )
+    else:
+        uuids = draw(st.lists(st.uuids(version=4)))
+    return UUIDFilter(uuids, mode)
