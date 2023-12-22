@@ -215,7 +215,7 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
         self._validate_date(date_)
         self._validate_price(price)
         self._price_history[date_] = price
-        self._update_values()
+        self.update_values()
 
     def set_prices(
         self, date_price_tuples: Collection[tuple[date, CashAmount]]
@@ -224,11 +224,12 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
             self._validate_date(date_)
             self._validate_price(price)
             self._price_history[date_] = price
-        self._update_values()
+        self.update_values()
 
-    def delete_price(self, date_: date) -> None:
+    def delete_price(self, date_: date, *, update: bool = True) -> None:
         del self._price_history[date_]
-        self._update_values()
+        if update:
+            self.update_values()
 
     def calculate_return(
         self, start: date | None = None, end: date | None = None
@@ -292,7 +293,7 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
         obj._uuid = UUID(data["uuid"])  # noqa: SLF001
         return obj
 
-    def _update_values(self) -> None:
+    def update_values(self) -> None:
         if len(self._price_history) == 0:
             self._earliest_date = None
             self._latest_date = None
@@ -301,21 +302,21 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
             self._earliest_date = min(date_ for date_ in self._price_history)
             self._latest_date = max(date_ for date_ in self._price_history)
             latest_price = self._price_history[self._latest_date]
-        if hasattr(self, "_latest_price"):
-            previous_latest_price = self._latest_price
-        else:
-            previous_latest_price = None
 
+        previous_latest_price = (
+            self._latest_price if hasattr(self, "_latest_price") else None
+        )
         self._latest_price = latest_price
         if previous_latest_price != latest_price:
             self.event_price_updated()
 
-        self._price_decimals = 0
-        for price in self._price_history.values():
-            value_normalized = price.value_normalized
-            decimals = -value_normalized.as_tuple().exponent
-            if decimals > self._price_decimals:
-                self._price_decimals = decimals
+        self._price_decimals = max(
+            (
+                -price.value_normalized.as_tuple().exponent
+                for price in self._price_history.values()
+            ),
+            default=0,
+        )
 
         self._recalculate_price_history_pairs = True
 

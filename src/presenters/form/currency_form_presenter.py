@@ -367,16 +367,16 @@ class CurrencyFormPresenter:
             logging.debug("User cancelled the data point deletion")
             return
 
+        any_deleted = False
         try:
-            any_deleted = False
             for date_, _ in selected_data_points:
-                exchange_rate.delete_rate(date_)
+                exchange_rate.delete_rate(date_, update=False)
                 any_deleted = True
         except Exception as exception:  # noqa: BLE001
             handle_exception(exception)
-            return
 
         if any_deleted:
+            exchange_rate.update_values()
             self._reset_model_and_update_chart(exchange_rate)
             self._data_point_selection_changed()
             self.event_data_changed()

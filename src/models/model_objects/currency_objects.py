@@ -300,7 +300,7 @@ class ExchangeRate(CopyableMixin, JSONSerializableMixin):
         self._validate_date(date_)
         _rate = self._validate_rate(rate)
         self._rate_history[date_] = _rate.normalize()
-        self._update_values()
+        self.update_values()
 
     def set_rates(
         self, date_rate_tuples: Collection[tuple[date, Decimal | int | str]]
@@ -309,11 +309,12 @@ class ExchangeRate(CopyableMixin, JSONSerializableMixin):
             self._validate_date(date_)
             _rate = self._validate_rate(rate)
             self._rate_history[date_] = _rate.normalize()
-        self._update_values()
+        self.update_values()
 
-    def delete_rate(self, date_: date) -> None:
+    def delete_rate(self, date_: date, *, update: bool = True) -> None:
         del self._rate_history[date_]
-        self._update_values()
+        if update:
+            self.update_values()
 
     def prepare_for_deletion(self) -> None:
         self.primary_currency.remove_exchange_rate(self)
@@ -388,7 +389,7 @@ class ExchangeRate(CopyableMixin, JSONSerializableMixin):
             raise ValueError("Parameter 'rate' must be finite and positive.")
         return _rate
 
-    def _update_values(self) -> None:
+    def update_values(self) -> None:
         if len(self._rate_history) == 0:
             self._latest_date = None
             self._earliest_date = None
@@ -398,9 +399,10 @@ class ExchangeRate(CopyableMixin, JSONSerializableMixin):
             self._earliest_date = min(date_ for date_ in self._rate_history)
             self._latest_rate = self._rate_history[self._latest_date]
 
-        self._rate_decimals = 0
-        for rate in self._rate_history.values():
-            self._rate_decimals = max(self._rate_decimals, -rate.as_tuple().exponent)
+        self._rate_decimals = max(
+            (-rate.as_tuple().exponent for rate in self._rate_history.values()),
+            default=0,
+        )
 
         self.primary_currency.reset_cache()
         self.secondary_currency.reset_cache()
