@@ -201,13 +201,6 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
             if index:  # zero if date_ is earliest or history is empty
                 _, price = self.price_history_pairs[index - 1]
                 return price
-            if len(self._price_history) >= 1:
-                _date, price = self._price_history_pairs[0]
-                logging.warning(
-                    f"{self!s}: no earlier price found for {date_}, "
-                    f"returning {price} for {_date}"
-                )
-                return price
             logging.warning(f"{self!s}: no price found, returning CashAmount('NaN')")
             return CashAmount(Decimal("NaN"), self._currency)
 
@@ -249,8 +242,6 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
 
         price_end = self.get_price(end).value_normalized
         price_start = self.get_price(start).value_normalized
-        if price_start.is_nan() or price_end.is_nan():
-            return Decimal("NaN")
 
         return Decimal(100 * (price_end / price_start - 1))
 

@@ -332,7 +332,7 @@ class ExchangeRate(CopyableMixin, JSONSerializableMixin):
     def calculate_return(
         self, start: date | None = None, end: date | None = None
     ) -> Decimal:
-        """Returns the Security return as a percentage."""
+        """Returns the ExchangeRate return as a percentage."""
         if not hasattr(self, "_earliest_date") or self._earliest_date is None:
             return Decimal("NaN")
         if start is None:

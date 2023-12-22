@@ -179,7 +179,6 @@ class SecurityForm(CustomWidget, Ui_SecurityForm):
         )
 
     def refresh_tree_view(self) -> None:
-        self.treeView.expandAll()
         for column in OwnedSecuritiesTreeColumn:
             self.treeView.resizeColumnToContents(column)
 

@@ -184,7 +184,7 @@ class UserSettings(JSONSerializableMixin, CopyableMixin):
     @exchange_rate_decimals.setter
     def exchange_rate_decimals(self, value: int) -> None:
         if not isinstance(value, int):
-            raise TypeError("UserSettings.exchange_rate_decimals must be an int.")
+            raise TypeError("UserSettings.exchange_rate_decimals must be an integer.")
         if value < 0:
             raise ValueError(
                 "UserSettings.exchange_rate_decimals must not be negative."
@@ -205,7 +205,7 @@ class UserSettings(JSONSerializableMixin, CopyableMixin):
     @price_per_share_decimals.setter
     def price_per_share_decimals(self, value: int) -> None:
         if not isinstance(value, int):
-            raise TypeError("UserSettings.price_per_share_decimals must be an int.")
+            raise TypeError("UserSettings.price_per_share_decimals must be an integer.")
         if value < 0:
             raise ValueError(
                 "UserSettings.price_per_share_decimals must not be negative."
