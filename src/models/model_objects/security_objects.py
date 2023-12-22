@@ -485,16 +485,21 @@ class SecurityAccount(Account):
     ) -> CashAmount:
         if not isinstance(security, Security):
             raise TypeError("Parameter 'security' must be a Security.")
-        if date_ is None and security not in self._securities_history[-1][1]:
+        if date_ is None and (
+            len(self._securities_history) == 0
+            or security not in self._securities_history[-1][1]
+        ):
             raise ValueError(
                 f"Security {security.name} is not in this SecurityAccount."
             )
         if date_ is not None:
             for _datetime, security_dict in reversed(self._securities_history):
-                if _datetime.date() < date_ and security not in security_dict:
-                    raise ValueError(
-                        f"Security {security.name} is not in this SecurityAccount."
-                    )
+                if _datetime.date() <= date_ and security in security_dict:
+                    break
+            else:
+                raise ValueError(
+                    f"Security {security.name} is not in this SecurityAccount."
+                )
 
         shares_price_pairs: list[tuple[int, CashAmount]] = []
         for transaction in self._transactions:

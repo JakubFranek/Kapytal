@@ -123,7 +123,7 @@ def calculate_attribute_stats(
     attribute_types = {attribute.type_ for attribute in all_attributes}
     if len(attribute_types) > 1:
         raise ValueError("All Attributes must be of the same type_.")
-    attribute_type = attribute_types.pop() if len(attribute_types) == 1 else None
+    attribute_type = attribute_types.pop()
 
     stats_dict: dict[Attribute, AttributeStats] = {}
     for attribute in all_attributes:
@@ -146,6 +146,4 @@ def calculate_attribute_stats(
             stats.balance += transaction.get_amount(transaction.account).convert(
                 base_currency
             )
-        else:
-            pass
     return stats_dict

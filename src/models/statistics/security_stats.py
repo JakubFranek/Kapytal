@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 
 from pyxirr import InvalidPaymentsError, xirr
@@ -26,14 +26,14 @@ def calculate_irr(security: Security, accounts: list[SecurityAccount]) -> Decima
     if len(transactions) == 0:
         return Decimal("NaN")
 
-    dates = []
-    cashflows = []
+    dates: list[date] = []
+    cashflows: list[Decimal] = []
     for transaction in transactions:
         _date = transaction.datetime_.date()
 
         if isinstance(transaction, SecurityTransaction):
             amount = transaction.get_amount(transaction.cash_account).value_normalized
-        elif isinstance(transaction, SecurityTransfer):
+        else:
             if transaction.sender in accounts and transaction.recipient in accounts:
                 continue
             if transaction.recipient in accounts:
@@ -42,8 +42,6 @@ def calculate_irr(security: Security, accounts: list[SecurityAccount]) -> Decima
             else:
                 avg_price = transaction.recipient.get_average_price(security, _date)
                 amount = avg_price.value_normalized * transaction.shares
-        else:
-            raise TypeError("Unknown Transaction type.")
 
         if len(dates) > 0 and _date == dates[-1]:
             cashflows[-1] += amount
@@ -59,7 +57,7 @@ def calculate_irr(security: Security, accounts: list[SecurityAccount]) -> Decima
     price = security.price
     for account in accounts:
         sell_all_amount += account.securities[security] * price.value_normalized
-    if sell_all_amount.is_zero():
+    if sell_all_amount.is_zero() or sell_all_amount.is_nan():
         return Decimal("NaN")
     today = datetime.now(user_settings.settings.time_zone).date()
     if today > dates[-1]:
@@ -72,8 +70,8 @@ def calculate_irr(security: Security, accounts: list[SecurityAccount]) -> Decima
 
     try:
         irr = xirr(dates, cashflows)
-    except InvalidPaymentsError:
+    except InvalidPaymentsError:  # pragma: no cover
         return Decimal("NaN")
     if irr is None:  # solution not found
-        return Decimal("NaN")
+        return Decimal("NaN")  # pragma: no cover
     return Decimal(irr)

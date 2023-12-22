@@ -574,7 +574,7 @@ class CashTransaction(CashRelatedTransaction):
         min_amount = max_amount - remaining_amount
         if not min_amount.is_negative():
             return min_amount
-        return self.currency.zero_amount
+        return self.currency.zero_amount # TODO: test this line
 
     def is_account_related(self, account: Account) -> bool:
         return self._account == account

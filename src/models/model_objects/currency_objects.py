@@ -278,7 +278,9 @@ class ExchangeRate(CopyableMixin, JSONSerializableMixin):
     def __str__(self) -> str:
         return f"{self._primary_currency.code}/{self._secondary_currency.code}"
 
-    def get_rate(self, date_: date) -> Decimal:
+    def get_rate(self, date_: date | None = None) -> Decimal:
+        if date_ is None:
+            return self.latest_rate
         try:
             return self._rate_history[date_]
         except KeyError:
@@ -342,8 +344,6 @@ class ExchangeRate(CopyableMixin, JSONSerializableMixin):
 
         rate_end = self.get_rate(end)
         rate_start = self.get_rate(start)
-        if rate_start.is_nan() or rate_end.is_nan():
-            return Decimal("NaN")
 
         return Decimal(100 * (rate_end / rate_start - 1))
 
