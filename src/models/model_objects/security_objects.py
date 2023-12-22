@@ -234,7 +234,7 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
         self, start: date | None = None, end: date | None = None
     ) -> Decimal:
         """Returns the Security return as a percentage."""
-        if not hasattr(self, "_earliest_date"):
+        if not hasattr(self, "_earliest_date") or self._earliest_date is None:
             return Decimal("NaN")
         if start is None:
             start = self._earliest_date
@@ -392,13 +392,11 @@ class SecurityAccount(Account):
     ) -> tuple[CashAmount, ...]:
         balances: dict[Currency, CashAmount] = {}
         for security, shares in security_dict.items():
-            security_amount = security.get_price(date_) * shares
-            if security_amount.is_nan():
-                continue
-            if security_amount.currency in balances:
-                balances[security_amount.currency] += security_amount
-            else:
-                balances[security_amount.currency] = security_amount
+            amount = security.get_price(date_) * shares
+            currency = amount.currency
+            if currency not in balances:
+                balances[currency] = currency.zero_amount
+            balances[currency] += amount
         return tuple(balances.values())
 
     def add_transaction(self, transaction: "SecurityRelatedTransaction") -> None:
