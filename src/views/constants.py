@@ -32,8 +32,9 @@ class ExchangeRateTableColumn(IntEnum):
     Y5 = 11
     Y7 = 12
     Y10 = 13
-    TOTAL = 14
-    TOTAL_ANNUALIZED = 15
+    YTD = 14
+    TOTAL = 15
+    TOTAL_ANNUALIZED = 16
 
 
 class ValueTableColumn(IntEnum):
@@ -70,8 +71,9 @@ class SecurityTableColumn(IntEnum):
     Y5 = 13
     Y7 = 14
     Y10 = 15
-    TOTAL = 16
-    TOTAL_ANNUALIZED = 17
+    YTD = 16
+    TOTAL = 17
+    TOTAL_ANNUALIZED = 18
 
 
 class SecurityAccountTableColumn(IntEnum):

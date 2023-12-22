@@ -619,6 +619,7 @@ class SecurityFormPresenter:
             "5Y": (today - relativedelta(years=5), today),
             "7Y": (today - relativedelta(years=7), today),
             "10Y": (today - relativedelta(years=10), today),
+            "YTD": (today.replace(month=1, day=1), today),
             "Total": (None, today),
         }
 

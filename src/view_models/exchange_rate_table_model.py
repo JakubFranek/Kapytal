@@ -25,6 +25,7 @@ COLUMNS_ALIGNED_RIGHT = {
     ExchangeRateTableColumn.Y5,
     ExchangeRateTableColumn.Y7,
     ExchangeRateTableColumn.Y10,
+    ExchangeRateTableColumn.YTD,
     ExchangeRateTableColumn.TOTAL,
     ExchangeRateTableColumn.TOTAL_ANNUALIZED,
 }
@@ -44,6 +45,7 @@ COLUMN_HEADERS = {
     ExchangeRateTableColumn.Y5: "5Y",
     ExchangeRateTableColumn.Y7: "7Y",
     ExchangeRateTableColumn.Y10: "10Y",
+    ExchangeRateTableColumn.YTD: "YTD",
     ExchangeRateTableColumn.TOTAL: "Total",
     ExchangeRateTableColumn.TOTAL_ANNUALIZED: "Total p.a.",
 }

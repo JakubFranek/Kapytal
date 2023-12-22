@@ -30,6 +30,7 @@ COLUMN_HEADERS = {
     SecurityTableColumn.Y5: "5Y",
     SecurityTableColumn.Y7: "7Y",
     SecurityTableColumn.Y10: "10Y",
+    SecurityTableColumn.YTD: "YTD",
     SecurityTableColumn.TOTAL: "Total",
     SecurityTableColumn.TOTAL_ANNUALIZED: "Total p.a.",
 }
@@ -47,6 +48,7 @@ COLUMNS_ALIGNED_RIGHT = {
     SecurityTableColumn.Y5,
     SecurityTableColumn.Y7,
     SecurityTableColumn.Y10,
+    SecurityTableColumn.YTD,
     SecurityTableColumn.TOTAL,
     SecurityTableColumn.TOTAL_ANNUALIZED,
 }
