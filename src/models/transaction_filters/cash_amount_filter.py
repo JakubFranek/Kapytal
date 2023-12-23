@@ -73,10 +73,7 @@ class CashAmountFilter(BaseTransactionFilter):
             return False
         if self._mode == FilterMode.OFF and __o.mode == FilterMode.OFF:
             return True
-        try:
-            return self.members == __o.members
-        except CurrencyError:
-            return False
+        return self.members == __o.members
 
     def __hash__(self) -> int:
         return hash(self.members)

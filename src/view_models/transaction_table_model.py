@@ -1,4 +1,3 @@
-import copy
 import unicodedata
 from collections.abc import Collection, Sequence
 from decimal import Decimal

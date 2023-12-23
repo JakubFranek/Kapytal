@@ -276,18 +276,17 @@ def test_invalid_shares_value(  # noqa: PLR0913
     type_=st.sampled_from(SecurityTransactionType),
     security=securities(),
     security_account=security_accounts(),
-    cash_account=cash_accounts(),
     datetime_=st.datetimes(timezones=st.just(user_settings.settings.time_zone)),
     data=st.data(),
 )
-def test_invalid_shares_decimals(  # noqa: PLR0913
+def test_invalid_shares_decimals(
     type_: SecurityTransactionType,
     security: Security,
     security_account: SecurityAccount,
-    cash_account: CashAccount,
     datetime_: datetime,
     data: st.DataObject,
 ) -> None:
+    cash_account = cash_accounts(currency=security.currency)
     shares = data.draw(st.integers(min_value=1)) * Decimal(
         10 ** (-security.shares_decimals - 1)
     )

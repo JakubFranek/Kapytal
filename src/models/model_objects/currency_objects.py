@@ -278,7 +278,9 @@ class ExchangeRate(CopyableMixin, JSONSerializableMixin):
     def __str__(self) -> str:
         return f"{self._primary_currency.code}/{self._secondary_currency.code}"
 
-    def get_rate(self, date_: date) -> Decimal:
+    def get_rate(self, date_: date | None = None) -> Decimal:
+        if date_ is None:
+            return self.latest_rate
         try:
             return self._rate_history[date_]
         except KeyError:
@@ -296,24 +298,32 @@ class ExchangeRate(CopyableMixin, JSONSerializableMixin):
             logging.warning(f"{self!s}: no rate found, returning 'NaN'")
             return Decimal("NaN")
 
-    def set_rate(self, date_: date, rate: Decimal | int | str) -> None:
+    def set_rate(
+        self, date_: date, rate: Decimal | int | str, *, update: bool = True
+    ) -> None:
         self._validate_date(date_)
         _rate = self._validate_rate(rate)
         self._rate_history[date_] = _rate.normalize()
-        self._update_values()
+        if update:
+            self.update_values()
 
     def set_rates(
-        self, date_rate_tuples: Collection[tuple[date, Decimal | int | str]]
+        self,
+        date_rate_tuples: Collection[tuple[date, Decimal | int | str]],
+        *,
+        update: bool = True,
     ) -> None:
         for date_, rate in date_rate_tuples:
             self._validate_date(date_)
             _rate = self._validate_rate(rate)
             self._rate_history[date_] = _rate.normalize()
-        self._update_values()
+        if update:
+            self.update_values()
 
-    def delete_rate(self, date_: date) -> None:
+    def delete_rate(self, date_: date, *, update: bool = True) -> None:
         del self._rate_history[date_]
-        self._update_values()
+        if update:
+            self.update_values()
 
     def prepare_for_deletion(self) -> None:
         self.primary_currency.remove_exchange_rate(self)
@@ -324,8 +334,8 @@ class ExchangeRate(CopyableMixin, JSONSerializableMixin):
     def calculate_return(
         self, start: date | None = None, end: date | None = None
     ) -> Decimal:
-        """Returns the Security return as a percentage."""
-        if not hasattr(self, "_earliest_date"):
+        """Returns the ExchangeRate return as a percentage."""
+        if not hasattr(self, "_earliest_date") or self._earliest_date is None:
             return Decimal("NaN")
         if start is None:
             start = self._earliest_date
@@ -334,8 +344,6 @@ class ExchangeRate(CopyableMixin, JSONSerializableMixin):
 
         rate_end = self.get_rate(end)
         rate_start = self.get_rate(start)
-        if rate_start.is_nan() or rate_end.is_nan():
-            return Decimal("NaN")
 
         return Decimal(100 * (rate_end / rate_start - 1))
 
@@ -369,7 +377,9 @@ class ExchangeRate(CopyableMixin, JSONSerializableMixin):
                 .replace(tzinfo=user_settings.settings.time_zone)
                 .date(),
                 rate,
+                update=False,
             )
+        obj.update_values()
 
         return obj
 
@@ -388,7 +398,7 @@ class ExchangeRate(CopyableMixin, JSONSerializableMixin):
             raise ValueError("Parameter 'rate' must be finite and positive.")
         return _rate
 
-    def _update_values(self) -> None:
+    def update_values(self) -> None:
         if len(self._rate_history) == 0:
             self._latest_date = None
             self._earliest_date = None
@@ -398,9 +408,10 @@ class ExchangeRate(CopyableMixin, JSONSerializableMixin):
             self._earliest_date = min(date_ for date_ in self._rate_history)
             self._latest_rate = self._rate_history[self._latest_date]
 
-        self._rate_decimals = 0
-        for rate in self._rate_history.values():
-            self._rate_decimals = max(self._rate_decimals, -rate.as_tuple().exponent)
+        self._rate_decimals = max(
+            (-rate.as_tuple().exponent for rate in self._rate_history.values()),
+            default=0,
+        )
 
         self.primary_currency.reset_cache()
         self.secondary_currency.reset_cache()

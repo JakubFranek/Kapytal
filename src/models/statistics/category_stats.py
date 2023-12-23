@@ -1,8 +1,7 @@
-import itertools
 from collections.abc import Collection, Sequence
 from dataclasses import dataclass, field
 
-from src.models.model_objects.attributes import Category, CategoryType
+from src.models.model_objects.attributes import Category
 from src.models.model_objects.cash_objects import (
     CashTransaction,
     CashTransactionType,
@@ -59,32 +58,24 @@ def calculate_periodic_totals_and_averages(
 
             if stats.category.parent is None:
                 total_balance.balance += stats.balance
-                if stats.category.type_ == CategoryType.INCOME or (
-                    stats.category.type_ == CategoryType.INCOME_AND_EXPENSE
-                    and stats.balance.value_rounded > 0
-                ):
-                    transactions = {
-                        transaction
-                        for transaction in stats.transactions
-                        if (
-                            isinstance(transaction, CashTransaction)
-                            and transaction.type_ == CashTransactionType.INCOME
-                        )
-                    }
-                    income_balance.add_transaction_balance(transactions, stats.balance)
-                elif stats.category.type_ == CategoryType.EXPENSE or (
-                    stats.category.type_ == CategoryType.INCOME_AND_EXPENSE
-                    and stats.balance.value_rounded < 0
-                ):
-                    transactions = {
-                        transaction
-                        for transaction in stats.transactions
-                        if (
-                            isinstance(transaction, RefundTransaction)
-                            or transaction.type_ == CashTransactionType.EXPENSE
-                        )
-                    }
-                    expense_balance.add_transaction_balance(transactions, stats.balance)
+                income_data = TransactionBalance(currency.zero_amount)
+                expense_data = TransactionBalance(currency.zero_amount)
+
+                for transaction in stats.transactions:
+                    date_ = transaction.datetime_.date()
+                    amount = transaction.get_amount_for_category(
+                        stats.category, total=True
+                    ).convert(currency, date_)
+                    if (
+                        isinstance(transaction, CashTransaction)
+                        and transaction.type_ == CashTransactionType.INCOME
+                    ):
+                        income_data.add_transaction_balance({transaction}, amount)
+                    else:
+                        expense_data.add_transaction_balance({transaction}, amount)
+
+                income_balance += income_data
+                expense_balance += expense_data
 
             category_totals[stats.category].add_transaction_balance(
                 stats.transactions, stats.balance
@@ -136,34 +127,6 @@ def calculate_periodic_category_stats(
     return stats_dict
 
 
-def calculate_average_per_period_category_stats(
-    periodic_stats: dict[str, tuple[CategoryStats]],
-) -> dict[Category, CategoryStats]:
-    base_currency = next(iter(periodic_stats.values()))[0].balance.currency
-    all_stats = list(itertools.chain(*periodic_stats.values()))
-    periods = len(periodic_stats)
-
-    average_stats: dict[Category, CategoryStats] = {}
-    for stats in all_stats:
-        if stats.category in average_stats:
-            _average_stats = average_stats[stats.category]
-            _average_stats.balance += stats.balance
-            _average_stats.transactions_self += stats.transactions_self
-            _average_stats.transactions_total += stats.transactions_total
-            _average_stats.transactions.add(*stats.transactions)
-        else:
-            average_stats[stats.category] = CategoryStats(
-                stats.category, 0, 0, base_currency.zero_amount
-            )
-
-    for stats in average_stats.values():
-        stats.balance = stats.balance / periods
-        stats.transactions_self = round(stats.transactions_self / periods, 2)
-        stats.transactions_total = round(stats.transactions_total / periods, 2)
-
-    return average_stats
-
-
 def calculate_category_stats(
     transactions: Collection[CashTransaction | RefundTransaction],
     base_currency: Currency,
@@ -183,7 +146,7 @@ def calculate_category_stats(
 
             stats.balance += transaction.get_amount_for_category(
                 category, total=False
-            ).convert(base_currency)
+            ).convert(base_currency, date_)
             stats.transactions_self += 1
             stats.transactions_total += 1
 

@@ -7,6 +7,7 @@ from uuid import UUID
 import pytest
 from hypothesis import given
 from hypothesis import strategies as st
+from src.models.custom_exceptions import NotFoundError
 from src.models.model_objects.attributes import (
     Attribute,
     AttributeType,
@@ -30,7 +31,7 @@ def test_creation(description: str, datetime_: datetime) -> None:
 
     dt_created_diff = transaction.datetime_created - dt_start
 
-    assert transaction.description == description
+    assert transaction.description == description.strip()
     assert transaction.datetime_ == datetime_
     assert isinstance(transaction.uuid, UUID)
     assert dt_created_diff.seconds < 1
@@ -73,7 +74,7 @@ def test_invalid_datetime_type(description: str, datetime_: datetime) -> None:
 def test_set_attributes_same_values(description: str, datetime_: datetime) -> None:
     transaction = ConcreteTransaction(description, datetime_)
     transaction.set_attributes()
-    assert transaction.description == description
+    assert transaction.description == description.strip()
     assert transaction.datetime_ == datetime_
 
 
@@ -122,7 +123,33 @@ def test_clear_tags() -> None:
     transaction = ConcreteTransaction(
         "test", datetime.now(user_settings.settings.time_zone)
     )
-    transaction._tags = frozenset(("TEST TAG",))
-    assert transaction.tags == frozenset(("TEST TAG",))
+    tag = Attribute("TEST TAG", AttributeType.TAG)
+    transaction._tags = frozenset((tag,))
+    assert transaction.tags == frozenset((tag,))
     transaction.clear_tags()
     assert transaction.tags == frozenset()
+
+
+def test_replace_tag() -> None:
+    transaction = ConcreteTransaction(
+        "test", datetime.now(user_settings.settings.time_zone)
+    )
+    tag_1 = Attribute("TAG1", AttributeType.TAG)
+    tag_2 = Attribute("TAG2", AttributeType.TAG)
+    transaction._tags = frozenset((tag_1,))
+    assert transaction.tags == frozenset((tag_1,))
+    transaction.replace_tag(tag_1, tag_2)
+    assert transaction.tags == frozenset((tag_2,))
+
+
+def test_replace_tag_not_found() -> None:
+    transaction = ConcreteTransaction(
+        "test", datetime.now(user_settings.settings.time_zone)
+    )
+    tag_1 = Attribute("TAG1", AttributeType.TAG)
+    tag_2 = Attribute("TAG2", AttributeType.TAG)
+    tag_3 = Attribute("TAG3", AttributeType.TAG)
+    transaction._tags = frozenset((tag_1,))
+    assert transaction.tags == frozenset((tag_1,))
+    with pytest.raises(NotFoundError):
+        transaction.replace_tag(tag_2, tag_3)

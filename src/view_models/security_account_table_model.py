@@ -143,7 +143,7 @@ class SecurityAccountTableModel(QAbstractTableModel):
             SecurityAccountTableColumn.AMOUNT_BASE,
         }:
             native_amount = security.price.value_normalized * shares
-            if native_amount < 0:
+            if native_amount.is_nan() or native_amount < 0:
                 return colors.get_red_brush()
             if native_amount > 0:
                 return colors.get_green_brush()

@@ -995,12 +995,9 @@ class RecordKeeper:
             return
         if merge:
             if type_ == AttributeType.PAYEE:
-                for transaction in self._cash_transactions:
+                for transaction in self._cash_transactions + self._refund_transactions:
                     if transaction.payee == edited_attribute:
-                        transaction.replace_payee(edited_attribute, existing_attribute)
-                for transaction in self._refund_transactions:
-                    if transaction.payee == edited_attribute:
-                        transaction.replace_payee(edited_attribute, existing_attribute)
+                        transaction.replace_payee(existing_attribute)
                 self._payees.remove(edited_attribute)
             else:
                 for transaction in self._transactions:

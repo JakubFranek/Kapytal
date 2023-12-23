@@ -201,40 +201,39 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
             if index:  # zero if date_ is earliest or history is empty
                 _, price = self.price_history_pairs[index - 1]
                 return price
-            if len(self._price_history) >= 1:
-                _date, price = self._price_history_pairs[0]
-                logging.warning(
-                    f"{self!s}: no earlier price found for {date_}, "
-                    f"returning {price} for {_date}"
-                )
-                return price
             logging.warning(f"{self!s}: no price found, returning CashAmount('NaN')")
             return CashAmount(Decimal("NaN"), self._currency)
 
-    def set_price(self, date_: date, price: CashAmount) -> None:
+    def set_price(self, date_: date, price: CashAmount, *, update: bool = True) -> None:
         self._validate_date(date_)
         self._validate_price(price)
         self._price_history[date_] = price
-        self._update_values()
+        if update:
+            self.update_values()
 
     def set_prices(
-        self, date_price_tuples: Collection[tuple[date, CashAmount]]
+        self,
+        date_price_tuples: Collection[tuple[date, CashAmount]],
+        *,
+        update: bool = True,
     ) -> None:
         for date_, price in date_price_tuples:
             self._validate_date(date_)
             self._validate_price(price)
             self._price_history[date_] = price
-        self._update_values()
+        if update:
+            self.update_values()
 
-    def delete_price(self, date_: date) -> None:
+    def delete_price(self, date_: date, *, update: bool = True) -> None:
         del self._price_history[date_]
-        self._update_values()
+        if update:
+            self.update_values()
 
     def calculate_return(
         self, start: date | None = None, end: date | None = None
     ) -> Decimal:
         """Returns the Security return as a percentage."""
-        if not hasattr(self, "_earliest_date"):
+        if not hasattr(self, "_earliest_date") or self._earliest_date is None:
             return Decimal("NaN")
         if start is None:
             start = self._earliest_date
@@ -243,8 +242,6 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
 
         price_end = self.get_price(end).value_normalized
         price_start = self.get_price(start).value_normalized
-        if price_start.is_nan() or price_end.is_nan():
-            return Decimal("NaN")
 
         return Decimal(100 * (price_end / price_start - 1))
 
@@ -287,12 +284,13 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
                 .replace(tzinfo=user_settings.settings.time_zone)
                 .date(),
                 CashAmount(price, obj.currency),
+                update=False,
             )
-
+        obj.update_values()
         obj._uuid = UUID(data["uuid"])  # noqa: SLF001
         return obj
 
-    def _update_values(self) -> None:
+    def update_values(self) -> None:
         if len(self._price_history) == 0:
             self._earliest_date = None
             self._latest_date = None
@@ -301,21 +299,21 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
             self._earliest_date = min(date_ for date_ in self._price_history)
             self._latest_date = max(date_ for date_ in self._price_history)
             latest_price = self._price_history[self._latest_date]
-        if hasattr(self, "_latest_price"):
-            previous_latest_price = self._latest_price
-        else:
-            previous_latest_price = None
 
+        previous_latest_price = (
+            self._latest_price if hasattr(self, "_latest_price") else None
+        )
         self._latest_price = latest_price
         if previous_latest_price != latest_price:
             self.event_price_updated()
 
-        self._price_decimals = 0
-        for price in self._price_history.values():
-            value_normalized = price.value_normalized
-            decimals = -value_normalized.as_tuple().exponent
-            if decimals > self._price_decimals:
-                self._price_decimals = decimals
+        self._price_decimals = max(
+            (
+                -price.value_normalized.as_tuple().exponent
+                for price in self._price_history.values()
+            ),
+            default=0,
+        )
 
         self._recalculate_price_history_pairs = True
 
@@ -392,13 +390,11 @@ class SecurityAccount(Account):
     ) -> tuple[CashAmount, ...]:
         balances: dict[Currency, CashAmount] = {}
         for security, shares in security_dict.items():
-            security_amount = security.get_price(date_) * shares
-            if security_amount.is_nan():
-                continue
-            if security_amount.currency in balances:
-                balances[security_amount.currency] += security_amount
-            else:
-                balances[security_amount.currency] = security_amount
+            amount = security.get_price(date_) * shares
+            currency = amount.currency
+            if currency not in balances:
+                balances[currency] = currency.zero_amount
+            balances[currency] += amount
         return tuple(balances.values())
 
     def add_transaction(self, transaction: "SecurityRelatedTransaction") -> None:
@@ -489,16 +485,21 @@ class SecurityAccount(Account):
     ) -> CashAmount:
         if not isinstance(security, Security):
             raise TypeError("Parameter 'security' must be a Security.")
-        if date_ is None and security not in self._securities_history[-1][1]:
+        if date_ is None and (
+            len(self._securities_history) == 0
+            or security not in self._securities_history[-1][1]
+        ):
             raise ValueError(
                 f"Security {security.name} is not in this SecurityAccount."
             )
         if date_ is not None:
             for _datetime, security_dict in reversed(self._securities_history):
-                if _datetime.date() < date_ and security not in security_dict:
-                    raise ValueError(
-                        f"Security {security.name} is not in this SecurityAccount."
-                    )
+                if _datetime.date() <= date_ and security in security_dict:
+                    break
+            else:
+                raise ValueError(
+                    f"Security {security.name} is not in this SecurityAccount."
+                )
 
         shares_price_pairs: list[tuple[int, CashAmount]] = []
         for transaction in self._transactions:

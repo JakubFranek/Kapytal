@@ -62,7 +62,7 @@ def test_creation(
 
     dt_created_diff = transfer.datetime_created - dt_start
 
-    assert transfer.description == description
+    assert transfer.description == description.strip()
     assert transfer.datetime_ == datetime_
     assert transfer.sender == account_sender
     assert transfer.recipient == account_recipient

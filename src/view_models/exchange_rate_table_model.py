@@ -11,6 +11,25 @@ from src.views import colors
 from src.views.constants import ExchangeRateTableColumn, monospace_font
 
 ALIGNMENT_RIGHT = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+COLUMNS_ALIGNED_RIGHT = {
+    ExchangeRateTableColumn.RATE,
+    ExchangeRateTableColumn.LAST_DATE,
+    ExchangeRateTableColumn.D1,
+    ExchangeRateTableColumn.D7,
+    ExchangeRateTableColumn.M1,
+    ExchangeRateTableColumn.M3,
+    ExchangeRateTableColumn.M6,
+    ExchangeRateTableColumn.Y1,
+    ExchangeRateTableColumn.Y2,
+    ExchangeRateTableColumn.Y3,
+    ExchangeRateTableColumn.Y5,
+    ExchangeRateTableColumn.Y7,
+    ExchangeRateTableColumn.Y10,
+    ExchangeRateTableColumn.YTD,
+    ExchangeRateTableColumn.TOTAL,
+    ExchangeRateTableColumn.TOTAL_ANNUALIZED,
+}
+
 COLUMN_HEADERS = {
     ExchangeRateTableColumn.CODE: "Code",
     ExchangeRateTableColumn.RATE: "Latest Quote",
@@ -26,6 +45,7 @@ COLUMN_HEADERS = {
     ExchangeRateTableColumn.Y5: "5Y",
     ExchangeRateTableColumn.Y7: "7Y",
     ExchangeRateTableColumn.Y10: "10Y",
+    ExchangeRateTableColumn.YTD: "YTD",
     ExchangeRateTableColumn.TOTAL: "Total",
     ExchangeRateTableColumn.TOTAL_ANNUALIZED: "Total p.a.",
 }
@@ -84,10 +104,10 @@ class ExchangeRateTableModel(QAbstractTableModel):
             return self._get_display_role_data(column, exchange_rate)
         if role == Qt.ItemDataRole.UserRole:
             return self._get_sort_role_data(column, exchange_rate)
-        if role == Qt.ItemDataRole.TextAlignmentRole and column in {
-            ExchangeRateTableColumn.RATE,
-            ExchangeRateTableColumn.LAST_DATE,
-        }:
+        if (
+            role == Qt.ItemDataRole.TextAlignmentRole
+            and column in COLUMNS_ALIGNED_RIGHT
+        ):
             return ALIGNMENT_RIGHT
         if role == Qt.ItemDataRole.FontRole and column == ExchangeRateTableColumn.CODE:
             return monospace_font

@@ -30,8 +30,6 @@ class Ui_TreeAndSunburstReport(object):
         self.searchLineEdit = QtWidgets.QLineEdit(TreeAndSunburstReport)
         self.searchLineEdit.setObjectName("searchLineEdit")
         self.treeViewControlsHorizontalLayout.addWidget(self.searchLineEdit)
-        spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Minimum)
-        self.treeViewControlsHorizontalLayout.addItem(spacerItem)
         self.treeViewVerticalLayout.addLayout(self.treeViewControlsHorizontalLayout)
         self.treeView = QtWidgets.QTreeView(TreeAndSunburstReport)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.MinimumExpanding, QtWidgets.QSizePolicy.Policy.Expanding)

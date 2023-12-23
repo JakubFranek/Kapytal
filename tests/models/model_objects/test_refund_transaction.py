@@ -6,7 +6,7 @@ from typing import Any
 import pytest
 from hypothesis import assume, given
 from hypothesis import strategies as st
-from src.models.custom_exceptions import InvalidOperationError
+from src.models.custom_exceptions import InvalidOperationError, NotFoundError
 from src.models.model_objects.attributes import (
     Attribute,
     AttributeType,
@@ -22,7 +22,6 @@ from src.models.model_objects.cash_objects import (
     InvalidCashTransactionTypeError,
     RefundPrecedesTransactionError,
     RefundTransaction,
-    UnrelatedAccountError,
     UnrelatedTransactionError,
 )
 from src.models.model_objects.currency_objects import (
@@ -107,6 +106,10 @@ def test_creation() -> None:
         / refunded_transaction.amount
     )
     assert refund.refund_ratio == Decimal(refund.amount / refunded_transaction.amount)
+    assert refund.are_categories_split is (len(category_amount_pairs) > 1)
+    assert refund.are_tags_split is any(
+        amount != refund.amount for _, amount in refund.tag_amount_pairs
+    )
 
 
 def test_unrelated_refund_transaction() -> None:
@@ -690,6 +693,75 @@ def test_get_amount_for_tag_not_related(tag: Attribute) -> None:
     assume(tag not in transaction.tags)
     with pytest.raises(ValueError, match="not found in this RefundTransaction's tags"):
         transaction.get_amount_for_tag(tag)
+
+
+@given(payee=attributes(type_=AttributeType.PAYEE))
+def test_replace_payee(payee: Attribute) -> None:
+    refund = get_preloaded_refund()
+    assert refund.payee != payee
+    refund.replace_payee(payee)
+    assert refund.payee == payee
+
+
+def test_replace_tag_with_new_one() -> None:
+    tag_1 = Attribute("TAG1", AttributeType.TAG)
+    tag_2 = Attribute("TAG2", AttributeType.TAG)
+
+    refund = get_preloaded_refund()
+    refunded_transaction = refund.refunded_transaction
+    refunded_transaction._tag_amount_pairs = [
+        (tag_1, refunded_transaction.amount),
+    ]
+    refunded_transaction._update_cached_data(refunded_transaction.currency)
+
+    amount = refund.amount
+    refund._tag_amount_pairs = [
+        (tag_1, amount),
+    ]
+    refund._update_cached_data(amount.currency)
+
+    refunded_transaction.replace_tag(tag_1, tag_2)
+
+    assert tag_1 in refund.tags
+    refund.replace_tag(tag_1, tag_2)
+    assert tag_2 in refund.tags
+    assert tag_1 not in refund.tags
+
+
+def test_replace_tag_with_old_one() -> None:
+    tag_1 = Attribute("TAG1", AttributeType.TAG)
+    tag_2 = Attribute("TAG2", AttributeType.TAG)
+
+    refund = get_preloaded_refund()
+    refunded_transaction = refund.refunded_transaction
+    refunded_transaction._tag_amount_pairs = [
+        (tag_1, Decimal("0.25") * refunded_transaction.amount),
+        (tag_2, Decimal("0.5") * refunded_transaction.amount),
+    ]
+    refunded_transaction._update_cached_data(refunded_transaction.currency)
+
+    amount = refund.amount
+    refund._tag_amount_pairs = [
+        (tag_1, Decimal("0.25") * amount),
+        (tag_2, Decimal("0.5") * amount),
+    ]
+    refund._update_cached_data(amount.currency)
+
+    refunded_transaction.replace_tag(tag_1, tag_2)
+
+    assert abs(refund.get_amount_for_tag(tag_1)) == Decimal("0.25") * amount
+    assert abs(refund.get_amount_for_tag(tag_2)) == Decimal("0.5") * amount
+    refund.replace_tag(tag_1, tag_2)
+    assert abs(refund.get_amount_for_tag(tag_2)) == Decimal("0.75") * amount
+    assert tag_1 not in refund.tags
+
+
+def test_replace_tag_not_found() -> None:
+    refund = get_preloaded_refund()
+    tag_1 = Attribute("TAG1", AttributeType.TAG)
+    tag_2 = Attribute("TAG2", AttributeType.TAG)
+    with pytest.raises(NotFoundError, match="Tag 'TAG1' not found"):
+        refund.replace_tag(tag_1, tag_2)
 
 
 def get_preloaded_refund() -> RefundTransaction:

@@ -523,19 +523,19 @@ class CashTransaction(CashRelatedTransaction):
         ignore_refund: "RefundTransaction|None",
         refund_amount: CashAmount | None,
     ) -> CashAmount:
-        for _tag, amount in self._tag_amount_pairs:
-            if _tag == tag:
-                max_amount = amount
-                break
-        else:
+        if tag not in self.tags:
             raise ValueError(f"Tag {tag} not in this CashTransaction's tags.")
+
+        max_amount = next(
+            _amount for _tag, _amount in self._tag_amount_pairs if _tag == tag
+        )
 
         other_refunds = [refund for refund in self._refunds if refund != ignore_refund]
         for refund in other_refunds:
-            for _tag, _amount in refund.tag_amount_pairs:
-                if _tag != tag:
-                    continue
-                max_amount -= _amount
+            max_amount -= next(
+                (_amount for _tag, _amount in refund.tag_amount_pairs if _tag == tag),
+                self.currency.zero_amount,
+            )
 
         if refund_amount is not None:
             return min(max_amount, refund_amount)
@@ -544,37 +544,33 @@ class CashTransaction(CashRelatedTransaction):
     def get_min_refundable_for_tag(
         self,
         tag: Attribute,
-        ignore_refund: "RefundTransaction|None",
+        ignored_refund: "RefundTransaction|None",
         refund_amount: CashAmount | None,
     ) -> CashAmount:
-        for _tag, amount in self._tag_amount_pairs:
-            if _tag == tag:
-                max_amount = amount
-                break
-        else:
+        if tag not in self.tags:
             raise ValueError(f"Tag {tag} not in this CashTransaction's tags.")
+        if refund_amount is None:
+            return self.currency.zero_amount
 
-        other_refunds = [refund for refund in self._refunds if refund != ignore_refund]
+        max_amount = next(
+            _amount for _tag, _amount in self._tag_amount_pairs if _tag == tag
+        )
+
+        other_refunds = [refund for refund in self._refunds if refund != ignored_refund]
         remaining_amount = self._amount - sum(
             (refund.amount for refund in other_refunds),
             start=self.currency.zero_amount,
         )
         for refund in other_refunds:
-            for _tag, _amount in refund.tag_amount_pairs:
-                if _tag != tag:
-                    continue
-                max_amount -= _amount
-
-        if refund_amount is not None:
-            return max(
-                max_amount - (remaining_amount - refund_amount),
+            max_amount -= next(
+                (_amount for _tag, _amount in refund.tag_amount_pairs if _tag == tag),
                 self.currency.zero_amount,
             )
 
-        min_amount = max_amount - remaining_amount
-        if not min_amount.is_negative():
-            return min_amount
-        return self.currency.zero_amount
+        return max(
+            max_amount - (remaining_amount - refund_amount),
+            self.currency.zero_amount,
+        )
 
     def is_account_related(self, account: Account) -> bool:
         return self._account == account
@@ -639,39 +635,25 @@ class CashTransaction(CashRelatedTransaction):
             )
         tag_amount_pairs = list(self._tag_amount_pairs)
         if replacement_tag not in self._tags:
-            for tag, amount in self._tag_amount_pairs:
+            for index, pair in enumerate(self._tag_amount_pairs):
+                tag, amount = pair
                 if tag == replaced_tag:
-                    tag_amount_pairs[self._tag_amount_pairs.index((tag, amount))] = (
-                        replacement_tag,
-                        amount,
-                    )
+                    tag_amount_pairs[index] = (replacement_tag, amount)
         else:
             replaced_amount = abs(self.get_amount_for_tag(replaced_tag))
             replacement_amount = abs(self.get_amount_for_tag(replacement_tag))
             new_amount = min(self.amount, replaced_amount + replacement_amount)
-            for tag, amount in self._tag_amount_pairs:
+            for index, pair in enumerate(self._tag_amount_pairs):
+                tag, amount = pair
                 if tag == replacement_tag:
-                    tag_amount_pairs[self._tag_amount_pairs.index((tag, amount))] = (
-                        replacement_tag,
-                        new_amount,
-                    )
+                    tag_amount_pairs[index] = (replacement_tag, new_amount)
             tag_amount_pairs.remove((replaced_tag, replaced_amount))
         self._validate_tag_amount_pairs(tag_amount_pairs, self._amount, self.currency)
         self._tag_amount_pairs = tuple(tag_amount_pairs)
         self._tags = frozenset(tag for tag, _ in tag_amount_pairs)
 
-    def replace_payee(
-        self, replaced_payee: Attribute, replacement_payee: Attribute
-    ) -> None:
-        if replaced_payee.type_ != AttributeType.PAYEE:
-            raise ValueError(f"{replaced_payee} is not a Payee.")
-        if replacement_payee.type_ != AttributeType.PAYEE:
-            raise ValueError(f"{replacement_payee} is not a Payee.")
-        if replaced_payee != self._payee:
-            raise ValueError(
-                f"Payee '{replaced_payee.name}' does not match this "
-                f"CashTransaction's payee '{self._payee.name}'."
-            )
+    def replace_payee(self, replacement_payee: Attribute) -> None:
+        _validate_payee(replacement_payee)
         self._payee = replacement_payee
 
     def set_attributes(
@@ -819,7 +801,7 @@ class CashTransaction(CashRelatedTransaction):
 
         self._category_amount_pairs = _category_amount_pairs
         self._tag_amount_pairs = tuple(tag_amount_pairs)
-        self._update_cached_data(account)
+        self._update_cached_data(account.currency)
         self._set_account(account, balance_changed=update_account)
 
     def _set_account(self, account: CashAccount, *, balance_changed: bool) -> None:
@@ -832,8 +814,8 @@ class CashTransaction(CashRelatedTransaction):
         self._account = account
         self._account.add_transaction(self)
 
-    def _update_cached_data(self, account: CashAccount) -> None:
-        total_amount = account.currency.zero_amount
+    def _update_cached_data(self, currency: Currency) -> None:
+        total_amount = currency.zero_amount
         categories: set[Category] = set()
         for category, amount in self._category_amount_pairs:
             total_amount += amount
@@ -1538,39 +1520,27 @@ class RefundTransaction(CashRelatedTransaction):
             )
         tag_amount_pairs = list(self._tag_amount_pairs)
         if replacement_tag not in self._tags:
-            for tag, amount in self._tag_amount_pairs:
+            for index, pair in enumerate(self._tag_amount_pairs):
+                tag, amount = pair
                 if tag == replaced_tag:
-                    tag_amount_pairs[self._tag_amount_pairs.index((tag, amount))] = (
-                        replacement_tag,
-                        amount,
-                    )
+                    tag_amount_pairs[index] = (replacement_tag, amount)
         else:
             replaced_amount = abs(self.get_amount_for_tag(replaced_tag))
             replacement_amount = abs(self.get_amount_for_tag(replacement_tag))
             new_amount = min(self.amount, replaced_amount + replacement_amount)
-            for tag, amount in self._tag_amount_pairs:
+            for index, pair in enumerate(self._tag_amount_pairs):
+                tag, amount = pair
                 if tag == replacement_tag:
-                    tag_amount_pairs[self._tag_amount_pairs.index((tag, amount))] = (
-                        replacement_tag,
-                        new_amount,
-                    )
+                    tag_amount_pairs[index] = (replacement_tag, new_amount)
             tag_amount_pairs.remove((replaced_tag, replaced_amount))
-        self._validate_tag_amount_pairs(tag_amount_pairs, self._amount, self.currency)
+        self._validate_tag_amount_pairs(
+            tag_amount_pairs, self._refunded_transaction, self._amount
+        )
         self._tag_amount_pairs = tuple(tag_amount_pairs)
         self._tags = frozenset(tag for tag, _ in tag_amount_pairs)
 
-    def replace_payee(
-        self, replaced_payee: Attribute, replacement_payee: Attribute
-    ) -> None:
-        if replaced_payee.type_ != AttributeType.PAYEE:
-            raise ValueError(f"{replaced_payee} is not a Payee.")
-        if replacement_payee.type_ != AttributeType.PAYEE:
-            raise ValueError(f"{replacement_payee} is not a Payee.")
-        if replaced_payee != self._payee:
-            raise ValueError(
-                f"Payee '{replaced_payee.name}' does not match this "
-                f"RefundTransaction's payee '{self._payee.name}'."
-            )
+    def replace_payee(self, replacement_payee: Attribute) -> None:
+        _validate_payee(replacement_payee)
         self._payee = replacement_payee
 
     def set_attributes(
@@ -1684,25 +1654,10 @@ class RefundTransaction(CashRelatedTransaction):
             update_account = self._category_amount_pairs != _category_amount_pairs
 
         self._category_amount_pairs = tuple(category_amount_pairs)
-        self._categories = frozenset(
-            category for category, _ in self._category_amount_pairs
-        )
-
         self._tag_amount_pairs = tuple(tag_amount_pairs)
         self._payee = payee
 
-        self._amount = sum(
-            (amount for _, amount in self._category_amount_pairs),
-            start=account.currency.zero_amount,
-        )
-        tags: set[Attribute] = set()
-        self._are_tags_split = False
-        for tag, amount in self._tag_amount_pairs:
-            tags.add(tag)
-            if not self._are_tags_split and amount != self._amount:
-                self._are_tags_split = True
-        self._tags = frozenset(tags)
-
+        self._update_cached_data(account.currency)
         self._set_account(account, update_account=update_account)
 
     def _set_account(self, account: CashAccount, *, update_account: bool) -> None:
@@ -1714,6 +1669,23 @@ class RefundTransaction(CashRelatedTransaction):
             self._account.remove_transaction(self)
         self._account = account
         self._account.add_transaction(self)
+
+    def _update_cached_data(self, currency: Currency) -> None:
+        total_amount = currency.zero_amount
+        categories: set[Category] = set()
+        for category, amount in self._category_amount_pairs:
+            total_amount += amount
+            categories.add(category)
+        self._amount = total_amount
+        self._categories = frozenset(categories)
+
+        tags: set[Attribute] = set()
+        self._are_tags_split = False
+        for tag, amount in self._tag_amount_pairs:
+            tags.add(tag)
+            if not self._are_tags_split and amount != self._amount:
+                self._are_tags_split = True
+        self._tags = frozenset(tags)
 
     def _validate_datetime(
         self, datetime_: datetime, refunded_transaction_datetime: datetime
@@ -1811,7 +1783,7 @@ class RefundTransaction(CashRelatedTransaction):
                 tag, ignore_refund=self, refund_amount=refund_amount
             )
             min_value = refunded_transaction.get_min_refundable_for_tag(
-                tag, ignore_refund=self, refund_amount=refund_amount
+                tag, ignored_refund=self, refund_amount=refund_amount
             )
             if amount > max_value or amount < min_value:
                 raise ValueError(

@@ -1,5 +1,6 @@
+import re
 from collections.abc import Collection
-from datetime import datetime
+from datetime import datetime, timedelta
 from decimal import Decimal
 from types import NoneType
 from typing import Any
@@ -7,7 +8,7 @@ from typing import Any
 import pytest
 from hypothesis import assume, given
 from hypothesis import strategies as st
-from src.models.custom_exceptions import InvalidOperationError
+from src.models.custom_exceptions import InvalidOperationError, NotFoundError
 from src.models.model_objects.attributes import (
     Attribute,
     AttributeType,
@@ -20,7 +21,6 @@ from src.models.model_objects.cash_objects import (
     CashTransactionType,
     InvalidCategoryTypeError,
     RefundTransaction,
-    UnrelatedAccountError,
 )
 from src.models.model_objects.currency_objects import (
     CashAmount,
@@ -37,6 +37,7 @@ from tests.models.test_assets.composites import (
     category_amount_pairs,
     currencies,
     everything_except,
+    refunds,
     tag_amount_pairs,
 )
 from tests.models.test_assets.constants import MIN_DATETIME
@@ -381,7 +382,7 @@ def test_category_amount_pairs_invalid_type(
 def test_category_amount_pairs_invalid_member_type(
     transaction: CashTransaction, category_amount_pairs: Collection[Any]
 ) -> None:
-    with pytest.raises((TypeError, ValueError), match="unpack"):
+    with pytest.raises((TypeError, ValueError)):
         transaction.set_attributes(category_amount_pairs=category_amount_pairs)
 
 
@@ -744,7 +745,7 @@ def test_get_min_refundable_for_tag_invalid_tag(
 
     with pytest.raises(ValueError, match="not in this CashTransaction's tags"):
         transaction.get_min_refundable_for_tag(
-            tag, ignore_refund=None, refund_amount=None
+            tag, ignored_refund=None, refund_amount=None
         )
 
 
@@ -755,6 +756,106 @@ def test_get_min_refundable_for_tag_no_refunds(
     transaction.add_tags((Attribute("test_tag", AttributeType.TAG),))
     tag, _ = transaction.tag_amount_pairs[0]
     amount = transaction.get_min_refundable_for_tag(
-        tag, ignore_refund=None, refund_amount=None
+        tag, ignored_refund=None, refund_amount=None
     )
     assert amount == transaction.currency.zero_amount
+
+
+def test_get_min_refundable_for_tag_fully_refunded_tag() -> None:
+    currency = Currency("XXX", 2)
+    account = CashAccount("test", currency, currency.zero_amount)
+    payee = Attribute("payee", AttributeType.PAYEE)
+    category = Category("category", CategoryType.EXPENSE)
+    tag = Attribute("tag", AttributeType.TAG)
+
+    transaction = CashTransaction(
+        "test",
+        datetime.now(user_settings.settings.time_zone) - timedelta(days=1),
+        CashTransactionType.EXPENSE,
+        account,
+        payee,
+        [(category, CashAmount(100, currency))],
+        [(tag, CashAmount(50, currency))],
+    )
+
+    RefundTransaction(
+        "refund",
+        datetime.now(user_settings.settings.time_zone),
+        account,
+        transaction,
+        payee,
+        [(category, CashAmount(50, currency))],
+        [(tag, CashAmount(50, currency))],
+    )
+
+    min_refundable = transaction.get_min_refundable_for_tag(tag, None, None)
+    max_refundable = transaction.get_max_refundable_for_tag(tag, None, None)
+    assert min_refundable == CashAmount(0, currency)
+    assert max_refundable == CashAmount(0, currency)
+
+
+@given(transaction=cash_transactions())
+def test_replace_tag_with_new_one(
+    transaction: CashTransaction,
+) -> None:
+    tag_1 = Attribute("TAG1", AttributeType.TAG)
+    tag_2 = Attribute("TAG2", AttributeType.TAG)
+    transaction.add_tags((tag_1,))
+    assert tag_1 in transaction.tags
+    transaction.replace_tag(tag_1, tag_2)
+    assert tag_2 in transaction.tags
+    assert tag_1 not in transaction.tags
+
+
+@given(transaction=cash_transactions())
+def test_replace_tag_with_old_one(
+    transaction: CashTransaction,
+) -> None:
+    amount = transaction.amount
+    tag_1 = Attribute("TAG1", AttributeType.TAG)
+    tag_2 = Attribute("TAG2", AttributeType.TAG)
+    transaction._tag_amount_pairs = [
+        (tag_1, Decimal("0.25") * amount),
+        (tag_2, Decimal("0.5") * amount),
+    ]
+    transaction._update_cached_data(amount.currency)
+    assert abs(transaction.get_amount_for_tag(tag_1)) == Decimal("0.25") * amount
+    assert abs(transaction.get_amount_for_tag(tag_2)) == Decimal("0.5") * amount
+    transaction.replace_tag(tag_1, tag_2)
+    assert abs(transaction.get_amount_for_tag(tag_2)) == Decimal("0.75") * amount
+    assert tag_1 not in transaction.tags
+
+
+@given(transaction=cash_transactions())
+def test_replace_tag_not_found(
+    transaction: CashTransaction,
+) -> None:
+    tag_1 = Attribute("TAG1", AttributeType.TAG)
+    tag_2 = Attribute("TAG2", AttributeType.TAG)
+    tag_3 = Attribute("TAG3", AttributeType.TAG)
+    transaction.add_tags((tag_1,))
+    assert tag_1 in transaction.tags
+    with pytest.raises(NotFoundError, match="Tag 'TAG2' not found"):
+        transaction.replace_tag(tag_2, tag_3)
+
+
+@given(transaction=cash_transactions())
+def test_replace_payee(
+    transaction: CashTransaction,
+) -> None:
+    payee = Attribute("PAYEE1", AttributeType.PAYEE)
+    assert transaction.payee != payee
+    transaction.replace_payee(payee)
+    assert transaction.payee == payee
+
+
+@given(transaction=cash_transactions(type_=CashTransactionType.EXPENSE), data=st.data())
+def test_change_datetime_refunded(
+    transaction: CashTransaction, data: st.DataObject
+) -> None:
+    refund = data.draw(refunds(transaction))
+    wrong_datetime = refund.datetime_ + timedelta(days=1)
+    with pytest.raises(
+        ValueError, match="The datetime_ of a refunded CashTransaction must"
+    ):
+        transaction.set_attributes(datetime_=wrong_datetime)

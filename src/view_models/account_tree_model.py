@@ -384,6 +384,7 @@ class AccountTreeModel(QAbstractItemModel):
             if item.type_ == CashAccount:
                 if (
                     item.balance_base is not None
+                    and not item.balance_base.is_nan()
                     and item.balance_base.value_rounded > 0
                 ):
                     return icons.cash_account
@@ -413,7 +414,7 @@ class AccountTreeModel(QAbstractItemModel):
         else:
             return None
 
-        if amount.value_rounded < 0 or amount.is_nan():
+        if amount.is_nan() or amount.value_rounded < 0:
             return colors.get_red_brush()
         if abs(amount.value_rounded) == 0:
             return colors.get_gray_brush()

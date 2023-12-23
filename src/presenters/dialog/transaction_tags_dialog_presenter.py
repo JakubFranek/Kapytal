@@ -64,8 +64,11 @@ class TransactionTagsDialogPresenter:
         uuids = [transaction.uuid for transaction in self._transactions]
         try:
             self._record_keeper.add_tags_to_transactions(uuids, tag_names)
-            logging.info(f"Added Tags {tag_names} to Transactions: {uuids}")
-            self.event_data_changed()
+            logging.info(
+                f"Added Tags {tag_names} to Transactions: "
+                f"uuids={[str(uuid) for uuid in uuids]}"
+            )
+            self.event_data_changed(uuids)
             self._dialog.close()
         except Exception as exception:  # noqa: BLE001
             handle_exception(exception)
@@ -82,8 +85,11 @@ class TransactionTagsDialogPresenter:
         uuids = [transaction.uuid for transaction in self._transactions]
         try:
             self._record_keeper.remove_tags_from_transactions(uuids, tag_names)
-            logging.info(f"Removed Tags {tag_names} from Transactions: {uuids}")
-            self.event_data_changed()
+            logging.info(
+                f"Removed Tags {tag_names} from Transactions: "
+                f"uuids={[str(uuid) for uuid in uuids]}"
+            )
+            self.event_data_changed(uuids)
             self._dialog.close()
         except Exception as exception:  # noqa: BLE001
             handle_exception(exception)

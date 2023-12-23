@@ -32,8 +32,9 @@ class ExchangeRateTableColumn(IntEnum):
     Y5 = 11
     Y7 = 12
     Y10 = 13
-    TOTAL = 14
-    TOTAL_ANNUALIZED = 15
+    YTD = 14
+    TOTAL = 15
+    TOTAL_ANNUALIZED = 16
 
 
 class ValueTableColumn(IntEnum):
@@ -70,8 +71,9 @@ class SecurityTableColumn(IntEnum):
     Y5 = 13
     Y7 = 14
     Y10 = 15
-    TOTAL = 16
-    TOTAL_ANNUALIZED = 17
+    YTD = 16
+    TOTAL = 17
+    TOTAL_ANNUALIZED = 18
 
 
 class SecurityAccountTableColumn(IntEnum):
@@ -109,13 +111,13 @@ class TransactionTableColumn(IntEnum):
     TYPE = 2
     FROM = 3
     TO = 4
-    SECURITY = 5
-    SHARES = 6
-    PRICE_PER_SHARE = 7
-    AMOUNT_NATIVE = 8
-    AMOUNT_BASE = 9
-    AMOUNT_SENT = 10
-    AMOUNT_RECEIVED = 11
+    AMOUNT_NATIVE = 5
+    AMOUNT_BASE = 6
+    AMOUNT_SENT = 7
+    AMOUNT_RECEIVED = 8
+    SECURITY = 9
+    SHARES = 10
+    PRICE_PER_SHARE = 11
     BALANCE = 12
     CATEGORY = 13
     TAG = 14

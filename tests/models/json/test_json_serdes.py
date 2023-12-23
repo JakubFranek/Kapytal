@@ -389,7 +389,9 @@ def test_cash_transfer(transaction: CashTransfer) -> None:
     original_iso = transaction.datetime_.replace(microsecond=0).isoformat()
     assert decoded_iso == original_iso
 
-    assert decoded.datetime_ == transaction.datetime_.replace(microsecond=0)
+    assert decoded.datetime_ == transaction.datetime_.replace(microsecond=0).astimezone(
+        decoded.datetime_.tzinfo
+    )
     assert decoded.datetime_created == transaction.datetime_created.replace(
         microsecond=0
     )

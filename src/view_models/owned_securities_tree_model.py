@@ -1,3 +1,4 @@
+import contextlib
 import numbers
 import unicodedata
 from collections.abc import Collection
@@ -106,10 +107,8 @@ class AccountItem:
 
         self.gain_native = self.native_amount - avg_price * shares
         self.gain_base = self.gain_native.convert(base_currency)
-        try:
+        with contextlib.suppress(Exception):
             self.gain_pct = round(100 * self.gain_native / (avg_price * shares), 2)
-        except Exception:
-            pass
 
         self.native_currency = parent.security.currency
 
@@ -326,6 +325,7 @@ class OwnedSecuritiesTreeModel(QAbstractItemModel):
                 OwnedSecuritiesTreeColumn.AMOUNT_NATIVE,
                 OwnedSecuritiesTreeColumn.AMOUNT_BASE,
             }
+            and not item.base_amount.is_nan()
             and item.base_amount.value_rounded < 0
         ):
             return colors.get_red_brush()
@@ -338,7 +338,9 @@ class OwnedSecuritiesTreeModel(QAbstractItemModel):
         self.endResetModel()
 
 
-def _get_brush_color_from_number(number: numbers.Real) -> QBrush:
+def _get_brush_color_from_number(number: Decimal) -> QBrush:
+    if number.is_nan():
+        return colors.get_red_brush()
     if number > 0:
         return colors.get_green_brush()
     if number < 0:
