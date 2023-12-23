@@ -348,7 +348,7 @@ def test_add_cash_transaction(
     transaction = record_keeper.transactions[0]
     assert transaction in record_keeper.cash_transactions
     assert transaction.datetime_ == datetime_
-    assert transaction.description == description
+    assert transaction.description == description.strip()
 
 
 @given(

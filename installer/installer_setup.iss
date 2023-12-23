@@ -1,5 +1,5 @@
 #define MyAppName "Kapytal"
-#define MyAppVersion "0.13.0"
+#define MyAppVersion "0.14.0"
 #define MyAppPublisher "Jakub Franek"
 #define MyAppURL "https://github.com/JakubFranek/Kapytal"
 #define MyAppExeName "Kapytal.exe"
