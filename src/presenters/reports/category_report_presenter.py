@@ -6,7 +6,12 @@ from PyQt6.QtWidgets import QApplication
 from src.models.base_classes.transaction import Transaction
 from src.models.custom_exceptions import InvalidOperationError
 from src.models.model_objects.attributes import Category
-from src.models.model_objects.cash_objects import CashTransaction, RefundTransaction
+from src.models.model_objects.cash_objects import (
+    CashTransaction,
+    CashTransactionType,
+    RefundTransaction,
+)
+from src.models.model_objects.currency_objects import Currency
 from src.models.record_keeper import RecordKeeper
 from src.models.statistics.category_stats import (
     CategoryStats,
@@ -155,23 +160,21 @@ class CategoryReportPresenter:
         income_periodic_stats: dict[str, list[CategoryStats]] = {}
         expense_periodic_stats: dict[str, list[CategoryStats]] = {}
         for period, stats in periodic_stats.items():
-            income_stats = []
-            expense_stats = []
-            for item in stats:
-                if item.balance.value_rounded > 0:
-                    income_stats.append(item)
-                elif item.balance.value_rounded < 0:
-                    expense_stats.append(item)
+            income_stats, expense_stats = separate_income_and_expense_stats(
+                stats, base_currency
+            )
             income_periodic_stats[period] = income_stats
             expense_periodic_stats[period] = expense_stats
 
-        income_averages, expense_averages = create_income_and_expense_stats(
-            category_averages
+        income_averages, expense_averages = separate_income_and_expense_stats(
+            category_averages, base_currency, divisor=len(periodic_stats)
         )
         income_periodic_stats["Average"] = income_averages
         expense_periodic_stats["Average"] = expense_averages
 
-        income_totals, expense_totals = create_income_and_expense_stats(category_totals)
+        income_totals, expense_totals = separate_income_and_expense_stats(
+            category_totals, base_currency
+        )
         income_periodic_stats["Total"] = income_totals
         expense_periodic_stats["Total"] = expense_totals
 
@@ -207,9 +210,11 @@ class CategoryReportPresenter:
 
         transactions = None
         if path == "Total":
-            transactions = []
+            transactions: set[CashTransaction | RefundTransaction] = set()
             for category_stats in data:
-                transactions.extend(category_stats.transactions)
+                if category_stats.category.parent is not None:
+                    continue
+                transactions = transactions.union(category_stats.transactions)
         for category_stats in data:
             if category_stats.category.path == path:
                 transactions = category_stats.transactions
@@ -271,25 +276,71 @@ def _filter_transactions(
     )
 
 
-def create_income_and_expense_stats(
-    category_stats: dict[Category, TransactionBalance]
+def separate_income_and_expense_stats(
+    category_stats: dict[Category, TransactionBalance] | tuple[CategoryStats, ...],
+    currency: Currency,
+    divisor: int = 1,
 ) -> tuple[tuple[CategoryStats, ...], tuple[CategoryStats, ...]]:
     income_stats = []
     expense_stats = []
-    for category, transactions_balance in category_stats.items():
-        stats = CategoryStats(
-            category,
-            0,
-            0,
-            transactions_balance.balance,
-            transactions_balance.transactions,
-        )
-        if transactions_balance.balance.value_rounded > 0:
-            income_stats.append(stats)
-        elif transactions_balance.balance.value_rounded < 0:
-            expense_stats.append(stats)
+    if isinstance(category_stats, dict):
+        for category, transactions_balance in category_stats.items():
+            separate_stats(
+                income_stats,
+                expense_stats,
+                transactions_balance.transactions,
+                category,
+                currency,
+                divisor,
+            )
+    elif isinstance(category_stats, tuple):
+        for stats in category_stats:
+            separate_stats(
+                income_stats,
+                expense_stats,
+                stats.transactions,
+                stats.category,
+                currency,
+                divisor,
+            )
+    else:
+        raise TypeError("Parameter 'category_stats' must be a dict or a tuple.")
 
     return income_stats, expense_stats
+
+
+def separate_stats(
+    income_stats: list[CategoryStats],
+    expense_stats: list[CategoryStats],
+    transactions: Collection[CashTransaction | RefundTransaction],
+    category: Category,
+    currency: Currency,
+    divisor: int = 1,
+) -> None:
+    income_data = TransactionBalance(currency.zero_amount)
+    expense_data = TransactionBalance(currency.zero_amount)
+    for transaction in transactions:
+        date_ = transaction.datetime_.date()
+        amount = transaction.get_amount_for_category(category, total=True).convert(
+            currency, date_
+        )
+        if (
+            isinstance(transaction, RefundTransaction)
+            or transaction.type_ == CashTransactionType.INCOME
+        ):
+            income_data.add_transaction_balance({transaction}, amount)
+        else:
+            expense_data.add_transaction_balance({transaction}, amount)
+    if len(income_data) > 0:
+        income_stats_item = CategoryStats(
+            category, 0, 0, income_data.balance / divisor, income_data.transactions
+        )
+        income_stats.append(income_stats_item)
+    if len(expense_data) > 0:
+        expense_stats_item = CategoryStats(
+            category, 0, 0, expense_data.balance / divisor, expense_data.transactions
+        )
+        expense_stats.append(expense_stats_item)
 
 
 def add_missing_parent_category_stats(

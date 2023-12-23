@@ -85,36 +85,6 @@ def calculate_periodic_attribute_stats(
     return stats_dict
 
 
-def calculate_average_per_period_attribute_stats(
-    transactions: Collection[CashTransaction | RefundTransaction],
-    base_currency: Currency,
-    all_attributes: Collection[Attribute],
-) -> tuple[AttributeStats]:
-    periodic_stats = calculate_periodic_attribute_stats(
-        transactions, base_currency, all_attributes
-    )
-    all_stats = list(itertools.chain(*periodic_stats.values()))
-    periods = len(periodic_stats)
-
-    average_stats: dict[Attribute, AttributeStats] = {}
-    for stats in all_stats:
-        if stats.attribute in average_stats:
-            _average_stats = average_stats[stats.attribute]
-            _average_stats.balance += stats.balance
-            _average_stats.no_of_transactions += stats.no_of_transactions
-            _average_stats.transactions.add(*stats.transactions)
-        else:
-            average_stats[stats.attribute] = AttributeStats(
-                stats.attribute, 0, base_currency.zero_amount
-            )
-
-    for stats in average_stats.values():
-        stats.balance = stats.balance / periods
-        stats.no_of_transactions = stats.no_of_transactions / periods
-
-    return tuple(average_stats.values())
-
-
 def calculate_attribute_stats(
     transactions: Collection[CashTransaction | RefundTransaction],
     base_currency: Currency,

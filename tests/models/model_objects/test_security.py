@@ -208,9 +208,23 @@ def test_shares_decimals_invalid_type(
     symbol=st.text(alphabet=Security.SYMBOL_ALLOWED_CHARS, min_size=1, max_size=8),
     type_=names(min_size=1, max_size=32),
     currency=currencies(),
-    shares_decimals=st.sampled_from([-10, -1, 19, 100, 1000]),
+    shares_decimals=st.sampled_from([19, 100]),
 )
-def test_shares_decimals_invalid_value(
+def test_shares_decimals_value_too_big(
+    name: str, symbol: str, type_: str, currency: Currency, shares_decimals: Any
+) -> None:
+    with pytest.raises(ValueError, match="Security.shares_decimals must"):
+        Security(name, symbol, type_, currency, shares_decimals)
+
+
+@given(
+    name=names(min_size=1, max_size=64),
+    symbol=st.text(alphabet=Security.SYMBOL_ALLOWED_CHARS, min_size=1, max_size=8),
+    type_=names(min_size=1, max_size=32),
+    currency=currencies(),
+    shares_decimals=st.sampled_from([-100, -1]),
+)
+def test_shares_decimals_value_negative(
     name: str, symbol: str, type_: str, currency: Currency, shares_decimals: Any
 ) -> None:
     with pytest.raises(ValueError, match="Security.shares_decimals must"):

@@ -74,7 +74,7 @@ def test_invalid_datetime_type(description: str, datetime_: datetime) -> None:
 def test_set_attributes_same_values(description: str, datetime_: datetime) -> None:
     transaction = ConcreteTransaction(description, datetime_)
     transaction.set_attributes()
-    assert transaction.description == description
+    assert transaction.description == description.strip()
     assert transaction.datetime_ == datetime_
 
 

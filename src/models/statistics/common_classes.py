@@ -17,7 +17,7 @@ class TransactionBalance:
     ) -> None:
         self.balance = balance
         if transactions is not None:
-            self.transactions = set(transactions)
+            self.transactions: set[Transaction] = set(transactions)
         else:
             self.transactions = set()
 
