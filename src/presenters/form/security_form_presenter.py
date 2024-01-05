@@ -659,7 +659,7 @@ class SecurityFormPresenter:
             accounts = [
                 account
                 for account in self._record_keeper.security_accounts
-                if account.is_security_related(security)
+                if security in account.related_securities
             ]
             irrs[security] = {None: calculate_irr(security, accounts)}
             for account in accounts:

@@ -40,6 +40,8 @@ def test_creation(name: str, parent: AccountGroup | None) -> None:
     assert security_account.name == name
     assert security_account.parent == parent
     assert security_account.securities == {}
+    assert security_account.related_securities == set()
+    assert security_account.currency is None
     assert security_account.transactions == ()
     assert security_account.__repr__() == f"SecurityAccount({expected_path})"
 
@@ -189,6 +191,9 @@ def test_get_balance_with_date(
     assert balance_1 == transaction_sum_1
     assert balance_0 == currency.zero_amount
     assert balance_1x == transaction_sum_1
+
+    assert account.currency == currency
+    assert account.related_securities == {security}
 
 
 @given(

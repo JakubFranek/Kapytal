@@ -340,12 +340,14 @@ class SecurityAccount(Account):
         "allow_update_balance",
         "event_balance_updated",
         "_securities_history",
+        "_related_securities",
     )
 
     def __init__(self, name: str, parent: AccountGroup | None = None) -> None:
         super().__init__(name, parent)
         self._securities_history: list[tuple[datetime, dict[Security, Decimal]]] = []
         self._transactions: list[SecurityRelatedTransaction] = []
+        self._related_securities: frozenset[Security] = frozenset()
 
         # allow_update_balance attribute is used to block updating the balance
         # when a transaction is added or removed during deserialization
@@ -360,6 +362,17 @@ class SecurityAccount(Account):
     @property
     def transactions(self) -> tuple["SecurityRelatedTransaction", ...]:
         return tuple(self._transactions)
+
+    @property
+    def currency(self) -> Currency | None:
+        currencies = {security.currency for security in self._related_securities}
+        if len(currencies) == 1:
+            return next(iter(currencies))
+        return None
+
+    @property
+    def related_securities(self) -> frozenset[Security]:
+        return self._related_securities
 
     def get_balance(self, currency: Currency, date_: date | None = None) -> CashAmount:
         if date_ is None:
@@ -424,6 +437,7 @@ class SecurityAccount(Account):
                     datetime_=new_datetime, block_account_update=True
                 )
 
+        related_securities = set()
         for transaction in self._transactions:
             security_dict = (
                 defaultdict(lambda: Decimal(0))
@@ -440,17 +454,13 @@ class SecurityAccount(Account):
                 },
             )
             self._securities_history.append((transaction.datetime_, security_dict))
+            related_securities.add(transaction.security)
 
         if len(self._securities_history) != 0:
             for security in self._securities_history[-1][1]:
                 security.event_price_updated.append(self._update_balances)
+        self._related_securities = frozenset(related_securities)
         self._update_balances()
-
-    def is_security_related(self, security: Security) -> bool:
-        for _, security_dict in self._securities_history:
-            if security in security_dict:
-                return True
-        return False
 
     def serialize(self) -> dict[str, Any]:
         index = self._parent.children.index(self) if self._parent is not None else None
