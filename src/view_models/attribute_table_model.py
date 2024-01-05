@@ -71,7 +71,7 @@ class AttributeTableModel(QAbstractTableModel):
                 index.column(), self._attribute_stats[index.row()]
             )
         if role == Qt.ItemDataRole.UserRole:
-            return self._get_user_role_data(
+            return self._get_sort_role_data(
                 index.column(), self._attribute_stats[index.row()]
             )
         column = index.column()
@@ -94,7 +94,7 @@ class AttributeTableModel(QAbstractTableModel):
             return stats.balance.to_str_rounded()
         return None
 
-    def _get_user_role_data(
+    def _get_sort_role_data(
         self, column: int, stats: AttributeStats
     ) -> str | int | float | None:
         if column == AttributeTableColumn.NAME:
@@ -173,3 +173,7 @@ class AttributeTableModel(QAbstractTableModel):
                 f"Parameter {item=} not in AttributeTableModel.attribute_stats."
             )
         return QAbstractTableModel.createIndex(self, row, 0)
+
+    def item_changed(self, item: Attribute) -> None:
+        index = self.get_index_from_item(item)
+        self.dataChanged.emit(index, index)

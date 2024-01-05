@@ -286,7 +286,7 @@ def test_invalid_shares_decimals(
     datetime_: datetime,
     data: st.DataObject,
 ) -> None:
-    cash_account = cash_accounts(currency=security.currency)
+    cash_account = data.draw(cash_accounts(currency=security.currency))
     shares = data.draw(st.integers(min_value=1)) * Decimal(
         10 ** (-security.shares_decimals - 1)
     )

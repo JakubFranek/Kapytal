@@ -137,7 +137,6 @@ class RecordKeeper:
 
     @property
     def payees(self) -> tuple[Attribute, ...]:
-        self._payees.sort(key=lambda payee: payee.name)
         return tuple(self._payees)
 
     @property
