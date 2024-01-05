@@ -154,8 +154,6 @@ class MainView(QMainWindow, Ui_MainWindow):
         self.transaction_table_widget = TransactionTableWidget(self)
         self.horizontalLayout.addWidget(self.account_tree_widget)
         self.horizontalLayout.addWidget(self.transaction_table_widget)
-        self.horizontalLayout.setStretch(0, 0)
-        self.horizontalLayout.setStretch(1, 1)
 
         app_icon = QIcon()
         app_icon.addFile("icons_custom:coin-k.png", QSize(24, 24))
