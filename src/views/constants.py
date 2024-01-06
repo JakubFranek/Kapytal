@@ -93,10 +93,12 @@ class OwnedSecuritiesTreeColumn(IntEnum):
     PRICE_AVERAGE = 3
     GAIN_NATIVE = 4
     GAIN_BASE = 5
-    ABSOLUTE_RETURN = 6
-    IRR = 7
-    AMOUNT_NATIVE = 8
-    AMOUNT_BASE = 9
+    RETURN_NATIVE = 6
+    RETURN_BASE = 7
+    IRR_NATIVE = 8
+    IRR_BASE = 9
+    AMOUNT_NATIVE = 10
+    AMOUNT_BASE = 11
 
 
 class CategoryTreeColumn(IntEnum):

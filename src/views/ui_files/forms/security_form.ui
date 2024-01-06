@@ -228,16 +228,6 @@
          </property>
         </widget>
        </item>
-       <item>
-        <widget class="QLabel" name="label">
-         <property name="text">
-          <string>NOTE: Absolute Return and Internal Rate of Return (IRR) calculations do NOT take Currency Exchange Rate fluctuation into account. They are calculated using the native Currency of the given Security. Returns can differ in other Currencies as Exchange Rates fluctuate over time.</string>
-         </property>
-         <property name="wordWrap">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
       </layout>
      </widget>
     </widget>

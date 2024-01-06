@@ -11,7 +11,7 @@ from src.models.custom_exceptions import InvalidOperationError
 from src.models.model_objects.currency_objects import CashAmount
 from src.models.model_objects.security_objects import Security, SecurityAccount
 from src.models.record_keeper import RecordKeeper
-from src.models.statistics.security_stats import calculate_irr
+from src.models.statistics.security_stats import calculate_irr, calculate_total_irr
 from src.models.user_settings import user_settings
 from src.presenters.utilities.event import Event
 from src.presenters.utilities.handle_exception import handle_exception
@@ -78,9 +78,13 @@ class SecurityFormPresenter:
 
     def update_overview_model_data(self) -> None:
         irrs = self._calculate_irrs()
+        total_irr = calculate_total_irr(
+            self._record_keeper.security_accounts, self._record_keeper.base_currency
+        )
         self._overview_tree_model.load_data(
             self._record_keeper.security_accounts,
             irrs,
+            total_irr,
             self._record_keeper.base_currency,
         )
         hide_native_column = all(
@@ -653,16 +657,27 @@ class SecurityFormPresenter:
             column_empty = self._security_table_model.is_column_empty(column)
             self.view.securityTableView.setColumnHidden(column, column_empty)
 
-    def _calculate_irrs(self) -> dict[Security, dict[SecurityAccount | None, Decimal]]:
-        irrs: dict[Security, dict[SecurityAccount | None, Decimal]] = {}
+    def _calculate_irrs(
+        self,
+    ) -> dict[Security, dict[SecurityAccount | None, tuple[Decimal, Decimal]]]:
+        irrs: dict[Security, dict[SecurityAccount | None, tuple[Decimal, Decimal]]] = {}
+        base_currency = self._record_keeper.base_currency
         for security in self._record_keeper.securities:
             accounts = [
                 account
                 for account in self._record_keeper.security_accounts
                 if security in account.related_securities
             ]
-            irrs[security] = {None: calculate_irr(security, accounts)}
+            irrs[security] = {
+                None: (
+                    calculate_irr(security, accounts),
+                    calculate_irr(security, accounts, base_currency),
+                )
+            }
             for account in accounts:
-                irrs[security][account] = calculate_irr(security, [account])
+                irrs[security][account] = (
+                    calculate_irr(security, [account]),
+                    calculate_irr(security, [account], base_currency),
+                )
 
         return irrs

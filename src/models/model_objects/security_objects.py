@@ -8,6 +8,7 @@ from collections.abc import Collection
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 from enum import Enum, auto
+from types import NoneType
 from typing import Any
 from uuid import UUID
 
@@ -491,10 +492,17 @@ class SecurityAccount(Account):
         return obj
 
     def get_average_price(
-        self, security: Security, date_: date | None = None
+        self,
+        security: Security,
+        date_: date | None = None,  # latest date if None
+        currency: Currency | None = None,  # Security.currency if None
     ) -> CashAmount:
         if not isinstance(security, Security):
             raise TypeError("Parameter 'security' must be a Security.")
+        if not isinstance(date_, (date, NoneType)):
+            raise TypeError("Parameter 'date' must be a date or None.")
+        if not isinstance(currency, (Currency, NoneType)):
+            raise TypeError("Parameter 'currency' must be a Currency or None.")
         if date_ is None and (
             len(self._securities_history) == 0
             or security not in self._securities_history[-1][1]
@@ -511,28 +519,33 @@ class SecurityAccount(Account):
                     f"Security {security.name} is not in this SecurityAccount."
                 )
 
+        if currency is None:
+            currency = security.currency
+
         shares_price_pairs: list[tuple[int, CashAmount]] = []
         for transaction in self._transactions:
-            _transaction_date = transaction.datetime_.date()
-            if date_ is not None and _transaction_date > date_:
-                continue
+            _transaction_date = transaction.date_
             if transaction.security != security:
                 continue
+            if date_ is not None and _transaction_date > date_:
+                continue
             if isinstance(transaction, SecurityTransaction):
-                shares_price_pairs.append(
-                    (transaction.shares, transaction.price_per_share)
-                )
+                amount = transaction.price_per_share
             elif (
                 isinstance(transaction, SecurityTransfer)
                 and transaction.recipient == self
             ):
-                avg_price = transaction.sender.get_average_price(
-                    security, _transaction_date
+                amount = transaction.sender.get_average_price(
+                    security, _transaction_date, currency
                 )
-                shares_price_pairs.append((transaction.shares, avg_price))
+            else:
+                continue
+            shares_price_pairs.append(
+                (transaction.shares, amount.convert(currency, _transaction_date))
+            )
 
         total_shares = 0
-        total_price = CashAmount(0, security.currency)
+        total_price = currency.zero_amount
         for shares, price in shares_price_pairs:
             total_price += price * shares
             total_shares += shares
@@ -540,7 +553,7 @@ class SecurityAccount(Account):
         return (
             total_price / total_shares
             if total_shares != 0
-            else CashAmount("NaN", security.currency)
+            else CashAmount("NaN", currency)
         )
 
     def _validate_transaction(self, transaction: "SecurityRelatedTransaction") -> None:
