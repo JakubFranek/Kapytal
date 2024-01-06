@@ -22,6 +22,7 @@ class UserSettings(JSONSerializableMixin, CopyableMixin):
         "_transaction_date_format",
         "_exchange_rate_decimals",
         "_price_per_share_decimals",
+        "_check_for_updates_on_startup",
     )
 
     LOGS_DEFAULT_MAX_SIZE = 1_000_000
@@ -40,6 +41,8 @@ class UserSettings(JSONSerializableMixin, CopyableMixin):
         self._price_per_share_decimals = 9
 
         self._backup_paths = []
+
+        self._check_for_updates_on_startup = True
 
     @property
     def time_zone(self) -> ZoneInfo:
@@ -219,6 +222,23 @@ class UserSettings(JSONSerializableMixin, CopyableMixin):
         )
         self._price_per_share_decimals = value
 
+    @property
+    def check_for_updates_on_startup(self) -> bool:
+        return self._check_for_updates_on_startup
+
+    @check_for_updates_on_startup.setter
+    def check_for_updates_on_startup(self, value: bool) -> None:
+        if not isinstance(value, bool):
+            raise TypeError("UserSettings.check_for_updates_on_startup must be a bool.")
+        if self._check_for_updates_on_startup == value:
+            return
+
+        logging.info(
+            "Changing UserSettings.check_for_updates_on_startup from "
+            f"{self._check_for_updates_on_startup} to {value}"
+        )
+        self._check_for_updates_on_startup = value
+
     def __repr__(self) -> str:
         return "UserSettings"
 
@@ -234,6 +254,7 @@ class UserSettings(JSONSerializableMixin, CopyableMixin):
             "transaction_date_format": self._transaction_date_format,
             "exchange_rate_decimals": self._exchange_rate_decimals,
             "price_per_share_decimals": self._price_per_share_decimals,
+            "check_for_updates_on_startup": self._check_for_updates_on_startup,
         }
 
     @staticmethod
@@ -251,6 +272,10 @@ class UserSettings(JSONSerializableMixin, CopyableMixin):
         exchange_rate_decimals: int = data.get("exchange_rate_decimals", 9)
         price_per_share_decimals: int = data.get("price_per_share_decimals", 9)
 
+        check_for_updates_on_startup: bool = data.get(
+            "check_for_updates_on_startup", True
+        )
+
         obj = UserSettings()
         obj._time_zone = time_zone  # noqa: SLF001
         obj._logs_max_size_bytes = logs_max_size_bytes  # noqa: SLF001
@@ -260,5 +285,6 @@ class UserSettings(JSONSerializableMixin, CopyableMixin):
         obj._transaction_date_format = transaction_date_format  # noqa: SLF001
         obj._exchange_rate_decimals = exchange_rate_decimals  # noqa: SLF001
         obj._price_per_share_decimals = price_per_share_decimals  # noqa: SLF001
+        obj._check_for_updates_on_startup = check_for_updates_on_startup  # noqa: SLF001
 
         return obj

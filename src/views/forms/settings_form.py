@@ -38,6 +38,7 @@ class SettingsForm(CustomWidget, Ui_SettingsForm):
         self.transactionTableDateFormatLineEdit.textEdited.connect(
             self.signal_data_changed.emit
         )
+        self.checkforUpdatesCheckBox.toggled.connect(self.signal_data_changed.emit)
 
     @property
     def exchange_rate_decimals(self) -> int:
@@ -86,6 +87,14 @@ class SettingsForm(CustomWidget, Ui_SettingsForm):
     @logs_max_size_kb.setter
     def logs_max_size_kb(self, value: int) -> None:
         self.logsSizeLimitSpinBox.setValue(value)
+
+    @property
+    def check_for_updates_on_startup(self) -> bool:
+        return self.checkforUpdatesCheckBox.isChecked()
+
+    @check_for_updates_on_startup.setter
+    def check_for_updates_on_startup(self, value: bool) -> None:
+        self.checkforUpdatesCheckBox.setChecked(value)
 
     def get_directory_path(self) -> str:
         return QFileDialog.getExistingDirectory(self)

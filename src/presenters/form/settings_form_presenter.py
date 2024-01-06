@@ -53,6 +53,9 @@ class SettingsFormPresenter:
         self._view.price_per_share_decimals = (
             user_settings.settings.price_per_share_decimals
         )
+        self._view.check_for_updates_on_startup = (
+            user_settings.settings.check_for_updates_on_startup
+        )
         self._backup_paths = list(user_settings.settings.backup_paths)
         self._backup_paths_list_model.pre_reset_model()
         self.update_model_data()
@@ -121,6 +124,9 @@ class SettingsFormPresenter:
             )
             user_settings.settings.price_per_share_decimals = (
                 self._view.price_per_share_decimals
+            )
+            user_settings.settings.check_for_updates_on_startup = (
+                self._view.check_for_updates_on_startup
             )
         except Exception as exception:  # noqa: BLE001
             handle_exception(exception)
