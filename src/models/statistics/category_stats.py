@@ -62,7 +62,7 @@ def calculate_periodic_totals_and_averages(
                 expense_data = TransactionBalance(currency.zero_amount)
 
                 for transaction in stats.transactions:
-                    date_ = transaction.datetime_.date()
+                    date_ = transaction.date_
                     amount = transaction.get_amount_for_category(
                         stats.category, total=True
                     ).convert(currency, date_)
@@ -139,7 +139,7 @@ def calculate_category_stats(
 
     for transaction in transactions:
         already_counted_ancestors = set()
-        date_ = transaction.datetime_.date()
+        date_ = transaction.date_
         for category in transaction.categories:
             stats = stats_dict[category]
             stats.transactions.add(transaction)

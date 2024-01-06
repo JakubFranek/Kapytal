@@ -100,7 +100,7 @@ def calculate_attribute_stats(
         stats = AttributeStats(attribute, 0, base_currency.zero_amount)
         stats_dict[attribute] = stats
     for transaction in transactions:
-        date_ = transaction.datetime_.date()
+        date_ = transaction.date_
         if attribute_type == AttributeType.TAG:
             for tag in transaction.tags:
                 stats = stats_dict[tag]

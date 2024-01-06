@@ -757,4 +757,4 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
         else:
             return
         self.currency_code = _account.currency.code
-        self.amount_decimals = _account.currency.places
+        self.amount_decimals = _account.currency.decimals

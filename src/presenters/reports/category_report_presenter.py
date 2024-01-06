@@ -320,7 +320,7 @@ def separate_stats(
     income_data = TransactionBalance(currency.zero_amount)
     expense_data = TransactionBalance(currency.zero_amount)
     for transaction in transactions:
-        date_ = transaction.datetime_.date()
+        date_ = transaction.date_
         amount = transaction.get_amount_for_category(category, total=True).convert(
             currency, date_
         )

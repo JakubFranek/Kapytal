@@ -165,7 +165,7 @@ class PeriodicCategoryStatsTreeModel(QAbstractItemModel):
 
         total_sum = sum(periodic_totals_row_data)
         average_sum = round(
-            total_sum / len(periodic_totals_row_data), base_currency.places
+            total_sum / len(periodic_totals_row_data), base_currency.decimals
         )
         periodic_totals_row_data.append(average_sum)
         periodic_totals_row_data.append(total_sum)
@@ -174,7 +174,7 @@ class PeriodicCategoryStatsTreeModel(QAbstractItemModel):
 
         income_sum = sum(periodic_income_totals_row_data)
         average_income_sum = round(
-            income_sum / len(periodic_income_totals_row_data), base_currency.places
+            income_sum / len(periodic_income_totals_row_data), base_currency.decimals
         )
         periodic_income_totals_row_data.append(average_income_sum)
         periodic_income_totals_row_data.append(income_sum)
@@ -183,7 +183,7 @@ class PeriodicCategoryStatsTreeModel(QAbstractItemModel):
 
         expense_sum = sum(periodic_expense_totals_row_data)
         average_expense_sum = round(
-            expense_sum / len(periodic_expense_totals_row_data), base_currency.places
+            expense_sum / len(periodic_expense_totals_row_data), base_currency.decimals
         )
         periodic_expense_totals_row_data.append(average_expense_sum)
         periodic_expense_totals_row_data.append(expense_sum)

@@ -237,11 +237,11 @@ def test_get_balance_with_date(
     )
 
     latest_balance = account.get_balance(currency)
-    balance_3 = account.get_balance(currency, t3.datetime_.date())
-    balance_2 = account.get_balance(currency, t2.datetime_.date())
-    balance_1 = account.get_balance(currency, t1.datetime_.date())
-    balance_0 = account.get_balance(currency, t1.datetime_.date() - timedelta(days=1))
-    balance_m1 = account.get_balance(currency, t1.datetime_.date() - timedelta(days=2))
+    balance_3 = account.get_balance(currency, t3.date_)
+    balance_2 = account.get_balance(currency, t2.date_)
+    balance_1 = account.get_balance(currency, t1.date_)
+    balance_0 = account.get_balance(currency, t1.date_ - timedelta(days=1))
+    balance_m1 = account.get_balance(currency, t1.date_ - timedelta(days=2))
     assert latest_balance == account.initial_balance + transaction_sum_3
     assert balance_3 == latest_balance
     assert balance_2 == account.initial_balance + transaction_sum_2

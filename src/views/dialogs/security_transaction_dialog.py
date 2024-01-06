@@ -523,7 +523,7 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
         self.sharesDoubleSpinBox.setSingleStep(10 ** (-security.shares_decimals))
         self._update_shares_spinbox_suffix()
 
-        self.totalDoubleSpinBox.setDecimals(security.currency.places)
+        self.totalDoubleSpinBox.setDecimals(security.currency.decimals)
 
     def _update_shares_spinbox_suffix(self) -> None:
         if self.type_ == SecurityTransactionType.BUY:

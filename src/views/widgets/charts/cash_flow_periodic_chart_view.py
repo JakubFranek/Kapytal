@@ -75,7 +75,7 @@ class CashFlowPeriodicChartView(QChartView):
             self._unit = "%"
         else:
             self._unit = stats_sequence[0].inflows.balance.currency.code
-        self._places = stats_sequence[0].inflows.balance.currency.places
+        self._places = stats_sequence[0].inflows.balance.currency.decimals
 
         bar_inflows = BarSet("Inflows")
         bar_inflows.setColor(QColor("darkgreen"))

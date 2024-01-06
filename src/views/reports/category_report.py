@@ -198,7 +198,7 @@ def _convert_category_stats_to_sunburst_data(
 
     children: list[SunburstNode] = []
     root_node = SunburstNode(
-        "Total", "Total", 0, currency.code, currency.places, [], None
+        "Total", "Total", 0, currency.code, currency.decimals, [], None
     )
     for item in stats:
         if item.category.parent is not None:

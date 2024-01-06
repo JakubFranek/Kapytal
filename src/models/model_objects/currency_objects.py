@@ -26,10 +26,16 @@ class ConversionFactorNotFoundError(ValueError):
 
 
 class Currency(CopyableMixin, JSONSerializableMixin):
-    __slots__ = ("_code", "_places", "_exchange_rates", "_factor_cache", "_zero_amount")
+    __slots__ = (
+        "_code",
+        "_decimals",
+        "_exchange_rates",
+        "_factor_cache",
+        "_zero_amount",
+    )
     CODE_LENGTH = 3
 
-    def __init__(self, code: str, places: int) -> None:
+    def __init__(self, code: str, decimals: int) -> None:
         super().__init__()
 
         if not isinstance(code, str):
@@ -38,11 +44,11 @@ class Currency(CopyableMixin, JSONSerializableMixin):
             raise ValueError("Currency.code must be a three letter ISO-4217 code.")
         self._code = code.upper()
 
-        if not isinstance(places, int):
-            raise TypeError("Currency.places must be an integer.")
-        if places < 0:
-            raise ValueError("Currency.places must not be negative.")
-        self._places = places
+        if not isinstance(decimals, int):
+            raise TypeError("Currency.decimals must be an integer.")
+        if decimals < 0:
+            raise ValueError("Currency.decimals must not be negative.")
+        self._decimals = decimals
 
         self._exchange_rates: dict[Currency, "ExchangeRate"] = {}
         self._factor_cache: dict[str, Decimal] = {}
@@ -53,8 +59,8 @@ class Currency(CopyableMixin, JSONSerializableMixin):
         return self._code
 
     @property
-    def places(self) -> int:
-        return self._places
+    def decimals(self) -> int:
+        return self._decimals
 
     @property
     def zero_amount(self) -> "CashAmount":
@@ -182,11 +188,11 @@ class Currency(CopyableMixin, JSONSerializableMixin):
         return None  # Reached a dead-end.
 
     def serialize(self) -> dict:
-        return {"datatype": "Currency", "code": self._code, "places": self._places}
+        return {"datatype": "Currency", "code": self._code, "places": self._decimals} # TODO: rename key
 
     @staticmethod
     def deserialize(data: dict[str, Any]) -> "Currency":
-        return Currency(code=data["code"], places=data["places"])
+        return Currency(code=data["code"], decimals=data["places"])
 
 
 class ExchangeRate(CopyableMixin, JSONSerializableMixin):
@@ -455,8 +461,8 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
             if self._raw_value.is_nan():
                 self._value_rounded = self._raw_value
             else:
-                self._value_rounded = round(self._raw_value, self._currency.places)
-                min_places = min(self._currency.places, 4)
+                self._value_rounded = round(self._raw_value, self._currency.decimals)
+                min_places = min(self._currency.decimals, 4)
                 if -self._value_rounded.as_tuple().exponent > min_places:
                     self._value_rounded = self._value_rounded.normalize()
                     if -self._value_rounded.as_tuple().exponent < min_places:
@@ -470,7 +476,7 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
     def value_normalized(self) -> Decimal:
         if not hasattr(self, "_value_normalized"):
             self._value_normalized = self._raw_value.normalize()
-            places = min(self._currency.places, 4)
+            places = min(self._currency.decimals, 4)
             if (
                 not self._value_normalized.is_nan()
                 and -self._value_normalized.as_tuple().exponent < places

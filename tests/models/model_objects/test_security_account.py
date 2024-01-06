@@ -152,9 +152,7 @@ def test_get_balance_with_date(
     t2._timestamp = t2._datetime.timestamp()
     t3._timestamp = t3._datetime.timestamp()
     transactions = [t1, t2, t3]
-    security.set_price(
-        t1.datetime_.date() - timedelta(days=10), CashAmount(1, currency)
-    )
+    security.set_price(t1.date_ - timedelta(days=10), CashAmount(1, currency))
     account.update_securities()
     transaction_sum_3 = sum(
         (
@@ -179,11 +177,11 @@ def test_get_balance_with_date(
     )
 
     latest_balance = account.get_balance(currency)
-    balance_3 = account.get_balance(currency, t3.datetime_.date())
-    balance_2 = account.get_balance(currency, t2.datetime_.date())
-    balance_1 = account.get_balance(currency, t1.datetime_.date())
-    balance_0 = account.get_balance(currency, t1.datetime_.date() - timedelta(days=10))
-    balance_1x = account.get_balance(currency, t1.datetime_.date() + timedelta(days=1))
+    balance_3 = account.get_balance(currency, t3.date_)
+    balance_2 = account.get_balance(currency, t2.date_)
+    balance_1 = account.get_balance(currency, t1.date_)
+    balance_0 = account.get_balance(currency, t1.date_ - timedelta(days=10))
+    balance_1x = account.get_balance(currency, t1.date_ + timedelta(days=1))
 
     assert latest_balance == transaction_sum_3
     assert balance_3 == latest_balance

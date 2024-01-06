@@ -321,6 +321,6 @@ class TransactionTableFormPresenter:
         for transaction in transactions:
             if isinstance(transaction, CashTransaction | RefundTransaction):
                 _amount = transaction.get_amount(transaction.account)
-                amount += _amount.convert(base_currency, transaction.datetime_.date())
+                amount += _amount.convert(base_currency, transaction.date_)
 
         self._form.set_selected_amount(amount.to_str_rounded())

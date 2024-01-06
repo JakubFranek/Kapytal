@@ -521,7 +521,7 @@ class TransactionTableModel(QAbstractTableModel):
         if base:
             try:
                 return amount.convert(
-                    self._base_currency, transaction.datetime_.date()
+                    self._base_currency, transaction.date_
                 ).to_str_rounded()
             except ConversionFactorNotFoundError:
                 return "Error!"
@@ -544,7 +544,7 @@ class TransactionTableModel(QAbstractTableModel):
         if base:
             return float(
                 amount.convert(
-                    self._base_currency, transaction.datetime_.date()
+                    self._base_currency, transaction.date_
                 ).value_rounded
             )
         return float(amount.value_rounded)

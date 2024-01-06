@@ -78,7 +78,7 @@ class RefundTransactionDialogPresenter(TransactionDialogPresenter):
         if not validate_datetime(datetime_, self._dialog):
             return
         if (
-            datetime_.date() == refunded_transaction.datetime_.date()
+            datetime_.date() == refunded_transaction.date_
             and datetime_ <= refunded_transaction.datetime_
         ):
             datetime_ = refunded_transaction.datetime_ + timedelta(seconds=1)
@@ -143,7 +143,7 @@ class RefundTransactionDialogPresenter(TransactionDialogPresenter):
         if datetime_ is not None and not validate_datetime(datetime_, self._dialog):
             return
         if (
-            datetime_.date() == refunded_transaction.datetime_.date()
+            datetime_.date() == refunded_transaction.date_
             and datetime_ <= refunded_transaction.datetime_
         ):
             datetime_ = refunded_transaction.datetime_ + timedelta(seconds=1)

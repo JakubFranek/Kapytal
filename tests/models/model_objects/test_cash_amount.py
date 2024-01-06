@@ -78,7 +78,7 @@ def test_value_invalid_str(value: str, currency: Currency) -> None:
 def test_value_valid_str(value: str, currency: Currency) -> None:
     value = str(value)
     amount = CashAmount(value, currency)
-    assert amount.value_rounded == round(Decimal(value), currency.places)
+    assert amount.value_rounded == round(Decimal(value), currency.decimals)
 
 
 @given(
@@ -96,12 +96,12 @@ def test_currency_invalid_type(value: Decimal, currency: Currency) -> None:
 )
 def test_value_rounded(value: Decimal, currency: Currency) -> None:
     amount = CashAmount(value, currency)
-    currency_places = currency.places
+    currency_places = currency.decimals
     if currency_places < 4:
         assert amount.value_rounded == round(value, currency_places)
     else:
         value_rounded = round(value, currency_places)
-        min_places = min(currency.places, 4)
+        min_places = min(currency.decimals, 4)
         if -value_rounded.as_tuple().exponent > min_places:
             value_rounded = value_rounded.normalize()
             if -value_rounded.as_tuple().exponent < min_places:
@@ -146,7 +146,7 @@ def test_value_rounded_specific_values() -> None:
 def test_value_normalized(value: Decimal, currency: Currency) -> None:
     amount = CashAmount(value, currency)
     value_normalized = value.normalize()
-    places = min(currency.places, 4)
+    places = min(currency.decimals, 4)
     if not value_normalized.is_nan() and -value_normalized.as_tuple().exponent < places:
         value_normalized = value_normalized.quantize(Decimal(f"1e-{places}"))
     assert amount.value_normalized == value_normalized
