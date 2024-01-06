@@ -26,6 +26,13 @@ from src.views.dialogs.set_security_price_dialog import SetSecurityPriceDialog
 from src.views.forms.security_form import SecurityForm
 from src.views.utilities.message_box_functions import ask_yes_no_question
 
+OVERVIEW_COLUMNS_NATIVE = {
+    OwnedSecuritiesTreeColumn.GAIN_NATIVE,
+    OwnedSecuritiesTreeColumn.RETURN_NATIVE,
+    OwnedSecuritiesTreeColumn.IRR_NATIVE,
+    OwnedSecuritiesTreeColumn.AMOUNT_NATIVE,
+}
+
 
 class SecurityFormPresenter:
     event_data_changed = Event()
@@ -57,7 +64,7 @@ class SecurityFormPresenter:
         self.reset_overview_model_data()
 
         self._price_table_model.pre_reset_model()
-        self.update_price_model_data()
+        self.reset_price_model_data()
         self._price_table_model.post_reset_model()
 
         self._update_chart(None)
@@ -91,14 +98,10 @@ class SecurityFormPresenter:
             security.currency == self._record_keeper.base_currency
             for security in self._record_keeper.securities
         )
-        self.view.treeView.setColumnHidden(
-            OwnedSecuritiesTreeColumn.AMOUNT_NATIVE, hide_native_column
-        )
-        self.view.treeView.setColumnHidden(
-            OwnedSecuritiesTreeColumn.GAIN_NATIVE, hide_native_column
-        )
+        for column in OVERVIEW_COLUMNS_NATIVE:
+            self.view.treeView.setColumnHidden(column, hide_native_column)
 
-    def update_price_model_data(self) -> None:
+    def reset_price_model_data(self) -> None:
         self._price_table_model.load_data(())
 
     def data_changed(self) -> None:

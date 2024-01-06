@@ -46,7 +46,6 @@ COLUMNS_NUMBERS = {
 }
 
 # TODO: add sync_nodes function
-# TODO: add logic for turning off empty columns
 
 bold_font = QFont()
 bold_font.setBold(True)  # noqa: FBT003
