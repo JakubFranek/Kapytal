@@ -637,12 +637,12 @@ class TransactionsPresenter:
 
     def _reset_columns(self) -> None:
         for column in TransactionTableColumn:
-            if column in COLUMNS_HIDDEN_BY_DEFAULT:
-                continue
-            self._view.set_column_visibility(column, show=True)
+            self._view.set_column_visibility(
+                column, show=column not in COLUMNS_HIDDEN_BY_DEFAULT
+            )
         self._update_table_columns()
         self._view.reset_column_order()
-        self._view.auto_column_mode = True
+        self._view.auto_column_visibility = True
 
     def _copy_uuids(self) -> None:
         selected_transactions = self._model.get_selected_items()
