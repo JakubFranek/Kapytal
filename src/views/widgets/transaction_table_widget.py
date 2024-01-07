@@ -1,8 +1,16 @@
 import logging
+from collections.abc import Sequence
 
 from PyQt6.QtCore import QEvent, QObject, Qt, pyqtSignal
 from PyQt6.QtGui import QAction, QContextMenuEvent, QCursor, QKeyEvent
-from PyQt6.QtWidgets import QApplication, QLineEdit, QMenu, QTableView, QWidget
+from PyQt6.QtWidgets import (
+    QApplication,
+    QHeaderView,
+    QLineEdit,
+    QMenu,
+    QTableView,
+    QWidget,
+)
 from src.views import icons
 from src.views.constants import TRANSACTION_TABLE_COLUMN_HEADERS, TransactionTableColumn
 from src.views.dialogs.busy_dialog import create_simple_busy_indicator
@@ -56,6 +64,8 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
     signal_search_text_changed = pyqtSignal(str)
     signal_filter_transactions = pyqtSignal()
     signal_reset_columns = pyqtSignal()
+    signal_save_column_order = pyqtSignal()
+    signal_load_column_order = pyqtSignal()
 
     signal_income = pyqtSignal()
     signal_expense = pyqtSignal()
@@ -105,6 +115,16 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
     def search_bar_text(self, text: str) -> None:
         self.searchLineEdit.setText(text)
 
+    @property
+    def auto_column_visibility(self) -> bool:
+        return self.actionAuto_Column_Mode.isChecked()
+
+    @auto_column_visibility.setter
+    def auto_column_visibility(self, value: bool) -> None:
+        self.actionAuto_Column_Mode.setChecked(value)
+        if value:
+            self.actionAuto_Column_Mode.setEnabled(False)
+
     def set_filter_tooltip(self, active_filters: str) -> None:
         text = "Filter Transactions"
         if active_filters:
@@ -135,8 +155,17 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
         self.tableView.horizontalHeader().setStretchLastSection(True)
 
     def set_column_visibility(
-        self, column: TransactionTableColumn, *, show: bool, resize: bool = False
+        self,
+        column: TransactionTableColumn,
+        *,
+        show: bool,
+        resize: bool = False,
+        turn_off_auto_column_visibility: bool = False,
     ) -> None:
+        if turn_off_auto_column_visibility:
+            self.actionAuto_Column_Mode.setChecked(False)
+            self.actionAuto_Column_Mode.setEnabled(True)
+
         if show != self.tableView.isColumnHidden(column):
             return
 
@@ -160,7 +189,9 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
 
     def set_all_columns_visibility(self, *, show: bool) -> None:
         for column in TRANSACTION_TABLE_COLUMN_HEADERS:
-            self.set_column_visibility(column, show=show)
+            self.set_column_visibility(
+                column, show=show, turn_off_auto_column_visibility=True
+            )
         self.resize_table_to_contents()
 
     def set_actions(
@@ -204,15 +235,24 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
             action.setCheckable(True)
             action.triggered.connect(
                 lambda checked, column=column: self.set_column_visibility(
-                    column=column, show=checked, resize=True
+                    column=column,
+                    show=checked,
+                    resize=True,
+                    turn_off_auto_column_visibility=True,
                 )
             )
             self.column_actions.append(action)
 
     def _create_header_context_menu(self, _: QContextMenuEvent) -> None:
         self.header_menu = QMenu(self)
+        self.header_menu.addAction(self.actionAuto_Column_Mode)
+        self.header_menu.addSeparator()
         self.header_menu.addAction(self.actionShow_All_Columns)
         self.header_menu.addAction(self.actionHide_All_Columns)
+        self.header_menu.addSeparator()
+        self.header_menu.addAction(self.actionSave_Column_Order)
+        self.header_menu.addAction(self.actionLoad_Column_Order)
+        self.header_menu.addSeparator()
         self.header_menu.addAction(self.actionResize_Columns_to_Fit)
         self.header_menu.addAction(self.actionReset_Columns)
         self.header_menu.addSeparator()
@@ -284,6 +324,15 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
             self.resize_table_to_contents
         )
         self.actionReset_Columns.triggered.connect(self.signal_reset_columns)
+        self.actionAuto_Column_Mode.triggered.connect(
+            lambda checked: self._toggle_auto_column_mode(checked=checked)
+        )
+        self.actionSave_Column_Order.triggered.connect(
+            self.signal_save_column_order.emit
+        )
+        self.actionLoad_Column_Order.triggered.connect(
+            self.signal_load_column_order.emit
+        )
 
     def _initialize_signals(self) -> None:
         self.tableView.doubleClicked.connect(self.signal_edit.emit)
@@ -312,6 +361,10 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
         self.actionCopy_UUIDs.triggered.connect(self.signal_copy_uuids.emit)
 
         self.searchLineEdit.textChanged.connect(self.signal_search_text_changed.emit)
+
+        self.tableView.horizontalHeader().sectionMoved.connect(
+            self._header_section_moved
+        )
 
     def _setup_header(self) -> None:
         header = self.tableView.horizontalHeader()
@@ -354,3 +407,30 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
             raise
         finally:
             self._busy_dialog.close()
+
+    def _toggle_auto_column_mode(self, *, checked: bool) -> None:
+        if checked:
+            self.signal_reset_columns.emit()
+
+    def get_column_order(self) -> list[TransactionTableColumn]:
+        columns: list[TransactionTableColumn] = []
+        header: QHeaderView = self.tableView.horizontalHeader()
+        for visual_index in range(header.count()):
+            logical_index = header.logicalIndex(visual_index)
+            column = TransactionTableColumn(logical_index)
+            columns.append(column)
+        return columns
+
+    def load_column_order(self, column_order: Sequence[TransactionTableColumn]) -> None:
+        header: QHeaderView = self.tableView.horizontalHeader()
+        for target_index, logical_index in enumerate(column_order):
+            current_index = header.visualIndex(logical_index)
+            header.moveSection(current_index, target_index)
+
+    def _header_section_moved(
+        self, section: int, old_index: int, new_index: int  # noqa: ARG002
+    ) -> None:
+        self.actionSave_Column_Order.setEnabled(True)
+
+    def column_order_saved(self) -> None:
+        self.actionSave_Column_Order.setEnabled(False)

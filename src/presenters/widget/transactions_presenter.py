@@ -24,6 +24,7 @@ from src.models.model_objects.security_objects import (
 )
 from src.models.record_keeper import RecordKeeper
 from src.models.transaction_filters.transaction_filter import TransactionFilter
+from src.models.user_settings import user_settings
 from src.presenters.dialog.cash_transaction_dialog_presenter import (
     CashTransactionDialogPresenter,
 )
@@ -97,6 +98,7 @@ class TransactionsPresenter:
         self._connect_to_signals()
         self._connect_events()
         self._update_model_data()
+        self._load_column_order()
         self._view.finalize_setup()
 
     @property
@@ -184,6 +186,9 @@ class TransactionsPresenter:
         )
 
     def _update_table_columns(self) -> None:
+        if not self._view.auto_column_visibility:
+            return
+
         visible_transactions = self._model.get_visible_items()
 
         any_security_related = False
@@ -221,6 +226,8 @@ class TransactionsPresenter:
         )
 
         for column in TransactionTableColumn:
+            if column not in COLUMNS_HIDDEN_BY_DEFAULT:
+                self._view.set_column_visibility(column, show=True)
             if column in COLUMNS_SECURITY_RELATED:
                 self._view.set_column_visibility(column, show=any_security_related)
             if column in COLUMNS_CASH_TRANSFERS:
@@ -365,6 +372,8 @@ class TransactionsPresenter:
         self._view.signal_refund.connect(self._refund_transaction)
         self._view.signal_find_related.connect(self._find_related)
         self._view.signal_reset_columns.connect(self._reset_columns)
+        self._view.signal_save_column_order.connect(self._save_column_order)
+        self._view.signal_load_column_order.connect(self._load_column_order)
 
     def _connect_events(self) -> None:
         for presenter in self._transaction_dialog_presenters:
@@ -633,8 +642,22 @@ class TransactionsPresenter:
             self._view.set_column_visibility(column, show=True)
         self._update_table_columns()
         self._view.reset_column_order()
+        self._view.auto_column_mode = True
 
     def _copy_uuids(self) -> None:
         selected_transactions = self._model.get_selected_items()
         uuids = [str(transaction.uuid) for transaction in selected_transactions]
         QApplication.clipboard().setText(",\n".join(uuids))
+
+    def _save_column_order(self) -> None:
+        order = self._view.get_column_order()
+        user_settings.settings.transaction_table_column_order = order
+        user_settings.save()
+        self._view.column_order_saved()
+
+    def _load_column_order(self) -> None:
+        order = user_settings.settings.transaction_table_column_order
+        if not order:
+            return
+
+        self._view.load_column_order(order)
