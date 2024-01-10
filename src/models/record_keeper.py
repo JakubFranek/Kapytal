@@ -249,6 +249,8 @@ class RecordKeeper:
         secondary_currency = self.get_currency(secondary_currency_code)
         exchange_rate = ExchangeRate(primary_currency, secondary_currency)
         self._exchange_rates.append(exchange_rate)
+        exchange_rate.event_reset_currency_caches.append(self._reset_currency_caches)
+        self._reset_currency_caches()
 
     def add_security(  # noqa: PLR0913
         self,
@@ -1211,6 +1213,7 @@ class RecordKeeper:
 
         removed_exchange_rate.prepare_for_deletion()
         self._exchange_rates.remove(removed_exchange_rate)
+        self._reset_currency_caches()
         del removed_exchange_rate
 
     def remove_category(self, path: str) -> None:
@@ -1500,6 +1503,10 @@ class RecordKeeper:
         obj._exchange_rates = RecordKeeper._deserialize_exchange_rates(  # noqa: SLF001
             data["exchange_rates"], currencies
         )
+        for exchange_rate in obj._exchange_rates:  # noqa: SLF001
+            exchange_rate.event_reset_currency_caches.append(
+                obj._reset_currency_caches  # noqa: SLF001
+            )
 
         securities = RecordKeeper._deserialize_securities(
             data["securities"], currencies
@@ -1951,3 +1958,7 @@ class RecordKeeper:
         for transaction in self._transactions:
             if transaction.description:
                 self._descriptions[transaction.description] += 1
+
+    def _reset_currency_caches(self) -> None:
+        for currency in self._currencies:
+            currency.reset_cache()
