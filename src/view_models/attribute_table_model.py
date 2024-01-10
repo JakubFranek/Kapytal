@@ -91,7 +91,7 @@ class AttributeTableModel(QAbstractTableModel):
         if column == AttributeTableColumn.TRANSACTIONS:
             return stats.no_of_transactions
         if column == AttributeTableColumn.BALANCE:
-            return stats.balance.to_str_rounded()
+            return stats.balance.to_str_rounded() if stats.balance is not None else None
         return None
 
     def _get_sort_role_data(
@@ -102,13 +102,19 @@ class AttributeTableModel(QAbstractTableModel):
         if column == AttributeTableColumn.TRANSACTIONS:
             return stats.no_of_transactions
         if column == AttributeTableColumn.BALANCE:
-            return float(stats.balance.value_normalized)
+            return (
+                float(stats.balance.value_normalized)
+                if stats.balance is not None
+                else None
+            )
         return None
 
     def _get_foreground_role_data(
         self, column: int, stats: AttributeStats
     ) -> QBrush | None:
         if column != AttributeTableColumn.BALANCE:
+            return None
+        if stats.balance is None:
             return None
         if stats.balance.is_positive():
             return colors.get_green_brush()

@@ -16,7 +16,7 @@ class CategoryStats:
     category: Category
     transactions_self: int | float
     transactions_total: int | float
-    balance: CashAmount
+    balance: CashAmount | None
     transactions: set[CashTransaction | RefundTransaction] = field(default_factory=set)
 
 
@@ -129,13 +129,19 @@ def calculate_periodic_category_stats(
 
 def calculate_category_stats(
     transactions: Collection[CashTransaction | RefundTransaction],
-    base_currency: Currency,
+    base_currency: Currency | None,
     categories: Collection[Category],
 ) -> dict[Category, CategoryStats]:
     stats_dict: dict[Category, CategoryStats] = {}
     for category in categories:
-        stats = CategoryStats(category, 0, 0, base_currency.zero_amount)
+        if base_currency is None:
+            stats = CategoryStats(category, 0, 0, None)
+        else:
+            stats = CategoryStats(category, 0, 0, base_currency.zero_amount)
         stats_dict[category] = stats
+
+    if base_currency is None:
+        return stats_dict
 
     for transaction in transactions:
         already_counted_ancestors = set()
