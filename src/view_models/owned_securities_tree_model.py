@@ -58,8 +58,10 @@ class TotalItem:
         self.base_amount = base_amount
 
         self.gain_base = gain_base
-        self.return_base = round(
-            100 * gain_base.value_normalized / base_amount.value_normalized, 2
+        self.return_base = (
+            round(100 * gain_base.value_normalized / base_amount.value_normalized, 2)
+            if not base_amount.value_normalized.is_zero()
+            else Decimal("NaN")
         )
         self.irr_base = round(100 * irr, 2)
 
@@ -131,7 +133,7 @@ class AccountItem:
         avg_price_base: CashAmount,
         irr_native: Decimal,
         irr_base: Decimal,
-        base_currency: Currency | None,
+        base_currency: Currency,
     ) -> None:
         self.parent = parent
         self.account = account
@@ -153,13 +155,10 @@ class AccountItem:
 
         self.gain_native = self.native_amount - avg_price_native * shares
         self.gain_base = self.base_amount - avg_price_base * shares
-        with contextlib.suppress(Exception):
-            self.return_native = round(
-                100 * self.gain_native / (avg_price_native * shares), 2
-            )
+        self.return_native = round(
+            100 * self.gain_native / (avg_price_native * shares), 2
+        )
         self.return_base = round(100 * self.gain_base / (avg_price_base * shares), 2)
-
-        self.native_currency = parent.security.currency
 
     @property
     def name(self) -> str:
@@ -194,6 +193,10 @@ class OwnedSecuritiesTreeModel(QAbstractItemModel):
         total_irr: Decimal,
         base_currency: Currency | None,
     ) -> None:
+        if base_currency is None:
+            self._tree_items = ()
+            return
+
         tree_items: dict[Security, SecurityItem | TotalItem] = {}
         for account in accounts:
             for security, shares in account.securities.items():
