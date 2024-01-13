@@ -38,6 +38,12 @@ class SettingsForm(CustomWidget, Ui_SettingsForm):
         self.transactionTableDateFormatLineEdit.textEdited.connect(
             self.signal_data_changed.emit
         )
+        self.exchangeRateDecimalsSpinBox.valueChanged.connect(
+            self.signal_data_changed.emit
+        )
+        self.pricePerShareDecimalsSpinBox.valueChanged.connect(
+            self.signal_data_changed.emit
+        )
         self.checkforUpdatesCheckBox.toggled.connect(self.signal_data_changed.emit)
 
     @property
