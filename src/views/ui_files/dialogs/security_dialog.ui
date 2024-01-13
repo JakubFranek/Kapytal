@@ -59,7 +59,7 @@
      <item row="2" column="0">
       <widget class="QLabel" name="decimalsLabel">
        <property name="toolTip">
-        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Number of decimals of Security shares.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;For example:&lt;/p&gt;&lt;p&gt;0 decimals - shares are multiples of 1&lt;/p&gt;&lt;p&gt;1 decimals - shares are multiples of 0.1&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Number of decimals of Security shares.&lt;br/&gt;&lt;br/&gt;For example:&lt;br/&gt;0 decimals - shares are multiples of 1&lt;br/&gt;1 decimals - shares are multiples of 0.1&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
        <property name="text">
         <string>Shares decimals</string>
@@ -79,7 +79,7 @@
      <item row="2" column="1">
       <widget class="QSpinBox" name="decimalsSpinBox">
        <property name="toolTip">
-        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Number of decimals of Security shares.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;For example:&lt;/p&gt;&lt;p&gt;0 decimals - shares are multiples of 1&lt;/p&gt;&lt;p&gt;1 decimals - shares are multiples of 0.1&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Number of decimals of Security shares.&lt;br/&gt;&lt;br/&gt;For example:&lt;br/&gt;0 decimals - shares are multiples of 1&lt;br/&gt;1 decimals - shares are multiples of 0.1&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
        <property name="alignment">
         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
