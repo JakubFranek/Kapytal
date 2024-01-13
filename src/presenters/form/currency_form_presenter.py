@@ -93,6 +93,7 @@ class CurrencyFormPresenter:
         self._exchange_rate_table_model.pre_reset_model()
         self.update_exchange_rate_table_data()
         self._exchange_rate_table_model.post_reset_model()
+        self._set_exchange_rate_table_column_visibility()
 
         if selected_index.isValid():
             self.view.exchangeRateTable.selectRow(selected_index.row())
@@ -102,7 +103,6 @@ class CurrencyFormPresenter:
         self._exchange_rate_table_model.load_data(
             self._record_keeper.exchange_rates, stats
         )
-        self._set_exchange_rate_table_column_visibility()
 
     def show_form(self) -> None:
         self._busy_dialog = create_simple_busy_indicator(
@@ -212,6 +212,7 @@ class CurrencyFormPresenter:
         self._exchange_rate_table_model.pre_add()
         self.update_exchange_rate_table_data()
         self._exchange_rate_table_model.post_add()
+        self._set_exchange_rate_table_column_visibility()
         self._dialog.close()
         self.event_data_changed()
 
@@ -241,6 +242,7 @@ class CurrencyFormPresenter:
         self._exchange_rate_table_model.pre_remove_item(exchange_rate)
         self.update_exchange_rate_table_data()
         self._exchange_rate_table_model.post_remove_item()
+        self._set_exchange_rate_table_column_visibility()
         self.event_data_changed()
 
     def _run_add_data_point_dialog(self) -> None:
