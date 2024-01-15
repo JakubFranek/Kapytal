@@ -1,6 +1,7 @@
 from collections import defaultdict
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from decimal import Decimal
+from types import NoneType
 from typing import Any
 
 import pytest
@@ -40,6 +41,8 @@ def test_creation(name: str, parent: AccountGroup | None) -> None:
     assert security_account.name == name
     assert security_account.parent == parent
     assert security_account.securities == {}
+    assert security_account.related_securities == set()
+    assert security_account.currency is None
     assert security_account.transactions == ()
     assert security_account.__repr__() == f"SecurityAccount({expected_path})"
 
@@ -88,6 +91,8 @@ def test_get_balance(  # noqa: PLR0913
     exchange_rate: Decimal,
 ) -> None:
     assume(currency_a != currency_b)
+    price_a = round(price_a, 4)
+    price_b = round(price_b, 4)
     datetime_ = datetime.now(user_settings.settings.time_zone)
     date_ = datetime_.date()
     exchange_rate_obj = ExchangeRate(currency_a, currency_b)
@@ -150,9 +155,7 @@ def test_get_balance_with_date(
     t2._timestamp = t2._datetime.timestamp()
     t3._timestamp = t3._datetime.timestamp()
     transactions = [t1, t2, t3]
-    security.set_price(
-        t1.datetime_.date() - timedelta(days=10), CashAmount(1, currency)
-    )
+    security.set_price(t1.date_ - timedelta(days=10), CashAmount(1, currency))
     account.update_securities()
     transaction_sum_3 = sum(
         (
@@ -177,11 +180,11 @@ def test_get_balance_with_date(
     )
 
     latest_balance = account.get_balance(currency)
-    balance_3 = account.get_balance(currency, t3.datetime_.date())
-    balance_2 = account.get_balance(currency, t2.datetime_.date())
-    balance_1 = account.get_balance(currency, t1.datetime_.date())
-    balance_0 = account.get_balance(currency, t1.datetime_.date() - timedelta(days=10))
-    balance_1x = account.get_balance(currency, t1.datetime_.date() + timedelta(days=1))
+    balance_3 = account.get_balance(currency, t3.date_)
+    balance_2 = account.get_balance(currency, t2.date_)
+    balance_1 = account.get_balance(currency, t1.date_)
+    balance_0 = account.get_balance(currency, t1.date_ - timedelta(days=10))
+    balance_1x = account.get_balance(currency, t1.date_ + timedelta(days=1))
 
     assert latest_balance == transaction_sum_3
     assert balance_3 == latest_balance
@@ -189,6 +192,9 @@ def test_get_balance_with_date(
     assert balance_1 == transaction_sum_1
     assert balance_0 == currency.zero_amount
     assert balance_1x == transaction_sum_1
+
+    assert account.currency == currency
+    assert account.related_securities == {security}
 
 
 @given(
@@ -377,7 +383,17 @@ def test_get_average_price_specific_date() -> None:
     assert avg_price == CashAmount(5, usd)
 
 
-def test_get_average_price_invalid_date() -> None:
+@given(date_=everything_except((date, NoneType)))
+def test_get_average_price_invalid_date_type(date_: Any) -> None:
+    account = SecurityAccount("Test")
+    usd = Currency("USD", 2)
+    security = Security("Alphabet", "ABC", "Stock", usd, 1)
+
+    with pytest.raises(TypeError, match="date or None"):
+        account.get_average_price(security, date_)
+
+
+def test_get_average_price_invalid_date_value() -> None:
     account = SecurityAccount("Test")
     usd = Currency("USD", 2)
     security = Security("Alphabet", "ABC", "Stock", usd, 1)
@@ -385,3 +401,14 @@ def test_get_average_price_invalid_date() -> None:
 
     with pytest.raises(ValueError, match="not in this SecurityAccount"):
         account.get_average_price(security, today.date() - timedelta(days=7))
+
+
+@given(currency=everything_except((Currency, NoneType)))
+def test_get_average_price_invalid_currency_type(currency: Any) -> None:
+    account = SecurityAccount("Test")
+    usd = Currency("USD", 2)
+    security = Security("Alphabet", "ABC", "Stock", usd, 1)
+    date_ = datetime.now(user_settings.settings.time_zone)
+
+    with pytest.raises(TypeError, match="Currency or None"):
+        account.get_average_price(security, date_, currency)

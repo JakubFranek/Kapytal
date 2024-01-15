@@ -16,7 +16,7 @@ class CategoryStats:
     category: Category
     transactions_self: int | float
     transactions_total: int | float
-    balance: CashAmount
+    balance: CashAmount | None
     transactions: set[CashTransaction | RefundTransaction] = field(default_factory=set)
 
 
@@ -62,7 +62,7 @@ def calculate_periodic_totals_and_averages(
                 expense_data = TransactionBalance(currency.zero_amount)
 
                 for transaction in stats.transactions:
-                    date_ = transaction.datetime_.date()
+                    date_ = transaction.date_
                     amount = transaction.get_amount_for_category(
                         stats.category, total=True
                     ).convert(currency, date_)
@@ -129,17 +129,23 @@ def calculate_periodic_category_stats(
 
 def calculate_category_stats(
     transactions: Collection[CashTransaction | RefundTransaction],
-    base_currency: Currency,
+    base_currency: Currency | None,
     categories: Collection[Category],
 ) -> dict[Category, CategoryStats]:
     stats_dict: dict[Category, CategoryStats] = {}
     for category in categories:
-        stats = CategoryStats(category, 0, 0, base_currency.zero_amount)
+        if base_currency is None:
+            stats = CategoryStats(category, 0, 0, None)
+        else:
+            stats = CategoryStats(category, 0, 0, base_currency.zero_amount)
         stats_dict[category] = stats
+
+    if base_currency is None:
+        return stats_dict  # no base Currency means no Transactions
 
     for transaction in transactions:
         already_counted_ancestors = set()
-        date_ = transaction.datetime_.date()
+        date_ = transaction.date_
         for category in transaction.categories:
             stats = stats_dict[category]
             stats.transactions.add(transaction)

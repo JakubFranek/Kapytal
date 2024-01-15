@@ -33,11 +33,12 @@ class CategoryTreeNode:
     transactions_self: int
     transactions_total: int
     transactions: set[Transaction]
-    balance: CashAmount
+    balance: CashAmount | None
     parent: Self | None
     children: list[Self]
     uuid: UUID
     # TODO: replace stats attributes with CategoryStats attribute directly
+    # and maybe uuid won't be needed anymore?
 
     def __repr__(self) -> str:
         return f"CategoryTreeNode({self.path})"
@@ -209,7 +210,7 @@ class CategoryTreeModel(QAbstractItemModel):
                 return f"{node.transactions_total} ({node.transactions_self})"
             return f"{node.transactions_total}"
         if column == CategoryTreeColumn.BALANCE:
-            return node.balance.to_str_rounded()
+            return node.balance.to_str_rounded() if node.balance is not None else None
         return None
 
     def _get_user_role_data(
@@ -220,13 +221,19 @@ class CategoryTreeModel(QAbstractItemModel):
         if column == CategoryTreeColumn.TRANSACTIONS:
             return node.transactions_total
         if column == CategoryTreeColumn.BALANCE:
-            return float(node.balance.value_normalized)
+            return (
+                float(node.balance.value_normalized)
+                if node.balance is not None
+                else None
+            )
         return None
 
     def _get_foreground_role_data(
         self, column: int, node: CategoryTreeNode
     ) -> QBrush | None:
         if column != CategoryTreeColumn.BALANCE:
+            return None
+        if node.balance is None:
             return None
         if node.balance.is_positive():
             return colors.get_green_brush()

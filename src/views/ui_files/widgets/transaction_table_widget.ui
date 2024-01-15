@@ -347,6 +347,36 @@
     <string>Copy UUIDs of selected Transactions to clipboard</string>
    </property>
   </action>
+  <action name="actionAuto_Column_Mode">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Auto Column Visibility</string>
+   </property>
+   <property name="toolTip">
+    <string>If enabled, Transaction Table column visibility is determined automatically based on visible Transactions.</string>
+   </property>
+  </action>
+  <action name="actionSave_Column_Order">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Save Column Order</string>
+   </property>
+  </action>
+  <action name="actionLoad_Column_Order">
+   <property name="text">
+    <string>Load Column Order</string>
+   </property>
+  </action>
  </widget>
  <resources/>
  <connections/>

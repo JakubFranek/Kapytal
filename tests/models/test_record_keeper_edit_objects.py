@@ -243,7 +243,7 @@ def test_edit_security_account_group_from_root_to_children() -> None:
     record_keeper = RecordKeeper()
     record_keeper.add_account_group("TEST")
     record_keeper.add_account_group("DUMMY PARENT")
-    assert len(record_keeper.root_account_items) == 2  # noqa: PLR2004
+    assert len(record_keeper.root_account_items) == 2
     record_keeper.edit_account_group("TEST", "DUMMY PARENT/TEST")
     assert len(record_keeper.root_account_items) == 1
 
@@ -254,7 +254,7 @@ def test_edit_security_account_group_from_child_to_root() -> None:
     record_keeper.add_account_group("DUMMY PARENT/TEST")
     assert len(record_keeper.root_account_items) == 1
     record_keeper.edit_account_group("DUMMY PARENT/TEST", "TEST")
-    assert len(record_keeper.root_account_items) == 2  # noqa: PLR2004
+    assert len(record_keeper.root_account_items) == 2
 
 
 def test_edit_security_account_group_already_exists() -> None:

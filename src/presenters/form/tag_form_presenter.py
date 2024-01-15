@@ -34,14 +34,14 @@ class TagFormPresenter:
         self._record_keeper = record_keeper
         self._transaction_table_form_presenter = transaction_table_form_presenter
 
-        self._proxy_model = QSortFilterProxyModel(self._view.tableView)
-        self._model = AttributeTableModel(self._view.tableView, self._proxy_model)
+        self._proxy = QSortFilterProxyModel(self._view.tableView)
+        self._model = AttributeTableModel(self._view.tableView, self._proxy)
         self._update_model_data()
-        self._proxy_model.setSourceModel(self._model)
-        self._proxy_model.setSortRole(Qt.ItemDataRole.UserRole)
-        self._proxy_model.setSortCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
-        self._proxy_model.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
-        self._view.tableView.setModel(self._proxy_model)
+        self._proxy.setSourceModel(self._model)
+        self._proxy.setSortRole(Qt.ItemDataRole.UserRole)
+        self._proxy.setSortCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+        self._proxy.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+        self._view.tableView.setModel(self._proxy)
 
         self._view.signal_add_tag.connect(lambda: self._run_tag_dialog(edit=False))
         self._view.signal_remove_tag.connect(self._remove_tag)
@@ -148,6 +148,7 @@ class TagFormPresenter:
                 current_name, new_name, AttributeType.TAG
             )
             self._update_model_data_with_busy_dialog()
+            self._model.item_changed(tag)
         except AlreadyExistsError:
             if not ask_yes_no_question(
                 self._dialog,
@@ -198,7 +199,7 @@ class TagFormPresenter:
     def _filter(self, pattern: str) -> None:
         if ("[" in pattern and "]" not in pattern) or "[]" in pattern:
             return
-        self._proxy_model.setFilterWildcard(pattern)
+        self._proxy.setFilterWildcard(pattern)
 
     def _selection_changed(self) -> None:
         tags = self._model.get_selected_attributes()

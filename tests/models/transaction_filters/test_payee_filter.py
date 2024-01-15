@@ -1,3 +1,4 @@
+import unicodedata
 from typing import Any
 
 import pytest
@@ -37,7 +38,12 @@ def check_transaction(filter_: PayeeFilter, transaction: Transaction) -> bool:
 def test_creation(payees: list[Attribute], mode: FilterMode) -> None:
     filter_ = PayeeFilter(payees, mode)
     assert filter_.payees == frozenset(payees)
-    assert filter_.payee_names == tuple(sorted(payee.name for payee in payees))
+    assert filter_.payee_names == tuple(
+        sorted(
+            (payee.name for payee in payees),
+            key=lambda name: unicodedata.normalize("NFD", name.lower()),
+        )
+    )
     assert filter_.mode == mode
     assert (
         filter_.__repr__()
@@ -50,7 +56,7 @@ def test_creation(payees: list[Attribute], mode: FilterMode) -> None:
     mode=st.sampled_from(FilterMode),
 )
 def test_creation_invalid_type(payees: list[Any], mode: FilterMode) -> None:
-    with pytest.raises(TypeError, match="must be a Collection ofAttributes"):
+    with pytest.raises(TypeError, match="must be a Collection of Attributes"):
         PayeeFilter(payees, mode)
 
 

@@ -48,7 +48,7 @@ class UpdatePresenter:
                     title="No response from GitHub",
                 )
             return
-        except ConnectionError:
+        except requests.exceptions.ConnectionError:
             logging.warning("Connection error while checking for updates")
             if not silent:
                 display_error_message(

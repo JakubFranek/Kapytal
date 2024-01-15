@@ -97,7 +97,9 @@ def cash_amounts(
     if currency is None:
         currency = draw(currencies())
     value = draw(
-        valid_decimals(min_value=min_value, max_value=max_value, places=currency.places)
+        valid_decimals(
+            min_value=min_value, max_value=max_value, places=currency.decimals
+        )
     )
     return CashAmount(value, currency)
 

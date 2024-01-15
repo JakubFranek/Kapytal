@@ -66,7 +66,7 @@ class CurrencyTableModel(QAbstractTableModel):
             if column == CurrencyTableColumn.CODE:
                 return currency.code
             if column == CurrencyTableColumn.PLACES:
-                return str(currency.places)
+                return str(currency.decimals)
         if (
             role == Qt.ItemDataRole.DecorationRole
             and column == CurrencyTableColumn.CODE

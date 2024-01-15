@@ -1,4 +1,3 @@
-import itertools
 from collections.abc import Collection
 from dataclasses import dataclass, field
 
@@ -15,7 +14,7 @@ from src.models.statistics.common_classes import TransactionBalance
 class AttributeStats:
     attribute: Attribute
     no_of_transactions: int
-    balance: CashAmount
+    balance: CashAmount | None
     transactions: set[CashTransaction | RefundTransaction] = field(default_factory=set)
 
 
@@ -87,7 +86,7 @@ def calculate_periodic_attribute_stats(
 
 def calculate_attribute_stats(
     transactions: Collection[CashTransaction | RefundTransaction],
-    base_currency: Currency,
+    base_currency: Currency | None,
     all_attributes: Collection[Attribute],
 ) -> dict[Attribute, AttributeStats]:
     attribute_types = {attribute.type_ for attribute in all_attributes}
@@ -97,10 +96,14 @@ def calculate_attribute_stats(
 
     stats_dict: dict[Attribute, AttributeStats] = {}
     for attribute in all_attributes:
-        stats = AttributeStats(attribute, 0, base_currency.zero_amount)
+        if base_currency is not None:
+            stats = AttributeStats(attribute, 0, base_currency.zero_amount)
+        else:
+            stats = AttributeStats(attribute, 0, None)
         stats_dict[attribute] = stats
+
     for transaction in transactions:
-        date_ = transaction.datetime_.date()
+        date_ = transaction.date_
         if attribute_type == AttributeType.TAG:
             for tag in transaction.tags:
                 stats = stats_dict[tag]

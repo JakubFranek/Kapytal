@@ -158,7 +158,7 @@ class AttributeReport(CustomWidget, Ui_AttributeReport):
         ]
         try:
             currency: Currency = _periodic_stats[selected_period][0].balance.currency
-            places = currency.places
+            places = currency.decimals
             currency_code = currency.code
         except IndexError:
             places = 0

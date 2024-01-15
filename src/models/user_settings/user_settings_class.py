@@ -1,11 +1,12 @@
 import logging
-from collections.abc import Collection
+from collections.abc import Collection, Sequence
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Self
 
 from src.models.mixins.copyable_mixin import CopyableMixin
 from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
+from src.views.constants import TransactionTableColumn
 from tzlocal import get_localzone_name
 from zoneinfo import ZoneInfo
 
@@ -22,6 +23,8 @@ class UserSettings(JSONSerializableMixin, CopyableMixin):
         "_transaction_date_format",
         "_exchange_rate_decimals",
         "_price_per_share_decimals",
+        "_check_for_updates_on_startup",
+        "_transaction_table_column_order",
     )
 
     LOGS_DEFAULT_MAX_SIZE = 1_000_000
@@ -40,6 +43,10 @@ class UserSettings(JSONSerializableMixin, CopyableMixin):
         self._price_per_share_decimals = 9
 
         self._backup_paths = []
+
+        self._check_for_updates_on_startup = True
+
+        self._transaction_table_column_order = ()
 
     @property
     def time_zone(self) -> ZoneInfo:
@@ -219,11 +226,69 @@ class UserSettings(JSONSerializableMixin, CopyableMixin):
         )
         self._price_per_share_decimals = value
 
+    @property
+    def check_for_updates_on_startup(self) -> bool:
+        return self._check_for_updates_on_startup
+
+    @check_for_updates_on_startup.setter
+    def check_for_updates_on_startup(self, value: bool) -> None:
+        if not isinstance(value, bool):
+            raise TypeError("UserSettings.check_for_updates_on_startup must be a bool.")
+        if self._check_for_updates_on_startup == value:
+            return
+
+        logging.info(
+            "Changing UserSettings.check_for_updates_on_startup from "
+            f"{self._check_for_updates_on_startup} to {value}"
+        )
+        self._check_for_updates_on_startup = value
+
+    @property
+    def transaction_table_column_order(self) -> tuple[TransactionTableColumn]:
+        return self._transaction_table_column_order
+
+    @transaction_table_column_order.setter
+    def transaction_table_column_order(
+        self, columns: Sequence[TransactionTableColumn]
+    ) -> None:
+        if not isinstance(columns, Sequence):
+            raise TypeError(
+                "UserSettings.transaction_table_column_order must be a Sequence."
+            )
+        if not all(isinstance(column, TransactionTableColumn) for column in columns):
+            raise TypeError(
+                "UserSettings.transaction_table_column_order must be a Sequence "
+                "of TransactionTableColumn."
+            )
+        if len(columns) != 0 and len(columns) != len(TransactionTableColumn):
+            raise ValueError(
+                "UserSettings.transaction_table_column_order must be a Sequence of "
+                f"exactly {len(TransactionTableColumn)} TransactionTableColumns "
+                "or empty."
+            )
+        _column_set = set(columns)
+        if len(_column_set) != len(columns):
+            raise ValueError(
+                "UserSettings.transaction_table_column_order must not contain "
+                "duplicate values."
+            )
+        if self._transaction_table_column_order == tuple(columns):
+            return
+
+        logging.info(
+            "Changing UserSettings.transaction_table_column_order from "
+            f"{self._transaction_table_column_order} to {columns}"
+        )
+        self._transaction_table_column_order = tuple(columns)
+
     def __repr__(self) -> str:
         return "UserSettings"
 
     def serialize(self) -> dict[str, Any]:
         backup_paths = [str(path) for path in self._backup_paths]
+        transaction_table_column_names = [
+            column.name for column in self._transaction_table_column_order
+        ]
         return {
             "datatype": "UserSettings",
             "time_zone": self._time_zone.key,
@@ -234,6 +299,8 @@ class UserSettings(JSONSerializableMixin, CopyableMixin):
             "transaction_date_format": self._transaction_date_format,
             "exchange_rate_decimals": self._exchange_rate_decimals,
             "price_per_share_decimals": self._price_per_share_decimals,
+            "check_for_updates_on_startup": self._check_for_updates_on_startup,
+            "transaction_table_column_order": transaction_table_column_names,
         }
 
     @staticmethod
@@ -251,6 +318,15 @@ class UserSettings(JSONSerializableMixin, CopyableMixin):
         exchange_rate_decimals: int = data.get("exchange_rate_decimals", 9)
         price_per_share_decimals: int = data.get("price_per_share_decimals", 9)
 
+        check_for_updates_on_startup: bool = data.get(
+            "check_for_updates_on_startup", True
+        )
+
+        transaction_table_column_order: tuple[TransactionTableColumn] = tuple(
+            TransactionTableColumn[name]
+            for name in data.get("transaction_table_column_order", ())
+        )
+
         obj = UserSettings()
         obj._time_zone = time_zone  # noqa: SLF001
         obj._logs_max_size_bytes = logs_max_size_bytes  # noqa: SLF001
@@ -260,5 +336,9 @@ class UserSettings(JSONSerializableMixin, CopyableMixin):
         obj._transaction_date_format = transaction_date_format  # noqa: SLF001
         obj._exchange_rate_decimals = exchange_rate_decimals  # noqa: SLF001
         obj._price_per_share_decimals = price_per_share_decimals  # noqa: SLF001
+        obj._check_for_updates_on_startup = check_for_updates_on_startup  # noqa: SLF001
+        obj._transaction_table_column_order = (  # noqa: SLF001
+            transaction_table_column_order
+        )
 
         return obj

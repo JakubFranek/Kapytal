@@ -11,7 +11,7 @@ from src.models.custom_exceptions import InvalidOperationError
 from src.models.model_objects.currency_objects import CashAmount
 from src.models.model_objects.security_objects import Security, SecurityAccount
 from src.models.record_keeper import RecordKeeper
-from src.models.statistics.security_stats import calculate_irr
+from src.models.statistics.security_stats import calculate_irr, calculate_total_irr
 from src.models.user_settings import user_settings
 from src.presenters.utilities.event import Event
 from src.presenters.utilities.handle_exception import handle_exception
@@ -25,6 +25,13 @@ from src.views.dialogs.security_dialog import SecurityDialog
 from src.views.dialogs.set_security_price_dialog import SetSecurityPriceDialog
 from src.views.forms.security_form import SecurityForm
 from src.views.utilities.message_box_functions import ask_yes_no_question
+
+OVERVIEW_COLUMNS_NATIVE = {
+    OwnedSecuritiesTreeColumn.GAIN_NATIVE,
+    OwnedSecuritiesTreeColumn.RETURN_NATIVE,
+    OwnedSecuritiesTreeColumn.IRR_NATIVE,
+    OwnedSecuritiesTreeColumn.AMOUNT_NATIVE,
+}
 
 
 class SecurityFormPresenter:
@@ -57,7 +64,7 @@ class SecurityFormPresenter:
         self.reset_overview_model_data()
 
         self._price_table_model.pre_reset_model()
-        self.update_price_model_data()
+        self.reset_price_model_data()
         self._price_table_model.post_reset_model()
 
         self._update_chart(None)
@@ -78,23 +85,21 @@ class SecurityFormPresenter:
 
     def update_overview_model_data(self) -> None:
         irrs = self._calculate_irrs()
+        total_irr = calculate_total_irr(self._record_keeper)
         self._overview_tree_model.load_data(
             self._record_keeper.security_accounts,
             irrs,
+            total_irr,
             self._record_keeper.base_currency,
         )
         hide_native_column = all(
             security.currency == self._record_keeper.base_currency
             for security in self._record_keeper.securities
         )
-        self.view.treeView.setColumnHidden(
-            OwnedSecuritiesTreeColumn.AMOUNT_NATIVE, hide_native_column
-        )
-        self.view.treeView.setColumnHidden(
-            OwnedSecuritiesTreeColumn.GAIN_NATIVE, hide_native_column
-        )
+        for column in OVERVIEW_COLUMNS_NATIVE:
+            self.view.treeView.setColumnHidden(column, hide_native_column)
 
-    def update_price_model_data(self) -> None:
+    def reset_price_model_data(self) -> None:
         self._price_table_model.load_data(())
 
     def data_changed(self) -> None:
@@ -653,16 +658,27 @@ class SecurityFormPresenter:
             column_empty = self._security_table_model.is_column_empty(column)
             self.view.securityTableView.setColumnHidden(column, column_empty)
 
-    def _calculate_irrs(self) -> dict[Security, dict[SecurityAccount | None, Decimal]]:
-        irrs: dict[Security, dict[SecurityAccount | None, Decimal]] = {}
+    def _calculate_irrs(
+        self,
+    ) -> dict[Security, dict[SecurityAccount | None, tuple[Decimal, Decimal]]]:
+        irrs: dict[Security, dict[SecurityAccount | None, tuple[Decimal, Decimal]]] = {}
+        base_currency = self._record_keeper.base_currency
         for security in self._record_keeper.securities:
             accounts = [
                 account
                 for account in self._record_keeper.security_accounts
-                if account.is_security_related(security)
+                if security in account.related_securities
             ]
-            irrs[security] = {None: calculate_irr(security, accounts)}
+            irrs[security] = {
+                None: (
+                    calculate_irr(security, accounts),
+                    calculate_irr(security, accounts, base_currency),
+                )
+            }
             for account in accounts:
-                irrs[security][account] = calculate_irr(security, [account])
+                irrs[security][account] = (
+                    calculate_irr(security, [account]),
+                    calculate_irr(security, [account], base_currency),
+                )
 
         return irrs

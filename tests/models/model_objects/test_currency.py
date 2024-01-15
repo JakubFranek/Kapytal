@@ -22,7 +22,7 @@ def test_creation(code: str, places: int) -> None:
     assert currency.code == code.upper()
     assert currency.__repr__() == f"Currency({code.upper()})"
     assert currency.__str__() == code.upper()
-    assert currency.places == places
+    assert currency.decimals == places
     assert currency.convertible_to == set()
     assert currency.exchange_rates == {}
 
@@ -65,7 +65,7 @@ def test_code_not_string(code: Any, places: int) -> None:
     places=everything_except(int),
 )
 def test_places_invalid_type(code: Any, places: int) -> None:
-    with pytest.raises(TypeError, match="Currency.places must be an integer."):
+    with pytest.raises(TypeError, match="Currency.decimals must be an integer."):
         Currency(code, places)
 
 
@@ -74,7 +74,7 @@ def test_places_invalid_type(code: Any, places: int) -> None:
     places=st.integers(max_value=-1),
 )
 def test_places_invalid_value(code: Any, places: int) -> None:
-    with pytest.raises(ValueError, match="Currency.places must not be negative."):
+    with pytest.raises(ValueError, match="Currency.decimals must not be negative."):
         Currency(code, places)
 
 

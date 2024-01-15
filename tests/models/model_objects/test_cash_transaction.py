@@ -1,4 +1,3 @@
-import re
 from collections.abc import Collection
 from datetime import datetime, timedelta
 from decimal import Decimal
@@ -655,7 +654,7 @@ def test_add_remove_tags_refunded(
 
 @given(transaction=cash_transactions(), category=categories(), total=st.booleans())
 def test_get_amount_for_category_not_related(
-    transaction: CashTransaction, category: Category, total: bool  # noqa: FBT001
+    transaction: CashTransaction, category: Category, total: bool
 ) -> None:
     assume(category not in transaction.categories)
     assert transaction.get_amount_for_category(category, total=total) == CashAmount(

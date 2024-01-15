@@ -131,13 +131,11 @@ class TransactionTableFormPresenter:
                 self._model.post_reset_model()
 
             self._update_table_columns()
-            self._form.table_view.resizeColumnsToContents()
             self._form.set_window_title(title)
-
             self._update_number_of_shown_transactions()
             self._update_selected_transactions_amount()
-
             self._form.setParent(parent, Qt.WindowType.Window)
+            self._form.table_view.resizeColumnsToContents()
             self._form.show_form()
         except:  # noqa: TRY302
             raise
@@ -323,6 +321,6 @@ class TransactionTableFormPresenter:
         for transaction in transactions:
             if isinstance(transaction, CashTransaction | RefundTransaction):
                 _amount = transaction.get_amount(transaction.account)
-                amount += _amount.convert(base_currency, transaction.datetime_.date())
+                amount += _amount.convert(base_currency, transaction.date_)
 
         self._form.set_selected_amount(amount.to_str_rounded())

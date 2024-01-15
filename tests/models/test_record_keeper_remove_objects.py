@@ -28,8 +28,8 @@ def test_remove_account() -> None:
 
     record_keeper.add_security_account("PARENT/SECURITY")
     record_keeper.add_cash_account("PARENT/CASH", "CZK", 0)
-    assert len(parent.children) == 2  # noqa: PLR2004
-    assert len(record_keeper.accounts) == 2  # noqa: PLR2004
+    assert len(parent.children) == 2
+    assert len(record_keeper.accounts) == 2
 
     record_keeper.remove_account("PARENT/SECURITY")
     record_keeper.remove_account("PARENT/CASH")

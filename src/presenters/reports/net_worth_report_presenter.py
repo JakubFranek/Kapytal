@@ -225,7 +225,7 @@ class NetWorthReportPresenter:
                 title="Warning",
             )
             return
-        start = transactions[0].datetime_.date()
+        start = transactions[0].date_
         end = datetime.now(tz=user_settings.settings.time_zone).date()
 
         base_currency = self._record_keeper.base_currency
@@ -275,8 +275,8 @@ class NetWorthReportPresenter:
             y.append(net_worth)
 
         places = (
-            base_currency.places - 2
-            if base_currency.places >= 2  # noqa: PLR2004
+            base_currency.decimals - 2
+            if base_currency.decimals >= 2  # noqa: PLR2004
             else 0
         )
         self._report.load_data(
@@ -342,7 +342,7 @@ def calculate_accounts_sunburst_data(
     level = 1
     nodes: list[SunburstNode] = []
     root_node = SunburstNode(
-        "Total", "Total", 0, base_currency.code, base_currency.places, [], None
+        "Total", "Total", 0, base_currency.code, base_currency.decimals, [], None
     )
     for account in account_items:
         if account.parent is not None:
@@ -375,7 +375,7 @@ def _create_account_item_node(
         account_item.path,
         0,
         currency.code,
-        currency.places,
+        currency.decimals,
         [],
         parent,
     )
@@ -406,7 +406,7 @@ def calculate_asset_type_sunburst_data(
     try:
         currency = stats[0].amount_base.currency
         currency_code = currency.code
-        currency_places = currency.places
+        currency_places = currency.decimals
     except IndexError:
         currency_code = ""
         currency_places = 0

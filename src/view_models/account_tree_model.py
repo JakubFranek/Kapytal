@@ -144,7 +144,9 @@ def sync_nodes(
                 balance_base = item.get_balance(currency=base_currency)
             except (ConversionFactorNotFoundError, AttributeError):
                 balance_base = None
-            if isinstance(item, CashAccount):
+            if isinstance(item, CashAccount) or (
+                isinstance(item, SecurityAccount) and item.currency is not None
+            ):
                 balance_native = item.get_balance(item.currency)
             else:
                 balance_native = None
@@ -165,7 +167,9 @@ def sync_nodes(
                 node.balance_base = item.get_balance(currency=base_currency)
             except (ConversionFactorNotFoundError, AttributeError):
                 node.balance_base = None
-            if isinstance(item, CashAccount):
+            if isinstance(item, CashAccount) or (
+                isinstance(item, SecurityAccount) and item.currency is not None
+            ):
                 node.balance_native = item.get_balance(item.currency)
             node.parent = parent_node
             node.children = []

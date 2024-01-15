@@ -1,7 +1,9 @@
+from decimal import Decimal
 from enum import Enum, auto
 
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtWidgets import QWidget
+from PyQt6.QtWidgets import QLabel, QWidget
+from src.models.model_objects.currency_objects import CashAmount
 from src.models.statistics.cashflow_stats import CashFlowStats
 from src.presenters.utilities.event import Event
 from src.views import colors, icons
@@ -44,103 +46,29 @@ class CashFlowTotalReport(CustomWidget, Ui_CashFlowTotalReport):
         self.resize(1150, 600)
 
     def load_stats(self, stats: CashFlowStats) -> None:
-        self.incomeAmountLabel.setText(stats.incomes.balance.to_str_rounded())
-        if stats.incomes.balance.is_positive():
-            self.incomeAmountLabel.setStyleSheet(f"color: {colors.get_green().name()}")
+        set_label(self.incomeAmountLabel, stats.incomes.balance)
+        set_label(self.inwardTransfersAmountLabel, stats.inward_transfers.balance)
+        set_label(self.refundsAmountLabel, stats.refunds.balance)
+        set_label(self.initialBalancesAmountLabel, stats.initial_balances)
+        set_label(self.inflowAmountLabel, stats.inflows.balance)
 
-        self.inwardTransfersAmountLabel.setText(
-            stats.inward_transfers.balance.to_str_rounded()
+        set_label(self.expensesAmountLabel, -stats.expenses.balance)
+        set_label(self.outwardTransfersAmountLabel, -stats.outward_transfers.balance)
+        set_label(self.outflowAmountLabel, -stats.outflows.balance)
+
+        set_label(self.cashFlowAmountLabel, stats.delta_neutral.balance)
+        set_label(
+            self.gainLossSecuritiesAmountLabel, stats.delta_performance_securities
         )
-        if stats.inward_transfers.balance.is_positive():
-            self.inwardTransfersAmountLabel.setStyleSheet(
-                f"color: {colors.get_green().name()}"
-            )
-
-        self.refundsAmountLabel.setText(stats.refunds.balance.to_str_rounded())
-        if stats.refunds.balance.is_positive():
-            self.refundsAmountLabel.setStyleSheet(f"color: {colors.get_green().name()}")
-
-        self.initialBalancesAmountLabel.setText(stats.initial_balances.to_str_rounded())
-        if stats.initial_balances.is_positive():
-            self.initialBalancesAmountLabel.setStyleSheet(
-                f"color: {colors.get_green().name()}"
-            )
-
-        self.inflowAmountLabel.setText(stats.inflows.balance.to_str_rounded())
-        if stats.inflows.balance.is_positive():
-            self.inflowAmountLabel.setStyleSheet(f"color: {colors.get_green().name()}")
-
-        self.expensesAmountLabel.setText("-" + stats.expenses.balance.to_str_rounded())
-        if stats.expenses.balance.is_positive():
-            self.expensesAmountLabel.setStyleSheet(f"color: {colors.get_red().name()}")
-        self.outwardTransfersAmountLabel.setText(
-            "-" + stats.outward_transfers.balance.to_str_rounded()
+        set_label(
+            self.gainLossCurrenciesAmountLabel, stats.delta_performance_currencies
         )
-        if stats.outward_transfers.balance.is_positive():
-            self.outwardTransfersAmountLabel.setStyleSheet(
-                f"color: {colors.get_red().name()}"
-            )
-        self.outflowAmountLabel.setText("-" + stats.outflows.balance.to_str_rounded())
-        if stats.outflows.balance.is_positive():
-            self.outflowAmountLabel.setStyleSheet(f"color: {colors.get_red().name()}")
-
-        self.gainLossSecuritiesAmountLabel.setText(
-            stats.delta_performance_securities.to_str_rounded()
-        )
-        if stats.delta_performance_securities.is_positive():
-            self.gainLossSecuritiesAmountLabel.setStyleSheet(
-                f"color: {colors.get_green().name()}"
-            )
-        elif stats.delta_performance_securities.is_negative():
-            self.gainLossSecuritiesAmountLabel.setStyleSheet(
-                f"color: {colors.get_red().name()}"
-            )
-
-        self.gainLossCurrenciesAmountLabel.setText(
-            stats.delta_performance_currencies.to_str_rounded()
-        )
-        if stats.delta_performance_currencies.is_positive():
-            self.gainLossCurrenciesAmountLabel.setStyleSheet(
-                f"color: {colors.get_green().name()}"
-            )
-        elif stats.delta_performance_currencies.is_negative():
-            self.gainLossCurrenciesAmountLabel.setStyleSheet(
-                f"color: {colors.get_red().name()}"
-            )
-
-        self.gainLossAmountLabel.setText(stats.delta_performance.to_str_rounded())
-        if stats.delta_performance.is_positive():
-            self.gainLossAmountLabel.setStyleSheet(
-                f"color: {colors.get_green().name()}"
-            )
-        elif stats.delta_performance.is_negative():
-            self.gainLossAmountLabel.setStyleSheet(f"color: {colors.get_red().name()}")
-
-        self.cashFlowAmountLabel.setText(stats.delta_neutral.balance.to_str_rounded())
-        if stats.delta_neutral.balance.is_positive():
-            self.cashFlowAmountLabel.setStyleSheet(
-                f"color: {colors.get_green().name()}"
-            )
-        elif stats.delta_neutral.balance.is_negative():
-            self.cashFlowAmountLabel.setStyleSheet(f"color: {colors.get_red().name()}")
+        set_label(self.gainLossAmountLabel, stats.delta_performance)
 
         self.savingsRateAmountLabel.setText(f"{100 * stats.savings_rate:.2f}%")
-        if stats.savings_rate > 0:
-            self.savingsRateAmountLabel.setStyleSheet(
-                f"color: {colors.get_green().name()}"
-            )
-        elif stats.savings_rate < 0:
-            self.savingsRateAmountLabel.setStyleSheet(
-                f"color: {colors.get_red().name()}"
-            )
+        set_label_color(self.savingsRateAmountLabel, stats.savings_rate)
 
-        self.netGrowthAmountLabel.setText(stats.delta_total.to_str_rounded())
-        if stats.delta_total.is_positive():
-            self.netGrowthAmountLabel.setStyleSheet(
-                f"color: {colors.get_green().name()}"
-            )
-        elif stats.delta_total.is_negative():
-            self.netGrowthAmountLabel.setStyleSheet(f"color: {colors.get_red().name()}")
+        set_label(self.netGrowthAmountLabel, stats.delta_total)
 
         self.actionShow_Income_Transactions.setEnabled(
             len(stats.incomes.transactions) > 0
@@ -225,3 +153,19 @@ class CashFlowTotalReport(CustomWidget, Ui_CashFlowTotalReport):
         )
         self.cashflowToolButton.setDefaultAction(self.actionShow_All_Transactions)
         self.recalculateToolButton.setDefaultAction(self.actionRecalculate_Report)
+
+
+def set_label(label: QLabel, value: CashAmount) -> None:
+    label.setText(value.to_str_rounded())
+    set_label_color(label, value)
+
+
+def set_label_color(label: QLabel, value: CashAmount | Decimal) -> None:
+    _value = value.value_rounded if isinstance(value, CashAmount) else value
+
+    if _value.is_nan() or _value == 0:
+        label.setStyleSheet(f"color: {colors.get_gray().name()}")
+    elif _value > 0:
+        label.setStyleSheet(f"color: {colors.get_green().name()}")
+    else:
+        label.setStyleSheet(f"color: {colors.get_red().name()}")

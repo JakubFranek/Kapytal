@@ -507,7 +507,7 @@ class TransactionTableModel(QAbstractTableModel):
     @staticmethod
     def _get_transaction_price_per_share_string(transaction: Transaction) -> str:
         if isinstance(transaction, SecurityTransaction):
-            return f"{transaction.price_per_share.value_normalized:,f}"
+            return transaction.price_per_share.to_str_normalized()
         return ""
 
     def _get_transaction_amount_string(
@@ -521,7 +521,7 @@ class TransactionTableModel(QAbstractTableModel):
         if base:
             try:
                 return amount.convert(
-                    self._base_currency, transaction.datetime_.date()
+                    self._base_currency, transaction.date_
                 ).to_str_rounded()
             except ConversionFactorNotFoundError:
                 return "Error!"
@@ -543,9 +543,7 @@ class TransactionTableModel(QAbstractTableModel):
 
         if base:
             return float(
-                amount.convert(
-                    self._base_currency, transaction.datetime_.date()
-                ).value_rounded
+                amount.convert(self._base_currency, transaction.date_).value_rounded
             )
         return float(amount.value_rounded)
 

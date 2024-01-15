@@ -1,21 +1,10 @@
-import math
-from datetime import datetime, timedelta
 from decimal import Decimal
 
-import pytest
 from hypothesis import given
 from hypothesis import strategies as st
 from src.models.base_classes.transaction import Transaction
-from src.models.model_objects.cash_objects import CashAccount
-from src.models.model_objects.currency_objects import CashAmount, Currency
-from src.models.model_objects.security_objects import (
-    Security,
-    SecurityAccount,
-    SecurityTransaction,
-    SecurityTransactionType,
-)
+from src.models.model_objects.currency_objects import CashAmount
 from src.models.statistics.common_classes import TransactionBalance
-from src.models.user_settings import user_settings
 from tests.models.test_assets.composites import (
     cash_amounts,
     currencies,

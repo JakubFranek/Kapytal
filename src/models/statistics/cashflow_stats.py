@@ -104,9 +104,9 @@ def calculate_cash_flow(
 
     transactions = sorted(transactions, key=lambda x: x.timestamp)
     if start_date is None:
-        start_date = transactions[0].datetime_.date()
+        start_date = transactions[0].date_
     if end_date is None:
-        end_date = transactions[-1].datetime_.date()
+        end_date = transactions[-1].date_
 
     start_balance = base_currency.zero_amount
     end_balance = base_currency.zero_amount
@@ -130,7 +130,7 @@ def calculate_cash_flow(
             delta_security += _end_balance
 
     for transaction in transactions:
-        date_ = transaction.datetime_.date()
+        date_ = transaction.date_
         if date_ < start_date or date_ > end_date:
             raise ValueError(f"Unexpected Transaction date: {date_}")
         if isinstance(transaction, CashTransaction):
@@ -196,13 +196,13 @@ def calculate_cash_flow(
             elif transaction.sender in accounts:
                 shares = transaction.shares
                 security = transaction.security
-                amount = shares * security.get_price(transaction.datetime_.date())
+                amount = shares * security.get_price(date_)
                 stats.outward_transfers.balance += amount
                 stats.outward_transfers.transactions.add(transaction)
             else:
                 shares = transaction.shares
                 security = transaction.security
-                amount = shares * security.get_price(transaction.datetime_.date())
+                amount = shares * security.get_price(date_)
                 stats.inward_transfers.balance += amount
                 stats.inward_transfers.transactions.add(transaction)
 
@@ -240,8 +240,8 @@ def calculate_periodic_cash_flow(
     end_date: date | None,
 ) -> tuple[CashFlowStats]:
     transactions = sorted(transactions, key=lambda x: x.timestamp)
-    start_date = transactions[0].datetime_.date() if start_date is None else start_date
-    end_date = transactions[-1].datetime_.date() if end_date is None else end_date
+    start_date = transactions[0].date_ if start_date is None else start_date
+    end_date = transactions[-1].date_ if end_date is None else end_date
 
     periods = get_periods(start_date, end_date, period_type)
     period_format = "%Y" if period_type == PeriodType.YEAR else "%b %Y"

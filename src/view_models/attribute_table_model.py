@@ -71,7 +71,7 @@ class AttributeTableModel(QAbstractTableModel):
                 index.column(), self._attribute_stats[index.row()]
             )
         if role == Qt.ItemDataRole.UserRole:
-            return self._get_user_role_data(
+            return self._get_sort_role_data(
                 index.column(), self._attribute_stats[index.row()]
             )
         column = index.column()
@@ -91,10 +91,10 @@ class AttributeTableModel(QAbstractTableModel):
         if column == AttributeTableColumn.TRANSACTIONS:
             return stats.no_of_transactions
         if column == AttributeTableColumn.BALANCE:
-            return stats.balance.to_str_rounded()
+            return stats.balance.to_str_rounded() if stats.balance is not None else None
         return None
 
-    def _get_user_role_data(
+    def _get_sort_role_data(
         self, column: int, stats: AttributeStats
     ) -> str | int | float | None:
         if column == AttributeTableColumn.NAME:
@@ -102,13 +102,19 @@ class AttributeTableModel(QAbstractTableModel):
         if column == AttributeTableColumn.TRANSACTIONS:
             return stats.no_of_transactions
         if column == AttributeTableColumn.BALANCE:
-            return float(stats.balance.value_normalized)
+            return (
+                float(stats.balance.value_normalized)
+                if stats.balance is not None
+                else None
+            )
         return None
 
     def _get_foreground_role_data(
         self, column: int, stats: AttributeStats
     ) -> QBrush | None:
         if column != AttributeTableColumn.BALANCE:
+            return None
+        if stats.balance is None:
             return None
         if stats.balance.is_positive():
             return colors.get_green_brush()
@@ -173,3 +179,7 @@ class AttributeTableModel(QAbstractTableModel):
                 f"Parameter {item=} not in AttributeTableModel.attribute_stats."
             )
         return QAbstractTableModel.createIndex(self, row, 0)
+
+    def item_changed(self, item: Attribute) -> None:
+        index = self.get_index_from_item(item)
+        self.dataChanged.emit(index, index)

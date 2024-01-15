@@ -68,7 +68,7 @@ class CashTransactionDialogPresenter(TransactionDialogPresenter):
 
         self._dialog.type_ = transaction.type_
         self._dialog.account_path = transaction.account.path
-        self._dialog.amount_decimals = transaction.account.currency.places
+        self._dialog.amount_decimals = transaction.account.currency.decimals
         self._dialog.currency_code = transaction.account.currency.code
         self._dialog.payee = transaction.payee.name
         self._dialog.datetime_ = transaction.datetime_
@@ -123,7 +123,7 @@ class CashTransactionDialogPresenter(TransactionDialogPresenter):
 
         currencies = {transaction.currency for transaction in transactions}
         first_currency = currencies.pop()
-        self._dialog.amount_decimals = first_currency.places
+        self._dialog.amount_decimals = first_currency.decimals
         self._dialog.currency_code = first_currency.code
 
         payees = {transaction.payee.name for transaction in transactions}

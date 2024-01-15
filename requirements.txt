@@ -2,7 +2,6 @@ altgraph==0.17.4
 appdirs==1.4.4
 attrs==23.1.0
 beautifulsoup4==4.12.2
-black==23.12.1
 certifi==2023.11.17
 charset-normalizer==3.3.2
 click==8.1.7
@@ -20,7 +19,6 @@ iniconfig==2.0.0
 kiwisolver==1.4.5
 lxml==4.9.4
 matplotlib==3.8.2
-mplcursors==0.5.2
 multitasking==0.0.11
 mypy==1.8.0
 mypy-extensions==1.0.0

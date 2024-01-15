@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from collections.abc import Collection
-from datetime import datetime
+from datetime import date, datetime
 from typing import TYPE_CHECKING
 
 from src.models.custom_exceptions import NotFoundError
@@ -53,6 +53,10 @@ class Transaction(
     @property
     def datetime_(self) -> datetime:
         return self._datetime
+
+    @property
+    def date_(self) -> date:
+        return self._datetime.date()
 
     @property
     def timestamp(self) -> float:

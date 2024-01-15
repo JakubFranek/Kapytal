@@ -241,3 +241,31 @@ def test_calculate_periodic_totals_and_averages() -> None:
     assert len(attr_totals) == 1
     assert attr_totals[tag_1].transactions == {t1a, t1b, t2, t3}
     assert attr_totals[tag_1].balance == CashAmount(9, currency)
+
+
+def test_calculate_attribute_stats_no_base_currency() -> None:
+    tag_1 = Attribute("tag1", AttributeType.TAG)
+    tag_2 = Attribute("tag2", AttributeType.TAG)
+
+    payee_1 = Attribute("payee1", AttributeType.PAYEE)
+    payee_2 = Attribute("payee2", AttributeType.PAYEE)
+
+    tag_stats = calculate_attribute_stats([], None, [tag_1, tag_2])
+    assert tag_stats[tag_1].no_of_transactions == 0
+    assert tag_stats[tag_2].no_of_transactions == 0
+    assert tag_stats[tag_1].balance is None
+    assert tag_stats[tag_2].balance is None
+    assert tag_stats[tag_1].transactions == set()
+    assert tag_stats[tag_2].transactions == set()
+    assert tag_stats[tag_1].attribute == tag_1
+    assert tag_stats[tag_2].attribute == tag_2
+
+    payee_stats = calculate_attribute_stats([], None, [payee_1, payee_2])
+    assert payee_stats[payee_1].no_of_transactions == 0
+    assert payee_stats[payee_2].no_of_transactions == 0
+    assert payee_stats[payee_1].balance is None
+    assert payee_stats[payee_2].balance is None
+    assert payee_stats[payee_1].transactions == set()
+    assert payee_stats[payee_2].transactions == set()
+    assert payee_stats[payee_1].attribute == payee_1
+    assert payee_stats[payee_2].attribute == payee_2

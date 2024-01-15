@@ -40,7 +40,7 @@ class CashAccountDialogPresenter:
 
         account_group_paths = self._get_account_group_paths()
         code_places_pairs = [
-            (currency.code, currency.places)
+            (currency.code, currency.decimals)
             for currency in self._record_keeper.currencies
         ]
         self._dialog = CashAccountDialog(
@@ -70,7 +70,7 @@ class CashAccountDialogPresenter:
 
         account_group_paths = self._get_account_group_paths()
         code_places_pairs = (
-            (selected_item.currency.code, selected_item.currency.places),
+            (selected_item.currency.code, selected_item.currency.decimals),
         )
         self._dialog = CashAccountDialog(
             parent=self._view,

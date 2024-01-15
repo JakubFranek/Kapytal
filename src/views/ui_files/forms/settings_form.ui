@@ -35,27 +35,27 @@
       <layout class="QVBoxLayout" name="verticalLayout_3">
        <item>
         <layout class="QFormLayout" name="formLayout">
-         <item row="2" column="0">
+         <item row="3" column="0">
           <widget class="QLabel" name="generalDateFormatLabel">
            <property name="text">
             <string>General date format</string>
            </property>
           </widget>
          </item>
-         <item row="2" column="1">
+         <item row="3" column="1">
           <widget class="QLineEdit" name="generalDateFormatLineEdit"/>
          </item>
-         <item row="3" column="0">
+         <item row="4" column="0">
           <widget class="QLabel" name="transactionTableDateFormatLabel">
            <property name="text">
             <string>Transaction table date format</string>
            </property>
           </widget>
          </item>
-         <item row="3" column="1">
+         <item row="4" column="1">
           <widget class="QLineEdit" name="transactionTableDateFormatLineEdit"/>
          </item>
-         <item row="0" column="0">
+         <item row="1" column="0">
           <widget class="QLabel" name="exchangeRateDecimalsLabel">
            <property name="toolTip">
             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Number of decimal places of Exchange Rate spinbox when manually setting Exchange Rate quote in Currencies and Exchange Rates Form.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -65,17 +65,17 @@
            </property>
           </widget>
          </item>
-         <item row="0" column="1">
+         <item row="1" column="1">
           <widget class="QSpinBox" name="exchangeRateDecimalsSpinBox">
            <property name="toolTip">
             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Number of decimal places of Exchange Rate spinbox when manually setting Exchange Rate quote in Currencies and Exchange Rates Form.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </property>
            <property name="minimum">
-            <number>9</number>
+            <number>0</number>
            </property>
           </widget>
          </item>
-         <item row="1" column="0">
+         <item row="2" column="0">
           <widget class="QLabel" name="pricePerShareDecimalsLabel">
            <property name="toolTip">
             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Number of decimal places of Price per Share spinbox in Security Transaction Dialog.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -85,13 +85,30 @@
            </property>
           </widget>
          </item>
-         <item row="1" column="1">
+         <item row="2" column="1">
           <widget class="QSpinBox" name="pricePerShareDecimalsSpinBox">
            <property name="toolTip">
             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Number of decimal places of Price per Share spinbox in Security Transaction Dialog.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </property>
            <property name="minimum">
-            <number>9</number>
+            <number>0</number>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0">
+          <widget class="QLabel" name="checkForUpdatesLabel">
+           <property name="text">
+            <string>Check for updates on startup</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QCheckBox" name="checkforUpdatesCheckBox">
+           <property name="text">
+            <string/>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
            </property>
           </widget>
          </item>

@@ -10,6 +10,10 @@ from typing import Any, Self, overload
 from src.models.mixins.copyable_mixin import CopyableMixin
 from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
 from src.models.user_settings import user_settings
+from src.presenters.utilities.event import Event
+
+# TODO: add CurrencyManager class to take care of Currency cache resets
+# and offload RecordKeeper methods to CurrencyManager
 
 quantizers: dict[int, Decimal] = {}
 for i in range(18 + 1):
@@ -26,10 +30,16 @@ class ConversionFactorNotFoundError(ValueError):
 
 
 class Currency(CopyableMixin, JSONSerializableMixin):
-    __slots__ = ("_code", "_places", "_exchange_rates", "_factor_cache", "_zero_amount")
+    __slots__ = (
+        "_code",
+        "_decimals",
+        "_exchange_rates",
+        "_factor_cache",
+        "_zero_amount",
+    )
     CODE_LENGTH = 3
 
-    def __init__(self, code: str, places: int) -> None:
+    def __init__(self, code: str, decimals: int) -> None:
         super().__init__()
 
         if not isinstance(code, str):
@@ -38,11 +48,11 @@ class Currency(CopyableMixin, JSONSerializableMixin):
             raise ValueError("Currency.code must be a three letter ISO-4217 code.")
         self._code = code.upper()
 
-        if not isinstance(places, int):
-            raise TypeError("Currency.places must be an integer.")
-        if places < 0:
-            raise ValueError("Currency.places must not be negative.")
-        self._places = places
+        if not isinstance(decimals, int):
+            raise TypeError("Currency.decimals must be an integer.")
+        if decimals < 0:
+            raise ValueError("Currency.decimals must not be negative.")
+        self._decimals = decimals
 
         self._exchange_rates: dict[Currency, "ExchangeRate"] = {}
         self._factor_cache: dict[str, Decimal] = {}
@@ -53,8 +63,8 @@ class Currency(CopyableMixin, JSONSerializableMixin):
         return self._code
 
     @property
-    def places(self) -> int:
-        return self._places
+    def decimals(self) -> int:
+        return self._decimals
 
     @property
     def zero_amount(self) -> "CashAmount":
@@ -83,6 +93,9 @@ class Currency(CopyableMixin, JSONSerializableMixin):
         return self._code == __o._code
 
     def add_exchange_rate(self, exchange_rate: "ExchangeRate") -> None:
+        """The class managing Currencies must reset all Currency caches
+        after this method is called."""
+
         if not isinstance(exchange_rate, ExchangeRate):
             raise TypeError("Parameter 'exchange_rate' must be an ExchangeRate.")
         if self not in exchange_rate.currencies:
@@ -92,14 +105,15 @@ class Currency(CopyableMixin, JSONSerializableMixin):
             )
         other_currency = exchange_rate.currencies - {self}
         self._exchange_rates[other_currency.pop()] = exchange_rate
-        self.reset_cache()
 
     def remove_exchange_rate(self, exchange_rate: "ExchangeRate") -> None:
+        """The class managing Currencies must reset all Currency caches
+        after this method is called."""
+
         if not isinstance(exchange_rate, ExchangeRate):
             raise TypeError("Parameter 'exchange_rate' must be an ExchangeRate.")
         other_currency = exchange_rate.currencies - {self}
         del self._exchange_rates[other_currency.pop()]
-        self.reset_cache()
 
     def reset_cache(self) -> None:
         self._factor_cache = {}
@@ -160,14 +174,13 @@ class Currency(CopyableMixin, JSONSerializableMixin):
             # Direct ExchangeRate found!
             return [current_currency.exchange_rates[target_currency]]
 
-        # Direct ExchangeRate not found...
-        # Get unexplored currencies to iterate over.
+        # Direct ExchangeRate not found...get unexplored currencies to iterate over
         iterable_currencies = [
             currency
             for currency in current_currency.convertible_to
             if currency not in ignore_currencies
         ]
-        # Ignore these currencies in future deeper searches (no need to go back).
+        # Ignore these currencies in future deeper searches (no need to go back)
         ignore_currencies = ignore_currencies | current_currency.convertible_to
         for loop_currency in iterable_currencies:
             exchange_rates = Currency._get_exchange_rates(
@@ -176,17 +189,21 @@ class Currency(CopyableMixin, JSONSerializableMixin):
             if exchange_rates is None:
                 continue  # Reached a dead end.
             # ExchangeRate to target_currency found!
-            # Append ExchangeRate needed to get there from the current_currency.
+            # Append ExchangeRate needed to get there from the current_currency
             exchange_rates.insert(0, current_currency.exchange_rates[loop_currency])
             return exchange_rates
         return None  # Reached a dead-end.
 
     def serialize(self) -> dict:
-        return {"datatype": "Currency", "code": self._code, "places": self._places}
+        return {
+            "datatype": "Currency",
+            "code": self._code,
+            "places": self._decimals,  # TODO: rename key
+        }
 
     @staticmethod
     def deserialize(data: dict[str, Any]) -> "Currency":
-        return Currency(code=data["code"], places=data["places"])
+        return Currency(code=data["code"], decimals=data["places"])
 
 
 class ExchangeRate(CopyableMixin, JSONSerializableMixin):
@@ -200,6 +217,7 @@ class ExchangeRate(CopyableMixin, JSONSerializableMixin):
         "_latest_date",
         "_earliest_date",
         "_recalculate_rate_history_pairs",
+        "event_reset_currency_caches",
     )
 
     def __init__(
@@ -221,6 +239,8 @@ class ExchangeRate(CopyableMixin, JSONSerializableMixin):
         self._rate_history_pairs: tuple[tuple[date, Decimal]] = ()
         self._rate_decimals = 0
         self._recalculate_rate_history_pairs = False
+
+        self.event_reset_currency_caches = Event()
 
     @property
     def primary_currency(self) -> Currency:
@@ -326,10 +346,8 @@ class ExchangeRate(CopyableMixin, JSONSerializableMixin):
             self.update_values()
 
     def prepare_for_deletion(self) -> None:
-        self.primary_currency.remove_exchange_rate(self)
-        self.primary_currency.reset_cache()
-        self.secondary_currency.remove_exchange_rate(self)
-        self.secondary_currency.reset_cache()
+        self._primary_currency.remove_exchange_rate(self)
+        self._secondary_currency.remove_exchange_rate(self)
 
     def calculate_return(
         self, start: date | None = None, end: date | None = None
@@ -413,8 +431,7 @@ class ExchangeRate(CopyableMixin, JSONSerializableMixin):
             default=0,
         )
 
-        self.primary_currency.reset_cache()
-        self.secondary_currency.reset_cache()
+        self.event_reset_currency_caches()
         self._recalculate_rate_history_pairs = True
 
 
@@ -455,8 +472,8 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
             if self._raw_value.is_nan():
                 self._value_rounded = self._raw_value
             else:
-                self._value_rounded = round(self._raw_value, self._currency.places)
-                min_places = min(self._currency.places, 4)
+                self._value_rounded = round(self._raw_value, self._currency.decimals)
+                min_places = min(self._currency.decimals, 4)
                 if -self._value_rounded.as_tuple().exponent > min_places:
                     self._value_rounded = self._value_rounded.normalize()
                     if -self._value_rounded.as_tuple().exponent < min_places:
@@ -470,7 +487,7 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
     def value_normalized(self) -> Decimal:
         if not hasattr(self, "_value_normalized"):
             self._value_normalized = self._raw_value.normalize()
-            places = min(self._currency.places, 4)
+            places = min(self._currency.decimals, 4)
             if (
                 not self._value_normalized.is_nan()
                 and -self._value_normalized.as_tuple().exponent < places

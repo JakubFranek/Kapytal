@@ -1,6 +1,5 @@
 from datetime import datetime
 
-import pytest
 from dateutil.relativedelta import relativedelta
 from src.models.model_objects.attributes import (
     Attribute,
@@ -264,3 +263,28 @@ def test_calculate_periodic_totals_and_averages() -> None:
     assert len(category_totals) == 1
     assert category_totals[category].transactions == {t1a, t1b, t2, t3}
     assert category_totals[category].balance == CashAmount(3, currency)
+
+
+def test_calculate_attribute_stats_no_base_currency() -> None:
+    category_1 = Category("Category1", CategoryType.INCOME_AND_EXPENSE)
+    category_2 = Category("Category2", CategoryType.INCOME_AND_EXPENSE)
+    category_2a = Category("Category2a", CategoryType.INCOME_AND_EXPENSE, category_2)
+
+    category_stats = calculate_category_stats(
+        [], None, [category_1, category_2, category_2a]
+    )
+    assert category_stats[category_1].transactions_total == 0
+    assert category_stats[category_2].transactions_total == 0
+    assert category_stats[category_2a].transactions_total == 0
+    assert category_stats[category_1].transactions_self == 0
+    assert category_stats[category_2].transactions_self == 0
+    assert category_stats[category_2a].transactions_self == 0
+    assert category_stats[category_1].balance is None
+    assert category_stats[category_2].balance is None
+    assert category_stats[category_2a].balance is None
+    assert category_stats[category_1].transactions == set()
+    assert category_stats[category_2].transactions == set()
+    assert category_stats[category_2a].transactions == set()
+    assert category_stats[category_1].category == category_1
+    assert category_stats[category_2].category == category_2
+    assert category_stats[category_2a].category == category_2a

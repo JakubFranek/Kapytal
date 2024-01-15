@@ -169,7 +169,7 @@ class CashAccount(Account):
 
     def get_balance(self, currency: Currency, date_: date | None = None) -> CashAmount:
         if date_ is None:
-            amount = self._balance_history[-1][1]
+            amount = self._balance_history[-1][1].convert(currency)
         else:
             index = bisect_right(
                 self._balance_history, date_, key=lambda x: x[0].date()

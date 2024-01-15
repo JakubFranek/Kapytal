@@ -8,6 +8,7 @@ from collections.abc import Collection
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 from enum import Enum, auto
+from types import NoneType
 from typing import Any
 from uuid import UUID
 
@@ -340,12 +341,14 @@ class SecurityAccount(Account):
         "allow_update_balance",
         "event_balance_updated",
         "_securities_history",
+        "_related_securities",
     )
 
     def __init__(self, name: str, parent: AccountGroup | None = None) -> None:
         super().__init__(name, parent)
         self._securities_history: list[tuple[datetime, dict[Security, Decimal]]] = []
         self._transactions: list[SecurityRelatedTransaction] = []
+        self._related_securities: frozenset[Security] = frozenset()
 
         # allow_update_balance attribute is used to block updating the balance
         # when a transaction is added or removed during deserialization
@@ -360,6 +363,17 @@ class SecurityAccount(Account):
     @property
     def transactions(self) -> tuple["SecurityRelatedTransaction", ...]:
         return tuple(self._transactions)
+
+    @property
+    def currency(self) -> Currency | None:
+        currencies = {security.currency for security in self._related_securities}
+        if len(currencies) == 1:
+            return next(iter(currencies))
+        return None
+
+    @property
+    def related_securities(self) -> frozenset[Security]:
+        return self._related_securities
 
     def get_balance(self, currency: Currency, date_: date | None = None) -> CashAmount:
         if date_ is None:
@@ -424,6 +438,7 @@ class SecurityAccount(Account):
                     datetime_=new_datetime, block_account_update=True
                 )
 
+        related_securities = set()
         for transaction in self._transactions:
             security_dict = (
                 defaultdict(lambda: Decimal(0))
@@ -440,17 +455,13 @@ class SecurityAccount(Account):
                 },
             )
             self._securities_history.append((transaction.datetime_, security_dict))
+            related_securities.add(transaction.security)
 
         if len(self._securities_history) != 0:
             for security in self._securities_history[-1][1]:
                 security.event_price_updated.append(self._update_balances)
+        self._related_securities = frozenset(related_securities)
         self._update_balances()
-
-    def is_security_related(self, security: Security) -> bool:
-        for _, security_dict in self._securities_history:
-            if security in security_dict:
-                return True
-        return False
 
     def serialize(self) -> dict[str, Any]:
         index = self._parent.children.index(self) if self._parent is not None else None
@@ -480,11 +491,19 @@ class SecurityAccount(Account):
             obj._parent = parent  # noqa: SLF001
         return obj
 
-    def get_average_price(
-        self, security: Security, date_: date | None = None
+    def get_average_price(  # add method for average sell price
+        self,
+        security: Security,
+        date_: date | None = None,  # latest date if None
+        currency: Currency | None = None,  # Security.currency if None
+        type_: SecurityTransactionType = SecurityTransactionType.BUY,
     ) -> CashAmount:
         if not isinstance(security, Security):
             raise TypeError("Parameter 'security' must be a Security.")
+        if not isinstance(date_, (date, NoneType)):
+            raise TypeError("Parameter 'date' must be a date or None.")
+        if not isinstance(currency, (Currency, NoneType)):
+            raise TypeError("Parameter 'currency' must be a Currency or None.")
         if date_ is None and (
             len(self._securities_history) == 0
             or security not in self._securities_history[-1][1]
@@ -495,34 +514,42 @@ class SecurityAccount(Account):
         if date_ is not None:
             for _datetime, security_dict in reversed(self._securities_history):
                 if _datetime.date() <= date_ and security in security_dict:
-                    break
+                    break  # OK
             else:
                 raise ValueError(
                     f"Security {security.name} is not in this SecurityAccount."
                 )
 
+        if currency is None:
+            currency = security.currency
+
         shares_price_pairs: list[tuple[int, CashAmount]] = []
         for transaction in self._transactions:
-            _transaction_date = transaction.datetime_.date()
-            if date_ is not None and _transaction_date > date_:
-                continue
+            _transaction_date = transaction.date_
             if transaction.security != security:
                 continue
-            if isinstance(transaction, SecurityTransaction):
-                shares_price_pairs.append(
-                    (transaction.shares, transaction.price_per_share)
-                )
+            if date_ is not None and _transaction_date > date_:
+                continue
+            if (
+                isinstance(transaction, SecurityTransaction)
+                and transaction.type_ == type_
+            ):
+                amount = transaction.price_per_share
             elif (
                 isinstance(transaction, SecurityTransfer)
                 and transaction.recipient == self
             ):
-                avg_price = transaction.sender.get_average_price(
-                    security, _transaction_date
+                amount = transaction.sender.get_average_price(
+                    security, _transaction_date, currency
                 )
-                shares_price_pairs.append((transaction.shares, avg_price))
+            else:
+                continue
+            shares_price_pairs.append(
+                (transaction.shares, amount.convert(currency, _transaction_date))
+            )
 
         total_shares = 0
-        total_price = CashAmount(0, security.currency)
+        total_price = currency.zero_amount
         for shares, price in shares_price_pairs:
             total_price += price * shares
             total_shares += shares
@@ -530,7 +557,7 @@ class SecurityAccount(Account):
         return (
             total_price / total_shares
             if total_shares != 0
-            else CashAmount("NaN", security.currency)
+            else CashAmount("NaN", currency)
         )
 
     def _validate_transaction(self, transaction: "SecurityRelatedTransaction") -> None:

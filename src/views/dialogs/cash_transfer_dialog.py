@@ -194,7 +194,7 @@ class CashTransferDialog(CustomDialog, Ui_CashTransferDialog):
             spinbox.setSuffix("")
             return
         spinbox.setSuffix(" " + account.currency.code)
-        spinbox.setDecimals(account.currency.places)
+        spinbox.setDecimals(account.currency.decimals)
 
     def _get_account(self, account_path: str) -> CashAccount | None:
         for account in self._accounts:
@@ -220,8 +220,8 @@ class CashTransferDialog(CustomDialog, Ui_CashTransferDialog):
         try:
             rate_primary = self.amount_received / self.amount_sent
             rate_secondary = self.amount_sent / self.amount_received
-            rate_primary = round(rate_primary, recipient.currency.places)
-            rate_secondary = round(rate_secondary, sender.currency.places)
+            rate_primary = round(rate_primary, recipient.currency.decimals)
+            rate_secondary = round(rate_secondary, sender.currency.decimals)
         except (InvalidOperation, DivisionByZero, TypeError):
             self.exchangeRateLineEdit.setText("Undefined")
             return

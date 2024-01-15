@@ -4,6 +4,7 @@ from PyQt6.QtCore import QSortFilterProxyModel
 from PyQt6.QtWidgets import QTreeView, QWidget
 from pytestqt.modeltest import ModelTester
 from pytestqt.qtbot import QtBot
+from src.models.statistics.security_stats import calculate_total_irr
 from src.presenters.form.security_form_presenter import SecurityFormPresenter
 from src.utilities import constants
 from src.view_models.owned_securities_tree_model import OwnedSecuritiesTreeModel
@@ -27,13 +28,16 @@ def test_owned_securities_tree_model(qtbot: QtBot, qtmodeltester: ModelTester) -
 
     presenter = SecurityFormPresenter(view=form, record_keeper=record_keeper)
     irrs = presenter._calculate_irrs()
+    total_irr = calculate_total_irr(record_keeper)
 
     proxy = QSortFilterProxyModel(parent)
     model = OwnedSecuritiesTreeModel(
         tree_view=view,
         proxy=proxy,
     )
-    model.load_data(record_keeper.security_accounts, irrs, record_keeper.base_currency)
+    model.load_data(
+        record_keeper.security_accounts, irrs, total_irr, record_keeper.base_currency
+    )
     proxy.setSourceModel(model)
     view.setModel(proxy)
 

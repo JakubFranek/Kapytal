@@ -40,7 +40,7 @@ class CashFlowTotalChartView(QChartView):
 
     def load_data(self, stats: CashFlowStats) -> None:  # noqa: PLR0915
         self._currency_code = stats.incomes.balance.currency.code
-        self._places = stats.incomes.balance.currency.places
+        self._places = stats.incomes.balance.currency.decimals
 
         bar_income = QBarSet("Income")
         bar_income.setColor(QColor("darkgreen"))
