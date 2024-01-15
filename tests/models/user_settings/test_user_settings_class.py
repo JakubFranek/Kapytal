@@ -1,11 +1,13 @@
 import shutil
+from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
 import pytest
-from hypothesis import given
+from hypothesis import assume, given
 from hypothesis import strategies as st
 from src.models.user_settings.user_settings_class import UserSettings
+from src.views.constants import TransactionTableColumn
 from tests.models.test_assets.composites import everything_except
 from tzlocal import get_localzone_name
 from zoneinfo import ZoneInfo, available_timezones
@@ -243,3 +245,78 @@ def test_price_per_share_decimals_invalid_value(decimals: int) -> None:
     settings = UserSettings()
     with pytest.raises(ValueError, match="negative"):
         settings.price_per_share_decimals = decimals
+
+
+@given(check=st.sampled_from([True, False]))
+def test_check_for_updates_on_startup(check: bool) -> None:
+    settings = UserSettings()
+    assert settings.check_for_updates_on_startup is True
+    settings.check_for_updates_on_startup = check
+    assert settings.check_for_updates_on_startup == check
+
+
+@given(check=everything_except(bool))
+def test_check_for_updates_on_startup_invalid_type(check: Any) -> None:
+    settings = UserSettings()
+    with pytest.raises(TypeError, match="bool"):
+        settings.check_for_updates_on_startup = check
+
+
+@given(
+    columns=st.lists(
+        st.sampled_from(TransactionTableColumn),
+        unique=True,
+        min_size=len(TransactionTableColumn),
+        max_size=len(TransactionTableColumn),
+    ),
+)
+def test_transaction_table_column_order(columns: list[TransactionTableColumn]) -> None:
+    settings = UserSettings()
+    assert settings.transaction_table_column_order == ()
+    settings.transaction_table_column_order = columns
+    assert settings.transaction_table_column_order == tuple(columns)
+    settings.transaction_table_column_order = columns
+    assert settings.transaction_table_column_order == tuple(columns)
+
+
+@given(columns=everything_except(Sequence))
+def test_transaction_table_column_order_invalid_type(columns: Any) -> None:
+    settings = UserSettings()
+    with pytest.raises(TypeError, match="Sequence"):
+        settings.transaction_table_column_order = columns
+
+
+def test_transaction_table_column_order_invalid_member_type() -> None:
+    settings = UserSettings()
+    columns = [True, (), {}, 1.0]
+    with pytest.raises(TypeError, match="TransactionTableColumn"):
+        settings.transaction_table_column_order = columns
+
+
+@given(
+    columns=st.lists(
+        st.sampled_from(TransactionTableColumn),
+        unique=False,
+        min_size=len(TransactionTableColumn),
+        max_size=len(TransactionTableColumn),
+    )
+)
+def test_transaction_table_column_order_duplicates(
+    columns: list[TransactionTableColumn],
+) -> None:
+    assume(len(columns) != len(set(columns)))
+    settings = UserSettings()
+    with pytest.raises(ValueError, match="duplicate"):
+        settings.transaction_table_column_order = columns
+
+
+@given(
+    columns=st.lists(st.sampled_from(TransactionTableColumn), unique=True, min_size=1)
+)
+def test_transaction_table_column_order_invalid_length(
+    columns: list[TransactionTableColumn],
+) -> None:
+    assume(len(columns) != len(TransactionTableColumn))
+    settings = UserSettings()
+    with pytest.raises(ValueError, match="exactly"):
+        settings.transaction_table_column_order = columns

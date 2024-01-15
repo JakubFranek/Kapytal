@@ -85,9 +85,7 @@ class SecurityFormPresenter:
 
     def update_overview_model_data(self) -> None:
         irrs = self._calculate_irrs()
-        total_irr = calculate_total_irr(
-            self._record_keeper.security_accounts, self._record_keeper.base_currency
-        )
+        total_irr = calculate_total_irr(self._record_keeper)
         self._overview_tree_model.load_data(
             self._record_keeper.security_accounts,
             irrs,

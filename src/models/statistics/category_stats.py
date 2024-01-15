@@ -141,7 +141,7 @@ def calculate_category_stats(
         stats_dict[category] = stats
 
     if base_currency is None:
-        return stats_dict
+        return stats_dict  # no base Currency means no Transactions
 
     for transaction in transactions:
         already_counted_ancestors = set()

@@ -1,6 +1,7 @@
 from collections import defaultdict
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from decimal import Decimal
+from types import NoneType
 from typing import Any
 
 import pytest
@@ -90,6 +91,8 @@ def test_get_balance(  # noqa: PLR0913
     exchange_rate: Decimal,
 ) -> None:
     assume(currency_a != currency_b)
+    price_a = round(price_a, 4)
+    price_b = round(price_b, 4)
     datetime_ = datetime.now(user_settings.settings.time_zone)
     date_ = datetime_.date()
     exchange_rate_obj = ExchangeRate(currency_a, currency_b)
@@ -380,7 +383,17 @@ def test_get_average_price_specific_date() -> None:
     assert avg_price == CashAmount(5, usd)
 
 
-def test_get_average_price_invalid_date() -> None:
+@given(date_=everything_except((date, NoneType)))
+def test_get_average_price_invalid_date_type(date_: Any) -> None:
+    account = SecurityAccount("Test")
+    usd = Currency("USD", 2)
+    security = Security("Alphabet", "ABC", "Stock", usd, 1)
+
+    with pytest.raises(TypeError, match="date or None"):
+        account.get_average_price(security, date_)
+
+
+def test_get_average_price_invalid_date_value() -> None:
     account = SecurityAccount("Test")
     usd = Currency("USD", 2)
     security = Security("Alphabet", "ABC", "Stock", usd, 1)
@@ -388,3 +401,14 @@ def test_get_average_price_invalid_date() -> None:
 
     with pytest.raises(ValueError, match="not in this SecurityAccount"):
         account.get_average_price(security, today.date() - timedelta(days=7))
+
+
+@given(currency=everything_except((Currency, NoneType)))
+def test_get_average_price_invalid_currency_type(currency: Any) -> None:
+    account = SecurityAccount("Test")
+    usd = Currency("USD", 2)
+    security = Security("Alphabet", "ABC", "Stock", usd, 1)
+    date_ = datetime.now(user_settings.settings.time_zone)
+
+    with pytest.raises(TypeError, match="Currency or None"):
+        account.get_average_price(security, date_, currency)

@@ -249,25 +249,37 @@ class UserSettings(JSONSerializableMixin, CopyableMixin):
 
     @transaction_table_column_order.setter
     def transaction_table_column_order(
-        self, value: Sequence[TransactionTableColumn]
+        self, columns: Sequence[TransactionTableColumn]
     ) -> None:
-        if not isinstance(value, Sequence):
+        if not isinstance(columns, Sequence):
             raise TypeError(
                 "UserSettings.transaction_table_column_order must be a Sequence."
             )
-        if not all(isinstance(column, TransactionTableColumn) for column in value):
-            raise ValueError(
+        if not all(isinstance(column, TransactionTableColumn) for column in columns):
+            raise TypeError(
                 "UserSettings.transaction_table_column_order must be a Sequence "
                 "of TransactionTableColumn."
             )
-        if self._transaction_table_column_order == value:
+        if len(columns) != 0 and len(columns) != len(TransactionTableColumn):
+            raise ValueError(
+                "UserSettings.transaction_table_column_order must be a Sequence of "
+                f"exactly {len(TransactionTableColumn)} TransactionTableColumns "
+                "or empty."
+            )
+        _column_set = set(columns)
+        if len(_column_set) != len(columns):
+            raise ValueError(
+                "UserSettings.transaction_table_column_order must not contain "
+                "duplicate values."
+            )
+        if self._transaction_table_column_order == tuple(columns):
             return
 
         logging.info(
             "Changing UserSettings.transaction_table_column_order from "
-            f"{self._transaction_table_column_order} to {value}"
+            f"{self._transaction_table_column_order} to {columns}"
         )
-        self._transaction_table_column_order = tuple(value)
+        self._transaction_table_column_order = tuple(columns)
 
     def __repr__(self) -> str:
         return "UserSettings"

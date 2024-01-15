@@ -9,6 +9,7 @@ from src.models.model_objects.security_objects import (
     SecurityTransaction,
     SecurityTransfer,
 )
+from src.models.record_keeper import RecordKeeper
 from src.models.user_settings import user_settings
 
 
@@ -72,29 +73,16 @@ def calculate_irr(
     price = security.price.convert(currency)
     for account in accounts:
         sell_all_amount += account.securities[security] * price.value_normalized
-    if sell_all_amount.is_zero() or sell_all_amount.is_nan():
-        return Decimal("NaN")
-    today = datetime.now(user_settings.settings.time_zone).date()
-    if today > dates[-1]:
-        dates.append(today)
-        cashflows.append(sell_all_amount)
-    elif today == dates[-1]:
-        cashflows[-1] += sell_all_amount
-    else:
-        raise ValueError("Unable to calculate IRR based on future prices.")
 
-    try:
-        irr = xirr(dates, cashflows)
-    except InvalidPaymentsError:  # pragma: no cover
-        return Decimal("NaN")
-    if irr is None:  # solution not found
-        return Decimal("NaN")  # pragma: no cover
-    return Decimal(irr)
+    return _calculate_irr(dates, cashflows, sell_all_amount)
 
 
-def calculate_total_irr(
-    accounts: list[SecurityAccount], base_currency: Currency
-) -> Decimal:
+def calculate_total_irr(record_keeper: RecordKeeper) -> Decimal:
+    # REFACTOR: move shared code to separate functions
+
+    currency = record_keeper.base_currency
+    accounts = record_keeper.security_accounts
+
     # 'transactions' is first created as a set to remove duplicates
     # (as SecurityTransfers can relate to multiple accounts)
     transactions = {
@@ -116,22 +104,12 @@ def calculate_total_irr(
         if isinstance(transaction, SecurityTransaction):
             amount = (
                 transaction.get_amount(transaction.cash_account)
-                .convert(base_currency, _date)
+                .convert(currency, _date)
                 .value_normalized
             )
         else:
-            if transaction.sender in accounts and transaction.recipient in accounts:
-                continue
-            if transaction.recipient in accounts:
-                avg_price = transaction.sender.get_average_price(
-                    transaction.security, _date
-                ).convert(base_currency, _date)
-                amount = -avg_price.value_normalized * transaction.shares
-            else:
-                avg_price = transaction.recipient.get_average_price(
-                    transaction.security, _date
-                ).convert(base_currency, _date)
-                amount = avg_price.value_normalized * transaction.shares
+            # SecurityTransfers can be ignored as they do not affect performance
+            continue
 
         if len(dates) > 0 and _date == dates[-1]:
             cashflows[-1] += amount
@@ -143,13 +121,19 @@ def calculate_total_irr(
         return Decimal("NaN")
 
     # add last fictitious outflow as if all investment was liquidated
-    sell_all_amount = base_currency.zero_amount
+    sell_all_amount = currency.zero_amount
     for account in accounts:
         for security in account.securities:
             sell_all_amount += account.securities[security] * security.price.convert(
-                base_currency
+                currency
             )
     sell_all_amount = sell_all_amount.value_normalized
+    return _calculate_irr(dates, cashflows, sell_all_amount)
+
+
+def _calculate_irr(
+    dates: list[date], cashflows: list[Decimal], sell_all_amount: Decimal
+) -> Decimal:
     if sell_all_amount.is_zero() or sell_all_amount.is_nan():
         return Decimal("NaN")
     today = datetime.now(user_settings.settings.time_zone).date()
