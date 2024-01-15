@@ -1,5 +1,6 @@
 from datetime import date, datetime
 from decimal import Decimal
+from enum import Enum, auto
 
 from pyxirr import InvalidPaymentsError, xirr
 from src.models.model_objects.currency_objects import Currency
@@ -11,6 +12,78 @@ from src.models.model_objects.security_objects import (
 )
 from src.models.record_keeper import RecordKeeper
 from src.models.user_settings import user_settings
+
+
+class SecurityStatsType(Enum):
+    TOTAL = auto()
+    REALIZED = auto()
+    UNREALIZED = auto()
+
+
+class SecurityStatsData:
+    pass
+
+
+class SecurityStats:
+    """
+    _Security
+    [SecurityAccountStats]
+    Name
+    Shares
+    Shares sold
+    Market Price
+    Avg. Buy Price
+    Avg. Sell Price
+    Native Value
+    Base Value
+    Native Gain Total
+    Native Gain Realized
+    Native Gain Unrealized
+    Native Return Total
+    Native Return Realized
+    Native Return Unrealized
+    Native IRR p.a. Total
+    Native IRR p.a. Realized
+    Native IRR p.a. Unrealized"""
+
+
+class SecurityAccountStats:
+    """
+    _Security
+    _SecurityAccount
+    Name
+    Shares
+    Shares sold
+    Market Price
+    Avg. Buy Price
+    Avg. Sell Price
+    Native Value
+    Base Value
+    Native Gain Total
+    Native Gain Realized
+    Native Gain Unrealized
+    Native Return Total
+    Native Return Realized
+    Native Return Unrealized
+    Native IRR p.a. Total
+    Native IRR p.a. Realized
+    Native IRR p.a. Unrealized"""
+
+
+class TotalSecurityStats:
+    """
+    Name
+    Native Value
+    Base Value
+    Native Gain Total
+    Native Gain Realized
+    Native Gain Unrealized
+    Native Return Total
+    Native Return Realized
+    Native Return Unrealized
+    Native IRR p.a. Total
+    Native IRR p.a. Realized
+    Native IRR p.a. Unrealized"""
 
 
 def calculate_irr(

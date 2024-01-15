@@ -210,6 +210,30 @@
           </widget>
          </item>
          <item>
+          <widget class="Line" name="securitiesOverviewControlsLine_1">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="statsTypeLabel">
+           <property name="text">
+            <string>Stats Type</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="statsTypeComboBox"/>
+         </item>
+         <item>
+          <widget class="Line" name="securitiesOverviewControlsLine_2">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+          </widget>
+         </item>
+         <item>
           <widget class="QLineEdit" name="overviewSearchLineEdit">
            <property name="placeholderText">
             <string>Search Securities and Security Accounts</string>
