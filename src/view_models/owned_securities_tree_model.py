@@ -1,4 +1,3 @@
-import contextlib
 import unicodedata
 from collections.abc import Collection
 from decimal import Decimal

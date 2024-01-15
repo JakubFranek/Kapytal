@@ -1,6 +1,5 @@
 from datetime import datetime
 
-import pytest
 from dateutil.relativedelta import relativedelta
 from src.models.model_objects.attributes import (
     Attribute,

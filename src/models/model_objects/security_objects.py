@@ -491,11 +491,12 @@ class SecurityAccount(Account):
             obj._parent = parent  # noqa: SLF001
         return obj
 
-    def get_average_price(
+    def get_average_price(  # add method for average sell price
         self,
         security: Security,
         date_: date | None = None,  # latest date if None
         currency: Currency | None = None,  # Security.currency if None
+        type_: SecurityTransactionType = SecurityTransactionType.BUY,
     ) -> CashAmount:
         if not isinstance(security, Security):
             raise TypeError("Parameter 'security' must be a Security.")
@@ -513,7 +514,7 @@ class SecurityAccount(Account):
         if date_ is not None:
             for _datetime, security_dict in reversed(self._securities_history):
                 if _datetime.date() <= date_ and security in security_dict:
-                    break
+                    break  # OK
             else:
                 raise ValueError(
                     f"Security {security.name} is not in this SecurityAccount."
@@ -529,7 +530,10 @@ class SecurityAccount(Account):
                 continue
             if date_ is not None and _transaction_date > date_:
                 continue
-            if isinstance(transaction, SecurityTransaction):
+            if (
+                isinstance(transaction, SecurityTransaction)
+                and transaction.type_ == type_
+            ):
                 amount = transaction.price_per_share
             elif (
                 isinstance(transaction, SecurityTransfer)

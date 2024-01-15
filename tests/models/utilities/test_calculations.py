@@ -41,10 +41,10 @@ def test_calculate_attribute_stats() -> None:
     payee_stats = payee_stats[payee]
     tag_stats = tag_stats[tag]
     assert payee_stats.attribute == payee
-    assert payee_stats.no_of_transactions == 7  # noqa: PLR2004
+    assert payee_stats.no_of_transactions == 7
     assert payee_stats.balance.value_rounded == -1 - 2 + 3 + 5 + 6 + 7 + 1
     assert tag_stats.attribute == tag
-    assert tag_stats.no_of_transactions == 7  # noqa: PLR2004
+    assert tag_stats.no_of_transactions == 7
     assert tag_stats.balance.value_rounded == -1 - 2 + 3 - 4 + 6 + 7 + 1
 
 
@@ -59,13 +59,13 @@ def test_calculate_category_stats() -> None:
     category_child_stats = category_stats_dict[category_expense_child]
 
     assert category_stats.category == category_expense
-    assert category_stats.transactions_self == 3  # noqa: PLR2004
-    assert category_stats.transactions_total == 4  # noqa: PLR2004
+    assert category_stats.transactions_self == 3
+    assert category_stats.transactions_total == 4
     assert category_stats.balance.value_rounded == -1 - 2 - 4 - 4 + 1
 
     assert category_child_stats.category == category_expense_child
-    assert category_child_stats.transactions_self == 2  # noqa: PLR2004
-    assert category_child_stats.transactions_total == 2  # noqa: PLR2004
+    assert category_child_stats.transactions_self == 2
+    assert category_child_stats.transactions_total == 2
     assert category_child_stats.balance.value_rounded == -2 - 4
 
 
