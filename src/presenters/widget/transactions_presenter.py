@@ -208,7 +208,10 @@ class TransactionsPresenter:
                 any_with_categories = True
             if (
                 not any_non_base_amount
-                and isinstance(transaction, CashTransaction | RefundTransaction)
+                and isinstance(
+                    transaction,
+                    CashTransaction | RefundTransaction | SecurityTransaction,
+                )
                 and transaction.currency != self._record_keeper.base_currency
             ):
                 any_non_base_amount = True
