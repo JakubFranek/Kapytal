@@ -39,6 +39,12 @@ class SecurityTransactionType(Enum):
     SELL = auto()
 
 
+class SharesType(Enum):
+    BOUGHT = auto()
+    SOLD = auto()
+    TRANSFERRED = auto()
+
+
 class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
     __slots__ = (
         "_uuid",
@@ -432,7 +438,7 @@ class SecurityAccount(Account):
         self._securities_history.clear()
         self._transactions.sort(key=lambda x: x.timestamp)
         for i, transaction in enumerate(self._transactions):
-            if i > 0 and transaction.datetime_ == self._transactions[i - 1].datetime_:
+            if transaction.datetime_ == self._transactions[i - 1].datetime_ and i > 0:
                 new_datetime = transaction.datetime_ + timedelta(seconds=1)
                 transaction.set_attributes(
                     datetime_=new_datetime, block_account_update=True
@@ -558,6 +564,28 @@ class SecurityAccount(Account):
             total_price / total_shares
             if total_shares != 0
             else CashAmount("NaN", currency)
+        )
+
+    def get_shares(self, security: Security, type_: SharesType) -> Decimal:
+        transactions = {t for t in self._transactions if t.security == security}
+        if type_ == SharesType.TRANSFERRED:
+            return sum(
+                (t.shares for t in transactions if isinstance(t, SecurityTransfer)),
+                start=Decimal(0),
+            )
+
+        transaction_type = (
+            SecurityTransactionType.BUY
+            if type_ == SharesType.BOUGHT
+            else (SecurityTransactionType.SELL)
+        )
+        return sum(
+            (
+                t.shares
+                for t in transactions
+                if isinstance(t, SecurityTransaction) and t.type_ == transaction_type
+            ),
+            start=Decimal(0),
         )
 
     def _validate_transaction(self, transaction: "SecurityRelatedTransaction") -> None:

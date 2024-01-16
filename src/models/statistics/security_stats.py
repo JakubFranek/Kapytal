@@ -8,7 +8,9 @@ from src.models.model_objects.security_objects import (
     Security,
     SecurityAccount,
     SecurityTransaction,
+    SecurityTransactionType,
     SecurityTransfer,
+    SharesType,
 )
 from src.models.record_keeper import RecordKeeper
 from src.models.user_settings import user_settings
@@ -43,31 +45,98 @@ class SecurityStats:
     Native Return Realized
     Native Return Unrealized
     Native IRR p.a. Total
-    Native IRR p.a. Realized
-    Native IRR p.a. Unrealized"""
+    Base Gain Total
+    Base Gain Realized
+    Base Gain Unrealized
+    Base Return Total
+    Base Return Realized
+    Base Return Unrealized
+    Base IRR p.a. Total
+    """
 
 
 class SecurityAccountStats:
-    """
-    _Security
-    _SecurityAccount
-    Name
-    Shares
-    Shares sold
-    Market Price
-    Avg. Buy Price
-    Avg. Sell Price
-    Native Value
-    Base Value
-    Native Gain Total
-    Native Gain Realized
-    Native Gain Unrealized
-    Native Return Total
-    Native Return Realized
-    Native Return Unrealized
-    Native IRR p.a. Total
-    Native IRR p.a. Realized
-    Native IRR p.a. Unrealized"""
+    def __init__(
+        self, security: Security, account: SecurityAccount, base_currency: Currency
+    ) -> None:
+        self.security = security
+        self.account = account
+        self.base_currency = base_currency
+
+        self.transactions = {t for t in account.transactions if t.security == security}
+
+        self.name = account.path
+
+        self.shares_owned = account.securities.get(security, Decimal(0))
+        self.shares_bought = account.get_shares(security, SharesType.BOUGHT)
+        self.shares_sold = account.get_shares(security, SharesType.SOLD)
+        self.shares_transferred = account.get_shares(security, SharesType.TRANSFERRED)
+
+        self.price_market_native = security.price
+        self.price_market_base = security.price.convert(base_currency)
+        self.price_avg_buy_native = account.get_average_price(
+            security, type_=SecurityTransactionType.BUY
+        )
+        self.price_avg_buy_base = account.get_average_price(
+            security, currency=base_currency, type_=SecurityTransactionType.BUY
+        )
+        self.price_avg_sell_native = account.get_average_price(
+            security, type_=SecurityTransactionType.SELL
+        )
+        self.price_avg_sell_base = account.get_average_price(
+            security, currency=base_currency, type_=SecurityTransactionType.SELL
+        )
+
+        self.value_current_native = self.shares_owned * self.price_market_native
+        self.value_current_base = self.value_current_native.convert(base_currency)
+        self.value_sold_native = self.shares_sold * self.price_avg_sell_native
+        self.value_sold_base = self.shares_sold * self.price_avg_sell_base
+        self.value_bought_native = self.shares_bought * self.price_avg_buy_native
+        self.value_bought_base = self.shares_bought * self.price_avg_buy_base
+
+        self.gain_native_unrealized = self.shares_owned * (
+            self.price_market_native - self.price_avg_buy_native
+        )
+        self.gain_base_unrealized = self.shares_owned * (
+            self.price_market_base - self.price_avg_buy_base
+        )
+        self.return_native_unrealized_pct = 100 * (
+            self.gain_native_unrealized
+            / (self.shares_owned * self.price_avg_buy_native)
+        )
+        self.return_base_unrealized_pct = 100 * (
+            self.gain_base_unrealized / (self.shares_owned * self.price_avg_buy_base)
+        )
+
+        self.gain_native_realized = self.shares_sold * (
+            self.price_avg_sell_native - self.price_avg_buy_native
+        )
+        self.gain_base_realized = self.shares_sold * (
+            self.price_avg_sell_base - self.price_avg_buy_base
+        )
+        self.return_native_realized_pct = (
+            100
+            * self.gain_native_realized
+            / (self.shares_sold * self.price_avg_buy_native)
+        )
+        self.return_base_realized_pct = (
+            100 * self.gain_base_realized / (self.shares_sold * self.price_avg_buy_base)
+        )
+
+        self.gain_native_total = self.gain_native_unrealized + self.gain_native_realized
+        self.gain_base_total = self.gain_base_unrealized + self.gain_base_realized
+        self.return_native_total_pct = (
+            100 * self.gain_native_total / self.value_bought_native
+        )
+        self.return_base_total_pct = 100 * self.gain_base_total / self.value_bought_base
+
+        self.irr_native_total_pct = 100 * calculate_irr(security, [account])
+        self.irr_base_total_pct = 100 * calculate_irr(
+            security, [account], base_currency
+        )
+
+    def __repr__(self) -> str:
+        return f"SecurityAccountStats({self.security.name}, {self.name})"
 
 
 class TotalSecurityStats:
@@ -82,8 +151,13 @@ class TotalSecurityStats:
     Native Return Realized
     Native Return Unrealized
     Native IRR p.a. Total
-    Native IRR p.a. Realized
-    Native IRR p.a. Unrealized"""
+    Base Gain Total
+    Base Gain Realized
+    Base Gain Unrealized
+    Base Return Total
+    Base Return Realized
+    Base Return Unrealized
+    Base IRR p.a. Total"""
 
 
 def calculate_irr(
@@ -145,7 +219,7 @@ def calculate_irr(
     sell_all_amount = Decimal(0)
     price = security.price.convert(currency)
     for account in accounts:
-        sell_all_amount += account.securities[security] * price.value_normalized
+        sell_all_amount += account.securities.get(security, 0) * price.value_normalized
 
     return _calculate_irr(dates, cashflows, sell_all_amount)
 
@@ -207,8 +281,9 @@ def calculate_total_irr(record_keeper: RecordKeeper) -> Decimal:
 def _calculate_irr(
     dates: list[date], cashflows: list[Decimal], sell_all_amount: Decimal
 ) -> Decimal:
-    if sell_all_amount.is_zero() or sell_all_amount.is_nan():
+    if sell_all_amount.is_nan():
         return Decimal("NaN")
+
     today = datetime.now(user_settings.settings.time_zone).date()
     if today > dates[-1]:
         dates.append(today)
@@ -222,6 +297,7 @@ def _calculate_irr(
         irr = xirr(dates, cashflows)
     except InvalidPaymentsError:  # pragma: no cover
         return Decimal("NaN")
+
     if irr is None:  # solution not found
         return Decimal("NaN")  # pragma: no cover
     return Decimal(irr)
