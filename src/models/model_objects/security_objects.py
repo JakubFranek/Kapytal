@@ -512,10 +512,10 @@ class SecurityAccount(Account):
             raise TypeError("Parameter 'currency' must be a Currency or None.")
         if date_ is None and (
             len(self._securities_history) == 0
-            or security not in self._securities_history[-1][1]
+            or security not in self._related_securities
         ):
             raise ValueError(
-                f"Security {security.name} is not in this SecurityAccount."
+                f"Security {security.name} is not related to this SecurityAccount."
             )
         if date_ is not None:
             for _datetime, security_dict in reversed(self._securities_history):

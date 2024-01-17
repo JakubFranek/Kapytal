@@ -235,6 +235,9 @@ def test_set_rates(primary: Currency, secondary: Currency, data: st.DataObject) 
         )
     )
 
+    _dates = {date_ for date_, _ in data}
+    assume(len(_dates) == len(data))
+
     exchange_rate = ExchangeRate(primary, secondary)
     exchange_rate.set_rates(data)
 

@@ -28,7 +28,9 @@ def test_owned_securities_tree_model(qtbot: QtBot, qtmodeltester: ModelTester) -
 
     presenter = SecurityFormPresenter(view=form, record_keeper=record_keeper)
     irrs = presenter._calculate_irrs()
-    total_irr = calculate_total_irr(record_keeper)
+    total_irr = calculate_total_irr(
+        record_keeper.security_accounts, record_keeper.base_currency
+    )
 
     proxy = QSortFilterProxyModel(parent)
     model = OwnedSecuritiesTreeModel(
