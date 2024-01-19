@@ -450,6 +450,7 @@ def test_security_account_stats() -> None:
 
     assert stats.gain_native_total == CashAmount(4, usd)
     assert stats.gain_base_total == CashAmount(4 * rate - 1 + 2 * rate - 1, eur)
+    assert stats.gain_currency_total == CashAmount(Decimal("-0.2"), eur)
     assert stats.return_native_total_pct == Decimal(200)
     assert stats.return_base_total_pct == Decimal(170)
 
@@ -555,6 +556,7 @@ def test_security_stats() -> None:
 
     assert stats.gain_native_total == CashAmount(5, usd)
     assert stats.gain_base_total == CashAmount(4 * rate - 1 + 4 * rate - 2, eur)
+    assert stats.gain_currency_total == CashAmount(Decimal("-0.3"), eur)
     assert stats.return_native_total_pct == Decimal(200 * Decimal(5) / Decimal(6))
     assert stats.return_base_total_pct == Decimal(140)
 
@@ -651,6 +653,8 @@ def test_security_stats_data() -> None:
 
     assert total_stats.gain_base_total == CashAmount(12 * rate - 4, eur)
     assert total_stats.gain_native_total is None
+
+    assert total_stats.gain_currency_total == CashAmount(Decimal("-0.4"), eur)
 
     assert total_stats.return_base_unrealized_pct == Decimal(260)
     assert total_stats.return_native_unrealized_pct is None

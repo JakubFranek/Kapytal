@@ -160,6 +160,9 @@ class SecurityStats:
 
         self.gain_native_total = self.gain_native_unrealized + self.gain_native_realized
         self.gain_base_total = self.gain_base_unrealized + self.gain_base_realized
+        self.gain_currency_total = (
+            self.gain_base_total - self.gain_native_total.convert(base_currency)
+        )
         self.return_native_total_pct = (
             100 * self.gain_native_total / self.value_bought_native
         )
@@ -254,6 +257,9 @@ class SecurityAccountStats:
 
         self.gain_native_total = self.gain_native_unrealized + self.gain_native_realized
         self.gain_base_total = self.gain_base_unrealized + self.gain_base_realized
+        self.gain_currency_total = (
+            self.gain_base_total - self.gain_native_total.convert(base_currency)
+        )
         self.return_native_total_pct = (
             100 * self.gain_native_total / self.value_bought_native
         )
@@ -376,6 +382,10 @@ class TotalSecurityStats:
             else None
         )
         self.gain_base_total = self.gain_base_unrealized + self.gain_base_realized
+        self.gain_currency_total = sum(
+            (s.gain_currency_total for s in security_stats),
+            start=base_currency.zero_amount,
+        )
         self.return_native_total_pct = (
             100
             * (self.gain_native_realized - self.gain_native_unrealized)
