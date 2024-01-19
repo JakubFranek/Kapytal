@@ -1,7 +1,7 @@
+from abc import ABC, abstractmethod
 from collections.abc import Collection
 from datetime import date, datetime
 from decimal import Decimal
-from enum import Enum, auto
 
 from pyxirr import InvalidPaymentsError, xirr
 from src.models.model_objects.currency_objects import Currency
@@ -17,10 +17,16 @@ from src.models.model_objects.security_objects import (
 from src.models.user_settings import user_settings
 
 
-class SecurityStatsType(Enum):
-    TOTAL = auto()
-    REALIZED = auto()
-    UNREALIZED = auto()
+class SecurityStatsItem(ABC):
+    @property
+    @abstractmethod
+    def name(self) -> str:
+        raise NotImplementedError  # pragma: no cover
+
+    @property
+    @abstractmethod
+    def is_base(self) -> bool:
+        raise NotImplementedError  # pragma: no cover
 
 
 class SecurityStatsData:
@@ -38,15 +44,19 @@ class SecurityStatsData:
         for security in self.securities:
             stats = SecurityStats(security, accounts, base_currency)
             _security_stats.append(stats)
-        self.security_stats = tuple(_security_stats)
 
-        self.total_stats = TotalSecurityStats(self.security_stats, base_currency)
+        self.total_stats = TotalSecurityStats(_security_stats, base_currency)
+
+        self.stats: tuple[SecurityStats | TotalSecurityStats, ...] = (
+            *_security_stats,
+            self.total_stats,
+        )
 
     def __repr__(self) -> str:
-        return f"SecurityStatsData(len={len(self.security_stats)})"
+        return f"SecurityStatsData(len={len(self.stats)-1})"
 
 
-class SecurityStats:
+class SecurityStats(SecurityStatsItem):
     def __init__(
         self,
         security: Security,
@@ -62,60 +72,82 @@ class SecurityStats:
         _account_stats: list[SecurityAccountStats] = []
         _transactions: set[SecurityRelatedTransaction] = set()
         for account in self.accounts:
-            stats = SecurityAccountStats(security, account, base_currency)
+            stats = SecurityAccountStats(security, account, base_currency, parent=self)
             _account_stats.append(stats)
             _transactions.update(stats.transactions)
         self.account_stats = tuple(_account_stats)
         self.transactions = frozenset(_transactions)
 
-        self.name = security.name
+        self._name = security.name
 
-        self.shares_owned = sum(stats.shares_owned for stats in self.account_stats)
-        self.shares_bought = sum(stats.shares_bought for stats in self.account_stats)
-        self.shares_sold = sum(stats.shares_sold for stats in self.account_stats)
+        self.shares_owned = sum(
+            (stats.shares_owned for stats in self.account_stats), start=Decimal(0)
+        )
+        self.shares_bought = sum(
+            (stats.shares_bought for stats in self.account_stats), start=Decimal(0)
+        )
+        self.shares_sold = sum(
+            (stats.shares_sold for stats in self.account_stats), start=Decimal(0)
+        )
         self.shares_transferred = Decimal(0)
 
         self.price_market_native = security.price
         self.price_market_base = security.price.convert(base_currency)
         self.price_avg_buy_native = (
-            sum(
-                (
-                    stats.price_avg_buy_native * stats.shares_bought
-                    for stats in self.account_stats
-                ),
-                start=security.currency.zero_amount,
+            (
+                sum(
+                    (
+                        stats.price_avg_buy_native * stats.shares_bought
+                        for stats in self.account_stats
+                    ),
+                    start=security.currency.zero_amount,
+                )
+                / self.shares_bought
             )
-            / self.shares_bought
+            if self.shares_bought != 0
+            else security.currency.zero_amount
         )
         self.price_avg_buy_base = (
-            sum(
-                (
-                    stats.price_avg_buy_base * stats.shares_bought
-                    for stats in self.account_stats
-                ),
-                start=base_currency.zero_amount,
+            (
+                sum(
+                    (
+                        stats.price_avg_buy_base * stats.shares_bought
+                        for stats in self.account_stats
+                    ),
+                    start=base_currency.zero_amount,
+                )
+                / self.shares_bought
             )
-            / self.shares_bought
+            if self.shares_bought != 0
+            else base_currency.zero_amount
         )
         self.price_avg_sell_native = (
-            sum(
-                (
-                    stats.price_avg_sell_native * stats.shares_sold
-                    for stats in self.account_stats
-                ),
-                start=security.currency.zero_amount,
+            (
+                sum(
+                    (
+                        stats.price_avg_sell_native * stats.shares_sold
+                        for stats in self.account_stats
+                    ),
+                    start=security.currency.zero_amount,
+                )
+                / self.shares_sold
             )
-            / self.shares_sold
+            if self.shares_sold != 0
+            else security.currency.zero_amount
         )
         self.price_avg_sell_base = (
-            sum(
-                (
-                    stats.price_avg_sell_base * stats.shares_sold
-                    for stats in self.account_stats
-                ),
-                start=base_currency.zero_amount,
+            (
+                sum(
+                    (
+                        stats.price_avg_sell_base * stats.shares_sold
+                        for stats in self.account_stats
+                    ),
+                    start=base_currency.zero_amount,
+                )
+                / self.shares_sold
             )
-            / self.shares_sold
+            if self.shares_sold != 0
+            else base_currency.zero_amount
         )
 
         self.value_current_native = self.price_market_native * self.shares_owned
@@ -125,62 +157,89 @@ class SecurityStats:
         self.value_bought_native = self.price_avg_buy_native * self.shares_bought
         self.value_bought_base = self.price_avg_buy_base * self.shares_bought
 
-        self.cost_basis_native_unrealized = (
+        self.cost_basis_unrealized_native = (
             self.shares_owned * self.price_avg_buy_native
         )
-        self.cost_basis_base_unrealized = self.shares_owned * self.price_avg_buy_base
-        self.cost_basis_native_realized = self.shares_sold * self.price_avg_buy_native
-        self.cost_basis_base_realized = self.shares_sold * self.price_avg_buy_base
+        self.cost_basis_unrealized_base = self.shares_owned * self.price_avg_buy_base
+        self.cost_basis_realized_native = self.shares_sold * self.price_avg_buy_native
+        self.cost_basis_realized_base = self.shares_sold * self.price_avg_buy_base
 
-        self.gain_native_unrealized = self.shares_owned * (
+        self.gain_unrealized_native = self.shares_owned * (
             self.price_market_native - self.price_avg_buy_native
         )
-        self.gain_base_unrealized = self.shares_owned * (
+        self.gain_unrealized_base = self.shares_owned * (
             self.price_market_base - self.price_avg_buy_base
         )
-        self.return_native_unrealized_pct = 100 * (
-            self.gain_native_unrealized / self.cost_basis_native_unrealized
+        self.return_pct_unrealized_native = (
+            100 * (self.gain_unrealized_native / self.cost_basis_unrealized_native)
+            if self.cost_basis_unrealized_native.value_normalized != 0
+            else Decimal(0)
         )
-        self.return_base_unrealized_pct = 100 * (
-            self.gain_base_unrealized / self.cost_basis_base_unrealized
+        self.return_pct_unrealized_base = (
+            100 * (self.gain_unrealized_base / self.cost_basis_unrealized_base)
+            if self.cost_basis_unrealized_base.value_normalized != 0
+            else Decimal(0)
         )
 
-        self.gain_native_realized = self.shares_sold * (
+        self.gain_realized_native = self.shares_sold * (
             self.price_avg_sell_native - self.price_avg_buy_native
         )
-        self.gain_base_realized = self.shares_sold * (
+        self.gain_realized_base = self.shares_sold * (
             self.price_avg_sell_base - self.price_avg_buy_base
         )
-        self.return_native_realized_pct = (
-            100 * self.gain_native_realized / self.cost_basis_native_realized
+        self.return_pct_realized_native = (
+            (100 * self.gain_realized_native / self.cost_basis_realized_native)
+            if self.cost_basis_realized_native.value_normalized != 0
+            else Decimal(0)
         )
-        self.return_base_realized_pct = (
-            100 * self.gain_base_realized / self.cost_basis_base_realized
+        self.return_pct_realized_base = (
+            (100 * self.gain_realized_base / self.cost_basis_realized_base)
+            if self.cost_basis_realized_base.value_normalized != 0
+            else Decimal(0)
         )
 
-        self.gain_native_total = self.gain_native_unrealized + self.gain_native_realized
-        self.gain_base_total = self.gain_base_unrealized + self.gain_base_realized
-        self.gain_currency_total = (
-            self.gain_base_total - self.gain_native_total.convert(base_currency)
+        self.gain_total_native = self.gain_unrealized_native + self.gain_realized_native
+        self.gain_total_base = self.gain_unrealized_base + self.gain_realized_base
+        self.gain_total_currency = (
+            self.gain_total_base - self.gain_total_native.convert(base_currency)
         )
-        self.return_native_total_pct = (
-            100 * self.gain_native_total / self.value_bought_native
+        self.return_pct_total_native = (
+            (100 * self.gain_total_native / self.value_bought_native)
+            if self.value_bought_native.value_normalized != 0
+            else Decimal(0)
         )
-        self.return_base_total_pct = 100 * self.gain_base_total / self.value_bought_base
+        self.return_pct_total_base = (
+            (100 * self.gain_total_base / self.value_bought_base)
+            if self.value_bought_base.value_normalized != 0
+            else Decimal(0)
+        )
 
-        self.irr_native_total_pct = 100 * calculate_irr(security, self.accounts)
-        self.irr_base_total_pct = 100 * calculate_irr(
+        self.irr_pct_total_native = 100 * calculate_irr(security, self.accounts)
+        self.irr_pct_total_base = 100 * calculate_irr(
             security, self.accounts, base_currency
         )
 
     def __repr__(self) -> str:
         return f"SecurityStats('{self.name}')"
 
+    @property
+    def name(self) -> str:
+        return self._name
 
-class SecurityAccountStats:
+    @property
+    def is_base(self) -> bool:
+        return self.security.currency == self.base_currency
+
+
+class SecurityAccountStats(SecurityStatsItem):
     def __init__(
-        self, security: Security, account: SecurityAccount, base_currency: Currency
+        self,
+        security: Security,
+        account: SecurityAccount,
+        base_currency: Currency,
+        parent: SecurityStats,
     ) -> None:
+        self.parent = parent
         self.security = security
         self.account = account
         self.base_currency = base_currency
@@ -189,7 +248,7 @@ class SecurityAccountStats:
             t for t in account.transactions if t.security == security
         )
 
-        self.name = account.path
+        self._name = account.path
 
         self.shares_owned = account.securities.get(security, Decimal(0))
         self.shares_bought = account.get_shares(security, SharesType.BOUGHT)
@@ -210,6 +269,9 @@ class SecurityAccountStats:
         self.price_avg_sell_base = account.get_average_price(
             security, currency=base_currency, type_=SecurityTransactionType.SELL
         )
+        if self.price_avg_sell_native.is_nan():
+            self.price_avg_sell_native = security.currency.zero_amount
+            self.price_avg_sell_base = base_currency.zero_amount
 
         self.value_current_native = self.shares_owned * self.price_market_native
         self.value_current_base = self.value_current_native.convert(base_currency)
@@ -221,62 +283,74 @@ class SecurityAccountStats:
         self.cost_basis_native_unrealized = (
             self.shares_owned * self.price_avg_buy_native
         )
-        self.cost_basis_base_unrealized = self.shares_owned * self.price_avg_buy_base
-        self.cost_basis_native_realized = self.shares_sold * self.price_avg_buy_native
-        self.cost_basis_base_realized = self.shares_sold * self.price_avg_buy_base
+        self.cost_basis_unrealized_base = self.shares_owned * self.price_avg_buy_base
+        self.cost_basis_realized_native = self.shares_sold * self.price_avg_buy_native
+        self.cost_basis_realized_base = self.shares_sold * self.price_avg_buy_base
 
-        self.gain_native_unrealized = self.shares_owned * (
+        self.gain_unrealized_native = self.shares_owned * (
             self.price_market_native - self.price_avg_buy_native
         )
-        self.gain_base_unrealized = self.shares_owned * (
+        self.gain_unrealized_base = self.shares_owned * (
             self.price_market_base - self.price_avg_buy_base
         )
-        self.return_native_unrealized_pct = (
-            100 * (self.gain_native_unrealized / self.cost_basis_native_unrealized)
-            if self.shares_owned > 0
-            else Decimal("NaN")
+        self.return_pct_unrealized_native = (
+            100 * (self.gain_unrealized_native / self.cost_basis_native_unrealized)
+            if self.shares_owned != 0
+            else Decimal(0)
         )
-        self.return_base_unrealized_pct = (
-            100 * (self.gain_base_unrealized / self.cost_basis_base_unrealized)
-            if self.shares_owned > 0
-            else Decimal("NaN")
+        self.return_pct_unrealized_base = (
+            100 * (self.gain_unrealized_base / self.cost_basis_unrealized_base)
+            if self.shares_owned != 0
+            else Decimal(0)
         )
 
-        self.gain_native_realized = self.shares_sold * (
+        self.gain_realized_native = self.shares_sold * (
             self.price_avg_sell_native - self.price_avg_buy_native
         )
-        self.gain_base_realized = self.shares_sold * (
+        self.gain_realized_base = self.shares_sold * (
             self.price_avg_sell_base - self.price_avg_buy_base
         )
-        self.return_native_realized_pct = (
-            100 * self.gain_native_realized / self.cost_basis_native_realized
+        self.return_pct_realized_native = (
+            (100 * self.gain_realized_native / self.cost_basis_realized_native)
+            if self.cost_basis_realized_native.value_normalized != 0
+            else Decimal(0)
         )
-        self.return_base_realized_pct = (
-            100 * self.gain_base_realized / self.cost_basis_base_realized
+        self.return_pct_realized_base = (
+            100 * self.gain_realized_base / self.cost_basis_realized_base
+            if self.cost_basis_realized_base.value_normalized != 0
+            else Decimal(0)
         )
 
-        self.gain_native_total = self.gain_native_unrealized + self.gain_native_realized
-        self.gain_base_total = self.gain_base_unrealized + self.gain_base_realized
-        self.gain_currency_total = (
-            self.gain_base_total - self.gain_native_total.convert(base_currency)
+        self.gain_total_native = self.gain_unrealized_native + self.gain_realized_native
+        self.gain_total_base = self.gain_unrealized_base + self.gain_realized_base
+        self.gain_total_currency = (
+            self.gain_total_base - self.gain_total_native.convert(base_currency)
         )
-        self.return_native_total_pct = (
-            100 * self.gain_native_total / self.value_bought_native
+        self.return_pct_total_native = (
+            100 * self.gain_total_native / self.value_bought_native
         )
-        self.return_base_total_pct = 100 * self.gain_base_total / self.value_bought_base
+        self.return_pct_total_base = 100 * self.gain_total_base / self.value_bought_base
 
-        self.irr_native_total_pct = 100 * calculate_irr(security, [account])
-        self.irr_base_total_pct = 100 * calculate_irr(
+        self.irr_pct_total_native = 100 * calculate_irr(security, [account])
+        self.irr_pct_total_base = 100 * calculate_irr(
             security, [account], base_currency
         )
 
     def __repr__(self) -> str:
         return f"SecurityAccountStats('{self.security.name}', '{self.name}')"
 
+    @property
+    def name(self) -> str:
+        return self._name
 
-class TotalSecurityStats:
+    @property
+    def is_base(self) -> bool:
+        return self.security.currency == self.base_currency
+
+
+class TotalSecurityStats(SecurityStatsItem):
     def __init__(
-        self, security_stats: Collection[SecurityStats], base_currency: Currency
+        self, security_stats: Collection[SecurityStats], base_currency: Currency | None
     ) -> None:
         _accounts: set[SecurityAccount] = set()
         _transactions: set[SecurityRelatedTransaction] = set()
@@ -288,127 +362,221 @@ class TotalSecurityStats:
         self.base_currency = base_currency
 
         _currencies = {stat.security.currency for stat in security_stats}
-        is_single_native_currency = len(_currencies) == 2
-        single_native_currency = (
-            _currencies.pop() if is_single_native_currency else None
-        )
-
-        self.name = "Σ Total"
+        if len(_currencies) > 1:
+            single_native_currency = _currencies.difference({base_currency}).pop()
+            if not all(
+                stats.security.currency == single_native_currency
+                for stats in security_stats
+            ):
+                single_native_currency = None
+        else:
+            single_native_currency = None
 
         self.value_current_native = (
             sum(
                 (stats.value_current_native for stats in security_stats),
                 start=single_native_currency.zero_amount,
             )
-            if is_single_native_currency
+            if single_native_currency is not None
             else None
         )
-        self.value_current_base = sum(
-            (stats.value_current_base for stats in security_stats),
-            start=base_currency.zero_amount,
-        )
-
-        self.cost_basis_native_unrealized = (
+        self.value_current_base = (
             sum(
-                (stats.cost_basis_native_unrealized for stats in security_stats),
+                (stats.value_current_base for stats in security_stats),
+                start=base_currency.zero_amount,
+            )
+            if base_currency is not None
+            else None
+        )
+        self.value_bought_native = (
+            sum(
+                (stats.value_bought_native for stats in security_stats),
                 start=single_native_currency.zero_amount,
             )
-            if is_single_native_currency
+            if single_native_currency is not None
             else None
         )
-        self.cost_basis_base_unrealized = sum(
-            (stats.cost_basis_base_unrealized for stats in security_stats),
-            start=base_currency.zero_amount,
-        )
-        self.cost_basis_native_realized = (
+        self.value_bought_base = (
             sum(
-                (stats.cost_basis_native_realized for stats in security_stats),
+                (stats.value_bought_base for stats in security_stats),
+                start=base_currency.zero_amount,
+            )
+            if base_currency is not None
+            else None
+        )
+        self.value_sold_native = (
+            sum(
+                (stats.value_sold_native for stats in security_stats),
                 start=single_native_currency.zero_amount,
             )
-            if is_single_native_currency
+            if single_native_currency is not None
             else None
         )
-        self.cost_basis_base_realized = sum(
-            (stats.cost_basis_base_realized for stats in security_stats),
-            start=base_currency.zero_amount,
+        self.value_sold_base = (
+            sum(
+                (stats.value_sold_base for stats in security_stats),
+                start=base_currency.zero_amount,
+            )
+            if base_currency is not None
+            else None
         )
 
-        self.gain_native_unrealized = (
+        self.cost_basis_unrealized_native = (
             sum(
-                (stats.gain_native_unrealized for stats in security_stats),
+                (stats.cost_basis_unrealized_native for stats in security_stats),
                 start=single_native_currency.zero_amount,
             )
-            if is_single_native_currency
+            if single_native_currency is not None
             else None
         )
-        self.gain_base_unrealized = sum(
-            (stats.gain_base_unrealized for stats in security_stats),
-            start=base_currency.zero_amount,
-        )
-        self.return_native_unrealized_pct = (
-            100 * self.gain_native_unrealized / self.cost_basis_native_unrealized
-            if is_single_native_currency
-            else None
-        )
-        self.return_base_unrealized_pct = (
-            100 * self.gain_base_unrealized / self.cost_basis_base_unrealized
-        )
-
-        self.gain_native_realized = (
+        self.cost_basis_unrealized_base = (
             sum(
-                (stats.gain_native_realized for stats in security_stats),
+                (stats.cost_basis_unrealized_base for stats in security_stats),
+                start=base_currency.zero_amount,
+            )
+            if base_currency is not None
+            else None
+        )
+        self.cost_basis_realized_native = (
+            sum(
+                (stats.cost_basis_realized_native for stats in security_stats),
                 start=single_native_currency.zero_amount,
             )
-            if is_single_native_currency
+            if single_native_currency is not None
             else None
         )
-        self.gain_base_realized = sum(
-            (stats.gain_base_realized for stats in security_stats),
-            start=base_currency.zero_amount,
-        )
-        self.return_native_realized_pct = (
-            100 * self.gain_native_realized / self.cost_basis_native_realized
-            if is_single_native_currency
+        self.cost_basis_realized_base = (
+            sum(
+                (stats.cost_basis_realized_base for stats in security_stats),
+                start=base_currency.zero_amount,
+            )
+            if base_currency is not None
             else None
-        )
-        self.return_base_realized_pct = (
-            100 * self.gain_base_realized / self.cost_basis_base_realized
         )
 
-        self.gain_native_total = (
-            self.gain_native_unrealized + self.gain_native_realized
-            if self.gain_native_unrealized is not None
-            and self.gain_native_realized is not None
+        self.gain_unrealized_native = (
+            sum(
+                (stats.gain_unrealized_native for stats in security_stats),
+                start=single_native_currency.zero_amount,
+            )
+            if single_native_currency is not None
             else None
         )
-        self.gain_base_total = self.gain_base_unrealized + self.gain_base_realized
-        self.gain_currency_total = sum(
-            (s.gain_currency_total for s in security_stats),
-            start=base_currency.zero_amount,
-        )
-        self.return_native_total_pct = (
-            100
-            * (self.gain_native_realized - self.gain_native_unrealized)
-            / (self.cost_basis_native_realized + self.cost_basis_native_unrealized)
-            if self.gain_native_realized is not None
-            and self.cost_basis_native_realized is not None
+        self.gain_unrealized_base = (
+            sum(
+                (stats.gain_unrealized_base for stats in security_stats),
+                start=base_currency.zero_amount,
+            )
+            if base_currency is not None
             else None
         )
-        self.return_base_total_pct = (
-            100
-            * (self.gain_base_realized + self.gain_base_unrealized)
-            / (self.cost_basis_base_realized + self.cost_basis_base_unrealized)
+        self.return_pct_unrealized_native = (
+            100 * self.gain_unrealized_native / self.cost_basis_unrealized_native
+            if single_native_currency is not None
+            else None
+        )
+        self.return_pct_unrealized_base = (
+            (100 * self.gain_unrealized_base / self.cost_basis_unrealized_base)
+            if self.cost_basis_unrealized_base is not None
+            and self.cost_basis_unrealized_base.value_normalized != 0
+            else Decimal(0)
         )
 
-        self.irr_native_total_pct = (
+        self.gain_realized_native = (
+            sum(
+                (stats.gain_realized_native for stats in security_stats),
+                start=single_native_currency.zero_amount,
+            )
+            if single_native_currency is not None
+            else None
+        )
+        self.gain_realized_base = (
+            sum(
+                (stats.gain_realized_base for stats in security_stats),
+                start=base_currency.zero_amount,
+            )
+            if base_currency is not None
+            else None
+        )
+        self.return_pct_realized_native = (
+            (100 * self.gain_realized_native / self.cost_basis_realized_native)
+            if single_native_currency is not None
+            else None
+        )
+        self.return_pct_realized_base = (
+            (100 * self.gain_realized_base / self.cost_basis_realized_base)
+            if self.cost_basis_realized_base is not None
+            and self.cost_basis_realized_base.value_normalized != 0
+            else Decimal(0)
+        )
+
+        self.gain_total_native = (
+            self.gain_unrealized_native + self.gain_realized_native
+            if self.gain_unrealized_native is not None
+            and self.gain_realized_native is not None
+            else None
+        )
+        self.gain_total_base = (
+            self.gain_unrealized_base + self.gain_realized_base
+            if (
+                self.gain_unrealized_base is not None
+                and self.gain_realized_base is not None
+            )
+            else None
+        )
+        self.gain_total_currency = (
+            sum(
+                (s.gain_total_currency for s in security_stats),
+                start=base_currency.zero_amount,
+            )
+            if base_currency is not None
+            else None
+        )
+        self.return_pct_total_native = (
+            (
+                100
+                * (self.gain_realized_native - self.gain_unrealized_native)
+                / (self.cost_basis_realized_native + self.cost_basis_unrealized_native)
+            )
+            if self.gain_realized_native is not None
+            and self.cost_basis_realized_native is not None
+            else None
+        )
+        self.return_pct_total_base = (
+            (
+                100
+                * (self.gain_realized_base + self.gain_unrealized_base)
+                / (self.cost_basis_realized_base + self.cost_basis_unrealized_base)
+            )
+            if self.gain_realized_base is not None
+            and self.gain_unrealized_base is not None
+            and self.cost_basis_realized_base is not None
+            and self.cost_basis_unrealized_base is not None
+            and (
+                self.cost_basis_realized_base.value_normalized
+                + self.cost_basis_unrealized_base.value_normalized
+            )
+            != 0
+            else Decimal(0)
+        )
+
+        self.irr_pct_total_native = (
             100 * calculate_total_irr(_accounts, single_native_currency)
-            if is_single_native_currency
+            if single_native_currency is not None
             else None
         )
-        self.irr_base_total_pct = 100 * calculate_total_irr(_accounts, base_currency)
+        self.irr_pct_total_base = 100 * calculate_total_irr(_accounts, base_currency)
 
     def __repr__(self) -> str:
         return "TotalSecurityStats()"
+
+    @property
+    def name(self) -> str:
+        return "Total"
+
+    @property
+    def is_base(self) -> bool:
+        return True
 
 
 def calculate_irr(
@@ -479,8 +647,10 @@ def calculate_irr(
 def calculate_total_irr(
     accounts: Collection[SecurityAccount], currency: Currency
 ) -> Decimal:
-    # REFACTOR: move shared code to separate functions
     accounts = frozenset(accounts)
+
+    if currency is None:
+        return Decimal("NaN")
 
     # 'transactions' is first created as a set to remove duplicates
     # (as SecurityTransfers can relate to multiple accounts)

@@ -91,6 +91,7 @@ swap: QIcon | None = None
 refresh: QIcon | None = None
 clipboard_text: QIcon | None = None
 globe: QIcon | None = None
+sum_: QIcon | None = None
 
 
 def setup() -> None:  # noqa: PLR0915
@@ -121,7 +122,7 @@ def setup() -> None:  # noqa: PLR0915
     global bar_chart, pie_chart, calendar  # noqa: PLW0603
     global document_smiley, document_clock, document_plus  # noqa: PLW0603
     global book_question, table, percent  # noqa: PLW0603
-    global swap, refresh, clipboard_text, globe  # noqa: PLW0603
+    global swap, refresh, clipboard_text, globe, sum_  # noqa: PLW0603
 
     QDir.addSearchPath(
         "icons_24",
@@ -225,3 +226,8 @@ def setup() -> None:  # noqa: PLR0915
     refresh = QIcon("icons_16:arrow-circle-double.png")
     clipboard_text = QIcon("icons_16:clipboard-text.png")
     globe = QIcon("icons_16:globe-green.png")
+    sum_ = (
+        QIcon("icons_custom:sum_dark_mode.png")
+        if colors.color_scheme == Qt.ColorScheme.Dark
+        else QIcon("icons_custom:sum_light_mode.png")
+    )

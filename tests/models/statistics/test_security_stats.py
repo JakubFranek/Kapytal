@@ -12,7 +12,6 @@ from src.models.model_objects.security_objects import (
     SecurityTransactionType,
     SecurityTransfer,
 )
-from src.models.record_keeper import RecordKeeper
 from src.models.statistics.security_stats import (
     SecurityAccountStats,
     SecurityStats,
@@ -411,7 +410,7 @@ def test_security_account_stats() -> None:
         cash_account,
     )
 
-    stats = SecurityAccountStats(security, account, eur)
+    stats = SecurityAccountStats(security, account, eur, None)
 
     assert stats.name == account.path
     assert (
@@ -438,24 +437,24 @@ def test_security_account_stats() -> None:
     assert stats.value_bought_native == CashAmount(2, usd)
     assert stats.value_bought_base == CashAmount(2 * old_rate, eur)
 
-    assert stats.gain_native_unrealized == CashAmount(3, usd)
-    assert stats.gain_base_unrealized == CashAmount(4 * rate - 1, eur)
-    assert stats.return_native_unrealized_pct == Decimal(300)
-    assert stats.return_base_unrealized_pct == Decimal(260)
+    assert stats.gain_unrealized_native == CashAmount(3, usd)
+    assert stats.gain_unrealized_base == CashAmount(4 * rate - 1, eur)
+    assert stats.return_pct_unrealized_native == Decimal(300)
+    assert stats.return_pct_unrealized_base == Decimal(260)
 
-    assert stats.gain_native_realized == CashAmount(1, usd)
-    assert stats.gain_base_realized == CashAmount(2 * rate - 1, eur)
-    assert stats.return_native_realized_pct == Decimal(100)
-    assert stats.return_base_realized_pct == Decimal(80)
+    assert stats.gain_realized_native == CashAmount(1, usd)
+    assert stats.gain_realized_base == CashAmount(2 * rate - 1, eur)
+    assert stats.return_pct_realized_native == Decimal(100)
+    assert stats.return_pct_realized_base == Decimal(80)
 
-    assert stats.gain_native_total == CashAmount(4, usd)
-    assert stats.gain_base_total == CashAmount(4 * rate - 1 + 2 * rate - 1, eur)
-    assert stats.gain_currency_total == CashAmount(Decimal("-0.2"), eur)
-    assert stats.return_native_total_pct == Decimal(200)
-    assert stats.return_base_total_pct == Decimal(170)
+    assert stats.gain_total_native == CashAmount(4, usd)
+    assert stats.gain_total_base == CashAmount(4 * rate - 1 + 2 * rate - 1, eur)
+    assert stats.gain_total_currency == CashAmount(Decimal("-0.2"), eur)
+    assert stats.return_pct_total_native == Decimal(200)
+    assert stats.return_pct_total_base == Decimal(170)
 
-    assert math.isclose(stats.irr_native_total_pct, 200)
-    assert math.isclose(stats.irr_base_total_pct, 170)
+    assert math.isclose(stats.irr_pct_total_native, 200)
+    assert math.isclose(stats.irr_pct_total_base, 170)
 
 
 def test_security_stats() -> None:
@@ -544,24 +543,24 @@ def test_security_stats() -> None:
     assert stats.value_bought_native == CashAmount(3, usd)
     assert stats.value_bought_base == CashAmount(3 * old_rate, eur)
 
-    assert stats.gain_native_unrealized == CashAmount(3, usd)
-    assert stats.gain_base_unrealized == CashAmount(4 * rate - 1, eur)
-    assert stats.return_native_unrealized_pct == Decimal(300)
-    assert stats.return_base_unrealized_pct == Decimal(260)
+    assert stats.gain_unrealized_native == CashAmount(3, usd)
+    assert stats.gain_unrealized_base == CashAmount(4 * rate - 1, eur)
+    assert stats.return_pct_unrealized_native == Decimal(300)
+    assert stats.return_pct_unrealized_base == Decimal(260)
 
-    assert stats.gain_native_realized == CashAmount(2, usd)
-    assert stats.gain_base_realized == CashAmount(4 * rate - 2, eur)
-    assert stats.return_native_realized_pct == Decimal(100)
-    assert stats.return_base_realized_pct == Decimal(80)
+    assert stats.gain_realized_native == CashAmount(2, usd)
+    assert stats.gain_realized_base == CashAmount(4 * rate - 2, eur)
+    assert stats.return_pct_realized_native == Decimal(100)
+    assert stats.return_pct_realized_base == Decimal(80)
 
-    assert stats.gain_native_total == CashAmount(5, usd)
-    assert stats.gain_base_total == CashAmount(4 * rate - 1 + 4 * rate - 2, eur)
-    assert stats.gain_currency_total == CashAmount(Decimal("-0.3"), eur)
-    assert stats.return_native_total_pct == Decimal(200 * Decimal(5) / Decimal(6))
-    assert stats.return_base_total_pct == Decimal(140)
+    assert stats.gain_total_native == CashAmount(5, usd)
+    assert stats.gain_total_base == CashAmount(4 * rate - 1 + 4 * rate - 2, eur)
+    assert stats.gain_total_currency == CashAmount(Decimal("-0.3"), eur)
+    assert stats.return_pct_total_native == Decimal(200 * Decimal(5) / Decimal(6))
+    assert stats.return_pct_total_base == Decimal(140)
 
-    assert math.isclose(stats.irr_native_total_pct, 200 * 5 / 6)
-    assert math.isclose(stats.irr_base_total_pct, 140)
+    assert math.isclose(stats.irr_pct_total_native, 200 * 5 / 6)
+    assert math.isclose(stats.irr_pct_total_base, 140)
 
 
 def test_security_stats_data() -> None:
@@ -639,30 +638,30 @@ def test_security_stats_data() -> None:
     assert total_stats.value_current_base == CashAmount((4 + 4) * rate, eur)
     assert total_stats.value_current_native is None
 
-    assert total_stats.cost_basis_base_realized == CashAmount(4 * old_rate - 2, eur)
-    assert total_stats.cost_basis_native_realized is None
+    assert total_stats.cost_basis_realized_base == CashAmount(4 * old_rate - 2, eur)
+    assert total_stats.cost_basis_realized_native is None
 
-    assert total_stats.cost_basis_base_unrealized == CashAmount(4 * old_rate - 2, eur)
-    assert total_stats.cost_basis_native_unrealized is None
+    assert total_stats.cost_basis_unrealized_base == CashAmount(4 * old_rate - 2, eur)
+    assert total_stats.cost_basis_unrealized_native is None
 
-    assert total_stats.gain_base_unrealized == CashAmount(8 * rate - 2, eur)
-    assert total_stats.gain_native_unrealized is None
+    assert total_stats.gain_unrealized_base == CashAmount(8 * rate - 2, eur)
+    assert total_stats.gain_unrealized_native is None
 
-    assert total_stats.gain_base_realized == CashAmount(4 * rate - 2, eur)
-    assert total_stats.gain_native_realized is None
+    assert total_stats.gain_realized_base == CashAmount(4 * rate - 2, eur)
+    assert total_stats.gain_realized_native is None
 
-    assert total_stats.gain_base_total == CashAmount(12 * rate - 4, eur)
-    assert total_stats.gain_native_total is None
+    assert total_stats.gain_total_base == CashAmount(12 * rate - 4, eur)
+    assert total_stats.gain_total_native is None
 
-    assert total_stats.gain_currency_total == CashAmount(Decimal("-0.4"), eur)
+    assert total_stats.gain_total_currency == CashAmount(Decimal("-0.4"), eur)
 
-    assert total_stats.return_base_unrealized_pct == Decimal(260)
-    assert total_stats.return_native_unrealized_pct is None
+    assert total_stats.return_pct_unrealized_base == Decimal(260)
+    assert total_stats.return_pct_unrealized_native is None
 
-    assert total_stats.return_base_realized_pct == Decimal(80)
-    assert total_stats.return_native_realized_pct is None
+    assert total_stats.return_pct_realized_base == Decimal(80)
+    assert total_stats.return_pct_realized_native is None
 
-    assert total_stats.return_base_total_pct == Decimal(170)
-    assert total_stats.return_native_total_pct is None
+    assert total_stats.return_pct_total_base == Decimal(170)
+    assert total_stats.return_pct_total_native is None
 
-    assert math.isclose(total_stats.irr_base_total_pct, 170)
+    assert math.isclose(total_stats.irr_pct_total_base, 170)

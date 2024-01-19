@@ -1,17 +1,25 @@
 from collections.abc import Collection
+from enum import Enum
 
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtWidgets import QHeaderView, QLineEdit, QWidget
 from src.views import colors, icons
 from src.views.base_classes.custom_widget import CustomWidget
 from src.views.constants import (
-    OwnedSecuritiesTreeColumn,
+    SecuritiesOverviewTreeColumn,
     SecurityTableColumn,
     ValueTableColumn,
 )
 from src.views.ui_files.forms.Ui_security_form import Ui_SecurityForm
 from src.views.utilities.helper_functions import calculate_table_width
 from src.views.widgets.charts.date_line_chart_view import DateLineChartView
+
+
+class PerformanceStats(Enum):
+    TOTAL = "Total (T)"
+    REALIZED = "Realized (R)"
+    UNREALIZED = "Unrealized (U)"
+    ALL = "All"
 
 
 class SecurityForm(CustomWidget, Ui_SecurityForm):
@@ -31,6 +39,7 @@ class SecurityForm(CustomWidget, Ui_SecurityForm):
     signal_security_table_double_clicked = pyqtSignal()
     signal_price_table_double_clicked = pyqtSignal()
     signal_update_quotes = pyqtSignal()
+    signal_overview_column_settings_changed = pyqtSignal()
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent=parent)
@@ -113,6 +122,33 @@ class SecurityForm(CustomWidget, Ui_SecurityForm):
             self.signal_price_table_double_clicked.emit
         )
 
+        self.statsTypeComboBox.currentTextChanged.connect(
+            self.signal_overview_column_settings_changed.emit
+        )
+        self.nativeCurrencyStatsCheckBox.stateChanged.connect(
+            self.signal_overview_column_settings_changed.emit
+        )
+        self.detailedStatsCheckBox.stateChanged.connect(
+            self.signal_overview_column_settings_changed.emit
+        )
+
+        for option in PerformanceStats:
+            self.statsTypeComboBox.addItem(option.value)
+
+        self.statsTypeComboBox.setCurrentText(PerformanceStats.TOTAL.value)
+
+    @property
+    def performance_stats(self) -> PerformanceStats:
+        return PerformanceStats(self.statsTypeComboBox.currentText())
+
+    @property
+    def native_currency_stats(self) -> bool:
+        return self.nativeCurrencyStatsCheckBox.isChecked()
+
+    @property
+    def detailed_stats(self) -> bool:
+        return self.detailedStatsCheckBox.isChecked()
+
     def load_chart_data(  # noqa: PLR0913
         self,
         x: Collection,
@@ -159,7 +195,7 @@ class SecurityForm(CustomWidget, Ui_SecurityForm):
         self.securityTableView.sortByColumn(0, Qt.SortOrder.AscendingOrder)
 
         self.treeView.header().setStretchLastSection(False)
-        for column in OwnedSecuritiesTreeColumn:
+        for column in SecuritiesOverviewTreeColumn:
             self.treeView.header().setSectionResizeMode(
                 column,
                 QHeaderView.ResizeMode.ResizeToContents,
@@ -179,7 +215,7 @@ class SecurityForm(CustomWidget, Ui_SecurityForm):
         )
 
     def refresh_tree_view(self) -> None:
-        for column in OwnedSecuritiesTreeColumn:
+        for column in SecuritiesOverviewTreeColumn:
             self.treeView.resizeColumnToContents(column)
 
     def update_price_table_width(self) -> None:
