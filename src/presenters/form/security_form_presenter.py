@@ -678,3 +678,11 @@ class SecurityFormPresenter:
                 }
 
             self.view.treeView.setColumnHidden(column.value, not show)
+
+        all_base = all(
+            security.currency == self._record_keeper.base_currency
+            for security in self._record_keeper.securities
+        )
+        self.view.treeView.setColumnHidden(
+            SecuritiesOverviewTreeColumn.GAIN_TOTAL_CURRENCY, all_base
+        )
