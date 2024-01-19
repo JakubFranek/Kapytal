@@ -194,6 +194,13 @@ COLUMNS_DETAILED = {
     SecuritiesOverviewTreeColumn.PRICE_AVERAGE_SELL,
 }
 
+GAIN_TOTAL_CURRENCY_TOOLTIP = (
+    "Total Currency Gain is the difference between\n"
+    "the Total Base Gain and Total Native Gain\n"
+    "(when converted to base Currency using the\n"
+    "latest Exchange Rate)."
+)
+
 bold_font = QFont()
 bold_font.setBold(True)  # noqa: FBT003
 
@@ -263,6 +270,11 @@ class SecuritiesOverviewTreeModel(QAbstractItemModel):
             return str(section)
         if role == Qt.ItemDataRole.TextAlignmentRole:
             return Qt.AlignmentFlag.AlignCenter
+        if (
+            role == Qt.ItemDataRole.ToolTipRole
+            and section == SecuritiesOverviewTreeColumn.GAIN_TOTAL_CURRENCY
+        ):
+            return GAIN_TOTAL_CURRENCY_TOOLTIP
         return None
 
     def data(
@@ -288,6 +300,8 @@ class SecuritiesOverviewTreeModel(QAbstractItemModel):
             return self._get_foreground_role_data(column, item)
         if role == Qt.ItemDataRole.FontRole:
             return self._get_font_role_data(item)
+        if role == Qt.ItemDataRole.ToolTipRole:
+            return self._get_tooltip_role_data(column, item)
         return None
 
     def _get_display_role_data(
@@ -366,6 +380,13 @@ class SecuritiesOverviewTreeModel(QAbstractItemModel):
             _get_numerical_attribute(item, column),
             green_allowed=column in COLUMNS_COLOURFUL,
         )
+
+    def _get_tooltip_role_data(
+        self, column: int, item: SecurityStatsItem  # noqa: ARG002
+    ) -> str | None:
+        if column != SecuritiesOverviewTreeColumn.GAIN_TOTAL_CURRENCY:
+            return None
+        return GAIN_TOTAL_CURRENCY_TOOLTIP
 
     def _get_font_role_data(self, item: SecurityStatsItem) -> QFont | None:
         if isinstance(item, TotalSecurityStats):
