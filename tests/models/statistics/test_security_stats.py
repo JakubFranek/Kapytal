@@ -656,12 +656,12 @@ def test_security_stats_data() -> None:
     assert total_stats.gain_total_currency == CashAmount(Decimal("-0.4"), eur)
 
     assert total_stats.return_pct_unrealized_base == Decimal(260)
-    assert total_stats.return_pct_unrealized_native is None
+    assert total_stats.return_pct_unrealized_native == Decimal(0)
 
     assert total_stats.return_pct_realized_base == Decimal(80)
-    assert total_stats.return_pct_realized_native is None
+    assert total_stats.return_pct_realized_native == Decimal(0)
 
     assert total_stats.return_pct_total_base == Decimal(170)
-    assert total_stats.return_pct_total_native is None
+    assert total_stats.return_pct_total_native == Decimal(0)
 
     assert math.isclose(total_stats.irr_pct_total_base, 170)
