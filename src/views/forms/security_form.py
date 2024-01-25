@@ -149,6 +149,14 @@ class SecurityForm(CustomWidget, Ui_SecurityForm):
     def detailed_stats(self) -> bool:
         return self.detailedStatsCheckBox.isChecked()
 
+    @property
+    def is_overview_tab_selected(self) -> bool:
+        return self.tabWidget.currentWidget() == self.securitiesOverviewTab
+
+    @property
+    def is_manage_tab_selected(self) -> bool:
+        return self.tabWidget.currentWidget() == self.manageSecuritiesTab
+
     def load_chart_data(  # noqa: PLR0913
         self,
         x: Collection,

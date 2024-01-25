@@ -42,7 +42,9 @@ class SecurityFormPresenter:
         self.view = view
         self._record_keeper = record_keeper
 
-        self.reset_self = True  # if True, models can be reset via data_changed
+        self._reset_self = True  # if True, models can be reset via data_changed
+        self._update_overview_on_show = False
+        self._update_manage_on_show = False
 
         self.view.signal_update_quotes.connect(self.event_update_quotes)
 
@@ -64,7 +66,7 @@ class SecurityFormPresenter:
         self.update_overview_model_data()
 
         self._price_table_model.pre_reset_model()
-        self.reset_price_model_data()
+        self._price_table_model.load_data(())
         self._price_table_model.post_reset_model()
 
         self._update_chart(None)
@@ -77,7 +79,6 @@ class SecurityFormPresenter:
         self._set_security_table_column_visibility()
 
     def update_overview_model_data(self) -> None:
-        # TODO: update overview only when activating the tab
         self._overview_tree_model.pre_reset_model()
         data = SecurityStatsData(
             self._record_keeper.securities,
@@ -87,29 +88,29 @@ class SecurityFormPresenter:
         self._overview_tree_model.load_data(data)
         self._overview_tree_model.post_reset_model()
 
-    def reset_price_model_data(self) -> None:
-        self._price_table_model.load_data(())
+        self._update_overview_on_show = False
 
     def data_changed(self) -> None:
         # skip this if data_changed is triggered by self via event chain
-        if not self.reset_self:
+        if not self._reset_self:
             return
 
         self.view.securityTableView.viewport().update()  # forces redraw
-        self.update_security_model_data()
 
-        self.update_overview_model_data()
+        if self.view.isVisible() and self.view.is_overview_tab_selected:
+            self.update_overview_model_data()
+        else:
+            self._update_overview_on_show = True
 
-        security = self._security_table_model.get_selected_item()
-        if security is None:
-            return
-        self._price_table_model.pre_reset_model()
-        self._price_table_model.load_data(
-            security.decimal_price_history_pairs, security.price_decimals
-        )
-        self._price_table_model.set_unit(security.currency.code)
-        self._price_table_model.post_reset_model()
-        self._update_chart(security)
+        if self.view.isVisible() and self.view.is_manage_tab_selected:
+            self.update_security_model_data()
+
+            security = self._security_table_model.get_selected_item()
+            if security is None:
+                return
+            self._update_price_table_and_chart(security)
+        else:
+            self._update_manage_on_show = True
 
     def show_form(self) -> None:
         self._busy_form_dialog = create_simple_busy_indicator(
@@ -123,6 +124,17 @@ class SecurityFormPresenter:
             and self._security_table_model.rowCount() > 0
         ):
             self.view.securityTableView.selectRow(0)
+
+        if self._update_overview_on_show:
+            self.update_overview_model_data()
+
+        if self._update_manage_on_show:
+            self.update_security_model_data()
+            security = self._security_table_model.get_selected_item()
+            if security is None:
+                return
+            self._update_price_table_and_chart(security)
+            self._update_manage_on_show = False
 
         self.view.refresh_tree_view()
         self.view.treeView.sortByColumn(
@@ -184,9 +196,9 @@ class SecurityFormPresenter:
         self._security_table_model.post_add()
         self._security_selection_changed()
         self._dialog.close()
-        self.reset_self = False
+        self._reset_self = False
         self.event_data_changed()
-        self.reset_self = True
+        self._reset_self = True
 
     def _edit_security(self) -> None:
         security = self._security_table_model.get_selected_item()
@@ -212,9 +224,9 @@ class SecurityFormPresenter:
 
         self.update_security_model_data()
         self._dialog.close()
-        self.reset_self = False
+        self._reset_self = False
         self.event_data_changed()
-        self.reset_self = True
+        self._reset_self = True
 
     def _remove_security(self) -> None:
         security = self._security_table_model.get_selected_item()
@@ -242,9 +254,9 @@ class SecurityFormPresenter:
         self._security_table_model.pre_remove_item(security)
         self.update_security_model_data()
         self._security_table_model.post_remove_item()
-        self.reset_self = False
+        self._reset_self = False
         self.event_data_changed()
-        self.reset_self = True
+        self._reset_self = True
 
     def _run_add_price_dialog(self) -> None:
         security = self._security_table_model.get_selected_item()
@@ -340,9 +352,9 @@ class SecurityFormPresenter:
         self._update_chart(security)
         self.update_security_model_data()
         self.update_overview_model_data()
-        self.reset_self = False
+        self._reset_self = False
         self.event_data_changed()
-        self.reset_self = True
+        self._reset_self = True
 
     def _remove_prices(self) -> None:
         selected_data_points = self._price_table_model.get_selected_values()
@@ -384,9 +396,9 @@ class SecurityFormPresenter:
             self._price_selection_changed()
             self.update_security_model_data()
             self.update_overview_model_data()
-            self.reset_self = False
+            self._reset_self = False
             self.event_data_changed()
-            self.reset_self = True
+            self._reset_self = True
 
     def _run_load_data_dialog(self) -> None:
         security = self._security_table_model.get_selected_item()
@@ -449,9 +461,9 @@ class SecurityFormPresenter:
         self.update_security_model_data()
         self.update_overview_model_data()
         self._dialog.close()
-        self.reset_self = False
+        self._reset_self = False
         self.event_data_changed()
-        self.reset_self = True
+        self._reset_self = True
 
     def _initialize_table_models(self) -> None:
         self._security_table_proxy = QSortFilterProxyModel(self.view.securityTableView)
