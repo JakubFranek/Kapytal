@@ -2,7 +2,7 @@ import logging
 from typing import TYPE_CHECKING
 
 from PyQt6.QtCore import QSortFilterProxyModel, Qt
-from PyQt6.QtWidgets import QWidget
+from PyQt6.QtWidgets import QApplication, QWidget
 from src.models.model_objects.currency_objects import CashAmount, ExchangeRate
 from src.models.model_objects.security_objects import Security
 from src.models.online_quotes.functions import QuoteUpdateError, get_latest_quote
@@ -11,6 +11,9 @@ from src.models.user_settings import user_settings
 from src.presenters.utilities.event import Event
 from src.presenters.utilities.handle_exception import handle_exception
 from src.view_models.quotes_update_table_model import QuotesUpdateTableModel
+from src.views.dialogs.busy_dialog import (
+    create_multi_step_busy_indicator,
+)
 from src.views.forms.quotes_update_form import QuotesUpdateForm
 from src.views.utilities.handle_exception import display_error_message
 from src.views.utilities.message_box_functions import ask_yes_no_question, show_info_box
@@ -36,6 +39,8 @@ class QuotesUpdateFormPresenter:
         self._connect_to_signals()
         self._update_button_states()
         self._view.finalize_setup()
+
+        self._failed_quotes: list[str] = []
 
     def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
         self._record_keeper = record_keeper
@@ -73,15 +78,31 @@ class QuotesUpdateFormPresenter:
 
     def _connect_to_signals(self) -> None:
         self._view.signal_save.connect(self._save_quotes)
-        self._view.signal_download.connect(self._download_quotes)
+        self._view.signal_download.connect(self._download_quotes_with_busy_dialog)
         self._view.signal_select_all.connect(self._select_all)
         self._view.signal_unselect_all.connect(self._unselect_all)
         self._view.signal_exit.connect(self._close_attempted)
         self._view.signal_search_text_changed.connect(self._filter)
 
+    def _download_quotes_with_busy_dialog(self) -> None:
+        self._busy_dialog = create_multi_step_busy_indicator(
+            self._view,
+            "Downloading Quotes, please wait...",
+            len(self._model.checked_items),
+        )
+        self._busy_dialog.open()
+        QApplication.processEvents()
+        try:
+            self._download_quotes()
+        except:  # noqa: TRY302
+            raise
+        finally:
+            self._busy_dialog.close()
+
     def _download_quotes(self) -> None:
         logging.info("Downloading quotes...")
         checked_items = self._model.checked_items
+        n_done = 0
         for item in checked_items:
             data = (item, "Fetching...", "Fetching...")
             self._model.load_single_data(data)
@@ -89,8 +110,11 @@ class QuotesUpdateFormPresenter:
                 self._download_exchange_rate_quote(item)
             elif isinstance(item, Security):
                 self._download_security_quote(item)
+            n_done += 1
+            self._busy_dialog.set_value(n_done)
+        self._show_failed_quotes()
         self._update_button_states()
-        self._unsaved_quotes = True
+        self._unsaved_quotes = len(self._quotes) > 0
 
     def _download_security_quote(self, security: Security) -> None:
         try:
@@ -101,11 +125,7 @@ class QuotesUpdateFormPresenter:
                 f"{price.to_str_normalized()} on {date_}"
             )
         except QuoteUpdateError:
-            display_error_message(
-                f"Download failed for Security symbol {security.symbol}.\n"
-                "Please ensure the symbol is correct and your internet connection is "
-                "stable."
-            )
+            self._failed_quotes.append(security.symbol)
             data = (security, "Error!", "Error!")
             self._model.load_single_data(data)
             return
@@ -139,11 +159,7 @@ class QuotesUpdateFormPresenter:
                 )
                 date_, rate = get_latest_quote(exchange_rate_ticker)
             except QuoteUpdateError:
-                display_error_message(
-                    f"Download failed for Exchange Rate {exchange_rate}.\n"
-                    "Please ensure the Currency codes are correct and your internet "
-                    "connection is stable."
-                )
+                self._failed_quotes.append(str(exchange_rate))
                 data = (exchange_rate, "Error!", "Error!")
                 self._model.load_single_data(data)
                 return
@@ -158,6 +174,20 @@ class QuotesUpdateFormPresenter:
         )
         self._model.load_single_data(data)
         self._quotes[str(exchange_rate)] = (date_, rate)
+
+    def _show_failed_quotes(self) -> None:
+        if len(self._failed_quotes) == 0:
+            return
+
+        text = "Download failed for following items:\n"
+        for item in self._failed_quotes:
+            text += f"- {item}\n"
+        text += (
+            "\nPlease ensure the symbols are correct and your internet connection is "
+            "stable."
+        )
+        display_error_message(text)
+        self._failed_quotes = []
 
     def _save_quotes(self) -> None:
         checked_items = self._model.checked_items
