@@ -22,6 +22,8 @@ if TYPE_CHECKING:
     from datetime import date
     from decimal import Decimal
 
+# TODO: add multi threading to be able to cancel quotes download
+
 
 class QuotesUpdateFormPresenter:
     event_data_changed = Event()

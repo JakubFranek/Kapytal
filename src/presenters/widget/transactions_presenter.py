@@ -613,6 +613,8 @@ class TransactionsPresenter:
             self._model.emit_data_changed_for_uuids(uuids)
 
         self._update_table_columns()
+        if len(self._record_keeper.transactions) < 2:
+            self.resize_table_to_contents()
         self._update_number_of_shown_transactions()
         self.event_data_changed()
 
