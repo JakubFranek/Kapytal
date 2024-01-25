@@ -57,6 +57,8 @@ class SetExchangeRateDialog(CustomDialog, Ui_SetExchangeRateDialog):
         )
         self.dateEdit.setDisplayFormat(display_format)
 
+        self.exchangeRateDoubleSpinBox.setFocus()
+
     @property
     def value(self) -> Decimal:
         return Decimal(self.exchangeRateDoubleSpinBox.cleanText().replace(",", ""))
