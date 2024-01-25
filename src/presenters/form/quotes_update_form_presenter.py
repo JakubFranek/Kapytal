@@ -35,6 +35,7 @@ class QuotesUpdateFormPresenter:
         self._initialize_models()
         self._connect_to_signals()
         self._update_button_states()
+        self._view.finalize_setup()
 
     def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
         self._record_keeper = record_keeper

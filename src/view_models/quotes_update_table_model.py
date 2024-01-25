@@ -6,6 +6,7 @@ from PyQt6.QtWidgets import QApplication, QTableView
 from src.models.model_objects.currency_objects import ExchangeRate
 from src.models.model_objects.security_objects import Security
 from src.presenters.utilities.event import Event
+from src.views import icons
 from src.views.constants import QuotesUpdateTableColumn
 
 COLUMN_HEADERS = {
@@ -93,7 +94,17 @@ class QuotesUpdateTableModel(QAbstractTableModel):
         column = index.column()
         if role == Qt.ItemDataRole.DisplayRole:
             return self._get_display_role_data(item, column)
-        if index.column() == 0 and role == Qt.ItemDataRole.CheckStateRole:
+        if (
+            role == Qt.ItemDataRole.DecorationRole
+            and column == QuotesUpdateTableColumn.ITEM
+        ):
+            if isinstance(item[0], ExchangeRate):
+                return icons.exchange_rate
+            return icons.security
+        if (
+            index.column() == QuotesUpdateTableColumn.ITEM
+            and role == Qt.ItemDataRole.CheckStateRole
+        ):
             return (
                 Qt.CheckState.Checked
                 if item[0] in self._checked_items
@@ -137,8 +148,10 @@ class QuotesUpdateTableModel(QAbstractTableModel):
     def _get_display_role_data(
         self, item: tuple[ExchangeRate | Security, str, str], column: int
     ) -> str:
-        if column in COLUMNS_ALIGNED_RIGHT:
-            return item[column]
+        if column == QuotesUpdateTableColumn.LATEST_QUOTE:
+            return item[2]
+        if column == QuotesUpdateTableColumn.LATEST_DATE:
+            return item[1]
         _item = item[0]
         if isinstance(_item, Security):
             return _item.symbol

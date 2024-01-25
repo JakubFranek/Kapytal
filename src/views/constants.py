@@ -196,5 +196,5 @@ class AssetTypeTreeColumn(IntEnum):
 
 class QuotesUpdateTableColumn(IntEnum):
     ITEM = 0
-    LATEST_DATE = 1
-    LATEST_QUOTE = 2
+    LATEST_DATE = 2
+    LATEST_QUOTE = 1
