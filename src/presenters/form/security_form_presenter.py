@@ -655,6 +655,11 @@ class SecurityFormPresenter:
         native_currency_columns = self.view.native_currency_stats
         detailed_shares_columns = self.view.detailed_stats
 
+        all_base = all(
+            security.currency == self._record_keeper.base_currency
+            for security in self._record_keeper.securities
+        )
+
         for column in SecuritiesOverviewTreeColumn:
             show = True
             if column in COLUMNS_NATIVE:
@@ -666,6 +671,8 @@ class SecurityFormPresenter:
                     PerformanceStats.TOTAL,
                     PerformanceStats.ALL,
                 }
+            if column == SecuritiesOverviewTreeColumn.GAIN_TOTAL_CURRENCY:
+                show = show and not all_base
             if column in COLUMNS_REALIZED:
                 show = show and performance_type in {
                     PerformanceStats.REALIZED,
@@ -678,11 +685,3 @@ class SecurityFormPresenter:
                 }
 
             self.view.treeView.setColumnHidden(column.value, not show)
-
-        all_base = all(
-            security.currency == self._record_keeper.base_currency
-            for security in self._record_keeper.securities
-        )
-        self.view.treeView.setColumnHidden(
-            SecuritiesOverviewTreeColumn.GAIN_TOTAL_CURRENCY, all_base
-        )

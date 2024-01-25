@@ -19,7 +19,7 @@ class PerformanceStats(Enum):
     TOTAL = "Total (T)"
     REALIZED = "Realized (R)"
     UNREALIZED = "Unrealized (U)"
-    ALL = "All"
+    ALL = "All (T, R, U)"
 
 
 class SecurityForm(CustomWidget, Ui_SecurityForm):

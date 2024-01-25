@@ -93,61 +93,34 @@ class SecurityStats(SecurityStatsItem):
 
         self.price_market_native = security.price
         self.price_market_base = security.price.convert(base_currency)
-        self.price_avg_buy_native = (
-            (
-                sum(
-                    (
-                        stats.price_avg_buy_native * stats.shares_bought
-                        for stats in self.account_stats
-                    ),
-                    start=security.currency.zero_amount,
-                )
-                / self.shares_bought
-            )
-            if self.shares_bought != 0
-            else security.currency.zero_amount
+
+        self.price_avg_buy_native = _average_of_sum_of_attribute_products(
+            "price_avg_buy_native",
+            "shares_bought",
+            self.shares_bought,
+            self.account_stats,
+            security.currency,
         )
-        self.price_avg_buy_base = (
-            (
-                sum(
-                    (
-                        stats.price_avg_buy_base * stats.shares_bought
-                        for stats in self.account_stats
-                    ),
-                    start=base_currency.zero_amount,
-                )
-                / self.shares_bought
-            )
-            if self.shares_bought != 0
-            else base_currency.zero_amount
+        self.price_avg_buy_base = _average_of_sum_of_attribute_products(
+            "price_avg_buy_base",
+            "shares_bought",
+            self.shares_bought,
+            self.account_stats,
+            base_currency,
         )
-        self.price_avg_sell_native = (
-            (
-                sum(
-                    (
-                        stats.price_avg_sell_native * stats.shares_sold
-                        for stats in self.account_stats
-                    ),
-                    start=security.currency.zero_amount,
-                )
-                / self.shares_sold
-            )
-            if self.shares_sold != 0
-            else security.currency.zero_amount
+        self.price_avg_sell_native = _average_of_sum_of_attribute_products(
+            "price_avg_sell_native",
+            "shares_sold",
+            self.shares_sold,
+            self.account_stats,
+            security.currency,
         )
-        self.price_avg_sell_base = (
-            (
-                sum(
-                    (
-                        stats.price_avg_sell_base * stats.shares_sold
-                        for stats in self.account_stats
-                    ),
-                    start=base_currency.zero_amount,
-                )
-                / self.shares_sold
-            )
-            if self.shares_sold != 0
-            else base_currency.zero_amount
+        self.price_avg_sell_base = _average_of_sum_of_attribute_products(
+            "price_avg_sell_base",
+            "shares_sold",
+            self.shares_sold,
+            self.account_stats,
+            base_currency,
         )
 
         self.value_current_native = self.price_market_native * self.shares_owned
@@ -157,18 +130,24 @@ class SecurityStats(SecurityStatsItem):
         self.value_bought_native = self.price_avg_buy_native * self.shares_bought
         self.value_bought_base = self.price_avg_buy_base * self.shares_bought
 
-        self.cost_basis_unrealized_native = (
+        self.cost_basis_unrealized_native = _zero_if_nan(
             self.shares_owned * self.price_avg_buy_native
         )
-        self.cost_basis_unrealized_base = self.shares_owned * self.price_avg_buy_base
-        self.cost_basis_realized_native = self.shares_sold * self.price_avg_buy_native
-        self.cost_basis_realized_base = self.shares_sold * self.price_avg_buy_base
-
-        self.gain_unrealized_native = self.shares_owned * (
-            self.price_market_native - self.price_avg_buy_native
+        self.cost_basis_unrealized_base = _zero_if_nan(
+            self.shares_owned * self.price_avg_buy_base
         )
-        self.gain_unrealized_base = self.shares_owned * (
-            self.price_market_base - self.price_avg_buy_base
+        self.cost_basis_realized_native = _zero_if_nan(
+            self.shares_sold * self.price_avg_buy_native
+        )
+        self.cost_basis_realized_base = _zero_if_nan(
+            self.shares_sold * self.price_avg_buy_base
+        )
+
+        self.gain_unrealized_native = _zero_if_nan(
+            self.shares_owned * (self.price_market_native - self.price_avg_buy_native)
+        )
+        self.gain_unrealized_base = _zero_if_nan(
+            self.shares_owned * (self.price_market_base - self.price_avg_buy_base)
         )
         self.return_pct_unrealized_native = _calculate_return_percentage(
             nom=self.gain_unrealized_native,
@@ -179,11 +158,11 @@ class SecurityStats(SecurityStatsItem):
             denom=self.cost_basis_unrealized_base,
         )
 
-        self.gain_realized_native = self.shares_sold * (
-            self.price_avg_sell_native - self.price_avg_buy_native
+        self.gain_realized_native = _zero_if_nan(
+            self.shares_sold * (self.price_avg_sell_native - self.price_avg_buy_native)
         )
-        self.gain_realized_base = self.shares_sold * (
-            self.price_avg_sell_base - self.price_avg_buy_base
+        self.gain_realized_base = _zero_if_nan(
+            self.shares_sold * (self.price_avg_sell_base - self.price_avg_buy_base)
         )
         self.return_pct_realized_native = _calculate_return_percentage(
             nom=self.gain_realized_native,
@@ -280,12 +259,18 @@ class SecurityAccountStats(SecurityStatsItem):
         self.cost_basis_unrealized_base = self.shares_owned * self.price_avg_buy_base
         self.cost_basis_realized_native = self.shares_sold * self.price_avg_buy_native
         self.cost_basis_realized_base = self.shares_sold * self.price_avg_buy_base
-
-        self.gain_unrealized_native = self.shares_owned * (
-            self.price_market_native - self.price_avg_buy_native
+        self.cost_basis_total_native = (
+            self.cost_basis_unrealized_native + self.cost_basis_realized_native
         )
-        self.gain_unrealized_base = self.shares_owned * (
-            self.price_market_base - self.price_avg_buy_base
+        self.cost_basis_total_base = (
+            self.cost_basis_unrealized_base + self.cost_basis_realized_base
+        )
+
+        self.gain_unrealized_native = _zero_if_nan(
+            self.shares_owned * (self.price_market_native - self.price_avg_buy_native)
+        )
+        self.gain_unrealized_base = _zero_if_nan(
+            self.shares_owned * (self.price_market_base - self.price_avg_buy_base)
         )
         self.return_pct_unrealized_native = _calculate_return_percentage(
             nom=self.gain_unrealized_native,
@@ -296,11 +281,11 @@ class SecurityAccountStats(SecurityStatsItem):
             denom=self.cost_basis_unrealized_base,
         )
 
-        self.gain_realized_native = self.shares_sold * (
-            self.price_avg_sell_native - self.price_avg_buy_native
+        self.gain_realized_native = _zero_if_nan(
+            self.shares_sold * (self.price_avg_sell_native - self.price_avg_buy_native)
         )
-        self.gain_realized_base = self.shares_sold * (
-            self.price_avg_sell_base - self.price_avg_buy_base
+        self.gain_realized_base = _zero_if_nan(
+            self.shares_sold * (self.price_avg_sell_base - self.price_avg_buy_base)
         )
         self.return_pct_realized_native = _calculate_return_percentage(
             nom=self.gain_realized_native,
@@ -318,11 +303,11 @@ class SecurityAccountStats(SecurityStatsItem):
         )
         self.return_pct_total_native = _calculate_return_percentage(
             nom=self.gain_total_native,
-            denom=self.value_bought_native,
+            denom=self.cost_basis_total_native,
         )
         self.return_pct_total_base = _calculate_return_percentage(
             nom=self.gain_total_base,
-            denom=self.value_bought_base,
+            denom=self.cost_basis_total_base,
         )
 
         self.irr_pct_total_native = 100 * calculate_irr(security, [account])
@@ -628,9 +613,12 @@ def _calculate_return_percentage(
     if isinstance(nom, CashAmount):
         _nominator = nom
     else:
-        if not all(isinstance(num, CashAmount) for num in nom) or len(nom) == 0:
+        _nom = tuple(nom)
+        if any(not isinstance(num, CashAmount) for num in _nom) or len(_nom) == 0:
             return Decimal(0)
-        _nominator = sum(nom, start=nom[0].currency.zero_amount)
+        _nominator: CashAmount = sum(nom, start=_nom[0].currency.zero_amount)
+        if _nominator.value_normalized == 0:
+            return Decimal(0)
 
     if denom is None:
         return Decimal(0)
@@ -639,16 +627,44 @@ def _calculate_return_percentage(
             return Decimal(0)
         _denominator = denom
     else:
-        if not all(isinstance(num, CashAmount) for num in denom) or len(denom) == 0:
+        _denom = tuple(denom)
+        if any(not isinstance(num, CashAmount) for num in _denom) or len(_denom) == 0:
             return Decimal(0)
-        _denominator = sum(denom, start=denom[0].currency.zero_amount)
+        _denominator: CashAmount = sum(_denom, start=_denom[0].currency.zero_amount)
+        if _denominator.value_normalized == 0:
+            return Decimal(0)
 
-    return 100 * _nominator / _denominator
+    _return = 100 * _nominator / _denominator
+
+    return _return if not _return.is_nan() else Decimal(0)
 
 
 def _sum_attribute(
-    attr: str, items: Collection, currency: Currency | None
+    attr: str,
+    items: Collection,
+    currency: Currency | None,
 ) -> CashAmount | None:
     if currency is None:
         return None
     return sum((getattr(item, attr) for item in items), start=currency.zero_amount)
+
+
+def _average_of_sum_of_attribute_products(
+    attr1: str, attr2: str, denom: Decimal, items: Collection, currency: Currency
+) -> CashAmount:
+    _sum_of_products = sum(
+        (getattr(item, attr1) * getattr(item, attr2) for item in items),
+        start=currency.zero_amount,
+    )
+
+    if _sum_of_products.is_nan():
+        return _sum_of_products
+    if denom == 0:
+        return currency.zero_amount
+    return _sum_of_products / denom
+
+
+def _zero_if_nan(value: CashAmount) -> CashAmount:
+    if value.is_nan():
+        return value.currency.zero_amount
+    return value

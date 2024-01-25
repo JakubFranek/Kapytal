@@ -570,7 +570,7 @@ class SecurityAccount(Account):
         transactions = {t for t in self._transactions if t.security == security}
         if type_ == SharesType.TRANSFERRED:
             return sum(
-                (t.shares for t in transactions if isinstance(t, SecurityTransfer)),
+                (t.get_shares(self) for t in transactions if isinstance(t, SecurityTransfer)),
                 start=Decimal(0),
             )
 
