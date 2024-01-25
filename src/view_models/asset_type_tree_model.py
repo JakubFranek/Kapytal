@@ -144,13 +144,13 @@ class AssetTypeTreeModel(QAbstractItemModel):
         if column != AssetTypeTreeColumn.NAME:
             return None
         if item.asset_type == AssetType.CURRENCY:
-            return QIcon(icons.currency)
+            return icons.currency
         if item.asset_type == AssetType.SECURITY:
-            return QIcon(icons.security)
+            return icons.security
         if item.asset_type == AssetType.ACCOUNT:
             if item.parent.asset_type == AssetType.SECURITY:
-                return QIcon(icons.security_account)
-            return QIcon(icons.cash_account)
+                return icons.security_account
+            return icons.cash_account
         return None
 
     def _get_foreground_role_data(self, column: int, item: AssetStats) -> QBrush | None:

@@ -52,6 +52,8 @@ class SetSecurityPriceDialog(CustomDialog, Ui_SetSecurityPriceDialog):
         )
         self.dateEdit.setDisplayFormat(display_format)
 
+        self.priceDoubleSpinBox.setFocus()
+
     @property
     def value(self) -> Decimal:
         return Decimal(self.priceDoubleSpinBox.cleanText().replace(",", ""))

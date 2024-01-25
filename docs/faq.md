@@ -29,7 +29,7 @@ In Czech, capybara is spelled "kapybara". My friend mentioned the similarity wit
 Kapytal currently requires internet connection for two **optional** functionalities:
 
 - checking for its own updates
-- downloading [Security](./glossary.md#security-) and [Exchange Rate](./glossary.md#exchange-rate-) quotes from [Update Quotes Form](./glossary.md#update-quotes-form-)
+- downloading [Security](./glossary.md#security-) and [Exchange Rate](./glossary.md#exchange-rate-) quotes from Yahoo Finance using [Update Quotes Form](./glossary.md#update-quotes-form-)
 
 ## Why won't you support automated imports?
 
@@ -85,3 +85,9 @@ Edit the hours or minutes of the [Transactions](./glossary.md#transaction). You 
 ## Should I model cryptocurrencies as Currencies or Securities?
 
 Kapytal allows you to use both approaches, so it is up to you. However, if you ever expect to buy a pizza or get salary in the given cryptocurrency, it is necessary to model it as a [Currency](./glossary.md#currency-). On the other hand, if the crypto you buy is intended purely as an investment to be bought and sold eventually, [Security](./glossary.md#security-) might be the way to go, as Securities offer better investment performance stats in [Securitites Form](./glossary.md#securities-). If you are unsure, go down the Currency path.
+
+## In Securities Form Overview tab tree, why do the quantities denominated in native and base Currencies sometimes not match after converting them with the latest Exchange Rate to base Currency? Why are native and base Currency returns different?
+
+[Security](./glossary.md#security-) performance quantities in Kapytal are calculated using average buy and average sell prices. These average prices are actually calculated twice each, once in the Security native [Currency](./glossary.md#currency-) and once in the [base Currency](./glossary.md#base-currency). For Securities denominated in a non-base Currency, the base average prices take the Exchange Rate valid on the day of each Security Transaction into account. Therefore, buying non-base Securities when the base Currency is relatively strong and selling them when the base Currency is relatively weak leads to better performance in base Currency, while the performance in native Currency is naturally unaffected.
+
+The Total Currency Gain column in the Securities Overview tree quantifies the impact of the [Exchange Rate](./glossary.md#exchange-rate-) fluctuations on the Total Base Gain. The value of Total Currency Gain is equal to the difference between the Total Base Gain and the Total Native Gain, after converting Total Native Gain to base Currency using the latest Exchange Rate.

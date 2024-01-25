@@ -299,7 +299,7 @@ def test_get_average_price_invalid_type(security: Any) -> None:
 @given(security=securities())
 def test_get_average_price_invalid_security(security: Security) -> None:
     account = SecurityAccount("Test")
-    with pytest.raises(ValueError, match="not in this SecurityAccount."):
+    with pytest.raises(ValueError, match="is not related to this SecurityAccount."):
         account.get_average_price(security)
 
 

@@ -287,6 +287,9 @@
          </item>
          <item row="2" column="1">
           <widget class="QLabel" name="gainLossSecuritiesLabel">
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Represents Gain / Loss of Securities due to their Price changing over time. The effect of Exchange Rate fluctuations on non-base Currency Securities is also included within this quantity.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
            <property name="text">
             <string>Securities Gain / Loss</string>
            </property>
@@ -309,6 +312,9 @@
          </item>
          <item row="3" column="1">
           <widget class="QLabel" name="gainLossCurrenciesLabel">
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Represents Gain / Loss caused by fluctuating Exchange Rates and inter-Currency Cash Transfers.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
            <property name="text">
             <string>Currencies Gain / Loss</string>
            </property>
@@ -373,6 +379,9 @@
          </item>
          <item row="2" column="2">
           <widget class="QLabel" name="gainLossSecuritiesAmountLabel">
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Represents Gain / Loss of Securities due to their Price changing over time. The effect of Exchange Rate fluctuations on non-base Currency Securities is also included within this quantity.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
            <property name="text">
             <string>TextLabel</string>
            </property>
@@ -383,6 +392,9 @@
          </item>
          <item row="3" column="2">
           <widget class="QLabel" name="gainLossCurrenciesAmountLabel">
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Represents Gain / Loss caused by fluctuating Exchange Rates and inter-Currency Cash Transfers.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
            <property name="text">
             <string>TextLabel</string>
            </property>
