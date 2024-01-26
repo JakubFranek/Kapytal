@@ -439,10 +439,8 @@ class TotalSecurityStats(SecurityStatsItem):
             denom=(self.cost_basis_realized_base, self.cost_basis_unrealized_base),
         )
 
-        self.irr_pct_total_native = (
-            100 * calculate_total_irr(_accounts, single_native_currency)
-            if single_native_currency is not None
-            else None
+        self.irr_pct_total_native = 100 * calculate_total_irr(
+            _accounts, single_native_currency
         )
         self.irr_pct_total_base = 100 * calculate_total_irr(_accounts, base_currency)
 
@@ -524,7 +522,7 @@ def calculate_irr(
 
 
 def calculate_total_irr(
-    accounts: Collection[SecurityAccount], currency: Currency
+    accounts: Collection[SecurityAccount], currency: Currency | None
 ) -> Decimal:
     accounts = frozenset(accounts)
 

@@ -16,6 +16,7 @@ from src.models.statistics.security_stats import (
     SecurityAccountStats,
     SecurityStats,
     SecurityStatsData,
+    _calculate_return_percentage,
     calculate_irr,
     calculate_total_irr,
 )
@@ -351,6 +352,13 @@ def test_calculate_total_irr_empty() -> None:
     assert irr.is_nan()
 
 
+def test_calculate_total_irr_no_currency() -> None:
+    account = SecurityAccount("Test 1")
+
+    irr = calculate_total_irr([account], None)
+    assert irr.is_nan()
+
+
 def test_calculate_total_irr_only_transfers() -> None:
     account_1 = SecurityAccount("Test 1")
     account_2 = SecurityAccount("Test 2")
@@ -416,6 +424,7 @@ def test_security_account_stats() -> None:
     assert (
         stats.__repr__() == f"SecurityAccountStats('{security.name}', '{account.path}')"
     )
+    assert stats.is_base == (eur == security.currency)
 
     assert stats.shares_owned == Decimal(1)
     assert stats.shares_sold == Decimal(1)
@@ -522,6 +531,7 @@ def test_security_stats() -> None:
 
     assert stats.name == security.name
     assert stats.__repr__() == "SecurityStats('Alphabet')"
+    assert stats.is_base == (eur == security.currency)
 
     assert stats.shares_owned == Decimal(1)
     assert stats.shares_sold == Decimal(2)
@@ -634,6 +644,8 @@ def test_security_stats_data() -> None:
 
     assert stats.__repr__() == "SecurityStatsData(len=2)"
     assert total_stats.__repr__() == "TotalSecurityStats()"
+    assert total_stats.name == "Total"
+    assert total_stats.is_base is True
 
     assert total_stats.value_current_base == CashAmount((4 + 4) * rate, eur)
     assert total_stats.value_current_native is None
@@ -665,3 +677,64 @@ def test_security_stats_data() -> None:
     assert total_stats.return_pct_total_native == Decimal(0)
 
     assert math.isclose(total_stats.irr_pct_total_base, 170)
+
+
+def test_security_stats_data_no_transactions() -> None:
+    account_1 = SecurityAccount("Test 1")
+    account_2 = SecurityAccount("Test 2")
+    usd = Currency("USD", 2)
+    eur = Currency("EUR", 2)
+
+    security_1 = Security("Alphabet", "ABC", "Stock", usd, 1)
+    security_2 = Security("Wowazon", "WAZ", "Stock", usd, 1)
+    today = datetime.now(user_settings.settings.time_zone)
+
+    security_1.set_price(today.date() - timedelta(days=365), CashAmount(1, usd))
+    security_1.set_price(today.date(), CashAmount(4, usd))
+
+    security_2.set_price(today.date() - timedelta(days=365), CashAmount(2, usd))
+    security_2.set_price(today.date(), CashAmount(4, usd))
+
+    exchange_rate = ExchangeRate(usd, eur)
+    old_rate = Decimal(1)
+    exchange_rate.set_rate(today.date() - timedelta(days=365), old_rate)
+    rate = Decimal("0.9")
+    exchange_rate.set_rate(today.date(), rate)
+
+    stats = SecurityStatsData([security_1, security_2], [account_1, account_2], eur)
+
+    total_stats = stats.total_stats
+
+    assert stats.__repr__() == "SecurityStatsData(len=2)"
+    assert total_stats.__repr__() == "TotalSecurityStats()"
+    assert total_stats.is_base is True
+
+
+def test_calculate_return_percentage_empty_tuple_denom() -> None:
+    result = _calculate_return_percentage(
+        nom=CashAmount(1, Currency("USD", 2)), denom=()
+    )
+    assert result == Decimal(0)
+
+
+def test_calculate_return_percentage_tuple_of_none_denom() -> None:
+    result = _calculate_return_percentage(
+        nom=CashAmount(1, Currency("USD", 2)), denom=(None,)
+    )
+    assert result == Decimal(0)
+
+
+def test_calculate_return_percentage_none_denom() -> None:
+    result = _calculate_return_percentage(
+        nom=CashAmount(1, Currency("USD", 2)), denom=None
+    )
+    assert result == Decimal(0)
+
+
+def test_calculate_return_percentage_tuple_of_zero_denom() -> None:
+    currency = Currency("USD", 2)
+    result = _calculate_return_percentage(
+        nom=CashAmount(1, currency),
+        denom=(CashAmount(0, currency), CashAmount(0, currency)),
+    )
+    assert result == Decimal(0)
