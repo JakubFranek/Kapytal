@@ -11,13 +11,10 @@ from src.models.mixins.copyable_mixin import CopyableMixin
 from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
 from src.models.user_settings import user_settings
 from src.presenters.utilities.event import Event
+from src.utilities.formatting import quantizers
 
 # TODO: add CurrencyManager class to take care of Currency cache resets
 # and offload RecordKeeper methods to CurrencyManager
-
-quantizers: dict[int, Decimal] = {}
-for i in range(18 + 1):
-    quantizers[i] = Decimal(f"1e-{i}")
 
 
 class CurrencyError(ValueError):

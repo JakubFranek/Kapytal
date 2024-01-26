@@ -29,6 +29,7 @@ from src.models.model_objects.security_objects import (
     SecurityTransfer,
 )
 from src.models.user_settings import user_settings
+from src.utilities.formatting import convert_decimal_to_string
 from src.views import colors, icons
 from src.views.constants import (
     TRANSACTION_TABLE_COLUMN_HEADERS,
@@ -55,6 +56,7 @@ COLUMNS_TRANSFER_AMOUNTS = {
     TransactionTableColumn.AMOUNT_SENT,
     TransactionTableColumn.AMOUNT_RECEIVED,
 }
+SHARES_SIGNIFICANT_DIGITS = 4
 
 
 class TransactionTableModel(QAbstractTableModel):
@@ -142,9 +144,9 @@ class TransactionTableModel(QAbstractTableModel):
                 self._transactions[index.row()], index.column()
             )
         if role == Qt.ItemDataRole.TextAlignmentRole:
-            return TransactionTableModel._get_text_alignment_data(index.column())
+            return TransactionTableModel._get_text_alignment_role_data(index.column())
         if role == Qt.ItemDataRole.ForegroundRole:
-            return self._get_foreground_data(
+            return self._get_foreground_role_data(
                 self._transactions[index.row()], index.column()
             )
         if (
@@ -152,6 +154,10 @@ class TransactionTableModel(QAbstractTableModel):
             and index.column() == TransactionTableColumn.UUID
         ):
             return monospace_font
+        if role == Qt.ItemDataRole.ToolTipRole:
+            return self._get_tooltip_role_data(
+                self._transactions[index.row()], index.column()
+            )
         return None
 
     def headerData(
@@ -394,13 +400,27 @@ class TransactionTableModel(QAbstractTableModel):
             "NFD", self._get_display_role_data(transaction, column)
         )
 
+    def _get_tooltip_role_data(
+        self, transaction: Transaction, column: int
+    ) -> float | str:
+        if column == TransactionTableColumn.DESCRIPTION:
+            return transaction.description
+        if column == TransactionTableColumn.SHARES:
+            shares = TransactionTableModel._get_transaction_shares(transaction)
+            return f"{shares:,}"
+        if column == TransactionTableColumn.PRICE_PER_SHARE:
+            return TransactionTableModel._get_transaction_price_per_share_tooltip(
+                transaction
+            )
+        return None
+
     @staticmethod
-    def _get_text_alignment_data(column: int) -> Qt.AlignmentFlag | None:
+    def _get_text_alignment_role_data(column: int) -> Qt.AlignmentFlag | None:
         if column in COLUMNS_ALIGNED_RIGHT:
             return ALIGNMENT_RIGHT
         return None
 
-    def _get_foreground_data(  # noqa: PLR0911, C901
+    def _get_foreground_role_data(  # noqa: PLR0911, C901, PLR0912
         self, transaction: Transaction, column: int
     ) -> QBrush | None:
         if column in COLUMNS_TRANSACTION_AMOUNTS:
@@ -492,11 +512,14 @@ class TransactionTableModel(QAbstractTableModel):
 
     @staticmethod
     def _get_transaction_shares_string(transaction: Transaction) -> str:
+        if not isinstance(transaction, (SecurityTransaction, SecurityTransfer)):
+            return ""
         if isinstance(transaction, SecurityTransaction):
-            return f"{transaction.get_shares(transaction.security_account):,f}"
-        if isinstance(transaction, SecurityTransfer):
-            return f"{transaction.get_shares(transaction.recipient):,f}"
-        return ""
+            shares = transaction.get_shares(transaction.security_account)
+        else:
+            shares = transaction.get_shares(transaction.recipient)
+
+        return convert_decimal_to_string(shares)
 
     @staticmethod
     def _get_transaction_price_per_share(transaction: Transaction) -> Decimal:
@@ -506,6 +529,19 @@ class TransactionTableModel(QAbstractTableModel):
 
     @staticmethod
     def _get_transaction_price_per_share_string(transaction: Transaction) -> str:
+        if isinstance(transaction, SecurityTransaction):
+            return (
+                convert_decimal_to_string(
+                    transaction.price_per_share.value_normalized,
+                    min_decimals=transaction.security.price_decimals,
+                )
+                + " "
+                + transaction.currency.code
+            )
+        return ""
+
+    @staticmethod
+    def _get_transaction_price_per_share_tooltip(transaction: Transaction) -> str:
         if isinstance(transaction, SecurityTransaction):
             return transaction.price_per_share.to_str_normalized()
         return ""
@@ -629,7 +665,7 @@ class TransactionTableModel(QAbstractTableModel):
 
 
 def _get_split_category_string(
-    category_amount_pairs: Sequence[tuple[Category, CashAmount]]
+    category_amount_pairs: Sequence[tuple[Category, CashAmount]],
 ) -> str:
     remaining_pairs = list(category_amount_pairs)
     grouped_pairs: list[list[tuple[Category, CashAmount]]] = []
