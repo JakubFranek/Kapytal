@@ -534,6 +534,7 @@ class TransactionTableModel(QAbstractTableModel):
                 convert_decimal_to_string(
                     transaction.price_per_share.value_normalized,
                     min_decimals=transaction.security.price_decimals,
+                    significant_digits=transaction.security.price_decimals,
                 )
                 + " "
                 + transaction.currency.code
