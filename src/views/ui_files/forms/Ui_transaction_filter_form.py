@@ -20,7 +20,6 @@ class Ui_TransactionFilterForm(object):
         sizePolicy.setHeightForWidth(TransactionFilterForm.sizePolicy().hasHeightForWidth())
         TransactionFilterForm.setSizePolicy(sizePolicy)
         TransactionFilterForm.setMinimumSize(QtCore.QSize(0, 0))
-        TransactionFilterForm.setLocale(QtCore.QLocale(QtCore.QLocale.Language.English, QtCore.QLocale.Country.UnitedKingdom))
         self.verticalLayout = QtWidgets.QVBoxLayout(TransactionFilterForm)
         self.verticalLayout.setObjectName("verticalLayout")
         self.mainTabWidget = QtWidgets.QTabWidget(TransactionFilterForm)
@@ -517,7 +516,6 @@ class Ui_TransactionFilterForm(object):
         self.retranslateUi(TransactionFilterForm)
         self.mainTabWidget.setCurrentIndex(0)
         self.categoriesTypeTabWidget.setCurrentIndex(0)
-        # QtCore.QMetaObject.connectSlotsByName(TransactionFilterForm)
 
     def retranslateUi(self, TransactionFilterForm):
         _translate = QtCore.QCoreApplication.translate

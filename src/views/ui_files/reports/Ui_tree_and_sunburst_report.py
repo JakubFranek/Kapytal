@@ -14,7 +14,6 @@ class Ui_TreeAndSunburstReport(object):
         TreeAndSunburstReport.setObjectName("TreeAndSunburstReport")
         TreeAndSunburstReport.setWindowModality(QtCore.Qt.WindowModality.WindowModal)
         TreeAndSunburstReport.resize(800, 600)
-        TreeAndSunburstReport.setLocale(QtCore.QLocale(QtCore.QLocale.Language.English, QtCore.QLocale.Country.UnitedKingdom))
         self.horizontalLayout = QtWidgets.QHBoxLayout(TreeAndSunburstReport)
         self.horizontalLayout.setObjectName("horizontalLayout")
         self.treeViewVerticalLayout = QtWidgets.QVBoxLayout()

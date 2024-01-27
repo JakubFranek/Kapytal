@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'd:\Coding\Kapytal\src\views\ui_files\tag_dialog.ui'
+# Form implementation generated from reading ui file 'd:\Coding\Kapytal\src\views\ui_files\dialogs\tag_dialog.ui'
 #
 # Created by: PyQt6 UI code generator 6.4.0
 #
@@ -19,7 +19,6 @@ class Ui_TagDialog(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(TagDialog.sizePolicy().hasHeightForWidth())
         TagDialog.setSizePolicy(sizePolicy)
-        TagDialog.setLocale(QtCore.QLocale(QtCore.QLocale.Language.English, QtCore.QLocale.Country.UnitedKingdom))
         self.verticalLayout = QtWidgets.QVBoxLayout(TagDialog)
         self.verticalLayout.setSizeConstraint(QtWidgets.QLayout.SizeConstraint.SetDefaultConstraint)
         self.verticalLayout.setObjectName("verticalLayout")

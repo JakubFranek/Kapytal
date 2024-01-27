@@ -14,7 +14,6 @@ class Ui_CashFlowTotalReport(object):
         CashFlowTotalReport.setObjectName("CashFlowTotalReport")
         CashFlowTotalReport.setWindowModality(QtCore.Qt.WindowModality.WindowModal)
         CashFlowTotalReport.resize(900, 600)
-        CashFlowTotalReport.setLocale(QtCore.QLocale(QtCore.QLocale.Language.English, QtCore.QLocale.Country.UnitedKingdom))
         self.horizontalLayout = QtWidgets.QHBoxLayout(CashFlowTotalReport)
         self.horizontalLayout.setObjectName("horizontalLayout")
         self.verticalLayout_3 = QtWidgets.QVBoxLayout()

@@ -14,7 +14,6 @@ class Ui_QuotesUpdateForm(object):
         QuotesUpdateForm.setObjectName("QuotesUpdateForm")
         QuotesUpdateForm.setWindowModality(QtCore.Qt.WindowModality.WindowModal)
         QuotesUpdateForm.resize(357, 350)
-        QuotesUpdateForm.setLocale(QtCore.QLocale(QtCore.QLocale.Language.English, QtCore.QLocale.Country.UnitedKingdom))
         self.verticalLayout = QtWidgets.QVBoxLayout(QuotesUpdateForm)
         self.verticalLayout.setObjectName("verticalLayout")
         self.searchLineEdit = QtWidgets.QLineEdit(QuotesUpdateForm)

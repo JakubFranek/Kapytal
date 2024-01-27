@@ -16,9 +16,6 @@
   <property name="windowTitle">
    <string>Sunburst Report</string>
   </property>
-  <property name="locale">
-   <locale language="English" country="UnitedKingdom"/>
-  </property>
   <layout class="QHBoxLayout" name="horizontalLayout" stretch="0,1">
    <item>
     <layout class="QVBoxLayout" name="treeViewVerticalLayout">

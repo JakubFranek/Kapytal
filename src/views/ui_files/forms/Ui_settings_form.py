@@ -14,7 +14,6 @@ class Ui_SettingsForm(object):
         SettingsForm.setObjectName("SettingsForm")
         SettingsForm.setWindowModality(QtCore.Qt.WindowModality.WindowModal)
         SettingsForm.resize(500, 400)
-        SettingsForm.setLocale(QtCore.QLocale(QtCore.QLocale.Language.English, QtCore.QLocale.Country.UnitedKingdom))
         self.verticalLayout = QtWidgets.QVBoxLayout(SettingsForm)
         self.verticalLayout.setObjectName("verticalLayout")
         self.tabWidget = QtWidgets.QTabWidget(SettingsForm)

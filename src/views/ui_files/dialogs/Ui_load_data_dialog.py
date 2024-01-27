@@ -19,7 +19,6 @@ class Ui_LoadDataDialog(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(LoadDataDialog.sizePolicy().hasHeightForWidth())
         LoadDataDialog.setSizePolicy(sizePolicy)
-        LoadDataDialog.setLocale(QtCore.QLocale(QtCore.QLocale.Language.English, QtCore.QLocale.Country.UnitedKingdom))
         self.verticalLayout = QtWidgets.QVBoxLayout(LoadDataDialog)
         self.verticalLayout.setSizeConstraint(QtWidgets.QLayout.SizeConstraint.SetDefaultConstraint)
         self.verticalLayout.setObjectName("verticalLayout")
