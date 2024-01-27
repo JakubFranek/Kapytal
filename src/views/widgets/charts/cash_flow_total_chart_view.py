@@ -12,6 +12,7 @@ from PyQt6.QtCore import QMargins, QPointF, Qt, pyqtSignal
 from PyQt6.QtGui import QColor, QCursor, QFont, QMouseEvent, QPainter
 from PyQt6.QtWidgets import QGraphicsScene, QWidget
 from src.models.statistics.cashflow_stats import CashFlowStats
+from src.utilities.formatting import format_real
 from src.views.widgets.charts.general_chart_callout import GeneralChartCallout
 
 x_labels = ["Inflows", "Outflows", "Cash Flow", "Total Gain / Loss"]
@@ -29,7 +30,7 @@ class CashFlowTotalChartView(QChartView):
         self.setMouseTracking(True)
 
         self._currency_code = ""
-        self._places = 0
+        self._decimals = 0
 
         self._font = QFont()
         self._font.setPointSize(10)
@@ -40,7 +41,7 @@ class CashFlowTotalChartView(QChartView):
 
     def load_data(self, stats: CashFlowStats) -> None:  # noqa: PLR0915
         self._currency_code = stats.incomes.balance.currency.code
-        self._places = stats.incomes.balance.currency.decimals
+        self._decimals = stats.incomes.balance.currency.decimals
 
         bar_income = QBarSet("Income")
         bar_income.setColor(QColor("darkgreen"))
@@ -131,7 +132,10 @@ class CashFlowTotalChartView(QChartView):
         self.axis_y.applyNiceNumbers()
 
     def on_hover(
-        self, state: bool, index: int, bar_set: QBarSet  # noqa: FBT001
+        self,
+        state: bool,  # noqa: FBT001
+        index: int,
+        bar_set: QBarSet,
     ) -> None:
         label = bar_set.label()
         value = bar_set.at(index)
@@ -141,7 +145,7 @@ class CashFlowTotalChartView(QChartView):
         scene_pos = self.mapToScene(view_pos)
 
         self._tooltip.set_text(
-            f"{label}\n{value:,.{self._places}f} {self._currency_code}"
+            f"{label}\n{format_real(value, self._decimals)} {self._currency_code}"
         )
         self._tooltip.set_anchor(scene_pos)
         self._tooltip.setZValue(11)

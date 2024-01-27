@@ -621,7 +621,7 @@ class TransactionsPresenter:
     def _update_number_of_shown_transactions(self) -> None:
         n_visible = self._proxy_regex_sort_filter.rowCount()
         n_total = len(self._record_keeper.transactions)
-        logging.debug(f"Visible transactions: {n_visible:,}/{n_total:,}")
+        logging.debug(f"Visible transactions: {n_visible:n}/{n_total:n}")
         self._view.set_shown_transactions(n_visible, n_total)
 
     def _update_selected_transactions_amount(

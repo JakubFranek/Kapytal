@@ -477,6 +477,10 @@ def test_nan() -> None:
 
 
 def test_round() -> None:
+    import locale
+
+    locale.setlocale(locale.LC_ALL, "en_US.UTF-8")
+
     amount = CashAmount(Decimal("1.23456789"), Currency("EUR", 2))
 
     assert amount.value_normalized == Decimal("1.23456789")
@@ -500,6 +504,10 @@ def test_round() -> None:
 
 
 def test_round_quantization() -> None:
+    import locale
+
+    locale.setlocale(locale.LC_ALL, "en_US.UTF-8")
+
     amount = CashAmount(Decimal("1.0000"), Currency("EUR", 2))
 
     assert amount.value_normalized == Decimal("1.0000")

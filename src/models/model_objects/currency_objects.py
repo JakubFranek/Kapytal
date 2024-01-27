@@ -1,3 +1,4 @@
+import locale
 import logging
 import operator
 from bisect import bisect_right
@@ -641,14 +642,23 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
     def to_str_rounded(self, decimals: int | None = None) -> str:
         if decimals is None:
             if not hasattr(self, "_str_rounded"):
-                self._str_rounded = f"{self.value_rounded:,} {self._currency.code}"
+                number_string = locale.format_string(
+                    f"%.{self.currency.decimals}f",
+                    self.value_rounded,
+                    grouping=True,
+                    monetary=True,
+                )
+                self._str_rounded = f"{number_string} {self._currency.code}"
             return self._str_rounded
         value_rounded = round(self._raw_value, decimals)
-        return f"{value_rounded:,} {self._currency.code}"
+        number_string = locale.format_string(
+            f"%.{decimals}f", value_rounded, grouping=True, monetary=True
+        )
+        return f"{number_string} {self._currency.code}"
 
     def to_str_normalized(self) -> str:
         if not hasattr(self, "_str_normalized"):
-            self._str_normalized = f"{self.value_normalized:,} {self._currency.code}"
+            self._str_normalized = f"{self.value_normalized:n} {self._currency.code}"
         return self._str_normalized
 
     def convert(self, target_currency: Currency, date_: date | None = None) -> Self:

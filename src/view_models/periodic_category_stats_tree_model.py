@@ -326,7 +326,7 @@ class PeriodicCategoryStatsTreeModel(QAbstractItemModel):
             prefix = "Σ "
         else:
             prefix = ""
-        return prefix + f"{row_object.data[column-1]:,}"
+        return prefix + f"{row_object.data[column-1]:n}"
 
     def _get_user_role_data(self, column: int, row_object: RowObject) -> str | None:
         if column == 0:

@@ -7,6 +7,7 @@ from src.models.base_classes.transaction import Transaction
 from src.models.custom_exceptions import InvalidOperationError
 from src.models.model_objects.currency_objects import CashAmount
 from src.models.statistics.cashflow_stats import CashFlowStats
+from src.utilities.formatting import format_percentage
 from src.views import colors
 from src.views.constants import CashFlowTableColumn
 
@@ -104,8 +105,8 @@ class CashFlowTableModel(QAbstractTableModel):
 
     def _get_display_role_data(self, column: int, stats: CashFlowStats) -> str:
         if column == CashFlowTableColumn.SAVINGS_RATE:
-            return f"{stats.savings_rate:.2%}"
-        return f"{self._get_cash_amount_for_column(stats, column).value_rounded:,}"
+            return format_percentage(100 * stats.savings_rate)
+        return f"{self._get_cash_amount_for_column(stats, column).value_rounded:n}"
 
     def _get_user_role_data(self, column: int, stats: CashFlowStats) -> float:
         if column == CashFlowTableColumn.SAVINGS_RATE:

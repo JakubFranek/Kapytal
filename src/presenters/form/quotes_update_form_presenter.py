@@ -172,7 +172,7 @@ class QuotesUpdateFormPresenter:
         data = (
             exchange_rate,
             date_.strftime(user_settings.settings.general_date_format),
-            f"{rate:,}",
+            f"{rate:n}",
         )
         self._model.load_single_data(data)
         self._quotes[str(exchange_rate)] = (date_, rate)
@@ -206,7 +206,7 @@ class QuotesUpdateFormPresenter:
                 else:
                     item.set_rate(date_, value)
                     text += (
-                        f"- {item}: {value:,} on "
+                        f"- {item}: {value:n} on "
                         f"{date_.strftime(user_settings.settings.general_date_format)}\n"
                     )
             except KeyError:

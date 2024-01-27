@@ -227,10 +227,10 @@ class CashTransferDialog(CustomDialog, Ui_CashTransferDialog):
             return
 
         text_primary = (
-            f"1 {sender.currency.code} = {rate_primary:,} {recipient.currency.code}"
+            f"1 {sender.currency.code} = {rate_primary:n} {recipient.currency.code}"
         )
         text_secondary = (
-            f"1 {recipient.currency.code} = {rate_secondary:,} {sender.currency.code}"
+            f"1 {recipient.currency.code} = {rate_secondary:n} {sender.currency.code}"
         )
 
         text_overall = text_primary + " | " + text_secondary

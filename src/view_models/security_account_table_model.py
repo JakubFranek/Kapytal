@@ -115,7 +115,7 @@ class SecurityAccountTableModel(QAbstractTableModel):
         if column == SecurityAccountTableColumn.TYPE:
             return security.type_
         if column == SecurityAccountTableColumn.SHARES:
-            return f"{shares:,}"
+            return f"{shares:n}"
         if column == SecurityAccountTableColumn.PRICE:
             return security.price.to_str_normalized()
         if column == SecurityAccountTableColumn.AMOUNT_NATIVE:

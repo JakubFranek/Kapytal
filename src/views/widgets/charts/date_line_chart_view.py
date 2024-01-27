@@ -23,6 +23,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 from src.models.user_settings import user_settings
+from src.utilities.formatting import format_real
 from src.views.widgets.charts.date_line_chart_callout import DateLineChartCallout
 
 
@@ -144,7 +145,7 @@ class DateLineChartView(QChartView):
             self._callout.set_anchor(point)
             self._callout.set_text(
                 f"X: {x_dt.toString('dd.MM.yyyy')}\n"
-                f"Y: {point.y():,.{self._y_decimals}f}" + self._y_unit
+                f"Y: {format_real(point.y(), self._y_decimals)}" + self._y_unit
             )
             self._callout.setZValue(11)
             self._callout.update_geometry()

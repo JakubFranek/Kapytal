@@ -880,7 +880,8 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
         )
 
     def _create_account_filter_context_menu(
-        self, event: QContextMenuEvent  # noqa: ARG002
+        self,
+        event: QContextMenuEvent,  # noqa: ARG002
     ) -> None:
         self.menu = QMenu(self)
         self.menu.addAction(self.actionSelectAllCashAccountsBelow)
@@ -935,7 +936,7 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
     def set_selected_tags_number(self, selected: int, total: int) -> None:
         if self.specific_tags_filter_mode != FilterMode.OFF:
             self.specificTagsFilterGroupBox.setTitle(
-                f"Specific Tags Filter ({selected:,} / {total:,})"
+                f"Specific Tags Filter ({selected:n} / {total:n})"
             )
         else:
             self.specificTagsFilterGroupBox.setTitle("Specific Tags Filter")
@@ -943,7 +944,7 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
     def set_selected_payees_number(self, selected: int, total: int) -> None:
         if self.payee_filter_mode != FilterMode.OFF:
             self.payeeFilterGroupBox.setTitle(
-                f"Payee Filter ({selected:,} / {total:,})"
+                f"Payee Filter ({selected:n} / {total:n})"
             )
         else:
             self.payeeFilterGroupBox.setTitle("Payee Filter")
@@ -951,7 +952,7 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
     def set_selected_currencies_number(self, selected: int, total: int) -> None:
         if self.currency_filter_mode != FilterMode.OFF:
             self.currencyFilterGroupBox.setTitle(
-                f"Currency Filter ({selected:,} / {total:,})"
+                f"Currency Filter ({selected:n} / {total:n})"
             )
         else:
             self.currencyFilterGroupBox.setTitle("Currency Filter")
@@ -959,7 +960,7 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
     def set_selected_securities_number(self, selected: int, total: int) -> None:
         if self.security_filter_mode != FilterMode.OFF:
             self.securityFilterGroupBox.setTitle(
-                f"Security Filter ({selected:,} / {total:,})"
+                f"Security Filter ({selected:n} / {total:n})"
             )
         else:
             self.securityFilterGroupBox.setTitle("Security Filter")
