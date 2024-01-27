@@ -2,6 +2,7 @@ import logging
 from collections.abc import Sequence
 from datetime import datetime
 
+from src.models.custom_exceptions import NotFoundError
 from src.models.model_objects.attributes import AttributeType
 from src.models.model_objects.cash_objects import CashAccount
 from src.models.model_objects.security_objects import (
@@ -324,12 +325,12 @@ class SecurityTransactionDialogPresenter(TransactionDialogPresenter):
         security_name = self._dialog.security_name
         security_account_path = self._dialog.security_account_path
 
-        if (
-            security_name is None
-            or security_account_path is None
-            or security_name == ""
-            or security_account_path == ""
-        ):
+        try:
+            security = self._record_keeper.get_security_by_name(security_name)
+            security_account_path = self._record_keeper.get_account(
+                security_account_path, SecurityAccount
+            )
+        except (NotFoundError, TypeError):
             self._dialog.set_shares_suffix("")
             return
 
