@@ -1,3 +1,4 @@
+import locale
 import logging
 from datetime import date
 from decimal import Decimal
@@ -61,7 +62,9 @@ class SetExchangeRateDialog(CustomDialog, Ui_SetExchangeRateDialog):
 
     @property
     def value(self) -> Decimal:
-        return Decimal(self.exchangeRateDoubleSpinBox.cleanText().replace(",", ""))
+        text = self.exchangeRateDoubleSpinBox.cleanText()
+        text_delocalized = locale.delocalize(text)
+        return Decimal(text_delocalized)
 
     @property
     def date_(self) -> date:

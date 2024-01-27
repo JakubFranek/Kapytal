@@ -1,3 +1,4 @@
+import locale
 from collections.abc import Collection
 from datetime import date, datetime
 from decimal import Decimal, DivisionByZero, InvalidOperation
@@ -145,10 +146,11 @@ class CashTransferDialog(CustomDialog, Ui_CashTransferDialog):
 
     @property
     def amount_sent(self) -> Decimal | None:
-        text = self.sentDoubleSpinBox.cleanText().replace(",", "")
+        text = self.sentDoubleSpinBox.cleanText()
+        text_delocalized = locale.delocalize(text)
         if text == self.KEEP_CURRENT_VALUES:
             return None
-        return Decimal(text)
+        return Decimal(text_delocalized)
 
     @amount_sent.setter
     def amount_sent(self, amount: Decimal) -> None:
@@ -157,10 +159,10 @@ class CashTransferDialog(CustomDialog, Ui_CashTransferDialog):
     @property
     def amount_received(self) -> Decimal | None:
         text = self.receivedDoubleSpinBox.cleanText()
+        text_delocalized = locale.delocalize(text)
         if text == self.KEEP_CURRENT_VALUES:
             return None
-        text = text.replace(",", "")
-        return Decimal(text)
+        return Decimal(text_delocalized)
 
     @amount_received.setter
     def amount_received(self, amount: Decimal) -> None:

@@ -1,3 +1,4 @@
+import locale
 import logging
 from collections.abc import Collection
 from datetime import datetime
@@ -133,8 +134,9 @@ class RefundTransactionDialog(CustomDialog, Ui_RefundTransactionDialog):
 
     @property
     def amount(self) -> Decimal:
-        text = self.amountDoubleSpinBox.cleanText().replace(",", "")
-        return Decimal(text)
+        text = self.amountDoubleSpinBox.cleanText()
+        text_delocalized = locale.delocalize(text)
+        return Decimal(text_delocalized)
 
     @property
     def min_amount(self) -> Decimal:

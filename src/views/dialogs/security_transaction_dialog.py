@@ -1,3 +1,4 @@
+import locale
 import unicodedata
 from collections.abc import Collection
 from datetime import date, datetime
@@ -204,10 +205,11 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
 
     @property
     def shares(self) -> Decimal | None:
-        text = self.sharesDoubleSpinBox.cleanText().replace(",", "")
+        text = self.sharesDoubleSpinBox.cleanText()
+        text_delocalized = locale.delocalize(text)
         if text == self.KEEP_CURRENT_VALUES:
             return None
-        return Decimal(text)
+        return Decimal(text_delocalized)
 
     @shares.setter
     def shares(self, shares: Decimal) -> None:
@@ -216,10 +218,11 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
 
     @property
     def price_per_share(self) -> Decimal | None:
-        text = self.priceDoubleSpinBox.cleanText().replace(",", "")
+        text = self.priceDoubleSpinBox.cleanText()
+        text_delocalized = locale.delocalize(text)
         if text == self.KEEP_CURRENT_VALUES:
             return None
-        return Decimal(text)
+        return Decimal(text_delocalized)
 
     @price_per_share.setter
     def price_per_share(self, price_per_share: Decimal) -> None:
@@ -412,7 +415,7 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
             return
         with QSignalBlocker(self.priceDoubleSpinBox):
             shares = self.shares
-            total = Decimal(self.totalDoubleSpinBox.cleanText().replace(",", ""))
+            total = self._get_total_decimal()
             if (shares is None or shares == 0) and len(self._fixed_spinboxes) == 2:
                 self.priceDoubleSpinBox.setValue(0)
                 return
@@ -436,7 +439,7 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
         elif self.priceDoubleSpinBox not in self._fixed_spinboxes:
             with QSignalBlocker(self.priceDoubleSpinBox):
                 shares = self.shares
-                total = Decimal(self.totalDoubleSpinBox.cleanText().replace(",", ""))
+                total = self._get_total_decimal()
                 if shares is None or shares == 0:
                     self.priceDoubleSpinBox.setValue(0)
                     with QSignalBlocker(self.totalDoubleSpinBox):
@@ -446,7 +449,7 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
         elif self.sharesDoubleSpinBox not in self._fixed_spinboxes:
             with QSignalBlocker(self.sharesDoubleSpinBox):
                 price_per_share = self.price_per_share
-                total = Decimal(self.totalDoubleSpinBox.cleanText().replace(",", ""))
+                total = self._get_total_decimal()
                 if price_per_share is None or price_per_share == 0:
                     self.sharesDoubleSpinBox.setValue(0)
                     with QSignalBlocker(self.totalDoubleSpinBox):
@@ -457,7 +460,7 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
         else:
             raise ValueError("Invalid spinbox")
 
-        value = Decimal(spinbox.cleanText().replace(",", ""))
+        value = self._get_decimal_from_spinbox(spinbox)
         if value == 0:
             self._fixed_spinboxes.remove(spinbox)
 
@@ -552,3 +555,13 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
         self.sharesDoubleSpinBox.setEnabled(enabled)
         self.priceDoubleSpinBox.setEnabled(enabled)
         self.totalDoubleSpinBox.setEnabled(enabled)
+
+    def _get_total_decimal(self) -> Decimal:
+        text = self.totalDoubleSpinBox.cleanText()
+        text_delocalized = locale.delocalize(text)
+        return Decimal(text_delocalized)
+
+    def _get_decimal_from_spinbox(self, spinbox: QDoubleSpinBox) -> Decimal:
+        text = spinbox.cleanText()
+        text_delocalized = locale.delocalize(text)
+        return Decimal(text_delocalized)

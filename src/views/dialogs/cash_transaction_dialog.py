@@ -1,3 +1,4 @@
+import locale
 import logging
 from collections.abc import Collection
 from datetime import date, datetime
@@ -202,10 +203,11 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
 
     @property
     def amount(self) -> Decimal | None:
-        text = self.amountDoubleSpinBox.cleanText().replace(",", "")
+        text = self.amountDoubleSpinBox.cleanText()
+        text_delocalized = locale.delocalize(text)
         if text == self.KEEP_CURRENT_VALUES:
             return None
-        return Decimal(text)
+        return Decimal(text_delocalized)
 
     @amount.setter
     def amount(self, amount: Decimal) -> None:

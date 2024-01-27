@@ -1,3 +1,4 @@
+import locale
 import unicodedata
 from collections.abc import Collection
 from datetime import date, datetime
@@ -156,10 +157,11 @@ class SecurityTransferDialog(CustomDialog, Ui_SecurityTransferDialog):
 
     @property
     def shares(self) -> Decimal | None:
-        text = self.sharesDoubleSpinBox.cleanText().replace(",", "")
+        text = self.sharesDoubleSpinBox.cleanText()
+        text_delocalized = locale.delocalize(text)
         if text == self.KEEP_CURRENT_VALUES:
             return None
-        return Decimal(text)
+        return Decimal(text_delocalized)
 
     @shares.setter
     def shares(self, shares: Decimal) -> None:

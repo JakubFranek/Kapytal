@@ -1,3 +1,4 @@
+import locale
 from collections.abc import Collection
 from decimal import Decimal
 
@@ -103,8 +104,9 @@ class SplitTagRowWidget(QWidget):
 
     @property
     def amount(self) -> Decimal:
-        text = self.double_spin_box.cleanText().replace(",", "")
-        return Decimal(text)
+        text = self.double_spin_box.cleanText()
+        text_delocalized = locale.delocalize(text)
+        return Decimal(text_delocalized)
 
     @amount.setter
     def amount(self, value: Decimal) -> None:

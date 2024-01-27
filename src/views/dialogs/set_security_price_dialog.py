@@ -1,3 +1,4 @@
+import locale
 import logging
 from datetime import date
 from decimal import Decimal
@@ -56,7 +57,9 @@ class SetSecurityPriceDialog(CustomDialog, Ui_SetSecurityPriceDialog):
 
     @property
     def value(self) -> Decimal:
-        return Decimal(self.priceDoubleSpinBox.cleanText().replace(",", ""))
+        text = self.priceDoubleSpinBox.cleanText()
+        text_delocalized = locale.delocalize(text)
+        return Decimal(text_delocalized)
 
     @property
     def date_(self) -> date:

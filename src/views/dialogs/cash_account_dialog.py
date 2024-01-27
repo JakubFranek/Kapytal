@@ -1,3 +1,4 @@
+import locale
 import logging
 from collections.abc import Collection
 from decimal import Decimal
@@ -84,7 +85,10 @@ class CashAccountDialog(CustomDialog, Ui_CashAccountDialog):
 
     @property
     def initial_balance(self) -> Decimal:
-        return Decimal(self.initialBalanceDoubleSpinBox.cleanText().replace(",", ""))
+        text_delocalized = locale.delocalize(
+            self.initialBalanceDoubleSpinBox.cleanText()
+        )
+        return Decimal(text_delocalized)
 
     @initial_balance.setter
     def initial_balance(self, value: Decimal) -> None:

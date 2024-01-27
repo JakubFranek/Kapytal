@@ -1,3 +1,4 @@
+import locale
 from collections.abc import Collection
 from datetime import datetime, time, timedelta
 from decimal import Decimal
@@ -325,8 +326,9 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
 
     @property
     def cash_amount_filter_minimum(self) -> Decimal:
-        text = self.cashAmountFilterMinimumDoubleSpinBox.cleanText().replace(",", "")
-        return Decimal(text)
+        text = self.cashAmountFilterMinimumDoubleSpinBox.cleanText()
+        text_delocalized = locale.delocalize(text)
+        return Decimal(text_delocalized)
 
     @cash_amount_filter_minimum.setter
     def cash_amount_filter_minimum(self, amount: Decimal) -> None:
@@ -334,8 +336,9 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
 
     @property
     def cash_amount_filter_maximum(self) -> Decimal:
-        text = self.cashAmountFilterMaximumDoubleSpinBox.cleanText().replace(",", "")
-        return Decimal(text)
+        text = self.cashAmountFilterMaximumDoubleSpinBox.cleanText()
+        text_delocalized = locale.delocalize(text)
+        return Decimal(text_delocalized)
 
     @cash_amount_filter_maximum.setter
     def cash_amount_filter_maximum(self, amount: Decimal) -> None:
@@ -901,8 +904,9 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
         self.actionExpandAllAccountItemsBelow.setEnabled(account_group_selected)
 
     def _update_cash_amount_filter_minimum(self) -> None:
-        text = self.cashAmountFilterMaximumDoubleSpinBox.cleanText().replace(",", "")
-        maximum = Decimal(text)
+        text = self.cashAmountFilterMaximumDoubleSpinBox.cleanText()
+        text_delocalized = locale.delocalize(text)
+        maximum = Decimal(text_delocalized)
         self.cashAmountFilterMinimumDoubleSpinBox.setMaximum(maximum)
 
     def set_selected_category_numbers(

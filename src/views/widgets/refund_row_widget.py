@@ -1,3 +1,4 @@
+import locale
 from decimal import Decimal
 
 from PyQt6.QtCore import QSignalBlocker, Qt, pyqtSignal
@@ -42,8 +43,10 @@ class RefundRowWidget(QWidget):
 
     @property
     def amount(self) -> Decimal:
-        text = self.double_spin_box.cleanText().replace(",", "")
-        return Decimal(text)
+        # TODO: encapsulate in a src/views/utilities helper function
+        text = self.double_spin_box.cleanText()
+        text_delocalized = locale.delocalize(text)
+        return Decimal(text_delocalized)
 
     @amount.setter
     def amount(self, value: Decimal) -> None:
