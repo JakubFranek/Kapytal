@@ -100,3 +100,7 @@ def test_convert_decimal_to_string(test_data: tuple[Decimal, str]) -> None:
 @pytest.mark.parametrize("test_data", test_data_2_decimals.items())
 def test_convert_decimal_to_string_two_decimals(test_data: tuple[Decimal, str]) -> None:
     assert convert_decimal_to_string(test_data[0], min_decimals=2) == test_data[1]
+
+
+def test_convert_decimal_to_string_twelve_decimals() -> None:
+    assert convert_decimal_to_string(Decimal(0), min_decimals=12) == "0.000000000000"

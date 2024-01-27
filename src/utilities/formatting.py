@@ -40,7 +40,7 @@ def convert_decimal_to_string(
     return (
         f"{value.quantize(DECIMAL_ONE):,}"
         if min_decimals is None
-        else f"{value.quantize(quantizers[min_decimals]):,}"
+        else f"{value.quantize(quantizers[min_decimals]):,f}"
     )
 
 

@@ -5,6 +5,7 @@ from datetime import datetime
 from src.models.model_objects.attributes import AttributeType
 from src.models.model_objects.cash_objects import CashAccount
 from src.models.model_objects.security_objects import (
+    SecurityAccount,
     SecurityTransaction,
     SecurityTransactionType,
 )
@@ -17,6 +18,7 @@ from src.presenters.utilities.check_for_nonexistent_attributes import (
 )
 from src.presenters.utilities.handle_exception import handle_exception
 from src.presenters.utilities.validate_inputs import validate_datetime
+from src.utilities.formatting import convert_decimal_to_string
 from src.views.dialogs.security_transaction_dialog import (
     EditMode,
     SecurityTransactionDialog,
@@ -51,6 +53,9 @@ class SecurityTransactionDialogPresenter(TransactionDialogPresenter):
         self._dialog.signal_do_and_continue.connect(
             lambda: self._add_security_transaction(close=False)
         )
+        self._dialog.signal_request_shares_suffix_update.connect(
+            lambda: self._update_shares_suffix(())
+        )
 
         self._dialog.exec()
 
@@ -73,6 +78,9 @@ class SecurityTransactionDialogPresenter(TransactionDialogPresenter):
         )
         self._dialog.signal_do_and_continue.connect(
             lambda: self._add_security_transaction(close=False)
+        )
+        self._dialog.signal_request_shares_suffix_update.connect(
+            lambda: self._update_shares_suffix(())
         )
         self._dialog.exec()
 
@@ -155,6 +163,10 @@ class SecurityTransactionDialogPresenter(TransactionDialogPresenter):
         self._dialog.signal_do_and_close.connect(
             lambda: self._edit_security_transactions(transactions)
         )
+        self._dialog.signal_request_shares_suffix_update.connect(
+            lambda: self._update_shares_suffix(transactions)
+        )
+        self._update_shares_suffix(transactions)
         self._dialog.exec()
 
     def _add_security_transaction(self, *, close: bool) -> None:
@@ -301,3 +313,46 @@ class SecurityTransactionDialogPresenter(TransactionDialogPresenter):
             self._record_keeper.descriptions,
             edit_mode=edit_mode,
         )
+
+    def _update_shares_suffix(
+        self, transactions: Sequence[SecurityTransaction]
+    ) -> None:
+        if self._dialog.type_ == SecurityTransactionType.BUY:
+            self._dialog.set_shares_suffix("")
+            return
+
+        security_name = self._dialog.security_name
+        security_account_path = self._dialog.security_account_path
+
+        if (
+            security_name is None
+            or security_account_path is None
+            or security_name == ""
+            or security_account_path == ""
+        ):
+            self._dialog.set_shares_suffix("")
+            return
+
+        security = self._record_keeper.get_security_by_name(security_name)
+        security_account = self._record_keeper.get_account(
+            security_account_path, SecurityAccount
+        )
+
+        if self._dialog.edit_mode == EditMode.ADD:
+            shares = security_account.securities[security]
+        elif self._dialog.edit_mode == EditMode.EDIT_SINGLE:
+            edited_transaction = transactions[0]
+            if edited_transaction.security == security and (
+                edited_transaction.security_account == security_account
+            ):
+                shares = (
+                    edited_transaction.shares + security_account.securities[security]
+                )
+            else:
+                shares = security_account.securities[security]
+        else:
+            self._dialog.set_shares_suffix("")
+            return
+
+        suffix = f" / {convert_decimal_to_string(shares,18,security.shares_decimals)}"
+        self._dialog.set_shares_suffix(suffix)
