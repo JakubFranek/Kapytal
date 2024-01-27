@@ -197,7 +197,7 @@ class TransactionsPresenter:
         any_non_base_amount = False
         for transaction in visible_transactions:
             if not any_security_related and isinstance(
-                transaction, SecurityTransaction
+                transaction, (SecurityTransaction, SecurityTransfer)
             ):
                 any_security_related = True
             if not any_cash_transfers and isinstance(transaction, CashTransfer):
