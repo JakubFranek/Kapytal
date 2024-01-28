@@ -19,7 +19,6 @@ class Ui_CategoryDialog(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(CategoryDialog.sizePolicy().hasHeightForWidth())
         CategoryDialog.setSizePolicy(sizePolicy)
-        CategoryDialog.setLocale(QtCore.QLocale(QtCore.QLocale.Language.English, QtCore.QLocale.Country.UnitedKingdom))
         self.verticalLayout = QtWidgets.QVBoxLayout(CategoryDialog)
         self.verticalLayout.setSizeConstraint(QtWidgets.QLayout.SizeConstraint.SetDefaultConstraint)
         self.verticalLayout.setObjectName("verticalLayout")

@@ -1,8 +1,9 @@
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QCloseEvent
-from PyQt6.QtWidgets import QLineEdit, QTableView, QWidget
+from PyQt6.QtWidgets import QHeaderView, QLineEdit, QTableView, QWidget
 from src.views import icons
 from src.views.base_classes.custom_widget import CustomWidget
+from src.views.constants import QuotesUpdateTableColumn
 from src.views.ui_files.forms.Ui_quotes_update_form import Ui_QuotesUpdateForm
 from src.views.utilities.message_box_functions import show_info_box
 
@@ -41,6 +42,12 @@ class QuotesUpdateForm(CustomWidget, Ui_QuotesUpdateForm):
 
         self.searchLineEdit.addAction(
             icons.magnifier, QLineEdit.ActionPosition.LeadingPosition
+        )
+
+    def finalize_setup(self) -> None:
+        self.tableView.horizontalHeader().setSectionResizeMode(
+            QuotesUpdateTableColumn.ITEM,
+            QHeaderView.ResizeMode.ResizeToContents,
         )
 
     @property

@@ -16,9 +16,6 @@
   <property name="windowTitle">
    <string>Set Security Price</string>
   </property>
-  <property name="locale">
-   <locale language="English" country="UnitedKingdom"/>
-  </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
     <layout class="QFormLayout" name="formLayout">
@@ -51,6 +48,9 @@
      </item>
      <item row="1" column="1">
       <widget class="QDateEdit" name="dateEdit">
+       <property name="locale">
+        <locale language="English" country="UnitedKingdom"/>
+       </property>
        <property name="calendarPopup">
         <bool>true</bool>
        </property>

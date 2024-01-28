@@ -9,29 +9,29 @@ from PyQt6.QtCore import QSortFilterProxyModel, Qt
 from PyQt6.QtWidgets import QApplication
 from src.models.custom_exceptions import InvalidOperationError
 from src.models.model_objects.currency_objects import CashAmount
-from src.models.model_objects.security_objects import Security, SecurityAccount
+from src.models.model_objects.security_objects import Security
 from src.models.record_keeper import RecordKeeper
-from src.models.statistics.security_stats import calculate_irr, calculate_total_irr
+from src.models.statistics.security_stats import SecurityStatsData
 from src.models.user_settings import user_settings
 from src.presenters.utilities.event import Event
 from src.presenters.utilities.handle_exception import handle_exception
-from src.view_models.owned_securities_tree_model import OwnedSecuritiesTreeModel
+from src.view_models.securities_overview_tree_model import (
+    COLUMNS_DETAILED,
+    COLUMNS_NATIVE,
+    COLUMNS_REALIZED,
+    COLUMNS_TOTAL,
+    COLUMNS_UNREALIZED,
+    SecuritiesOverviewTreeModel,
+)
 from src.view_models.security_table_model import SecurityTableModel
 from src.view_models.value_table_model import ValueTableModel, ValueType
-from src.views.constants import OwnedSecuritiesTreeColumn
+from src.views.constants import SecuritiesOverviewTreeColumn
 from src.views.dialogs.busy_dialog import create_simple_busy_indicator
 from src.views.dialogs.load_data_dialog import ConflictResolutionMode, LoadDataDialog
 from src.views.dialogs.security_dialog import SecurityDialog
 from src.views.dialogs.set_security_price_dialog import SetSecurityPriceDialog
-from src.views.forms.security_form import SecurityForm
+from src.views.forms.security_form import PerformanceStats, SecurityForm
 from src.views.utilities.message_box_functions import ask_yes_no_question
-
-OVERVIEW_COLUMNS_NATIVE = {
-    OwnedSecuritiesTreeColumn.GAIN_NATIVE,
-    OwnedSecuritiesTreeColumn.RETURN_NATIVE,
-    OwnedSecuritiesTreeColumn.IRR_NATIVE,
-    OwnedSecuritiesTreeColumn.AMOUNT_NATIVE,
-}
 
 
 class SecurityFormPresenter:
@@ -42,7 +42,9 @@ class SecurityFormPresenter:
         self.view = view
         self._record_keeper = record_keeper
 
-        self.reset_self = True  # if True, models can be reset via data_changed
+        self._reset_self = True  # if True, models can be reset via data_changed
+        self._update_overview_on_show = False
+        self._update_manage_on_show = False
 
         self.view.signal_update_quotes.connect(self.event_update_quotes)
 
@@ -61,10 +63,10 @@ class SecurityFormPresenter:
         self.update_security_model_data()
         self._security_table_model.post_reset_model()
 
-        self.reset_overview_model_data()
+        self.update_overview_model_data()
 
         self._price_table_model.pre_reset_model()
-        self.reset_price_model_data()
+        self._price_table_model.load_data(())
         self._price_table_model.post_reset_model()
 
         self._update_chart(None)
@@ -76,54 +78,39 @@ class SecurityFormPresenter:
         )
         self._set_security_table_column_visibility()
 
-    def reset_overview_model_data(self) -> None:
-        # REFACTOR: resetting model for every update is necessary because the model
-        # cannot synchronize id's during model updates
-        self._overview_tree_model.pre_reset_model()
-        self.update_overview_model_data()
-        self._overview_tree_model.post_reset_model()
-
     def update_overview_model_data(self) -> None:
-        irrs = self._calculate_irrs()
-        total_irr = calculate_total_irr(self._record_keeper)
-        self._overview_tree_model.load_data(
+        self._overview_tree_model.pre_reset_model()
+        data = SecurityStatsData(
+            self._record_keeper.securities,
             self._record_keeper.security_accounts,
-            irrs,
-            total_irr,
             self._record_keeper.base_currency,
         )
-        hide_native_column = all(
-            security.currency == self._record_keeper.base_currency
-            for security in self._record_keeper.securities
-        )
-        for column in OVERVIEW_COLUMNS_NATIVE:
-            self.view.treeView.setColumnHidden(column, hide_native_column)
+        self._overview_tree_model.load_data(data)
+        self._overview_tree_model.post_reset_model()
 
-    def reset_price_model_data(self) -> None:
-        self._price_table_model.load_data(())
+        self._update_overview_on_show = False
 
     def data_changed(self) -> None:
         # skip this if data_changed is triggered by self via event chain
-        if not self.reset_self:
+        if not self._reset_self:
             return
 
         self.view.securityTableView.viewport().update()  # forces redraw
-        self.update_security_model_data()
 
-        self._overview_tree_model.pre_reset_model()
-        self.update_overview_model_data()
-        self._overview_tree_model.post_reset_model()
+        if self.view.isVisible() and self.view.is_overview_tab_selected:
+            self.update_overview_model_data()
+        else:
+            self._update_overview_on_show = True
 
-        security = self._security_table_model.get_selected_item()
-        if security is None:
-            return
-        self._price_table_model.pre_reset_model()
-        self._price_table_model.load_data(
-            security.decimal_price_history_pairs, security.price_decimals
-        )
-        self._price_table_model.set_unit(security.currency.code)
-        self._price_table_model.post_reset_model()
-        self._update_chart(security)
+        if self.view.isVisible() and self.view.is_manage_tab_selected:
+            self.update_security_model_data()
+
+            security = self._security_table_model.get_selected_item()
+            if security is None:
+                return
+            self._update_price_table_and_chart(security)
+        else:
+            self._update_manage_on_show = True
 
     def show_form(self) -> None:
         self._busy_form_dialog = create_simple_busy_indicator(
@@ -138,10 +125,22 @@ class SecurityFormPresenter:
         ):
             self.view.securityTableView.selectRow(0)
 
+        if self._update_overview_on_show:
+            self.update_overview_model_data()
+
+        if self._update_manage_on_show:
+            self.update_security_model_data()
+            security = self._security_table_model.get_selected_item()
+            if security is None:
+                return
+            self._update_price_table_and_chart(security)
+            self._update_manage_on_show = False
+
         self.view.refresh_tree_view()
         self.view.treeView.sortByColumn(
-            OwnedSecuritiesTreeColumn.AMOUNT_BASE, Qt.SortOrder.DescendingOrder
+            SecuritiesOverviewTreeColumn.AMOUNT_OWNED_BASE, Qt.SortOrder.DescendingOrder
         )
+        self._update_overview_columns()
         self.view.show_form()
         self._busy_form_dialog.close()
 
@@ -197,9 +196,9 @@ class SecurityFormPresenter:
         self._security_table_model.post_add()
         self._security_selection_changed()
         self._dialog.close()
-        self.reset_self = False
+        self._reset_self = False
         self.event_data_changed()
-        self.reset_self = True
+        self._reset_self = True
 
     def _edit_security(self) -> None:
         security = self._security_table_model.get_selected_item()
@@ -225,9 +224,9 @@ class SecurityFormPresenter:
 
         self.update_security_model_data()
         self._dialog.close()
-        self.reset_self = False
+        self._reset_self = False
         self.event_data_changed()
-        self.reset_self = True
+        self._reset_self = True
 
     def _remove_security(self) -> None:
         security = self._security_table_model.get_selected_item()
@@ -255,9 +254,9 @@ class SecurityFormPresenter:
         self._security_table_model.pre_remove_item(security)
         self.update_security_model_data()
         self._security_table_model.post_remove_item()
-        self.reset_self = False
+        self._reset_self = False
         self.event_data_changed()
-        self.reset_self = True
+        self._reset_self = True
 
     def _run_add_price_dialog(self) -> None:
         security = self._security_table_model.get_selected_item()
@@ -352,10 +351,10 @@ class SecurityFormPresenter:
         self._dialog.close()
         self._update_chart(security)
         self.update_security_model_data()
-        self.reset_overview_model_data()
-        self.reset_self = False
+        self.update_overview_model_data()
+        self._reset_self = False
         self.event_data_changed()
-        self.reset_self = True
+        self._reset_self = True
 
     def _remove_prices(self) -> None:
         selected_data_points = self._price_table_model.get_selected_values()
@@ -375,7 +374,7 @@ class SecurityFormPresenter:
         if not ask_yes_no_question(
             self.view,
             question=(
-                f"Do you want to delete {len(selected_data_points):,} data point(s) "
+                f"Do you want to delete {len(selected_data_points):n} data point(s) "
                 f"of {security.name}?"
             ),
             title="Are you sure?",
@@ -396,10 +395,10 @@ class SecurityFormPresenter:
             self._update_price_table_and_chart(security)
             self._price_selection_changed()
             self.update_security_model_data()
-            self.reset_overview_model_data()
-            self.reset_self = False
+            self.update_overview_model_data()
+            self._reset_self = False
             self.event_data_changed()
-            self.reset_self = True
+            self._reset_self = True
 
     def _run_load_data_dialog(self) -> None:
         security = self._security_table_model.get_selected_item()
@@ -460,11 +459,11 @@ class SecurityFormPresenter:
 
         self._update_price_table_and_chart(security)
         self.update_security_model_data()
-        self.reset_overview_model_data()
+        self.update_overview_model_data()
         self._dialog.close()
-        self.reset_self = False
+        self._reset_self = False
         self.event_data_changed()
-        self.reset_self = True
+        self._reset_self = True
 
     def _initialize_table_models(self) -> None:
         self._security_table_proxy = QSortFilterProxyModel(self.view.securityTableView)
@@ -497,7 +496,7 @@ class SecurityFormPresenter:
 
     def _initialize_tree_models(self) -> None:
         self._tree_proxy = QSortFilterProxyModel(self.view.treeView)
-        self._overview_tree_model = OwnedSecuritiesTreeModel(
+        self._overview_tree_model = SecuritiesOverviewTreeModel(
             self.view.treeView,
             self._tree_proxy,
         )
@@ -506,9 +505,10 @@ class SecurityFormPresenter:
         self._tree_proxy.setSortCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
         self._tree_proxy.setRecursiveFilteringEnabled(True)  # noqa: FBT003
         self._tree_proxy.sort(
-            OwnedSecuritiesTreeColumn.AMOUNT_BASE, Qt.SortOrder.DescendingOrder
+            SecuritiesOverviewTreeColumn.AMOUNT_OWNED_BASE, Qt.SortOrder.DescendingOrder
         )
-        self._tree_proxy.setFilterKeyColumn(-1)
+        self._tree_proxy.setFilterKeyColumn(SecuritiesOverviewTreeColumn.NAME)
+        self._tree_proxy.setFilterRole(Qt.ItemDataRole.UserRole + 1)
         self._tree_proxy.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
         self.view.treeView.setModel(self._tree_proxy)
 
@@ -538,6 +538,10 @@ class SecurityFormPresenter:
             lambda: self._run_security_dialog(edit=True)
         )
         self.view.signal_price_table_double_clicked.connect(self._run_edit_price_dialog)
+
+        self.view.signal_overview_column_settings_changed.connect(
+            self._update_overview_columns
+        )
 
     def _filter_table(self, pattern: str) -> None:
         if ("[" in pattern and "]" not in pattern) or "[]" in pattern:
@@ -658,27 +662,38 @@ class SecurityFormPresenter:
             column_empty = self._security_table_model.is_column_empty(column)
             self.view.securityTableView.setColumnHidden(column, column_empty)
 
-    def _calculate_irrs(
-        self,
-    ) -> dict[Security, dict[SecurityAccount | None, tuple[Decimal, Decimal]]]:
-        irrs: dict[Security, dict[SecurityAccount | None, tuple[Decimal, Decimal]]] = {}
-        base_currency = self._record_keeper.base_currency
-        for security in self._record_keeper.securities:
-            accounts = [
-                account
-                for account in self._record_keeper.security_accounts
-                if security in account.related_securities
-            ]
-            irrs[security] = {
-                None: (
-                    calculate_irr(security, accounts),
-                    calculate_irr(security, accounts, base_currency),
-                )
-            }
-            for account in accounts:
-                irrs[security][account] = (
-                    calculate_irr(security, [account]),
-                    calculate_irr(security, [account], base_currency),
-                )
+    def _update_overview_columns(self) -> None:
+        performance_type = self.view.performance_stats
+        native_currency_columns = self.view.native_currency_stats
+        detailed_shares_columns = self.view.detailed_stats
 
-        return irrs
+        all_base = all(
+            security.currency == self._record_keeper.base_currency
+            for security in self._record_keeper.securities
+        )
+
+        for column in SecuritiesOverviewTreeColumn:
+            show = True
+            if column in COLUMNS_NATIVE:
+                show = show and native_currency_columns
+            if column in COLUMNS_DETAILED:
+                show = show and detailed_shares_columns
+            if column in COLUMNS_TOTAL:
+                show = show and performance_type in {
+                    PerformanceStats.TOTAL,
+                    PerformanceStats.ALL,
+                }
+            if column == SecuritiesOverviewTreeColumn.GAIN_TOTAL_CURRENCY:
+                show = show and not all_base
+            if column in COLUMNS_REALIZED:
+                show = show and performance_type in {
+                    PerformanceStats.REALIZED,
+                    PerformanceStats.ALL,
+                }
+            if column in COLUMNS_UNREALIZED:
+                show = show and performance_type in {
+                    PerformanceStats.UNREALIZED,
+                    PerformanceStats.ALL,
+                }
+
+            self.view.treeView.setColumnHidden(column.value, not show)

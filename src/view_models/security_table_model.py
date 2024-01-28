@@ -7,7 +7,7 @@ from PyQt6.QtGui import QBrush
 from PyQt6.QtWidgets import QTableView
 from src.models.model_objects.security_objects import Security
 from src.models.user_settings import user_settings
-from src.utilities.formatting import get_short_percentage_string
+from src.utilities.formatting import format_percentage
 from src.views import colors
 from src.views.constants import SecurityTableColumn
 
@@ -141,7 +141,7 @@ class SecurityTableModel(QAbstractTableModel):
             _return = self._returns[security][COLUMN_HEADERS[column]]
             if _return.is_nan():
                 return None
-            return get_short_percentage_string(_return)
+            return format_percentage(_return)
         return None
 
     def _get_user_role_data(  # noqa: PLR0911

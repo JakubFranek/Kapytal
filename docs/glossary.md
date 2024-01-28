@@ -192,11 +192,13 @@ The user can set the maximum logs directory size in [Settings Form](#settings-fo
 
 ## Native Currency/Amount
 
-The [Currency](#currency-) of a [Cash Account](#cash-account-) is considered to be its native Currency.
+The [Currency](#currency-) of a [Cash Account](#cash-account-) or a [Security](#security-) is considered to be its native Currency.
 
 In the [Account Tree](#account-tree-), the balance of all Cash Accounts is shown in both native and [base](#base-currency) Currency, unless the native Currency of the particular Cash Account matches the base Currency. In that case, native balance is empty (as it would be identical to base amount anyway).
 
-In the [Transaction Table](#transaction-table-), Native amount and Base amount are two separate columns. Native amount displays the amount of all [Transactions](#transaction) except the [Cash Transfer](#cash-transfer-) and [Security Transfer](#security-transfer-) Transactions, which are denominated in a Currency different from the base Currency.
+In the [Transaction Table](#transaction-table-), Native Amount and Base Amount are two separate columns. Native Amount displays the amount of all [Transactions](#transaction) except the [Cash Transfer](#cash-transfer-) and [Security Transfer](#security-transfer-) Transactions, which are denominated in a Currency different from the base Currency.
+
+In the [Securities Form](#securities-form) Overview tab tree, there are several performance indicators, some of which are also denominated in the native Currency of the given Security.
 
 ## Net Worth Reports ![Icon](../resources/icons/icons-16/chart-pie.png)
 

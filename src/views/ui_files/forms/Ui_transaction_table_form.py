@@ -15,7 +15,6 @@ class Ui_TransactionTableForm(object):
         TransactionTableForm.setWindowModality(QtCore.Qt.WindowModality.WindowModal)
         TransactionTableForm.resize(800, 500)
         TransactionTableForm.setWindowTitle("")
-        TransactionTableForm.setLocale(QtCore.QLocale(QtCore.QLocale.Language.English, QtCore.QLocale.Country.UnitedKingdom))
         self.verticalLayout = QtWidgets.QVBoxLayout(TransactionTableForm)
         self.verticalLayout.setObjectName("verticalLayout")
         self.searchLineEdit = QtWidgets.QLineEdit(TransactionTableForm)

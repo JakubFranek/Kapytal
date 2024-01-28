@@ -14,7 +14,6 @@ class Ui_CashFlowPeriodicReport(object):
         CashFlowPeriodicReport.setObjectName("CashFlowPeriodicReport")
         CashFlowPeriodicReport.setWindowModality(QtCore.Qt.WindowModality.WindowModal)
         CashFlowPeriodicReport.resize(800, 600)
-        CashFlowPeriodicReport.setLocale(QtCore.QLocale(QtCore.QLocale.Language.English, QtCore.QLocale.Country.UnitedKingdom))
         self.horizontalLayout = QtWidgets.QHBoxLayout(CashFlowPeriodicReport)
         self.horizontalLayout.setObjectName("horizontalLayout")
         self.tabWidget = QtWidgets.QTabWidget(CashFlowPeriodicReport)

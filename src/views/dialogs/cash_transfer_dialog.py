@@ -15,7 +15,10 @@ from src.models.user_settings import user_settings
 from src.views import icons
 from src.views.base_classes.custom_dialog import CustomDialog
 from src.views.ui_files.dialogs.Ui_cash_transfer_dialog import Ui_CashTransferDialog
-from src.views.utilities.helper_functions import convert_datetime_format_to_qt
+from src.views.utilities.helper_functions import (
+    convert_datetime_format_to_qt,
+    get_spinbox_value_as_decimal,
+)
 from src.views.widgets.description_plain_text_edit import DescriptionPlainTextEdit
 from src.views.widgets.multiple_tags_selector_widget import MultipleTagsSelectorWidget
 from src.views.widgets.smart_combo_box import SmartComboBox
@@ -145,10 +148,10 @@ class CashTransferDialog(CustomDialog, Ui_CashTransferDialog):
 
     @property
     def amount_sent(self) -> Decimal | None:
-        text = self.sentDoubleSpinBox.cleanText().replace(",", "")
+        text = self.sentDoubleSpinBox.cleanText()
         if text == self.KEEP_CURRENT_VALUES:
             return None
-        return Decimal(text)
+        return get_spinbox_value_as_decimal(self.sentDoubleSpinBox)
 
     @amount_sent.setter
     def amount_sent(self, amount: Decimal) -> None:
@@ -159,8 +162,7 @@ class CashTransferDialog(CustomDialog, Ui_CashTransferDialog):
         text = self.receivedDoubleSpinBox.cleanText()
         if text == self.KEEP_CURRENT_VALUES:
             return None
-        text = text.replace(",", "")
-        return Decimal(text)
+        return get_spinbox_value_as_decimal(self.receivedDoubleSpinBox)
 
     @amount_received.setter
     def amount_received(self, amount: Decimal) -> None:
@@ -227,10 +229,10 @@ class CashTransferDialog(CustomDialog, Ui_CashTransferDialog):
             return
 
         text_primary = (
-            f"1 {sender.currency.code} = {rate_primary:,} {recipient.currency.code}"
+            f"1 {sender.currency.code} = {rate_primary:n} {recipient.currency.code}"
         )
         text_secondary = (
-            f"1 {recipient.currency.code} = {rate_secondary:,} {sender.currency.code}"
+            f"1 {recipient.currency.code} = {rate_secondary:n} {sender.currency.code}"
         )
 
         text_overall = text_primary + " | " + text_secondary

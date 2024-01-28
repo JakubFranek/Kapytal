@@ -19,7 +19,6 @@ class Ui_SelectItemDialog(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(SelectItemDialog.sizePolicy().hasHeightForWidth())
         SelectItemDialog.setSizePolicy(sizePolicy)
-        SelectItemDialog.setLocale(QtCore.QLocale(QtCore.QLocale.Language.English, QtCore.QLocale.Country.UnitedKingdom))
         self.verticalLayout = QtWidgets.QVBoxLayout(SelectItemDialog)
         self.verticalLayout.setSizeConstraint(QtWidgets.QLayout.SizeConstraint.SetDefaultConstraint)
         self.verticalLayout.setObjectName("verticalLayout")

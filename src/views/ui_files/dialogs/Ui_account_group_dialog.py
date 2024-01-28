@@ -19,7 +19,6 @@ class Ui_AccountGroupDialog(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(AccountGroupDialog.sizePolicy().hasHeightForWidth())
         AccountGroupDialog.setSizePolicy(sizePolicy)
-        AccountGroupDialog.setLocale(QtCore.QLocale(QtCore.QLocale.Language.English, QtCore.QLocale.Country.UnitedKingdom))
         self.verticalLayout = QtWidgets.QVBoxLayout(AccountGroupDialog)
         self.verticalLayout.setSizeConstraint(QtWidgets.QLayout.SizeConstraint.SetDefaultConstraint)
         self.verticalLayout.setObjectName("verticalLayout")

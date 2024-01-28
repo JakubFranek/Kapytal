@@ -20,7 +20,10 @@ from src.views.base_classes.custom_dialog import CustomDialog
 from src.views.ui_files.dialogs.Ui_security_transfer_dialog import (
     Ui_SecurityTransferDialog,
 )
-from src.views.utilities.helper_functions import convert_datetime_format_to_qt
+from src.views.utilities.helper_functions import (
+    convert_datetime_format_to_qt,
+    get_spinbox_value_as_decimal,
+)
 from src.views.widgets.description_plain_text_edit import DescriptionPlainTextEdit
 from src.views.widgets.multiple_tags_selector_widget import MultipleTagsSelectorWidget
 from src.views.widgets.smart_combo_box import SmartComboBox
@@ -37,6 +40,7 @@ class SecurityTransferDialog(CustomDialog, Ui_SecurityTransferDialog):
 
     signal_do_and_close = pyqtSignal()
     signal_do_and_continue = pyqtSignal()
+    signal_request_shares_suffix_update = pyqtSignal()
 
     def __init__(
         self,
@@ -50,7 +54,7 @@ class SecurityTransferDialog(CustomDialog, Ui_SecurityTransferDialog):
     ) -> None:
         super().__init__(parent)
         self.setupUi(self)
-        self._edit_mode = edit_mode
+        self.edit_mode = edit_mode
 
         self._security_accounts = security_accounts
         self._securities = securities
@@ -83,7 +87,7 @@ class SecurityTransferDialog(CustomDialog, Ui_SecurityTransferDialog):
     def security_name(self, value: str) -> None:
         security = self._get_security(value)
         if security is None:
-            if self._edit_mode != EditMode.EDIT_MULTIPLE:
+            if self.edit_mode != EditMode.EDIT_MULTIPLE:
                 raise ValueError(f"Security {value} not found.")
             self.securityComboBox.setCurrentText(self.KEEP_CURRENT_VALUES)
             return
@@ -145,7 +149,7 @@ class SecurityTransferDialog(CustomDialog, Ui_SecurityTransferDialog):
     @property
     def description(self) -> str | None:
         text = self.descriptionPlainTextEdit.toPlainText()
-        if self._edit_mode == EditMode.EDIT_MULTIPLE:
+        if self.edit_mode == EditMode.EDIT_MULTIPLE:
             return text if text else None
         return text
 
@@ -155,10 +159,10 @@ class SecurityTransferDialog(CustomDialog, Ui_SecurityTransferDialog):
 
     @property
     def shares(self) -> Decimal | None:
-        text = self.sharesDoubleSpinBox.cleanText().replace(",", "")
+        text = self.sharesDoubleSpinBox.cleanText()
         if text == self.KEEP_CURRENT_VALUES:
             return None
-        return Decimal(text)
+        return get_spinbox_value_as_decimal(self.sharesDoubleSpinBox)
 
     @shares.setter
     def shares(self, shares: Decimal) -> None:
@@ -171,7 +175,7 @@ class SecurityTransferDialog(CustomDialog, Ui_SecurityTransferDialog):
         if len(_tag_names) != 0:
             return _tag_names
 
-        if self._edit_mode == EditMode.EDIT_MULTIPLE:
+        if self.edit_mode == EditMode.EDIT_MULTIPLE:
             return None
         return ()
 
@@ -179,11 +183,14 @@ class SecurityTransferDialog(CustomDialog, Ui_SecurityTransferDialog):
     def tag_names(self, tag_names: Collection[str]) -> None:
         self.tags_widget.tag_names = tag_names
 
+    def set_shares_suffix(self, suffix: str) -> None:
+        self.sharesDoubleSpinBox.setSuffix(suffix)
+
     def _initialize_window(self) -> None:
         self.setWindowIcon(icons.security_transfer)
         self.buttonBox = QDialogButtonBox(self)
-        if self._edit_mode != EditMode.ADD:
-            if self._edit_mode == EditMode.EDIT_MULTIPLE:
+        if self.edit_mode != EditMode.ADD:
+            if self.edit_mode == EditMode.EDIT_MULTIPLE:
                 self.setWindowTitle("Edit Security Transfers")
             else:
                 self.setWindowTitle("Edit Security Transfer")
@@ -201,7 +208,7 @@ class SecurityTransferDialog(CustomDialog, Ui_SecurityTransferDialog):
         self.gridLayout.addWidget(self.buttonBox, 7, 1, 1, -1)
 
     def _initialize_placeholders(self) -> None:
-        if self._edit_mode == EditMode.EDIT_MULTIPLE:
+        if self.edit_mode == EditMode.EDIT_MULTIPLE:
             self.descriptionPlainTextEdit.setPlaceholderText(
                 "Leave empty to keep current values"
             )
@@ -222,7 +229,7 @@ class SecurityTransferDialog(CustomDialog, Ui_SecurityTransferDialog):
         self.gridLayout.addWidget(self.descriptionPlainTextEdit, 5, 1, 1, -1)
 
     def _initialize_security_combobox(self, securities: Collection[Security]) -> None:
-        if self._edit_mode == EditMode.EDIT_MULTIPLE:
+        if self.edit_mode == EditMode.EDIT_MULTIPLE:
             placeholder_text = "Leave empty to keep current values"
         else:
             placeholder_text = "Enter Security name"
@@ -258,7 +265,7 @@ class SecurityTransferDialog(CustomDialog, Ui_SecurityTransferDialog):
     ) -> None:
         items = [account.path for account in self._security_accounts]
 
-        if self._edit_mode == EditMode.EDIT_MULTIPLE:
+        if self.edit_mode == EditMode.EDIT_MULTIPLE:
             placeholder_text = "Leave empty to keep current values"
         else:
             placeholder_text = "Enter Account path"
@@ -267,6 +274,9 @@ class SecurityTransferDialog(CustomDialog, Ui_SecurityTransferDialog):
         self.senderComboBox.load_items(items, icons.security_account, placeholder_text)
         self.gridLayout.addWidget(self.senderComboBox, 1, 1, 1, 1)
         self.senderComboBox.setMinimumWidth(300)
+        self.senderComboBox.currentTextChanged.connect(
+            self.signal_request_shares_suffix_update.emit
+        )
 
         self.recipientComboBox = SmartComboBox(parent=self)
         self.recipientComboBox.load_items(
@@ -297,10 +307,12 @@ class SecurityTransferDialog(CustomDialog, Ui_SecurityTransferDialog):
 
         if security is None:
             self.sharesDoubleSpinBox.setDecimals(0)  # default value
+            self.sharesDoubleSpinBox.setSuffix("")
             return
 
         self.sharesDoubleSpinBox.setDecimals(security.shares_decimals)
         self.sharesDoubleSpinBox.setSingleStep(10 ** (-security.shares_decimals))
+        self.signal_request_shares_suffix_update.emit()
 
     def _set_tab_order(self) -> None:
         self.setTabOrder(self.securityComboBox, self.senderComboBox)

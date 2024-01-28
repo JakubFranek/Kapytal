@@ -57,7 +57,7 @@ class TransactionTableForm(CustomWidget, Ui_TransactionTableForm):
 
     def set_shown_transactions(self, shown: int, total: int) -> None:
         self.shownTransactionsLabel.setText(
-            f"Showing Transactions: {shown:,} / {total:,}"
+            f"Showing Transactions: {shown:n} / {total:n}"
         )
 
     def set_selected_amount(self, amount: str) -> None:

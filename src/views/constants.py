@@ -86,19 +86,42 @@ class SecurityAccountTableColumn(IntEnum):
     AMOUNT_BASE = 6
 
 
-class OwnedSecuritiesTreeColumn(IntEnum):
+class SecuritiesOverviewTreeColumn(IntEnum):
     NAME = 0
-    SHARES = 1
-    PRICE_MARKET = 2
-    PRICE_AVERAGE = 3
-    GAIN_NATIVE = 4
-    GAIN_BASE = 5
-    RETURN_NATIVE = 6
-    RETURN_BASE = 7
-    IRR_NATIVE = 8
-    IRR_BASE = 9
-    AMOUNT_NATIVE = 10
-    AMOUNT_BASE = 11
+
+    SHARES_OWNED = 1
+    SHARES_BOUGHT = 2
+    SHARES_SOLD = 3
+    SHARES_TRANSFERRED = 4
+
+    AMOUNT_OWNED_NATIVE = 5
+    AMOUNT_OWNED_BASE = 6
+    AMOUNT_BOUGHT_NATIVE = 7
+    AMOUNT_BOUGHT_BASE = 8
+    AMOUNT_SOLD_NATIVE = 9
+    AMOUNT_SOLD_BASE = 10
+
+    PRICE_MARKET = 11
+    PRICE_AVERAGE_BUY = 12
+    PRICE_AVERAGE_SELL = 13
+
+    GAIN_TOTAL_NATIVE = 14
+    GAIN_TOTAL_BASE = 15
+    GAIN_TOTAL_CURRENCY = 16
+    RETURN_TOTAL_NATIVE = 17
+    RETURN_TOTAL_BASE = 18
+    IRR_TOTAL_NATIVE = 19
+    IRR_TOTAL_BASE = 20
+
+    GAIN_REALIZED_NATIVE = 21
+    GAIN_REALIZED_BASE = 22
+    RETURN_REALIZED_NATIVE = 23
+    RETURN_REALIZED_BASE = 24
+
+    GAIN_UNREALIZED_NATIVE = 25
+    GAIN_UNREALIZED_BASE = 26
+    RETURN_UNREALIZED_NATIVE = 27
+    RETURN_UNREALIZED_BASE = 28
 
 
 class CategoryTreeColumn(IntEnum):
@@ -173,5 +196,5 @@ class AssetTypeTreeColumn(IntEnum):
 
 class QuotesUpdateTableColumn(IntEnum):
     ITEM = 0
-    LATEST_DATE = 1
-    LATEST_QUOTE = 2
+    LATEST_DATE = 2
+    LATEST_QUOTE = 1

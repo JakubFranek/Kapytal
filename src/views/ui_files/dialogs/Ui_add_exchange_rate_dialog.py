@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'd:\Coding\Kapytal\src\views\ui_files\add_exchange_rate_dialog.ui'
+# Form implementation generated from reading ui file 'd:\Coding\Kapytal\src\views\ui_files\dialogs\add_exchange_rate_dialog.ui'
 #
 # Created by: PyQt6 UI code generator 6.4.0
 #
@@ -14,7 +14,6 @@ class Ui_AddExchangeRateDialog(object):
         AddExchangeRateDialog.setObjectName("AddExchangeRateDialog")
         AddExchangeRateDialog.setWindowModality(QtCore.Qt.WindowModality.WindowModal)
         AddExchangeRateDialog.resize(202, 104)
-        AddExchangeRateDialog.setLocale(QtCore.QLocale(QtCore.QLocale.Language.English, QtCore.QLocale.Country.UnitedKingdom))
         self.verticalLayout = QtWidgets.QVBoxLayout(AddExchangeRateDialog)
         self.verticalLayout.setObjectName("verticalLayout")
         self.formLayout = QtWidgets.QFormLayout()

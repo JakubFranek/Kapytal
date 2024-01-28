@@ -14,7 +14,6 @@ class Ui_CurrencyDialog(object):
         CurrencyDialog.setObjectName("CurrencyDialog")
         CurrencyDialog.setWindowModality(QtCore.Qt.WindowModality.WindowModal)
         CurrencyDialog.resize(392, 105)
-        CurrencyDialog.setLocale(QtCore.QLocale(QtCore.QLocale.Language.English, QtCore.QLocale.Country.UnitedKingdom))
         self.verticalLayout = QtWidgets.QVBoxLayout(CurrencyDialog)
         self.verticalLayout.setObjectName("verticalLayout")
         self.formLayout = QtWidgets.QFormLayout()

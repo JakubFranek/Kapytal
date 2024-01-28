@@ -6,6 +6,7 @@ from enum import Enum, auto
 from PyQt6.QtCore import QAbstractTableModel, QModelIndex, QSortFilterProxyModel, Qt
 from PyQt6.QtWidgets import QTableView
 from src.models.user_settings import user_settings
+from src.utilities.formatting import format_real
 from src.views.constants import ValueTableColumn
 
 ALIGNMENT_RIGHT = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
@@ -101,8 +102,8 @@ class ValueTableModel(QAbstractTableModel):
             return data[0].strftime(user_settings.settings.general_date_format)
         if column == ValueTableColumn.VALUE:
             if self._decimals is not None:
-                return f"{data[1]:,.{self._decimals}f}"
-            return f"{data[1]:,}"
+                return format_real(data[1], self._decimals)
+            return f"{data[1]:n}"
         return None
 
     def _get_user_role_data(

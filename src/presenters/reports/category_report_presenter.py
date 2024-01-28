@@ -90,7 +90,7 @@ class CategoryReportPresenter:
         if n_transactions > N_TRANSACTIONS_THRESHOLD and not ask_yes_no_question(
             self._busy_dialog,
             "The report will be generated from a large number of Transactions "
-            f"({n_transactions:,}). This may take a while. "
+            f"({n_transactions:n}). This may take a while. "
             "Proceed anyway?",
             "Are you sure?",
         ):
@@ -344,7 +344,7 @@ def separate_stats(
 
 
 def add_missing_parent_category_stats(
-    periodic_category_stats: dict[str, list[CategoryStats]]
+    periodic_category_stats: dict[str, list[CategoryStats]],
 ) -> tuple[CategoryStats, ...]:
     stats_to_add = []
     for period, stats_sequence in periodic_category_stats.items():

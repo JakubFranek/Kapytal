@@ -11,6 +11,7 @@ from PyQt6.QtWidgets import (
 from src.views import icons
 from src.views.base_classes.custom_dialog import CustomDialog
 from src.views.ui_files.dialogs.Ui_cash_account_dialog import Ui_CashAccountDialog
+from src.views.utilities.helper_functions import get_spinbox_value_as_decimal
 from src.views.widgets.smart_combo_box import SmartComboBox
 
 
@@ -84,7 +85,7 @@ class CashAccountDialog(CustomDialog, Ui_CashAccountDialog):
 
     @property
     def initial_balance(self) -> Decimal:
-        return Decimal(self.initialBalanceDoubleSpinBox.cleanText().replace(",", ""))
+        return get_spinbox_value_as_decimal(self.initialBalanceDoubleSpinBox)
 
     @initial_balance.setter
     def initial_balance(self, value: Decimal) -> None:

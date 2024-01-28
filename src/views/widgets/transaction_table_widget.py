@@ -141,7 +141,7 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
 
     def set_shown_transactions(self, shown: int, total: int) -> None:
         self.shownTransactionsLabel.setText(
-            f"Showing Transactions: {shown:,} / {total:,}"
+            f"Showing Transactions: {shown:n} / {total:n}"
         )
 
     def set_selected_amount(self, amount: str) -> None:
@@ -428,7 +428,10 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
             header.moveSection(current_index, target_index)
 
     def _header_section_moved(
-        self, section: int, old_index: int, new_index: int  # noqa: ARG002
+        self,
+        section: int,  # noqa: ARG002
+        old_index: int,  # noqa: ARG002
+        new_index: int,  # noqa: ARG002
     ) -> None:
         self.actionSave_Column_Order.setEnabled(True)
 

@@ -22,9 +22,6 @@
   <property name="windowTitle">
    <string>Payee Dialog</string>
   </property>
-  <property name="locale">
-   <locale language="English" country="UnitedKingdom"/>
-  </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <property name="sizeConstraint">
     <enum>QLayout::SetDefaultConstraint</enum>

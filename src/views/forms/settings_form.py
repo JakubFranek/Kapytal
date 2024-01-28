@@ -1,5 +1,6 @@
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtWidgets import QAbstractButton, QDialogButtonBox, QFileDialog, QWidget
+from src.models.user_settings.user_settings_class import NumberFormat
 from src.views import icons
 from src.views.base_classes.custom_widget import CustomWidget
 from src.views.ui_files.forms.Ui_settings_form import Ui_SettingsForm
@@ -26,6 +27,9 @@ class SettingsForm(CustomWidget, Ui_SettingsForm):
         self.setWindowFlag(Qt.WindowType.Window)
         self.setWindowIcon(icons.settings)
 
+        for item in NumberFormat:
+            self.numberFormatComboBox.addItem(item.value)
+
         self.buttonBox.clicked.connect(self._handle_button_box_click)
         self.addBackupDirectoryButton.clicked.connect(self.signal_add_backup_path)
         self.removeBackupDirectoryButton.clicked.connect(self.signal_remove_backup_path)
@@ -38,6 +42,7 @@ class SettingsForm(CustomWidget, Ui_SettingsForm):
         self.transactionTableDateFormatLineEdit.textEdited.connect(
             self.signal_data_changed.emit
         )
+        self.numberFormatComboBox.currentTextChanged.connect(self.signal_data_changed)
         self.exchangeRateDecimalsSpinBox.valueChanged.connect(
             self.signal_data_changed.emit
         )
@@ -101,6 +106,14 @@ class SettingsForm(CustomWidget, Ui_SettingsForm):
     @check_for_updates_on_startup.setter
     def check_for_updates_on_startup(self, value: bool) -> None:
         self.checkforUpdatesCheckBox.setChecked(value)
+
+    @property
+    def number_format(self) -> NumberFormat:
+        return NumberFormat(self.numberFormatComboBox.currentText())
+
+    @number_format.setter
+    def number_format(self, value: NumberFormat) -> None:
+        self.numberFormatComboBox.setCurrentText(value.value)
 
     def get_directory_path(self) -> str:
         return QFileDialog.getExistingDirectory(self)

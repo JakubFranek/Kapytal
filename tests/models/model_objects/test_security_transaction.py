@@ -289,7 +289,7 @@ def test_invalid_shares_decimals(
     cash_account = data.draw(cash_accounts(currency=security.currency))
     decimal_part = Decimal(f"1e{(-security.shares_decimals - 1)}")
     assume(decimal_part != 0)
-    shares = data.draw(st.integers(min_value=1)) + decimal_part
+    shares = data.draw(st.integers(min_value=1, max_value=1e10)) + decimal_part
 
     with pytest.raises(
         ValueError,

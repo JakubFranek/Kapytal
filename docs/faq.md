@@ -29,7 +29,7 @@ In Czech, capybara is spelled "kapybara". My friend mentioned the similarity wit
 Kapytal currently requires internet connection for two **optional** functionalities:
 
 - checking for its own updates
-- downloading [Security](./glossary.md#security-) and [Exchange Rate](./glossary.md#exchange-rate-) quotes from [Update Quotes Form](./glossary.md#update-quotes-form-)
+- downloading [Security](./glossary.md#security-) and [Exchange Rate](./glossary.md#exchange-rate-) quotes from Yahoo Finance using [Update Quotes Form](./glossary.md#update-quotes-form-)
 
 ## Why won't you support automated imports?
 
@@ -50,7 +50,7 @@ Mortgage is a loan, but its also an investment, as you are buying an asset that 
     1. create a Security for your mortgage
         - set a high number of share decimals, as you want a fine grained resolution of shares here
         - set the price of your mortgage Security to the amount of money you borrowed
-    1. create a [Security Account](./glossary.md#security-account-) for your real estate and mortgage [Securities](./glossary.md#security-)
+    1. create a [Security Account](./glossary.md#security-account-) for your real estate and mortgage Securities
     1. create a [Sell](./glossary.md#sell-) [Transaction](./glossary.md#transaction) to get your loaned amount
         - set the newly created real estate Security Account
         - set the [Cash Account](./glossary.md#transaction) you want to receive the borrowed money
@@ -69,7 +69,7 @@ Mortgage is a loan, but its also an investment, as you are buying an asset that 
         - you can use online annuity calculators if you do not have the precise amounts from your lender yet
     1. create the payment of the loan interest as an [Expense](./glossary.md#expense-)
         - the [Category](./glossary.md#category-) could be something like "Housing/Mortgage Interest"
-    1. create the capital repayment as a [Buy](./glossary.md#buy-) from your bank account to a fictituous real estate Security Account
+    1. create the capital repayment as a Buy from your bank account to a fictituous real estate Security Account
         - price per share is the amount of money you borrowed
         - total is the current month's capital repayment amount
         - the number of mortgage shares is capital repayment amount divided by the borrowed amount (should be a positive number smaller than 1)
@@ -85,3 +85,13 @@ Edit the hours or minutes of the [Transactions](./glossary.md#transaction). You 
 ## Should I model cryptocurrencies as Currencies or Securities?
 
 Kapytal allows you to use both approaches, so it is up to you. However, if you ever expect to buy a pizza or get salary in the given cryptocurrency, it is necessary to model it as a [Currency](./glossary.md#currency-). On the other hand, if the crypto you buy is intended purely as an investment to be bought and sold eventually, [Security](./glossary.md#security-) might be the way to go, as Securities offer better investment performance stats in [Securitites Form](./glossary.md#securities-). If you are unsure, go down the Currency path.
+
+## In Securities Form Overview tab tree, why do the quantities denominated in native and base Currencies sometimes not match after converting them with the latest Exchange Rate to base Currency? Why are native and base Currency returns different?
+
+[Security](./glossary.md#security-) performance quantities in Kapytal are calculated using average buy and average sell prices. These average prices are actually calculated twice each, once in the Security native [Currency](./glossary.md#currency-) and once in the [base Currency](./glossary.md#base-currency). For Securities denominated in a non-base Currency, the base average prices take the Exchange Rate valid on the day of each Security Transaction into account. Therefore, buying non-base Securities when the base Currency is relatively strong and selling them when the base Currency is relatively weak leads to better performance in base Currency, while the performance in native Currency is naturally unaffected.
+
+The Total Currency Gain column in the Securities Overview tree quantifies the impact of the [Exchange Rate](./glossary.md#exchange-rate-) fluctuations on the Total Base Gain. The value of Total Currency Gain is equal to the difference between the Total Base Gain and the Total Native Gain, after converting Total Native Gain to base Currency using the latest Exchange Rate.
+
+## How should I handle stock splits?
+
+Frankly, Kapytal does not have any special feature that would help with handling stock splits. At this point I would recommend to create a new [Security](./glossary.md#security-) for the newly splitted stock, [Sell](./glossary.md#sell-) all the old Security shares and [Buy](./glossary.md#buy-) the new Security.

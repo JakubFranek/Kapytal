@@ -26,7 +26,10 @@ from src.views.base_classes.custom_dialog import CustomDialog
 from src.views.ui_files.dialogs.Ui_security_transaction_dialog import (
     Ui_SecurityTransactionDialog,
 )
-from src.views.utilities.helper_functions import convert_datetime_format_to_qt
+from src.views.utilities.helper_functions import (
+    convert_datetime_format_to_qt,
+    get_spinbox_value_as_decimal,
+)
 from src.views.widgets.description_plain_text_edit import DescriptionPlainTextEdit
 from src.views.widgets.multiple_tags_selector_widget import MultipleTagsSelectorWidget
 from src.views.widgets.smart_combo_box import SmartComboBox
@@ -51,6 +54,7 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
 
     signal_do_and_close = pyqtSignal()
     signal_do_and_continue = pyqtSignal()
+    signal_request_shares_suffix_update = pyqtSignal()
 
     def __init__(  # noqa: PLR0913
         self,
@@ -65,7 +69,7 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
     ) -> None:
         super().__init__(parent)
         self.setupUi(self)
-        self._edit_mode = edit_mode
+        self.edit_mode = edit_mode
 
         self._cash_accounts = cash_accounts
         self._security_accounts = security_accounts
@@ -131,7 +135,7 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
     def security_name(self, value: str) -> None:
         security = self._get_security(value)
         if security is None:
-            if self._edit_mode not in EditMode.get_multiple_edit_values():
+            if self.edit_mode not in EditMode.get_multiple_edit_values():
                 raise ValueError(f"Security {value} not found.")
             self.securityComboBox.setCurrentText(self.KEEP_CURRENT_VALUES)
             return
@@ -193,7 +197,7 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
     @property
     def description(self) -> str | None:
         text = self.descriptionPlainTextEdit.toPlainText()
-        if self._edit_mode in EditMode.get_multiple_edit_values():
+        if self.edit_mode in EditMode.get_multiple_edit_values():
             return text if text else None
         return text
 
@@ -203,10 +207,10 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
 
     @property
     def shares(self) -> Decimal | None:
-        text = self.sharesDoubleSpinBox.cleanText().replace(",", "")
+        text = self.sharesDoubleSpinBox.cleanText()
         if text == self.KEEP_CURRENT_VALUES:
             return None
-        return Decimal(text)
+        return get_spinbox_value_as_decimal(self.sharesDoubleSpinBox)
 
     @shares.setter
     def shares(self, shares: Decimal) -> None:
@@ -215,10 +219,10 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
 
     @property
     def price_per_share(self) -> Decimal | None:
-        text = self.priceDoubleSpinBox.cleanText().replace(",", "")
+        text = self.priceDoubleSpinBox.cleanText()
         if text == self.KEEP_CURRENT_VALUES:
             return None
-        return Decimal(text)
+        return get_spinbox_value_as_decimal(self.priceDoubleSpinBox)
 
     @price_per_share.setter
     def price_per_share(self, price_per_share: Decimal) -> None:
@@ -239,7 +243,7 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
         if len(_tag_names) != 0:
             return _tag_names
 
-        if self._edit_mode in EditMode.get_multiple_edit_values():
+        if self.edit_mode in EditMode.get_multiple_edit_values():
             return None
         return ()
 
@@ -247,11 +251,14 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
     def tag_names(self, tag_names: Collection[str]) -> None:
         self.tags_widget.tag_names = tag_names
 
+    def set_shares_suffix(self, suffix: str) -> None:
+        self.sharesDoubleSpinBox.setSuffix(suffix)
+
     def _initialize_window(self) -> None:
         self.setWindowIcon(icons.security)
         self.buttonBox = QDialogButtonBox(self)
-        if self._edit_mode != EditMode.ADD:
-            if self._edit_mode in EditMode.get_multiple_edit_values():
+        if self.edit_mode != EditMode.ADD:
+            if self.edit_mode in EditMode.get_multiple_edit_values():
                 self.setWindowTitle("Edit Security Transactions")
             else:
                 self.setWindowTitle("Edit Security Transaction")
@@ -273,7 +280,7 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
         )
 
     def _initialize_placeholders(self) -> None:
-        if self._edit_mode in EditMode.get_multiple_edit_values():
+        if self.edit_mode in EditMode.get_multiple_edit_values():
             self.descriptionPlainTextEdit.setPlaceholderText(
                 "Leave empty to keep current values"
             )
@@ -291,7 +298,7 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
         self.buyRadioButton.toggled.connect(self._update_shares_spinbox_suffix)
 
     def _initialize_security_combobox(self, securities: Collection[Security]) -> None:
-        if self._edit_mode in EditMode.get_multiple_edit_values():
+        if self.edit_mode in EditMode.get_multiple_edit_values():
             placeholder_text = "Leave empty to keep current values"
         else:
             placeholder_text = "Enter Security name"
@@ -343,7 +350,7 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
     ) -> None:
         items = [account.path for account in self._security_accounts]
 
-        if self._edit_mode in EditMode.get_multiple_edit_values():
+        if self.edit_mode in EditMode.get_multiple_edit_values():
             placeholder_text = "Leave empty to keep current values"
         else:
             placeholder_text = "Enter Account path"
@@ -361,8 +368,8 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
             cash_account_path = self.cash_account_path
             self.cashAccountComboBox.clear()
 
-            if self._edit_mode == EditMode.EDIT_MULTIPLE or (
-                self._edit_mode == EditMode.EDIT_MULTIPLE_MIXED_CURRENCY
+            if self.edit_mode == EditMode.EDIT_MULTIPLE or (
+                self.edit_mode == EditMode.EDIT_MULTIPLE_MIXED_CURRENCY
                 and security is None
             ):
                 placeholder_text = "Leave empty to keep current values"
@@ -408,7 +415,7 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
             return
         with QSignalBlocker(self.priceDoubleSpinBox):
             shares = self.shares
-            total = Decimal(self.totalDoubleSpinBox.cleanText().replace(",", ""))
+            total = get_spinbox_value_as_decimal(self.totalDoubleSpinBox)
             if (shares is None or shares == 0) and len(self._fixed_spinboxes) == 2:
                 self.priceDoubleSpinBox.setValue(0)
                 return
@@ -432,7 +439,7 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
         elif self.priceDoubleSpinBox not in self._fixed_spinboxes:
             with QSignalBlocker(self.priceDoubleSpinBox):
                 shares = self.shares
-                total = Decimal(self.totalDoubleSpinBox.cleanText().replace(",", ""))
+                total = get_spinbox_value_as_decimal(self.totalDoubleSpinBox)
                 if shares is None or shares == 0:
                     self.priceDoubleSpinBox.setValue(0)
                     with QSignalBlocker(self.totalDoubleSpinBox):
@@ -442,7 +449,7 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
         elif self.sharesDoubleSpinBox not in self._fixed_spinboxes:
             with QSignalBlocker(self.sharesDoubleSpinBox):
                 price_per_share = self.price_per_share
-                total = Decimal(self.totalDoubleSpinBox.cleanText().replace(",", ""))
+                total = get_spinbox_value_as_decimal(self.totalDoubleSpinBox)
                 if price_per_share is None or price_per_share == 0:
                     self.sharesDoubleSpinBox.setValue(0)
                     with QSignalBlocker(self.totalDoubleSpinBox):
@@ -453,7 +460,7 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
         else:
             raise ValueError("Invalid spinbox")
 
-        value = Decimal(spinbox.cleanText().replace(",", ""))
+        value = get_spinbox_value_as_decimal(spinbox)
         if value == 0:
             self._fixed_spinboxes.remove(spinbox)
 
@@ -503,7 +510,7 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
         security = self._get_security(self.security_name)
         self._setup_cash_account_combobox()
 
-        if self._edit_mode == EditMode.EDIT_MULTIPLE_MIXED_CURRENCY:
+        if self.edit_mode == EditMode.EDIT_MULTIPLE_MIXED_CURRENCY:
             self.cashAccountComboBox.setEnabled(security is not None)
             self.priceDoubleSpinBox.setEnabled(security is not None)
             if security is not None:
@@ -530,17 +537,7 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
             self.sharesDoubleSpinBox.setSuffix("")
             return
 
-        try:
-            security_account = self._get_security_account(self.security_account_path)
-            security = self._get_security(self.security_name)
-            shares = security_account.securities[security]
-        except (KeyError, ValueError, AttributeError):
-            self.sharesDoubleSpinBox.setSuffix("")
-            return
-
-        self.sharesDoubleSpinBox.setSuffix(
-            f" / {round(shares,security.shares_decimals)}"
-        )
+        self.signal_request_shares_suffix_update.emit()
 
     def _set_tab_order(self) -> None:
         self.setTabOrder(self.buyRadioButton, self.sellRadioButton)

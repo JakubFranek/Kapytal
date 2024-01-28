@@ -19,7 +19,6 @@ class Ui_CashAccountDialog(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(CashAccountDialog.sizePolicy().hasHeightForWidth())
         CashAccountDialog.setSizePolicy(sizePolicy)
-        CashAccountDialog.setLocale(QtCore.QLocale(QtCore.QLocale.Language.English, QtCore.QLocale.Country.UnitedKingdom))
         self.verticalLayout = QtWidgets.QVBoxLayout(CashAccountDialog)
         self.verticalLayout.setSizeConstraint(QtWidgets.QLayout.SizeConstraint.SetDefaultConstraint)
         self.verticalLayout.setObjectName("verticalLayout")

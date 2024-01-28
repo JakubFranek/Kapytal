@@ -3,6 +3,7 @@ from decimal import Decimal
 from PyQt6.QtCore import QSignalBlocker, Qt, pyqtSignal
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QDoubleSpinBox, QHBoxLayout, QLineEdit, QWidget
+from src.views.utilities.helper_functions import get_spinbox_value_as_decimal
 
 
 class RefundRowWidget(QWidget):
@@ -42,8 +43,7 @@ class RefundRowWidget(QWidget):
 
     @property
     def amount(self) -> Decimal:
-        text = self.double_spin_box.cleanText().replace(",", "")
-        return Decimal(text)
+        return get_spinbox_value_as_decimal(self.double_spin_box)
 
     @amount.setter
     def amount(self, value: Decimal) -> None:

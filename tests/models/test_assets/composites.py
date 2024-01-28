@@ -164,6 +164,7 @@ def cash_transactions(  # noqa: PLR0913
             max_size=5,
         )
     )
+    assume(are_all_first_elements_unique(category_amount_pairs_list))
     max_tag_amount = sum(
         (amount for _, amount in category_amount_pairs_list),
         start=currency.zero_amount,
@@ -179,6 +180,7 @@ def cash_transactions(  # noqa: PLR0913
             max_size=5,
         )
     )
+    assume(are_all_first_elements_unique(tag_amount_pairs_list))
     return CashTransaction(
         description,
         datetime_,
@@ -616,3 +618,8 @@ def uuid_filters(
     else:
         uuids = draw(st.lists(st.uuids(version=4)))
     return UUIDFilter(uuids, mode)
+
+
+def are_all_first_elements_unique(pairs: Collection[tuple[object, object]]) -> bool:
+    first_elements = [p[0] for p in pairs]
+    return len(first_elements) == len(set(first_elements))

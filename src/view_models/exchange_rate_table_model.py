@@ -6,7 +6,7 @@ from PyQt6.QtGui import QBrush
 from PyQt6.QtWidgets import QTableView
 from src.models.model_objects.currency_objects import ExchangeRate
 from src.models.user_settings import user_settings
-from src.utilities.formatting import get_short_percentage_string
+from src.utilities.formatting import format_percentage, format_real
 from src.views import colors
 from src.views.constants import ExchangeRateTableColumn, monospace_font
 
@@ -121,7 +121,7 @@ class ExchangeRateTableModel(QAbstractTableModel):
         if column == ExchangeRateTableColumn.CODE:
             return str(exchange_rate)
         if column == ExchangeRateTableColumn.RATE:
-            return f"{exchange_rate.latest_rate:,.{exchange_rate.rate_decimals}f}"
+            return format_real(exchange_rate.latest_rate, exchange_rate.rate_decimals)
         if column == ExchangeRateTableColumn.LAST_DATE:
             latest_date = exchange_rate.latest_date
             if latest_date is None:
@@ -134,7 +134,7 @@ class ExchangeRateTableModel(QAbstractTableModel):
             _return = self._stats[exchange_rate][COLUMN_HEADERS[column]]
             if _return.is_nan():
                 return None
-            return get_short_percentage_string(_return)
+            return format_percentage(_return)
         return None
 
     def _get_sort_role_data(

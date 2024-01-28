@@ -1,13 +1,18 @@
 import ctypes
+import locale
 import logging
 import os
 import sys
 from pathlib import Path
 
+from PyQt6.QtCore import QLocale
 from PyQt6.QtWidgets import QApplication, QStyleFactory
 from src.models.json.custom_json_decoder import CustomJSONDecoder
 from src.models.json.custom_json_encoder import CustomJSONEncoder
 from src.models.user_settings import user_settings
+from src.models.user_settings.user_settings_class import (
+    get_locale_code_for_number_format,
+)
 from src.presenters.main_presenter import MainPresenter
 from src.utilities import constants
 from src.utilities.logging import remove_old_logs, setup_logging
@@ -17,6 +22,8 @@ from src.views.utilities.handle_exception import handle_uncaught_exception
 
 
 def main() -> None:
+    locale.setlocale(locale.LC_ALL, "")  # set locale per LANG env variable
+
     # The following three lines are needed to make sure task bar icon works on Windows
     if os.name == "nt":
         myappid = f"Jakub_Franek.Kapytal.v{constants.VERSION}"  # arbitrary string
@@ -37,6 +44,13 @@ def main() -> None:
         Path.mkdir(constants.backups_folder_path, parents=True, exist_ok=True)
         user_settings.settings.backup_paths = [constants.backups_folder_path]
         user_settings.save()
+
+    locale_code_for_number_format = get_locale_code_for_number_format(
+        user_settings.settings.number_format
+    )
+    logging.info(f"Setting locale.LC_NUMERIC to '{locale_code_for_number_format}'")
+    locale.setlocale(locale.LC_NUMERIC, locale_code_for_number_format)
+    locale_qt = QLocale(locale_code_for_number_format)
 
     remove_old_logs()  # remove logs once settings are initialized
 
@@ -60,6 +74,10 @@ def main() -> None:
 
     logging.debug("Creating MainPresenter")
     main_presenter = MainPresenter(main_view, app)
+
+    logging.debug("Setting Qt locales")
+    QLocale.setDefault(locale_qt)
+    main_view.setLocale(locale_qt)
 
     logging.debug("Showing MainView")
     main_view.showMaximized()

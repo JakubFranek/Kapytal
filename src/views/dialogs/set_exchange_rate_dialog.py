@@ -10,7 +10,10 @@ from src.views.base_classes.custom_dialog import CustomDialog
 from src.views.ui_files.dialogs.Ui_set_exchange_rate_dialog import (
     Ui_SetExchangeRateDialog,
 )
-from src.views.utilities.helper_functions import convert_datetime_format_to_qt
+from src.views.utilities.helper_functions import (
+    convert_datetime_format_to_qt,
+    get_spinbox_value_as_decimal,
+)
 
 
 class SetExchangeRateDialog(CustomDialog, Ui_SetExchangeRateDialog):
@@ -57,9 +60,11 @@ class SetExchangeRateDialog(CustomDialog, Ui_SetExchangeRateDialog):
         )
         self.dateEdit.setDisplayFormat(display_format)
 
+        self.exchangeRateDoubleSpinBox.setFocus()
+
     @property
     def value(self) -> Decimal:
-        return Decimal(self.exchangeRateDoubleSpinBox.cleanText().replace(",", ""))
+        return get_spinbox_value_as_decimal(self.exchangeRateDoubleSpinBox)
 
     @property
     def date_(self) -> date:

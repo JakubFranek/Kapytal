@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'd:\Coding\Kapytal\src\views\ui_files\payee_dialog.ui'
+# Form implementation generated from reading ui file 'd:\Coding\Kapytal\src\views\ui_files\dialogs\payee_dialog.ui'
 #
 # Created by: PyQt6 UI code generator 6.4.0
 #
@@ -19,7 +19,6 @@ class Ui_PayeeDialog(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(PayeeDialog.sizePolicy().hasHeightForWidth())
         PayeeDialog.setSizePolicy(sizePolicy)
-        PayeeDialog.setLocale(QtCore.QLocale(QtCore.QLocale.Language.English, QtCore.QLocale.Country.UnitedKingdom))
         self.verticalLayout = QtWidgets.QVBoxLayout(PayeeDialog)
         self.verticalLayout.setSizeConstraint(QtWidgets.QLayout.SizeConstraint.SetDefaultConstraint)
         self.verticalLayout.setObjectName("verticalLayout")

@@ -197,7 +197,7 @@ class TransactionsPresenter:
         any_non_base_amount = False
         for transaction in visible_transactions:
             if not any_security_related and isinstance(
-                transaction, SecurityTransaction
+                transaction, (SecurityTransaction, SecurityTransfer)
             ):
                 any_security_related = True
             if not any_cash_transfers and isinstance(transaction, CashTransfer):
@@ -613,13 +613,15 @@ class TransactionsPresenter:
             self._model.emit_data_changed_for_uuids(uuids)
 
         self._update_table_columns()
+        if len(self._record_keeper.transactions) < 2:
+            self.resize_table_to_contents()
         self._update_number_of_shown_transactions()
         self.event_data_changed()
 
     def _update_number_of_shown_transactions(self) -> None:
         n_visible = self._proxy_regex_sort_filter.rowCount()
         n_total = len(self._record_keeper.transactions)
-        logging.debug(f"Visible transactions: {n_visible:,}/{n_total:,}")
+        logging.debug(f"Visible transactions: {n_visible:n}/{n_total:n}")
         self._view.set_shown_transactions(n_visible, n_total)
 
     def _update_selected_transactions_amount(

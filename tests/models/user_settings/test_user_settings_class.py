@@ -6,7 +6,12 @@ from typing import Any
 import pytest
 from hypothesis import assume, given
 from hypothesis import strategies as st
-from src.models.user_settings.user_settings_class import UserSettings
+from src.models.user_settings.user_settings_class import (
+    NumberFormat,
+    UserSettings,
+    _get_number_format_for_locale,
+    get_locale_code_for_number_format,
+)
 from src.views.constants import TransactionTableColumn
 from tests.models.test_assets.composites import everything_except
 from tzlocal import get_localzone_name
@@ -320,3 +325,58 @@ def test_transaction_table_column_order_invalid_length(
     settings = UserSettings()
     with pytest.raises(ValueError, match="exactly"):
         settings.transaction_table_column_order = columns
+
+
+@given(format_=st.sampled_from(NumberFormat))
+def test_number_format(format_: NumberFormat) -> None:
+    settings = UserSettings()
+    settings.number_format = format_
+    assert settings.number_format == format_
+    settings.number_format = format_
+    assert settings.number_format == format_
+
+
+@given(format_=everything_except(NumberFormat))
+def test_number_format_invalid_type(format_: Any) -> None:
+    settings = UserSettings()
+    with pytest.raises(TypeError, match="NumberFormat"):
+        settings.number_format = format_
+
+
+locale_data_set = {
+    "en_US": NumberFormat.SEP_COMMA_DECIMAL_POINT,
+    "cs_CZ": NumberFormat.SEP_SPACE_DECIMAL_COMMA,
+    "xh_ZA": NumberFormat.SEP_SPACE_DECIMAL_POINT,
+    "nl_NL": NumberFormat.SEP_POINT_DECIMAL_COMMA,
+    "C": NumberFormat.SEP_NONE_DECIMAL_POINT,
+}
+
+
+@pytest.mark.parametrize("test_data", locale_data_set.items())
+def test_get_number_format_for_locale(test_data: tuple[str, NumberFormat]) -> None:
+    import locale
+
+    locale.setlocale(locale.LC_NUMERIC, test_data[0])
+    assert _get_number_format_for_locale() == test_data[1]
+
+
+def test_get_number_format_for_locale_no_locale_set() -> None:
+    assert _get_number_format_for_locale() == NumberFormat.SEP_NONE_DECIMAL_POINT
+
+
+def test_get_number_format_for_locale_unsupported() -> None:
+    import locale
+
+    locale.setlocale(locale.LC_NUMERIC, "fa_IR")
+    assert _get_number_format_for_locale() == NumberFormat.SEP_NONE_DECIMAL_POINT
+
+
+@pytest.mark.parametrize("test_data", locale_data_set.items())
+def test_get_locale_code_for_number_format(test_data: tuple[str, NumberFormat]) -> None:
+    assert get_locale_code_for_number_format(test_data[1]) == test_data[0]
+
+
+@given(format_=everything_except(NumberFormat))
+def test_get_locale_code_for_number_format_invalid_value(format_: Any) -> None:
+    with pytest.raises(ValueError, match="Unknown number format"):
+        get_locale_code_for_number_format(format_)

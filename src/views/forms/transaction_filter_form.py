@@ -31,7 +31,10 @@ from src.views import icons
 from src.views.base_classes.custom_widget import CustomWidget
 from src.views.constants import monospace_font
 from src.views.ui_files.forms.Ui_transaction_filter_form import Ui_TransactionFilterForm
-from src.views.utilities.helper_functions import convert_datetime_format_to_qt
+from src.views.utilities.helper_functions import (
+    convert_datetime_format_to_qt,
+    get_spinbox_value_as_decimal,
+)
 
 CASH_RELATED_TRANSACTION_TYPES = (
     CashTransactionType.INCOME,
@@ -325,8 +328,7 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
 
     @property
     def cash_amount_filter_minimum(self) -> Decimal:
-        text = self.cashAmountFilterMinimumDoubleSpinBox.cleanText().replace(",", "")
-        return Decimal(text)
+        return get_spinbox_value_as_decimal(self.cashAmountFilterMinimumDoubleSpinBox)
 
     @cash_amount_filter_minimum.setter
     def cash_amount_filter_minimum(self, amount: Decimal) -> None:
@@ -334,8 +336,7 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
 
     @property
     def cash_amount_filter_maximum(self) -> Decimal:
-        text = self.cashAmountFilterMaximumDoubleSpinBox.cleanText().replace(",", "")
-        return Decimal(text)
+        return get_spinbox_value_as_decimal(self.cashAmountFilterMaximumDoubleSpinBox)
 
     @cash_amount_filter_maximum.setter
     def cash_amount_filter_maximum(self, amount: Decimal) -> None:
@@ -880,7 +881,8 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
         )
 
     def _create_account_filter_context_menu(
-        self, event: QContextMenuEvent  # noqa: ARG002
+        self,
+        event: QContextMenuEvent,  # noqa: ARG002
     ) -> None:
         self.menu = QMenu(self)
         self.menu.addAction(self.actionSelectAllCashAccountsBelow)
@@ -900,9 +902,9 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
         self.actionExpandAllAccountItemsBelow.setEnabled(account_group_selected)
 
     def _update_cash_amount_filter_minimum(self) -> None:
-        text = self.cashAmountFilterMaximumDoubleSpinBox.cleanText().replace(",", "")
-        maximum = Decimal(text)
-        self.cashAmountFilterMinimumDoubleSpinBox.setMaximum(maximum)
+        self.cashAmountFilterMinimumDoubleSpinBox.setMaximum(
+            self.cash_amount_filter_maximum
+        )
 
     def set_selected_category_numbers(
         self,
@@ -935,7 +937,7 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
     def set_selected_tags_number(self, selected: int, total: int) -> None:
         if self.specific_tags_filter_mode != FilterMode.OFF:
             self.specificTagsFilterGroupBox.setTitle(
-                f"Specific Tags Filter ({selected:,} / {total:,})"
+                f"Specific Tags Filter ({selected:n} / {total:n})"
             )
         else:
             self.specificTagsFilterGroupBox.setTitle("Specific Tags Filter")
@@ -943,7 +945,7 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
     def set_selected_payees_number(self, selected: int, total: int) -> None:
         if self.payee_filter_mode != FilterMode.OFF:
             self.payeeFilterGroupBox.setTitle(
-                f"Payee Filter ({selected:,} / {total:,})"
+                f"Payee Filter ({selected:n} / {total:n})"
             )
         else:
             self.payeeFilterGroupBox.setTitle("Payee Filter")
@@ -951,7 +953,7 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
     def set_selected_currencies_number(self, selected: int, total: int) -> None:
         if self.currency_filter_mode != FilterMode.OFF:
             self.currencyFilterGroupBox.setTitle(
-                f"Currency Filter ({selected:,} / {total:,})"
+                f"Currency Filter ({selected:n} / {total:n})"
             )
         else:
             self.currencyFilterGroupBox.setTitle("Currency Filter")
@@ -959,7 +961,7 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
     def set_selected_securities_number(self, selected: int, total: int) -> None:
         if self.security_filter_mode != FilterMode.OFF:
             self.securityFilterGroupBox.setTitle(
-                f"Security Filter ({selected:,} / {total:,})"
+                f"Security Filter ({selected:n} / {total:n})"
             )
         else:
             self.securityFilterGroupBox.setTitle("Security Filter")

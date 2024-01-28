@@ -18,7 +18,6 @@ class Ui_AccountTreeWidget(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(AccountTreeWidget.sizePolicy().hasHeightForWidth())
         AccountTreeWidget.setSizePolicy(sizePolicy)
-        AccountTreeWidget.setLocale(QtCore.QLocale(QtCore.QLocale.Language.English, QtCore.QLocale.Country.UnitedKingdom))
         self.verticalLayout = QtWidgets.QVBoxLayout(AccountTreeWidget)
         self.verticalLayout.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout.setSpacing(6)

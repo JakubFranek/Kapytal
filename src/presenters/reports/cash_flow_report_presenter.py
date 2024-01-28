@@ -102,7 +102,7 @@ class CashFlowReportPresenter:
         if n_transactions > N_TRANSACTIONS_THRESHOLD_TOTAL and not ask_yes_no_question(
             self._busy_dialog,
             "The report will be generated from a large number of Transactions "
-            f"({n_transactions:,}). This may take a while. "
+            f"({n_transactions:n}). This may take a while. "
             "Proceed anyway?",
             "Are you sure?",
         ):
@@ -184,7 +184,7 @@ class CashFlowReportPresenter:
             and not ask_yes_no_question(
                 self._busy_dialog,
                 "The report will be generated from a large number of Transactions "
-                f"({n_transactions:,}). This may take a while. "
+                f"({n_transactions:n}). This may take a while. "
                 "Proceed anyway?",
                 "Are you sure?",
             )

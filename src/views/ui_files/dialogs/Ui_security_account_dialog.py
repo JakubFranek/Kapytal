@@ -19,7 +19,6 @@ class Ui_SecurityAccountDialog(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(SecurityAccountDialog.sizePolicy().hasHeightForWidth())
         SecurityAccountDialog.setSizePolicy(sizePolicy)
-        SecurityAccountDialog.setLocale(QtCore.QLocale(QtCore.QLocale.Language.English, QtCore.QLocale.Country.UnitedKingdom))
         self.verticalLayout = QtWidgets.QVBoxLayout(SecurityAccountDialog)
         self.verticalLayout.setSizeConstraint(QtWidgets.QLayout.SizeConstraint.SetDefaultConstraint)
         self.verticalLayout.setObjectName("verticalLayout")

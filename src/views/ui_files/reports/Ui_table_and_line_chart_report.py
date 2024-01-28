@@ -14,7 +14,6 @@ class Ui_TableAndLineChartReport(object):
         TableAndLineChartReport.setObjectName("TableAndLineChartReport")
         TableAndLineChartReport.setWindowModality(QtCore.Qt.WindowModality.WindowModal)
         TableAndLineChartReport.resize(800, 600)
-        TableAndLineChartReport.setLocale(QtCore.QLocale(QtCore.QLocale.Language.English, QtCore.QLocale.Country.UnitedKingdom))
         self.horizontalLayout = QtWidgets.QHBoxLayout(TableAndLineChartReport)
         self.horizontalLayout.setObjectName("horizontalLayout")
         self.tableView = QtWidgets.QTableView(TableAndLineChartReport)

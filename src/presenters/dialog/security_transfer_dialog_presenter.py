@@ -3,6 +3,7 @@ from collections.abc import Collection, Sequence
 from datetime import datetime
 
 from src.models.base_classes.account import Account
+from src.models.custom_exceptions import NotFoundError
 from src.models.model_objects.attributes import AttributeType
 from src.models.model_objects.security_objects import SecurityAccount, SecurityTransfer
 from src.models.user_settings import user_settings
@@ -14,6 +15,7 @@ from src.presenters.utilities.check_for_nonexistent_attributes import (
 )
 from src.presenters.utilities.handle_exception import handle_exception
 from src.presenters.utilities.validate_inputs import validate_datetime
+from src.utilities.formatting import convert_decimal_to_string
 from src.views.dialogs.security_transfer_dialog import EditMode, SecurityTransferDialog
 from src.views.utilities.handle_exception import display_error_message
 
@@ -52,6 +54,10 @@ class SecurityTransferDialogPresenter(TransactionDialogPresenter):
         self._dialog.signal_do_and_continue.connect(
             lambda: self._add_security_transfer(close=False)
         )
+        self._dialog.signal_request_shares_suffix_update.connect(
+            lambda: self._update_shares_suffix(())
+        )
+        self._update_shares_suffix(())
 
         self._dialog.exec()
 
@@ -73,6 +79,10 @@ class SecurityTransferDialogPresenter(TransactionDialogPresenter):
         self._dialog.signal_do_and_continue.connect(
             lambda: self._add_security_transfer(close=False)
         )
+        self._dialog.signal_request_shares_suffix_update.connect(
+            lambda: self._update_shares_suffix(())
+        )
+        self._update_shares_suffix(())
         self._dialog.exec()
 
     def run_edit_dialog(self, transfers: Sequence[SecurityTransfer]) -> None:
@@ -128,6 +138,10 @@ class SecurityTransferDialogPresenter(TransactionDialogPresenter):
         self._dialog.signal_do_and_close.connect(
             lambda: self._edit_security_transfers(transfers)
         )
+        self._dialog.signal_request_shares_suffix_update.connect(
+            lambda: self._update_shares_suffix(transfers)
+        )
+        self._update_shares_suffix(transfers)
         self._dialog.exec()
 
     def _add_security_transfer(self, *, close: bool) -> None:
@@ -248,3 +262,31 @@ class SecurityTransferDialogPresenter(TransactionDialogPresenter):
             self._record_keeper.descriptions,
             edit_mode=edit_mode,
         )
+
+    def _update_shares_suffix(self, transactions: Sequence[SecurityTransfer]) -> None:
+        security_name = self._dialog.security_name
+        sender_path = self._dialog.sender_path
+
+        try:
+            security = self._record_keeper.get_security_by_name(security_name)
+            sender = self._record_keeper.get_account(sender_path, SecurityAccount)
+        except (NotFoundError, TypeError):
+            self._dialog.set_shares_suffix("")
+            return
+
+        if self._dialog.edit_mode == EditMode.ADD:
+            shares = sender.securities[security]
+        elif self._dialog.edit_mode == EditMode.EDIT_SINGLE:
+            edited_transaction = transactions[0]
+            if edited_transaction.security == security and (
+                edited_transaction.sender == sender
+            ):
+                shares = edited_transaction.shares + sender.securities[security]
+            else:
+                shares = sender.securities[security]
+        else:
+            self._dialog.set_shares_suffix("")
+            return
+
+        suffix = f" / {convert_decimal_to_string(shares,18,security.shares_decimals)}"
+        self._dialog.set_shares_suffix(suffix)

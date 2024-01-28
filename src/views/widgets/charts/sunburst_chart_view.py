@@ -7,6 +7,7 @@ from PyQt6.QtCharts import QChart, QChartView, QPieSeries, QPieSlice
 from PyQt6.QtCore import QPointF, Qt, pyqtSignal
 from PyQt6.QtGui import QColor, QCursor, QFont, QMouseEvent, QPainter
 from PyQt6.QtWidgets import QWidget
+from src.utilities.formatting import format_percentage, format_real
 from src.views import colors
 from src.views.widgets.charts.general_chart_callout import GeneralChartCallout
 
@@ -86,10 +87,13 @@ class SunburstNode:
         return self if self.parent is None else self.parent.get_root_node()
 
     def get_callout_text(self) -> str:
-        text = f"{self.path}\n{self.value:,.{self.decimals}f}"
+        text = f"{self.path}\n{format_real(self.value, self.decimals)}"
         text = text + f" {self.unit}" if self.unit else text
         for ancestor in self.get_ancestors():
-            text += f"\n{100*self.value/ancestor.value:.2f}% of {ancestor.path}"
+            text += (
+                f"\n{format_percentage(100*self.value/ancestor.value)} "
+                f"of {ancestor.path}"
+            )
 
         return text
 

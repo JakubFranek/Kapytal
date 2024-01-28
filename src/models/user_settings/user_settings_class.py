@@ -1,6 +1,8 @@
+import locale
 import logging
 from collections.abc import Collection, Sequence
 from datetime import datetime
+from enum import Enum
 from pathlib import Path
 from typing import Any, Self
 
@@ -9,6 +11,14 @@ from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
 from src.views.constants import TransactionTableColumn
 from tzlocal import get_localzone_name
 from zoneinfo import ZoneInfo
+
+
+class NumberFormat(Enum):
+    SEP_COMMA_DECIMAL_POINT = "1,234.5678"
+    SEP_POINT_DECIMAL_COMMA = "1.234,5678"
+    SEP_SPACE_DECIMAL_POINT = "1\xa0234.5678"  # \xa0 is non-breaking space
+    SEP_SPACE_DECIMAL_COMMA = "1\xa0234,5678"
+    SEP_NONE_DECIMAL_POINT = "1234.5678"
 
 
 class UserSettings(JSONSerializableMixin, CopyableMixin):
@@ -21,6 +31,7 @@ class UserSettings(JSONSerializableMixin, CopyableMixin):
         "_backup_paths",
         "_general_date_format",
         "_transaction_date_format",
+        "_number_format",
         "_exchange_rate_decimals",
         "_price_per_share_decimals",
         "_check_for_updates_on_startup",
@@ -38,6 +49,8 @@ class UserSettings(JSONSerializableMixin, CopyableMixin):
 
         self._general_date_format = "%d.%m.%Y"
         self._transaction_date_format = "%d.%m.%Y"
+
+        self._number_format: NumberFormat = _get_number_format_for_locale()
 
         self._exchange_rate_decimals = 9
         self._price_per_share_decimals = 9
@@ -185,6 +198,23 @@ class UserSettings(JSONSerializableMixin, CopyableMixin):
         self._general_date_format = value
 
     @property
+    def number_format(self) -> NumberFormat:
+        return self._number_format
+
+    @number_format.setter
+    def number_format(self, value: NumberFormat) -> None:
+        if not isinstance(value, NumberFormat):
+            raise TypeError("UserSettings.number_format must be a NumberFormat.")
+        if self._number_format == value:
+            return
+
+        logging.info(
+            "Changing UserSettings.number_format from "
+            f"{self._number_format} to {value}"
+        )
+        self._number_format = value
+
+    @property
     def exchange_rate_decimals(self) -> int:
         return self._exchange_rate_decimals
 
@@ -297,6 +327,7 @@ class UserSettings(JSONSerializableMixin, CopyableMixin):
             "backup_paths": backup_paths,
             "general_date_format": self._general_date_format,
             "transaction_date_format": self._transaction_date_format,
+            "number_format": self._number_format.name,
             "exchange_rate_decimals": self._exchange_rate_decimals,
             "price_per_share_decimals": self._price_per_share_decimals,
             "check_for_updates_on_startup": self._check_for_updates_on_startup,
@@ -314,6 +345,11 @@ class UserSettings(JSONSerializableMixin, CopyableMixin):
 
         general_date_format: str = data.get("general_date_format", "%d.%m.%Y")
         transaction_date_format: str = data.get("transaction_date_format", "%d.%m.%Y")
+
+        if "number_format" in data:
+            number_format = NumberFormat[data["number_format"]]
+        else:
+            number_format = NumberFormat.SEP_NONE_DECIMAL_POINT
 
         exchange_rate_decimals: int = data.get("exchange_rate_decimals", 9)
         price_per_share_decimals: int = data.get("price_per_share_decimals", 9)
@@ -334,6 +370,7 @@ class UserSettings(JSONSerializableMixin, CopyableMixin):
         obj._backup_paths = backup_paths  # noqa: SLF001
         obj._general_date_format = general_date_format  # noqa: SLF001
         obj._transaction_date_format = transaction_date_format  # noqa: SLF001
+        obj._number_format = number_format  # noqa: SLF001
         obj._exchange_rate_decimals = exchange_rate_decimals  # noqa: SLF001
         obj._price_per_share_decimals = price_per_share_decimals  # noqa: SLF001
         obj._check_for_updates_on_startup = check_for_updates_on_startup  # noqa: SLF001
@@ -342,3 +379,44 @@ class UserSettings(JSONSerializableMixin, CopyableMixin):
         )
 
         return obj
+
+
+def _get_number_format_for_locale() -> NumberFormat:
+    # relies on locale.setlocale(locale.LC_ALL, "") being called first in main.py
+    point = locale.localeconv().get("decimal_point")
+    sep = locale.localeconv().get("thousands_sep")
+
+    format_ = None
+    if sep in (" ", "\xa0"):
+        if point == ".":
+            format_ = NumberFormat.SEP_SPACE_DECIMAL_POINT
+        if point == ",":
+            format_ = NumberFormat.SEP_SPACE_DECIMAL_COMMA
+    if sep == "," and point == ".":
+        format_ = NumberFormat.SEP_COMMA_DECIMAL_POINT
+    if sep == "." and point == ",":
+        format_ = NumberFormat.SEP_POINT_DECIMAL_COMMA
+    if sep == "" and point == ".":
+        format_ = NumberFormat.SEP_NONE_DECIMAL_POINT
+
+    if format_ is None:
+        # default to decimal point, no separator ("C" locale)
+        return NumberFormat.SEP_NONE_DECIMAL_POINT
+
+    return format_
+
+
+def get_locale_code_for_number_format(number_format: NumberFormat) -> str:
+    match number_format:
+        case NumberFormat.SEP_SPACE_DECIMAL_POINT:
+            return "xh_ZA"
+        case NumberFormat.SEP_SPACE_DECIMAL_COMMA:
+            return "cs_CZ"
+        case NumberFormat.SEP_COMMA_DECIMAL_POINT:
+            return "en_US"
+        case NumberFormat.SEP_POINT_DECIMAL_COMMA:
+            return "nl_NL"
+        case NumberFormat.SEP_NONE_DECIMAL_POINT:
+            return "C"
+        case _:
+            raise ValueError(f"Unknown number format: {number_format}")
