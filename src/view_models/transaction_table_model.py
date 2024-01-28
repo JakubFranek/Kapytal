@@ -170,18 +170,18 @@ class TransactionTableModel(QAbstractTableModel):
         return None
 
     def pre_add(self) -> None:
-        self._view.setSortingEnabled(False)  # noqa: FBT003
+        self._view.setSortingEnabled(False)
         self.beginInsertRows(QModelIndex(), self.rowCount(), self.rowCount())
 
     def post_add(self) -> None:
         self.endInsertRows()
-        self._view.setSortingEnabled(True)  # noqa: FBT003
+        self._view.setSortingEnabled(True)
 
     def pre_reset_model(self) -> None:
         if self._proxy_sourceside is not None:
-            self._proxy_sourceside.setDynamicSortFilter(False)  # noqa: FBT003
+            self._proxy_sourceside.setDynamicSortFilter(False)
 
-        self._proxy_viewside.setDynamicSortFilter(False)  # noqa: FBT003
+        self._proxy_viewside.setDynamicSortFilter(False)
 
         # this effectively turns off sorting and dramatically decreases calls
         # to data() for sorting purposes during file load
@@ -197,9 +197,9 @@ class TransactionTableModel(QAbstractTableModel):
         self.endResetModel()
 
         if self._proxy_sourceside is not None:
-            self._proxy_sourceside.setDynamicSortFilter(True)  # noqa: FBT003
+            self._proxy_sourceside.setDynamicSortFilter(True)
 
-        self._proxy_viewside.setDynamicSortFilter(True)  # noqa: FBT003
+        self._proxy_viewside.setDynamicSortFilter(True)
         # this slows down file load but enables dynamic sort filter
         self._view.sortByColumn(sort_column, sort_order)
 

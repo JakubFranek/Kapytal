@@ -503,7 +503,7 @@ class SecurityFormPresenter:
         self._tree_proxy.setSourceModel(self._overview_tree_model)
         self._tree_proxy.setSortRole(Qt.ItemDataRole.UserRole)
         self._tree_proxy.setSortCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
-        self._tree_proxy.setRecursiveFilteringEnabled(True)  # noqa: FBT003
+        self._tree_proxy.setRecursiveFilteringEnabled(True)
         self._tree_proxy.sort(
             SecuritiesOverviewTreeColumn.AMOUNT_OWNED_BASE, Qt.SortOrder.DescendingOrder
         )

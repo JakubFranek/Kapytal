@@ -162,7 +162,7 @@ class TransactionsPresenter:
         self._view.resize_table_to_contents()
 
     def reapply_sort(self) -> None:
-        self._proxy_regex_sort_filter.setDynamicSortFilter(True)  # noqa: FBT003
+        self._proxy_regex_sort_filter.setDynamicSortFilter(True)
 
     def set_widget_visibility(self, *, visible: bool) -> None:
         if visible and self._view.isHidden():

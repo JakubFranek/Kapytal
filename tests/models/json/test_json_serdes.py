@@ -630,10 +630,10 @@ def test_user_settings() -> None:
 
 
 settings_json = r"""{
-  "datatype": "UserSettings", 
-  "time_zone": "Europe/Prague", 
-  "logs_max_size_bytes": 1000000, 
-  "backups_max_size_bytes": 100000000, 
+  "datatype": "UserSettings",
+  "time_zone": "Europe/Prague",
+  "logs_max_size_bytes": 1000000,
+  "backups_max_size_bytes": 100000000,
   "backup_paths": [
     "D:\\Coding\\Kapytal\\saved_data\\backups"
   ]

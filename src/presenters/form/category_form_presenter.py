@@ -288,7 +288,7 @@ class CategoryFormPresenter:
         )
         self._proxy_income.setSourceModel(self._model_income)
         self._proxy_income.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
-        self._proxy_income.setRecursiveFilteringEnabled(True)  # noqa: FBT003
+        self._proxy_income.setRecursiveFilteringEnabled(True)
         self._proxy_income.setSortRole(Qt.ItemDataRole.UserRole)
         self._proxy_income.setFilterRole(Qt.ItemDataRole.UserRole + 1)
         self._view.incomeTreeView.setModel(self._proxy_income)
@@ -300,7 +300,7 @@ class CategoryFormPresenter:
         )
         self._proxy_expense.setSourceModel(self._model_expense)
         self._proxy_expense.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
-        self._proxy_expense.setRecursiveFilteringEnabled(True)  # noqa: FBT003
+        self._proxy_expense.setRecursiveFilteringEnabled(True)
         self._proxy_expense.setSortRole(Qt.ItemDataRole.UserRole)
         self._proxy_expense.setFilterRole(Qt.ItemDataRole.UserRole + 1)
         self._view.expenseTreeView.setModel(self._proxy_expense)
@@ -317,7 +317,7 @@ class CategoryFormPresenter:
             Qt.CaseSensitivity.CaseInsensitive
         )
         self._proxy_income_and_expense.setRecursiveFilteringEnabled(
-            True  # noqa: FBT003
+            True
         )
         self._proxy_income_and_expense.setSortRole(Qt.ItemDataRole.UserRole)
         self._proxy_income_and_expense.setFilterRole(Qt.ItemDataRole.UserRole + 1)
@@ -427,7 +427,9 @@ class CategoryFormPresenter:
         )
 
     def _transaction_table_form_data_changed(
-        self, *_: Any, **__: Any  # noqa: ANN401
+        self,
+        *_: Any,  # noqa: ANN401
+        **__: Any,  # noqa: ANN401
     ) -> None:
         self._recalculate_data = True
 
