@@ -7,17 +7,17 @@
       {
         "datatype": "Currency",
         "code": "EUR",
-        "places": 2
+        "decimals": 2
       },
       {
         "datatype": "Currency",
         "code": "CZK",
-        "places": 2
+        "decimals": 2
       },
       {
         "datatype": "Currency",
         "code": "BTC",
-        "places": 8
+        "decimals": 8
       }
     ],
     "base_currency_code": "EUR",
@@ -1192,7 +1192,7 @@
         "type": "BUY",
         "security_name": "Vanguard FTSE All-World",
         "shares": "1E+1",
-        "price_per_share": "94.43 EUR",
+        "amount_per_share": "94.43 EUR",
         "security_account_path": "Adam/Investments/XTBroker/Securities",
         "cash_account_path": "Adam/Investments/XTBroker/EUR",
         "datetime_created": "2023-08-13T10:13:48+02:00",
@@ -1392,7 +1392,7 @@
         "type": "BUY",
         "security_name": "Vanguard FTSE All-World",
         "shares": "4",
-        "price_per_share": "96.70 EUR",
+        "amount_per_share": "96.70 EUR",
         "security_account_path": "Adam/Investments/Intelligent Brokers/Securities",
         "cash_account_path": "Adam/Investments/Intelligent Brokers/EUR",
         "datetime_created": "2023-08-11T19:54:59+02:00",
@@ -1441,7 +1441,7 @@
         "type": "BUY",
         "security_name": "ABC Dynamic Fund",
         "shares": "167",
-        "price_per_share": "1.49 EUR",
+        "amount_per_share": "1.49 EUR",
         "security_account_path": "Adam/Investments/Pension Plan/Securities",
         "cash_account_path": "Adam/Investments/Pension Plan/EUR",
         "datetime_created": "2023-08-07T21:04:16+02:00",
@@ -1887,7 +1887,7 @@
         "type": "BUY",
         "security_name": "Vanguard FTSE All-World",
         "shares": "4",
-        "price_per_share": "100.82 EUR",
+        "amount_per_share": "100.82 EUR",
         "security_account_path": "Adam/Investments/Intelligent Brokers/Securities",
         "cash_account_path": "Adam/Investments/Intelligent Brokers/EUR",
         "datetime_created": "2023-08-11T19:55:35+02:00",
@@ -1900,7 +1900,7 @@
         "type": "BUY",
         "security_name": "ABC Dynamic Fund",
         "shares": "177",
-        "price_per_share": "1.56 EUR",
+        "amount_per_share": "1.56 EUR",
         "security_account_path": "Adam/Investments/Pension Plan/Securities",
         "cash_account_path": "Adam/Investments/Pension Plan/EUR",
         "datetime_created": "2023-08-07T21:04:44+02:00",
@@ -2479,7 +2479,7 @@
         "type": "BUY",
         "security_name": "Vanguard FTSE All-World",
         "shares": "5",
-        "price_per_share": "100.12 EUR",
+        "amount_per_share": "100.12 EUR",
         "security_account_path": "Adam/Investments/Intelligent Brokers/Securities",
         "cash_account_path": "Adam/Investments/Intelligent Brokers/EUR",
         "datetime_created": "2023-08-11T19:55:50+02:00",
@@ -2555,7 +2555,7 @@
         "type": "BUY",
         "security_name": "ABC Dynamic Fund",
         "shares": "1.8E+2",
-        "price_per_share": "1.52 EUR",
+        "amount_per_share": "1.52 EUR",
         "security_account_path": "Adam/Investments/Pension Plan/Securities",
         "cash_account_path": "Adam/Investments/Pension Plan/EUR",
         "datetime_created": "2023-08-07T21:05:05+02:00",

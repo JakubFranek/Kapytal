@@ -106,7 +106,7 @@ class CurrencyFormPresenter:
 
     def show_form(self) -> None:
         self._busy_dialog = create_simple_busy_indicator(
-            self.view, "Preparing Currencies and Exchange Rates form, please wait..."
+            self.view, "Preparing Currencies Form, please wait..."
         )
         self._busy_dialog.open()
         QApplication.processEvents()

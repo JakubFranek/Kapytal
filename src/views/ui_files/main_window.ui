@@ -57,7 +57,7 @@
     <property name="title">
      <string>Edit</string>
     </property>
-    <addaction name="actionCurrencies_and_Exchange_Rates"/>
+    <addaction name="actionCurrencies"/>
     <addaction name="actionSecurities"/>
     <addaction name="separator"/>
     <addaction name="actionCategories"/>
@@ -141,7 +141,7 @@
    <addaction name="actionSave"/>
    <addaction name="actionSave_As"/>
    <addaction name="separator"/>
-   <addaction name="actionCurrencies_and_Exchange_Rates"/>
+   <addaction name="actionCurrencies"/>
    <addaction name="actionSecurities"/>
    <addaction name="actionUpdate_Quotes"/>
    <addaction name="separator"/>
@@ -181,9 +181,12 @@
     <string>Ctrl+O</string>
    </property>
   </action>
-  <action name="actionCurrencies_and_Exchange_Rates">
+  <action name="actionCurrencies">
    <property name="text">
-    <string>Currencies and Exchange Rates</string>
+    <string>Currencies</string>
+   </property>
+   <property name="toolTip">
+    <string>Currencies</string>
    </property>
   </action>
   <action name="actionQuit">

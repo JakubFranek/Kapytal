@@ -806,13 +806,15 @@ def test_edit_security_transactions_mixed_currency_keep_security_invalid_args() 
     ]
     uuids = [transfer.uuid for transfer in transactions]
     cash_account_path = "test"
-    price_per_share = "test"
+    amount_per_share = "test"
     with pytest.raises(
         ValueError,
         match="security_name is None",
     ):
         record_keeper.edit_security_transactions(
-            uuids, cash_account_path=cash_account_path, price_per_share=price_per_share
+            uuids,
+            cash_account_path=cash_account_path,
+            amount_per_share=amount_per_share,
         )
 
 
@@ -882,7 +884,7 @@ def test_edit_security_transactions_change_security_account() -> None:
         assert transaction.security_account.path == edit_security_account
 
 
-def test_edit_security_transactions_change_price_per_share() -> None:
+def test_edit_security_transactions_change_amount_per_share() -> None:
     edit_price = Decimal(1)
     record_keeper = get_preloaded_record_keeper_with_security_transactions()
     transactions = [
@@ -892,9 +894,9 @@ def test_edit_security_transactions_change_price_per_share() -> None:
         and transaction.security.symbol == "VWCE.DE"
     ]
     uuids = [transfer.uuid for transfer in transactions]
-    record_keeper.edit_security_transactions(uuids, price_per_share=edit_price)
+    record_keeper.edit_security_transactions(uuids, amount_per_share=edit_price)
     for transaction in transactions:
-        assert transaction.price_per_share.value_rounded == edit_price
+        assert transaction.amount_per_share.value_rounded == edit_price
 
 
 def test_edit_security_transactions_change_shares() -> None:

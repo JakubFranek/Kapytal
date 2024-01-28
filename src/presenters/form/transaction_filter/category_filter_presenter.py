@@ -114,12 +114,12 @@ class CategoryFilterPresenter:
             Qt.ItemDataRole.UserRole
         )
 
-        self._income_categories_proxy.setRecursiveFilteringEnabled(True)  # noqa: FBT003
+        self._income_categories_proxy.setRecursiveFilteringEnabled(True)
         self._expense_categories_proxy.setRecursiveFilteringEnabled(
-            True  # noqa: FBT003
+            True
         )
         self._income_and_expense_categories_proxy.setRecursiveFilteringEnabled(
-            True  # noqa: FBT003
+            True
         )
 
         self._income_categories_model = CheckableCategoryTreeModel(

@@ -171,7 +171,7 @@ class MainView(QMainWindow, Ui_MainWindow):
         self.actionOpen_File.setIcon(icons.open_file)
         self.actionSave.setIcon(icons.disk)
         self.actionSave_As.setIcon(icons.disks)
-        self.actionCurrencies_and_Exchange_Rates.setIcon(icons.currency)
+        self.actionCurrencies.setIcon(icons.currency)
         self.actionQuit.setIcon(icons.quit_)
         self.actionSecurities.setIcon(icons.security)
         self.actionCategories.setIcon(icons.category)
@@ -194,9 +194,7 @@ class MainView(QMainWindow, Ui_MainWindow):
         self._connect_actions_to_signals()
 
     def _connect_actions_to_signals(self) -> None:
-        self.actionCurrencies_and_Exchange_Rates.triggered.connect(
-            self.signal_open_currency_form.emit
-        )
+        self.actionCurrencies.triggered.connect(self.signal_open_currency_form.emit)
         self.actionSecurities.triggered.connect(self.signal_open_security_form.emit)
         self.actionPayees.triggered.connect(self.signal_open_payee_form.emit)
         self.actionTags.triggered.connect(self.signal_open_tag_form.emit)

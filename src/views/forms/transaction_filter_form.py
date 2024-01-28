@@ -36,15 +36,6 @@ from src.views.utilities.helper_functions import (
     get_spinbox_value_as_decimal,
 )
 
-CASH_RELATED_TRANSACTION_TYPES = (
-    CashTransactionType.INCOME,
-    CashTransactionType.EXPENSE,
-    CashTransfer,
-    RefundTransaction,
-    SecurityTransactionType.BUY,
-    SecurityTransactionType.SELL,
-)
-
 
 class AccountFilterMode(Enum):
     ACCOUNT_TREE = auto()

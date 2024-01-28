@@ -117,22 +117,22 @@ class ValueTableModel(QAbstractTableModel):
         return None
 
     def pre_add(self, row: int) -> None:
-        self._proxy.setDynamicSortFilter(False)  # noqa: FBT003
-        self._view.setSortingEnabled(False)  # noqa: FBT003
+        self._proxy.setDynamicSortFilter(False)
+        self._view.setSortingEnabled(False)
         self.beginInsertRows(QModelIndex(), row, row)
 
     def post_add(self) -> None:
         self.endInsertRows()
-        self._view.setSortingEnabled(True)  # noqa: FBT003
-        self._proxy.setDynamicSortFilter(True)  # noqa: FBT003
+        self._view.setSortingEnabled(True)
+        self._proxy.setDynamicSortFilter(True)
 
     def pre_reset_model(self) -> None:
-        self._view.setSortingEnabled(False)  # noqa: FBT003
+        self._view.setSortingEnabled(False)
         self.beginResetModel()
 
     def post_reset_model(self) -> None:
         self.endResetModel()
-        self._view.setSortingEnabled(True)  # noqa: FBT003
+        self._view.setSortingEnabled(True)
 
     def pre_remove_item(self, date_: date) -> None:
         index = self.get_index_from_date(date_)

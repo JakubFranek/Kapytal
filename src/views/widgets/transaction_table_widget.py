@@ -73,6 +73,7 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
     signal_cash_transfer = pyqtSignal()
     signal_buy = pyqtSignal()
     signal_sell = pyqtSignal()
+    signal_dividend = pyqtSignal()
     signal_security_transfer = pyqtSignal()
 
     signal_find_related = pyqtSignal()
@@ -286,6 +287,7 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
         self.actionExpense.setIcon(icons.expense)
         self.actionBuy.setIcon(icons.buy)
         self.actionSell.setIcon(icons.sell)
+        self.actionDividend.setIcon(icons.dividend)
         self.actionCash_Transfer.setIcon(icons.cash_transfer)
         self.actionSecurity_Transfer.setIcon(icons.security_transfer)
         self.actionRefund.setIcon(icons.refund)
@@ -298,8 +300,6 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
         self.actionAdd_Tags.setIcon(icons.add_tag)
         self.actionRemove_Tags.setIcon(icons.remove_tag)
 
-        self.transferToolButton.setIcon(icons.transfer)
-
         self.searchLineEdit.addAction(
             icons.magnifier, QLineEdit.ActionPosition.LeadingPosition
         )
@@ -308,11 +308,11 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
         self.filterToolButton.setDefaultAction(self.actionFilter_Transactions)
         self.buyToolButton.setDefaultAction(self.actionBuy)
         self.sellToolButton.setDefaultAction(self.actionSell)
+        self.dividendToolButton.setDefaultAction(self.actionDividend)
         self.incomeToolButton.setDefaultAction(self.actionIncome)
         self.expenseToolButton.setDefaultAction(self.actionExpense)
-
-        self.transferToolButton.addAction(self.actionCash_Transfer)
-        self.transferToolButton.addAction(self.actionSecurity_Transfer)
+        self.cashTransferToolButton.setDefaultAction(self.actionCash_Transfer)
+        self.securityTransferToolButton.setDefaultAction(self.actionSecurity_Transfer)
 
         self.actionShow_All_Columns.triggered.connect(
             lambda: self.set_all_columns_visibility(show=True)
@@ -343,6 +343,7 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
         self.actionCash_Transfer.triggered.connect(self.signal_cash_transfer.emit)
         self.actionBuy.triggered.connect(self.signal_buy.emit)
         self.actionSell.triggered.connect(self.signal_sell.emit)
+        self.actionDividend.triggered.connect(self.signal_dividend.emit)
         self.actionSecurity_Transfer.triggered.connect(
             self.signal_security_transfer.emit
         )

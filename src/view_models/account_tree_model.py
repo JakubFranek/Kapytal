@@ -466,13 +466,13 @@ class AccountTreeModel(QAbstractItemModel):
         return self._get_display_role_data(column, item)
 
     def pre_add(self, parent: AccountGroup | None, index: int) -> None:
-        self._proxy.setDynamicSortFilter(False)  # noqa: FBT003
+        self._proxy.setDynamicSortFilter(False)
         parent_index = self.get_index_from_item(parent)
         self.beginInsertRows(parent_index, index, index)
 
     def post_add(self) -> None:
         self.endInsertRows()
-        self._proxy.setDynamicSortFilter(True)  # noqa: FBT003
+        self._proxy.setDynamicSortFilter(True)
 
     def pre_reset_model(self) -> None:
         self.beginResetModel()
@@ -494,7 +494,7 @@ class AccountTreeModel(QAbstractItemModel):
         new_parent: AccountGroup | None,
         new_index: int,
     ) -> None:
-        self._proxy.setDynamicSortFilter(False)  # noqa: FBT003
+        self._proxy.setDynamicSortFilter(False)
         previous_parent_index = self.get_index_from_item(previous_parent)
         new_parent_index = self.get_index_from_item(new_parent)
         # Index must be limited to valid indexes
@@ -515,7 +515,7 @@ class AccountTreeModel(QAbstractItemModel):
 
     def post_move_item(self) -> None:
         self.endMoveRows()
-        self._proxy.setDynamicSortFilter(True)  # noqa: FBT003
+        self._proxy.setDynamicSortFilter(True)
 
     def get_selected_item_index(self) -> QModelIndex:
         indexes = self._tree.selectedIndexes()

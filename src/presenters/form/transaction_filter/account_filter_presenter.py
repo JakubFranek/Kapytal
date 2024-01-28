@@ -67,7 +67,7 @@ class AccountFilterPresenter:
     def _initialize_models(self) -> None:
         self._proxy = QSortFilterProxyModel(self._form)
         self._proxy.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
-        self._proxy.setRecursiveFilteringEnabled(True)  # noqa: FBT003
+        self._proxy.setRecursiveFilteringEnabled(True)
         self._proxy.setFilterRole(Qt.ItemDataRole.UserRole)
 
         self._model = CheckableAccountTreeModel(

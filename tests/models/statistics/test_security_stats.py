@@ -398,7 +398,7 @@ def test_security_account_stats() -> None:
     exchange_rate.set_rate(today.date(), rate)
 
     SecurityTransaction(
-        "test",
+        "buy",
         today - timedelta(days=365),
         SecurityTransactionType.BUY,
         security,
@@ -408,7 +408,17 @@ def test_security_account_stats() -> None:
         cash_account,
     )
     SecurityTransaction(
-        "test",
+        "dividend",
+        today,
+        SecurityTransactionType.DIVIDEND,
+        security,
+        2,
+        CashAmount("0.1", usd),
+        account,
+        cash_account,
+    )
+    SecurityTransaction(
+        "sell",
         today,
         SecurityTransactionType.SELL,
         security,
@@ -432,10 +442,13 @@ def test_security_account_stats() -> None:
     assert stats.shares_transferred == Decimal(0)
 
     assert stats.price_market_native == CashAmount(4, usd)
+    assert stats.price_market_base == CashAmount(4 * rate, eur)
     assert stats.price_avg_buy_native == CashAmount(1, usd)
     assert stats.price_avg_sell_native == CashAmount(2, usd)
     assert stats.price_avg_buy_base == CashAmount(1 * old_rate, eur)
     assert stats.price_avg_sell_base == CashAmount(2 * rate, eur)
+    assert stats.amount_avg_dividend_native == CashAmount("0.1", usd)
+    assert stats.amount_avg_dividend_base == CashAmount("0.09", eur)
 
     assert stats.value_current_native == CashAmount(4, usd)
     assert stats.value_current_base == CashAmount(4 * rate, eur)
@@ -451,19 +464,21 @@ def test_security_account_stats() -> None:
     assert stats.return_pct_unrealized_native == Decimal(300)
     assert stats.return_pct_unrealized_base == Decimal(260)
 
-    assert stats.gain_realized_native == CashAmount(1, usd)
-    assert stats.gain_realized_base == CashAmount(2 * rate - 1, eur)
-    assert stats.return_pct_realized_native == Decimal(100)
-    assert stats.return_pct_realized_base == Decimal(80)
+    assert stats.gain_realized_native == CashAmount("1.2", usd)  # +0.2 for dividend
+    assert stats.gain_realized_base == CashAmount("0.98", eur)
+    assert stats.value_dividend_native == CashAmount("0.2", usd)
+    assert stats.value_dividend_base == CashAmount("0.18", eur)
+    assert stats.return_pct_realized_native == Decimal(120)
+    assert stats.return_pct_realized_base == Decimal(98)
 
-    assert stats.gain_total_native == CashAmount(4, usd)
-    assert stats.gain_total_base == CashAmount(4 * rate - 1 + 2 * rate - 1, eur)
+    assert stats.gain_total_native == CashAmount("4.2", usd)
+    assert stats.gain_total_base == CashAmount("3.58", eur)
     assert stats.gain_total_currency == CashAmount(Decimal("-0.2"), eur)
-    assert stats.return_pct_total_native == Decimal(200)
-    assert stats.return_pct_total_base == Decimal(170)
+    assert stats.return_pct_total_native == Decimal(210)
+    assert stats.return_pct_total_base == Decimal(179)
 
-    assert math.isclose(stats.irr_pct_total_native, 200)
-    assert math.isclose(stats.irr_pct_total_base, 170)
+    assert math.isclose(stats.irr_pct_total_native, 210)
+    assert math.isclose(stats.irr_pct_total_base, 179)
 
 
 def test_security_stats() -> None:
@@ -519,6 +534,16 @@ def test_security_stats() -> None:
     SecurityTransaction(
         "test",
         today,
+        SecurityTransactionType.DIVIDEND,
+        security,
+        1,
+        CashAmount("0.1", usd),
+        account_2,
+        cash_account,
+    )
+    SecurityTransaction(
+        "test",
+        today,
         SecurityTransactionType.SELL,
         security,
         1,
@@ -558,19 +583,23 @@ def test_security_stats() -> None:
     assert stats.return_pct_unrealized_native == Decimal(300)
     assert stats.return_pct_unrealized_base == Decimal(260)
 
-    assert stats.gain_realized_native == CashAmount(2, usd)
-    assert stats.gain_realized_base == CashAmount(4 * rate - 2, eur)
-    assert stats.return_pct_realized_native == Decimal(100)
-    assert stats.return_pct_realized_base == Decimal(80)
+    assert stats.gain_realized_native == CashAmount("2.1", usd)
+    assert stats.gain_realized_base == CashAmount(
+        4 * rate - 2 + rate * Decimal("0.1"), eur
+    )
+    assert stats.return_pct_realized_native == Decimal(105)
+    assert stats.return_pct_realized_base == Decimal("84.5")
 
-    assert stats.gain_total_native == CashAmount(5, usd)
-    assert stats.gain_total_base == CashAmount(4 * rate - 1 + 4 * rate - 2, eur)
+    assert stats.gain_total_native == CashAmount("5.1", usd)
+    assert stats.gain_total_base == CashAmount(
+        4 * rate - 1 + 4 * rate - 2 + rate * Decimal("0.1"), eur
+    )
     assert stats.gain_total_currency == CashAmount(Decimal("-0.3"), eur)
-    assert stats.return_pct_total_native == Decimal(200 * Decimal(5) / Decimal(6))
-    assert stats.return_pct_total_base == Decimal(140)
+    assert stats.return_pct_total_native == Decimal(170)
+    assert stats.return_pct_total_base == Decimal(143)
 
-    assert math.isclose(stats.irr_pct_total_native, 200 * 5 / 6)
-    assert math.isclose(stats.irr_pct_total_base, 140)
+    assert math.isclose(stats.irr_pct_total_native, 170)
+    assert math.isclose(stats.irr_pct_total_base, 143)
 
 
 def test_security_stats_data() -> None:
@@ -630,6 +659,16 @@ def test_security_stats_data() -> None:
     SecurityTransaction(
         "test",
         today,
+        SecurityTransactionType.DIVIDEND,
+        security_2,
+        1,
+        CashAmount("0.1", usd),
+        account_2,
+        cash_account,
+    )
+    SecurityTransaction(
+        "test",
+        today,
         SecurityTransactionType.SELL,
         security_2,
         1,
@@ -659,24 +698,28 @@ def test_security_stats_data() -> None:
     assert total_stats.gain_unrealized_base == CashAmount(8 * rate - 2, eur)
     assert total_stats.gain_unrealized_native is None
 
-    assert total_stats.gain_realized_base == CashAmount(4 * rate - 2, eur)
+    assert total_stats.gain_realized_base == CashAmount(
+        4 * rate - 2 + rate * Decimal("0.1"), eur
+    )
     assert total_stats.gain_realized_native is None
 
-    assert total_stats.gain_total_base == CashAmount(12 * rate - 4, eur)
+    assert total_stats.gain_total_base == CashAmount(
+        12 * rate - 4 + rate * Decimal("0.1"), eur
+    )
     assert total_stats.gain_total_native is None
 
-    assert total_stats.gain_total_currency == CashAmount(Decimal("-0.4"), eur)
+    assert total_stats.gain_total_currency == CashAmount("-0.4", eur)
 
     assert total_stats.return_pct_unrealized_base == Decimal(260)
     assert total_stats.return_pct_unrealized_native == Decimal(0)
 
-    assert total_stats.return_pct_realized_base == Decimal(80)
+    assert total_stats.return_pct_realized_base == Decimal(84.5)
     assert total_stats.return_pct_realized_native == Decimal(0)
 
-    assert total_stats.return_pct_total_base == Decimal(170)
+    assert total_stats.return_pct_total_base == Decimal("172.25")
     assert total_stats.return_pct_total_native == Decimal(0)
 
-    assert math.isclose(total_stats.irr_pct_total_base, 170)
+    assert math.isclose(total_stats.irr_pct_total_base, 172.25)
 
 
 def test_security_stats_data_no_transactions() -> None:

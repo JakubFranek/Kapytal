@@ -80,14 +80,14 @@ class CurrencyTableModel(QAbstractTableModel):
         return None
 
     def pre_add(self) -> None:
-        self._proxy.setDynamicSortFilter(False)  # noqa: FBT003
-        self._view.setSortingEnabled(False)  # noqa: FBT003
+        self._proxy.setDynamicSortFilter(False)
+        self._view.setSortingEnabled(False)
         self.beginInsertRows(QModelIndex(), self.rowCount(), self.rowCount())
 
     def post_add(self) -> None:
         self.endInsertRows()
-        self._proxy.setDynamicSortFilter(True)  # noqa: FBT003
-        self._view.setSortingEnabled(True)  # noqa: FBT003
+        self._proxy.setDynamicSortFilter(True)
+        self._view.setSortingEnabled(True)
 
     def pre_reset_model(self) -> None:
         self.beginResetModel()

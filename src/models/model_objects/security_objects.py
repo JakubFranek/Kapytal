@@ -37,12 +37,14 @@ class PriceNotFoundError(ValueError):
 class SecurityTransactionType(Enum):
     BUY = auto()
     SELL = auto()
+    DIVIDEND = auto()
 
 
 class SharesType(Enum):
     BOUGHT = auto()
     SOLD = auto()
     TRANSFERRED = auto()
+    PAID_DIVIDEND = auto()
 
 
 class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
@@ -497,7 +499,7 @@ class SecurityAccount(Account):
             obj._parent = parent  # noqa: SLF001
         return obj
 
-    def get_average_price(  # add method for average sell price
+    def get_average_amount_per_share(
         self,
         security: Security,
         date_: date | None = None,  # latest date if None
@@ -540,12 +542,12 @@ class SecurityAccount(Account):
                 isinstance(transaction, SecurityTransaction)
                 and transaction.type_ == type_
             ):
-                amount = transaction.price_per_share
+                amount = transaction.amount_per_share
             elif (
                 isinstance(transaction, SecurityTransfer)
                 and transaction.recipient == self
             ):
-                amount = transaction.sender.get_average_price(
+                amount = transaction.sender.get_average_amount_per_share(
                     security, _transaction_date, currency
                 )
             else:
@@ -570,15 +572,22 @@ class SecurityAccount(Account):
         transactions = {t for t in self._transactions if t.security == security}
         if type_ == SharesType.TRANSFERRED:
             return sum(
-                (t.get_shares(self) for t in transactions if isinstance(t, SecurityTransfer)),
+                (
+                    t.get_shares(self)
+                    for t in transactions
+                    if isinstance(t, SecurityTransfer)
+                ),
                 start=Decimal(0),
             )
 
-        transaction_type = (
-            SecurityTransactionType.BUY
-            if type_ == SharesType.BOUGHT
-            else (SecurityTransactionType.SELL)
-        )
+        if type_ == SharesType.BOUGHT:
+            transaction_type = SecurityTransactionType.BUY
+        elif type_ == SharesType.SOLD:
+            transaction_type = SecurityTransactionType.SELL
+        elif type_ == SharesType.PAID_DIVIDEND:
+            transaction_type = SecurityTransactionType.DIVIDEND
+        else:
+            raise TypeError("Parameter 'type_' must be a SharesType.")
         return sum(
             (
                 t.shares
@@ -618,10 +627,14 @@ class SecurityRelatedTransaction(Transaction, ABC):
     def shares(self) -> Decimal:
         return self._shares
 
-    def get_shares(self, account: SecurityAccount) -> Decimal:
-        if not isinstance(account, SecurityAccount):
-            raise TypeError("Parameter 'account' must be a SecurityAccount.")
-        if not self.is_account_related(account):
+    def get_shares(self, account: SecurityAccount | None = None) -> Decimal:
+        """If account is SecurityAccount, returns the change in shares
+        related to that SecurityAccount with the correct sign (zero for dividends).
+        If account is None, returns shares with the correct sign."""
+
+        if not isinstance(account, (SecurityAccount, NoneType)):
+            raise TypeError("Parameter 'account' must be a SecurityAccount or None.")
+        if account is not None and not self.is_account_related(account):
             raise UnrelatedAccountError(
                 f"SecurityAccount '{account.name}' is not related to this "
                 f"{self.__class__.__name__}."
@@ -653,7 +666,7 @@ class SecurityRelatedTransaction(Transaction, ABC):
             )
 
     @abstractmethod
-    def _get_shares(self, account: SecurityAccount) -> Decimal:
+    def _get_shares(self, account: SecurityAccount | None) -> Decimal:
         raise NotImplementedError
 
 
@@ -663,7 +676,7 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
         "_type",
         "_security",
         "_shares",
-        "_price_per_share",
+        "_amount_per_share",
         "_security_account",
         "_cash_account",
         "_description",
@@ -682,7 +695,7 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
         type_: SecurityTransactionType,
         security: Security,
         shares: Decimal | int | str,
-        price_per_share: CashAmount,
+        amount_per_share: CashAmount,
         security_account: SecurityAccount,
         cash_account: CashAccount,
         uuid: UUID | None = None,
@@ -696,7 +709,7 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
             type_=type_,
             security=security,
             shares=shares,
-            price_per_share=price_per_share,
+            amount_per_share=amount_per_share,
             security_account=security_account,
             cash_account=cash_account,
         )
@@ -714,8 +727,8 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
         return self._cash_account
 
     @property
-    def price_per_share(self) -> CashAmount:
-        return self._price_per_share
+    def amount_per_share(self) -> CashAmount:
+        return self._amount_per_share
 
     @property
     def amount(self) -> CashAmount:
@@ -755,7 +768,7 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
             "type": self._type.name,
             "security_name": self._security.name,
             "shares": str(self._shares),
-            "price_per_share": self._price_per_share.serialize(),
+            "amount_per_share": self._amount_per_share.serialize(),
             "security_account_path": self._security_account.path,
             "cash_account_path": self._cash_account.path,
             "datetime_created": self._datetime_created.isoformat(),
@@ -773,7 +786,8 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
         datetime_ = datetime.fromisoformat(data["datetime"])
         type_ = SecurityTransactionType[data["type"]]
         shares = Decimal(data["shares"])
-        price_per_share = CashAmount.deserialize(data["price_per_share"], currencies)
+
+        amount_per_share = CashAmount.deserialize(data["amount_per_share"], currencies)
         security = securities[data["security_name"]]
         cash_account = accounts[data["cash_account_path"]]
         security_account = accounts[data["security_account_path"]]
@@ -784,7 +798,7 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
             type_=type_,
             security=security,
             shares=shares,
-            price_per_share=price_per_share,
+            amount_per_share=amount_per_share,
             security_account=security_account,
             cash_account=cash_account,
             uuid=UUID(data["uuid"]),
@@ -802,7 +816,7 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
         type_: SecurityTransactionType | None = None,
         security: Security | None = None,
         shares: Decimal | None = None,
-        price_per_share: CashAmount | None = None,
+        amount_per_share: CashAmount | None = None,
         security_account: SecurityAccount | None = None,
         cash_account: CashAccount | None = None,
         block_account_update: bool = False,
@@ -817,8 +831,8 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
             security = self._security
         if shares is None:
             shares = self._shares
-        if price_per_share is None:
-            price_per_share = self._price_per_share
+        if amount_per_share is None:
+            amount_per_share = self._amount_per_share
         if security_account is None:
             security_account = self._security_account
         if cash_account is None:
@@ -830,7 +844,7 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
             type_=type_,
             security=security,
             shares=shares,
-            price_per_share=price_per_share,
+            amount_per_share=amount_per_share,
             security_account=security_account,
             cash_account=cash_account,
         )
@@ -841,7 +855,7 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
             type_=type_,
             security=security,
             shares=shares,
-            price_per_share=price_per_share,
+            amount_per_share=amount_per_share,
             security_account=security_account,
             cash_account=cash_account,
             block_account_update=block_account_update,
@@ -855,7 +869,7 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
         type_: SecurityTransactionType | None = None,
         security: Security | None = None,
         shares: Decimal | None = None,
-        price_per_share: CashAmount | None = None,
+        amount_per_share: CashAmount | None = None,
         security_account: SecurityAccount | None = None,
         cash_account: CashAccount | None = None,
     ) -> None:
@@ -869,8 +883,8 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
             security = self._security
         if shares is None:
             shares = self._shares
-        if price_per_share is None:
-            price_per_share = self._price_per_share
+        if amount_per_share is None:
+            amount_per_share = self._amount_per_share
         if security_account is None:
             security_account = self._security_account
         if cash_account is None:
@@ -883,7 +897,7 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
         self._validate_shares(shares, security.shares_decimals)
         self._validate_cash_account(cash_account, security.currency)
         self._validate_security_account(security_account)
-        self._validate_amount(price_per_share, cash_account.currency)
+        self._validate_amount(amount_per_share, cash_account.currency)
 
     def _set_attributes(
         self,
@@ -893,7 +907,7 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
         type_: SecurityTransactionType,
         security: Security,
         shares: Decimal,
-        price_per_share: CashAmount,
+        amount_per_share: CashAmount,
         security_account: SecurityAccount,
         cash_account: CashAccount,
         block_account_update: bool = False,
@@ -932,11 +946,11 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
 
         if (
             not block_account_update
-            and hasattr(self, "_price_per_share")
+            and hasattr(self, "_amount_per_share")
             and not update_cash_account
         ):
-            update_cash_account = self._price_per_share != price_per_share
-        self._price_per_share = price_per_share
+            update_cash_account = self._amount_per_share != amount_per_share
+        self._amount_per_share = amount_per_share
 
         self._update_cached_data()
         self._set_accounts(
@@ -947,7 +961,7 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
         )
 
     def _update_cached_data(self) -> None:
-        self._amount = self._shares * self._price_per_share
+        self._amount = self._shares * self._amount_per_share
         self._amount_negative = -self._amount
 
     def _set_accounts(
@@ -1019,10 +1033,14 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
             return self._amount_negative
         return self._amount
 
-    def _get_shares(self, account: SecurityAccount) -> Decimal:  # noqa: ARG002
+    def _get_shares(self, account: SecurityAccount | None) -> Decimal:
         if self._type == SecurityTransactionType.BUY:
             return self._shares
-        return -self._shares
+        if self._type == SecurityTransactionType.SELL:
+            return -self._shares
+        if account is None:
+            return self._shares
+        return Decimal(0)  # for SecurityTransactionType.DIVIDEND
 
 
 class SecurityTransfer(SecurityRelatedTransaction):
@@ -1285,7 +1303,7 @@ class SecurityTransfer(SecurityRelatedTransaction):
                 "SecurityAccounts."
             )
 
-    def _get_shares(self, account: SecurityAccount) -> Decimal:
+    def _get_shares(self, account: SecurityAccount | None) -> Decimal:
         if account == self._sender:
             return -self._shares
         return self._shares

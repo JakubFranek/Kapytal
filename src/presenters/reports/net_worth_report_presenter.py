@@ -124,7 +124,7 @@ class NetWorthReportPresenter:
         self._proxy.setSortRole(Qt.ItemDataRole.UserRole)
         self._proxy.setSortCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
         self._proxy.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
-        self._proxy.setRecursiveFilteringEnabled(True)  # noqa: FBT003
+        self._proxy.setRecursiveFilteringEnabled(True)
         self._proxy.setFilterRole(Qt.ItemDataRole.UserRole + 1)
         self._model = AccountTreeModel(self._report.treeView, self._proxy)
         self._model.pre_reset_model()
@@ -182,7 +182,7 @@ class NetWorthReportPresenter:
         self._proxy.setSortRole(Qt.ItemDataRole.UserRole)
         self._proxy.setSortCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
         self._proxy.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
-        self._proxy.setRecursiveFilteringEnabled(True)  # noqa: FBT003
+        self._proxy.setRecursiveFilteringEnabled(True)
         self._proxy.setFilterRole(Qt.ItemDataRole.UserRole + 1)
         self._model = AssetTypeTreeModel(self._report.treeView, self._proxy)
         self._model.pre_reset_model()
