@@ -141,8 +141,11 @@ class DateLineChartView(QChartView):
         if point is not None:
             x_dt = QDateTime.fromMSecsSinceEpoch(int(point.x()))
             self._callout.set_anchor(point)
+            dt_format_qt = convert_datetime_format_to_qt(
+                user_settings.settings.general_date_format
+            )
             self._callout.set_text(
-                f"X: {x_dt.toString('dd.MM.yyyy')}\n"
+                f"X: {x_dt.toString(dt_format_qt)}\n"
                 f"Y: {format_real(point.y(), self._y_decimals)}" + self._y_unit
             )
             self._callout.setZValue(11)

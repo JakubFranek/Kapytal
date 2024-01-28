@@ -16,8 +16,8 @@ from zoneinfo import ZoneInfo
 class NumberFormat(Enum):
     SEP_COMMA_DECIMAL_POINT = "1,234.5678"
     SEP_POINT_DECIMAL_COMMA = "1.234,5678"
-    SEP_SPACE_DECIMAL_POINT = "1 234.5678"
-    SEP_SPACE_DECIMAL_COMMA = "1 234,5678"
+    SEP_SPACE_DECIMAL_POINT = "1\xa0234.5678"  # \xa0 is non-breaking space
+    SEP_SPACE_DECIMAL_COMMA = "1\xa0234,5678"
     SEP_NONE_DECIMAL_POINT = "1234.5678"
 
 
@@ -400,7 +400,7 @@ def _get_number_format_for_locale() -> NumberFormat:
         format_ = NumberFormat.SEP_NONE_DECIMAL_POINT
 
     if format_ is None:
-        # default to decimal point, no separator
+        # default to decimal point, no separator ("C" locale)
         return NumberFormat.SEP_NONE_DECIMAL_POINT
 
     return format_

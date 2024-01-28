@@ -5,17 +5,19 @@ from hypothesis import assume, given
 from hypothesis import strategies as st
 from src.models.mixins.name_mixin import NameLengthError
 from src.models.model_objects.attributes import Attribute, AttributeType
-from tests.models.test_assets.composites import everything_except, names
+from tests.models.test_assets.composites import attributes, everything_except, names
 
 
 @given(name=names(), type_=st.sampled_from(AttributeType))
 def test_creation(name: str, type_: AttributeType) -> None:
     assume(name.lower() != "total")
     attribute = Attribute(name, type_)
+    attribute_duplicate = Attribute(name, type_)
 
     assert attribute.name == name
     assert attribute.__str__() == name
     assert attribute.__repr__() == f"Attribute('{name}', {type_.name})"
+    assert attribute == attribute_duplicate
 
 
 @given(
@@ -61,3 +63,9 @@ def test_name_too_long(name: str, type_: AttributeType) -> None:
 def test_type_invalid_type(name: str, type_: Any) -> None:
     with pytest.raises(TypeError, match="Attribute.type_ must be an AttributeType."):
         Attribute(name, type_)
+
+
+@given(attr=attributes(None), other=everything_except(Attribute))
+def test_eq_invalid_type(attr: Attribute, other: Any) -> None:
+    result = attr.__eq__(other)
+    assert result is NotImplemented

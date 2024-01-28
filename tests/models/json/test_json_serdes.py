@@ -31,7 +31,7 @@ from src.models.model_objects.security_objects import (
 )
 from src.models.record_keeper import RecordKeeper
 from src.models.user_settings import user_settings
-from src.models.user_settings.user_settings_class import UserSettings
+from src.models.user_settings.user_settings_class import NumberFormat, UserSettings
 from tests.models.test_assets.composites import (
     attributes,
     cash_transactions,
@@ -202,7 +202,8 @@ def test_record_keeper_currencies_exchange_rates() -> None:
     serialized = json.dumps(serialized, cls=CustomJSONEncoder)
     decoded = json.loads(serialized, cls=CustomJSONDecoder)
     decoded = RecordKeeper.deserialize(
-        decoded, lambda *args, **kwargs: None  # noqa: ARG005
+        decoded,
+        lambda *args, **kwargs: None,  # noqa: ARG005
     )
 
     assert isinstance(decoded, RecordKeeper)
@@ -225,7 +226,8 @@ def test_record_keeper_account_groups() -> None:
     serialized = json.dumps(serialized, cls=CustomJSONEncoder)
     decoded = json.loads(serialized, cls=CustomJSONDecoder)
     decoded = RecordKeeper.deserialize(
-        decoded, lambda *args, **kwargs: None  # noqa: ARG005
+        decoded,
+        lambda *args, **kwargs: None,  # noqa: ARG005
     )
     assert isinstance(decoded, RecordKeeper)
     assert len(record_keeper.account_groups) == len(decoded.account_groups)
@@ -244,7 +246,8 @@ def test_record_keeper_accounts() -> None:
     serialized = json.dumps(serialized, cls=CustomJSONEncoder)
     decoded = json.loads(serialized, cls=CustomJSONDecoder)
     decoded = RecordKeeper.deserialize(
-        decoded, lambda *args, **kwargs: None  # noqa: ARG005
+        decoded,
+        lambda *args, **kwargs: None,  # noqa: ARG005
     )
     assert isinstance(decoded, RecordKeeper)
     assert len(record_keeper.accounts) == len(decoded.accounts)
@@ -276,7 +279,8 @@ def test_record_keeper_securities() -> None:
     serialized = json.dumps(serialized, cls=CustomJSONEncoder)
     decoded = json.loads(serialized, cls=CustomJSONDecoder)
     decoded = RecordKeeper.deserialize(
-        decoded, lambda *args, **kwargs: None  # noqa: ARG005
+        decoded,
+        lambda *args, **kwargs: None,  # noqa: ARG005
     )
     assert isinstance(decoded, RecordKeeper)
     assert len(record_keeper.securities) == len(decoded.securities)
@@ -296,7 +300,8 @@ def test_record_keeper_tags_and_payees(
     serialized = json.dumps(serialized, cls=CustomJSONEncoder)
     decoded = json.loads(serialized, cls=CustomJSONDecoder)
     decoded = RecordKeeper.deserialize(
-        decoded, lambda *args, **kwargs: None  # noqa: ARG005
+        decoded,
+        lambda *args, **kwargs: None,  # noqa: ARG005
     )
     assert isinstance(decoded, RecordKeeper)
     assert len(record_keeper.tags) == len(decoded.tags)
@@ -319,7 +324,8 @@ def test_record_keeper_categories() -> None:
     serialized = json.dumps(serialized, cls=CustomJSONEncoder)
     decoded = json.loads(serialized, cls=CustomJSONDecoder)
     decoded = RecordKeeper.deserialize(
-        decoded, lambda *args, **kwargs: None  # noqa: ARG005
+        decoded,
+        lambda *args, **kwargs: None,  # noqa: ARG005
     )
     assert isinstance(decoded, RecordKeeper)
     assert len(record_keeper.categories) == len(decoded.categories)
@@ -576,7 +582,8 @@ def test_record_keeper_transactions() -> None:
     serialized = json.dumps(serialized, cls=CustomJSONEncoder)
     decoded = json.loads(serialized, cls=CustomJSONDecoder)
     decoded = RecordKeeper.deserialize(
-        decoded, lambda *args, **kwargs: None  # noqa: ARG005
+        decoded,
+        lambda *args, **kwargs: None,  # noqa: ARG005
     )
     assert isinstance(decoded, RecordKeeper)
     assert decoded.currencies == record_keeper.currencies
@@ -614,6 +621,34 @@ def test_user_settings() -> None:
     assert decoded.backup_paths == settings.backup_paths
     assert decoded.logs_max_size_bytes == settings.logs_max_size_bytes
     assert decoded.backups_max_size_bytes == settings.backups_max_size_bytes
+    assert decoded.general_date_format == settings.general_date_format
+    assert decoded.transaction_date_format == settings.transaction_date_format
+    assert decoded.exchange_rate_decimals == settings.exchange_rate_decimals
+    assert decoded.price_per_share_decimals == settings.price_per_share_decimals
+    assert decoded.number_format == settings.number_format
+    assert decoded.check_for_updates_on_startup == settings.check_for_updates_on_startup
+
+
+settings_json = r"""{
+  "datatype": "UserSettings", 
+  "time_zone": "Europe/Prague", 
+  "logs_max_size_bytes": 1000000, 
+  "backups_max_size_bytes": 100000000, 
+  "backup_paths": [
+    "D:\\Coding\\Kapytal\\saved_data\\backups"
+  ]
+}"""
+
+
+def test_user_settings_missing_keys() -> None:
+    decoded = json.loads(settings_json, cls=CustomJSONDecoder)
+    assert isinstance(decoded, UserSettings)
+    assert decoded.general_date_format == "%d.%m.%Y"
+    assert decoded.transaction_date_format == "%d.%m.%Y"
+    assert decoded.exchange_rate_decimals == 9
+    assert decoded.price_per_share_decimals == 9
+    assert decoded.number_format == NumberFormat.SEP_NONE_DECIMAL_POINT
+    assert decoded.check_for_updates_on_startup is True
 
 
 def test_record_keeper_with_extra_data() -> None:
@@ -627,7 +662,8 @@ def test_record_keeper_with_extra_data() -> None:
     serialized = json.dumps(data, cls=CustomJSONEncoder)
     decoded = json.loads(serialized, cls=CustomJSONDecoder)
     decoded = RecordKeeper.deserialize(
-        decoded["data"], lambda *args, **kwargs: None  # noqa: ARG005
+        decoded["data"],
+        lambda *args, **kwargs: None,  # noqa: ARG005
     )
 
     assert isinstance(decoded, RecordKeeper)
