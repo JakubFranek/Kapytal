@@ -196,12 +196,12 @@ class Currency(CopyableMixin, JSONSerializableMixin):
         return {
             "datatype": "Currency",
             "code": self._code,
-            "places": self._decimals,  # TODO: rename key
+            "decimals": self._decimals,
         }
 
     @staticmethod
     def deserialize(data: dict[str, Any]) -> "Currency":
-        return Currency(code=data["code"], decimals=data["places"])
+        return Currency(code=data["code"], decimals=data["decimals"])
 
 
 class ExchangeRate(CopyableMixin, JSONSerializableMixin):

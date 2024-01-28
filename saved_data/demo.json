@@ -7,17 +7,17 @@
       {
         "datatype": "Currency",
         "code": "EUR",
-        "places": 2
+        "decimals": 2
       },
       {
         "datatype": "Currency",
         "code": "CZK",
-        "places": 2
+        "decimals": 2
       },
       {
         "datatype": "Currency",
         "code": "BTC",
-        "places": 8
+        "decimals": 8
       }
     ],
     "base_currency_code": "EUR",

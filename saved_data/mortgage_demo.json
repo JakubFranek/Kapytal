@@ -7,7 +7,7 @@
       {
         "datatype": "Currency",
         "code": "CZK",
-        "places": 2
+        "decimals": 2
       }
     ],
     "base_currency_code": "CZK",
