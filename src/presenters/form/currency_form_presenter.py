@@ -361,7 +361,7 @@ class CurrencyFormPresenter:
         if not ask_yes_no_question(
             self.view,
             question=(
-                f"Do you want to delete {len(selected_data_points):,} data point(s) "
+                f"Do you want to delete {len(selected_data_points):n} data point(s) "
                 f"for {exchange_rate!s} exchange rate?"
             ),
             title="Are you sure?",

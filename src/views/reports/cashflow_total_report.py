@@ -6,6 +6,7 @@ from PyQt6.QtWidgets import QLabel, QWidget
 from src.models.model_objects.currency_objects import CashAmount
 from src.models.statistics.cashflow_stats import CashFlowStats
 from src.presenters.utilities.event import Event
+from src.utilities.formatting import format_percentage
 from src.views import colors, icons
 from src.views.base_classes.custom_widget import CustomWidget
 from src.views.ui_files.reports.Ui_cash_flow_total_report import Ui_CashFlowTotalReport
@@ -65,7 +66,7 @@ class CashFlowTotalReport(CustomWidget, Ui_CashFlowTotalReport):
         )
         set_label(self.gainLossAmountLabel, stats.delta_performance)
 
-        self.savingsRateAmountLabel.setText(f"{100 * stats.savings_rate:.2f}%")
+        self.savingsRateAmountLabel.setText(format_percentage(100 * stats.savings_rate))
         set_label_color(self.savingsRateAmountLabel, stats.savings_rate)
 
         set_label(self.netGrowthAmountLabel, stats.delta_total)

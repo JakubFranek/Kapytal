@@ -16,9 +16,6 @@
   <property name="windowTitle">
    <string>Update Quotes</string>
   </property>
-  <property name="locale">
-   <locale language="English" country="UnitedKingdom"/>
-  </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
     <widget class="QLineEdit" name="searchLineEdit">

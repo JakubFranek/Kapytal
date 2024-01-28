@@ -20,7 +20,10 @@ from src.views.base_classes.custom_dialog import CustomDialog
 from src.views.ui_files.dialogs.Ui_security_transfer_dialog import (
     Ui_SecurityTransferDialog,
 )
-from src.views.utilities.helper_functions import convert_datetime_format_to_qt
+from src.views.utilities.helper_functions import (
+    convert_datetime_format_to_qt,
+    get_spinbox_value_as_decimal,
+)
 from src.views.widgets.description_plain_text_edit import DescriptionPlainTextEdit
 from src.views.widgets.multiple_tags_selector_widget import MultipleTagsSelectorWidget
 from src.views.widgets.smart_combo_box import SmartComboBox
@@ -156,10 +159,10 @@ class SecurityTransferDialog(CustomDialog, Ui_SecurityTransferDialog):
 
     @property
     def shares(self) -> Decimal | None:
-        text = self.sharesDoubleSpinBox.cleanText().replace(",", "")
+        text = self.sharesDoubleSpinBox.cleanText()
         if text == self.KEEP_CURRENT_VALUES:
             return None
-        return Decimal(text)
+        return get_spinbox_value_as_decimal(self.sharesDoubleSpinBox)
 
     @shares.setter
     def shares(self, shares: Decimal) -> None:

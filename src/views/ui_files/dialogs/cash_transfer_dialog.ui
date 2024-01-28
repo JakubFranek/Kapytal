@@ -22,14 +22,14 @@
   <property name="windowTitle">
    <string>Dialog</string>
   </property>
-  <property name="locale">
-   <locale language="English" country="UnitedKingdom"/>
-  </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
     <layout class="QGridLayout" name="gridLayout">
      <item row="5" column="1" colspan="2">
       <widget class="QDateTimeEdit" name="dateTimeEdit">
+       <property name="locale">
+        <locale language="English" country="UnitedKingdom"/>
+       </property>
        <property name="displayFormat">
         <string>dd.MM.yyyy hh:mm</string>
        </property>

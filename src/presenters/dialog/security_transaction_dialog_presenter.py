@@ -327,17 +327,12 @@ class SecurityTransactionDialogPresenter(TransactionDialogPresenter):
 
         try:
             security = self._record_keeper.get_security_by_name(security_name)
-            security_account_path = self._record_keeper.get_account(
+            security_account = self._record_keeper.get_account(
                 security_account_path, SecurityAccount
             )
         except (NotFoundError, TypeError):
             self._dialog.set_shares_suffix("")
             return
-
-        security = self._record_keeper.get_security_by_name(security_name)
-        security_account = self._record_keeper.get_account(
-            security_account_path, SecurityAccount
-        )
 
         if self._dialog.edit_mode == EditMode.ADD:
             shares = security_account.securities[security]

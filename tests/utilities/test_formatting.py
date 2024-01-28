@@ -94,13 +94,33 @@ test_data_2_decimals = {
 
 @pytest.mark.parametrize("test_data", test_data.items())
 def test_convert_decimal_to_string(test_data: tuple[Decimal, str]) -> None:
+    import locale
+
+    locale.setlocale(locale.LC_ALL, "en_US.UTF-8")
+
     assert convert_decimal_to_string(test_data[0]) == test_data[1]
 
 
 @pytest.mark.parametrize("test_data", test_data_2_decimals.items())
 def test_convert_decimal_to_string_two_decimals(test_data: tuple[Decimal, str]) -> None:
+    import locale
+
+    locale.setlocale(locale.LC_ALL, "en_US.UTF-8")
     assert convert_decimal_to_string(test_data[0], min_decimals=2) == test_data[1]
 
 
 def test_convert_decimal_to_string_twelve_decimals() -> None:
     assert convert_decimal_to_string(Decimal(0), min_decimals=12) == "0.000000000000"
+
+
+def test_convert_decimal_to_string_czech_locale() -> None:
+    import locale
+
+    locale.setlocale(locale.LC_ALL, "cs_CZ")
+    result = convert_decimal_to_string(
+        Decimal("1234567.891234"), significant_digits=2, min_decimals=2
+    )
+    assert result == "≈1 234 567,89".replace(
+        " ",
+        "\xa0",  # \xa0 is a non-breaking space
+    )

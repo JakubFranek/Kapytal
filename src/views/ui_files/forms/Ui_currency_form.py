@@ -14,7 +14,6 @@ class Ui_CurrencyForm(object):
         CurrencyForm.setObjectName("CurrencyForm")
         CurrencyForm.setWindowModality(QtCore.Qt.WindowModality.WindowModal)
         CurrencyForm.resize(950, 600)
-        CurrencyForm.setLocale(QtCore.QLocale(QtCore.QLocale.Language.English, QtCore.QLocale.Country.UnitedKingdom))
         self.verticalLayout = QtWidgets.QVBoxLayout(CurrencyForm)
         self.verticalLayout.setObjectName("verticalLayout")
         self.splitter = QtWidgets.QSplitter(CurrencyForm)

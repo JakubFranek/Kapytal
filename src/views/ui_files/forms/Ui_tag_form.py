@@ -14,7 +14,6 @@ class Ui_TagForm(object):
         TagForm.setObjectName("TagForm")
         TagForm.setWindowModality(QtCore.Qt.WindowModality.WindowModal)
         TagForm.resize(500, 400)
-        TagForm.setLocale(QtCore.QLocale(QtCore.QLocale.Language.English, QtCore.QLocale.Country.UnitedKingdom))
         self.horizontalLayout = QtWidgets.QHBoxLayout(TagForm)
         self.horizontalLayout.setObjectName("horizontalLayout")
         self.leftVerticalLayout = QtWidgets.QVBoxLayout()

@@ -15,7 +15,6 @@ class Ui_TableViewForm(object):
         TableViewForm.setWindowModality(QtCore.Qt.WindowModality.WindowModal)
         TableViewForm.resize(800, 500)
         TableViewForm.setWindowTitle("")
-        TableViewForm.setLocale(QtCore.QLocale(QtCore.QLocale.Language.English, QtCore.QLocale.Country.UnitedKingdom))
         self.verticalLayout = QtWidgets.QVBoxLayout(TableViewForm)
         self.verticalLayout.setObjectName("verticalLayout")
         self.tableView = QtWidgets.QTableView(TableViewForm)

@@ -274,17 +274,12 @@ class NetWorthReportPresenter:
             x.append(date)
             y.append(net_worth)
 
-        places = (
-            base_currency.decimals - 2
-            if base_currency.decimals >= 2  # noqa: PLR2004
-            else 0
-        )
         self._report.load_data(
             x,
             y,
             y_label=f"Net Worth [{base_currency.code}]",
             y_unit=base_currency.code,
-            y_decimals=places,
+            y_decimals=base_currency.decimals,
         )
         self._report.show_form()
 

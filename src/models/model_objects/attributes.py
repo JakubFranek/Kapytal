@@ -46,6 +46,14 @@ class Attribute(NameMixin, JSONSerializableMixin):
     def type_(self) -> AttributeType:
         return self._type
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Attribute):
+            return NotImplemented
+        return self._name == other._name and self._type == other._type
+
+    def __hash__(self) -> int:
+        return hash((self._name, self._type))
+
     def __repr__(self) -> str:
         return f"Attribute('{self._name}', {self._type.name})"
 

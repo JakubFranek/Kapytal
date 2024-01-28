@@ -11,6 +11,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 from src.views import icons
+from src.views.utilities.helper_functions import get_spinbox_value_as_decimal
 from src.views.widgets.smart_combo_box import SmartComboBox
 
 
@@ -103,8 +104,7 @@ class SplitTagRowWidget(QWidget):
 
     @property
     def amount(self) -> Decimal:
-        text = self.double_spin_box.cleanText().replace(",", "")
-        return Decimal(text)
+        return get_spinbox_value_as_decimal(self.double_spin_box)
 
     @amount.setter
     def amount(self, value: Decimal) -> None:

@@ -10,7 +10,10 @@ from src.views.base_classes.custom_dialog import CustomDialog
 from src.views.ui_files.dialogs.Ui_set_security_price_dialog import (
     Ui_SetSecurityPriceDialog,
 )
-from src.views.utilities.helper_functions import convert_datetime_format_to_qt
+from src.views.utilities.helper_functions import (
+    convert_datetime_format_to_qt,
+    get_spinbox_value_as_decimal,
+)
 
 
 class SetSecurityPriceDialog(CustomDialog, Ui_SetSecurityPriceDialog):
@@ -56,7 +59,7 @@ class SetSecurityPriceDialog(CustomDialog, Ui_SetSecurityPriceDialog):
 
     @property
     def value(self) -> Decimal:
-        return Decimal(self.priceDoubleSpinBox.cleanText().replace(",", ""))
+        return get_spinbox_value_as_decimal(self.priceDoubleSpinBox)
 
     @property
     def date_(self) -> date:

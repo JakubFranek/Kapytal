@@ -29,7 +29,7 @@ from src.models.model_objects.security_objects import (
     SecurityTransfer,
 )
 from src.models.user_settings import user_settings
-from src.utilities.formatting import convert_decimal_to_string
+from src.utilities.formatting import convert_decimal_to_string, format_percentage
 from src.views import colors, icons
 from src.views.constants import (
     TRANSACTION_TABLE_COLUMN_HEADERS,
@@ -407,7 +407,7 @@ class TransactionTableModel(QAbstractTableModel):
             return transaction.description
         if column == TransactionTableColumn.SHARES:
             shares = TransactionTableModel._get_transaction_shares(transaction)
-            return f"{shares:,}"
+            return f"{shares:n}"
         if column == TransactionTableColumn.PRICE_PER_SHARE:
             return TransactionTableModel._get_transaction_price_per_share_tooltip(
                 transaction
@@ -462,14 +462,16 @@ class TransactionTableModel(QAbstractTableModel):
                 and transaction.is_refunded
             ):
                 refunded_ratio = transaction.refunded_ratio
-                return f"Expense ({refunded_ratio*100:.0f}% Refunded)"
+                return f"Expense ({format_percentage(100*refunded_ratio,decimals=0)} Refunded)"
             return transaction.type_.name.capitalize()
         if isinstance(transaction, SecurityTransaction):
             return transaction.type_.name.capitalize()
         if isinstance(transaction, CashTransfer):
             return "Cash Transfer"
         if isinstance(transaction, RefundTransaction):
-            return f"Refund ({transaction.refund_ratio*100:.0f}%)"
+            return (
+                f"Refund ({format_percentage(100*transaction.refund_ratio,decimals=0)})"
+            )
         if isinstance(transaction, SecurityTransfer):
             return "Security Transfer"
         raise TypeError("Unexpected Transaction type.")

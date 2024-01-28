@@ -14,7 +14,6 @@ class Ui_AttributeReport(object):
         AttributeReport.setObjectName("AttributeReport")
         AttributeReport.setWindowModality(QtCore.Qt.WindowModality.WindowModal)
         AttributeReport.resize(800, 600)
-        AttributeReport.setLocale(QtCore.QLocale(QtCore.QLocale.Language.English, QtCore.QLocale.Country.UnitedKingdom))
         self.verticalLayout_3 = QtWidgets.QVBoxLayout(AttributeReport)
         self.verticalLayout_3.setObjectName("verticalLayout_3")
         self.splitter = QtWidgets.QSplitter(AttributeReport)

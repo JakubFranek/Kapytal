@@ -14,7 +14,6 @@ class Ui_PayeeForm(object):
         PayeeForm.setObjectName("PayeeForm")
         PayeeForm.setWindowModality(QtCore.Qt.WindowModality.WindowModal)
         PayeeForm.resize(500, 400)
-        PayeeForm.setLocale(QtCore.QLocale(QtCore.QLocale.Language.English, QtCore.QLocale.Country.UnitedKingdom))
         self.horizontalLayout = QtWidgets.QHBoxLayout(PayeeForm)
         self.horizontalLayout.setObjectName("horizontalLayout")
         self.leftVerticalLayout = QtWidgets.QVBoxLayout()

@@ -14,7 +14,6 @@ class Ui_CategoryReport(object):
         CategoryReport.setObjectName("CategoryReport")
         CategoryReport.setWindowModality(QtCore.Qt.WindowModality.WindowModal)
         CategoryReport.resize(885, 600)
-        CategoryReport.setLocale(QtCore.QLocale(QtCore.QLocale.Language.English, QtCore.QLocale.Country.UnitedKingdom))
         self.verticalLayout_3 = QtWidgets.QVBoxLayout(CategoryReport)
         self.verticalLayout_3.setObjectName("verticalLayout_3")
         self.splitter = QtWidgets.QSplitter(CategoryReport)

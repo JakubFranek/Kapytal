@@ -334,6 +334,7 @@ def test_tag_amount_pairs_none_amount_new_tag(
     transaction: CashTransaction, data: st.DataObject
 ) -> None:
     tag = data.draw(attributes(type_=AttributeType.TAG))
+    assume(tag not in transaction.tags)
     tup = ((tag, None),)
     transaction.set_attributes(tag_amount_pairs=tup)
     assert transaction.tag_amount_pairs == ((tag, transaction.amount),)

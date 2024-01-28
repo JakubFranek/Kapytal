@@ -1,3 +1,4 @@
+import locale
 import logging
 import operator
 from bisect import bisect_right
@@ -436,6 +437,8 @@ class ExchangeRate(CopyableMixin, JSONSerializableMixin):
 class CashAmount(CopyableMixin, JSONSerializableMixin):
     """An immutable object comprising of Decimal value and a Currency."""
 
+    ROUNDED_MAX_ZEROES = 4
+
     __slots__ = (
         "_raw_value",
         "_currency",
@@ -456,7 +459,7 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
         except (TypeError, InvalidOperation, ValueError) as exc:
             raise TypeError(
                 "CashAmount.value must be a Decimal, integer or a string "
-                "containing a number."
+                f"containing a number (received {value!r})."
             ) from exc
 
         if not isinstance(currency, Currency):
@@ -470,12 +473,17 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
                 self._value_rounded = self._raw_value
             else:
                 self._value_rounded = round(self._raw_value, self._currency.decimals)
-                min_places = min(self._currency.decimals, 4)
-                if -self._value_rounded.as_tuple().exponent > min_places:
+                if -self._value_rounded.as_tuple().exponent > self.ROUNDED_MAX_ZEROES:
+                    # if value has too many decimals, remove trailing zeros
+                    # to save horizontal space
                     self._value_rounded = self._value_rounded.normalize()
-                    if -self._value_rounded.as_tuple().exponent < min_places:
+                    # if value has too few decimal places now, restore some zeros
+                    if (
+                        -self._value_rounded.as_tuple().exponent
+                        < self.ROUNDED_MAX_ZEROES
+                    ):
                         self._value_rounded = self._value_rounded.quantize(
-                            quantizers[min_places]
+                            quantizers[self.ROUNDED_MAX_ZEROES]
                         )
 
         return self._value_rounded
@@ -641,14 +649,17 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
     def to_str_rounded(self, decimals: int | None = None) -> str:
         if decimals is None:
             if not hasattr(self, "_str_rounded"):
-                self._str_rounded = f"{self.value_rounded:,} {self._currency.code}"
+                self._str_rounded = f"{self.value_rounded:n} {self._currency.code}"
             return self._str_rounded
         value_rounded = round(self._raw_value, decimals)
-        return f"{value_rounded:,} {self._currency.code}"
+        number_string = locale.localize(
+            f"{value_rounded:.{decimals}f}", grouping=True, monetary=True
+        )
+        return f"{number_string} {self._currency.code}"
 
     def to_str_normalized(self) -> str:
         if not hasattr(self, "_str_normalized"):
-            self._str_normalized = f"{self.value_normalized:,} {self._currency.code}"
+            self._str_normalized = f"{self.value_normalized:n} {self._currency.code}"
         return self._str_normalized
 
     def convert(self, target_currency: Currency, date_: date | None = None) -> Self:

@@ -14,7 +14,6 @@ class Ui_CategoryForm(object):
         CategoryForm.setObjectName("CategoryForm")
         CategoryForm.setWindowModality(QtCore.Qt.WindowModality.WindowModal)
         CategoryForm.resize(500, 500)
-        CategoryForm.setLocale(QtCore.QLocale(QtCore.QLocale.Language.English, QtCore.QLocale.Country.UnitedKingdom))
         self.verticalLayout = QtWidgets.QVBoxLayout(CategoryForm)
         self.verticalLayout.setObjectName("verticalLayout")
         self.tabWidget = QtWidgets.QTabWidget(CategoryForm)

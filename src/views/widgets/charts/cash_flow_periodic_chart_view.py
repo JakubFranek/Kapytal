@@ -15,6 +15,7 @@ from PyQt6.QtCore import QMargins, QPointF, Qt, pyqtSignal
 from PyQt6.QtGui import QColor, QCursor, QFont, QMouseEvent, QPainter
 from PyQt6.QtWidgets import QGraphicsScene, QWidget
 from src.models.statistics.cashflow_stats import CashFlowStats
+from src.utilities.formatting import format_real
 from src.views import colors
 from src.views.widgets.charts.general_chart_callout import GeneralChartCallout
 
@@ -59,7 +60,7 @@ class CashFlowPeriodicChartView(QChartView):
         self._font_bold.setBold(True)
 
         self._unit = ""
-        self._places = 0
+        self._decimals = 0
 
     def load_data(
         self, stats_sequence: Sequence[CashFlowStats], chart_data: ChartData
@@ -75,7 +76,7 @@ class CashFlowPeriodicChartView(QChartView):
             self._unit = "%"
         else:
             self._unit = stats_sequence[0].inflows.balance.currency.code
-        self._places = stats_sequence[0].inflows.balance.currency.decimals
+        self._decimals = stats_sequence[0].inflows.balance.currency.decimals
 
         bar_inflows = BarSet("Inflows")
         bar_inflows.setColor(QColor("darkgreen"))
@@ -186,7 +187,10 @@ class CashFlowPeriodicChartView(QChartView):
         self.axis_y.applyNiceNumbers()
 
     def on_hover(
-        self, state: bool, index: int, bar_set: BarSet  # noqa: FBT001
+        self,
+        state: bool,  # noqa: FBT001
+        index: int,
+        bar_set: BarSet,
     ) -> None:
         label = bar_set.label()
         value = bar_set.at(index)
@@ -195,7 +199,7 @@ class CashFlowPeriodicChartView(QChartView):
         view_pos = self.mapFromGlobal(cursor_pos)
         scene_pos = self.mapToScene(view_pos)
 
-        tooltip_text = f"{label}\n{value:,.{self._places}f} {self._unit}"
+        tooltip_text = f"{label}\n{format_real(value, self._decimals)} {self._unit}"
 
         if len(bar_set.extra_text) > index and bar_set.extra_text[index]:
             tooltip_text += bar_set.extra_text[index]

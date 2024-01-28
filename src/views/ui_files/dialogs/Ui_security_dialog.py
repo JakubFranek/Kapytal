@@ -14,7 +14,6 @@ class Ui_SecurityDialog(object):
         SecurityDialog.setObjectName("SecurityDialog")
         SecurityDialog.setWindowModality(QtCore.Qt.WindowModality.WindowModal)
         SecurityDialog.resize(300, 165)
-        SecurityDialog.setLocale(QtCore.QLocale(QtCore.QLocale.Language.English, QtCore.QLocale.Country.UnitedKingdom))
         self.verticalLayout = QtWidgets.QVBoxLayout(SecurityDialog)
         self.verticalLayout.setObjectName("verticalLayout")
         self.formLayout = QtWidgets.QFormLayout()

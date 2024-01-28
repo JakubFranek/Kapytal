@@ -13,7 +13,7 @@ from src.models.statistics.security_stats import (
     SecurityStatsItem,
     TotalSecurityStats,
 )
-from src.utilities.formatting import get_short_percentage_string
+from src.utilities.formatting import format_percentage
 from src.views import colors, icons
 from src.views.constants import SecuritiesOverviewTreeColumn
 
@@ -382,7 +382,9 @@ class SecuritiesOverviewTreeModel(QAbstractItemModel):
         )
 
     def _get_tooltip_role_data(
-        self, column: int, item: SecurityStatsItem  # noqa: ARG002
+        self,
+        column: int,
+        item: SecurityStatsItem,  # noqa: ARG002
     ) -> str | None:
         if column != SecuritiesOverviewTreeColumn.GAIN_TOTAL_CURRENCY:
             return None
@@ -432,8 +434,8 @@ def _convert_numerical_attribute_to_text(
         return value.to_str_rounded(decimals=decimals)
 
     if percentage:
-        return get_short_percentage_string(value)
-    return f"{value:,}"
+        return format_percentage(value)
+    return f"{value:n}"
 
 
 def _convert_numerical_attribute_to_float(

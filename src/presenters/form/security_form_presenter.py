@@ -374,7 +374,7 @@ class SecurityFormPresenter:
         if not ask_yes_no_question(
             self.view,
             question=(
-                f"Do you want to delete {len(selected_data_points):,} data point(s) "
+                f"Do you want to delete {len(selected_data_points):n} data point(s) "
                 f"of {security.name}?"
             ),
             title="Are you sure?",

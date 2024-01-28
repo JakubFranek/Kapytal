@@ -162,7 +162,7 @@ class PeriodicAttributeStatsTableModel(QAbstractTableModel):
             prefix = "Σ "
         else:
             prefix = ""
-        return prefix + f"{self._rows[row][column].value:,}"
+        return prefix + f"{self._rows[row][column].value:n}"
 
     def _get_foreground_role_data(self, amount: Decimal) -> QBrush | None:
         if amount > 0:

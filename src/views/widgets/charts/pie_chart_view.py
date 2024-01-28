@@ -6,6 +6,7 @@ from PyQt6.QtCharts import QChart, QChartView, QPieSeries, QPieSlice
 from PyQt6.QtCore import QPointF, Qt, pyqtSignal
 from PyQt6.QtGui import QCursor, QFont, QMouseEvent, QPainter
 from PyQt6.QtWidgets import QWidget
+from src.utilities.formatting import format_percentage, format_real
 from src.views import colors
 from src.views.widgets.charts.general_chart_callout import GeneralChartCallout
 
@@ -31,7 +32,7 @@ class PieChartView(QChartView):
         currency_code: str,
         color: colors.ColorRanges,
     ) -> None:
-        self._places = places
+        self._decimals = places
         self._currency_code = currency_code
 
         _data = [(float(d[0]), d[1]) for d in data]
@@ -78,8 +79,8 @@ class PieChartView(QChartView):
 
         callout_text = (
             f"{label}\n"
-            f"{value:,.{self._places}f} {self._currency_code}\n"
-            f"{percentage:.2f}% of Total"
+            f"{format_real(value, self._decimals)} {self._currency_code}\n"
+            f"{format_percentage(percentage)} of Total"
         )
         self._update_callout(callout_text)
         if state:

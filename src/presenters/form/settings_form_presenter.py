@@ -8,6 +8,7 @@ from src.presenters.utilities.handle_exception import handle_exception
 from src.utilities import constants
 from src.view_models.backup_paths_list_model import BackupPathsListModel
 from src.views.forms.settings_form import SettingsForm
+from src.views.utilities.message_box_functions import show_info_box
 
 
 class SettingsFormPresenter:
@@ -56,6 +57,7 @@ class SettingsFormPresenter:
         self._view.check_for_updates_on_startup = (
             user_settings.settings.check_for_updates_on_startup
         )
+        self._view.number_format = user_settings.settings.number_format
         self._backup_paths = list(user_settings.settings.backup_paths)
         self._backup_paths_list_model.pre_reset_model()
         self.update_model_data()
@@ -110,6 +112,10 @@ class SettingsFormPresenter:
         backup_size_limit_bytes = self._view.backups_max_size_kb * 1000
         logs_size_limit_bytes = self._view.logs_max_size_kb * 1000
 
+        number_format_changed = (
+            self._view.number_format != user_settings.settings.number_format
+        )
+
         settings_copy = copy.copy(user_settings.settings)
         try:
             user_settings.settings.backups_max_size_bytes = backup_size_limit_bytes
@@ -128,6 +134,7 @@ class SettingsFormPresenter:
             user_settings.settings.check_for_updates_on_startup = (
                 self._view.check_for_updates_on_startup
             )
+            user_settings.settings.number_format = self._view.number_format
         except Exception as exception:  # noqa: BLE001
             handle_exception(exception)
             user_settings.settings = settings_copy
@@ -135,6 +142,13 @@ class SettingsFormPresenter:
 
         user_settings.save()
         self._set_unsaved_changes(unsaved=False)
+
+        if number_format_changed:
+            show_info_box(
+                self._view,
+                "Please restart Kapytal to apply number format changes.",
+                "Restart Kapytal to apply changes",
+            )
 
         if close:
             self._view.close()

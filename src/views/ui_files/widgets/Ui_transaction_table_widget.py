@@ -18,7 +18,6 @@ class Ui_TransactionTableWidget(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(TransactionTableWidget.sizePolicy().hasHeightForWidth())
         TransactionTableWidget.setSizePolicy(sizePolicy)
-        TransactionTableWidget.setLocale(QtCore.QLocale(QtCore.QLocale.Language.English, QtCore.QLocale.Country.UnitedKingdom))
         self.verticalLayout = QtWidgets.QVBoxLayout(TransactionTableWidget)
         self.verticalLayout.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout.setObjectName("verticalLayout")
