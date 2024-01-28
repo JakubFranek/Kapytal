@@ -36,7 +36,7 @@ Kapytal is creating backups of user JSON [data file](#data-file) every time the 
 
 In Kapytal, exactly one Currency at a time can be designated as base Currency. Base Currency is used in Base Balance column and Checked Account Balance widget in [Account Tree](#account-tree-), Base Amount column and Selected Transactions Total widget in [Transaction Table](#transaction-table-), and in [Reports](#reports).
 
-The user can change the base Currency any time in [Currencies and Exchange Rates Form](#currencies-and-exchange-rates-form) in the Currencies section.
+The user can change the base Currency any time in [Currencies Form](#currencies-and-exchange-rates-form) in the Currencies section.
 
 ## Buy ![Icon](../resources/icons/icons-custom/certificate-plus.png)
 
@@ -117,13 +117,13 @@ Categories are meant to be rather generic and "reused" often. [Tags](#tag-) are 
 
 Contrary to many similar software, in Kapytal, the user can assign Categories to Cash Transactions regardless of how many children the Categories have. For example, the user can use Category *Food and Drink* as well as *Food and Drink/Eating out*, and both could be even assigned to the same Cash Transactions at the same time.
 
-## Currencies and Exchange Rates Form
+## Currencies Form
 
-Currencies and Exchange Rates Form is the [Form](#form) for creating, editing, deleting, manipulating and updating [Currencies](#currency-), [Exchange Rates](#exchange-rate-) and Exchange Rate quotes.
+Currencies Form is the [Form](#form) for creating, editing, deleting, manipulating and updating [Currencies](#currency-), [Exchange Rates](#exchange-rate-) and Exchange Rate quotes.
 
 ## Currency ![Icon](../resources/icons/icons-custom/currency.png)
 
-In Kapytal, Currencies are units of money. The user can create Currencies in [Currencies and Exchange Rates Form](#currencies-and-exchange-rates-form). Currencies have two attributes: code and number of decimals. These two attributes are specified upon Currency creation and can never be changed.
+In Kapytal, Currencies are units of money. The user can create Currencies in [Currencies Form](#currencies-and-exchange-rates-form). Currencies have two attributes: code and number of decimals. These two attributes are specified upon Currency creation and can never be changed.
 
 Code is a 3-letter string, as the intended contents are the [ISO 4217](https://en.wikipedia.org/wiki/ISO_4217) standard codes (such as USD, EUR etc.). However, in practice, the user can enter any three letter string. Kapytal Currencies can therefore be used to represent non-ISO4217 currencies such as cryptocurrencies (BTC, ETH) or any other unit of monetary value.
 
@@ -157,9 +157,9 @@ In Kapytal, Dialogs are "disposable" user interface elements/windows used for si
 
 ## Exchange Rate ![Icon](../resources/icons/icons-custom/currency-arrow.png)
 
-Exchange Rates relate two [Currencies](#currency-) together through a numerical conversion factor. Exchange Rates can be created within [Currencies and Exchange Rates Form](#currencies-and-exchange-rates-form).
+Exchange Rates relate two [Currencies](#currency-) together through a numerical conversion factor. Exchange Rates can be created within [Currencies Form](#currencies-and-exchange-rates-form).
 
-Both current or past values of Exchange Rates can be set manually within [Currencies and Exchange Rates Form](#currencies-and-exchange-rates-form). Current rates can also be downloaded automatically via [Update Quotes Form](#update-quotes-form-).
+Both current or past values of Exchange Rates can be set manually within [Currencies Form](#currencies-and-exchange-rates-form). Current rates can also be downloaded automatically via [Update Quotes Form](#update-quotes-form-).
 
 ## Expense ![Icon](../resources/icons/icons-custom/coins-minus.png)
 
@@ -172,7 +172,7 @@ In Kapytal, Forms are user interface elements/windows used for more complex sett
 These are some of the Forms in Kapytal:
 
 - [Category](#category-) Form
-- [Currencies and Exchange Rates Form](#currencies-and-exchange-rates-form)
+- [Currencies Form](#currencies-and-exchange-rates-form)
 - [Payee](#payee-) Form
 - [Update Quotes Form](#update-quotes-form-)
 - [Securities Form](#securities-form)

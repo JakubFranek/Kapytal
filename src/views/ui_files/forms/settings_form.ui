@@ -55,7 +55,7 @@
          <item row="1" column="0">
           <widget class="QLabel" name="exchangeRateDecimalsLabel">
            <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Number of decimal places of Exchange Rate spinbox when manually setting Exchange Rate quote in Currencies and Exchange Rates Form.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Number of decimal places of Exchange Rate spinbox when manually setting Exchange Rate quote in Currencies Form.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </property>
            <property name="text">
             <string>Exchange Rate decimals</string>
@@ -65,7 +65,7 @@
          <item row="1" column="1">
           <widget class="QSpinBox" name="exchangeRateDecimalsSpinBox">
            <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Number of decimal places of Exchange Rate spinbox when manually setting Exchange Rate quote in Currencies and Exchange Rates Form.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Number of decimal places of Exchange Rate spinbox when manually setting Exchange Rate quote in Currencies Form.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </property>
            <property name="minimum">
             <number>0</number>
