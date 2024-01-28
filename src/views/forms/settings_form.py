@@ -51,6 +51,9 @@ class SettingsForm(CustomWidget, Ui_SettingsForm):
         )
         self.checkforUpdatesCheckBox.toggled.connect(self.signal_data_changed.emit)
 
+        self.exchangeRateDecimalsSpinBox.setMaximum(18)
+        self.pricePerShareDecimalsSpinBox.setMaximum(18)
+
     @property
     def exchange_rate_decimals(self) -> int:
         return self.exchangeRateDecimalsSpinBox.value()
@@ -60,11 +63,11 @@ class SettingsForm(CustomWidget, Ui_SettingsForm):
         self.exchangeRateDecimalsSpinBox.setValue(value)
 
     @property
-    def price_per_share_decimals(self) -> int:
+    def amount_per_share_decimals(self) -> int:
         return self.pricePerShareDecimalsSpinBox.value()
 
-    @price_per_share_decimals.setter
-    def price_per_share_decimals(self, value: int) -> None:
+    @amount_per_share_decimals.setter
+    def amount_per_share_decimals(self, value: int) -> None:
         self.pricePerShareDecimalsSpinBox.setValue(value)
 
     @property

@@ -479,7 +479,7 @@ def test_security_transaction(transaction: SecurityTransaction) -> None:
     )
     assert decoded.type_ == transaction.type_
     assert decoded.security == transaction.security
-    assert decoded.price_per_share == transaction.price_per_share
+    assert decoded.amount_per_share == transaction.amount_per_share
     assert decoded.cash_account == transaction.cash_account
     assert decoded.security_account == transaction.security_account
 
@@ -624,16 +624,16 @@ def test_user_settings() -> None:
     assert decoded.general_date_format == settings.general_date_format
     assert decoded.transaction_date_format == settings.transaction_date_format
     assert decoded.exchange_rate_decimals == settings.exchange_rate_decimals
-    assert decoded.price_per_share_decimals == settings.price_per_share_decimals
+    assert decoded.amount_per_share_decimals == settings.amount_per_share_decimals
     assert decoded.number_format == settings.number_format
     assert decoded.check_for_updates_on_startup == settings.check_for_updates_on_startup
 
 
 settings_json = r"""{
-  "datatype": "UserSettings", 
-  "time_zone": "Europe/Prague", 
-  "logs_max_size_bytes": 1000000, 
-  "backups_max_size_bytes": 100000000, 
+  "datatype": "UserSettings",
+  "time_zone": "Europe/Prague",
+  "logs_max_size_bytes": 1000000,
+  "backups_max_size_bytes": 100000000,
   "backup_paths": [
     "D:\\Coding\\Kapytal\\saved_data\\backups"
   ]
@@ -646,7 +646,7 @@ def test_user_settings_missing_keys() -> None:
     assert decoded.general_date_format == "%d.%m.%Y"
     assert decoded.transaction_date_format == "%d.%m.%Y"
     assert decoded.exchange_rate_decimals == 9
-    assert decoded.price_per_share_decimals == 9
+    assert decoded.amount_per_share_decimals == 9
     assert decoded.number_format == NumberFormat.SEP_NONE_DECIMAL_POINT
     assert decoded.check_for_updates_on_startup is True
 

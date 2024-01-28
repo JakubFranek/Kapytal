@@ -22,6 +22,7 @@ refund: QIcon | None = None
 cash_transfer: QIcon | None = None
 buy: QIcon | None = None
 sell: QIcon | None = None
+dividend: QIcon | None = None
 security_transfer: QIcon | None = None
 payee: QIcon | None = None
 split_attribute: QIcon | None = None
@@ -99,7 +100,7 @@ def setup() -> None:  # noqa: PLR0915
     global cash_account, cash_account_empty  # noqa: PLW0603
     global select_all, unselect_all  # noqa: PLW0603
     global select_cash_accounts, select_security_accounts, select_this  # noqa: PLW0603
-    global income, expense, refund, cash_transfer, buy, sell  # noqa: PLW0603
+    global income, expense, refund, cash_transfer, buy, sell, dividend  # noqa: PLW0603
     global security_transfer, payee, split_attribute  # noqa: PLW0603
     global base_currency, question, disk, disk_warning, disks  # noqa: PLW0603
     global open_file, currency, quit_, security, category, settings  # noqa: PLW0603
@@ -231,3 +232,4 @@ def setup() -> None:  # noqa: PLR0915
         if colors.color_scheme == Qt.ColorScheme.Dark
         else QIcon("icons_custom:sum_light_mode.png")
     )
+    dividend = QIcon("icons_custom:certificate-coin.png")

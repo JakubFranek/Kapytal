@@ -90,6 +90,10 @@ class SecurityStats(SecurityStatsItem):
             (stats.shares_sold for stats in self.account_stats), start=Decimal(0)
         )
         self.shares_transferred = Decimal(0)
+        self.shares_paid_dividend = sum(
+            (stats.shares_paid_dividend for stats in self.account_stats),
+            start=Decimal(0),
+        )
 
         self.price_market_native = security.price
         self.price_market_base = security.price.convert(base_currency)
@@ -122,6 +126,20 @@ class SecurityStats(SecurityStatsItem):
             self.account_stats,
             base_currency,
         )
+        self.amount_avg_dividend_native = _average_of_sum_of_attribute_products(
+            "amount_avg_dividend_native",
+            "shares_paid_dividend",
+            self.shares_paid_dividend,
+            self.account_stats,
+            security.currency,
+        )
+        self.amount_avg_dividend_base = _average_of_sum_of_attribute_products(
+            "amount_avg_dividend_base",
+            "shares_paid_dividend",
+            self.shares_paid_dividend,
+            self.account_stats,
+            base_currency,
+        )
 
         self.value_current_native = self.price_market_native * self.shares_owned
         self.value_current_base = self.price_market_base * self.shares_owned
@@ -129,6 +147,8 @@ class SecurityStats(SecurityStatsItem):
         self.value_sold_base = self.price_avg_sell_base * self.shares_sold
         self.value_bought_native = self.price_avg_buy_native * self.shares_bought
         self.value_bought_base = self.price_avg_buy_base * self.shares_bought
+        self.value_dividend_native = self.amount_avg_dividend_native
+        self.value_dividend_base = self.amount_avg_dividend_base
 
         self.cost_basis_unrealized_native = _zero_if_nan(
             self.shares_owned * self.price_avg_buy_native
@@ -160,9 +180,11 @@ class SecurityStats(SecurityStatsItem):
 
         self.gain_realized_native = _zero_if_nan(
             self.shares_sold * (self.price_avg_sell_native - self.price_avg_buy_native)
+            + self.value_dividend_native
         )
         self.gain_realized_base = _zero_if_nan(
             self.shares_sold * (self.price_avg_sell_base - self.price_avg_buy_base)
+            + self.value_dividend_base
         )
         self.return_pct_realized_native = _calculate_return_percentage(
             nom=self.gain_realized_native,
@@ -227,24 +249,36 @@ class SecurityAccountStats(SecurityStatsItem):
         self.shares_bought = account.get_shares(security, SharesType.BOUGHT)
         self.shares_sold = account.get_shares(security, SharesType.SOLD)
         self.shares_transferred = account.get_shares(security, SharesType.TRANSFERRED)
+        self.shares_paid_dividend = account.get_shares(
+            security, SharesType.PAID_DIVIDEND
+        )
 
         self.price_market_native = security.price
         self.price_market_base = security.price.convert(base_currency)
-        self.price_avg_buy_native = account.get_average_price(
+        self.price_avg_buy_native = account.get_average_amount_per_share(
             security, type_=SecurityTransactionType.BUY
         )
-        self.price_avg_buy_base = account.get_average_price(
+        self.price_avg_buy_base = account.get_average_amount_per_share(
             security, currency=base_currency, type_=SecurityTransactionType.BUY
         )
-        self.price_avg_sell_native = account.get_average_price(
+        self.price_avg_sell_native = account.get_average_amount_per_share(
             security, type_=SecurityTransactionType.SELL
         )
-        self.price_avg_sell_base = account.get_average_price(
+        self.price_avg_sell_base = account.get_average_amount_per_share(
             security, currency=base_currency, type_=SecurityTransactionType.SELL
+        )
+        self.amount_avg_dividend_native = account.get_average_amount_per_share(
+            security, type_=SecurityTransactionType.DIVIDEND
+        )
+        self.amount_avg_dividend_base = account.get_average_amount_per_share(
+            security, currency=base_currency, type_=SecurityTransactionType.DIVIDEND
         )
         if self.price_avg_sell_native.is_nan():
             self.price_avg_sell_native = security.currency.zero_amount
             self.price_avg_sell_base = base_currency.zero_amount
+        if self.amount_avg_dividend_native.is_nan():
+            self.amount_avg_dividend_native = security.currency.zero_amount
+            self.amount_avg_dividend_base = base_currency.zero_amount
 
         self.value_current_native = self.shares_owned * self.price_market_native
         self.value_current_base = self.value_current_native.convert(base_currency)
@@ -252,6 +286,12 @@ class SecurityAccountStats(SecurityStatsItem):
         self.value_sold_base = self.shares_sold * self.price_avg_sell_base
         self.value_bought_native = self.shares_bought * self.price_avg_buy_native
         self.value_bought_base = self.shares_bought * self.price_avg_buy_base
+        self.value_dividend_native = (
+            self.shares_paid_dividend * self.amount_avg_dividend_native
+        )
+        self.value_dividend_base = (
+            self.shares_paid_dividend * self.amount_avg_dividend_base
+        )
 
         self.cost_basis_unrealized_native = (
             self.shares_owned * self.price_avg_buy_native
@@ -283,9 +323,11 @@ class SecurityAccountStats(SecurityStatsItem):
 
         self.gain_realized_native = _zero_if_nan(
             self.shares_sold * (self.price_avg_sell_native - self.price_avg_buy_native)
+            + self.value_dividend_native
         )
         self.gain_realized_base = _zero_if_nan(
             self.shares_sold * (self.price_avg_sell_base - self.price_avg_buy_base)
+            + self.value_dividend_base
         )
         self.return_pct_realized_native = _calculate_return_percentage(
             nom=self.gain_realized_native,
@@ -368,6 +410,12 @@ class TotalSecurityStats(SecurityStatsItem):
         )
         self.value_sold_base = _sum_attribute(
             "value_sold_base", security_stats, base_currency
+        )
+        self.value_dividend_native = _sum_attribute(
+            "value_dividend_native", security_stats, single_native_currency
+        )
+        self.value_dividend_base = _sum_attribute(
+            "value_dividend_base", security_stats, base_currency
         )
 
         self.cost_basis_unrealized_native = _sum_attribute(
@@ -493,12 +541,12 @@ def calculate_irr(
             if transaction.sender in _accounts and transaction.recipient in _accounts:
                 continue
             if transaction.recipient in _accounts:
-                avg_price = transaction.sender.get_average_price(
+                avg_price = transaction.sender.get_average_amount_per_share(
                     security, _date, currency
                 )
                 amount = -avg_price.value_normalized * transaction.shares
             else:
-                avg_price = transaction.recipient.get_average_price(
+                avg_price = transaction.recipient.get_average_amount_per_share(
                     security, _date, currency
                 )
                 amount = avg_price.value_normalized * transaction.shares

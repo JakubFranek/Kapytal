@@ -55,13 +55,13 @@ Mortgage is a loan, but its also an investment, as you are buying an asset that 
         - set the newly created real estate Security Account
         - set the [Cash Account](./glossary.md#transaction) you want to receive the borrowed money
         - sell exactly 1 share of your mortgage Security
-        - price per share is the amount of money you borrowed
+        - Amount per Share is the amount of money you borrowed
         - after this Sell Transaction, your real estate Security Account will contain exactly -1 (minus one!) share of your Mortgage, while your Cash Account will contain the money you borrowed
     1. create a [Buy](./glossary.md#buy-) Transaction to buy your real estate
         - set the newly created real estate Security Account again
         - set the Cash Account you want to buy the real estate from
         - buy exactly 1 share of your real estate Security
-        - price per share is the price you bought the real estate for
+        - Amount per Share is the price you bought the real estate for
         - after creating this Buy Transaction, your real estate Security Account will contain exactly -1 (minus one!) share of your Mortgage and +1 share of your real estate, while your Cash Account should contain zero money or so (depending on previous Transaction history)
 1. Monthly logging
     1. find out what part of your monthly annuity/payment is loan interest and what part is the capital repayment
@@ -70,7 +70,7 @@ Mortgage is a loan, but its also an investment, as you are buying an asset that 
     1. create the payment of the loan interest as an [Expense](./glossary.md#expense-)
         - the [Category](./glossary.md#category-) could be something like "Housing/Mortgage Interest"
     1. create the capital repayment as a Buy from your bank account to a fictituous real estate Security Account
-        - price per share is the amount of money you borrowed
+        - Amount per Share is the amount of money you borrowed
         - total is the current month's capital repayment amount
         - the number of mortgage shares is capital repayment amount divided by the borrowed amount (should be a positive number smaller than 1)
 

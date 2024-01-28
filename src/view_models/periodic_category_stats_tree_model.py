@@ -14,12 +14,12 @@ from src.models.statistics.category_stats import CategoryStats, TransactionBalan
 from src.views import colors
 
 overline_font = QFont()
-overline_font.setOverline(True)  # noqa: FBT003
+overline_font.setOverline(True)
 bold_font = QFont()
-bold_font.setBold(True)  # noqa: FBT003
+bold_font.setBold(True)
 overline_bold_font = QFont()
-overline_bold_font.setOverline(True)  # noqa: FBT003
-overline_bold_font.setBold(True)  # noqa: FBT003
+overline_bold_font.setOverline(True)
+overline_bold_font.setBold(True)
 
 ALIGNMENT_RIGHT = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
 ALIGNMENT_CENTER = Qt.AlignmentFlag.AlignCenter | Qt.AlignmentFlag.AlignVCenter
@@ -365,12 +365,12 @@ class PeriodicCategoryStatsTreeModel(QAbstractItemModel):
         return None
 
     def pre_reset_model(self) -> None:
-        self._view.setSortingEnabled(False)  # noqa: FBT003
+        self._view.setSortingEnabled(False)
         self.beginResetModel()
 
     def post_reset_model(self) -> None:
         self.endResetModel()
-        self._view.setSortingEnabled(True)  # noqa: FBT003
+        self._view.setSortingEnabled(True)
 
     def get_selected_index(self) -> QModelIndex | None:
         indexes = self._view.selectedIndexes()

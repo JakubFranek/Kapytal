@@ -22,11 +22,12 @@ TYPE_NAME_DICT = {
     CashTransactionType.EXPENSE: "Expense",
     RefundTransaction: "Refund",
     CashTransfer: "Cash Transfer",
-    SecurityTransfer: "Security Transfer",
     SecurityTransactionType.BUY: "Buy",
     SecurityTransactionType.SELL: "Sell",
+    SecurityTransactionType.DIVIDEND: "Dividend",
+    SecurityTransfer: "Security Transfer",
 }
-all_types = frozenset(TYPE_NAME_DICT.keys())
+all_types = frozenset(TYPE_NAME_DICT)
 
 
 class TypeFilter(BaseTransactionFilter):
@@ -51,7 +52,7 @@ class TypeFilter(BaseTransactionFilter):
                 "types, CashTransactionType or SecurityTransactionType."
             )
         self._types = frozenset(types)
-        self._enum_types = tuple(
+        self._enum_types = frozenset(
             type_
             for type_ in self._types
             if isinstance(type_, CashTransactionType | SecurityTransactionType)
@@ -72,11 +73,13 @@ class TypeFilter(BaseTransactionFilter):
         return self._type_names
 
     @property
-    def transaction_types(self) -> tuple[type[Transaction], ...]:
-        return self._transaction_types
+    def transaction_types(self) -> frozenset[type[Transaction]]:
+        return frozenset(self._transaction_types)
 
     @property
-    def enum_types(self) -> tuple[CashTransactionType | SecurityTransactionType, ...]:
+    def enum_types(
+        self,
+    ) -> frozenset[CashTransactionType | SecurityTransactionType]:
         return self._enum_types
 
     @property

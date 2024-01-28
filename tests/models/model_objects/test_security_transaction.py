@@ -45,7 +45,7 @@ def test_buy(
     data: st.DataObject,
 ) -> None:
     currency = cash_account.currency
-    price_per_share = data.draw(
+    amount_per_share = data.draw(
         cash_amounts(currency=currency, min_value=0, max_value=1e6)
     )
     security = data.draw(securities(cash_account.currency))
@@ -61,11 +61,11 @@ def test_buy(
         type_,
         security,
         shares,
-        price_per_share,
+        amount_per_share,
         security_account,
         cash_account,
     )
-    assert transaction.price_per_share == price_per_share
+    assert transaction.amount_per_share == amount_per_share
     assert transaction.shares == shares
     assert transaction.security == security
     assert transaction.security_account == security_account
@@ -74,7 +74,7 @@ def test_buy(
     assert transaction.currencies == (cash_account.currency,)
     assert (
         cash_account.get_balance(currency)
-        == cash_account.initial_balance - shares * price_per_share
+        == cash_account.initial_balance - shares * amount_per_share
     )
     assert security_account.securities[security] == shares
     assert transaction.__repr__() == (
@@ -88,12 +88,44 @@ def test_buy(
 @given(
     data=st.data(),
 )
+def test_dividend(data: st.DataObject) -> None:
+    buy = get_buy()
+    security = buy.security
+    shares = data.draw(share_decimals(decimals=security.shares_decimals))
+    currency = security.currency
+    amount_per_share = data.draw(cash_amounts(currency=currency, min_value=0))
+    security_account = buy.security_account
+    cash_account = buy.cash_account
+
+    dividend = SecurityTransaction(
+        "A Sell transaction",
+        datetime.now(user_settings.settings.time_zone),
+        SecurityTransactionType.DIVIDEND,
+        security,
+        shares,
+        amount_per_share,
+        security_account,
+        cash_account,
+    )
+    assert security_account.securities[security] == buy.shares
+    assert cash_account.get_balance(
+        currency
+    ) == cash_account.initial_balance + buy.get_amount(
+        cash_account
+    ) + dividend.get_amount(cash_account)
+    assert dividend.get_shares(security_account) == Decimal(0)
+    assert dividend.get_shares() == shares
+
+
+@given(
+    data=st.data(),
+)
 def test_sell(data: st.DataObject) -> None:
     buy = get_buy()
     security = buy.security
     shares = data.draw(share_decimals(decimals=security.shares_decimals))
     currency = security.currency
-    price_per_share = data.draw(cash_amounts(currency=currency, min_value=0))
+    amount_per_share = data.draw(cash_amounts(currency=currency, min_value=0))
     security_account = buy.security_account
     cash_account = buy.cash_account
 
@@ -103,7 +135,7 @@ def test_sell(data: st.DataObject) -> None:
         SecurityTransactionType.SELL,
         security,
         shares,
-        price_per_share,
+        amount_per_share,
         security_account,
         cash_account,
     )
@@ -410,15 +442,15 @@ def test_invalid_cash_account_type(  # noqa: PLR0913
     type_=st.sampled_from(SecurityTransactionType),
     security=securities(),
     security_account=security_accounts(),
-    price_per_share=everything_except((CashAmount, NoneType)),
+    amount_per_share=everything_except((CashAmount, NoneType)),
     data=st.data(),
 )
-def test_invalid_price_per_share_type(  # noqa: PLR0913
+def test_invalid_amount_per_share_type(  # noqa: PLR0913
     datetime_: datetime,
     type_: SecurityTransactionType,
     security: Security,
     security_account: SecurityAccount,
-    price_per_share: Any,
+    amount_per_share: Any,
     data: st.DataObject,
 ) -> None:
     currency = security.currency
@@ -434,7 +466,7 @@ def test_invalid_price_per_share_type(  # noqa: PLR0913
             type_,
             security,
             shares,
-            price_per_share,
+            amount_per_share,
             security_account,
             cash_account,
         )
@@ -519,11 +551,11 @@ def test_change_cash_account(data: st.DataObject) -> None:
     assert buy not in old_cash_account.transactions
 
 
-@given(account=everything_except(SecurityAccount))
+@given(account=everything_except((SecurityAccount, NoneType)))
 def test_get_shares_invalid_account_type(account: Any) -> None:
     transaction = get_buy()
     with pytest.raises(
-        TypeError, match="Parameter 'account' must be a SecurityAccount."
+        TypeError, match="Parameter 'account' must be a SecurityAccount or None."
     ):
         transaction.get_shares(account)
 
@@ -549,7 +581,7 @@ def test_set_attributes_invalid_amount_value(data: st.DataObject) -> None:
     with pytest.raises(
         ValueError, match="SecurityTransaction amounts must not be negative."
     ):
-        transaction.set_attributes(price_per_share=amount)
+        transaction.set_attributes(amount_per_share=amount)
 
 
 @given(data=st.data())
@@ -558,7 +590,7 @@ def test_set_attributes_invalid_amount_currency(data: st.DataObject) -> None:
     amount = data.draw(cash_amounts(min_value=0.01))
     assume(amount.currency != transaction.cash_account.currency)
     with pytest.raises(CurrencyError):
-        transaction.set_attributes(price_per_share=amount)
+        transaction.set_attributes(amount_per_share=amount)
 
 
 @given(
@@ -592,14 +624,14 @@ def get_sell() -> SecurityTransaction:
     type_ = SecurityTransactionType.SELL
     security = buy.security
     shares = Decimal("10")
-    price_per_share = CashAmount("105.49", security.currency)
+    amount_per_share = CashAmount("105.49", security.currency)
     return SecurityTransaction(
         description,
         datetime_,
         type_,
         security,
         shares,
-        price_per_share,
+        amount_per_share,
         buy.security_account,
         buy.cash_account,
     )
@@ -611,7 +643,7 @@ def get_buy() -> SecurityTransaction:
     type_ = SecurityTransactionType.BUY
     security = get_security()
     shares = 10
-    price_per_share = CashAmount("99.77", security.currency)
+    amount_per_share = CashAmount("99.77", security.currency)
     security_account = SecurityAccount("Interactive Brokers")
     cash_account = CashAccount(
         "Interactive Brokers EUR",
@@ -624,7 +656,7 @@ def get_buy() -> SecurityTransaction:
         type_,
         security,
         shares,
-        price_per_share,
+        amount_per_share,
         security_account,
         cash_account,
     )

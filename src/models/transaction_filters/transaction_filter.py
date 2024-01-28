@@ -42,14 +42,17 @@ from src.models.transaction_filters.type_filter import TypeFilter
 from src.models.transaction_filters.uuid_filter import UUIDFilter
 from src.models.user_settings import user_settings
 
-all_transaction_types = (
-    CashTransactionType.INCOME,
-    CashTransactionType.EXPENSE,
-    RefundTransaction,
-    CashTransfer,
-    SecurityTransfer,
-    SecurityTransactionType.BUY,
-    SecurityTransactionType.SELL,
+all_transaction_types = frozenset(
+    (
+        CashTransactionType.INCOME,
+        CashTransactionType.EXPENSE,
+        RefundTransaction,
+        CashTransfer,
+        SecurityTransfer,
+        SecurityTransactionType.BUY,
+        SecurityTransactionType.SELL,
+        SecurityTransactionType.DIVIDEND,
+    )
 )
 
 

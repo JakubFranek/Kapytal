@@ -157,7 +157,7 @@ class Ui_CurrencyForm(object):
 
     def retranslateUi(self, CurrencyForm):
         _translate = QtCore.QCoreApplication.translate
-        CurrencyForm.setWindowTitle(_translate("CurrencyForm", "Currencies and Exchange Rates"))
+        CurrencyForm.setWindowTitle(_translate("CurrencyForm", "Currencies"))
         self.currencyGroupBox.setTitle(_translate("CurrencyForm", "Currencies"))
         self.addCurrencyToolButton.setText(_translate("CurrencyForm", "..."))
         self.setBaseCurrencyToolButton.setText(_translate("CurrencyForm", "..."))

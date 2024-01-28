@@ -10,7 +10,7 @@ from src.models.model_objects.attributes import Category
 from src.presenters.utilities.event import Event
 
 bold_font = QFont()
-bold_font.setBold(True)  # noqa: FBT003
+bold_font.setBold(True)
 
 FLAGS_CHECKABLE = (
     Qt.ItemFlag.ItemIsSelectable

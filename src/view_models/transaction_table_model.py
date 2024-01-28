@@ -45,7 +45,7 @@ COLUMNS_ALIGNED_RIGHT = {
     TransactionTableColumn.AMOUNT_SENT,
     TransactionTableColumn.AMOUNT_RECEIVED,
     TransactionTableColumn.SHARES,
-    TransactionTableColumn.PRICE_PER_SHARE,
+    TransactionTableColumn.AMOUNT_PER_SHARE,
     TransactionTableColumn.BALANCE,
 }
 COLUMNS_TRANSACTION_AMOUNTS = {
@@ -170,18 +170,18 @@ class TransactionTableModel(QAbstractTableModel):
         return None
 
     def pre_add(self) -> None:
-        self._view.setSortingEnabled(False)  # noqa: FBT003
+        self._view.setSortingEnabled(False)
         self.beginInsertRows(QModelIndex(), self.rowCount(), self.rowCount())
 
     def post_add(self) -> None:
         self.endInsertRows()
-        self._view.setSortingEnabled(True)  # noqa: FBT003
+        self._view.setSortingEnabled(True)
 
     def pre_reset_model(self) -> None:
         if self._proxy_sourceside is not None:
-            self._proxy_sourceside.setDynamicSortFilter(False)  # noqa: FBT003
+            self._proxy_sourceside.setDynamicSortFilter(False)
 
-        self._proxy_viewside.setDynamicSortFilter(False)  # noqa: FBT003
+        self._proxy_viewside.setDynamicSortFilter(False)
 
         # this effectively turns off sorting and dramatically decreases calls
         # to data() for sorting purposes during file load
@@ -197,9 +197,9 @@ class TransactionTableModel(QAbstractTableModel):
         self.endResetModel()
 
         if self._proxy_sourceside is not None:
-            self._proxy_sourceside.setDynamicSortFilter(True)  # noqa: FBT003
+            self._proxy_sourceside.setDynamicSortFilter(True)
 
-        self._proxy_viewside.setDynamicSortFilter(True)  # noqa: FBT003
+        self._proxy_viewside.setDynamicSortFilter(True)
         # this slows down file load but enables dynamic sort filter
         self._view.sortByColumn(sort_column, sort_order)
 
@@ -276,8 +276,8 @@ class TransactionTableModel(QAbstractTableModel):
             return TransactionTableModel._get_transaction_security(transaction)
         if column == TransactionTableColumn.SHARES:
             return TransactionTableModel._get_transaction_shares_string(transaction)
-        if column == TransactionTableColumn.PRICE_PER_SHARE:
-            return TransactionTableModel._get_transaction_price_per_share_string(
+        if column == TransactionTableColumn.AMOUNT_PER_SHARE:
+            return TransactionTableModel._get_transaction_amount_per_share_string(
                 transaction
             )
         if column == TransactionTableColumn.AMOUNT_NATIVE:
@@ -319,7 +319,9 @@ class TransactionTableModel(QAbstractTableModel):
             if isinstance(transaction, SecurityTransaction):
                 if transaction.type_ == SecurityTransactionType.BUY:
                     return icons.buy
-                return icons.sell
+                if transaction.type_ == SecurityTransactionType.SELL:
+                    return icons.sell
+                return icons.dividend
             if isinstance(transaction, SecurityTransfer):
                 return icons.security_transfer
         if column == TransactionTableColumn.FROM:
@@ -374,11 +376,11 @@ class TransactionTableModel(QAbstractTableModel):
         if column == TransactionTableColumn.SHARES:
             shares = TransactionTableModel._get_transaction_shares(transaction)
             return float(shares) if shares else float("-inf")
-        if column == TransactionTableColumn.PRICE_PER_SHARE:
-            price_per_share = TransactionTableModel._get_transaction_price_per_share(
+        if column == TransactionTableColumn.AMOUNT_PER_SHARE:
+            amount_per_share = TransactionTableModel._get_transaction_amount_per_share(
                 transaction
             )
-            return float(price_per_share) if price_per_share else float("-inf")
+            return float(amount_per_share) if amount_per_share else float("-inf")
         if column == TransactionTableColumn.AMOUNT_NATIVE:
             return self._get_transaction_amount_value(transaction, base=False)
         if column == TransactionTableColumn.AMOUNT_BASE:
@@ -408,8 +410,8 @@ class TransactionTableModel(QAbstractTableModel):
         if column == TransactionTableColumn.SHARES:
             shares = TransactionTableModel._get_transaction_shares(transaction)
             return f"{shares:n}"
-        if column == TransactionTableColumn.PRICE_PER_SHARE:
-            return TransactionTableModel._get_transaction_price_per_share_tooltip(
+        if column == TransactionTableColumn.AMOUNT_PER_SHARE:
+            return TransactionTableModel._get_transaction_amount_per_share_tooltip(
                 transaction
             )
         return None
@@ -440,7 +442,9 @@ class TransactionTableModel(QAbstractTableModel):
             if isinstance(transaction, SecurityTransaction):
                 if transaction.type_ == SecurityTransactionType.BUY:
                     return colors.get_green_brush()
-                return colors.get_red_brush()
+                if transaction.type_ == SecurityTransactionType.SELL:
+                    return colors.get_red_brush()
+                return None  # dividend
             if isinstance(transaction, SecurityTransfer):
                 return colors.get_blue_brush()
         if column == TransactionTableColumn.BALANCE:
@@ -462,7 +466,10 @@ class TransactionTableModel(QAbstractTableModel):
                 and transaction.is_refunded
             ):
                 refunded_ratio = transaction.refunded_ratio
-                return f"Expense ({format_percentage(100*refunded_ratio,decimals=0)} Refunded)"
+                return (
+                    f"Expense ({format_percentage(100*refunded_ratio,decimals=0)} "
+                    "Refunded)"
+                )
             return transaction.type_.name.capitalize()
         if isinstance(transaction, SecurityTransaction):
             return transaction.type_.name.capitalize()
@@ -507,9 +514,9 @@ class TransactionTableModel(QAbstractTableModel):
     @staticmethod
     def _get_transaction_shares(transaction: Transaction) -> Decimal:
         if isinstance(transaction, SecurityTransaction):
-            return transaction.get_shares(transaction.security_account)
+            return transaction.get_shares()
         if isinstance(transaction, SecurityTransfer):
-            return transaction.get_shares(transaction.recipient)
+            return transaction.get_shares()
         return Decimal("NaN")
 
     @staticmethod
@@ -517,24 +524,24 @@ class TransactionTableModel(QAbstractTableModel):
         if not isinstance(transaction, (SecurityTransaction, SecurityTransfer)):
             return ""
         if isinstance(transaction, SecurityTransaction):
-            shares = transaction.get_shares(transaction.security_account)
+            shares = transaction.get_shares()
         else:
-            shares = transaction.get_shares(transaction.recipient)
+            shares = transaction.get_shares()
 
         return convert_decimal_to_string(shares)
 
     @staticmethod
-    def _get_transaction_price_per_share(transaction: Transaction) -> Decimal:
+    def _get_transaction_amount_per_share(transaction: Transaction) -> Decimal:
         if isinstance(transaction, SecurityTransaction):
-            return transaction.price_per_share.value_normalized
+            return transaction.amount_per_share.value_normalized
         return Decimal("NaN")
 
     @staticmethod
-    def _get_transaction_price_per_share_string(transaction: Transaction) -> str:
+    def _get_transaction_amount_per_share_string(transaction: Transaction) -> str:
         if isinstance(transaction, SecurityTransaction):
             return (
                 convert_decimal_to_string(
-                    transaction.price_per_share.value_normalized,
+                    transaction.amount_per_share.value_normalized,
                     min_decimals=transaction.security.price_decimals,
                     significant_digits=transaction.security.price_decimals,
                 )
@@ -544,9 +551,9 @@ class TransactionTableModel(QAbstractTableModel):
         return ""
 
     @staticmethod
-    def _get_transaction_price_per_share_tooltip(transaction: Transaction) -> str:
+    def _get_transaction_amount_per_share_tooltip(transaction: Transaction) -> str:
         if isinstance(transaction, SecurityTransaction):
-            return transaction.price_per_share.to_str_normalized()
+            return transaction.amount_per_share.to_str_normalized()
         return ""
 
     def _get_transaction_amount_string(

@@ -731,14 +731,14 @@ def test_get_security_by_uuid_does_not_exist() -> None:
 @given(
     description=st.text(min_size=1, max_size=256),
     type_=st.sampled_from(SecurityTransactionType),
-    price_per_share=valid_decimals(min_value=0.0),
+    amount_per_share=valid_decimals(min_value=0.0),
     datetime_=st.datetimes(timezones=st.just(user_settings.settings.time_zone)),
     data=st.data(),
 )
 def test_add_security_transaction(
     description: str,
     type_: SecurityTransactionType,
-    price_per_share: Decimal,
+    amount_per_share: Decimal,
     datetime_: datetime,
     data: st.DataObject,
 ) -> None:
@@ -771,7 +771,7 @@ def test_add_security_transaction(
         type_,
         security.name,
         shares,
-        price_per_share,
+        amount_per_share,
         security_account_path,
         cash_account_path,
     )
@@ -908,7 +908,7 @@ def get_preloaded_record_keeper_with_security_transactions() -> RecordKeeper:
         type_=SecurityTransactionType.BUY,
         security_name="Vanguard FTSE All-World",
         shares=Decimal(10),
-        price_per_share=Decimal(90),
+        amount_per_share=Decimal(90),
         security_account_path="Security Accounts/Interactive Brokers",
         cash_account_path="Bank Accounts/Moneta EUR",
     )
@@ -918,7 +918,7 @@ def get_preloaded_record_keeper_with_security_transactions() -> RecordKeeper:
         type_=SecurityTransactionType.BUY,
         security_name="Vanguard FTSE All-World",
         shares=Decimal(10),
-        price_per_share=Decimal(91),
+        amount_per_share=Decimal(91),
         security_account_path="Security Accounts/Interactive Brokers",
         cash_account_path="Bank Accounts/Moneta EUR",
     )
@@ -928,7 +928,7 @@ def get_preloaded_record_keeper_with_security_transactions() -> RecordKeeper:
         type_=SecurityTransactionType.BUY,
         security_name="ČSOB Dynamický penzijní fond",
         shares=Decimal(2750),
-        price_per_share=Decimal(1.75),
+        amount_per_share=Decimal(1.75),
         security_account_path="Security Accounts/ČSOB Penzijní účet",
         cash_account_path="Bank Accounts/Fio CZK",
     )
@@ -938,7 +938,7 @@ def get_preloaded_record_keeper_with_security_transactions() -> RecordKeeper:
         type_=SecurityTransactionType.BUY,
         security_name="ČSOB Dynamický penzijní fond",
         shares=Decimal(2850),
-        price_per_share=Decimal(1.6),
+        amount_per_share=Decimal(1.6),
         security_account_path="Security Accounts/ČSOB Penzijní účet",
         cash_account_path="Bank Accounts/Fio CZK",
     )
@@ -1162,7 +1162,7 @@ def get_preloaded_record_keeper_with_various_transactions() -> RecordKeeper:
         type_=SecurityTransactionType.BUY,
         security_name="ČSOB Dynamický penzijní fond",
         shares=Decimal(2850),
-        price_per_share=Decimal(1.6),
+        amount_per_share=Decimal(1.6),
         security_account_path="Security Accounts/ČSOB Penzijní účet",
         cash_account_path="Bank Accounts/Fio CZK",
     )

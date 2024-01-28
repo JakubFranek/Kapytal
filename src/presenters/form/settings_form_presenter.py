@@ -51,8 +51,8 @@ class SettingsFormPresenter:
         self._view.exchange_rate_decimals = (
             user_settings.settings.exchange_rate_decimals
         )
-        self._view.price_per_share_decimals = (
-            user_settings.settings.price_per_share_decimals
+        self._view.amount_per_share_decimals = (
+            user_settings.settings.amount_per_share_decimals
         )
         self._view.check_for_updates_on_startup = (
             user_settings.settings.check_for_updates_on_startup
@@ -128,8 +128,8 @@ class SettingsFormPresenter:
             user_settings.settings.exchange_rate_decimals = (
                 self._view.exchange_rate_decimals
             )
-            user_settings.settings.price_per_share_decimals = (
-                self._view.price_per_share_decimals
+            user_settings.settings.amount_per_share_decimals = (
+                self._view.amount_per_share_decimals
             )
             user_settings.settings.check_for_updates_on_startup = (
                 self._view.check_for_updates_on_startup

@@ -33,13 +33,14 @@ valid_types = (
     SecurityTransfer,
     SecurityTransactionType.BUY,
     SecurityTransactionType.SELL,
+    SecurityTransactionType.DIVIDEND,
 )
 
 
 def check_transaction(filter_: TypeFilter, transaction: Transaction) -> bool:
     if isinstance(transaction, CashTransaction | SecurityTransaction):
         return transaction.type_ in filter_.enum_types
-    return isinstance(transaction, filter_.transaction_types)
+    return isinstance(transaction, tuple(filter_.transaction_types))
 
 
 @given(

@@ -33,7 +33,7 @@ class UserSettings(JSONSerializableMixin, CopyableMixin):
         "_transaction_date_format",
         "_number_format",
         "_exchange_rate_decimals",
-        "_price_per_share_decimals",
+        "_amount_per_share_decimals",
         "_check_for_updates_on_startup",
         "_transaction_table_column_order",
     )
@@ -53,7 +53,7 @@ class UserSettings(JSONSerializableMixin, CopyableMixin):
         self._number_format: NumberFormat = _get_number_format_for_locale()
 
         self._exchange_rate_decimals = 9
-        self._price_per_share_decimals = 9
+        self._amount_per_share_decimals = 9
 
         self._backup_paths = []
 
@@ -222,9 +222,9 @@ class UserSettings(JSONSerializableMixin, CopyableMixin):
     def exchange_rate_decimals(self, value: int) -> None:
         if not isinstance(value, int):
             raise TypeError("UserSettings.exchange_rate_decimals must be an integer.")
-        if value < 0:
+        if value < 0 or value > 18:
             raise ValueError(
-                "UserSettings.exchange_rate_decimals must not be negative."
+                "UserSettings.exchange_rate_decimals must be between 0 and 18."
             )
         if self._exchange_rate_decimals == value:
             return
@@ -236,25 +236,27 @@ class UserSettings(JSONSerializableMixin, CopyableMixin):
         self._exchange_rate_decimals = value
 
     @property
-    def price_per_share_decimals(self) -> int:
-        return self._price_per_share_decimals
+    def amount_per_share_decimals(self) -> int:
+        return self._amount_per_share_decimals
 
-    @price_per_share_decimals.setter
-    def price_per_share_decimals(self, value: int) -> None:
+    @amount_per_share_decimals.setter
+    def amount_per_share_decimals(self, value: int) -> None:
         if not isinstance(value, int):
-            raise TypeError("UserSettings.price_per_share_decimals must be an integer.")
-        if value < 0:
-            raise ValueError(
-                "UserSettings.price_per_share_decimals must not be negative."
+            raise TypeError(
+                "UserSettings.amount_per_share_decimals must be an integer."
             )
-        if self._price_per_share_decimals == value:
+        if value < 0 or value > 18:
+            raise ValueError(
+                "UserSettings.amount_per_share_decimals must be between 0 and 18."
+            )
+        if self._amount_per_share_decimals == value:
             return
 
         logging.info(
-            "Changing UserSettings.price_per_share_decimals from "
-            f"{self._price_per_share_decimals} to {value}"
+            "Changing UserSettings.amount_per_share_decimals from "
+            f"{self._amount_per_share_decimals} to {value}"
         )
-        self._price_per_share_decimals = value
+        self._amount_per_share_decimals = value
 
     @property
     def check_for_updates_on_startup(self) -> bool:
@@ -329,7 +331,7 @@ class UserSettings(JSONSerializableMixin, CopyableMixin):
             "transaction_date_format": self._transaction_date_format,
             "number_format": self._number_format.name,
             "exchange_rate_decimals": self._exchange_rate_decimals,
-            "price_per_share_decimals": self._price_per_share_decimals,
+            "amount_per_share_decimals": self._amount_per_share_decimals,
             "check_for_updates_on_startup": self._check_for_updates_on_startup,
             "transaction_table_column_order": transaction_table_column_names,
         }
@@ -352,7 +354,7 @@ class UserSettings(JSONSerializableMixin, CopyableMixin):
             number_format = NumberFormat.SEP_NONE_DECIMAL_POINT
 
         exchange_rate_decimals: int = data.get("exchange_rate_decimals", 9)
-        price_per_share_decimals: int = data.get("price_per_share_decimals", 9)
+        amount_per_share_decimals: int = data.get("amount_per_share_decimals", 9)
 
         check_for_updates_on_startup: bool = data.get(
             "check_for_updates_on_startup", True
@@ -372,7 +374,7 @@ class UserSettings(JSONSerializableMixin, CopyableMixin):
         obj._transaction_date_format = transaction_date_format  # noqa: SLF001
         obj._number_format = number_format  # noqa: SLF001
         obj._exchange_rate_decimals = exchange_rate_decimals  # noqa: SLF001
-        obj._price_per_share_decimals = price_per_share_decimals  # noqa: SLF001
+        obj._amount_per_share_decimals = amount_per_share_decimals  # noqa: SLF001
         obj._check_for_updates_on_startup = check_for_updates_on_startup  # noqa: SLF001
         obj._transaction_table_column_order = (  # noqa: SLF001
             transaction_table_column_order

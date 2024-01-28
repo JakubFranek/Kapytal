@@ -31,18 +31,25 @@ COLUMN_HEADERS = {
     SecuritiesOverviewTreeColumn.AMOUNT_BOUGHT_BASE: "Base Bought Amount",
     SecuritiesOverviewTreeColumn.AMOUNT_SOLD_NATIVE: "Native Sold Amount",
     SecuritiesOverviewTreeColumn.AMOUNT_SOLD_BASE: "Base Sold Amount",
-    SecuritiesOverviewTreeColumn.PRICE_MARKET: "Market Price",
-    SecuritiesOverviewTreeColumn.PRICE_AVERAGE_BUY: "Avg. Buy Price",
-    SecuritiesOverviewTreeColumn.PRICE_AVERAGE_SELL: "Avg. Sell Price",
+    SecuritiesOverviewTreeColumn.PRICE_MARKET_NATIVE: "Market Price",
+    SecuritiesOverviewTreeColumn.PRICE_AVERAGE_BUY_NATIVE: "Avg. Buy Price",
+    SecuritiesOverviewTreeColumn.PRICE_AVERAGE_SELL_NATIVE: "Avg. Sell Price",
+    SecuritiesOverviewTreeColumn.DIVIDEND_AVERAGE_NATIVE: "Native Avg. Dividend",
+    SecuritiesOverviewTreeColumn.PRICE_MARKET_BASE: "Base Market Price",
+    SecuritiesOverviewTreeColumn.PRICE_AVERAGE_BUY_BASE: "Base Avg. Buy Price",
+    SecuritiesOverviewTreeColumn.PRICE_AVERAGE_SELL_BASE: "Base Avg. Sell Price",
+    SecuritiesOverviewTreeColumn.DIVIDEND_AVERAGE_BASE: "Base Avg. Dividend",
     SecuritiesOverviewTreeColumn.GAIN_TOTAL_NATIVE: "Native Gain (T)",
     SecuritiesOverviewTreeColumn.GAIN_TOTAL_BASE: "Base Gain (T)",
-    SecuritiesOverviewTreeColumn.GAIN_TOTAL_CURRENCY: "Currency Gain (T)",
+    SecuritiesOverviewTreeColumn.GAIN_TOTAL_CURRENCY_BASE: "Currency Gain (T)",
     SecuritiesOverviewTreeColumn.RETURN_TOTAL_NATIVE: "Native Return (T)",
     SecuritiesOverviewTreeColumn.RETURN_TOTAL_BASE: "Base Return (T)",
     SecuritiesOverviewTreeColumn.IRR_TOTAL_NATIVE: "Native IRR (T)",
     SecuritiesOverviewTreeColumn.IRR_TOTAL_BASE: "Base IRR (T)",
     SecuritiesOverviewTreeColumn.GAIN_REALIZED_NATIVE: "Native Gain (R)",
     SecuritiesOverviewTreeColumn.GAIN_REALIZED_BASE: "Base Gain (R)",
+    SecuritiesOverviewTreeColumn.GAIN_DIVIDEND_NATIVE: "Native Dividends (R)",
+    SecuritiesOverviewTreeColumn.GAIN_DIVIDEND_BASE: "Base Dividends (R)",
     SecuritiesOverviewTreeColumn.RETURN_REALIZED_NATIVE: "Native Return (R)",
     SecuritiesOverviewTreeColumn.RETURN_REALIZED_BASE: "Base Return (R)",
     SecuritiesOverviewTreeColumn.GAIN_UNREALIZED_NATIVE: "Native Gain (U)",
@@ -51,42 +58,15 @@ COLUMN_HEADERS = {
     SecuritiesOverviewTreeColumn.RETURN_UNREALIZED_BASE: "Base Return (U)",
 }
 
-COLUMNS_NUMERICAL = {
-    SecuritiesOverviewTreeColumn.SHARES_OWNED,
-    SecuritiesOverviewTreeColumn.SHARES_BOUGHT,
-    SecuritiesOverviewTreeColumn.SHARES_SOLD,
-    SecuritiesOverviewTreeColumn.SHARES_TRANSFERRED,
-    SecuritiesOverviewTreeColumn.AMOUNT_OWNED_NATIVE,
-    SecuritiesOverviewTreeColumn.AMOUNT_OWNED_BASE,
-    SecuritiesOverviewTreeColumn.AMOUNT_BOUGHT_NATIVE,
-    SecuritiesOverviewTreeColumn.AMOUNT_BOUGHT_BASE,
-    SecuritiesOverviewTreeColumn.AMOUNT_SOLD_NATIVE,
-    SecuritiesOverviewTreeColumn.AMOUNT_SOLD_BASE,
-    SecuritiesOverviewTreeColumn.PRICE_MARKET,
-    SecuritiesOverviewTreeColumn.PRICE_AVERAGE_BUY,
-    SecuritiesOverviewTreeColumn.PRICE_AVERAGE_SELL,
-    SecuritiesOverviewTreeColumn.GAIN_TOTAL_NATIVE,
-    SecuritiesOverviewTreeColumn.GAIN_TOTAL_BASE,
-    SecuritiesOverviewTreeColumn.GAIN_TOTAL_CURRENCY,
-    SecuritiesOverviewTreeColumn.RETURN_TOTAL_NATIVE,
-    SecuritiesOverviewTreeColumn.RETURN_TOTAL_BASE,
-    SecuritiesOverviewTreeColumn.IRR_TOTAL_NATIVE,
-    SecuritiesOverviewTreeColumn.IRR_TOTAL_BASE,
-    SecuritiesOverviewTreeColumn.GAIN_REALIZED_NATIVE,
-    SecuritiesOverviewTreeColumn.GAIN_REALIZED_BASE,
-    SecuritiesOverviewTreeColumn.RETURN_REALIZED_NATIVE,
-    SecuritiesOverviewTreeColumn.RETURN_REALIZED_BASE,
-    SecuritiesOverviewTreeColumn.GAIN_UNREALIZED_NATIVE,
-    SecuritiesOverviewTreeColumn.GAIN_UNREALIZED_BASE,
-    SecuritiesOverviewTreeColumn.RETURN_UNREALIZED_NATIVE,
-    SecuritiesOverviewTreeColumn.RETURN_UNREALIZED_BASE,
-}
+COLUMNS_TEXT = {SecuritiesOverviewTreeColumn.NAME}
+
 
 COLUMNS_NATIVE = {
     SecuritiesOverviewTreeColumn.AMOUNT_OWNED_NATIVE,
     SecuritiesOverviewTreeColumn.AMOUNT_BOUGHT_NATIVE,
     SecuritiesOverviewTreeColumn.AMOUNT_SOLD_NATIVE,
     SecuritiesOverviewTreeColumn.GAIN_TOTAL_NATIVE,
+    SecuritiesOverviewTreeColumn.GAIN_DIVIDEND_NATIVE,
     SecuritiesOverviewTreeColumn.RETURN_TOTAL_NATIVE,
     SecuritiesOverviewTreeColumn.IRR_TOTAL_NATIVE,
     SecuritiesOverviewTreeColumn.GAIN_REALIZED_NATIVE,
@@ -104,7 +84,9 @@ COLUMNS_TOTAL_STATS_ITEM = {
     SecuritiesOverviewTreeColumn.AMOUNT_SOLD_BASE,
     SecuritiesOverviewTreeColumn.GAIN_TOTAL_NATIVE,
     SecuritiesOverviewTreeColumn.GAIN_TOTAL_BASE,
-    SecuritiesOverviewTreeColumn.GAIN_TOTAL_CURRENCY,
+    SecuritiesOverviewTreeColumn.GAIN_TOTAL_CURRENCY_BASE,
+    SecuritiesOverviewTreeColumn.GAIN_DIVIDEND_NATIVE,
+    SecuritiesOverviewTreeColumn.GAIN_DIVIDEND_BASE,
     SecuritiesOverviewTreeColumn.RETURN_TOTAL_NATIVE,
     SecuritiesOverviewTreeColumn.RETURN_TOTAL_BASE,
     SecuritiesOverviewTreeColumn.IRR_TOTAL_NATIVE,
@@ -131,15 +113,29 @@ COLUMNS_PERCENTAGE = {
 }
 
 COLUMNS_PRICE = {
-    SecuritiesOverviewTreeColumn.PRICE_MARKET,
-    SecuritiesOverviewTreeColumn.PRICE_AVERAGE_BUY,
-    SecuritiesOverviewTreeColumn.PRICE_AVERAGE_SELL,
+    SecuritiesOverviewTreeColumn.PRICE_MARKET_NATIVE,
+    SecuritiesOverviewTreeColumn.PRICE_AVERAGE_BUY_NATIVE,
+    SecuritiesOverviewTreeColumn.PRICE_AVERAGE_SELL_NATIVE,
+    SecuritiesOverviewTreeColumn.DIVIDEND_AVERAGE_NATIVE,
+    SecuritiesOverviewTreeColumn.PRICE_MARKET_BASE,
+    SecuritiesOverviewTreeColumn.PRICE_AVERAGE_BUY_BASE,
+    SecuritiesOverviewTreeColumn.PRICE_AVERAGE_SELL_BASE,
+    SecuritiesOverviewTreeColumn.DIVIDEND_AVERAGE_BASE,
+}
+
+COLUMNS_DIVIDEND = {
+    SecuritiesOverviewTreeColumn.DIVIDEND_AVERAGE_NATIVE,
+    SecuritiesOverviewTreeColumn.DIVIDEND_AVERAGE_BASE,
+    SecuritiesOverviewTreeColumn.GAIN_DIVIDEND_NATIVE,
+    SecuritiesOverviewTreeColumn.GAIN_DIVIDEND_BASE,
 }
 
 COLUMNS_COLOURFUL = {
     SecuritiesOverviewTreeColumn.GAIN_TOTAL_NATIVE,
     SecuritiesOverviewTreeColumn.GAIN_TOTAL_BASE,
-    SecuritiesOverviewTreeColumn.GAIN_TOTAL_CURRENCY,
+    SecuritiesOverviewTreeColumn.GAIN_TOTAL_CURRENCY_BASE,
+    SecuritiesOverviewTreeColumn.GAIN_DIVIDEND_BASE,
+    SecuritiesOverviewTreeColumn.GAIN_DIVIDEND_NATIVE,
     SecuritiesOverviewTreeColumn.RETURN_TOTAL_NATIVE,
     SecuritiesOverviewTreeColumn.RETURN_TOTAL_BASE,
     SecuritiesOverviewTreeColumn.IRR_TOTAL_NATIVE,
@@ -162,16 +158,17 @@ COLUMNS_IRR = {
 COLUMNS_TOTAL = {
     SecuritiesOverviewTreeColumn.GAIN_TOTAL_NATIVE,
     SecuritiesOverviewTreeColumn.GAIN_TOTAL_BASE,
-    SecuritiesOverviewTreeColumn.GAIN_TOTAL_CURRENCY,
+    SecuritiesOverviewTreeColumn.GAIN_TOTAL_CURRENCY_BASE,
     SecuritiesOverviewTreeColumn.RETURN_TOTAL_NATIVE,
     SecuritiesOverviewTreeColumn.RETURN_TOTAL_BASE,
     SecuritiesOverviewTreeColumn.IRR_TOTAL_NATIVE,
     SecuritiesOverviewTreeColumn.IRR_TOTAL_BASE,
 }
-
 COLUMNS_REALIZED = {
     SecuritiesOverviewTreeColumn.GAIN_REALIZED_NATIVE,
     SecuritiesOverviewTreeColumn.GAIN_REALIZED_BASE,
+    SecuritiesOverviewTreeColumn.GAIN_DIVIDEND_BASE,
+    SecuritiesOverviewTreeColumn.GAIN_DIVIDEND_NATIVE,
     SecuritiesOverviewTreeColumn.RETURN_REALIZED_NATIVE,
     SecuritiesOverviewTreeColumn.RETURN_REALIZED_BASE,
 }
@@ -191,7 +188,11 @@ COLUMNS_DETAILED = {
     SecuritiesOverviewTreeColumn.AMOUNT_BOUGHT_BASE,
     SecuritiesOverviewTreeColumn.AMOUNT_SOLD_NATIVE,
     SecuritiesOverviewTreeColumn.AMOUNT_SOLD_BASE,
-    SecuritiesOverviewTreeColumn.PRICE_AVERAGE_SELL,
+    SecuritiesOverviewTreeColumn.PRICE_MARKET_BASE,
+    SecuritiesOverviewTreeColumn.PRICE_AVERAGE_SELL_NATIVE,
+    SecuritiesOverviewTreeColumn.PRICE_AVERAGE_BUY_BASE,
+    SecuritiesOverviewTreeColumn.PRICE_AVERAGE_SELL_BASE,
+    SecuritiesOverviewTreeColumn.DIVIDEND_AVERAGE_BASE,
 }
 
 GAIN_TOTAL_CURRENCY_TOOLTIP = (
@@ -202,7 +203,7 @@ GAIN_TOTAL_CURRENCY_TOOLTIP = (
 )
 
 bold_font = QFont()
-bold_font.setBold(True)  # noqa: FBT003
+bold_font.setBold(True)
 
 
 class SecuritiesOverviewTreeModel(QAbstractItemModel):
@@ -272,7 +273,7 @@ class SecuritiesOverviewTreeModel(QAbstractItemModel):
             return Qt.AlignmentFlag.AlignCenter
         if (
             role == Qt.ItemDataRole.ToolTipRole
-            and section == SecuritiesOverviewTreeColumn.GAIN_TOTAL_CURRENCY
+            and section == SecuritiesOverviewTreeColumn.GAIN_TOTAL_CURRENCY_BASE
         ):
             return GAIN_TOTAL_CURRENCY_TOOLTIP
         return None
@@ -292,7 +293,7 @@ class SecuritiesOverviewTreeModel(QAbstractItemModel):
             return self._get_sort_data(column, item)
         if role == Qt.ItemDataRole.UserRole + 1:
             return self._get_filter_data(column, item)
-        if role == Qt.ItemDataRole.TextAlignmentRole and column in COLUMNS_NUMERICAL:
+        if role == Qt.ItemDataRole.TextAlignmentRole and column not in COLUMNS_TEXT:
             return ALIGNMENT_FLAGS_AMOUNTS
         if role == Qt.ItemDataRole.DecorationRole:
             return self._get_decoration_role_data(column, item)
@@ -315,7 +316,7 @@ class SecuritiesOverviewTreeModel(QAbstractItemModel):
         if (
             column in COLUMNS_NATIVE
             or (
-                column == SecuritiesOverviewTreeColumn.GAIN_TOTAL_CURRENCY
+                column == SecuritiesOverviewTreeColumn.GAIN_TOTAL_CURRENCY_BASE
                 and not isinstance(item, TotalSecurityStats)
             )
         ) and item.is_base:
@@ -373,7 +374,7 @@ class SecuritiesOverviewTreeModel(QAbstractItemModel):
     def _get_foreground_role_data(
         self, column: int, item: SecurityStatsItem
     ) -> QBrush | None:
-        if column not in COLUMNS_NUMERICAL:
+        if column in COLUMNS_TEXT:
             return None
 
         return _get_brush_color_from_number(
@@ -386,7 +387,7 @@ class SecuritiesOverviewTreeModel(QAbstractItemModel):
         column: int,
         item: SecurityStatsItem,  # noqa: ARG002
     ) -> str | None:
-        if column != SecuritiesOverviewTreeColumn.GAIN_TOTAL_CURRENCY:
+        if column != SecuritiesOverviewTreeColumn.GAIN_TOTAL_CURRENCY_BASE:
             return None
         return GAIN_TOTAL_CURRENCY_TOOLTIP
 
@@ -400,6 +401,16 @@ class SecuritiesOverviewTreeModel(QAbstractItemModel):
 
     def post_reset_model(self) -> None:
         self.endResetModel()
+
+    def show_dividend_amounts(self) -> bool:
+        for stats in self._data:
+            if (
+                isinstance(stats, SecurityStats)
+                and stats.amount_avg_dividend_native is not None
+                and stats.amount_avg_dividend_native.value_normalized != 0
+            ):
+                return True
+        return False
 
 
 def _get_brush_color_from_number(
@@ -484,19 +495,33 @@ def _get_numerical_attribute(
         case SecuritiesOverviewTreeColumn.AMOUNT_SOLD_BASE:
             _value = item.value_sold_base
 
-        case SecuritiesOverviewTreeColumn.PRICE_MARKET:
+        case SecuritiesOverviewTreeColumn.PRICE_MARKET_NATIVE:
             _value = item.price_market_native
-        case SecuritiesOverviewTreeColumn.PRICE_AVERAGE_BUY:
+        case SecuritiesOverviewTreeColumn.PRICE_AVERAGE_BUY_NATIVE:
             _value = item.price_avg_buy_native
-        case SecuritiesOverviewTreeColumn.PRICE_AVERAGE_SELL:
+        case SecuritiesOverviewTreeColumn.PRICE_AVERAGE_SELL_NATIVE:
             _value = item.price_avg_sell_native
+        case SecuritiesOverviewTreeColumn.DIVIDEND_AVERAGE_NATIVE:
+            _value = item.amount_avg_dividend_native
+        case SecuritiesOverviewTreeColumn.PRICE_MARKET_BASE:
+            _value = item.price_market_base
+        case SecuritiesOverviewTreeColumn.PRICE_AVERAGE_BUY_BASE:
+            _value = item.price_avg_buy_base
+        case SecuritiesOverviewTreeColumn.PRICE_AVERAGE_SELL_BASE:
+            _value = item.price_avg_sell_base
+        case SecuritiesOverviewTreeColumn.DIVIDEND_AVERAGE_BASE:
+            _value = item.amount_avg_dividend_base
 
         case SecuritiesOverviewTreeColumn.GAIN_TOTAL_NATIVE:
             _value = item.gain_total_native
         case SecuritiesOverviewTreeColumn.GAIN_TOTAL_BASE:
             _value = item.gain_total_base
-        case SecuritiesOverviewTreeColumn.GAIN_TOTAL_CURRENCY:
+        case SecuritiesOverviewTreeColumn.GAIN_TOTAL_CURRENCY_BASE:
             _value = item.gain_total_currency
+        case SecuritiesOverviewTreeColumn.GAIN_DIVIDEND_NATIVE:
+            _value = item.value_dividend_native
+        case SecuritiesOverviewTreeColumn.GAIN_DIVIDEND_BASE:
+            _value = item.value_dividend_base
         case SecuritiesOverviewTreeColumn.RETURN_TOTAL_NATIVE:
             _value = item.return_pct_total_native
         case SecuritiesOverviewTreeColumn.RETURN_TOTAL_BASE:

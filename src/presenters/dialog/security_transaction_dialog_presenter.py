@@ -69,7 +69,7 @@ class SecurityTransactionDialogPresenter(TransactionDialogPresenter):
         self._dialog.cash_account_path = transaction.cash_account.path
         self._dialog.security_account_path = transaction.security_account.path
         self._dialog.shares = transaction.shares
-        self._dialog.price_per_share = transaction.price_per_share.value_normalized
+        self._dialog.amount_per_share = transaction.amount_per_share.value_normalized
         self._dialog.datetime_ = transaction.datetime_
         self._dialog.description = transaction.description
         self._dialog.tag_names = [tag.name for tag in transaction.tags]
@@ -147,8 +147,8 @@ class SecurityTransactionDialogPresenter(TransactionDialogPresenter):
         shares = {transaction.shares for transaction in transactions}
         self._dialog.shares = shares.pop() if len(shares) == 1 else 0
 
-        prices = {transaction.price_per_share for transaction in transactions}
-        self._dialog.price_per_share = (
+        prices = {transaction.amount_per_share for transaction in transactions}
+        self._dialog.amount_per_share = (
             prices.pop().value_normalized if len(prices) == 1 else 0
         )
 
@@ -182,7 +182,7 @@ class SecurityTransactionDialogPresenter(TransactionDialogPresenter):
         security_name = self._dialog.security_name
         type_ = self._dialog.type_
         shares = self._dialog.shares
-        price_per_share = self._dialog.price_per_share
+        amount_per_share = self._dialog.amount_per_share
         security_account_path = self._dialog.security_account_path
         cash_account_path = self._dialog.cash_account_path
         tag_names = self._dialog.tag_names
@@ -206,7 +206,7 @@ class SecurityTransactionDialogPresenter(TransactionDialogPresenter):
             f"{description=}, type={type_.name}, security='{security_name}', "
             f"cash_account='{cash_account_path}', "
             f"security_account_path='{security_account_path}', shares={shares}, "
-            f"price_per_share={price_per_share} {cash_account.currency.code}, "
+            f"amount_per_share={amount_per_share} {cash_account.currency.code}, "
             f"tags={tag_names}"
         )
         try:
@@ -216,7 +216,7 @@ class SecurityTransactionDialogPresenter(TransactionDialogPresenter):
                 type_,
                 security_name,
                 shares,
-                price_per_share,
+                amount_per_share,
                 security_account_path,
                 cash_account_path,
                 tag_names,
@@ -247,7 +247,7 @@ class SecurityTransactionDialogPresenter(TransactionDialogPresenter):
         cash_account_path = self._dialog.cash_account_path
         security_account_path = self._dialog.security_account_path
         shares = self._dialog.shares
-        price_per_share = self._dialog.price_per_share
+        amount_per_share = self._dialog.amount_per_share
         tag_names = self._dialog.tag_names
 
         if tag_names is not None and not check_for_nonexistent_attributes(
@@ -271,9 +271,9 @@ class SecurityTransactionDialogPresenter(TransactionDialogPresenter):
             log.append(f"security_account='{security_account_path}'")
         if shares is not None:
             log.append(f"shares={shares}")
-        if price_per_share is not None:
+        if amount_per_share is not None:
             log.append(
-                f"price_per_share={price_per_share} {self._dialog.currency_code}"
+                f"amount_per_share={amount_per_share} {self._dialog.currency_code}"
             )
         if tag_names is not None:
             log.append(f"tags={tag_names}")
@@ -290,7 +290,7 @@ class SecurityTransactionDialogPresenter(TransactionDialogPresenter):
                 security_name,
                 cash_account_path,
                 security_account_path,
-                price_per_share,
+                amount_per_share,
                 shares,
                 tag_names,
             )

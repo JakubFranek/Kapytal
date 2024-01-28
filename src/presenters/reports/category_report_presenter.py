@@ -151,10 +151,10 @@ class CategoryReportPresenter:
         self._proxy.setSourceModel(self._model)
         self._proxy.setSortRole(Qt.ItemDataRole.UserRole)
         self._proxy.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
-        self._proxy.setRecursiveFilteringEnabled(True)  # noqa: FBT003
+        self._proxy.setRecursiveFilteringEnabled(True)
         self._proxy.setFilterRole(Qt.ItemDataRole.UserRole + 1)
         self._report.treeView.setModel(self._proxy)
-        self._report.treeView.header().setSortIndicatorClearable(True)  # noqa: FBT003
+        self._report.treeView.header().setSortIndicatorClearable(True)
         self._report.treeView.sortByColumn(-1, Qt.SortOrder.AscendingOrder)
 
         income_periodic_stats: dict[str, list[CategoryStats]] = {}

@@ -155,7 +155,7 @@ class AccountTreePresenter:
         self._proxy.setSortCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
         self._proxy.setFilterRole(Qt.ItemDataRole.UserRole + 1)
         self._proxy.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
-        self._proxy.setRecursiveFilteringEnabled(True)  # noqa: FBT003
+        self._proxy.setRecursiveFilteringEnabled(True)
         self._model = AccountTreeModel(
             view=self._view.treeView,
             proxy=self._proxy,

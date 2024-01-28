@@ -12,9 +12,9 @@ from src.views import colors
 from src.views.constants import CashFlowTableColumn
 
 overline_font = QFont()
-overline_font.setOverline(True)  # noqa: FBT003
+overline_font.setOverline(True)
 bold_font = QFont()
-bold_font.setBold(True)  # noqa: FBT003
+bold_font.setBold(True)
 
 ALIGNMENT_RIGHT = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
 COLUMN_HEADERS = {
@@ -131,12 +131,12 @@ class CashFlowTableModel(QAbstractTableModel):
         return colors.get_gray_brush()
 
     def pre_reset_model(self) -> None:
-        self._view.setSortingEnabled(False)  # noqa: FBT003
+        self._view.setSortingEnabled(False)
         self.beginResetModel()
 
     def post_reset_model(self) -> None:
         self.endResetModel()
-        self._view.setSortingEnabled(True)  # noqa: FBT003
+        self._view.setSortingEnabled(True)
 
     def get_selected_transactions(
         self,
