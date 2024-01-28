@@ -444,7 +444,7 @@ class TransactionTableModel(QAbstractTableModel):
                     return colors.get_green_brush()
                 if transaction.type_ == SecurityTransactionType.SELL:
                     return colors.get_red_brush()
-                return None
+                return None  # dividend
             if isinstance(transaction, SecurityTransfer):
                 return colors.get_blue_brush()
         if column == TransactionTableColumn.BALANCE:

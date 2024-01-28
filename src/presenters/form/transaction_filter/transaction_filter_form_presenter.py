@@ -64,6 +64,7 @@ currency_related_types = {
     CashTransfer,
     SecurityTransactionType.BUY,
     SecurityTransactionType.SELL,
+    SecurityTransactionType.DIVIDEND,
 }
 payee_related_types = {
     CashTransactionType.EXPENSE,
@@ -73,6 +74,7 @@ payee_related_types = {
 security_related_types = {
     SecurityTransactionType.BUY,
     SecurityTransactionType.SELL,
+    SecurityTransactionType.DIVIDEND,
     SecurityTransfer,
 }
 category_related_types = {
