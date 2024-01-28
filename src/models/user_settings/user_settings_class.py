@@ -222,9 +222,9 @@ class UserSettings(JSONSerializableMixin, CopyableMixin):
     def exchange_rate_decimals(self, value: int) -> None:
         if not isinstance(value, int):
             raise TypeError("UserSettings.exchange_rate_decimals must be an integer.")
-        if value < 0:
+        if value < 0 or value > 18:
             raise ValueError(
-                "UserSettings.exchange_rate_decimals must not be negative."
+                "UserSettings.exchange_rate_decimals must be between 0 and 18."
             )
         if self._exchange_rate_decimals == value:
             return
@@ -245,9 +245,9 @@ class UserSettings(JSONSerializableMixin, CopyableMixin):
             raise TypeError(
                 "UserSettings.amount_per_share_decimals must be an integer."
             )
-        if value < 0:
+        if value < 0 or value > 18:
             raise ValueError(
-                "UserSettings.amount_per_share_decimals must not be negative."
+                "UserSettings.amount_per_share_decimals must be between 0 and 18."
             )
         if self._amount_per_share_decimals == value:
             return

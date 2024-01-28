@@ -206,7 +206,7 @@ def test_general_date_format_invalid_value() -> None:
         settings.general_date_format = "%"
 
 
-@given(decimals=st.integers(min_value=0))
+@given(decimals=st.integers(min_value=0, max_value=18))
 def test_exchange_rate_decimals(decimals: int) -> None:
     settings = UserSettings()
     settings.exchange_rate_decimals = decimals
@@ -223,13 +223,20 @@ def test_exchange_rate_decimals_invalid_type(decimals: Any) -> None:
 
 
 @given(decimals=st.integers(max_value=-1))
-def test_exchange_rate_decimals_invalid_value(decimals: int) -> None:
+def test_exchange_rate_decimals_negative_value(decimals: int) -> None:
     settings = UserSettings()
-    with pytest.raises(ValueError, match="negative"):
+    with pytest.raises(ValueError, match="between"):
         settings.exchange_rate_decimals = decimals
 
 
-@given(decimals=st.integers(min_value=0))
+@given(decimals=st.integers(min_value=19))
+def test_exchange_rate_decimals_large_value(decimals: int) -> None:
+    settings = UserSettings()
+    with pytest.raises(ValueError, match="between"):
+        settings.exchange_rate_decimals = decimals
+
+
+@given(decimals=st.integers(min_value=0, max_value=18))
 def test_amount_per_share_decimals(decimals: int) -> None:
     settings = UserSettings()
     settings.amount_per_share_decimals = decimals
@@ -246,9 +253,16 @@ def test_amount_per_share_decimals_invalid_type(decimals: Any) -> None:
 
 
 @given(decimals=st.integers(max_value=-1))
-def test_amount_per_share_decimals_invalid_value(decimals: int) -> None:
+def test_amount_per_share_decimals_negative_value(decimals: int) -> None:
     settings = UserSettings()
-    with pytest.raises(ValueError, match="negative"):
+    with pytest.raises(ValueError, match="between"):
+        settings.amount_per_share_decimals = decimals
+
+
+@given(decimals=st.integers(min_value=19))
+def test_amount_per_share_decimals_large_value(decimals: int) -> None:
+    settings = UserSettings()
+    with pytest.raises(ValueError, match="between"):
         settings.amount_per_share_decimals = decimals
 
 

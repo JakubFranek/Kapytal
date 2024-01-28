@@ -51,6 +51,9 @@ class SettingsForm(CustomWidget, Ui_SettingsForm):
         )
         self.checkforUpdatesCheckBox.toggled.connect(self.signal_data_changed.emit)
 
+        self.exchangeRateDecimalsSpinBox.setMaximum(18)
+        self.pricePerShareDecimalsSpinBox.setMaximum(18)
+
     @property
     def exchange_rate_decimals(self) -> int:
         return self.exchangeRateDecimalsSpinBox.value()
