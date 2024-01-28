@@ -894,7 +894,7 @@ def test_edit_security_transactions_change_price_per_share() -> None:
     uuids = [transfer.uuid for transfer in transactions]
     record_keeper.edit_security_transactions(uuids, price_per_share=edit_price)
     for transaction in transactions:
-        assert transaction.price_per_share.value_rounded == edit_price
+        assert transaction.amount_per_share.value_rounded == edit_price
 
 
 def test_edit_security_transactions_change_shares() -> None:

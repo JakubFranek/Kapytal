@@ -65,7 +65,7 @@ def test_buy(
         security_account,
         cash_account,
     )
-    assert transaction.price_per_share == price_per_share
+    assert transaction.amount_per_share == price_per_share
     assert transaction.shares == shares
     assert transaction.security == security
     assert transaction.security_account == security_account
@@ -519,11 +519,11 @@ def test_change_cash_account(data: st.DataObject) -> None:
     assert buy not in old_cash_account.transactions
 
 
-@given(account=everything_except(SecurityAccount))
+@given(account=everything_except((SecurityAccount, NoneType)))
 def test_get_shares_invalid_account_type(account: Any) -> None:
     transaction = get_buy()
     with pytest.raises(
-        TypeError, match="Parameter 'account' must be a SecurityAccount."
+        TypeError, match="Parameter 'account' must be a SecurityAccount or None."
     ):
         transaction.get_shares(account)
 
@@ -549,7 +549,7 @@ def test_set_attributes_invalid_amount_value(data: st.DataObject) -> None:
     with pytest.raises(
         ValueError, match="SecurityTransaction amounts must not be negative."
     ):
-        transaction.set_attributes(price_per_share=amount)
+        transaction.set_attributes(amount_per_share=amount)
 
 
 @given(data=st.data())
@@ -558,7 +558,7 @@ def test_set_attributes_invalid_amount_currency(data: st.DataObject) -> None:
     amount = data.draw(cash_amounts(min_value=0.01))
     assume(amount.currency != transaction.cash_account.currency)
     with pytest.raises(CurrencyError):
-        transaction.set_attributes(price_per_share=amount)
+        transaction.set_attributes(amount_per_share=amount)
 
 
 @given(

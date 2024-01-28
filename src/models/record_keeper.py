@@ -478,7 +478,7 @@ class RecordKeeper:
             type_=type_,
             security=security,
             shares=shares,
-            price_per_share=CashAmount(price_per_share, cash_account.currency),
+            amount_per_share=CashAmount(price_per_share, cash_account.currency),
             security_account=security_account,
             cash_account=cash_account,
         )
@@ -849,7 +849,7 @@ class RecordKeeper:
                 datetime_=datetime_,
                 type_=transaction_type,
                 security=security,
-                price_per_share=_price_per_share,
+                amount_per_share=_price_per_share,
                 shares=shares,
                 cash_account=cash_account,
                 security_account=security_account,
@@ -862,7 +862,7 @@ class RecordKeeper:
                 datetime_=datetime_,
                 type_=transaction_type,
                 security=security,
-                price_per_share=_price_per_share,
+                amount_per_share=_price_per_share,
                 shares=shares,
                 cash_account=cash_account,
                 security_account=security_account,
@@ -1494,7 +1494,8 @@ class RecordKeeper:
         obj = RecordKeeper()
         obj._currencies: list[Currency] = data["currencies"]  # noqa: SLF001
         currencies: dict[str, Currency] = {
-            currency.code: currency for currency in obj._currencies  # noqa: SLF001
+            currency.code: currency
+            for currency in obj._currencies  # noqa: SLF001
         }
         base_currency_code = data["base_currency_code"]
         if base_currency_code is not None:
@@ -1543,13 +1544,15 @@ class RecordKeeper:
             Attribute(name, AttributeType.PAYEE) for name in data["payees"]
         ]
         payees: dict[str, Attribute] = {
-            payee.name: payee for payee in obj._payees  # noqa: SLF001
+            payee.name: payee
+            for payee in obj._payees  # noqa: SLF001
         }
         obj._tags = [  # noqa: SLF001
             Attribute(name, AttributeType.TAG) for name in data["tags"]
         ]
         tags: dict[str, Attribute] = {
-            tag.name: tag for tag in obj._tags  # noqa: SLF001
+            tag.name: tag
+            for tag in obj._tags  # noqa: SLF001
         }
 
         categories = RecordKeeper._deserialize_categories(data["categories"])
@@ -1651,7 +1654,7 @@ class RecordKeeper:
 
     @staticmethod
     def _deserialize_account_groups(
-        account_group_dicts: Collection[dict[str, Any]]
+        account_group_dicts: Collection[dict[str, Any]],
     ) -> dict[str, AccountGroup]:
         account_groups: dict[str, AccountGroup] = {}
         for account_group_dict in account_group_dicts:
@@ -1700,7 +1703,7 @@ class RecordKeeper:
 
     @staticmethod
     def _deserialize_categories(
-        category_path_dicts: Collection[dict[str, Any]]
+        category_path_dicts: Collection[dict[str, Any]],
     ) -> dict[str, Category]:
         categories: dict[str, Category] = {}
         for category_dict in category_path_dicts:

@@ -479,7 +479,7 @@ def test_security_transaction(transaction: SecurityTransaction) -> None:
     )
     assert decoded.type_ == transaction.type_
     assert decoded.security == transaction.security
-    assert decoded.price_per_share == transaction.price_per_share
+    assert decoded.amount_per_share == transaction.amount_per_share
     assert decoded.cash_account == transaction.cash_account
     assert decoded.security_account == transaction.security_account
 

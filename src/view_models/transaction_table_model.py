@@ -526,7 +526,7 @@ class TransactionTableModel(QAbstractTableModel):
     @staticmethod
     def _get_transaction_price_per_share(transaction: Transaction) -> Decimal:
         if isinstance(transaction, SecurityTransaction):
-            return transaction.price_per_share.value_normalized
+            return transaction.amount_per_share.value_normalized
         return Decimal("NaN")
 
     @staticmethod
@@ -534,7 +534,7 @@ class TransactionTableModel(QAbstractTableModel):
         if isinstance(transaction, SecurityTransaction):
             return (
                 convert_decimal_to_string(
-                    transaction.price_per_share.value_normalized,
+                    transaction.amount_per_share.value_normalized,
                     min_decimals=transaction.security.price_decimals,
                     significant_digits=transaction.security.price_decimals,
                 )
@@ -546,7 +546,7 @@ class TransactionTableModel(QAbstractTableModel):
     @staticmethod
     def _get_transaction_price_per_share_tooltip(transaction: Transaction) -> str:
         if isinstance(transaction, SecurityTransaction):
-            return transaction.price_per_share.to_str_normalized()
+            return transaction.amount_per_share.to_str_normalized()
         return ""
 
     def _get_transaction_amount_string(
