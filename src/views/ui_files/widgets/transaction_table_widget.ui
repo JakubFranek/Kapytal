@@ -88,20 +88,11 @@
       </widget>
      </item>
      <item>
-      <spacer name="horizontalSpacer">
+      <widget class="Line" name="line_2">
        <property name="orientation">
-        <enum>Qt::Horizontal</enum>
+        <enum>Qt::Vertical</enum>
        </property>
-       <property name="sizeType">
-        <enum>QSizePolicy::Fixed</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
+      </widget>
      </item>
      <item>
       <widget class="QToolButton" name="filterToolButton">
