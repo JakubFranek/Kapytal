@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 
 from PyQt6.QtCore import QLocale
-from PyQt6.QtWidgets import QApplication, QStyleFactory, QWidget
+from PyQt6.QtWidgets import QApplication, QStyleFactory
 from src.models.json.custom_json_decoder import CustomJSONDecoder
 from src.models.json.custom_json_encoder import CustomJSONEncoder
 from src.models.user_settings import user_settings

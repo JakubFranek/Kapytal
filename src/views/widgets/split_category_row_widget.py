@@ -1,4 +1,3 @@
-import locale
 from collections.abc import Collection
 from decimal import Decimal
 
@@ -11,6 +10,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 from src.views import icons
+from src.views.utilities.helper_functions import get_spinbox_value_as_decimal
 from src.views.widgets.smart_combo_box import SmartComboBox
 
 
@@ -66,9 +66,7 @@ class SplitCategoryRowWidget(QWidget):
 
     @property
     def amount(self) -> Decimal:
-        text = self.double_spin_box.cleanText()
-        text_delocalized = locale.delocalize(text)
-        return Decimal(text_delocalized)
+        return get_spinbox_value_as_decimal(self.double_spin_box)
 
     @amount.setter
     def amount(self, value: Decimal) -> None:

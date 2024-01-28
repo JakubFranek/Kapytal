@@ -1,4 +1,3 @@
-import locale
 import logging
 from collections.abc import Collection
 from datetime import date, datetime
@@ -19,7 +18,10 @@ from src.views.base_classes.custom_dialog import CustomDialog
 from src.views.ui_files.dialogs.Ui_cash_transaction_dialog import (
     Ui_CashTransactionDialog,
 )
-from src.views.utilities.helper_functions import convert_datetime_format_to_qt
+from src.views.utilities.helper_functions import (
+    convert_datetime_format_to_qt,
+    get_spinbox_value_as_decimal,
+)
 from src.views.widgets.add_attribute_row_widget import AddAttributeRowWidget
 from src.views.widgets.description_plain_text_edit import DescriptionPlainTextEdit
 from src.views.widgets.label_widget import LabelWidget
@@ -204,10 +206,9 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
     @property
     def amount(self) -> Decimal | None:
         text = self.amountDoubleSpinBox.cleanText()
-        text_delocalized = locale.delocalize(text)
         if text == self.KEEP_CURRENT_VALUES:
             return None
-        return Decimal(text_delocalized)
+        return get_spinbox_value_as_decimal(self.amountDoubleSpinBox)
 
     @amount.setter
     def amount(self, amount: Decimal) -> None:

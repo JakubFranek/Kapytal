@@ -24,6 +24,7 @@ from PyQt6.QtWidgets import (
 )
 from src.models.user_settings import user_settings
 from src.utilities.formatting import format_real
+from src.views.utilities.helper_functions import convert_datetime_format_to_qt
 from src.views.widgets.charts.date_line_chart_callout import DateLineChartCallout
 
 
@@ -110,11 +111,8 @@ class DateLineChartView(QChartView):
         self._axis_x.setTitleFont(self._font_bold_small)
         self._axis_x.setLabelsFont(self._font)
         self._axis_x.setTickCount(6)
-        # TODO: make a Python format to Qt format conversion function (both ways)
         self._axis_x.setFormat(
-            user_settings.settings.general_date_format.replace("%Y", "yyyy")
-            .replace("%m", "MM")
-            .replace("%d", "dd")
+            convert_datetime_format_to_qt(user_settings.settings.general_date_format)
         )
         self._chart.addAxis(self._axis_x, Qt.AlignmentFlag.AlignBottom)
         self._series.attachAxis(self._axis_x)

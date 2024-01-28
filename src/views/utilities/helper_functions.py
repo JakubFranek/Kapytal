@@ -1,12 +1,20 @@
+import locale
 from datetime import datetime
+from decimal import Decimal
 
 from PyQt6.QtCore import QDateTime
-from PyQt6.QtWidgets import QTableView
+from PyQt6.QtWidgets import QSpinBox, QTableView
 from src.models.user_settings import user_settings
 
 
 def calculate_table_width(table: QTableView) -> int:
     return table.horizontalHeader().length() + table.verticalHeader().width()
+
+
+def get_spinbox_value_as_decimal(spinbox: QSpinBox) -> Decimal:
+    text = spinbox.cleanText()
+    text_delocalized = locale.delocalize(text)
+    return Decimal(text_delocalized)
 
 
 def convert_datetime_format_to_qt(datetime_format: str) -> str:
