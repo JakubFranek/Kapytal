@@ -348,6 +348,11 @@ class TransactionsPresenter:
                 SecurityTransactionType.BUY
             )
         )
+        self._view.signal_dividend.connect(
+            lambda: self._security_transaction_dialog_presenter.run_add_dialog(
+                SecurityTransactionType.DIVIDEND
+            )
+        )
         self._view.signal_sell.connect(
             lambda: self._security_transaction_dialog_presenter.run_add_dialog(
                 SecurityTransactionType.SELL
