@@ -18,6 +18,7 @@ from src.models.model_objects.security_objects import (
     SecurityTransaction,
     SecurityTransactionType,
     SecurityTransfer,
+    SharesType,
 )
 from src.models.user_settings import user_settings
 from tests.models.test_assets.composites import (
@@ -70,6 +71,18 @@ def test_validate_transaction_unrelated(
     assume(not transaction.is_account_related(security_account))
     with pytest.raises(UnrelatedAccountError):
         security_account._validate_transaction(transaction)
+
+
+@given(
+    security_account=security_accounts(),
+    security=securities(),
+    type_=everything_except(SharesType),
+)
+def test_get_shares_invalid_type(
+    security_account: SecurityAccount, security: Security, type_: Any
+) -> None:
+    with pytest.raises(TypeError):
+        security_account.get_shares(security, type_)
 
 
 @given(

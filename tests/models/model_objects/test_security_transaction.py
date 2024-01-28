@@ -88,6 +88,38 @@ def test_buy(
 @given(
     data=st.data(),
 )
+def test_dividend(data: st.DataObject) -> None:
+    buy = get_buy()
+    security = buy.security
+    shares = data.draw(share_decimals(decimals=security.shares_decimals))
+    currency = security.currency
+    amount_per_share = data.draw(cash_amounts(currency=currency, min_value=0))
+    security_account = buy.security_account
+    cash_account = buy.cash_account
+
+    dividend = SecurityTransaction(
+        "A Sell transaction",
+        datetime.now(user_settings.settings.time_zone),
+        SecurityTransactionType.DIVIDEND,
+        security,
+        shares,
+        amount_per_share,
+        security_account,
+        cash_account,
+    )
+    assert security_account.securities[security] == buy.shares
+    assert cash_account.get_balance(
+        currency
+    ) == cash_account.initial_balance + buy.get_amount(
+        cash_account
+    ) + dividend.get_amount(cash_account)
+    assert dividend.get_shares(security_account) == Decimal(0)
+    assert dividend.get_shares() == shares
+
+
+@given(
+    data=st.data(),
+)
 def test_sell(data: st.DataObject) -> None:
     buy = get_buy()
     security = buy.security
