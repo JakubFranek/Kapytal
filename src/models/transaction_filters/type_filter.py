@@ -27,7 +27,7 @@ TYPE_NAME_DICT = {
     SecurityTransactionType.DIVIDEND: "Dividend",
     SecurityTransfer: "Security Transfer",
 }
-all_types = frozenset(TYPE_NAME_DICT.keys())
+all_types = frozenset(TYPE_NAME_DICT)
 
 
 class TypeFilter(BaseTransactionFilter):

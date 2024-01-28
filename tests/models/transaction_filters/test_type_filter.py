@@ -33,6 +33,7 @@ valid_types = (
     SecurityTransfer,
     SecurityTransactionType.BUY,
     SecurityTransactionType.SELL,
+    SecurityTransactionType.DIVIDEND,
 )
 
 
