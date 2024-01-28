@@ -75,17 +75,17 @@
          <item row="2" column="0">
           <widget class="QLabel" name="pricePerShareDecimalsLabel">
            <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Number of decimal places of Price per Share spinbox in Security Transaction Dialog.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Number of decimal places of Amount per Share spinbox in Security Transaction Dialog.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </property>
            <property name="text">
-            <string>Price per Share decimals</string>
+            <string>Amount per Share decimals</string>
            </property>
           </widget>
          </item>
          <item row="2" column="1">
           <widget class="QSpinBox" name="pricePerShareDecimalsSpinBox">
            <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Number of decimal places of Price per Share spinbox in Security Transaction Dialog.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Number of decimal places of Amount per Share spinbox in Security Transaction Dialog.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </property>
            <property name="minimum">
             <number>0</number>

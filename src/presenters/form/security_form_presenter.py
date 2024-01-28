@@ -17,6 +17,7 @@ from src.presenters.utilities.event import Event
 from src.presenters.utilities.handle_exception import handle_exception
 from src.view_models.securities_overview_tree_model import (
     COLUMNS_DETAILED,
+    COLUMNS_DIVIDEND,
     COLUMNS_NATIVE,
     COLUMNS_REALIZED,
     COLUMNS_TOTAL,
@@ -131,9 +132,8 @@ class SecurityFormPresenter:
         if self._update_manage_on_show:
             self.update_security_model_data()
             security = self._security_table_model.get_selected_item()
-            if security is None:
-                return
-            self._update_price_table_and_chart(security)
+            if security is not None:
+                self._update_price_table_and_chart(security)
             self._update_manage_on_show = False
 
         self.view.refresh_tree_view()
@@ -671,6 +671,7 @@ class SecurityFormPresenter:
             security.currency == self._record_keeper.base_currency
             for security in self._record_keeper.securities
         )
+        show_dividends = self._overview_tree_model.show_dividend_amounts()
 
         for column in SecuritiesOverviewTreeColumn:
             show = True
@@ -683,7 +684,7 @@ class SecurityFormPresenter:
                     PerformanceStats.TOTAL,
                     PerformanceStats.ALL,
                 }
-            if column == SecuritiesOverviewTreeColumn.GAIN_TOTAL_CURRENCY:
+            if column == SecuritiesOverviewTreeColumn.GAIN_TOTAL_CURRENCY_BASE:
                 show = show and not all_base
             if column in COLUMNS_REALIZED:
                 show = show and performance_type in {
@@ -695,5 +696,7 @@ class SecurityFormPresenter:
                     PerformanceStats.UNREALIZED,
                     PerformanceStats.ALL,
                 }
+            if column in COLUMNS_DIVIDEND:
+                show = show and show_dividends
 
             self.view.treeView.setColumnHidden(column.value, not show)

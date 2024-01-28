@@ -1,188 +1,188 @@
 {
-  "version": "0.9.0", 
-  "datetime_saved": "2023-10-29T14:05:59.372313+01:00", 
+  "version": "0.9.0",
+  "datetime_saved": "2023-10-29T14:05:59.372313+01:00",
   "data": {
-    "datatype": "RecordKeeper", 
+    "datatype": "RecordKeeper",
     "currencies": [
       {
-        "datatype": "Currency", 
-        "code": "CZK", 
+        "datatype": "Currency",
+        "code": "CZK",
         "places": 2
       }
-    ], 
-    "base_currency_code": "CZK", 
-    "exchange_rates": [], 
+    ],
+    "base_currency_code": "CZK",
+    "exchange_rates": [],
     "securities": [
       {
-        "datatype": "Security", 
-        "name": "My House", 
-        "symbol": "", 
-        "type": "Real Estate", 
-        "currency_code": "CZK", 
-        "shares_decimals": 0, 
-        "uuid": "ee5e8a9c-048c-4670-afb6-c9898652c8ec", 
+        "datatype": "Security",
+        "name": "My House",
+        "symbol": "",
+        "type": "Real Estate",
+        "currency_code": "CZK",
+        "shares_decimals": 0,
+        "uuid": "ee5e8a9c-048c-4670-afb6-c9898652c8ec",
         "date_price_pairs": [
           [
-            "2022-01-01", 
+            "2022-01-01",
             "6000000.00"
           ]
         ]
-      }, 
+      },
       {
-        "datatype": "Security", 
-        "name": "My Mortgage", 
-        "symbol": "", 
-        "type": "Mortgage", 
-        "currency_code": "CZK", 
-        "shares_decimals": 9, 
-        "uuid": "f3259522-cc6c-4e1c-bc44-58ecf153a1a0", 
+        "datatype": "Security",
+        "name": "My Mortgage",
+        "symbol": "",
+        "type": "Mortgage",
+        "currency_code": "CZK",
+        "shares_decimals": 9,
+        "uuid": "f3259522-cc6c-4e1c-bc44-58ecf153a1a0",
         "date_price_pairs": [
           [
-            "2022-01-01", 
+            "2022-01-01",
             "5400000.00"
           ]
         ]
       }
-    ], 
-    "account_groups": [], 
+    ],
+    "account_groups": [],
     "accounts": [
       {
-        "datatype": "CashAccount", 
-        "path": "Bank Account", 
-        "index": null, 
-        "currency_code": "CZK", 
-        "initial_balance": "0.00", 
+        "datatype": "CashAccount",
+        "path": "Bank Account",
+        "index": null,
+        "currency_code": "CZK",
+        "initial_balance": "0.00",
         "uuid": "0614373b-b72c-4438-8ff7-df9afc120b43"
-      }, 
+      },
       {
-        "datatype": "SecurityAccount", 
-        "path": "Real Estate", 
-        "index": null, 
+        "datatype": "SecurityAccount",
+        "path": "Real Estate",
+        "index": null,
         "uuid": "76bc8e6f-1334-4072-948c-445eb27c16d9"
       }
-    ], 
+    ],
     "root_account_items": [
       {
-        "datatype": "CashAccount", 
+        "datatype": "CashAccount",
         "path": "Bank Account"
-      }, 
+      },
       {
-        "datatype": "SecurityAccount", 
+        "datatype": "SecurityAccount",
         "path": "Real Estate"
       }
-    ], 
+    ],
     "payees": [
-      "My Bank", 
+      "My Bank",
       "unknown"
-    ], 
-    "tags": [], 
+    ],
+    "tags": [],
     "categories": [
       {
-        "datatype": "Category", 
-        "path": "Housing", 
-        "type": "EXPENSE", 
+        "datatype": "Category",
+        "path": "Housing",
+        "type": "EXPENSE",
         "index": null
-      }, 
+      },
       {
-        "datatype": "Category", 
-        "path": "Housing/Mortgage Interest", 
-        "type": "EXPENSE", 
+        "datatype": "Category",
+        "path": "Housing/Mortgage Interest",
+        "type": "EXPENSE",
         "index": 0
-      }, 
+      },
       {
-        "datatype": "Category", 
-        "path": "Income", 
-        "type": "INCOME", 
+        "datatype": "Category",
+        "path": "Income",
+        "type": "INCOME",
         "index": null
       }
-    ], 
+    ],
     "root_income_categories": [
       "Income"
-    ], 
+    ],
     "root_expense_categories": [
       "Housing"
-    ], 
-    "root_income_and_expense_categories": [], 
+    ],
+    "root_income_and_expense_categories": [],
     "transactions": [
       {
-        "datatype": "CashTransaction", 
-        "description": "money for downpayment", 
-        "datetime": "2022-01-01T00:00:00+01:00", 
-        "type": "INCOME", 
-        "account_path": "Bank Account", 
-        "payee_name": "unknown", 
+        "datatype": "CashTransaction",
+        "description": "money for downpayment",
+        "datetime": "2022-01-01T00:00:00+01:00",
+        "type": "INCOME",
+        "account_path": "Bank Account",
+        "payee_name": "unknown",
         "category_amount_pairs": [
           "Income:600,000.00 CZK"
-        ], 
-        "tag_amount_pairs": [], 
-        "datetime_created": "2023-10-16T20:52:56+02:00", 
+        ],
+        "tag_amount_pairs": [],
+        "datetime_created": "2023-10-16T20:52:56+02:00",
         "uuid": "8df56b22-330d-4b94-aa57-7d392458b81b"
-      }, 
+      },
       {
-        "datatype": "SecurityTransaction", 
-        "description": "taking a mortgage for 90% of house price", 
-        "datetime": "2022-01-01T00:01:00+01:00", 
-        "type": "SELL", 
-        "security_name": "My Mortgage", 
-        "shares": "1", 
-        "price_per_share": "5,400,000.00 CZK", 
-        "security_account_path": "Real Estate", 
-        "cash_account_path": "Bank Account", 
-        "datetime_created": "2023-10-16T20:55:32+02:00", 
+        "datatype": "SecurityTransaction",
+        "description": "taking a mortgage for 90% of house price",
+        "datetime": "2022-01-01T00:01:00+01:00",
+        "type": "SELL",
+        "security_name": "My Mortgage",
+        "shares": "1",
+        "amount_per_share": "5,400,000.00 CZK",
+        "security_account_path": "Real Estate",
+        "cash_account_path": "Bank Account",
+        "datetime_created": "2023-10-16T20:55:32+02:00",
         "uuid": "4bf316d7-5dd2-4aa4-9104-648cffa55583"
-      }, 
+      },
       {
-        "datatype": "SecurityTransaction", 
-        "description": "buying a house", 
-        "datetime": "2022-01-01T00:02:00+01:00", 
-        "type": "BUY", 
-        "security_name": "My House", 
-        "shares": "1", 
-        "price_per_share": "6,000,000.00 CZK", 
-        "security_account_path": "Real Estate", 
-        "cash_account_path": "Bank Account", 
-        "datetime_created": "2023-10-16T20:55:53+02:00", 
+        "datatype": "SecurityTransaction",
+        "description": "buying a house",
+        "datetime": "2022-01-01T00:02:00+01:00",
+        "type": "BUY",
+        "security_name": "My House",
+        "shares": "1",
+        "amount_per_share": "6,000,000.00 CZK",
+        "security_account_path": "Real Estate",
+        "cash_account_path": "Bank Account",
+        "datetime_created": "2023-10-16T20:55:53+02:00",
         "uuid": "fe8daf18-44fd-4949-92ab-cc15cadb4fb8"
-      }, 
+      },
       {
-        "datatype": "CashTransaction", 
-        "description": "money for monthly payment", 
-        "datetime": "2022-02-15T00:00:00+01:00", 
-        "type": "INCOME", 
-        "account_path": "Bank Account", 
-        "payee_name": "unknown", 
+        "datatype": "CashTransaction",
+        "description": "money for monthly payment",
+        "datetime": "2022-02-15T00:00:00+01:00",
+        "type": "INCOME",
+        "account_path": "Bank Account",
+        "payee_name": "unknown",
         "category_amount_pairs": [
           "Income:20,000.00 CZK"
-        ], 
-        "tag_amount_pairs": [], 
-        "datetime_created": "2023-10-16T21:02:55+02:00", 
+        ],
+        "tag_amount_pairs": [],
+        "datetime_created": "2023-10-16T21:02:55+02:00",
         "uuid": "9e521246-2de6-400f-aacc-38872b8d09e3"
-      }, 
+      },
       {
-        "datatype": "CashTransaction", 
-        "description": "mortgage interest", 
-        "datetime": "2022-02-15T00:00:01+01:00", 
-        "type": "EXPENSE", 
-        "account_path": "Bank Account", 
-        "payee_name": "My Bank", 
+        "datatype": "CashTransaction",
+        "description": "mortgage interest",
+        "datetime": "2022-02-15T00:00:01+01:00",
+        "type": "EXPENSE",
+        "account_path": "Bank Account",
+        "payee_name": "My Bank",
         "category_amount_pairs": [
           "Housing/Mortgage Interest:15,000.00 CZK"
-        ], 
-        "tag_amount_pairs": [], 
-        "datetime_created": "2023-10-19T21:46:54+02:00", 
+        ],
+        "tag_amount_pairs": [],
+        "datetime_created": "2023-10-19T21:46:54+02:00",
         "uuid": "a0c830fc-97f8-4abc-8f86-1d1ecb0b978f"
-      }, 
+      },
       {
-        "datatype": "SecurityTransaction", 
-        "description": "capital repayment", 
-        "datetime": "2022-02-15T00:04:00+01:00", 
-        "type": "BUY", 
-        "security_name": "My Mortgage", 
-        "shares": "0.000925926", 
-        "price_per_share": "5,399,999.568000034 CZK", 
-        "security_account_path": "Real Estate", 
-        "cash_account_path": "Bank Account", 
-        "datetime_created": "2023-10-16T21:00:18+02:00", 
+        "datatype": "SecurityTransaction",
+        "description": "capital repayment",
+        "datetime": "2022-02-15T00:04:00+01:00",
+        "type": "BUY",
+        "security_name": "My Mortgage",
+        "shares": "0.000925926",
+        "amount_per_share": "5,399,999.568000034 CZK",
+        "security_account_path": "Real Estate",
+        "cash_account_path": "Bank Account",
+        "datetime_created": "2023-10-16T21:00:18+02:00",
         "uuid": "71d96b2d-883d-4b94-a317-51eefd217eaa"
       }
     ]

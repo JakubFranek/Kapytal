@@ -127,7 +127,7 @@ In Kapytal, Currencies are units of money. The user can create Currencies in [Cu
 
 Code is a 3-letter string, as the intended contents are the [ISO 4217](https://en.wikipedia.org/wiki/ISO_4217) standard codes (such as USD, EUR etc.). However, in practice, the user can enter any three letter string. Kapytal Currencies can therefore be used to represent non-ISO4217 currencies such as cryptocurrencies (BTC, ETH) or any other unit of monetary value.
 
-Number of decimals represents the number of digits after the decimal separator for the given Currency. Most currencies have 2 decimals (see column D [here](https://en.wikipedia.org/wiki/ISO_4217#List_of_ISO_4217_currency_codes)). Cryptocurrencies such as Ethereum can however have up to 18 decimals. Kapytal therefore supports up to 18 decimal places. In general, Kapytal does not allow the user to specify amounts with more decimals than the specified Currency number of decimals, with the exception of [Security](#security-) price. When specifying Security price per share in [Security Form](#securities-form) or [Security Transactions](#security-transaction), Kapytal allows the user to enter the price with greater precision than the number of digits of the given Currency.
+Number of decimals represents the number of digits after the decimal separator for the given Currency. Most currencies have 2 decimals (see column D [here](https://en.wikipedia.org/wiki/ISO_4217#List_of_ISO_4217_currency_codes)). Cryptocurrencies such as Ethereum can however have up to 18 decimals. Kapytal therefore supports up to 18 decimal places. In general, Kapytal does not allow the user to specify amounts with more decimals than the specified Currency number of decimals, with the exception of [Security](#security-) price. When specifying Security Amount per Share in [Security Form](#securities-form) or [Security Transactions](#security-transaction), Kapytal allows the user to enter the price with greater precision than the number of digits of the given Currency.
 
 In Kapytal, exactly one Currency at a time can be designated as [base Currency](#base-currency).
 
@@ -302,7 +302,7 @@ Security Accounts are used in [Security Transactions](#security-transaction) and
 
 Security Transactions are [Transactions](#transaction) that represent buying or selling shares of a [Security](#security-) in exchange for monetary value. There are two sub-types of Security Transactions: [Buy](#buy-) and [Sell](#sell-).
 
-Security Transaction specific attributes are: [Cash Account](#cash-account-), [Security Account](#security-account-), Security, shares, price per share.
+Security Transaction specific attributes are: [Cash Account](#cash-account-), [Security Account](#security-account-), Security, shares, Amount per Share.
 
 ## Security Transfer ![Icon](../resources/icons/icons-custom/certificate-arrow.png)
 

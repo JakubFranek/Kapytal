@@ -624,7 +624,7 @@ def test_user_settings() -> None:
     assert decoded.general_date_format == settings.general_date_format
     assert decoded.transaction_date_format == settings.transaction_date_format
     assert decoded.exchange_rate_decimals == settings.exchange_rate_decimals
-    assert decoded.price_per_share_decimals == settings.price_per_share_decimals
+    assert decoded.amount_per_share_decimals == settings.amount_per_share_decimals
     assert decoded.number_format == settings.number_format
     assert decoded.check_for_updates_on_startup == settings.check_for_updates_on_startup
 
@@ -646,7 +646,7 @@ def test_user_settings_missing_keys() -> None:
     assert decoded.general_date_format == "%d.%m.%Y"
     assert decoded.transaction_date_format == "%d.%m.%Y"
     assert decoded.exchange_rate_decimals == 9
-    assert decoded.price_per_share_decimals == 9
+    assert decoded.amount_per_share_decimals == 9
     assert decoded.number_format == NumberFormat.SEP_NONE_DECIMAL_POINT
     assert decoded.check_for_updates_on_startup is True
 

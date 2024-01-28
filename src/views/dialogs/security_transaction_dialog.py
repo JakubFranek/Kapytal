@@ -87,7 +87,7 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
         }
 
         self.priceDoubleSpinBox.setDecimals(
-            user_settings.settings.price_per_share_decimals
+            user_settings.settings.amount_per_share_decimals
         )
 
         self._initialize_window()
@@ -113,6 +113,8 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
             return SecurityTransactionType.BUY
         if self.sellRadioButton.isChecked():
             return SecurityTransactionType.SELL
+        if self.dividendRadioButton.isChecked():
+            return SecurityTransactionType.DIVIDEND
         raise ValueError("No radio button checked.")
 
     @type_.setter
@@ -121,6 +123,8 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
             self.buyRadioButton.setChecked(True)
         elif value == SecurityTransactionType.SELL:
             self.sellRadioButton.setChecked(True)
+        elif value == SecurityTransactionType.DIVIDEND:
+            self.dividendRadioButton.setChecked(True)
         else:
             raise ValueError("Invalid type_ value.")
 
@@ -218,15 +222,15 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
         self._fixed_spinboxes = []
 
     @property
-    def price_per_share(self) -> Decimal | None:
+    def amount_per_share(self) -> Decimal | None:
         text = self.priceDoubleSpinBox.cleanText()
         if text == self.KEEP_CURRENT_VALUES:
             return None
         return get_spinbox_value_as_decimal(self.priceDoubleSpinBox)
 
-    @price_per_share.setter
-    def price_per_share(self, price_per_share: Decimal) -> None:
-        self.priceDoubleSpinBox.setValue(price_per_share)
+    @amount_per_share.setter
+    def amount_per_share(self, amount_per_share: Decimal) -> None:
+        self.priceDoubleSpinBox.setValue(amount_per_share)
         self._fixed_spinboxes = []
 
     @property
@@ -430,11 +434,11 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
         if self.totalDoubleSpinBox not in self._fixed_spinboxes:
             with QSignalBlocker(self.totalDoubleSpinBox):
                 shares = self.shares
-                price_per_share = self.price_per_share
-                if shares is None or price_per_share is None:
+                amount_per_share = self.amount_per_share
+                if shares is None or amount_per_share is None:
                     self.totalDoubleSpinBox.setValue(0)
                     return
-                total = shares * price_per_share
+                total = shares * amount_per_share
                 self.totalDoubleSpinBox.setValue(total)
         elif self.priceDoubleSpinBox not in self._fixed_spinboxes:
             with QSignalBlocker(self.priceDoubleSpinBox):
@@ -448,14 +452,14 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
                 self.priceDoubleSpinBox.setValue(total / shares)
         elif self.sharesDoubleSpinBox not in self._fixed_spinboxes:
             with QSignalBlocker(self.sharesDoubleSpinBox):
-                price_per_share = self.price_per_share
+                amount_per_share = self.amount_per_share
                 total = get_spinbox_value_as_decimal(self.totalDoubleSpinBox)
-                if price_per_share is None or price_per_share == 0:
+                if amount_per_share is None or amount_per_share == 0:
                     self.sharesDoubleSpinBox.setValue(0)
                     with QSignalBlocker(self.totalDoubleSpinBox):
                         self.totalDoubleSpinBox.setValue(0)
                     return
-                shares = total / price_per_share
+                shares = total / amount_per_share
                 self.sharesDoubleSpinBox.setValue(shares)
         else:
             raise ValueError("Invalid spinbox")

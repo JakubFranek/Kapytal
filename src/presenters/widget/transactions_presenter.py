@@ -69,7 +69,7 @@ if TYPE_CHECKING:
 COLUMNS_SECURITY_RELATED = {
     TransactionTableColumn.SECURITY,
     TransactionTableColumn.SHARES,
-    TransactionTableColumn.PRICE_PER_SHARE,
+    TransactionTableColumn.AMOUNT_PER_SHARE,
 }
 COLUMNS_CASH_TRANSFERS = {
     TransactionTableColumn.AMOUNT_RECEIVED,

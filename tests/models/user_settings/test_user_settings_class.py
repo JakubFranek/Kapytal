@@ -31,7 +31,7 @@ def test_default_settings() -> None:
     assert settings.general_date_format == "%d.%m.%Y"
     assert settings.transaction_date_format == "%d.%m.%Y"
     assert settings.exchange_rate_decimals == 9
-    assert settings.price_per_share_decimals == 9
+    assert settings.amount_per_share_decimals == 9
 
 
 @given(time_zone_key=st.sampled_from(available_time_zone_keys))
@@ -230,26 +230,26 @@ def test_exchange_rate_decimals_invalid_value(decimals: int) -> None:
 
 
 @given(decimals=st.integers(min_value=0))
-def test_price_per_share_decimals(decimals: int) -> None:
+def test_amount_per_share_decimals(decimals: int) -> None:
     settings = UserSettings()
-    settings.price_per_share_decimals = decimals
-    assert settings.price_per_share_decimals == decimals
-    settings.price_per_share_decimals = decimals
-    assert settings.price_per_share_decimals == decimals
+    settings.amount_per_share_decimals = decimals
+    assert settings.amount_per_share_decimals == decimals
+    settings.amount_per_share_decimals = decimals
+    assert settings.amount_per_share_decimals == decimals
 
 
 @given(decimals=everything_except(int))
-def test_price_per_share_decimals_invalid_type(decimals: Any) -> None:
+def test_amount_per_share_decimals_invalid_type(decimals: Any) -> None:
     settings = UserSettings()
     with pytest.raises(TypeError, match="integer"):
-        settings.price_per_share_decimals = decimals
+        settings.amount_per_share_decimals = decimals
 
 
 @given(decimals=st.integers(max_value=-1))
-def test_price_per_share_decimals_invalid_value(decimals: int) -> None:
+def test_amount_per_share_decimals_invalid_value(decimals: int) -> None:
     settings = UserSettings()
     with pytest.raises(ValueError, match="negative"):
-        settings.price_per_share_decimals = decimals
+        settings.amount_per_share_decimals = decimals
 
 
 @given(check=st.sampled_from([True, False]))

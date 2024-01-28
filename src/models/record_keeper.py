@@ -463,7 +463,7 @@ class RecordKeeper:
         type_: SecurityTransactionType,
         security_name: str,
         shares: Decimal | int | str,
-        price_per_share: Decimal | int | str,
+        amount_per_share: Decimal | int | str,
         security_account_path: str,
         cash_account_path: str,
         tag_names: Collection[str] = (),
@@ -478,7 +478,7 @@ class RecordKeeper:
             type_=type_,
             security=security,
             shares=shares,
-            amount_per_share=CashAmount(price_per_share, cash_account.currency),
+            amount_per_share=CashAmount(amount_per_share, cash_account.currency),
             security_account=security_account,
             cash_account=cash_account,
         )
@@ -787,7 +787,7 @@ class RecordKeeper:
         security_name: str | None = None,
         cash_account_path: str | None = None,
         security_account_path: str | None = None,
-        price_per_share: Decimal | int | str | None = None,
+        amount_per_share: Decimal | int | str | None = None,
         shares: Decimal | int | str | None = None,
         tag_names: Collection[str] | None = None,
     ) -> None:
@@ -798,19 +798,19 @@ class RecordKeeper:
             for transaction in transactions
         ):
             if security_name is None and (
-                cash_account_path is not None or price_per_share is not None
+                cash_account_path is not None or amount_per_share is not None
             ):
                 raise ValueError(
                     "If mixed currency SecurityTransactions are edited and "
-                    "security_name is None, cash_account_path and price_per_share must "
+                    "security_name is None, cash_account_path and amount_per_share must "
                     "be None too."
                 )
             if security_name is not None and (
-                cash_account_path is None or price_per_share is None
+                cash_account_path is None or amount_per_share is None
             ):
                 raise ValueError(
                     "If mixed currency SecurityTransactions are edited and "
-                    "security_name is not None, cash_account_path and price_per_share "
+                    "security_name is not None, cash_account_path and amount_per_share "
                     "must not be None too."
                 )
 
@@ -835,10 +835,10 @@ class RecordKeeper:
             else transactions[0].currency
         )
 
-        if price_per_share is not None:
-            _price_per_share = CashAmount(price_per_share, currency)
+        if amount_per_share is not None:
+            _amount_per_share = CashAmount(amount_per_share, currency)
         else:
-            _price_per_share = None
+            _amount_per_share = None
 
         if shares is not None:
             shares = Decimal(shares)
@@ -849,7 +849,7 @@ class RecordKeeper:
                 datetime_=datetime_,
                 type_=transaction_type,
                 security=security,
-                amount_per_share=_price_per_share,
+                amount_per_share=_amount_per_share,
                 shares=shares,
                 cash_account=cash_account,
                 security_account=security_account,
@@ -862,7 +862,7 @@ class RecordKeeper:
                 datetime_=datetime_,
                 type_=transaction_type,
                 security=security,
-                amount_per_share=_price_per_share,
+                amount_per_share=_amount_per_share,
                 shares=shares,
                 cash_account=cash_account,
                 security_account=security_account,

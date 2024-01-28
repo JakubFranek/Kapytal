@@ -44,6 +44,7 @@ class SharesType(Enum):
     BOUGHT = auto()
     SOLD = auto()
     TRANSFERRED = auto()
+    PAID_DIVIDEND = auto()
 
 
 class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
@@ -498,7 +499,7 @@ class SecurityAccount(Account):
             obj._parent = parent  # noqa: SLF001
         return obj
 
-    def get_average_price(  # add method for average sell price
+    def get_average_amount_per_share(
         self,
         security: Security,
         date_: date | None = None,  # latest date if None
@@ -546,7 +547,7 @@ class SecurityAccount(Account):
                 isinstance(transaction, SecurityTransfer)
                 and transaction.recipient == self
             ):
-                amount = transaction.sender.get_average_price(
+                amount = transaction.sender.get_average_amount_per_share(
                     security, _transaction_date, currency
                 )
             else:
@@ -579,11 +580,14 @@ class SecurityAccount(Account):
                 start=Decimal(0),
             )
 
-        transaction_type = (
-            SecurityTransactionType.BUY
-            if type_ == SharesType.BOUGHT
-            else (SecurityTransactionType.SELL)
-        )
+        if type_ == SharesType.BOUGHT:
+            transaction_type = SecurityTransactionType.BUY
+        elif type_ == SharesType.SOLD:
+            transaction_type = SecurityTransactionType.SELL
+        elif type_ == SharesType.PAID_DIVIDEND:
+            transaction_type = SecurityTransactionType.DIVIDEND
+        else:
+            raise TypeError("Parameter 'type_' must be a SharesType.")
         return sum(
             (
                 t.shares
@@ -623,7 +627,7 @@ class SecurityRelatedTransaction(Transaction, ABC):
     def shares(self) -> Decimal:
         return self._shares
 
-    def get_shares(self, account: SecurityAccount | None) -> Decimal:
+    def get_shares(self, account: SecurityAccount | None = None) -> Decimal:
         """If account is SecurityAccount, returns the change in shares
         related to that SecurityAccount with the correct sign (zero for dividends).
         If account is None, returns shares with the correct sign."""
@@ -942,7 +946,7 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
 
         if (
             not block_account_update
-            and hasattr(self, "_price_per_share")
+            and hasattr(self, "_amount_per_share")
             and not update_cash_account
         ):
             update_cash_account = self._amount_per_share != amount_per_share

@@ -409,7 +409,7 @@ def security_transactions(  # noqa: PLR0913
         security_account = draw(security_accounts())
     assume(cash_account.path != security_account.path)
 
-    price_per_share = draw(
+    amount_per_share = draw(
         cash_amounts(currency=cash_account.currency, min_value=0, max_value=1e9)
     )
     if security is None:
@@ -425,8 +425,8 @@ def security_transactions(  # noqa: PLR0913
     )
     type_ = draw(st.sampled_from(SecurityTransactionType))
 
-    if price_per_share.value_normalized != 0:
-        max_shares = Decimal("1e9") // price_per_share.value_normalized
+    if amount_per_share.value_normalized != 0:
+        max_shares = Decimal("1e9") // amount_per_share.value_normalized
     else:
         max_shares = Decimal("1e9")
     if max_shares == 0:
@@ -441,7 +441,7 @@ def security_transactions(  # noqa: PLR0913
         type_,
         security,
         shares,
-        price_per_share,
+        amount_per_share,
         security_account,
         cash_account,
     )

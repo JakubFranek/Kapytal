@@ -424,9 +424,12 @@ class ExchangeRate(CopyableMixin, JSONSerializableMixin):
             self._earliest_date = min(date_ for date_ in self._rate_history)
             self._latest_rate = self._rate_history[self._latest_date]
 
-        self._rate_decimals = max(
-            (-rate.as_tuple().exponent for rate in self._rate_history.values()),
-            default=0,
+        self._rate_decimals = min(
+            max(
+                (-rate.as_tuple().exponent for rate in self._rate_history.values()),
+                default=0,
+            ),
+            18,  # hard limit to 18 decimals
         )
 
         self.event_reset_currency_caches()
@@ -674,7 +677,7 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
         return obj
 
     def serialize(self) -> dict[str, Any]:
-        return self.to_str_normalized()
+        return f"{self.value_normalized:,} {self._currency.code}"
 
     @staticmethod
     def deserialize(
