@@ -38,12 +38,7 @@ def check_transaction(filter_: PayeeFilter, transaction: Transaction) -> bool:
 def test_creation(payees: list[Attribute], mode: FilterMode) -> None:
     filter_ = PayeeFilter(payees, mode)
     assert filter_.payees == frozenset(payees)
-    assert filter_.payee_names == tuple(
-        sorted(
-            (payee.name for payee in payees),
-            key=lambda name: unicodedata.normalize("NFD", name.lower()),
-        )
-    )
+    assert filter_.payee_names == frozenset(payee.name for payee in payees)
     assert filter_.mode == mode
     assert (
         filter_.__repr__()

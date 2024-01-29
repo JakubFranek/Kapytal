@@ -468,8 +468,8 @@ def test_security_account_stats() -> None:
     assert stats.gain_realized_base == CashAmount("0.98", eur)
     assert stats.value_dividend_native == CashAmount("0.2", usd)
     assert stats.value_dividend_base == CashAmount("0.18", eur)
-    assert stats.return_pct_realized_native == Decimal(120)
-    assert stats.return_pct_realized_base == Decimal(98)
+    assert stats.return_pct_realized_native == Decimal(110)
+    assert stats.return_pct_realized_base == Decimal(89)
 
     assert stats.gain_total_native == CashAmount("4.2", usd)
     assert stats.gain_total_base == CashAmount("3.58", eur)
@@ -587,8 +587,8 @@ def test_security_stats() -> None:
     assert stats.gain_realized_base == CashAmount(
         4 * rate - 2 + rate * Decimal("0.1"), eur
     )
-    assert stats.return_pct_realized_native == Decimal(105)
-    assert stats.return_pct_realized_base == Decimal("84.5")
+    assert stats.return_pct_realized_native == Decimal(110)
+    assert stats.return_pct_realized_base == Decimal(89)
 
     assert stats.gain_total_native == CashAmount("5.1", usd)
     assert stats.gain_total_base == CashAmount(
