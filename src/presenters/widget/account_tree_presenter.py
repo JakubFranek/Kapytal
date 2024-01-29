@@ -78,7 +78,7 @@ class AccountTreePresenter:
     def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
         self._record_keeper = record_keeper
         self._model.pre_reset_model()
-        self.update_model_data()
+        self.update_model_data(trigger_check_state_changed=False)
         self._model.post_reset_model()
         self._security_account_form_presenter.load_record_keeper(record_keeper)
         self._account_group_dialog_presenter.load_record_keeper(record_keeper)
@@ -93,7 +93,7 @@ class AccountTreePresenter:
     def update_geometries(self) -> None:
         self._view.treeView.updateGeometries()
 
-    def update_model_data(self) -> None:
+    def update_model_data(self, *, trigger_check_state_changed: bool = True) -> None:
         self._model.load_data(
             self._record_keeper.account_items, self._record_keeper.base_currency
         )
@@ -105,7 +105,8 @@ class AccountTreePresenter:
             AccountTreeColumn.BALANCE_NATIVE, hide_native
         )
         self._set_native_balance_column_visibility()
-        self._update_checked_account_balance()
+        if trigger_check_state_changed:
+            self._check_state_changed()
 
     def expand_all_below(self) -> None:
         indexes = self._view.treeView.selectedIndexes()

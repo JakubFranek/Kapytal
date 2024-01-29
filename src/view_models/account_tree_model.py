@@ -224,9 +224,6 @@ class AccountTreeModel(QAbstractItemModel):
                 lambda uuid_string: self._node_check_state_changed(uuid_string)
             )
 
-        # alert presenter check state could have changed (i.e. after adding items)
-        self.signal_check_state_changed.emit()
-
     def get_checked_accounts(self) -> frozenset[Account]:
         uuids = {
             node.uuid
@@ -295,7 +292,10 @@ class AccountTreeModel(QAbstractItemModel):
         return FLAGS_DEFAULT
 
     def setData(
-        self, index: QModelIndex, value: Any, role: int = ...  # noqa: ANN401
+        self,
+        index: QModelIndex,
+        value: Any,  # noqa: ANN401
+        role: int = ...,
     ) -> bool | None:
         if role == Qt.ItemDataRole.CheckStateRole:
             node: AccountTreeNode = index.internalPointer()
