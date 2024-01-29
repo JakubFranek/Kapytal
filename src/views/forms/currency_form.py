@@ -65,7 +65,7 @@ class CurrencyForm(CustomWidget, Ui_CurrencyForm):
         *,
         is_exchange_rate_selected: bool,
         is_data_point_selected: bool,
-        is_single_data_point_selected: bool
+        is_single_data_point_selected: bool,
     ) -> None:
         self.actionAdd_data.setEnabled(is_exchange_rate_selected)
         self.actionEdit_data.setEnabled(
@@ -175,7 +175,7 @@ class CurrencyForm(CustomWidget, Ui_CurrencyForm):
         currency_table_width = calculate_table_width(self.currencyTable)
         self.currencyGroupBox.setFixedWidth(currency_table_width + 30)
         self.currencyTable.horizontalHeader().setSectionResizeMode(
-            CurrencyTableColumn.PLACES,
+            CurrencyTableColumn.DECIMALS,
             QHeaderView.ResizeMode.Stretch,
         )
 

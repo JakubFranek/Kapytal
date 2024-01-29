@@ -420,11 +420,11 @@ class CashTransaction(CashRelatedTransaction):
 
     def serialize(self) -> dict[str, Any]:
         tag_amount_pairs = [
-            tag.name + ":" + amount.to_str_normalized()
+            tag.name + ":" + amount.serialize()
             for tag, amount in self._tag_amount_pairs
         ]
         category_amount_pairs = [
-            category.path + ":" + amount.to_str_normalized()
+            category.path + ":" + amount.serialize()
             for category, amount in self._category_amount_pairs
         ]
         return {
@@ -1436,11 +1436,11 @@ class RefundTransaction(CashRelatedTransaction):
 
     def serialize(self) -> dict[str, Any]:
         tag_amount_pairs = [
-            tag.name + ":" + amount.to_str_normalized()
+            tag.name + ":" + amount.serialize()
             for tag, amount in self._tag_amount_pairs
         ]
         category_amount_pairs = [
-            category.path + ":" + amount.to_str_normalized()
+            category.path + ":" + amount.serialize()
             for category, amount in self._category_amount_pairs
         ]
         return {

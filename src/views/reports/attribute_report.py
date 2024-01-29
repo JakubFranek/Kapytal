@@ -158,17 +158,17 @@ class AttributeReport(CustomWidget, Ui_AttributeReport):
         ]
         try:
             currency: Currency = _periodic_stats[selected_period][0].balance.currency
-            places = currency.decimals
+            decimals = currency.decimals
             currency_code = currency.code
         except IndexError:
-            places = 0
+            decimals = 0
             currency_code = ""
 
         color = (
             colors.ColorRanges.GREEN if type_ == "Income" else colors.ColorRanges.RED
         )
 
-        self.chart_view.load_data(data, places, currency_code, color)
+        self.chart_view.load_data(data, decimals, currency_code, color)
 
     def _show_hide_periods(self) -> None:
         state = self.actionShow_Hide_Period_Columns.isChecked()

@@ -401,16 +401,16 @@ def calculate_asset_type_sunburst_data(
     try:
         currency = stats[0].amount_base.currency
         currency_code = currency.code
-        currency_places = currency.decimals
+        currency_decimals = currency.decimals
     except IndexError:
         currency_code = ""
-        currency_places = 0
+        currency_decimals = 0
 
     balance = 0.0
     level = 1
     children: list[SunburstNode] = []
     root_node = SunburstNode(
-        "Total", "Total", 0, currency_code, currency_places, [], None
+        "Total", "Total", 0, currency_code, currency_decimals, [], None
     )
     for item in stats:
         child_node = _create_asset_node(item, level + 1, root_node)

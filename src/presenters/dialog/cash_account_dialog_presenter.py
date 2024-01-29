@@ -39,14 +39,14 @@ class CashAccountDialogPresenter:
             return
 
         account_group_paths = self._get_account_group_paths()
-        code_places_pairs = [
+        code_decimals_pairs = [
             (currency.code, currency.decimals)
             for currency in self._record_keeper.currencies
         ]
         self._dialog = CashAccountDialog(
             parent=self._view,
             paths=account_group_paths,
-            code_places_pairs=code_places_pairs,
+            code_decimals_pairs=code_decimals_pairs,
             edit=False,
         )
         self._dialog.signal_ok.connect(self.add_cash_account)
@@ -69,13 +69,13 @@ class CashAccountDialogPresenter:
             raise TypeError(f"Expected CashAccount, received {type(selected_item)}")
 
         account_group_paths = self._get_account_group_paths()
-        code_places_pairs = (
+        code_decimals_pairs = (
             (selected_item.currency.code, selected_item.currency.decimals),
         )
         self._dialog = CashAccountDialog(
             parent=self._view,
             paths=account_group_paths,
-            code_places_pairs=code_places_pairs,
+            code_decimals_pairs=code_decimals_pairs,
             edit=True,
         )
         self._dialog.signal_ok.connect(self.edit_cash_account)

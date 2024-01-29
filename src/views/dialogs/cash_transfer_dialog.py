@@ -222,8 +222,8 @@ class CashTransferDialog(CustomDialog, Ui_CashTransferDialog):
         try:
             rate_primary = self.amount_received / self.amount_sent
             rate_secondary = self.amount_sent / self.amount_received
-            rate_primary = round(rate_primary, recipient.currency.decimals)
-            rate_secondary = round(rate_secondary, sender.currency.decimals)
+            rate_primary = round(rate_primary, recipient.currency.decimals + 2)
+            rate_secondary = round(rate_secondary, sender.currency.decimals + 2)
         except (InvalidOperation, DivisionByZero, TypeError):
             self.exchangeRateLineEdit.setText("Undefined")
             return

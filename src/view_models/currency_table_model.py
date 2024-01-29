@@ -10,7 +10,7 @@ from src.views.constants import CurrencyTableColumn, monospace_font
 ALIGN_RIGHT = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
 COLUMN_HEADERS = {
     CurrencyTableColumn.CODE: "Code",
-    CurrencyTableColumn.PLACES: "Decimals",
+    CurrencyTableColumn.DECIMALS: "Decimals",
 }
 
 
@@ -65,7 +65,7 @@ class CurrencyTableModel(QAbstractTableModel):
         if role == Qt.ItemDataRole.DisplayRole:
             if column == CurrencyTableColumn.CODE:
                 return currency.code
-            if column == CurrencyTableColumn.PLACES:
+            if column == CurrencyTableColumn.DECIMALS:
                 return str(currency.decimals)
         if (
             role == Qt.ItemDataRole.DecorationRole

@@ -147,8 +147,12 @@ class SecurityStats(SecurityStatsItem):
         self.value_sold_base = self.price_avg_sell_base * self.shares_sold
         self.value_bought_native = self.price_avg_buy_native * self.shares_bought
         self.value_bought_base = self.price_avg_buy_base * self.shares_bought
-        self.value_dividend_native = self.amount_avg_dividend_native
-        self.value_dividend_base = self.amount_avg_dividend_base
+        self.value_dividend_native = (
+            self.amount_avg_dividend_native * self.shares_paid_dividend
+        )
+        self.value_dividend_base = (
+            self.amount_avg_dividend_base * self.shares_paid_dividend
+        )
 
         self.cost_basis_unrealized_native = _zero_if_nan(
             self.shares_owned * self.price_avg_buy_native

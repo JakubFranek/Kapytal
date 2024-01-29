@@ -34,7 +34,7 @@ COLUMN_HEADERS = {
     SecuritiesOverviewTreeColumn.PRICE_MARKET_NATIVE: "Market Price",
     SecuritiesOverviewTreeColumn.PRICE_AVERAGE_BUY_NATIVE: "Avg. Buy Price",
     SecuritiesOverviewTreeColumn.PRICE_AVERAGE_SELL_NATIVE: "Avg. Sell Price",
-    SecuritiesOverviewTreeColumn.DIVIDEND_AVERAGE_NATIVE: "Native Avg. Dividend",
+    SecuritiesOverviewTreeColumn.DIVIDEND_AVERAGE_NATIVE: "Avg. Dividend",
     SecuritiesOverviewTreeColumn.PRICE_MARKET_BASE: "Base Market Price",
     SecuritiesOverviewTreeColumn.PRICE_AVERAGE_BUY_BASE: "Base Avg. Buy Price",
     SecuritiesOverviewTreeColumn.PRICE_AVERAGE_SELL_BASE: "Base Avg. Sell Price",

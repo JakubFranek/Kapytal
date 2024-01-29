@@ -208,13 +208,13 @@ class RecordKeeper:
     def __repr__(self) -> str:
         return "RecordKeeper"
 
-    def add_currency(self, currency_code: str, places: int) -> None:
+    def add_currency(self, currency_code: str, decimals: int) -> None:
         code_upper = currency_code.upper()
         if any(currency.code == code_upper for currency in self._currencies):
             raise AlreadyExistsError(
                 f"A Currency with code '{code_upper}' already exists."
             )
-        currency = Currency(code_upper, places)
+        currency = Currency(code_upper, decimals)
         if len(self._currencies) == 0:
             self._base_currency = currency
         self._currencies.append(currency)
