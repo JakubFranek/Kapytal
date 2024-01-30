@@ -340,6 +340,7 @@ class SecurityTransactionDialogPresenter(TransactionDialogPresenter):
             edited_transaction = transactions[0]
             if edited_transaction.security == security and (
                 edited_transaction.security_account == security_account
+                and edited_transaction.type_ == SecurityTransactionType.SELL
             ):
                 shares = (
                     edited_transaction.shares + security_account.securities[security]

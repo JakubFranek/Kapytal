@@ -447,11 +447,15 @@ class AccountTreeModel(QAbstractItemModel):
         if column == AccountTreeColumn.BALANCE_NATIVE:
             if (
                 item.type_ == CashAccount
+                and isinstance(item.balance_native, CashAmount)
+                and isinstance(item.balance_base, CashAmount)
                 and item.balance_base.currency != item.balance_native.currency
             ):
                 return item.balance_native.to_str_normalized()
             return None
         if column == AccountTreeColumn.BALANCE_BASE:
+            if not isinstance(item.balance_base, CashAmount):
+                return None
             return item.balance_base.to_str_normalized()
         if column == AccountTreeColumn.SHOW:
             return (
