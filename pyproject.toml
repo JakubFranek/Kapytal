@@ -39,3 +39,4 @@ extend-ignore = [
 "tests/*" = ["S101", "ANN401", "SLF001", "PLR2004", "FBT001"]
 "src/views/*" = ["FBT003", "N802"]
 "src/view_models/*" = ["N802"]
+"main.py" = ["E402"]                                          # imports not at top

@@ -5,6 +5,8 @@ import os
 import sys
 from pathlib import Path
 
+locale.setlocale(locale.LC_ALL, "")  # set locale per LANG env variable ASAP
+
 from PyQt6.QtCore import QLocale
 from PyQt6.QtWidgets import QApplication, QStyleFactory
 from src.models.json.custom_json_decoder import CustomJSONDecoder
@@ -22,8 +24,6 @@ from src.views.utilities.handle_exception import handle_uncaught_exception
 
 
 def main() -> None:
-    locale.setlocale(locale.LC_ALL, "")  # set locale per LANG env variable
-
     # The following three lines are needed to make sure task bar icon works on Windows
     if os.name == "nt":
         myappid = f"Jakub_Franek.Kapytal.v{constants.VERSION}"  # arbitrary string
