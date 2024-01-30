@@ -125,11 +125,11 @@ class CurrencyFormPresenter:
     def _add_currency(self) -> None:
         previous_base_currency = self._record_keeper.base_currency
         code = self._dialog.currency_code
-        places = self._dialog.currency_places
+        decimals = self._dialog.currency_decimals
 
-        logging.info(f"Adding Currency: {code=}, {places=}")
+        logging.info(f"Adding Currency: {code=}, {decimals=}")
         try:
-            self._record_keeper.add_currency(code, places)
+            self._record_keeper.add_currency(code, decimals)
         except Exception as exception:  # noqa: BLE001
             handle_exception(exception)
             return

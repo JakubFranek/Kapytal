@@ -36,13 +36,8 @@ class PayeeFilter(BaseTransactionFilter):
         return self._payees
 
     @property
-    def payee_names(self) -> tuple[str]:
-        return tuple(
-            sorted(
-                (payee.name for payee in self._payees),
-                key=lambda name: unicodedata.normalize("NFD", name.lower()),
-            )
-        )
+    def payee_names(self) -> frozenset[str]:
+        return frozenset(payee.name for payee in self._payees)
 
     @property
     def members(self) -> tuple[frozenset[Attribute], FilterMode]:

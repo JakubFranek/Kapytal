@@ -14,7 +14,7 @@ class AccountTreeColumn(IntEnum):
 
 class CurrencyTableColumn(IntEnum):
     CODE = 0
-    PLACES = 1
+    DECIMALS = 1
 
 
 class ExchangeRateTableColumn(IntEnum):

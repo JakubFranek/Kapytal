@@ -98,7 +98,7 @@ def cash_amounts(
         currency = draw(currencies())
     value = draw(
         valid_decimals(
-            min_value=min_value, max_value=max_value, places=currency.decimals
+            min_value=min_value, max_value=max_value, decimals=currency.decimals
         )
     )
     return CashAmount(value, currency)
@@ -262,10 +262,12 @@ def category_amount_pairs(
 
 
 @st.composite
-def currencies(draw: st.DrawFn, min_places: int = 2, max_places: int = 8) -> Currency:
+def currencies(
+    draw: st.DrawFn, min_decimals: int = 2, max_decimals: int = 8
+) -> Currency:
     code = draw(st.text(alphabet=string.ascii_letters, min_size=3, max_size=3))
-    places = draw(st.integers(min_value=min_places, max_value=max_places))
-    return Currency(code, places)
+    decimals = draw(st.integers(min_value=min_decimals, max_value=max_decimals))
+    return Currency(code, decimals)
 
 
 @st.composite
@@ -588,17 +590,17 @@ def valid_decimals(
     draw: st.DrawFn,
     min_value: numbers.Real | str | None = None,
     max_value: numbers.Real | str | None = None,
-    places: int | None = None,
+    decimals: int | None = None,
 ) -> Decimal:
     if min_value is None:
         min_value = -1e12
     if max_value is None:
         max_value = 1e12
-    if places is None:
-        places = 10
+    if decimals is None:
+        decimals = 10
     return draw(
         st.decimals(
-            min_value, max_value, places=places, allow_infinity=False, allow_nan=False
+            min_value, max_value, places=decimals, allow_infinity=False, allow_nan=False
         )
     )
 

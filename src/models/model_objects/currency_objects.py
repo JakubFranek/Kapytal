@@ -495,13 +495,13 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
     def value_normalized(self) -> Decimal:
         if not hasattr(self, "_value_normalized"):
             self._value_normalized = self._raw_value.normalize()
-            places = min(self._currency.decimals, 4)
+            decimals = min(self._currency.decimals, 4)
             if (
                 not self._value_normalized.is_nan()
-                and -self._value_normalized.as_tuple().exponent < places
+                and -self._value_normalized.as_tuple().exponent < decimals
             ):
                 self._value_normalized = self._value_normalized.quantize(
-                    quantizers[places]
+                    quantizers[decimals]
                 )
         return self._value_normalized
 
@@ -626,11 +626,11 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
 
     def __round__(self, ndigits: int = 0) -> Decimal:
         _value_rounded = round(self._raw_value, ndigits)
-        min_places = min(ndigits, 4)
-        if -_value_rounded.as_tuple().exponent > min_places:
+        min_decimals = min(ndigits, 4)
+        if -_value_rounded.as_tuple().exponent > min_decimals:
             _value_rounded = _value_rounded.normalize()
-            if -_value_rounded.as_tuple().exponent < min_places:
-                _value_rounded = _value_rounded.quantize(quantizers[min_places])
+            if -_value_rounded.as_tuple().exponent < min_decimals:
+                _value_rounded = _value_rounded.quantize(quantizers[min_decimals])
         return _value_rounded
 
     def is_positive(self) -> bool:

@@ -21,8 +21,8 @@ class CurrencyDialog(CustomDialog, Ui_CurrencyDialog):
         return self.currencyCodeLineEdit.text()
 
     @property
-    def currency_places(self) -> int:
-        return self.currencyPlacesSpinBox.value()
+    def currency_decimals(self) -> int:
+        return self.currencyDecimalsSpinBox.value()
 
     def _handle_button_box_click(self, button: QAbstractButton) -> None:
         role = self.buttonBox.buttonRole(button)

@@ -147,8 +147,12 @@ class SecurityStats(SecurityStatsItem):
         self.value_sold_base = self.price_avg_sell_base * self.shares_sold
         self.value_bought_native = self.price_avg_buy_native * self.shares_bought
         self.value_bought_base = self.price_avg_buy_base * self.shares_bought
-        self.value_dividend_native = self.amount_avg_dividend_native
-        self.value_dividend_base = self.amount_avg_dividend_base
+        self.value_dividend_native = (
+            self.amount_avg_dividend_native * self.shares_paid_dividend
+        )
+        self.value_dividend_base = (
+            self.amount_avg_dividend_base * self.shares_paid_dividend
+        )
 
         self.cost_basis_unrealized_native = _zero_if_nan(
             self.shares_owned * self.price_avg_buy_native
@@ -161,6 +165,12 @@ class SecurityStats(SecurityStatsItem):
         )
         self.cost_basis_realized_base = _zero_if_nan(
             self.shares_sold * self.price_avg_buy_base
+        )
+        self.cost_basis_dividend_native = _zero_if_nan(
+            self.shares_paid_dividend * self.price_avg_buy_native
+        )
+        self.cost_basis_dividend_base = _zero_if_nan(
+            self.shares_paid_dividend * self.price_avg_buy_base
         )
 
         self.gain_unrealized_native = _zero_if_nan(
@@ -187,12 +197,19 @@ class SecurityStats(SecurityStatsItem):
             + self.value_dividend_base
         )
         self.return_pct_realized_native = _calculate_return_percentage(
-            nom=self.gain_realized_native,
+            nom=self.shares_sold
+            * (self.price_avg_sell_native - self.price_avg_buy_native),
             denom=self.cost_basis_realized_native,
+        ) + _calculate_return_percentage(
+            nom=self.value_dividend_native,
+            denom=self.cost_basis_dividend_native,
         )
         self.return_pct_realized_base = _calculate_return_percentage(
-            nom=self.gain_realized_base,
+            nom=self.shares_sold * (self.price_avg_sell_base - self.price_avg_buy_base),
             denom=self.cost_basis_realized_base,
+        ) + _calculate_return_percentage(
+            nom=self.value_dividend_base,
+            denom=self.cost_basis_dividend_base,
         )
 
         self.gain_total_native = self.gain_unrealized_native + self.gain_realized_native
@@ -305,6 +322,12 @@ class SecurityAccountStats(SecurityStatsItem):
         self.cost_basis_total_base = (
             self.cost_basis_unrealized_base + self.cost_basis_realized_base
         )
+        self.cost_basis_dividend_native = (
+            self.shares_paid_dividend * self.price_avg_buy_native
+        )
+        self.cost_basis_dividend_base = (
+            self.shares_paid_dividend * self.price_avg_buy_base
+        )
 
         self.gain_unrealized_native = _zero_if_nan(
             self.shares_owned * (self.price_market_native - self.price_avg_buy_native)
@@ -330,12 +353,19 @@ class SecurityAccountStats(SecurityStatsItem):
             + self.value_dividend_base
         )
         self.return_pct_realized_native = _calculate_return_percentage(
-            nom=self.gain_realized_native,
+            nom=self.shares_sold
+            * (self.price_avg_sell_native - self.price_avg_buy_native),
             denom=self.cost_basis_realized_native,
+        ) + _calculate_return_percentage(
+            nom=self.value_dividend_native,
+            denom=self.cost_basis_dividend_native,
         )
         self.return_pct_realized_base = _calculate_return_percentage(
-            nom=self.gain_realized_base,
+            nom=self.shares_sold * (self.price_avg_sell_base - self.price_avg_buy_base),
             denom=self.cost_basis_realized_base,
+        ) + _calculate_return_percentage(
+            nom=self.value_dividend_base,
+            denom=self.cost_basis_dividend_base,
         )
 
         self.gain_total_native = self.gain_unrealized_native + self.gain_realized_native

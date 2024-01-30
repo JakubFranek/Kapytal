@@ -61,11 +61,11 @@ def test_creation() -> None:
 
 @given(
     code=st.text(string.ascii_letters, min_size=3, max_size=3),
-    places=st.integers(min_value=0, max_value=8),
+    decimals=st.integers(min_value=0, max_value=8),
 )
-def test_add_currency(code: str, places: int) -> None:
+def test_add_currency(code: str, decimals: int) -> None:
     record_keeper = RecordKeeper()
-    record_keeper.add_currency(code, places)
+    record_keeper.add_currency(code, decimals)
     currency = record_keeper.currencies[0]
     assert currency.code == code.upper()
     assert record_keeper.base_currency == currency
@@ -84,15 +84,15 @@ def test_set_base_currency() -> None:
 @given(
     currency_a=currencies(),
     currency_b=currencies(),
-    places=st.integers(min_value=0, max_value=8),
+    decimals=st.integers(min_value=0, max_value=8),
 )
 def test_add_exchange_rate(
-    currency_a: Currency, currency_b: Currency, places: int
+    currency_a: Currency, currency_b: Currency, decimals: int
 ) -> None:
     assume(currency_a != currency_b)
     record_keeper = RecordKeeper()
-    record_keeper.add_currency(currency_a.code, places)
-    record_keeper.add_currency(currency_b.code, places)
+    record_keeper.add_currency(currency_a.code, decimals)
+    record_keeper.add_currency(currency_b.code, decimals)
     record_keeper.add_exchange_rate(currency_a.code, currency_b.code)
     assert (
         str(record_keeper.exchange_rates[0]) == f"{currency_a.code}/{currency_b.code}"
@@ -102,15 +102,15 @@ def test_add_exchange_rate(
 @given(
     currency_a=currencies(),
     currency_b=currencies(),
-    places=st.integers(min_value=0, max_value=8),
+    decimals=st.integers(min_value=0, max_value=8),
 )
 def test_add_exchange_rate_already_exists(
-    currency_a: Currency, currency_b: Currency, places: int
+    currency_a: Currency, currency_b: Currency, decimals: int
 ) -> None:
     assume(currency_a != currency_b)
     record_keeper = RecordKeeper()
-    record_keeper.add_currency(currency_a.code, places)
-    record_keeper.add_currency(currency_b.code, places)
+    record_keeper.add_currency(currency_a.code, decimals)
+    record_keeper.add_currency(currency_b.code, decimals)
     record_keeper.add_exchange_rate(currency_a.code, currency_b.code)
     with pytest.raises(AlreadyExistsError):
         record_keeper.add_exchange_rate(currency_a.code, currency_b.code)
@@ -119,15 +119,15 @@ def test_add_exchange_rate_already_exists(
 @given(
     currency_a=currencies(),
     currency_b=currencies(),
-    places=st.integers(min_value=0, max_value=8),
+    decimals=st.integers(min_value=0, max_value=8),
 )
 def test_get_exchange_rate(
-    currency_a: Currency, currency_b: Currency, places: int
+    currency_a: Currency, currency_b: Currency, decimals: int
 ) -> None:
     assume(currency_a != currency_b)
     record_keeper = RecordKeeper()
-    record_keeper.add_currency(currency_a.code, places)
-    record_keeper.add_currency(currency_b.code, places)
+    record_keeper.add_currency(currency_a.code, decimals)
+    record_keeper.add_currency(currency_b.code, decimals)
     record_keeper.add_exchange_rate(currency_a.code, currency_b.code)
     exchange_rate = record_keeper.get_exchange_rate(
         f"{currency_a.code}/{currency_b.code}"
@@ -229,20 +229,20 @@ def test_add_account_group_with_multiple_parents(
 @given(
     name=names(),
     currency_code=st.text(string.ascii_letters, min_size=3, max_size=3),
-    places=st.integers(min_value=0, max_value=8),
+    decimals=st.integers(min_value=0, max_value=8),
     initial_balance=valid_decimals(min_value=0),
     parent_name=st.none() | names(),
 )
 def test_add_cash_account(
     name: str,
     currency_code: str,
-    places: int,
+    decimals: int,
     initial_balance: Decimal,
     parent_name: str | None,
 ) -> None:
     path = parent_name + "/" + name if parent_name is not None else name
     record_keeper = RecordKeeper()
-    record_keeper.add_currency(currency_code, places)
+    record_keeper.add_currency(currency_code, decimals)
     if parent_name:
         record_keeper.add_account_group(parent_name)
     record_keeper.add_cash_account(path, currency_code, initial_balance)
@@ -404,13 +404,13 @@ def test_add_cash_transfer(
 
 @given(
     code=st.text(string.ascii_letters, min_size=3, max_size=3),
-    places=st.integers(min_value=0, max_value=8),
+    decimals=st.integers(min_value=0, max_value=8),
 )
-def test_add_currency_already_exists(code: str, places: int) -> None:
+def test_add_currency_already_exists(code: str, decimals: int) -> None:
     record_keeper = RecordKeeper()
-    record_keeper.add_currency(code, places)
+    record_keeper.add_currency(code, decimals)
     with pytest.raises(AlreadyExistsError):
-        record_keeper.add_currency(code, places)
+        record_keeper.add_currency(code, decimals)
 
 
 @given(
@@ -657,9 +657,9 @@ def test_add_security() -> None:
     symbol = "ABCD.EF"
     type_ = "ETF"
     currency_code = "EUR"
-    places = 2
+    decimals = 2
     unit = 1
-    record_keeper.add_currency(currency_code, places)
+    record_keeper.add_currency(currency_code, decimals)
     record_keeper.add_security(name, symbol, type_, currency_code, unit)
     security = record_keeper.get_security_by_name(name)
     assert security.name == name
@@ -677,9 +677,9 @@ def test_add_security_symbol_already_exists() -> None:
     type_ = "ETF"
     type_2 = "Mutual Fund"
     currency_code = "EUR"
-    places = 2
+    decimals = 2
     unit = 1
-    record_keeper.add_currency(currency_code, places)
+    record_keeper.add_currency(currency_code, decimals)
     record_keeper.add_security(name_1, symbol, type_, currency_code, unit)
     with pytest.raises(AlreadyExistsError):
         record_keeper.add_security(name_2, symbol, type_2, currency_code, unit)
@@ -693,9 +693,9 @@ def test_add_security_name_already_exists() -> None:
     type_ = "ETF"
     type_2 = "Mutual Fund"
     currency_code = "EUR"
-    places = 2
+    decimals = 2
     unit = 1
-    record_keeper.add_currency(currency_code, places)
+    record_keeper.add_currency(currency_code, decimals)
     record_keeper.add_security(name, symbol_1, type_, currency_code, unit)
     with pytest.raises(AlreadyExistsError):
         record_keeper.add_security(name, symbol_2, type_2, currency_code, unit)

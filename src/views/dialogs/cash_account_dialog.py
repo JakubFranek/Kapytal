@@ -23,7 +23,7 @@ class CashAccountDialog(CustomDialog, Ui_CashAccountDialog):
         self,
         parent: QWidget,
         paths: Collection[str],
-        code_places_pairs: Collection[tuple[str, int]],
+        code_decimals_pairs: Collection[tuple[str, int]],
         *,
         edit: bool,
     ) -> None:
@@ -50,7 +50,7 @@ class CashAccountDialog(CustomDialog, Ui_CashAccountDialog):
             self.setWindowIcon(icons.add_cash_account)
             self.currentPathLabel.setVisible(False)
             self.currentPathLineEdit.setVisible(False)
-            for code, _ in code_places_pairs:
+            for code, _ in code_decimals_pairs:
                 self.currencyComboBox.addItem(code)
             self.currencyComboBox.setCurrentIndex(0)
 
@@ -59,7 +59,7 @@ class CashAccountDialog(CustomDialog, Ui_CashAccountDialog):
         self.currencyComboBox.currentTextChanged.connect(self._currency_changed)
         self.pathComboBox.currentTextChanged.connect(self.signal_path_changed.emit)
         self.initialBalanceDoubleSpinBox.setMaximum(1_000_000_000_000)
-        self.code_places_pairs = code_places_pairs
+        self.code_decimals_pairs = code_decimals_pairs
 
         self._currency_changed()
 
@@ -113,13 +113,13 @@ class CashAccountDialog(CustomDialog, Ui_CashAccountDialog):
 
     def _currency_changed(self) -> None:
         index = self.currencyComboBox.currentIndex()
-        if len(self.code_places_pairs) != 0:
-            code, places = self.code_places_pairs[index]
+        if len(self.code_decimals_pairs) != 0:
+            code, decimals = self.code_decimals_pairs[index]
         else:
             code = ""
-            places = 0
+            decimals = 0
         self.initialBalanceDoubleSpinBox.setSuffix(" " + code)
-        self.initialBalanceDoubleSpinBox.setDecimals(places)
+        self.initialBalanceDoubleSpinBox.setDecimals(decimals)
 
     def _handle_button_box_click(self, button: QAbstractButton) -> None:
         role = self.buttonBox.buttonRole(button)

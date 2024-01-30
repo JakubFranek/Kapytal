@@ -28,11 +28,11 @@ class PieChartView(QChartView):
     def load_data(
         self,
         data: Sequence[tuple[Real, str]],
-        places: int,
+        decimals: int,
         currency_code: str,
         color: colors.ColorRanges,
     ) -> None:
-        self._decimals = places
+        self._decimals = decimals
         self._currency_code = currency_code
 
         _data = [(float(d[0]), d[1]) for d in data]
