@@ -6,6 +6,7 @@ import sys
 from pathlib import Path
 
 locale.setlocale(locale.LC_ALL, "")  # set locale per LANG env variable ASAP
+locale.setlocale(locale.LC_TIME, "en_GB")  # set English calendar names
 
 from PyQt6.QtCore import QLocale
 from PyQt6.QtWidgets import QApplication, QStyleFactory
