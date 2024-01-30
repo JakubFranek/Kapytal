@@ -23,6 +23,7 @@ from src.models.model_objects.account_group import AccountGroup
 from src.models.model_objects.cash_objects import CashAccount, CashRelatedTransaction
 from src.models.model_objects.currency_objects import (
     CashAmount,
+    ConversionFactorNotFoundError,
     Currency,
     CurrencyError,
 )
@@ -552,9 +553,11 @@ class SecurityAccount(Account):
                 )
             else:
                 continue
-            shares_price_pairs.append(
-                (transaction.shares, amount.convert(currency, _transaction_date))
-            )
+            try:
+                amount_ = amount.convert(currency, _transaction_date)
+            except ConversionFactorNotFoundError:
+                amount_ = CashAmount("NaN", currency)
+            shares_price_pairs.append((transaction.shares, amount_))
 
         total_shares = 0
         total_price = currency.zero_amount
