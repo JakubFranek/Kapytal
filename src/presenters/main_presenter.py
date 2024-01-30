@@ -49,7 +49,9 @@ class MainPresenter:
         self._welcome_dialog.signal_open_recent_file.connect(
             self._load_most_recent_file
         )
-        self._welcome_dialog.signal_open_demo_file.connect(self._load_demo_file)
+        self._welcome_dialog.signal_open_demo_file.connect(
+            lambda: self._load_file(constants.demo_basic_file_path)
+        )
         self._welcome_dialog.signal_quit.connect(self._quit)
         self._welcome_dialog.set_open_recent_file_button(
             enabled=len(self._file_presenter.recent_file_paths) > 0
@@ -57,16 +59,15 @@ class MainPresenter:
         self._welcome_dialog.show()
 
     def _load_most_recent_file(self) -> None:
-        if self._file_presenter.load_most_recent_file():
-            self._welcome_dialog.close()
-
-    def _load_file(self) -> None:
-        if self._file_presenter.load_from_file():
-            self._welcome_dialog.close()
-
-    def _load_demo_file(self) -> None:
         if (
-            self._file_presenter.load_from_file(constants.demo_file_path)
+            self._file_presenter.load_most_recent_file()
+            and self._welcome_dialog.isVisible()
+        ):
+            self._welcome_dialog.close()
+
+    def _load_file(self, path: str | None = None) -> None:
+        if (
+            self._file_presenter.load_from_file(path)
             and self._welcome_dialog.isVisible()
         ):
             self._welcome_dialog.close()
@@ -204,7 +205,18 @@ class MainPresenter:
             lambda: self._file_presenter.save_to_file(self._record_keeper, save_as=True)
         )
         self._view.signal_open_file.connect(self._file_presenter.load_from_file)
-        self._view.signal_open_demo_file.connect(self._load_demo_file)
+        self._view.signal_open_basic_demo.connect(
+            lambda: self._load_file(constants.demo_basic_file_path)
+        )
+        self._view.signal_open_mortgage_demo.connect(
+            lambda: self._load_file(constants.demo_mortgage_file_path)
+        )
+        self._view.signal_open_category_template_en.connect(
+            lambda: self._load_file(constants.template_category_en_file_path)
+        )
+        self._view.signal_open_category_template_cz.connect(
+            lambda: self._load_file(constants.template_category_cz_file_path)
+        )
         self._view.signal_open_recent_file.connect(
             lambda path: self._file_presenter.load_from_file(path)
         )

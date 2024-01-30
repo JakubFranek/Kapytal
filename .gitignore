@@ -5,8 +5,10 @@ dist
 __pycache__
 *.log
 saved_data/**/*.json
-!saved_data/demo.json
-!saved_data/mortgage_demo.json
+!saved_data/demo_basic.json
+!saved_data/demo_mortgage.json
+!saved_data/template_category_en.json
+!saved_data/template_category_cz.json
 saved_data/archive
 .pytest_cache
 .ruff_cache

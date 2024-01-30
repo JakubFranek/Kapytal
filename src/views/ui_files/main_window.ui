@@ -42,9 +42,19 @@
      <addaction name="separator"/>
      <addaction name="actionClear_Recent_File_Menu"/>
     </widget>
+    <widget class="QMenu" name="menuDemos_and_Templates">
+     <property name="title">
+      <string>Demos and Templates</string>
+     </property>
+     <addaction name="actionBasicDemo"/>
+     <addaction name="actionMortgage_Demo"/>
+     <addaction name="separator"/>
+     <addaction name="actionCategory_Template_EN"/>
+     <addaction name="actionCategory_Template_CZ"/>
+    </widget>
     <addaction name="actionOpen_File"/>
     <addaction name="menuRecent_Files"/>
-    <addaction name="actionOpen_Demo_File"/>
+    <addaction name="menuDemos_and_Templates"/>
     <addaction name="separator"/>
     <addaction name="actionSave"/>
     <addaction name="actionSave_As"/>
@@ -53,9 +63,9 @@
     <addaction name="separator"/>
     <addaction name="actionQuit"/>
    </widget>
-   <widget class="QMenu" name="menuEdit">
+   <widget class="QMenu" name="menuForms">
     <property name="title">
-     <string>Edit</string>
+     <string>Forms</string>
     </property>
     <addaction name="actionCurrencies"/>
     <addaction name="actionSecurities"/>
@@ -123,7 +133,7 @@
     <addaction name="actionAbout"/>
    </widget>
    <addaction name="menuFile"/>
-   <addaction name="menuEdit"/>
+   <addaction name="menuForms"/>
    <addaction name="menuReports"/>
    <addaction name="menuAbout"/>
   </widget>
@@ -334,11 +344,6 @@
     <string>Show/Hide Transaction Table</string>
    </property>
   </action>
-  <action name="actionOpen_Demo_File">
-   <property name="text">
-    <string>Open Demo File</string>
-   </property>
-  </action>
   <action name="actionUpdate_Quotes">
    <property name="text">
     <string>Update Quotes</string>
@@ -354,7 +359,27 @@
   </action>
   <action name="actionOpen_Kapytal_GitHub_page">
    <property name="text">
-    <string>Open Kapytal GitHub page</string>
+    <string>Open Kapytal on GitHub</string>
+   </property>
+  </action>
+  <action name="actionBasicDemo">
+   <property name="text">
+    <string>Basic Demo</string>
+   </property>
+  </action>
+  <action name="actionMortgage_Demo">
+   <property name="text">
+    <string>Mortgage Demo</string>
+   </property>
+  </action>
+  <action name="actionCategory_Template_EN">
+   <property name="text">
+    <string>Category Template (EN)</string>
+   </property>
+  </action>
+  <action name="actionCategory_Template_CZ">
+   <property name="text">
+    <string>Category Template (CZ)</string>
    </property>
   </action>
  </widget>

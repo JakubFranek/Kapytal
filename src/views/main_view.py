@@ -48,10 +48,14 @@ class MainView(QMainWindow, Ui_MainWindow):
     signal_save_file = pyqtSignal()
     signal_save_file_as = pyqtSignal()
     signal_open_file = pyqtSignal()
-    signal_open_demo_file = pyqtSignal()
     signal_open_recent_file = pyqtSignal(str)
     signal_clear_recent_files = pyqtSignal()
     signal_close_file = pyqtSignal()
+
+    signal_open_basic_demo = pyqtSignal()
+    signal_open_mortgage_demo = pyqtSignal()
+    signal_open_category_template_en = pyqtSignal()
+    signal_open_category_template_cz = pyqtSignal()
 
     signal_open_github = pyqtSignal()
     signal_check_updates = pyqtSignal()
@@ -201,10 +205,18 @@ class MainView(QMainWindow, Ui_MainWindow):
         self.actionCategories.triggered.connect(self.signal_open_category_form.emit)
         self.actionSettings.triggered.connect(self.signal_open_settings_form.emit)
 
+        self.actionBasicDemo.triggered.connect(self.signal_open_basic_demo.emit)
+        self.actionMortgage_Demo.triggered.connect(self.signal_open_mortgage_demo.emit)
+        self.actionCategory_Template_EN.triggered.connect(
+            self.signal_open_category_template_en.emit
+        )
+        self.actionCategory_Template_CZ.triggered.connect(
+            self.signal_open_category_template_cz.emit
+        )
+
         self.actionSave.triggered.connect(self.signal_save_file.emit)
         self.actionSave_As.triggered.connect(self.signal_save_file_as.emit)
         self.actionOpen_File.triggered.connect(self.signal_open_file.emit)
-        self.actionOpen_Demo_File.triggered.connect(self.signal_open_demo_file.emit)
         self.actionClear_Recent_File_Menu.triggered.connect(
             self.signal_clear_recent_files.emit
         )

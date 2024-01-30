@@ -1,6 +1,6 @@
 {
-  "version": "0.17.0", 
-  "datetime_saved": "2024-01-29T19:04:04.105576+01:00", 
+  "version": "0.18.0", 
+  "datetime_saved": "2024-01-30T20:55:24.407364+01:00", 
   "data": {
     "datatype": "RecordKeeper", 
     "currencies": [
@@ -582,7 +582,7 @@
         "path": "Adam/Savings Accounts/Alpha Bank", 
         "index": 0, 
         "currency_code": "EUR", 
-        "initial_balance": "4000.00", 
+        "initial_balance": "1500.00", 
         "uuid": "79aa8e51-a98a-41f9-a147-f78472aa2740"
       }, 
       {
@@ -598,7 +598,7 @@
         "path": "Eve/Savings Accounts/Brookside Bank", 
         "index": 0, 
         "currency_code": "EUR", 
-        "initial_balance": "5500.00", 
+        "initial_balance": "2500.00", 
         "uuid": "9ced537c-4f99-4932-aba0-c0a8934f92b3"
       }, 
       {
@@ -1261,7 +1261,7 @@
         "account_path": "Eve/Current Accounts/Brookside Bank", 
         "payee_name": "Eve's Employer", 
         "category_amount_pairs": [
-          "Employment/Salary:2,160.00 EUR", 
+          "Employment/Salary:1,660.00 EUR", 
           "Employment/Benefits:90.00 EUR", 
           "Employment/Bonus:1,250.00 EUR"
         ], 
@@ -1275,8 +1275,8 @@
         "datetime": "2023-05-07T00:00:01+02:00", 
         "sender_path": "Eve/Current Accounts/Brookside Bank", 
         "recipient_path": "Eve/Savings Accounts/Brookside Bank", 
-        "amount_sent": "2,000.00 EUR", 
-        "amount_received": "2,000.00 EUR", 
+        "amount_sent": "1,250.00 EUR", 
+        "amount_received": "1,250.00 EUR", 
         "datetime_created": "2023-08-07T21:28:27+02:00", 
         "uuid": "7affbc5f-38b6-439e-81a9-ffaab39d25e4"
       }, 
@@ -1321,6 +1321,21 @@
       }, 
       {
         "datatype": "CashTransaction", 
+        "description": "April salary", 
+        "datetime": "2023-05-15T00:00:00+02:00", 
+        "type": "INCOME", 
+        "account_path": "Adam/Current Accounts/Alpha Bank", 
+        "payee_name": "Adam's Employer", 
+        "category_amount_pairs": [
+          "Employment/Salary:1,700.00 EUR", 
+          "Employment/Benefits:150.00 EUR"
+        ], 
+        "tag_amount_pairs": [], 
+        "datetime_created": "2023-08-07T20:49:45+02:00", 
+        "uuid": "4a128031-6c83-4294-aa46-927d89013454"
+      }, 
+      {
+        "datatype": "CashTransaction", 
         "description": "employer pension contribution", 
         "datetime": "2023-05-15T00:00:00+02:00", 
         "type": "INCOME", 
@@ -1334,21 +1349,6 @@
         "uuid": "0e3eca4d-b422-4b97-a2b3-fc2a11e5a9f1"
       }, 
       {
-        "datatype": "CashTransaction", 
-        "description": "April salary", 
-        "datetime": "2023-05-15T00:00:02+02:00", 
-        "type": "INCOME", 
-        "account_path": "Adam/Current Accounts/Alpha Bank", 
-        "payee_name": "Adam's Employer", 
-        "category_amount_pairs": [
-          "Employment/Salary:1,800.00 EUR", 
-          "Employment/Benefits:150.00 EUR"
-        ], 
-        "tag_amount_pairs": [], 
-        "datetime_created": "2023-08-07T20:49:45+02:00", 
-        "uuid": "4a128031-6c83-4294-aa46-927d89013454"
-      }, 
-      {
         "datatype": "CashTransfer", 
         "description": "my pension contribution", 
         "datetime": "2023-05-15T00:01:00+02:00", 
@@ -1358,6 +1358,22 @@
         "amount_received": "150.00 EUR", 
         "datetime_created": "2023-08-07T21:02:25+02:00", 
         "uuid": "4145daf7-c7ce-460c-8d5d-22b528f08525"
+      }, 
+      {
+        "datatype": "CashTransaction", 
+        "description": "rent for June", 
+        "datetime": "2023-05-16T00:00:00+02:00", 
+        "type": "EXPENSE", 
+        "account_path": "Shared/Savings Accounts/Cool Bank", 
+        "payee_name": "Landlord", 
+        "category_amount_pairs": [
+          "Housing/Rent:800.00 EUR", 
+          "Housing/Electricity:100.00 EUR", 
+          "Housing/Water:100.00 EUR"
+        ], 
+        "tag_amount_pairs": [], 
+        "datetime_created": "2023-08-07T21:14:29+02:00", 
+        "uuid": "eaee081f-bdb1-435c-8137-5a19993150a4"
       }, 
       {
         "datatype": "CashTransfer", 
@@ -1391,22 +1407,6 @@
         "amount_received": "271.40 USD", 
         "datetime_created": "2024-01-29T19:01:45+01:00", 
         "uuid": "55db7bd3-2c7a-46e5-a3eb-8c496ffb8205"
-      }, 
-      {
-        "datatype": "CashTransaction", 
-        "description": "rent for June", 
-        "datetime": "2023-05-16T00:00:02+02:00", 
-        "type": "EXPENSE", 
-        "account_path": "Shared/Savings Accounts/Cool Bank", 
-        "payee_name": "Landlord", 
-        "category_amount_pairs": [
-          "Housing/Rent:825.00 EUR", 
-          "Housing/Electricity:50.00 EUR", 
-          "Housing/Water:25.00 EUR"
-        ], 
-        "tag_amount_pairs": [], 
-        "datetime_created": "2023-08-07T21:14:29+02:00", 
-        "uuid": "eaee081f-bdb1-435c-8137-5a19993150a4"
       }, 
       {
         "datatype": "CashTransaction", 
@@ -1479,8 +1479,26 @@
       }, 
       {
         "datatype": "CashTransaction", 
-        "description": "return flight tickets to Prague", 
+        "description": "hotel in Prague", 
         "datetime": "2023-05-18T00:00:00+02:00", 
+        "type": "EXPENSE", 
+        "account_path": "Eve/Current Accounts/Brookside Bank", 
+        "payee_name": "Pražský hotel", 
+        "category_amount_pairs": [
+          "Travel/Accommodation:419.90 EUR"
+        ], 
+        "tag_amount_pairs": [
+          "vacation Prague 7/2023:419.90 EUR", 
+          "Adam owes Eve:209.95 EUR", 
+          "together:419.90 EUR"
+        ], 
+        "datetime_created": "2023-08-08T20:37:54+02:00", 
+        "uuid": "2ded618a-543f-44c9-93de-59d80b1298bd"
+      }, 
+      {
+        "datatype": "CashTransaction", 
+        "description": "return flight tickets to Prague", 
+        "datetime": "2023-05-18T00:00:01+02:00", 
         "type": "EXPENSE", 
         "account_path": "Eve/Current Accounts/Brookside Bank", 
         "payee_name": "Bizzair", 
@@ -1494,24 +1512,6 @@
         ], 
         "datetime_created": "2023-08-08T20:36:33+02:00", 
         "uuid": "ef9d5cfa-9312-47ea-b8e8-6d16080b1b9f"
-      }, 
-      {
-        "datatype": "CashTransaction", 
-        "description": "hotel in Prague", 
-        "datetime": "2023-05-18T00:00:01+02:00", 
-        "type": "EXPENSE", 
-        "account_path": "Eve/Current Accounts/Brookside Bank", 
-        "payee_name": "Pražský hotel", 
-        "category_amount_pairs": [
-          "Travel/Accommodation:279.90 EUR"
-        ], 
-        "tag_amount_pairs": [
-          "vacation Prague 7/2023:279.90 EUR", 
-          "Adam owes Eve:139.95 EUR", 
-          "together:279.90 EUR"
-        ], 
-        "datetime_created": "2023-08-08T20:37:54+02:00", 
-        "uuid": "2ded618a-543f-44c9-93de-59d80b1298bd"
       }, 
       {
         "datatype": "SecurityTransaction", 
@@ -1548,7 +1548,7 @@
         "datetime": "2023-05-23T00:00:00+02:00", 
         "sender_path": "Adam/Current Accounts/Alpha Bank", 
         "recipient_path": "Adam/Investments/Crypto/BTC", 
-        "amount_sent": "500.00 EUR", 
+        "amount_sent": "400.00 EUR", 
         "amount_received": "0.019547 BTC", 
         "datetime_created": "2023-08-11T19:11:54+02:00", 
         "uuid": "f6b46962-aadf-4f15-b431-f8a178dc3e42"
@@ -1665,12 +1665,12 @@
         "account_path": "Eve/Current Accounts/Brookside Bank", 
         "payee_name": "Bizzair", 
         "category_amount_pairs": [
-          "Transport/Flight:137.80 EUR"
+          "Transport/Flight:237.80 EUR"
         ], 
         "tag_amount_pairs": [
-          "vacation Prague 7/2023:137.80 EUR", 
-          "Adam owes Eve:68.90 EUR", 
-          "together:137.80 EUR"
+          "vacation Prague 7/2023:237.80 EUR", 
+          "Adam owes Eve:118.90 EUR", 
+          "together:237.80 EUR"
         ], 
         "datetime_created": "2023-08-11T17:49:39+02:00", 
         "uuid": "f740cada-a522-4e88-a05f-2fec6e1ffdba"
@@ -1701,11 +1701,26 @@
         "account_path": "Adam/Current Accounts/Alpha Bank", 
         "payee_name": "City Transport", 
         "category_amount_pairs": [
-          "Transport/Public:125.00 EUR"
+          "Transport/Public:215.00 EUR"
         ], 
         "tag_amount_pairs": [], 
         "datetime_created": "2023-08-07T21:33:43+02:00", 
         "uuid": "111438bf-391d-4fd5-a78e-ef6c85627d57"
+      }, 
+      {
+        "datatype": "CashTransaction", 
+        "description": "May salary", 
+        "datetime": "2023-06-07T00:00:00+02:00", 
+        "type": "INCOME", 
+        "account_path": "Eve/Current Accounts/Brookside Bank", 
+        "payee_name": "Eve's Employer", 
+        "category_amount_pairs": [
+          "Employment/Salary:1,660.00 EUR", 
+          "Employment/Benefits:90.00 EUR"
+        ], 
+        "tag_amount_pairs": [], 
+        "datetime_created": "2023-08-07T20:55:14+02:00", 
+        "uuid": "ef9bb7ca-5885-4368-9104-53df08f40eb8"
       }, 
       {
         "datatype": "CashTransaction", 
@@ -1722,28 +1737,13 @@
         "uuid": "b418b76d-9530-4e6f-8678-891320b4e2e3"
       }, 
       {
-        "datatype": "CashTransaction", 
-        "description": "May salary", 
-        "datetime": "2023-06-07T00:00:01+02:00", 
-        "type": "INCOME", 
-        "account_path": "Eve/Current Accounts/Brookside Bank", 
-        "payee_name": "Eve's Employer", 
-        "category_amount_pairs": [
-          "Employment/Salary:2,160.00 EUR", 
-          "Employment/Benefits:90.00 EUR"
-        ], 
-        "tag_amount_pairs": [], 
-        "datetime_created": "2023-08-07T20:55:14+02:00", 
-        "uuid": "ef9bb7ca-5885-4368-9104-53df08f40eb8"
-      }, 
-      {
         "datatype": "CashTransfer", 
         "description": "", 
         "datetime": "2023-06-07T00:01:00+02:00", 
         "sender_path": "Eve/Current Accounts/Brookside Bank", 
         "recipient_path": "Eve/Savings Accounts/Brookside Bank", 
-        "amount_sent": "1,000.00 EUR", 
-        "amount_received": "1,000.00 EUR", 
+        "amount_sent": "500.00 EUR", 
+        "amount_received": "500.00 EUR", 
         "datetime_created": "2023-08-07T21:28:48+02:00", 
         "uuid": "4857a9c3-2401-4862-a78c-84032b6f9fe1"
       }, 
@@ -1753,8 +1753,8 @@
         "datetime": "2023-06-08T00:00:00+02:00", 
         "sender_path": "Eve/Current Accounts/Brookside Bank", 
         "recipient_path": "Shared/Savings Accounts/Cool Bank", 
-        "amount_sent": "700.00 EUR", 
-        "amount_received": "700.00 EUR", 
+        "amount_sent": "500.00 EUR", 
+        "amount_received": "500.00 EUR", 
         "datetime_created": "2023-08-07T20:58:08+02:00", 
         "uuid": "56c8972a-d397-4bed-ae5e-a9304ffcfd59"
       }, 
@@ -1766,7 +1766,7 @@
         "account_path": "Eve/Current Accounts/Brookside Bank", 
         "payee_name": "Freshco", 
         "category_amount_pairs": [
-          "Food and Drinks/Groceries:72.90 EUR"
+          "Food and Drinks/Groceries:82.90 EUR"
         ], 
         "tag_amount_pairs": [
           "Adam owes Eve:36.45 EUR"
@@ -1789,6 +1789,21 @@
         "uuid": "1d968fc9-cb62-4033-aaeb-6e6bd1df7de1"
       }, 
       {
+        "datatype": "CashTransaction", 
+        "description": "May salary (raise!)", 
+        "datetime": "2023-06-15T00:00:00+02:00", 
+        "type": "INCOME", 
+        "account_path": "Adam/Current Accounts/Alpha Bank", 
+        "payee_name": "Adam's Employer", 
+        "category_amount_pairs": [
+          "Employment/Salary:1,850.00 EUR", 
+          "Employment/Benefits:150.00 EUR"
+        ], 
+        "tag_amount_pairs": [], 
+        "datetime_created": "2023-08-07T20:48:36+02:00", 
+        "uuid": "6be27f7c-ae02-45d6-9819-e6bb7faed76b"
+      }, 
+      {
         "datatype": "SecurityTransaction", 
         "description": "first Coke dividend!", 
         "datetime": "2023-06-15T00:00:00+02:00", 
@@ -1800,21 +1815,6 @@
         "cash_account_path": "Adam/Investments/Intelligent Brokers/USD", 
         "datetime_created": "2024-01-29T19:03:22+01:00", 
         "uuid": "ffa95900-0dcb-4a5d-b8c0-cd2371c6a122"
-      }, 
-      {
-        "datatype": "CashTransaction", 
-        "description": "May salary (raise!)", 
-        "datetime": "2023-06-15T00:00:01+02:00", 
-        "type": "INCOME", 
-        "account_path": "Adam/Current Accounts/Alpha Bank", 
-        "payee_name": "Adam's Employer", 
-        "category_amount_pairs": [
-          "Employment/Salary:2,100.00 EUR", 
-          "Employment/Benefits:150.00 EUR"
-        ], 
-        "tag_amount_pairs": [], 
-        "datetime_created": "2023-08-07T20:48:36+02:00", 
-        "uuid": "6be27f7c-ae02-45d6-9819-e6bb7faed76b"
       }, 
       {
         "datatype": "CashTransaction", 
@@ -1849,9 +1849,9 @@
         "account_path": "Shared/Savings Accounts/Cool Bank", 
         "payee_name": "Landlord", 
         "category_amount_pairs": [
-          "Housing/Rent:825.00 EUR", 
-          "Housing/Electricity:50.00 EUR", 
-          "Housing/Water:25.00 EUR"
+          "Housing/Rent:800.00 EUR", 
+          "Housing/Electricity:100.00 EUR", 
+          "Housing/Water:100.00 EUR"
         ], 
         "tag_amount_pairs": [], 
         "datetime_created": "2023-08-07T21:14:27+02:00", 
@@ -1865,11 +1865,11 @@
         "account_path": "Adam/Current Accounts/Alpha Bank", 
         "payee_name": "The Bear", 
         "category_amount_pairs": [
-          "Food and Drinks/Eating out:38.90 EUR", 
-          "Food and Drinks/Alcohol:18.90 EUR"
+          "Food and Drinks/Eating out:33.90 EUR", 
+          "Food and Drinks/Alcohol:33.90 EUR"
         ], 
         "tag_amount_pairs": [
-          "together:57.80 EUR"
+          "together:67.80 EUR"
         ], 
         "datetime_created": "2023-08-07T21:30:34+02:00", 
         "uuid": "baf1cc31-4362-46ad-8761-4859e3fdcf2d"
@@ -2022,10 +2022,10 @@
         "account_path": "Adam/Current Accounts/Alpha Bank", 
         "payee_name": "The Winery", 
         "category_amount_pairs": [
-          "Gift/Drinks:25.90 EUR"
+          "Gift/Drinks:45.90 EUR"
         ], 
         "tag_amount_pairs": [
-          "Family:25.90 EUR"
+          "Family:45.90 EUR"
         ], 
         "datetime_created": "2023-08-07T21:09:02+02:00", 
         "uuid": "590d078c-4bc9-49e3-a9ba-198ec0f80b96"
@@ -2389,7 +2389,7 @@
         "account_path": "Eve/Current Accounts/Brookside Bank", 
         "payee_name": "Eve's Employer", 
         "category_amount_pairs": [
-          "Employment/Salary:2,160.00 EUR", 
+          "Employment/Salary:1,660.00 EUR", 
           "Employment/Benefits:90.00 EUR"
         ], 
         "tag_amount_pairs": [], 
@@ -2402,8 +2402,8 @@
         "datetime": "2023-07-07T00:00:01+02:00", 
         "sender_path": "Eve/Current Accounts/Brookside Bank", 
         "recipient_path": "Eve/Savings Accounts/Brookside Bank", 
-        "amount_sent": "750.00 EUR", 
-        "amount_received": "750.00 EUR", 
+        "amount_sent": "500.00 EUR", 
+        "amount_received": "500.00 EUR", 
         "datetime_created": "2023-08-07T21:28:54+02:00", 
         "uuid": "2d9a84bf-7bdd-49d2-bf5c-7e94bd5cd3cc"
       }, 
@@ -2448,6 +2448,21 @@
       }, 
       {
         "datatype": "CashTransaction", 
+        "description": "June salary", 
+        "datetime": "2023-07-15T00:00:00+02:00", 
+        "type": "INCOME", 
+        "account_path": "Adam/Current Accounts/Alpha Bank", 
+        "payee_name": "Adam's Employer", 
+        "category_amount_pairs": [
+          "Employment/Salary:1,850.00 EUR", 
+          "Employment/Benefits:150.00 EUR"
+        ], 
+        "tag_amount_pairs": [], 
+        "datetime_created": "2023-08-07T20:49:04+02:00", 
+        "uuid": "e9bea141-f57d-4e71-a134-e7a3c430d2f7"
+      }, 
+      {
+        "datatype": "CashTransaction", 
         "description": "employer pension contribution", 
         "datetime": "2023-07-15T00:00:00+02:00", 
         "type": "INCOME", 
@@ -2459,21 +2474,6 @@
         "tag_amount_pairs": [], 
         "datetime_created": "2023-08-07T20:59:38+02:00", 
         "uuid": "11a7ce90-cc68-477c-bff2-8955b286a41e"
-      }, 
-      {
-        "datatype": "CashTransaction", 
-        "description": "June salary", 
-        "datetime": "2023-07-15T00:00:02+02:00", 
-        "type": "INCOME", 
-        "account_path": "Adam/Current Accounts/Alpha Bank", 
-        "payee_name": "Adam's Employer", 
-        "category_amount_pairs": [
-          "Employment/Salary:2,100.00 EUR", 
-          "Employment/Benefits:150.00 EUR"
-        ], 
-        "tag_amount_pairs": [], 
-        "datetime_created": "2023-08-07T20:49:04+02:00", 
-        "uuid": "e9bea141-f57d-4e71-a134-e7a3c430d2f7"
       }, 
       {
         "datatype": "CashTransfer", 
@@ -2494,9 +2494,9 @@
         "account_path": "Shared/Savings Accounts/Cool Bank", 
         "payee_name": "Landlord", 
         "category_amount_pairs": [
-          "Housing/Rent:825.00 EUR", 
-          "Housing/Electricity:50.00 EUR", 
-          "Housing/Water:25.00 EUR"
+          "Housing/Rent:800.00 EUR", 
+          "Housing/Electricity:100.00 EUR", 
+          "Housing/Water:100.00 EUR"
         ], 
         "tag_amount_pairs": [], 
         "datetime_created": "2023-08-07T20:56:31+02:00", 
@@ -2518,6 +2518,17 @@
         "description": "", 
         "datetime": "2023-07-16T00:00:01+02:00", 
         "sender_path": "Adam/Current Accounts/Alpha Bank", 
+        "recipient_path": "Shared/Savings Accounts/Cool Bank", 
+        "amount_sent": "500.00 EUR", 
+        "amount_received": "500.00 EUR", 
+        "datetime_created": "2023-08-07T20:57:56+02:00", 
+        "uuid": "c151ae31-e8ec-48eb-affb-eab343b72bba"
+      }, 
+      {
+        "datatype": "CashTransfer", 
+        "description": "", 
+        "datetime": "2023-07-16T00:00:02+02:00", 
+        "sender_path": "Adam/Current Accounts/Alpha Bank", 
         "recipient_path": "Adam/Savings Accounts/Alpha Bank", 
         "amount_sent": "750.00 EUR", 
         "amount_received": "750.00 EUR", 
@@ -2527,7 +2538,7 @@
       {
         "datatype": "CashTransaction", 
         "description": "", 
-        "datetime": "2023-07-16T00:00:02+02:00", 
+        "datetime": "2023-07-16T00:00:03+02:00", 
         "type": "EXPENSE", 
         "account_path": "Adam/Current Accounts/Alpha Bank", 
         "payee_name": "SafeLife", 
@@ -2537,17 +2548,6 @@
         "tag_amount_pairs": [], 
         "datetime_created": "2023-08-07T21:19:04+02:00", 
         "uuid": "67312d8c-ce1c-4b1b-8ed4-93f220bb7326"
-      }, 
-      {
-        "datatype": "CashTransfer", 
-        "description": "", 
-        "datetime": "2023-07-16T00:00:03+02:00", 
-        "sender_path": "Adam/Current Accounts/Alpha Bank", 
-        "recipient_path": "Shared/Savings Accounts/Cool Bank", 
-        "amount_sent": "1,000.00 EUR", 
-        "amount_received": "1,000.00 EUR", 
-        "datetime_created": "2023-08-07T20:57:56+02:00", 
-        "uuid": "c151ae31-e8ec-48eb-affb-eab343b72bba"
       }, 
       {
         "datatype": "CashTransaction", 
