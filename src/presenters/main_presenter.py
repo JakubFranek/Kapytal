@@ -49,8 +49,17 @@ class MainPresenter:
         self._welcome_dialog.signal_open_recent_file.connect(
             self._load_most_recent_file
         )
-        self._welcome_dialog.signal_open_demo_file.connect(
+        self._welcome_dialog.signal_open_demo_basic.connect(
             lambda: self._load_file(constants.demo_basic_file_path)
+        )
+        self._welcome_dialog.signal_open_demo_mortgage.connect(
+            lambda: self._load_file(constants.demo_mortgage_file_path)
+        )
+        self._welcome_dialog.signal_open_template_category_en.connect(
+            lambda: self._load_file(constants.template_category_en_file_path)
+        )
+        self._welcome_dialog.signal_open_template_category_cz.connect(
+            lambda: self._load_file(constants.template_category_cz_file_path)
         )
         self._welcome_dialog.signal_quit.connect(self._quit)
         self._welcome_dialog.set_open_recent_file_button(

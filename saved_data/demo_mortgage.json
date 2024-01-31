@@ -1,14 +1,9 @@
 {
   "version": "0.18.0", 
-  "datetime_saved": "2024-01-30T20:28:16.670518+01:00", 
+  "datetime_saved": "2024-01-31T20:40:38.044086+01:00", 
   "data": {
     "datatype": "RecordKeeper", 
     "currencies": [
-      {
-        "datatype": "Currency", 
-        "code": "CZK", 
-        "decimals": 2
-      }, 
       {
         "datatype": "Currency", 
         "code": "EUR", 
