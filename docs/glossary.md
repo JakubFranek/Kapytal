@@ -30,17 +30,17 @@ Account Tree can be hidden by toggling the ![Icon](../resources/icons/icons-16/f
 
 ## Backups
 
-Kapytal is creating backups of user JSON [data file](#data-file) every time the file is opened or saved. Backups are created in all the directories listed within the Backups tab in [Settings Form](#settings-form-). Once the total size of all backups within a directory exceeds the size limit specified within the Settings Form Backups tab, Kapytal starts deleting old backups until the limit is satisfied again.
+Kapytal is creating backups of user JSON [data file](#data-file) every time the file is opened or saved. Backups are created in all the directories listed within the Backups tab in [Settings Form](#settings-form-). If the total size of all backups within a directory exceeds the size limit specified within the Settings Form Backups tab at the time of Kapytal's startup, Kapytal starts deleting backups until the limit is satisfied again, starting from the oldest backups.
 
 ## Base Currency
 
 In Kapytal, exactly one Currency at a time can be designated as base Currency. Base Currency is used in Base Balance column and Checked Account Balance widget in [Account Tree](#account-tree-), Base Amount column and Selected Transactions Total widget in [Transaction Table](#transaction-table-), and in [Reports](#reports).
 
-The user can change the base Currency any time in [Currencies Form](#currencies-and-exchange-rates-form) in the Currencies section.
+The user can change the base Currency any time in [Currencies Form](#currencies-form) in the Currencies section.
 
 ## Buy ![Icon](../resources/icons/icons-custom/certificate-plus.png)
 
-Buy is a sub-type of [Security Transaction](#security-transaction) that represents the exchange of money from a [Cash Account](#cash-account-) for a gain of shares of a [Security](#security-) in a [Security Account](#security-account-).
+Buy is a sub-type of [Security Transaction](#security-transaction) that represents the exchange of money from a [Cash Account](#cash-account-) for a gain of shares of a [Security](#security-) in a [Security Account](#security-account-). The keyboard shortcut for adding a Buy is the `B` key.
 
 ## Cash
 
@@ -103,6 +103,8 @@ Cash Transfers are [Transactions](#transaction) that can transfer money from one
 
 Cash Transfer specific attributes are: Sender Cash Account, Recipient Cash Account, amount sent, amount received.
 
+The keyboard shortcut for adding a Cash Transfer is the `Ctrl+T` combination (the mnemonic is: `Ctrl` for Cash and `T` for Transfer).
+
 ## Category ![Icon](../resources/icons/icons-custom/category.png)
 
 Categories are attributes that can be used in [Cash Transactions](#cash-transaction) and [Refunds](#refund-). The user can create any amount of Categories, and Categories can form a tree-like hierarchy. The user can use Categories to filter [Transactions](#transaction) or create specific Category [Reports](#reports).
@@ -123,7 +125,7 @@ Currencies Form is the [Form](#form) for creating, editing, deleting, manipulati
 
 ## Currency ![Icon](../resources/icons/icons-custom/currency.png)
 
-In Kapytal, Currencies are units of money. The user can create Currencies in [Currencies Form](#currencies-and-exchange-rates-form). Currencies have two attributes: code and number of decimals. These two attributes are specified upon Currency creation and can never be changed.
+In Kapytal, Currencies are units of money. The user can create Currencies in [Currencies Form](#currencies-form). Currencies have two attributes: code and number of decimals. These two attributes are specified upon Currency creation and can never be changed.
 
 Code is a 3-letter string, as the intended contents are the [ISO 4217](https://en.wikipedia.org/wiki/ISO_4217) standard codes (such as USD, EUR etc.). However, in practice, the user can enter any three letter string. Kapytal Currencies can therefore be used to represent non-ISO4217 currencies such as cryptocurrencies (BTC, ETH) or any other unit of monetary value.
 
@@ -155,15 +157,21 @@ Descriptions are optional strings describing [Transactions](#transaction). They 
 
 In Kapytal, Dialogs are "disposable" user interface elements/windows used for simple data entry tasks (note this is not a clear cut definition). Dialogs usually disappear after accepting them.
 
+## Dividend ![Icon](../resources/icons/icons-custom/certificate-coin.png)
+
+Dividend is a sub-type of [Security Transaction](#security-transaction) that represents the gain of money in a [Cash Account](#cash-account-) which is connected to a [Security](#security-) from a [Security Account](#security-account-), but which does not change the amount of shares held in the Security Account. The keyboard shortcut for adding a Dividend is the `Shift+D` key combination, as `D` is reserved for the *Duplicate Transaction* action (as a mnemonic, the `Shift` stands for Security, just like in the [Security Transfer](#security-transfer-) shortcut).
+
+Dividends are included in the Total and Realized performance stats shown in the Overview tab of the [Securities Form](#securities-form).
+
 ## Exchange Rate ![Icon](../resources/icons/icons-custom/currency-arrow.png)
 
-Exchange Rates relate two [Currencies](#currency-) together through a numerical conversion factor. Exchange Rates can be created within [Currencies Form](#currencies-and-exchange-rates-form).
+Exchange Rates relate two [Currencies](#currency-) together through a numerical conversion factor. Exchange Rates can be created within [Currencies Form](#currencies-form).
 
-Both current or past values of Exchange Rates can be set manually within [Currencies Form](#currencies-and-exchange-rates-form). Current rates can also be downloaded automatically via [Update Quotes Form](#update-quotes-form-).
+Both current or past values of Exchange Rates can be set manually within [Currencies Form](#currencies-form). Current rates can also be downloaded automatically via [Update Quotes Form](#update-quotes-form-).
 
 ## Expense ![Icon](../resources/icons/icons-custom/coins-minus.png)
 
-Expense is a sub-type of [Cash Transaction](#cash-transaction), which represents the transfer of money from a [Cash Account](#cash-account-) to a [Payee](#payee-). Unlike [Income](#income-), Expense can be refunded by a [Refund](#refund-). Once an Expense is refunded, it cannot be edited anymore.
+Expense is a sub-type of [Cash Transaction](#cash-transaction), which represents the transfer of money from a [Cash Account](#cash-account-) to a [Payee](#payee-). Unlike [Income](#income-), Expense can be refunded by a [Refund](#refund-). Once an Expense is refunded, it cannot be edited anymore. The keyboard shortcut for adding an Expense is the `E` key.
 
 ## Form
 
@@ -172,23 +180,25 @@ In Kapytal, Forms are user interface elements/windows used for more complex sett
 These are some of the Forms in Kapytal:
 
 - [Category](#category-) Form
-- [Currencies Form](#currencies-and-exchange-rates-form)
+- [Currencies Form](#currencies-form)
 - [Payee](#payee-) Form
 - [Update Quotes Form](#update-quotes-form-)
 - [Securities Form](#securities-form)
 - [Settings Form](#settings-form-)
 - [Tags](#tag-) Form
 - [Transaction Filter](#transaction-filters-) Form
+- Transaction Table Form
+  - this is a Form available only via *Show Transactions* action available in Category, Tag and Payee forms and in many [Reports](#reports)
 
 ## Income ![Icon](../resources/icons/icons-custom/coins-plus.png)
 
-Income is a sub-type of [Cash Transaction](#cash-transaction), which represents the transfer of money from a [Payee](#payee-) to a [Cash Account](#cash-account-). Unlike [Expense](#expense-), Income cannot be [refunded](#refund-).
+Income is a sub-type of [Cash Transaction](#cash-transaction), which represents the transfer of money from a [Payee](#payee-) to a [Cash Account](#cash-account-). Unlike [Expense](#expense-), Income cannot be [refunded](#refund-). The keyboard shortcut for adding an Income is the `I` key.
 
 ## Logging
 
 Most operations the user makes within Kapytal are logged in a log file. These files are used for debugging purposes and can be found within `<installation_directory>/Kapytal/_internal/logs/`.
 
-The user can set the maximum logs directory size in [Settings Form](#settings-form-). Once exceeded, Kapytal will start deleting logs upon startup, starting from the oldest logs, until the limit is satisfied.
+The user can set the maximum logs directory size in [Settings Form](#settings-form-). If exceeded, Kapytal will start deleting logs during startup, starting from the oldest logs, until the limit is satisfied. The details about the outcome of this deletion process can be naturally found in the most recent log.
 
 ## Native Currency/Amount
 
@@ -229,7 +239,7 @@ Payees can be used to filter Cash Transactions or create specific Payee [Reports
 
 ## Refund ![Icon](../resources/icons/icons-custom/coins-arrow-back.png)
 
-Refund is a special type of [Transaction](#transaction) that "reverts" the effects of an [Expense](#expense-). The user can create a Refund by right-clicking an Expense in [Transaction Table](#transaction-table-) and selecting *Add Refund*.
+Refund is a special type of [Transaction](#transaction) that "reverts" the effects of an [Expense](#expense-). The user can create a Refund by right-clicking an Expense in [Transaction Table](#transaction-table-) and selecting *Add Refund*, or by selecting an Expense and pressing the `R` key.
 
 Refunds can refund the Expense fully or partially. Each Refund can relate to only one Expense, while each Expense can be refunded by multiple Refunds. However, the total sum of refunded money cannot exceed the total amount defined by the Expense.
 
@@ -310,9 +320,11 @@ Security Transfers are [Transaction](#transaction) that can transfer shares of a
 
 Security Transfer specific attributes are: Sender Security Account, Recipient Security Account, Security, shares.
 
+The keyboard shortcut for adding a Security Transfer is the `Shift+T` combination (the mnemonic is: `Shift` for Security and `T` for Transfer).
+
 ## Sell ![Icon](../resources/icons/icons-custom/certificate-minus.png)
 
-Sell is a sub-type of [Security Transaction](#security-transaction) that represents the exchange of shares of a [Security](#security-) from a [Security Account](#security-account-) for a gain of money in a [Cash Account](#cash-account-).
+Sell is a sub-type of [Security Transaction](#security-transaction) that represents the exchange of shares of a [Security](#security-) from a [Security Account](#security-account-) for a gain of money in a [Cash Account](#cash-account-). The keyboard shortcut for adding a Sell is the `S` key.
 
 Note Kapytal allows negative shares of a Security within Security Account, i.e. it is possible to use Sell to sell shares of Security from a Security Account that does not contain any shares of that Security at all. This can be leveraged for [modelling mortgages](./faq.md#how-to-handle-a-mortgage-in-kapytal).
 

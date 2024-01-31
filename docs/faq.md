@@ -76,7 +76,7 @@ Mortgage is a loan, but its also an investment, as you are buying an asset that 
 
 The advantage of this approach is that when your real estate appreciates in value, your net worth grows by the same exact amount. It allows you to easily handle refinancing your mortgage, as the only thing that would change after refinancing is the monthly interest and capital repayment amounts, as well as early mortgage payoff, as you can easily model that via special [Buy](./glossary.md#buy-) Transaction which would pay a significant part of your mortgage off.
 
-A data file with an example of the setup described above is available: [mortgage_demo.json](../saved_data/mortgage_demo.json)
+A data file with an example of the setup described above is available in Kapytal via File/Demos and Templates/Mortgage Demo option or here: [mortgage_demo.json](../saved_data/mortgage_demo.json)
 
 ## How to reorder Transactions with the same date?
 
@@ -94,4 +94,4 @@ The Total Currency Gain column in the Securities Overview tree quantifies the im
 
 ## How should I handle stock splits?
 
-Frankly, Kapytal does not have any special feature that would help with handling stock splits. At this point I would recommend to create a new [Security](./glossary.md#security-) for the newly splitted stock, [Sell](./glossary.md#sell-) all the old Security shares and [Buy](./glossary.md#buy-) the new Security.
+Frankly, Kapytal does not have any special feature that would help with handling stock splits. I would recommend to create a new [Security](./glossary.md#security-) for the newly splitted stock, [Sell](./glossary.md#sell-) all the old Security shares and [Buy](./glossary.md#buy-) the new Security with the money gained by the Sell.

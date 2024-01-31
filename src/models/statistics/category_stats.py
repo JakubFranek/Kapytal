@@ -147,12 +147,14 @@ def calculate_category_stats(
         already_counted_ancestors = set()
         date_ = transaction.date_
         for category in transaction.categories:
+            _amount = transaction.get_amount_for_category(category, total=False)
+            if _amount.value_normalized == 0:
+                continue
+
             stats = stats_dict[category]
             stats.transactions.add(transaction)
 
-            stats.balance += transaction.get_amount_for_category(
-                category, total=False
-            ).convert(base_currency, date_)
+            stats.balance += _amount.convert(base_currency, date_)
             stats.transactions_self += 1
             stats.transactions_total += 1
 
