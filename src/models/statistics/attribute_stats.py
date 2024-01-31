@@ -106,12 +106,13 @@ def calculate_attribute_stats(
         date_ = transaction.date_
         if attribute_type == AttributeType.TAG:
             for tag in transaction.tags:
+                _amount = transaction.get_amount_for_tag(tag)
+                if _amount.value_normalized == 0:
+                    continue
                 stats = stats_dict[tag]
                 stats.transactions.add(transaction)
                 stats.no_of_transactions += 1
-                stats.balance += transaction.get_amount_for_tag(tag).convert(
-                    base_currency, date_
-                )
+                stats.balance += _amount.convert(base_currency, date_)
         elif attribute_type == AttributeType.PAYEE:
             stats = stats_dict[transaction.payee]
             stats.transactions.add(transaction)

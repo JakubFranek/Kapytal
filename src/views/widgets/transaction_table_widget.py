@@ -103,6 +103,7 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
         # this is necessary to make action shortcuts work
         self.tableView.addAction(self.actionDelete)
         self.tableView.addAction(self.actionDuplicate)
+        self.tableView.addAction(self.actionRefund)
 
         # this filter disables keyboard search in QTableView
         self.filter_ = EventFilter(parent=None)

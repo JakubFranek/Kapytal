@@ -243,7 +243,7 @@ class TransactionTableFormPresenter:
         if all(
             isinstance(transaction, RefundTransaction) for transaction in transactions
         ):
-            self._refund_transaction_dialog_presenter.run_edit_dialog()
+            self._refund_transaction_dialog_presenter.run_edit_dialog(transactions)
             return
         if all(
             isinstance(transaction, SecurityTransaction) for transaction in transactions
