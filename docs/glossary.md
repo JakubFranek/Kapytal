@@ -30,7 +30,7 @@ Account Tree can be hidden by toggling the ![Icon](../resources/icons/icons-16/f
 
 ## Backups
 
-Kapytal is creating backups of user JSON [data file](#data-file) every time the file is opened or saved. Backups are created in all the directories listed within the Backups tab in [Settings Form](#settings-form-). If the total size of all backups within a directory exceeds the size limit specified within the Settings Form Backups tab at the time of Kapytal's startup, Kapytal starts deleting backups until the limit is satisfied again, starting from the oldest backups.
+Kapytal is creating backups of user JSON [data file](#data-file) every time the file is opened or saved. Backups are created in all the directories listed within the Backups tab in [Settings Form](#settings-form-). If the total size of all backups within any backup directory exceeds the size limit specified within the Settings Form Backups tab, Kapytal starts deleting backups until the limit is satisfied again, starting from the oldest backups. This backup size checking process occurs any time a backup is created. Detailes about the outcome of these backup checks can be found in the [logs](#logging).
 
 ## Base Currency
 
