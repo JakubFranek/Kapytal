@@ -19,7 +19,6 @@ class Ui_WelcomeDialog(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(WelcomeDialog.sizePolicy().hasHeightForWidth())
         WelcomeDialog.setSizePolicy(sizePolicy)
-        WelcomeDialog.setLocale(QtCore.QLocale(QtCore.QLocale.Language.English, QtCore.QLocale.Country.UnitedKingdom))
         WelcomeDialog.setModal(True)
         self.verticalLayout = QtWidgets.QVBoxLayout(WelcomeDialog)
         self.verticalLayout.setSizeConstraint(QtWidgets.QLayout.SizeConstraint.SetDefaultConstraint)

@@ -3,7 +3,7 @@ from datetime import datetime, time, timedelta
 from decimal import Decimal
 from enum import Enum, auto
 
-from PyQt6.QtCore import QSignalBlocker, Qt, pyqtSignal
+from PyQt6.QtCore import QLocale, QSignalBlocker, Qt, pyqtSignal
 from PyQt6.QtGui import QAction, QContextMenuEvent, QCursor
 from PyQt6.QtWidgets import (
     QAbstractButton,

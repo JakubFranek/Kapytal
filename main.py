@@ -73,12 +73,14 @@ def main() -> None:
     logging.debug("Creating MainWindow")
     main_view = MainView()
 
-    logging.debug("Creating MainPresenter")
-    main_presenter = MainPresenter(main_view, app)
-
+    # the locale setting must be set right after creating MainView
+    # else TransactionFilterForm spinboxes will not get correct locale
     logging.debug("Setting Qt locales")
     QLocale.setDefault(locale_qt)
     main_view.setLocale(locale_qt)
+
+    logging.debug("Creating MainPresenter")
+    main_presenter = MainPresenter(main_view, app)
 
     logging.debug("Showing MainView")
     main_view.showMaximized()

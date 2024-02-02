@@ -654,11 +654,9 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
             if not hasattr(self, "_str_rounded"):
                 self._str_rounded = f"{self.value_rounded:n} {self._currency.code}"
             return self._str_rounded
+
         value_rounded = round(self._raw_value, decimals)
-        number_string = locale.localize(
-            f"{value_rounded:.{decimals}f}", grouping=True, monetary=True
-        )
-        return f"{number_string} {self._currency.code}"
+        return f"{value_rounded:n} {self._currency.code}"
 
     def to_str_normalized(self) -> str:
         if not hasattr(self, "_str_normalized"):
