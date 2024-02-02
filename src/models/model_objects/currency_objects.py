@@ -1,4 +1,3 @@
-import locale
 import logging
 import operator
 from bisect import bisect_right

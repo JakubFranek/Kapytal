@@ -3,7 +3,7 @@ from datetime import datetime, time, timedelta
 from decimal import Decimal
 from enum import Enum, auto
 
-from PyQt6.QtCore import QLocale, QSignalBlocker, Qt, pyqtSignal
+from PyQt6.QtCore import QSignalBlocker, Qt, pyqtSignal
 from PyQt6.QtGui import QAction, QContextMenuEvent, QCursor
 from PyQt6.QtWidgets import (
     QAbstractButton,
@@ -15,14 +15,6 @@ from PyQt6.QtWidgets import (
     QMenu,
     QTreeView,
     QWidget,
-)
-from src.models.model_objects.cash_objects import (
-    CashTransactionType,
-    CashTransfer,
-    RefundTransaction,
-)
-from src.models.model_objects.security_objects import (
-    SecurityTransactionType,
 )
 from src.models.transaction_filters.base_transaction_filter import FilterMode
 from src.models.user_settings import user_settings
