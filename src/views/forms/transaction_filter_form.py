@@ -579,12 +579,26 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
         self.actionCollapseAllIncomeCategories = QAction("Collapse All", self)
         self.actionCollapseAllExpenseCategories = QAction("Collapse All", self)
         self.actionCollapseAllIncomeAndExpenseCategories = QAction("Collapse All", self)
-        self.actionSelectAllIncomeCategories = QAction("Select All", self)
-        self.actionUnselectAllIncomeCategories = QAction("Unselect All", self)
-        self.actionSelectAllExpenseCategories = QAction("Select All", self)
-        self.actionUnselectAllExpenseCategories = QAction("Unselect All", self)
-        self.actionSelectAllIncomeAndExpenseCategories = QAction("Select All", self)
-        self.actionUnselectAllIncomeAndExpenseCategories = QAction("Unselect All", self)
+        self.actionSelectAllCategories = QAction("Select All Categories", self)
+        self.actionUnselectAllCategories = QAction("Unselect All Categories", self)
+        self.actionSelectAllIncomeCategories = QAction(
+            "Select All Income Categories", self
+        )
+        self.actionUnselectAllIncomeCategories = QAction(
+            "Unselect All Income Categories", self
+        )
+        self.actionSelectAllExpenseCategories = QAction(
+            "Select All Expense Categories", self
+        )
+        self.actionUnselectAllExpenseCategories = QAction(
+            "Unselect All Expense Categories", self
+        )
+        self.actionSelectAllIncomeAndExpenseCategories = QAction(
+            "Select All Income and Expense Categories", self
+        )
+        self.actionUnselectAllIncomeAndExpenseCategories = QAction(
+            "Unselect All Income and Expense Categories", self
+        )
         self.actionSelectAllTags = QAction("Select All", self)
         self.actionUnselectAllTags = QAction("Unselect All", self)
         self.actionSelectAllPayees = QAction("Select All", self)
@@ -604,6 +618,8 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
         self.actionCollapseAllIncomeCategories.setIcon(icons.collapse)
         self.actionCollapseAllExpenseCategories.setIcon(icons.collapse)
         self.actionCollapseAllIncomeAndExpenseCategories.setIcon(icons.collapse)
+        self.actionSelectAllCategories.setIcon(icons.select_all)
+        self.actionUnselectAllCategories.setIcon(icons.unselect_all)
         self.actionSelectAllIncomeCategories.setIcon(icons.select_all)
         self.actionUnselectAllIncomeCategories.setIcon(icons.unselect_all)
         self.actionSelectAllExpenseCategories.setIcon(icons.select_all)
@@ -648,6 +664,12 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
         )
         self.actionCollapseAllIncomeAndExpenseCategories.triggered.connect(
             self.incomeAndExpenseCategoriesTreeView.collapseAll
+        )
+        self.actionSelectAllCategories.triggered.connect(
+            lambda: self._set_all_category_selection(selected=True)
+        )
+        self.actionUnselectAllCategories.triggered.connect(
+            lambda: self._set_all_category_selection(selected=False)
         )
         self.actionSelectAllIncomeCategories.triggered.connect(
             self.signal_income_categories_select_all.emit
@@ -715,6 +737,12 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
         )
         self.incomeAndExpenseCategoriesCollapseAllToolButton.setDefaultAction(
             self.actionCollapseAllIncomeAndExpenseCategories
+        )
+        self.selectAllCategoriesToolButton.setDefaultAction(
+            self.actionSelectAllCategories
+        )
+        self.unselectAllCategoriesToolButton.setDefaultAction(
+            self.actionUnselectAllCategories
         )
         self.incomeCategoriesSelectAllToolButton.setDefaultAction(
             self.actionSelectAllIncomeCategories
@@ -792,6 +820,8 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
         self.specificCategoryFilterSelectionModeComboBox.setEnabled(
             mode != FilterMode.OFF
         )
+        self.actionSelectAllCategories.setEnabled(mode != FilterMode.OFF)
+        self.actionUnselectAllCategories.setEnabled(mode != FilterMode.OFF)
         self.categoriesTypeTabWidget.setEnabled(mode != FilterMode.OFF)
         self.signal_categories_update_number_selected.emit()
 
@@ -979,3 +1009,13 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
         first_day_of_last_year = last_day_of_last_year.replace(day=1, month=1)
         self.dateFilterStartDateEdit.setDate(first_day_of_last_year)
         self.dateFilterEndDateEdit.setDate(last_day_of_last_year)
+
+    def _set_all_category_selection(self, *, selected: bool) -> None:
+        if selected:
+            self.signal_income_categories_select_all.emit()
+            self.signal_expense_categories_select_all.emit()
+            self.signal_income_and_expense_categories_select_all.emit()
+        else:
+            self.signal_income_categories_unselect_all.emit()
+            self.signal_expense_categories_unselect_all.emit()
+            self.signal_income_and_expense_categories_unselect_all.emit()
