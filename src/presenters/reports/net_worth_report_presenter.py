@@ -301,7 +301,10 @@ class NetWorthReportPresenter:
     def _is_tree_item_visible(self, item: Account | AccountGroup | AssetStats) -> bool:
         if item.parent is None:
             return True
-        index = self._model.get_index_from_item(item.parent)
+        try:
+            index = self._model.get_index_from_item(item.parent)
+        except ValueError:
+            return False  # index not found, so item is not visible by default
         index = self._proxy.mapFromSource(index)
         if self._report.treeView.isExpanded(index):
             return self._is_tree_item_visible(item.parent)
