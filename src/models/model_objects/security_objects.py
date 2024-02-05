@@ -503,26 +503,26 @@ class SecurityAccount(Account):
     def get_average_amount_per_share(
         self,
         security: Security,
-        date_: date | None = None,  # latest date if None
+        datetime_: datetime | None = None,  # latest datetime if None
         currency: Currency | None = None,  # Security.currency if None
         type_: SecurityTransactionType = SecurityTransactionType.BUY,
     ) -> CashAmount:
         if not isinstance(security, Security):
             raise TypeError("Parameter 'security' must be a Security.")
-        if not isinstance(date_, (date, NoneType)):
-            raise TypeError("Parameter 'date' must be a date or None.")
+        if not isinstance(datetime_, (datetime, NoneType)):
+            raise TypeError("Parameter 'datetime_' must be a datetime or None.")
         if not isinstance(currency, (Currency, NoneType)):
             raise TypeError("Parameter 'currency' must be a Currency or None.")
-        if date_ is None and (
+        if datetime_ is None and (
             len(self._securities_history) == 0
             or security not in self._related_securities
         ):
             raise ValueError(
                 f"Security {security.name} is not related to this SecurityAccount."
             )
-        if date_ is not None:
+        if datetime_ is not None:
             for _datetime, security_dict in reversed(self._securities_history):
-                if _datetime.date() <= date_ and security in security_dict:
+                if _datetime <= datetime_ and security in security_dict:
                     break  # OK
             else:
                 raise ValueError(
@@ -534,10 +534,10 @@ class SecurityAccount(Account):
 
         shares_price_pairs: list[tuple[int, CashAmount]] = []
         for transaction in self._transactions:
-            _transaction_date = transaction.date_
+            _transaction_datetime = transaction.datetime_
             if transaction.security != security:
                 continue
-            if date_ is not None and _transaction_date > date_:
+            if datetime_ is not None and _transaction_datetime > datetime_:
                 continue
             if (
                 isinstance(transaction, SecurityTransaction)
@@ -549,12 +549,12 @@ class SecurityAccount(Account):
                 and transaction.recipient == self
             ):
                 amount = transaction.sender.get_average_amount_per_share(
-                    security, _transaction_date, currency
+                    security, _transaction_datetime, currency
                 )
             else:
                 continue
             try:
-                amount_ = amount.convert(currency, _transaction_date)
+                amount_ = amount.convert(currency, _transaction_datetime.date())
             except ConversionFactorNotFoundError:
                 return CashAmount("NaN", currency)
             shares_price_pairs.append((transaction.shares, amount_))

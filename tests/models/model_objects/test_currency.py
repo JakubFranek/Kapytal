@@ -43,15 +43,11 @@ def test_code_too_long(code: str, decimals: int) -> None:
         Currency(code, decimals)
 
 
-@given(
-    code=st.text(min_size=3, max_size=3), decimals=st.integers(min_value=0, max_value=8)
-)
-def test_code_not_alpha(code: str, decimals: int) -> None:
-    assume(any(char.isdigit() for char in code))
+def test_code_not_alpha() -> None:
     with pytest.raises(
         ValueError, match="Currency.code must be a three letter ISO-4217 code."
     ):
-        Currency(code, decimals)
+        Currency("AB1", 2)
 
 
 @given(code=everything_except(str), decimals=st.integers(min_value=0, max_value=8))

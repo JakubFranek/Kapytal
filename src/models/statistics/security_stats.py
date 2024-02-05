@@ -566,6 +566,7 @@ def calculate_irr(
     cashflows: list[Decimal] = []
     for transaction in transactions:
         _date = transaction.date_
+        _datetime = transaction.datetime_
 
         if isinstance(transaction, SecurityTransaction):
             amount = _safe_convert(
@@ -576,12 +577,12 @@ def calculate_irr(
                 continue
             if transaction.recipient in _accounts:
                 avg_price = transaction.sender.get_average_amount_per_share(
-                    security, _date, currency
+                    security, _datetime, currency
                 )
                 amount = -avg_price.value_normalized * transaction.shares
             else:
                 avg_price = transaction.recipient.get_average_amount_per_share(
-                    security, _date, currency
+                    security, _datetime, currency
                 )
                 amount = avg_price.value_normalized * transaction.shares
 

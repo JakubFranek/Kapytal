@@ -261,7 +261,7 @@ def test_get_average_price_with_transfers() -> None:
 
     SecurityTransaction(
         "test",
-        datetime.now(user_settings.settings.time_zone),
+        datetime.now(user_settings.settings.time_zone) - timedelta(days=4),
         SecurityTransactionType.BUY,
         security,
         5,
@@ -271,7 +271,7 @@ def test_get_average_price_with_transfers() -> None:
     )
     SecurityTransaction(
         "test",
-        datetime.now(user_settings.settings.time_zone),
+        datetime.now(user_settings.settings.time_zone) - timedelta(days=3),
         SecurityTransactionType.BUY,
         security,
         5,
@@ -281,7 +281,7 @@ def test_get_average_price_with_transfers() -> None:
     )
     SecurityTransfer(
         "transfer",
-        datetime.now(user_settings.settings.time_zone),
+        datetime.now(user_settings.settings.time_zone) - timedelta(days=2),
         security,
         5,
         account_2,
@@ -289,7 +289,7 @@ def test_get_average_price_with_transfers() -> None:
     )
     SecurityTransaction(
         "test",
-        datetime.now(user_settings.settings.time_zone),
+        datetime.now(user_settings.settings.time_zone) - timedelta(days=1),
         SecurityTransactionType.BUY,
         security,
         5,
@@ -393,18 +393,18 @@ def test_get_average_price_specific_date() -> None:
     )
 
     avg_price = account.get_average_amount_per_share(
-        security, today.date() - timedelta(days=2)
+        security, today - timedelta(days=2)
     )
     assert avg_price == CashAmount(5, usd)
 
 
-@given(date_=everything_except((date, NoneType)))
-def test_get_average_price_invalid_date_type(date_: Any) -> None:
+@given(date_=everything_except((datetime, NoneType)))
+def test_get_average_price_invalid_datetime_type(date_: Any) -> None:
     account = SecurityAccount("Test")
     usd = Currency("USD", 2)
     security = Security("Alphabet", "ABC", "Stock", usd, 1)
 
-    with pytest.raises(TypeError, match="date or None"):
+    with pytest.raises(TypeError, match="datetime or None"):
         account.get_average_amount_per_share(security, date_)
 
 
@@ -415,7 +415,7 @@ def test_get_average_price_invalid_date_value() -> None:
     today = datetime.now(user_settings.settings.time_zone)
 
     with pytest.raises(ValueError, match="not in this SecurityAccount"):
-        account.get_average_amount_per_share(security, today.date() - timedelta(days=7))
+        account.get_average_amount_per_share(security, today - timedelta(days=7))
 
 
 @given(currency=everything_except((Currency, NoneType)))
@@ -426,7 +426,7 @@ def test_get_average_price_invalid_currency_type(currency: Any) -> None:
     datetime_ = datetime.now(user_settings.settings.time_zone)
 
     with pytest.raises(TypeError, match="Currency or None"):
-        account.get_average_amount_per_share(security, datetime_.date(), currency)
+        account.get_average_amount_per_share(security, datetime_, currency)
 
 
 def test_get_average_price_invalid_currency() -> None:
@@ -450,5 +450,5 @@ def test_get_average_price_invalid_currency() -> None:
         cash_account,
     )
 
-    avg_amount = account.get_average_amount_per_share(security, datetime_.date(), eur)
+    avg_amount = account.get_average_amount_per_share(security, datetime_, eur)
     assert avg_amount.is_nan()
