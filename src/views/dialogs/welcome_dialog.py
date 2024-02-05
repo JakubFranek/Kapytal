@@ -1,3 +1,6 @@
+import os
+from pathlib import Path
+
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QAction, QIcon, QPixmap
 from PyQt6.QtWidgets import QGridLayout, QLabel, QMenu, QPushButton, QWidget
@@ -11,7 +14,7 @@ class WelcomeDialog(CustomDialog, Ui_WelcomeDialog):
     signal_new_file = pyqtSignal()
     signal_open_recent_file = pyqtSignal()
     signal_open_file = pyqtSignal()
-    signal_open_guide = pyqtSignal()
+    signal_open_docs = pyqtSignal()
     signal_quit = pyqtSignal()
 
     signal_open_demo_basic = pyqtSignal()
@@ -38,7 +41,10 @@ class WelcomeDialog(CustomDialog, Ui_WelcomeDialog):
             self.createNewFilePushButton, icons.document_plus, "Create New File"
         )
         self._setup_button(
-            self.openRecentFilePushButton, icons.document_clock, "Open Most Recent File"
+            self.openRecentFilePushButton,
+            icons.document_clock,
+            "Open Most Recent File",
+            height=52,
         )
         self._setup_button(
             self.openFilePushButton, icons.open_file, "Open File from Browser"
@@ -49,7 +55,8 @@ class WelcomeDialog(CustomDialog, Ui_WelcomeDialog):
         self._setup_button(
             self.openQuickStartGuidePushButton,
             icons.book_question,
-            "Open Quick Start Guide",
+            "Open Documentation on GitHub",
+            height=52,
         )
         self._setup_button(self.quitPushButton, icons.quit_, "Quit")
 
@@ -57,24 +64,34 @@ class WelcomeDialog(CustomDialog, Ui_WelcomeDialog):
         self.openFilePushButton.clicked.connect(self.signal_open_file)
         self.openRecentFilePushButton.clicked.connect(self.signal_open_recent_file)
         self.openDemoFilePushButton.clicked.connect(self._show_menu)
-        self.openQuickStartGuidePushButton.clicked.connect(self.signal_open_guide)
+        self.openQuickStartGuidePushButton.clicked.connect(self.signal_open_docs)
         self.quitPushButton.clicked.connect(self.signal_quit)
-
-        # TODO: add quick start guide and enable this button
-        self.openQuickStartGuidePushButton.setEnabled(False)
 
         self.menu_demo_template = None
 
-    def set_open_recent_file_button(self, *, enabled: bool) -> None:
+    def set_open_recent_file_button(
+        self, *, enabled: bool, file_path: Path | None
+    ) -> None:
         self.openRecentFilePushButton.setEnabled(enabled)
+        self.openRecentFilePushButton.setToolTip(str(file_path))
+
+        label = self.openRecentFilePushButton.layout().itemAt(0).widget()
+        if not isinstance(label, QLabel):
+            raise TypeError("Unexpected widget in openRecentFilePushButton layout")
+        if file_path is not None:
+            label.setText(f"Open Most Recent File\n({_shorten_path_string(file_path)})")
+        else:
+            label.setText("Open Most Recent File")
 
     @staticmethod
-    def _setup_button(button: QPushButton, icon: QIcon, text: str) -> None:
+    def _setup_button(
+        button: QPushButton, icon: QIcon, text: str, height: int = 34
+    ) -> None:
         button.setIcon(icon)
         button.setText("")
         button.setStyleSheet("text-align:left; padding-left:6px")
         button.setLayout(QGridLayout())
-        button.setMinimumHeight(34)
+        button.setMinimumHeight(height)
 
         label = QLabel(text=text)
         label.setAlignment(Qt.AlignmentFlag.AlignCenter | Qt.AlignmentFlag.AlignVCenter)
@@ -111,3 +128,19 @@ class WelcomeDialog(CustomDialog, Ui_WelcomeDialog):
             )
         )
         self.menu_demo_template = None
+
+
+def _shorten_path_string(path: Path) -> str:
+    """Returns shortened path string limited to 25 characters."""
+    str_ = str(path)
+    if len(str_) <= 27:
+        return str_
+
+    segments = Path(path).parts
+    n_segments = len(segments)
+    for i in range(1, n_segments):
+        path = Path(*segments[i:n_segments])
+        str_ = str(path)
+        if len(str_) <= 27:
+            return f"...{os.sep}{str_}"
+    return "mouseover to show full path"

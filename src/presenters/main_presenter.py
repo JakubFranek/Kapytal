@@ -61,9 +61,17 @@ class MainPresenter:
         self._welcome_dialog.signal_open_template_category_cz.connect(
             lambda: self._load_file(constants.template_category_cz_file_path)
         )
+        self._welcome_dialog.signal_open_docs.connect(self._open_docs)
         self._welcome_dialog.signal_quit.connect(self._quit)
+
+        file_path = (
+            self._file_presenter.recent_file_paths[0]
+            if len(self._file_presenter.recent_file_paths) > 0
+            else None
+        )
         self._welcome_dialog.set_open_recent_file_button(
-            enabled=len(self._file_presenter.recent_file_paths) > 0
+            enabled=len(self._file_presenter.recent_file_paths) > 0,
+            file_path=file_path,
         )
         self._welcome_dialog.show()
 
@@ -283,3 +291,6 @@ class MainPresenter:
 
     def _open_github(self) -> None:
         webbrowser.open(constants.GITHUB_URL)
+
+    def _open_docs(self) -> None:
+        webbrowser.open(constants.GITHUB_DOCS_URL)
