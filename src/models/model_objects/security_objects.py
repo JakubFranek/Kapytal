@@ -556,7 +556,7 @@ class SecurityAccount(Account):
             try:
                 amount_ = amount.convert(currency, _transaction_date)
             except ConversionFactorNotFoundError:
-                amount_ = CashAmount("NaN", currency)
+                return CashAmount("NaN", currency)
             shares_price_pairs.append((transaction.shares, amount_))
 
         total_shares = 0
