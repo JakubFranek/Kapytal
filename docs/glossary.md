@@ -147,7 +147,7 @@ The user can set the format of date attributes in [Settings Form](#settings-form
 
 ## Demo File
 
-Demo file is a JSON [data file](#data-file) distributed within Kapytal installation and can be found at `<installation_directory>/Kapytal/_internal/saved_data/demo.json` or [here](../saved_data/demo.json). It contains fictitous data and showcases the typical usage of Kapytal features.
+Demo file is a JSON [data file](#data-file) distributed within Kapytal installation and can be found at `<installation_directory>/Kapytal/_internal/saved_data/demo_basic.json` or [here](../saved_data/demo_basic.json). It contains fictitous data and showcases the typical usage of Kapytal features.
 
 ## Description
 

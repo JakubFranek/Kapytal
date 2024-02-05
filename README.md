@@ -1,44 +1,34 @@
 # Kapytal
 
-Kapytal is an upcoming PyQt-based desktop tool for managing personal or household finances.
+Kapytal is a PyQt-based Windows tool for managing your personal or household finances. Log your income and expenses, track your investments, analyse the data and take control of your financial life.
 
-Log your income and expenses, track your investments, analyse the data and take control of your financial life.
+See the showcase video on YouTube
 
-## Kapytal supports
+## Features
 
-- saving to and loading from a custom JSON file ([example here](/saved_data/demo.json))
-- Currencies
-- Securities
-- Cash Accounts and Security Accounts
-- multi-level Account hierarchies
-- several Transaction types: Income, Expense, Refund, Cash Transfer, Buy, Sell, Security Transfer
-- multiple Income or Expense Categories per Transaction
-- multiple Tags per Transaction
-- custom amounts ascribed to each Tag within Transactions
-- Payees
-- powerful Transaction filtering
-- many Reports, charts and tables to analyse your data
-
-## Kapytal does NOT support
-
-- importing and exporting data from other financial software
-- importing data from your bank statements
-- calling your bank's API to import your latest transactions
-- advanced investment performance analysis
-  - Kapytal offers only basic performance indicators (absolute return and IRR)
-  - complementing Kapytal with [Portfolio Performance](https://www.portfolio-performance.info/en/) for advanced analytics is recommended
-- synchronizing your data with any web or mobile apps
-- scheduled Transactions
-- budgets
-- languages other than English
+- a wide variety of Transaction types: Income, Expense, Refund, Cash Transfer, Buy, Sell, Dividend, Security Transfer
+- multi-currency support
+- investment tracking and performance analysis
+- multiple user support thanks to unlimited tree-like Account hierarchies
+- advanced Transaction categorization with Payees, Tags and hierarchical Categories
+- 14 powerful Transaction filters, capable of working in conjunction
+- a variety of chart-based Reports to analyse and visualize your data
+- and much, much more...
 
 ## Requirements
 
 - Windows 8 or newer
 - around 200 MB of disk space
-- internet connection is optional
+- internet connection is useful, but optional
+
+## Get started
+
+- visit the [Quick Start Guide](/docs/quick_start_guide) for a video tutorial
+- download and install the executable from the [latest release](https://github.com/JakubFranek/Kapytal/releases) assets
 
 ## Documentation
 
+- [Quick Start Guide](/docs/quick_start_guide)
 - [Glossary](/docs/glossary.md)
 - [FAQ](/docs/faq.md)
+- [Screenshots](/docs/screenshots.md)
