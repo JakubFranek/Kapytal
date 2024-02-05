@@ -5,8 +5,6 @@ from src.views import icons
 from src.views.base_classes.custom_widget import CustomWidget
 from src.views.ui_files.forms.Ui_settings_form import Ui_SettingsForm
 
-# IDEA: link to documentation instead of notes?
-
 
 class SettingsForm(CustomWidget, Ui_SettingsForm):
     signal_ok = pyqtSignal()
