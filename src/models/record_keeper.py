@@ -1662,10 +1662,10 @@ class RecordKeeper:
             exchange_rate = ExchangeRate.deserialize(exchange_rate_dict, currencies)
             exchange_rates.append(exchange_rate)
             if (done + 1) % step == 0:
-                progress = int(33 + done / no_of_exchange_rates * 33)
+                progress = int(done / no_of_exchange_rates * 33)
                 progress_callable(progress)
             if (done + 1) == no_of_exchange_rates:
-                progress_callable(66)
+                progress_callable(33)
         return exchange_rates
 
     @staticmethod
@@ -1683,10 +1683,10 @@ class RecordKeeper:
             security = Security.deserialize(security_dict, currencies)
             securities[security.name] = security
             if (done + 1) % step == 0:
-                progress = int(done / no_of_securities * 33)
+                progress = int(33 + done / no_of_securities * 33)
                 progress_callable(progress)
             if (done + 1) == no_of_securities:
-                progress_callable(33)
+                progress_callable(66)
         return securities
 
     @staticmethod
