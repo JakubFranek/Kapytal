@@ -82,7 +82,10 @@ class MainPresenter:
             self._welcome_dialog.close()
 
     def _quit(self) -> None:
-        if self._file_presenter.check_for_unsaved_changes("Quit") is False:
+        if (
+            self._file_presenter.check_for_unsaved_changes("Quit", callback=self._quit)
+            is False
+        ):
             return
         logging.info("Qutting")
         self._app.quit()
