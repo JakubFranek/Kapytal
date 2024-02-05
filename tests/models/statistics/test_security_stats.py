@@ -17,6 +17,7 @@ from src.models.statistics.security_stats import (
     SecurityStats,
     SecurityStatsData,
     _calculate_return_percentage,
+    _safe_convert,
     calculate_irr,
     calculate_total_irr,
 )
@@ -781,3 +782,8 @@ def test_calculate_return_percentage_tuple_of_zero_denom() -> None:
         denom=(CashAmount(0, currency), CashAmount(0, currency)),
     )
     assert result == Decimal(0)
+
+
+def test_safe_convert_no_conversion_found() -> None:
+    result = _safe_convert(CashAmount(1, Currency("EUR", 2)), Currency("USD", 2))
+    assert result.is_nan()

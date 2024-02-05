@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from dateutil.relativedelta import relativedelta
 from src.models.model_objects.attributes import (
@@ -11,6 +11,7 @@ from src.models.model_objects.cash_objects import (
     CashAccount,
     CashTransaction,
     CashTransactionType,
+    RefundTransaction,
 )
 from src.models.model_objects.currency_objects import CashAmount, Currency
 from src.models.statistics.category_stats import (
@@ -288,3 +289,48 @@ def test_calculate_attribute_stats_no_base_currency() -> None:
     assert category_stats[category_1].category == category_1
     assert category_stats[category_2].category == category_2
     assert category_stats[category_2a].category == category_2a
+
+
+def test_calculate_attribute_stats_with_refund() -> None:
+    currency = Currency("USD", 2)
+    cash_account = CashAccount("Test CashAccount", currency, currency.zero_amount)
+
+    payee = Attribute("payee1", AttributeType.PAYEE)
+
+    category_1 = Category("Category1", CategoryType.INCOME_AND_EXPENSE)
+    category_2 = Category("Category2", CategoryType.INCOME_AND_EXPENSE)
+
+    now = datetime.now(user_settings.settings.time_zone)
+
+    t1 = CashTransaction(
+        "test",
+        now - timedelta(days=1),
+        CashTransactionType.EXPENSE,
+        cash_account,
+        payee,
+        [(category_1, CashAmount(2, currency)), (category_2, CashAmount(1, currency))],
+        [],
+    )
+    t2 = RefundTransaction(
+        "refund",
+        now,
+        cash_account,
+        t1,
+        payee,
+        [(category_1, CashAmount(1, currency)), (category_2, currency.zero_amount)],
+        [],
+    )
+
+    category_stats = calculate_category_stats(
+        [t1, t2], currency, [category_1, category_2]
+    )
+    assert category_stats[category_1].transactions_total == 2
+    assert category_stats[category_2].transactions_total == 1
+    assert category_stats[category_1].transactions_self == 2
+    assert category_stats[category_2].transactions_self == 1
+    assert category_stats[category_1].balance == CashAmount(-1, currency)
+    assert category_stats[category_2].balance == CashAmount(-1, currency)
+    assert category_stats[category_1].transactions == {t1, t2}
+    assert category_stats[category_2].transactions == {t1}
+    assert category_stats[category_1].category == category_1
+    assert category_stats[category_2].category == category_2

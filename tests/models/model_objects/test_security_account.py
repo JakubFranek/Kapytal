@@ -423,7 +423,32 @@ def test_get_average_price_invalid_currency_type(currency: Any) -> None:
     account = SecurityAccount("Test")
     usd = Currency("USD", 2)
     security = Security("Alphabet", "ABC", "Stock", usd, 1)
-    date_ = datetime.now(user_settings.settings.time_zone)
+    datetime_ = datetime.now(user_settings.settings.time_zone)
 
     with pytest.raises(TypeError, match="Currency or None"):
-        account.get_average_amount_per_share(security, date_, currency)
+        account.get_average_amount_per_share(security, datetime_.date(), currency)
+
+
+def test_get_average_price_invalid_currency() -> None:
+    usd = Currency("USD", 2)
+    eur = Currency("EUR", 2)
+
+    account = SecurityAccount("Test")
+    cash_account = CashAccount("Test", usd, usd.zero_amount)
+
+    security = Security("Alphabet", "ABC", "Stock", usd, 1)
+    datetime_ = datetime.now(user_settings.settings.time_zone)
+
+    SecurityTransaction(
+        "buy",
+        datetime_,
+        SecurityTransactionType.BUY,
+        security,
+        5,
+        CashAmount(5, usd),
+        account,
+        cash_account,
+    )
+
+    avg_amount = account.get_average_amount_per_share(security, datetime_.date(), eur)
+    assert avg_amount.is_nan()

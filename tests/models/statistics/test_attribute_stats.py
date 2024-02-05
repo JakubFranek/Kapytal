@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import pytest
 from dateutil.relativedelta import relativedelta
@@ -12,6 +12,7 @@ from src.models.model_objects.cash_objects import (
     CashAccount,
     CashTransaction,
     CashTransactionType,
+    RefundTransaction,
 )
 from src.models.model_objects.currency_objects import CashAmount, Currency
 from src.models.statistics.attribute_stats import (
@@ -269,3 +270,55 @@ def test_calculate_attribute_stats_no_base_currency() -> None:
     assert payee_stats[payee_2].transactions == set()
     assert payee_stats[payee_1].attribute == payee_1
     assert payee_stats[payee_2].attribute == payee_2
+
+
+def test_calculate_attribute_stats_with_refund() -> None:
+    currency = Currency("USD", 2)
+    cash_account = CashAccount("Test CashAccount", currency, currency.zero_amount)
+
+    tag_1 = Attribute("tag1", AttributeType.TAG)
+    tag_2 = Attribute("tag2", AttributeType.TAG)
+    payee = Attribute("payee", AttributeType.PAYEE)
+    category = Category("Category", CategoryType.INCOME_AND_EXPENSE)
+
+    now = datetime.now(user_settings.settings.time_zone)
+
+    t1 = CashTransaction(
+        "test",
+        now - timedelta(days=1),
+        CashTransactionType.EXPENSE,
+        cash_account,
+        payee,
+        [(category, CashAmount(2, currency))],
+        [(tag_1, CashAmount(2, currency)), (tag_2, CashAmount(1, currency))],
+    )
+
+    t2 = RefundTransaction(
+        "refund",
+        now,
+        cash_account,
+        t1,
+        payee,
+        [(category, CashAmount(1, currency))],
+        [(tag_1, CashAmount(1, currency)), (tag_2, currency.zero_amount)],
+    )
+
+    tag_stats = calculate_attribute_stats(
+        [t1, t2],
+        currency,
+        [tag_1, tag_2],
+    )
+    assert tag_stats[tag_1].no_of_transactions == 2
+    assert tag_stats[tag_1].balance == CashAmount(-1, currency)
+    assert tag_stats[tag_1].transactions == {t1, t2}
+    assert tag_stats[tag_1].attribute == tag_1
+    assert tag_stats[tag_2].no_of_transactions == 1
+    assert tag_stats[tag_2].balance == CashAmount(-1, currency)
+    assert tag_stats[tag_2].transactions == {t1}
+    assert tag_stats[tag_2].attribute == tag_2
+
+    payee_stats = calculate_attribute_stats([t1, t2], currency, [payee])
+    assert payee_stats[payee].no_of_transactions == 2
+    assert payee_stats[payee].balance == CashAmount(-1, currency)
+    assert payee_stats[payee].transactions == {t1, t2}
+    assert payee_stats[payee].attribute == payee

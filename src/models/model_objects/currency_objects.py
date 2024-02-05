@@ -13,7 +13,7 @@ from src.models.user_settings import user_settings
 from src.presenters.utilities.event import Event
 from src.utilities.formatting import quantizers
 
-# TODO: add CurrencyManager class to take care of Currency cache resets
+# IDEA: add CurrencyManager class to take care of Currency cache resets
 # and offload RecordKeeper methods to CurrencyManager
 
 
