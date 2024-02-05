@@ -99,10 +99,7 @@ class SecurityTransferDialogPresenter(TransactionDialogPresenter):
 
         self._prepare_dialog(edit_mode=edit_mode)
 
-        datetimes = {
-            transaction.datetime_.replace(second=0, microsecond=0)
-            for transaction in transfers
-        }
+        datetimes = {transaction.datetime_ for transaction in transfers}
         self._dialog.datetime_ = (
             datetimes.pop() if len(datetimes) == 1 else self._dialog.min_datetime
         )

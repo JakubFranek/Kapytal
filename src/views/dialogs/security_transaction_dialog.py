@@ -101,10 +101,11 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
         self._initialize_events()
         self._set_tab_order()
 
-        display_format = (
-            convert_datetime_format_to_qt(user_settings.settings.general_date_format)
-            + " hh:mm"
+        display_format = convert_datetime_format_to_qt(
+            user_settings.settings.general_date_format
         )
+        if "hh" not in display_format or "mm" not in display_format:
+            display_format += " hh:mm"
         self.dateTimeEdit.setDisplayFormat(display_format)
 
     @property
@@ -177,7 +178,6 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
             .toPyDateTime()
             .replace(
                 tzinfo=user_settings.settings.time_zone,
-                second=0,
                 microsecond=0,
             )
         )
@@ -193,7 +193,6 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
             .toPyDateTime()
             .replace(
                 tzinfo=user_settings.settings.time_zone,
-                second=0,
                 microsecond=0,
             )
         )
