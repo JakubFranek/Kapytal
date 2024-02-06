@@ -104,16 +104,14 @@ class QuotesUpdateFormPresenter:
     def _download_quotes(self) -> None:
         logging.info("Downloading quotes...")
         checked_items = self._model.checked_items
-        n_done = 0
-        for item in checked_items:
+        for index, item in enumerate(checked_items):
             data = (item, "Fetching...", "Fetching...")
             self._model.load_single_data(data)
             if isinstance(item, ExchangeRate):
                 self._download_exchange_rate_quote(item)
             elif isinstance(item, Security):
                 self._download_security_quote(item)
-            n_done += 1
-            self._busy_dialog.set_value(n_done)
+            self._busy_dialog.set_value(index + 1)
         self._show_failed_quotes()
         self._update_button_states()
         self._unsaved_quotes = len(self._quotes) > 0

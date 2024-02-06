@@ -79,7 +79,7 @@ class CashFlowTotalChartView(QChartView):
             [0, 0, float(stats.delta_neutral.balance.value_rounded), 0]
         )
 
-        bar_delta_performance = QBarSet("Gain / Loss")
+        bar_delta_performance = QBarSet("Total Gain / Loss")
         bar_delta_performance.setColor(QColor("orange"))
         bar_delta_performance.append(
             [0, 0, 0, float(stats.delta_performance.value_rounded)]

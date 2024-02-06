@@ -22,7 +22,7 @@ Kapytal is a PyQt-based Windows tool for managing your personal or household fin
 ## Get started
 
 - visit the [Quick Start Guide](/docs/quick_start_guide) for a video tutorial
-- download and install the executable from the [latest release](https://github.com/JakubFranek/Kapytal/releases) assets
+- download and install the executable from the [latest release](https://github.com/JakubFranek/Kapytal/releases/latest) assets
 
 ## Documentation
 
