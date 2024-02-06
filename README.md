@@ -1,13 +1,11 @@
-# Kapytal
+![image](./resources/images/welcome_dark_mode.png)
 
 Kapytal is a PyQt-based Windows tool for managing your personal or household finances. Log your income and expenses, track your investments, analyse the data and take control of your financial life.
 
-See the showcase video on YouTube
-
 ## Features
 
-- a wide variety of Transaction types: Income, Expense, Refund, Cash Transfer, Buy, Sell, Dividend, Security Transfer
-- multi-currency support
+- a wide variety of Transactions: Income, Expense, Refund, Cash Transfer, Buy, Sell, Dividend, Security Transfer
+- multi-currency support with exchange rate history
 - investment tracking and performance analysis
 - multiple user support thanks to unlimited tree-like Account hierarchies
 - advanced Transaction categorization with Payees, Tags and hierarchical Categories
@@ -32,3 +30,5 @@ See the showcase video on YouTube
 - [Glossary](/docs/glossary.md)
 - [FAQ](/docs/faq.md)
 - [Screenshots](/docs/screenshots.md)
+- [Development roadmap](/docs/development_roadmap.md)
+- [Known issues](/docs/known_issues.md)

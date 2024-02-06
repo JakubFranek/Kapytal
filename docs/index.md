@@ -8,3 +8,5 @@ Welcome to Kapytal documentation.
 - [Glossary](/docs/glossary.md)
 - [FAQ](/docs/faq.md)
 - [Screenshots](/docs/screenshots.md)
+- [Development roadmap](/docs/development_roadmap.md)
+- [Known issues](/docs/known_issues.md)

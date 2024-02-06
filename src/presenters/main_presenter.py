@@ -39,12 +39,14 @@ class MainPresenter:
         self._setup_event_observers()
         self._connect_view_signals()
 
+        self._view.setDisabled(True)  # disabling MainView until WelcomeDialog is gone
+
     def check_for_updates(self, *, silent: bool = True) -> None:
         self._update_presenter.check_for_updates(silent=silent)
 
     def show_welcome_dialog(self) -> None:
         self._welcome_dialog = WelcomeDialog(self._view)
-        self._welcome_dialog.signal_new_file.connect(self._welcome_dialog.close)
+        self._welcome_dialog.signal_new_file.connect(self._close_welcome_dialog)
         self._welcome_dialog.signal_open_file.connect(self._load_file)
         self._welcome_dialog.signal_open_recent_file.connect(
             self._load_most_recent_file
@@ -63,6 +65,7 @@ class MainPresenter:
         )
         self._welcome_dialog.signal_open_docs.connect(self._open_docs)
         self._welcome_dialog.signal_quit.connect(self._quit)
+        self._welcome_dialog.signal_close.connect(self._close_welcome_dialog)
 
         file_path = (
             self._file_presenter.recent_file_paths[0]
@@ -80,14 +83,14 @@ class MainPresenter:
             self._file_presenter.load_most_recent_file()
             and self._welcome_dialog.isVisible()
         ):
-            self._welcome_dialog.close()
+            self._close_welcome_dialog()
 
     def _load_file(self, path: str | None = None) -> None:
         if (
             self._file_presenter.load_from_file(path)
             and self._welcome_dialog.isVisible()
         ):
-            self._welcome_dialog.close()
+            self._close_welcome_dialog()
 
     def _quit(self) -> None:
         if (
@@ -294,3 +297,7 @@ class MainPresenter:
 
     def _open_docs(self) -> None:
         webbrowser.open(constants.GITHUB_DOCS_URL)
+
+    def _close_welcome_dialog(self) -> None:
+        self._view.setDisabled(False)  # re-enable MainView after disabling it in init
+        self._welcome_dialog.close()

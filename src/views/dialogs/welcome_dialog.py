@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QAction, QIcon, QPixmap
+from PyQt6.QtGui import QAction, QCloseEvent, QIcon, QPixmap
 from PyQt6.QtWidgets import QGridLayout, QLabel, QMenu, QPushButton, QWidget
 from src.utilities import constants
 from src.views import colors, icons
@@ -16,6 +16,7 @@ class WelcomeDialog(CustomDialog, Ui_WelcomeDialog):
     signal_open_file = pyqtSignal()
     signal_open_docs = pyqtSignal()
     signal_quit = pyqtSignal()
+    signal_close = pyqtSignal()
 
     signal_open_demo_basic = pyqtSignal()
     signal_open_demo_mortgage = pyqtSignal()
@@ -30,11 +31,11 @@ class WelcomeDialog(CustomDialog, Ui_WelcomeDialog):
         if colors.color_scheme == Qt.ColorScheme.Dark:
             self.pixmap = QPixmap(
                 str(constants.app_root_path / "resources/images/welcome_dark_mode.png")
-            )
+            ).scaledToWidth(512, Qt.TransformationMode.SmoothTransformation)
         else:
             self.pixmap = QPixmap(
                 str(constants.app_root_path / "resources/images/welcome_light_mode.png")
-            )
+            ).scaledToWidth(512, Qt.TransformationMode.SmoothTransformation)
         self.label.setPixmap(self.pixmap)
 
         self._setup_button(
@@ -68,6 +69,9 @@ class WelcomeDialog(CustomDialog, Ui_WelcomeDialog):
         self.quitPushButton.clicked.connect(self.signal_quit)
 
         self.menu_demo_template = None
+
+    def closeEvent(self, a0: QCloseEvent) -> None:  # noqa: ARG002
+        self.signal_close.emit()  # needed to re-enable MainView
 
     def set_open_recent_file_button(
         self, *, enabled: bool, file_path: Path | None
@@ -131,9 +135,9 @@ class WelcomeDialog(CustomDialog, Ui_WelcomeDialog):
 
 
 def _shorten_path_string(path: Path) -> str:
-    """Returns shortened path string limited to 25 characters."""
+    """Returns shortened path string limited to 30(+3) characters."""
     str_ = str(path)
-    if len(str_) <= 27:
+    if len(str_) <= 30:
         return str_
 
     segments = Path(path).parts
@@ -141,6 +145,6 @@ def _shorten_path_string(path: Path) -> str:
     for i in range(1, n_segments):
         path = Path(*segments[i:n_segments])
         str_ = str(path)
-        if len(str_) <= 27:
+        if len(str_) <= 30:
             return f"...{os.sep}{str_}"
     return "mouseover to show full path"
