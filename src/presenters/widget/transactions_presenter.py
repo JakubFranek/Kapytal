@@ -642,10 +642,18 @@ class TransactionsPresenter:
         for transaction in transactions:
             if isinstance(transaction, CashTransaction | RefundTransaction):
                 _amount = transaction.get_amount(transaction.account)
-                try:
-                    amount += _amount.convert(base_currency, transaction.date_)
-                except ConversionFactorNotFoundError:
-                    self._view.set_selected_amount("N/A")
+            elif (
+                isinstance(transaction, SecurityTransaction)
+                and transaction.type_ == SecurityTransactionType.DIVIDEND
+            ):
+                _amount = transaction.amount
+            else:
+                continue
+
+            try:
+                amount += _amount.convert(base_currency, transaction.date_)
+            except ConversionFactorNotFoundError:
+                self._view.set_selected_amount("N/A")
 
         self._view.set_selected_amount(amount.to_str_rounded())
 

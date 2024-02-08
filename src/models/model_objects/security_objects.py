@@ -20,6 +20,7 @@ from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
 from src.models.mixins.name_mixin import NameMixin
 from src.models.mixins.uuid_mixin import UUIDMixin
 from src.models.model_objects.account_group import AccountGroup
+from src.models.model_objects.attributes import Attribute
 from src.models.model_objects.cash_objects import CashAccount, CashRelatedTransaction
 from src.models.model_objects.currency_objects import (
     CashAmount,
@@ -901,6 +902,17 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
         self._validate_cash_account(cash_account, security.currency)
         self._validate_security_account(security_account)
         self._validate_amount(amount_per_share, cash_account.currency)
+
+    def get_amount_for_tag(self, tag: Attribute) -> CashAmount:
+        if self._type != SecurityTransactionType.DIVIDEND:
+            raise ValueError(
+                "Only Dividend SecurityTransactions have a relevant Tag amount."
+            )
+        if tag not in self._tags:
+            raise ValueError(
+                f"Tag '{tag.name}' not found in this SecurityTransaction's tags."
+            )
+        return self._amount
 
     def _set_attributes(
         self,

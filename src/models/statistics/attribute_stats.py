@@ -1,12 +1,17 @@
 from collections.abc import Collection
 from dataclasses import dataclass, field
 
+from src.models.base_classes.transaction import Transaction
 from src.models.model_objects.attributes import Attribute, AttributeType
 from src.models.model_objects.cash_objects import (
     CashTransaction,
     RefundTransaction,
 )
 from src.models.model_objects.currency_objects import CashAmount, Currency
+from src.models.model_objects.security_objects import (
+    SecurityTransaction,
+    SecurityTransactionType,
+)
 from src.models.statistics.common_classes import TransactionBalance
 
 
@@ -85,7 +90,7 @@ def calculate_periodic_attribute_stats(
 
 
 def calculate_attribute_stats(
-    transactions: Collection[CashTransaction | RefundTransaction],
+    transactions: Collection[Transaction],
     base_currency: Currency | None,
     all_attributes: Collection[Attribute],
 ) -> dict[Attribute, AttributeStats]:
@@ -103,21 +108,33 @@ def calculate_attribute_stats(
         stats_dict[attribute] = stats
 
     for transaction in transactions:
-        date_ = transaction.date_
         if attribute_type == AttributeType.TAG:
+            if not isinstance(
+                transaction, (CashTransaction, RefundTransaction, SecurityTransaction)
+            ):
+                continue
+            if (
+                isinstance(transaction, SecurityTransaction)
+                and transaction.type_ != SecurityTransactionType.DIVIDEND
+            ):
+                continue
+
             for tag in transaction.tags:
                 _amount = transaction.get_amount_for_tag(tag)
-                if _amount.value_normalized == 0:
+                if _amount.value_normalized == 0:  # relevant for Refunds
                     continue
                 stats = stats_dict[tag]
                 stats.transactions.add(transaction)
                 stats.no_of_transactions += 1
-                stats.balance += _amount.convert(base_currency, date_)
+                stats.balance += _amount.convert(base_currency, transaction.date_)
         elif attribute_type == AttributeType.PAYEE:
+            if not isinstance(transaction, (CashTransaction, RefundTransaction)):
+                continue
+
             stats = stats_dict[transaction.payee]
             stats.transactions.add(transaction)
             stats.no_of_transactions += 1
             stats.balance += transaction.get_amount(transaction.account).convert(
-                base_currency
+                base_currency, transaction.date_
             )
     return stats_dict
