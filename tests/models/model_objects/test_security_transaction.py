@@ -7,6 +7,7 @@ import pytest
 from hypothesis import assume, given
 from hypothesis import strategies as st
 from src.models.base_classes.account import UnrelatedAccountError
+from src.models.model_objects.attributes import Attribute, AttributeType
 from src.models.model_objects.cash_objects import CashAccount
 from src.models.model_objects.currency_objects import (
     CashAmount,
@@ -662,6 +663,31 @@ def get_buy() -> SecurityTransaction:
     )
 
 
+def get_dividend() -> SecurityTransaction:
+    description = "A Dividend transaction"
+    datetime_ = datetime.now(user_settings.settings.time_zone)
+    type_ = SecurityTransactionType.DIVIDEND
+    security = get_security()
+    shares = 10
+    amount_per_share = CashAmount("1.23", security.currency)
+    security_account = SecurityAccount("Interactive Brokers")
+    cash_account = CashAccount(
+        "Interactive Brokers EUR",
+        security.currency,
+        CashAmount("1000", security.currency),
+    )
+    return SecurityTransaction(
+        description,
+        datetime_,
+        type_,
+        security,
+        shares,
+        amount_per_share,
+        security_account,
+        cash_account,
+    )
+
+
 def get_security() -> Security:
     return Security(
         "Vanguard FTSE All-World UCITS ETF USD Acc",
@@ -670,3 +696,32 @@ def get_security() -> Security:
         Currency("EUR", 2),
         1,
     )
+
+
+@pytest.mark.parametrize("transaction", [get_buy(), get_sell()])
+def test_get_amount_for_tag_not_dividend(transaction: SecurityTransaction) -> None:
+    assert transaction.tags == frozenset()
+
+    tag = Attribute("test", AttributeType.TAG)
+
+    transaction.add_tags([tag])
+    assert transaction.tags == frozenset([tag])
+
+    with pytest.raises(ValueError, match="Only Dividend SecurityTransactions"):
+        transaction.get_amount_for_tag(tag)
+
+
+def test_get_amount_for_tag_dividend() -> None:
+    transaction = get_dividend()
+    assert transaction.tags == frozenset()
+
+    tag = Attribute("test", AttributeType.TAG)
+
+    with pytest.raises(ValueError, match="not found"):
+        transaction.get_amount_for_tag(tag)
+
+    transaction.add_tags([tag])
+    assert transaction.tags == frozenset([tag])
+
+    amount = transaction.get_amount_for_tag(tag)
+    assert amount == transaction.amount

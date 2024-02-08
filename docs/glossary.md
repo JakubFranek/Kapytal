@@ -79,7 +79,7 @@ Account Item is an umbrella term for [Accounts](#account) and [Account Groups](#
 
 Account Tree is the second largest user interface feature of Kapytal, and it is the used to create, browse, edit, delete or otherwise manipulate [Accounts](#account) and [Account Groups](#account-group-). It is also the place where the balances of all Accounts and Account Groups are visible in both their [native](#native-currencyamount) and [base](#base-currency) [Currencies](#currency-).
 
-Account Tree also offers an intuitive and easy to use interface shortcut to the Account [Transaction Filter](#transaction-filters-) via the check boxes in the rightmost Account Tree column. Only [Transactions](#transaction) related to the currently checked [Account Items](#account-item) are shown in the [Transaction Table](#transaction-table-).
+Account Tree also offers an intuitive interface shortcut to the Account [Transaction Filter](#transaction-filters-) via the check boxes in the rightmost Account Tree column. Only [Transactions](#transaction) related to the currently checked [Account Items](#account-item) are shown in the [Transaction Table](#transaction-table-).
 
 Below the Account Tree there is a text label showing the total balance of currently selected Account Items in base Currency.
 
@@ -89,15 +89,15 @@ Account Tree can be hidden by toggling the ![Icon](../resources/icons/icons-16/f
 
 ### Backups
 
-Kapytal is creating backups of user JSON [data file](#data-file) every time the file is opened or saved. Backups are created in all the directories listed within the Backups tab in [Settings Form](#settings-form-). If the total size of all backups within any backup directory exceeds the size limit specified within the Settings Form Backups tab, Kapytal starts deleting backups until the limit is satisfied again, starting from the oldest backups. This backup size checking process occurs any time a backup is created. Detailes about the outcome of these backup checks can be found in the [logs](#logging).
+Kapytal is creating backups of user JSON [data file](#data-file) every time the file is opened or saved. Backups are created in all the directories listed within the Backups tab in [Settings Form](#settings-form-). If the total size of all backups within any backup directory exceeds the size limit specified within the Settings Form Backups tab, Kapytal starts deleting backups in that particular directory until the limit is satisfied again, starting from the oldest backups. This backup size checking process occurs every time a backup is created. Details about the outcome of these backup checks can be found in the [logs](#logging).
 
 ---
 
 ### Base Currency
 
-In Kapytal, exactly one Currency at a time can be designated as base Currency. Base Currency is used in Base Balance column and Checked Account Balance widget in [Account Tree](#account-tree-), Base Amount column and Selected Transactions Total widget in [Transaction Table](#transaction-table-), and in [Reports](#reports).
+In Kapytal, exactly one Currency at a time can be designated as base Currency. Base Currency is used in *Base Balance* column and *Checked Account Balance* widget in [Account Tree](#account-tree-), *Base Amount* column and *Selected Transactions Total* widget in [Transaction Table](#transaction-table-), in [Securities](#securities-form), [Categories](#category-), [Payees](#payee-) and [Tags](#tag-) [Forms](#form) and in all [Reports](#reports).
 
-The user can change the base Currency any time in [Currencies Form](#currencies-form) in the Currencies section.
+The user can change the base Currency anytime in [Currencies Form](#currencies-form) in the Currencies section.
 
 ---
 
@@ -133,16 +133,16 @@ Cash Accounts can have a non-zero initial balance. In Kapytal, initial balance i
 
 Cash Flow Reports are [Reports](#reports) used for analyzing the flow of your money within a given period. Monthly, Annual and Total Cash Flow Reports are available. The data is shown in two tabs: Table and Chart.
 
-In Table tab, double-clicking on any table cell (or selecting a table cell and selecting ![Icon](../resources/icons/icons-16/table.png) *Show Transactions* action) brings up a small version of a [Transaction Table](#transaction-table-) with all the [Transactions](#transaction) that were used for calculating the value of that table cell. The Transactions can be edited from this small Transaction Table.
+In Table tab, double-clicking on any table cell (or selecting a table cell and selecting ![Icon](../resources/icons/icons-16/table.png) *Show Transactions* action) brings up a [Transaction Table Form](#transaction-table-form), allowing the user to investigate the [Transactions](#transaction) used to calculate the selected quantity.
 
 Evaluated quantities are:
 
 + [Income](#income-)
 + Inward Transfers
-  + [Cash Transfers](#cash-transfer-), [Security Transactions](#security-transaction) and [Security Transfers](#security-transfer-) transferring value from an unselected [Cash Account](#cash-account-) or [Security Account](#security-account-) to one of the selected [Account Items](#account-item)
+  + [Cash Transfers](#cash-transfer-), [Security Transactions](#security-transaction) and [Security Transfers](#security-transfer-) transferring value from [Cash Accounts](#cash-account-) or [Security Accounts](#security-account-) which are unselected in the [Account Tree](#account-tree-) to one of the selected [Account Items](#account-item)
 + [Refunds](#refund-)
 + Initial Balances
-  + see [Cash Account](#cash-account-) for more info
+  + see [Cash Account](#cash-account-) for details
 + Total Inflow
 + [Expenses](#expense-)
 + Outward Transfers
@@ -164,7 +164,7 @@ Evaluated quantities are:
 
 Cash Transactions are [Transactions](#transaction) that represent the transfer of money between a [Cash Account](#cash-account-) and a [Payee](#payee-). There are two types of Cash Transactions: [Income](#income-) and [Expense](#expense-).
 
-Cash Transactions can contain multiple Categories (so-called "split [Categories](#category-)").
+Cash Transactions can contain multiple [Categories](#category-) (so-called *"split Categories"*).
 
 Cash Transaction specific attributes are: [Cash Account](#cash-account-), [Payee](#payee-), Amount and Categories.
 
@@ -186,7 +186,7 @@ Categories are attributes that can be used in [Cash Transactions](#cash-transact
 
 Each Category is defined by its [path](#path) and type (Income, Expense, Income and Expense). Income Categories can only be used in [Income](#income-) Cash Transactions, Expense Categories can only be used in [Expense](#expense-) Cash Transactions and Income and Expense Categories can be used in any Cash Transactions.
 
-Categories are meant to be rather generic and "reused" often. [Tags](#tag-) are better suited as an "one-off" attribute.
+Categories are meant to be generic and reused often. [Tags](#tag-) are better suited as an "one-off" attribute.
 
 + Example Income Categories: *Employment/Salary*, *Employment/Benefits*, *Employment/Bonus*, *Tax Refund*.
 + Example Expense Categories: *Food and Drink/Eating out*, *Food and Drink/Groceries*, *Bills/Heating*, *Health/Medicine*, *Housing/Rent*, *Housing/Equipment/Kitchen*, *Transport/Airplane*, *Car/Fuel*, *Car/Repairs*, *Clothes/Accessories*, *Sports/Equipment*, *Leisure/Culture/Theatre*.
@@ -194,25 +194,27 @@ Categories are meant to be rather generic and "reused" often. [Tags](#tag-) are 
 
 Contrary to many similar software, in Kapytal, the user can assign Categories to Cash Transactions regardless of how many children the Categories have. For example, the user can use Category *Food and Drink* as well as *Food and Drink/Eating out*, and both could be even assigned to the same Cash Transactions at the same time.
 
+Cash Transactions can include one or more Categories.
+
 ---
 
 ### Currencies Form
 
-Currencies Form is the [Form](#form) for creating, editing, deleting, manipulating and updating [Currencies](#currency-), [Exchange Rates](#exchange-rate-) and Exchange Rate quotes.
+Currencies Form is the [Form](#form) for creating, editing, deleting, manipulating and updating [Currencies](#currency-), [Exchange Rates](#exchange-rate-) and Exchange Rate quotes. It also allows the user to set the [base Currency](#base-currency).
 
 ---
 
 ### Currency ![Icon](../resources/icons/icons-custom/currency.png)
 
-In Kapytal, Currencies are units of money. The user can create Currencies in [Currencies Form](#currencies-form). Currencies have two attributes: code and number of decimals. These two attributes are specified upon Currency creation and can never be changed.
+In Kapytal, Currencies are units of money. The user can create and delete Currencies in [Currencies Form](#currencies-form). Currencies have two attributes: code and number of decimals. These two attributes are specified upon Currency creation and can never be changed.
 
-Code is a 3-letter string, as the intended contents are the [ISO 4217](https://en.wikipedia.org/wiki/ISO_4217) standard codes (such as USD, EUR etc.). However, in practice, the user can enter any three letter string. Kapytal Currencies can therefore be used to represent non-ISO4217 currencies such as cryptocurrencies (BTC, ETH) or any other unit of monetary value.
+Code is a 3-letter string, as the intended contents are the [ISO 4217](https://en.wikipedia.org/wiki/ISO_4217) standard codes (such as USD, EUR etc.). However, in practice, the user can enter any three letter string. Kapytal Currencies can therefore be used to represent non-standard currencies such as cryptocurrencies (BTC, ETH) or any other unit of monetary value.
 
-Number of decimals represents the number of digits after the decimal separator for the given Currency. Most currencies have 2 decimals (see column D [here](https://en.wikipedia.org/wiki/ISO_4217#List_of_ISO_4217_currency_codes)). Cryptocurrencies such as Ethereum can however have up to 18 decimals. Kapytal therefore supports up to 18 decimal places. In general, Kapytal does not allow the user to specify amounts with more decimals than the specified Currency number of decimals, with the exception of [Security](#security-) price. When specifying Security Amount per Share in [Security Form](#securities-form) or [Security Transactions](#security-transaction), Kapytal allows the user to enter the price with greater precision than the number of digits of the given Currency.
+Number of decimals represents the number of digits after the decimal separator for the given Currency. Most currencies have 2 decimals (see column D [here](https://en.wikipedia.org/wiki/ISO_4217#List_of_ISO_4217_currency_codes)). Cryptocurrencies such as Ethereum can however have up to 18 decimals. Kapytal therefore supports up to 18 decimal places. In general, Kapytal does not allow the user to specify amounts with more decimals than the specified Currency number of decimals, with the exception of [Security](#security-) price. When specifying Security Amount per Share in [Securities Form](#securities-form) or [Security Transactions](#security-transaction), Kapytal allows the user to enter the price with greater precision than the number of digits of the given Currency. The precision can be set within [Settings Form](#settings-form-).
 
 In Kapytal, exactly one Currency at a time can be designated as [base Currency](#base-currency).
 
-To represent Currency exchange, use [Cash Transfers](#cash-transfer-), as sending and receiving Cash Accounts do not have to have the same Currency.
+To represent Currency exchange, use [Cash Transfers](#cash-transfer-), as the sending and receiving Cash Accounts do not have to have the same Currency.
 
 ---
 
@@ -230,9 +232,9 @@ The user can set the format of date attributes in [Settings Form](#settings-form
 
 ---
 
-### Demo File
+### Demo Files
 
-Demo file is a JSON [data file](#data-file) distributed within Kapytal installation and can be found at `<installation_directory>/Kapytal/_internal/saved_data/demo_basic.json` or [here](../saved_data/demo_basic.json). It contains fictitous data and showcases the typical usage of Kapytal features.
+Demo files are JSON [data file](#data-file) distributed within Kapytal installation and can be found at `<installation_directory>/Kapytal/_internal/saved_data/` or [here](../saved_data/). They contain fictitous data and showcase the typical usage of Kapytal features.
 
 ---
 
@@ -262,11 +264,13 @@ Exchange Rates relate two [Currencies](#currency-) together through a numerical 
 
 Both current or past values of Exchange Rates can be set manually within [Currencies Form](#currencies-form). Current rates can also be downloaded automatically via [Update Quotes Form](#update-quotes-form-).
 
+The number of decimals of Exchange Rate quote dialog spinboxes can be set within [Settings Form](#settings-form-).
+
 ---
 
 ### Expense ![Icon](../resources/icons/icons-custom/coins-minus.png)
 
-Expense is a sub-type of [Cash Transaction](#cash-transaction), which represents the transfer of money from a [Cash Account](#cash-account-) to a [Payee](#payee-). Unlike [Income](#income-), Expense can be refunded by a [Refund](#refund-). Once an Expense is refunded, it cannot be edited anymore. The keyboard shortcut for adding an Expense is the `E` key.
+Expense is a sub-type of [Cash Transaction](#cash-transaction), which represents the transfer of money from a [Cash Account](#cash-account-) to a [Payee](#payee-). Unlike [Income](#income-), Expense can be refunded by a [Refund](#refund-). Once an Expense is refunded, it cannot be edited until the Refunds are deleted. The keyboard shortcut for adding an Expense is the `E` key.
 
 ---
 
@@ -284,8 +288,7 @@ These are some of the Forms in Kapytal:
 + [Settings Form](#settings-form-)
 + [Tags](#tag-) Form
 + [Transaction Filter](#transaction-filters-) Form
-+ Transaction Table Form
-  + this is a Form available only via *Show Transactions* action available in Category, Tag and Payee forms and in many [Reports](#reports)
++ [Transaction Table Form](#transaction-table-form)
 
 ---
 
@@ -311,7 +314,7 @@ In the [Account Tree](#account-tree-), the balance of all Cash Accounts is shown
 
 In the [Transaction Table](#transaction-table-), Native Amount and Base Amount are two separate columns. Native Amount displays the amount of all [Transactions](#transaction) except the [Cash Transfer](#cash-transfer-) and [Security Transfer](#security-transfer-) Transactions, which are denominated in a Currency different from the base Currency.
 
-In the [Securities Form](#securities-form) Overview tab tree, there are several performance indicators, some of which are also denominated in the native Currency of the given Security.
+In the [Securities Form](#securities-form) Overview tab tree, there are several performance indicators which are denominated in the native Currency of the given Security.
 
 ---
 
@@ -319,7 +322,7 @@ In the [Securities Form](#securities-form) Overview tab tree, there are several 
 
 Net Worth Reports are [Reports](#reports) used for high level overview of total financial assets.
 
-Net Worth Reports only take [Account Items](#account-item) passing through the Account Filter into account.
+Net Worth Reports only take [Account Items](#account-item) passing through the Account Filter into account (they do not operate on [Transactions](#transaction)).
 
 There are three Net Worth Reports:
 
@@ -328,13 +331,13 @@ There are three Net Worth Reports:
 + Asset Type
   + used for calculating and visualizing how much net worth within selected Account Items consists of money denominated in specific [Currencies](#currency-) or money tied up in specific [Securities](#security-)
 + Time
-  + used for visualizing the time evolution of selected Account Items
+  + used for visualizing the time evolution of the balance of selected Account Items
 
 ---
 
 ### Path
 
-In Kapytal, items in tree-like hierarchies ([Account Items](#account-item) or [Categories](#category-)) are identified by their path. The path string consists of item names separated by slashes, starting from root item: `Grandparent Name/Parent Name/Item Name`.
+In Kapytal, items in tree-like hierarchies ([Account Items](#account-item) or [Categories](#category-)) are identified by their path. The path string consists of item names separated by slashes, starting from root item: `Grandparent/Parent/Child`.
 
 ---
 
@@ -354,11 +357,11 @@ Refund is a special type of [Transaction](#transaction) that "reverts" the effec
 
 Refunds can refund the Expense fully or partially. Each Refund can relate to only one Expense, while each Expense can be refunded by multiple Refunds. However, the total sum of refunded money cannot exceed the total amount defined by the Expense.
 
-Refunds can refund money to a different [Cash Account](#cash-account-) than the Cash Account defined in the refunded Expense. The date & time of a Refund cannot be earlier than the date & time of the refunded Expense.
+Refunds can refund money to a different [Cash Account](#cash-account-) than the Cash Account defined in the refunded Expense. The [date & time](#date) of a Refund cannot precede the date & time of the refunded Expense.
 
 To find Refund's refunded Expense, or to find refunded Expense's Refunds, right-click the chosen Transaction and select *Find related*.
 
-For the purposes of most [Reports](#reports), Refunds are either treated separately, or as "inverted" Expense. Refunds are never considered as [Income](#income-).
+For the purposes of most [Reports](#reports), Refunds are either treated separately, or as "inverted" Expense. Refunds are only considered as [Income](#income-) in the [Categories](#category-) Report sunburst chart, because this chart type is incapable of visualizing negative values (Refunds would be ideally considered negative Expense).
 
 ---
 
@@ -366,14 +369,14 @@ For the purposes of most [Reports](#reports), Refunds are either treated separat
 
 Reports are used to analyse and visualize your data using charts and tables. Reports can be accessed via the *Reports* menu item.
 
-Note reports always analyse only the [Transactions](#transaction) or [Account Items](#account-item) that are passing through [Transaction Filters](#transaction-filters-). The user can use this to their advantage, for example to remove some Transactions from the analysed data set etc.
+Note reports always analyse only the [Transactions](#transaction) or [Account Items](#account-item) that are passing through [Transaction Filters](#transaction-filters-). The user can use this to purposefully remove some Transactions from the analysed data set.
 
 There are several types of Reports:
 
 + [Net Worth Reports](#net-worth-reports-)
 + [Cash Flow Reports](#cash-flow-reports-)
 + Category Reports
-+ Tags Reports
++ Tag Reports
 + Payee Reports
 
 ---
@@ -390,17 +393,17 @@ The formula is: $ \text{Savings Rate} = \text{Cash Flow} / (\text{Income} + \tex
 
 ### Securities Form
 
-Securities Form is the [Form](#form) for creating, editing, deleting, manipulating and updating [Securities](#securities-form) and their price quotes. In the Overview tab, an overview of Securities and all Security Accounts which contain their shares is available.
+Securities Form is the [Form](#form) for creating, editing, deleting, manipulating and updating [Securities](#securities-form) and their price quotes. In the Overview tab, an overview of Securities and all Security Accounts which contain their shares is available, including a large number of performance related quantities.
 
 ---
 
 ### Security ![Icon](../resources/icons/icons-16/certificate.png)
 
-Securities are used to represent asserts of monetary value which fluctuates over time, such as stocks, bonds, ETFs, pension funds and other financial instruments, as well as real estate, [mortgages](./faq.md#how-to-handle-a-mortgage-in-kapytal), cars, art etc.
+Securities are used to represent assets with a monetary value which fluctuates over time, such as stocks, bonds, ETFs, pension funds or other financial instruments, as well as real estate, [mortgages](./faq.md#how-to-handle-a-mortgage-in-kapytal), loans, cars, art etc.
 
 In Kapytal, shares of Securities can be owned within [Security Accounts](#security-account-), can be acquired or sold via [Security Transactions](#security-transaction), and can be transfered to other Security Accounts via [Security Transfers](#security-transfer-).
 
-Price history of Securities can be tracked by Kapytal. Prices for a specific calendar day can be entered manually or loaded from a CSV file in [Securities Form](#securities-form), or updated automatically in [Update Quotes Form](#update-quotes-form-).
+Price history of Securities can be tracked by Kapytal. Prices for a specific calendar day can be entered manually, loaded from a CSV file in [Securities Form](#securities-form), or updated automatically in [Update Quotes Form](#update-quotes-form-).
 
 When creating a Security in Securities Form, following attributes are requested:
 
@@ -409,9 +412,11 @@ When creating a Security in Securities Form, following attributes are requested:
   + optional, but required for automatic price updates via [Update Quotes Form](#update-quotes-form-)
 + Type
   + custom string of your own choosing (for example *ETF*, *Real Estate*, *Pension Fund* etc.)
-+ Unit
-  + smallest unit of Security (typical value is 1, but some Securities can be owned in fractions like 0.001 etc.)
++ Shares decimals
+  + number of decimal places of shares
+  + typically 0 decimal places (integer amount of Shares), but more decimals are needed for Securities with fractional shares
 + [Currency](#currency-)
+  + Currency of the Security price as well as the Currency which will be used when buying or selling shares
 
 ---
 
@@ -419,13 +424,13 @@ When creating a Security in Securities Form, following attributes are requested:
 
 Security Account is a type of [Account](#account) that can contain shares of [Securities](#security-). Unlike [Cash Accounts](#cash-account-), which can contain only money of single [Currency](#currency-), Security Accounts can contain shares of any number of various Securities, and the Securities do not even have to be denominated in the same Currency.
 
-There is no Currency associated with Security Accounts. In [Account Tree](#account-tree-), their balance is shown only in terms of the [base Currency](#base-currency).
+There is no Currency associated with Security Accounts. In [Account Tree](#account-tree-), their balance is shown in terms of the [base Currency](#base-currency). [Native](#native-currencyamount) balance of a Security Account is shown only when all Securities within are denominated in the same non-base Currency.
 
-In practice, Security Accounts can be used to represent investment or trading accounts or pension scheme accounts, but also real estate portfolio, cars, art collection or any group of assets whose fluctuating value the user wants to track in Kapytal.
+In practice, Security Accounts can be used to represent investment, trading or pension accounts, but also real estate portfolio, car collection, art collection or any group of assets whose fluctuating value the user wants to track in Kapytal.
 
-Security Accounts can contain positive, zero, or even negative amounts of shares of any Security. Negative amounts of shares are usually an indicator of user error.
+Security Accounts can contain positive, zero, or even negative amounts of shares of any Security. Negative amounts of shares are useful for modelling loans and [mortgages](./faq.md#how-to-handle-a-mortgage-in-kapytal).
 
-To see the Security contained within a Security Account, right-click the Security Account in the Accoutn Tree and select *Show Securities* option from the context menu. The contents of a Security Account can also be seen from a different point of view by navigating to Edit/Securities form and switching to the *Overview* tab.
+To see the Security contained within a Security Account, double-click the Security Account in the Account Tree or right-click the Security Account in the Account Tree and select *Show Securities* option from the context menu. The contents of a Security Account can also be seen from a different point of view by navigating to Edit/Securities form and switching to the *Overview* tab.
 
 Security Accounts are used in [Security Transactions](#security-transaction) and [Security Transfers](#security-transfer-).
 
@@ -433,7 +438,7 @@ Security Accounts are used in [Security Transactions](#security-transaction) and
 
 ### Security Transaction
 
-Security Transactions are [Transactions](#transaction) that represent buying or selling shares of a [Security](#security-) in exchange for monetary value. There are two sub-types of Security Transactions: [Buy](#buy-) and [Sell](#sell-).
+Security Transactions are [Transactions](#transaction) that represent buying or selling shares of a [Security](#security-) in exchange for monetary value. There are three sub-types of Security Transactions: [Buy](#buy-), [Sell](#sell-) and [Dividend](#dividend-).
 
 Security Transaction specific attributes are: [Cash Account](#cash-account-), [Security Account](#security-account-), Security, shares, Amount per Share.
 
@@ -471,6 +476,10 @@ Tags can be used to distinguish Transactions related to certain events (*vacatio
 
 Tags are not meant for describing the object of the Transactions (i.e. *Groceries*, *Electronics*, *Rent* etc.) as that is the purpose of [Categories](#category-).
 
+Note that [Cash Transactions](#cash-transaction) and [Refunds](#refund-) support the *"split Tags"* functionality, which allows the user to specify the monetary amount which should be associated with the given Tag. By default, full Transaction amount is associated with the Tag, but split Tags can be used to alter this to a lower amount. This feature is useful for splitting expenses (see the basic [demo file](#demo-files) for example of this usage).
+
+Note that for the purposes of Tag Reports, only [Income](#income-), [Expense](#expense-), [Refund](#refund-) and [Dividend](#dividend-) Transaction amounts are considered in the calculation. This is because other Transaction types are expected to be value-neutral.
+
 ---
 
 ### Transaction
@@ -489,12 +498,12 @@ Transaction Filters are used to filter [Transactions](#transaction) based on spe
 
 There are many Transaction Filters:
 
-+ Type Filter
++ Transaction Type Filter
 + [Date](#date) Filter
 + [Description](#description) Filter
 + Account Filter
   + mostly accessed directly from the [Account Tree](#account-tree-) check boxes
-  + it filters Transactions based on the [Account Items](#account-item) they relate to, but also the Account Items themselves (mainly for [Net Worth Report](#net-worth-reports-) purposes)
+  + this filter filters Transactions based on the [Account Items](#account-item) they relate to, but it also filters the Account Items themselves for [Net Worth Report](#net-worth-reports-) purposes
 + [Tag](#tag-) Filters
   + Tag-less Transaction Filter
   + Specific Tag Filter
@@ -510,32 +519,40 @@ There are many Transaction Filters:
 
 Transaction Filters are chained one after another, and only Transactions passing through all active filters are shown in the Transaction Table.
 
-Many Transaction Filters have three "modes": off, keep and discard. Filters which are off do not discard any Transactions. Filters which are set to keep mode keep the Transactions which satisfy their criteria, while filters set to discard mode do the opposite of keep mode filters and discard the Transactions which satisfy their criteria instead.
+Many Transaction Filters have three "modes": `OFF`, `KEEP` and `DISCARD`. Filters which are `OFF` do not discard any Transactions. Filters which are set to `KEEP` mode keep the Transactions which satisfy their criteria, while filters set to `DISCARD` mode do the opposite of `KEEP` mode filters and discard the Transactions which satisfy their criteria instead.
 
 ---
 
 ### Transaction Table ![Icon](../resources/icons/icons-16/table.png)
 
-Transaction Table is the dominant user interface feature of Kapytal, and it is the interface used to create, browse, edit, delete or otherwise manipulate [Transactions](#transaction).
+Transaction Table is the dominant user interface feature of Kapytal, and it is the interface element used to create, browse, edit, delete or otherwise manipulate [Transactions](#transaction).
 
-Transaction Table contains many columns, some of which are not shown by default. The columns can be manipulated via the context menu shown by right-clicking on the Transaction Table column headers.
+Transaction Table contains many columns, some of which are not shown by default. The columns can be manipulated via the context menu shown by right-clicking on the Transaction Table column headers. The columns can also be reordered or stretched by manually dragging the headers or header edges respectively.
 
-Below the Transaction Table, there are two text labels. First label shows the amount of currently shown Transactions out of the total amount of Transactions. Transactions can be hidden from Transaction Table via [Transaction Filters](#transaction-filters-). Second label shows the sum of the amounts of currently selected Transactions. Please note only [Income](#income-), [Expense](#expense-) and [Refund](#refund-) amounts are summed.
+Below the Transaction Table, there are two text labels. First label shows the amount of currently shown Transactions out of the total amount of Transactions. Transactions can be hidden from Transaction Table via [Transaction Filters](#transaction-filters-). Second label shows the sum of the amounts of currently selected Transactions. Please note only [Income](#income-), [Expense](#expense-), [Refund](#refund-) and [Dividend](#dividend-) amounts are summed.
 
 Transaction Table can be hidden by toggling the ![Icon](../resources/icons/icons-16/table.png) *Show/Hide Transaction Table* action in the toolbar.
 
 ---
 
+### Transaction Table Form
+
+Transaction Table Form is a small and less-capable version of the [Transaction Table](#transaction-table-) which can be opened in various [Reports](#reports) and [Categories](#category-), [Payees](#payee-) and [Tags](#tag-) [Forms](#form). Transaction Table Form contains all the [Transactions](#transaction) that are related to the selected Report or Form item. Transaction Table Form supports editing and adding or removing Tags.
+
+---
+
 ### UUID
 
-Universally Unique IDentifier is a string of characters which unambiguously identifies an object. In Kapytal, all [Transactions](#transaction) have an UUIDv4, which can be shown in the [Transaction Table](#transaction-table-) by right-clicking the Transaction Table header and enabling the UUID column in the context menu. Transaction UUIDs can also be copied to clipboard by right-clicking selected Transactions in the Transaction Table and selecting the Copy UUIDs action in the context menu. The user can paste the clipboard contents into the UUID [Transaction Filter](#transaction-filters-) directly.
+Universally Unique IDentifier is a string of characters which unambiguously identifies an object.
 
-Under the hood, all [Account Items](#account-item), [Securities](#security-) and [Categories](#category-) are also assigned an UUID. Account Item and Security UUIDs can be found in the JSON [data file](#data-file), while Category UUIDs are assigned randomly during program runtime.
+In Kapytal, all [Transactions](#transaction) have an UUIDv4, which can be shown in the [Transaction Table](#transaction-table-) by right-clicking the Transaction Table header and enabling the UUID column in the context menu. Transaction UUIDs can also be copied to clipboard by right-clicking selected Transactions in the Transaction Table and selecting the *Copy UUIDs* action in the context menu. The user can paste the clipboard contents into the UUID [Transaction Filter](#transaction-filters-) directly.
+
+Under the hood, all [Account Items](#account-item), [Securities](#security-) and [Categories](#category-) are also assigned an UUID. Account Item and Security UUIDs can be found in the JSON [data file](#data-file), while Category UUIDs are assigned randomly during program runtime for internal purposes.
 
 ---
 
 ### Update Quotes Form ![Icon](../resources/icons/icons-16/arrow-circle-double.png)
 
-Update Quotes Form is a [Form](#form) used to fetch latest [Security](#security-) price and [Exchange Rate](#exchange-rate-) data from Yahoo Finance. Only Securities with non-empty symbol strings are eligible for price update.
+Update Quotes Form is a [Form](#form) used to fetch latest [Security](#security-) price and [Exchange Rate](#exchange-rate-) data from Yahoo Finance. Only Securities with non-empty symbol strings are eligible for price update. The Security symbol must match the symbol used for the given Security on Yahoo Finance.
 
 ---
