@@ -219,7 +219,7 @@ def test_get_rate() -> None:
 def test_set_rates(primary: Currency, secondary: Currency, data: st.DataObject) -> None:
     assume(primary != secondary)
 
-    data: list[tuple[date, Decimal]] = data.draw(
+    data_: list[tuple[date, Decimal]] = data.draw(
         st.lists(
             st.tuples(
                 st.dates(),
@@ -235,16 +235,16 @@ def test_set_rates(primary: Currency, secondary: Currency, data: st.DataObject) 
         )
     )
 
-    _dates = {date_ for date_, _ in data}
-    assume(len(_dates) == len(data))
+    _dates = {date_ for date_, _ in data_}
+    assume(len(_dates) == len(data_))
 
     exchange_rate = ExchangeRate(primary, secondary)
-    exchange_rate.set_rates(data)
+    exchange_rate.set_rates(data_)
 
-    if len(data) != 0:
-        latest_date = max(date_ for date_, _ in data)
+    if len(data_) != 0:
+        latest_date = max(date_ for date_, _ in data_)
         latest_rate = None
-        for date_, rate in data:
+        for date_, rate in data_:
             if date_ == latest_date:
                 latest_rate = rate
                 break

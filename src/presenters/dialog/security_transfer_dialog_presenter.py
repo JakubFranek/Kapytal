@@ -1,6 +1,7 @@
 import logging
 from collections.abc import Collection, Sequence
 from datetime import datetime
+from decimal import Decimal
 
 from src.models.base_classes.account import Account
 from src.models.custom_exceptions import NotFoundError

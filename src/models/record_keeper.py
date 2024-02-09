@@ -1508,7 +1508,7 @@ class RecordKeeper:
         data: dict[str, Any], progress_callable: Callable[[int], None]
     ) -> "RecordKeeper":
         obj = RecordKeeper()
-        obj._currencies: list[Currency] = data["currencies"]  # noqa: SLF001
+        obj._currencies = data["currencies"]  # noqa: SLF001
         currencies: dict[str, Currency] = {
             currency.code: currency
             for currency in obj._currencies  # noqa: SLF001

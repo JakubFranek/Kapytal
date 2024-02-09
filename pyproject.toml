@@ -2,7 +2,15 @@
 pythonpath = "."
 
 [tool.pyright]
-reportGeneralTypeIssues = "none"
+reportGeneralTypeIssues = false
+reportArgumentType = false
+reportReturnType = false
+reportAttributeAccessIssue = false
+reportIndexIssue = false
+reportOperatorIssue = false
+reportAssignmentType = false
+reportAbstractUsage = false
+reportCallIssue = false
 reportOptionalMemberAccess = "none"
 exclude = ["src/views", ".venv", "aux_stuff"]
 

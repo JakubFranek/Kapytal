@@ -44,5 +44,5 @@ class Ui_CurrencyDialog(object):
         _translate = QtCore.QCoreApplication.translate
         CurrencyDialog.setWindowTitle(_translate("CurrencyDialog", "Add Currency"))
         self.currencyCodeLabel.setText(_translate("CurrencyDialog", "Currency Code"))
-        self.currencyCodeLineEdit.setPlaceholderText(_translate("CurrencyDialog", "Enter an ISO 4217 currency code"))
-        self.currencyDecimalsLabel.setText(_translate("CurrencyDialog", "Number of decimal places"))
+        self.currencyCodeLineEdit.setPlaceholderText(_translate("CurrencyDialog", "Enter three letters (e.g. ISO 4217 code)"))
+        self.currencyDecimalsLabel.setText(_translate("CurrencyDialog", "Decimal places"))
