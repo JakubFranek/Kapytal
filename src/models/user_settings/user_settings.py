@@ -6,8 +6,8 @@ from src.utilities import constants
 
 settings: UserSettings = UserSettings()  # this is where the settings are
 
-_json_encoder: type[json.JSONEncoder] = None
-_json_decoder: type[json.JSONDecoder] = None
+_json_encoder: type[json.JSONEncoder] | None = None
+_json_decoder: type[json.JSONDecoder] | None = None
 
 
 def set_json_encoder(encoder: type[json.JSONEncoder]) -> None:

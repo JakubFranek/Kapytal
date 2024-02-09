@@ -6,7 +6,7 @@ from uuid import UUID
 from src.models.base_classes.account import Account
 from src.models.base_classes.transaction import Transaction
 from src.models.mixins.copyable_mixin import CopyableMixin
-from src.models.model_objects.attributes import Attribute
+from src.models.model_objects.attributes import Attribute, Category
 from src.models.model_objects.cash_objects import (
     CashTransactionType,
     CashTransfer,
@@ -317,7 +317,7 @@ class TransactionFilter(CopyableMixin):
         self._calculate_all_pass_attribute()
 
     def set_specific_categories_filter(
-        self, categories: Collection[Attribute], mode: FilterMode
+        self, categories: Collection[Category], mode: FilterMode
     ) -> None:
         self._specific_categories_filter = SpecificCategoriesFilter(categories, mode)
         self._calculate_all_pass_attribute()
@@ -339,10 +339,10 @@ class TransactionFilter(CopyableMixin):
         self._calculate_all_pass_attribute()
 
     def set_cash_amount_filter(
-        self, minimum: CashAmount, maximum: CashAmount, mode: FilterMode
+        self, minimum: CashAmount | None, maximum: CashAmount | None, mode: FilterMode
     ) -> None:
         self._cash_amount_filter = CashAmountFilter(minimum, maximum, mode)
         self._calculate_all_pass_attribute()
 
-    def _calculate_all_pass_attribute(self) -> bool:
+    def _calculate_all_pass_attribute(self) -> None:
         self._all_pass = all(filter_.is_all_pass for filter_ in self.members)

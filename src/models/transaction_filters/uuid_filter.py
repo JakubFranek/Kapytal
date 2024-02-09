@@ -27,7 +27,7 @@ class UUIDFilter(BaseTransactionFilter):
         return self._uuids_set
 
     @property
-    def members(self) -> tuple[tuple[UUID, ...], FilterMode]:
+    def members(self) -> tuple[frozenset[UUID], FilterMode]:
         return (self._uuids_set, self._mode)
 
     def __repr__(self) -> str:

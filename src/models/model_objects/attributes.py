@@ -1,5 +1,5 @@
 from enum import Enum, auto
-from typing import Any, Self
+from typing import Any
 
 from src.models.custom_exceptions import NotFoundError
 from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
@@ -64,7 +64,7 @@ class Attribute(NameMixin, JSONSerializableMixin):
         return {"datatype": "Attribute", "name": self._name, "type": self._type.name}
 
     @staticmethod
-    def deserialize(data: dict[str, Any]) -> Self:
+    def deserialize(data: dict[str, Any]) -> "Attribute":
         name = data["name"]
         type_ = AttributeType[data["type"]]
         return Attribute(name, type_)
@@ -83,7 +83,7 @@ class Category(NameMixin, JSONSerializableMixin, UUIDMixin):
     )
 
     def __init__(
-        self, name: str, type_: CategoryType, parent: Self | None = None
+        self, name: str, type_: CategoryType, parent: "Category | None" = None
     ) -> None:
         super().__init__(name, allow_slash=False)
         if name.lower() == "total":
@@ -94,15 +94,15 @@ class Category(NameMixin, JSONSerializableMixin, UUIDMixin):
         self._type = type_
 
         self.parent = parent
-        self._children_dict: dict[int, Self] = {}
-        self._children_tuple: tuple[Self, ...] = ()
+        self._children_dict: dict[int, "Category"] = {}
+        self._children_tuple: tuple["Category", ...] = ()
 
     @property
-    def parent(self) -> Self | None:
+    def parent(self) -> "Category | None":
         return self._parent
 
     @parent.setter
-    def parent(self, parent: Self | None) -> None:
+    def parent(self, parent: "Category | None") -> None:
         if parent is not None:
             if not isinstance(parent, Category):
                 raise TypeError("Category.parent must be a Category or a None.")
@@ -124,7 +124,7 @@ class Category(NameMixin, JSONSerializableMixin, UUIDMixin):
         self._parent = parent
 
     @property
-    def children(self) -> tuple[Self, ...]:
+    def children(self) -> tuple["Category", ...]:
         return self._children_tuple
 
     @property
@@ -138,7 +138,7 @@ class Category(NameMixin, JSONSerializableMixin, UUIDMixin):
         return self._parent.path + "/" + self._name
 
     @property
-    def ancestors(self) -> frozenset[Self]:
+    def ancestors(self) -> frozenset["Category"]:
         ancestors = set()
         node = self._parent
         while node is not None:
@@ -147,7 +147,7 @@ class Category(NameMixin, JSONSerializableMixin, UUIDMixin):
         return frozenset(ancestors)
 
     @property
-    def descendants(self) -> frozenset[Self]:
+    def descendants(self) -> frozenset["Category"]:
         if not self._children_tuple:
             return frozenset()
         descendants = set(self._children_tuple)
@@ -158,7 +158,7 @@ class Category(NameMixin, JSONSerializableMixin, UUIDMixin):
     def __repr__(self) -> str:
         return f"Category('{self.path}', {self._type.name})"
 
-    def is_ancestor_of(self, category: Self) -> bool:
+    def is_ancestor_of(self, category: "Category") -> bool:
         """Check if this Category is an ancestor of the parameter Category.
         Seems to be slower than checking if category is in self.descendants."""
 
@@ -171,7 +171,7 @@ class Category(NameMixin, JSONSerializableMixin, UUIDMixin):
                 return True
         return False
 
-    def is_descendant_of(self, category: Self) -> bool:
+    def is_descendant_of(self, category: "Category") -> bool:
         """Check if this Category is a descendant of the parameter Category."""
         if self._parent == category:
             return True
@@ -184,14 +184,14 @@ class Category(NameMixin, JSONSerializableMixin, UUIDMixin):
             self._children_dict[key] for key in sorted(self._children_dict.keys())
         )
 
-    def _add_child(self, child: Self) -> None:
+    def _add_child(self, child: "Category") -> None:
         max_index = max(sorted(self._children_dict.keys()), default=-1)
         self._children_dict[max_index + 1] = child
         self._update_children_tuple()
 
-    def _remove_child(self, child: Self) -> None:
+    def _remove_child(self, child: "Category") -> None:
         index = self.get_child_index(child)
-        aux_dict: dict[int, Self] = {}
+        aux_dict: dict[int, Category] = {}
         for key, value in self._children_dict.items():
             if key >= index:
                 aux_dict[key] = self._children_dict.get(key + 1, None)
@@ -202,7 +202,7 @@ class Category(NameMixin, JSONSerializableMixin, UUIDMixin):
         self._children_dict = aux_dict
         self._update_children_tuple()
 
-    def set_child_index(self, child: Self, index: int) -> None:
+    def set_child_index(self, child: "Category", index: int) -> None:
         if index < 0:
             raise ValueError("Parameter 'index' must not be negative.")
         if child not in self._children_tuple:
@@ -213,7 +213,7 @@ class Category(NameMixin, JSONSerializableMixin, UUIDMixin):
             return
 
         self._remove_child(child)
-        aux_dict: dict[int, Self] = {}
+        aux_dict: dict[int, Category] = {}
         for key, value in self._children_dict.items():
             if key >= index:
                 aux_dict[key + 1] = value
@@ -223,7 +223,7 @@ class Category(NameMixin, JSONSerializableMixin, UUIDMixin):
         self._children_dict = aux_dict
         self._update_children_tuple()
 
-    def get_child_index(self, child: Self) -> int:
+    def get_child_index(self, child: "Category") -> int:
         return list(self._children_dict.keys())[
             list(self._children_dict.values()).index(child)
         ]

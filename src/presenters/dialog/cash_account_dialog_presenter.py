@@ -121,7 +121,9 @@ class CashAccountDialogPresenter:
         self.event_data_changed()
 
     def edit_cash_account(self) -> None:
-        item: CashAccount = self._model.get_selected_item()
+        item = self._model.get_selected_item()
+        if not isinstance(item, CashAccount):
+            raise TypeError(f"Expected CashAccount, received {type(item)}")
         previous_parent = item.parent
         previous_path = self._dialog.current_path
         previous_index = self._get_item_index(item)
@@ -213,7 +215,7 @@ class CashAccountDialogPresenter:
 
         self._dialog.maximum_position = maximum_position
 
-    def _get_account_group_paths(self) -> tuple[str]:
+    def _get_account_group_paths(self) -> tuple[str, ...]:
         return tuple(
             account_group.path + "/"
             for account_group in self._record_keeper.account_groups

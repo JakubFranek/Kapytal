@@ -16,13 +16,13 @@ FLAGS_CHECKABLE = (
 
 class CheckableListModel(QAbstractListModel):
     def __init__(
-        self, view: QListView, proxy: QSortFilterProxyModel, *, sort: bool = True
+        self, view: QListView, proxy: QSortFilterProxyModel | None, *, sort: bool = True
     ) -> None:
         super().__init__()
         self._list_view = view
         self._items = ()
         self._icons = None
-        self._checked_items = ()
+        self._checked_items = []
         self._proxy = proxy
         self._sort = sort
         self.event_checked_items_changed = Event()
@@ -36,7 +36,7 @@ class CheckableListModel(QAbstractListModel):
         return tuple(self._checked_items)
 
     def load_items(self, values: Collection[Any]) -> None:
-        self._items = sorted(values, key=str) if self._sort else values
+        self._items = sorted(values, key=str) if self._sort else list(values)
         self._icons = None
 
     def load_items_with_icons(self, values: Collection[tuple[Any, QIcon]]) -> None:
@@ -51,12 +51,14 @@ class CheckableListModel(QAbstractListModel):
             self.dataChanged.emit(index, index, [Qt.ItemDataRole.CheckStateRole])
         self.event_checked_items_changed()
 
-    def rowCount(self, index: QModelIndex = ...) -> int:
+    def rowCount(self, index: QModelIndex) -> int:
         if isinstance(index, QModelIndex) and index.isValid():
             return 0
         return len(self._items)
 
-    def data(self, index: QModelIndex, role: Qt.ItemDataRole = ...) -> str | None:
+    def data(
+        self, index: QModelIndex, role: Qt.ItemDataRole
+    ) -> str | Qt.CheckState | QIcon | None:
         if not index.isValid():
             return None
 
@@ -79,7 +81,7 @@ class CheckableListModel(QAbstractListModel):
         self,
         index: QModelIndex,
         value: Any,  # noqa: ANN401
-        role: int = ...,
+        role: int,
     ) -> bool | None:
         if role == Qt.ItemDataRole.CheckStateRole:
             item: str = self._items[index.row()]
@@ -100,7 +102,7 @@ class CheckableListModel(QAbstractListModel):
 
     def get_selected_item(self) -> Any | None:  # noqa: ANN401
         indexes = self._list_view.selectedIndexes()
-        if self._proxy:
+        if self._proxy is not None:
             indexes = [self._proxy.mapToSource(index) for index in indexes]
         if len(indexes) == 0:
             return None

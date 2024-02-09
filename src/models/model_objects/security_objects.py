@@ -183,7 +183,7 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
         return self._price_history_pairs
 
     @property
-    def decimal_price_history_pairs(self) -> tuple[tuple[date, Decimal]]:
+    def decimal_price_history_pairs(self) -> tuple[tuple[date, Decimal], ...]:
         return tuple(
             (date_, price.value_normalized) for date_, price in self.price_history_pairs
         )
@@ -288,7 +288,7 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
 
         obj = Security(name, symbol, type_, security_currency, shares_decimals)
 
-        date_price_pairs: list[list[str, str]] = data["date_price_pairs"]
+        date_price_pairs: list[list[str]] = data["date_price_pairs"]
         for date_, price in date_price_pairs:
             obj.set_price(
                 datetime.strptime(date_, "%Y-%m-%d")
@@ -533,7 +533,7 @@ class SecurityAccount(Account):
         if currency is None:
             currency = security.currency
 
-        shares_price_pairs: list[tuple[int, CashAmount]] = []
+        shares_price_pairs: list[tuple[Decimal, CashAmount]] = []
         for transaction in self._transactions:
             _transaction_datetime = transaction.datetime_
             if transaction.security != security:
@@ -819,7 +819,7 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
         datetime_: datetime | None = None,
         type_: SecurityTransactionType | None = None,
         security: Security | None = None,
-        shares: Decimal | None = None,
+        shares: Decimal | int | str | None = None,
         amount_per_share: CashAmount | None = None,
         security_account: SecurityAccount | None = None,
         cash_account: CashAccount | None = None,
@@ -872,7 +872,7 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
         datetime_: datetime | None = None,
         type_: SecurityTransactionType | None = None,
         security: Security | None = None,
-        shares: Decimal | None = None,
+        shares: Decimal | int | str | None = None,
         amount_per_share: CashAmount | None = None,
         security_account: SecurityAccount | None = None,
         cash_account: CashAccount | None = None,
@@ -921,7 +921,7 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
         datetime_: datetime,
         type_: SecurityTransactionType,
         security: Security,
-        shares: Decimal,
+        shares: Decimal | int | str,
         amount_per_share: CashAmount,
         security_account: SecurityAccount,
         cash_account: CashAccount,
@@ -952,12 +952,13 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
                 update_security_account = self._security != security
         self._security = security
 
+        _shares = Decimal(shares).normalize()
         if not block_account_update and hasattr(self, "_shares"):
             if not update_cash_account:
-                update_cash_account = self._shares != shares
+                update_cash_account = self._shares != _shares
             if not update_security_account:
-                update_security_account = self._shares != shares
-        self._shares = Decimal(shares).normalize()
+                update_security_account = self._shares != _shares
+        self._shares = _shares
 
         if (
             not block_account_update
@@ -1167,7 +1168,7 @@ class SecurityTransfer(SecurityRelatedTransaction):
         description: str | None = None,
         datetime_: datetime | None = None,
         security: Security | None = None,
-        shares: Decimal | None = None,
+        shares: Decimal | int | str | None = None,
         sender: SecurityAccount | None = None,
         recipient: SecurityAccount | None = None,
         block_account_update: bool = False,

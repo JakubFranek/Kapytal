@@ -88,7 +88,7 @@ def get_datetime_from_file_path(path: Path) -> datetime:
     )
 
 
-def get_exception_display_info(exception: Exception) -> tuple[str, str]:
+def get_exception_display_info(exception: Exception) -> tuple[str, str] | None:
     exc_traceback = exception.__traceback__
     exc_type = type(exception)
     exc_value = exception
@@ -115,7 +115,11 @@ def get_exception_info(
     exc_type: type[BaseException],
     exc_value: BaseException,
     exc_traceback: TracebackType,
-) -> tuple[str, str, str,]:
+) -> tuple[
+    str,
+    str,
+    str,
+]:
     stack_summary = traceback.extract_tb(exc_traceback)
     file_name, line, _, _ = stack_summary.pop()
     exc_details_list = traceback.format_exception(exc_type, exc_value, exc_traceback)

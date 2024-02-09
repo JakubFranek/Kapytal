@@ -121,7 +121,7 @@ class SecurityTransferDialogPresenter(TransactionDialogPresenter):
         )
 
         shares = {transaction.shares for transaction in transfers}
-        self._dialog.shares = shares.pop() if len(shares) == 1 else 0
+        self._dialog.shares = shares.pop() if len(shares) == 1 else Decimal(0)
 
         tag_names_frozensets = set()
         for transaction in transfers:
@@ -248,7 +248,7 @@ class SecurityTransferDialogPresenter(TransactionDialogPresenter):
         self.event_update_model()
         self.event_data_changed(uuids)
 
-    def _prepare_dialog(self, edit_mode: EditMode) -> bool:
+    def _prepare_dialog(self, edit_mode: EditMode) -> None:
         securities = self._record_keeper.securities
         tag_names = sorted(tag.name for tag in self._record_keeper.tags)
         self._dialog = SecurityTransferDialog(

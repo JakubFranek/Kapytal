@@ -74,23 +74,53 @@ def test_creation(currency: Currency, mode: FilterMode, data: st.DataObject) -> 
     )
 
 
-@given(currency=currencies(), mode=st.sampled_from(FilterMode), data=st.data())
-def test_creation_minimum_invalid_type(
+@given(currency=currencies(), data=st.data())
+def test_creation_mode_off_minimum_invalid_type(
+    currency: Currency, data: st.DataObject
+) -> None:
+    mode = FilterMode.OFF
+    minimum = data.draw(everything_except(CashAmount))
+    maximum = data.draw(cash_amounts(currency, min_value=0))
+    with pytest.raises(TypeError, match="same type"):
+        CashAmountFilter(minimum, maximum, mode)
+
+
+@given(currency=currencies(), data=st.data())
+def test_creation_mode_off_maximum_invalid_type(
+    currency: Currency, data: st.DataObject
+) -> None:
+    mode = FilterMode.OFF
+    minimum = data.draw(cash_amounts(currency, min_value=0))
+    maximum = data.draw(everything_except(CashAmount))
+    with pytest.raises(TypeError, match="same type"):
+        CashAmountFilter(minimum, maximum, mode)
+
+
+@given(
+    currency=currencies(),
+    mode=st.sampled_from((FilterMode.KEEP, FilterMode.DISCARD)),
+    data=st.data(),
+)
+def test_creation_mode_keep_discard_minimum_invalid_type(
     currency: Currency, mode: FilterMode, data: st.DataObject
 ) -> None:
     minimum = data.draw(everything_except(CashAmount))
     maximum = data.draw(cash_amounts(currency, min_value=0))
-    with pytest.raises(TypeError, match="Parameter 'minimum' must be a CashAmount."):
+    with pytest.raises(TypeError, match="CashAmount"):
         CashAmountFilter(minimum, maximum, mode)
 
 
-@given(currency=currencies(), mode=st.sampled_from(FilterMode), data=st.data())
-def test_creation_maximum_invalid_type(
+@given(
+    currency=currencies(),
+    mode=st.sampled_from((FilterMode.KEEP, FilterMode.DISCARD)),
+    data=st.data(),
+)
+def test_creation_mode_keep_discard_maximum_invalid_type(
     currency: Currency, mode: FilterMode, data: st.DataObject
 ) -> None:
     minimum = data.draw(cash_amounts(currency, min_value=0))
     maximum = data.draw(everything_except(CashAmount))
-    with pytest.raises(TypeError, match="Parameter 'maximum' must be a CashAmount."):
+    with pytest.raises(TypeError, match="CashAmount"):
         CashAmountFilter(minimum, maximum, mode)
 
 

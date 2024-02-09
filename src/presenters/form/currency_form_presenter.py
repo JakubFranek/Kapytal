@@ -1,5 +1,6 @@
 import csv
 import logging
+from collections.abc import Collection
 from datetime import date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -123,6 +124,9 @@ class CurrencyFormPresenter:
         self._dialog.exec()
 
     def _add_currency(self) -> None:
+        if not isinstance(self._dialog, CurrencyDialog):
+            raise TypeError(f"Expected CurrencyDialog, received {type(self._dialog)}")
+
         previous_base_currency = self._record_keeper.base_currency
         code = self._dialog.currency_code
         decimals = self._dialog.currency_decimals
@@ -199,6 +203,11 @@ class CurrencyFormPresenter:
         self._dialog.exec()
 
     def _add_exchange_rate(self) -> None:
+        if not isinstance(self._dialog, AddExchangeRateDialog):
+            raise TypeError(
+                f"Expected AddExchangeRateDialog, received {type(self._dialog)}"
+            )
+
         primary_code = self._dialog.primary_currency_code
         secondary_code = self._dialog.secondary_currency_code
 
@@ -295,6 +304,11 @@ class CurrencyFormPresenter:
         exchange_rate = self._exchange_rate_table_model.get_selected_item()
         if exchange_rate is None:
             raise ValueError("An ExchangeRate must be selected to edit its data point.")
+
+        if not isinstance(self._dialog, SetExchangeRateDialog):
+            raise TypeError(
+                f"Expected SetExchangeRateDialog, received {type(self._dialog)}"
+            )
 
         value = self._dialog.value.normalize()
         date_ = self._dialog.date_
@@ -400,6 +414,9 @@ class CurrencyFormPresenter:
             raise InvalidOperationError(
                 "An ExchangeRate must be selected to load data points."
             )
+
+        if not isinstance(self._dialog, LoadDataDialog):
+            raise TypeError(f"Expected LoadDataDialog, received {type(self._dialog)}")
 
         _path = self._dialog.path
         conflict_resolution_mode = self._dialog.conflict_resolution_mode
@@ -541,7 +558,7 @@ class CurrencyFormPresenter:
             self.view.exchangeRateTable.setColumnHidden(column, column_empty)
 
     def _calculate_exchange_rate_stats(
-        self, exchange_rates: list[ExchangeRate]
+        self, exchange_rates: Collection[ExchangeRate]
     ) -> dict[ExchangeRate, dict[str, Decimal]]:
         today = datetime.now(user_settings.settings.time_zone).date()
         periods = {

@@ -269,7 +269,7 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
         self.splitTagsFilterModeComboBox.setCurrentText(mode.name)
 
     @property
-    def payee_filter_mode(self) -> bool:
+    def payee_filter_mode(self) -> FilterMode:
         return TransactionFilterForm._get_filter_mode_from_combobox(
             self.payeesFilterModeComboBox
         )
@@ -279,7 +279,7 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
         self.payeesFilterModeComboBox.setCurrentText(mode.name)
 
     @property
-    def security_filter_mode(self) -> bool:
+    def security_filter_mode(self) -> FilterMode:
         return TransactionFilterForm._get_filter_mode_from_combobox(
             self.securityFilterModeComboBox
         )

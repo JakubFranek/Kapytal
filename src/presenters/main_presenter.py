@@ -1,5 +1,6 @@
 import logging
 import webbrowser
+from pathlib import Path
 
 from PyQt6.QtWidgets import QApplication
 from src.models.record_keeper import RecordKeeper
@@ -85,7 +86,7 @@ class MainPresenter:
         ):
             self._close_welcome_dialog()
 
-    def _load_file(self, path: str | None = None) -> None:
+    def _load_file(self, path: Path | str | None = None) -> None:
         if (
             self._file_presenter.load_from_file(path)
             and self._welcome_dialog.isVisible()

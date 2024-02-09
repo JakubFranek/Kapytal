@@ -19,7 +19,10 @@ class BaseTransactionFilter(ABC):
     __slots__ = ()
 
     def __init__(
-        self, mode: FilterMode, *args: Any, **kwargs: Any  # noqa: ANN401
+        self,
+        mode: FilterMode,
+        *args: Any,
+        **kwargs: Any,  # noqa: ANN401
     ) -> None:
         super().__init__(*args, **kwargs)
 
@@ -62,7 +65,7 @@ class BaseTransactionFilter(ABC):
 
     def filter_transactions(
         self, transactions: Collection[Transaction]
-    ) -> tuple[Transaction]:
+    ) -> tuple[Transaction, ...]:
         if self._mode == FilterMode.OFF:
             return tuple(transactions)
 

@@ -91,7 +91,7 @@ class TransactionsPresenter:
     ) -> None:
         self._view = view
         self._record_keeper = record_keeper
-        self._account_tree_shown_accounts = record_keeper.accounts
+        self._account_tree_shown_accounts = frozenset(record_keeper.accounts)
 
         self._initialize_model()
         self._initialize_presenters()
@@ -143,7 +143,7 @@ class TransactionsPresenter:
         self._transaction_tags_dialog_presenter.load_record_keeper(record_keeper)
         self._transaction_filter_form_presenter.load_record_keeper(record_keeper)
         self._transaction_table_form_presenter.load_record_keeper(record_keeper)
-        self._account_tree_shown_accounts = record_keeper.accounts
+        self._account_tree_shown_accounts = frozenset(record_keeper.accounts)
         self._reset_model()
         self._update_number_of_shown_transactions()
         self._selection_changed()
@@ -311,7 +311,7 @@ class TransactionsPresenter:
             self._record_keeper
         )
 
-        self._transaction_dialog_presenters: tuple[TransactionDialogPresenter] = (
+        self._transaction_dialog_presenters: tuple[TransactionDialogPresenter, ...] = (
             self._cash_transaction_dialog_presenter,
             self._cash_transfer_dialog_presenter,
             self._security_transaction_dialog_presenter,

@@ -64,18 +64,18 @@ class SecurityAccountTableModel(QAbstractTableModel):
             self._securities = ()
         self._base_currency = base_currency
 
-    def rowCount(self, index: QModelIndex = ...) -> int:
+    def rowCount(self, index: QModelIndex | None = None) -> int:
         if isinstance(index, QModelIndex) and index.isValid():
             return 0
         return len(self._securities)
 
-    def columnCount(self, index: QModelIndex = ...) -> int:  # noqa: ARG002
+    def columnCount(self, index: QModelIndex | None = None) -> int:  # noqa: ARG002
         if not hasattr(self, "_column_count"):
             self._column_count = len(COLUMN_HEADERS)
         return self._column_count
 
     def headerData(
-        self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole = ...
+        self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole
     ) -> str | int | None:
         if (
             role == Qt.ItemDataRole.DisplayRole
@@ -85,8 +85,8 @@ class SecurityAccountTableModel(QAbstractTableModel):
         return None
 
     def data(
-        self, index: QModelIndex, role: Qt.ItemDataRole = ...
-    ) -> str | Qt.AlignmentFlag | None:
+        self, index: QModelIndex, role: Qt.ItemDataRole
+    ) -> str | Qt.AlignmentFlag | float | QBrush | None:
         if not index.isValid():
             return None
 
@@ -107,7 +107,7 @@ class SecurityAccountTableModel(QAbstractTableModel):
 
     def _get_display_role_data(  # noqa: PLR0911
         self, column: int, security: Security, shares: Decimal
-    ) -> str | QBrush | None:
+    ) -> str | None:
         if column == SecurityAccountTableColumn.SECURITY_NAME:
             return security.name
         if column == SecurityAccountTableColumn.SYMBOL:
@@ -152,7 +152,7 @@ class SecurityAccountTableModel(QAbstractTableModel):
 
     def _get_user_role_data(  # noqa: PLR0911
         self, column: int, security: Security, shares: Decimal
-    ) -> str | None:
+    ) -> str | float | None:
         if column == SecurityAccountTableColumn.SECURITY_NAME:
             return unicodedata.normalize("NFD", security.name)
         if column == SecurityAccountTableColumn.SYMBOL:

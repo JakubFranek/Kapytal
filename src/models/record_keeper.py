@@ -1076,7 +1076,7 @@ class RecordKeeper:
         )
 
     def add_tags_to_transactions(
-        self, transaction_uuids: Collection[str], tag_names: Collection[str]
+        self, transaction_uuids: Collection[UUID], tag_names: Collection[str]
     ) -> None:
         self._perform_tag_operation(
             transaction_uuids=transaction_uuids,
@@ -1085,7 +1085,7 @@ class RecordKeeper:
         )
 
     def remove_tags_from_transactions(
-        self, transaction_uuids: Collection[str], tag_names: Collection[str]
+        self, transaction_uuids: Collection[UUID], tag_names: Collection[str]
     ) -> None:
         self._perform_tag_operation(
             transaction_uuids=transaction_uuids,
@@ -1095,7 +1095,7 @@ class RecordKeeper:
 
     def _perform_tag_operation(
         self,
-        transaction_uuids: Collection[str],
+        transaction_uuids: Collection[UUID],
         tag_names: Collection[str],
         method_name: str,
     ) -> None:
@@ -1138,7 +1138,7 @@ class RecordKeeper:
         self._account_groups.remove(account_group)
         del account_group
 
-    def remove_transactions(self, transaction_uuids: Collection[str]) -> None:
+    def remove_transactions(self, transaction_uuids: Collection[UUID]) -> None:
         transactions = self._get_transactions(transaction_uuids, Transaction)
         for transaction in transactions:
             transaction.prepare_for_deletion()

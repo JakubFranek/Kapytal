@@ -208,7 +208,7 @@ class TransactionTableFormPresenter:
             self._form, self._record_keeper
         )
 
-        self._transaction_dialog_presenters: tuple[TransactionDialogPresenter] = (
+        self._transaction_dialog_presenters: tuple[TransactionDialogPresenter, ...] = (
             self._cash_transaction_dialog_presenter,
             self._cash_transfer_dialog_presenter,
             self._security_transaction_dialog_presenter,

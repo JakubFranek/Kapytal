@@ -693,7 +693,7 @@ def _calculate_return_percentage(
         _nominator = nom
     else:
         _nom = tuple(nom)
-        if any(not isinstance(num, CashAmount) for num in _nom) or len(_nom) == 0:
+        if any(num is None for num in _nom) or len(_nom) == 0:
             return Decimal(0)
         _nominator: CashAmount = sum(nom, start=_nom[0].currency.zero_amount)
         if _nominator.value_normalized == 0:

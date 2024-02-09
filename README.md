@@ -11,7 +11,7 @@ Kapytal is a PyQt-based Windows tool for managing your personal or household fin
 - advanced Transaction categorization with Payees, Tags and hierarchical Categories
 - 14 powerful Transaction filters, capable of working in conjunction
 - a variety of chart-based Reports to analyse and visualize your data
-- and much, much more...
+- and much more...
 
 ## Requirements
 

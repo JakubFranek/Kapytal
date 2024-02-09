@@ -220,7 +220,7 @@ class SecuritiesOverviewTreeModel(QAbstractItemModel):
     def load_data(self, data: SecurityStatsData) -> None:
         self._data = data.stats
 
-    def rowCount(self, index: QModelIndex = ...) -> int:
+    def rowCount(self, index: QModelIndex | None = None) -> int:
         if index.isValid():
             if index.column() != 0:
                 return 0
@@ -230,28 +230,31 @@ class SecuritiesOverviewTreeModel(QAbstractItemModel):
             return len(item.account_stats)
         return len(self._data)
 
-    def columnCount(self, index: QModelIndex = ...) -> int:
+    def columnCount(self, index: QModelIndex | None = None) -> int:
         return (
             len(SecuritiesOverviewTreeColumn)
             if not index.isValid() or index.column() == 0
             else 0
         )
 
-    def index(self, row: int, column: int, _parent: QModelIndex = ...) -> QModelIndex:
+    def index(
+        self, row: int, column: int, _parent: QModelIndex | None = None
+    ) -> QModelIndex:
         if _parent.isValid() and _parent.column() != 0:
             return QModelIndex()
 
+        parent: SecurityStats | None
         if not _parent or not _parent.isValid():
             parent = None
         else:
-            parent: SecurityStats = _parent.internalPointer()
+            parent = _parent.internalPointer()
 
         child = self._data[row] if parent is None else parent.account_stats[row]
         if child:
             return QAbstractItemModel.createIndex(self, row, column, child)
         return QModelIndex()
 
-    def parent(self, index: QModelIndex = ...) -> QModelIndex:
+    def parent(self, index: QModelIndex | None = None) -> QModelIndex:
         if not index.isValid():
             return QModelIndex()
 
@@ -263,7 +266,7 @@ class SecuritiesOverviewTreeModel(QAbstractItemModel):
         return QAbstractItemModel.createIndex(self, row, 0, parent)
 
     def headerData(
-        self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole = ...
+        self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole
     ) -> str | int | None:
         if role == Qt.ItemDataRole.DisplayRole:
             if orientation == Qt.Orientation.Horizontal:
@@ -279,7 +282,7 @@ class SecuritiesOverviewTreeModel(QAbstractItemModel):
         return None
 
     def data(
-        self, index: QModelIndex, role: Qt.ItemDataRole = ...
+        self, index: QModelIndex, role: Qt.ItemDataRole
     ) -> str | Qt.AlignmentFlag | None:
         if not index.isValid():
             return None
@@ -335,7 +338,7 @@ class SecuritiesOverviewTreeModel(QAbstractItemModel):
             decimals=decimals,
         )
 
-        if column in COLUMNS_IRR:
+        if column in COLUMNS_IRR and isinstance(text, str):
             text += " p.a."
         return text
 

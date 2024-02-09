@@ -1,6 +1,7 @@
 import logging
 from collections.abc import Collection, Sequence
 from datetime import datetime
+from decimal import Decimal
 
 from src.models.base_classes.account import Account
 from src.models.model_objects.attributes import AttributeType
@@ -111,9 +112,11 @@ class CashTransferDialogPresenter(TransactionDialogPresenter):
         amounts_received = {
             transfer.amount_received.value_rounded for transfer in transfers
         }
-        self._dialog.amount_sent = amounts_sent.pop() if len(amounts_sent) == 1 else 0
+        self._dialog.amount_sent = (
+            amounts_sent.pop() if len(amounts_sent) == 1 else Decimal(0)
+        )
         self._dialog.amount_received = (
-            amounts_received.pop() if len(amounts_received) == 1 else 0
+            amounts_received.pop() if len(amounts_received) == 1 else Decimal(0)
         )
 
         tag_names_frozensets = set()
@@ -243,7 +246,7 @@ class CashTransferDialogPresenter(TransactionDialogPresenter):
         self.event_update_model()
         self.event_data_changed(uuids)
 
-    def _prepare_dialog(self, edit_mode: EditMode) -> bool:
+    def _prepare_dialog(self, edit_mode: EditMode) -> None:
         tag_names = sorted(tag.name for tag in self._record_keeper.tags)
         self._dialog = CashTransferDialog(
             self._parent_view,

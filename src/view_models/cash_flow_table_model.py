@@ -55,19 +55,19 @@ class CashFlowTableModel(QAbstractTableModel):
         self.AVERAGE_ROW = len(self._stats) - 2
         self.TOTAL_ROW = len(self._stats) - 1
 
-    def rowCount(self, index: QModelIndex = ...) -> int:
+    def rowCount(self, index: QModelIndex | None = None) -> int:
         if isinstance(index, QModelIndex) and index.isValid():
             return 0
         return len(self._stats)
 
-    def columnCount(self, index: QModelIndex = ...) -> int:  # noqa: ARG002
+    def columnCount(self, index: QModelIndex | None = None) -> int:  # noqa: ARG002
         if not hasattr(self, "_column_count"):
             self._column_count = len(COLUMN_HEADERS)
         return self._column_count
 
     def headerData(
-        self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole = ...
-    ) -> str | int | None:
+        self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole
+    ) -> str | int | QFont | None:
         if role == Qt.ItemDataRole.DisplayRole:
             if orientation == Qt.Orientation.Horizontal:
                 return COLUMN_HEADERS[section]
@@ -81,7 +81,7 @@ class CashFlowTableModel(QAbstractTableModel):
         return None
 
     def data(
-        self, index: QModelIndex, role: Qt.ItemDataRole = ...
+        self, index: QModelIndex, role: Qt.ItemDataRole
     ) -> str | Qt.AlignmentFlag | QFont | QBrush | float | int | None:
         if not index.isValid():
             return None

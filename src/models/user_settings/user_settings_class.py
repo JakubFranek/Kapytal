@@ -276,7 +276,7 @@ class UserSettings(JSONSerializableMixin, CopyableMixin):
         self._check_for_updates_on_startup = value
 
     @property
-    def transaction_table_column_order(self) -> tuple[TransactionTableColumn]:
+    def transaction_table_column_order(self) -> tuple[TransactionTableColumn, ...]:
         return self._transaction_table_column_order
 
     @transaction_table_column_order.setter
@@ -360,7 +360,7 @@ class UserSettings(JSONSerializableMixin, CopyableMixin):
             "check_for_updates_on_startup", True
         )
 
-        transaction_table_column_order: tuple[TransactionTableColumn] = tuple(
+        transaction_table_column_order: tuple[TransactionTableColumn, ...] = tuple(
             TransactionTableColumn[name]
             for name in data.get("transaction_table_column_order", ())
         )

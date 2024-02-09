@@ -20,7 +20,9 @@ class AttributeStats:
     attribute: Attribute
     no_of_transactions: int
     balance: CashAmount | None
-    transactions: set[CashTransaction | RefundTransaction] = field(default_factory=set)
+    transactions: set[
+        CashTransaction | RefundTransaction | SecurityTransaction
+    ] = field(default_factory=set)
 
 
 def calculate_periodic_totals_and_averages(
@@ -68,7 +70,7 @@ def calculate_periodic_attribute_stats(
     base_currency: Currency,
     all_attributes: Collection[Attribute],
     period_format: str = "%B %Y",
-) -> dict[str, tuple[AttributeStats]]:
+) -> dict[str, tuple[AttributeStats, ...]]:
     transactions = sorted(transactions, key=lambda x: x.timestamp)
 
     # separate transactions into bins by period
@@ -79,7 +81,7 @@ def calculate_periodic_attribute_stats(
             transactions_by_period[key] = []
         transactions_by_period[key].append(transaction)
 
-    stats_dict: dict[str, tuple[AttributeStats]] = {}
+    stats_dict: dict[str, tuple[AttributeStats, ...]] = {}
     for period in transactions_by_period:
         period_stats = calculate_attribute_stats(
             transactions_by_period[period], base_currency, all_attributes
@@ -106,6 +108,9 @@ def calculate_attribute_stats(
         else:
             stats = AttributeStats(attribute, 0, None)
         stats_dict[attribute] = stats
+
+    if base_currency is None:
+        return stats_dict
 
     for transaction in transactions:
         if attribute_type == AttributeType.TAG:

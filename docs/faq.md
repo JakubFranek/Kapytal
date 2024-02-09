@@ -5,7 +5,7 @@ The following questions are not ordered in any particular way.
 ## Index
 
 * [What's the backstory behind Kapytal?](#whats-the-backstory-behind-kapytal)
-* [What's the meaning of the name?](#whats-the-meaning-of-the-name)
+* [What's the meaning of the name? How is it pronounced?](#whats-the-meaning-of-the-name-how-is-it-pronounced)
 * [What's up with the capybara mascots?](#whats-up-with-the-capybara-mascots)
 * [Why even bother logging all of your transactions?](#why-even-bother-logging-all-of-your-transactions)
 * [Does Kapytal need an internet connection?](#does-kapytal-need-an-internet-connection)
@@ -30,10 +30,12 @@ I started tracking my financial life in 2018 as I started investing. It seemed n
 
 ---
 
-### What's the meaning of the name?
+### What's the meaning of the name? How is it pronounced?
 
 I was looking for a short yet meaningful name, one which would look and sound good but would not clash with existing projects or well known brand names. I think Kapytal fits the bill.
 The word "capital" has an obvious connection to money, the "py" refers to the fact that the program is written in Python, and the "K" stands for Kuba, which is the diminutive version of my first name.
+
+The preferred pronounciation is [ˈkapɪtaːl], i.e. same as the Czech word *kapitál* or German word *das Kapital*.
 
 ---
 

@@ -1,6 +1,6 @@
 # Glossary
 
-This alphabetically-sorted document contains succint descriptions of many terms one can encounter in Kapytal.
+This alphabetically-sorted document contains succint descriptions and explanations of many terms one can encounter in Kapytal.
 
 ## Index
 
@@ -21,7 +21,7 @@ This alphabetically-sorted document contains succint descriptions of many terms 
 + [Currency](#currency-)
 + [Data File](#data-file)
 + [Date](#date)
-+ [Demo File](#demo-file)
++ [Demo Files](#demo-files)
 + [Description](#description)
 + [Dialog](#dialog)
 + [Dividend](#dividend-)
@@ -48,8 +48,9 @@ This alphabetically-sorted document contains succint descriptions of many terms 
 + [Transaction](#transaction)
 + [Transaction Filters](#transaction-filters-)
 + [Transaction Table](#transaction-table-)
-+ [UUID](#uuid)
++ [Transaction Table Form](#transaction-table-form)
 + [Update Quotes Form](#update-quotes-form-)
++ [UUID](#uuid)
 
 ---
 

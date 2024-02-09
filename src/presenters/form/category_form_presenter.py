@@ -166,7 +166,9 @@ class CategoryFormPresenter:
 
     def _edit_category(self) -> None:
         model = self._get_current_model()
-        item: Category = model.get_selected_category()
+        item = model.get_selected_category()
+        if item is None:
+            raise ValueError("Cannot edit an unselected item.")
         previous_parent = item.parent
         previous_path = self._dialog.current_path
         previous_index = self._get_category_index(item)
@@ -316,9 +318,7 @@ class CategoryFormPresenter:
         self._proxy_income_and_expense.setFilterCaseSensitivity(
             Qt.CaseSensitivity.CaseInsensitive
         )
-        self._proxy_income_and_expense.setRecursiveFilteringEnabled(
-            True
-        )
+        self._proxy_income_and_expense.setRecursiveFilteringEnabled(True)
         self._proxy_income_and_expense.setSortRole(Qt.ItemDataRole.UserRole)
         self._proxy_income_and_expense.setFilterRole(Qt.ItemDataRole.UserRole + 1)
         self._view.incomeAndExpenseTreeView.setModel(self._proxy_income_and_expense)
@@ -387,7 +387,9 @@ class CategoryFormPresenter:
             return self._record_keeper.expense_categories
         return self._record_keeper.income_and_expense_categories
 
-    def _get_root_categories_for_type(self, type_: CategoryType) -> list[Category]:
+    def _get_root_categories_for_type(
+        self, type_: CategoryType
+    ) -> tuple[Category, ...]:
         if type_ == CategoryType.INCOME:
             return self._record_keeper.root_income_categories
         if type_ == CategoryType.EXPENSE:

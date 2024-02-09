@@ -375,7 +375,7 @@ class CashTransactionDialogPresenter(TransactionDialogPresenter):
         self.event_update_model()
         self.event_data_changed(uuids)
 
-    def _prepare_dialog(self, edit_mode: EditMode) -> bool:
+    def _prepare_dialog(self, edit_mode: EditMode) -> None:
         payees = sorted(payee.name for payee in self._record_keeper.payees)
         categories_income = (
             self._record_keeper.income_categories

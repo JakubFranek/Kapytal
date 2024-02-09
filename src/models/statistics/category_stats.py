@@ -106,7 +106,7 @@ def calculate_periodic_category_stats(
     base_currency: Currency,
     all_categories: Collection[Category],
     period_format: str = "%B %Y",
-) -> dict[str, tuple[CategoryStats]]:
+) -> dict[str, tuple[CategoryStats, ...]]:
     transactions = sorted(transactions, key=lambda x: x.timestamp)
 
     # separate transactions into bins by period
@@ -117,7 +117,7 @@ def calculate_periodic_category_stats(
             transactions_by_period[key] = []
         transactions_by_period[key].append(transaction)
 
-    stats_dict: dict[str, tuple[CategoryStats]] = {}
+    stats_dict: dict[str, tuple[CategoryStats, ...]] = {}
     for period in transactions_by_period:
         period_stats = calculate_category_stats(
             transactions_by_period[period], base_currency, all_categories

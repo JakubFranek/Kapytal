@@ -93,7 +93,7 @@ class FilePresenter:
         self.update_unsaved_changes(unsaved_changes=False)
 
     @property
-    def recent_file_paths(self) -> tuple[Path]:
+    def recent_file_paths(self) -> tuple[Path, ...]:
         return tuple(self._recent_paths)
 
     def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
@@ -229,6 +229,9 @@ class FilePresenter:
         self._busy_indicator.set_lower_text("Updating User Interface...")
         self._view.set_item_view_update_state(enabled=True)
         QApplication.processEvents()
+
+        if not isinstance(self._worker, LoadFileWorker):
+            raise TypeError("Worker must be an instance of LoadFileWorker.")
 
         data = self._worker.data
         record_keeper = self._worker.record_keeper

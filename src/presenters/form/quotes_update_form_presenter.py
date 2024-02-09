@@ -196,12 +196,16 @@ class QuotesUpdateFormPresenter:
             try:
                 date_, value = self._quotes[str(item)]
                 if isinstance(item, Security):
+                    if not isinstance(value, CashAmount):
+                        raise TypeError(f"Expected CashAmount, received {type(value)}")
                     item.set_price(date_, value)
                     text += (
                         f"- {item.symbol}: {value} on "
                         f"{date_.strftime(user_settings.settings.general_date_format)}\n"
                     )
                 else:
+                    if not isinstance(value, Decimal):
+                        raise TypeError(f"Expected Decimal, received {type(value)}")
                     item.set_rate(date_, value)
                     text += (
                         f"- {item}: {value:n} on "

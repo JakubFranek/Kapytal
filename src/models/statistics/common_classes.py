@@ -30,17 +30,17 @@ class TransactionBalance:
     def __len__(self) -> int:
         return len(self.transactions)
 
-    def __add__(self, other: Self) -> Self:
+    def __add__(self, other: Self) -> "TransactionBalance":
         return TransactionBalance(
             self.balance + other.balance, self.transactions.union(other.transactions)
         )
 
-    def __sub__(self, other: Self) -> Self:
+    def __sub__(self, other: Self) -> "TransactionBalance":
         return TransactionBalance(
             self.balance - other.balance, self.transactions.union(other.transactions)
         )
 
-    def __truediv__(self, __o: object) -> Self:
+    def __truediv__(self, __o: object) -> "TransactionBalance":
         if not isinstance(__o, int | Decimal):
             return NotImplemented
         return TransactionBalance(self.balance / __o, self.transactions)

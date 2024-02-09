@@ -1,6 +1,7 @@
 import logging
 from collections.abc import Sequence
 from datetime import datetime
+from decimal import Decimal
 
 from src.models.custom_exceptions import NotFoundError
 from src.models.model_objects.attributes import AttributeType
@@ -142,11 +143,11 @@ class SecurityTransactionDialogPresenter(TransactionDialogPresenter):
         )
 
         shares = {transaction.shares for transaction in transactions}
-        self._dialog.shares = shares.pop() if len(shares) == 1 else 0
+        self._dialog.shares = shares.pop() if len(shares) == 1 else Decimal(0)
 
         prices = {transaction.amount_per_share for transaction in transactions}
         self._dialog.amount_per_share = (
-            prices.pop().value_normalized if len(prices) == 1 else 0
+            prices.pop().value_normalized if len(prices) == 1 else Decimal(0)
         )
 
         tag_names_frozensets = set()
@@ -299,7 +300,7 @@ class SecurityTransactionDialogPresenter(TransactionDialogPresenter):
         self.event_update_model()
         self.event_data_changed(uuids)
 
-    def _prepare_dialog(self, edit_mode: EditMode) -> bool:
+    def _prepare_dialog(self, edit_mode: EditMode) -> None:
         securities = self._record_keeper.securities
         tag_names = sorted(tag.name for tag in self._record_keeper.tags)
         self._dialog = SecurityTransactionDialog(

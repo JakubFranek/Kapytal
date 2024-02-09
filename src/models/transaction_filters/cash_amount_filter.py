@@ -1,4 +1,5 @@
 from src.models.base_classes.transaction import Transaction
+from src.models.custom_exceptions import InvalidOperationError
 from src.models.model_objects.cash_objects import (
     CashRelatedTransaction,
     CashTransaction,
@@ -34,10 +35,7 @@ class CashAmountFilter(BaseTransactionFilter):
     ) -> None:
         super().__init__(mode)
 
-        if mode != FilterMode.OFF or (minimum is not None or maximum is not None):
-            self._validate_cash_amounts(minimum, maximum)
-        else:
-            self._currency = None
+        self._validate_cash_amounts(minimum, maximum, mode)
 
         self._minimum = minimum
         self._maximum = maximum
@@ -116,22 +114,36 @@ class CashAmountFilter(BaseTransactionFilter):
     def _convert_amounts(
         self, amounts: tuple[CashAmount, ...]
     ) -> tuple[CashAmount, ...]:
+        if self._currency is None:  # should never occur, but just in case
+            raise InvalidOperationError(  # pragma: no cover
+                "Cannot convert amounts without Currency."
+            )
         return tuple(amount.convert(self._currency) for amount in amounts)
 
-    def _validate_cash_amounts(self, minimum: CashAmount, maximum: CashAmount) -> None:
-        if not isinstance(minimum, CashAmount):
+    def _validate_cash_amounts(
+        self, minimum: CashAmount | None, maximum: CashAmount | None, mode: FilterMode
+    ) -> None:
+        if mode != FilterMode.OFF and not isinstance(minimum, CashAmount):
             raise TypeError("Parameter 'minimum' must be a CashAmount.")
-        if not isinstance(maximum, CashAmount):
+        if mode != FilterMode.OFF and not isinstance(maximum, CashAmount):
             raise TypeError("Parameter 'maximum' must be a CashAmount.")
-        if minimum.currency != maximum.currency:
-            raise CurrencyError(
-                "Parameters 'minimum' and 'maximum' must have the same currency."
+        if type(minimum) != type(maximum):
+            raise TypeError(
+                "Parameters 'minimum' and 'maximum' must be of the same type."
             )
-        if minimum > maximum:
-            raise ValueError(
-                "Parameter 'minimum' must be less than or equal to 'maximum'."
-            )
-        if minimum.is_negative():
-            # It is enough to check minimum since we know that minimum <= maximum
-            raise ValueError("Parameter 'minimum' must not be negative.")
-        self._currency = minimum.currency
+
+        if isinstance(minimum, CashAmount) and isinstance(maximum, CashAmount):
+            if minimum.currency != maximum.currency:
+                raise CurrencyError(
+                    "Parameters 'minimum' and 'maximum' must have the same currency."
+                )
+            if minimum > maximum:
+                raise ValueError(
+                    "Parameter 'minimum' must be less than or equal to 'maximum'."
+                )
+            if minimum.is_negative():
+                # It is enough to check minimum since we know that minimum <= maximum
+                raise ValueError("Parameter 'minimum' must not be negative.")
+            self._currency = minimum.currency
+        else:
+            self._currency = None
