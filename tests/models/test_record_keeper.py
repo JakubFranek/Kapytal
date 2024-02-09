@@ -334,6 +334,7 @@ def test_add_cash_transaction(
             ),
             min_size=0,
             max_size=5,
+            unique=True,
         )
     )
     record_keeper.add_cash_transaction(

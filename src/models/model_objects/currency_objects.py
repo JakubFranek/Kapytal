@@ -12,6 +12,7 @@ from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
 from src.models.user_settings import user_settings
 from src.presenters.utilities.event import Event
 from src.utilities.formatting import quantizers
+from src.utilities.numbers import get_decimal_exponent
 
 # IDEA: add CurrencyManager class to take care of Currency cache resets
 # and offload RecordKeeper methods to CurrencyManager
@@ -425,7 +426,7 @@ class ExchangeRate(CopyableMixin, JSONSerializableMixin):
 
         self._rate_decimals = min(
             max(
-                (-rate.as_tuple().exponent for rate in self._rate_history.values()),
+                (get_decimal_exponent(rate) for rate in self._rate_history.values()),
                 default=0,
             ),
             18,  # hard limit to 18 decimals
@@ -475,13 +476,13 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
                 self._value_rounded = self._raw_value
             else:
                 self._value_rounded = round(self._raw_value, self._currency.decimals)
-                if -self._value_rounded.as_tuple().exponent > self.ROUNDED_MAX_ZEROES:
+                if get_decimal_exponent(self._value_rounded) > self.ROUNDED_MAX_ZEROES:
                     # if value has too many decimals, remove trailing zeros
                     # to save horizontal space
                     self._value_rounded = self._value_rounded.normalize()
                     # if value has too few decimal places now, restore some zeros
                     if (
-                        -self._value_rounded.as_tuple().exponent
+                        get_decimal_exponent(self._value_rounded)
                         < self.ROUNDED_MAX_ZEROES
                     ):
                         self._value_rounded = self._value_rounded.quantize(
@@ -497,7 +498,7 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
             decimals = min(self._currency.decimals, 4)
             if (
                 not self._value_normalized.is_nan()
-                and -self._value_normalized.as_tuple().exponent < decimals
+                and get_decimal_exponent(self._value_normalized) < decimals
             ):
                 self._value_normalized = self._value_normalized.quantize(
                     quantizers[decimals]
@@ -626,10 +627,9 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
     def __round__(self, ndigits: int = 0) -> Decimal:
         _value_rounded = round(self._raw_value, ndigits)
         min_decimals = min(ndigits, 4)
-        # TODO: create exponent helper function
-        if -_value_rounded.as_tuple().exponent > min_decimals:
+        if get_decimal_exponent(_value_rounded) > min_decimals:
             _value_rounded = _value_rounded.normalize()
-            if -_value_rounded.as_tuple().exponent < min_decimals:
+            if get_decimal_exponent(_value_rounded) < min_decimals:
                 _value_rounded = _value_rounded.quantize(quantizers[min_decimals])
         return _value_rounded
 

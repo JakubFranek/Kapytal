@@ -30,6 +30,7 @@ from src.models.model_objects.currency_objects import (
 )
 from src.models.user_settings import user_settings
 from src.presenters.utilities.event import Event
+from src.utilities.numbers import get_decimal_exponent
 
 
 class PriceNotFoundError(ValueError):
@@ -320,7 +321,7 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
 
         self._price_decimals = max(
             (
-                -price.value_normalized.as_tuple().exponent
+                get_decimal_exponent(price.value_normalized)
                 for price in self._price_history.values()
             ),
             default=0,
@@ -662,7 +663,7 @@ class SecurityRelatedTransaction(Transaction, ABC):
             raise ValueError(
                 f"{self.__class__.__name__}.shares must be a finite positive number."
             )
-        _value_decimals = -_value.as_tuple().exponent
+        _value_decimals = get_decimal_exponent(_value)
         if _value_decimals > shares_decimals:
             raise ValueError(
                 f"{self.__class__.__name__}.shares must have maximum "

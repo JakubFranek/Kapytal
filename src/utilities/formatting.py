@@ -2,6 +2,8 @@ import locale
 import numbers
 from decimal import Decimal
 
+from src.utilities.numbers import get_decimal_exponent
+
 DECIMAL_ONE = Decimal(1)
 
 quantizers: dict[int, Decimal] = {i: Decimal(f"1e-{i}") for i in range(18 + 1)}
@@ -53,7 +55,7 @@ def convert_decimal_to_string(
 
 def _quantize_if_needed(value: Decimal, min_decimals: int | None) -> Decimal:
     if min_decimals is not None:
-        exponent = -value.as_tuple().exponent
+        exponent = get_decimal_exponent(value)
         if exponent < min_decimals:
             return value.quantize(quantizers[min_decimals])
     return value

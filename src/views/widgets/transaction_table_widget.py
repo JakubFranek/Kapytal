@@ -208,6 +208,7 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
         self.actionEdit.setEnabled(is_any_selected)
         self.actionDuplicate.setEnabled(is_one_selected and enable_duplicate)
         self.actionDelete.setEnabled(is_any_selected)
+        self.actionCopy_UUIDs.setEnabled(is_any_selected)
         self.actionAdd_Tags.setEnabled(is_any_selected)
         self.actionRemove_Tags.setEnabled(is_any_selected)
         self.actionRefund.setEnabled(enable_refund)
