@@ -1,4 +1,5 @@
 import logging
+from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from PyQt6.QtCore import QSortFilterProxyModel, Qt
@@ -20,7 +21,6 @@ from src.views.utilities.message_box_functions import ask_yes_no_question, show_
 
 if TYPE_CHECKING:
     from datetime import date
-    from decimal import Decimal
 
 # TODO: add multi threading to be able to cancel quotes download
 
