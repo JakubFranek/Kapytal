@@ -152,13 +152,13 @@ class FilePresenter:
         self.load_from_file(recent_path)
         return True
 
-    def close_file(self) -> None:
+    def create_new_file(self) -> None:
         if (
-            self.check_for_unsaved_changes("Close File", callback=self.close_file)
+            self.check_for_unsaved_changes("New File", callback=self.create_new_file)
             is False
         ):
             return
-        logging.info("Closing File, resetting to clean state")
+        logging.info("Creating New File, resetting to clean state")
         self.event_load_record_keeper(RecordKeeper())
         self._current_file_path = None
         self.update_unsaved_changes(unsaved_changes=False)

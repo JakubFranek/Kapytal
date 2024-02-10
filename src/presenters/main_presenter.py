@@ -247,7 +247,7 @@ class MainPresenter:
         self._view.signal_clear_recent_files.connect(
             self._file_presenter.clear_recent_paths
         )
-        self._view.signal_close_file.connect(self._file_presenter.close_file)
+        self._view.signal_new_file.connect(self._file_presenter.create_new_file)
 
         self._view.signal_show_account_tree.connect(
             lambda checked: self._account_tree_presenter.set_widget_visibility(

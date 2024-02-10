@@ -44,7 +44,7 @@
      <item row="2" column="0">
       <widget class="QPushButton" name="openFilePushButton">
        <property name="text">
-        <string>Open file from browser</string>
+        <string>Open File</string>
        </property>
       </widget>
      </item>
@@ -65,7 +65,7 @@
      <item row="0" column="0">
       <widget class="QPushButton" name="createNewFilePushButton">
        <property name="text">
-        <string>Create new file</string>
+        <string>New file</string>
        </property>
       </widget>
      </item>

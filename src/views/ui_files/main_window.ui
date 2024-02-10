@@ -52,14 +52,13 @@
      <addaction name="actionCategory_Template_EN"/>
      <addaction name="actionCategory_Template_CZ"/>
     </widget>
+    <addaction name="actionNew_File"/>
     <addaction name="actionOpen_File"/>
     <addaction name="menuRecent_Files"/>
     <addaction name="menuDemos_and_Templates"/>
     <addaction name="separator"/>
     <addaction name="actionSave"/>
     <addaction name="actionSave_As"/>
-    <addaction name="separator"/>
-    <addaction name="actionClose_File"/>
     <addaction name="separator"/>
     <addaction name="actionQuit"/>
    </widget>
@@ -234,9 +233,9 @@
     <string>Settings</string>
    </property>
   </action>
-  <action name="actionClose_File">
+  <action name="actionNew_File">
    <property name="text">
-    <string>Close File</string>
+    <string>New File</string>
    </property>
   </action>
   <action name="actionClear_Recent_File_Menu">

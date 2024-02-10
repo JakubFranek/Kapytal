@@ -39,7 +39,7 @@ class WelcomeDialog(CustomDialog, Ui_WelcomeDialog):
         self.label.setPixmap(self.pixmap)
 
         self._setup_button(
-            self.createNewFilePushButton, icons.document_plus, "Create New File"
+            self.createNewFilePushButton, icons.document_plus, "New File"
         )
         self._setup_button(
             self.openRecentFilePushButton,
@@ -47,9 +47,7 @@ class WelcomeDialog(CustomDialog, Ui_WelcomeDialog):
             "Open Most Recent File",
             height=52,
         )
-        self._setup_button(
-            self.openFilePushButton, icons.open_file, "Open File from Browser"
-        )
+        self._setup_button(self.openFilePushButton, icons.open_file, "Open File")
         self._setup_button(
             self.openDemoFilePushButton, icons.document_smiley, "Open Demo or Template"
         )

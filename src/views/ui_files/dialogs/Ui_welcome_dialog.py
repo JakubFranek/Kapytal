@@ -56,9 +56,9 @@ class Ui_WelcomeDialog(object):
         _translate = QtCore.QCoreApplication.translate
         WelcomeDialog.setWindowTitle(_translate("WelcomeDialog", "Welcome"))
         self.label.setText(_translate("WelcomeDialog", "WELCOME IMAGE HERE"))
-        self.openFilePushButton.setText(_translate("WelcomeDialog", "Open file from browser"))
+        self.openFilePushButton.setText(_translate("WelcomeDialog", "Open File"))
         self.openRecentFilePushButton.setText(_translate("WelcomeDialog", "Open most recent file"))
         self.openQuickStartGuidePushButton.setText(_translate("WelcomeDialog", "Quick Start Guide"))
-        self.createNewFilePushButton.setText(_translate("WelcomeDialog", "Create new file"))
+        self.createNewFilePushButton.setText(_translate("WelcomeDialog", "New file"))
         self.quitPushButton.setText(_translate("WelcomeDialog", "Quit"))
         self.openDemoFilePushButton.setText(_translate("WelcomeDialog", "Open Demo or Template"))
