@@ -313,7 +313,9 @@ The [Currency](#currency-) of a [Cash Account](#cash-account-) or a [Security](#
 
 In the [Account Tree](#account-tree-), the balance of all Cash Accounts is shown in both native and [base](#base-currency) Currency, unless the native Currency of the particular Cash Account matches the base Currency. In that case, native balance is empty (as it would be identical to base amount anyway).
 
-In the [Transaction Table](#transaction-table-), Native Amount and Base Amount are two separate columns. Native Amount displays the amount of all [Transactions](#transaction) except the [Cash Transfer](#cash-transfer-) and [Security Transfer](#security-transfer-) Transactions, which are denominated in a Currency different from the base Currency.
+If all Securities contained within a [Security Account](#security-account-) are denominated in the same non-base Currency, the balance of the Security Account is shown in the Currency of the Securities in the Account Tree *Native Balance* column.
+
+In the [Transaction Table](#transaction-table-), Native Amount and Base Amount are two separate columns. Native Amount displays the amount of all [Transactions](#transaction), which are denominated in a Currency different from the base Currency (except the [Cash Transfer](#cash-transfer-) and [Security Transfer](#security-transfer-) Transactions, which utilize different columns altogether).
 
 In the [Securities Form](#securities-form) Overview tab tree, there are several performance indicators which are denominated in the native Currency of the given Security.
 
@@ -584,5 +586,7 @@ Under the hood, all [Account Items](#account-item), [Securities](#security-) and
 ### Update Quotes Form ![Icon](../resources/icons/icons-16/arrow-circle-double.png)
 
 Update Quotes Form is a [Form](#form) used to fetch latest [Security](#security-) price and [Exchange Rate](#exchange-rate-) data from Yahoo Finance. Only Securities with non-empty symbol strings are eligible for price update. The Security symbol must match the symbol used for the given Security on Yahoo Finance.
+
+Please note the first quote download after starting Kapytal can take a while (but usually less than 1 minute).
 
 ---
