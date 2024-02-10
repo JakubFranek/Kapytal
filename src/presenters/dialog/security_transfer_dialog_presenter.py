@@ -272,19 +272,24 @@ class SecurityTransferDialogPresenter(TransactionDialogPresenter):
             self._dialog.set_shares_suffix("")
             return
 
-        if self._dialog.edit_mode == EditMode.ADD:
-            shares = sender.securities[security]
-        elif self._dialog.edit_mode == EditMode.EDIT_SINGLE:
-            edited_transaction = transactions[0]
-            if edited_transaction.security == security and (
-                edited_transaction.sender == sender
-            ):
-                shares = edited_transaction.shares + sender.securities[security]
-            else:
+        try:
+            if self._dialog.edit_mode == EditMode.ADD:
                 shares = sender.securities[security]
-        else:
-            self._dialog.set_shares_suffix("")
-            return
+            elif self._dialog.edit_mode == EditMode.EDIT_SINGLE:
+                edited_transaction = transactions[0]
+                if edited_transaction.security == security and (
+                    edited_transaction.sender == sender
+                ):
+                    shares = edited_transaction.shares + sender.securities[security]
+                else:
+                    shares = sender.securities[security]
+            else:
+                self._dialog.set_shares_suffix("")
+                return
 
-        suffix = f" / {convert_decimal_to_string(shares,18,security.shares_decimals)}"
-        self._dialog.set_shares_suffix(suffix)
+            suffix = (
+                f" / {convert_decimal_to_string(shares,18,security.shares_decimals)}"
+            )
+            self._dialog.set_shares_suffix(suffix)
+        except Exception:  # noqa: BLE001
+            self._dialog.set_shares_suffix("")
