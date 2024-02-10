@@ -465,7 +465,36 @@ Note Kapytal allows negative shares of a Security within Security Account, i.e. 
 
 ### Settings Form ![Icon](../resources/icons/icons-16/gear.png)
 
-Settings Form is used to change internal Kapytal settings, such as the [date](#date) formats, [backup](#backups) file sizes and paths, and [log](#logging) sizes.
+Settings Form is used to change the following internal Kapytal settings:
+
++ Check for updates on startup
+  + when checked, Kapytal attempts to connect to GitHub on each startup to check whether there are any new releases available
+  + default value: checked
++ Exchange Rate decimals
+  + number of decimals available when manually setting Exchange Rate value in [Currencies Form](#currencies-form)
+  + default value: 4
++ Amount per Share decimals
+  + number of decimals available in the [Security Transaction](#security-transaction) dialogs in the Amount per Share spinbox
+  + default value: 4
++ General date format
+  + formatting string used for formatting [dates](#date), with the exception of [Transaction Table](#transaction-table-) Date column (see below)
+  + default value: `%d.%m.%Y`
++ Transaction Table date format
+  + formatting string used for formatting dates in the Date column of the Transaction Table
+  + default value: `%d.%m.%Y`
++ Number format
+  + number format for all numbers shown in Kapytal
+  + possible options: `1,234.5678`, `1.234,5678`, `1 234.5678`, `1 234,5678`, `1234.5678`
+  + default value is set automatically during first start up based on system locale
++ Maximum [backup](#backups) directory size
+  + maximum size of each backup directory before Kapytal starts deleting backups, starting from the oldest
+  + default value: 100,000 kB
++ Backup directories
+  + list of directories where backups will be created
+  + default value: `<installation_directory>/_internal/saved_data/backups`
++ Maximum [logs](#logging) directory size
+  + maximum size of logs directory before Kapytal starts deleting log files, starting from the oldest
+  + default value: 1,000 kB
 
 ---
 

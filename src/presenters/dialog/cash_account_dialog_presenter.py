@@ -100,7 +100,7 @@ class CashAccountDialogPresenter:
 
         logging.info(
             f"Adding CashAccount: {path=}, {index=}, "
-            f"initial_balance={initial_balance:,} {currency_code}"
+            f"initial_balance={initial_balance} {currency_code}"
         )
         try:
             self._record_keeper.add_cash_account(

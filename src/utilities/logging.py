@@ -95,15 +95,13 @@ def remove_old_logs() -> None:
 
         if logs_number <= 1 and logs_size >= size_limit:
             logging.warning(
-                f"All old logs deleted, size limit of {size_limit:,} bytes "
+                f"All old logs deleted, size limit of {size_limit} bytes "
                 "could not be reached, continuing"
             )
             return
 
         if logs_size <= size_limit:
-            logging.debug(
-                f"Logs size limit satisfied ({logs_size:,}/{size_limit:,} bytes)"
-            )
+            logging.debug(f"Logs size limit satisfied ({logs_size}/{size_limit} bytes)")
             return
 
         _remove_oldest_log(constants.logs_path)

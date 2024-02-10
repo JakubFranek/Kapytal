@@ -435,7 +435,7 @@ class CurrencyFormPresenter:
             handle_exception(exception)
             return
 
-        logging.debug(f"Loaded {len(data):,} data points for {exchange_rate!s}")
+        logging.debug(f"Loaded {len(data)} data points for {exchange_rate!s}")
 
         if conflict_resolution_mode == ConflictResolutionMode.OVERWRITE:
             filtered_data = data
@@ -453,7 +453,7 @@ class CurrencyFormPresenter:
             return
 
         logging.debug(
-            f"Set {len(filtered_data):,} data points to {exchange_rate!s} "
+            f"Set {len(filtered_data)} data points to {exchange_rate!s} "
             f"(conflict_resolution_mode={conflict_resolution_mode.name})"
         )
 

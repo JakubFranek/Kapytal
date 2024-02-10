@@ -46,14 +46,14 @@ def backup_json_file(file_path: Path) -> None:
             if len(old_backup_paths) == 1 and total_size > size_limit:
                 logging.warning(
                     f"Only the latest backup is left, size limit of "
-                    f"{size_limit:,} bytes could not be reached: {backup_directory}"
+                    f"{size_limit} bytes could not be reached: {backup_directory}"
                 )
                 break
 
             if total_size <= size_limit:
                 logging.debug(
-                    f"Backup size limit satisfied ({total_size:,} / "
-                    f"{size_limit:,} bytes): {backup_directory}"
+                    f"Backup size limit satisfied ({total_size} / "
+                    f"{size_limit} bytes): {backup_directory}"
                 )
                 break
 

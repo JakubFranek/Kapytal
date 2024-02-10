@@ -435,7 +435,7 @@ class SecurityFormPresenter:
             handle_exception(exception)
             return
 
-        logging.debug(f"Loaded {len(data):,} data points for {security!s}")
+        logging.debug(f"Loaded {len(data)} data points for {security!s}")
 
         if conflict_resolution_mode == ConflictResolutionMode.OVERWRITE:
             filtered_data = data
@@ -453,7 +453,7 @@ class SecurityFormPresenter:
             return
 
         logging.debug(
-            f"Set {len(filtered_data):,} data points to {security.name} "
+            f"Set {len(filtered_data)} data points to {security.name} "
             f"(conflict_resolution_mode={conflict_resolution_mode.name})"
         )
 

@@ -39,7 +39,7 @@ class UserSettings(JSONSerializableMixin, CopyableMixin):
     )
 
     LOGS_DEFAULT_MAX_SIZE = 1_000_000
-    BACKUPS_DEFAULT_MAX_SIZE = 10_000_000
+    BACKUPS_DEFAULT_MAX_SIZE = 100_000_000
 
     def __init__(self) -> None:
         self._time_zone = ZoneInfo(get_localzone_name())
@@ -52,8 +52,8 @@ class UserSettings(JSONSerializableMixin, CopyableMixin):
 
         self._number_format: NumberFormat = _get_number_format_for_locale()
 
-        self._exchange_rate_decimals = 9
-        self._amount_per_share_decimals = 9
+        self._exchange_rate_decimals = 4
+        self._amount_per_share_decimals = 4
 
         self._backup_paths = []
 
@@ -93,7 +93,7 @@ class UserSettings(JSONSerializableMixin, CopyableMixin):
 
         logging.info(
             "Changing UserSettings.logs_max_size_bytes from "
-            f"{self._logs_max_size_bytes:,} to {value:,}"
+            f"{self._logs_max_size_bytes} to {value}"
         )
         self._logs_max_size_bytes = value
 
@@ -112,7 +112,7 @@ class UserSettings(JSONSerializableMixin, CopyableMixin):
 
         logging.info(
             "Changing UserSettings.backups_max_size_bytes from "
-            f"{self._backups_max_size_bytes:,} to {value:,}"
+            f"{self._backups_max_size_bytes} to {value}"
         )
         self._backups_max_size_bytes = value
 

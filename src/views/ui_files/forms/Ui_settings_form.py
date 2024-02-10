@@ -169,7 +169,7 @@ class Ui_SettingsForm(object):
         _translate = QtCore.QCoreApplication.translate
         SettingsForm.setWindowTitle(_translate("SettingsForm", "Settings"))
         self.generalDateFormatLabel.setText(_translate("SettingsForm", "General date format"))
-        self.transactionTableDateFormatLabel.setText(_translate("SettingsForm", "Transaction table date format"))
+        self.transactionTableDateFormatLabel.setText(_translate("SettingsForm", "Transaction Table date format"))
         self.exchangeRateDecimalsLabel.setToolTip(_translate("SettingsForm", "<html><head/><body><p>Number of decimal places of Exchange Rate spinbox when manually setting Exchange Rate quote in Currencies Form.</p></body></html>"))
         self.exchangeRateDecimalsLabel.setText(_translate("SettingsForm", "Exchange Rate decimals"))
         self.exchangeRateDecimalsSpinBox.setToolTip(_translate("SettingsForm", "<html><head/><body><p>Number of decimal places of Exchange Rate spinbox when manually setting Exchange Rate quote in Currencies Form.</p></body></html>"))
