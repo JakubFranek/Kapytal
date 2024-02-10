@@ -45,7 +45,7 @@
          <item row="4" column="0">
           <widget class="QLabel" name="transactionTableDateFormatLabel">
            <property name="text">
-            <string>Transaction table date format</string>
+            <string>Transaction Table date format</string>
            </property>
           </widget>
          </item>
@@ -236,7 +236,7 @@
        <item>
         <widget class="QLabel" name="backupsDisclaimerLabel">
          <property name="text">
-          <string>NOTE: Kapytal automatically deletes the contents of the backup directories, starting from the oldest file, if the backup directory size limit is exceeded during launch. If you wish to keep any of the backups permanently, copy them elsewhere or set a very large directory size limit. Do not store any other data in the backup directories.</string>
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;NOTE: A backup file is created in all backup directories whenever a file is opened or saved. Kapytal automatically deletes the contents of a backup directory, starting from the oldest file, if the size limit is exceeded. To keep any of the backups permanently, copy them elsewhere or set a very large size limit. Do not store any other data in the backup directories.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignJustify|Qt::AlignVCenter</set>
@@ -297,7 +297,7 @@
        <item>
         <widget class="QLabel" name="logsDisclaimerLabel">
          <property name="text">
-          <string>NOTE: Logs contain records of all operations performed by Kapytal. A new log is created each time the program is launched. Logs contain data entered into the Kapytal by the user, which can be sensitive. The logs exist only locally. The purpose of the logs is to provide information to the developer if unexpected behaviour or an error occurs. &quot;Debug&quot; logs are more detailed than &quot;info&quot; logs. When the logs directory size exceeds the user defined limit during launch, Kapytal automatically deletes the oldest logs until the limit is satisfied. Do not store any other data in the logs directories.</string>
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;NOTE: Logs contain records of all operations performed by Kapytal. A new log is created each time the program is launched. Logs contain potentially sensitive data entered into Kapytal by the user. The logs exist only locally and are not uploaded anywhere. The purpose of the logs is to provide debugging information if unexpected behaviour or an error occurs. Upon launch, Kapytal automatically deletes the oldest logs until the size limit is satisfied. Do not store any other data in the logs directories.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignJustify|Qt::AlignVCenter</set>

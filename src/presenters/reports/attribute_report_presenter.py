@@ -294,7 +294,7 @@ class AttributeReportPresenter:
 
 def _filter_transactions(
     transactions: Collection[Transaction],
-) -> tuple[CashTransaction | RefundTransaction]:
+) -> tuple[CashTransaction | RefundTransaction, ...]:
     return tuple(
         transaction
         for transaction in transactions

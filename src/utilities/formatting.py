@@ -2,19 +2,21 @@ import locale
 import numbers
 from decimal import Decimal
 
+from src.utilities.numbers import get_decimal_exponent
+
 DECIMAL_ONE = Decimal(1)
 
 quantizers: dict[int, Decimal] = {i: Decimal(f"1e-{i}") for i in range(18 + 1)}
 
 
-def format_real(number: numbers.Real, decimals: int = 2) -> str:
+def format_real(number: numbers.Real | Decimal, decimals: int = 2) -> str:
     """Returns a string representation of a number with min_decimals precision.
     Is locale-aware and includes group separators."""
     return locale.format_string(f"%.{decimals}f", number, grouping=True)
 
 
 def format_percentage(
-    number: numbers.Real, max_length: int = 12, decimals: int = 2
+    number: numbers.Real | Decimal, max_length: int = 12, decimals: int = 2
 ) -> str:
     return_text = f"{format_real(number, decimals)} %"
     if len(return_text) <= max_length:
@@ -53,7 +55,7 @@ def convert_decimal_to_string(
 
 def _quantize_if_needed(value: Decimal, min_decimals: int | None) -> Decimal:
     if min_decimals is not None:
-        exponent = -value.as_tuple().exponent
+        exponent = get_decimal_exponent(value)
         if exponent < min_decimals:
             return value.quantize(quantizers[min_decimals])
     return value

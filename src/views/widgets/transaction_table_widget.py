@@ -103,6 +103,7 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
         # this is necessary to make action shortcuts work
         self.tableView.addAction(self.actionDelete)
         self.tableView.addAction(self.actionDuplicate)
+        self.tableView.addAction(self.actionRefund)
 
         # this filter disables keyboard search in QTableView
         self.filter_ = EventFilter(parent=None)
@@ -180,13 +181,9 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
             return
 
         self.tableView.setColumnHidden(column, not show)
-        if show:
-            logging.debug(f"Showing column {column.name}")
-            if resize:
-                self.resize_table_to_contents()
-                self.tableView.viewport().update()
-        else:
-            logging.debug(f"Hiding column {column.name}")
+        if show and resize:
+            self.resize_table_to_contents()
+            self.tableView.viewport().update()
 
     def set_all_columns_visibility(self, *, show: bool) -> None:
         for column in TRANSACTION_TABLE_COLUMN_HEADERS:
@@ -207,6 +204,7 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
         self.actionEdit.setEnabled(is_any_selected)
         self.actionDuplicate.setEnabled(is_one_selected and enable_duplicate)
         self.actionDelete.setEnabled(is_any_selected)
+        self.actionCopy_UUIDs.setEnabled(is_any_selected)
         self.actionAdd_Tags.setEnabled(is_any_selected)
         self.actionRemove_Tags.setEnabled(is_any_selected)
         self.actionRefund.setEnabled(enable_refund)

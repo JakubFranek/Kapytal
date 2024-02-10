@@ -1,44 +1,32 @@
-# Kapytal
+![image](./resources/images/welcome_dark_mode.png)
 
-Kapytal is an upcoming PyQt-based desktop tool for managing personal or household finances.
+Kapytal is a PyQt-based Windows tool for managing your personal or household finances. Log your income and expenses, track your investments, analyse the data and take control of your financial life.
 
-Log your income and expenses, track your investments, analyse the data and take control of your financial life.
+## Features
 
-## Kapytal supports
-
-- saving to and loading from a custom JSON file ([example here](/saved_data/demo.json))
-- Currencies
-- Securities
-- Cash Accounts and Security Accounts
-- multi-level Account hierarchies
-- several Transaction types: Income, Expense, Refund, Cash Transfer, Buy, Sell, Security Transfer
-- multiple Income or Expense Categories per Transaction
-- multiple Tags per Transaction
-- custom amounts ascribed to each Tag within Transactions
-- Payees
-- powerful Transaction filtering
-- many Reports, charts and tables to analyse your data
-
-## Kapytal does NOT support
-
-- importing and exporting data from other financial software
-- importing data from your bank statements
-- calling your bank's API to import your latest transactions
-- advanced investment performance analysis
-  - Kapytal offers only basic performance indicators (absolute return and IRR)
-  - complementing Kapytal with [Portfolio Performance](https://www.portfolio-performance.info/en/) for advanced analytics is recommended
-- synchronizing your data with any web or mobile apps
-- scheduled Transactions
-- budgets
-- languages other than English
+- a wide variety of [Transactions](./docs/glossary.md#transaction): [Income](./docs/glossary.md#income-), [Expense](./docs/glossary.md#expense-), [Refund](./docs/glossary.md#expense-), [Cash Transfer](./docs/glossary.md#cash-transfer-), [Buy](./docs/glossary.md#buy-), [Sell](./docs/glossary.md#sell-), [Dividend](./docs/glossary.md#dividend-), [Security Transfer](./docs/glossary.md#security-transfer-)
+- multi-[currency](./docs/glossary.md#currency-) support with [exchange rate](./docs/glossary.md#exchange-rate-) history
+- [investment](./docs/glossary.md#security-) tracking and performance analysis
+- multiple user support thanks to unlimited [tree-like](./docs/glossary.md#account-tree-) [Account](./docs/glossary.md#account) hierarchies
+- advanced Transaction categorization with [Payees](./docs/glossary.md#payee-), [Tags](./docs/glossary.md#tag-) and hierarchical [Categories](./docs/glossary.md#category-)
+- a variety of chart-based [Reports](./docs/glossary.md#reports) to analyse and visualize your data
+- 14 powerful [Transaction filters](./docs/glossary.md#transaction-filters-) for precise Report data set control
+- and much more...
 
 ## Requirements
 
 - Windows 8 or newer
 - around 200 MB of disk space
-- internet connection is optional
+- internet connection is useful, but optional
+
+## Get started
+
+- visit the [Quick Start Guide](/docs/quick_start_guide) for a video tutorial
+- download and install the executable from the [latest release](https://github.com/JakubFranek/Kapytal/releases/latest) assets
 
 ## Documentation
 
+- [Quick Start Guide](/docs/quick_start_guide)
 - [Glossary](/docs/glossary.md)
 - [FAQ](/docs/faq.md)
+- [Screenshots](/docs/screenshots.md)

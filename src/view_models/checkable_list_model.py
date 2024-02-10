@@ -3,6 +3,7 @@ from collections.abc import Collection
 from typing import Any
 
 from PyQt6.QtCore import QAbstractListModel, QModelIndex, QSortFilterProxyModel, Qt
+from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QListView
 from src.presenters.utilities.event import Event
 
@@ -15,12 +16,13 @@ FLAGS_CHECKABLE = (
 
 class CheckableListModel(QAbstractListModel):
     def __init__(
-        self, view: QListView, proxy: QSortFilterProxyModel, *, sort: bool = True
+        self, view: QListView, proxy: QSortFilterProxyModel | None, *, sort: bool = True
     ) -> None:
         super().__init__()
         self._list_view = view
         self._items = ()
-        self._checked_items = ()
+        self._icons = None
+        self._checked_items = []
         self._proxy = proxy
         self._sort = sort
         self.event_checked_items_changed = Event()
@@ -34,7 +36,13 @@ class CheckableListModel(QAbstractListModel):
         return tuple(self._checked_items)
 
     def load_items(self, values: Collection[Any]) -> None:
-        self._items = sorted(values, key=str) if self._sort else values
+        self._items = sorted(values, key=str) if self._sort else list(values)
+        self._icons = None
+
+    def load_items_with_icons(self, values: Collection[tuple[Any, QIcon]]) -> None:
+        item_tuples = sorted(values, key=lambda x: str(x[0])) if self._sort else values
+        self._items = [item_tuple[0] for item_tuple in item_tuples]
+        self._icons = [item_tuple[1] for item_tuple in item_tuples]
 
     def load_checked_items(self, values: Collection[Any]) -> None:
         self._checked_items = sorted(values, key=str) if self._sort else list(values)
@@ -43,14 +51,17 @@ class CheckableListModel(QAbstractListModel):
             self.dataChanged.emit(index, index, [Qt.ItemDataRole.CheckStateRole])
         self.event_checked_items_changed()
 
-    def rowCount(self, index: QModelIndex = ...) -> int:
+    def rowCount(self, index: QModelIndex) -> int:
         if isinstance(index, QModelIndex) and index.isValid():
             return 0
         return len(self._items)
 
-    def data(self, index: QModelIndex, role: Qt.ItemDataRole = ...) -> str | None:
+    def data(
+        self, index: QModelIndex, role: Qt.ItemDataRole
+    ) -> str | Qt.CheckState | QIcon | None:
         if not index.isValid():
             return None
+
         item = self._items[index.row()]
         if role == Qt.ItemDataRole.DisplayRole:
             return str(item)
@@ -62,10 +73,15 @@ class CheckableListModel(QAbstractListModel):
             )
         if role == Qt.ItemDataRole.UserRole:
             return unicodedata.normalize("NFD", str(item))
+        if role == Qt.ItemDataRole.DecorationRole and self._icons is not None:
+            return self._icons[index.row()]
         return None
 
     def setData(
-        self, index: QModelIndex, value: Any, role: int = ...  # noqa: ANN401
+        self,
+        index: QModelIndex,
+        value: Any,  # noqa: ANN401
+        role: int,
     ) -> bool | None:
         if role == Qt.ItemDataRole.CheckStateRole:
             item: str = self._items[index.row()]
@@ -86,7 +102,7 @@ class CheckableListModel(QAbstractListModel):
 
     def get_selected_item(self) -> Any | None:  # noqa: ANN401
         indexes = self._list_view.selectedIndexes()
-        if self._proxy:
+        if self._proxy is not None:
             indexes = [self._proxy.mapToSource(index) for index in indexes]
         if len(indexes) == 0:
             return None

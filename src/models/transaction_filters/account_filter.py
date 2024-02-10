@@ -30,7 +30,7 @@ class AccountFilter(BaseTransactionFilter):
         return self._accounts_set
 
     @property
-    def members(self) -> tuple[tuple[Account, ...], FilterMode]:
+    def members(self) -> tuple[frozenset[Account], FilterMode]:
         return (self._accounts_set, self._mode)
 
     def __repr__(self) -> str:

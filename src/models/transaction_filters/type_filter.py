@@ -58,7 +58,9 @@ class TypeFilter(BaseTransactionFilter):
             if isinstance(type_, CashTransactionType | SecurityTransactionType)
         )
         self._transaction_types = tuple(
-            type_ for type_ in self._types if isinstance(type_, type(Transaction))
+            type_
+            for type_ in self._types
+            if not isinstance(type_, (CashTransactionType | SecurityTransactionType))
         )
         self._type_names = tuple(TYPE_NAME_DICT[type_] for type_ in self._types)
 
@@ -69,11 +71,13 @@ class TypeFilter(BaseTransactionFilter):
         return self._types
 
     @property
-    def type_names(self) -> tuple[str]:
+    def type_names(self) -> tuple[str, ...]:
         return self._type_names
 
     @property
-    def transaction_types(self) -> frozenset[type[Transaction]]:
+    def transaction_types(
+        self,
+    ) -> frozenset[type[Transaction] | CashTransactionType | SecurityTransactionType]:
         return frozenset(self._transaction_types)
 
     @property

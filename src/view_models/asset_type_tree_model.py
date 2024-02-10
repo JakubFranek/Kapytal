@@ -1,6 +1,5 @@
 import unicodedata
 from collections.abc import Collection
-from decimal import Decimal
 
 from PyQt6.QtCore import QAbstractItemModel, QModelIndex, QSortFilterProxyModel, Qt
 from PyQt6.QtGui import QBrush, QIcon
@@ -33,9 +32,9 @@ class AssetTypeTreeModel(QAbstractItemModel):
         self._root_items = ()
 
     def load_data(self, collection: Collection[AssetStats]) -> None:
-        self._root_items = collection
+        self._root_items = tuple(collection)
 
-    def rowCount(self, index: QModelIndex = ...) -> int:
+    def rowCount(self, index: QModelIndex) -> int:
         if index.isValid():
             if index.column() != 0:
                 return 0
@@ -43,24 +42,25 @@ class AssetTypeTreeModel(QAbstractItemModel):
             return len(item.children)
         return len(self._root_items)
 
-    def columnCount(self, index: QModelIndex = ...) -> int:
+    def columnCount(self, index: QModelIndex | None = None) -> int:
         return 3 if not index.isValid() or index.column() == 0 else 0
 
-    def index(self, row: int, column: int, _parent: QModelIndex = ...) -> QModelIndex:
+    def index(self, row: int, column: int, _parent: QModelIndex) -> QModelIndex:
         if _parent.isValid() and _parent.column() != 0:
             return QModelIndex()
 
+        parent: AssetStats | None
         if not _parent or not _parent.isValid():
             parent = None
         else:
-            parent: AssetStats = _parent.internalPointer()
+            parent = _parent.internalPointer()
 
         child = self._root_items[row] if parent is None else parent.children[row]
         if child:
             return QAbstractItemModel.createIndex(self, row, column, child)
         return QModelIndex()
 
-    def parent(self, index: QModelIndex = ...) -> QModelIndex:
+    def parent(self, index: QModelIndex) -> QModelIndex:
         if not index.isValid():
             return QModelIndex()
 
@@ -76,7 +76,7 @@ class AssetTypeTreeModel(QAbstractItemModel):
         return QAbstractItemModel.createIndex(self, row, 0, parent)
 
     def headerData(
-        self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole = ...
+        self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole
     ) -> str | int | None:
         if role == Qt.ItemDataRole.DisplayRole:
             if orientation == Qt.Orientation.Horizontal:
@@ -87,8 +87,8 @@ class AssetTypeTreeModel(QAbstractItemModel):
         return None
 
     def data(
-        self, index: QModelIndex, role: Qt.ItemDataRole = ...
-    ) -> str | Qt.AlignmentFlag | None:
+        self, index: QModelIndex, role: Qt.ItemDataRole
+    ) -> str | Qt.AlignmentFlag | None | float | QIcon | QBrush:
         if not index.isValid():
             return None
         column = index.column()
@@ -107,9 +107,7 @@ class AssetTypeTreeModel(QAbstractItemModel):
             return self._get_foreground_role_data(column, item)
         return None
 
-    def _get_display_role_data(
-        self, column: int, item: AssetStats
-    ) -> str | Decimal | None:
+    def _get_display_role_data(self, column: int, item: AssetStats) -> str | None:
         if column == AssetTypeTreeColumn.NAME:
             return item.name
         if column == AssetTypeTreeColumn.BALANCE_NATIVE:
@@ -122,7 +120,7 @@ class AssetTypeTreeModel(QAbstractItemModel):
             return item.amount_base.to_str_rounded()
         return None
 
-    def _get_sort_data(self, column: int, item: AssetStats) -> str | Decimal | None:
+    def _get_sort_data(self, column: int, item: AssetStats) -> float | str | None:
         if column == AssetTypeTreeColumn.NAME:
             return unicodedata.normalize("NFD", item.name)
         if column == AssetTypeTreeColumn.BALANCE_NATIVE:
@@ -135,7 +133,7 @@ class AssetTypeTreeModel(QAbstractItemModel):
             return float(item.amount_base.value_rounded)
         return None
 
-    def _get_filter_data(self, column: int, item: AssetStats) -> str | Decimal | None:
+    def _get_filter_data(self, column: int, item: AssetStats) -> str | None:
         if column == AssetTypeTreeColumn.NAME:
             return unicodedata.normalize("NFD", item.path)
         return None

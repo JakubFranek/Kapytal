@@ -238,7 +238,7 @@ def calculate_periodic_cash_flow(
     period_type: PeriodType,
     start_date: date | None,
     end_date: date | None,
-) -> tuple[CashFlowStats]:
+) -> tuple[CashFlowStats, ...]:
     transactions = sorted(transactions, key=lambda x: x.timestamp)
     start_date = transactions[0].date_ if start_date is None else start_date
     end_date = transactions[-1].date_ if end_date is None else end_date

@@ -41,7 +41,7 @@ class AccountFilterPresenter:
     def load_from_account_filter(
         self,
         account_filter: AccountFilter,
-    ) -> bool:
+    ) -> None:
         if self._form.account_filter_mode == AccountFilterMode.ACCOUNT_TREE:
             return
 

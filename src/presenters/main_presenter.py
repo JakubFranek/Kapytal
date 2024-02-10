@@ -1,5 +1,6 @@
 import logging
 import webbrowser
+from pathlib import Path
 
 from PyQt6.QtWidgets import QApplication
 from src.models.record_keeper import RecordKeeper
@@ -39,40 +40,64 @@ class MainPresenter:
         self._setup_event_observers()
         self._connect_view_signals()
 
+        self._view.setDisabled(True)  # disabling MainView until WelcomeDialog is gone
+
     def check_for_updates(self, *, silent: bool = True) -> None:
         self._update_presenter.check_for_updates(silent=silent)
 
     def show_welcome_dialog(self) -> None:
         self._welcome_dialog = WelcomeDialog(self._view)
-        self._welcome_dialog.signal_new_file.connect(self._welcome_dialog.close)
+        self._welcome_dialog.signal_new_file.connect(self._close_welcome_dialog)
         self._welcome_dialog.signal_open_file.connect(self._load_file)
         self._welcome_dialog.signal_open_recent_file.connect(
             self._load_most_recent_file
         )
-        self._welcome_dialog.signal_open_demo_file.connect(self._load_demo_file)
+        self._welcome_dialog.signal_open_demo_basic.connect(
+            lambda: self._load_file(constants.demo_basic_file_path)
+        )
+        self._welcome_dialog.signal_open_demo_mortgage.connect(
+            lambda: self._load_file(constants.demo_mortgage_file_path)
+        )
+        self._welcome_dialog.signal_open_template_category_en.connect(
+            lambda: self._load_file(constants.template_category_en_file_path)
+        )
+        self._welcome_dialog.signal_open_template_category_cz.connect(
+            lambda: self._load_file(constants.template_category_cz_file_path)
+        )
+        self._welcome_dialog.signal_open_docs.connect(self._open_docs)
         self._welcome_dialog.signal_quit.connect(self._quit)
+        self._welcome_dialog.signal_close.connect(self._close_welcome_dialog)
+
+        file_path = (
+            self._file_presenter.recent_file_paths[0]
+            if len(self._file_presenter.recent_file_paths) > 0
+            else None
+        )
         self._welcome_dialog.set_open_recent_file_button(
-            enabled=len(self._file_presenter.recent_file_paths) > 0
+            enabled=len(self._file_presenter.recent_file_paths) > 0,
+            file_path=file_path,
         )
         self._welcome_dialog.show()
 
     def _load_most_recent_file(self) -> None:
-        if self._file_presenter.load_most_recent_file():
-            self._welcome_dialog.close()
-
-    def _load_file(self) -> None:
-        if self._file_presenter.load_from_file():
-            self._welcome_dialog.close()
-
-    def _load_demo_file(self) -> None:
         if (
-            self._file_presenter.load_from_file(constants.demo_file_path)
+            self._file_presenter.load_most_recent_file()
             and self._welcome_dialog.isVisible()
         ):
-            self._welcome_dialog.close()
+            self._close_welcome_dialog()
+
+    def _load_file(self, path: Path | str | None = None) -> None:
+        if (
+            self._file_presenter.load_from_file(path)
+            and self._welcome_dialog.isVisible()
+        ):
+            self._close_welcome_dialog()
 
     def _quit(self) -> None:
-        if self._file_presenter.check_for_unsaved_changes("Quit") is False:
+        if (
+            self._file_presenter.check_for_unsaved_changes("Quit", callback=self._quit)
+            is False
+        ):
             return
         logging.info("Qutting")
         self._app.quit()
@@ -204,14 +229,25 @@ class MainPresenter:
             lambda: self._file_presenter.save_to_file(self._record_keeper, save_as=True)
         )
         self._view.signal_open_file.connect(self._file_presenter.load_from_file)
-        self._view.signal_open_demo_file.connect(self._load_demo_file)
+        self._view.signal_open_basic_demo.connect(
+            lambda: self._load_file(constants.demo_basic_file_path)
+        )
+        self._view.signal_open_mortgage_demo.connect(
+            lambda: self._load_file(constants.demo_mortgage_file_path)
+        )
+        self._view.signal_open_category_template_en.connect(
+            lambda: self._load_file(constants.template_category_en_file_path)
+        )
+        self._view.signal_open_category_template_cz.connect(
+            lambda: self._load_file(constants.template_category_cz_file_path)
+        )
         self._view.signal_open_recent_file.connect(
             lambda path: self._file_presenter.load_from_file(path)
         )
         self._view.signal_clear_recent_files.connect(
             self._file_presenter.clear_recent_paths
         )
-        self._view.signal_close_file.connect(self._file_presenter.close_file)
+        self._view.signal_new_file.connect(self._file_presenter.create_new_file)
 
         self._view.signal_show_account_tree.connect(
             lambda checked: self._account_tree_presenter.set_widget_visibility(
@@ -259,3 +295,10 @@ class MainPresenter:
 
     def _open_github(self) -> None:
         webbrowser.open(constants.GITHUB_URL)
+
+    def _open_docs(self) -> None:
+        webbrowser.open(constants.GITHUB_DOCS_URL)
+
+    def _close_welcome_dialog(self) -> None:
+        self._view.setDisabled(False)  # re-enable MainView after disabling it in init
+        self._welcome_dialog.close()

@@ -1,4 +1,3 @@
-import locale
 import logging
 import operator
 from bisect import bisect_right
@@ -13,8 +12,9 @@ from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
 from src.models.user_settings import user_settings
 from src.presenters.utilities.event import Event
 from src.utilities.formatting import quantizers
+from src.utilities.numbers import get_decimal_exponent
 
-# TODO: add CurrencyManager class to take care of Currency cache resets
+# IDEA: add CurrencyManager class to take care of Currency cache resets
 # and offload RecordKeeper methods to CurrencyManager
 
 
@@ -69,11 +69,11 @@ class Currency(CopyableMixin, JSONSerializableMixin):
         return self._zero_amount
 
     @property
-    def convertible_to(self) -> set[Self]:
+    def convertible_to(self) -> set["Currency"]:
         return set(self._exchange_rates)
 
     @property
-    def exchange_rates(self) -> dict[Self, "ExchangeRate"]:
+    def exchange_rates(self) -> dict["Currency", "ExchangeRate"]:
         return self._exchange_rates
 
     def __repr__(self) -> str:
@@ -234,7 +234,7 @@ class ExchangeRate(CopyableMixin, JSONSerializableMixin):
         self._secondary_currency.add_exchange_rate(self)
 
         self._rate_history: dict[date, Decimal] = {}
-        self._rate_history_pairs: tuple[tuple[date, Decimal]] = ()
+        self._rate_history_pairs: tuple[tuple[date, Decimal], ...] = ()
         self._rate_decimals = 0
         self._recalculate_rate_history_pairs = False
 
@@ -257,7 +257,7 @@ class ExchangeRate(CopyableMixin, JSONSerializableMixin):
         return self._rate_history
 
     @property
-    def rate_history_pairs(self) -> tuple[tuple[date, Decimal]]:
+    def rate_history_pairs(self) -> tuple[tuple[date, Decimal], ...]:
         if self._recalculate_rate_history_pairs:
             pairs: list[tuple[date, Decimal]] = list(self._rate_history.items())
             pairs.sort(key=lambda x: x[0])
@@ -381,7 +381,7 @@ class ExchangeRate(CopyableMixin, JSONSerializableMixin):
     ) -> "ExchangeRate":
         primary_code = data["primary_currency_code"]
         secondary_code = data["secondary_currency_code"]
-        date_rate_pairs: list[list[str, str]] = data["date_rate_pairs"]
+        date_rate_pairs: list[list[str]] = data["date_rate_pairs"]
 
         primary = currencies[primary_code]
         secondary = currencies[secondary_code]
@@ -426,7 +426,7 @@ class ExchangeRate(CopyableMixin, JSONSerializableMixin):
 
         self._rate_decimals = min(
             max(
-                (-rate.as_tuple().exponent for rate in self._rate_history.values()),
+                (get_decimal_exponent(rate) for rate in self._rate_history.values()),
                 default=0,
             ),
             18,  # hard limit to 18 decimals
@@ -476,13 +476,13 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
                 self._value_rounded = self._raw_value
             else:
                 self._value_rounded = round(self._raw_value, self._currency.decimals)
-                if -self._value_rounded.as_tuple().exponent > self.ROUNDED_MAX_ZEROES:
+                if get_decimal_exponent(self._value_rounded) > self.ROUNDED_MAX_ZEROES:
                     # if value has too many decimals, remove trailing zeros
                     # to save horizontal space
                     self._value_rounded = self._value_rounded.normalize()
                     # if value has too few decimal places now, restore some zeros
                     if (
-                        -self._value_rounded.as_tuple().exponent
+                        get_decimal_exponent(self._value_rounded)
                         < self.ROUNDED_MAX_ZEROES
                     ):
                         self._value_rounded = self._value_rounded.quantize(
@@ -498,7 +498,7 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
             decimals = min(self._currency.decimals, 4)
             if (
                 not self._value_normalized.is_nan()
-                and -self._value_normalized.as_tuple().exponent < decimals
+                and get_decimal_exponent(self._value_normalized) < decimals
             ):
                 self._value_normalized = self._value_normalized.quantize(
                     quantizers[decimals]
@@ -541,19 +541,19 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
             raise CurrencyError("CashAmount.currency of operands must match.")
         return self._raw_value <= __o._raw_value
 
-    def __neg__(self) -> Self:
+    def __neg__(self) -> "CashAmount":
         obj = object.__new__(CashAmount)
         obj._raw_value = -self._raw_value  # noqa: SLF001
         obj._currency = self._currency  # noqa: SLF001
         return obj
 
-    def __abs__(self) -> Self:
+    def __abs__(self) -> "CashAmount":
         obj = object.__new__(CashAmount)
         obj._raw_value = abs(self._raw_value)  # noqa: SLF001
         obj._currency = self._currency  # noqa: SLF001
         return obj
 
-    def __add__(self, __o: object) -> Self:
+    def __add__(self, __o: object) -> "CashAmount":
         if not isinstance(__o, CashAmount):
             return NotImplemented
         if self._currency != __o._currency:
@@ -563,10 +563,10 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
         obj._currency = self._currency
         return obj
 
-    def __radd__(self, __o: object) -> Self:
+    def __radd__(self, __o: object) -> "CashAmount":
         return self.__add__(__o)
 
-    def __sub__(self, __o: object) -> Self:
+    def __sub__(self, __o: object) -> "CashAmount":
         if not isinstance(__o, CashAmount):
             return NotImplemented
         if self._currency != __o._currency:
@@ -576,7 +576,7 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
         obj._currency = self._currency
         return obj
 
-    def __rsub__(self, __o: object) -> Self:
+    def __rsub__(self, __o: object) -> "CashAmount":
         if not isinstance(__o, CashAmount):
             return NotImplemented
         if self._currency != __o._currency:
@@ -586,7 +586,7 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
         obj._currency = self._currency
         return obj
 
-    def __mul__(self, __o: object) -> Self:
+    def __mul__(self, __o: object) -> "CashAmount":
         if not isinstance(__o, int | Decimal):
             return NotImplemented
         obj = object.__new__(CashAmount)
@@ -594,18 +594,18 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
         obj._currency = self._currency
         return obj
 
-    def __rmul__(self, __o: object) -> Self:
+    def __rmul__(self, __o: object) -> "CashAmount":
         return self.__mul__(__o)
 
     @overload
-    def __truediv__(self, __o: Self) -> Decimal:
+    def __truediv__(self, __o: "CashAmount") -> Decimal:
         ...
 
     @overload
-    def __truediv__(self, __o: int | Decimal) -> Self:
+    def __truediv__(self, __o: int | Decimal) -> "CashAmount":
         ...
 
-    def __truediv__(self, __o: object) -> Decimal | Self:
+    def __truediv__(self, __o: object) -> "Decimal | CashAmount":
         if isinstance(__o, CashAmount):
             if self._currency != __o._currency:
                 raise CurrencyError("CashAmount.currency of operands must match.")
@@ -627,9 +627,9 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
     def __round__(self, ndigits: int = 0) -> Decimal:
         _value_rounded = round(self._raw_value, ndigits)
         min_decimals = min(ndigits, 4)
-        if -_value_rounded.as_tuple().exponent > min_decimals:
+        if get_decimal_exponent(_value_rounded) > min_decimals:
             _value_rounded = _value_rounded.normalize()
-            if -_value_rounded.as_tuple().exponent < min_decimals:
+            if get_decimal_exponent(_value_rounded) < min_decimals:
                 _value_rounded = _value_rounded.quantize(quantizers[min_decimals])
         return _value_rounded
 
@@ -654,18 +654,18 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
             if not hasattr(self, "_str_rounded"):
                 self._str_rounded = f"{self.value_rounded:n} {self._currency.code}"
             return self._str_rounded
+
         value_rounded = round(self._raw_value, decimals)
-        number_string = locale.localize(
-            f"{value_rounded:.{decimals}f}", grouping=True, monetary=True
-        )
-        return f"{number_string} {self._currency.code}"
+        return f"{value_rounded:n} {self._currency.code}"
 
     def to_str_normalized(self) -> str:
         if not hasattr(self, "_str_normalized"):
             self._str_normalized = f"{self.value_normalized:n} {self._currency.code}"
         return self._str_normalized
 
-    def convert(self, target_currency: Currency, date_: date | None = None) -> Self:
+    def convert(
+        self, target_currency: Currency, date_: date | None = None
+    ) -> "CashAmount":
         if target_currency == self._currency:
             return self
         if self._raw_value == 0:
@@ -676,14 +676,13 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
         obj._currency = target_currency  # noqa: SLF001
         return obj
 
-    def serialize(self) -> dict[str, Any]:
-        return f"{self.value_normalized:,} {self._currency.code}"
+    def serialize(self) -> str:
+        return f"{self.value_normalized} {self._currency.code}"
 
     @staticmethod
     def deserialize(
         cash_amount_string: str, currencies: dict[str, Currency]
     ) -> "CashAmount":
         value, _, currency_code = cash_amount_string.partition(" ")
-        value = value.replace(",", "")  # remove any thousands separators
         currency = currencies[currency_code]
         return CashAmount(value, currency)

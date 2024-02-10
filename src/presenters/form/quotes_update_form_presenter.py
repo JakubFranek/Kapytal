@@ -1,4 +1,5 @@
 import logging
+from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from PyQt6.QtCore import QSortFilterProxyModel, Qt
@@ -20,7 +21,6 @@ from src.views.utilities.message_box_functions import ask_yes_no_question, show_
 
 if TYPE_CHECKING:
     from datetime import date
-    from decimal import Decimal
 
 # TODO: add multi threading to be able to cancel quotes download
 
@@ -104,16 +104,14 @@ class QuotesUpdateFormPresenter:
     def _download_quotes(self) -> None:
         logging.info("Downloading quotes...")
         checked_items = self._model.checked_items
-        n_done = 0
-        for item in checked_items:
+        for index, item in enumerate(checked_items):
             data = (item, "Fetching...", "Fetching...")
             self._model.load_single_data(data)
             if isinstance(item, ExchangeRate):
                 self._download_exchange_rate_quote(item)
             elif isinstance(item, Security):
                 self._download_security_quote(item)
-            n_done += 1
-            self._busy_dialog.set_value(n_done)
+            self._busy_dialog.set_value(index + 1)
         self._show_failed_quotes()
         self._update_button_states()
         self._unsaved_quotes = len(self._quotes) > 0
@@ -198,12 +196,16 @@ class QuotesUpdateFormPresenter:
             try:
                 date_, value = self._quotes[str(item)]
                 if isinstance(item, Security):
+                    if not isinstance(value, CashAmount):
+                        raise TypeError(f"Expected CashAmount, received {type(value)}")
                     item.set_price(date_, value)
                     text += (
                         f"- {item.symbol}: {value} on "
                         f"{date_.strftime(user_settings.settings.general_date_format)}\n"
                     )
                 else:
+                    if not isinstance(value, Decimal):
+                        raise TypeError(f"Expected Decimal, received {type(value)}")
                     item.set_rate(date_, value)
                     text += (
                         f"- {item}: {value:n} on "

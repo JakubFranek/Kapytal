@@ -4,7 +4,11 @@ from datetime import date, datetime
 from decimal import Decimal
 
 from pyxirr import InvalidPaymentsError, xirr
-from src.models.model_objects.currency_objects import CashAmount, Currency
+from src.models.model_objects.currency_objects import (
+    CashAmount,
+    ConversionFactorNotFoundError,
+    Currency,
+)
 from src.models.model_objects.security_objects import (
     Security,
     SecurityAccount,
@@ -96,7 +100,7 @@ class SecurityStats(SecurityStatsItem):
         )
 
         self.price_market_native = security.price
-        self.price_market_base = security.price.convert(base_currency)
+        self.price_market_base = _safe_convert(security.price, base_currency)
 
         self.price_avg_buy_native = _average_of_sum_of_attribute_products(
             "price_avg_buy_native",
@@ -214,8 +218,8 @@ class SecurityStats(SecurityStatsItem):
 
         self.gain_total_native = self.gain_unrealized_native + self.gain_realized_native
         self.gain_total_base = self.gain_unrealized_base + self.gain_realized_base
-        self.gain_total_currency = (
-            self.gain_total_base - self.gain_total_native.convert(base_currency)
+        self.gain_total_currency = self.gain_total_base - _safe_convert(
+            self.gain_total_native, base_currency
         )
         self.return_pct_total_native = _calculate_return_percentage(
             nom=self.gain_total_native,
@@ -271,7 +275,7 @@ class SecurityAccountStats(SecurityStatsItem):
         )
 
         self.price_market_native = security.price
-        self.price_market_base = security.price.convert(base_currency)
+        self.price_market_base = _safe_convert(security.price, base_currency)
         self.price_avg_buy_native = account.get_average_amount_per_share(
             security, type_=SecurityTransactionType.BUY
         )
@@ -298,7 +302,9 @@ class SecurityAccountStats(SecurityStatsItem):
             self.amount_avg_dividend_base = base_currency.zero_amount
 
         self.value_current_native = self.shares_owned * self.price_market_native
-        self.value_current_base = self.value_current_native.convert(base_currency)
+        self.value_current_base = _safe_convert(
+            self.value_current_native, base_currency
+        )
         self.value_sold_native = self.shares_sold * self.price_avg_sell_native
         self.value_sold_base = self.shares_sold * self.price_avg_sell_base
         self.value_bought_native = self.shares_bought * self.price_avg_buy_native
@@ -370,8 +376,8 @@ class SecurityAccountStats(SecurityStatsItem):
 
         self.gain_total_native = self.gain_unrealized_native + self.gain_realized_native
         self.gain_total_base = self.gain_unrealized_base + self.gain_realized_base
-        self.gain_total_currency = (
-            self.gain_total_base - self.gain_total_native.convert(base_currency)
+        self.gain_total_currency = self.gain_total_base - _safe_convert(
+            self.gain_total_native, base_currency
         )
         self.return_pct_total_native = _calculate_return_percentage(
             nom=self.gain_total_native,
@@ -560,24 +566,23 @@ def calculate_irr(
     cashflows: list[Decimal] = []
     for transaction in transactions:
         _date = transaction.date_
+        _datetime = transaction.datetime_
 
         if isinstance(transaction, SecurityTransaction):
-            amount = (
-                transaction.get_amount(transaction.cash_account)
-                .convert(currency, _date)
-                .value_normalized
-            )
+            amount = _safe_convert(
+                transaction.get_amount(transaction.cash_account), currency, _date
+            ).value_normalized
         else:
             if transaction.sender in _accounts and transaction.recipient in _accounts:
                 continue
             if transaction.recipient in _accounts:
                 avg_price = transaction.sender.get_average_amount_per_share(
-                    security, _date, currency
+                    security, _datetime, currency
                 )
                 amount = -avg_price.value_normalized * transaction.shares
             else:
                 avg_price = transaction.recipient.get_average_amount_per_share(
-                    security, _date, currency
+                    security, _datetime, currency
                 )
                 amount = avg_price.value_normalized * transaction.shares
 
@@ -592,7 +597,7 @@ def calculate_irr(
 
     # add last fictitious outflow as if all investment was liquidated
     sell_all_amount = Decimal(0)
-    price = security.price.convert(currency)
+    price = _safe_convert(security.price, currency)
     for account in _accounts:
         sell_all_amount += account.securities.get(security, 0) * price.value_normalized
 
@@ -626,11 +631,9 @@ def calculate_total_irr(
         _date = transaction.date_
 
         if isinstance(transaction, SecurityTransaction):
-            amount = (
-                transaction.get_amount(transaction.cash_account)
-                .convert(currency, _date)
-                .value_normalized
-            )
+            amount = _safe_convert(
+                transaction.get_amount(transaction.cash_account), currency, _date
+            ).value_normalized
         else:
             # SecurityTransfers can be ignored as they do not affect performance
             continue
@@ -648,8 +651,8 @@ def calculate_total_irr(
     sell_all_amount = currency.zero_amount
     for account in accounts:
         for security in account.securities:
-            sell_all_amount += account.securities[security] * security.price.convert(
-                currency
+            sell_all_amount += account.securities[security] * _safe_convert(
+                security.price, currency
             )
     sell_all_amount = sell_all_amount.value_normalized
     return _calculate_irr(dates, cashflows, sell_all_amount)
@@ -690,7 +693,7 @@ def _calculate_return_percentage(
         _nominator = nom
     else:
         _nom = tuple(nom)
-        if any(not isinstance(num, CashAmount) for num in _nom) or len(_nom) == 0:
+        if any(num is None for num in _nom) or len(_nom) == 0:
             return Decimal(0)
         _nominator: CashAmount = sum(nom, start=_nom[0].currency.zero_amount)
         if _nominator.value_normalized == 0:
@@ -744,3 +747,12 @@ def _zero_if_nan(value: CashAmount) -> CashAmount:
     if value.is_nan():
         return value.currency.zero_amount
     return value
+
+
+def _safe_convert(
+    value: CashAmount, currency: Currency, date_: date | None = None
+) -> CashAmount:
+    try:
+        return value.convert(currency, date_)
+    except ConversionFactorNotFoundError:
+        return CashAmount("NaN", currency)

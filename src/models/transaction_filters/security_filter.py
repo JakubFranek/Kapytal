@@ -30,7 +30,7 @@ class SecurityFilter(BaseTransactionFilter):
         return self._securities
 
     @property
-    def security_names(self) -> tuple[str]:
+    def security_names(self) -> tuple[str, ...]:
         return tuple(sorted(security.name for security in self._securities))
 
     @property

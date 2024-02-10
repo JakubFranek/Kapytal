@@ -115,22 +115,12 @@ class CategoryFilterPresenter:
         )
 
         self._income_categories_proxy.setRecursiveFilteringEnabled(True)
-        self._expense_categories_proxy.setRecursiveFilteringEnabled(
-            True
-        )
-        self._income_and_expense_categories_proxy.setRecursiveFilteringEnabled(
-            True
-        )
+        self._expense_categories_proxy.setRecursiveFilteringEnabled(True)
+        self._income_and_expense_categories_proxy.setRecursiveFilteringEnabled(True)
 
-        self._income_categories_model = CheckableCategoryTreeModel(
-            self._form.currency_list_view
-        )
-        self._expense_categories_model = CheckableCategoryTreeModel(
-            self._form.currency_list_view
-        )
-        self._income_and_expense_categories_model = CheckableCategoryTreeModel(
-            self._form.currency_list_view
-        )
+        self._income_categories_model = CheckableCategoryTreeModel()
+        self._expense_categories_model = CheckableCategoryTreeModel()
+        self._income_and_expense_categories_model = CheckableCategoryTreeModel()
 
         self._income_categories_proxy.setSourceModel(self._income_categories_model)
         self._expense_categories_proxy.setSourceModel(self._expense_categories_model)

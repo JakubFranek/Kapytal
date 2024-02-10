@@ -1076,7 +1076,7 @@ class RecordKeeper:
         )
 
     def add_tags_to_transactions(
-        self, transaction_uuids: Collection[str], tag_names: Collection[str]
+        self, transaction_uuids: Collection[UUID], tag_names: Collection[str]
     ) -> None:
         self._perform_tag_operation(
             transaction_uuids=transaction_uuids,
@@ -1085,7 +1085,7 @@ class RecordKeeper:
         )
 
     def remove_tags_from_transactions(
-        self, transaction_uuids: Collection[str], tag_names: Collection[str]
+        self, transaction_uuids: Collection[UUID], tag_names: Collection[str]
     ) -> None:
         self._perform_tag_operation(
             transaction_uuids=transaction_uuids,
@@ -1095,7 +1095,7 @@ class RecordKeeper:
 
     def _perform_tag_operation(
         self,
-        transaction_uuids: Collection[str],
+        transaction_uuids: Collection[UUID],
         tag_names: Collection[str],
         method_name: str,
     ) -> None:
@@ -1138,7 +1138,7 @@ class RecordKeeper:
         self._account_groups.remove(account_group)
         del account_group
 
-    def remove_transactions(self, transaction_uuids: Collection[str]) -> None:
+    def remove_transactions(self, transaction_uuids: Collection[UUID]) -> None:
         transactions = self._get_transactions(transaction_uuids, Transaction)
         for transaction in transactions:
             transaction.prepare_for_deletion()
@@ -1412,11 +1412,31 @@ class RecordKeeper:
             self._base_currency.code if self._base_currency is not None else None
         )
 
-        serialized_exchange_rates = [
-            exchange_rate.serialize() for exchange_rate in self._exchange_rates
-        ]
+        serialized_exchange_rates = []
+        no_of_exchange_rates = len(self._exchange_rates)
+        step = no_of_exchange_rates // 33
+        step = 1 if step == 0 else step
+        for done, exchange_rate in enumerate(self._exchange_rates):
+            serialized_exchange_rate = exchange_rate.serialize()
+            serialized_exchange_rates.append(serialized_exchange_rate)
+            if (done + 1) % step == 0:
+                progress = int(done / no_of_exchange_rates * 33)
+                progress_callable(progress)
+            if (done + 1) == no_of_exchange_rates:
+                progress_callable(33)
 
-        serialized_securities = [security.serialize() for security in self._securities]
+        serialized_securities = []
+        no_of_securities = len(self._securities)
+        step = no_of_securities // 33
+        step = 1 if step == 0 else step
+        for done, security in enumerate(self._securities):
+            serialized_security = security.serialize()
+            serialized_securities.append(serialized_security)
+            if (done + 1) % step == 0:
+                progress = int(33 + done / no_of_securities * 33)
+                progress_callable(progress)
+            if (done + 1) == no_of_securities:
+                progress_callable(66)
 
         sorted_account_groups = sorted(self._account_groups, key=lambda x: x.path)
         serialized_account_groups = [
@@ -1454,18 +1474,15 @@ class RecordKeeper:
         sorted_transactions = sorted(self._transactions, key=lambda x: x.timestamp)
         serialized_transactions = []
         no_of_transactions = len(sorted_transactions)
-        step = no_of_transactions // 100
+        step = no_of_transactions // 34
         step = 1 if step == 0 else step
-
-        done = 0
-        for transaction in sorted_transactions:
-            serialized_transaction = transaction.serialize()
+        for done, security in enumerate(sorted_transactions):
+            serialized_transaction = security.serialize()
             serialized_transactions.append(serialized_transaction)
-            done += 1
-            if done % step == 0:
-                progress = int(done / no_of_transactions * 100)
+            if (done + 1) % step == 0:
+                progress = int(66 + done / no_of_transactions * 34)
                 progress_callable(progress)
-            if done == no_of_transactions:
+            if (done + 1) == no_of_transactions:
                 progress_callable(100)
 
         return {
@@ -1486,13 +1503,12 @@ class RecordKeeper:
             "transactions": serialized_transactions,
         }
 
-    # TODO: add progress for exchange rate and price deserialization
     @staticmethod
     def deserialize(
         data: dict[str, Any], progress_callable: Callable[[int], None]
     ) -> "RecordKeeper":
         obj = RecordKeeper()
-        obj._currencies: list[Currency] = data["currencies"]  # noqa: SLF001
+        obj._currencies = data["currencies"]  # noqa: SLF001
         currencies: dict[str, Currency] = {
             currency.code: currency
             for currency in obj._currencies  # noqa: SLF001
@@ -1502,7 +1518,7 @@ class RecordKeeper:
             obj._base_currency = currencies[base_currency_code]  # noqa: SLF001
 
         obj._exchange_rates = RecordKeeper._deserialize_exchange_rates(  # noqa: SLF001
-            data["exchange_rates"], currencies
+            data["exchange_rates"], currencies, progress_callable
         )
         for exchange_rate in obj._exchange_rates:  # noqa: SLF001
             exchange_rate.event_reset_currency_caches.append(
@@ -1510,7 +1526,7 @@ class RecordKeeper:
             )
 
         securities = RecordKeeper._deserialize_securities(
-            data["securities"], currencies
+            data["securities"], currencies, progress_callable
         )
         obj._securities = list(securities.values())  # noqa: SLF001
 
@@ -1634,22 +1650,42 @@ class RecordKeeper:
     def _deserialize_exchange_rates(
         exchange_rate_dicts: Collection[dict[str, Any]],
         currencies: dict[str, Currency],
+        progress_callable: Callable[[int], None],
     ) -> list[ExchangeRate]:
         exchange_rates = []
-        for exchange_rate_dict in exchange_rate_dicts:
+        no_of_exchange_rates = len(exchange_rate_dicts)
+        step = no_of_exchange_rates // 33
+        if step == 0:
+            step = 1
+        for done, exchange_rate_dict in enumerate(exchange_rate_dicts):
             exchange_rate = ExchangeRate.deserialize(exchange_rate_dict, currencies)
             exchange_rates.append(exchange_rate)
+            if (done + 1) % step == 0:
+                progress = int(done / no_of_exchange_rates * 33)
+                progress_callable(progress)
+            if (done + 1) == no_of_exchange_rates:
+                progress_callable(33)
         return exchange_rates
 
     @staticmethod
     def _deserialize_securities(
         security_dicts: Collection[dict[str, Any]],
         currencies: dict[str, Currency],
+        progress_callable: Callable[[int], None],
     ) -> dict[str, Security]:
         securities: dict[str, Security] = {}
-        for security_dict in security_dicts:
+        no_of_securities = len(security_dicts)
+        step = no_of_securities // 33
+        if step == 0:
+            step = 1
+        for done, security_dict in enumerate(security_dicts):
             security = Security.deserialize(security_dict, currencies)
             securities[security.name] = security
+            if (done + 1) % step == 0:
+                progress = int(33 + done / no_of_securities * 33)
+                progress_callable(progress)
+            if (done + 1) == no_of_securities:
+                progress_callable(66)
         return securities
 
     @staticmethod
@@ -1731,11 +1767,10 @@ class RecordKeeper:
     ) -> dict[UUID, Transaction]:
         _transaction_dict: dict[UUID, Transaction] = {}
         no_of_transactions = len(transaction_dicts)
-        step = no_of_transactions // 100
+        step = no_of_transactions // 34
         if step == 0:
             step = 1
-        done = 0
-        for transaction_dict in transaction_dicts:
+        for done, transaction_dict in enumerate(transaction_dicts):
             transaction: Transaction
             if transaction_dict["datatype"] == "CashTransaction":
                 transaction = CashTransaction.deserialize(
@@ -1771,11 +1806,10 @@ class RecordKeeper:
             else:
                 raise ValueError("Unexpected 'datatype' value.")
             _transaction_dict[transaction.uuid] = transaction
-            done += 1
-            if done % step == 0:
-                progress = int(done / no_of_transactions * 100)
+            if (done + 1) % step == 0:
+                progress = int(66 + done / no_of_transactions * 34)
                 progress_callable(progress)
-            if done == no_of_transactions:
+            if (done + 1) == no_of_transactions:
                 progress_callable(100)
         return _transaction_dict
 

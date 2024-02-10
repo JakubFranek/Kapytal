@@ -32,14 +32,14 @@
         <number>3</number>
        </property>
        <property name="placeholderText">
-        <string>Enter an ISO 4217 currency code</string>
+        <string>Enter three letters (e.g. ISO 4217 code)</string>
        </property>
       </widget>
      </item>
      <item row="1" column="0">
       <widget class="QLabel" name="currencyDecimalsLabel">
        <property name="text">
-        <string>Number of decimal places</string>
+        <string>Decimal places</string>
        </property>
       </widget>
      </item>

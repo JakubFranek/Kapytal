@@ -5,6 +5,9 @@ import os
 import sys
 from pathlib import Path
 
+locale.setlocale(locale.LC_ALL, "")  # set locale per LANG env variable ASAP
+locale.setlocale(locale.LC_TIME, "en_GB")  # set English calendar names
+
 from PyQt6.QtCore import QLocale
 from PyQt6.QtWidgets import QApplication, QStyleFactory
 from src.models.json.custom_json_decoder import CustomJSONDecoder
@@ -22,8 +25,6 @@ from src.views.utilities.handle_exception import handle_uncaught_exception
 
 
 def main() -> None:
-    locale.setlocale(locale.LC_ALL, "")  # set locale per LANG env variable
-
     # The following three lines are needed to make sure task bar icon works on Windows
     if os.name == "nt":
         myappid = f"Jakub_Franek.Kapytal.v{constants.VERSION}"  # arbitrary string
@@ -72,12 +73,14 @@ def main() -> None:
     logging.debug("Creating MainWindow")
     main_view = MainView()
 
-    logging.debug("Creating MainPresenter")
-    main_presenter = MainPresenter(main_view, app)
-
+    # the locale setting must be set right after creating MainView
+    # else TransactionFilterForm spinboxes will not get correct locale
     logging.debug("Setting Qt locales")
     QLocale.setDefault(locale_qt)
     main_view.setLocale(locale_qt)
+
+    logging.debug("Creating MainPresenter")
+    main_presenter = MainPresenter(main_view, app)
 
     logging.debug("Showing MainView")
     main_view.showMaximized()

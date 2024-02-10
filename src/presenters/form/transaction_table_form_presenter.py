@@ -11,6 +11,7 @@ from src.models.model_objects.cash_objects import (
     CashTransfer,
     RefundTransaction,
 )
+from src.models.model_objects.currency_objects import ConversionFactorNotFoundError
 from src.models.model_objects.security_objects import (
     SecurityTransaction,
     SecurityTransfer,
@@ -207,7 +208,7 @@ class TransactionTableFormPresenter:
             self._form, self._record_keeper
         )
 
-        self._transaction_dialog_presenters: tuple[TransactionDialogPresenter] = (
+        self._transaction_dialog_presenters: tuple[TransactionDialogPresenter, ...] = (
             self._cash_transaction_dialog_presenter,
             self._cash_transfer_dialog_presenter,
             self._security_transaction_dialog_presenter,
@@ -242,7 +243,7 @@ class TransactionTableFormPresenter:
         if all(
             isinstance(transaction, RefundTransaction) for transaction in transactions
         ):
-            self._refund_transaction_dialog_presenter.run_edit_dialog()
+            self._refund_transaction_dialog_presenter.run_edit_dialog(transactions)
             return
         if all(
             isinstance(transaction, SecurityTransaction) for transaction in transactions
@@ -321,6 +322,10 @@ class TransactionTableFormPresenter:
         for transaction in transactions:
             if isinstance(transaction, CashTransaction | RefundTransaction):
                 _amount = transaction.get_amount(transaction.account)
-                amount += _amount.convert(base_currency, transaction.date_)
+                try:
+                    amount += _amount.convert(base_currency, transaction.date_)
+                except ConversionFactorNotFoundError:
+                    self._form.set_selected_amount("N/A")
+                    return
 
         self._form.set_selected_amount(amount.to_str_rounded())

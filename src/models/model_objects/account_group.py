@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, Self
+from typing import TYPE_CHECKING, Any, TypeGuard, TypeVar
 from uuid import UUID
 
 from src.models.custom_exceptions import NotFoundError
@@ -26,18 +26,18 @@ class AccountGroup(NameMixin, BalanceMixin, JSONSerializableMixin, UUIDMixin):
         "event_balance_updated",
     )
 
-    def __init__(self, name: str, parent: Self | None = None) -> None:
+    def __init__(self, name: str, parent: "AccountGroup | None" = None) -> None:
         super().__init__(name=name, allow_slash=False)
         self.parent = parent
-        self._children_dict: dict[int, Self | Account] = {}
-        self._children_tuple: tuple[Self | Account, ...] = ()
+        self._children_dict: dict[int, "AccountGroup" | Account] = {}
+        self._children_tuple: tuple["AccountGroup" | Account, ...] = ()
 
     @property
-    def parent(self) -> Self | None:
+    def parent(self) -> "AccountGroup | None":
         return self._parent
 
     @parent.setter
-    def parent(self, parent: Self | None) -> None:
+    def parent(self, parent: "AccountGroup | None") -> None:
         if parent is not None and not isinstance(parent, AccountGroup):
             raise TypeError("AccountGroup.parent must be an AccountGroup or a None.")
 
@@ -53,7 +53,7 @@ class AccountGroup(NameMixin, BalanceMixin, JSONSerializableMixin, UUIDMixin):
         self._parent = parent
 
     @property
-    def children(self) -> tuple["Account" | Self, ...]:
+    def children(self) -> tuple["Account | AccountGroup", ...]:
         return self._children_tuple
 
     @property
@@ -70,29 +70,29 @@ class AccountGroup(NameMixin, BalanceMixin, JSONSerializableMixin, UUIDMixin):
             self._children_dict[key] for key in sorted(self._children_dict.keys())
         )
 
-    def _add_child(self, child: Self | "Account") -> None:
+    def _add_child(self, child: "AccountGroup | Account") -> None:
         max_index = max(sorted(self._children_dict.keys()), default=-1)
         self._children_dict[max_index + 1] = child
         self._update_children_tuple()
         child.event_balance_updated.append(self._update_balances)
         self._update_balances()
 
-    def _remove_child(self, child: Self | "Account") -> None:
+    def _remove_child(self, child: "AccountGroup | Account") -> None:
         index = self.get_child_index(child)
-        aux_dict: dict[int, AccountGroup | Account] = {}
+        aux_dict: dict[int, AccountGroup | Account | None] = {}
         for key, value in self._children_dict.items():
             if key >= index:
                 aux_dict[key] = self._children_dict.get(key + 1, None)
             else:
                 aux_dict[key] = value
         max_index = max(sorted(aux_dict.keys()), default=0)
-        del aux_dict[max_index]
+        del aux_dict[max_index]  # should delete None
         self._children_dict = aux_dict
         self._update_children_tuple()
         child.event_balance_updated.remove(self._update_balances)
         self._update_balances()
 
-    def set_child_index(self, child: "Account" | Self, index: int) -> None:
+    def set_child_index(self, child: "Account | AccountGroup", index: int) -> None:
         if index < 0:
             raise ValueError("Parameter 'index' must not be negative.")
         if child not in self._children_tuple:
@@ -117,7 +117,7 @@ class AccountGroup(NameMixin, BalanceMixin, JSONSerializableMixin, UUIDMixin):
         self._update_children_tuple()
         self._update_balances()
 
-    def get_child_index(self, child: "Account" | Self) -> int:
+    def get_child_index(self, child: "Account|AccountGroup") -> int:
         return list(self._children_dict.keys())[
             list(self._children_dict.values()).index(child)
         ]
@@ -157,7 +157,7 @@ class AccountGroup(NameMixin, BalanceMixin, JSONSerializableMixin, UUIDMixin):
         parent_path, _, name = path.rpartition("/")
         obj = AccountGroup(name)
         obj._uuid = UUID(data["uuid"])  # noqa: SLF001
-        if parent_path:
+        if parent_path and index is not None:
             obj._parent = account_groups[parent_path]  # noqa: SLF001
             obj._parent._children_dict[index] = obj  # noqa: SLF001
             obj._parent._update_children_tuple()  # noqa: SLF001
@@ -165,3 +165,6 @@ class AccountGroup(NameMixin, BalanceMixin, JSONSerializableMixin, UUIDMixin):
                 obj._parent._update_balances  # noqa: SLF001
             )
         return obj
+
+
+T = TypeVar("T")

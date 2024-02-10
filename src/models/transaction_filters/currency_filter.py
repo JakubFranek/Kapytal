@@ -28,7 +28,7 @@ class CurrencyFilter(BaseTransactionFilter):
         return self._currencies
 
     @property
-    def currency_codes(self) -> tuple[str]:
+    def currency_codes(self) -> tuple[str, ...]:
         return tuple(sorted(currency.code for currency in self._currencies))
 
     @property

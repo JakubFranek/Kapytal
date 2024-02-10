@@ -41,18 +41,18 @@ class AttributeTableModel(QAbstractTableModel):
     def load_attribute_stats(self, stats: Collection[AttributeStats]) -> None:
         self._attribute_stats = tuple(stats)
 
-    def rowCount(self, index: QModelIndex = ...) -> int:
+    def rowCount(self, index: QModelIndex | None = None) -> int:
         if isinstance(index, QModelIndex) and index.isValid():
             return 0
         return len(self._attribute_stats)
 
-    def columnCount(self, index: QModelIndex = ...) -> int:  # noqa: ARG002
+    def columnCount(self, index: QModelIndex | None = None) -> int:  # noqa: ARG002
         if not hasattr(self, "_column_count"):
             self._column_count = len(COLUMN_HEADERS)
         return self._column_count
 
     def headerData(
-        self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole = ...
+        self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole
     ) -> str | int | None:
         if role == Qt.ItemDataRole.DisplayRole:
             if orientation == Qt.Orientation.Horizontal:
@@ -61,8 +61,8 @@ class AttributeTableModel(QAbstractTableModel):
         return None
 
     def data(
-        self, index: QModelIndex, role: Qt.ItemDataRole = ...
-    ) -> str | int | float | Qt.AlignmentFlag | None:
+        self, index: QModelIndex, role: Qt.ItemDataRole
+    ) -> str | int | float | Qt.AlignmentFlag | QBrush | None:
         if not index.isValid():
             return None
 
@@ -147,7 +147,7 @@ class AttributeTableModel(QAbstractTableModel):
     def post_remove_item(self) -> None:
         self.endRemoveRows()
 
-    def get_selected_attributes(self) -> tuple[Attribute]:
+    def get_selected_attributes(self) -> tuple[Attribute, ...]:
         proxy_indexes = self._view.selectedIndexes()
         source_indexes = [self._proxy.mapToSource(index) for index in proxy_indexes]
         return tuple(

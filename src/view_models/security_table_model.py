@@ -77,18 +77,18 @@ class SecurityTableModel(QAbstractTableModel):
         self._securities = tuple(securities)
         self._returns = returns
 
-    def rowCount(self, index: QModelIndex = ...) -> int:
+    def rowCount(self, index: QModelIndex | None = None) -> int:
         if isinstance(index, QModelIndex) and index.isValid():
             return 0
         return len(self._securities)
 
-    def columnCount(self, index: QModelIndex = ...) -> int:  # noqa: ARG002
+    def columnCount(self, index: QModelIndex | None = None) -> int:  # noqa: ARG002
         if not hasattr(self, "_column_count"):
             self._column_count = len(SecurityTableColumn)
         return self._column_count
 
     def headerData(
-        self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole = ...
+        self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole
     ) -> str | int | None:
         if role == Qt.ItemDataRole.DisplayRole:
             if orientation == Qt.Orientation.Horizontal:
@@ -97,8 +97,8 @@ class SecurityTableModel(QAbstractTableModel):
         return None
 
     def data(
-        self, index: QModelIndex, role: Qt.ItemDataRole = ...
-    ) -> str | Qt.AlignmentFlag | None:
+        self, index: QModelIndex, role: Qt.ItemDataRole
+    ) -> str | Qt.AlignmentFlag | QBrush | None:
         if not index.isValid():
             return None
 
@@ -148,7 +148,7 @@ class SecurityTableModel(QAbstractTableModel):
         self,
         column: int,
         security: Security,
-    ) -> str | None:
+    ) -> str | float | None:
         if column == SecurityTableColumn.NAME:
             return unicodedata.normalize("NFD", security.name)
         if column == SecurityTableColumn.SYMBOL:

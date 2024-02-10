@@ -60,7 +60,7 @@ class SpecificCategoriesFilter(BaseTransactionFilter):
         )
 
     @property
-    def category_paths(self) -> tuple[str]:
+    def category_paths(self) -> tuple[str, ...]:
         return tuple(
             sorted(
                 (category.path for category in self._categories),

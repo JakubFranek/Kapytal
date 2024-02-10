@@ -2,7 +2,15 @@
 pythonpath = "."
 
 [tool.pyright]
-reportGeneralTypeIssues = "none"
+reportGeneralTypeIssues = false
+reportArgumentType = false
+reportReturnType = false
+reportAttributeAccessIssue = false
+reportIndexIssue = false
+reportOperatorIssue = false
+reportAssignmentType = false
+reportAbstractUsage = false
+reportCallIssue = false
 reportOptionalMemberAccess = "none"
 exclude = ["src/views", ".venv", "aux_stuff"]
 
@@ -19,9 +27,9 @@ exclude_lines = [
 src = ["src/**", "tests/**", "tests", "main.py"]
 line-length = 88
 extend-exclude = ["src/views/ui_files/*", "main.spec"]
-select = ["ALL"]
-ignore = ["D", "COM", "G"]
-extend-ignore = [
+lint.select = ["ALL"]
+lint.ignore = ["D", "COM", "G"]
+lint.extend-ignore = [
   "ANN101",
   "TRY003",
   "EM101",
@@ -35,7 +43,8 @@ extend-ignore = [
   "PERF203",
 ]
 
-[tool.ruff.per-file-ignores]
+[tool.ruff.lint.per-file-ignores]
 "tests/*" = ["S101", "ANN401", "SLF001", "PLR2004", "FBT001"]
 "src/views/*" = ["FBT003", "N802"]
 "src/view_models/*" = ["N802"]
+"main.py" = ["E402"]                                          # imports not at top

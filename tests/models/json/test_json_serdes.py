@@ -460,6 +460,7 @@ def test_refund_transaction(transaction: CashTransaction) -> None:
 def test_security_transaction(transaction: SecurityTransaction) -> None:
     serialized = json.dumps(transaction, cls=CustomJSONEncoder)
     transaction.cash_account.remove_transaction(transaction)
+    transaction.security_account.remove_transaction(transaction)
     decoded = json.loads(serialized, cls=CustomJSONDecoder)
     decoded = SecurityTransaction.deserialize(
         decoded,

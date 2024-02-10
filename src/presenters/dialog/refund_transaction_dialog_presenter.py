@@ -28,7 +28,7 @@ class RefundTransactionDialogPresenter(TransactionDialogPresenter):
         if len(selected_transactions) > 1:
             raise ValueError("Cannot refund multiple transactions.")
 
-        refunded_transaction: CashTransaction = selected_transactions[0]
+        refunded_transaction: CashTransaction = next(iter(selected_transactions))
         self._prepare_dialog(refunded_transaction, edited_refund=None)
 
         self._dialog.account_path = refunded_transaction.account.path
@@ -48,7 +48,7 @@ class RefundTransactionDialogPresenter(TransactionDialogPresenter):
             display_error_message("Cannot edit multiple Refunds.", title="Warning")
             return
 
-        refund: RefundTransaction = selected_transactions[0]
+        refund: RefundTransaction = next(iter(selected_transactions))
         self._prepare_dialog(refund.refunded_transaction, edited_refund=refund)
         self._dialog.signal_do_and_close.connect(self._edit_refund)
         self._dialog.exec()
@@ -207,7 +207,7 @@ class RefundTransactionDialogPresenter(TransactionDialogPresenter):
         self,
         refunded_transaction: CashTransaction,
         edited_refund: RefundTransaction | None,
-    ) -> bool:
+    ) -> None:
         accounts = [
             account
             for account in self._record_keeper.cash_accounts

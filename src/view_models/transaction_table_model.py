@@ -4,7 +4,7 @@ from decimal import Decimal
 from uuid import UUID
 
 from PyQt6.QtCore import QAbstractTableModel, QModelIndex, QSortFilterProxyModel, Qt
-from PyQt6.QtGui import QBrush, QIcon
+from PyQt6.QtGui import QBrush, QFont, QIcon
 from PyQt6.QtWidgets import QTableView
 from src.models.base_classes.account import Account
 from src.models.base_classes.transaction import Transaction
@@ -72,7 +72,7 @@ class TransactionTableModel(QAbstractTableModel):
         self._proxy_sourceside = proxy_sourceside
 
         self._transaction_uuid_dict: dict[UUID, Transaction] = {}
-        self._transactions: tuple[Transaction] = ()
+        self._transactions: tuple[Transaction, ...] = ()
         self._row_count = 0
         self._base_currency: Currency | None = None
         self._valid_accounts = ()
@@ -82,7 +82,7 @@ class TransactionTableModel(QAbstractTableModel):
         return self._transactions
 
     @property
-    def base_currency(self) -> Currency:
+    def base_currency(self) -> Currency | None:
         return self._base_currency
 
     @base_currency.setter
@@ -94,7 +94,7 @@ class TransactionTableModel(QAbstractTableModel):
         return self._transaction_uuid_dict
 
     @property
-    def valid_accounts(self) -> tuple[Account]:
+    def valid_accounts(self) -> tuple[Account, ...]:
         return self._valid_accounts
 
     @valid_accounts.setter
@@ -115,19 +115,19 @@ class TransactionTableModel(QAbstractTableModel):
         self._transaction_uuid_dict = transaction_uuid_dict
         self._row_count = len(self._transactions)
 
-    def rowCount(self, index: QModelIndex = ...) -> int:
+    def rowCount(self, index: QModelIndex | None = None) -> int:
         if isinstance(index, QModelIndex) and index.isValid():
             return 0
         return self._row_count
 
-    def columnCount(self, index: QModelIndex = ...) -> int:  # noqa: ARG002
+    def columnCount(self, index: QModelIndex | None = None) -> int:  # noqa: ARG002
         if not hasattr(self, "_column_count"):
             self._column_count = len(TRANSACTION_TABLE_COLUMN_HEADERS)
         return self._column_count
 
     def data(  # noqa: PLR0911
-        self, index: QModelIndex, role: Qt.ItemDataRole = ...
-    ) -> str | float | QIcon | Qt.AlignmentFlag | QBrush | None:
+        self, index: QModelIndex, role: Qt.ItemDataRole
+    ) -> str | float | QIcon | Qt.AlignmentFlag | QBrush | QFont | None:
         if not index.isValid():
             return None
 
@@ -161,7 +161,7 @@ class TransactionTableModel(QAbstractTableModel):
         return None
 
     def headerData(
-        self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole = ...
+        self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole
     ) -> str | int | None:
         if role == Qt.ItemDataRole.DisplayRole:
             if orientation == Qt.Orientation.Horizontal:
@@ -404,7 +404,7 @@ class TransactionTableModel(QAbstractTableModel):
 
     def _get_tooltip_role_data(
         self, transaction: Transaction, column: int
-    ) -> float | str:
+    ) -> float | str | None:
         if column == TransactionTableColumn.DESCRIPTION:
             return transaction.description
         if column == TransactionTableColumn.SHARES:

@@ -27,7 +27,7 @@ class DescriptionFilter(BaseTransactionFilter):
         return self._flags == re.IGNORECASE
 
     @property
-    def members(self) -> tuple[str, FilterMode]:
+    def members(self) -> tuple[str, re.RegexFlag | int, FilterMode]:
         return (self._regex_pattern, self._flags, self._mode)
 
     def __repr__(self) -> str:
@@ -38,8 +38,8 @@ class DescriptionFilter(BaseTransactionFilter):
         )
 
     def _keep_in_keep_mode(self, transaction: Transaction) -> bool:
-        return re.search(
-            self._regex_pattern, transaction.description, flags=self._flags
+        return bool(
+            re.search(self._regex_pattern, transaction.description, flags=self._flags)
         )
 
     def _keep_in_discard_mode(self, transaction: Transaction) -> bool:

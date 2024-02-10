@@ -1,6 +1,7 @@
 import logging
 from collections.abc import Collection, Sequence
 from datetime import datetime
+from decimal import Decimal
 
 from src.models.base_classes.account import Account
 from src.models.custom_exceptions import NotFoundError
@@ -99,10 +100,7 @@ class SecurityTransferDialogPresenter(TransactionDialogPresenter):
 
         self._prepare_dialog(edit_mode=edit_mode)
 
-        datetimes = {
-            transaction.datetime_.replace(second=0, microsecond=0)
-            for transaction in transfers
-        }
+        datetimes = {transaction.datetime_ for transaction in transfers}
         self._dialog.datetime_ = (
             datetimes.pop() if len(datetimes) == 1 else self._dialog.min_datetime
         )
@@ -124,7 +122,7 @@ class SecurityTransferDialogPresenter(TransactionDialogPresenter):
         )
 
         shares = {transaction.shares for transaction in transfers}
-        self._dialog.shares = shares.pop() if len(shares) == 1 else 0
+        self._dialog.shares = shares.pop() if len(shares) == 1 else Decimal(0)
 
         tag_names_frozensets = set()
         for transaction in transfers:
@@ -251,7 +249,7 @@ class SecurityTransferDialogPresenter(TransactionDialogPresenter):
         self.event_update_model()
         self.event_data_changed(uuids)
 
-    def _prepare_dialog(self, edit_mode: EditMode) -> bool:
+    def _prepare_dialog(self, edit_mode: EditMode) -> None:
         securities = self._record_keeper.securities
         tag_names = sorted(tag.name for tag in self._record_keeper.tags)
         self._dialog = SecurityTransferDialog(

@@ -30,8 +30,8 @@ def test_default_settings() -> None:
     assert settings.backups_max_size_bytes == UserSettings.BACKUPS_DEFAULT_MAX_SIZE
     assert settings.general_date_format == "%d.%m.%Y"
     assert settings.transaction_date_format == "%d.%m.%Y"
-    assert settings.exchange_rate_decimals == 9
-    assert settings.amount_per_share_decimals == 9
+    assert settings.exchange_rate_decimals == 4
+    assert settings.amount_per_share_decimals == 4
 
 
 @given(time_zone_key=st.sampled_from(available_time_zone_keys))

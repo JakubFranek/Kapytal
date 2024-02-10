@@ -1,4 +1,3 @@
-import unicodedata
 from collections.abc import Collection
 
 from src.models.base_classes.transaction import Transaction

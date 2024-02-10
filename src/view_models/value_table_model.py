@@ -41,7 +41,7 @@ class ValueTableModel(QAbstractTableModel):
             self.COLUMN_HEADERS[ValueTableColumn.VALUE] = f"Net Worth ({unit})"
 
     @property
-    def data_points(self) -> tuple[date, Decimal]:
+    def data_points(self) -> tuple[tuple[date, Decimal], ...]:
         return self._data
 
     def load_data(
@@ -59,18 +59,18 @@ class ValueTableModel(QAbstractTableModel):
         elif self._type == ValueType.NET_WORTH:
             self.COLUMN_HEADERS[ValueTableColumn.VALUE] = f"Net Worth ({unit})"
 
-    def rowCount(self, index: QModelIndex = ...) -> int:
+    def rowCount(self, index: QModelIndex | None = None) -> int:
         if isinstance(index, QModelIndex) and index.isValid():
             return 0
         return len(self._data)
 
-    def columnCount(self, index: QModelIndex = ...) -> int:  # noqa: ARG002
+    def columnCount(self, index: QModelIndex | None = None) -> int:  # noqa: ARG002
         if not hasattr(self, "_column_count"):
             self._column_count = len(self.COLUMN_HEADERS)
         return self._column_count
 
     def headerData(
-        self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole = ...
+        self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole
     ) -> str | int | None:
         if role == Qt.ItemDataRole.DisplayRole:
             if orientation == Qt.Orientation.Horizontal:
@@ -79,7 +79,7 @@ class ValueTableModel(QAbstractTableModel):
         return None
 
     def data(
-        self, index: QModelIndex, role: Qt.ItemDataRole = ...
+        self, index: QModelIndex, role: Qt.ItemDataRole
     ) -> str | int | float | Qt.AlignmentFlag | None:
         if not index.isValid():
             return None

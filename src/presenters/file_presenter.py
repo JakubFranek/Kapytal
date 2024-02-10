@@ -1,5 +1,6 @@
 import json
 import logging
+from collections.abc import Callable
 from datetime import datetime
 from pathlib import Path
 
@@ -92,28 +93,37 @@ class FilePresenter:
         self.update_unsaved_changes(unsaved_changes=False)
 
     @property
-    def recent_file_paths(self) -> tuple[Path]:
+    def recent_file_paths(self) -> tuple[Path, ...]:
         return tuple(self._recent_paths)
 
     def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
         self._record_keeper = record_keeper
 
-    def save_to_file(self, record_keeper: RecordKeeper, *, save_as: bool) -> None:
+    def save_to_file(
+        self,
+        record_keeper: RecordKeeper,
+        *,
+        save_as: bool,
+        callback: Callable | None = None,
+    ) -> bool:
         logging.debug("Save to file initiated")
         if save_as is True or self._current_file_path is None:
             logging.debug("Asking the user for destination path")
             file_path = self._view.get_save_path()
             if not file_path:
                 logging.info("Save to file cancelled: invalid or no file path received")
-                return
+                return False
             self._current_file_path = Path(file_path)
 
         logging.debug(f"Saving to file: {self._current_file_path}")
-        self._save_to_file(record_keeper, self._current_file_path)
+        self._save_to_file(record_keeper, self._current_file_path, callback=callback)
+        return True
 
     def load_from_file(self, path: str | Path | None = None) -> bool:
         logging.debug("Load from file initiated")
-        if not self.check_for_unsaved_changes("Load File"):
+        if not self.check_for_unsaved_changes(
+            "Load File", callback=lambda: self.load_from_file(path)
+        ):
             return False
         if path is None:
             logging.debug("Asking user for file path")
@@ -131,7 +141,9 @@ class FilePresenter:
 
     def load_most_recent_file(self) -> bool:
         logging.debug("Load most recent file initiated")
-        if not self.check_for_unsaved_changes("Load Most Recent File"):
+        if not self.check_for_unsaved_changes(
+            "Load Most Recent File", callback=self.load_most_recent_file
+        ):
             return False
         if len(self._recent_paths) == 0:
             logging.info("Load most recent file cancelled: no recent files")
@@ -140,10 +152,13 @@ class FilePresenter:
         self.load_from_file(recent_path)
         return True
 
-    def close_file(self) -> None:
-        if self.check_for_unsaved_changes("Close File") is False:
+    def create_new_file(self) -> None:
+        if (
+            self.check_for_unsaved_changes("New File", callback=self.create_new_file)
+            is False
+        ):
             return
-        logging.info("Closing File, resetting to clean state")
+        logging.info("Creating New File, resetting to clean state")
         self.event_load_record_keeper(RecordKeeper())
         self._current_file_path = None
         self.update_unsaved_changes(unsaved_changes=False)
@@ -154,7 +169,9 @@ class FilePresenter:
             self._current_file_path, unsaved=self._unsaved_changes
         )
 
-    def check_for_unsaved_changes(self, operation: str) -> bool:
+    def check_for_unsaved_changes(
+        self, operation: str, callback: Callable | None = None
+    ) -> bool:
         """True: proceed \n False: abort"""
 
         if not self._unsaved_changes:
@@ -166,13 +183,15 @@ class FilePresenter:
         )
         reply = self._view.ask_save_before_close()
         if reply is True:
-            self.save_to_file(self._record_keeper, save_as=False)
-            # FIXME: due to multithreaded saving, the next line is always False and the program does not Quit
-            # solution: pass operation function as argument and perform it once thread is done
-            if not self._unsaved_changes:
-                logging.info(f"Saved, proceeding with '{operation}'")
-                return True
-            logging.info(f"Save cancelled, aborting operation '{operation}'")
+            save_started = self.save_to_file(
+                self._record_keeper, save_as=False, callback=callback
+            )
+            if save_started:
+                logging.debug(
+                    f"Save started, operation '{operation}' will continue afterwards"
+                )
+            else:
+                logging.info(f"Save cancelled, aborting operation '{operation}'")
             return False
         if reply is False:
             logging.info(f"Save rejected, proceeding with operation '{operation}'")
@@ -211,6 +230,9 @@ class FilePresenter:
         self._view.set_item_view_update_state(enabled=True)
         QApplication.processEvents()
 
+        if not isinstance(self._worker, LoadFileWorker):
+            raise TypeError("Worker must be an instance of LoadFileWorker.")
+
         data = self._worker.data
         record_keeper = self._worker.record_keeper
         self._worker.thread().quit()
@@ -246,7 +268,9 @@ class FilePresenter:
         self._busy_indicator.close()
         handle_exception(exception)
 
-    def _save_to_file(self, record_keeper: RecordKeeper, path: Path) -> None:
+    def _save_to_file(
+        self, record_keeper: RecordKeeper, path: Path, callback: Callable | None = None
+    ) -> None:
         self._busy_indicator = create_multi_step_busy_indicator(
             self._view,
             "Saving data, please wait...",
@@ -260,7 +284,7 @@ class FilePresenter:
         self._worker.path = path
         self._worker.record_keeper = record_keeper
         self._thread.started.connect(self._worker.run)
-        self._worker.finished.connect(self._file_save_completed)
+        self._worker.finished.connect(lambda: self._file_save_completed(callback))
         self._worker.failed.connect(self._worker_operation_failed)
         self._worker.progress.connect(self._update_file_save_progress)
         self._worker.status_text.connect(self._update_file_save_status_text)
@@ -281,7 +305,7 @@ class FilePresenter:
         self._busy_indicator.set_progress_bar_range(0, 0)
         QApplication.processEvents()
 
-    def _file_save_completed(self) -> None:
+    def _file_save_completed(self, callback: Callable | None = None) -> None:
         self._busy_indicator.close()
         self._view.set_item_view_update_state(enabled=True)
 
@@ -293,6 +317,9 @@ class FilePresenter:
 
         logging.info(f"File saved: {self._current_file_path}")
         backup_json_file(self._current_file_path)
+
+        if callback is not None:
+            callback()
 
     def _initialize_recent_paths(self) -> None:
         if not constants.recent_files_path.exists():

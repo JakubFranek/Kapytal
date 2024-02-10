@@ -176,7 +176,7 @@ class AccountGroupDialogPresenter:
 
         self._dialog.maximum_position = maximum_position
 
-    def _get_account_group_paths(self) -> tuple[str]:
+    def _get_account_group_paths(self) -> tuple[str, ...]:
         return tuple(
             account_group.path + "/"
             for account_group in self._record_keeper.account_groups

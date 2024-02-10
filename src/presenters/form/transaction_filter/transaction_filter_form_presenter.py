@@ -88,7 +88,7 @@ def get_type_names(
     types: Collection[
         type[Transaction] | CashTransactionType | SecurityTransactionType
     ],
-) -> tuple[str]:
+) -> tuple[str, ...]:
     type_names_: list[str] = []
     ordered_types_: list[
         type[Transaction] | CashTransactionType | SecurityTransactionType
@@ -126,7 +126,7 @@ class TransactionFilterFormPresenter:
         self._parent_view = parent_view
         self._record_keeper = record_keeper
 
-        self._account_tree_checked_accounts = tuple(account_tree_shown_accounts)
+        self._account_tree_checked_accounts = frozenset(account_tree_shown_accounts)
 
         base_currency_code = (
             record_keeper.base_currency.code
@@ -169,7 +169,7 @@ class TransactionFilterFormPresenter:
         return self._transaction_filter != self._default_filter
 
     @property
-    def active_filter_names(self) -> tuple[str]:
+    def active_filter_names(self) -> tuple[str, ...]:
         active_filters = _get_active_filters(
             self._transaction_filter, self._default_filter
         )

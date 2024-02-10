@@ -129,10 +129,7 @@ class CashTransactionDialogPresenter(TransactionDialogPresenter):
         payees = {transaction.payee.name for transaction in transactions}
         self._dialog.payee = payees.pop() if len(payees) == 1 else ""
 
-        datetimes = {
-            transaction.datetime_.replace(second=0, microsecond=0)
-            for transaction in transactions
-        }
+        datetimes = {transaction.datetime_ for transaction in transactions}
         self._dialog.datetime_ = (
             datetimes.pop() if len(datetimes) == 1 else self._dialog.min_datetime
         )
@@ -378,7 +375,7 @@ class CashTransactionDialogPresenter(TransactionDialogPresenter):
         self.event_update_model()
         self.event_data_changed(uuids)
 
-    def _prepare_dialog(self, edit_mode: EditMode) -> bool:
+    def _prepare_dialog(self, edit_mode: EditMode) -> None:
         payees = sorted(payee.name for payee in self._record_keeper.payees)
         categories_income = (
             self._record_keeper.income_categories

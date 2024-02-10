@@ -20,14 +20,17 @@ from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
 from src.models.mixins.name_mixin import NameMixin
 from src.models.mixins.uuid_mixin import UUIDMixin
 from src.models.model_objects.account_group import AccountGroup
+from src.models.model_objects.attributes import Attribute
 from src.models.model_objects.cash_objects import CashAccount, CashRelatedTransaction
 from src.models.model_objects.currency_objects import (
     CashAmount,
+    ConversionFactorNotFoundError,
     Currency,
     CurrencyError,
 )
 from src.models.user_settings import user_settings
 from src.presenters.utilities.event import Event
+from src.utilities.numbers import get_decimal_exponent
 
 
 class PriceNotFoundError(ValueError):
@@ -181,7 +184,7 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
         return self._price_history_pairs
 
     @property
-    def decimal_price_history_pairs(self) -> tuple[tuple[date, Decimal]]:
+    def decimal_price_history_pairs(self) -> tuple[tuple[date, Decimal], ...]:
         return tuple(
             (date_, price.value_normalized) for date_, price in self.price_history_pairs
         )
@@ -286,7 +289,7 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
 
         obj = Security(name, symbol, type_, security_currency, shares_decimals)
 
-        date_price_pairs: list[list[str, str]] = data["date_price_pairs"]
+        date_price_pairs: list[list[str]] = data["date_price_pairs"]
         for date_, price in date_price_pairs:
             obj.set_price(
                 datetime.strptime(date_, "%Y-%m-%d")
@@ -318,7 +321,7 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
 
         self._price_decimals = max(
             (
-                -price.value_normalized.as_tuple().exponent
+                get_decimal_exponent(price.value_normalized)
                 for price in self._price_history.values()
             ),
             default=0,
@@ -502,26 +505,26 @@ class SecurityAccount(Account):
     def get_average_amount_per_share(
         self,
         security: Security,
-        date_: date | None = None,  # latest date if None
+        datetime_: datetime | None = None,  # latest datetime if None
         currency: Currency | None = None,  # Security.currency if None
         type_: SecurityTransactionType = SecurityTransactionType.BUY,
     ) -> CashAmount:
         if not isinstance(security, Security):
             raise TypeError("Parameter 'security' must be a Security.")
-        if not isinstance(date_, (date, NoneType)):
-            raise TypeError("Parameter 'date' must be a date or None.")
+        if not isinstance(datetime_, (datetime, NoneType)):
+            raise TypeError("Parameter 'datetime_' must be a datetime or None.")
         if not isinstance(currency, (Currency, NoneType)):
             raise TypeError("Parameter 'currency' must be a Currency or None.")
-        if date_ is None and (
+        if datetime_ is None and (
             len(self._securities_history) == 0
             or security not in self._related_securities
         ):
             raise ValueError(
                 f"Security {security.name} is not related to this SecurityAccount."
             )
-        if date_ is not None:
+        if datetime_ is not None:
             for _datetime, security_dict in reversed(self._securities_history):
-                if _datetime.date() <= date_ and security in security_dict:
+                if _datetime <= datetime_ and security in security_dict:
                     break  # OK
             else:
                 raise ValueError(
@@ -531,12 +534,12 @@ class SecurityAccount(Account):
         if currency is None:
             currency = security.currency
 
-        shares_price_pairs: list[tuple[int, CashAmount]] = []
+        shares_price_pairs: list[tuple[Decimal, CashAmount]] = []
         for transaction in self._transactions:
-            _transaction_date = transaction.date_
+            _transaction_datetime = transaction.datetime_
             if transaction.security != security:
                 continue
-            if date_ is not None and _transaction_date > date_:
+            if datetime_ is not None and _transaction_datetime > datetime_:
                 continue
             if (
                 isinstance(transaction, SecurityTransaction)
@@ -548,13 +551,15 @@ class SecurityAccount(Account):
                 and transaction.recipient == self
             ):
                 amount = transaction.sender.get_average_amount_per_share(
-                    security, _transaction_date, currency
+                    security, _transaction_datetime, currency
                 )
             else:
                 continue
-            shares_price_pairs.append(
-                (transaction.shares, amount.convert(currency, _transaction_date))
-            )
+            try:
+                amount_ = amount.convert(currency, _transaction_datetime.date())
+            except ConversionFactorNotFoundError:
+                return CashAmount("NaN", currency)
+            shares_price_pairs.append((transaction.shares, amount_))
 
         total_shares = 0
         total_price = currency.zero_amount
@@ -658,7 +663,7 @@ class SecurityRelatedTransaction(Transaction, ABC):
             raise ValueError(
                 f"{self.__class__.__name__}.shares must be a finite positive number."
             )
-        _value_decimals = -_value.as_tuple().exponent
+        _value_decimals = get_decimal_exponent(_value)
         if _value_decimals > shares_decimals:
             raise ValueError(
                 f"{self.__class__.__name__}.shares must have maximum "
@@ -815,7 +820,7 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
         datetime_: datetime | None = None,
         type_: SecurityTransactionType | None = None,
         security: Security | None = None,
-        shares: Decimal | None = None,
+        shares: Decimal | int | str | None = None,
         amount_per_share: CashAmount | None = None,
         security_account: SecurityAccount | None = None,
         cash_account: CashAccount | None = None,
@@ -868,7 +873,7 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
         datetime_: datetime | None = None,
         type_: SecurityTransactionType | None = None,
         security: Security | None = None,
-        shares: Decimal | None = None,
+        shares: Decimal | int | str | None = None,
         amount_per_share: CashAmount | None = None,
         security_account: SecurityAccount | None = None,
         cash_account: CashAccount | None = None,
@@ -899,6 +904,17 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
         self._validate_security_account(security_account)
         self._validate_amount(amount_per_share, cash_account.currency)
 
+    def get_amount_for_tag(self, tag: Attribute) -> CashAmount:
+        if self._type != SecurityTransactionType.DIVIDEND:
+            raise ValueError(
+                "Only Dividend SecurityTransactions have a relevant Tag amount."
+            )
+        if tag not in self._tags:
+            raise ValueError(
+                f"Tag '{tag.name}' not found in this SecurityTransaction's tags."
+            )
+        return self._amount
+
     def _set_attributes(
         self,
         *,
@@ -906,7 +922,7 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
         datetime_: datetime,
         type_: SecurityTransactionType,
         security: Security,
-        shares: Decimal,
+        shares: Decimal | int | str,
         amount_per_share: CashAmount,
         security_account: SecurityAccount,
         cash_account: CashAccount,
@@ -937,12 +953,13 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
                 update_security_account = self._security != security
         self._security = security
 
+        _shares = Decimal(shares).normalize()
         if not block_account_update and hasattr(self, "_shares"):
             if not update_cash_account:
-                update_cash_account = self._shares != shares
+                update_cash_account = self._shares != _shares
             if not update_security_account:
-                update_security_account = self._shares != shares
-        self._shares = Decimal(shares).normalize()
+                update_security_account = self._shares != _shares
+        self._shares = _shares
 
         if (
             not block_account_update
@@ -1152,7 +1169,7 @@ class SecurityTransfer(SecurityRelatedTransaction):
         description: str | None = None,
         datetime_: datetime | None = None,
         security: Security | None = None,
-        shares: Decimal | None = None,
+        shares: Decimal | int | str | None = None,
         sender: SecurityAccount | None = None,
         recipient: SecurityAccount | None = None,
         block_account_update: bool = False,

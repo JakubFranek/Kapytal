@@ -268,7 +268,7 @@ class CategoryReportPresenter:
 
 def _filter_transactions(
     transactions: Collection[Transaction],
-) -> tuple[CashTransaction | RefundTransaction]:
+) -> tuple[CashTransaction | RefundTransaction, ...]:
     return tuple(
         transaction
         for transaction in transactions
@@ -345,7 +345,7 @@ def separate_stats(
 
 def add_missing_parent_category_stats(
     periodic_category_stats: dict[str, list[CategoryStats]],
-) -> tuple[CategoryStats, ...]:
+) -> None:
     stats_to_add = []
     for period, stats_sequence in periodic_category_stats.items():
         categories = {s.category for s in stats_sequence}

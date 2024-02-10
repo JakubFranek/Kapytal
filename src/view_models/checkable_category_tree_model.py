@@ -5,7 +5,6 @@ from typing import Any, Self
 
 from PyQt6.QtCore import QAbstractItemModel, QModelIndex, Qt
 from PyQt6.QtGui import QFont
-from PyQt6.QtWidgets import QTreeView
 from src.models.model_objects.attributes import Category
 from src.presenters.utilities.event import Event
 
@@ -149,12 +148,10 @@ def get_node_by_item_path(
 class CheckableCategoryTreeModel(QAbstractItemModel):
     def __init__(
         self,
-        tree_view: QTreeView,
     ) -> None:
         super().__init__()
-        self._tree_view = tree_view
-        self._flat_nodes: tuple[CategoryTreeNode] = ()
-        self._root_nodes: tuple[CategoryTreeNode] = ()
+        self._flat_nodes: tuple[CategoryTreeNode, ...] = ()
+        self._root_nodes: tuple[CategoryTreeNode, ...] = ()
         self._selection_mode = CategorySelectionMode.HIERARCHICAL
         self.event_checked_categories_changed = Event()
 
@@ -259,7 +256,10 @@ class CheckableCategoryTreeModel(QAbstractItemModel):
         return None
 
     def setData(
-        self, index: QModelIndex, value: Any, role: int = ...  # noqa: ANN401
+        self,
+        index: QModelIndex,
+        value: Any,
+        role: int = ...,
     ) -> bool | None:
         if role == Qt.ItemDataRole.CheckStateRole:
             item: CategoryTreeNode = index.internalPointer()

@@ -17,6 +17,7 @@ from src.models.model_objects.cash_objects import (
     CashTransfer,
     RefundTransaction,
 )
+from src.models.model_objects.currency_objects import ConversionFactorNotFoundError
 from src.models.model_objects.security_objects import (
     SecurityTransaction,
     SecurityTransactionType,
@@ -90,7 +91,7 @@ class TransactionsPresenter:
     ) -> None:
         self._view = view
         self._record_keeper = record_keeper
-        self._account_tree_shown_accounts = record_keeper.accounts
+        self._account_tree_shown_accounts = frozenset(record_keeper.accounts)
 
         self._initialize_model()
         self._initialize_presenters()
@@ -142,7 +143,7 @@ class TransactionsPresenter:
         self._transaction_tags_dialog_presenter.load_record_keeper(record_keeper)
         self._transaction_filter_form_presenter.load_record_keeper(record_keeper)
         self._transaction_table_form_presenter.load_record_keeper(record_keeper)
-        self._account_tree_shown_accounts = record_keeper.accounts
+        self._account_tree_shown_accounts = frozenset(record_keeper.accounts)
         self._reset_model()
         self._update_number_of_shown_transactions()
         self._selection_changed()
@@ -310,7 +311,7 @@ class TransactionsPresenter:
             self._record_keeper
         )
 
-        self._transaction_dialog_presenters: tuple[TransactionDialogPresenter] = (
+        self._transaction_dialog_presenters: tuple[TransactionDialogPresenter, ...] = (
             self._cash_transaction_dialog_presenter,
             self._cash_transfer_dialog_presenter,
             self._security_transaction_dialog_presenter,
@@ -641,7 +642,18 @@ class TransactionsPresenter:
         for transaction in transactions:
             if isinstance(transaction, CashTransaction | RefundTransaction):
                 _amount = transaction.get_amount(transaction.account)
+            elif (
+                isinstance(transaction, SecurityTransaction)
+                and transaction.type_ == SecurityTransactionType.DIVIDEND
+            ):
+                _amount = transaction.amount
+            else:
+                continue
+
+            try:
                 amount += _amount.convert(base_currency, transaction.date_)
+            except ConversionFactorNotFoundError:
+                self._view.set_selected_amount("N/A")
 
         self._view.set_selected_amount(amount.to_str_rounded())
 

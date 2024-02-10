@@ -1,0 +1,231 @@
+{
+  "version": "1.0.0-rc1", 
+  "datetime_saved": "2024-02-10T16:43:35.910547+01:00", 
+  "data": {
+    "datatype": "RecordKeeper", 
+    "currencies": [
+      {
+        "datatype": "Currency", 
+        "code": "EUR", 
+        "decimals": 2
+      }
+    ], 
+    "base_currency_code": "EUR", 
+    "exchange_rates": [], 
+    "securities": [
+      {
+        "datatype": "Security", 
+        "name": "House", 
+        "symbol": "", 
+        "type": "Real Estate", 
+        "currency_code": "EUR", 
+        "shares_decimals": 0, 
+        "uuid": "4e76940b-80a4-4e0a-ad40-8ad8ac1dc409", 
+        "date_price_pairs": [
+          [
+            "2022-01-01", 
+            "240000.00"
+          ]
+        ]
+      }, 
+      {
+        "datatype": "Security", 
+        "name": "Mortgage", 
+        "symbol": "", 
+        "type": "Mortgage", 
+        "currency_code": "EUR", 
+        "shares_decimals": 12, 
+        "uuid": "80b6f0ab-9dda-4fee-8000-556871aa4662", 
+        "date_price_pairs": [
+          [
+            "2022-01-01", 
+            "216000.00"
+          ]
+        ]
+      }
+    ], 
+    "account_groups": [], 
+    "accounts": [
+      {
+        "datatype": "CashAccount", 
+        "path": "Bank Account", 
+        "index": null, 
+        "currency_code": "EUR", 
+        "initial_balance": "0.00", 
+        "uuid": "d2851468-f28e-4e6b-9e53-c61f2b20596a"
+      }, 
+      {
+        "datatype": "SecurityAccount", 
+        "path": "Real Estate", 
+        "index": null, 
+        "uuid": "76bc8e6f-1334-4072-948c-445eb27c16d9"
+      }
+    ], 
+    "root_account_items": [
+      {
+        "datatype": "SecurityAccount", 
+        "path": "Real Estate"
+      }, 
+      {
+        "datatype": "CashAccount", 
+        "path": "Bank Account"
+      }
+    ], 
+    "payees": [
+      "My Bank", 
+      "unknown"
+    ], 
+    "tags": [], 
+    "categories": [
+      {
+        "datatype": "Category", 
+        "path": "Housing", 
+        "type": "EXPENSE", 
+        "index": null
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Housing/Mortgage Interest", 
+        "type": "EXPENSE", 
+        "index": 0
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Income", 
+        "type": "INCOME", 
+        "index": null
+      }
+    ], 
+    "root_income_categories": [
+      "Income"
+    ], 
+    "root_expense_categories": [
+      "Housing"
+    ], 
+    "root_income_and_expense_categories": [], 
+    "transactions": [
+      {
+        "datatype": "CashTransaction", 
+        "description": "money for downpayment", 
+        "datetime": "2022-01-01T00:00:00+01:00", 
+        "type": "INCOME", 
+        "account_path": "Bank Account", 
+        "payee_name": "unknown", 
+        "category_amount_pairs": [
+          "Income:24000.00 EUR"
+        ], 
+        "tag_amount_pairs": [], 
+        "datetime_created": "2023-10-16T20:52:56+02:00", 
+        "uuid": "8df56b22-330d-4b94-aa57-7d392458b81b"
+      }, 
+      {
+        "datatype": "SecurityTransaction", 
+        "description": "taking a mortgage for 90% of house price", 
+        "datetime": "2022-01-01T00:01:00+01:00", 
+        "type": "SELL", 
+        "security_name": "Mortgage", 
+        "shares": "1", 
+        "amount_per_share": "216000.00 EUR", 
+        "security_account_path": "Real Estate", 
+        "cash_account_path": "Bank Account", 
+        "datetime_created": "2023-10-16T20:55:32+02:00", 
+        "uuid": "4bf316d7-5dd2-4aa4-9104-648cffa55583"
+      }, 
+      {
+        "datatype": "SecurityTransaction", 
+        "description": "buying a house", 
+        "datetime": "2022-01-01T00:02:00+01:00", 
+        "type": "BUY", 
+        "security_name": "House", 
+        "shares": "1", 
+        "amount_per_share": "240000.00 EUR", 
+        "security_account_path": "Real Estate", 
+        "cash_account_path": "Bank Account", 
+        "datetime_created": "2023-10-16T20:55:53+02:00", 
+        "uuid": "fe8daf18-44fd-4949-92ab-cc15cadb4fb8"
+      }, 
+      {
+        "datatype": "CashTransaction", 
+        "description": "money for monthly payment #1", 
+        "datetime": "2022-02-14T00:00:00+01:00", 
+        "type": "INCOME", 
+        "account_path": "Bank Account", 
+        "payee_name": "unknown", 
+        "category_amount_pairs": [
+          "Income:800.00 EUR"
+        ], 
+        "tag_amount_pairs": [], 
+        "datetime_created": "2024-01-30T20:27:41+01:00", 
+        "uuid": "58c6f35f-de9a-4a6a-91a8-158689daf04c"
+      }, 
+      {
+        "datatype": "CashTransaction", 
+        "description": "mortgage interest #1", 
+        "datetime": "2022-02-15T00:00:02+01:00", 
+        "type": "EXPENSE", 
+        "account_path": "Bank Account", 
+        "payee_name": "My Bank", 
+        "category_amount_pairs": [
+          "Housing/Mortgage Interest:600.00 EUR"
+        ], 
+        "tag_amount_pairs": [], 
+        "datetime_created": "2023-10-19T21:46:54+02:00", 
+        "uuid": "a0c830fc-97f8-4abc-8f86-1d1ecb0b978f"
+      }, 
+      {
+        "datatype": "SecurityTransaction", 
+        "description": "capital repayment #1", 
+        "datetime": "2022-02-15T00:01:00+01:00", 
+        "type": "BUY", 
+        "security_name": "Mortgage", 
+        "shares": "0.000925925926", 
+        "amount_per_share": "215999.99998272 EUR", 
+        "security_account_path": "Real Estate", 
+        "cash_account_path": "Bank Account", 
+        "datetime_created": "2023-10-16T21:00:18+02:00", 
+        "uuid": "71d96b2d-883d-4b94-a317-51eefd217eaa"
+      }, 
+      {
+        "datatype": "CashTransaction", 
+        "description": "money for monthly payment #2", 
+        "datetime": "2022-03-14T00:00:00+01:00", 
+        "type": "INCOME", 
+        "account_path": "Bank Account", 
+        "payee_name": "unknown", 
+        "category_amount_pairs": [
+          "Income:800.00 EUR"
+        ], 
+        "tag_amount_pairs": [], 
+        "datetime_created": "2023-10-16T21:02:55+02:00", 
+        "uuid": "9e521246-2de6-400f-aacc-38872b8d09e3"
+      }, 
+      {
+        "datatype": "CashTransaction", 
+        "description": "mortgage interest #2", 
+        "datetime": "2022-03-15T00:00:01+01:00", 
+        "type": "EXPENSE", 
+        "account_path": "Bank Account", 
+        "payee_name": "My Bank", 
+        "category_amount_pairs": [
+          "Housing/Mortgage Interest:590.00 EUR"
+        ], 
+        "tag_amount_pairs": [], 
+        "datetime_created": "2024-01-30T20:27:20+01:00", 
+        "uuid": "a4a1833e-3608-4695-8d05-5cd1096e8a44"
+      }, 
+      {
+        "datatype": "SecurityTransaction", 
+        "description": "capital repayment #2", 
+        "datetime": "2022-03-15T00:01:00+01:00", 
+        "type": "BUY", 
+        "security_name": "Mortgage", 
+        "shares": "0.000972222222", 
+        "amount_per_share": "216000.000049371 EUR", 
+        "security_account_path": "Real Estate", 
+        "cash_account_path": "Bank Account", 
+        "datetime_created": "2024-01-30T20:27:33+01:00", 
+        "uuid": "94af3963-44a0-41b3-995c-a192f6fbd027"
+      }
+    ]
+  }
+}

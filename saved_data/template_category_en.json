@@ -1,0 +1,878 @@
+{
+  "version": "0.18.0", 
+  "datetime_saved": "2024-01-30T20:02:19.222377+01:00", 
+  "data": {
+    "datatype": "RecordKeeper", 
+    "currencies": [], 
+    "base_currency_code": null, 
+    "exchange_rates": [], 
+    "securities": [], 
+    "account_groups": [], 
+    "accounts": [], 
+    "root_account_items": [], 
+    "payees": [], 
+    "tags": [], 
+    "categories": [
+      {
+        "datatype": "Category", 
+        "path": "Bet", 
+        "type": "INCOME_AND_EXPENSE", 
+        "index": null
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Charity", 
+        "type": "EXPENSE", 
+        "index": null
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Clothes", 
+        "type": "EXPENSE", 
+        "index": null
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Clothes/Accessories", 
+        "type": "EXPENSE", 
+        "index": 2
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Clothes/Casual", 
+        "type": "EXPENSE", 
+        "index": 0
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Clothes/Formal", 
+        "type": "EXPENSE", 
+        "index": 1
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Clothes/Shoes", 
+        "type": "EXPENSE", 
+        "index": 3
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Digital goods", 
+        "type": "EXPENSE", 
+        "index": null
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Digital goods/Cloud storage", 
+        "type": "EXPENSE", 
+        "index": 2
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Digital goods/Internet", 
+        "type": "EXPENSE", 
+        "index": 0
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Digital goods/Mobile data", 
+        "type": "EXPENSE", 
+        "index": 1
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Digital goods/Phone plan", 
+        "type": "EXPENSE", 
+        "index": 4
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Digital goods/Software", 
+        "type": "EXPENSE", 
+        "index": 3
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Dividend", 
+        "type": "INCOME", 
+        "index": null
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Education", 
+        "type": "EXPENSE", 
+        "index": null
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Education/Books and supplies", 
+        "type": "EXPENSE", 
+        "index": 1
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Education/Courses", 
+        "type": "EXPENSE", 
+        "index": 0
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Education/Software and apps", 
+        "type": "EXPENSE", 
+        "index": 3
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Education/Tuition", 
+        "type": "EXPENSE", 
+        "index": 2
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Electronics", 
+        "type": "EXPENSE", 
+        "index": null
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Employment", 
+        "type": "INCOME", 
+        "index": null
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Employment/Bonus", 
+        "type": "INCOME", 
+        "index": 1
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Employment/Meal vouchers", 
+        "type": "INCOME", 
+        "index": 2
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Employment/Other benefits", 
+        "type": "INCOME", 
+        "index": 4
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Employment/Pension contribution", 
+        "type": "INCOME", 
+        "index": 3
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Employment/Salary", 
+        "type": "INCOME", 
+        "index": 0
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Entrepreneurship", 
+        "type": "INCOME", 
+        "index": null
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Expense Reconciliation", 
+        "type": "INCOME_AND_EXPENSE", 
+        "index": null
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Food and Drink", 
+        "type": "EXPENSE", 
+        "index": null
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Food and Drink/Alcohol", 
+        "type": "EXPENSE", 
+        "index": 3
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Food and Drink/Eating out", 
+        "type": "EXPENSE", 
+        "index": 1
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Food and Drink/Groceries", 
+        "type": "EXPENSE", 
+        "index": 0
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Food and Drink/Takeout", 
+        "type": "EXPENSE", 
+        "index": 2
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Gift", 
+        "type": "INCOME_AND_EXPENSE", 
+        "index": null
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Gift/Activites", 
+        "type": "INCOME_AND_EXPENSE", 
+        "index": 6
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Gift/Drink", 
+        "type": "INCOME_AND_EXPENSE", 
+        "index": 1
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Gift/Finance", 
+        "type": "INCOME_AND_EXPENSE", 
+        "index": 0
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Gift/Flowers", 
+        "type": "INCOME_AND_EXPENSE", 
+        "index": 4
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Gift/Food", 
+        "type": "INCOME_AND_EXPENSE", 
+        "index": 2
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Gift/Jewelry", 
+        "type": "INCOME_AND_EXPENSE", 
+        "index": 5
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Gift/Toys", 
+        "type": "INCOME_AND_EXPENSE", 
+        "index": 3
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Health", 
+        "type": "EXPENSE", 
+        "index": null
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Health/Accessories", 
+        "type": "EXPENSE", 
+        "index": 1
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Health/Dentist", 
+        "type": "EXPENSE", 
+        "index": 3
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Health/GP", 
+        "type": "EXPENSE", 
+        "index": 4
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Health/Medicine", 
+        "type": "EXPENSE", 
+        "index": 0
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Health/Vaccine", 
+        "type": "EXPENSE", 
+        "index": 2
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Household Goods", 
+        "type": "EXPENSE", 
+        "index": null
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Housing", 
+        "type": "EXPENSE", 
+        "index": null
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Housing/Bills", 
+        "type": "EXPENSE", 
+        "index": 2
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Housing/Bills/Electricity", 
+        "type": "EXPENSE", 
+        "index": 0
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Housing/Bills/Garbage", 
+        "type": "EXPENSE", 
+        "index": 3
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Housing/Bills/Heating", 
+        "type": "EXPENSE", 
+        "index": 1
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Housing/Bills/Water", 
+        "type": "EXPENSE", 
+        "index": 2
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Housing/Equipment", 
+        "type": "EXPENSE", 
+        "index": 4
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Housing/Equipment/Furniture", 
+        "type": "EXPENSE", 
+        "index": 0
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Housing/Equipment/Kitchen", 
+        "type": "EXPENSE", 
+        "index": 1
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Housing/Equipment/Repairs", 
+        "type": "EXPENSE", 
+        "index": 2
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Housing/Hotel", 
+        "type": "EXPENSE", 
+        "index": 5
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Housing/Maintenance", 
+        "type": "EXPENSE", 
+        "index": 6
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Housing/Mortgage Interest", 
+        "type": "EXPENSE", 
+        "index": 1
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Housing/Remodelling", 
+        "type": "EXPENSE", 
+        "index": 3
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Housing/Rent", 
+        "type": "EXPENSE", 
+        "index": 0
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Inheritance", 
+        "type": "INCOME", 
+        "index": null
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Insurance", 
+        "type": "EXPENSE", 
+        "index": null
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Insurance/Legal", 
+        "type": "EXPENSE", 
+        "index": 2
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Insurance/Life", 
+        "type": "EXPENSE", 
+        "index": 0
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Insurance/Property", 
+        "type": "EXPENSE", 
+        "index": 1
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Insurance/Travel", 
+        "type": "EXPENSE", 
+        "index": 3
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Interest", 
+        "type": "INCOME_AND_EXPENSE", 
+        "index": null
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Leisure", 
+        "type": "EXPENSE", 
+        "index": null
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Leisure/Culture", 
+        "type": "EXPENSE", 
+        "index": 0
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Leisure/Culture/Cinema", 
+        "type": "EXPENSE", 
+        "index": 0
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Leisure/Culture/Museum, galleries", 
+        "type": "EXPENSE", 
+        "index": 2
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Leisure/Culture/Music", 
+        "type": "EXPENSE", 
+        "index": 4
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Leisure/Culture/Sightseeing", 
+        "type": "EXPENSE", 
+        "index": 3
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Leisure/Culture/Subscriptions", 
+        "type": "EXPENSE", 
+        "index": 5
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Leisure/Culture/Theatre", 
+        "type": "EXPENSE", 
+        "index": 1
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Leisure/Hobbies", 
+        "type": "EXPENSE", 
+        "index": 3
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Leisure/Hobbies/Boardgames", 
+        "type": "EXPENSE", 
+        "index": 2
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Leisure/Hobbies/DIY", 
+        "type": "EXPENSE", 
+        "index": 0
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Leisure/Hobbies/Gardening", 
+        "type": "EXPENSE", 
+        "index": 1
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Leisure/Hobbies/Videogames", 
+        "type": "EXPENSE", 
+        "index": 3
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Leisure/Reading", 
+        "type": "EXPENSE", 
+        "index": 1
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Leisure/Reading/Books", 
+        "type": "EXPENSE", 
+        "index": 2
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Leisure/Reading/Magazines", 
+        "type": "EXPENSE", 
+        "index": 0
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Leisure/Reading/Newspapers", 
+        "type": "EXPENSE", 
+        "index": 1
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Leisure/Wellness", 
+        "type": "EXPENSE", 
+        "index": 2
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Loan", 
+        "type": "INCOME_AND_EXPENSE", 
+        "index": null
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Other income", 
+        "type": "INCOME", 
+        "index": null
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Personal Care", 
+        "type": "EXPENSE", 
+        "index": null
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Personal Care/Haircare", 
+        "type": "EXPENSE", 
+        "index": 2
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Personal Care/Skincare", 
+        "type": "EXPENSE", 
+        "index": 1
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Personal Care/Toiletries", 
+        "type": "EXPENSE", 
+        "index": 0
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Pets", 
+        "type": "EXPENSE", 
+        "index": null
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Pets/Food", 
+        "type": "EXPENSE", 
+        "index": 1
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Pets/Purchase", 
+        "type": "EXPENSE", 
+        "index": 0
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Pets/Vet", 
+        "type": "EXPENSE", 
+        "index": 2
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Services", 
+        "type": "EXPENSE", 
+        "index": null
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Services/Barber", 
+        "type": "EXPENSE", 
+        "index": 1
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Services/Catering", 
+        "type": "EXPENSE", 
+        "index": 4
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Services/Financial", 
+        "type": "EXPENSE", 
+        "index": 3
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Services/Hairdresser", 
+        "type": "EXPENSE", 
+        "index": 0
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Services/Handyman", 
+        "type": "EXPENSE", 
+        "index": 7
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Services/Legal", 
+        "type": "EXPENSE", 
+        "index": 8
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Services/Post", 
+        "type": "EXPENSE", 
+        "index": 5
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Services/Printing", 
+        "type": "EXPENSE", 
+        "index": 2
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Services/Public Toilets", 
+        "type": "EXPENSE", 
+        "index": 6
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Services/Realtor", 
+        "type": "EXPENSE", 
+        "index": 9
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Sports", 
+        "type": "EXPENSE", 
+        "index": null
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Sports/Activities", 
+        "type": "EXPENSE", 
+        "index": 2
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Sports/Clothes", 
+        "type": "EXPENSE", 
+        "index": 1
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Sports/Equipment", 
+        "type": "EXPENSE", 
+        "index": 0
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Stipend", 
+        "type": "INCOME", 
+        "index": null
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Tax", 
+        "type": "EXPENSE", 
+        "index": null
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Tax Return", 
+        "type": "INCOME", 
+        "index": null
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Transport", 
+        "type": "EXPENSE", 
+        "index": null
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Transport/Airplane", 
+        "type": "EXPENSE", 
+        "index": 5
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Transport/Bus", 
+        "type": "EXPENSE", 
+        "index": 3
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Transport/Car", 
+        "type": "EXPENSE", 
+        "index": 0
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Transport/Car sharing", 
+        "type": "EXPENSE", 
+        "index": 2
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Transport/Car/Fuel", 
+        "type": "EXPENSE", 
+        "index": 0
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Transport/Car/Insurance", 
+        "type": "EXPENSE", 
+        "index": 6
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Transport/Car/Maintenance", 
+        "type": "EXPENSE", 
+        "index": 2
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Transport/Car/Parking", 
+        "type": "EXPENSE", 
+        "index": 3
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Transport/Car/Purchase", 
+        "type": "EXPENSE", 
+        "index": 1
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Transport/Car/Renting", 
+        "type": "EXPENSE", 
+        "index": 4
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Transport/Car/Toll", 
+        "type": "EXPENSE", 
+        "index": 5
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Transport/Public", 
+        "type": "EXPENSE", 
+        "index": 1
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Transport/Ship", 
+        "type": "EXPENSE", 
+        "index": 6
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Transport/Taxi", 
+        "type": "EXPENSE", 
+        "index": 7
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Transport/Train", 
+        "type": "EXPENSE", 
+        "index": 4
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Welfare", 
+        "type": "INCOME", 
+        "index": null
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Work", 
+        "type": "EXPENSE", 
+        "index": null
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Work/Office supplies", 
+        "type": "EXPENSE", 
+        "index": 0
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Work/Professional Memberships", 
+        "type": "EXPENSE", 
+        "index": 1
+      }, 
+      {
+        "datatype": "Category", 
+        "path": "Work/Trainings and conferences", 
+        "type": "EXPENSE", 
+        "index": 2
+      }
+    ], 
+    "root_income_categories": [
+      "Employment", 
+      "Tax Return", 
+      "Stipend", 
+      "Inheritance", 
+      "Welfare", 
+      "Dividend", 
+      "Entrepreneurship", 
+      "Other income"
+    ], 
+    "root_expense_categories": [
+      "Housing", 
+      "Food and Drink", 
+      "Leisure", 
+      "Tax", 
+      "Transport", 
+      "Work", 
+      "Digital goods", 
+      "Sports", 
+      "Pets", 
+      "Personal Care", 
+      "Health", 
+      "Insurance", 
+      "Services", 
+      "Clothes", 
+      "Electronics", 
+      "Education", 
+      "Charity", 
+      "Household Goods"
+    ], 
+    "root_income_and_expense_categories": [
+      "Gift", 
+      "Interest", 
+      "Loan", 
+      "Expense Reconciliation", 
+      "Bet"
+    ], 
+    "transactions": []
+  }
+}
