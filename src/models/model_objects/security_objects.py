@@ -572,9 +572,10 @@ class SecurityAccount(Account):
             elif (
                 isinstance(transaction, SecurityTransfer)
                 and transaction.recipient == self
+                and type_ == SecurityTransactionType.BUY
             ):
                 amount = transaction.sender.get_average_amount_per_share(
-                    security, _transaction_datetime, currency
+                    security, _transaction_datetime, currency, type_
                 )
             else:
                 continue
