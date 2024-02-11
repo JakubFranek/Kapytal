@@ -44,7 +44,7 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
     signal_payees_search_text_changed = pyqtSignal(str)
     signal_income_categories_search_text_changed = pyqtSignal(str)
     signal_expense_categories_search_text_changed = pyqtSignal(str)
-    signal_income_and_expense_categories_search_text_changed = pyqtSignal(str)
+    signal_dual_purpose_categories_search_text_changed = pyqtSignal(str)
     signal_currencies_search_text_changed = pyqtSignal(str)
     signal_securities_search_text_changed = pyqtSignal(str)
 
@@ -70,8 +70,8 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
     signal_income_categories_unselect_all = pyqtSignal()
     signal_expense_categories_select_all = pyqtSignal()
     signal_expense_categories_unselect_all = pyqtSignal()
-    signal_income_and_expense_categories_select_all = pyqtSignal()
-    signal_income_and_expense_categories_unselect_all = pyqtSignal()
+    signal_dual_purpose_categories_select_all = pyqtSignal()
+    signal_dual_purpose_categories_unselect_all = pyqtSignal()
     signal_categories_update_number_selected = pyqtSignal()
 
     signal_currencies_select_all = pyqtSignal()
@@ -139,7 +139,7 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
         return self.expenseCategoriesTreeView
 
     @property
-    def income_and_expense_category_tree_view(self) -> QTreeView:
+    def dual_purpose_category_tree_view(self) -> QTreeView:
         return self.incomeAndExpenseCategoriesTreeView
 
     @property
@@ -457,7 +457,7 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
             self.signal_expense_categories_search_text_changed.emit
         )
         self.incomeAndExpenseCategoriesSearchLineEdit.textChanged.connect(
-            self.signal_income_and_expense_categories_search_text_changed.emit
+            self.signal_dual_purpose_categories_search_text_changed.emit
         )
         self.currencyFilterSearchLineEdit.textChanged.connect(
             self.signal_currencies_search_text_changed.emit
@@ -594,10 +594,10 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
             "Unselect All Expense Categories", self
         )
         self.actionSelectAllIncomeAndExpenseCategories = QAction(
-            "Select All Income and Expense Categories", self
+            "Select All Dual-Purpose Categories", self
         )
         self.actionUnselectAllIncomeAndExpenseCategories = QAction(
-            "Unselect All Income and Expense Categories", self
+            "Unselect All Dual-Purpose Categories", self
         )
         self.actionSelectAllTags = QAction("Select All", self)
         self.actionUnselectAllTags = QAction("Unselect All", self)
@@ -684,10 +684,10 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
             self.signal_expense_categories_unselect_all.emit
         )
         self.actionSelectAllIncomeAndExpenseCategories.triggered.connect(
-            self.signal_income_and_expense_categories_select_all.emit
+            self.signal_dual_purpose_categories_select_all.emit
         )
         self.actionUnselectAllIncomeAndExpenseCategories.triggered.connect(
-            self.signal_income_and_expense_categories_unselect_all.emit
+            self.signal_dual_purpose_categories_unselect_all.emit
         )
         self.actionSelectAllTags.triggered.connect(self.signal_tags_select_all.emit)
         self.actionUnselectAllTags.triggered.connect(self.signal_tags_unselect_all.emit)
@@ -925,8 +925,8 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
         income_total: int,
         expense_selected: int,
         expense_total: int,
-        income_and_expense_selected: int,
-        income_and_expense_total: int,
+        dual_purpose_selected: int,
+        dual_purpose_total: int,
     ) -> None:
         """Set the number of currently selected categories in tab names.
         Pass a negative number if no number is to be shown."""
@@ -934,18 +934,17 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
         if self.specific_categories_filter_mode != FilterMode.OFF:
             income_text = f"Income ({income_selected} / {income_total})"
             expense_text = f"Expense ({expense_selected} / {expense_total})"
-            income_and_expense_text = (
-                f"Income and Expense ({income_and_expense_selected} "
-                f"/ {income_and_expense_total})"
+            dual_purpose_text = (
+                f"Dual-Purpose ({dual_purpose_selected} / {dual_purpose_total})"
             )
         else:
             income_text = "Income"
             expense_text = "Expense"
-            income_and_expense_text = "Income and Expense"
+            dual_purpose_text = "Dual-Purpose"
 
         self.categoriesTypeTabWidget.setTabText(0, income_text)
         self.categoriesTypeTabWidget.setTabText(1, expense_text)
-        self.categoriesTypeTabWidget.setTabText(2, income_and_expense_text)
+        self.categoriesTypeTabWidget.setTabText(2, dual_purpose_text)
 
     def set_selected_tags_number(self, selected: int, total: int) -> None:
         if self.specific_tags_filter_mode != FilterMode.OFF:
@@ -1014,8 +1013,8 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
         if selected:
             self.signal_income_categories_select_all.emit()
             self.signal_expense_categories_select_all.emit()
-            self.signal_income_and_expense_categories_select_all.emit()
+            self.signal_dual_purpose_categories_select_all.emit()
         else:
             self.signal_income_categories_unselect_all.emit()
             self.signal_expense_categories_unselect_all.emit()
-            self.signal_income_and_expense_categories_unselect_all.emit()
+            self.signal_dual_purpose_categories_unselect_all.emit()

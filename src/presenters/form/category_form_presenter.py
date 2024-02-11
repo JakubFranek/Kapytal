@@ -56,11 +56,11 @@ class CategoryFormPresenter:
     def _reset_model(self) -> None:
         self._model_income.pre_reset_model()
         self._model_expense.pre_reset_model()
-        self._model_income_and_expense.pre_reset_model()
+        self._model_dual_purpose.pre_reset_model()
         self._update_model_data_with_busy_dialog()
         self._model_income.post_reset_model()
         self._model_expense.post_reset_model()
-        self._model_income_and_expense.post_reset_model()
+        self._model_dual_purpose.post_reset_model()
 
     def _update_model_data_with_busy_dialog(self) -> None:
         no_of_transactions = len(self._record_keeper.transactions)
@@ -95,8 +95,8 @@ class CategoryFormPresenter:
         self._model_expense.load_data(
             self._record_keeper.expense_categories, category_stats
         )
-        self._model_income_and_expense.load_data(
-            self._record_keeper.income_and_expense_categories, category_stats
+        self._model_dual_purpose.load_data(
+            self._record_keeper.dual_purpose_categories, category_stats
         )
 
         self._recalculate_data = False
@@ -241,8 +241,8 @@ class CategoryFormPresenter:
         self._view.signal_expense_search_text_changed.connect(
             self._filter_expense_categories
         )
-        self._view.signal_income_and_expense_search_text_changed.connect(
-            self._filter_income_and_expense_categories
+        self._view.signal_dual_purpose_search_text_changed.connect(
+            self._filter_dual_purpose_categories
         )
 
         self._tree_selection_changed()  # called to ensure context menu is OK at start
@@ -276,10 +276,10 @@ class CategoryFormPresenter:
         self._proxy_expense.setFilterWildcard(pattern)
         self._view.expenseTreeView.expandAll()
 
-    def _filter_income_and_expense_categories(self, pattern: str) -> None:
+    def _filter_dual_purpose_categories(self, pattern: str) -> None:
         if ("[" in pattern and "]" not in pattern) or "[]" in pattern:
             return
-        self._proxy_income_and_expense.setFilterWildcard(pattern)
+        self._proxy_dual_purpose.setFilterWildcard(pattern)
         self._view.incomeAndExpenseTreeView.expandAll()
 
     def _initialize_models(self) -> None:
@@ -307,21 +307,21 @@ class CategoryFormPresenter:
         self._proxy_expense.setFilterRole(Qt.ItemDataRole.UserRole + 1)
         self._view.expenseTreeView.setModel(self._proxy_expense)
 
-        self._proxy_income_and_expense = QSortFilterProxyModel(
+        self._proxy_dual_purpose = QSortFilterProxyModel(
             self._view.incomeAndExpenseTreeView
         )
-        self._model_income_and_expense = CategoryTreeModel(
+        self._model_dual_purpose = CategoryTreeModel(
             tree_view=self._view.incomeAndExpenseTreeView,
-            proxy=self._proxy_income_and_expense,
+            proxy=self._proxy_dual_purpose,
         )
-        self._proxy_income_and_expense.setSourceModel(self._model_income_and_expense)
-        self._proxy_income_and_expense.setFilterCaseSensitivity(
+        self._proxy_dual_purpose.setSourceModel(self._model_dual_purpose)
+        self._proxy_dual_purpose.setFilterCaseSensitivity(
             Qt.CaseSensitivity.CaseInsensitive
         )
-        self._proxy_income_and_expense.setRecursiveFilteringEnabled(True)
-        self._proxy_income_and_expense.setSortRole(Qt.ItemDataRole.UserRole)
-        self._proxy_income_and_expense.setFilterRole(Qt.ItemDataRole.UserRole + 1)
-        self._view.incomeAndExpenseTreeView.setModel(self._proxy_income_and_expense)
+        self._proxy_dual_purpose.setRecursiveFilteringEnabled(True)
+        self._proxy_dual_purpose.setSortRole(Qt.ItemDataRole.UserRole)
+        self._proxy_dual_purpose.setFilterRole(Qt.ItemDataRole.UserRole + 1)
+        self._view.incomeAndExpenseTreeView.setModel(self._proxy_dual_purpose)
 
     def _get_current_model(self) -> CategoryTreeModel:
         type_ = self._view.category_type
@@ -329,7 +329,7 @@ class CategoryFormPresenter:
             return self._model_income
         if type_ == CategoryType.EXPENSE:
             return self._model_expense
-        return self._model_income_and_expense
+        return self._model_dual_purpose
 
     def _update_dialog_position_limits(self, path: str) -> None:
         if self._dialog.edit:
@@ -385,7 +385,7 @@ class CategoryFormPresenter:
             return self._record_keeper.income_categories
         if type_ == CategoryType.EXPENSE:
             return self._record_keeper.expense_categories
-        return self._record_keeper.income_and_expense_categories
+        return self._record_keeper.dual_purpose_categories
 
     def _get_root_categories_for_type(
         self, type_: CategoryType
@@ -394,7 +394,7 @@ class CategoryFormPresenter:
             return self._record_keeper.root_income_categories
         if type_ == CategoryType.EXPENSE:
             return self._record_keeper.root_expense_categories
-        return self._record_keeper.root_income_and_expense_categories
+        return self._record_keeper.root_dual_purpose_categories
 
     def _get_category_index(self, category: Category) -> int:
         if category.parent is not None:

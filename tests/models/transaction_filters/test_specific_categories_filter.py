@@ -45,15 +45,15 @@ def test_creation(categories: list[Category], mode: FilterMode) -> None:
     expense_categories = frozenset(
         category for category in categories if category.type_ == CategoryType.EXPENSE
     )
-    income_and_expense_categories = frozenset(
+    dual_purpose_categories = frozenset(
         category
         for category in categories
-        if category.type_ == CategoryType.INCOME_AND_EXPENSE
+        if category.type_ == CategoryType.DUAL_PURPOSE
     )
     assert filter_.categories == frozenset(categories)
     assert filter_.income_categories == income_categories
     assert filter_.expense_categories == expense_categories
-    assert filter_.income_and_expense_categories == income_and_expense_categories
+    assert filter_.dual_purpose_categories == dual_purpose_categories
     assert filter_.category_paths == tuple(
         sorted(
             (category.path for category in categories),

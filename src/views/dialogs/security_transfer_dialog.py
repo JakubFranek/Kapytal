@@ -76,6 +76,9 @@ class SecurityTransferDialog(CustomDialog, Ui_SecurityTransferDialog):
         if "hh" not in display_format or "mm" not in display_format:
             display_format += " hh:mm"
         self.dateTimeEdit.setDisplayFormat(display_format)
+        self.dateTimeEdit.dateTimeChanged.connect(
+            self.signal_request_shares_suffix_update.emit
+        )
 
     @property
     def security_name(self) -> str | None:

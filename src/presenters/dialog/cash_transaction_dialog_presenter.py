@@ -379,11 +379,11 @@ class CashTransactionDialogPresenter(TransactionDialogPresenter):
         payees = sorted(payee.name for payee in self._record_keeper.payees)
         categories_income = (
             self._record_keeper.income_categories
-            + self._record_keeper.income_and_expense_categories
+            + self._record_keeper.dual_purpose_categories
         )
         categories_expense = (
             self._record_keeper.expense_categories
-            + self._record_keeper.income_and_expense_categories
+            + self._record_keeper.dual_purpose_categories
         )
         category_income_paths = tuple(category.path for category in categories_income)
         category_expense_paths = tuple(category.path for category in categories_expense)

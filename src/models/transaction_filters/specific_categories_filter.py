@@ -52,11 +52,11 @@ class SpecificCategoriesFilter(BaseTransactionFilter):
         )
 
     @property
-    def income_and_expense_categories(self) -> frozenset[Category]:
+    def dual_purpose_categories(self) -> frozenset[Category]:
         return frozenset(
             category
             for category in self._categories
-            if category.type_ == CategoryType.INCOME_AND_EXPENSE
+            if category.type_ == CategoryType.DUAL_PURPOSE
         )
 
     @property

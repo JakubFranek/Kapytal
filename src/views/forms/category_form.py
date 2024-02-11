@@ -19,7 +19,7 @@ class CategoryForm(CustomWidget, Ui_CategoryForm):
 
     signal_income_search_text_changed = pyqtSignal(str)
     signal_expense_search_text_changed = pyqtSignal(str)
-    signal_income_and_expense_search_text_changed = pyqtSignal(str)
+    signal_dual_purpose_search_text_changed = pyqtSignal(str)
 
     signal_tab_changed = pyqtSignal()
 
@@ -53,7 +53,7 @@ class CategoryForm(CustomWidget, Ui_CategoryForm):
             return CategoryType.INCOME
         if current_index == 1:
             return CategoryType.EXPENSE
-        return CategoryType.INCOME_AND_EXPENSE
+        return CategoryType.DUAL_PURPOSE
 
     def enable_actions(
         self,
@@ -146,7 +146,7 @@ class CategoryForm(CustomWidget, Ui_CategoryForm):
             self.signal_expense_search_text_changed.emit
         )
         self.incomeAndExpenseSearchLineEdit.textChanged.connect(
-            self.signal_income_and_expense_search_text_changed.emit
+            self.signal_dual_purpose_search_text_changed.emit
         )
 
     def _initialize_actions(self) -> None:

@@ -73,6 +73,8 @@
     <addaction name="actionTags"/>
     <addaction name="actionPayees"/>
     <addaction name="separator"/>
+    <addaction name="actionUpdate_Quotes"/>
+    <addaction name="separator"/>
     <addaction name="actionSettings"/>
    </widget>
    <widget class="QMenu" name="menuReports">

@@ -591,7 +591,7 @@ class Ui_TransactionFilterForm(object):
         self.incomeAndExpenseCategoriesSelectAllToolButton.setText(_translate("TransactionFilterForm", "..."))
         self.incomeAndExpenseCategoriesUnselectAllToolButton.setText(_translate("TransactionFilterForm", "..."))
         self.incomeAndExpenseCategoriesSearchLineEdit.setPlaceholderText(_translate("TransactionFilterForm", "Search Categories"))
-        self.categoriesTypeTabWidget.setTabText(self.categoriesTypeTabWidget.indexOf(self.incomeAndExpenseCategoriesTab), _translate("TransactionFilterForm", "Income and Expense"))
+        self.categoriesTypeTabWidget.setTabText(self.categoriesTypeTabWidget.indexOf(self.incomeAndExpenseCategoriesTab), _translate("TransactionFilterForm", "Dual-Purpose"))
         self.multipleCategoriesFilterGroupBox.setToolTip(_translate("TransactionFilterForm", "<html><head/><body><p>Filter Incomes, Expenses and Refunds with multiple Categories. Other Transaction types are unaffected by this Filter.</p><p>KEEP: Only Transactions with multiple Categories are kept</p><p>DISCARD: Transactions with multiple Categories are discarded</p></body></html>"))
         self.multipleCategoriesFilterGroupBox.setTitle(_translate("TransactionFilterForm", "Multiple Categories Filter"))
         self.multipleCategoriesFilterModeLabel.setText(_translate("TransactionFilterForm", "Mode"))
