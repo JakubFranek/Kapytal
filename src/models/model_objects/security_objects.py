@@ -428,8 +428,8 @@ class SecurityAccount(Account):
     def _update_balances(self) -> None:
         if len(self._securities_history) == 0:
             self._balances = ()
-            return
-        self._balances = self._calculate_balances(self._securities_history[-1][1])
+        else:
+            self._balances = self._calculate_balances(self._securities_history[-1][1])
         self.event_balance_updated()
 
     @staticmethod
