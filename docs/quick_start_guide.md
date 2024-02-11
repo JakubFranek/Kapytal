@@ -4,7 +4,7 @@
 
 ![Youtube Icon](../resources/icons/icons-16/film-youtube.png) [Click here to watch Kapytal Quick Start Guide video on YouTube!](https://youtu.be/dCtn-ZUGWMs) ![Youtube Icon](../resources/icons/icons-16/film-youtube.png)
 
-## Bullet point overview
+## First steps
 
 1. Download Kapytal executable from GitHub
     - Executable can be found in the [latest release](https://github.com/JakubFranek/Kapytal/releases/latest) assets
