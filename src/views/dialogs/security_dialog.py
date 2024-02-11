@@ -31,6 +31,11 @@ class SecurityDialog(CustomDialog, Ui_SecurityDialog):
         self.typeComboBox = SmartComboBox(parent=self)
         self.typeComboBox.load_items(security_types)
         self.typeComboBox.setCurrentText("")
+        self.typeComboBox.setToolTip(
+            "Enter any text string. Security Type is only used for classifying\n"
+            "Securities in the Net Worth Asset Type Report.\nExample: 'ETF', 'Stock', "
+            "'Real Estate'."
+        )
         self.formLayout.insertRow(2, "Type", self.typeComboBox)
 
         for code in currency_codes:

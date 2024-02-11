@@ -21,6 +21,9 @@
     <layout class="QFormLayout" name="formLayout">
      <item row="0" column="0">
       <widget class="QLabel" name="nameLabel">
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Name of the Security can be any text string. Contrary to the Symbol, it is not used by Kapytal for downloading quotes.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
        <property name="text">
         <string>Name</string>
        </property>
@@ -28,6 +31,9 @@
      </item>
      <item row="0" column="1">
       <widget class="QLineEdit" name="nameLineEdit">
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Name of the Security can be any text string. Contrary to the Symbol, it is not used by Kapytal for downloading quotes.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
        <property name="maxLength">
         <number>64</number>
        </property>
@@ -45,6 +51,9 @@
      </item>
      <item row="1" column="1">
       <widget class="QLineEdit" name="symbolLineEdit">
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If Yahoo Finance ticker of the Security is entered (for example &amp;quot;VWCE.DE&amp;quot;), Update Quotes Form will be able to download the quote. Leave empty if the Security does not exist on Yahoo Finance.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
        <property name="maxLength">
         <number>8</number>
        </property>
@@ -56,7 +65,7 @@
      <item row="2" column="0">
       <widget class="QLabel" name="decimalsLabel">
        <property name="toolTip">
-        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Number of decimals of Security shares.&lt;br/&gt;&lt;br/&gt;For example:&lt;br/&gt;0 decimals - shares are multiples of 1&lt;br/&gt;1 decimals - shares are multiples of 0.1&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Number of decimals of Security shares.&lt;br/&gt;&lt;br/&gt;For example:&lt;br/&gt;0 decimals - shares are multiples of 1&lt;br/&gt;1 decimals - shares are multiples of 0.1&lt;br/&gt;2 decimals - shares are multiples of 0.01&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
        <property name="text">
         <string>Shares decimals</string>
@@ -76,7 +85,7 @@
      <item row="2" column="1">
       <widget class="QSpinBox" name="decimalsSpinBox">
        <property name="toolTip">
-        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Number of decimals of Security shares.&lt;br/&gt;&lt;br/&gt;For example:&lt;br/&gt;0 decimals - shares are multiples of 1&lt;br/&gt;1 decimals - shares are multiples of 0.1&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Number of decimals of Security shares.&lt;br/&gt;&lt;br/&gt;For example:&lt;br/&gt;0 decimals - shares are multiples of 1&lt;br/&gt;1 decimals - shares are multiples of 0.1&lt;br/&gt;2 decimals - shares are multiples of 0.01&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
        <property name="alignment">
         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
