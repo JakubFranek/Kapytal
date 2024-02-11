@@ -402,6 +402,29 @@ class SecurityAccount(Account):
             )
         return currency.zero_amount
 
+    def get_shares_for_datetime(
+        self, security: Security, datetime_: datetime | None = None
+    ) -> Decimal:
+        """Returns number of shares for the specified security at the specified datetime.
+        Raises ValueError if security not found in SecurityAccount, or if datetime precedes
+        SecurityAccount history."""
+
+        if datetime_ is None:
+            if security in self.securities:
+                return self.securities[security]
+            raise ValueError(
+                f"Security '{security.name}' not found in this SecurityAccount."
+            )
+        index = bisect_right(self._securities_history, datetime_, key=lambda x: x[0])
+        if index:
+            _, security_dict = self._securities_history[index - 1]
+            if security in security_dict:
+                return security_dict[security]
+            raise ValueError(
+                f"Security '{security.name}' not found in this SecurityAccount."
+            )
+        raise ValueError("Datetime not found in SecurityAccount history.")
+
     def _update_balances(self) -> None:
         if len(self._securities_history) == 0:
             self._balances = ()

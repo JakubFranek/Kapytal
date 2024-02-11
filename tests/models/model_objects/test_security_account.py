@@ -452,3 +452,105 @@ def test_get_average_price_invalid_currency() -> None:
 
     avg_amount = account.get_average_amount_per_share(security, datetime_, eur)
     assert avg_amount.is_nan()
+
+
+def test_get_shares_for_datetime() -> None:
+    account = SecurityAccount("Test")
+    account_2 = SecurityAccount("Original Buyer")
+    usd = Currency("USD", 2)
+    cash_account = CashAccount("Test", usd, CashAmount(0, usd))
+    security = Security("Alphabet", "ABC", "Stock", usd, 1)
+    security_dummy = Security("Dummy", "DUMMY", "Stock", usd, 1)
+    security_unrelated = Security("Unrelated", "UNREL", "Stock", usd, 1)
+    today = datetime.now(user_settings.settings.time_zone)
+
+    SecurityTransaction(
+        "test",
+        today - timedelta(days=5),
+        SecurityTransactionType.BUY,
+        security,
+        5,
+        CashAmount(5, usd),
+        account_2,
+        cash_account,
+    )
+    SecurityTransaction(
+        "test",
+        today - timedelta(days=4),
+        SecurityTransactionType.BUY,
+        security,
+        5,
+        CashAmount(3, usd),
+        account_2,
+        cash_account,
+    )
+    SecurityTransfer(
+        "transfer",
+        today - timedelta(days=3),
+        security_dummy,
+        5,
+        account_2,
+        account,
+    )
+    SecurityTransfer(
+        "transfer",
+        today - timedelta(days=3),
+        security,
+        5,
+        account_2,
+        account,
+    )
+    SecurityTransaction(
+        "test",
+        today - timedelta(days=2),
+        SecurityTransactionType.BUY,
+        security,
+        5,
+        CashAmount(6, usd),
+        account,
+        cash_account,
+    )
+    SecurityTransaction(
+        "test",
+        today - timedelta(days=1),
+        SecurityTransactionType.BUY,
+        security_dummy,
+        5,
+        CashAmount(6, usd),
+        account,
+        cash_account,
+    )
+    SecurityTransaction(
+        "test",
+        today,
+        SecurityTransactionType.BUY,
+        security,
+        5,
+        CashAmount(6, usd),
+        account,
+        cash_account,
+    )
+
+    shares_latest = account.get_shares_for_datetime(security)
+    assert shares_latest == 15
+
+    shares_today = account.get_shares_for_datetime(security, today)
+    shares_today_2 = account_2.get_shares_for_datetime(security, today)
+    assert shares_today == 15
+    assert shares_today_2 == 5
+
+    shares_2d_ago = account.get_shares_for_datetime(security, today - timedelta(days=2))
+    shares_2d_ago_2 = account_2.get_shares_for_datetime(
+        security, today - timedelta(days=2)
+    )
+    assert shares_2d_ago == 10
+    assert shares_2d_ago_2 == 5
+
+    with pytest.raises(ValueError, match="not found in this SecurityAccount"):
+        account.get_shares_for_datetime(security_unrelated, today)
+
+    with pytest.raises(ValueError, match="not found in this SecurityAccount"):
+        account.get_shares_for_datetime(security_unrelated, None)
+
+    with pytest.raises(ValueError, match="Datetime not found"):
+        account.get_shares_for_datetime(security, today - timedelta(days=10))

@@ -299,6 +299,7 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
             self._update_shares_spinbox_suffix
         )
         self.buyRadioButton.toggled.connect(self._update_shares_spinbox_suffix)
+        self.dateTimeEdit.dateTimeChanged.connect(self._update_shares_spinbox_suffix)
 
     def _initialize_security_combobox(self, securities: Collection[Security]) -> None:
         if self.edit_mode in EditMode.get_multiple_edit_values():
@@ -536,10 +537,6 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
         self.totalDoubleSpinBox.setDecimals(security.currency.decimals)
 
     def _update_shares_spinbox_suffix(self) -> None:
-        if self.type_ == SecurityTransactionType.BUY:
-            self.sharesDoubleSpinBox.setSuffix("")
-            return
-
         self.signal_request_shares_suffix_update.emit()
 
     def _set_tab_order(self) -> None:
