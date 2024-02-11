@@ -13,6 +13,8 @@ Kapytal is a PyQt-based Windows tool for managing your personal or household fin
 - 14 powerful [Transaction filters](./docs/glossary.md#transaction-filters-) for precise Report data set control
 - and much more...
 
+![Youtube Icon](./resources/icons/icons-16/film-youtube.png) [Click here to watch Kapytal Showcase video on YouTube!](https://youtu.be/EUVaSDxPzxs) ![Youtube Icon](./resources/icons/icons-16/film-youtube.png)
+
 ## Requirements
 
 - Windows 8 or newer
