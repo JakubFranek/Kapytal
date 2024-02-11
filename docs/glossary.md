@@ -150,13 +150,13 @@ Evaluated quantities are:
   + same as Inward Transfers, but for value flowing out of the selected Account Items into the unselected Account Items
 + Total Outflow
 + Cash Flow
-  + equal to $ \text{Total Inflow} - \text{Total Outflow} $
+  + equal to $\text{Total Inflow} - \text{Total Outflow}$
   + Cash Flow is often more important than Net Growth, as the Gain/Loss part of Net Growth is usually beyond one's control
 + [Securities](#security-) Gain/Loss
 + [Currencies](#currency-) Gain/Loss
 + Total Gain/Loss
 + Net Growth
-  + equal to $ \text{Cash Flow} + \text{Total Gain/Loss}$
+  + equal to $\text{Cash Flow} + \text{Total Gain/Loss}$
 + [Savings Rate](#savings-rate)
 
 ---
@@ -390,7 +390,7 @@ Savings Rate is a quantity evaluated in [Cash Flow Reports](#cash-flow-reports-)
 
 Savings Rate quantifies saved money relative to the sum of all saveable money for a given period. [Refunds](#refund-) contribute towards the saved amount, but not towards the saveable amount, therefore Savings Rate of more than 100% is theoretically possible.
 
-The formula is: $ \text{Savings Rate} = \text{Cash Flow} / (\text{Income} + \text{Inward Transfers}) = (\text{Inflows} - \text{Outflows}) / (\text{Inflows} - \text{Refunds}) $
+The formula is: $\text{Savings Rate} = \text{Cash Flow} / (\text{Income} + \text{Inward Transfers}) = (\text{Inflows} - \text{Outflows}) / (\text{Inflows} - \text{Refunds})$
 
 ---
 
