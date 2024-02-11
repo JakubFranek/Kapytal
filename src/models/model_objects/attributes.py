@@ -27,7 +27,7 @@ class AttributeType(Enum):
 class CategoryType(Enum):
     INCOME = "Income"
     EXPENSE = "Expense"
-    INCOME_AND_EXPENSE = "Income and Expense"
+    DUAL_PURPOSE = "Dual-Purpose"
 
 
 class Attribute(NameMixin, JSONSerializableMixin):

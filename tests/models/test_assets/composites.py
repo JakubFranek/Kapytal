@@ -162,6 +162,7 @@ def cash_transactions(  # noqa: PLR0913
             ),
             min_size=1,
             max_size=5,
+            unique=True,
         )
     )
     assume(are_all_first_elements_unique(category_amount_pairs_list))
@@ -178,6 +179,7 @@ def cash_transactions(  # noqa: PLR0913
             ),
             min_size=0,
             max_size=5,
+            unique=True,
         )
     )
     assume(are_all_first_elements_unique(tag_amount_pairs_list))
@@ -236,11 +238,11 @@ def categories(
             category_type = draw(st.sampled_from(CategoryType))
     elif transaction_type == CashTransactionType.INCOME:
         category_type = draw(
-            st.sampled_from((CategoryType.INCOME, CategoryType.INCOME_AND_EXPENSE))
+            st.sampled_from((CategoryType.INCOME, CategoryType.DUAL_PURPOSE))
         )
     else:
         category_type = draw(
-            st.sampled_from((CategoryType.EXPENSE, CategoryType.INCOME_AND_EXPENSE))
+            st.sampled_from((CategoryType.EXPENSE, CategoryType.DUAL_PURPOSE))
         )
 
     return Category(name, category_type)
@@ -622,6 +624,8 @@ def uuid_filters(
     return UUIDFilter(uuids, mode)
 
 
-def are_all_first_elements_unique(pairs: Collection[tuple[object, object]]) -> bool:
-    first_elements = [p[0] for p in pairs]
-    return len(first_elements) == len(set(first_elements))
+def are_all_first_elements_unique(
+    pairs: Collection[tuple[Attribute | Category, object]],
+) -> bool:
+    names = [p[0].name for p in pairs]
+    return len(names) == len(set(names))

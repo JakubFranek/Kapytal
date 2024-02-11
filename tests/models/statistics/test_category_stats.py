@@ -28,9 +28,9 @@ def test_calculate_attribute_stats() -> None:
 
     payee = Attribute("payee1", AttributeType.PAYEE)
 
-    category_1 = Category("Category1", CategoryType.INCOME_AND_EXPENSE)
-    category_2 = Category("Category2", CategoryType.INCOME_AND_EXPENSE)
-    category_2a = Category("Category2a", CategoryType.INCOME_AND_EXPENSE, category_2)
+    category_1 = Category("Category1", CategoryType.DUAL_PURPOSE)
+    category_2 = Category("Category2", CategoryType.DUAL_PURPOSE)
+    category_2a = Category("Category2a", CategoryType.DUAL_PURPOSE, category_2)
 
     now = datetime.now(user_settings.settings.time_zone)
 
@@ -100,7 +100,7 @@ def test_calculate_periodic_category_stats() -> None:
 
     payee = Attribute("payee1", AttributeType.PAYEE)
 
-    category = Category("Category", CategoryType.INCOME_AND_EXPENSE)
+    category = Category("Category", CategoryType.DUAL_PURPOSE)
 
     now = datetime.now(user_settings.settings.time_zone)
     y1 = (now - relativedelta(years=2)).strftime("%Y")
@@ -168,7 +168,7 @@ def test_calculate_periodic_totals_and_averages() -> None:
 
     payee = Attribute("payee1", AttributeType.PAYEE)
 
-    category = Category("Category", CategoryType.INCOME_AND_EXPENSE)
+    category = Category("Category", CategoryType.DUAL_PURPOSE)
 
     now = datetime.now(user_settings.settings.time_zone)
     y1 = (now - relativedelta(years=2)).strftime("%B %Y")
@@ -267,9 +267,9 @@ def test_calculate_periodic_totals_and_averages() -> None:
 
 
 def test_calculate_attribute_stats_no_base_currency() -> None:
-    category_1 = Category("Category1", CategoryType.INCOME_AND_EXPENSE)
-    category_2 = Category("Category2", CategoryType.INCOME_AND_EXPENSE)
-    category_2a = Category("Category2a", CategoryType.INCOME_AND_EXPENSE, category_2)
+    category_1 = Category("Category1", CategoryType.DUAL_PURPOSE)
+    category_2 = Category("Category2", CategoryType.DUAL_PURPOSE)
+    category_2a = Category("Category2a", CategoryType.DUAL_PURPOSE, category_2)
 
     category_stats = calculate_category_stats(
         [], None, [category_1, category_2, category_2a]
@@ -297,8 +297,8 @@ def test_calculate_attribute_stats_with_refund() -> None:
 
     payee = Attribute("payee1", AttributeType.PAYEE)
 
-    category_1 = Category("Category1", CategoryType.INCOME_AND_EXPENSE)
-    category_2 = Category("Category2", CategoryType.INCOME_AND_EXPENSE)
+    category_1 = Category("Category1", CategoryType.DUAL_PURPOSE)
+    category_2 = Category("Category2", CategoryType.DUAL_PURPOSE)
 
     now = datetime.now(user_settings.settings.time_zone)
 

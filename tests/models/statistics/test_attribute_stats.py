@@ -41,7 +41,7 @@ def test_calculate_attribute_stats() -> None:
     payee_1 = Attribute("payee1", AttributeType.PAYEE)
     payee_2 = Attribute("payee2", AttributeType.PAYEE)
 
-    category = Category("Category", CategoryType.INCOME_AND_EXPENSE)
+    category = Category("Category", CategoryType.DUAL_PURPOSE)
 
     now = datetime.now(user_settings.settings.time_zone)
 
@@ -112,7 +112,7 @@ def test_calculate_periodic_attribute_stats() -> None:
     tag_1 = Attribute("tag1", AttributeType.TAG)
     payee_1 = Attribute("payee1", AttributeType.PAYEE)
 
-    category = Category("Category", CategoryType.INCOME_AND_EXPENSE)
+    category = Category("Category", CategoryType.DUAL_PURPOSE)
 
     now = datetime.now(user_settings.settings.time_zone)
     y1 = (now - relativedelta(years=2)).strftime("%Y")
@@ -178,7 +178,7 @@ def test_calculate_periodic_totals_and_averages() -> None:
     tag_1 = Attribute("tag1", AttributeType.TAG)
     payee_1 = Attribute("payee1", AttributeType.PAYEE)
 
-    category = Category("Category", CategoryType.INCOME_AND_EXPENSE)
+    category = Category("Category", CategoryType.DUAL_PURPOSE)
 
     now = datetime.now(user_settings.settings.time_zone)
     y1 = (now - relativedelta(years=2)).strftime("%B %Y")
@@ -287,7 +287,7 @@ def test_calculate_attribute_stats_with_refund() -> None:
     tag_1 = Attribute("tag1", AttributeType.TAG)
     tag_2 = Attribute("tag2", AttributeType.TAG)
     payee = Attribute("payee", AttributeType.PAYEE)
-    category = Category("Category", CategoryType.INCOME_AND_EXPENSE)
+    category = Category("Category", CategoryType.DUAL_PURPOSE)
 
     now = datetime.now(user_settings.settings.time_zone)
 
@@ -346,7 +346,7 @@ def test_calculate_attribute_stats_with_other_types() -> None:
     tag_1 = Attribute("tag1", AttributeType.TAG)
     tag_2 = Attribute("tag2", AttributeType.TAG)
     payee = Attribute("payee", AttributeType.PAYEE)
-    category = Category("Category", CategoryType.INCOME_AND_EXPENSE)
+    category = Category("Category", CategoryType.DUAL_PURPOSE)
 
     now = datetime.now(user_settings.settings.time_zone)
 

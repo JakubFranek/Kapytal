@@ -981,13 +981,13 @@ class CashTransaction(CashRelatedTransaction):
 
     def _get_valid_category_types(
         self, type_: CashTransactionType | None = None
-    ) -> tuple[CategoryType, ...]:
+    ) -> frozenset[CategoryType]:
         if type_ is None:
             type_ = self._type
 
         if type_ == CashTransactionType.INCOME:
-            return (CategoryType.INCOME, CategoryType.INCOME_AND_EXPENSE)
-        return (CategoryType.EXPENSE, CategoryType.INCOME_AND_EXPENSE)
+            return frozenset((CategoryType.INCOME, CategoryType.DUAL_PURPOSE))
+        return frozenset((CategoryType.EXPENSE, CategoryType.DUAL_PURPOSE))
 
     def _get_amount(self, account: CashAccount) -> CashAmount:  # noqa: ARG002
         if self.type_ == CashTransactionType.INCOME:

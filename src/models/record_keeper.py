@@ -57,7 +57,7 @@ class RecordKeeper:
         "_categories",
         "_root_income_categories",
         "_root_expense_categories",
-        "_root_income_and_expense_categories",
+        "_root_dual_purpose_categories",
         "_tags",
         "_transactions",
         "_cash_transactions",
@@ -83,7 +83,7 @@ class RecordKeeper:
         self._categories: list[Category] = []
         self._root_income_categories: list[Category] = []
         self._root_expense_categories: list[Category] = []
-        self._root_income_and_expense_categories: list[Category] = []
+        self._root_dual_purpose_categories: list[Category] = []
         self._tags: list[Attribute] = []
         self._transactions: list[Transaction] = []
         self._cash_transactions: list[CashTransaction] = []
@@ -152,8 +152,8 @@ class RecordKeeper:
         return tuple(self._root_expense_categories)
 
     @property
-    def root_income_and_expense_categories(self) -> tuple[Category, ...]:
-        return tuple(self._root_income_and_expense_categories)
+    def root_dual_purpose_categories(self) -> tuple[Category, ...]:
+        return tuple(self._root_dual_purpose_categories)
 
     @property
     def income_categories(self) -> tuple[Category, ...]:
@@ -164,9 +164,9 @@ class RecordKeeper:
         return tuple(RecordKeeper._flatten_categories(self._root_expense_categories))
 
     @property
-    def income_and_expense_categories(self) -> tuple[Category, ...]:
+    def dual_purpose_categories(self) -> tuple[Category, ...]:
         return tuple(
-            RecordKeeper._flatten_categories(self._root_income_and_expense_categories)
+            RecordKeeper._flatten_categories(self._root_dual_purpose_categories)
         )
 
     @property
@@ -1466,8 +1466,8 @@ class RecordKeeper:
         root_expense_category_refs = [
             category.path for category in self._root_expense_categories
         ]
-        root_income_and_expense_category_refs = [
-            category.path for category in self._root_income_and_expense_categories
+        root_dual_purpose_category_refs = [
+            category.path for category in self._root_dual_purpose_categories
         ]
 
         # Sorting transactions here speeds up sorting during deserialization
@@ -1499,7 +1499,7 @@ class RecordKeeper:
             "categories": serialized_categories,
             "root_income_categories": root_income_category_refs,
             "root_expense_categories": root_expense_category_refs,
-            "root_income_and_expense_categories": root_income_and_expense_category_refs,
+            "root_dual_purpose_categories": root_dual_purpose_category_refs,
             "transactions": serialized_transactions,
         }
 
@@ -1584,9 +1584,9 @@ class RecordKeeper:
                 data["root_expense_categories"], categories
             )
         )
-        obj._root_income_and_expense_categories = (  # noqa: SLF001
+        obj._root_dual_purpose_categories = (  # noqa: SLF001
             RecordKeeper._deserialize_root_categories(
-                data["root_income_and_expense_categories"],
+                data["root_dual_purpose_categories"],
                 categories,
             )
         )
@@ -1934,7 +1934,7 @@ class RecordKeeper:
             return self._root_income_categories
         if category.type_ == CategoryType.EXPENSE:
             return self._root_expense_categories
-        return self._root_income_and_expense_categories
+        return self._root_dual_purpose_categories
 
     @staticmethod
     def _flatten_account_items(
@@ -1980,7 +1980,7 @@ class RecordKeeper:
         ):
             self._root_expense_categories.append(category)
         else:
-            self._root_income_and_expense_categories.append(category)
+            self._root_dual_purpose_categories.append(category)
 
     def _add_description(self, description: str) -> None:
         self._descriptions[description] += 1

@@ -134,7 +134,7 @@ def test_type_invalid_type(
     payee = Attribute("Test", AttributeType.PAYEE)
     category_amount_collection = [
         (
-            Category("Test", CategoryType.INCOME_AND_EXPENSE),
+            Category("Test", CategoryType.DUAL_PURPOSE),
             CashAmount(1, account.currency),
         )
     ]
@@ -442,7 +442,7 @@ def test_category_amount_pairs_invalid_second_member_type(
 ) -> None:
     first_member = Category(
         "Test",
-        data.draw(st.sampled_from(transaction._get_valid_category_types())),
+        data.draw(st.sampled_from(tuple(transaction._get_valid_category_types()))),
     )
     tup = ((first_member, second_member),)
     with pytest.raises(
@@ -462,11 +462,11 @@ def test_category_amount_pairs_invalid_second_member_type_multiple(
 ) -> None:
     first_member = Category(
         "Test",
-        data.draw(st.sampled_from(transaction._get_valid_category_types())),
+        data.draw(st.sampled_from(tuple(transaction._get_valid_category_types()))),
     )
     first_member2 = Category(
         "Test2",
-        data.draw(st.sampled_from(transaction._get_valid_category_types())),
+        data.draw(st.sampled_from(tuple(transaction._get_valid_category_types()))),
     )
     tup = [(first_member, second_member), (first_member2, second_member)]
     with pytest.raises(
@@ -508,7 +508,7 @@ def test_category_amount_pairs_invalid_amount_value(
     )
     category = Category(
         "Test",
-        data.draw(st.sampled_from(transaction._get_valid_category_types())),
+        data.draw(st.sampled_from(tuple(transaction._get_valid_category_types()))),
     )
     tup = ((category, amount),)
     with pytest.raises(
@@ -530,7 +530,7 @@ def test_category_amount_pairs_not_unique(
     )
     category = Category(
         "Test",
-        data.draw(st.sampled_from(transaction._get_valid_category_types())),
+        data.draw(st.sampled_from(tuple(transaction._get_valid_category_types()))),
     )
     tup = (
         (category, amount),
@@ -557,7 +557,7 @@ def test_category_amount_pairs_invalid_amount_currency(
     )
     category = Category(
         "Test",
-        data.draw(st.sampled_from(transaction._get_valid_category_types())),
+        data.draw(st.sampled_from(tuple(transaction._get_valid_category_types()))),
     )
     tup = ((category, amount),)
     with pytest.raises(CurrencyError):

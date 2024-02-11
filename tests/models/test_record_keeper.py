@@ -46,10 +46,10 @@ def test_creation() -> None:
     assert record_keeper.categories == ()
     assert record_keeper.income_categories == ()
     assert record_keeper.expense_categories == ()
-    assert record_keeper.income_and_expense_categories == ()
+    assert record_keeper.dual_purpose_categories == ()
     assert record_keeper.root_income_categories == ()
     assert record_keeper.root_expense_categories == ()
-    assert record_keeper.root_income_and_expense_categories == ()
+    assert record_keeper.root_dual_purpose_categories == ()
     assert record_keeper.payees == ()
     assert record_keeper.currencies == ()
     assert record_keeper.base_currency is None
@@ -305,9 +305,9 @@ def test_add_cash_transaction(
         )
     )
     valid_cat_types = (
-        [CategoryType.INCOME, CategoryType.INCOME_AND_EXPENSE]
+        [CategoryType.INCOME, CategoryType.DUAL_PURPOSE]
         if transaction_type == CashTransactionType.INCOME
-        else [CategoryType.EXPENSE, CategoryType.INCOME_AND_EXPENSE]
+        else [CategoryType.EXPENSE, CategoryType.DUAL_PURPOSE]
     )
     valid_categories = [
         cat for cat in record_keeper.categories if cat.type_ in valid_cat_types
@@ -872,11 +872,11 @@ def test_account_items() -> None:
 
 
 def test_save_category() -> None:
-    category = Category("Test", CategoryType.INCOME_AND_EXPENSE)
+    category = Category("Test", CategoryType.DUAL_PURPOSE)
     record_keeper = RecordKeeper()
     record_keeper._save_category(category)
     assert category in record_keeper.categories
-    assert category in record_keeper.root_income_and_expense_categories
+    assert category in record_keeper.root_dual_purpose_categories
 
 
 def test_flatten_categories() -> None:
@@ -1232,5 +1232,5 @@ def get_preloaded_record_keeper() -> RecordKeeper:
     record_keeper.add_category("Food and Drink/Groceries")
     record_keeper.add_category("Food and Drink/Eating out")
     record_keeper.add_category("Salary", CategoryType.INCOME)
-    record_keeper.add_category("Splitting costs", CategoryType.INCOME_AND_EXPENSE)
+    record_keeper.add_category("Splitting costs", CategoryType.DUAL_PURPOSE)
     return record_keeper

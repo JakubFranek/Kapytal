@@ -185,13 +185,13 @@ The keyboard shortcut for adding a Cash Transfer is the `Ctrl+T` combination (th
 
 Categories are attributes that can be used in [Cash Transactions](#cash-transaction) and [Refunds](#refund-). The user can create any amount of Categories, and Categories can form a tree-like hierarchy. The user can use Categories to filter [Transactions](#transaction) or create specific Category [Reports](#reports).
 
-Each Category is defined by its [path](#path) and type (Income, Expense, Income and Expense). Income Categories can only be used in [Income](#income-) Cash Transactions, Expense Categories can only be used in [Expense](#expense-) Cash Transactions and Income and Expense Categories can be used in any Cash Transactions.
+Each Category is defined by its [path](#path) and type (Income, Expense, Dual-Purpose). Income Categories can only be used in [Income](#income-) Cash Transactions, Expense Categories can only be used in [Expense](#expense-) Cash Transactions and Dual-Purpose Categories can be used in both Income and Expense Transactions.
 
 Categories are meant to be generic and reused often. [Tags](#tag-) are better suited as an "one-off" attribute.
 
 + Example Income Categories: *Employment/Salary*, *Employment/Benefits*, *Employment/Bonus*, *Tax Refund*.
 + Example Expense Categories: *Food and Drink/Eating out*, *Food and Drink/Groceries*, *Bills/Heating*, *Health/Medicine*, *Housing/Rent*, *Housing/Equipment/Kitchen*, *Transport/Airplane*, *Car/Fuel*, *Car/Repairs*, *Clothes/Accessories*, *Sports/Equipment*, *Leisure/Culture/Theatre*.
-+ Example Income and Expense Categories: *Interest*, *Gift*.
++ Example Dual-Purpose Categories: *Interest*, *Gift*.
 
 Contrary to many similar software, in Kapytal, the user can assign Categories to Cash Transactions regardless of how many children the Categories have. For example, the user can use Category *Food and Drink* as well as *Food and Drink/Eating out*, and both could be even assigned to the same Cash Transactions at the same time.
 

@@ -184,7 +184,7 @@ class Ui_CategoryForm(object):
         self.incomeAndExpenseShowTransactionsToolButton.setText(_translate("CategoryForm", "..."))
         self.incomeAndExpenseSearchLineEdit.setToolTip(_translate("CategoryForm", "<html><head/><body><p>Special characters:</p><p>* matches zero or more of any characters<br/>? matches any single character<br/>[...] matches any character within square brackets</p></body></html>"))
         self.incomeAndExpenseSearchLineEdit.setPlaceholderText(_translate("CategoryForm", "Search Categories"))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.incomeAndExpenseTab), _translate("CategoryForm", "Income and Expense"))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.incomeAndExpenseTab), _translate("CategoryForm", "Dual-Purpose"))
         self.actionAdd.setText(_translate("CategoryForm", "Add Category"))
         self.actionAdd.setToolTip(_translate("CategoryForm", "Add Category"))
         self.actionEdit.setText(_translate("CategoryForm", "Edit Category"))

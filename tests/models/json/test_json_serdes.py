@@ -319,7 +319,7 @@ def test_record_keeper_categories() -> None:
     record_keeper.add_category("Housing/Electricity")
     record_keeper.add_category("Housing/Water")
     record_keeper.add_category("Food/Work lunch")
-    record_keeper.add_category("Splitting costs", CategoryType.INCOME_AND_EXPENSE)
+    record_keeper.add_category("Splitting costs", CategoryType.DUAL_PURPOSE)
     serialized = record_keeper.serialize(lambda *args, **kwargs: None)  # noqa: ARG005
     serialized = json.dumps(serialized, cls=CustomJSONEncoder)
     decoded = json.loads(serialized, cls=CustomJSONDecoder)
@@ -335,8 +335,8 @@ def test_record_keeper_categories() -> None:
     assert len(record_keeper.root_expense_categories) == len(
         decoded.root_expense_categories
     )
-    assert len(record_keeper.root_income_and_expense_categories) == len(
-        decoded.root_income_and_expense_categories
+    assert len(record_keeper.root_dual_purpose_categories) == len(
+        decoded.root_dual_purpose_categories
     )
 
 

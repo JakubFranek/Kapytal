@@ -184,7 +184,7 @@
      </widget>
      <widget class="QWidget" name="incomeAndExpenseTab">
       <attribute name="title">
-       <string>Income and Expense</string>
+       <string>Dual-Purpose</string>
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_4">
        <item>
