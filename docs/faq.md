@@ -137,6 +137,8 @@ Kapytal allows you to use both approaches, so it is up to you. However, if you e
 
 The Total Currency Gain column in the Securities Overview tree quantifies the impact of the [Exchange Rate](./glossary.md#exchange-rate-) fluctuations on the Total Base Gain. The value of Total Currency Gain is equal to the difference between the Total Base Gain and the Total Native Gain, after converting Total Native Gain to base Currency using the latest Exchange Rate.
 
+For more details into Securities Form Overview tab calculations, see [Securities Form](./glossary.md#securities-form) in the glossary.
+
 ---
 
 ### How should I handle stock splits?

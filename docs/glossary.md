@@ -396,8 +396,45 @@ The formula is: $\text{Savings Rate} = \text{Cash Flow} / (\text{Income} + \text
 
 ### Securities Form
 
-Securities Form is the [Form](#form) for creating, editing, deleting, manipulating and updating [Securities](#securities-form) and their price quotes. In the Overview tab, an overview of Securities and all Security Accounts which contain their shares is available, including a large number of performance related quantities.
+Securities Form is the [Form](#form) for creating, editing, deleting, manipulating and updating [Securities](#securities-form) and their price quotes.
 
+In the Overview tab, an overview of Securities and all [Security Accounts](#security-account-) which contain their shares is available, including a large number of performance related quantities.
+
+Some performance quantities are available in the following "flavors":
+
++ Realized (R)
+  + actual performance based on paid-out [Dividends](#dividend-) and completed [Sell](#sell-) [Transactions](#transaction)
++ Unrealized (U)
+  + virtual performance which could hypothetically be realized if all owned Security shares were sold for market price
++ Total (T)
+  + sum of realized and unrealized performance
+
+Some performance quantities are available in [base](#base-currency) and/or [native](#native-currencyamount) [Currencies](#currency-). This means that the quantities are calculated using base or native $\text{Avg. Buy Price}$ or $\text{Avg. Sell Price}$ respectively. These quantities are different, even after [Exchange Rate](#exchange-rate-) conversion! This is because $\text{Avg. Buy Price}$ and $\text{Avg. Sell Price}$ take the Exchange Rates for the given Transaction [date](#date) into account, and they are therefore affected by the Exchange Rate history. For more details, [see this FAQ question](./faq.md#in-securities-form-overview-tab-tree-why-do-the-quantities-denominated-in-native-and-base-currencies-sometimes-not-match-after-converting-them-with-the-latest-exchange-rate-to-base-currency-why-are-native-and-base-currency-returns-different).
+
+Following performance quantities are available:
+
++ Gain
+  + available in base and native Currencies
+  + available in Realized, Unrealized and Total flavors
+    + $\text{Realized Gain} = \text{Shares Sold} * (\text{Avg. Sell Price} - \text{Avg. Buy Price}) + \text{Dividends}$
+    + $\text{Unrealized Gain} = \text{Shares Owned} * (\text{Market Price} - \text{Avg. Buy Price})$
+    + $\text{Total Gain} = \text{Realized Gain} + \text{Unrealized Gain}$
++ Currency Gain
+  + available only in base Currency
+  + available only in Total flavor
+    + $\text{Total Currency Gain} = \text{Total Base Gain} - \text{Total Native Gain}$
++ Return
+  + relative return in percent
+  + available in base and native Currencies
+  + available in Realized, Unrealized and Total flavors
+    + $\text{Realized Return} = \frac{\text{Realized Gain}}{\text{Shares Sold} * \text{Avg. Buy Price}}$
+    + $\text{Unrealized Return} = \frac{\text{Unrealized Gain}}{\text{Shares Owned} * \text{Avg. Buy Price}}$
+    + $\text{Total Return} = \frac{\text{Total Gain}}{\text{Avg. Buy Price} * (\text{Shares Sold} + \text{Shares Owned})}$
++ Annualized [Internal Rate of Return (IRR)](https://en.wikipedia.org/wiki/Internal_rate_of_return)
+  + available in base and native Currencies
+  + available only in Total flavor
+  + calculated using the [`pyxirr`](https://pypi.org/project/pyxirr/) package `xirr` function, which takes the dates of Security Transactions into account
+  
 ---
 
 ### Security ![Icon](../resources/icons/icons-16/certificate.png)
