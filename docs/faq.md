@@ -21,6 +21,7 @@ The following questions are not ordered in any particular way.
 * [Why did you choose PyQt?](#why-did-you-choose-pyqt)
 * [What is Kapytal's performance like? How many Transactions can it handle?](#what-is-kapytals-performance-like-how-many-transactions-can-it-handle)
 * [Can I contribute?](#can-i-contribute)
+* [Why does Kapytal save data in a JSON format?](#why-does-kapytal-save-data-in-a-json-format)
 
 ---
 
@@ -187,3 +188,7 @@ If it ever becomes necessary, I can try to optimize the worst performance offend
 If you want to contribute, let me know, but Kapytal was always intended to be a solo project, so I can't promise anything. You can fork the project freely though. If you do so, please give credit, link the original repository and indicate any changes you made. If they are any good I might port them to the original project :^)
 
 ---
+
+### Why does Kapytal save data in a JSON format?
+
+I chose JSON because it is well-established, human-readable/editable and easy to work with. For example, if required, it seems easier to me to write a script for translating Kapytal JSON file to some other software's data format rather than working with a relational database. Admittedly, I have zero database experience, so I might be completely off the mark :(

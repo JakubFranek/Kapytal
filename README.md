@@ -32,3 +32,7 @@ Kapytal is a PyQt-based Windows tool for managing your personal or household fin
 - [Glossary](/docs/glossary.md)
 - [FAQ](/docs/faq.md)
 - [Screenshots](/docs/screenshots.md)
+
+---
+
+*Dedicated to my wife Soňa*
