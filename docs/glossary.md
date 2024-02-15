@@ -281,9 +281,9 @@ In Kapytal, Forms are user interface elements/windows used for more complex sett
 
 These are some of the Forms in Kapytal:
 
-+ [Category](#category-) Form
++ [Categories](#category-) Form
 + [Currencies Form](#currencies-form)
-+ [Payee](#payee-) Form
++ [Payees](#payee-) Form
 + [Update Quotes Form](#update-quotes-form-)
 + [Securities Form](#securities-form)
 + [Settings Form](#settings-form-)

@@ -80,12 +80,17 @@ class UpdatePresenter:
         )
         current_version = packaging.version.parse(constants.VERSION)
         if latest_version > current_version:
-            logging.info(f"New version available: {latest_release_name}")
+            prerelease_string = (
+                " (pre-release)" if response_json[0]["prerelease"] else ""
+            )
+            logging.info(
+                f"New version available: {latest_release_name}{prerelease_string}"
+            )
             if not ask_yes_no_question(
                 parent=self._view,
                 question=(
                     f"Current version: v{constants.VERSION}\n"
-                    f"Latest version: {latest_release_name}\n\n"
+                    f"Latest version: {latest_release_name}{prerelease_string}\n\n"
                     "Open latest release in internet browser?"
                 ),
                 title="New version available",
