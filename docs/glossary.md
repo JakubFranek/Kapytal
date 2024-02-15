@@ -427,9 +427,9 @@ Following performance quantities are available:
   + relative return in percent
   + available in base and native Currencies
   + available in Realized, Unrealized and Total flavors
-    + $\text{Realized Return} = \frac{\text{Realized Gain}}{\text{Shares Sold} * \text{Avg. Buy Price}}$
+    + $\text{Realized Return} = \frac{\text{Shares Sold} * (\text{Avg. Sell Price} - \text{Avg. Buy Price})}{\text{Shares Sold} * \text{Avg. Buy Price}}+\frac{\text{Dividends}}{\text{Shares Bought} * \text{Avg. Buy Price}}$
     + $\text{Unrealized Return} = \frac{\text{Unrealized Gain}}{\text{Shares Owned} * \text{Avg. Buy Price}}$
-    + $\text{Total Return} = \frac{\text{Total Gain}}{\text{Avg. Buy Price} * (\text{Shares Sold} + \text{Shares Owned})}$
+    + $\text{Total Return} = \frac{\text{Total Gain}}{\text{Avg. Buy Price} * \text{Shares Bought}}$
 + Annualized [Internal Rate of Return (IRR)](https://en.wikipedia.org/wiki/Internal_rate_of_return)
   + available in base and native Currencies
   + available only in Total flavor

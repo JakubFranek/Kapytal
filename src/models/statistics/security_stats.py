@@ -171,10 +171,10 @@ class SecurityStats(SecurityStatsItem):
             self.shares_sold * self.price_avg_buy_base
         )
         self.cost_basis_dividend_native = _zero_if_nan(
-            self.shares_paid_dividend * self.price_avg_buy_native
+            self.shares_bought * self.price_avg_buy_native
         )
         self.cost_basis_dividend_base = _zero_if_nan(
-            self.shares_paid_dividend * self.price_avg_buy_base
+            self.shares_bought * self.price_avg_buy_base
         )
 
         self.gain_unrealized_native = _zero_if_nan(
@@ -322,17 +322,13 @@ class SecurityAccountStats(SecurityStatsItem):
         self.cost_basis_unrealized_base = self.shares_owned * self.price_avg_buy_base
         self.cost_basis_realized_native = self.shares_sold * self.price_avg_buy_native
         self.cost_basis_realized_base = self.shares_sold * self.price_avg_buy_base
+        self.cost_basis_dividend_native = self.shares_bought * self.price_avg_buy_native
+        self.cost_basis_dividend_base = self.shares_bought * self.price_avg_buy_base
         self.cost_basis_total_native = (
             self.cost_basis_unrealized_native + self.cost_basis_realized_native
         )
         self.cost_basis_total_base = (
             self.cost_basis_unrealized_base + self.cost_basis_realized_base
-        )
-        self.cost_basis_dividend_native = (
-            self.shares_paid_dividend * self.price_avg_buy_native
-        )
-        self.cost_basis_dividend_base = (
-            self.shares_paid_dividend * self.price_avg_buy_base
         )
 
         self.gain_unrealized_native = _zero_if_nan(
