@@ -274,11 +274,8 @@ class SecuritiesOverviewTreeModel(QAbstractItemModel):
             return str(section)
         if role == Qt.ItemDataRole.TextAlignmentRole:
             return Qt.AlignmentFlag.AlignCenter
-        if (
-            role == Qt.ItemDataRole.ToolTipRole
-            and section == SecuritiesOverviewTreeColumn.GAIN_TOTAL_CURRENCY_BASE
-        ):
-            return GAIN_TOTAL_CURRENCY_TOOLTIP
+        if role == Qt.ItemDataRole.ToolTipRole:
+            return self._get_tooltip_role_data(section, None)
         return None
 
     def data(
@@ -388,11 +385,16 @@ class SecuritiesOverviewTreeModel(QAbstractItemModel):
     def _get_tooltip_role_data(
         self,
         column: int,
-        item: SecurityStatsItem,  # noqa: ARG002
+        item: SecurityStatsItem | None,  # noqa: ARG002
     ) -> str | None:
-        if column != SecuritiesOverviewTreeColumn.GAIN_TOTAL_CURRENCY_BASE:
-            return None
-        return GAIN_TOTAL_CURRENCY_TOOLTIP
+        if column == SecuritiesOverviewTreeColumn.GAIN_TOTAL_CURRENCY_BASE:
+            return GAIN_TOTAL_CURRENCY_TOOLTIP
+        if column in {
+            SecuritiesOverviewTreeColumn.IRR_TOTAL_BASE,
+            SecuritiesOverviewTreeColumn.IRR_TOTAL_NATIVE,
+        }:
+            return "Annualized Internal Rate of Return"
+        return None
 
     def _get_font_role_data(self, item: SecurityStatsItem) -> QFont | None:
         if isinstance(item, TotalSecurityStats):

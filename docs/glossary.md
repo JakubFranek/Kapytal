@@ -255,7 +255,7 @@ In Kapytal, Dialogs are "disposable" user interface elements/windows used for si
 
 Dividend is a sub-type of [Security Transaction](#security-transaction) that represents the gain of money in a [Cash Account](#cash-account-) which is connected to a [Security](#security-) from a [Security Account](#security-account-), but which does not change the amount of shares held in the Security Account. The keyboard shortcut for adding a Dividend is the `Shift+D` key combination, as `D` is reserved for the *Duplicate Transaction* action (as a mnemonic, the `Shift` stands for Security, just like in the [Security Transfer](#security-transfer-) shortcut).
 
-Dividends are included in the Total and Realized performance stats shown in the Overview tab of the [Securities Form](#securities-form).
+Dividends are included in the Total and Realized performance shown in the Overview tab of the [Securities Form](#securities-form).
 
 ---
 
