@@ -22,6 +22,7 @@ The following questions are not ordered in any particular way.
 * [What is Kapytal's performance like? How many Transactions can it handle?](#what-is-kapytals-performance-like-how-many-transactions-can-it-handle)
 * [Can I contribute?](#can-i-contribute)
 * [Why does Kapytal save data in a JSON format?](#why-does-kapytal-save-data-in-a-json-format)
+* [How long did it take to create Kapytal?](#how-long-did-it-take-to-create-kapytal)
 
 ---
 
@@ -194,3 +195,9 @@ If you want to contribute, let me know, but Kapytal was always intended to be a 
 ### Why does Kapytal save data in a JSON format?
 
 I chose JSON because it is well-established, human-readable/editable and easy to work with. For example, if required, it seems easier to me to write a script for translating Kapytal JSON file to some other software's data format rather than working with a relational database. Admittedly, I have zero database experience, so I might be completely off the mark :(
+
+---
+
+### How long did it take to create Kapytal?
+
+According to my [ActivityWatch](https://activitywatch.net/), between November 30th 2022 (when the development started) and February 15th 2024 (today), I spent 735 hours in VS Code, Qt Creator, googling programming related topics and editing images or videos for Kapytal. This is about 1 hour and 40 minutes per day on average. Needless to say, I spent many more uncounted hours working on Kapytal in my mind!
