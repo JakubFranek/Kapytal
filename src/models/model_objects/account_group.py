@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, TypeGuard, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
 from uuid import UUID
 
 from src.models.custom_exceptions import NotFoundError
