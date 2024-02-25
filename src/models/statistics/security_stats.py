@@ -149,8 +149,12 @@ class SecurityStats(SecurityStatsItem):
         self.value_current_base = self.price_market_base * self.shares_owned
         self.value_sold_native = self.price_avg_sell_native * self.shares_sold
         self.value_sold_base = self.price_avg_sell_base * self.shares_sold
-        self.value_bought_native = self.price_avg_buy_native * self.shares_bought
-        self.value_bought_base = self.price_avg_buy_base * self.shares_bought
+        self.value_bought_native = _zero_if_nan(
+            self.price_avg_buy_native * self.shares_bought
+        )
+        self.value_bought_base = _zero_if_nan(
+            self.price_avg_buy_base * self.shares_bought
+        )
         self.value_dividend_native = (
             self.amount_avg_dividend_native * self.shares_paid_dividend
         )
@@ -307,8 +311,12 @@ class SecurityAccountStats(SecurityStatsItem):
         )
         self.value_sold_native = self.shares_sold * self.price_avg_sell_native
         self.value_sold_base = self.shares_sold * self.price_avg_sell_base
-        self.value_bought_native = self.shares_bought * self.price_avg_buy_native
-        self.value_bought_base = self.shares_bought * self.price_avg_buy_base
+        self.value_bought_native = _zero_if_nan(
+            self.shares_bought * self.price_avg_buy_native
+        )
+        self.value_bought_base = _zero_if_nan(
+            self.shares_bought * self.price_avg_buy_base
+        )
         self.value_dividend_native = (
             self.shares_paid_dividend * self.amount_avg_dividend_native
         )
