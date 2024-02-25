@@ -280,7 +280,7 @@ class SecuritiesOverviewTreeModel(QAbstractItemModel):
 
     def data(
         self, index: QModelIndex, role: Qt.ItemDataRole
-    ) -> str | Qt.AlignmentFlag | None:
+    ) -> str | Qt.AlignmentFlag | float | None:
         if not index.isValid():
             return None
 
@@ -344,6 +344,11 @@ class SecuritiesOverviewTreeModel(QAbstractItemModel):
     ) -> str | float | None:
         if column == SecuritiesOverviewTreeColumn.NAME:
             return unicodedata.normalize("NFD", item.name)
+        if (
+            self._get_display_role_data(column, item) is None
+            or self._get_display_role_data(column, item) == ""
+        ):
+            return float("-inf")
         return _convert_numerical_attribute_to_float(
             _get_numerical_attribute(item, column)
         )
@@ -458,10 +463,14 @@ def _convert_numerical_attribute_to_float(
     value: CashAmount | Decimal | None,
 ) -> float | None:
     if value is None:
-        return None
+        return float("-inf")
 
     if isinstance(value, CashAmount):
+        if value.is_nan():
+            return float("-inf")
         return float(value.value_normalized)
+    if value.is_nan():
+        return float("-inf")
     return float(value)
 
 
