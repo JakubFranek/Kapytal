@@ -36,6 +36,8 @@ class MainPresenter:
         self._record_keeper = RecordKeeper()
         self._app = app
 
+        self._quitting = False  # used to prevent showing confirm quit dialogs twice
+
         self._initialize_presenters()
         self._setup_event_observers()
         self._connect_view_signals()
@@ -65,7 +67,9 @@ class MainPresenter:
             lambda: self._load_file(constants.template_category_cz_file_path)
         )
         self._welcome_dialog.signal_open_docs.connect(self._open_docs)
-        self._welcome_dialog.signal_quit.connect(self._quit)
+        self._welcome_dialog.signal_quit.connect(
+            lambda: self._quit(ask_confirmation=False)
+        )
         self._welcome_dialog.signal_close.connect(self._close_welcome_dialog)
 
         file_path = (
@@ -93,13 +97,23 @@ class MainPresenter:
         ):
             self._close_welcome_dialog()
 
-    def _quit(self) -> None:
-        if (
-            self._file_presenter.check_for_unsaved_changes("Quit", callback=self._quit)
-            is False
-        ):
-            return
-        logging.info("Qutting")
+    def _quit(self, *, ask_confirmation: bool = True) -> None:
+        if not self._quitting:  # shortcut if already quitting from previous _quit call
+            logging.debug("Quitting attempted")
+            if ask_confirmation and not self._file_presenter.unsaved_changes:
+                logging.debug("No unsaved changes, asking user for confirmation")
+                if self._view.confirm_close() is False:
+                    logging.debug("Quitting cancelled by user")
+                    return
+            elif (
+                self._file_presenter.check_for_unsaved_changes(
+                    "Quit", callback=self._quit
+                )
+                is False
+            ):
+                return
+            logging.info("Qutting")
+        self._quitting = True
         self._app.quit()
 
     def _load_record_keeper(self, record_keeper: RecordKeeper) -> None:

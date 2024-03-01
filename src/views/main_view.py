@@ -101,6 +101,23 @@ class MainView(QMainWindow, Ui_MainWindow):
             return False
         return None
 
+    def confirm_close(self) -> bool | None:
+        """True: close \n False: cancel"""
+
+        message_box = QMessageBox(
+            QMessageBox.Icon.Question,
+            "Quit?",
+            "Do you want to quit Kapytal?",
+            (QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No),
+            self,
+        )
+        message_box.setWindowIcon(icons.question)
+        message_box.setDefaultButton(QMessageBox.StandardButton.No)
+        reply = message_box.exec()
+        if reply == QMessageBox.StandardButton.Yes:
+            return True
+        return False
+
     def set_save_status(self, current_file_path: Path | None, *, unsaved: bool) -> None:
         if unsaved is True:
             self.actionSave.setIcon(icons.disk_warning)
