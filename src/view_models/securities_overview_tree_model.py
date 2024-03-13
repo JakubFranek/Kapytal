@@ -58,6 +58,124 @@ COLUMN_HEADERS = {
     SecuritiesOverviewTreeColumn.RETURN_UNREALIZED_BASE: "Base Return (U)",
 }
 
+COLUMN_HEADER_TOOLTIPS = {
+    SecuritiesOverviewTreeColumn.SHARES_OWNED: "Number of currently owned Shares",
+    SecuritiesOverviewTreeColumn.SHARES_BOUGHT: "Number of bought Shares",
+    SecuritiesOverviewTreeColumn.SHARES_SOLD: "Number of sold Shares",
+    SecuritiesOverviewTreeColumn.SHARES_TRANSFERRED: (
+        "Number of Shares transferred to (+) or from (-) Security Account"
+    ),
+    SecuritiesOverviewTreeColumn.AMOUNT_OWNED_NATIVE: (
+        "Total market value of owned Shares in native Currency"
+    ),
+    SecuritiesOverviewTreeColumn.AMOUNT_OWNED_BASE: (
+        "Total market value of owned Shares in base Currency"
+    ),
+    SecuritiesOverviewTreeColumn.AMOUNT_BOUGHT_NATIVE: (
+        "Total amount spent on buying Shares in native Currency"
+    ),
+    SecuritiesOverviewTreeColumn.AMOUNT_BOUGHT_BASE: (
+        "Total amount spent on buying Shares in base Currency"
+    ),
+    SecuritiesOverviewTreeColumn.AMOUNT_SOLD_NATIVE: (
+        "Total amount received by selling Shares in native Currency"
+    ),
+    SecuritiesOverviewTreeColumn.AMOUNT_SOLD_BASE: (
+        "Total amount received by selling Shares in base Currency"
+    ),
+    SecuritiesOverviewTreeColumn.PRICE_MARKET_NATIVE: (
+        "Market Price of single Share in native Currency"
+    ),
+    SecuritiesOverviewTreeColumn.PRICE_AVERAGE_BUY_NATIVE: (
+        "Average Buy Price in native Currency for a single Share"
+    ),
+    SecuritiesOverviewTreeColumn.PRICE_AVERAGE_SELL_NATIVE: (
+        "Average Sell Price in native Currency for a single Share"
+    ),
+    SecuritiesOverviewTreeColumn.DIVIDEND_AVERAGE_NATIVE: (
+        "Average Dividend per Share in native Currency"
+    ),
+    SecuritiesOverviewTreeColumn.PRICE_MARKET_BASE: (
+        "Market Price of single Share in base Currency"
+    ),
+    SecuritiesOverviewTreeColumn.PRICE_AVERAGE_BUY_BASE: (
+        "Average Buy Price in base Currency for a single Share"
+    ),
+    SecuritiesOverviewTreeColumn.PRICE_AVERAGE_SELL_BASE: (
+        "Average Sell Price in base Currency for a single Share"
+    ),
+    SecuritiesOverviewTreeColumn.DIVIDEND_AVERAGE_BASE: (
+        "Average Dividend per Share in base Currency"
+    ),
+    SecuritiesOverviewTreeColumn.GAIN_TOTAL_NATIVE: (
+        "Total Gain in native Currency\n[Native Gain (R) + Native Gain (U)]"
+    ),
+    SecuritiesOverviewTreeColumn.GAIN_TOTAL_BASE: (
+        "Total Gain in base Currency\n[Base Gain (R) + Base Gain (U)]"
+    ),
+    SecuritiesOverviewTreeColumn.GAIN_TOTAL_CURRENCY_BASE: (
+        "Total Currency Gain is the difference between\n"
+        "the Total Base Gain and Total Native Gain\n"
+        "(when converted to base Currency using the\n"
+        "latest Exchange Rate)."
+    ),
+    SecuritiesOverviewTreeColumn.RETURN_TOTAL_NATIVE: (
+        "Total Return in native Currency\n[Native Gain (T) / Native Amount Bought]"
+    ),
+    SecuritiesOverviewTreeColumn.RETURN_TOTAL_BASE: (
+        "Total Return in base Currency\n[Base Gain (T) / Base Amount Bought]"
+    ),
+    SecuritiesOverviewTreeColumn.IRR_TOTAL_NATIVE: (
+        "Total annualized Internal Rate of Return in native Currency"
+    ),
+    SecuritiesOverviewTreeColumn.IRR_TOTAL_BASE: (
+        "Total annualized Internal Rate of Return in base Currency"
+    ),
+    SecuritiesOverviewTreeColumn.GAIN_REALIZED_NATIVE: (
+        "Realized Gain in native Currency\n"
+        "[Shares Sold * (Avg. Sell Price - Avg. Buy Price) + Native Dividends (R)]"
+    ),
+    SecuritiesOverviewTreeColumn.GAIN_REALIZED_BASE: (
+        "Realized Gain in base Currency\n"
+        "[Shares Sold * (Base Avg. Sell Price - Base Avg. Buy Price)"
+        "+ Base Dividends (R)]"
+    ),
+    SecuritiesOverviewTreeColumn.GAIN_DIVIDEND_NATIVE: (
+        "Total Dividends in native Currency"
+    ),
+    SecuritiesOverviewTreeColumn.GAIN_DIVIDEND_BASE: (
+        "Total Dividends in base Currency"
+    ),
+    SecuritiesOverviewTreeColumn.RETURN_REALIZED_NATIVE: (
+        "Realized Return in native Currency\n"
+        "[Shares Sold * (Avg. Sell Price - Avg. Buy Price)"
+        "/ (Shares Sold * Avg. Buy Price)\n"
+        "+ Native Dividends (R) / (Shares Bought * Avg. Buy Price)]"
+    ),
+    SecuritiesOverviewTreeColumn.RETURN_REALIZED_BASE: (
+        "Realized Return in base Currency\n"
+        "[Shares Sold * (Base Avg. Sell Price - Base Avg. Buy Price)"
+        "/ (Shares Sold * Base Avg. Buy Price)\n"
+        "+ Base Dividends (R) / (Shares Bought * Base Avg. Buy Price)]"
+    ),
+    SecuritiesOverviewTreeColumn.GAIN_UNREALIZED_NATIVE: (
+        "Unrealized Gain in native Currency\n"
+        "[Shares Owned * (Market Price - Avg. Buy Price)]"
+    ),
+    SecuritiesOverviewTreeColumn.GAIN_UNREALIZED_BASE: (
+        "Unrealized Gain in base Currency\n"
+        "[Shares Owned * (Base Market Price - Base Avg. Buy Price)]"
+    ),
+    SecuritiesOverviewTreeColumn.RETURN_UNREALIZED_NATIVE: (
+        "Unrealized Return in native Currency\n"
+        "[Native Gain (U) / (Shares Owned * Avg. Buy Price)]"
+    ),
+    SecuritiesOverviewTreeColumn.RETURN_UNREALIZED_BASE: (
+        "Unrealized Return in base Currency\n"
+        "[Base Gain (U) / (Shares Owned * Base Avg. Buy Price)]"
+    ),
+}
+
 COLUMNS_TEXT = {SecuritiesOverviewTreeColumn.NAME}
 
 
@@ -195,12 +313,6 @@ COLUMNS_DETAILED = {
     SecuritiesOverviewTreeColumn.DIVIDEND_AVERAGE_BASE,
 }
 
-GAIN_TOTAL_CURRENCY_TOOLTIP = (
-    "Total Currency Gain is the difference between\n"
-    "the Total Base Gain and Total Native Gain\n"
-    "(when converted to base Currency using the\n"
-    "latest Exchange Rate)."
-)
 
 bold_font = QFont()
 bold_font.setBold(True)
@@ -275,7 +387,7 @@ class SecuritiesOverviewTreeModel(QAbstractItemModel):
         if role == Qt.ItemDataRole.TextAlignmentRole:
             return Qt.AlignmentFlag.AlignCenter
         if role == Qt.ItemDataRole.ToolTipRole:
-            return self._get_tooltip_role_data(section, None)
+            return self._get_tooltip_role_header_data(section, None)
         return None
 
     def data(
@@ -301,8 +413,6 @@ class SecuritiesOverviewTreeModel(QAbstractItemModel):
             return self._get_foreground_role_data(column, item)
         if role == Qt.ItemDataRole.FontRole:
             return self._get_font_role_data(item)
-        if role == Qt.ItemDataRole.ToolTipRole:
-            return self._get_tooltip_role_data(column, item)
         return None
 
     def _get_display_role_data(
@@ -387,23 +497,18 @@ class SecuritiesOverviewTreeModel(QAbstractItemModel):
             green_allowed=column in COLUMNS_COLOURFUL,
         )
 
-    def _get_tooltip_role_data(
+    def _get_font_role_data(self, item: SecurityStatsItem) -> QFont | None:
+        if isinstance(item, TotalSecurityStats):
+            return bold_font
+        return None
+
+    def _get_tooltip_role_header_data(
         self,
         column: int,
         item: SecurityStatsItem | None,  # noqa: ARG002
     ) -> str | None:
-        if column == SecuritiesOverviewTreeColumn.GAIN_TOTAL_CURRENCY_BASE:
-            return GAIN_TOTAL_CURRENCY_TOOLTIP
-        if column in {
-            SecuritiesOverviewTreeColumn.IRR_TOTAL_BASE,
-            SecuritiesOverviewTreeColumn.IRR_TOTAL_NATIVE,
-        }:
-            return "Annualized Internal Rate of Return"
-        return None
-
-    def _get_font_role_data(self, item: SecurityStatsItem) -> QFont | None:
-        if isinstance(item, TotalSecurityStats):
-            return bold_font
+        if column in COLUMN_HEADER_TOOLTIPS:
+            return COLUMN_HEADER_TOOLTIPS[column]
         return None
 
     def pre_reset_model(self) -> None:
