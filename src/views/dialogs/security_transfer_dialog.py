@@ -4,7 +4,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum, auto
 
-from PyQt6.QtCore import pyqtSignal
+from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtWidgets import (
     QAbstractButton,
     QDialogButtonBox,
@@ -76,6 +76,7 @@ class SecurityTransferDialog(CustomDialog, Ui_SecurityTransferDialog):
         if "hh" not in display_format or "mm" not in display_format:
             display_format += " hh:mm"
         self.dateTimeEdit.setDisplayFormat(display_format)
+        self.dateTimeEdit.calendarWidget().setFirstDayOfWeek(Qt.DayOfWeek.Monday)
         self.dateTimeEdit.dateTimeChanged.connect(
             self.signal_request_shares_suffix_update.emit
         )

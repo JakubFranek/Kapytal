@@ -2,7 +2,7 @@ import logging
 from datetime import date
 from decimal import Decimal
 
-from PyQt6.QtCore import pyqtSignal
+from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtWidgets import QAbstractButton, QDialogButtonBox, QWidget
 from src.models.user_settings import user_settings
 from src.views import icons
@@ -59,6 +59,7 @@ class SetExchangeRateDialog(CustomDialog, Ui_SetExchangeRateDialog):
             user_settings.settings.general_date_format
         )
         self.dateEdit.setDisplayFormat(display_format)
+        self.dateEdit.calendarWidget().setFirstDayOfWeek(Qt.DayOfWeek.Monday)
 
         self.exchangeRateDoubleSpinBox.setFocus()
 

@@ -114,6 +114,13 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
         self._uuid_filter_mode_changed()
         self.uuidFilterPlainTextEdit.setFont(monospace_font)
 
+        self.dateFilterStartDateEdit.calendarWidget().setFirstDayOfWeek(
+            Qt.DayOfWeek.Monday
+        )
+        self.dateFilterEndDateEdit.calendarWidget().setFirstDayOfWeek(
+            Qt.DayOfWeek.Monday
+        )
+
     @property
     def types_list_view(self) -> QListView:
         return self.typeFilterListView
