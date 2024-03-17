@@ -39,6 +39,10 @@ COLUMN_HEADERS = {
     SecuritiesOverviewTreeColumn.PRICE_AVERAGE_BUY_BASE: "Base Avg. Buy Price",
     SecuritiesOverviewTreeColumn.PRICE_AVERAGE_SELL_BASE: "Base Avg. Sell Price",
     SecuritiesOverviewTreeColumn.DIVIDEND_AVERAGE_BASE: "Base Avg. Dividend",
+    SecuritiesOverviewTreeColumn.GAIN_PER_SHARE_TOTAL_NATIVE: (
+        "Native Gain per Share (T)"
+    ),
+    SecuritiesOverviewTreeColumn.GAIN_PER_SHARE_TOTAL_BASE: "Base Gain per Share (T)",
     SecuritiesOverviewTreeColumn.GAIN_TOTAL_NATIVE: "Native Gain (T)",
     SecuritiesOverviewTreeColumn.GAIN_TOTAL_BASE: "Base Gain (T)",
     SecuritiesOverviewTreeColumn.GAIN_TOTAL_CURRENCY_BASE: "Currency Gain (T)",
@@ -106,6 +110,12 @@ COLUMN_HEADER_TOOLTIPS = {
     ),
     SecuritiesOverviewTreeColumn.DIVIDEND_AVERAGE_BASE: (
         "Average Dividend per Share in base Currency"
+    ),
+    SecuritiesOverviewTreeColumn.GAIN_PER_SHARE_TOTAL_NATIVE: (
+        "Gain per Share in native Currency\n[Native Gain (T) / Shares Bought]"
+    ),
+    SecuritiesOverviewTreeColumn.GAIN_PER_SHARE_TOTAL_BASE: (
+        "Gain per Share in base Currency\n[Base Gain (T) / Shares Bought]"
     ),
     SecuritiesOverviewTreeColumn.GAIN_TOTAL_NATIVE: (
         "Total Gain in native Currency\n[Native Gain (R) + Native Gain (U)]"
@@ -183,6 +193,7 @@ COLUMNS_NATIVE = {
     SecuritiesOverviewTreeColumn.AMOUNT_OWNED_NATIVE,
     SecuritiesOverviewTreeColumn.AMOUNT_BOUGHT_NATIVE,
     SecuritiesOverviewTreeColumn.AMOUNT_SOLD_NATIVE,
+    SecuritiesOverviewTreeColumn.GAIN_PER_SHARE_TOTAL_NATIVE,
     SecuritiesOverviewTreeColumn.GAIN_TOTAL_NATIVE,
     SecuritiesOverviewTreeColumn.GAIN_DIVIDEND_NATIVE,
     SecuritiesOverviewTreeColumn.RETURN_TOTAL_NATIVE,
@@ -249,6 +260,8 @@ COLUMNS_DIVIDEND = {
 }
 
 COLUMNS_COLOURFUL = {
+    SecuritiesOverviewTreeColumn.GAIN_PER_SHARE_TOTAL_NATIVE,
+    SecuritiesOverviewTreeColumn.GAIN_PER_SHARE_TOTAL_BASE,
     SecuritiesOverviewTreeColumn.GAIN_TOTAL_NATIVE,
     SecuritiesOverviewTreeColumn.GAIN_TOTAL_BASE,
     SecuritiesOverviewTreeColumn.GAIN_TOTAL_CURRENCY_BASE,
@@ -274,6 +287,7 @@ COLUMNS_IRR = {
 }
 
 COLUMNS_TOTAL = {
+    SecuritiesOverviewTreeColumn.GAIN_PER_SHARE_TOTAL_NATIVE,
     SecuritiesOverviewTreeColumn.GAIN_TOTAL_NATIVE,
     SecuritiesOverviewTreeColumn.GAIN_TOTAL_BASE,
     SecuritiesOverviewTreeColumn.GAIN_TOTAL_CURRENCY_BASE,
@@ -311,6 +325,8 @@ COLUMNS_DETAILED = {
     SecuritiesOverviewTreeColumn.PRICE_AVERAGE_BUY_BASE,
     SecuritiesOverviewTreeColumn.PRICE_AVERAGE_SELL_BASE,
     SecuritiesOverviewTreeColumn.DIVIDEND_AVERAGE_BASE,
+    SecuritiesOverviewTreeColumn.GAIN_PER_SHARE_TOTAL_NATIVE,
+    SecuritiesOverviewTreeColumn.GAIN_PER_SHARE_TOTAL_BASE,
 }
 
 
@@ -631,6 +647,10 @@ def _get_numerical_attribute(
         case SecuritiesOverviewTreeColumn.DIVIDEND_AVERAGE_BASE:
             _value = item.amount_avg_dividend_base
 
+        case SecuritiesOverviewTreeColumn.GAIN_PER_SHARE_TOTAL_NATIVE:
+            _value = item.gain_per_share_total_native
+        case SecuritiesOverviewTreeColumn.GAIN_PER_SHARE_TOTAL_BASE:
+            _value = item.gain_per_share_total_base
         case SecuritiesOverviewTreeColumn.GAIN_TOTAL_NATIVE:
             _value = item.gain_total_native
         case SecuritiesOverviewTreeColumn.GAIN_TOTAL_BASE:

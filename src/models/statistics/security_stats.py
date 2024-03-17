@@ -222,6 +222,8 @@ class SecurityStats(SecurityStatsItem):
 
         self.gain_total_native = self.gain_unrealized_native + self.gain_realized_native
         self.gain_total_base = self.gain_unrealized_base + self.gain_realized_base
+        self.gain_per_share_total_native = self.gain_total_native / self.shares_bought
+        self.gain_per_share_total_base = self.gain_total_base / self.shares_bought
         self.gain_total_currency = self.gain_total_base - _safe_convert(
             self.gain_total_native, base_currency
         )
@@ -380,6 +382,8 @@ class SecurityAccountStats(SecurityStatsItem):
 
         self.gain_total_native = self.gain_unrealized_native + self.gain_realized_native
         self.gain_total_base = self.gain_unrealized_base + self.gain_realized_base
+        self.gain_per_share_total_native = self.gain_total_native / self.shares_bought
+        self.gain_per_share_total_base = self.gain_total_base / self.shares_bought
         self.gain_total_currency = self.gain_total_base - _safe_convert(
             self.gain_total_native, base_currency
         )
