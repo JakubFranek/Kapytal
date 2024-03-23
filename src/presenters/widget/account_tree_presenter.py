@@ -333,8 +333,25 @@ class AccountTreePresenter:
             for account in self._record_keeper.cash_accounts
             if account.currency != self._record_keeper.base_currency
         ]
-        for account in non_native_cash_accounts:
-            show_native_balance_column = self._is_item_visible(account)
+        single_currency_account_groups = [
+            account_group
+            for account_group in self._record_keeper.account_groups
+            if account_group.currency is not None
+            and account_group.currency != self._record_keeper.base_currency
+        ]
+        single_currency_security_account = [
+            account
+            for account in self._record_keeper.security_accounts
+            if account.currency is not None
+            and account.currency != self._record_keeper.base_currency
+        ]
+        items = (
+            non_native_cash_accounts
+            + single_currency_account_groups
+            + single_currency_security_account
+        )
+        for item in items:
+            show_native_balance_column = self._is_item_visible(item)
             if show_native_balance_column:
                 break
         self._view.treeView.setColumnHidden(

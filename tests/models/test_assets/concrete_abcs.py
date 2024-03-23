@@ -34,6 +34,10 @@ class ConcreteAccount(Account):
     def transactions(self) -> tuple[Transaction, ...]:
         return super().transactions
 
+    @property
+    def currency(self) -> Currency | None:
+        return super().currency
+
     def get_balance(self, currency: Currency) -> CashAmount:
         return super().get_balance(currency)
 
