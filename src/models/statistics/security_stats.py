@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from collections.abc import Collection
 from datetime import date, datetime
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 
 from pyxirr import InvalidPaymentsError, xirr
 from src.models.model_objects.currency_objects import (
@@ -222,8 +222,12 @@ class SecurityStats(SecurityStatsItem):
 
         self.gain_total_native = self.gain_unrealized_native + self.gain_realized_native
         self.gain_total_base = self.gain_unrealized_base + self.gain_realized_base
-        self.gain_per_share_total_native = self.gain_total_native / self.shares_bought
-        self.gain_per_share_total_base = self.gain_total_base / self.shares_bought
+        self.gain_per_share_total_native = _safe_division(
+            self.gain_total_native, self.shares_bought
+        )
+        self.gain_per_share_total_base = _safe_division(
+            self.gain_total_base, self.shares_bought
+        )
         self.gain_total_currency = self.gain_total_base - _safe_convert(
             self.gain_total_native, base_currency
         )
@@ -382,8 +386,12 @@ class SecurityAccountStats(SecurityStatsItem):
 
         self.gain_total_native = self.gain_unrealized_native + self.gain_realized_native
         self.gain_total_base = self.gain_unrealized_base + self.gain_realized_base
-        self.gain_per_share_total_native = self.gain_total_native / self.shares_bought
-        self.gain_per_share_total_base = self.gain_total_base / self.shares_bought
+        self.gain_per_share_total_native = _safe_division(
+            self.gain_total_native, self.shares_bought
+        )
+        self.gain_per_share_total_base = _safe_division(
+            self.gain_total_base, self.shares_bought
+        )
         self.gain_total_currency = self.gain_total_base - _safe_convert(
             self.gain_total_native, base_currency
         )
@@ -764,3 +772,10 @@ def _safe_convert(
         return value.convert(currency, date_)
     except ConversionFactorNotFoundError:
         return CashAmount("NaN", currency)
+
+
+def _safe_division(nominator: CashAmount, denominator: CashAmount) -> CashAmount:
+    try:
+        return nominator / denominator
+    except InvalidOperation:
+        return nominator
