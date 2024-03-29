@@ -93,6 +93,7 @@ refresh: QIcon | None = None
 clipboard_text: QIcon | None = None
 globe: QIcon | None = None
 sum_: QIcon | None = None
+securities: QIcon | None = None
 
 
 def setup() -> None:  # noqa: PLR0915
@@ -123,7 +124,7 @@ def setup() -> None:  # noqa: PLR0915
     global bar_chart, pie_chart, calendar  # noqa: PLW0603
     global document_smiley, document_clock, document_plus  # noqa: PLW0603
     global book_question, table, percent  # noqa: PLW0603
-    global swap, refresh, clipboard_text, globe, sum_  # noqa: PLW0603
+    global swap, refresh, clipboard_text, globe, sum_, securities  # noqa: PLW0603
 
     QDir.addSearchPath(
         "icons_24",
@@ -233,3 +234,4 @@ def setup() -> None:  # noqa: PLR0915
         else QIcon("icons_custom:sum_light_mode.png")
     )
     dividend = QIcon("icons_custom:certificate-coin.png")
+    securities = QIcon("icons_custom:certificates.png")

@@ -144,6 +144,8 @@ class AssetTypeTreeModel(QAbstractItemModel):
         if item.asset_type == AssetType.CURRENCY:
             return icons.currency
         if item.asset_type == AssetType.SECURITY:
+            if item.parent is None or item.parent.parent is None:
+                return icons.securities
             return icons.security
         if item.asset_type == AssetType.ACCOUNT:
             if item.parent.asset_type == AssetType.SECURITY:

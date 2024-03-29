@@ -353,6 +353,10 @@ class SecuritiesOverviewTreeModel(QAbstractItemModel):
             if index.column() != 0:
                 return 0
             item: SecurityStatsItem = index.internalPointer()
+            if isinstance(item, TotalSecurityStats):
+                if item.name == "Total":
+                    return 0
+                return len(item.security_stats)
             if not isinstance(item, SecurityStats):
                 return 0
             return len(item.account_stats)
@@ -371,13 +375,18 @@ class SecuritiesOverviewTreeModel(QAbstractItemModel):
         if _parent.isValid() and _parent.column() != 0:
             return QModelIndex()
 
-        parent: SecurityStats | None
+        parent: SecurityStats | TotalSecurityStats | None
         if not _parent or not _parent.isValid():
             parent = None
         else:
             parent = _parent.internalPointer()
 
-        child = self._data[row] if parent is None else parent.account_stats[row]
+        if parent is None:
+            child = self._data[row]
+        elif isinstance(parent, TotalSecurityStats):
+            child = parent.security_stats[row]
+        elif isinstance(parent, SecurityStats):
+            child = parent.account_stats[row]
         if child:
             return QAbstractItemModel.createIndex(self, row, column, child)
         return QModelIndex()
@@ -387,7 +396,11 @@ class SecuritiesOverviewTreeModel(QAbstractItemModel):
             return QModelIndex()
 
         child: SecurityStatsItem = index.internalPointer()
-        parent = child.parent if isinstance(child, SecurityAccountStats) else None
+        parent = (
+            child.parent
+            if isinstance(child, (SecurityAccountStats, SecurityStats))
+            else None
+        )
         if parent is None:
             return QModelIndex()
         row = self._data.index(parent)
@@ -443,7 +456,7 @@ class SecuritiesOverviewTreeModel(QAbstractItemModel):
             column in COLUMNS_NATIVE
             or (
                 column == SecuritiesOverviewTreeColumn.GAIN_TOTAL_CURRENCY_BASE
-                and not isinstance(item, TotalSecurityStats)
+                and not (isinstance(item, TotalSecurityStats) and item.name == "Total")
             )
         ) and item.is_base:
             return None
@@ -497,7 +510,9 @@ class SecuritiesOverviewTreeModel(QAbstractItemModel):
             return None
 
         if isinstance(item, TotalSecurityStats):
-            return icons.sum_
+            if item.name == "Total":
+                return icons.sum_
+            return icons.securities
         if isinstance(item, SecurityStats):
             return icons.security
         return icons.security_account
@@ -514,7 +529,7 @@ class SecuritiesOverviewTreeModel(QAbstractItemModel):
         )
 
     def _get_font_role_data(self, item: SecurityStatsItem) -> QFont | None:
-        if isinstance(item, TotalSecurityStats):
+        if isinstance(item, TotalSecurityStats) and item.name == "Total":
             return bold_font
         return None
 

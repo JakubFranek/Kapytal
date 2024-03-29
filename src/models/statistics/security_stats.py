@@ -49,10 +49,23 @@ class SecurityStatsData:
             stats = SecurityStats(security, accounts, base_currency)
             _security_stats.append(stats)
 
-        self.total_stats = TotalSecurityStats(_security_stats, base_currency)
+        _security_stats_by_type: dict[str, list[SecurityStats]] = {}
+        for stats in _security_stats:
+            if stats.security.type_ not in _security_stats_by_type:
+                _security_stats_by_type[stats.security.type_] = []
+            _security_stats_by_type[stats.security.type_].append(stats)
 
-        self.stats: tuple[SecurityStats | TotalSecurityStats, ...] = (
-            *_security_stats,
+        _total_security_stats_by_type: list[TotalSecurityStats] = []
+        for type_, security_stats in _security_stats_by_type.items():
+            stats = TotalSecurityStats(type_, security_stats, base_currency)
+            _total_security_stats_by_type.append(stats)
+            for security_stats_ in security_stats:
+                security_stats_.set_parent(stats)
+
+        self.total_stats = TotalSecurityStats("Total", _security_stats, base_currency)
+
+        self.stats: tuple[TotalSecurityStats, ...] = (
+            *_total_security_stats_by_type,
             self.total_stats,
         )
 
@@ -72,6 +85,7 @@ class SecurityStats(SecurityStatsItem):
             account for account in accounts if security in account.related_securities
         )
         self.base_currency = base_currency
+        self.parent = None
 
         _account_stats: list[SecurityAccountStats] = []
         _transactions: set[SecurityRelatedTransaction] = set()
@@ -256,6 +270,9 @@ class SecurityStats(SecurityStatsItem):
     def is_base(self) -> bool:
         return self.security.currency == self.base_currency
 
+    def set_parent(self, parent: "TotalSecurityStats") -> None:
+        self.parent = parent
+
 
 class SecurityAccountStats(SecurityStatsItem):
     def __init__(
@@ -423,8 +440,14 @@ class SecurityAccountStats(SecurityStatsItem):
 
 class TotalSecurityStats(SecurityStatsItem):
     def __init__(
-        self, security_stats: Collection[SecurityStats], base_currency: Currency | None
+        self,
+        name: str,
+        security_stats: Collection[SecurityStats],
+        base_currency: Currency | None,
     ) -> None:
+        self._name = name
+        self.security_stats = tuple(security_stats)
+
         _accounts: set[SecurityAccount] = set()
         _transactions: set[SecurityRelatedTransaction] = set()
         for stats in security_stats:
@@ -435,15 +458,13 @@ class TotalSecurityStats(SecurityStatsItem):
         self.base_currency = base_currency
 
         _currencies = {stat.security.currency for stat in security_stats}
-        if len(_currencies) > 1:
-            single_native_currency = _currencies.difference({base_currency}).pop()
-            if not all(
-                stats.security.currency == single_native_currency
-                for stats in security_stats
-            ):
-                single_native_currency = None
+
+        if len(_currencies) == 1 and base_currency not in _currencies:
+            single_native_currency = next(iter(_currencies))
         else:
             single_native_currency = None
+
+        self._is_base = single_native_currency is None
 
         self.value_current_native = _sum_attribute(
             "value_current_native", security_stats, single_native_currency
@@ -549,11 +570,11 @@ class TotalSecurityStats(SecurityStatsItem):
 
     @property
     def name(self) -> str:
-        return "Total"
+        return self._name
 
     @property
     def is_base(self) -> bool:
-        return True
+        return self._is_base
 
 
 def calculate_irr(
