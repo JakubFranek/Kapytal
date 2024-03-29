@@ -188,7 +188,7 @@ class Ui_SecurityForm(object):
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.manageSecuritiesTab), _translate("SecurityForm", "Manage"))
         self.expandAllToolButton.setText(_translate("SecurityForm", "..."))
         self.collapseAllToolButton.setText(_translate("SecurityForm", "..."))
-        self.statsTypeLabel.setText(_translate("SecurityForm", "Performance Stats"))
+        self.statsTypeLabel.setText(_translate("SecurityForm", "Performance"))
         self.nativeCurrencyStatsCheckBox.setText(_translate("SecurityForm", "Native Currency Stats"))
         self.detailedStatsCheckBox.setText(_translate("SecurityForm", "Detailed Stats"))
         self.overviewSearchLineEdit.setPlaceholderText(_translate("SecurityForm", "Search Securities and Security Accounts"))

@@ -39,6 +39,10 @@ COLUMN_HEADERS = {
     SecuritiesOverviewTreeColumn.PRICE_AVERAGE_BUY_BASE: "Base Avg. Buy Price",
     SecuritiesOverviewTreeColumn.PRICE_AVERAGE_SELL_BASE: "Base Avg. Sell Price",
     SecuritiesOverviewTreeColumn.DIVIDEND_AVERAGE_BASE: "Base Avg. Dividend",
+    SecuritiesOverviewTreeColumn.GAIN_PER_SHARE_TOTAL_NATIVE: (
+        "Native Gain per Share (T)"
+    ),
+    SecuritiesOverviewTreeColumn.GAIN_PER_SHARE_TOTAL_BASE: "Base Gain per Share (T)",
     SecuritiesOverviewTreeColumn.GAIN_TOTAL_NATIVE: "Native Gain (T)",
     SecuritiesOverviewTreeColumn.GAIN_TOTAL_BASE: "Base Gain (T)",
     SecuritiesOverviewTreeColumn.GAIN_TOTAL_CURRENCY_BASE: "Currency Gain (T)",
@@ -58,6 +62,130 @@ COLUMN_HEADERS = {
     SecuritiesOverviewTreeColumn.RETURN_UNREALIZED_BASE: "Base Return (U)",
 }
 
+COLUMN_HEADER_TOOLTIPS = {
+    SecuritiesOverviewTreeColumn.SHARES_OWNED: "Number of currently owned Shares",
+    SecuritiesOverviewTreeColumn.SHARES_BOUGHT: "Number of bought Shares",
+    SecuritiesOverviewTreeColumn.SHARES_SOLD: "Number of sold Shares",
+    SecuritiesOverviewTreeColumn.SHARES_TRANSFERRED: (
+        "Number of Shares transferred to (+) or from (-) Security Account"
+    ),
+    SecuritiesOverviewTreeColumn.AMOUNT_OWNED_NATIVE: (
+        "Total market value of owned Shares in native Currency"
+    ),
+    SecuritiesOverviewTreeColumn.AMOUNT_OWNED_BASE: (
+        "Total market value of owned Shares in base Currency"
+    ),
+    SecuritiesOverviewTreeColumn.AMOUNT_BOUGHT_NATIVE: (
+        "Total amount spent on buying Shares in native Currency"
+    ),
+    SecuritiesOverviewTreeColumn.AMOUNT_BOUGHT_BASE: (
+        "Total amount spent on buying Shares in base Currency"
+    ),
+    SecuritiesOverviewTreeColumn.AMOUNT_SOLD_NATIVE: (
+        "Total amount received by selling Shares in native Currency"
+    ),
+    SecuritiesOverviewTreeColumn.AMOUNT_SOLD_BASE: (
+        "Total amount received by selling Shares in base Currency"
+    ),
+    SecuritiesOverviewTreeColumn.PRICE_MARKET_NATIVE: (
+        "Market Price of single Share in native Currency"
+    ),
+    SecuritiesOverviewTreeColumn.PRICE_AVERAGE_BUY_NATIVE: (
+        "Average Buy Price in native Currency for a single Share"
+    ),
+    SecuritiesOverviewTreeColumn.PRICE_AVERAGE_SELL_NATIVE: (
+        "Average Sell Price in native Currency for a single Share"
+    ),
+    SecuritiesOverviewTreeColumn.DIVIDEND_AVERAGE_NATIVE: (
+        "Average Dividend per Share in native Currency"
+    ),
+    SecuritiesOverviewTreeColumn.PRICE_MARKET_BASE: (
+        "Market Price of single Share in base Currency"
+    ),
+    SecuritiesOverviewTreeColumn.PRICE_AVERAGE_BUY_BASE: (
+        "Average Buy Price in base Currency for a single Share"
+    ),
+    SecuritiesOverviewTreeColumn.PRICE_AVERAGE_SELL_BASE: (
+        "Average Sell Price in base Currency for a single Share"
+    ),
+    SecuritiesOverviewTreeColumn.DIVIDEND_AVERAGE_BASE: (
+        "Average Dividend per Share in base Currency"
+    ),
+    SecuritiesOverviewTreeColumn.GAIN_PER_SHARE_TOTAL_NATIVE: (
+        "Gain per Share in native Currency\n[Native Gain (T) / Shares Bought]"
+    ),
+    SecuritiesOverviewTreeColumn.GAIN_PER_SHARE_TOTAL_BASE: (
+        "Gain per Share in base Currency\n[Base Gain (T) / Shares Bought]"
+    ),
+    SecuritiesOverviewTreeColumn.GAIN_TOTAL_NATIVE: (
+        "Total Gain in native Currency\n[Native Gain (R) + Native Gain (U)]"
+    ),
+    SecuritiesOverviewTreeColumn.GAIN_TOTAL_BASE: (
+        "Total Gain in base Currency\n[Base Gain (R) + Base Gain (U)]"
+    ),
+    SecuritiesOverviewTreeColumn.GAIN_TOTAL_CURRENCY_BASE: (
+        "Total Currency Gain is the difference between\n"
+        "the Total Base Gain and Total Native Gain\n"
+        "(when converted to base Currency using the\n"
+        "latest Exchange Rate)."
+    ),
+    SecuritiesOverviewTreeColumn.RETURN_TOTAL_NATIVE: (
+        "Total Return in native Currency\n[Native Gain (T) / Native Amount Bought]"
+    ),
+    SecuritiesOverviewTreeColumn.RETURN_TOTAL_BASE: (
+        "Total Return in base Currency\n[Base Gain (T) / Base Amount Bought]"
+    ),
+    SecuritiesOverviewTreeColumn.IRR_TOTAL_NATIVE: (
+        "Total annualized Internal Rate of Return in native Currency"
+    ),
+    SecuritiesOverviewTreeColumn.IRR_TOTAL_BASE: (
+        "Total annualized Internal Rate of Return in base Currency"
+    ),
+    SecuritiesOverviewTreeColumn.GAIN_REALIZED_NATIVE: (
+        "Realized Gain in native Currency\n"
+        "[Shares Sold * (Avg. Sell Price - Avg. Buy Price) + Native Dividends (R)]"
+    ),
+    SecuritiesOverviewTreeColumn.GAIN_REALIZED_BASE: (
+        "Realized Gain in base Currency\n"
+        "[Shares Sold * (Base Avg. Sell Price - Base Avg. Buy Price)"
+        "+ Base Dividends (R)]"
+    ),
+    SecuritiesOverviewTreeColumn.GAIN_DIVIDEND_NATIVE: (
+        "Total Dividends in native Currency"
+    ),
+    SecuritiesOverviewTreeColumn.GAIN_DIVIDEND_BASE: (
+        "Total Dividends in base Currency"
+    ),
+    SecuritiesOverviewTreeColumn.RETURN_REALIZED_NATIVE: (
+        "Realized Return in native Currency\n"
+        "[Shares Sold * (Avg. Sell Price - Avg. Buy Price)"
+        "/ (Shares Sold * Avg. Buy Price)\n"
+        "+ Native Dividends (R) / (Shares Bought * Avg. Buy Price)]"
+    ),
+    SecuritiesOverviewTreeColumn.RETURN_REALIZED_BASE: (
+        "Realized Return in base Currency\n"
+        "[Shares Sold * (Base Avg. Sell Price - Base Avg. Buy Price)"
+        "/ (Shares Sold * Base Avg. Buy Price)\n"
+        "+ Base Dividends (R) / (Shares Bought * Base Avg. Buy Price)]"
+    ),
+    SecuritiesOverviewTreeColumn.GAIN_UNREALIZED_NATIVE: (
+        "Unrealized Gain in native Currency\n"
+        "[Shares Owned * (Market Price - Avg. Buy Price)]"
+    ),
+    SecuritiesOverviewTreeColumn.GAIN_UNREALIZED_BASE: (
+        "Unrealized Gain in base Currency\n"
+        "[Shares Owned * (Base Market Price - Base Avg. Buy Price)]"
+    ),
+    SecuritiesOverviewTreeColumn.RETURN_UNREALIZED_NATIVE: (
+        "Unrealized Return in native Currency\n"
+        "[Native Gain (U) / (Shares Owned * Avg. Buy Price)]"
+    ),
+    SecuritiesOverviewTreeColumn.RETURN_UNREALIZED_BASE: (
+        "Unrealized Return in base Currency\n"
+        "[Base Gain (U) / (Shares Owned * Base Avg. Buy Price)]"
+    ),
+}
+
 COLUMNS_TEXT = {SecuritiesOverviewTreeColumn.NAME}
 
 
@@ -65,6 +193,7 @@ COLUMNS_NATIVE = {
     SecuritiesOverviewTreeColumn.AMOUNT_OWNED_NATIVE,
     SecuritiesOverviewTreeColumn.AMOUNT_BOUGHT_NATIVE,
     SecuritiesOverviewTreeColumn.AMOUNT_SOLD_NATIVE,
+    SecuritiesOverviewTreeColumn.GAIN_PER_SHARE_TOTAL_NATIVE,
     SecuritiesOverviewTreeColumn.GAIN_TOTAL_NATIVE,
     SecuritiesOverviewTreeColumn.GAIN_DIVIDEND_NATIVE,
     SecuritiesOverviewTreeColumn.RETURN_TOTAL_NATIVE,
@@ -131,6 +260,8 @@ COLUMNS_DIVIDEND = {
 }
 
 COLUMNS_COLOURFUL = {
+    SecuritiesOverviewTreeColumn.GAIN_PER_SHARE_TOTAL_NATIVE,
+    SecuritiesOverviewTreeColumn.GAIN_PER_SHARE_TOTAL_BASE,
     SecuritiesOverviewTreeColumn.GAIN_TOTAL_NATIVE,
     SecuritiesOverviewTreeColumn.GAIN_TOTAL_BASE,
     SecuritiesOverviewTreeColumn.GAIN_TOTAL_CURRENCY_BASE,
@@ -156,6 +287,7 @@ COLUMNS_IRR = {
 }
 
 COLUMNS_TOTAL = {
+    SecuritiesOverviewTreeColumn.GAIN_PER_SHARE_TOTAL_NATIVE,
     SecuritiesOverviewTreeColumn.GAIN_TOTAL_NATIVE,
     SecuritiesOverviewTreeColumn.GAIN_TOTAL_BASE,
     SecuritiesOverviewTreeColumn.GAIN_TOTAL_CURRENCY_BASE,
@@ -193,14 +325,10 @@ COLUMNS_DETAILED = {
     SecuritiesOverviewTreeColumn.PRICE_AVERAGE_BUY_BASE,
     SecuritiesOverviewTreeColumn.PRICE_AVERAGE_SELL_BASE,
     SecuritiesOverviewTreeColumn.DIVIDEND_AVERAGE_BASE,
+    SecuritiesOverviewTreeColumn.GAIN_PER_SHARE_TOTAL_NATIVE,
+    SecuritiesOverviewTreeColumn.GAIN_PER_SHARE_TOTAL_BASE,
 }
 
-GAIN_TOTAL_CURRENCY_TOOLTIP = (
-    "Total Currency Gain is the difference between\n"
-    "the Total Base Gain and Total Native Gain\n"
-    "(when converted to base Currency using the\n"
-    "latest Exchange Rate)."
-)
 
 bold_font = QFont()
 bold_font.setBold(True)
@@ -215,7 +343,7 @@ class SecuritiesOverviewTreeModel(QAbstractItemModel):
         super().__init__()
         self._tree_view = tree_view
         self._proxy = proxy
-        self._data = ()
+        self._data: tuple[TotalSecurityStats, ...] = ()
 
     def load_data(self, data: SecurityStatsData) -> None:
         self._data = data.stats
@@ -225,6 +353,10 @@ class SecuritiesOverviewTreeModel(QAbstractItemModel):
             if index.column() != 0:
                 return 0
             item: SecurityStatsItem = index.internalPointer()
+            if isinstance(item, TotalSecurityStats):
+                if item.name == "Total":
+                    return 0
+                return len(item.security_stats)
             if not isinstance(item, SecurityStats):
                 return 0
             return len(item.account_stats)
@@ -243,13 +375,18 @@ class SecuritiesOverviewTreeModel(QAbstractItemModel):
         if _parent.isValid() and _parent.column() != 0:
             return QModelIndex()
 
-        parent: SecurityStats | None
+        parent: SecurityStats | TotalSecurityStats | None
         if not _parent or not _parent.isValid():
             parent = None
         else:
             parent = _parent.internalPointer()
 
-        child = self._data[row] if parent is None else parent.account_stats[row]
+        if parent is None:
+            child = self._data[row]
+        elif isinstance(parent, TotalSecurityStats):
+            child = parent.security_stats[row]
+        elif isinstance(parent, SecurityStats):
+            child = parent.account_stats[row]
         if child:
             return QAbstractItemModel.createIndex(self, row, column, child)
         return QModelIndex()
@@ -259,10 +396,17 @@ class SecuritiesOverviewTreeModel(QAbstractItemModel):
             return QModelIndex()
 
         child: SecurityStatsItem = index.internalPointer()
-        parent = child.parent if isinstance(child, SecurityAccountStats) else None
+        parent = (
+            child.parent
+            if isinstance(child, (SecurityAccountStats, SecurityStats))
+            else None
+        )
         if parent is None:
             return QModelIndex()
-        row = self._data.index(parent)
+        if isinstance(parent, TotalSecurityStats):
+            row = self._data.index(parent)
+        elif isinstance(parent, SecurityStats):
+            row = parent.parent.security_stats.index(parent)
         return QAbstractItemModel.createIndex(self, row, 0, parent)
 
     def headerData(
@@ -274,16 +418,13 @@ class SecuritiesOverviewTreeModel(QAbstractItemModel):
             return str(section)
         if role == Qt.ItemDataRole.TextAlignmentRole:
             return Qt.AlignmentFlag.AlignCenter
-        if (
-            role == Qt.ItemDataRole.ToolTipRole
-            and section == SecuritiesOverviewTreeColumn.GAIN_TOTAL_CURRENCY_BASE
-        ):
-            return GAIN_TOTAL_CURRENCY_TOOLTIP
+        if role == Qt.ItemDataRole.ToolTipRole:
+            return self._get_tooltip_role_header_data(section, None)
         return None
 
     def data(
         self, index: QModelIndex, role: Qt.ItemDataRole
-    ) -> str | Qt.AlignmentFlag | None:
+    ) -> str | Qt.AlignmentFlag | float | None:
         if not index.isValid():
             return None
 
@@ -304,8 +445,6 @@ class SecuritiesOverviewTreeModel(QAbstractItemModel):
             return self._get_foreground_role_data(column, item)
         if role == Qt.ItemDataRole.FontRole:
             return self._get_font_role_data(item)
-        if role == Qt.ItemDataRole.ToolTipRole:
-            return self._get_tooltip_role_data(column, item)
         return None
 
     def _get_display_role_data(
@@ -320,7 +459,7 @@ class SecuritiesOverviewTreeModel(QAbstractItemModel):
             column in COLUMNS_NATIVE
             or (
                 column == SecuritiesOverviewTreeColumn.GAIN_TOTAL_CURRENCY_BASE
-                and not isinstance(item, TotalSecurityStats)
+                and not (isinstance(item, TotalSecurityStats) and item.name == "Total")
             )
         ) and item.is_base:
             return None
@@ -347,6 +486,11 @@ class SecuritiesOverviewTreeModel(QAbstractItemModel):
     ) -> str | float | None:
         if column == SecuritiesOverviewTreeColumn.NAME:
             return unicodedata.normalize("NFD", item.name)
+        if (
+            self._get_display_role_data(column, item) is None
+            or self._get_display_role_data(column, item) == ""
+        ):
+            return float("-inf")
         return _convert_numerical_attribute_to_float(
             _get_numerical_attribute(item, column)
         )
@@ -369,7 +513,9 @@ class SecuritiesOverviewTreeModel(QAbstractItemModel):
             return None
 
         if isinstance(item, TotalSecurityStats):
-            return icons.sum_
+            if item.name == "Total":
+                return icons.sum_
+            return icons.securities
         if isinstance(item, SecurityStats):
             return icons.security
         return icons.security_account
@@ -385,18 +531,18 @@ class SecuritiesOverviewTreeModel(QAbstractItemModel):
             green_allowed=column in COLUMNS_COLOURFUL,
         )
 
-    def _get_tooltip_role_data(
+    def _get_font_role_data(self, item: SecurityStatsItem) -> QFont | None:
+        if isinstance(item, TotalSecurityStats) and item.name == "Total":
+            return bold_font
+        return None
+
+    def _get_tooltip_role_header_data(
         self,
         column: int,
-        item: SecurityStatsItem,  # noqa: ARG002
+        item: SecurityStatsItem | None,  # noqa: ARG002
     ) -> str | None:
-        if column != SecuritiesOverviewTreeColumn.GAIN_TOTAL_CURRENCY_BASE:
-            return None
-        return GAIN_TOTAL_CURRENCY_TOOLTIP
-
-    def _get_font_role_data(self, item: SecurityStatsItem) -> QFont | None:
-        if isinstance(item, TotalSecurityStats):
-            return bold_font
+        if column in COLUMN_HEADER_TOOLTIPS:
+            return COLUMN_HEADER_TOOLTIPS[column]
         return None
 
     def pre_reset_model(self) -> None:
@@ -456,10 +602,14 @@ def _convert_numerical_attribute_to_float(
     value: CashAmount | Decimal | None,
 ) -> float | None:
     if value is None:
-        return None
+        return float("-inf")
 
     if isinstance(value, CashAmount):
+        if value.is_nan():
+            return float("-inf")
         return float(value.value_normalized)
+    if value.is_nan():
+        return float("-inf")
     return float(value)
 
 
@@ -515,6 +665,10 @@ def _get_numerical_attribute(
         case SecuritiesOverviewTreeColumn.DIVIDEND_AVERAGE_BASE:
             _value = item.amount_avg_dividend_base
 
+        case SecuritiesOverviewTreeColumn.GAIN_PER_SHARE_TOTAL_NATIVE:
+            _value = item.gain_per_share_total_native
+        case SecuritiesOverviewTreeColumn.GAIN_PER_SHARE_TOTAL_BASE:
+            _value = item.gain_per_share_total_base
         case SecuritiesOverviewTreeColumn.GAIN_TOTAL_NATIVE:
             _value = item.gain_total_native
         case SecuritiesOverviewTreeColumn.GAIN_TOTAL_BASE:

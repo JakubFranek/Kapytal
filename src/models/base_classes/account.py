@@ -62,6 +62,11 @@ class Account(
 
     @property
     @abstractmethod
+    def currency(self) -> Currency | None:
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
     def transactions(self) -> tuple["Transaction", ...]:
         raise NotImplementedError
 

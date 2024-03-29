@@ -3,7 +3,7 @@ from datetime import date, datetime
 from decimal import Decimal, DivisionByZero, InvalidOperation
 from enum import Enum, auto
 
-from PyQt6.QtCore import QSignalBlocker, pyqtSignal
+from PyQt6.QtCore import QSignalBlocker, Qt, pyqtSignal
 from PyQt6.QtWidgets import (
     QAbstractButton,
     QDialogButtonBox,
@@ -83,6 +83,7 @@ class CashTransferDialog(CustomDialog, Ui_CashTransferDialog):
         if "hh" not in display_format or "mm" not in display_format:
             display_format += " hh:mm"
         self.dateTimeEdit.setDisplayFormat(display_format)
+        self.dateTimeEdit.calendarWidget().setFirstDayOfWeek(Qt.DayOfWeek.Monday)
 
     @property
     def datetime_(self) -> datetime | None:

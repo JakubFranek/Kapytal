@@ -21,6 +21,8 @@ The following questions are not ordered in any particular way.
 * [Why did you choose PyQt?](#why-did-you-choose-pyqt)
 * [What is Kapytal's performance like? How many Transactions can it handle?](#what-is-kapytals-performance-like-how-many-transactions-can-it-handle)
 * [Can I contribute?](#can-i-contribute)
+* [Why does Kapytal save data in a JSON format?](#why-does-kapytal-save-data-in-a-json-format)
+* [How long did it take to create Kapytal?](#how-long-did-it-take-to-create-kapytal)
 
 ---
 
@@ -136,6 +138,8 @@ Kapytal allows you to use both approaches, so it is up to you. However, if you e
 
 The Total Currency Gain column in the Securities Overview tree quantifies the impact of the [Exchange Rate](./glossary.md#exchange-rate-) fluctuations on the Total Base Gain. The value of Total Currency Gain is equal to the difference between the Total Base Gain and the Total Native Gain, after converting Total Native Gain to base Currency using the latest Exchange Rate.
 
+For more details into Securities Form Overview tab calculations, see [Securities Form](./glossary.md#securities-form) in the glossary.
+
 ---
 
 ### How should I handle stock splits?
@@ -176,7 +180,7 @@ I wanted to learn a GUI framework which is reliable, well maintained and feature
 
 There are many places in Kapytal's codebase which I optimized as much as I could (caching, using optimal data structures, rigorous line-by-line profiling etc). My main [data file](./glossary.md#data-file) is over 5 000 [Transactions](./glossary.md#transaction) long now and the performance is completely fine with file load taking usually less than 2 seconds.
 
-I also tested Kapytal with files up to 100 thousand Transactions, which I think is the upper limit for most use cases (100 000 Transactions is about 5 Transactions per day for 60 years). The file load and save times get longer with so many Transactions (up to 2 minutes), but the tool remains useable.
+I also tested Kapytal with files up to 100 thousand Transactions, which I think is the upper limit for most use cases (100 000 Transactions is about 5 Transactions per day for 60 years). The file load and save times get longer with so many Transactions (up to 1 minute on my laptop), but the tool remains useable.
 
 If it ever becomes necessary, I can try to optimize the worst performance offenders sometime down the road.
 
@@ -187,3 +191,13 @@ If it ever becomes necessary, I can try to optimize the worst performance offend
 If you want to contribute, let me know, but Kapytal was always intended to be a solo project, so I can't promise anything. You can fork the project freely though. If you do so, please give credit, link the original repository and indicate any changes you made. If they are any good I might port them to the original project :^)
 
 ---
+
+### Why does Kapytal save data in a JSON format?
+
+I chose JSON because it is well-established, human-readable/editable and easy to work with. For example, if required, it seems easier to me to write a script for translating Kapytal JSON file to some other software's data format rather than working with a relational database. Admittedly, I have zero database experience, so I might be completely off the mark :(
+
+---
+
+### How long did it take to create Kapytal?
+
+According to my [ActivityWatch](https://activitywatch.net/), between November 30th 2022 (when the development started) and February 15th 2024 (today), I spent 735 hours in VS Code, Qt Creator, googling programming related topics and editing images or videos for Kapytal. This is about 1 hour and 40 minutes per day on average. Needless to say, I spent many more uncounted hours working on Kapytal in my mind!

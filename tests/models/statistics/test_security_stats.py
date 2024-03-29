@@ -588,8 +588,8 @@ def test_security_stats() -> None:
     assert stats.gain_realized_base == CashAmount(
         4 * rate - 2 + rate * Decimal("0.1"), eur
     )
-    assert stats.return_pct_realized_native == Decimal(110)
-    assert stats.return_pct_realized_base == Decimal(89)
+    assert math.isclose(stats.return_pct_realized_native, 103.33333333333)
+    assert stats.return_pct_realized_base == Decimal(83)
 
     assert stats.gain_total_native == CashAmount("5.1", usd)
     assert stats.gain_total_base == CashAmount(
@@ -682,45 +682,46 @@ def test_security_stats_data() -> None:
 
     total_stats = stats.total_stats
 
-    assert stats.__repr__() == "SecurityStatsData(len=2)"
-    assert total_stats.__repr__() == "TotalSecurityStats()"
+    assert stats.__repr__() == "SecurityStatsData(len=1)"
+    assert total_stats.__repr__() == "TotalSecurityStats(name=Total)"
     assert total_stats.name == "Total"
-    assert total_stats.is_base is True
+    assert total_stats.is_base is False
 
     assert total_stats.value_current_base == CashAmount((4 + 4) * rate, eur)
-    assert total_stats.value_current_native is None
+    assert total_stats.value_current_native == CashAmount(8, usd)
 
     assert total_stats.cost_basis_realized_base == CashAmount(4 * old_rate - 2, eur)
-    assert total_stats.cost_basis_realized_native is None
+    assert total_stats.cost_basis_realized_native == CashAmount(2, usd)
 
     assert total_stats.cost_basis_unrealized_base == CashAmount(4 * old_rate - 2, eur)
-    assert total_stats.cost_basis_unrealized_native is None
+    assert total_stats.cost_basis_unrealized_native == CashAmount(2, usd)
 
     assert total_stats.gain_unrealized_base == CashAmount(8 * rate - 2, eur)
-    assert total_stats.gain_unrealized_native is None
+    assert total_stats.gain_unrealized_native == CashAmount(6, usd)
 
     assert total_stats.gain_realized_base == CashAmount(
         4 * rate - 2 + rate * Decimal("0.1"), eur
     )
-    assert total_stats.gain_realized_native is None
+    assert total_stats.gain_realized_native == CashAmount("2.1", usd)
 
     assert total_stats.gain_total_base == CashAmount(
         12 * rate - 4 + rate * Decimal("0.1"), eur
     )
-    assert total_stats.gain_total_native is None
+    assert total_stats.gain_total_native == CashAmount("8.1", usd)
 
     assert total_stats.gain_total_currency == CashAmount("-0.4", eur)
 
     assert total_stats.return_pct_unrealized_base == Decimal(260)
-    assert total_stats.return_pct_unrealized_native == Decimal(0)
+    assert total_stats.return_pct_unrealized_native == Decimal(300)
 
     assert total_stats.return_pct_realized_base == Decimal(84.5)
-    assert total_stats.return_pct_realized_native == Decimal(0)
+    assert total_stats.return_pct_realized_native == Decimal(105)
 
     assert total_stats.return_pct_total_base == Decimal("172.25")
-    assert total_stats.return_pct_total_native == Decimal(0)
+    assert total_stats.return_pct_total_native == Decimal("202.5")
 
     assert math.isclose(total_stats.irr_pct_total_base, 172.25)
+    assert math.isclose(total_stats.irr_pct_total_native, 202.5)
 
 
 def test_security_stats_data_no_transactions() -> None:
@@ -749,9 +750,9 @@ def test_security_stats_data_no_transactions() -> None:
 
     total_stats = stats.total_stats
 
-    assert stats.__repr__() == "SecurityStatsData(len=2)"
-    assert total_stats.__repr__() == "TotalSecurityStats()"
-    assert total_stats.is_base is True
+    assert stats.__repr__() == "SecurityStatsData(len=1)"
+    assert total_stats.__repr__() == "TotalSecurityStats(name=Total)"
+    assert total_stats.is_base is False
 
 
 def test_calculate_return_percentage_empty_tuple_denom() -> None:
@@ -787,3 +788,312 @@ def test_calculate_return_percentage_tuple_of_zero_denom() -> None:
 def test_safe_convert_no_conversion_found() -> None:
     result = _safe_convert(CashAmount(1, Currency("EUR", 2)), Currency("USD", 2))
     assert result.is_nan()
+
+
+def test_security_account_stats_simple() -> None:
+    account = SecurityAccount("Test 1")
+    usd = Currency("USD", 2)
+
+    cash_account = CashAccount("Test Cash", usd, CashAmount(0, usd))
+    security = Security("Alphabet", "ABC", "Stock", usd, 1)
+    today = datetime.now(user_settings.settings.time_zone)
+
+    security.set_price(today.date() - timedelta(days=365), CashAmount(1, usd))
+    security.set_price(today.date(), CashAmount(3, usd))
+
+    SecurityTransaction(
+        "buy",
+        today - timedelta(days=365),
+        SecurityTransactionType.BUY,
+        security,
+        10,
+        CashAmount(1, usd),
+        account,
+        cash_account,
+    )
+    SecurityTransaction(
+        "sell",
+        today,
+        SecurityTransactionType.SELL,
+        security,
+        10,
+        CashAmount(2, usd),
+        account,
+        cash_account,
+    )
+
+    stats = SecurityAccountStats(security, account, usd, None)
+
+    assert stats.name == account.path
+    assert (
+        stats.__repr__() == f"SecurityAccountStats('{security.name}', '{account.path}')"
+    )
+    assert stats.is_base is True
+
+    assert stats.shares_owned == Decimal(0)
+    assert stats.shares_sold == Decimal(10)
+    assert stats.shares_bought == Decimal(10)
+    assert stats.shares_transferred == Decimal(0)
+
+    assert stats.price_market_native == CashAmount(3, usd)
+    assert stats.price_avg_buy_native == CashAmount(1, usd)
+    assert stats.price_avg_sell_native == CashAmount(2, usd)
+    assert stats.amount_avg_dividend_native == CashAmount(0, usd)
+
+    assert stats.value_current_native == CashAmount(0, usd)
+
+    assert stats.value_sold_native == CashAmount(20, usd)
+
+    assert stats.value_bought_native == CashAmount(10, usd)
+
+    assert stats.gain_unrealized_native == CashAmount(0, usd)
+    assert stats.return_pct_unrealized_native == Decimal(0)
+
+    assert stats.gain_realized_native == CashAmount(10, usd)
+    assert stats.value_dividend_native == CashAmount(0, usd)
+    assert stats.return_pct_realized_native == Decimal(100)
+
+    assert stats.gain_total_native == CashAmount(10, usd)
+    assert stats.return_pct_total_native == Decimal(100)
+
+    assert math.isclose(stats.irr_pct_total_native, 100)
+
+
+def test_security_account_stats_simple_dividend() -> None:
+    account = SecurityAccount("Test 1")
+    usd = Currency("USD", 2)
+
+    cash_account = CashAccount("Test Cash", usd, CashAmount(0, usd))
+    security = Security("Alphabet", "ABC", "Stock", usd, 1)
+    today = datetime.now(user_settings.settings.time_zone)
+
+    security.set_price(today.date() - timedelta(days=365), CashAmount(1, usd))
+    security.set_price(today.date(), CashAmount(3, usd))
+
+    SecurityTransaction(
+        "buy",
+        today - timedelta(days=365),
+        SecurityTransactionType.BUY,
+        security,
+        10,
+        CashAmount(1, usd),
+        account,
+        cash_account,
+    )
+    SecurityTransaction(
+        "dividend",
+        today,
+        SecurityTransactionType.DIVIDEND,
+        security,
+        10,
+        CashAmount("0.1", usd),
+        account,
+        cash_account,
+    )
+
+    stats = SecurityAccountStats(security, account, usd, None)
+
+    assert stats.name == account.path
+    assert (
+        stats.__repr__() == f"SecurityAccountStats('{security.name}', '{account.path}')"
+    )
+    assert stats.is_base is True
+
+    assert stats.shares_owned == Decimal(10)
+    assert stats.shares_sold == Decimal(0)
+    assert stats.shares_bought == Decimal(10)
+    assert stats.shares_transferred == Decimal(0)
+    assert stats.shares_paid_dividend == Decimal(10)
+
+    assert stats.price_market_native == CashAmount(3, usd)
+    assert stats.price_avg_buy_native == CashAmount(1, usd)
+    assert stats.price_avg_sell_native == CashAmount(0, usd)
+    assert stats.amount_avg_dividend_native == CashAmount("0.1", usd)
+
+    assert stats.value_current_native == CashAmount(30, usd)
+
+    assert stats.value_sold_native == CashAmount(0, usd)
+
+    assert stats.value_bought_native == CashAmount(10, usd)
+
+    assert stats.gain_unrealized_native == CashAmount(20, usd)
+    assert stats.return_pct_unrealized_native == Decimal(200)
+
+    assert stats.gain_realized_native == CashAmount(1, usd)
+    assert stats.value_dividend_native == CashAmount(1, usd)
+    assert stats.return_pct_realized_native == Decimal(10)
+
+    assert stats.gain_total_native == CashAmount(21, usd)
+    assert stats.return_pct_total_native == Decimal(210)
+
+    assert math.isclose(stats.irr_pct_total_native, 210)
+
+
+def test_security_account_stats_simple_dividend_twice() -> None:
+    account = SecurityAccount("Test 1")
+    usd = Currency("USD", 2)
+
+    cash_account = CashAccount("Test Cash", usd, CashAmount(0, usd))
+    security = Security("Alphabet", "ABC", "Stock", usd, 1)
+    today = datetime.now(user_settings.settings.time_zone)
+
+    security.set_price(today.date() - timedelta(days=365), CashAmount(1, usd))
+    security.set_price(today.date(), CashAmount(3, usd))
+
+    SecurityTransaction(
+        "buy",
+        today - timedelta(days=365),
+        SecurityTransactionType.BUY,
+        security,
+        10,
+        CashAmount(1, usd),
+        account,
+        cash_account,
+    )
+    SecurityTransaction(
+        "dividend",
+        today,
+        SecurityTransactionType.DIVIDEND,
+        security,
+        10,
+        CashAmount("0.1", usd),
+        account,
+        cash_account,
+    )
+    SecurityTransaction(
+        "dividend",
+        today,
+        SecurityTransactionType.DIVIDEND,
+        security,
+        10,
+        CashAmount("0.1", usd),
+        account,
+        cash_account,
+    )
+
+    stats = SecurityAccountStats(security, account, usd, None)
+
+    assert stats.name == account.path
+    assert (
+        stats.__repr__() == f"SecurityAccountStats('{security.name}', '{account.path}')"
+    )
+    assert stats.is_base is True
+
+    assert stats.shares_owned == Decimal(10)
+    assert stats.shares_sold == Decimal(0)
+    assert stats.shares_bought == Decimal(10)
+    assert stats.shares_transferred == Decimal(0)
+    assert stats.shares_paid_dividend == Decimal(20)
+
+    assert stats.price_market_native == CashAmount(3, usd)
+    assert stats.price_avg_buy_native == CashAmount(1, usd)
+    assert stats.price_avg_sell_native == CashAmount(0, usd)
+    assert stats.amount_avg_dividend_native == CashAmount("0.1", usd)
+
+    assert stats.value_current_native == CashAmount(30, usd)
+
+    assert stats.value_sold_native == CashAmount(0, usd)
+
+    assert stats.value_bought_native == CashAmount(10, usd)
+
+    assert stats.gain_unrealized_native == CashAmount(20, usd)
+    assert stats.return_pct_unrealized_native == Decimal(200)
+
+    assert stats.gain_realized_native == CashAmount(2, usd)
+    assert stats.value_dividend_native == CashAmount(2, usd)
+    assert stats.return_pct_realized_native == Decimal(20)
+
+    assert stats.gain_total_native == CashAmount(22, usd)
+    assert stats.return_pct_total_native == Decimal(220)
+
+    assert math.isclose(stats.irr_pct_total_native, 220)
+
+
+def test_security_account_stats_simple_dividend_twice_and_sold() -> None:
+    account = SecurityAccount("Test 1")
+    usd = Currency("USD", 2)
+
+    cash_account = CashAccount("Test Cash", usd, CashAmount(0, usd))
+    security = Security("Alphabet", "ABC", "Stock", usd, 1)
+    today = datetime.now(user_settings.settings.time_zone)
+
+    security.set_price(today.date() - timedelta(days=365), CashAmount(1, usd))
+    security.set_price(today.date(), CashAmount(3, usd))
+
+    SecurityTransaction(
+        "buy",
+        today - timedelta(days=365),
+        SecurityTransactionType.BUY,
+        security,
+        10,
+        CashAmount(1, usd),
+        account,
+        cash_account,
+    )
+    SecurityTransaction(
+        "dividend",
+        today,
+        SecurityTransactionType.DIVIDEND,
+        security,
+        10,
+        CashAmount("0.1", usd),
+        account,
+        cash_account,
+    )
+    SecurityTransaction(
+        "dividend",
+        today,
+        SecurityTransactionType.DIVIDEND,
+        security,
+        10,
+        CashAmount("0.1", usd),
+        account,
+        cash_account,
+    )
+    SecurityTransaction(
+        "sell",
+        today,
+        SecurityTransactionType.SELL,
+        security,
+        5,
+        CashAmount(2, usd),
+        account,
+        cash_account,
+    )
+
+    stats = SecurityAccountStats(security, account, usd, None)
+
+    assert stats.name == account.path
+    assert (
+        stats.__repr__() == f"SecurityAccountStats('{security.name}', '{account.path}')"
+    )
+    assert stats.is_base is True
+
+    assert stats.shares_owned == Decimal(5)
+    assert stats.shares_sold == Decimal(5)
+    assert stats.shares_bought == Decimal(10)
+    assert stats.shares_transferred == Decimal(0)
+    assert stats.shares_paid_dividend == Decimal(20)
+
+    assert stats.price_market_native == CashAmount(3, usd)
+    assert stats.price_avg_buy_native == CashAmount(1, usd)
+    assert stats.price_avg_sell_native == CashAmount(2, usd)
+    assert stats.amount_avg_dividend_native == CashAmount("0.1", usd)
+
+    assert stats.value_current_native == CashAmount(15, usd)
+
+    assert stats.value_sold_native == CashAmount(10, usd)
+
+    assert stats.value_bought_native == CashAmount(10, usd)
+
+    assert stats.gain_unrealized_native == CashAmount(10, usd)
+    assert stats.return_pct_unrealized_native == Decimal(200)
+
+    assert stats.gain_realized_native == CashAmount(2 + 5, usd)
+    assert stats.value_dividend_native == CashAmount(2, usd)
+    assert stats.return_pct_realized_native == Decimal(120)
+
+    assert stats.gain_total_native == CashAmount(10 + 7, usd)
+    assert stats.return_pct_total_native == Decimal(170)
+
+    assert math.isclose(stats.irr_pct_total_native, 170)

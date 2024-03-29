@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from collections.abc import Collection
 from datetime import date, datetime
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 
 from pyxirr import InvalidPaymentsError, xirr
 from src.models.model_objects.currency_objects import (
@@ -49,10 +49,23 @@ class SecurityStatsData:
             stats = SecurityStats(security, accounts, base_currency)
             _security_stats.append(stats)
 
-        self.total_stats = TotalSecurityStats(_security_stats, base_currency)
+        _security_stats_by_type: dict[str, list[SecurityStats]] = {}
+        for stats in _security_stats:
+            if stats.security.type_ not in _security_stats_by_type:
+                _security_stats_by_type[stats.security.type_] = []
+            _security_stats_by_type[stats.security.type_].append(stats)
 
-        self.stats: tuple[SecurityStats | TotalSecurityStats, ...] = (
-            *_security_stats,
+        _total_security_stats_by_type: list[TotalSecurityStats] = []
+        for type_, security_stats in _security_stats_by_type.items():
+            stats = TotalSecurityStats(type_, security_stats, base_currency)
+            _total_security_stats_by_type.append(stats)
+            for security_stats_ in security_stats:
+                security_stats_.set_parent(stats)
+
+        self.total_stats = TotalSecurityStats("Total", _security_stats, base_currency)
+
+        self.stats: tuple[TotalSecurityStats, ...] = (
+            *_total_security_stats_by_type,
             self.total_stats,
         )
 
@@ -72,6 +85,7 @@ class SecurityStats(SecurityStatsItem):
             account for account in accounts if security in account.related_securities
         )
         self.base_currency = base_currency
+        self.parent = None
 
         _account_stats: list[SecurityAccountStats] = []
         _transactions: set[SecurityRelatedTransaction] = set()
@@ -149,8 +163,12 @@ class SecurityStats(SecurityStatsItem):
         self.value_current_base = self.price_market_base * self.shares_owned
         self.value_sold_native = self.price_avg_sell_native * self.shares_sold
         self.value_sold_base = self.price_avg_sell_base * self.shares_sold
-        self.value_bought_native = self.price_avg_buy_native * self.shares_bought
-        self.value_bought_base = self.price_avg_buy_base * self.shares_bought
+        self.value_bought_native = _zero_if_nan(
+            self.price_avg_buy_native * self.shares_bought
+        )
+        self.value_bought_base = _zero_if_nan(
+            self.price_avg_buy_base * self.shares_bought
+        )
         self.value_dividend_native = (
             self.amount_avg_dividend_native * self.shares_paid_dividend
         )
@@ -171,10 +189,10 @@ class SecurityStats(SecurityStatsItem):
             self.shares_sold * self.price_avg_buy_base
         )
         self.cost_basis_dividend_native = _zero_if_nan(
-            self.shares_paid_dividend * self.price_avg_buy_native
+            self.shares_bought * self.price_avg_buy_native
         )
         self.cost_basis_dividend_base = _zero_if_nan(
-            self.shares_paid_dividend * self.price_avg_buy_base
+            self.shares_bought * self.price_avg_buy_base
         )
 
         self.gain_unrealized_native = _zero_if_nan(
@@ -218,6 +236,12 @@ class SecurityStats(SecurityStatsItem):
 
         self.gain_total_native = self.gain_unrealized_native + self.gain_realized_native
         self.gain_total_base = self.gain_unrealized_base + self.gain_realized_base
+        self.gain_per_share_total_native = _safe_division(
+            self.gain_total_native, self.shares_bought
+        )
+        self.gain_per_share_total_base = _safe_division(
+            self.gain_total_base, self.shares_bought
+        )
         self.gain_total_currency = self.gain_total_base - _safe_convert(
             self.gain_total_native, base_currency
         )
@@ -245,6 +269,9 @@ class SecurityStats(SecurityStatsItem):
     @property
     def is_base(self) -> bool:
         return self.security.currency == self.base_currency
+
+    def set_parent(self, parent: "TotalSecurityStats") -> None:
+        self.parent = parent
 
 
 class SecurityAccountStats(SecurityStatsItem):
@@ -307,8 +334,12 @@ class SecurityAccountStats(SecurityStatsItem):
         )
         self.value_sold_native = self.shares_sold * self.price_avg_sell_native
         self.value_sold_base = self.shares_sold * self.price_avg_sell_base
-        self.value_bought_native = self.shares_bought * self.price_avg_buy_native
-        self.value_bought_base = self.shares_bought * self.price_avg_buy_base
+        self.value_bought_native = _zero_if_nan(
+            self.shares_bought * self.price_avg_buy_native
+        )
+        self.value_bought_base = _zero_if_nan(
+            self.shares_bought * self.price_avg_buy_base
+        )
         self.value_dividend_native = (
             self.shares_paid_dividend * self.amount_avg_dividend_native
         )
@@ -322,17 +353,13 @@ class SecurityAccountStats(SecurityStatsItem):
         self.cost_basis_unrealized_base = self.shares_owned * self.price_avg_buy_base
         self.cost_basis_realized_native = self.shares_sold * self.price_avg_buy_native
         self.cost_basis_realized_base = self.shares_sold * self.price_avg_buy_base
+        self.cost_basis_dividend_native = self.shares_bought * self.price_avg_buy_native
+        self.cost_basis_dividend_base = self.shares_bought * self.price_avg_buy_base
         self.cost_basis_total_native = (
             self.cost_basis_unrealized_native + self.cost_basis_realized_native
         )
         self.cost_basis_total_base = (
             self.cost_basis_unrealized_base + self.cost_basis_realized_base
-        )
-        self.cost_basis_dividend_native = (
-            self.shares_paid_dividend * self.price_avg_buy_native
-        )
-        self.cost_basis_dividend_base = (
-            self.shares_paid_dividend * self.price_avg_buy_base
         )
 
         self.gain_unrealized_native = _zero_if_nan(
@@ -376,6 +403,12 @@ class SecurityAccountStats(SecurityStatsItem):
 
         self.gain_total_native = self.gain_unrealized_native + self.gain_realized_native
         self.gain_total_base = self.gain_unrealized_base + self.gain_realized_base
+        self.gain_per_share_total_native = _safe_division(
+            self.gain_total_native, self.shares_bought
+        )
+        self.gain_per_share_total_base = _safe_division(
+            self.gain_total_base, self.shares_bought
+        )
         self.gain_total_currency = self.gain_total_base - _safe_convert(
             self.gain_total_native, base_currency
         )
@@ -407,8 +440,14 @@ class SecurityAccountStats(SecurityStatsItem):
 
 class TotalSecurityStats(SecurityStatsItem):
     def __init__(
-        self, security_stats: Collection[SecurityStats], base_currency: Currency | None
+        self,
+        name: str,
+        security_stats: Collection[SecurityStats],
+        base_currency: Currency | None,
     ) -> None:
+        self._name = name
+        self.security_stats = tuple(security_stats)
+
         _accounts: set[SecurityAccount] = set()
         _transactions: set[SecurityRelatedTransaction] = set()
         for stats in security_stats:
@@ -419,15 +458,13 @@ class TotalSecurityStats(SecurityStatsItem):
         self.base_currency = base_currency
 
         _currencies = {stat.security.currency for stat in security_stats}
-        if len(_currencies) > 1:
-            single_native_currency = _currencies.difference({base_currency}).pop()
-            if not all(
-                stats.security.currency == single_native_currency
-                for stats in security_stats
-            ):
-                single_native_currency = None
+
+        if len(_currencies) == 1 and base_currency not in _currencies:
+            single_native_currency = next(iter(_currencies))
         else:
             single_native_currency = None
+
+        self._is_base = single_native_currency is None
 
         self.value_current_native = _sum_attribute(
             "value_current_native", security_stats, single_native_currency
@@ -529,15 +566,15 @@ class TotalSecurityStats(SecurityStatsItem):
         self.irr_pct_total_base = 100 * calculate_total_irr(_accounts, base_currency)
 
     def __repr__(self) -> str:
-        return "TotalSecurityStats()"
+        return f"TotalSecurityStats(name={self.name})"
 
     @property
     def name(self) -> str:
-        return "Total"
+        return self._name
 
     @property
     def is_base(self) -> bool:
-        return True
+        return self._is_base
 
 
 def calculate_irr(
@@ -756,3 +793,10 @@ def _safe_convert(
         return value.convert(currency, date_)
     except ConversionFactorNotFoundError:
         return CashAmount("NaN", currency)
+
+
+def _safe_division(nominator: CashAmount, denominator: CashAmount) -> CashAmount:
+    try:
+        return nominator / denominator
+    except InvalidOperation:
+        return nominator

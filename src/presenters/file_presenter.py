@@ -96,6 +96,10 @@ class FilePresenter:
     def recent_file_paths(self) -> tuple[Path, ...]:
         return tuple(self._recent_paths)
 
+    @property
+    def unsaved_changes(self) -> bool:
+        return self._unsaved_changes
+
     def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
         self._record_keeper = record_keeper
 

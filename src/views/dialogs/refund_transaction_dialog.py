@@ -3,7 +3,7 @@ from collections.abc import Collection
 from datetime import datetime
 from decimal import Decimal
 
-from PyQt6.QtCore import pyqtSignal
+from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtWidgets import (
     QAbstractButton,
     QDialogButtonBox,
@@ -82,6 +82,7 @@ class RefundTransactionDialog(CustomDialog, Ui_RefundTransactionDialog):
         if "hh" not in display_format or "mm" not in display_format:
             display_format += " hh:mm"
         self.dateTimeEdit.setDisplayFormat(display_format)
+        self.dateTimeEdit.calendarWidget().setFirstDayOfWeek(Qt.DayOfWeek.Monday)
 
     @property
     def account_path(self) -> str:

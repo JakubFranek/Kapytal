@@ -44,6 +44,7 @@ class SecurityFormPresenter:
         self._record_keeper = record_keeper
 
         self._reset_self = True  # if True, models can be reset via data_changed
+        self._reset_models_on_show = False
         self._update_overview_on_show = False
         self._update_manage_on_show = False
 
@@ -56,8 +57,8 @@ class SecurityFormPresenter:
 
     def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
         self._record_keeper = record_keeper
-        self.reset_models()
-        self._security_selection_changed()
+
+        self._reset_models_on_show = True
 
     def reset_models(self) -> None:
         self._security_table_model.pre_reset_model()
@@ -119,6 +120,13 @@ class SecurityFormPresenter:
         )
         self._busy_form_dialog.open()
         QApplication.processEvents()
+
+        if self._reset_models_on_show:  # when RecordKeeper was changed
+            self.reset_models()
+            self._security_selection_changed()
+            self._update_manage_on_show = False
+            self._update_overview_on_show = False
+            self._reset_models_on_show = False
 
         if (
             self._security_table_model.get_selected_item() is None

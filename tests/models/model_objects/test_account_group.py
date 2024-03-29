@@ -28,6 +28,8 @@ def test_creation(name: str, currency: Currency) -> None:
     assert account_group.get_balance(currency) == CashAmount(Decimal(0), currency)
     assert account_group.__repr__() == f"AccountGroup({name})"
     assert account_group.path == name
+    assert account_group.is_single_currency is True
+    assert account_group.currency is None
 
 
 @given(parent=account_groups())
@@ -46,6 +48,8 @@ def test_add_and_remove_parent(parent: AccountGroup) -> None:
     assert account_group in parent.children
     assert account_group.__repr__() == expected_repr
     assert account_group.path == f"{account_group.parent.name}/{account_group.name}"
+    assert account_group.is_single_currency is True
+    assert parent.is_single_currency is True
 
     account_group.parent = None
     expected_repr = f"AccountGroup({account_group.name})"
@@ -88,6 +92,12 @@ def test_get_balance_single_currency(currency: Currency, data: st.DataObject) ->
     )
     account_group._update_balances()
     assert account_group.get_balance(currency) == expected_sum
+    assert account_group.is_single_currency
+    assert (
+        account_group.currency == currency
+        if len(accounts) >= 1
+        else account_group.currency is None
+    )
 
 
 @given(

@@ -1,7 +1,7 @@
 from pathlib import Path
 
 # Literal constants
-VERSION = "1.0.0-rc2"
+VERSION = "1.0.0"
 
 GITHUB_URL = "https://github.com/JakubFranek/Kapytal"
 GITHUB_API_URL = "https://api.github.com/repos/JakubFranek/Kapytal"

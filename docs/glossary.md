@@ -150,13 +150,13 @@ Evaluated quantities are:
   + same as Inward Transfers, but for value flowing out of the selected Account Items into the unselected Account Items
 + Total Outflow
 + Cash Flow
-  + equal to $ \text{Total Inflow} - \text{Total Outflow} $
+  + equal to $\text{Total Inflow} - \text{Total Outflow}$
   + Cash Flow is often more important than Net Growth, as the Gain/Loss part of Net Growth is usually beyond one's control
 + [Securities](#security-) Gain/Loss
 + [Currencies](#currency-) Gain/Loss
 + Total Gain/Loss
 + Net Growth
-  + equal to $ \text{Cash Flow} + \text{Total Gain/Loss}$
+  + equal to $\text{Cash Flow} + \text{Total Gain/Loss}$
 + [Savings Rate](#savings-rate)
 
 ---
@@ -255,7 +255,7 @@ In Kapytal, Dialogs are "disposable" user interface elements/windows used for si
 
 Dividend is a sub-type of [Security Transaction](#security-transaction) that represents the gain of money in a [Cash Account](#cash-account-) which is connected to a [Security](#security-) from a [Security Account](#security-account-), but which does not change the amount of shares held in the Security Account. The keyboard shortcut for adding a Dividend is the `Shift+D` key combination, as `D` is reserved for the *Duplicate Transaction* action (as a mnemonic, the `Shift` stands for Security, just like in the [Security Transfer](#security-transfer-) shortcut).
 
-Dividends are included in the Total and Realized performance stats shown in the Overview tab of the [Securities Form](#securities-form).
+Dividends are included in the Total and Realized performance shown in the Overview tab of the [Securities Form](#securities-form).
 
 ---
 
@@ -281,9 +281,9 @@ In Kapytal, Forms are user interface elements/windows used for more complex sett
 
 These are some of the Forms in Kapytal:
 
-+ [Category](#category-) Form
++ [Categories](#category-) Form
 + [Currencies Form](#currencies-form)
-+ [Payee](#payee-) Form
++ [Payees](#payee-) Form
 + [Update Quotes Form](#update-quotes-form-)
 + [Securities Form](#securities-form)
 + [Settings Form](#settings-form-)
@@ -390,14 +390,51 @@ Savings Rate is a quantity evaluated in [Cash Flow Reports](#cash-flow-reports-)
 
 Savings Rate quantifies saved money relative to the sum of all saveable money for a given period. [Refunds](#refund-) contribute towards the saved amount, but not towards the saveable amount, therefore Savings Rate of more than 100% is theoretically possible.
 
-The formula is: $ \text{Savings Rate} = \text{Cash Flow} / (\text{Income} + \text{Inward Transfers}) = (\text{Inflows} - \text{Outflows}) / (\text{Inflows} - \text{Refunds}) $
+The formula is: $\text{Savings Rate} = \text{Cash Flow} / (\text{Income} + \text{Inward Transfers}) = (\text{Inflows} - \text{Outflows}) / (\text{Inflows} - \text{Refunds})$
 
 ---
 
 ### Securities Form
 
-Securities Form is the [Form](#form) for creating, editing, deleting, manipulating and updating [Securities](#securities-form) and their price quotes. In the Overview tab, an overview of Securities and all Security Accounts which contain their shares is available, including a large number of performance related quantities.
+Securities Form is the [Form](#form) for creating, editing, deleting, manipulating and updating [Securities](#securities-form) and their price quotes.
 
+In the Overview tab, an overview of Securities and all [Security Accounts](#security-account-) which contain their shares is available, including a large number of performance related quantities.
+
+Some performance quantities are available in the following "flavors":
+
++ Realized (R)
+  + actual performance based on paid-out [Dividends](#dividend-) and completed [Sell](#sell-) [Transactions](#transaction)
++ Unrealized (U)
+  + virtual performance which could hypothetically be realized if all owned Security shares were sold for market price
++ Total (T)
+  + sum of realized and unrealized performance
+
+Some performance quantities are available in [base](#base-currency) and/or [native](#native-currencyamount) [Currencies](#currency-). This means that the quantities are calculated using base or native $\text{Avg. Buy Price}$ or $\text{Avg. Sell Price}$ respectively. These quantities are different, even after [Exchange Rate](#exchange-rate-) conversion! This is because $\text{Avg. Buy Price}$ and $\text{Avg. Sell Price}$ take the Exchange Rates for the given Transaction [date](#date) into account, and they are therefore affected by the Exchange Rate history. For more details, [see this FAQ question](./faq.md#in-securities-form-overview-tab-tree-why-do-the-quantities-denominated-in-native-and-base-currencies-sometimes-not-match-after-converting-them-with-the-latest-exchange-rate-to-base-currency-why-are-native-and-base-currency-returns-different).
+
+Following performance quantities are available:
+
++ Gain
+  + available in base and native Currencies
+  + available in Realized, Unrealized and Total flavors
+    + $\text{Realized Gain} = \text{Shares Sold} * (\text{Avg. Sell Price} - \text{Avg. Buy Price}) + \text{Dividends}$
+    + $\text{Unrealized Gain} = \text{Shares Owned} * (\text{Market Price} - \text{Avg. Buy Price})$
+    + $\text{Total Gain} = \text{Realized Gain} + \text{Unrealized Gain}$
++ Currency Gain
+  + available only in base Currency
+  + available only in Total flavor
+    + $\text{Total Currency Gain} = \text{Total Base Gain} - \text{Total Native Gain}$
++ Return
+  + relative return in percent
+  + available in base and native Currencies
+  + available in Realized, Unrealized and Total flavors
+    + $\text{Realized Return} = \frac{\text{Shares Sold} * (\text{Avg. Sell Price} - \text{Avg. Buy Price})}{\text{Shares Sold} * \text{Avg. Buy Price}}+\frac{\text{Dividends}}{\text{Shares Bought} * \text{Avg. Buy Price}}$
+    + $\text{Unrealized Return} = \frac{\text{Unrealized Gain}}{\text{Shares Owned} * \text{Avg. Buy Price}}$
+    + $\text{Total Return} = \frac{\text{Total Gain}}{\text{Avg. Buy Price} * \text{Shares Bought}}$
++ Annualized [Internal Rate of Return (IRR)](https://en.wikipedia.org/wiki/Internal_rate_of_return)
+  + available in base and native Currencies
+  + available only in Total flavor
+  + calculated using the [`pyxirr`](https://pypi.org/project/pyxirr/) package `xirr` function, which takes the dates of Security Transactions into account
+  
 ---
 
 ### Security ![Icon](../resources/icons/icons-16/certificate.png)

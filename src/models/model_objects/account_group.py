@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, TypeGuard, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
 from uuid import UUID
 
 from src.models.custom_exceptions import NotFoundError
@@ -62,8 +62,32 @@ class AccountGroup(NameMixin, BalanceMixin, JSONSerializableMixin, UUIDMixin):
             return self._name
         return self._parent.path + "/" + self._name
 
+    @property
+    def is_single_currency(self) -> bool:
+        """Returns True if the AccountGroup contains items of only one Currency,
+        or no Currency at all."""
+        return len(self._get_children_currencies()) <= 1
+
+    @property
+    def currency(self) -> Currency | None:
+        if self.is_single_currency:
+            try:
+                return next(iter(self._get_children_currencies()))
+            except StopIteration:
+                return None
+        return None
+
     def __repr__(self) -> str:
         return f"AccountGroup({self.path})"
+
+    def _get_children_currencies(self) -> frozenset[Currency]:
+        currencies = set()
+        for child in self._children_tuple:
+            if isinstance(child, AccountGroup):
+                currencies.union(child._get_children_currencies())  # noqa: SLF001
+            elif child.currency is not None:
+                currencies.add(child.currency)
+        return frozenset(currencies)
 
     def _update_children_tuple(self) -> None:
         self._children_tuple = tuple(
