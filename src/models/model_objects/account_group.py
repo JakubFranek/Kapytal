@@ -64,12 +64,17 @@ class AccountGroup(NameMixin, BalanceMixin, JSONSerializableMixin, UUIDMixin):
 
     @property
     def is_single_currency(self) -> bool:
-        return len(self._get_children_currencies()) == 1
+        """Returns True if the AccountGroup contains items of only one Currency,
+        or no Currency at all."""
+        return len(self._get_children_currencies()) <= 1
 
     @property
     def currency(self) -> Currency | None:
         if self.is_single_currency:
-            return next(iter(self._get_children_currencies()))
+            try:
+                return next(iter(self._get_children_currencies()))
+            except StopIteration:
+                return None
         return None
 
     def __repr__(self) -> str:

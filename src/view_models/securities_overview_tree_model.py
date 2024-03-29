@@ -343,7 +343,7 @@ class SecuritiesOverviewTreeModel(QAbstractItemModel):
         super().__init__()
         self._tree_view = tree_view
         self._proxy = proxy
-        self._data = ()
+        self._data: tuple[TotalSecurityStats, ...] = ()
 
     def load_data(self, data: SecurityStatsData) -> None:
         self._data = data.stats
@@ -403,7 +403,10 @@ class SecuritiesOverviewTreeModel(QAbstractItemModel):
         )
         if parent is None:
             return QModelIndex()
-        row = self._data.index(parent)
+        if isinstance(parent, TotalSecurityStats):
+            row = self._data.index(parent)
+        elif isinstance(parent, SecurityStats):
+            row = parent.parent.security_stats.index(parent)
         return QAbstractItemModel.createIndex(self, row, 0, parent)
 
     def headerData(

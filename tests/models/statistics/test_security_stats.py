@@ -682,45 +682,46 @@ def test_security_stats_data() -> None:
 
     total_stats = stats.total_stats
 
-    assert stats.__repr__() == "SecurityStatsData(len=2)"
-    assert total_stats.__repr__() == "TotalSecurityStats()"
+    assert stats.__repr__() == "SecurityStatsData(len=1)"
+    assert total_stats.__repr__() == "TotalSecurityStats(name=Total)"
     assert total_stats.name == "Total"
-    assert total_stats.is_base is True
+    assert total_stats.is_base is False
 
     assert total_stats.value_current_base == CashAmount((4 + 4) * rate, eur)
-    assert total_stats.value_current_native is None
+    assert total_stats.value_current_native == CashAmount(8, usd)
 
     assert total_stats.cost_basis_realized_base == CashAmount(4 * old_rate - 2, eur)
-    assert total_stats.cost_basis_realized_native is None
+    assert total_stats.cost_basis_realized_native == CashAmount(2, usd)
 
     assert total_stats.cost_basis_unrealized_base == CashAmount(4 * old_rate - 2, eur)
-    assert total_stats.cost_basis_unrealized_native is None
+    assert total_stats.cost_basis_unrealized_native == CashAmount(2, usd)
 
     assert total_stats.gain_unrealized_base == CashAmount(8 * rate - 2, eur)
-    assert total_stats.gain_unrealized_native is None
+    assert total_stats.gain_unrealized_native == CashAmount(6, usd)
 
     assert total_stats.gain_realized_base == CashAmount(
         4 * rate - 2 + rate * Decimal("0.1"), eur
     )
-    assert total_stats.gain_realized_native is None
+    assert total_stats.gain_realized_native == CashAmount("2.1", usd)
 
     assert total_stats.gain_total_base == CashAmount(
         12 * rate - 4 + rate * Decimal("0.1"), eur
     )
-    assert total_stats.gain_total_native is None
+    assert total_stats.gain_total_native == CashAmount("8.1", usd)
 
     assert total_stats.gain_total_currency == CashAmount("-0.4", eur)
 
     assert total_stats.return_pct_unrealized_base == Decimal(260)
-    assert total_stats.return_pct_unrealized_native == Decimal(0)
+    assert total_stats.return_pct_unrealized_native == Decimal(300)
 
     assert total_stats.return_pct_realized_base == Decimal(84.5)
-    assert total_stats.return_pct_realized_native == Decimal(0)
+    assert total_stats.return_pct_realized_native == Decimal(105)
 
     assert total_stats.return_pct_total_base == Decimal("172.25")
-    assert total_stats.return_pct_total_native == Decimal(0)
+    assert total_stats.return_pct_total_native == Decimal("202.5")
 
     assert math.isclose(total_stats.irr_pct_total_base, 172.25)
+    assert math.isclose(total_stats.irr_pct_total_native, 202.5)
 
 
 def test_security_stats_data_no_transactions() -> None:
@@ -749,9 +750,9 @@ def test_security_stats_data_no_transactions() -> None:
 
     total_stats = stats.total_stats
 
-    assert stats.__repr__() == "SecurityStatsData(len=2)"
-    assert total_stats.__repr__() == "TotalSecurityStats()"
-    assert total_stats.is_base is True
+    assert stats.__repr__() == "SecurityStatsData(len=1)"
+    assert total_stats.__repr__() == "TotalSecurityStats(name=Total)"
+    assert total_stats.is_base is False
 
 
 def test_calculate_return_percentage_empty_tuple_denom() -> None:

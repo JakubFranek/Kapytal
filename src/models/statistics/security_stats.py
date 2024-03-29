@@ -566,7 +566,7 @@ class TotalSecurityStats(SecurityStatsItem):
         self.irr_pct_total_base = 100 * calculate_total_irr(_accounts, base_currency)
 
     def __repr__(self) -> str:
-        return "TotalSecurityStats()"
+        return f"TotalSecurityStats(name={self.name})"
 
     @property
     def name(self) -> str:
