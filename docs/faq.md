@@ -180,7 +180,7 @@ I wanted to learn a GUI framework which is reliable, well maintained and feature
 
 There are many places in Kapytal's codebase which I optimized as much as I could (caching, using optimal data structures, rigorous line-by-line profiling etc). My main [data file](./glossary.md#data-file) is over 5 000 [Transactions](./glossary.md#transaction) long now and the performance is completely fine with file load taking usually less than 2 seconds.
 
-I also tested Kapytal with files up to 100 thousand Transactions, which I think is the upper limit for most use cases (100 000 Transactions is about 5 Transactions per day for 60 years). The file load and save times get longer with so many Transactions (up to 2 minutes), but the tool remains useable.
+I also tested Kapytal with files up to 100 thousand Transactions, which I think is the upper limit for most use cases (100 000 Transactions is about 5 Transactions per day for 60 years). The file load and save times get longer with so many Transactions (up to 1 minute on my laptop), but the tool remains useable.
 
 If it ever becomes necessary, I can try to optimize the worst performance offenders sometime down the road.
 
