@@ -200,4 +200,4 @@ I chose JSON because it is well-established, human-readable/editable and easy to
 
 ### How long did it take to create Kapytal?
 
-According to my [ActivityWatch](https://activitywatch.net/), between November 30th 2022 (when the development started) and February 15th 2024 (today), I spent 735 hours in VS Code, Qt Creator, googling programming related topics and editing images or videos for Kapytal. This is about 1 hour and 40 minutes per day on average. Needless to say, I spent many more uncounted hours working on Kapytal in my mind!
+According to my [ActivityWatch](https://activitywatch.net/), between November 30th 2022 (when the development started) and March 29th 2024 (release of v1.0.0), I spent 746 hours in VS Code, Qt Creator, googling programming related topics and editing images or videos for Kapytal. This is about 1 hour and 35 minutes per day on average. Needless to say, I spent many more uncounted hours working on Kapytal in my mind!
