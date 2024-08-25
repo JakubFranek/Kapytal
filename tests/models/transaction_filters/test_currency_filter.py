@@ -31,7 +31,7 @@ def check_transaction(filter_: CurrencyFilter, transaction: Transaction) -> bool
     )
 
 
-@given(currencies=st.lists(currencies()), mode=st.sampled_from(FilterMode))
+@given(currencies=st.lists(currencies(), unique=True), mode=st.sampled_from(FilterMode))
 def test_creation(currencies: list[Currency], mode: FilterMode) -> None:
     filter_ = CurrencyFilter(currencies, mode)
     assert filter_.currencies == frozenset(currencies)

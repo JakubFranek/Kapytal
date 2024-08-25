@@ -340,6 +340,7 @@ def test_set_prices(currency: Currency, data: st.DataObject) -> None:
             ),
             min_size=1,
             max_size=5,
+            unique_by=lambda x: x[0],
         )
     )
     data_prep: list[tuple[date, CashAmount]] = []

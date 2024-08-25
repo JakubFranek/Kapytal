@@ -21,6 +21,7 @@ from src.models.model_objects.security_objects import (
     SecurityTransactionType,
 )
 from src.models.user_settings import user_settings
+from src.utilities.numbers import get_decimal_exponent
 from tests.models.test_assets.composites import (
     cash_accounts,
     cash_amounts,
@@ -323,6 +324,7 @@ def test_invalid_shares_decimals(
     decimal_part = Decimal(f"1e{(-security.shares_decimals - 1)}")
     assume(decimal_part != 0)
     shares = data.draw(st.integers(min_value=1, max_value=1e10)) + decimal_part
+    assume(get_decimal_exponent(shares) > security.shares_decimals)
 
     with pytest.raises(
         ValueError,

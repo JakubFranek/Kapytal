@@ -78,7 +78,9 @@ def test_set_attributes_same_values(description: str, datetime_: datetime) -> No
     assert transaction.datetime_ == datetime_
 
 
-@given(tags=st.lists(attributes(AttributeType.TAG), min_size=1, max_size=5))
+@given(
+    tags=st.lists(attributes(AttributeType.TAG), min_size=1, max_size=5, unique=True)
+)
 def test_add_remove_tags(tags: list[Attribute]) -> None:
     transaction = ConcreteTransaction(
         "test", datetime.now(user_settings.settings.time_zone)

@@ -1,3 +1,4 @@
+import math
 from collections import defaultdict
 from datetime import datetime, timedelta
 from decimal import Decimal
@@ -128,11 +129,11 @@ def test_get_balance(  # noqa: PLR0913
     expected_b = (
         shares_a * security_a.price.convert(currency_b) + shares_b * security_b.price
     )
-    assert round(balance_a.value_normalized, 10) == round(
-        expected_a.value_normalized, 10
+    assert math.isclose(
+        balance_a.value_normalized, expected_a.value_normalized, rel_tol=1e-12
     )
-    assert round(balance_b.value_normalized, 10) == round(
-        expected_b.value_normalized, 10
+    assert math.isclose(
+        balance_b.value_normalized, expected_b.value_normalized, rel_tol=1e-12
     )
 
 
