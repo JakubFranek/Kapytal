@@ -315,7 +315,7 @@ class TransactionTableFormPresenter:
 
         base_currency = self._record_keeper.base_currency
         if base_currency is None:
-            self._form.set_selected_amount("N/A")
+            self._form.set_selected_amount(len(transactions), "N/A")
             return
 
         amount = base_currency.zero_amount
@@ -325,7 +325,7 @@ class TransactionTableFormPresenter:
                 try:
                     amount += _amount.convert(base_currency, transaction.date_)
                 except ConversionFactorNotFoundError:
-                    self._form.set_selected_amount("N/A")
+                    self._form.set_selected_amount(len(transactions), "N/A")
                     return
 
-        self._form.set_selected_amount(amount.to_str_rounded())
+        self._form.set_selected_amount(len(transactions), amount.to_str_rounded())

@@ -219,12 +219,26 @@
       </widget>
      </item>
      <item>
-      <widget class="QLabel" name="selectedTransactionsTotalLabel">
+      <widget class="QLabel" name="selectedTransactionsLabel">
        <property name="toolTip">
         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Only Income, Expense and Refund Transaction amounts are used in the calculation.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
        <property name="text">
-        <string>Selected Transactions Total: ??? XXX </string>
+        <string>Selected Transactions: ??? </string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="Line" name="line_4">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="selectedTotalLabel">
+       <property name="text">
+        <string>Selected Total: ??? XXX</string>
        </property>
       </widget>
      </item>
