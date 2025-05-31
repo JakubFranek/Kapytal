@@ -202,23 +202,6 @@
       </spacer>
      </item>
      <item>
-      <widget class="QLabel" name="shownTransactionsLabel">
-       <property name="toolTip">
-        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Shows how many Transactions have passed the Transaction Filter and are listed in Transaction Table.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-       </property>
-       <property name="text">
-        <string>Showing Transactions: 0 / 0</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="Line" name="line">
-       <property name="orientation">
-        <enum>Qt::Vertical</enum>
-       </property>
-      </widget>
-     </item>
-     <item>
       <widget class="QLabel" name="selectedTransactionsLabel">
        <property name="toolTip">
         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Only Income, Expense and Refund Transaction amounts are used in the calculation.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -239,6 +222,23 @@
       <widget class="QLabel" name="selectedTotalLabel">
        <property name="text">
         <string>Selected Total: ??? XXX</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="Line" name="line">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="shownTransactionsLabel">
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Shows how many Transactions have passed the Transaction Filter and are listed in Transaction Table.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="text">
+        <string>Showing Transactions: 0 / 0</string>
        </property>
       </widget>
      </item>
