@@ -30,7 +30,6 @@ extend-exclude = ["src/views/ui_files/*", "main.spec"]
 lint.select = ["ALL"]
 lint.ignore = ["D", "COM", "G"]
 lint.extend-ignore = [
-  "ANN101",
   "TRY003",
   "EM101",
   "EM102",
