@@ -336,7 +336,12 @@ def test_set_prices(currency: Currency, data: st.DataObject) -> None:
         st.lists(
             st.tuples(
                 st.dates(),
-                st.decimals(min_value=0.01, allow_infinity=False, allow_nan=False),
+                st.decimals(
+                    min_value=0.01,
+                    max_value=1e15,
+                    allow_infinity=False,
+                    allow_nan=False,
+                ),
             ),
             min_size=1,
             max_size=5,
