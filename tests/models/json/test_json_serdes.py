@@ -474,7 +474,9 @@ def test_security_transaction(transaction: SecurityTransaction) -> None:
     assert isinstance(decoded, SecurityTransaction)
     assert decoded.uuid == transaction.uuid
     assert decoded.description == transaction.description
-    assert decoded.datetime_ == transaction.datetime_.replace(microsecond=0)
+    assert decoded.datetime_ == transaction.datetime_.replace(microsecond=0).astimezone(
+        decoded.datetime_.tzinfo
+    )
     assert decoded.datetime_created == transaction.datetime_created.replace(
         microsecond=0
     )
