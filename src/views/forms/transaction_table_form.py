@@ -60,10 +60,9 @@ class TransactionTableForm(CustomWidget, Ui_TransactionTableForm):
             f"Showing Transactions: {shown:n} / {total:n}"
         )
 
-    def set_selected_amount(self, amount: str) -> None:
-        self.selectedTransactionsTotalLabel.setText(
-            f"Selected Transactions Total: {amount}"
-        )
+    def set_selected_amount(self, count: int, amount: str) -> None:
+        self.selectedTransactionsLabel.setText(f"Selected Transactions: {count}")
+        self.selectedTotalLabel.setText(f"Selected Total: {amount}")
 
     def _create_context_menu(self, event: QContextMenuEvent) -> None:  # noqa: ARG002
         self.menu = QMenu(self)

@@ -326,7 +326,7 @@ def test_add_cash_transaction(
     paths = [path for path, _ in category_name_amount_pairs]
     assume(len(paths) == len(set(paths)))
     max_tag_amount = sum(amount for _, amount in category_name_amount_pairs)
-    tag_name_amount_pairs = data.draw(
+    tag_name_amount_pairs: list[tuple[str, Decimal]] = data.draw(
         st.lists(
             st.tuples(
                 names(),
@@ -334,7 +334,7 @@ def test_add_cash_transaction(
             ),
             min_size=0,
             max_size=5,
-            unique=True,
+            unique_by=lambda pair: pair[0],
         )
     )
     record_keeper.add_cash_transaction(

@@ -14,7 +14,7 @@ from tests.models.test_assets.composites import (
 )
 
 
-@given(balance=cash_amounts(), transactions=st.lists(transactions()) | st.just(None))
+@given(balance=cash_amounts(), transactions=st.one_of(st.just(None), transactions()))
 def test_creation(balance: CashAmount, transactions: list[Transaction]) -> None:
     item = TransactionBalance(balance, transactions)
 

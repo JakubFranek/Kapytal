@@ -77,6 +77,7 @@ def test_creation(  # noqa: PLR0913
             tag_amount_pairs(currency=currency, max_value=max_tag_amount.value_rounded),
             min_size=0,
             max_size=5,
+            unique_by=lambda pair: pair[0].name,
         )
     )
     account_currency = account.currency
@@ -624,7 +625,7 @@ def test_set_attributes_same_values(
 
 @given(
     transaction=cash_transactions(),
-    tags=st.lists(attributes(AttributeType.TAG), min_size=1, max_size=5),
+    tags=st.lists(attributes(AttributeType.TAG), min_size=1, max_size=5, unique=True),
 )
 def test_add_remove_tags(transaction: CashTransaction, tags: list[Attribute]) -> None:
     transaction.add_tags(tags)

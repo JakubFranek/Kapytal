@@ -619,7 +619,7 @@ class TransactionsPresenter:
             self._model.emit_data_changed_for_uuids(uuids)
 
         self._update_table_columns()
-        if len(self._record_keeper.transactions) < 2:
+        if len(self._record_keeper.transactions) <= 1:
             self.resize_table_to_contents()
         self._update_number_of_shown_transactions()
         self.event_data_changed()
@@ -635,7 +635,7 @@ class TransactionsPresenter:
     ) -> None:
         base_currency = self._record_keeper.base_currency
         if base_currency is None:
-            self._view.set_selected_amount("N/A")
+            self._view.set_selected_amount(len(transactions), "N/A")
             return
 
         amount = base_currency.zero_amount
@@ -653,9 +653,9 @@ class TransactionsPresenter:
             try:
                 amount += _amount.convert(base_currency, transaction.date_)
             except ConversionFactorNotFoundError:
-                self._view.set_selected_amount("N/A")
+                self._view.set_selected_amount(len(transactions), "N/A")
 
-        self._view.set_selected_amount(amount.to_str_rounded())
+        self._view.set_selected_amount(len(transactions), amount.to_str_rounded())
 
     def _reset_columns(self) -> None:
         for column in TransactionTableColumn:

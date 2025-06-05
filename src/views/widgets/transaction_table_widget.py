@@ -54,9 +54,7 @@ class EventFilter(QObject):
             self.table.keyPressEvent(original_event)
             res_cleared = text_cleared_event.isAccepted()
             res_original = original_event.isAccepted()
-            if res_original and not res_cleared:
-                return True
-            return False
+            return res_original and not res_cleared
         return False
 
 
@@ -146,10 +144,9 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
             f"Showing Transactions: {shown:n} / {total:n}"
         )
 
-    def set_selected_amount(self, amount: str) -> None:
-        self.selectedTransactionsTotalLabel.setText(
-            f"Selected Transactions Total: {amount}"
-        )
+    def set_selected_amount(self, count: int, amount: str) -> None:
+        self.selectedTransactionsLabel.setText(f"Selected Transactions: {count}")
+        self.selectedTotalLabel.setText(f"Selected Total: {amount}")
 
     def resize_table_to_contents(self) -> None:
         self.tableView.horizontalHeader().setStretchLastSection(False)
