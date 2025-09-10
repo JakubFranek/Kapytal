@@ -69,13 +69,13 @@ class QuotesUpdateTableModel(QAbstractTableModel):
             self.dataChanged.emit(index, index, [Qt.ItemDataRole.CheckStateRole])
         self.event_checked_items_changed()
 
-    def rowCount(self, index: QModelIndex = ...) -> int:
-        if isinstance(index, QModelIndex) and index.isValid():
+    def rowCount(self, parent: QModelIndex = ...) -> int:
+        if isinstance(parent, QModelIndex) and parent.isValid():
             return 0
         return len(self._items)
 
-    def columnCount(self, index: QModelIndex = ...) -> int:
-        return 0 if isinstance(index, QModelIndex) and index.isValid() else 3
+    def columnCount(self, parent: QModelIndex = ...) -> int:
+        return 0 if isinstance(parent, QModelIndex) and parent.isValid() else 3
 
     def headerData(
         self, section: int, orientation: Qt.Orientation, role: int = ...
@@ -118,7 +118,10 @@ class QuotesUpdateTableModel(QAbstractTableModel):
         return None
 
     def setData(
-        self, index: QModelIndex, value: Any, role: int = ...  # noqa: ANN401
+        self,
+        index: QModelIndex,
+        value: Any,
+        role: int = ...,  # noqa: ANN401
     ) -> bool | None:
         if role == Qt.ItemDataRole.CheckStateRole:
             item = self._items[index.row()]

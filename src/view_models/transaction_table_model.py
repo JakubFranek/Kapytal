@@ -115,12 +115,12 @@ class TransactionTableModel(QAbstractTableModel):
         self._transaction_uuid_dict = transaction_uuid_dict
         self._row_count = len(self._transactions)
 
-    def rowCount(self, index: QModelIndex | None = None) -> int:
-        if isinstance(index, QModelIndex) and index.isValid():
+    def rowCount(self, parent: QModelIndex | None = None) -> int:
+        if isinstance(parent, QModelIndex) and parent.isValid():
             return 0
         return self._row_count
 
-    def columnCount(self, index: QModelIndex | None = None) -> int:  # noqa: ARG002
+    def columnCount(self, parent: QModelIndex | None = None) -> int:  # noqa: ARG002
         if not hasattr(self, "_column_count"):
             self._column_count = len(TRANSACTION_TABLE_COLUMN_HEADERS)
         return self._column_count
@@ -467,7 +467,7 @@ class TransactionTableModel(QAbstractTableModel):
             ):
                 refunded_ratio = transaction.refunded_ratio
                 return (
-                    f"Expense ({format_percentage(100*refunded_ratio,decimals=0)} "
+                    f"Expense ({format_percentage(100 * refunded_ratio, decimals=0)} "
                     "Refunded)"
                 )
             return transaction.type_.name.capitalize()
@@ -476,9 +476,7 @@ class TransactionTableModel(QAbstractTableModel):
         if isinstance(transaction, CashTransfer):
             return "Cash Transfer"
         if isinstance(transaction, RefundTransaction):
-            return (
-                f"Refund ({format_percentage(100*transaction.refund_ratio,decimals=0)})"
-            )
+            return f"Refund ({format_percentage(100 * transaction.refund_ratio, decimals=0)})"
         if isinstance(transaction, SecurityTransfer):
             return "Security Transfer"
         raise TypeError("Unexpected Transaction type.")

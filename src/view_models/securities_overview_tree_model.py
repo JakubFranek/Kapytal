@@ -348,11 +348,11 @@ class SecuritiesOverviewTreeModel(QAbstractItemModel):
     def load_data(self, data: SecurityStatsData) -> None:
         self._data = data.stats
 
-    def rowCount(self, index: QModelIndex | None = None) -> int:
-        if index.isValid():
-            if index.column() != 0:
+    def rowCount(self, parent: QModelIndex | None = None) -> int:
+        if parent.isValid():
+            if parent.column() != 0:
                 return 0
-            item: SecurityStatsItem = index.internalPointer()
+            item: SecurityStatsItem = parent.internalPointer()
             if isinstance(item, TotalSecurityStats):
                 if item.name == "Total":
                     return 0
@@ -362,31 +362,31 @@ class SecuritiesOverviewTreeModel(QAbstractItemModel):
             return len(item.account_stats)
         return len(self._data)
 
-    def columnCount(self, index: QModelIndex | None = None) -> int:
+    def columnCount(self, parent: QModelIndex | None = None) -> int:
         return (
             len(SecuritiesOverviewTreeColumn)
-            if not index.isValid() or index.column() == 0
+            if not parent.isValid() or parent.column() == 0
             else 0
         )
 
     def index(
-        self, row: int, column: int, _parent: QModelIndex | None = None
+        self, row: int, column: int, parent: QModelIndex | None = None
     ) -> QModelIndex:
-        if _parent.isValid() and _parent.column() != 0:
+        if parent.isValid() and parent.column() != 0:
             return QModelIndex()
 
-        parent: SecurityStats | TotalSecurityStats | None
-        if not _parent or not _parent.isValid():
-            parent = None
+        _parent: SecurityStats | TotalSecurityStats | None
+        if not parent or not parent.isValid():
+            _parent = None
         else:
-            parent = _parent.internalPointer()
+            _parent = parent.internalPointer()
 
-        if parent is None:
+        if _parent is None:
             child = self._data[row]
-        elif isinstance(parent, TotalSecurityStats):
-            child = parent.security_stats[row]
-        elif isinstance(parent, SecurityStats):
-            child = parent.account_stats[row]
+        elif isinstance(_parent, TotalSecurityStats):
+            child = _parent.security_stats[row]
+        elif isinstance(_parent, SecurityStats):
+            child = _parent.account_stats[row]
         if child:
             return QAbstractItemModel.createIndex(self, row, column, child)
         return QModelIndex()
@@ -405,7 +405,7 @@ class SecuritiesOverviewTreeModel(QAbstractItemModel):
             return QModelIndex()
         if isinstance(parent, TotalSecurityStats):
             row = self._data.index(parent)
-        elif isinstance(parent, SecurityStats):
+        else:
             row = parent.parent.security_stats.index(parent)
         return QAbstractItemModel.createIndex(self, row, 0, parent)
 

@@ -228,39 +228,41 @@ class PeriodicCategoryStatsTreeModel(QAbstractItemModel):
             len(self._root_row_objects) - 3,
         )
 
-    def rowCount(self, index: QModelIndex = ...) -> int:
-        if index.isValid():
-            if index.column() != 0:
+    def rowCount(self, parent: QModelIndex = ...) -> int:
+        if parent.isValid():
+            if parent.column() != 0:
                 return 0
-            item: RowObject = index.internalPointer()
+            item: RowObject = parent.internalPointer()
             return len(item.children)
         return len(self._root_row_objects)
 
-    def columnCount(self, index: QModelIndex = ...) -> int:  # noqa: ARG002
+    def columnCount(self, parent: QModelIndex = ...) -> int:  # noqa: ARG002
         if not hasattr(self, "_column_count"):
             self._column_count = len(self._column_headers)
         return self._column_count
 
-    def index(self, row: int, column: int, _parent: QModelIndex = ...) -> QModelIndex:
-        if _parent.isValid() and _parent.column() != 0:
+    def index(self, row: int, column: int, parent: QModelIndex = ...) -> QModelIndex:
+        if parent.isValid() and parent.column() != 0:
             return QModelIndex()
 
-        if not _parent or not _parent.isValid():
-            parent = None
+        if not parent or not parent.isValid():
+            _parent = None
         else:
-            parent: RowObject = _parent.internalPointer()
+            _parent: RowObject = parent.internalPointer()
 
-        child = self._root_row_objects[row] if parent is None else parent.children[row]
+        child = (
+            self._root_row_objects[row] if _parent is None else _parent.children[row]
+        )
         if child:
             return QAbstractItemModel.createIndex(self, row, column, child)
         return QModelIndex()
 
-    def parent(self, index: QModelIndex = ...) -> QModelIndex:
-        if not index.isValid():
+    def parent(self, child: QModelIndex = ...) -> QModelIndex:
+        if not child.isValid():
             return QModelIndex()
 
-        child: RowObject = index.internalPointer()
-        parent = child.parent
+        _child: RowObject = child.internalPointer()
+        parent = _child.parent
         if parent is None:
             return QModelIndex()
         grandparent = parent.parent

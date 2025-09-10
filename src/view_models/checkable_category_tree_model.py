@@ -199,27 +199,27 @@ class CheckableCategoryTreeModel(QAbstractItemModel):
         for node in self._flat_nodes:
             node.update_are_children_mixed_check_state()
 
-    def rowCount(self, index: QModelIndex = ...) -> int:
-        if index.isValid():
-            if index.column() != 0:
+    def rowCount(self, parent: QModelIndex = ...) -> int:
+        if parent.isValid():
+            if parent.column() != 0:
                 return 0
-            node: CategoryTreeNode = index.internalPointer()
+            node: CategoryTreeNode = parent.internalPointer()
             return len(node.children)
         return len(self._root_nodes)
 
-    def columnCount(self, index: QModelIndex = ...) -> int:
-        return 1 if not index.isValid() or index.column() == 0 else 0
+    def columnCount(self, parent: QModelIndex = ...) -> int:
+        return 1 if not parent.isValid() or parent.column() == 0 else 0
 
-    def index(self, row: int, column: int, _parent: QModelIndex = ...) -> QModelIndex:
-        if _parent.isValid() and _parent.column() != 0:
+    def index(self, row: int, column: int, parent: QModelIndex = ...) -> QModelIndex:
+        if parent.isValid() and parent.column() != 0:
             return QModelIndex()
 
-        if not _parent or not _parent.isValid():
-            parent = None
+        if not parent or not parent.isValid():
+            _parent = None
         else:
-            parent: CategoryTreeNode = _parent.internalPointer()
+            _parent: CategoryTreeNode = parent.internalPointer()
 
-        child = self._root_nodes[row] if parent is None else parent.children[row]
+        child = self._root_nodes[row] if _parent is None else _parent.children[row]
         if child:
             return QAbstractItemModel.createIndex(self, row, column, child)
         return QModelIndex()

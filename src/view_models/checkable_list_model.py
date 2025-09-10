@@ -51,8 +51,8 @@ class CheckableListModel(QAbstractListModel):
             self.dataChanged.emit(index, index, [Qt.ItemDataRole.CheckStateRole])
         self.event_checked_items_changed()
 
-    def rowCount(self, index: QModelIndex) -> int:
-        if isinstance(index, QModelIndex) and index.isValid():
+    def rowCount(self, parent: QModelIndex = ...) -> int:
+        if isinstance(parent, QModelIndex) and parent.isValid():
             return 0
         return len(self._items)
 

@@ -41,12 +41,12 @@ class AttributeTableModel(QAbstractTableModel):
     def load_attribute_stats(self, stats: Collection[AttributeStats]) -> None:
         self._attribute_stats = tuple(stats)
 
-    def rowCount(self, index: QModelIndex | None = None) -> int:
-        if isinstance(index, QModelIndex) and index.isValid():
+    def rowCount(self, parent: QModelIndex | None = None) -> int:
+        if isinstance(parent, QModelIndex) and parent.isValid():
             return 0
         return len(self._attribute_stats)
 
-    def columnCount(self, index: QModelIndex | None = None) -> int:  # noqa: ARG002
+    def columnCount(self, parent: QModelIndex | None = None) -> int:  # noqa: ARG002
         if not hasattr(self, "_column_count"):
             self._column_count = len(COLUMN_HEADERS)
         return self._column_count

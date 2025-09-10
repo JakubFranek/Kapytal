@@ -18,8 +18,8 @@ class BackupPathsListModel(QAbstractListModel):
     def load_paths(self, paths: Collection[Path]) -> None:
         self._paths = tuple(paths)
 
-    def rowCount(self, index: QModelIndex | None = None) -> int:
-        if isinstance(index, QModelIndex) and index.isValid():
+    def rowCount(self, parent: QModelIndex | None = None) -> int:
+        if isinstance(parent, QModelIndex) and parent.isValid():
             return 0
         return len(self.paths)
 

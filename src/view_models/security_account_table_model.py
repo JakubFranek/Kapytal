@@ -64,12 +64,12 @@ class SecurityAccountTableModel(QAbstractTableModel):
             self._securities = ()
         self._base_currency = base_currency
 
-    def rowCount(self, index: QModelIndex | None = None) -> int:
-        if isinstance(index, QModelIndex) and index.isValid():
+    def rowCount(self, parent: QModelIndex | None = None) -> int:
+        if isinstance(parent, QModelIndex) and parent.isValid():
             return 0
         return len(self._securities)
 
-    def columnCount(self, index: QModelIndex | None = None) -> int:  # noqa: ARG002
+    def columnCount(self, parent: QModelIndex | None = None) -> int:  # noqa: ARG002
         if not hasattr(self, "_column_count"):
             self._column_count = len(COLUMN_HEADERS)
         return self._column_count

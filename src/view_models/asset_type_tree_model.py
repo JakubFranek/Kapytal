@@ -34,28 +34,28 @@ class AssetTypeTreeModel(QAbstractItemModel):
     def load_data(self, collection: Collection[AssetStats]) -> None:
         self._root_items = tuple(collection)
 
-    def rowCount(self, index: QModelIndex) -> int:
-        if index.isValid():
-            if index.column() != 0:
+    def rowCount(self, parent: QModelIndex = ...) -> int:
+        if parent.isValid():
+            if parent.column() != 0:
                 return 0
-            item: AssetStats = index.internalPointer()
+            item: AssetStats = parent.internalPointer()
             return len(item.children)
         return len(self._root_items)
 
-    def columnCount(self, index: QModelIndex | None = None) -> int:
-        return 3 if not index.isValid() or index.column() == 0 else 0
+    def columnCount(self, parent: QModelIndex | None = None) -> int:
+        return 3 if not parent.isValid() or parent.column() == 0 else 0
 
-    def index(self, row: int, column: int, _parent: QModelIndex) -> QModelIndex:
-        if _parent.isValid() and _parent.column() != 0:
+    def index(self, row: int, column: int, parent: QModelIndex = ...) -> QModelIndex:
+        if parent.isValid() and parent.column() != 0:
             return QModelIndex()
 
-        parent: AssetStats | None
-        if not _parent or not _parent.isValid():
-            parent = None
+        _parent: AssetStats | None
+        if not parent or not parent.isValid():
+            _parent = None
         else:
-            parent = _parent.internalPointer()
+            _parent = parent.internalPointer()
 
-        child = self._root_items[row] if parent is None else parent.children[row]
+        child = self._root_items[row] if _parent is None else _parent.children[row]
         if child:
             return QAbstractItemModel.createIndex(self, row, column, child)
         return QModelIndex()
