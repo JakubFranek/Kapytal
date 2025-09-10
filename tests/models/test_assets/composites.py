@@ -83,6 +83,7 @@ def account_groups(draw: st.DrawFn) -> AccountGroup:
 @st.composite
 def attributes(draw: st.DrawFn, type_: AttributeType | None = None) -> Attribute:
     name = draw(names())
+    assume(name.lower() != "total")
     attr_type = draw(st.sampled_from(AttributeType)) if type_ is None else type_
     return Attribute(name, attr_type)
 
