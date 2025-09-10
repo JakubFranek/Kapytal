@@ -247,16 +247,16 @@ class AccountTreeModel(QAbstractItemModel):
         items = [self._item_dict[uuid] for uuid in uuids]
         return frozenset(items)
 
-    def rowCount(self, index: QModelIndex = ...) -> int:
-        if index.isValid():
-            if index.column() != 0:
+    def rowCount(self, parent: QModelIndex = ...) -> int:
+        if parent.isValid():
+            if parent.column() != 0:
                 return 0
-            node: AccountTreeNode = index.internalPointer()
+            node: AccountTreeNode = parent.internalPointer()
             return len(node.children)
         return len(self._root_nodes)
 
-    def columnCount(self, index: QModelIndex = ...) -> int:
-        return 4 if not index.isValid() or index.column() == 0 else 0
+    def columnCount(self, parent: QModelIndex = ...) -> int:
+        return 4 if not parent.isValid() or parent.column() == 0 else 0
 
     def index(self, row: int, column: int, parent: QModelIndex = ...) -> QModelIndex:
         if parent.isValid() and parent.column() != 0:
@@ -272,11 +272,11 @@ class AccountTreeModel(QAbstractItemModel):
             return QAbstractItemModel.createIndex(self, row, column, child)
         return QModelIndex()
 
-    def parent(self, index: QModelIndex = ...) -> QModelIndex:
-        if not index.isValid():
+    def parent(self, child: QModelIndex = ...) -> QModelIndex:
+        if not child.isValid():
             return QModelIndex()
 
-        node: AccountTreeNode = index.internalPointer()
+        node: AccountTreeNode = child.internalPointer()
         parent = node.parent
         if parent is None:
             return QModelIndex()

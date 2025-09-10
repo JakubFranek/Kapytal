@@ -209,8 +209,7 @@ class UserSettings(JSONSerializableMixin, CopyableMixin):
             return
 
         logging.info(
-            "Changing UserSettings.number_format from "
-            f"{self._number_format} to {value}"
+            f"Changing UserSettings.number_format from {self._number_format} to {value}"
         )
         self._number_format = value
 
@@ -337,7 +336,7 @@ class UserSettings(JSONSerializableMixin, CopyableMixin):
         }
 
     @staticmethod
-    def deserialize(data: dict[str, Any]) -> Self:
+    def deserialize(data: dict[str, Any]) -> "UserSettings":
         time_zone = ZoneInfo(data["time_zone"])
         logs_max_size_bytes: int = data["logs_max_size_bytes"]
         backups_max_size_bytes: int = data["backups_max_size_bytes"]
@@ -376,9 +375,7 @@ class UserSettings(JSONSerializableMixin, CopyableMixin):
         obj._exchange_rate_decimals = exchange_rate_decimals
         obj._amount_per_share_decimals = amount_per_share_decimals
         obj._check_for_updates_on_startup = check_for_updates_on_startup
-        obj._transaction_table_column_order = (
-            transaction_table_column_order
-        )
+        obj._transaction_table_column_order = transaction_table_column_order
 
         return obj
 

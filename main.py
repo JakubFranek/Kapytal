@@ -18,7 +18,7 @@ from src.models.user_settings.user_settings_class import (
 )
 from src.presenters.main_presenter import MainPresenter
 from src.utilities import constants
-from src.utilities.logging import remove_old_logs, setup_logging
+from src.utilities.logging_utils import remove_old_logs, setup_logging
 from src.views import colors
 from src.views.main_view import MainView
 from src.views.utilities.handle_exception import handle_uncaught_exception

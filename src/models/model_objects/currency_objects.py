@@ -598,12 +598,10 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
         return self.__mul__(__o)
 
     @overload
-    def __truediv__(self, __o: "CashAmount") -> Decimal:
-        ...
+    def __truediv__(self, __o: "CashAmount") -> Decimal: ...
 
     @overload
-    def __truediv__(self, __o: int | Decimal) -> "CashAmount":
-        ...
+    def __truediv__(self, __o: int | Decimal) -> "CashAmount": ...
 
     def __truediv__(self, __o: object) -> "Decimal | CashAmount":
         if isinstance(__o, CashAmount):
