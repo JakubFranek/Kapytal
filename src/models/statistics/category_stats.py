@@ -46,25 +46,25 @@ def calculate_periodic_totals_and_averages(
         for stat in stats
     }
 
-    for period in periodic_stats:
+    for period, stats in periodic_stats.items():
         income_balance = TransactionBalance(currency.zero_amount)
         expense_balance = TransactionBalance(currency.zero_amount)
         total_balance = TransactionBalance(currency.zero_amount)
 
-        for stats in periodic_stats[period]:
+        for stat in stats:
             total_balance.transactions = total_balance.transactions.union(
-                stats.transactions
+                stat.transactions
             )
 
-            if stats.category.parent is None:
-                total_balance.balance += stats.balance
+            if stat.category.parent is None:
+                total_balance.balance += stat.balance
                 income_data = TransactionBalance(currency.zero_amount)
                 expense_data = TransactionBalance(currency.zero_amount)
 
-                for transaction in stats.transactions:
+                for transaction in stat.transactions:
                     date_ = transaction.date_
                     amount = transaction.get_amount_for_category(
-                        stats.category, total=True
+                        stat.category, total=True
                     ).convert(currency, date_)
                     if (
                         isinstance(transaction, CashTransaction)
@@ -77,8 +77,8 @@ def calculate_periodic_totals_and_averages(
                 income_balance += income_data
                 expense_balance += expense_data
 
-            category_totals[stats.category].add_transaction_balance(
-                stats.transactions, stats.balance
+            category_totals[stat.category].add_transaction_balance(
+                stat.transactions, stat.balance
             )
 
         period_income_totals[period] = income_balance
@@ -118,9 +118,9 @@ def calculate_periodic_category_stats(
         transactions_by_period[key].append(transaction)
 
     stats_dict: dict[str, tuple[CategoryStats, ...]] = {}
-    for period in transactions_by_period:
+    for period, transactions in transactions_by_period.items():
         period_stats = calculate_category_stats(
-            transactions_by_period[period], base_currency, all_categories
+            transactions, base_currency, all_categories
         )
         stats_dict[period] = tuple(period_stats.values())
 

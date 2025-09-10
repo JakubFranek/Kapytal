@@ -138,7 +138,7 @@ class TransactionTableFormPresenter:
             self._form.setParent(parent, Qt.WindowType.Window)
             self._form.table_view.resizeColumnsToContents()
             self._form.show_form()
-        except:  # noqa: TRY302
+        except:  # noqa: TRY203
             raise
         finally:
             self._busy_dialog.close()

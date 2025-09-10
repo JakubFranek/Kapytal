@@ -2,6 +2,7 @@ import shutil
 from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
+from zoneinfo import ZoneInfo, available_timezones
 
 import pytest
 from hypothesis import assume, given
@@ -15,7 +16,6 @@ from src.models.user_settings.user_settings_class import (
 from src.views.constants import TransactionTableColumn
 from tests.models.test_assets.composites import everything_except
 from tzlocal import get_localzone_name
-from zoneinfo import ZoneInfo, available_timezones
 
 available_time_zone_keys = tuple(available_timezones())
 

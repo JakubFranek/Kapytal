@@ -62,7 +62,7 @@ class NetWorthReportPresenter:
         QApplication.processEvents()
         try:
             self._create_accounts_report()
-        except:  # noqa: TRY302
+        except:  # noqa: TRY203
             raise
         finally:
             self._busy_dialog.close()
@@ -75,7 +75,7 @@ class NetWorthReportPresenter:
         QApplication.processEvents()
         try:
             self._create_asset_type_report()
-        except:  # noqa: TRY302
+        except:  # noqa: TRY203
             raise
         finally:
             self._busy_dialog.close()
@@ -88,7 +88,7 @@ class NetWorthReportPresenter:
         QApplication.processEvents()
         try:
             self._create_time_report()
-        except:  # noqa: TRY302
+        except:  # noqa: TRY203
             raise
         finally:
             self._busy_dialog.close()
@@ -390,7 +390,7 @@ def _create_account_item_node(
                 balance += child_node.value
     else:
         balance = float(account_item.get_balance(currency).value_rounded)
-        balance = balance if balance > 0 else 0
+        balance = max(0, balance)
 
     children.sort(key=lambda x: abs(x.value), reverse=True)
     node.children = children

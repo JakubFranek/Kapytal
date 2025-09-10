@@ -272,8 +272,7 @@ class CategoryTreeModel(QAbstractItemModel):
         new_parent_index = self.get_index_from_item(new_parent)
         # Index must be limited to valid indexes
         if new_parent is None:
-            if new_index > len(self._root_nodes):
-                new_index = len(self._root_nodes)
+            new_index = min(new_index, len(self._root_nodes))
         elif new_index > len(new_parent.children):
             new_index = len(new_parent.children)
         if previous_parent == new_parent and new_index > previous_index:

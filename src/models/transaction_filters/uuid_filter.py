@@ -9,7 +9,7 @@ from src.models.transaction_filters.base_transaction_filter import (
 
 
 class UUIDFilter(BaseTransactionFilter):
-    __slots__ = ("_uuids", "_mode", "_uuids_set")
+    __slots__ = ("_mode", "_uuids", "_uuids_set")
 
     def __init__(self, uuids: Collection[UUID], mode: FilterMode) -> None:
         super().__init__(mode=mode)

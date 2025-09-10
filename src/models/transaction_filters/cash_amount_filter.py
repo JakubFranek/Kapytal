@@ -28,7 +28,7 @@ class CashAmountFilter(BaseTransactionFilter):
     If no path to the currency of the CashAmountFilter is found, the filter accepts
     CashRelatedTransactions by default."""
 
-    __slots__ = ("_currency", "_minimum", "_maximum", "_mode")
+    __slots__ = ("_currency", "_maximum", "_minimum", "_mode")
 
     def __init__(
         self, minimum: CashAmount | None, maximum: CashAmount | None, mode: FilterMode

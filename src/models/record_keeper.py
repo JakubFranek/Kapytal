@@ -45,29 +45,29 @@ from src.models.model_objects.security_objects import (
 
 class RecordKeeper:
     __slots__ = (
-        "_accounts",
-        "_cash_accounts",
-        "_security_accounts",
         "_account_groups",
-        "_root_account_items",
-        "_currencies",
-        "_exchange_rates",
-        "_securities",
-        "_payees",
-        "_categories",
-        "_root_income_categories",
-        "_root_expense_categories",
-        "_root_dual_purpose_categories",
-        "_tags",
-        "_transactions",
+        "_accounts",
+        "_base_currency",
+        "_cash_accounts",
         "_cash_transactions",
-        "_refund_transactions",
         "_cash_transfers",
+        "_categories",
+        "_currencies",
+        "_descriptions",
+        "_exchange_rates",
+        "_payees",
+        "_refund_transactions",
+        "_root_account_items",
+        "_root_dual_purpose_categories",
+        "_root_expense_categories",
+        "_root_income_categories",
+        "_securities",
+        "_security_accounts",
         "_security_transactions",
         "_security_transfers",
+        "_tags",
+        "_transactions",
         "_transactions_uuid_dict",
-        "_descriptions",
-        "_base_currency",
     )
 
     def __init__(self) -> None:
@@ -252,7 +252,7 @@ class RecordKeeper:
         exchange_rate.event_reset_currency_caches.append(self._reset_currency_caches)
         self._reset_currency_caches()
 
-    def add_security(  # noqa: PLR0913
+    def add_security(
         self,
         name: str,
         symbol: str,
@@ -1508,47 +1508,47 @@ class RecordKeeper:
         data: dict[str, Any], progress_callable: Callable[[int], None]
     ) -> "RecordKeeper":
         obj = RecordKeeper()
-        obj._currencies = data["currencies"]  # noqa: SLF001
+        obj._currencies = data["currencies"]
         currencies: dict[str, Currency] = {
             currency.code: currency
-            for currency in obj._currencies  # noqa: SLF001
+            for currency in obj._currencies
         }
         base_currency_code = data["base_currency_code"]
         if base_currency_code is not None:
-            obj._base_currency = currencies[base_currency_code]  # noqa: SLF001
+            obj._base_currency = currencies[base_currency_code]
 
-        obj._exchange_rates = RecordKeeper._deserialize_exchange_rates(  # noqa: SLF001
+        obj._exchange_rates = RecordKeeper._deserialize_exchange_rates(
             data["exchange_rates"], currencies, progress_callable
         )
-        for exchange_rate in obj._exchange_rates:  # noqa: SLF001
+        for exchange_rate in obj._exchange_rates:
             exchange_rate.event_reset_currency_caches.append(
-                obj._reset_currency_caches  # noqa: SLF001
+                obj._reset_currency_caches
             )
 
         securities = RecordKeeper._deserialize_securities(
             data["securities"], currencies, progress_callable
         )
-        obj._securities = list(securities.values())  # noqa: SLF001
+        obj._securities = list(securities.values())
 
         account_groups = RecordKeeper._deserialize_account_groups(
             data["account_groups"]
         )
-        obj._account_groups = list(account_groups.values())  # noqa: SLF001
+        obj._account_groups = list(account_groups.values())
 
         accounts = RecordKeeper._deserialize_accounts(
             data["accounts"], account_groups, currencies
         )
-        obj._accounts = list(accounts.values())  # noqa: SLF001
-        obj._cash_accounts = [  # noqa: SLF001
+        obj._accounts = list(accounts.values())
+        obj._cash_accounts = [
             account for account in accounts.values() if isinstance(account, CashAccount)
         ]
-        obj._security_accounts = [  # noqa: SLF001
+        obj._security_accounts = [
             account
             for account in accounts.values()
             if isinstance(account, SecurityAccount)
         ]
 
-        obj._root_account_items = (  # noqa: SLF001
+        obj._root_account_items = (
             RecordKeeper._deserialize_root_account_items(
                 data["root_account_items"],
                 account_groups,
@@ -1556,42 +1556,42 @@ class RecordKeeper:
             )
         )
 
-        obj._payees = [  # noqa: SLF001
+        obj._payees = [
             Attribute(name, AttributeType.PAYEE) for name in data["payees"]
         ]
         payees: dict[str, Attribute] = {
             payee.name: payee
-            for payee in obj._payees  # noqa: SLF001
+            for payee in obj._payees
         }
-        obj._tags = [  # noqa: SLF001
+        obj._tags = [
             Attribute(name, AttributeType.TAG) for name in data["tags"]
         ]
         tags: dict[str, Attribute] = {
             tag.name: tag
-            for tag in obj._tags  # noqa: SLF001
+            for tag in obj._tags
         }
 
         categories = RecordKeeper._deserialize_categories(data["categories"])
-        obj._categories = list(categories.values())  # noqa: SLF001
+        obj._categories = list(categories.values())
 
-        obj._root_income_categories = (  # noqa: SLF001
+        obj._root_income_categories = (
             RecordKeeper._deserialize_root_categories(
                 data["root_income_categories"], categories
             )
         )
-        obj._root_expense_categories = (  # noqa: SLF001
+        obj._root_expense_categories = (
             RecordKeeper._deserialize_root_categories(
                 data["root_expense_categories"], categories
             )
         )
-        obj._root_dual_purpose_categories = (  # noqa: SLF001
+        obj._root_dual_purpose_categories = (
             RecordKeeper._deserialize_root_categories(
                 data["root_dual_purpose_categories"],
                 categories,
             )
         )
 
-        obj._transactions_uuid_dict = (  # noqa: SLF001
+        obj._transactions_uuid_dict = (
             RecordKeeper._deserialize_transactions(
                 data["transactions"],
                 accounts,
@@ -1607,29 +1607,29 @@ class RecordKeeper:
         # Sorting transactions here is useful because front-end can assume that
         # upon load of RecordKeeper._transactions, transactions are already sorted
         # in descending order
-        obj._transactions = sorted(  # noqa: SLF001
-            obj._transactions_uuid_dict.values(),  # noqa: SLF001
+        obj._transactions = sorted(
+            obj._transactions_uuid_dict.values(),
             key=lambda x: x.timestamp,
             reverse=True,
         )
 
-        for transaction in obj._transactions:  # noqa: SLF001
+        for transaction in obj._transactions:
             if isinstance(transaction, CashTransaction):
-                obj._cash_transactions.append(transaction)  # noqa: SLF001
+                obj._cash_transactions.append(transaction)
             elif isinstance(transaction, RefundTransaction):
-                obj._refund_transactions.append(transaction)  # noqa: SLF001
+                obj._refund_transactions.append(transaction)
             elif isinstance(transaction, CashTransfer):
-                obj._cash_transfers.append(transaction)  # noqa: SLF001
+                obj._cash_transfers.append(transaction)
             elif isinstance(transaction, SecurityTransaction):
-                obj._security_transactions.append(transaction)  # noqa: SLF001
+                obj._security_transactions.append(transaction)
             elif isinstance(transaction, SecurityTransfer):
-                obj._security_transfers.append(transaction)  # noqa: SLF001
+                obj._security_transfers.append(transaction)
             else:
                 raise TypeError(  # pragma: no cover
                     f"Unknown transaction type: {type(transaction)}"
                 )
 
-        for account in obj._accounts:  # noqa: SLF001
+        for account in obj._accounts:
             account: CashAccount | SecurityAccount
             account.allow_update_balance = True
             if isinstance(account, CashAccount):
@@ -1638,11 +1638,11 @@ class RecordKeeper:
                 account.update_securities()
 
         # this sort is needed because updating CashAccount balance can change timestamps
-        obj._transactions.sort(  # noqa: SLF001
+        obj._transactions.sort(
             key=lambda x: x.timestamp,
             reverse=True,
         )
-        obj._update_descriptions()  # noqa: SLF001
+        obj._update_descriptions()
 
         return obj
 

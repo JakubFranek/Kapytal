@@ -25,7 +25,7 @@ class UpdatePresenter:
         QApplication.processEvents()
         try:
             self._check_for_updates(silent=silent, timeout=timeout)
-        except:  # noqa: TRY302
+        except:  # noqa: TRY203
             raise
         finally:
             self._busy_dialog.close()

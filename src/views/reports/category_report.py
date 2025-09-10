@@ -175,7 +175,7 @@ class CategoryReport(CustomWidget, Ui_CategoryReport):
             else:
                 for column in range(1, self.treeView.model().columnCount() - 2):
                     self.treeView.hideColumn(column)
-        except:  # noqa: TRY302
+        except:  # noqa: TRY203
             raise
         finally:
             self._busy_dialog.close()

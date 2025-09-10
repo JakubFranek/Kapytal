@@ -81,7 +81,7 @@ class AttributeReportPresenter:
         QApplication.processEvents()
         try:
             self._create_periodic_report(period_format, title, attribute_type)
-        except:  # noqa: TRY302
+        except:  # noqa: TRY203
             raise
         finally:
             self._busy_dialog.close()

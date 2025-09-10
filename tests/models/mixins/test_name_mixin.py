@@ -8,7 +8,7 @@ from tests.models.test_assets.composites import everything_except
 
 
 class ConcreteNameMixin(NameMixin):
-    __slots__ = ("_allow_slash", "_allow_colon")
+    __slots__ = ("_allow_colon", "_allow_slash")
 
 
 @given(allow_slash=everything_except(bool))

@@ -87,16 +87,16 @@ class CashTransactionType(Enum):
 
 class CashAccount(Account):
     __slots__ = (
-        "_uuid",
-        "_currency",
-        "_initial_balance",
+        "_allow_colon",
+        "_allow_slash",
         "_balance_history",
         "_balances",
-        "_transactions",
+        "_currency",
+        "_initial_balance",
         "_name",
         "_parent",
-        "_allow_slash",
-        "_allow_colon",
+        "_transactions",
+        "_uuid",
         "allow_update_balance",
         "event_balance_updated",
     )
@@ -234,10 +234,10 @@ class CashAccount(Account):
         initial_balance = CashAmount(initial_balance_value, currency)
 
         obj = CashAccount(name, currency, initial_balance)
-        obj._uuid = UUID(data["uuid"])  # noqa: SLF001
+        obj._uuid = UUID(data["uuid"])
 
         if parent_path:
-            obj._parent = account_groups[parent_path]  # noqa: SLF001
+            obj._parent = account_groups[parent_path]
             obj._parent._children_dict[index] = obj  # noqa: SLF001
             obj._parent._update_children_tuple()  # noqa: SLF001
             obj.event_balance_updated.append(
@@ -281,8 +281,7 @@ class CashAccount(Account):
     ) -> None:
         if not isinstance(transaction, CashRelatedTransaction):
             raise TypeError(
-                "Parameter 'transaction' must be a subclass of "
-                "CashRelatedTransaction."
+                "Parameter 'transaction' must be a subclass of CashRelatedTransaction."
             )
         if not transaction.is_account_related(self):
             raise UnrelatedAccountError(
@@ -293,23 +292,23 @@ class CashAccount(Account):
 
 class CashTransaction(CashRelatedTransaction):
     __slots__ = (
-        "_uuid",
-        "_refunds",
-        "_refunded_ratio",
-        "_type",
-        "_payee",
-        "_category_amount_pairs",
-        "_categories",
-        "_tag_amount_pairs",
-        "_tags",
         "_account",
-        "_description",
-        "_datetime",
-        "_datetime_created",
-        "_timestamp",
         "_amount",
         "_amount_negative",
         "_are_tags_split",
+        "_categories",
+        "_category_amount_pairs",
+        "_datetime",
+        "_datetime_created",
+        "_description",
+        "_payee",
+        "_refunded_ratio",
+        "_refunds",
+        "_tag_amount_pairs",
+        "_tags",
+        "_timestamp",
+        "_type",
+        "_uuid",
     )
 
     def __init__(  # noqa: PLR0913
@@ -481,7 +480,7 @@ class CashTransaction(CashRelatedTransaction):
             tag_amount_pairs=decoded_tag_amount_pairs,
             uuid=UUID(data["uuid"]),
         )
-        obj._datetime_created = datetime.fromisoformat(  # noqa: SLF001
+        obj._datetime_created = datetime.fromisoformat(
             data["datetime_created"]
         )
         return obj
@@ -832,11 +831,11 @@ class CashTransaction(CashRelatedTransaction):
                 self._are_tags_split = True
         self._tags = frozenset(tags)
 
-    def _validate_datetime(self, datetime_: datetime) -> None:
-        super()._validate_datetime(datetime_)
+    def _validate_datetime(self, value: datetime) -> None:
+        super()._validate_datetime(value)
         if self.is_refunded:
             refund_datetimes = [refund.datetime_ for refund in self._refunds]
-            if any(refund_datetime < datetime_ for refund_datetime in refund_datetimes):
+            if any(refund_datetime < value for refund_datetime in refund_datetimes):
                 raise ValueError(
                     "The datetime_ of a refunded CashTransaction must "
                     "precede the datetimes of its refunds."
@@ -989,7 +988,7 @@ class CashTransaction(CashRelatedTransaction):
             return frozenset((CategoryType.INCOME, CategoryType.DUAL_PURPOSE))
         return frozenset((CategoryType.EXPENSE, CategoryType.DUAL_PURPOSE))
 
-    def _get_amount(self, account: CashAccount) -> CashAmount:  # noqa: ARG002
+    def _get_amount(self, account: CashAccount | None) -> CashAmount:  # noqa: ARG002
         if self.type_ == CashTransactionType.INCOME:
             return self._amount
         return self._amount_negative
@@ -1006,17 +1005,17 @@ class CashTransaction(CashRelatedTransaction):
 
 class CashTransfer(CashRelatedTransaction):
     __slots__ = (
-        "_uuid",
-        "_sender",
-        "_recipient",
         "_accounts",
-        "_amount_sent",
         "_amount_received",
-        "_description",
+        "_amount_sent",
         "_datetime",
         "_datetime_created",
-        "_timestamp",
+        "_description",
+        "_recipient",
+        "_sender",
         "_tags",
+        "_timestamp",
+        "_uuid",
     )
 
     def __init__(  # noqa: PLR0913
@@ -1121,7 +1120,7 @@ class CashTransfer(CashRelatedTransaction):
             amount_received=amount_received,
             uuid=UUID(data["uuid"]),
         )
-        obj._datetime_created = datetime.fromisoformat(  # noqa: SLF001
+        obj._datetime_created = datetime.fromisoformat(
             data["datetime_created"]
         )
         return obj
@@ -1295,7 +1294,9 @@ class CashTransfer(CashRelatedTransaction):
         if amount.currency != currency:
             raise CurrencyError("Invalid CashAmount currency.")
 
-    def _get_amount(self, account: CashAccount) -> CashAmount:
+    def _get_amount(self, account: CashAccount | None) -> CashAmount:
+        if account is None:
+            raise TypeError("Parameter 'account' must be a CashAccount.")
         if self.recipient == account:
             return self._amount_received
         return -self._amount_sent
@@ -1305,22 +1306,22 @@ class RefundTransaction(CashRelatedTransaction):
     """A refund which attaches itself to an expense CashTransaction"""
 
     __slots__ = (
-        "_uuid",
-        "_refunded_transaction",
-        "_refund_ratio",
-        "_type",
-        "_payee",
-        "_category_amount_pairs",
-        "_categories",
-        "_tag_amount_pairs",
-        "_tags",
-        "_are_tags_split",
         "_account",
-        "_description",
+        "_amount",
+        "_are_tags_split",
+        "_categories",
+        "_category_amount_pairs",
         "_datetime",
         "_datetime_created",
+        "_description",
+        "_payee",
+        "_refund_ratio",
+        "_refunded_transaction",
+        "_tag_amount_pairs",
+        "_tags",
         "_timestamp",
-        "_amount",
+        "_type",
+        "_uuid",
     )
 
     def __init__(  # noqa: PLR0913
@@ -1499,7 +1500,7 @@ class RefundTransaction(CashRelatedTransaction):
             tag_amount_pairs=decoded_tag_amount_pairs,
             uuid=UUID(data["uuid"]),
         )
-        obj._datetime_created = datetime.fromisoformat(  # noqa: SLF001
+        obj._datetime_created = datetime.fromisoformat(
             data["datetime_created"]
         )
         return obj
@@ -1688,10 +1689,10 @@ class RefundTransaction(CashRelatedTransaction):
         self._tags = frozenset(tags)
 
     def _validate_datetime(
-        self, datetime_: datetime, refunded_transaction_datetime: datetime
+        self, value: datetime, refunded_transaction_datetime: datetime
     ) -> None:
-        super()._validate_datetime(datetime_)
-        if datetime_ < refunded_transaction_datetime:
+        super()._validate_datetime(value)
+        if value < refunded_transaction_datetime:
             raise RefundPrecedesTransactionError(
                 "Supplied RefundTransaction.datetime_ precedes this "
                 "CashTransaction.datetime_."
@@ -1791,7 +1792,7 @@ class RefundTransaction(CashRelatedTransaction):
                     f"{min_value} and {max_value}."
                 )
 
-    def _get_amount(self, account: CashAccount) -> CashAmount:  # noqa: ARG002
+    def _get_amount(self, account: CashAccount | None) -> CashAmount:  # noqa: ARG002
         return self._amount
 
 

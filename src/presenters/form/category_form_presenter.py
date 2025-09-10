@@ -72,7 +72,7 @@ class CategoryFormPresenter:
             QApplication.processEvents()
         try:
             self._update_model_data()
-        except:  # noqa: TRY302
+        except:  # noqa: TRY203
             raise
         finally:
             if no_of_transactions >= BUSY_DIALOG_TRANSACTION_LIMIT:

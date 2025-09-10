@@ -172,7 +172,7 @@ class SunburstChartView(QChartView):
             series.setPieSize(self.min_size + size * (level + 0.5))
             self._chart.addSeries(series)
 
-    def create_series(  # noqa: PLR0913
+    def create_series(
         self,
         node: SunburstNode,
         parent_slice: QPieSlice | None,

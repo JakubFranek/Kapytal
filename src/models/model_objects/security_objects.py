@@ -52,22 +52,22 @@ class SharesType(Enum):
 
 class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
     __slots__ = (
-        "_uuid",
-        "_name",
-        "_symbol",
-        "_type",
+        "_allow_colon",
+        "_allow_slash",
         "_currency",
-        "_shares_decimals",
-        "_price_history",
-        "_price_history_pairs",
-        "_price_decimals",
         "_earliest_date",
         "_latest_date",
         "_latest_price",
-        "_allow_slash",
-        "_allow_colon",
-        "event_price_updated",
+        "_name",
+        "_price_decimals",
+        "_price_history",
+        "_price_history_pairs",
         "_recalculate_price_history_pairs",
+        "_shares_decimals",
+        "_symbol",
+        "_type",
+        "_uuid",
+        "event_price_updated",
     )
 
     NAME_MIN_LENGTH = 1
@@ -79,7 +79,7 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
     SYMBOL_ALLOWED_CHARS = string.ascii_letters + string.digits + "."
     SHARES_DECIMALS_MAX = 18
 
-    def __init__(  # noqa: PLR0913
+    def __init__(
         self,
         name: str,
         symbol: str,
@@ -299,7 +299,7 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
                 update=False,
             )
         obj.update_values()
-        obj._uuid = UUID(data["uuid"])  # noqa: SLF001
+        obj._uuid = UUID(data["uuid"])
         return obj
 
     def update_values(self) -> None:
@@ -342,17 +342,17 @@ class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
 
 class SecurityAccount(Account):
     __slots__ = (
-        "_uuid",
+        "_allow_colon",
+        "_allow_slash",
         "_balances",
-        "_transactions",
         "_name",
         "_parent",
-        "_allow_slash",
-        "_allow_colon",
+        "_related_securities",
+        "_securities_history",
+        "_transactions",
+        "_uuid",
         "allow_update_balance",
         "event_balance_updated",
-        "_securities_history",
-        "_related_securities",
     )
 
     def __init__(self, name: str, parent: AccountGroup | None = None) -> None:
@@ -515,14 +515,14 @@ class SecurityAccount(Account):
         parent_path, _, name = path.rpartition("/")
 
         obj = SecurityAccount(name)
-        obj._uuid = UUID(data["uuid"])  # noqa: SLF001
+        obj._uuid = UUID(data["uuid"])
 
         if parent_path:
             parent = account_group_dict[parent_path]
             parent._children_dict[index] = obj  # noqa: SLF001
             parent._update_children_tuple()  # noqa: SLF001
             obj.event_balance_updated.append(parent._update_balances)  # noqa: SLF001
-            obj._parent = parent  # noqa: SLF001
+            obj._parent = parent
         return obj
 
     def get_average_amount_per_share(
@@ -701,20 +701,20 @@ class SecurityRelatedTransaction(Transaction, ABC):
 
 class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
     __slots__ = (
-        "_uuid",
-        "_type",
-        "_security",
-        "_shares",
-        "_amount_per_share",
-        "_security_account",
-        "_cash_account",
-        "_description",
-        "_datetime",
-        "_datetime_created",
-        "_timestamp",
-        "_tags",
         "_amount",
         "_amount_negative",
+        "_amount_per_share",
+        "_cash_account",
+        "_datetime",
+        "_datetime_created",
+        "_description",
+        "_security",
+        "_security_account",
+        "_shares",
+        "_tags",
+        "_timestamp",
+        "_type",
+        "_uuid",
     )
 
     def __init__(  # noqa: PLR0913
@@ -832,7 +832,7 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
             cash_account=cash_account,
             uuid=UUID(data["uuid"]),
         )
-        obj._datetime_created = datetime.fromisoformat(  # noqa: SLF001
+        obj._datetime_created = datetime.fromisoformat(
             data["datetime_created"]
         )
         return obj
@@ -1069,7 +1069,7 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
         if amount.currency != currency:
             raise CurrencyError("Invalid CashAmount currency.")
 
-    def _get_amount(self, account: CashAccount) -> CashAmount:  # noqa: ARG002
+    def _get_amount(self, account: CashAccount | None) -> CashAmount:  # noqa: ARG002
         if self._type == SecurityTransactionType.BUY:
             return self._amount_negative
         return self._amount
@@ -1086,16 +1086,16 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
 
 class SecurityTransfer(SecurityRelatedTransaction):
     __slots__ = (
-        "_uuid",
-        "_sender",
-        "_recipient",
-        "_shares",
-        "_security",
         "_datetime",
         "_datetime_created",
-        "_timestamp",
         "_description",
+        "_recipient",
+        "_security",
+        "_sender",
+        "_shares",
         "_tags",
+        "_timestamp",
+        "_uuid",
     )
 
     def __init__(  # noqa: PLR0913
@@ -1182,7 +1182,7 @@ class SecurityTransfer(SecurityRelatedTransaction):
             recipient=recipient,
             uuid=UUID(data["uuid"]),
         )
-        obj._datetime_created = datetime.fromisoformat(  # noqa: SLF001
+        obj._datetime_created = datetime.fromisoformat(
             data["datetime_created"]
         )
         return obj

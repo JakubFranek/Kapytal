@@ -36,6 +36,6 @@ def convert_datetime_format_to_qt(datetime_format: str) -> str:
     now_qt = QDateTime(now)
     try:
         now_qt.toString(datetime_format)
-    except Exception as exception:  # noqa: BLE001
+    except Exception as exception:
         raise ValueError("Invalid datetime format specified.") from exception
     return datetime_format

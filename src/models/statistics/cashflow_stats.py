@@ -51,21 +51,21 @@ class Period:
 
 class CashFlowStats:
     __slots__ = (
-        "incomes",
-        "expenses",
-        "refunds",
-        "inward_transfers",
-        "outward_transfers",
-        "initial_balances",
-        "delta_total",
         "delta_neutral",
         "delta_performance",
-        "delta_performance_securities",
         "delta_performance_currencies",
+        "delta_performance_securities",
+        "delta_total",
+        "expenses",
+        "incomes",
         "inflows",
+        "initial_balances",
+        "inward_transfers",
         "outflows",
-        "savings_rate",
+        "outward_transfers",
         "period",
+        "refunds",
+        "savings_rate",
     )
 
     def __init__(self, base_currency: Currency) -> None:
@@ -347,8 +347,7 @@ def get_periods(
         earliest_period_name = start_date.strftime("%b %Y")
         earliest_period_start = start_date
         earliest_period_end = get_last_day_of_month(earliest_period_start)
-        if earliest_period_end > end_date:
-            earliest_period_end = end_date
+        earliest_period_end = min(earliest_period_end, end_date)
         earliest_period = Period(
             name=earliest_period_name,
             start=earliest_period_start,
@@ -358,8 +357,7 @@ def get_periods(
         while end_date > periods[-1].end:
             period_start = periods[-1].end + timedelta(days=1)
             period_end = get_last_day_of_month(period_start)
-            if period_end > end_date:
-                period_end = end_date
+            period_end = min(period_end, end_date)
             period_name = period_start.strftime("%b %Y")
             period = Period(
                 name=period_name,
@@ -371,8 +369,7 @@ def get_periods(
         earliest_period_name = start_date.strftime("%Y")
         earliest_period_start = start_date
         earliest_period_end = start_date.replace(month=12, day=31)
-        if earliest_period_end > end_date:
-            earliest_period_end = end_date
+        earliest_period_end = min(earliest_period_end, end_date)
         earliest_period = Period(
             name=earliest_period_name,
             start=earliest_period_start,
@@ -384,8 +381,7 @@ def get_periods(
             period_end = period_start.replace(year=period_start.year + 1) - timedelta(
                 days=1
             )
-            if period_end > end_date:
-                period_end = end_date
+            period_end = min(period_end, end_date)
             period_name = period_start.strftime("%Y")
             period = Period(
                 name=period_name,

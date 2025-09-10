@@ -15,22 +15,22 @@ from src.models.model_objects.currency_objects import CashAmount, Currency
 
 class AccountGroup(NameMixin, BalanceMixin, JSONSerializableMixin, UUIDMixin):
     __slots__ = (
-        "_uuid",
+        "_allow_colon",
+        "_allow_slash",
         "_balances",
-        "_parent",
         "_children_dict",
         "_children_tuple",
         "_name",
-        "_allow_slash",
-        "_allow_colon",
+        "_parent",
+        "_uuid",
         "event_balance_updated",
     )
 
     def __init__(self, name: str, parent: "AccountGroup | None" = None) -> None:
         super().__init__(name=name, allow_slash=False)
         self.parent = parent
-        self._children_dict: dict[int, "AccountGroup" | Account] = {}
-        self._children_tuple: tuple["AccountGroup" | Account, ...] = ()
+        self._children_dict: dict[int, AccountGroup | Account] = {}
+        self._children_tuple: tuple[AccountGroup | Account, ...] = ()
 
     @property
     def parent(self) -> "AccountGroup | None":
@@ -180,9 +180,9 @@ class AccountGroup(NameMixin, BalanceMixin, JSONSerializableMixin, UUIDMixin):
         index: int | None = data["index"]
         parent_path, _, name = path.rpartition("/")
         obj = AccountGroup(name)
-        obj._uuid = UUID(data["uuid"])  # noqa: SLF001
+        obj._uuid = UUID(data["uuid"])
         if parent_path and index is not None:
-            obj._parent = account_groups[parent_path]  # noqa: SLF001
+            obj._parent = account_groups[parent_path]
             obj._parent._children_dict[index] = obj  # noqa: SLF001
             obj._parent._update_children_tuple()  # noqa: SLF001
             obj.event_balance_updated.append(

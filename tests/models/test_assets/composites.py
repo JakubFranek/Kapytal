@@ -233,6 +233,7 @@ def categories(
     category_type: CategoryType | None = None,
 ) -> Category:
     name = draw(names())
+    assume(name.lower() != "total")
 
     if transaction_type is None:
         if category_type is None:

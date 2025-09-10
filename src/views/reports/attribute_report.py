@@ -185,7 +185,7 @@ class AttributeReport(CustomWidget, Ui_AttributeReport):
             else:
                 for column in range(self.tableView.model().columnCount() - 2):
                     self.tableView.hideColumn(column)
-        except:  # noqa: TRY302
+        except:  # noqa: TRY203
             raise
         finally:
             self._busy_dialog.close()

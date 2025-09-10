@@ -31,7 +31,7 @@ all_types = frozenset(TYPE_NAME_DICT)
 
 
 class TypeFilter(BaseTransactionFilter):
-    __slots__ = ("_types", "_mode", "_enum_types", "_transaction_types", "_type_names")
+    __slots__ = ("_enum_types", "_mode", "_transaction_types", "_type_names", "_types")
 
     def __init__(
         self,

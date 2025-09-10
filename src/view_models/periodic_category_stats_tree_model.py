@@ -84,11 +84,11 @@ class PeriodicCategoryStatsTreeModel(QAbstractItemModel):
             row_data: list[Decimal] = []
             row_transactions: list[tuple[CashTransaction | RefundTransaction]] = []
 
-            for period in periodic_stats:
-                stats = _get_category_stats(periodic_stats[period], category.path)
-                if stats is not None:
-                    row_data.append(stats.balance.value_rounded)
-                    row_transactions.append(tuple(stats.transactions))
+            for stats in periodic_stats.values():
+                stat = _get_category_stats(stats, category.path)
+                if stat is not None:
+                    row_data.append(stat.balance.value_rounded)
+                    row_transactions.append(tuple(stat.transactions))
                 else:
                     row_data.append(Decimal(0))
                     row_transactions.append(())
@@ -127,19 +127,15 @@ class PeriodicCategoryStatsTreeModel(QAbstractItemModel):
         periodic_expense_totals_transactions: list[
             list[CashTransaction | RefundTransaction]
         ] = []
-        for period in periodic_totals:
-            periodic_totals_row_data.append(
-                periodic_totals[period].balance.value_rounded
-            )
+        for period, total in periodic_totals.items():
+            periodic_totals_row_data.append(total.balance.value_rounded)
             periodic_income_totals_row_data.append(
                 periodic_income_totals[period].balance.value_rounded
             )
             periodic_expense_totals_row_data.append(
                 periodic_expense_totals[period].balance.value_rounded
             )
-            periodic_totals_transactions.append(
-                tuple(periodic_totals[period].transactions)
-            )
+            periodic_totals_transactions.append(tuple(total.transactions))
             periodic_income_totals_transactions.append(
                 tuple(periodic_income_totals[period].transactions)
             )
@@ -326,7 +322,7 @@ class PeriodicCategoryStatsTreeModel(QAbstractItemModel):
             prefix = "Σ "
         else:
             prefix = ""
-        return prefix + f"{row_object.data[column-1]:n}"
+        return prefix + f"{row_object.data[column - 1]:n}"
 
     def _get_user_role_data(self, column: int, row_object: RowObject) -> str | None:
         if column == 0:

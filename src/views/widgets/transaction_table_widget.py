@@ -399,7 +399,7 @@ class TransactionTableWidget(QWidget, Ui_TransactionTableWidget):
                 f"order={sort_order.name}"
             )
             self.tableView.sortByColumn(section, sort_order)
-        except:  # noqa: TRY302
+        except:  # noqa: TRY203
             raise
         finally:
             self._busy_dialog.close()

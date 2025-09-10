@@ -8,7 +8,7 @@ from src.models.transaction_filters.base_transaction_filter import (
 
 
 class DescriptionFilter(BaseTransactionFilter):
-    __slots__ = ("_regex_pattern", "_mode", "_flags")
+    __slots__ = ("_flags", "_mode", "_regex_pattern")
 
     def __init__(
         self, regex_pattern: str, mode: FilterMode, *, ignore_case: bool = True

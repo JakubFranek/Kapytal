@@ -52,7 +52,7 @@ class Currency(CopyableMixin, JSONSerializableMixin):
             raise ValueError("Currency.decimals must not be negative.")
         self._decimals = decimals
 
-        self._exchange_rates: dict[Currency, "ExchangeRate"] = {}
+        self._exchange_rates: dict[Currency, ExchangeRate] = {}
         self._factor_cache: dict[str, Decimal] = {}
         self._zero_amount: CashAmount = CashAmount(0, self)
 
@@ -206,15 +206,15 @@ class Currency(CopyableMixin, JSONSerializableMixin):
 
 class ExchangeRate(CopyableMixin, JSONSerializableMixin):
     __slots__ = (
+        "_earliest_date",
+        "_latest_date",
+        "_latest_rate",
         "_primary_currency",
-        "_secondary_currency",
+        "_rate_decimals",
         "_rate_history",
         "_rate_history_pairs",
-        "_rate_decimals",
-        "_latest_rate",
-        "_latest_date",
-        "_earliest_date",
         "_recalculate_rate_history_pairs",
+        "_secondary_currency",
         "event_reset_currency_caches",
     )
 
@@ -443,12 +443,12 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
     ROUNDED_MAX_ZEROES = 4
 
     __slots__ = (
-        "_raw_value",
         "_currency",
-        "_value_rounded",
-        "_value_normalized",
-        "_str_rounded",
+        "_raw_value",
         "_str_normalized",
+        "_str_rounded",
+        "_value_normalized",
+        "_value_rounded",
     )
 
     def __init__(self, value: Decimal | int | str, currency: Currency) -> None:

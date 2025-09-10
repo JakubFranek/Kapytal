@@ -609,7 +609,7 @@ class TransactionsPresenter:
             self._view.set_filter_tooltip(
                 self._transaction_filter_form_presenter.active_filter_names
             )
-        except:  # noqa: TRY302
+        except:  # noqa: TRY203
             raise
         finally:
             self._busy_dialog.close()
