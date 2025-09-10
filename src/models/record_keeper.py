@@ -340,7 +340,7 @@ class RecordKeeper:
         self._security_accounts.append(account)
         self._security_accounts.sort(key=lambda account: account.path.lower())
 
-    def add_cash_transaction(  # noqa: PLR0913
+    def add_cash_transaction(
         self,
         description: str,
         datetime_: datetime,
@@ -379,7 +379,7 @@ class RecordKeeper:
         self._transactions_uuid_dict[transaction.uuid] = transaction
         self._add_description(transaction.description)
 
-    def add_cash_transfer(  # noqa: PLR0913
+    def add_cash_transfer(
         self,
         description: str,
         datetime_: datetime,
@@ -410,7 +410,7 @@ class RecordKeeper:
         transfer.add_tags(tags)
         self._add_description(transfer.description)
 
-    def add_refund(  # noqa: PLR0913
+    def add_refund(
         self,
         description: str,
         datetime_: datetime,
@@ -456,7 +456,7 @@ class RecordKeeper:
         self._transactions_uuid_dict[refund.uuid] = refund
         self._add_description(refund.description)
 
-    def add_security_transaction(  # noqa: PLR0913
+    def add_security_transaction(
         self,
         description: str,
         datetime_: datetime,
@@ -492,7 +492,7 @@ class RecordKeeper:
         transaction.add_tags(tags)
         self._add_description(transaction.description)
 
-    def add_security_transfer(  # noqa: PLR0913
+    def add_security_transfer(
         self,
         description: str,
         datetime_: datetime,
@@ -523,7 +523,7 @@ class RecordKeeper:
         transaction.add_tags(tags)
         self._add_description(transaction.description)
 
-    def edit_cash_transactions(  # noqa: PLR0913
+    def edit_cash_transactions(
         self,
         transaction_uuids: Collection[UUID],
         description: str | None = None,
@@ -630,7 +630,7 @@ class RecordKeeper:
             )
             self._add_description(transaction.description)
 
-    def edit_cash_transfers(  # noqa: PLR0913
+    def edit_cash_transfers(
         self,
         transaction_uuids: Collection[UUID],
         description: str | None = None,
@@ -712,7 +712,7 @@ class RecordKeeper:
                 transfer.clear_tags()
                 transfer.add_tags(tags)
 
-    def edit_refunds(  # noqa: PLR0913
+    def edit_refunds(
         self,
         transaction_uuids: Collection[UUID],
         description: str | None = None,
@@ -778,7 +778,7 @@ class RecordKeeper:
             )
             self._add_description(refund.description)
 
-    def edit_security_transactions(  # noqa: PLR0913
+    def edit_security_transactions(
         self,
         transaction_uuids: Collection[UUID],
         description: str | None = None,
@@ -878,7 +878,7 @@ class RecordKeeper:
                 transaction.clear_tags()
                 transaction.add_tags(tags)
 
-    def edit_security_transfers(  # noqa: PLR0913
+    def edit_security_transfers(
         self,
         transaction_uuids: Collection[UUID],
         description: str | None = None,
@@ -1755,7 +1755,7 @@ class RecordKeeper:
         return [categories[path] for path in root_category_paths]
 
     @staticmethod
-    def _deserialize_transactions(  # noqa: PLR0913
+    def _deserialize_transactions(
         transaction_dicts: Collection[dict[str, Any]],
         accounts: dict[str, Account],
         payees: dict[str, Attribute],

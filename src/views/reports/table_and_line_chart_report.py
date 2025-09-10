@@ -35,7 +35,7 @@ class TableAndLineChartReport(CustomWidget, Ui_TableAndLineChartReport):
         self.verticalLayout.setStretch(0, 1)
         self.verticalLayout.setStretch(1, 0)
 
-    def load_data(  # noqa: PLR0913
+    def load_data(
         self,
         x: Sequence,
         y: Sequence,

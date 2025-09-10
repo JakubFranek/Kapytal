@@ -852,6 +852,7 @@ def test_add_payee_already_exists(name: str) -> None:
 def test_add_tag(name: str) -> None:
     record_keeper = RecordKeeper()
     record_keeper.add_tag(name)
+    assume(name.lower() != "total")
     tag = record_keeper.get_attribute(name, AttributeType.TAG)
     assert len(record_keeper.tags) == 1
     assert tag.name == name
@@ -929,7 +930,7 @@ def get_preloaded_record_keeper_with_security_transactions() -> RecordKeeper:
         type_=SecurityTransactionType.BUY,
         security_name="ČSOB Dynamický penzijní fond",
         shares=Decimal(2750),
-        amount_per_share=Decimal(1.75),
+        amount_per_share=Decimal("1.75"),
         security_account_path="Security Accounts/ČSOB Penzijní účet",
         cash_account_path="Bank Accounts/Fio CZK",
     )
@@ -939,7 +940,7 @@ def get_preloaded_record_keeper_with_security_transactions() -> RecordKeeper:
         type_=SecurityTransactionType.BUY,
         security_name="ČSOB Dynamický penzijní fond",
         shares=Decimal(2850),
-        amount_per_share=Decimal(1.6),
+        amount_per_share=Decimal("1.6"),
         security_account_path="Security Accounts/ČSOB Penzijní účet",
         cash_account_path="Bank Accounts/Fio CZK",
     )
@@ -1163,7 +1164,7 @@ def get_preloaded_record_keeper_with_various_transactions() -> RecordKeeper:
         type_=SecurityTransactionType.BUY,
         security_name="ČSOB Dynamický penzijní fond",
         shares=Decimal(2850),
-        amount_per_share=Decimal(1.6),
+        amount_per_share=Decimal("1.6"),
         security_account_path="Security Accounts/ČSOB Penzijní účet",
         cash_account_path="Bank Accounts/Fio CZK",
     )

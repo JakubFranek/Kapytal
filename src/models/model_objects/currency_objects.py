@@ -12,7 +12,7 @@ from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
 from src.models.user_settings import user_settings
 from src.presenters.utilities.event import Event
 from src.utilities.formatting import quantizers
-from src.utilities.numbers import get_decimal_exponent
+from src.utilities.number_utils import get_decimal_exponent
 
 # IDEA: add CurrencyManager class to take care of Currency cache resets
 # and offload RecordKeeper methods to CurrencyManager

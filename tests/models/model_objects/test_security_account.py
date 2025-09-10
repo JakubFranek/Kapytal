@@ -95,7 +95,7 @@ def test_get_shares_invalid_type(
     shares_b=st.integers(min_value=1, max_value=1e6),
     exchange_rate=valid_decimals(min_value=0.01, max_value=1e6, decimals=2),
 )
-def test_get_balance(  # noqa: PLR0913
+def test_get_balance(
     currency_a: Currency,
     currency_b: Currency,
     price_a: Decimal,

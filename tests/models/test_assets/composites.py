@@ -134,7 +134,7 @@ def cash_accounts(
 
 
 @st.composite
-def cash_transactions(  # noqa: PLR0913
+def cash_transactions(
     draw: st.DrawFn,
     currency: Currency | None = None,
     min_datetime: datetime = MIN_DATETIME,
@@ -401,7 +401,7 @@ def security_accounts(draw: st.DrawFn) -> SecurityAccount:
 
 
 @st.composite
-def security_transactions(  # noqa: PLR0913
+def security_transactions(
     draw: st.DrawFn,
     min_datetime: datetime = MIN_DATETIME,
     max_datetime: datetime = datetime.max,

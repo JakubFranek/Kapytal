@@ -27,7 +27,8 @@ def check_for_nonexistent_attributes(
     if nonexistent_names:
         attribute_type_name = attribute_type.name.title()
         logging.info(
-            f"Nonexistent {attribute_type_name} names entered, asking user whether to proceed"
+            f"Nonexistent {attribute_type_name} names entered, "
+            "asking user whether to proceed"
         )
 
         existing_names_dict: dict[str, set[str]] = {}
@@ -90,10 +91,14 @@ def check_for_nonexistent_categories(
     ask the user if they want to create new Categories or not.
     Returns True if the dialog can proceed, False if abort."""
 
-    nonexistent_paths = []
-    for category in category_names:
-        if category and category not in (category_.path for category_ in categories):
-            nonexistent_paths.append(category)
+    existing_category_paths = {category.path for category in categories}
+
+    nonexistent_paths = [
+        category
+        for category in category_names
+        if category and category not in existing_category_paths
+    ]
+
     if nonexistent_paths:
         nonexistent_categories_str = ", ".join(nonexistent_paths)
         logging.info(

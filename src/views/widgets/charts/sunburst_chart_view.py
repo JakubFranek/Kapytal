@@ -91,7 +91,7 @@ class SunburstNode:
         text = text + f" {self.unit}" if self.unit else text
         for ancestor in self.get_ancestors():
             text += (
-                f"\n{format_percentage(100*self.value/ancestor.value)} "
+                f"\n{format_percentage(100 * self.value / ancestor.value)} "
                 f"of {ancestor.path}"
             )
 
@@ -213,8 +213,8 @@ class SunburstChartView(QChartView):
             self.series_dict[level] = QPieSeries()
         self.series_dict[level].append(slice_)
 
-        for index, child in enumerate(node.children):
-            self.create_series(child, slice_, level + 1, index)
+        for index_, child in enumerate(node.children):
+            self.create_series(child, slice_, level + 1, index_)
 
         sum_children = sum(child.value for child in node.children)
         if len(node.children) > 0 and sum_children < node.value:

@@ -114,9 +114,7 @@ class MainView(QMainWindow, Ui_MainWindow):
         message_box.setWindowIcon(icons.question)
         message_box.setDefaultButton(QMessageBox.StandardButton.No)
         reply = message_box.exec()
-        if reply == QMessageBox.StandardButton.Yes:
-            return True
-        return False
+        return reply == QMessageBox.StandardButton.Yes
 
     def set_save_status(self, current_file_path: Path | None, *, unsaved: bool) -> None:
         if unsaved is True:

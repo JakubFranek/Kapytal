@@ -2,9 +2,11 @@ import logging
 from abc import ABC, abstractmethod
 from collections.abc import Collection
 from enum import Enum
-from typing import Any
+from typing import Any, ParamSpec
 
 from src.models.base_classes.transaction import Transaction
+
+P = ParamSpec("P")
 
 
 class FilterMode(Enum):
@@ -21,8 +23,8 @@ class BaseTransactionFilter(ABC):
     def __init__(
         self,
         mode: FilterMode,
-        *args: Any,
-        **kwargs: Any,  # noqa: ANN401
+        *args: P.args,
+        **kwargs: P.kwargs,
     ) -> None:
         super().__init__(*args, **kwargs)
 
@@ -46,7 +48,7 @@ class BaseTransactionFilter(ABC):
     def __hash__(self) -> int:
         return hash(self.members)
 
-    def __eq__(self, __o: object) -> bool:
+    def __eq__(self, /, __o: object) -> bool:
         """Filters are considered equal if they are of the same type and
         both are OFF or their members are equal."""
 

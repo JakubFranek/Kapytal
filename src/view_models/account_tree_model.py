@@ -65,7 +65,7 @@ class AccountTreeNode:
         "uuid",
     )
 
-    def __init__(  # noqa: PLR0913
+    def __init__(
         self,
         name: str,
         path: str,
@@ -90,7 +90,7 @@ class AccountTreeNode:
     def __repr__(self) -> str:
         return f"AccountTreeNode({self.path})"
 
-    def __eq__(self, __o: object) -> bool:
+    def __eq__(self, /, __o: object) -> bool:
         if not isinstance(__o, AccountTreeNode):
             return False
         return self.uuid == __o.uuid

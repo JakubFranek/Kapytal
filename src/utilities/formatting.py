@@ -2,7 +2,7 @@ import locale
 import numbers
 from decimal import Decimal
 
-from src.utilities.numbers import get_decimal_exponent
+from src.utilities.number_utils import get_decimal_exponent
 
 DECIMAL_ONE = Decimal(1)
 
@@ -21,7 +21,7 @@ def format_percentage(
     return_text = f"{format_real(number, decimals)} %"
     if len(return_text) <= max_length:
         return return_text
-    return f"{locale.format_string(f"%.{decimals}e", number, grouping=True)} %"
+    return f"{locale.format_string(f'%.{decimals}e', number, grouping=True)} %"
 
 
 def convert_decimal_to_string(

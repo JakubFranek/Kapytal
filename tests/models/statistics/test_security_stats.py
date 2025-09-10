@@ -714,7 +714,7 @@ def test_security_stats_data() -> None:
     assert total_stats.return_pct_unrealized_base == Decimal(260)
     assert total_stats.return_pct_unrealized_native == Decimal(300)
 
-    assert total_stats.return_pct_realized_base == Decimal(84.5)
+    assert total_stats.return_pct_realized_base == Decimal("84.5")
     assert total_stats.return_pct_realized_native == Decimal(105)
 
     assert total_stats.return_pct_total_base == Decimal("172.25")

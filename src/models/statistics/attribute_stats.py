@@ -20,9 +20,9 @@ class AttributeStats:
     attribute: Attribute
     no_of_transactions: int
     balance: CashAmount | None
-    transactions: set[
-        CashTransaction | RefundTransaction | SecurityTransaction
-    ] = field(default_factory=set)
+    transactions: set[CashTransaction | RefundTransaction | SecurityTransaction] = (
+        field(default_factory=set)
+    )
 
 
 def calculate_periodic_totals_and_averages(
@@ -41,17 +41,17 @@ def calculate_periodic_totals_and_averages(
         for stat in stats
     }
 
-    for period in periodic_stats:
+    for period, stats in periodic_stats.items():
         total_period_balance = TransactionBalance(currency.zero_amount)
 
-        for stats in periodic_stats[period]:
+        for stat in stats:
             total_period_balance.transactions = total_period_balance.transactions.union(
-                stats.transactions
+                stat.transactions
             )
-            total_period_balance.balance += stats.balance
+            total_period_balance.balance += stat.balance
 
-            attribute_totals[stats.attribute].add_transaction_balance(
-                stats.transactions, stats.balance
+            attribute_totals[stat.attribute].add_transaction_balance(
+                stat.transactions, stat.balance
             )
         period_totals[period] = total_period_balance
 
@@ -82,10 +82,8 @@ def calculate_periodic_attribute_stats(
         transactions_by_period[key].append(transaction)
 
     stats_dict: dict[str, tuple[AttributeStats, ...]] = {}
-    for period in transactions_by_period:
-        period_stats = calculate_attribute_stats(
-            transactions_by_period[period], base_currency, all_attributes
-        )
+    for period, stats in transactions_by_period.items():
+        period_stats = calculate_attribute_stats(stats, base_currency, all_attributes)
         stats_dict[period] = tuple(period_stats.values())
 
     return stats_dict

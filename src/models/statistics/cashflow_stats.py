@@ -33,7 +33,7 @@ class Period:
     start: date
     end: date
 
-    def __eq__(self, __value: object) -> bool:
+    def __eq__(self, /, __value: object) -> bool:
         if not isinstance(__value, Period):
             return NotImplemented
         return (

@@ -15,7 +15,7 @@ def test_value_table_model(qtbot: QtBot, qtmodeltester: ModelTester) -> None:
     model = ValueTableModel(
         view=list_view, proxy=QSortFilterProxyModel(), type_=ValueType.EXCHANGE_RATE
     )
-    data = [(date(2022, 1, 1), Decimal(1.0)), (date(2022, 1, 2), Decimal(2.0))]
+    data = [(date(2022, 1, 1), Decimal("1.0")), (date(2022, 1, 2), Decimal("2.0"))]
     model.load_data(data)
 
     qtmodeltester.check(model)

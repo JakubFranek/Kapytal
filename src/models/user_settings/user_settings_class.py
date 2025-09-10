@@ -4,7 +4,7 @@ from collections.abc import Collection, Sequence
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Self
+from typing import Any
 from zoneinfo import ZoneInfo
 
 from src.models.mixins.copyable_mixin import CopyableMixin

@@ -56,7 +56,7 @@ class SecurityTransactionDialog(CustomDialog, Ui_SecurityTransactionDialog):
     signal_do_and_continue = pyqtSignal()
     signal_request_shares_suffix_update = pyqtSignal()
 
-    def __init__(  # noqa: PLR0913
+    def __init__(
         self,
         parent: QWidget,
         securities: Collection[Security],

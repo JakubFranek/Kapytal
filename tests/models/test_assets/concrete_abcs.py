@@ -1,6 +1,6 @@
 from collections.abc import Collection
 from datetime import date, datetime
-from typing import Any, Self
+from typing import Any
 
 from src.models.base_classes.account import Account
 from src.models.base_classes.transaction import Transaction

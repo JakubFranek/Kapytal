@@ -181,7 +181,7 @@ class TransactionFilter(CopyableMixin):
     def __hash__(self) -> int:
         return hash(self.members)
 
-    def __eq__(self, __o: object) -> bool:
+    def __eq__(self, /, __o: object) -> bool:
         if not isinstance(__o, TransactionFilter):
             return NotImplemented
         return self.members == __o.members

@@ -19,7 +19,7 @@ from src.views.utilities.helper_functions import (
 class SetSecurityPriceDialog(CustomDialog, Ui_SetSecurityPriceDialog):
     signal_ok = pyqtSignal()
 
-    def __init__(  # noqa: PLR0913
+    def __init__(
         self,
         date_: date,
         max_date: date,

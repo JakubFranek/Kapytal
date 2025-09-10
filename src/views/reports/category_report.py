@@ -233,10 +233,10 @@ def _create_node(
             child_node = _create_node(item, all_stats, level + 1, node)
             node.children.append(child_node)
     child_value_sum = sum(child.value for child in node.children)
-    if child_value_sum > node.value:
-        # this is needed because CategoryStats can report a different number than
-        # the sum of children (due to refunds), as children are pre-separated by whether
-        # they are positive or negative but CategoryStats sum all balances together
-        node.value = child_value_sum
+
+    # this is needed because CategoryStats can report a different number than
+    # the sum of children (due to refunds), as children are pre-separated by whether
+    # they are positive or negative but CategoryStats sum all balances together
+    node.value = max(node.value, child_value_sum)
     node.children.sort(key=lambda x: abs(x.value), reverse=True)
     return node

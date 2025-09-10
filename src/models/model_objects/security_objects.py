@@ -30,7 +30,7 @@ from src.models.model_objects.currency_objects import (
 )
 from src.models.user_settings import user_settings
 from src.presenters.utilities.event import Event
-from src.utilities.numbers import get_decimal_exponent
+from src.utilities.number_utils import get_decimal_exponent
 
 
 class PriceNotFoundError(ValueError):
@@ -717,7 +717,7 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
         "_uuid",
     )
 
-    def __init__(  # noqa: PLR0913
+    def __init__(
         self,
         description: str,
         datetime_: datetime,
@@ -832,9 +832,7 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
             cash_account=cash_account,
             uuid=UUID(data["uuid"]),
         )
-        obj._datetime_created = datetime.fromisoformat(
-            data["datetime_created"]
-        )
+        obj._datetime_created = datetime.fromisoformat(data["datetime_created"])
         return obj
 
     def set_attributes(
@@ -1098,7 +1096,7 @@ class SecurityTransfer(SecurityRelatedTransaction):
         "_uuid",
     )
 
-    def __init__(  # noqa: PLR0913
+    def __init__(
         self,
         description: str,
         datetime_: datetime,
@@ -1182,9 +1180,7 @@ class SecurityTransfer(SecurityRelatedTransaction):
             recipient=recipient,
             uuid=UUID(data["uuid"]),
         )
-        obj._datetime_created = datetime.fromisoformat(
-            data["datetime_created"]
-        )
+        obj._datetime_created = datetime.fromisoformat(data["datetime_created"])
         return obj
 
     def set_attributes(

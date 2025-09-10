@@ -52,7 +52,7 @@ from tests.models.test_assets.constants import MIN_DATETIME
     payee=attributes(AttributeType.PAYEE),
     data=st.data(),
 )
-def test_creation(  # noqa: PLR0913
+def test_creation(
     description: str,
     datetime_: datetime,
     type_: CashTransactionType,

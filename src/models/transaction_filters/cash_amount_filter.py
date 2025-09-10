@@ -64,7 +64,7 @@ class CashAmountFilter(BaseTransactionFilter):
             f"mode={self._mode.name})"
         )
 
-    def __eq__(self, __o: object) -> bool:
+    def __eq__(self, /, __o: object) -> bool:
         if __o is None and self.mode == FilterMode.OFF:
             return True
         if not isinstance(__o, type(self)):
@@ -127,7 +127,7 @@ class CashAmountFilter(BaseTransactionFilter):
             raise TypeError("Parameter 'minimum' must be a CashAmount.")
         if mode != FilterMode.OFF and not isinstance(maximum, CashAmount):
             raise TypeError("Parameter 'maximum' must be a CashAmount.")
-        if type(minimum) != type(maximum):
+        if not isinstance(maximum, type(minimum)):
             raise TypeError(
                 "Parameters 'minimum' and 'maximum' must be of the same type."
             )

@@ -154,13 +154,11 @@ class DateLineChartCallout(QGraphicsItem):
         # if the anchor point is close to the left edge of the chart,
         # move text rectangle to the right
         if abs(x_anchor - x_max) < 4 * abs(x_anchor - x_min):
-            # self._textRect.translate(-1.35 * self._textRect.width(), 5)
             self._textRect.translate(
                 -self._textRect.width() - 20, -self._textRect.height() - 10
             )
         else:
             self._textRect.moveTopLeft(QPointF(20, -self._textRect.height() - 10))
-            # self._textRect.translate(5, 5)
 
         self.prepareGeometryChange()
         self._rect = self._textRect.adjusted(-5, -5, 5, 5)

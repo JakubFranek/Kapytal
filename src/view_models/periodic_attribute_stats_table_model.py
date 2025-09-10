@@ -68,10 +68,10 @@ class PeriodicAttributeStatsTableModel(QAbstractTableModel):
         )
         for attribute in attributes:
             row: list[Cell] = []
-            for period in periodic_stats:
-                stats = _get_attribute_stats(periodic_stats[period], attribute.name)
-                if stats is not None:
-                    row.append(Cell(stats.balance.value_rounded, stats.transactions))
+            for stats in periodic_stats.values():
+                stat = _get_attribute_stats(stats, attribute.name)
+                if stat is not None:
+                    row.append(Cell(stat.balance.value_rounded, stat.transactions))
                 else:
                     row.append(Cell(Decimal(0)))
             row.append(

@@ -67,7 +67,7 @@ class DateLineChartView(QChartView):
         self.setMouseTracking(True)
         self.setRubberBand(QChartView.RubberBand.RectangleRubberBand)
 
-    def load_data(  # noqa: PLR0913
+    def load_data(
         self,
         x: Sequence[date],
         y: Sequence[numbers.Real],
