@@ -37,6 +37,7 @@ class CategoryReport(CustomWidget, Ui_CategoryReport):
     signal_recalculate_report = pyqtSignal()
     signal_selection_changed = pyqtSignal()
     signal_sunburst_slice_clicked = pyqtSignal(str)
+    signal_bar_clicked = pyqtSignal(str)
     signal_search_text_changed = pyqtSignal(str)
 
     def __init__(
@@ -109,6 +110,7 @@ class CategoryReport(CustomWidget, Ui_CategoryReport):
         self.sunburst_chart_view.signal_slice_clicked.connect(
             self.signal_sunburst_slice_clicked
         )
+        self.bar_chart_view.signal_bar_clicked.connect(self.signal_bar_clicked)
 
         self.searchLineEdit.textChanged.connect(self.signal_search_text_changed)
         self.searchLineEdit.addAction(
@@ -151,6 +153,8 @@ class CategoryReport(CustomWidget, Ui_CategoryReport):
 
         periods = tuple(income_periodic_stats.keys())
         self._setup_sunburst_combobox(periods)
+        # Updates bar chart without user needing to update combobox manually
+        self._bar_combobox_text_changed()
 
     def set_recalculate_report_action_state(self, *, enabled: bool) -> None:
         self.actionRecalculate_Report.setEnabled(enabled)
@@ -294,7 +298,7 @@ def _convert_category_stats_to_bar_data(
                 continue
             for stats_item in stats_sequence:
                 if stats_item.category.name == category_name:
-                    data_series_item.values.append(stats_item.balance)
+                    data_series_item.values.append(abs(stats_item.balance))
                     value_added = True
                     break
             if value_added:

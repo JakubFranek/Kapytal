@@ -135,6 +135,7 @@ class CategoryReportPresenter:
         )
         self._report.signal_selection_changed.connect(self._selection_changed)
         self._report.signal_sunburst_slice_clicked.connect(self._sunburst_slice_clicked)
+        self._report.signal_bar_clicked.connect(self._bar_clicked)
         self._report.signal_search_text_changed.connect(self._filter)
 
         self._proxy = QSortFilterProxyModel(self._report)
@@ -223,6 +224,9 @@ class CategoryReportPresenter:
             return
 
         self._show_transaction_table(transactions, title)
+
+    def _bar_clicked(self) -> None:
+        return
 
     def _show_transaction_table(
         self, transactions: Collection[Transaction], title: str

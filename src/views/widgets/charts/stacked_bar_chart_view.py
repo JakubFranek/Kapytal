@@ -27,6 +27,7 @@ class DataSeries:
 
 class StackedBarChartView(QChartView):
     signal_mouse_move = pyqtSignal()
+    signal_bar_clicked = pyqtSignal(str)
 
     def __init__(
         self, parent: QWidget | None, *, background_color: QColor | None = None
@@ -75,6 +76,9 @@ class StackedBarChartView(QChartView):
         for bar_set in bar_sets:
             series.append(bar_set)
             bar_set.hovered[bool, int].connect(partial(self.on_hover, bar_set=bar_set))
+            bar_set.clicked.connect(
+                partial(self.signal_bar_clicked.emit, bar_set.label())
+            )
 
         self._chart = QChart()
         self._chart.setMargins(QMargins(5, 5, 5, 5))
@@ -117,28 +121,37 @@ class StackedBarChartView(QChartView):
         label = bar_set.label()
         value = bar_set.at(index)
 
+        self._tooltip.set_text(
+            f"{label}\n{format_real(value, self._decimals)} {self._currency_code}"
+        )
+
+        self._update_callout()
+        if state:
+            self._tooltip.show()
+            self.setCursor(Qt.CursorShape.PointingHandCursor)
+        else:
+            self._tooltip.hide()
+            self.setCursor(Qt.CursorShape.ArrowCursor)
+
+    def update_callout(self) -> None:
+        if self._tooltip.isVisible():
+            self._update_callout()
+
+    def _update_callout(self) -> None:
         cursor_pos = QCursor.pos()
         view_pos = self.mapFromGlobal(cursor_pos)
         scene_pos = self.mapToScene(view_pos)
 
-        self._tooltip.set_text(
-            f"{label}\n{format_real(value, self._decimals)} {self._currency_code}"
-        )
+        y_threshold = self.rect().topLeft().y()
+        top = scene_pos.y() > y_threshold + 80
+
+        x_threshold = self.rect().topLeft().x()
+        left = scene_pos.x() > x_threshold + 120
+
+        self._tooltip.set_text(self._tooltip.text, left=left, top=top)
         self._tooltip.set_anchor(scene_pos)
         self._tooltip.setZValue(11)
         self._tooltip.update_geometry()
-        if state:
-            self._tooltip.show()
-        else:
-            self._tooltip.hide()
-
-    def update_callout(self) -> None:
-        if self._tooltip.isVisible():
-            cursor_pos = QCursor.pos()
-            view_pos = self.mapFromGlobal(cursor_pos)
-            scene_pos = self.mapToScene(view_pos)
-            self._tooltip.set_anchor(scene_pos)
-            self._tooltip.update_geometry()
 
     def mouseMoveEvent(self, event: QMouseEvent | None) -> None:
         self.signal_mouse_move.emit()
