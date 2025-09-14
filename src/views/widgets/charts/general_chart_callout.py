@@ -44,9 +44,9 @@ class GeneralChartCallout(QGraphicsItem):
 
     def paint(
         self,
-        painter: QPainter,
-        option: QStyleOptionGraphicsItem,  # noqa: ARG002
-        widget: QWidget,  # noqa: ARG002
+        painter: QPainter | None,
+        option: QStyleOptionGraphicsItem | None,  # noqa: ARG002
+        widget: QWidget | None = ...,  # noqa: ARG002
     ) -> None:
         local_anchor = self._local_anchor
         x = local_anchor.x()

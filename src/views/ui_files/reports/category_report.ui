@@ -219,7 +219,7 @@
               </widget>
              </item>
              <item>
-              <widget class="QComboBox" name="barComboBox"/>
+              <widget class="QComboBox" name="barTypeComboBox"/>
              </item>
              <item>
               <spacer name="barControlsHorizontalSpacer">

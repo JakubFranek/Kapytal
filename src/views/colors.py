@@ -78,31 +78,6 @@ def get_gray_brush() -> QBrush:
     return _brush_gray
 
 
-def get_linear_color_sequence(start: QColor, end: QColor, length: int) -> tuple[QColor]:
-    # get the total difference between each color channel
-    red_difference = end.red() - start.red()
-    green_difference = end.green() - start.green()
-    blue_difference = end.blue() - start.blue()
-
-    # divide the difference by the number of rows
-    red_delta = red_difference / (length - 1)
-    green_delta = green_difference / (length - 1)
-    blue_delta = blue_difference / (length - 1)
-
-    # display the color for each row
-    colors = []
-    for i in range(length):
-        # apply the delta to the red, green and blue channels
-        interpolated_color = (
-            int(start.red() + (red_delta * i)),
-            int(start.green() + (green_delta * i)),
-            int(start.blue() + (blue_delta * i)),
-        )
-        colors.append(QColor(*interpolated_color))
-
-    return tuple(colors)
-
-
 def get_bezier_color_sequence(
     start: QColor, end: QColor, control: QColor, length: int
 ) -> tuple[QColor]:
@@ -135,9 +110,7 @@ def get_bezier_color_sequence(
             + x**2 * end_green
         )
         blue = int(
-            (1 - x**2) * start_blue
-            + 2 * (1 - x) * x * control_blue
-            + x**2 * end_blue
+            (1 - x**2) * start_blue + 2 * (1 - x) * x * control_blue + x**2 * end_blue
         )
         colors.append(QColor(red, green, blue))
 
