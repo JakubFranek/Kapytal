@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from collections.abc import Collection
 from datetime import date, datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from src.models.custom_exceptions import NotFoundError
 from src.models.mixins.copyable_mixin import CopyableMixin
@@ -63,7 +63,7 @@ class Transaction(CopyableMixin, DatetimeCreatedMixin, UUIDMixin, ABC):
     def tags(self) -> frozenset[Attribute]:
         return self._tags
 
-    def _validate_datetime(self, value: datetime) -> None:
+    def _validate_datetime(self, value: datetime, *args: Any, **kwargs: Any) -> None:  # noqa: ANN401, ARG002
         if not isinstance(value, datetime):
             raise TypeError(f"{self.__class__.__name__}.datetime_ must be a datetime.")
 
@@ -72,8 +72,9 @@ class Transaction(CopyableMixin, DatetimeCreatedMixin, UUIDMixin, ABC):
         self,
         description: str | None = None,
         datetime_: datetime | None = None,
-        *,
+        *args: Any,  # noqa: ANN401, ARG002
         block_account_update: bool = False,  # noqa: ARG002
+        **kwargs: Any,  # noqa: ANN401, ARG002
     ) -> None:
         """Validates and sets provided attributes if they are all valid.
         Parameters set to None keep their value."""
