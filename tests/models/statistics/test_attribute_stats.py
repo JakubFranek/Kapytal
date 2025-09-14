@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from decimal import Decimal
 
 import pytest
 from dateutil.relativedelta import relativedelta
@@ -216,20 +217,36 @@ def test_calculate_periodic_totals_and_averages() -> None:
 
     t3 = CashTransaction(
         "test",
-        now,
+        now - relativedelta(years=0),
         CashTransactionType.INCOME,
         cash_account,
         payee_1,
         [(category, CashAmount(3, currency))],
-        [(tag_1, CashAmount(3, currency))],
+        [(tag_1, CashAmount(1, currency))],
+    )
+
+    t4 = CashTransaction(
+        "test",
+        now - relativedelta(years=0),
+        CashTransactionType.EXPENSE,
+        cash_account,
+        payee_1,
+        [(category, CashAmount(4, currency))],
+        [(tag_1, CashAmount(4, currency))],
     )
 
     periodic_stats = calculate_periodic_attribute_stats(
-        [t1a, t1b, t2, t3], currency, [tag_1]
+        [t1a, t1b, t2, t3, t4], currency, [tag_1]
     )
-    period_totals, attr_averages, attr_totals = calculate_periodic_totals_and_averages(
-        periodic_stats, currency
-    )
+    (
+        period_totals,
+        attr_averages,
+        attr_totals,
+        income_attr_averages,
+        expense_attr_averages,
+        income_attr_totals,
+        expense_attr_totals,
+    ) = calculate_periodic_totals_and_averages(periodic_stats, currency)
 
     assert len(period_totals[y1]) == 2
     assert period_totals[y1].transactions == {t1a, t1b}
@@ -239,17 +256,37 @@ def test_calculate_periodic_totals_and_averages() -> None:
     assert period_totals[y2].transactions == {t2}
     assert period_totals[y2].balance == CashAmount(2, currency)
 
-    assert len(period_totals[y3]) == 1
-    assert period_totals[y3].transactions == {t3}
-    assert period_totals[y3].balance == CashAmount(3, currency)
+    assert len(period_totals[y3]) == 2
+    assert period_totals[y3].transactions == {t3, t4}
+    assert period_totals[y3].balance == CashAmount("-3", currency)
 
     assert len(attr_averages) == 1
-    assert attr_averages[tag_1].transactions == {t1a, t1b, t2, t3}
-    assert attr_averages[tag_1].balance == CashAmount(3, currency)
+    assert attr_averages[tag_1].transactions == {t1a, t1b, t2, t3, t4}
+    assert attr_averages[tag_1].balance == CashAmount(1, currency)
 
     assert len(attr_totals) == 1
-    assert attr_totals[tag_1].transactions == {t1a, t1b, t2, t3}
-    assert attr_totals[tag_1].balance == CashAmount(9, currency)
+    assert attr_totals[tag_1].transactions == {t1a, t1b, t2, t3, t4}
+    assert attr_totals[tag_1].balance == CashAmount(3, currency)
+
+    assert len(income_attr_averages) == 1
+    assert income_attr_averages[tag_1].transactions == {t1a, t1b, t2, t3}
+    assert income_attr_averages[tag_1].balance == CashAmount(
+        2 + (Decimal(1) / Decimal(3)), currency
+    )
+
+    assert len(expense_attr_averages) == 1
+    assert expense_attr_averages[tag_1].transactions == {t4}
+    assert expense_attr_averages[tag_1].balance == CashAmount(
+        -1 - (Decimal(1) / Decimal(3)), currency
+    )
+
+    assert len(income_attr_totals) == 1
+    assert income_attr_totals[tag_1].transactions == {t1a, t1b, t2, t3}
+    assert income_attr_totals[tag_1].balance == CashAmount(7, currency)
+
+    assert len(expense_attr_totals) == 1
+    assert expense_attr_totals[tag_1].transactions == {t4}
+    assert expense_attr_totals[tag_1].balance == CashAmount(-4, currency)
 
 
 def test_calculate_attribute_stats_no_base_currency() -> None:

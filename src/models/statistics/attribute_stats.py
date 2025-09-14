@@ -1,3 +1,4 @@
+from collections import defaultdict
 from collections.abc import Collection
 from dataclasses import dataclass, field
 
@@ -40,69 +41,98 @@ def calculate_periodic_totals_and_averages(
     income_attribute_averages, expense_attribute_averages, income_attribute_totals,
     expense_attribute_totals)"""
 
+    def make_dict() -> defaultdict[Attribute, TransactionBalance]:
+        return defaultdict(lambda: TransactionBalance(currency.zero_amount))
+
+    def add_balance(
+        target: dict[Attribute, TransactionBalance],
+        attribute: Attribute,
+        transactions: set[Transaction],
+        balance: CashAmount,
+    ) -> None:
+        target[attribute].add_transaction_balance(transactions, balance)
+
+    def split_income_expense(
+        transactions: set[Transaction],
+    ) -> tuple[
+        set[CashTransaction | RefundTransaction | SecurityTransaction],
+        set[CashTransaction | RefundTransaction | SecurityTransaction],
+    ]:
+        income = {
+            transaction
+            for transaction in transactions
+            if (
+                isinstance(transaction, (CashTransaction, RefundTransaction))
+                and transaction.get_amount().value_normalized > 0
+            )
+            or (
+                isinstance(transaction, SecurityTransaction)
+                and transaction.type_ == SecurityTransactionType.DIVIDEND
+            )
+        }
+        return income, transactions - income
+
+    def average_dict(
+        source: dict[Attribute, TransactionBalance],
+    ) -> dict[Attribute, TransactionBalance]:
+        return {
+            attr: TransactionBalance(
+                src.balance / len(periodic_stats), src.transactions
+            )
+            for attr, src in source.items()
+        }
+
+    def get_transaction_amount(
+        transaction: CashTransaction | RefundTransaction | SecurityTransaction,
+        attribute: Attribute,
+        currency: Currency,
+    ) -> CashAmount:
+        return (
+            transaction.get_amount_for_tag(attribute).convert(
+                currency, transaction.date_
+            )
+            if attribute.type_ == AttributeType.TAG
+            else transaction.get_amount().convert(currency, transaction.date_)
+        )
+
     period_totals: dict[str, TransactionBalance] = {}
-    attribute_averages: dict[Attribute, TransactionBalance] = {}
-    attribute_totals: dict[Attribute, TransactionBalance] = {
-        stat.attribute: TransactionBalance(currency.zero_amount)
-        for stats in periodic_stats.values()
-        for stat in stats
-    }
-    income_attribute_totals: dict[Attribute, TransactionBalance] = {
-        stat.attribute: TransactionBalance(currency.zero_amount)
-        for stats in periodic_stats.values()
-        for stat in stats
-    }
-    expense_attribute_totals: dict[Attribute, TransactionBalance] = {
-        stat.attribute: TransactionBalance(currency.zero_amount)
-        for stats in periodic_stats.values()
-        for stat in stats
-    }
-    income_attribute_averages: dict[Attribute, TransactionBalance] = {}
-    expense_attribute_averages: dict[Attribute, TransactionBalance] = {}
+    attribute_totals = make_dict()
+    income_attribute_totals = make_dict()
+    expense_attribute_totals = make_dict()
 
     for period, stats in periodic_stats.items():
         total_period_balance = TransactionBalance(currency.zero_amount)
 
         for stat in stats:
-            total_period_balance.transactions = total_period_balance.transactions.union(
-                stat.transactions
-            )
+            total_period_balance.transactions |= stat.transactions
             total_period_balance.balance += stat.balance
 
-            attribute_totals[stat.attribute].add_transaction_balance(
-                stat.transactions, stat.balance
+            add_balance(
+                attribute_totals, stat.attribute, stat.transactions, stat.balance
             )
 
-            income_transactions = {
-                transaction
-                for transaction in stat.transactions
-                if (
-                    isinstance(transaction, (CashTransaction, RefundTransaction))
-                    and transaction.get_amount().value_normalized > 0
-                )
-                or (
-                    isinstance(transaction, SecurityTransaction)
-                    and transaction.type_ == SecurityTransactionType.DIVIDEND
-                )
-            }
-            expense_transactions = stat.transactions - income_transactions
-
-            income_attribute_totals[stat.attribute].add_transaction_balance(
-                income_transactions,
+            # split income/expense and update respective totals
+            income_tx, expense_tx = split_income_expense(stat.transactions)
+            add_balance(
+                income_attribute_totals,
+                stat.attribute,
+                income_tx,
                 sum(
                     (
-                        transaction.get_amount().convert(currency, transaction.date_)
-                        for transaction in income_transactions
+                        get_transaction_amount(transaction, stat.attribute, currency)
+                        for transaction in income_tx
                     ),
                     start=currency.zero_amount,
                 ),
             )
-            expense_attribute_totals[stat.attribute].add_transaction_balance(
-                expense_transactions,
+            add_balance(
+                expense_attribute_totals,
+                stat.attribute,
+                expense_tx,
                 sum(
                     (
-                        transaction.get_amount().convert(currency, transaction.date_)
-                        for transaction in expense_transactions
+                        get_transaction_amount(transaction, stat.attribute, currency)
+                        for transaction in expense_tx
                     ),
                     start=currency.zero_amount,
                 ),
@@ -110,40 +140,23 @@ def calculate_periodic_totals_and_averages(
 
         period_totals[period] = total_period_balance
 
-    attribute_averages = {
-        attribute: TransactionBalance(
-            attribute_totals[attribute].balance / len(periodic_stats),
-            attribute_totals[attribute].transactions,
-        )
-        for attribute in attribute_totals
-    }
-    income_attribute_averages = {
-        attribute: TransactionBalance(
-            income_attribute_totals[attribute].balance / len(periodic_stats),
-            income_attribute_totals[attribute].transactions,
-        )
-        for attribute in income_attribute_totals
-    }
-    expense_attribute_averages = {
-        attribute: TransactionBalance(
-            expense_attribute_totals[attribute].balance / len(periodic_stats),
-            expense_attribute_totals[attribute].transactions,
-        )
-        for attribute in expense_attribute_totals
-    }
+    attribute_averages = average_dict(attribute_totals)
+    income_attribute_averages = average_dict(income_attribute_totals)
+    expense_attribute_averages = average_dict(expense_attribute_totals)
+
     return (
         period_totals,
         attribute_averages,
-        attribute_totals,
+        dict(attribute_totals),
         income_attribute_averages,
         expense_attribute_averages,
-        income_attribute_totals,
-        expense_attribute_totals,
+        dict(income_attribute_totals),
+        dict(expense_attribute_totals),
     )
 
 
 def calculate_periodic_attribute_stats(
-    transactions: Collection[CashTransaction | RefundTransaction],
+    transactions: Collection[CashTransaction | RefundTransaction | SecurityTransaction],
     base_currency: Currency,
     all_attributes: Collection[Attribute],
     period_format: str = "%B %Y",
@@ -173,82 +186,84 @@ def calculate_attribute_stats(
     base_currency: Currency | None,
     all_attributes: Collection[Attribute],
 ) -> dict[Attribute, AttributeStats]:
-    attribute_types = {attribute.type_ for attribute in all_attributes}
+    """Build AttributeStats for each attribute in all_attributes."""
+
+    attribute_types = {attr.type_ for attr in all_attributes}
     if len(attribute_types) > 1:
         raise ValueError("All Attributes must be of the same type_.")
-    attribute_type = attribute_types.pop() if len(attribute_types) == 1 else None
 
-    stats_dict: dict[Attribute, AttributeStats] = {}
-    for attribute in all_attributes:
-        if base_currency is not None:
-            stats = AttributeStats(attribute, 0, base_currency.zero_amount)
-        else:
-            stats = AttributeStats(attribute, 0, None)
-        stats_dict[attribute] = stats
+    attribute_type = attribute_types.pop() if attribute_types else None
+
+    # Initialize stats dict with zero balances
+    stats_dict: dict[Attribute, AttributeStats] = {
+        attr: AttributeStats(
+            attr, 0, base_currency.zero_amount if base_currency else None
+        )
+        for attr in all_attributes
+    }
 
     if base_currency is None:
         return stats_dict
 
     for transaction in transactions:
+        if not isinstance(
+            transaction, (CashTransaction, RefundTransaction, SecurityTransaction)
+        ) or (
+            isinstance(transaction, SecurityTransaction)
+            and transaction.type_ != SecurityTransactionType.DIVIDEND
+        ):
+            continue
+
         if attribute_type == AttributeType.TAG:
-            if not isinstance(
-                transaction, (CashTransaction, RefundTransaction, SecurityTransaction)
-            ):
-                continue
-            if (
-                isinstance(transaction, SecurityTransaction)
-                and transaction.type_ != SecurityTransactionType.DIVIDEND
-            ):
-                continue
-
             for tag in transaction.tags:
-                _amount = transaction.get_amount_for_tag(tag)
-                if _amount.value_normalized == 0:  # relevant for Refunds
-                    continue
-                stats = stats_dict[tag]
-                stats.transactions.add(transaction)
-                stats.no_of_transactions += 1
-                stats.balance += _amount.convert(base_currency, transaction.date_)
-        elif attribute_type == AttributeType.PAYEE:
-            if not isinstance(transaction, (CashTransaction, RefundTransaction)):
-                continue
+                add_to_stats(stats_dict[tag], transaction)
+        elif hasattr(transaction, "payee"):
+            add_to_stats(stats_dict[transaction.payee], transaction)
 
-            stats = stats_dict[transaction.payee]
-            stats.transactions.add(transaction)
-            stats.no_of_transactions += 1
-            stats.balance += transaction.get_amount(transaction.account).convert(
-                base_currency, transaction.date_
-            )
     return stats_dict
 
 
 def split_attribute_stats(
     stats: AttributeStats, base_currency: Currency
 ) -> tuple[AttributeStats, AttributeStats]:
-    """Returns a tuple of (income stats, expense stats)"""
+    """Return (income_stats, expense_stats)."""
+
     income_stats = AttributeStats(stats.attribute, 0, base_currency.zero_amount)
     expense_stats = AttributeStats(stats.attribute, 0, base_currency.zero_amount)
+
     for transaction in stats.transactions:
-        if isinstance(transaction, (CashTransaction, RefundTransaction)):
-            if transaction.get_amount().value_normalized > 0:
-                income_stats.transactions.add(transaction)
-                income_stats.no_of_transactions += 1
-                income_stats.balance += transaction.get_amount().convert(
-                    base_currency, transaction.date_
+        target = (
+            income_stats
+            if (
+                (
+                    isinstance(transaction, (CashTransaction, RefundTransaction))
+                    and transaction.get_amount().value_normalized > 0
                 )
-            else:
-                expense_stats.transactions.add(transaction)
-                expense_stats.no_of_transactions += 1
-                expense_stats.balance += transaction.get_amount().convert(
-                    base_currency, transaction.date_
+                or (
+                    isinstance(transaction, SecurityTransaction)
+                    and transaction.type_ == SecurityTransactionType.DIVIDEND
                 )
-        elif (
-            isinstance(transaction, SecurityTransaction)
-            and transaction.type_ == SecurityTransactionType.DIVIDEND
-        ):
-            income_stats.transactions.add(transaction)
-            income_stats.no_of_transactions += 1
-            income_stats.balance += transaction.get_amount().convert(
-                base_currency, transaction.date_
             )
+            else expense_stats
+        )
+        add_to_stats(target, transaction)
+
     return income_stats, expense_stats
+
+
+def add_to_stats(
+    target: AttributeStats,
+    transaction: CashTransaction | RefundTransaction | SecurityTransaction,
+) -> None:
+    if target.attribute.type_ == AttributeType.TAG:
+        amount = transaction.get_amount_for_tag(target.attribute)
+        if amount.value_normalized != 0:
+            target.balance += amount.convert(target.balance.currency, transaction.date_)
+            target.transactions.add(transaction)
+            target.no_of_transactions += 1
+    else:
+        target.balance += transaction.get_amount().convert(
+            target.balance.currency, transaction.date_
+        )
+        target.transactions.add(transaction)
+        target.no_of_transactions += 1
