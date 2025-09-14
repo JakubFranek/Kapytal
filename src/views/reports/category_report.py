@@ -12,7 +12,7 @@ from PyQt6.QtWidgets import (
 )
 from src.models.model_objects.currency_objects import Currency
 from src.models.statistics.category_stats import CategoryStats
-from src.views import icons
+from src.views import colors, icons
 from src.views.base_classes.custom_widget import CustomWidget
 from src.views.dialogs.busy_dialog import create_simple_busy_indicator
 from src.views.ui_files.reports.Ui_category_report import Ui_CategoryReport
@@ -48,8 +48,12 @@ class CategoryReport(CustomWidget, Ui_CategoryReport):
         self.setWindowIcon(icons.category)
         self.currencyNoteLabel.setText(f"All values in {currency_code}")
 
-        self.chart_view = SunburstChartView(self, clickable_slices=True)
-        self.chartVerticalLayout.addWidget(self.chart_view)
+        background = colors.get_tab_widget_background()
+
+        self.chart_view = SunburstChartView(
+            self, clickable_slices=True, background_color=background
+        )
+        self.sunburstChartTab.layout().addWidget(self.chart_view)
 
         self.actionExpand_All.setIcon(icons.expand)
         self.actionCollapse_All.setIcon(icons.collapse)

@@ -132,7 +132,7 @@ class DateLineChartView(QChartView):
             )
         self._axis_y.applyNiceNumbers()
 
-    def mouseMoveEvent(self, event: QMouseEvent) -> None:
+    def mouseMoveEvent(self, event: QMouseEvent | None) -> None:
         pos = self._chart.mapToValue(QPointF(event.position().toPoint()))
         x = pos.x()
         y = pos.y()

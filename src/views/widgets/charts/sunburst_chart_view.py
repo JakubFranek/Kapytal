@@ -134,9 +134,18 @@ class SunburstChartView(QChartView):
     signal_mouse_move = pyqtSignal()
     signal_slice_clicked = pyqtSignal(str)
 
-    def __init__(self, parent: QWidget | None, *, clickable_slices: bool) -> None:
+    def __init__(
+        self,
+        parent: QWidget | None,
+        *,
+        clickable_slices: bool,
+        background_color: QColor | None = None,
+    ) -> None:
         super().__init__(parent)
         self._clickable_slices = clickable_slices
+
+        if background_color is not None:
+            self.setBackgroundBrush(background_color)
 
         self.setRenderHint(QPainter.RenderHint.Antialiasing)
 
