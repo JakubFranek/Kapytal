@@ -262,7 +262,10 @@ def _convert_category_stats_to_bar_data(
     period_names = tuple(key for key in stats if key not in {"Total", "Average"})
     if not period_names:
         return ()
-    currency = stats[period_names[0]][0].balance.currency
+    try:
+        currency = stats[period_names[0]][0].balance.currency
+    except IndexError:
+        return ()
 
     periodic_category_order: dict[str, list[str]] = {}
 

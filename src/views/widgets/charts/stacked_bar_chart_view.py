@@ -55,11 +55,12 @@ class StackedBarChartView(QChartView):
     def load_data(
         self, data: Sequence[DataSeries], period_names: Sequence[str]
     ) -> None:
-        if len(data) == 0:
-            return
-
-        self._currency_code = data[0].values[0].currency.code
-        self._decimals = data[0].values[0].currency.decimals
+        try:
+            self._currency_code = data[0].values[0].currency.code
+            self._decimals = data[0].values[0].currency.decimals
+        except IndexError:
+            self._currency_code = ""
+            self._decimals = 0
 
         bar_sets: list[QBarSet] = []
         for index, series in enumerate(data):
