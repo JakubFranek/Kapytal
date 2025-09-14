@@ -150,19 +150,19 @@
           </attribute>
           <layout class="QVBoxLayout" name="verticalLayout">
            <item>
-            <layout class="QHBoxLayout" name="controlsHorizontalLayout">
+            <layout class="QHBoxLayout" name="sunburstControlsHorizontalLayout">
              <item>
-              <widget class="QLabel" name="typeLabel">
+              <widget class="QLabel" name="sunburstTypeLabel">
                <property name="text">
                 <string>Type</string>
                </property>
               </widget>
              </item>
              <item>
-              <widget class="QComboBox" name="typeComboBox"/>
+              <widget class="QComboBox" name="sunburstTypeComboBox"/>
              </item>
              <item>
-              <spacer name="chartHorizontalSpacer_1">
+              <spacer name="sunburstControlsHorizontalSpacer_1">
                <property name="orientation">
                 <enum>Qt::Horizontal</enum>
                </property>
@@ -188,7 +188,7 @@
               <widget class="QComboBox" name="periodComboBox"/>
              </item>
              <item>
-              <spacer name="chartHorizontalSpacer_2">
+              <spacer name="sunburstControlsHorizontalSpacer_2">
                <property name="orientation">
                 <enum>Qt::Horizontal</enum>
                </property>
@@ -208,6 +208,35 @@
           <attribute name="title">
            <string>Bar Chart</string>
           </attribute>
+          <layout class="QVBoxLayout" name="verticalLayout_2">
+           <item>
+            <layout class="QHBoxLayout" name="barChartControlsHorizontalLayout">
+             <item>
+              <widget class="QLabel" name="barTypeLabel">
+               <property name="text">
+                <string>Type</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QComboBox" name="barComboBox"/>
+             </item>
+             <item>
+              <spacer name="barControlsHorizontalSpacer">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
+           </item>
+          </layout>
          </widget>
         </widget>
        </item>

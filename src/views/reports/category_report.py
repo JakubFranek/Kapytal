@@ -79,10 +79,12 @@ class CategoryReport(CustomWidget, Ui_CategoryReport):
         self.recalculateReportToolButton.setDefaultAction(self.actionRecalculate_Report)
         self.showTransactionsToolButton.setDefaultAction(self.actionShow_Transactions)
 
-        self.typeComboBox.addItem("Income")
-        self.typeComboBox.addItem("Expense")
-        self.typeComboBox.setCurrentText("Income")
-        self.typeComboBox.currentTextChanged.connect(self._combobox_text_changed)
+        self.sunburstTypeComboBox.addItem("Income")
+        self.sunburstTypeComboBox.addItem("Expense")
+        self.sunburstTypeComboBox.setCurrentText("Income")
+        self.sunburstTypeComboBox.currentTextChanged.connect(
+            self._combobox_text_changed
+        )
 
         self.periodComboBox.currentTextChanged.connect(self._combobox_text_changed)
 
@@ -98,7 +100,7 @@ class CategoryReport(CustomWidget, Ui_CategoryReport):
 
     @property
     def stats_type(self) -> StatsType:
-        if self.typeComboBox.currentText() == "Income":
+        if self.sunburstTypeComboBox.currentText() == "Income":
             return StatsType.INCOME
         return StatsType.EXPENSE
 
@@ -152,7 +154,7 @@ class CategoryReport(CustomWidget, Ui_CategoryReport):
         self.periodComboBox.setCurrentText(periods[-1])
 
     def _combobox_text_changed(self) -> None:
-        type_ = self.typeComboBox.currentText()
+        type_ = self.sunburstTypeComboBox.currentText()
         data = (
             self._income_periodic_stats
             if type_ == "Income"

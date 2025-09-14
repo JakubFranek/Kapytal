@@ -15,8 +15,6 @@ from src.models.statistics.cashflow_stats import CashFlowStats
 from src.utilities.formatting import format_real
 from src.views.widgets.charts.general_chart_callout import GeneralChartCallout
 
-x_labels = ["Inflows", "Outflows", "Cash Flow", "Total Gain / Loss"]
-
 
 class CashFlowTotalChartView(QChartView):
     signal_mouse_move = pyqtSignal()
