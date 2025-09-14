@@ -7,11 +7,13 @@ from src.models.base_classes.transaction import Transaction
 from src.models.custom_exceptions import InvalidOperationError
 from src.models.model_objects.attributes import AttributeType
 from src.models.model_objects.cash_objects import CashTransaction, RefundTransaction
+from src.models.model_objects.security_objects import SecurityTransaction
 from src.models.record_keeper import RecordKeeper
 from src.models.statistics.attribute_stats import (
     AttributeStats,
     calculate_periodic_attribute_stats,
     calculate_periodic_totals_and_averages,
+    split_attribute_stats,
 )
 from src.presenters.widget.transactions_presenter import TransactionsPresenter
 from src.view_models.periodic_attribute_stats_table_model import (
@@ -143,8 +145,12 @@ class AttributeReportPresenter:
 
         (
             period_totals,
-            attribute_averages,
-            attribute_totals,
+            averages,
+            totals,
+            income_averages,
+            expense_averages,
+            income_totals,
+            expense_totals,
         ) = calculate_periodic_totals_and_averages(
             _periodic_stats, self._record_keeper.base_currency
         )
@@ -158,6 +164,7 @@ class AttributeReportPresenter:
         )
         self._report.signal_selection_changed.connect(self._selection_changed)
         self._report.signal_pie_slice_clicked.connect(self._pie_slice_clicked)
+        self._report.signal_bar_clicked.connect(self._bar_clicked)
         self._report.signal_search_text_changed.connect(self._filter)
         self._report.searchLineEdit.setPlaceholderText(
             f"Search {attribute_type.name.title()}s"
@@ -170,8 +177,8 @@ class AttributeReportPresenter:
         self._model.load_periodic_attribute_stats(
             _periodic_stats,
             period_totals,
-            attribute_averages,
-            attribute_totals,
+            averages,
+            totals,
         )
         self._proxy.setSourceModel(self._model)
         self._proxy.setSortRole(Qt.ItemDataRole.UserRole)
@@ -188,38 +195,55 @@ class AttributeReportPresenter:
             income_periodic_stats[period] = []
             expense_periodic_stats[period] = []
             for stats in periodic_stats[period]:
-                if stats.balance.value_rounded > 0:
-                    income_periodic_stats[period].append(stats)
-                elif stats.balance.value_rounded < 0:
-                    expense_periodic_stats[period].append(stats)
+                income_stats, expense_stats = split_attribute_stats(
+                    stats, base_currency
+                )
+                if income_stats.no_of_transactions > 0:
+                    income_periodic_stats[period].append(income_stats)
+                if expense_stats.no_of_transactions > 0:
+                    expense_periodic_stats[period].append(expense_stats)
 
         income_periodic_stats["Average"] = []
         expense_periodic_stats["Average"] = []
-        for attribute, transaction_balance in attribute_averages.items():
-            stats = AttributeStats(
-                attribute,
-                0,
-                transaction_balance.balance,
-                transaction_balance.transactions,
+        for attribute, transaction_balance in income_averages.items():
+            income_periodic_stats["Average"].append(
+                AttributeStats(
+                    attribute,
+                    len(transaction_balance),
+                    transaction_balance.balance,
+                    transaction_balance.transactions,
+                )
             )
-            if transaction_balance.balance.value_rounded > 0:
-                income_periodic_stats["Average"].append(stats)
-            elif transaction_balance.balance.value_rounded < 0:
-                expense_periodic_stats["Average"].append(stats)
+        for attribute, transaction_balance in expense_averages.items():
+            expense_periodic_stats["Average"].append(
+                AttributeStats(
+                    attribute,
+                    len(transaction_balance),
+                    transaction_balance.balance,
+                    transaction_balance.transactions,
+                )
+            )
 
         income_periodic_stats["Total"] = []
         expense_periodic_stats["Total"] = []
-        for attribute, transaction_balance in attribute_totals.items():
-            stats = AttributeStats(
-                attribute,
-                0,
-                transaction_balance.balance,
-                transaction_balance.transactions,
+        for attribute, transaction_balance in income_totals.items():
+            income_periodic_stats["Total"].append(
+                AttributeStats(
+                    attribute,
+                    len(transaction_balance),
+                    transaction_balance.balance,
+                    transaction_balance.transactions,
+                )
             )
-            if transaction_balance.balance.value_rounded > 0:
-                income_periodic_stats["Total"].append(stats)
-            elif transaction_balance.balance.value_rounded < 0:
-                expense_periodic_stats["Total"].append(stats)
+        for attribute, transaction_balance in expense_totals.items():
+            expense_periodic_stats["Total"].append(
+                AttributeStats(
+                    attribute,
+                    len(transaction_balance),
+                    transaction_balance.balance,
+                    transaction_balance.transactions,
+                )
+            )
 
         self._income_stats = income_periodic_stats
         self._expense_stats = expense_periodic_stats
@@ -236,8 +260,8 @@ class AttributeReportPresenter:
         self._show_transaction_table(transactions, title)
 
     def _pie_slice_clicked(self, name: str) -> None:
-        stats_type = self._report.stats_type
-        period = self._report.period
+        stats_type = self._report.pie_stats_type
+        period = self._report.pie_period
         title = f"{self._attribute_type.name.title()} Report - {name}, {period}"
 
         data = (
@@ -246,12 +270,36 @@ class AttributeReportPresenter:
             else self._expense_stats[period]
         )
 
-        transactions = None
+        transactions: set[CashTransaction | RefundTransaction | SecurityTransaction] = (
+            set()
+        )
         for stats in data:
             if stats.attribute.name == name:
                 transactions = stats.transactions
                 break
         if transactions is None:
+            return
+
+        self._show_transaction_table(transactions, title)
+
+    def _bar_clicked(self, period: str, name: str) -> None:
+        stats_type = self._report.bar_stats_type
+        title = f"{self._attribute_type.name.title()} Report - {name}, {period}"
+
+        data = (
+            self._income_stats[period]
+            if stats_type == StatsType.INCOME
+            else self._expense_stats[period]
+        )
+
+        transactions: set[CashTransaction | RefundTransaction | SecurityTransaction] = (
+            set()
+        )
+        for attribute_stats in data:
+            if attribute_stats.attribute.name == name:
+                transactions = attribute_stats.transactions
+                break
+        if len(transactions) == 0:
             return
 
         self._show_transaction_table(transactions, title)

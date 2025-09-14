@@ -37,9 +37,9 @@ class DateLineChartCallout(QGraphicsItem):
 
     def paint(
         self,
-        painter: QPainter,
-        option: QStyleOptionGraphicsItem,  # noqa: ARG002
-        widget: QWidget,  # noqa: ARG002
+        painter: QPainter | None,
+        option: QStyleOptionGraphicsItem | None,  # noqa: ARG002
+        widget: QWidget | None = ...,  # noqa: ARG002
     ) -> None:
         path = QPainterPath()
         path.addRoundedRect(self._rect, 5, 5)
@@ -121,10 +121,10 @@ class DateLineChartCallout(QGraphicsItem):
         painter.drawPath(path)
         painter.drawText(self._textRect, self._text)
 
-    def mousePressEvent(self, event: QGraphicsSceneMouseEvent) -> None:
+    def mousePressEvent(self, event: QGraphicsSceneMouseEvent | None) -> None:
         event.setAccepted(True)
 
-    def mouseMoveEvent(self, event: QGraphicsSceneMouseEvent) -> None:
+    def mouseMoveEvent(self, event: QGraphicsSceneMouseEvent | None) -> None:
         if event.buttons() & Qt.MouseButton.LeftButton:
             self.setPos(
                 self.mapToParent(

@@ -135,6 +135,7 @@ class CategoryReportPresenter:
         )
         self._report.signal_selection_changed.connect(self._selection_changed)
         self._report.signal_sunburst_slice_clicked.connect(self._sunburst_slice_clicked)
+        self._report.signal_bar_clicked.connect(self._bar_clicked)
         self._report.signal_search_text_changed.connect(self._filter)
 
         self._proxy = QSortFilterProxyModel(self._report)
@@ -198,8 +199,8 @@ class CategoryReportPresenter:
         self._show_transaction_table(transactions, title)
 
     def _sunburst_slice_clicked(self, path: str) -> None:
-        stats_type = self._report.stats_type
-        period = self._report.period
+        stats_type = self._report.sunburst_stats_type
+        period = self._report.sunburst_period
         title = f"Category Report - {path}, {period}"
 
         data = (
@@ -208,18 +209,38 @@ class CategoryReportPresenter:
             else self._expense_stats[period]
         )
 
-        transactions = None
+        transactions: set[CashTransaction | RefundTransaction] = set()
         if path == "Total":
-            transactions: set[CashTransaction | RefundTransaction] = set()
             for category_stats in data:
                 if category_stats.category.parent is not None:
                     continue
                 transactions = transactions.union(category_stats.transactions)
+        else:
+            for category_stats in data:
+                if category_stats.category.path == path:
+                    transactions = category_stats.transactions
+                    break
+        if len(transactions) == 0:
+            return
+
+        self._show_transaction_table(transactions, title)
+
+    def _bar_clicked(self, period: str, path: str) -> None:
+        stats_type = self._report.bar_stats_type
+        title = f"Category Report - {path}, {period}"
+
+        data = (
+            self._income_stats[period]
+            if stats_type == StatsType.INCOME
+            else self._expense_stats[period]
+        )
+
+        transactions: set[CashTransaction | RefundTransaction] = set()
         for category_stats in data:
             if category_stats.category.path == path:
                 transactions = category_stats.transactions
                 break
-        if transactions is None:
+        if len(transactions) == 0:
             return
 
         self._show_transaction_table(transactions, title)

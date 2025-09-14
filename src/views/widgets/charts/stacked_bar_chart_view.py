@@ -1,3 +1,5 @@
+from collections.abc import Sequence
+from dataclasses import dataclass
 from functools import partial
 
 from PyQt6.QtCharts import (
@@ -11,16 +13,29 @@ from PyQt6.QtCharts import (
 from PyQt6.QtCore import QMargins, QPointF, Qt, pyqtSignal
 from PyQt6.QtGui import QColor, QCursor, QFont, QMouseEvent, QPainter
 from PyQt6.QtWidgets import QGraphicsScene, QWidget
-from src.models.statistics.cashflow_stats import CashFlowStats
+from src.models.model_objects.currency_objects import CashAmount
 from src.utilities.formatting import format_real
+from src.views import colors
 from src.views.widgets.charts.general_chart_callout import GeneralChartCallout
 
 
-class CashFlowTotalChartView(QChartView):
-    signal_mouse_move = pyqtSignal()
+@dataclass
+class DataSeries:
+    name: str
+    values: list[CashAmount]
 
-    def __init__(self, parent: QWidget | None) -> None:
+
+class StackedBarChartView(QChartView):
+    signal_mouse_move = pyqtSignal()
+    signal_bar_clicked = pyqtSignal(str, str)
+
+    def __init__(
+        self, parent: QWidget | None, *, background_color: QColor | None = None
+    ) -> None:
         super().__init__(parent)
+
+        if background_color is not None:
+            self.setBackgroundBrush(background_color)
 
         self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
@@ -37,64 +52,32 @@ class CashFlowTotalChartView(QChartView):
         self._font_bold.setPointSize(10)
         self._font_bold.setBold(True)
 
-    def load_data(self, stats: CashFlowStats) -> None:  # noqa: PLR0915
-        self._currency_code = stats.incomes.balance.currency.code
-        self._decimals = stats.incomes.balance.currency.decimals
+    def load_data(
+        self, data: Sequence[DataSeries], period_names: Sequence[str]
+    ) -> None:
+        try:
+            self._currency_code = data[0].values[0].currency.code
+            self._decimals = data[0].values[0].currency.decimals
+        except IndexError:
+            self._currency_code = ""
+            self._decimals = 0
 
-        bar_income = QBarSet("Income")
-        bar_income.setColor(QColor("darkgreen"))
-        bar_income.append([float(stats.incomes.balance.value_rounded), 0, 0, 0])
-
-        bar_inward_transfers = QBarSet("Inward Transfers")
-        bar_inward_transfers.setColor(QColor("green"))
-        bar_inward_transfers.append(
-            [float(stats.inward_transfers.balance.value_rounded), 0, 0, 0]
-        )
-
-        bar_refunds = QBarSet("Refunds")
-        bar_refunds.setColor(QColor("limegreen"))
-        bar_refunds.append([float(stats.refunds.balance.value_rounded), 0, 0, 0])
-
-        bar_initial_balances = QBarSet("Initial Balances")
-        bar_initial_balances.setColor(QColor("lime"))
-        bar_initial_balances.append(
-            [float(stats.initial_balances.value_rounded), 0, 0, 0]
-        )
-
-        bar_expenses = QBarSet("Expenses")
-        bar_expenses.setColor(QColor("red"))
-        bar_expenses.append([0, float(stats.expenses.balance.value_rounded), 0, 0])
-
-        bar_outward_transfers = QBarSet("Outward Transfers")
-        bar_outward_transfers.setColor(QColor("salmon"))
-        bar_outward_transfers.append(
-            [0, float(stats.outward_transfers.balance.value_rounded), 0, 0]
-        )
-
-        bar_cash_flow = QBarSet("Cash Flow")
-        bar_cash_flow.setColor(QColor("royalblue"))
-        bar_cash_flow.append(
-            [0, 0, float(stats.delta_neutral.balance.value_rounded), 0]
-        )
-
-        bar_delta_performance = QBarSet("Total Gain / Loss")
-        bar_delta_performance.setColor(QColor("orange"))
-        bar_delta_performance.append(
-            [0, 0, 0, float(stats.delta_performance.value_rounded)]
-        )
+        bar_sets: list[QBarSet] = []
+        for index, series in enumerate(data):
+            bar_set = QBarSet(series.name)
+            bar_set.setColor(
+                colors.get_deep_tab10_palette()[index % 10].lighter(
+                    100 + 30 * int(index / 10)
+                )
+            )
+            bar_set.append([float(value.value_normalized) for value in series.values])
+            bar_sets.append(bar_set)
 
         series = QStackedBarSeries()
-        series.append(bar_income)
-        series.append(bar_inward_transfers)
-        series.append(bar_refunds)
-        series.append(bar_initial_balances)
-        series.append(bar_expenses)
-        series.append(bar_outward_transfers)
-        series.append(bar_cash_flow)
-        series.append(bar_delta_performance)
-
-        for bar_set in series.barSets():
+        for bar_set in bar_sets:
+            series.append(bar_set)
             bar_set.hovered[bool, int].connect(partial(self.on_hover, bar_set=bar_set))
+            bar_set.clicked[int].connect(partial(self._bar_clicked, bar_set=bar_set))
 
         self._chart = QChart()
         self._chart.setMargins(QMargins(5, 5, 5, 5))
@@ -104,11 +87,10 @@ class CashFlowTotalChartView(QChartView):
         self._chart.addSeries(series)
         self._chart.setAnimationOptions(QChart.AnimationOption.SeriesAnimations)
 
-        self.categories = ["Inflow", "Outflow", "Cash Flow", "Total Gain / Loss"]
         self.axis_x = QBarCategoryAxis()
         self.axis_x.setLabelsFont(self._font)
         self.axis_x.setGridLineVisible(False)
-        self.axis_x.append(self.categories)
+        self.axis_x.append(period_names)
         self._chart.addAxis(self.axis_x, Qt.AlignmentFlag.AlignBottom)
         series.attachAxis(self.axis_x)
 
@@ -138,29 +120,43 @@ class CashFlowTotalChartView(QChartView):
         label = bar_set.label()
         value = bar_set.at(index)
 
+        self._tooltip.set_text(
+            f"{label}\n{format_real(value, self._decimals)} {self._currency_code}"
+        )
+
+        self._update_callout()
+        if state:
+            self._tooltip.show()
+            self.setCursor(Qt.CursorShape.PointingHandCursor)
+        else:
+            self._tooltip.hide()
+            self.setCursor(Qt.CursorShape.ArrowCursor)
+
+    def update_callout(self) -> None:
+        if self._tooltip.isVisible():
+            self._update_callout()
+
+    def _update_callout(self) -> None:
         cursor_pos = QCursor.pos()
         view_pos = self.mapFromGlobal(cursor_pos)
         scene_pos = self.mapToScene(view_pos)
 
-        self._tooltip.set_text(
-            f"{label}\n{format_real(value, self._decimals)} {self._currency_code}"
-        )
+        y_threshold = self.rect().topLeft().y()
+        top = scene_pos.y() > y_threshold + 80
+
+        x_threshold = self.rect().topLeft().x()
+        left = scene_pos.x() > x_threshold + 120
+
+        self._tooltip.set_text(self._tooltip.text, left=left, top=top)
         self._tooltip.set_anchor(scene_pos)
         self._tooltip.setZValue(11)
         self._tooltip.update_geometry()
-        if state:
-            self._tooltip.show()
-        else:
-            self._tooltip.hide()
-
-    def update_callout(self) -> None:
-        if self._tooltip.isVisible():
-            cursor_pos = QCursor.pos()
-            view_pos = self.mapFromGlobal(cursor_pos)
-            scene_pos = self.mapToScene(view_pos)
-            self._tooltip.set_anchor(scene_pos)
-            self._tooltip.update_geometry()
 
     def mouseMoveEvent(self, event: QMouseEvent | None) -> None:
         self.signal_mouse_move.emit()
         return super().mouseMoveEvent(event)
+
+    def _bar_clicked(self, index: int, bar_set: QBarSet) -> None:
+        period = self.axis_x.categories()[index]
+        label = bar_set.label()
+        self.signal_bar_clicked.emit(period, label)

@@ -44,9 +44,9 @@ class GeneralChartCallout(QGraphicsItem):
 
     def paint(
         self,
-        painter: QPainter,
-        option: QStyleOptionGraphicsItem,  # noqa: ARG002
-        widget: QWidget,  # noqa: ARG002
+        painter: QPainter | None,
+        option: QStyleOptionGraphicsItem | None,  # noqa: ARG002
+        widget: QWidget | None = ...,  # noqa: ARG002
     ) -> None:
         local_anchor = self._local_anchor
         x = local_anchor.x()
@@ -135,7 +135,7 @@ class GeneralChartCallout(QGraphicsItem):
             painter.drawPath(path)
             painter.drawText(self._textRect, self._text)
 
-    def set_text(self, text: str, *, left: bool = True) -> None:
+    def set_text(self, text: str, *, left: bool = True, top: bool = True) -> None:
         self._text = text
         metrics = QFontMetrics(self._font)
         self._textRect = QRectF(
@@ -148,11 +148,17 @@ class GeneralChartCallout(QGraphicsItem):
             0, 0, int(self._textRect.width() / 9), int(self._textRect.height() / 8)
         )
 
-        if not left:
+        if not left and top:
             self._textRect.moveTopLeft(QPointF(20, -self._textRect.height() - 10))
-        else:
+        elif left and top:
             self._textRect.translate(
                 -self._textRect.width() - 20, -self._textRect.height() - 10
+            )
+        elif not left and not top:
+            self._textRect.moveTopLeft(QPointF(20, self._textRect.height()))
+        else:
+            self._textRect.translate(
+                -self._textRect.width() - 20, self._textRect.height()
             )
         self.prepareGeometryChange()
         self._rect = self._textRect.adjusted(-5, -5, 5, 5)
