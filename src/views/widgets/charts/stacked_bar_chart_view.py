@@ -27,7 +27,7 @@ class DataSeries:
 
 class StackedBarChartView(QChartView):
     signal_mouse_move = pyqtSignal()
-    signal_bar_clicked = pyqtSignal(str)
+    signal_bar_clicked = pyqtSignal(str, str)
 
     def __init__(
         self, parent: QWidget | None, *, background_color: QColor | None = None
@@ -76,9 +76,7 @@ class StackedBarChartView(QChartView):
         for bar_set in bar_sets:
             series.append(bar_set)
             bar_set.hovered[bool, int].connect(partial(self.on_hover, bar_set=bar_set))
-            bar_set.clicked.connect(
-                partial(self.signal_bar_clicked.emit, bar_set.label())
-            )
+            bar_set.clicked[int].connect(partial(self._bar_clicked, bar_set=bar_set))
 
         self._chart = QChart()
         self._chart.setMargins(QMargins(5, 5, 5, 5))
@@ -156,3 +154,8 @@ class StackedBarChartView(QChartView):
     def mouseMoveEvent(self, event: QMouseEvent | None) -> None:
         self.signal_mouse_move.emit()
         return super().mouseMoveEvent(event)
+
+    def _bar_clicked(self, index: int, bar_set: QBarSet) -> None:
+        period = self.axis_x.categories()[index]
+        label = bar_set.label()
+        self.signal_bar_clicked.emit(period, label)

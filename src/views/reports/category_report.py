@@ -37,7 +37,7 @@ class CategoryReport(CustomWidget, Ui_CategoryReport):
     signal_recalculate_report = pyqtSignal()
     signal_selection_changed = pyqtSignal()
     signal_sunburst_slice_clicked = pyqtSignal(str)
-    signal_bar_clicked = pyqtSignal(str)
+    signal_bar_clicked = pyqtSignal(str, str)
     signal_search_text_changed = pyqtSignal(str)
 
     def __init__(
@@ -118,13 +118,19 @@ class CategoryReport(CustomWidget, Ui_CategoryReport):
         )
 
     @property
-    def stats_type(self) -> StatsType:
+    def sunburst_stats_type(self) -> StatsType:
         if self.sunburstTypeComboBox.currentText() == "Income":
             return StatsType.INCOME
         return StatsType.EXPENSE
 
     @property
-    def period(self) -> str:
+    def bar_stats_type(self) -> StatsType:
+        if self.barTypeComboBox.currentText() == "Income":
+            return StatsType.INCOME
+        return StatsType.EXPENSE
+
+    @property
+    def sunburst_period(self) -> str:
         return self.periodComboBox.currentText()
 
     def finalize_setup(self) -> None:
