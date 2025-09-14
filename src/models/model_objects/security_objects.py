@@ -16,7 +16,6 @@ from src.models.base_classes.account import Account, UnrelatedAccountError
 from src.models.base_classes.transaction import Transaction
 from src.models.custom_exceptions import InvalidCharacterError, TransferSameAccountError
 from src.models.mixins.copyable_mixin import CopyableMixin
-from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
 from src.models.mixins.name_mixin import NameMixin
 from src.models.mixins.uuid_mixin import UUIDMixin
 from src.models.model_objects.account_group import AccountGroup
@@ -50,7 +49,7 @@ class SharesType(Enum):
     PAID_DIVIDEND = auto()
 
 
-class Security(CopyableMixin, NameMixin, UUIDMixin, JSONSerializableMixin):
+class Security(CopyableMixin, NameMixin, UUIDMixin):
     __slots__ = (
         "_allow_colon",
         "_allow_slash",
@@ -405,9 +404,10 @@ class SecurityAccount(Account):
     def get_shares_for_datetime(
         self, security: Security, datetime_: datetime | None = None
     ) -> Decimal:
-        """Returns number of shares for the specified security at the specified datetime.
-        Raises ValueError if security not found in SecurityAccount, or if datetime precedes
-        SecurityAccount history."""
+        """Returns number of shares for the specified security at the specified
+        datetime.
+        Raises ValueError if security not found in SecurityAccount, or if datetime
+        precedes SecurityAccount history."""
 
         if datetime_ is None:
             if security in self.securities:

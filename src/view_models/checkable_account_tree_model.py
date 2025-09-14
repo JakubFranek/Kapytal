@@ -1,6 +1,6 @@
 from collections.abc import Collection, Sequence
 from copy import copy
-from typing import Any, Self
+from typing import Self
 
 from PyQt6.QtCore import QAbstractItemModel, QModelIndex, QSortFilterProxyModel, Qt
 from PyQt6.QtWidgets import QTreeView
@@ -191,7 +191,7 @@ class CheckableAccountTreeModel(QAbstractItemModel):
             return QAbstractItemModel.createIndex(self, row, column, child)
         return QModelIndex()
 
-    def parent(self, index: QModelIndex = ...) -> QModelIndex:
+    def parent(self, index: QModelIndex) -> QModelIndex:  # type: ignore[override]
         if not index.isValid():
             return QModelIndex()
 
@@ -207,7 +207,7 @@ class CheckableAccountTreeModel(QAbstractItemModel):
         return QAbstractItemModel.createIndex(self, parent_row, 0, parent)
 
     def data(  # noqa: PLR0911, C901
-        self, index: QModelIndex, role: Qt.ItemDataRole = ...
+        self, index: QModelIndex, role: int = ...
     ) -> str | Qt.AlignmentFlag | None:
         if not index.isValid():
             return None
@@ -232,11 +232,11 @@ class CheckableAccountTreeModel(QAbstractItemModel):
             return item.path
         return None
 
-    def setData(
+    def setData(  # type: ignore[override]
         self,
         index: QModelIndex,
-        value: Any,
-        role: int = ...,  # noqa: ANN401
+        value: object,
+        role: int = ...,
     ) -> bool | None:
         if role == Qt.ItemDataRole.CheckStateRole:
             item: AccountTreeNode = index.internalPointer()

@@ -2,7 +2,6 @@ from enum import Enum, auto
 from typing import Any
 
 from src.models.custom_exceptions import NotFoundError
-from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
 from src.models.mixins.name_mixin import NameMixin
 from src.models.mixins.uuid_mixin import UUIDMixin
 
@@ -30,7 +29,7 @@ class CategoryType(Enum):
     DUAL_PURPOSE = "Dual-Purpose"
 
 
-class Attribute(NameMixin, JSONSerializableMixin):
+class Attribute(NameMixin):
     __slots__ = ("_allow_colon", "_allow_slash", "_name", "_type")
 
     def __init__(self, name: str, type_: AttributeType) -> None:
@@ -60,17 +59,8 @@ class Attribute(NameMixin, JSONSerializableMixin):
     def __str__(self) -> str:
         return self._name
 
-    def serialize(self) -> dict[str, Any]:
-        return {"datatype": "Attribute", "name": self._name, "type": self._type.name}
 
-    @staticmethod
-    def deserialize(data: dict[str, Any]) -> "Attribute":
-        name = data["name"]
-        type_ = AttributeType[data["type"]]
-        return Attribute(name, type_)
-
-
-class Category(NameMixin, JSONSerializableMixin, UUIDMixin):
+class Category(NameMixin, UUIDMixin):
     __slots__ = (
         "_allow_colon",
         "_allow_slash",

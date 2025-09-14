@@ -20,7 +20,7 @@ class SimpleListModel(QAbstractListModel):
             return 0
         return len(self._items)
 
-    def data(self, index: QModelIndex, role: Qt.ItemDataRole) -> str | None:
+    def data(self, index: QModelIndex, role: int = ...) -> str | None:
         if not index.isValid():
             return None
         item = self._items[index.row()]

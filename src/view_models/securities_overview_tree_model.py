@@ -391,7 +391,7 @@ class SecuritiesOverviewTreeModel(QAbstractItemModel):
             return QAbstractItemModel.createIndex(self, row, column, child)
         return QModelIndex()
 
-    def parent(self, index: QModelIndex | None = None) -> QModelIndex:
+    def parent(self, index: QModelIndex) -> QModelIndex:  # type: ignore[override]
         if not index.isValid():
             return QModelIndex()
 
@@ -410,7 +410,7 @@ class SecuritiesOverviewTreeModel(QAbstractItemModel):
         return QAbstractItemModel.createIndex(self, row, 0, parent)
 
     def headerData(
-        self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole
+        self, section: int, orientation: Qt.Orientation, role: int = ...
     ) -> str | int | None:
         if role == Qt.ItemDataRole.DisplayRole:
             if orientation == Qt.Orientation.Horizontal:
@@ -423,7 +423,7 @@ class SecuritiesOverviewTreeModel(QAbstractItemModel):
         return None
 
     def data(
-        self, index: QModelIndex, role: Qt.ItemDataRole
+        self, index: QModelIndex, role: int = ...
     ) -> str | Qt.AlignmentFlag | float | None:
         if not index.isValid():
             return None

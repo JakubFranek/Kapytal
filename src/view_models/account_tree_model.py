@@ -272,7 +272,7 @@ class AccountTreeModel(QAbstractItemModel):
             return QAbstractItemModel.createIndex(self, row, column, child)
         return QModelIndex()
 
-    def parent(self, child: QModelIndex = ...) -> QModelIndex:
+    def parent(self, child: QModelIndex) -> QModelIndex:  # type: ignore[override]
         if not child.isValid():
             return QModelIndex()
 
@@ -295,7 +295,7 @@ class AccountTreeModel(QAbstractItemModel):
             return FLAGS_SHOW
         return FLAGS_DEFAULT
 
-    def setData(
+    def setData(  # type: ignore[override]
         self,
         index: QModelIndex,
         value: Any,  # noqa: ANN401
@@ -314,7 +314,7 @@ class AccountTreeModel(QAbstractItemModel):
         return None
 
     def headerData(
-        self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole = ...
+        self, section: int, orientation: Qt.Orientation, role: int = ...
     ) -> str | int | None:
         if role == Qt.ItemDataRole.DisplayRole:
             if orientation == Qt.Orientation.Horizontal:
@@ -325,7 +325,7 @@ class AccountTreeModel(QAbstractItemModel):
         return None
 
     def data(  # noqa: PLR0911, C901
-        self, index: QModelIndex, role: Qt.ItemDataRole = ...
+        self, index: QModelIndex, role: int = ...
     ) -> str | QIcon | QBrush | Qt.AlignmentFlag | None:
         if not index.isValid():
             return None

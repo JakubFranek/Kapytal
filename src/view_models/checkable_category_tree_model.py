@@ -1,7 +1,7 @@
 from collections.abc import Collection, Sequence
 from copy import copy
 from enum import Enum, auto
-from typing import Any, Self
+from typing import Self
 
 from PyQt6.QtCore import QAbstractItemModel, QModelIndex, Qt
 from PyQt6.QtGui import QFont
@@ -224,7 +224,7 @@ class CheckableCategoryTreeModel(QAbstractItemModel):
             return QAbstractItemModel.createIndex(self, row, column, child)
         return QModelIndex()
 
-    def parent(self, index: QModelIndex = ...) -> QModelIndex:
+    def parent(self, index: QModelIndex) -> QModelIndex:  # type: ignore[override]
         if not index.isValid():
             return QModelIndex()
 
@@ -240,7 +240,7 @@ class CheckableCategoryTreeModel(QAbstractItemModel):
         return QAbstractItemModel.createIndex(self, parent_row, 0, parent)
 
     def data(
-        self, index: QModelIndex, role: Qt.ItemDataRole = ...
+        self, index: QModelIndex, role: int = ...
     ) -> str | Qt.AlignmentFlag | None:
         if not index.isValid():
             return None
@@ -255,10 +255,10 @@ class CheckableCategoryTreeModel(QAbstractItemModel):
             return node.item.path
         return None
 
-    def setData(
+    def setData(  # type: ignore[override]
         self,
         index: QModelIndex,
-        value: Any,
+        value: object,
         role: int = ...,
     ) -> bool | None:
         if role == Qt.ItemDataRole.CheckStateRole:

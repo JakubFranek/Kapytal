@@ -126,7 +126,7 @@ class TransactionTableModel(QAbstractTableModel):
         return self._column_count
 
     def data(  # noqa: PLR0911
-        self, index: QModelIndex, role: Qt.ItemDataRole
+        self, index: QModelIndex, role: int = ...
     ) -> str | float | QIcon | Qt.AlignmentFlag | QBrush | QFont | None:
         if not index.isValid():
             return None
@@ -161,7 +161,7 @@ class TransactionTableModel(QAbstractTableModel):
         return None
 
     def headerData(
-        self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole
+        self, section: int, orientation: Qt.Orientation, role: int = ...
     ) -> str | int | None:
         if role == Qt.ItemDataRole.DisplayRole:
             if orientation == Qt.Orientation.Horizontal:

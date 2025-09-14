@@ -47,7 +47,7 @@ class CurrencyTableModel(QAbstractTableModel):
         return self._column_count
 
     def headerData(
-        self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole = ...
+        self, section: int, orientation: Qt.Orientation, role: int = ...
     ) -> str | int | None:
         if role == Qt.ItemDataRole.DisplayRole:
             if orientation == Qt.Orientation.Horizontal:
@@ -56,7 +56,7 @@ class CurrencyTableModel(QAbstractTableModel):
         return None
 
     def data(  # noqa: PLR0911
-        self, index: QModelIndex, role: Qt.ItemDataRole = ...
+        self, index: QModelIndex, role: int = ...
     ) -> str | QIcon | None:
         if not index.isValid():
             return None

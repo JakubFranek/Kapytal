@@ -60,12 +60,12 @@ class AssetTypeTreeModel(QAbstractItemModel):
             return QAbstractItemModel.createIndex(self, row, column, child)
         return QModelIndex()
 
-    def parent(self, index: QModelIndex) -> QModelIndex:
-        if not index.isValid():
+    def parent(self, child: QModelIndex) -> QModelIndex:  # type: ignore[override]
+        if not child.isValid():
             return QModelIndex()
 
-        child: AssetStats = index.internalPointer()
-        parent = child.parent
+        _child: AssetStats = child.internalPointer()
+        parent = _child.parent
         if parent is None:
             return QModelIndex()
         grandparent = parent.parent
@@ -76,7 +76,7 @@ class AssetTypeTreeModel(QAbstractItemModel):
         return QAbstractItemModel.createIndex(self, row, 0, parent)
 
     def headerData(
-        self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole
+        self, section: int, orientation: Qt.Orientation, role: int = ...
     ) -> str | int | None:
         if role == Qt.ItemDataRole.DisplayRole:
             if orientation == Qt.Orientation.Horizontal:
@@ -87,12 +87,14 @@ class AssetTypeTreeModel(QAbstractItemModel):
         return None
 
     def data(
-        self, index: QModelIndex, role: Qt.ItemDataRole
+        self, index: QModelIndex, role: int = ...
     ) -> str | Qt.AlignmentFlag | None | float | QIcon | QBrush:
         if not index.isValid():
             return None
+
         column = index.column()
         item: AssetStats = index.internalPointer()
+
         if role == Qt.ItemDataRole.DisplayRole:
             return self._get_display_role_data(column, item)
         if role == Qt.ItemDataRole.UserRole:  # sort role
@@ -144,13 +146,17 @@ class AssetTypeTreeModel(QAbstractItemModel):
         if item.asset_type == AssetType.CURRENCY:
             return icons.currency
         if item.asset_type == AssetType.SECURITY:
-            if item.parent is None or item.parent.parent is None:
-                return icons.securities
-            return icons.security
+            return (
+                icons.securities
+                if item.parent is None or item.parent.parent is None
+                else icons.security
+            )
         if item.asset_type == AssetType.ACCOUNT:
-            if item.parent.asset_type == AssetType.SECURITY:
-                return icons.security_account
-            return icons.cash_account
+            return (
+                icons.security_account
+                if item.parent.asset_type == AssetType.SECURITY
+                else icons.cash_account
+            )
         return None
 
     def _get_foreground_role_data(self, column: int, item: AssetStats) -> QBrush | None:

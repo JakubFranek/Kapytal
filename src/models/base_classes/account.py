@@ -4,7 +4,6 @@ from typing import TYPE_CHECKING
 
 from src.models.mixins.balance_mixin import BalanceMixin
 from src.models.mixins.copyable_mixin import CopyableMixin
-from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
 from src.models.mixins.name_mixin import NameMixin
 from src.models.mixins.uuid_mixin import UUIDMixin
 from src.models.model_objects.account_group import AccountGroup
@@ -19,9 +18,7 @@ class UnrelatedAccountError(ValueError):
     not relate to it."""
 
 
-class Account(
-    CopyableMixin, NameMixin, UUIDMixin, BalanceMixin, JSONSerializableMixin, ABC
-):
+class Account(CopyableMixin, NameMixin, UUIDMixin, BalanceMixin, ABC):
     __slots__ = ()
 
     def __init__(self, name: str, parent: AccountGroup | None = None) -> None:
@@ -73,5 +70,6 @@ class Account(
     @abstractmethod
     def get_balance(self, currency: Currency, date_: date | None = None) -> CashAmount:
         """Returns latest balance, or the latest balance for the specified date."""
-        # TODO: None date should be initialized to today, which is not necessarily the latest!
+        # TODO: None date should be initialized to today,
+        # which is not necessarily the latest!
         raise NotImplementedError

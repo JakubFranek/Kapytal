@@ -23,7 +23,7 @@ class BackupPathsListModel(QAbstractListModel):
             return 0
         return len(self.paths)
 
-    def data(self, index: QModelIndex, role: Qt.ItemDataRole) -> str | None:
+    def data(self, index: QModelIndex, role: int = ...) -> str | None:
         if not index.isValid():
             return None
         if role == Qt.ItemDataRole.DisplayRole:

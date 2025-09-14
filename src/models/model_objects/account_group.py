@@ -7,13 +7,12 @@ if TYPE_CHECKING:
     from src.models.base_classes.account import Account
 
 from src.models.mixins.balance_mixin import BalanceMixin
-from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
 from src.models.mixins.name_mixin import NameMixin
 from src.models.mixins.uuid_mixin import UUIDMixin
 from src.models.model_objects.currency_objects import CashAmount, Currency
 
 
-class AccountGroup(NameMixin, BalanceMixin, JSONSerializableMixin, UUIDMixin):
+class AccountGroup(NameMixin, BalanceMixin, UUIDMixin):
     __slots__ = (
         "_allow_colon",
         "_allow_slash",

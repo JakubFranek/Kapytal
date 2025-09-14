@@ -10,7 +10,6 @@ if TYPE_CHECKING:
     from src.models.base_classes.account import Account
 
 from src.models.mixins.datetime_created_mixin import DatetimeCreatedMixin
-from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
 from src.models.mixins.uuid_mixin import UUIDMixin
 from src.models.model_objects.attributes import (
     Attribute,
@@ -19,9 +18,7 @@ from src.models.model_objects.attributes import (
 )
 
 
-class Transaction(
-    CopyableMixin, DatetimeCreatedMixin, UUIDMixin, JSONSerializableMixin, ABC
-):
+class Transaction(CopyableMixin, DatetimeCreatedMixin, UUIDMixin, ABC):
     __slots__ = ()
 
     DESCRIPTION_MIN_LENGTH = 0

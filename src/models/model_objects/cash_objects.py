@@ -71,7 +71,7 @@ class CashRelatedTransaction(Transaction, ABC):
         return self._get_amount(account)
 
     @abstractmethod
-    def _get_amount(self, account: "CashAccount | None") -> CashAmount:
+    def _get_amount(self, account: "CashAccount") -> CashAmount:
         raise NotImplementedError
 
     @property
@@ -480,9 +480,7 @@ class CashTransaction(CashRelatedTransaction):
             tag_amount_pairs=decoded_tag_amount_pairs,
             uuid=UUID(data["uuid"]),
         )
-        obj._datetime_created = datetime.fromisoformat(
-            data["datetime_created"]
-        )
+        obj._datetime_created = datetime.fromisoformat(data["datetime_created"])
         return obj
 
     def add_refund(self, refund: "RefundTransaction") -> None:
@@ -988,7 +986,7 @@ class CashTransaction(CashRelatedTransaction):
             return frozenset((CategoryType.INCOME, CategoryType.DUAL_PURPOSE))
         return frozenset((CategoryType.EXPENSE, CategoryType.DUAL_PURPOSE))
 
-    def _get_amount(self, account: CashAccount | None) -> CashAmount:  # noqa: ARG002
+    def _get_amount(self, account: CashAccount) -> CashAmount:  # noqa: ARG002
         if self.type_ == CashTransactionType.INCOME:
             return self._amount
         return self._amount_negative
@@ -1120,9 +1118,7 @@ class CashTransfer(CashRelatedTransaction):
             amount_received=amount_received,
             uuid=UUID(data["uuid"]),
         )
-        obj._datetime_created = datetime.fromisoformat(
-            data["datetime_created"]
-        )
+        obj._datetime_created = datetime.fromisoformat(data["datetime_created"])
         return obj
 
     def set_attributes(
@@ -1294,9 +1290,7 @@ class CashTransfer(CashRelatedTransaction):
         if amount.currency != currency:
             raise CurrencyError("Invalid CashAmount currency.")
 
-    def _get_amount(self, account: CashAccount | None) -> CashAmount:
-        if account is None:
-            raise TypeError("Parameter 'account' must be a CashAccount.")
+    def _get_amount(self, account: CashAccount) -> CashAmount:
         if self.recipient == account:
             return self._amount_received
         return -self._amount_sent
@@ -1500,9 +1494,7 @@ class RefundTransaction(CashRelatedTransaction):
             tag_amount_pairs=decoded_tag_amount_pairs,
             uuid=UUID(data["uuid"]),
         )
-        obj._datetime_created = datetime.fromisoformat(
-            data["datetime_created"]
-        )
+        obj._datetime_created = datetime.fromisoformat(data["datetime_created"])
         return obj
 
     def add_tags(self, tags: Collection[Attribute]) -> None:  # noqa: ARG002
@@ -1792,7 +1784,7 @@ class RefundTransaction(CashRelatedTransaction):
                     f"{min_value} and {max_value}."
                 )
 
-    def _get_amount(self, account: CashAccount | None) -> CashAmount:  # noqa: ARG002
+    def _get_amount(self, account: CashAccount) -> CashAmount:  # noqa: ARG002
         return self._amount
 
 

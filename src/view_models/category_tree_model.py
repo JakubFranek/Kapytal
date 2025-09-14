@@ -143,7 +143,7 @@ class CategoryTreeModel(QAbstractItemModel):
             return QAbstractItemModel.createIndex(self, row, column, child)
         return QModelIndex()
 
-    def parent(self, child: QModelIndex = ...) -> QModelIndex:
+    def parent(self, child: QModelIndex) -> QModelIndex:  # type: ignore[override]
         if not child.isValid():
             return QModelIndex()
 
@@ -159,7 +159,7 @@ class CategoryTreeModel(QAbstractItemModel):
         return QAbstractItemModel.createIndex(self, parent_row, 0, parent)
 
     def headerData(
-        self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole = ...
+        self, section: int, orientation: Qt.Orientation, role: int = ...
     ) -> str | int | None:
         if role == Qt.ItemDataRole.TextAlignmentRole:
             return Qt.AlignmentFlag.AlignCenter
@@ -170,12 +170,14 @@ class CategoryTreeModel(QAbstractItemModel):
         return None
 
     def data(
-        self, index: QModelIndex, role: Qt.ItemDataRole = ...
+        self, index: QModelIndex, role: int = ...
     ) -> str | Qt.AlignmentFlag | None:
         if not index.isValid():
             return None
+
         column = index.column()
         node: CategoryTreeNode = index.internalPointer()
+
         if role == Qt.ItemDataRole.DisplayRole:
             return self._get_display_role_data(column, node)
         if role == Qt.ItemDataRole.UserRole:

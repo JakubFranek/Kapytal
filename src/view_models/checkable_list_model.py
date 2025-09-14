@@ -57,7 +57,7 @@ class CheckableListModel(QAbstractListModel):
         return len(self._items)
 
     def data(
-        self, index: QModelIndex, role: Qt.ItemDataRole
+        self, index: QModelIndex, role: int = ...
     ) -> str | Qt.CheckState | QIcon | None:
         if not index.isValid():
             return None
@@ -77,11 +77,11 @@ class CheckableListModel(QAbstractListModel):
             return self._icons[index.row()]
         return None
 
-    def setData(
+    def setData(  # type: ignore[override]
         self,
         index: QModelIndex,
         value: Any,  # noqa: ANN401
-        role: int,
+        role: int = ...,
     ) -> bool | None:
         if role == Qt.ItemDataRole.CheckStateRole:
             item: str = self._items[index.row()]

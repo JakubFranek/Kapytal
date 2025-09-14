@@ -257,7 +257,7 @@ class PeriodicCategoryStatsTreeModel(QAbstractItemModel):
             return QAbstractItemModel.createIndex(self, row, column, child)
         return QModelIndex()
 
-    def parent(self, child: QModelIndex = ...) -> QModelIndex:
+    def parent(self, child: QModelIndex) -> QModelIndex:  # type: ignore[override]
         if not child.isValid():
             return QModelIndex()
 
@@ -273,7 +273,7 @@ class PeriodicCategoryStatsTreeModel(QAbstractItemModel):
         return QAbstractItemModel.createIndex(self, row, 0, parent)
 
     def headerData(
-        self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole = ...
+        self, section: int, orientation: Qt.Orientation, role: int = ...
     ) -> str | int | None:
         if (
             role == Qt.ItemDataRole.DisplayRole
@@ -291,7 +291,7 @@ class PeriodicCategoryStatsTreeModel(QAbstractItemModel):
         return None
 
     def data(
-        self, index: QModelIndex, role: Qt.ItemDataRole = ...
+        self, index: QModelIndex, role: int = ...
     ) -> str | Qt.AlignmentFlag | QFont | QBrush | float | int | None:
         if not index.isValid():
             return None
@@ -299,6 +299,7 @@ class PeriodicCategoryStatsTreeModel(QAbstractItemModel):
         row_object: RowObject = index.internalPointer()
         row = index.row()
         column = index.column()
+
         if role == Qt.ItemDataRole.DisplayRole:
             return self._get_display_role_data(row, column, row_object)
         if role == Qt.ItemDataRole.UserRole:  # sort role
@@ -306,9 +307,7 @@ class PeriodicCategoryStatsTreeModel(QAbstractItemModel):
         if role == Qt.ItemDataRole.UserRole + 1:  # filter role
             return self._get_filter_role_data(column, row_object)
         if role == Qt.ItemDataRole.TextAlignmentRole:
-            if column == 0:
-                return ALIGNMENT_LEFT
-            return ALIGNMENT_RIGHT
+            return ALIGNMENT_LEFT if column == 0 else ALIGNMENT_RIGHT
         if role == Qt.ItemDataRole.ForegroundRole:
             return self._get_foreground_role_data(column, row_object.data[column - 1])
         if role == Qt.ItemDataRole.FontRole:

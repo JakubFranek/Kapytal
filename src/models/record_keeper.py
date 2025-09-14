@@ -802,8 +802,8 @@ class RecordKeeper:
             ):
                 raise ValueError(
                     "If mixed currency SecurityTransactions are edited and "
-                    "security_name is None, cash_account_path and amount_per_share must "
-                    "be None too."
+                    "security_name is None, cash_account_path and amount_per_share "
+                    "must be None too."
                 )
             if security_name is not None and (
                 cash_account_path is None or amount_per_share is None
@@ -994,6 +994,7 @@ class RecordKeeper:
         if existing_attribute is None:
             edited_attribute.name = new_name
             return
+
         if merge:
             if type_ == AttributeType.PAYEE:
                 for transaction in self._cash_transactions + self._refund_transactions:
@@ -1510,8 +1511,7 @@ class RecordKeeper:
         obj = RecordKeeper()
         obj._currencies = data["currencies"]
         currencies: dict[str, Currency] = {
-            currency.code: currency
-            for currency in obj._currencies
+            currency.code: currency for currency in obj._currencies
         }
         base_currency_code = data["base_currency_code"]
         if base_currency_code is not None:
@@ -1521,9 +1521,7 @@ class RecordKeeper:
             data["exchange_rates"], currencies, progress_callable
         )
         for exchange_rate in obj._exchange_rates:
-            exchange_rate.event_reset_currency_caches.append(
-                obj._reset_currency_caches
-            )
+            exchange_rate.event_reset_currency_caches.append(obj._reset_currency_caches)
 
         securities = RecordKeeper._deserialize_securities(
             data["securities"], currencies, progress_callable
@@ -1548,60 +1546,40 @@ class RecordKeeper:
             if isinstance(account, SecurityAccount)
         ]
 
-        obj._root_account_items = (
-            RecordKeeper._deserialize_root_account_items(
-                data["root_account_items"],
-                account_groups,
-                accounts,
-            )
+        obj._root_account_items = RecordKeeper._deserialize_root_account_items(
+            data["root_account_items"],
+            account_groups,
+            accounts,
         )
 
-        obj._payees = [
-            Attribute(name, AttributeType.PAYEE) for name in data["payees"]
-        ]
-        payees: dict[str, Attribute] = {
-            payee.name: payee
-            for payee in obj._payees
-        }
-        obj._tags = [
-            Attribute(name, AttributeType.TAG) for name in data["tags"]
-        ]
-        tags: dict[str, Attribute] = {
-            tag.name: tag
-            for tag in obj._tags
-        }
+        obj._payees = [Attribute(name, AttributeType.PAYEE) for name in data["payees"]]
+        payees: dict[str, Attribute] = {payee.name: payee for payee in obj._payees}
+        obj._tags = [Attribute(name, AttributeType.TAG) for name in data["tags"]]
+        tags: dict[str, Attribute] = {tag.name: tag for tag in obj._tags}
 
         categories = RecordKeeper._deserialize_categories(data["categories"])
         obj._categories = list(categories.values())
 
-        obj._root_income_categories = (
-            RecordKeeper._deserialize_root_categories(
-                data["root_income_categories"], categories
-            )
+        obj._root_income_categories = RecordKeeper._deserialize_root_categories(
+            data["root_income_categories"], categories
         )
-        obj._root_expense_categories = (
-            RecordKeeper._deserialize_root_categories(
-                data["root_expense_categories"], categories
-            )
+        obj._root_expense_categories = RecordKeeper._deserialize_root_categories(
+            data["root_expense_categories"], categories
         )
-        obj._root_dual_purpose_categories = (
-            RecordKeeper._deserialize_root_categories(
-                data["root_dual_purpose_categories"],
-                categories,
-            )
+        obj._root_dual_purpose_categories = RecordKeeper._deserialize_root_categories(
+            data["root_dual_purpose_categories"],
+            categories,
         )
 
-        obj._transactions_uuid_dict = (
-            RecordKeeper._deserialize_transactions(
-                data["transactions"],
-                accounts,
-                payees,
-                tags,
-                categories,
-                currencies,
-                securities,
-                progress_callable,
-            )
+        obj._transactions_uuid_dict = RecordKeeper._deserialize_transactions(
+            data["transactions"],
+            accounts,
+            payees,
+            tags,
+            categories,
+            currencies,
+            securities,
+            progress_callable,
         )
 
         # Sorting transactions here is useful because front-end can assume that

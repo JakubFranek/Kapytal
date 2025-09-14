@@ -75,7 +75,7 @@ class SecurityAccountTableModel(QAbstractTableModel):
         return self._column_count
 
     def headerData(
-        self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole
+        self, section: int, orientation: Qt.Orientation, role: int = ...
     ) -> str | int | None:
         if (
             role == Qt.ItemDataRole.DisplayRole
@@ -85,7 +85,7 @@ class SecurityAccountTableModel(QAbstractTableModel):
         return None
 
     def data(
-        self, index: QModelIndex, role: Qt.ItemDataRole
+        self, index: QModelIndex, role: int = ...
     ) -> str | Qt.AlignmentFlag | float | QBrush | None:
         if not index.isValid():
             return None

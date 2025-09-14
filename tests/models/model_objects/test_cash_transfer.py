@@ -3,7 +3,7 @@ from types import NoneType
 from typing import Any
 
 import pytest
-from hypothesis import assume, given
+from hypothesis import assume, example, given
 from hypothesis import strategies as st
 from src.models.model_objects.cash_objects import (
     CashAccount,
@@ -25,6 +25,8 @@ from tests.models.test_assets.composites import (
     everything_except,
 )
 from tests.models.test_assets.constants import MIN_DATETIME
+
+cash_transfer_example = cash_transfers().example()
 
 
 @given(
@@ -123,6 +125,7 @@ def test_get_amount_for_account(transfer: CashTransfer) -> None:
     transaction=cash_transfers(),
     account=everything_except(CashAccount),
 )
+@example(account=None, transaction=cash_transfer_example)
 def test_get_amount_invalid_account_type(
     transaction: CashTransfer, account: Any
 ) -> None:
