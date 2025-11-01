@@ -2,8 +2,9 @@ import locale
 from datetime import datetime
 from decimal import Decimal
 
-from PyQt6.QtCore import QDateTime
-from PyQt6.QtWidgets import QSpinBox, QTableView
+from PyQt6.QtCore import QDateTime, Qt
+from PyQt6.QtGui import QKeyEvent
+from PyQt6.QtWidgets import QDateTimeEdit, QSpinBox, QTableView
 from src.models.user_settings import user_settings
 
 
@@ -39,3 +40,29 @@ def convert_datetime_format_to_qt(datetime_format: str) -> str:
     except Exception as exception:
         raise ValueError("Invalid datetime format specified.") from exception
     return datetime_format
+
+
+def overflowing_keyPressEvent(self: QDateTimeEdit, event: QKeyEvent) -> None:
+    """Assign this method to a QDateTimeEdit to enable natural date overflow."""
+
+    key = event.key()
+    steps = 0
+    if key == Qt.Key.Key_Up:
+        steps = 1
+    elif key == Qt.Key.Key_Down:
+        steps = -1
+
+    if steps != 0:
+        section = self.currentSection()
+        dt = self.dateTime()
+        if section == QDateTimeEdit.Section.DaySection:
+            self.setDateTime(dt.addDays(steps))
+            return
+        if section == QDateTimeEdit.Section.MonthSection:
+            self.setDateTime(dt.addMonths(steps))
+            return
+        if section == QDateTimeEdit.Section.YearSection:
+            self.setDateTime(dt.addYears(steps))
+            return
+
+    super(QDateTimeEdit, self).keyPressEvent(event)
