@@ -4,11 +4,12 @@ from pathlib import Path
 
 from PyQt6.QtCore import QSize, Qt, pyqtSignal
 from PyQt6.QtGui import QAction, QCloseEvent, QIcon, QKeyEvent
-from PyQt6.QtWidgets import QFileDialog, QMainWindow, QMessageBox
+from PyQt6.QtWidgets import QDateTimeEdit, QFileDialog, QMainWindow, QMessageBox
 from src.utilities import constants
 from src.views import icons
 from src.views.dialogs.about_dialog import AboutDialog
 from src.views.ui_files.Ui_main_window import Ui_MainWindow
+from src.views.utilities.helper_functions import overflowing_keyPressEvent
 from src.views.widgets.account_tree_widget import AccountTreeWidget
 from src.views.widgets.transaction_table_widget import TransactionTableWidget
 
@@ -166,6 +167,7 @@ class MainView(QMainWindow, Ui_MainWindow):
         about_dialog.exec()
 
     def _initial_setup(self) -> None:
+        QDateTimeEdit.keyPressEvent = overflowing_keyPressEvent
         icons.setup()
 
         self.setupUi(self)
