@@ -71,10 +71,14 @@ class MainView(QMainWindow, Ui_MainWindow):
         self.transaction_table_widget.tableView.setUpdatesEnabled(enabled)
 
     def get_save_path(self) -> str:
-        return QFileDialog.getSaveFileName(self, filter="JSON file (*.json)")[0]
+        return QFileDialog.getSaveFileName(
+            self, filter="Encrypted JSON file (*.json.enc);;JSON file (*.json)"
+        )[0]
 
     def get_open_path(self) -> str:
-        return QFileDialog.getOpenFileName(self, filter="JSON file (*.json)")[0]
+        return QFileDialog.getOpenFileName(
+            self, filter="All JSON files (*.json *.json.enc)"
+        )[0]
 
     def ask_save_before_close(self) -> bool | None:
         """True: save & close \n False: close \n None: cancel"""
