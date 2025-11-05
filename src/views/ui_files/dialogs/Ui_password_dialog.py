@@ -23,7 +23,7 @@ class Ui_PasswordDialog(object):
         self.verticalLayout.setSizeConstraint(QtWidgets.QLayout.SizeConstraint.SetDefaultConstraint)
         self.verticalLayout.setObjectName("verticalLayout")
         self.passwordLineEdit = QtWidgets.QLineEdit(parent=PasswordDialog)
-        self.passwordLineEdit.setEchoMode(QtWidgets.QLineEdit.EchoMode.PasswordEchoOnEdit)
+        self.passwordLineEdit.setEchoMode(QtWidgets.QLineEdit.EchoMode.Password)
         self.passwordLineEdit.setObjectName("passwordLineEdit")
         self.verticalLayout.addWidget(self.passwordLineEdit)
         self.buttonBox = QtWidgets.QDialogButtonBox(parent=PasswordDialog)
