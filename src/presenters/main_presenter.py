@@ -48,6 +48,7 @@ class MainPresenter:
         self._update_presenter.check_for_updates(silent=silent)
 
     def show_welcome_dialog(self) -> None:
+        self._view.setDisabled(True)  # disabling MainView until WelcomeDialog is gone
         self._welcome_dialog = WelcomeDialog(self._view)
         self._welcome_dialog.signal_new_file.connect(self._close_welcome_dialog)
         self._welcome_dialog.signal_open_file.connect(self._load_file)
@@ -114,6 +115,7 @@ class MainPresenter:
                 return
             logging.info("Qutting")
         self._quitting = True
+        self._file_presenter.clear_encryption_session()
         self._app.quit()
 
     def _load_record_keeper(self, record_keeper: RecordKeeper) -> None:

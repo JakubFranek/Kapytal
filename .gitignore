@@ -5,6 +5,7 @@ dist
 __pycache__
 *.log
 saved_data/**/*.json
+saved_data/**/*.json.enc
 !saved_data/demo_basic.json
 !saved_data/demo_mortgage.json
 !saved_data/template_category_en.json

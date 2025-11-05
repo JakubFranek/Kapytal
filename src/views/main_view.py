@@ -71,10 +71,45 @@ class MainView(QMainWindow, Ui_MainWindow):
         self.transaction_table_widget.tableView.setUpdatesEnabled(enabled)
 
     def get_save_path(self) -> str:
-        return QFileDialog.getSaveFileName(self, filter="JSON file (*.json)")[0]
+        path, selected_filter = QFileDialog.getSaveFileName(
+            self, filter="Encrypted JSON file (*.json.enc);;JSON file (*.json)"
+        )
+
+        if not path:
+            return ""
+
+        # Map filters to the extension we want to enforce
+        ext_map = {
+            "Encrypted JSON file (*.json.enc)": ".json.enc",
+            "JSON file (*.json)": ".json",
+        }
+
+        chosen_ext = ext_map.get(selected_filter)
+        if not chosen_ext:
+            return path  # unknown filter; don't touch
+
+        # Known extensions to strip from the end (longer first)
+        known_exts = sorted(ext_map.values(), key=len, reverse=True)
+
+        # Strip ANY known extension repeatedly (handles duplicates or wrong one)
+        path_lowered = path.lower()
+        changed = True
+        while changed:
+            changed = False
+            for ext in known_exts:
+                if path_lowered.endswith(ext.lower()):
+                    path = path[: -len(ext)]
+                    path_lowered = path.lower()
+                    changed = True
+                    break
+
+        # Append the chosen extension once
+        return path + chosen_ext
 
     def get_open_path(self) -> str:
-        return QFileDialog.getOpenFileName(self, filter="JSON file (*.json)")[0]
+        return QFileDialog.getOpenFileName(
+            self, filter="All JSON files (*.json *.json.enc)"
+        )[0]
 
     def ask_save_before_close(self) -> bool | None:
         """True: save & close \n False: close \n None: cancel"""

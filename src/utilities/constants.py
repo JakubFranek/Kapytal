@@ -20,6 +20,8 @@ DEMO_MORTGAGE_FILE_SUFFIX = "saved_data/demo_mortgage.json"
 TEMPLATE_CATEGORY_EN_FILE_SUFFIX = "saved_data/template_category_en.json"
 TEMPLATE_CATEGORY_CZ_FILE_SUFFIX = "saved_data/template_category_cz.json"
 
+PASSWORD_MIN_LENGTH = 8
+
 # Runtime constants
 app_root_path: Path
 settings_path: Path
