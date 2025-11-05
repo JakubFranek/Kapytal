@@ -9,7 +9,10 @@ from src.utilities import constants
 from src.views import icons
 from src.views.dialogs.about_dialog import AboutDialog
 from src.views.ui_files.Ui_main_window import Ui_MainWindow
-from src.views.utilities.helper_functions import overflowing_keyPressEvent
+from src.views.utilities.helper_functions import (
+    overflowing_keyPressEvent,
+    overflowing_wheelEvent,
+)
 from src.views.widgets.account_tree_widget import AccountTreeWidget
 from src.views.widgets.transaction_table_widget import TransactionTableWidget
 
@@ -203,6 +206,7 @@ class MainView(QMainWindow, Ui_MainWindow):
 
     def _initial_setup(self) -> None:
         QDateTimeEdit.keyPressEvent = overflowing_keyPressEvent
+        QDateTimeEdit.wheelEvent = overflowing_wheelEvent
         icons.setup()
 
         self.setupUi(self)
