@@ -41,7 +41,12 @@ class EncryptionSession:
     def is_password_set(self) -> bool:
         return self._password_bytes is not None
 
-    def set_password(self, password: str) -> None:
+    @property
+    def password(self) -> str | None:
+        return self._password_bytes
+
+    @password.setter
+    def password(self, password: str) -> None:
         self._password_bytes = password.encode()
 
     def clear_password_cache(self) -> None:
@@ -66,7 +71,7 @@ class EncryptionSession:
         key = self._derive_key(salt)
         aesgcm = AESGCM(key)
         nonce = os.urandom(12)
-        ciphertext = aesgcm.encrypt(nonce, plaintext, None)
+        ciphertext = aesgcm.encrypt(nonce=nonce, data=plaintext, associated_data=None)
         return base64.b64encode(salt + nonce + ciphertext)
 
     def decrypt(self, encrypted_bytes: bytes) -> dict[str, Any]:
@@ -203,13 +208,10 @@ class FilePresenter:
                 logging.info("Save to file cancelled: invalid or no file path received")
                 return False
 
-            if (
-                self._is_password_required(
-                    Path(file_path), operation=FileOperation.SAVE
-                )
-                and not self._run_password_dialog()
-            ):
-                return False
+            if self._is_password_required(
+                Path(file_path), operation=FileOperation.SAVE
+            ) and not self._run_password_dialog(FileOperation.SAVE):
+                return False  # Password required, but not provided
             self._current_file_path = Path(file_path)
 
         logging.debug(f"Saving to file: {self._current_file_path}")
@@ -231,11 +233,10 @@ class FilePresenter:
                 )
                 return False
 
-        if (
-            self._is_password_required(Path(path), operation=FileOperation.LOAD)
-            and not self._run_password_dialog()
-        ):
-            return False
+        if self._is_password_required(
+            Path(path), operation=FileOperation.LOAD
+        ) and not self._run_password_dialog(FileOperation.LOAD):
+            return False  # Password required, but not provided
 
         logging.debug(f"File path: {path}")
         self._current_file_path = Path(path).absolute()
@@ -483,15 +484,28 @@ class FilePresenter:
 
         return True  # Always require password for encrypted file load
 
-    def _run_password_dialog(self) -> bool:
+    def _run_password_dialog(self, operation: FileOperation) -> bool:
+        old_password = self._encryption_session.password
+
         self._dialog = PasswordDialog(self._view)
+        if operation == FileOperation.LOAD:
+            self._dialog.set_window_title("Decrypt File")
+        else:
+            self._dialog.set_window_title("Encrypt File")
+
         self._dialog.signal_ok.connect(self._validate_password_dialog)
         self._dialog.signal_cancel.connect(self._dialog.close)
 
         logging.debug("Asking the user for password")
         self._dialog.exec()
 
-        if self._encryption_session.is_password_set:
+        if self._encryption_session.is_password_set and (
+            operation == FileOperation.LOAD
+            or (
+                operation == FileOperation.SAVE
+                and old_password != self._encryption_session.password
+            )
+        ):
             logging.debug("Password accepted")
             return True
 
@@ -501,7 +515,7 @@ class FilePresenter:
     def _validate_password_dialog(self) -> None:
         password = self._dialog.password
         if len(password) >= constants.PASSWORD_MIN_LENGTH:
-            self._encryption_session.set_password(password)
+            self._encryption_session.password = password
             self._dialog.accept()
         else:
             display_error_message(

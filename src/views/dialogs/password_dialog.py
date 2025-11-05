@@ -13,7 +13,6 @@ class PasswordDialog(CustomDialog, Ui_PasswordDialog):
         super().__init__(parent=parent)
         self.setupUi(self)
         self.resize(270, 80)
-        self.setWindowTitle("Enter Password")
         self.setWindowIcon(icons.password)
 
         self.buttonBox.clicked.connect(self._handle_button_box_click)
@@ -21,6 +20,9 @@ class PasswordDialog(CustomDialog, Ui_PasswordDialog):
     @property
     def password(self) -> str:
         return self.passwordLineEdit.text()
+
+    def set_window_title(self, title: str) -> None:
+        self.setWindowTitle(title)
 
     def _handle_button_box_click(self, button: QAbstractButton) -> None:
         role = self.buttonBox.buttonRole(button)
