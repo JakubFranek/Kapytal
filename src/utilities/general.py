@@ -17,7 +17,10 @@ def backup_json_file(file_path: Path) -> None:
     size_limit = user_settings.settings.backups_max_size_bytes
 
     backup_name = (
-        file_path.stem + "_" + dt_now.strftime(constants.TIMESTAMP_FORMAT) + ".json"
+        file_path.stem
+        + "_"
+        + dt_now.strftime(constants.TIMESTAMP_FORMAT)
+        + file_path.suffix
     )
 
     for backup_directory in user_settings.settings.backup_paths:
@@ -131,12 +134,10 @@ def get_exception_info(
 
 class TreeItem(Protocol):
     @property
-    def children(self) -> Collection[Self]:
-        ...
+    def children(self) -> Collection[Self]: ...
 
     @property
-    def parent(self) -> Self | None:
-        ...
+    def parent(self) -> Self | None: ...
 
 
 TreeItemType = TypeVar("TreeItemType", bound=TreeItem)
