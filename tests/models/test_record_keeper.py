@@ -27,6 +27,7 @@ from tests.models.test_assets.composites import (
     names,
     valid_decimals,
 )
+from tests.utilities.constants import IBANS_VALID
 
 
 def test_creation() -> None:
@@ -245,7 +246,9 @@ def test_add_cash_account(
     record_keeper.add_currency(currency_code, decimals)
     if parent_name:
         record_keeper.add_account_group(parent_name)
-    record_keeper.add_cash_account(path, currency_code, initial_balance)
+    record_keeper.add_cash_account(
+        path, currency_code, initial_balance, iban=IBANS_VALID[0]
+    )
     parent_group = record_keeper.account_groups[0] if parent_name else None
     cash_account: CashAccount = record_keeper.accounts[0]
     assert cash_account.name == name
@@ -487,7 +490,9 @@ def test_add_cash_account_already_exists(data: st.DataObject) -> None:
     path = account.path
     currency = data.draw(st.sampled_from(record_keeper.currencies))
     with pytest.raises(AlreadyExistsError):
-        record_keeper.add_cash_account(path, currency.code, Decimal(0))
+        record_keeper.add_cash_account(
+            path, currency.code, Decimal(0), iban=IBANS_VALID[0]
+        )
 
 
 def test_get_account_parent_does_not_exist() -> None:
@@ -1199,26 +1204,31 @@ def get_preloaded_record_keeper() -> RecordKeeper:
         path="Bank Accounts/Raiffeisen CZK",
         currency_code="CZK",
         initial_balance_value=Decimal(1500),
+        iban=IBANS_VALID[0],
     )
     record_keeper.add_cash_account(
         path="Bank Accounts/Fio CZK",
         currency_code="CZK",
         initial_balance_value=Decimal(0),
+        iban=IBANS_VALID[1],
     )
     record_keeper.add_cash_account(
         path="Bank Accounts/Creditas CZK",
         currency_code="CZK",
         initial_balance_value=Decimal(100_000),
+        iban=IBANS_VALID[2],
     )
     record_keeper.add_cash_account(
         path="Bank Accounts/Moneta EUR",
         currency_code="EUR",
         initial_balance_value=Decimal(1600),
+        iban=IBANS_VALID[3],
     )
     record_keeper.add_cash_account(
         path="Bank Accounts/Revolut EUR",
         currency_code="EUR",
         initial_balance_value=Decimal(0),
+        iban=IBANS_VALID[4],
     )
     record_keeper.add_security_account("Security Accounts/Degiro")
     record_keeper.add_security_account("Security Accounts/Interactive Brokers")

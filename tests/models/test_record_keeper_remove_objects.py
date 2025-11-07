@@ -15,6 +15,7 @@ from src.models.user_settings import user_settings
 from tests.models.test_record_keeper import (
     get_preloaded_record_keeper_with_various_transactions,
 )
+from tests.utilities.constants import IBANS_VALID
 
 if TYPE_CHECKING:
     from src.models.model_objects.currency_objects import Currency
@@ -27,7 +28,7 @@ def test_remove_account() -> None:
     parent = record_keeper.account_groups[0]
 
     record_keeper.add_security_account("PARENT/SECURITY")
-    record_keeper.add_cash_account("PARENT/CASH", "CZK", 0)
+    record_keeper.add_cash_account("PARENT/CASH", "CZK", 0, iban=IBANS_VALID[0])
     assert len(parent.children) == 2
     assert len(record_keeper.accounts) == 2
 
@@ -202,7 +203,7 @@ def test_remove_currency_referenced_in_security() -> None:
 def test_remove_currency_referenced_in_account() -> None:
     record_keeper = RecordKeeper()
     record_keeper.add_currency("CZK", 2)
-    record_keeper.add_cash_account("PATH", "CZK", 0)
+    record_keeper.add_cash_account("PATH", "CZK", 0, iban=IBANS_VALID[0])
     with pytest.raises(InvalidOperationError):
         record_keeper.remove_currency("CZK")
 

@@ -24,6 +24,7 @@ from src.models.user_settings.user_settings_class import NumberFormat, UserSetti
 from tests.models.test_assets.composites import (
     attributes,
 )
+from tests.utilities.constants import IBANS_VALID
 
 
 def test_invalid_object() -> None:
@@ -93,8 +94,12 @@ def test_record_keeper_accounts() -> None:
     record_keeper.add_currency("EUR", 2)
     record_keeper.add_account_group("Security Accounts", None)
     record_keeper.add_account_group("Cash Accounts", None)
-    record_keeper.add_cash_account("Cash Accounts/CZK Account", "CZK", 0)
-    record_keeper.add_cash_account("Cash Accounts/EUR Account", "EUR", 0)
+    record_keeper.add_cash_account(
+        "Cash Accounts/CZK Account", "CZK", 0, IBANS_VALID[0]
+    )
+    record_keeper.add_cash_account(
+        "Cash Accounts/EUR Account", "EUR", 0, IBANS_VALID[1]
+    )
     record_keeper.add_security_account("Security Accounts/Degiro")
     serialized = record_keeper.serialize(lambda *args, **kwargs: None)  # noqa: ARG005
     serialized = json.dumps(serialized, cls=CustomJSONEncoder)
@@ -203,8 +208,10 @@ def test_record_keeper_transactions() -> None:
         "ČSOB Dynamický penzijní fond", "CSOB.DYN", "Pension Fund", "CZK", 0
     )
     record_keeper.add_account_group("Bank Accounts", None)
-    record_keeper.add_cash_account("Bank Accounts/Raiffeisen", "CZK", 15000)
-    record_keeper.add_cash_account("Bank Accounts/Moneta", "CZK", 0)
+    record_keeper.add_cash_account(
+        "Bank Accounts/Raiffeisen", "CZK", 15000, IBANS_VALID[0]
+    )
+    record_keeper.add_cash_account("Bank Accounts/Moneta", "CZK", 0, IBANS_VALID[1])
     record_keeper.add_security_account("ČSOB penzijní účet", None)
     record_keeper.add_security_account("ČSOB penzijní účet 2", None)
     record_keeper.add_cash_transaction(
