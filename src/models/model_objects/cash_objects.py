@@ -1,5 +1,6 @@
 import logging
 import operator
+import re
 from abc import ABC, abstractmethod
 from bisect import bisect_right
 from collections.abc import Collection
@@ -34,6 +35,7 @@ from src.models.model_objects.currency_objects import (
     CurrencyError,
 )
 from src.models.user_settings import user_settings
+from src.utilities.constants import IBAN_LENGTHS
 
 
 class UnrelatedTransactionError(ValueError):
@@ -92,6 +94,7 @@ class CashAccount(Account):
         "_balance_history",
         "_balances",
         "_currency",
+        "_iban",
         "_initial_balance",
         "_name",
         "_parent",
@@ -106,6 +109,7 @@ class CashAccount(Account):
         name: str,
         currency: Currency,
         initial_balance: CashAmount,
+        iban: str = "",
         parent: AccountGroup | None = None,
     ) -> None:
         if not isinstance(currency, Currency):
@@ -123,6 +127,8 @@ class CashAccount(Account):
         ] = [(datetime.now(user_settings.settings.time_zone), initial_balance, None)]
         self._transactions: set[CashRelatedTransaction] = set()
 
+        self.iban = iban  # IBAN validation done within the setter
+
         # parent is set last because it triggers chain of balance updates
         self.allow_update_balance = True
         super().__init__(name=name, parent=parent)
@@ -130,6 +136,20 @@ class CashAccount(Account):
     @property
     def currency(self) -> Currency:
         return self._currency
+
+    @property
+    def iban(self) -> str:
+        return self._iban
+
+    @iban.setter
+    def iban(self, iban: str) -> None:
+        if not iban:
+            self._iban = ""
+        else:
+            valid = _validate_iban(iban)
+            if not valid:
+                raise ValueError("CashAccount.iban must be a valid IBAN.")
+            self._iban = iban.replace(" ", "").replace("\t", "").upper()
 
     @property
     def initial_balance(self) -> CashAmount:
@@ -216,6 +236,7 @@ class CashAccount(Account):
             "index": index,
             "currency_code": self._currency.code,
             "initial_balance": str(self._initial_balance.value_rounded),
+            "iban": self._iban,
             "uuid": str(self._uuid),
         }
 
@@ -230,10 +251,11 @@ class CashAccount(Account):
         parent_path, _, name = path.rpartition("/")
         initial_balance_value = data["initial_balance"]
         currency = currencies[data["currency_code"]]
+        iban = data.get("iban", "")
 
         initial_balance = CashAmount(initial_balance_value, currency)
 
-        obj = CashAccount(name, currency, initial_balance)
+        obj = CashAccount(name, currency, initial_balance, iban)
         obj._uuid = UUID(data["uuid"])
 
         if parent_path:
@@ -1862,3 +1884,28 @@ def _get_amount_for_category(
         if total and _category in descendants:
             running_sum = func(running_sum, _amount)
     return running_sum
+
+
+def _validate_iban(iban: str) -> bool:
+    """Returns True if the IBAN is valid, False otherwise.
+    Copied from https://gist.github.com/dkdndes/578c579a86f7a19c646d5db9a4f9a845."""
+
+    # Ensure upper alphanumeric input.
+    iban = iban.replace(" ", "").replace("\t", "")
+    if not re.match(r"^[\dA-Z]+$", iban):
+        return False
+
+    # Validate country code against expected length.
+    if len(iban) != IBAN_LENGTHS[iban[:2]]:
+        return False
+
+    # Checksum validation (ISO 13616 / Mod 97):
+    # Move the first 4 characters to the end of the string.
+    # Replace each letter with its corresponding number (A=10, B=11, … Z=35).
+    # Interpret the result as a decimal integer and check that the remainder
+    # when divided by 97 is 1.
+    iban = iban[4:] + iban[:4]
+    digits = int(
+        "".join(str(int(ch, 36)) for ch in iban)
+    )  # BASE 36: 0..9,A..Z -> 0..35
+    return digits % 97 == 1

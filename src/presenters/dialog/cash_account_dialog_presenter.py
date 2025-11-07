@@ -87,6 +87,7 @@ class CashAccountDialogPresenter:
             raise ValueError("Cannot edit an unselected item.")
         self._dialog.current_path = selected_item.path
         self._dialog.path = selected_item.path
+        self._dialog.iban = selected_item.iban
         self._dialog.position = self._get_item_index(selected_item) + 1
 
         logging.debug("Running CashAccountDialog (edit=True)")
@@ -97,14 +98,16 @@ class CashAccountDialogPresenter:
         index = self._dialog.position - 1
         currency_code = self._dialog.currency_code
         initial_balance = self._dialog.initial_balance
+        iban = self._dialog.iban
 
         logging.info(
             f"Adding CashAccount: {path=}, {index=}, "
-            f"initial_balance={initial_balance} {currency_code}"
+            f"initial_balance={initial_balance} {currency_code},"
+            f"iban={iban}"
         )
         try:
             self._record_keeper.add_cash_account(
-                path, currency_code, initial_balance, index
+                path, currency_code, initial_balance, iban, index
             )
         except Exception as exception:  # noqa: BLE001
             handle_exception(exception)
@@ -136,18 +139,21 @@ class CashAccountDialogPresenter:
             return
         new_index = self._dialog.position - 1
         initial_balance = self._dialog.initial_balance
+        new_iban = self._dialog.iban
 
         logging.info(
             f"Editing CashAccount at path='{item.path}', index={previous_index}, "
             f"initial_balance={item.initial_balance.to_str_rounded()}: "
             f"new path={new_path}, new index={new_index}, "
-            f"new initial_balance={initial_balance} {item.currency.code}"
+            f"new initial_balance={initial_balance} {item.currency.code},"
+            f"new iban={self._dialog.iban}"
         )
         try:
             self._record_keeper.edit_cash_account(
                 current_path=previous_path,
                 new_path=new_path,
                 initial_balance=initial_balance,
+                iban=new_iban,
                 index=new_index,
             )
         except Exception as exception:  # noqa: BLE001
