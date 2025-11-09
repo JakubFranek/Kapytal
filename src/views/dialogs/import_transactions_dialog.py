@@ -53,17 +53,21 @@ class ImportTransactionsDialog(CustomDialog, Ui_ImportTransactionsDialog):
             self.actionSelect_Transaction_Data_File
         )
 
-        self.actionSelect_Column_Map_File.setIcon(icons.open_file)
-        self.actionSelect_Column_Map_File.triggered.connect(
-            lambda: self._select_file(self.columnMapLineEdit, FILTER_COLUMN_MAP)
+        self.actionSelect_Import_Profile_File.setIcon(icons.open_file)
+        self.actionSelect_Import_Profile_File.triggered.connect(
+            lambda: self._select_file(self.importProfileLineEdit, FILTER_COLUMN_MAP)
         )
-        self.columnMapToolButton.setDefaultAction(self.actionSelect_Column_Map_File)
+        self.importProfileToolButton.setDefaultAction(
+            self.actionSelect_Import_Profile_File
+        )
 
-        self.actionSelect_Payee_Map_File.setIcon(icons.open_file)
-        self.actionSelect_Payee_Map_File.triggered.connect(
-            lambda: self._select_file(self.payeeMapLineEdit, FILTER_PAYEE_MAP)
+        self.actionSelect_Payee_Mapping_File.setIcon(icons.open_file)
+        self.actionSelect_Payee_Mapping_File.triggered.connect(
+            lambda: self._select_file(self.payeeMappingLineEdit, FILTER_PAYEE_MAP)
         )
-        self.payeeMapToolButton.setDefaultAction(self.actionSelect_Payee_Map_File)
+        self.payeeMappingToolButton.setDefaultAction(
+            self.actionSelect_Payee_Mapping_File
+        )
 
         self.buttonBox.clicked.connect(self._handle_button_box_click)
 
@@ -76,12 +80,16 @@ class ImportTransactionsDialog(CustomDialog, Ui_ImportTransactionsDialog):
         return self.transactionDataLineEdit.text()
 
     @property
-    def path_column_map(self) -> str:
-        return self.columnMapLineEdit.text()
+    def path_import_profile(self) -> str:
+        return self.importProfileLineEdit.text()
 
     @property
-    def path_payee_map(self) -> str:
-        return self.payeeMapLineEdit.text()
+    def path_payee_mapping(self) -> str:
+        return self.payeeMappingLineEdit.text()
+
+    @property
+    def cash_account(self) -> str:
+        return self.cashAccountComboBox.currentText()
 
     def _handle_button_box_click(self, button: QAbstractButton) -> None:
         role = self.buttonBox.buttonRole(button)
