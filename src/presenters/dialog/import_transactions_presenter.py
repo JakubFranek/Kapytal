@@ -1,21 +1,15 @@
 import csv
 import json
 import logging
-from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
-from src.models.base_classes.account import Account
-from src.models.custom_exceptions import NotFoundError
-from src.models.model_objects.account_group import AccountGroup
-from src.models.model_objects.cash_objects import CashAccount
-from src.models.record_keeper import RecordKeeper
+from src.models.model_objects.cash_objects import CashAccount, CashTransactionType
 from src.presenters.dialog.transaction_dialog_presenter import (
     TransactionDialogPresenter,
 )
-from src.presenters.utilities.event import Event
 from src.presenters.utilities.handle_exception import handle_exception
 from src.views.dialogs.import_transactions_dialog import ImportTransactionsDialog
 from src.views.utilities.handle_exception import display_error_message
@@ -39,13 +33,19 @@ class ImportTransactionsDialogPresenter(TransactionDialogPresenter):
         self._dialog.exec()
 
     def _import_transactions(self) -> None:
-        cash_account_name = self._dialog.cash_account
+        cash_account_path = self._dialog.cash_account
+        currency = self._record_keeper.get_account(
+            cash_account_path, CashAccount
+        ).currency
+
         path_transaction_data = Path(self._dialog.path_transaction_data)
         path_import_profile = Path(self._dialog.path_import_profile)
         path_payee_map = Path(self._dialog.path_payee_mapping)
 
         profile_dict = _read_import_profile(path_import_profile)
         column_dict = profile_dict["columns"]
+
+        transactions_added = 0
 
         with path_transaction_data.open(
             encoding=profile_dict["encoding"]
@@ -58,8 +58,9 @@ class ImportTransactionsDialogPresenter(TransactionDialogPresenter):
             if profile_dict["has_header"]:
                 next(reader)
             for row in reader:
+                # TODO: handle errors gracefully, update table accordingly
                 date_str = _parse_field(row, column_dict["date"])
-                date = _parse_date(date_str, column_dict["date"])
+                datetime_ = _parse_date(date_str, column_dict["date"])
 
                 description = _parse_field(row, column_dict["description"])
                 amount = _parse_amount(
@@ -69,67 +70,72 @@ class ImportTransactionsDialogPresenter(TransactionDialogPresenter):
                 payee = _parse_field(row, column_dict["payee"])
                 category = _parse_field(row, column_dict["category"])
                 tag = _parse_field(row, column_dict["tag"])
-                pass
 
-        # datetime_ = self._dialog.datetime_
-        # if datetime_ is None:
-        #     raise ValueError("Expected datetime_, received None.")
-        # if not validate_datetime(datetime_, self._dialog):
-        #     return
-        # description = (
-        #     self._dialog.description if self._dialog.description is not None else ""
-        # )
-        # security_name = self._dialog.security_name
-        # type_ = self._dialog.type_
-        # shares = self._dialog.shares
-        # amount_per_share = self._dialog.amount_per_share
-        # security_account_path = self._dialog.security_account_path
-        # cash_account_path = self._dialog.cash_account_path
-        # tag_names = self._dialog.tag_names
+                iban_account_path = (
+                    self._get_account_path_from_iban(iban) if iban else ""
+                )
+                if iban_account_path:
+                    # IBAN account found, this is going to be a Cash Transfer
+                    if amount < 0:
+                        sender_path = cash_account_path
+                        recipient_path = iban_account_path
+                    else:
+                        sender_path = iban_account_path
+                        recipient_path = cash_account_path
 
-        # if not check_for_nonexistent_attributes(
-        #     tag_names, self._record_keeper.tags, AttributeType.TAG, self._dialog
-        # ):
-        #     logging.debug("Dialog aborted")
-        #     return
+                    logging.info(
+                        f"Adding CashTransfer: {datetime_.strftime('%Y-%m-%d')}, "
+                        f"{description=}, sender={sender_path}, "
+                        f"sent={amount} {currency.code}, recipient={recipient_path}, "
+                        f"received={amount} {currency.code}, {tag=}"
+                    )
 
-        # try:
-        #     cash_account = self._record_keeper.get_account(
-        #         cash_account_path, CashAccount
-        #     )
-        # except Exception as exception:  # noqa: BLE001
-        #     handle_exception(exception)
-        #     return
+                    self._record_keeper.add_cash_transfer(
+                        description=description,
+                        datetime_=datetime_,
+                        account_sender_path=sender_path,
+                        account_recipient_path=recipient_path,
+                        amount_sent=amount,
+                        amount_received=amount,
+                        tag_names=(tag,),
+                    )
+                else:
+                    # IBAN account not found, this is going to be a Cash Transaction
+                    if amount < 0:
+                        transaction_type = CashTransactionType.EXPENSE
+                    else:
+                        transaction_type = CashTransactionType.INCOME
 
-        # logging.info(
-        #     f"Adding SecurityTransaction: {datetime_.strftime('%Y-%m-%d')}, "
-        #     f"{description=}, type={type_.name}, security='{security_name}', "
-        #     f"cash_account='{cash_account_path}', "
-        #     f"security_account_path='{security_account_path}', shares={shares}, "
-        #     f"amount_per_share={amount_per_share} {cash_account.currency.code}, "
-        #     f"tags={tag_names}"
-        # )
-        # try:
-        #     self._record_keeper.add_security_transaction(
-        #         description,
-        #         datetime_,
-        #         type_,
-        #         security_name,
-        #         shares,
-        #         amount_per_share,
-        #         security_account_path,
-        #         cash_account_path,
-        #         tag_names,
-        #     )
-        # except Exception as exception:  # noqa: BLE001
-        #     handle_exception(exception)
-        #     return
+                    logging.info(
+                        f"Adding CashTransaction: {datetime_.strftime('%Y-%m-%d')}, "
+                        f"{description=}, type={transaction_type.name}, "
+                        f"{cash_account_path=}, {payee=}, "
+                        f"amount={amount!s} {currency.code}, "
+                        f"{category=}, {tag=}"
+                    )
 
-        # self.event_pre_add()
-        # self.event_update_model()
-        # self.event_post_add()
+                    self._record_keeper.add_cash_transaction(
+                        description=description,
+                        datetime_=datetime_,
+                        transaction_type=transaction_type,
+                        account_path=cash_account_path,
+                        payee_name=payee,
+                        category_path_amount_pairs=((category, abs(amount)),),
+                        tag_name_amount_pairs=((tag, abs(amount)),),
+                    )
+                transactions_added += 1
+
+        self.event_pre_add(transactions_added)
+        self.event_update_model()
+        self.event_post_add()
         self._dialog.close()
-        # self.event_data_changed()
+        self.event_data_changed()
+
+    def _get_account_path_from_iban(self, iban: str) -> str:
+        for account in self._record_keeper.cash_accounts:
+            if account.iban == iban:
+                return account.path
+        return ""
 
 
 def _read_import_profile(path: Path) -> dict[str, Any]:
@@ -157,6 +163,8 @@ def _parse_field(csv_row: str, profile: dict[str, Any]) -> str:
         for i in profile["indices"]:
             if i < len(csv_row) and csv_row[i].strip() != "":
                 return csv_row[i].strip()
+        if "fallback" in profile:
+            return profile["fallback"]
         raise ValueError("No non-empty index found")
 
     # Single index
@@ -169,14 +177,11 @@ def _parse_field(csv_row: str, profile: dict[str, Any]) -> str:
     raise ValueError(f"Invalid profile: {profile}")
 
 
-def _parse_amount(raw: str, profile: dict[str, Any]) -> Decimal | None:
+def _parse_amount(raw: str, profile: dict[str, Any]) -> Decimal:
     raw = raw.strip()
     raw = raw.replace(profile.get("thousand_separator", ""), "")
     raw = raw.replace(profile.get("decimal_separator", "."), ".")
-    try:
-        return Decimal(raw)
-    except ValueError:
-        return None
+    return Decimal(raw)
 
 
 def _parse_date(raw: str, profile: dict[str, Any]) -> datetime:
