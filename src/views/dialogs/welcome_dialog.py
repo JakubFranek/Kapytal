@@ -3,11 +3,20 @@ from pathlib import Path
 
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QAction, QCloseEvent, QIcon, QPixmap
-from PyQt6.QtWidgets import QGridLayout, QLabel, QMenu, QPushButton, QWidget
+from PyQt6.QtWidgets import (
+    QApplication,
+    QGridLayout,
+    QLabel,
+    QMenu,
+    QPushButton,
+    QWidget,
+)
 from src.utilities import constants
 from src.views import colors, icons
 from src.views.base_classes.custom_dialog import CustomDialog
 from src.views.ui_files.dialogs.Ui_welcome_dialog import Ui_WelcomeDialog
+
+PATH_STRING_MAX_LENGTH = 30
 
 
 class WelcomeDialog(CustomDialog, Ui_WelcomeDialog):
@@ -36,7 +45,16 @@ class WelcomeDialog(CustomDialog, Ui_WelcomeDialog):
             self.pixmap = QPixmap(
                 str(constants.app_root_path / "resources/images/welcome_light_mode.png")
             ).scaledToWidth(512, Qt.TransformationMode.SmoothTransformation)
-        self.label.setPixmap(self.pixmap)
+
+        screen = QApplication.primaryScreen()
+        dpr = screen.devicePixelRatio()
+
+        pixmap = self.pixmap.scaledToWidth(
+            int(512 * dpr), Qt.TransformationMode.SmoothTransformation
+        )
+        pixmap.setDevicePixelRatio(dpr)
+
+        self.label.setPixmap(pixmap)
 
         self._setup_button(
             self.createNewFilePushButton, icons.document_plus, "New File"
@@ -135,7 +153,7 @@ class WelcomeDialog(CustomDialog, Ui_WelcomeDialog):
 def _shorten_path_string(path: Path) -> str:
     """Returns shortened path string limited to 30(+3) characters."""
     str_ = str(path)
-    if len(str_) <= 30:
+    if len(str_) <= PATH_STRING_MAX_LENGTH:
         return str_
 
     segments = Path(path).parts
@@ -143,6 +161,6 @@ def _shorten_path_string(path: Path) -> str:
     for i in range(1, n_segments):
         path = Path(*segments[i:n_segments])
         str_ = str(path)
-        if len(str_) <= 30:
+        if len(str_) <= PATH_STRING_MAX_LENGTH:
             return f"...{os.sep}{str_}"
     return "mouseover to show full path"
