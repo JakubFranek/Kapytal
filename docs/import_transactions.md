@@ -10,7 +10,7 @@ This guide explains how to prepare these files and run the import.
 ## 1. Prepare a Cash Account
 
 Before importing, make sure there is at least one [Cash Account](./glossary.md#cash-account-icon) created in your [data file](./glossary.md#data-file).
-All imported transactions will be added into the selected account.
+All imported transactions will be added into the selected account. The [Currency](./glossary.md#currency-icon) of the amounts inside the CSV is assumed to match the Currency of the Cash Account.
 
 ## 2. Prepare Your CSV File
 
@@ -79,6 +79,7 @@ Example:
     - `description`
     - `amount`
       - Optional sub-fields are `decimal_separator` and `thousand_separator`.
+      - Negative numbers are expected for outgoing transactions, positive numbers for incoming transactions.
     - `iban`
     - `payee`
     - `category`

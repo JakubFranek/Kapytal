@@ -1,6 +1,6 @@
 {
   "version": "1.1.0", 
-  "datetime_saved": "2025-11-07T19:21:16.489618+01:00", 
+  "datetime_saved": "2025-11-15T23:03:17.056578+01:00", 
   "data": {
     "datatype": "RecordKeeper", 
     "currencies": [
@@ -518,7 +518,7 @@
         "index": 1, 
         "currency_code": "EUR", 
         "initial_balance": "0.00", 
-        "iban": "", 
+        "iban": "IE64IRCE92050112345678", 
         "uuid": "8f792753-b734-45c2-bfca-52ae222eebd7"
       }, 
       {
@@ -635,7 +635,7 @@
         "index": 0, 
         "currency_code": "EUR", 
         "initial_balance": "2900.00", 
-        "iban": "", 
+        "iban": "IE34000000000000000002", 
         "uuid": "a14378b8-506f-4de5-a2d3-28dd755b9011"
       }
     ], 
