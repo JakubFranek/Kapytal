@@ -8,6 +8,8 @@ saved_data/**/*.json
 saved_data/**/*.json.enc
 !saved_data/demo_basic.json
 !saved_data/demo_mortgage.json
+!saved_data/demo_import_profile.json
+!saved_data/demo_payee_map.json
 !saved_data/template_category_en.json
 !saved_data/template_category_cz.json
 saved_data/archive

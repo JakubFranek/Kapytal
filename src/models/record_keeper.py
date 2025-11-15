@@ -317,6 +317,7 @@ class RecordKeeper:
         path: str,
         currency_code: str,
         initial_balance_value: Decimal | int | str,
+        iban: str,
         index: int | None = None,
     ) -> None:
         parent_path, _, name = path.rpartition("/")
@@ -324,7 +325,7 @@ class RecordKeeper:
         currency = self.get_currency(currency_code)
         parent = self.get_account_group_or_none(parent_path)
         initial_balance = CashAmount(initial_balance_value, currency)
-        account = CashAccount(name, currency, initial_balance, parent)
+        account = CashAccount(name, currency, initial_balance, iban, parent)
         self._set_account_item_index(account, index)
         self._accounts.append(account)
         self._cash_accounts.append(account)
@@ -1027,6 +1028,7 @@ class RecordKeeper:
         current_path: str,
         new_path: str,
         initial_balance: Decimal | int | str,
+        iban: str,
         index: int | None = None,
     ) -> None:
         parent_path, _, name = new_path.rpartition("/")
@@ -1035,6 +1037,7 @@ class RecordKeeper:
         edited_account = self.get_account(current_path, CashAccount)
         new_parent = self.get_account_group_or_none(parent_path)
         edited_account.name = name
+        edited_account.iban = iban
         edited_account.initial_balance = CashAmount(
             initial_balance, edited_account.currency
         )

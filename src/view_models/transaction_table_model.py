@@ -169,9 +169,11 @@ class TransactionTableModel(QAbstractTableModel):
             return str(section)
         return None
 
-    def pre_add(self) -> None:
+    def pre_add(self, amount: int = 1) -> None:
         self._view.setSortingEnabled(False)
-        self.beginInsertRows(QModelIndex(), self.rowCount(), self.rowCount())
+        self.beginInsertRows(
+            QModelIndex(), self.rowCount(), self.rowCount() + (amount - 1)
+        )
 
     def post_add(self) -> None:
         self.endInsertRows()

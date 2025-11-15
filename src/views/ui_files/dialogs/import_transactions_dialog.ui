@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ImportTransactionsDialog</class>
+ <widget class="QDialog" name="ImportTransactionsDialog">
+  <property name="windowModality">
+   <enum>Qt::WindowModal</enum>
+  </property>
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>350</width>
+    <height>268</height>
+   </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
+  <property name="windowTitle">
+   <string>Import Transactions</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,0,1,0">
+   <property name="sizeConstraint">
+    <enum>QLayout::SetDefaultConstraint</enum>
+   </property>
+   <item>
+    <layout class="QGridLayout" name="gridLayout">
+     <item row="1" column="1">
+      <widget class="QLineEdit" name="transactionDataLineEdit">
+       <property name="placeholderText">
+        <string>Enter CSV file path</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="2">
+      <widget class="QToolButton" name="transactionDataToolButton">
+       <property name="text">
+        <string>...</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="importProfileLabel">
+       <property name="text">
+        <string>Import Profile</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="transactionDataLabel">
+       <property name="text">
+        <string>Transaction Data</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="2">
+      <widget class="QToolButton" name="payeeMappingToolButton">
+       <property name="text">
+        <string>...</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="2">
+      <widget class="QToolButton" name="importProfileToolButton">
+       <property name="text">
+        <string>...</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="0">
+      <widget class="QLabel" name="payeeMappingLabel">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="text">
+        <string>Payee Mapping</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="QLineEdit" name="importProfileLineEdit">
+       <property name="placeholderText">
+        <string>Enter JSON file path</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="1">
+      <widget class="QLineEdit" name="payeeMappingLineEdit">
+       <property name="placeholderText">
+        <string>Enter JSON file path</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0">
+      <widget class="QLabel" name="cashAccountLabel">
+       <property name="text">
+        <string>Cash Account</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="Line" name="line">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="label">
+     <property name="text">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Importing Transactions is not reversible. Transactions will be created in sequence, if a creation fails, the previously created Transactions will stay. Make sure Kapytal is set to automatically create backups or create a backup manually. Read the Help for more info.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item>
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Help|QDialogButtonBox::Ok</set>
+     </property>
+    </widget>
+   </item>
+  </layout>
+  <action name="actionSelect_Transaction_Data_File">
+   <property name="text">
+    <string>Select Transaction Data File</string>
+   </property>
+   <property name="toolTip">
+    <string>Select Transaction Data File</string>
+   </property>
+  </action>
+  <action name="actionSelect_Import_Profile_File">
+   <property name="text">
+    <string>Select Import Profile File</string>
+   </property>
+   <property name="toolTip">
+    <string>Select Import Profile File</string>
+   </property>
+  </action>
+  <action name="actionSelect_Payee_Mapping_File">
+   <property name="text">
+    <string>Select Payee Mapping File</string>
+   </property>
+   <property name="toolTip">
+    <string>Select Payee Mapping File</string>
+   </property>
+  </action>
+ </widget>
+ <tabstops>
+  <tabstop>transactionDataLineEdit</tabstop>
+  <tabstop>transactionDataToolButton</tabstop>
+  <tabstop>importProfileLineEdit</tabstop>
+  <tabstop>importProfileToolButton</tabstop>
+  <tabstop>payeeMappingLineEdit</tabstop>
+  <tabstop>payeeMappingToolButton</tabstop>
+ </tabstops>
+ <resources/>
+ <connections/>
+</ui>

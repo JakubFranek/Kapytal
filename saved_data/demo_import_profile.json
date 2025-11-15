@@ -1,0 +1,35 @@
+{
+  "column_delimiter": ";",
+  "quote_char": "\"",
+  "encoding": "utf-8-sig",
+  "has_header": true,
+
+  "columns": {
+    "date": {
+      "index": 0,
+      "format": "%d. %m. %Y"
+    },
+    "description": {
+      "indices": [4, 10],
+      "join_with": "; "
+    },
+    "amount": {
+      "index": 15,
+      "decimal_separator": ",",
+      "thousand_separator": "\u00A0"
+    },
+    "iban": {
+      "index": 7
+    },
+    "payee": {
+      "indices": [8, 9],
+      "fallback": "Unknown" 
+    },
+    "category": {
+      "constant": "Unknown"
+    },
+    "tag": {
+      "constant": "imported"
+    }
+  }  
+}

@@ -55,6 +55,7 @@ class MainView(QMainWindow, Ui_MainWindow):
     signal_open_recent_file = pyqtSignal(str)
     signal_clear_recent_files = pyqtSignal()
     signal_new_file = pyqtSignal()
+    signal_import_transactions = pyqtSignal()
 
     signal_open_basic_demo = pyqtSignal()
     signal_open_mortgage_demo = pyqtSignal()
@@ -278,6 +279,9 @@ class MainView(QMainWindow, Ui_MainWindow):
             self.signal_clear_recent_files.emit
         )
         self.actionNew_File.triggered.connect(self.signal_new_file.emit)
+        self.actionImport_Transactions.triggered.connect(
+            self.signal_import_transactions.emit
+        )
 
         self.actionShow_Hide_Account_Tree.triggered.connect(
             lambda checked: self.signal_show_account_tree.emit(checked)

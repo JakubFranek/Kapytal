@@ -92,6 +92,14 @@ class CashAccountDialog(CustomDialog, Ui_CashAccountDialog):
         self.initialBalanceDoubleSpinBox.setValue(value)
 
     @property
+    def iban(self) -> str:
+        return self.ibanLineEdit.text().strip().upper()
+
+    @iban.setter
+    def iban(self, value: str) -> None:
+        self.ibanLineEdit.setText(value)
+
+    @property
     def position(self) -> int:
         return self.positionSpinBox.value()
 

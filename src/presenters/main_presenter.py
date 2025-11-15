@@ -264,6 +264,9 @@ class MainPresenter:
             self._file_presenter.clear_recent_paths
         )
         self._view.signal_new_file.connect(self._file_presenter.create_new_file)
+        self._view.signal_import_transactions.connect(
+            self._transactions_presenter.import_transactions
+        )
 
         self._view.signal_show_account_tree.connect(
             lambda checked: self._account_tree_presenter.set_widget_visibility(
