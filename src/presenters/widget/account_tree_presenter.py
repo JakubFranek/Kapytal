@@ -362,7 +362,7 @@ class AccountTreePresenter:
         if item.parent is None:
             return True
         index = self._model.get_index_from_item(item.parent)
-        index = self._proxy.mapFromSource(index)
+        index = self._proxy.mapFromSource(index) # BUG: segmentation fault here on PyQt 6.10 and Python 3.14.0
         if self._view.treeView.isExpanded(index):
             return self._is_item_visible(item.parent)
         return False
