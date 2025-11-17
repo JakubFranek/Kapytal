@@ -116,9 +116,12 @@
    <item>
     <widget class="QLabel" name="label">
      <property name="text">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Importing Transactions is not reversible. Transactions will be created in sequence, if a creation fails, the previously created Transactions will stay. Make sure Kapytal is set to automatically create backups or create a backup manually. Read the Help for more info.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Importing Transactions is not reversible. Transactions will be created in sequence, if an error is encountered, the importing will abort but the previously created Transactions will stay. Make sure Kapytal is set to automatically create backups or create a backup manually. Please read &lt;a href=&quot;https://github.com/JakubFranek/Kapytal/blob/master/docs/import_transactions.md&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#007af4;&quot;&gt;the documentation on GitHub&lt;/span&gt;&lt;/a&gt;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
      <property name="wordWrap">
+      <bool>true</bool>
+     </property>
+     <property name="openExternalLinks">
       <bool>true</bool>
      </property>
     </widget>
@@ -139,7 +142,7 @@
    <item>
     <widget class="QDialogButtonBox" name="buttonBox">
      <property name="standardButtons">
-      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Help|QDialogButtonBox::Ok</set>
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
      </property>
     </widget>
    </item>
