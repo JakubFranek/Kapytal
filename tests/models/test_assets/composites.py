@@ -56,11 +56,14 @@ from tests.models.test_assets.constants import MIN_DATETIME
 
 
 def everything_except(excluded_types: type | tuple[type, ...]) -> Any:
-    return (
+    base = (
         st.from_type(type)
         .flatmap(st.from_type)
         .filter(lambda x: not isinstance(x, excluded_types))
     )
+    if isinstance(excluded_types, tuple) and type(None) in excluded_types:
+        return base
+    return st.one_of(base, st.none())
 
 
 @st.composite
@@ -83,6 +86,7 @@ def account_groups(draw: st.DrawFn) -> AccountGroup:
 @st.composite
 def attributes(draw: st.DrawFn, type_: AttributeType | None = None) -> Attribute:
     name = draw(names())
+    assume(name.lower() != "total")
     attr_type = draw(st.sampled_from(AttributeType)) if type_ is None else type_
     return Attribute(name, attr_type)
 
@@ -133,7 +137,7 @@ def cash_accounts(
 
 
 @st.composite
-def cash_transactions(  # noqa: PLR0913
+def cash_transactions(
     draw: st.DrawFn,
     currency: Currency | None = None,
     min_datetime: datetime = MIN_DATETIME,
@@ -232,6 +236,7 @@ def categories(
     category_type: CategoryType | None = None,
 ) -> Category:
     name = draw(names())
+    assume(name.lower() != "total")
 
     if transaction_type is None:
         if category_type is None:
@@ -399,7 +404,7 @@ def security_accounts(draw: st.DrawFn) -> SecurityAccount:
 
 
 @st.composite
-def security_transactions(  # noqa: PLR0913
+def security_transactions(
     draw: st.DrawFn,
     min_datetime: datetime = MIN_DATETIME,
     max_datetime: datetime = datetime.max,

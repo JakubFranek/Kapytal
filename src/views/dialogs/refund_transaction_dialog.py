@@ -37,7 +37,7 @@ from src.views.widgets.smart_combo_box import SmartComboBox
 class RefundTransactionDialog(CustomDialog, Ui_RefundTransactionDialog):
     signal_do_and_close = pyqtSignal()
 
-    def __init__(  # noqa: PLR0913
+    def __init__(
         self,
         parent: QWidget,
         refunded_transaction: CashTransaction,

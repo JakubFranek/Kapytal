@@ -1,9 +1,16 @@
+import base64
 import json
 import logging
+import os
 from collections.abc import Callable
 from datetime import datetime
+from enum import Enum, auto
 from pathlib import Path
+from typing import Any
 
+from cryptography.exceptions import InvalidTag
+from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 from PyQt6.QtCore import QObject, QThread, pyqtSignal
 from PyQt6.QtWidgets import QApplication
 from src.models.json.custom_json_decoder import CustomJSONDecoder
@@ -15,8 +22,65 @@ from src.presenters.utilities.handle_exception import handle_exception
 from src.utilities import constants
 from src.utilities.general import backup_json_file
 from src.views.dialogs.busy_dialog import create_multi_step_busy_indicator
+from src.views.dialogs.password_dialog import PasswordDialog
 from src.views.main_view import MainView
 from src.views.utilities.handle_exception import display_error_message
+
+
+class FileOperation(Enum):
+    LOAD = auto()
+    SAVE = auto()
+
+
+class EncryptionSession:
+    def __init__(self) -> None:
+        self._key_cache: dict[str, bytes] = {}
+        self._password_bytes: bytes | None = None
+
+    @property
+    def is_password_set(self) -> bool:
+        return self._password_bytes is not None
+
+    @property
+    def password(self) -> str | None:
+        return self._password_bytes
+
+    @password.setter
+    def password(self, password: str) -> None:
+        self._password_bytes = password.encode()
+
+    def clear_password_cache(self) -> None:
+        self._key_cache.clear()
+        self._password_bytes = None
+
+    def _derive_key(self, salt: bytes) -> bytes:
+        if self._password_bytes is None:
+            raise ValueError("Password not set")
+        # Cache key per salt + password combination to avoid re-deriving
+        cache_hex = (salt + self._password_bytes).hex()
+        if cache_hex not in self._key_cache:
+            kdf = Scrypt(salt=salt, length=32, n=2**14, r=8, p=1)
+            self._key_cache[cache_hex] = kdf.derive(self._password_bytes)
+        return self._key_cache[cache_hex]
+
+    def encrypt(self, data: dict) -> bytes:
+        plaintext = json.dumps(data, cls=CustomJSONEncoder, ensure_ascii=False).encode(
+            "utf-8"
+        )
+        salt = os.urandom(16)
+        key = self._derive_key(salt)
+        aesgcm = AESGCM(key)
+        nonce = os.urandom(12)
+        ciphertext = aesgcm.encrypt(nonce=nonce, data=plaintext, associated_data=None)
+        return base64.b64encode(salt + nonce + ciphertext)
+
+    def decrypt(self, encrypted_bytes: bytes) -> dict[str, Any]:
+        raw = base64.b64decode(encrypted_bytes)
+        salt, nonce, ciphertext = raw[:16], raw[16:28], raw[28:]
+        key = self._derive_key(salt)
+        aesgcm = AESGCM(key)
+        plaintext = aesgcm.decrypt(nonce, ciphertext, None)
+        return json.loads(plaintext.decode("utf-8"), cls=CustomJSONDecoder)
 
 
 class LoadFileWorker(QObject):
@@ -27,21 +91,32 @@ class LoadFileWorker(QObject):
     def __init__(self, parent: QObject | None = None) -> None:
         super().__init__(parent)
         self.path: Path
+        self.encryption_session: EncryptionSession | None = None
 
     def run(self) -> None:
         try:
-            with self.path.open(mode="r", encoding="UTF-8") as file:
-                logging.disable(logging.INFO)  # suppress logging of object creation
-                self.data = json.load(file, cls=CustomJSONDecoder)
-                self.record_keeper = RecordKeeper.deserialize(
-                    self.data["data"],
-                    progress_callable=self._progress,
-                )
-                logging.disable(logging.NOTSET)
-                self.finished.emit()
+            if self.encryption_session.is_password_set:
+                self.data = self._load_encrypted_json()
+            else:
+                self.data = self._load_unencrypted_json()
+            logging.disable(logging.INFO)  # suppress logging of object creation
+            self.record_keeper = RecordKeeper.deserialize(
+                self.data["data"],
+                progress_callable=self._progress,
+            )
+            logging.disable(logging.NOTSET)
+            self.finished.emit()
         except Exception as exc:  # noqa: BLE001
             self.exception = exc
             self.failed.emit()
+
+    def _load_encrypted_json(self) -> dict[str, Any]:
+        with self.path.open(mode="rb") as file:
+            return self.encryption_session.decrypt(file.read())
+
+    def _load_unencrypted_json(self) -> dict[str, Any]:
+        with self.path.open(mode="r", encoding="UTF-8") as file:
+            return json.load(file, cls=CustomJSONDecoder)
 
     def _progress(self, progress: int) -> None:
         self.progress.emit(progress)
@@ -58,23 +133,37 @@ class SaveFileWorker(QObject):
         super().__init__(parent)
         self.path: Path
         self.record_keeper: RecordKeeper
+        self.encryption_session: EncryptionSession | None = None
 
     def run(self) -> None:
         try:
-            with self.path.open(mode="w", encoding="UTF-8") as file:
-                self.status_text.emit("Serializing data...")
-                data = {
-                    "version": constants.VERSION,
-                    "datetime_saved": datetime.now(user_settings.settings.time_zone),
-                    "data": self.record_keeper.serialize(self._progress),
-                }
-                self.progress_unknown.emit()
-                self.status_text.emit("Writing to file...")
-                json.dump(data, file, cls=CustomJSONEncoder, ensure_ascii=False)
-                self.finished.emit()
+            self.status_text.emit("Serializing data...")
+            data = {
+                "version": constants.VERSION,
+                "datetime_saved": datetime.now(user_settings.settings.time_zone),
+                "data": self.record_keeper.serialize(self._progress),
+            }
+            self.progress_unknown.emit()
+            if self.encryption_session.is_password_set:
+                self._save_encrypted_json(data)
+            else:
+                self._save_json(data)
+            self.finished.emit()
         except Exception as exc:  # noqa: BLE001
             self.exception = exc
             self.failed.emit()
+
+    def _save_json(self, data: dict) -> None:
+        with self.path.open(mode="w", encoding="UTF-8") as file:
+            self.status_text.emit("Writing to file...")
+            json.dump(data, file, cls=CustomJSONEncoder, ensure_ascii=False)
+
+    def _save_encrypted_json(self, data: dict) -> None:
+        self.status_text.emit("Encrypting data...")
+        encrypted_bytes = self.encryption_session.encrypt(data)
+        with self.path.open(mode="wb") as file:
+            self.status_text.emit("Writing to file...")
+            file.write(encrypted_bytes)
 
     def _progress(self, progress: int) -> None:
         self.progress.emit(progress)
@@ -87,6 +176,7 @@ class FilePresenter:
         self._view = view
         self._initialize_recent_paths()
         self.load_record_keeper(record_keeper)
+        self._encryption_session = EncryptionSession()
 
         # File path initialization
         self._current_file_path: Path | None = None
@@ -117,6 +207,11 @@ class FilePresenter:
             if not file_path:
                 logging.info("Save to file cancelled: invalid or no file path received")
                 return False
+
+            if self._is_password_required(
+                Path(file_path), operation=FileOperation.SAVE
+            ) and not self._run_password_dialog(FileOperation.SAVE):
+                return False  # Password required, but not provided
             self._current_file_path = Path(file_path)
 
         logging.debug(f"Saving to file: {self._current_file_path}")
@@ -138,6 +233,11 @@ class FilePresenter:
                 )
                 return False
 
+        if self._is_password_required(
+            Path(path), operation=FileOperation.LOAD
+        ) and not self._run_password_dialog(FileOperation.LOAD):
+            return False  # Password required, but not provided
+
         logging.debug(f"File path: {path}")
         self._current_file_path = Path(path).absolute()
         self._open_file(self._current_file_path)
@@ -153,8 +253,7 @@ class FilePresenter:
             logging.info("Load most recent file cancelled: no recent files")
             return False
         recent_path = self._recent_paths[0]
-        self.load_from_file(recent_path)
-        return True
+        return self.load_from_file(recent_path)
 
     def create_new_file(self) -> None:
         if (
@@ -216,6 +315,7 @@ class FilePresenter:
         self._worker = LoadFileWorker()
         self._worker.moveToThread(self._thread)
         self._worker.path = path
+        self._worker.encryption_session = self._encryption_session
         self._thread.started.connect(self._worker.run)
         self._worker.finished.connect(self._file_load_completed)
         self._worker.failed.connect(self._worker_operation_failed)
@@ -270,7 +370,13 @@ class FilePresenter:
         self._worker.deleteLater()
         self._thread.deleteLater()
         self._busy_indicator.close()
-        handle_exception(exception)
+        if isinstance(exception, InvalidTag):
+            display_error_message(
+                "Decryption failed, please check password and try again."
+            )
+            self.load_from_file(self._current_file_path)
+        else:
+            handle_exception(exception)
 
     def _save_to_file(
         self, record_keeper: RecordKeeper, path: Path, callback: Callable | None = None
@@ -286,6 +392,7 @@ class FilePresenter:
         self._worker = SaveFileWorker()
         self._worker.moveToThread(self._thread)
         self._worker.path = path
+        self._worker.encryption_session = self._encryption_session
         self._worker.record_keeper = record_keeper
         self._thread.started.connect(self._worker.run)
         self._worker.finished.connect(lambda: self._file_save_completed(callback))
@@ -361,3 +468,64 @@ class FilePresenter:
         self._recent_paths = []
         self._save_recent_paths()
         self._update_recent_paths_menu()
+
+    def _is_password_required(self, path: Path, *, operation: FileOperation) -> bool:
+        """Returns true if new password is required for the operation."""
+
+        if path.suffix != ".enc":
+            self._encryption_session.clear_password_cache()
+            return False
+
+        if operation == FileOperation.SAVE:
+            return (
+                not self._encryption_session.is_password_set
+                or path != self._current_file_path
+            )
+
+        return True  # Always require password for encrypted file load
+
+    def _run_password_dialog(self, operation: FileOperation) -> bool:
+        old_password = self._encryption_session.password
+
+        self._dialog = PasswordDialog(self._view)
+        if operation == FileOperation.LOAD:
+            self._dialog.set_window_title("Decrypt File")
+        else:
+            self._dialog.set_window_title("Encrypt File")
+
+        self._dialog.signal_ok.connect(self._validate_password_dialog)
+        self._dialog.signal_cancel.connect(self._dialog.close)
+
+        logging.debug("Asking the user for password")
+        self._dialog.exec()
+
+        if self._encryption_session.is_password_set and (
+            operation == FileOperation.LOAD
+            or (
+                operation == FileOperation.SAVE
+                and old_password != self._encryption_session.password
+            )
+        ):
+            logging.debug("Password accepted")
+            return True
+
+        logging.debug("Password dialog cancelled")
+        return False
+
+    def _validate_password_dialog(self) -> None:
+        password = self._dialog.password
+        if len(password) >= constants.PASSWORD_MIN_LENGTH:
+            self._encryption_session.password = password
+            self._dialog.accept()
+        else:
+            display_error_message(
+                f"Password must be at least {constants.PASSWORD_MIN_LENGTH} "
+                "characters long."
+            )
+
+    def clear_encryption_session(self) -> None:
+        if self._encryption_session is None:
+            return
+
+        logging.debug("Clearing encryption session")
+        self._encryption_session.clear_password_cache()

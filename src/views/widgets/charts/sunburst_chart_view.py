@@ -91,7 +91,7 @@ class SunburstNode:
         text = text + f" {self.unit}" if self.unit else text
         for ancestor in self.get_ancestors():
             text += (
-                f"\n{format_percentage(100*self.value/ancestor.value)} "
+                f"\n{format_percentage(100 * self.value / ancestor.value)} "
                 f"of {ancestor.path}"
             )
 
@@ -134,9 +134,18 @@ class SunburstChartView(QChartView):
     signal_mouse_move = pyqtSignal()
     signal_slice_clicked = pyqtSignal(str)
 
-    def __init__(self, parent: QWidget | None, *, clickable_slices: bool) -> None:
+    def __init__(
+        self,
+        parent: QWidget | None,
+        *,
+        clickable_slices: bool,
+        background_color: QColor | None = None,
+    ) -> None:
         super().__init__(parent)
         self._clickable_slices = clickable_slices
+
+        if background_color is not None:
+            self.setBackgroundBrush(background_color)
 
         self.setRenderHint(QPainter.RenderHint.Antialiasing)
 
@@ -172,7 +181,7 @@ class SunburstChartView(QChartView):
             series.setPieSize(self.min_size + size * (level + 0.5))
             self._chart.addSeries(series)
 
-    def create_series(  # noqa: PLR0913
+    def create_series(
         self,
         node: SunburstNode,
         parent_slice: QPieSlice | None,
@@ -213,8 +222,8 @@ class SunburstChartView(QChartView):
             self.series_dict[level] = QPieSeries()
         self.series_dict[level].append(slice_)
 
-        for index, child in enumerate(node.children):
-            self.create_series(child, slice_, level + 1, index)
+        for index_, child in enumerate(node.children):
+            self.create_series(child, slice_, level + 1, index_)
 
         sum_children = sum(child.value for child in node.children)
         if len(node.children) > 0 and sum_children < node.value:

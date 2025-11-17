@@ -115,18 +115,18 @@ class TransactionTableModel(QAbstractTableModel):
         self._transaction_uuid_dict = transaction_uuid_dict
         self._row_count = len(self._transactions)
 
-    def rowCount(self, index: QModelIndex | None = None) -> int:
-        if isinstance(index, QModelIndex) and index.isValid():
+    def rowCount(self, parent: QModelIndex | None = None) -> int:
+        if isinstance(parent, QModelIndex) and parent.isValid():
             return 0
         return self._row_count
 
-    def columnCount(self, index: QModelIndex | None = None) -> int:  # noqa: ARG002
+    def columnCount(self, parent: QModelIndex | None = None) -> int:  # noqa: ARG002
         if not hasattr(self, "_column_count"):
             self._column_count = len(TRANSACTION_TABLE_COLUMN_HEADERS)
         return self._column_count
 
     def data(  # noqa: PLR0911
-        self, index: QModelIndex, role: Qt.ItemDataRole
+        self, index: QModelIndex, role: int = ...
     ) -> str | float | QIcon | Qt.AlignmentFlag | QBrush | QFont | None:
         if not index.isValid():
             return None
@@ -161,7 +161,7 @@ class TransactionTableModel(QAbstractTableModel):
         return None
 
     def headerData(
-        self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole
+        self, section: int, orientation: Qt.Orientation, role: int = ...
     ) -> str | int | None:
         if role == Qt.ItemDataRole.DisplayRole:
             if orientation == Qt.Orientation.Horizontal:
@@ -169,9 +169,11 @@ class TransactionTableModel(QAbstractTableModel):
             return str(section)
         return None
 
-    def pre_add(self) -> None:
+    def pre_add(self, amount: int = 1) -> None:
         self._view.setSortingEnabled(False)
-        self.beginInsertRows(QModelIndex(), self.rowCount(), self.rowCount())
+        self.beginInsertRows(
+            QModelIndex(), self.rowCount(), self.rowCount() + (amount - 1)
+        )
 
     def post_add(self) -> None:
         self.endInsertRows()
@@ -467,7 +469,7 @@ class TransactionTableModel(QAbstractTableModel):
             ):
                 refunded_ratio = transaction.refunded_ratio
                 return (
-                    f"Expense ({format_percentage(100*refunded_ratio,decimals=0)} "
+                    f"Expense ({format_percentage(100 * refunded_ratio, decimals=0)} "
                     "Refunded)"
                 )
             return transaction.type_.name.capitalize()
@@ -476,9 +478,7 @@ class TransactionTableModel(QAbstractTableModel):
         if isinstance(transaction, CashTransfer):
             return "Cash Transfer"
         if isinstance(transaction, RefundTransaction):
-            return (
-                f"Refund ({format_percentage(100*transaction.refund_ratio,decimals=0)})"
-            )
+            return f"Refund ({format_percentage(100 * transaction.refund_ratio, decimals=0)})"
         if isinstance(transaction, SecurityTransfer):
             return "Security Transfer"
         raise TypeError("Unexpected Transaction type.")

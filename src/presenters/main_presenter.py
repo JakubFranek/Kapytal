@@ -48,6 +48,7 @@ class MainPresenter:
         self._update_presenter.check_for_updates(silent=silent)
 
     def show_welcome_dialog(self) -> None:
+        self._view.setDisabled(True)  # disabling MainView until WelcomeDialog is gone
         self._welcome_dialog = WelcomeDialog(self._view)
         self._welcome_dialog.signal_new_file.connect(self._close_welcome_dialog)
         self._welcome_dialog.signal_open_file.connect(self._load_file)
@@ -114,6 +115,7 @@ class MainPresenter:
                 return
             logging.info("Qutting")
         self._quitting = True
+        self._file_presenter.clear_encryption_session()
         self._app.quit()
 
     def _load_record_keeper(self, record_keeper: RecordKeeper) -> None:
@@ -262,6 +264,9 @@ class MainPresenter:
             self._file_presenter.clear_recent_paths
         )
         self._view.signal_new_file.connect(self._file_presenter.create_new_file)
+        self._view.signal_import_transactions.connect(
+            self._transactions_presenter.import_transactions
+        )
 
         self._view.signal_show_account_tree.connect(
             lambda checked: self._account_tree_presenter.set_widget_visibility(
@@ -292,7 +297,7 @@ class MainPresenter:
         self._transactions_presenter.update_filter_models()
         self._transactions_presenter.refresh_view()
         self._account_tree_presenter.refresh_view()
-        self._account_tree_presenter.update_model_data()
+        self._account_tree_presenter.update_model_data(model_reset=False)
         self._account_tree_presenter.update_geometries()
         self._category_form_presenter.data_changed()
         self._payee_form_presenter.data_changed()

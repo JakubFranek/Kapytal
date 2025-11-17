@@ -86,6 +86,9 @@
            <property name="placeholderText">
             <string>Search Categories</string>
            </property>
+           <property name="clearButtonEnabled">
+            <bool>true</bool>
+           </property>
           </widget>
          </item>
         </layout>
@@ -166,6 +169,9 @@
            <property name="placeholderText">
             <string>Search Categories</string>
            </property>
+           <property name="clearButtonEnabled">
+            <bool>true</bool>
+           </property>
           </widget>
          </item>
         </layout>
@@ -245,6 +251,9 @@
            </property>
            <property name="placeholderText">
             <string>Search Categories</string>
+           </property>
+           <property name="clearButtonEnabled">
+            <bool>true</bool>
            </property>
           </widget>
          </item>

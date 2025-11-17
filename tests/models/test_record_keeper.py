@@ -27,6 +27,7 @@ from tests.models.test_assets.composites import (
     names,
     valid_decimals,
 )
+from tests.utilities.constants import IBANS_VALID
 
 
 def test_creation() -> None:
@@ -245,7 +246,9 @@ def test_add_cash_account(
     record_keeper.add_currency(currency_code, decimals)
     if parent_name:
         record_keeper.add_account_group(parent_name)
-    record_keeper.add_cash_account(path, currency_code, initial_balance)
+    record_keeper.add_cash_account(
+        path, currency_code, initial_balance, iban=IBANS_VALID[0]
+    )
     parent_group = record_keeper.account_groups[0] if parent_name else None
     cash_account: CashAccount = record_keeper.accounts[0]
     assert cash_account.name == name
@@ -316,7 +319,7 @@ def test_add_cash_transaction(
         st.lists(
             st.tuples(
                 st.sampled_from([cat.path for cat in valid_categories]),
-                valid_decimals(min_value=0.1),
+                valid_decimals(min_value=Decimal("0.1")),
             ),
             min_size=1,
             max_size=5,
@@ -330,7 +333,7 @@ def test_add_cash_transaction(
         st.lists(
             st.tuples(
                 names(),
-                valid_decimals(min_value=0.01, max_value=max_tag_amount),
+                valid_decimals(min_value=Decimal("0.01"), max_value=max_tag_amount),
             ),
             min_size=0,
             max_size=5,
@@ -358,8 +361,8 @@ def test_add_cash_transaction(
         min_value=datetime.now() + timedelta(days=1),  # noqa: DTZ005
         timezones=st.just(user_settings.settings.time_zone),
     ),
-    amount_sent=valid_decimals(min_value=0.01),
-    amount_received=valid_decimals(min_value=0.01),
+    amount_sent=valid_decimals(min_value=Decimal("0.01")),
+    amount_received=valid_decimals(min_value=Decimal("0.01")),
     data=st.data(),
 )
 def test_add_cash_transfer(
@@ -487,7 +490,9 @@ def test_add_cash_account_already_exists(data: st.DataObject) -> None:
     path = account.path
     currency = data.draw(st.sampled_from(record_keeper.currencies))
     with pytest.raises(AlreadyExistsError):
-        record_keeper.add_cash_account(path, currency.code, Decimal(0))
+        record_keeper.add_cash_account(
+            path, currency.code, Decimal(0), iban=IBANS_VALID[0]
+        )
 
 
 def test_get_account_parent_does_not_exist() -> None:
@@ -732,7 +737,7 @@ def test_get_security_by_uuid_does_not_exist() -> None:
 @given(
     description=st.text(min_size=1, max_size=256),
     type_=st.sampled_from(SecurityTransactionType),
-    amount_per_share=valid_decimals(min_value=0.0),
+    amount_per_share=valid_decimals(min_value=0),
     datetime_=st.datetimes(timezones=st.just(user_settings.settings.time_zone)),
     data=st.data(),
 )
@@ -745,7 +750,7 @@ def test_add_security_transaction(
 ) -> None:
     record_keeper = get_preloaded_record_keeper()
     security = data.draw(st.sampled_from(record_keeper.securities))
-    shares = data.draw(st.integers(min_value=1, max_value=1e10))
+    shares = data.draw(st.integers(min_value=1, max_value=Decimal("1e10")))
     security_account_path = data.draw(
         st.sampled_from(
             [
@@ -852,6 +857,7 @@ def test_add_payee_already_exists(name: str) -> None:
 def test_add_tag(name: str) -> None:
     record_keeper = RecordKeeper()
     record_keeper.add_tag(name)
+    assume(name.lower() != "total")
     tag = record_keeper.get_attribute(name, AttributeType.TAG)
     assert len(record_keeper.tags) == 1
     assert tag.name == name
@@ -929,7 +935,7 @@ def get_preloaded_record_keeper_with_security_transactions() -> RecordKeeper:
         type_=SecurityTransactionType.BUY,
         security_name="ČSOB Dynamický penzijní fond",
         shares=Decimal(2750),
-        amount_per_share=Decimal(1.75),
+        amount_per_share=Decimal("1.75"),
         security_account_path="Security Accounts/ČSOB Penzijní účet",
         cash_account_path="Bank Accounts/Fio CZK",
     )
@@ -939,7 +945,7 @@ def get_preloaded_record_keeper_with_security_transactions() -> RecordKeeper:
         type_=SecurityTransactionType.BUY,
         security_name="ČSOB Dynamický penzijní fond",
         shares=Decimal(2850),
-        amount_per_share=Decimal(1.6),
+        amount_per_share=Decimal("1.6"),
         security_account_path="Security Accounts/ČSOB Penzijní účet",
         cash_account_path="Bank Accounts/Fio CZK",
     )
@@ -1163,7 +1169,7 @@ def get_preloaded_record_keeper_with_various_transactions() -> RecordKeeper:
         type_=SecurityTransactionType.BUY,
         security_name="ČSOB Dynamický penzijní fond",
         shares=Decimal(2850),
-        amount_per_share=Decimal(1.6),
+        amount_per_share=Decimal("1.6"),
         security_account_path="Security Accounts/ČSOB Penzijní účet",
         cash_account_path="Bank Accounts/Fio CZK",
     )
@@ -1198,26 +1204,31 @@ def get_preloaded_record_keeper() -> RecordKeeper:
         path="Bank Accounts/Raiffeisen CZK",
         currency_code="CZK",
         initial_balance_value=Decimal(1500),
+        iban=IBANS_VALID[0],
     )
     record_keeper.add_cash_account(
         path="Bank Accounts/Fio CZK",
         currency_code="CZK",
         initial_balance_value=Decimal(0),
+        iban=IBANS_VALID[1],
     )
     record_keeper.add_cash_account(
         path="Bank Accounts/Creditas CZK",
         currency_code="CZK",
         initial_balance_value=Decimal(100_000),
+        iban=IBANS_VALID[2],
     )
     record_keeper.add_cash_account(
         path="Bank Accounts/Moneta EUR",
         currency_code="EUR",
         initial_balance_value=Decimal(1600),
+        iban=IBANS_VALID[3],
     )
     record_keeper.add_cash_account(
         path="Bank Accounts/Revolut EUR",
         currency_code="EUR",
         initial_balance_value=Decimal(0),
+        iban=IBANS_VALID[4],
     )
     record_keeper.add_security_account("Security Accounts/Degiro")
     record_keeper.add_security_account("Security Accounts/Interactive Brokers")

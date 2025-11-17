@@ -718,8 +718,9 @@ class TransactionFilterFormPresenter:
 def _get_active_filters(
     filter_: TransactionFilter, default_filter: TransactionFilter
 ) -> tuple[BaseTransactionFilter, ...]:
-    non_default_filters = []
-    for i in range(len(filter_.members)):
-        if filter_.members[i] != default_filter.members[i]:
-            non_default_filters.append(filter_.members[i])
+    non_default_filters = [
+        member
+        for i, member in enumerate(filter_.members)
+        if member != default_filter.members[i]
+    ]
     return tuple(non_default_filters)

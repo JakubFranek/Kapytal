@@ -17,7 +17,7 @@ class MyFormatter(logging.Formatter):
         if datefmt:
             return dt.strftime(datefmt)
         dt_as_str = dt.strftime("%Y-%m-%d %H:%M:%S")
-        return "%s.%03d" % (dt_as_str, record.msecs)
+        return f"{dt_as_str}.{record.msecs:03d}"
 
 
 class DuplicateFilter(logging.Filter):
@@ -75,6 +75,7 @@ def setup_logging() -> None:
     root_logger = logging.getLogger()  # this is the root logger
     logging.getLogger("yfinance").disabled = True
     logging.getLogger("urllib3.connectionpool").disabled = True
+    logging.getLogger("peewee").disabled = True
     root_logger.addFilter(DuplicateFilter(formatter))
     root_logger.setLevel(logging.DEBUG)
     root_logger.addHandler(handler_debug)

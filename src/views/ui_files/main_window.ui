@@ -57,6 +57,8 @@
     <addaction name="menuRecent_Files"/>
     <addaction name="menuDemos_and_Templates"/>
     <addaction name="separator"/>
+    <addaction name="actionImport_Transactions"/>
+    <addaction name="separator"/>
     <addaction name="actionSave"/>
     <addaction name="actionSave_As"/>
     <addaction name="separator"/>
@@ -381,6 +383,11 @@
   <action name="actionCategory_Template_CZ">
    <property name="text">
     <string>Category Template (CZ)</string>
+   </property>
+  </action>
+  <action name="actionImport_Transactions">
+   <property name="text">
+    <string>Import Transactions</string>
    </property>
   </action>
  </widget>

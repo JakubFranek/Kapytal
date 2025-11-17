@@ -28,7 +28,7 @@ class CashAmountFilter(BaseTransactionFilter):
     If no path to the currency of the CashAmountFilter is found, the filter accepts
     CashRelatedTransactions by default."""
 
-    __slots__ = ("_currency", "_minimum", "_maximum", "_mode")
+    __slots__ = ("_currency", "_maximum", "_minimum", "_mode")
 
     def __init__(
         self, minimum: CashAmount | None, maximum: CashAmount | None, mode: FilterMode
@@ -64,7 +64,7 @@ class CashAmountFilter(BaseTransactionFilter):
             f"mode={self._mode.name})"
         )
 
-    def __eq__(self, __o: object) -> bool:
+    def __eq__(self, /, __o: object) -> bool:
         if __o is None and self.mode == FilterMode.OFF:
             return True
         if not isinstance(__o, type(self)):
@@ -127,7 +127,7 @@ class CashAmountFilter(BaseTransactionFilter):
             raise TypeError("Parameter 'minimum' must be a CashAmount.")
         if mode != FilterMode.OFF and not isinstance(maximum, CashAmount):
             raise TypeError("Parameter 'maximum' must be a CashAmount.")
-        if type(minimum) != type(maximum):
+        if not isinstance(maximum, type(minimum)):
             raise TypeError(
                 "Parameters 'minimum' and 'maximum' must be of the same type."
             )

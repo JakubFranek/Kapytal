@@ -15,9 +15,9 @@ class CustomJSONEncoder(json.JSONEncoder):
             kwargs["separators"] = (", ", ": ")
         super().__init__(**kwargs)
 
-    def default(self, arg: Any) -> Any:  # noqa: ANN401
-        if isinstance(arg, datetime):
-            return arg.isoformat()
-        if isinstance(arg, JSONSerializableMixin):
-            return arg.serialize()
-        return super().default(arg)  # call to raise proper TypeError
+    def default(self, o: Any) -> Any:  # noqa: ANN401
+        if isinstance(o, datetime):
+            return o.isoformat()
+        if isinstance(o, JSONSerializableMixin):
+            return o.serialize()
+        return super().default(o)  # call to raise proper TypeError

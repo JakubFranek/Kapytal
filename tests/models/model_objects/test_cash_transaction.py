@@ -52,7 +52,7 @@ from tests.models.test_assets.constants import MIN_DATETIME
     payee=attributes(AttributeType.PAYEE),
     data=st.data(),
 )
-def test_creation(  # noqa: PLR0913
+def test_creation(
     description: str,
     datetime_: datetime,
     type_: CashTransactionType,
@@ -554,7 +554,7 @@ def test_category_amount_pairs_invalid_amount_currency(
 ) -> None:
     assume(invalid_currency != transaction.currency)
     amount = data.draw(
-        cash_amounts(min_value=0.01, currency=invalid_currency),
+        cash_amounts(min_value=Decimal("0.01"), currency=invalid_currency),
     )
     category = Category(
         "Test",

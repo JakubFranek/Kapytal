@@ -23,8 +23,7 @@ class TransactionBalance:
 
     def __repr__(self) -> str:
         return (
-            f"TransactionBalance({self.balance.to_str_normalized()}, "
-            f"len={len(self)})"
+            f"TransactionBalance({self.balance.to_str_normalized()}, len={len(self)})"
         )
 
     def __len__(self) -> int:
@@ -40,7 +39,7 @@ class TransactionBalance:
             self.balance - other.balance, self.transactions.union(other.transactions)
         )
 
-    def __truediv__(self, __o: object) -> "TransactionBalance":
+    def __truediv__(self, /, __o: object) -> "TransactionBalance":
         if not isinstance(__o, int | Decimal):
             return NotImplemented
         return TransactionBalance(self.balance / __o, self.transactions)

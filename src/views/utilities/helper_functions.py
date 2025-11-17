@@ -2,8 +2,9 @@ import locale
 from datetime import datetime
 from decimal import Decimal
 
-from PyQt6.QtCore import QDateTime
-from PyQt6.QtWidgets import QSpinBox, QTableView
+from PyQt6.QtCore import QDateTime, Qt
+from PyQt6.QtGui import QKeyEvent, QWheelEvent
+from PyQt6.QtWidgets import QDateTimeEdit, QSpinBox, QTableView
 from src.models.user_settings import user_settings
 
 
@@ -36,6 +37,38 @@ def convert_datetime_format_to_qt(datetime_format: str) -> str:
     now_qt = QDateTime(now)
     try:
         now_qt.toString(datetime_format)
-    except Exception as exception:  # noqa: BLE001
+    except Exception as exception:
         raise ValueError("Invalid datetime format specified.") from exception
     return datetime_format
+
+
+def overflowing_keyPressEvent(self: QDateTimeEdit, event: QKeyEvent) -> None:
+    key = event.key()
+    steps = 1 if key == Qt.Key.Key_Up else -1 if key == Qt.Key.Key_Down else 0
+    if steps and _overflow_step(self, steps):
+        return
+    super(QDateTimeEdit, self).keyPressEvent(event)
+
+
+def overflowing_wheelEvent(self: QDateTimeEdit, event: QWheelEvent) -> None:
+    delta = event.angleDelta().y()
+    steps = 1 if delta > 0 else -1 if delta < 0 else 0
+    if steps and _overflow_step(self, steps):
+        return
+    super(QDateTimeEdit, self).wheelEvent(event)
+
+
+def _overflow_step(self: QDateTimeEdit, steps: int) -> bool:
+    """Apply overflow step; return True if handled."""
+    section = self.currentSection()
+    dt = self.dateTime()
+    if section == QDateTimeEdit.Section.DaySection:
+        self.setDateTime(dt.addDays(steps))
+        return True
+    if section == QDateTimeEdit.Section.MonthSection:
+        self.setDateTime(dt.addMonths(steps))
+        return True
+    if section == QDateTimeEdit.Section.YearSection:
+        self.setDateTime(dt.addYears(steps))
+        return True
+    return False

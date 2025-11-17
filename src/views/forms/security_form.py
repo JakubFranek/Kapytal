@@ -157,7 +157,7 @@ class SecurityForm(CustomWidget, Ui_SecurityForm):
     def is_manage_tab_selected(self) -> bool:
         return self.tabWidget.currentWidget() == self.manageSecuritiesTab
 
-    def load_chart_data(  # noqa: PLR0913
+    def load_chart_data(
         self,
         x: Collection,
         y: Collection,

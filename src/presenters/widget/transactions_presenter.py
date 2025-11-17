@@ -32,6 +32,9 @@ from src.presenters.dialog.cash_transaction_dialog_presenter import (
 from src.presenters.dialog.cash_transfer_dialog_presenter import (
     CashTransferDialogPresenter,
 )
+from src.presenters.dialog.import_transactions_presenter import (
+    ImportTransactionsDialogPresenter,
+)
 from src.presenters.dialog.refund_transaction_dialog_presenter import (
     RefundTransactionDialogPresenter,
 )
@@ -141,6 +144,7 @@ class TransactionsPresenter:
         self._security_transfer_dialog_presenter.load_record_keeper(record_keeper)
         self._refund_transaction_dialog_presenter.load_record_keeper(record_keeper)
         self._transaction_tags_dialog_presenter.load_record_keeper(record_keeper)
+        self._import_transactions_dialog_presenter.load_record_keeper(record_keeper)
         self._transaction_filter_form_presenter.load_record_keeper(record_keeper)
         self._transaction_table_form_presenter.load_record_keeper(record_keeper)
         self._account_tree_shown_accounts = frozenset(record_keeper.accounts)
@@ -172,6 +176,9 @@ class TransactionsPresenter:
         elif not visible and not self._view.isHidden():
             logging.debug("Hiding TransactionTableWidget")
             self._view.hide()
+
+    def import_transactions(self) -> None:
+        self._import_transactions_dialog_presenter.run_dialog()
 
     def _reset_model(self) -> None:
         """Resets the TransactionTableModel only."""
@@ -304,6 +311,9 @@ class TransactionsPresenter:
         self._transaction_tags_dialog_presenter = TransactionTagsDialogPresenter(
             self._view, self._record_keeper
         )
+        self._import_transactions_dialog_presenter = ImportTransactionsDialogPresenter(
+            self._view, self._record_keeper
+        )
         self._transaction_filter_form_presenter = TransactionFilterFormPresenter(
             self._view, self._record_keeper, self._account_tree_shown_accounts
         )
@@ -317,6 +327,7 @@ class TransactionsPresenter:
             self._security_transaction_dialog_presenter,
             self._security_transfer_dialog_presenter,
             self._refund_transaction_dialog_presenter,
+            self._import_transactions_dialog_presenter,
         )
 
     def _initialize_view(self) -> None:
@@ -609,7 +620,7 @@ class TransactionsPresenter:
             self._view.set_filter_tooltip(
                 self._transaction_filter_form_presenter.active_filter_names
             )
-        except:  # noqa: TRY302
+        except:  # noqa: TRY203
             raise
         finally:
             self._busy_dialog.close()

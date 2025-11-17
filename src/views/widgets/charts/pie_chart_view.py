@@ -4,7 +4,7 @@ from numbers import Real
 
 from PyQt6.QtCharts import QChart, QChartView, QPieSeries, QPieSlice
 from PyQt6.QtCore import QPointF, Qt, pyqtSignal
-from PyQt6.QtGui import QCursor, QFont, QMouseEvent, QPainter
+from PyQt6.QtGui import QColor, QCursor, QFont, QMouseEvent, QPainter
 from PyQt6.QtWidgets import QWidget
 from src.utilities.formatting import format_percentage, format_real
 from src.views import colors
@@ -18,9 +18,18 @@ class PieChartView(QChartView):
     signal_mouse_move = pyqtSignal()
     signal_slice_clicked = pyqtSignal(str)
 
-    def __init__(self, parent: QWidget | None, *, clickable_slices: bool) -> None:
+    def __init__(
+        self,
+        parent: QWidget | None,
+        *,
+        clickable_slices: bool,
+        background_color: QColor | None,
+    ) -> None:
         super().__init__(parent)
         self._clickable_slices = clickable_slices
+
+        if background_color is not None:
+            self.setBackgroundBrush(background_color)
 
         self._font = QFont()
         self._font.setPointSize(10)

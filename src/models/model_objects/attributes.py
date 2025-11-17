@@ -2,7 +2,6 @@ from enum import Enum, auto
 from typing import Any
 
 from src.models.custom_exceptions import NotFoundError
-from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
 from src.models.mixins.name_mixin import NameMixin
 from src.models.mixins.uuid_mixin import UUIDMixin
 
@@ -30,8 +29,8 @@ class CategoryType(Enum):
     DUAL_PURPOSE = "Dual-Purpose"
 
 
-class Attribute(NameMixin, JSONSerializableMixin):
-    __slots__ = ("_type", "_name", "_allow_slash", "_allow_colon")
+class Attribute(NameMixin):
+    __slots__ = ("_allow_colon", "_allow_slash", "_name", "_type")
 
     def __init__(self, name: str, type_: AttributeType) -> None:
         super().__init__(name=name, allow_slash=True)
@@ -60,26 +59,17 @@ class Attribute(NameMixin, JSONSerializableMixin):
     def __str__(self) -> str:
         return self._name
 
-    def serialize(self) -> dict[str, Any]:
-        return {"datatype": "Attribute", "name": self._name, "type": self._type.name}
 
-    @staticmethod
-    def deserialize(data: dict[str, Any]) -> "Attribute":
-        name = data["name"]
-        type_ = AttributeType[data["type"]]
-        return Attribute(name, type_)
-
-
-class Category(NameMixin, JSONSerializableMixin, UUIDMixin):
+class Category(NameMixin, UUIDMixin):
     __slots__ = (
-        "_uuid",
-        "_type",
-        "_name",
-        "_allow_slash",
         "_allow_colon",
-        "_parent",
+        "_allow_slash",
         "_children_dict",
         "_children_tuple",
+        "_name",
+        "_parent",
+        "_type",
+        "_uuid",
     )
 
     def __init__(
@@ -94,8 +84,8 @@ class Category(NameMixin, JSONSerializableMixin, UUIDMixin):
         self._type = type_
 
         self.parent = parent
-        self._children_dict: dict[int, "Category"] = {}
-        self._children_tuple: tuple["Category", ...] = ()
+        self._children_dict: dict[int, Category] = {}
+        self._children_tuple: tuple[Category, ...] = ()
 
     @property
     def parent(self) -> "Category | None":
@@ -247,7 +237,7 @@ class Category(NameMixin, JSONSerializableMixin, UUIDMixin):
         index: int | None = data["index"]
         obj = Category(name, type_)
         if parent_path:
-            obj._parent = categories[parent_path]  # noqa: SLF001
+            obj._parent = categories[parent_path]
             obj._parent._children_dict[index] = obj  # noqa: SLF001
             obj._parent._update_children_tuple()  # noqa: SLF001
         return obj

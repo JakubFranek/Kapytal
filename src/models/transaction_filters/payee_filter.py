@@ -17,7 +17,7 @@ class PayeeFilter(BaseTransactionFilter):
     """Filters transactions based on whether they have specific Payees.
     Ignores Payee-less transactions."""
 
-    __slots__ = ("_payees", "_mode")
+    __slots__ = ("_mode", "_payees")
 
     def __init__(self, payees: Collection[Attribute], mode: FilterMode) -> None:
         super().__init__(mode=mode)

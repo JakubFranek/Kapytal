@@ -78,21 +78,21 @@ def set_maximum_time(datetime_: datetime) -> datetime:
 
 class TransactionFilter(CopyableMixin):
     __slots__ = (
-        "_uuid_filter",
-        "_type_filter",
+        "_account_filter",
+        "_all_pass",
+        "_cash_amount_filter",
+        "_currency_filter",
         "_datetime_filter",
         "_description_filter",
-        "_account_filter",
-        "_specific_tags_filter",
-        "_tagless_filter",
-        "_split_tags_filter",
-        "_payee_filter",
-        "_specific_categories_filter",
         "_multiple_categories_filter",
-        "_currency_filter",
+        "_payee_filter",
         "_security_filter",
-        "_cash_amount_filter",
-        "_all_pass",
+        "_specific_categories_filter",
+        "_specific_tags_filter",
+        "_split_tags_filter",
+        "_tagless_filter",
+        "_type_filter",
+        "_uuid_filter",
     )
 
     def __init__(self) -> None:
@@ -181,7 +181,7 @@ class TransactionFilter(CopyableMixin):
     def __hash__(self) -> int:
         return hash(self.members)
 
-    def __eq__(self, __o: object) -> bool:
+    def __eq__(self, /, __o: object) -> bool:
         if not isinstance(__o, TransactionFilter):
             return NotImplemented
         return self.members == __o.members

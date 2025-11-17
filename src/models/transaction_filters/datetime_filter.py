@@ -8,7 +8,7 @@ from src.models.transaction_filters.base_transaction_filter import (
 
 
 class DatetimeFilter(BaseTransactionFilter):
-    __slots__ = ("_start", "_end", "_mode")
+    __slots__ = ("_end", "_mode", "_start")
 
     def __init__(self, start: datetime, end: datetime, mode: FilterMode) -> None:
         super().__init__(mode=mode)

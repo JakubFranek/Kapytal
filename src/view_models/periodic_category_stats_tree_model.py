@@ -84,11 +84,11 @@ class PeriodicCategoryStatsTreeModel(QAbstractItemModel):
             row_data: list[Decimal] = []
             row_transactions: list[tuple[CashTransaction | RefundTransaction]] = []
 
-            for period in periodic_stats:
-                stats = _get_category_stats(periodic_stats[period], category.path)
-                if stats is not None:
-                    row_data.append(stats.balance.value_rounded)
-                    row_transactions.append(tuple(stats.transactions))
+            for stats in periodic_stats.values():
+                stat = _get_category_stats(stats, category.path)
+                if stat is not None:
+                    row_data.append(stat.balance.value_rounded)
+                    row_transactions.append(tuple(stat.transactions))
                 else:
                     row_data.append(Decimal(0))
                     row_transactions.append(())
@@ -127,19 +127,15 @@ class PeriodicCategoryStatsTreeModel(QAbstractItemModel):
         periodic_expense_totals_transactions: list[
             list[CashTransaction | RefundTransaction]
         ] = []
-        for period in periodic_totals:
-            periodic_totals_row_data.append(
-                periodic_totals[period].balance.value_rounded
-            )
+        for period, total in periodic_totals.items():
+            periodic_totals_row_data.append(total.balance.value_rounded)
             periodic_income_totals_row_data.append(
                 periodic_income_totals[period].balance.value_rounded
             )
             periodic_expense_totals_row_data.append(
                 periodic_expense_totals[period].balance.value_rounded
             )
-            periodic_totals_transactions.append(
-                tuple(periodic_totals[period].transactions)
-            )
+            periodic_totals_transactions.append(tuple(total.transactions))
             periodic_income_totals_transactions.append(
                 tuple(periodic_income_totals[period].transactions)
             )
@@ -232,39 +228,41 @@ class PeriodicCategoryStatsTreeModel(QAbstractItemModel):
             len(self._root_row_objects) - 3,
         )
 
-    def rowCount(self, index: QModelIndex = ...) -> int:
-        if index.isValid():
-            if index.column() != 0:
+    def rowCount(self, parent: QModelIndex = ...) -> int:
+        if parent.isValid():
+            if parent.column() != 0:
                 return 0
-            item: RowObject = index.internalPointer()
+            item: RowObject = parent.internalPointer()
             return len(item.children)
         return len(self._root_row_objects)
 
-    def columnCount(self, index: QModelIndex = ...) -> int:  # noqa: ARG002
+    def columnCount(self, parent: QModelIndex = ...) -> int:  # noqa: ARG002
         if not hasattr(self, "_column_count"):
             self._column_count = len(self._column_headers)
         return self._column_count
 
-    def index(self, row: int, column: int, _parent: QModelIndex = ...) -> QModelIndex:
-        if _parent.isValid() and _parent.column() != 0:
+    def index(self, row: int, column: int, parent: QModelIndex = ...) -> QModelIndex:
+        if parent.isValid() and parent.column() != 0:
             return QModelIndex()
 
-        if not _parent or not _parent.isValid():
-            parent = None
+        if not parent or not parent.isValid():
+            _parent = None
         else:
-            parent: RowObject = _parent.internalPointer()
+            _parent: RowObject = parent.internalPointer()
 
-        child = self._root_row_objects[row] if parent is None else parent.children[row]
+        child = (
+            self._root_row_objects[row] if _parent is None else _parent.children[row]
+        )
         if child:
             return QAbstractItemModel.createIndex(self, row, column, child)
         return QModelIndex()
 
-    def parent(self, index: QModelIndex = ...) -> QModelIndex:
-        if not index.isValid():
+    def parent(self, child: QModelIndex) -> QModelIndex:  # type: ignore[override]
+        if not child.isValid():
             return QModelIndex()
 
-        child: RowObject = index.internalPointer()
-        parent = child.parent
+        _child: RowObject = child.internalPointer()
+        parent = _child.parent
         if parent is None:
             return QModelIndex()
         grandparent = parent.parent
@@ -275,7 +273,7 @@ class PeriodicCategoryStatsTreeModel(QAbstractItemModel):
         return QAbstractItemModel.createIndex(self, row, 0, parent)
 
     def headerData(
-        self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole = ...
+        self, section: int, orientation: Qt.Orientation, role: int = ...
     ) -> str | int | None:
         if (
             role == Qt.ItemDataRole.DisplayRole
@@ -293,7 +291,7 @@ class PeriodicCategoryStatsTreeModel(QAbstractItemModel):
         return None
 
     def data(
-        self, index: QModelIndex, role: Qt.ItemDataRole = ...
+        self, index: QModelIndex, role: int = ...
     ) -> str | Qt.AlignmentFlag | QFont | QBrush | float | int | None:
         if not index.isValid():
             return None
@@ -301,6 +299,7 @@ class PeriodicCategoryStatsTreeModel(QAbstractItemModel):
         row_object: RowObject = index.internalPointer()
         row = index.row()
         column = index.column()
+
         if role == Qt.ItemDataRole.DisplayRole:
             return self._get_display_role_data(row, column, row_object)
         if role == Qt.ItemDataRole.UserRole:  # sort role
@@ -308,9 +307,7 @@ class PeriodicCategoryStatsTreeModel(QAbstractItemModel):
         if role == Qt.ItemDataRole.UserRole + 1:  # filter role
             return self._get_filter_role_data(column, row_object)
         if role == Qt.ItemDataRole.TextAlignmentRole:
-            if column == 0:
-                return ALIGNMENT_LEFT
-            return ALIGNMENT_RIGHT
+            return ALIGNMENT_LEFT if column == 0 else ALIGNMENT_RIGHT
         if role == Qt.ItemDataRole.ForegroundRole:
             return self._get_foreground_role_data(column, row_object.data[column - 1])
         if role == Qt.ItemDataRole.FontRole:
@@ -326,7 +323,7 @@ class PeriodicCategoryStatsTreeModel(QAbstractItemModel):
             prefix = "Σ "
         else:
             prefix = ""
-        return prefix + f"{row_object.data[column-1]:n}"
+        return prefix + f"{row_object.data[column - 1]:n}"
 
     def _get_user_role_data(self, column: int, row_object: RowObject) -> str | None:
         if column == 0:

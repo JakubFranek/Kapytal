@@ -49,7 +49,7 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
     signal_do_and_close = pyqtSignal()
     signal_do_and_continue = pyqtSignal()
 
-    def __init__(  # noqa: PLR0913
+    def __init__(
         self,
         parent: QWidget,
         accounts: Collection[CashAccount],
@@ -692,8 +692,8 @@ class CashTransactionDialog(CustomDialog, Ui_CashTransactionDialog):
             for row in self._category_rows
             if row not in self._fixed_split_category_rows
         ]
-        for row in adjustable_rows:
-            row.amount = adjust_amounts
+        for row_ in adjustable_rows:
+            row_.amount = adjust_amounts
 
         row_sum = sum(row.amount for row in self._category_rows)
         difference = self.amount - row_sum

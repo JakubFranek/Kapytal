@@ -44,6 +44,7 @@ class AccountTreeWidget(QWidget, Ui_AccountTreeWidget):
             "? matches any single character\n"
             "[...] matches any character within square brackets"
         )
+        self.searchLineEdit.setClearButtonEnabled(True)
         self.controlsHorizontalLayout.addWidget(self.searchLineEdit)
 
         self._set_action_icons()

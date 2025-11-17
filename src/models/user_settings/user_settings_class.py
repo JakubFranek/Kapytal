@@ -4,13 +4,13 @@ from collections.abc import Collection, Sequence
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Self
+from typing import Any
+from zoneinfo import ZoneInfo
 
 from src.models.mixins.copyable_mixin import CopyableMixin
 from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
 from src.views.constants import TransactionTableColumn
 from tzlocal import get_localzone_name
-from zoneinfo import ZoneInfo
 
 
 class NumberFormat(Enum):
@@ -25,16 +25,16 @@ class UserSettings(JSONSerializableMixin, CopyableMixin):
     """This class is intended to be instantiated only once, within user_settings."""
 
     __slots__ = (
-        "_time_zone",
-        "_logs_max_size_bytes",
-        "_backups_max_size_bytes",
-        "_backup_paths",
-        "_general_date_format",
-        "_transaction_date_format",
-        "_number_format",
-        "_exchange_rate_decimals",
         "_amount_per_share_decimals",
+        "_backup_paths",
+        "_backups_max_size_bytes",
         "_check_for_updates_on_startup",
+        "_exchange_rate_decimals",
+        "_general_date_format",
+        "_logs_max_size_bytes",
+        "_number_format",
+        "_time_zone",
+        "_transaction_date_format",
         "_transaction_table_column_order",
     )
 
@@ -209,8 +209,7 @@ class UserSettings(JSONSerializableMixin, CopyableMixin):
             return
 
         logging.info(
-            "Changing UserSettings.number_format from "
-            f"{self._number_format} to {value}"
+            f"Changing UserSettings.number_format from {self._number_format} to {value}"
         )
         self._number_format = value
 
@@ -337,7 +336,7 @@ class UserSettings(JSONSerializableMixin, CopyableMixin):
         }
 
     @staticmethod
-    def deserialize(data: dict[str, Any]) -> Self:
+    def deserialize(data: dict[str, Any]) -> "UserSettings":
         time_zone = ZoneInfo(data["time_zone"])
         logs_max_size_bytes: int = data["logs_max_size_bytes"]
         backups_max_size_bytes: int = data["backups_max_size_bytes"]
@@ -366,19 +365,17 @@ class UserSettings(JSONSerializableMixin, CopyableMixin):
         )
 
         obj = UserSettings()
-        obj._time_zone = time_zone  # noqa: SLF001
-        obj._logs_max_size_bytes = logs_max_size_bytes  # noqa: SLF001
-        obj._backups_max_size_bytes = backups_max_size_bytes  # noqa: SLF001
-        obj._backup_paths = backup_paths  # noqa: SLF001
-        obj._general_date_format = general_date_format  # noqa: SLF001
-        obj._transaction_date_format = transaction_date_format  # noqa: SLF001
-        obj._number_format = number_format  # noqa: SLF001
-        obj._exchange_rate_decimals = exchange_rate_decimals  # noqa: SLF001
-        obj._amount_per_share_decimals = amount_per_share_decimals  # noqa: SLF001
-        obj._check_for_updates_on_startup = check_for_updates_on_startup  # noqa: SLF001
-        obj._transaction_table_column_order = (  # noqa: SLF001
-            transaction_table_column_order
-        )
+        obj._time_zone = time_zone
+        obj._logs_max_size_bytes = logs_max_size_bytes
+        obj._backups_max_size_bytes = backups_max_size_bytes
+        obj._backup_paths = backup_paths
+        obj._general_date_format = general_date_format
+        obj._transaction_date_format = transaction_date_format
+        obj._number_format = number_format
+        obj._exchange_rate_decimals = exchange_rate_decimals
+        obj._amount_per_share_decimals = amount_per_share_decimals
+        obj._check_for_updates_on_startup = check_for_updates_on_startup
+        obj._transaction_table_column_order = transaction_table_column_order
 
         return obj
 

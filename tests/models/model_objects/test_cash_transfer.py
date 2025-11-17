@@ -1,9 +1,10 @@
 from datetime import datetime
+from decimal import Decimal
 from types import NoneType
 from typing import Any
 
 import pytest
-from hypothesis import assume, given
+from hypothesis import assume, example, given
 from hypothesis import strategies as st
 from src.models.model_objects.cash_objects import (
     CashAccount,
@@ -25,6 +26,7 @@ from tests.models.test_assets.composites import (
     everything_except,
 )
 from tests.models.test_assets.constants import MIN_DATETIME
+
 
 
 @given(
@@ -87,7 +89,7 @@ def test_amount_sent_invalid_type(transfer: CashTransfer, new_amount: Any) -> No
 
 @given(transfer=cash_transfers(), data=st.data())
 def test_amount_sent_invalid_value(transfer: CashTransfer, data: st.DataObject) -> None:
-    new_amount = data.draw(cash_amounts(max_value="-0.01"))
+    new_amount = data.draw(cash_amounts(max_value=Decimal("-0.01")))
     with pytest.raises(ValueError, match="CashTransfer amounts must be positive."):
         transfer.set_attributes(amount_sent=new_amount)
 

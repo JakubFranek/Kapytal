@@ -68,10 +68,10 @@ class PeriodicAttributeStatsTableModel(QAbstractTableModel):
         )
         for attribute in attributes:
             row: list[Cell] = []
-            for period in periodic_stats:
-                stats = _get_attribute_stats(periodic_stats[period], attribute.name)
-                if stats is not None:
-                    row.append(Cell(stats.balance.value_rounded, stats.transactions))
+            for stats in periodic_stats.values():
+                stat = _get_attribute_stats(stats, attribute.name)
+                if stat is not None:
+                    row.append(Cell(stat.balance.value_rounded, stat.transactions))
                 else:
                     row.append(Cell(Decimal(0)))
             row.append(
@@ -105,18 +105,18 @@ class PeriodicAttributeStatsTableModel(QAbstractTableModel):
         self.AVERAGE_COLUMN_INDEX = len(self._column_headers) - 2
         self.TOTAL_ROW_INDEX = len(self._row_headers) - 1
 
-    def rowCount(self, index: QModelIndex = ...) -> int:
-        if isinstance(index, QModelIndex) and index.isValid():
+    def rowCount(self, parent: QModelIndex = ...) -> int:
+        if isinstance(parent, QModelIndex) and parent.isValid():
             return 0
         return len(self._rows)
 
-    def columnCount(self, index: QModelIndex = ...) -> int:  # noqa: ARG002
+    def columnCount(self, parent: QModelIndex = ...) -> int:  # noqa: ARG002
         if not hasattr(self, "_column_count"):
             self._column_count = len(self._column_headers)
         return self._column_count
 
     def headerData(
-        self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole = ...
+        self, section: int, orientation: Qt.Orientation, role: int = ...
     ) -> str | int | None:
         if role == Qt.ItemDataRole.DisplayRole:
             if orientation == Qt.Orientation.Horizontal:
@@ -136,7 +136,7 @@ class PeriodicAttributeStatsTableModel(QAbstractTableModel):
         return None
 
     def data(
-        self, index: QModelIndex, role: Qt.ItemDataRole = ...
+        self, index: QModelIndex, role: int = ...
     ) -> str | Qt.AlignmentFlag | QFont | QBrush | float | int | None:
         if not index.isValid():
             return None

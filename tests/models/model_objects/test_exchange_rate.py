@@ -43,7 +43,7 @@ def test_creation(primary: Currency, secondary: Currency) -> None:
 @given(
     primary=currencies(),
     secondary=currencies(),
-    rate=valid_decimals(min_value=0.01) | st.integers(min_value=1, max_value=1e6),
+    rate=valid_decimals(min_value=Decimal("0.01")) | st.integers(min_value=1, max_value=1e6),
     date_=st.dates(),
 )
 def test_set_rate(
@@ -59,7 +59,7 @@ def test_set_rate(
 @given(
     primary=currencies(),
     secondary=currencies(),
-    rate=valid_decimals(min_value=0.01) | st.integers(min_value=1, max_value=1e6),
+    rate=valid_decimals(min_value=Decimal("0.01")) | st.integers(min_value=1, max_value=1e6),
     date_=st.dates(),
 )
 def test_set_and_delete_rate(
@@ -78,7 +78,7 @@ def test_set_and_delete_rate(
 @given(
     primary=currencies(),
     secondary=currencies(),
-    rate=valid_decimals(min_value=0.01)
+    rate=valid_decimals(min_value=Decimal("0.01"))
     | st.integers(min_value=1, max_value=1e6)
     | st.floats(
         min_value=1,

@@ -29,7 +29,7 @@ from tests.models.test_assets.composites import (
     account_recipient=security_accounts(),
     data=st.data(),
 )
-def test_creation(  # noqa: PLR0913
+def test_creation(
     description: str,
     datetime_: datetime,
     security: Security,
@@ -64,7 +64,7 @@ def test_creation(  # noqa: PLR0913
     account_recipient=security_accounts(),
     data=st.data(),
 )
-def test_invalid_account_sender_type(  # noqa: PLR0913
+def test_invalid_account_sender_type(
     description: str,
     datetime_: datetime,
     security: Security,
@@ -89,7 +89,7 @@ def test_invalid_account_sender_type(  # noqa: PLR0913
     account_sender=security_accounts(),
     data=st.data(),
 )
-def test_invalid_account_recipient_type(  # noqa: PLR0913
+def test_invalid_account_recipient_type(
     description: str,
     datetime_: datetime,
     security: Security,

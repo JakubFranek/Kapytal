@@ -67,7 +67,7 @@ class DateLineChartView(QChartView):
         self.setMouseTracking(True)
         self.setRubberBand(QChartView.RubberBand.RectangleRubberBand)
 
-    def load_data(  # noqa: PLR0913
+    def load_data(
         self,
         x: Sequence[date],
         y: Sequence[numbers.Real],
@@ -132,7 +132,7 @@ class DateLineChartView(QChartView):
             )
         self._axis_y.applyNiceNumbers()
 
-    def mouseMoveEvent(self, event: QMouseEvent) -> None:
+    def mouseMoveEvent(self, event: QMouseEvent | None) -> None:
         pos = self._chart.mapToValue(QPointF(event.position().toPoint()))
         x = pos.x()
         y = pos.y()

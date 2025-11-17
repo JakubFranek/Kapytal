@@ -19,7 +19,7 @@ from src.views.utilities.helper_functions import (
 class SetExchangeRateDialog(CustomDialog, Ui_SetExchangeRateDialog):
     signal_ok = pyqtSignal()
 
-    def __init__(  # noqa: PLR0913
+    def __init__(
         self,
         date_: date,
         max_date: date,

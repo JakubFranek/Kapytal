@@ -41,18 +41,18 @@ class AttributeTableModel(QAbstractTableModel):
     def load_attribute_stats(self, stats: Collection[AttributeStats]) -> None:
         self._attribute_stats = tuple(stats)
 
-    def rowCount(self, index: QModelIndex | None = None) -> int:
-        if isinstance(index, QModelIndex) and index.isValid():
+    def rowCount(self, parent: QModelIndex | None = None) -> int:
+        if isinstance(parent, QModelIndex) and parent.isValid():
             return 0
         return len(self._attribute_stats)
 
-    def columnCount(self, index: QModelIndex | None = None) -> int:  # noqa: ARG002
+    def columnCount(self, parent: QModelIndex | None = None) -> int:  # noqa: ARG002
         if not hasattr(self, "_column_count"):
             self._column_count = len(COLUMN_HEADERS)
         return self._column_count
 
     def headerData(
-        self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole
+        self, section: int, orientation: Qt.Orientation, role: int = ...
     ) -> str | int | None:
         if role == Qt.ItemDataRole.DisplayRole:
             if orientation == Qt.Orientation.Horizontal:
@@ -61,7 +61,7 @@ class AttributeTableModel(QAbstractTableModel):
         return None
 
     def data(
-        self, index: QModelIndex, role: Qt.ItemDataRole
+        self, index: QModelIndex, role: int = ...
     ) -> str | int | float | Qt.AlignmentFlag | QBrush | None:
         if not index.isValid():
             return None

@@ -69,13 +69,13 @@ class QuotesUpdateTableModel(QAbstractTableModel):
             self.dataChanged.emit(index, index, [Qt.ItemDataRole.CheckStateRole])
         self.event_checked_items_changed()
 
-    def rowCount(self, index: QModelIndex = ...) -> int:
-        if isinstance(index, QModelIndex) and index.isValid():
+    def rowCount(self, parent: QModelIndex = ...) -> int:
+        if isinstance(parent, QModelIndex) and parent.isValid():
             return 0
         return len(self._items)
 
-    def columnCount(self, index: QModelIndex = ...) -> int:
-        return 0 if isinstance(index, QModelIndex) and index.isValid() else 3
+    def columnCount(self, parent: QModelIndex = ...) -> int:
+        return 0 if isinstance(parent, QModelIndex) and parent.isValid() else 3
 
     def headerData(
         self, section: int, orientation: Qt.Orientation, role: int = ...
@@ -87,20 +87,24 @@ class QuotesUpdateTableModel(QAbstractTableModel):
             return COLUMN_HEADERS[section]
         return None
 
-    def data(self, index: QModelIndex, role: Qt.ItemDataRole = ...) -> str | None:
+    def data(self, index: QModelIndex, role: int = ...) -> str | None:
         if not index.isValid():
             return None
+
         item = self._items[index.row()]
         column = index.column()
+
         if role == Qt.ItemDataRole.DisplayRole:
             return self._get_display_role_data(item, column)
         if (
             role == Qt.ItemDataRole.DecorationRole
             and column == QuotesUpdateTableColumn.ITEM
         ):
-            if isinstance(item[0], ExchangeRate):
-                return icons.exchange_rate
-            return icons.security
+            return (
+                icons.exchange_rate
+                if isinstance(item[0], ExchangeRate)
+                else icons.security
+            )
         if (
             index.column() == QuotesUpdateTableColumn.ITEM
             and role == Qt.ItemDataRole.CheckStateRole
@@ -117,8 +121,11 @@ class QuotesUpdateTableModel(QAbstractTableModel):
             return ALIGNMENT_RIGHT
         return None
 
-    def setData(
-        self, index: QModelIndex, value: Any, role: int = ...  # noqa: ANN401
+    def setData(  # type: ignore[override]
+        self,
+        index: QModelIndex,
+        value: object,
+        role: int = ...,
     ) -> bool | None:
         if role == Qt.ItemDataRole.CheckStateRole:
             item = self._items[index.row()]

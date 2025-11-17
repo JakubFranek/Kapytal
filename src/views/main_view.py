@@ -4,11 +4,15 @@ from pathlib import Path
 
 from PyQt6.QtCore import QSize, Qt, pyqtSignal
 from PyQt6.QtGui import QAction, QCloseEvent, QIcon, QKeyEvent
-from PyQt6.QtWidgets import QFileDialog, QMainWindow, QMessageBox
+from PyQt6.QtWidgets import QDateTimeEdit, QFileDialog, QMainWindow, QMessageBox
 from src.utilities import constants
 from src.views import icons
 from src.views.dialogs.about_dialog import AboutDialog
 from src.views.ui_files.Ui_main_window import Ui_MainWindow
+from src.views.utilities.helper_functions import (
+    overflowing_keyPressEvent,
+    overflowing_wheelEvent,
+)
 from src.views.widgets.account_tree_widget import AccountTreeWidget
 from src.views.widgets.transaction_table_widget import TransactionTableWidget
 
@@ -51,6 +55,7 @@ class MainView(QMainWindow, Ui_MainWindow):
     signal_open_recent_file = pyqtSignal(str)
     signal_clear_recent_files = pyqtSignal()
     signal_new_file = pyqtSignal()
+    signal_import_transactions = pyqtSignal()
 
     signal_open_basic_demo = pyqtSignal()
     signal_open_mortgage_demo = pyqtSignal()
@@ -70,10 +75,45 @@ class MainView(QMainWindow, Ui_MainWindow):
         self.transaction_table_widget.tableView.setUpdatesEnabled(enabled)
 
     def get_save_path(self) -> str:
-        return QFileDialog.getSaveFileName(self, filter="JSON file (*.json)")[0]
+        path, selected_filter = QFileDialog.getSaveFileName(
+            self, filter="Encrypted JSON file (*.json.enc);;JSON file (*.json)"
+        )
+
+        if not path:
+            return ""
+
+        # Map filters to the extension we want to enforce
+        ext_map = {
+            "Encrypted JSON file (*.json.enc)": ".json.enc",
+            "JSON file (*.json)": ".json",
+        }
+
+        chosen_ext = ext_map.get(selected_filter)
+        if not chosen_ext:
+            return path  # unknown filter; don't touch
+
+        # Known extensions to strip from the end (longer first)
+        known_exts = sorted(ext_map.values(), key=len, reverse=True)
+
+        # Strip ANY known extension repeatedly (handles duplicates or wrong one)
+        path_lowered = path.lower()
+        changed = True
+        while changed:
+            changed = False
+            for ext in known_exts:
+                if path_lowered.endswith(ext.lower()):
+                    path = path[: -len(ext)]
+                    path_lowered = path.lower()
+                    changed = True
+                    break
+
+        # Append the chosen extension once
+        return path + chosen_ext
 
     def get_open_path(self) -> str:
-        return QFileDialog.getOpenFileName(self, filter="JSON file (*.json)")[0]
+        return QFileDialog.getOpenFileName(
+            self, filter="All JSON files (*.json *.json.enc)"
+        )[0]
 
     def ask_save_before_close(self) -> bool | None:
         """True: save & close \n False: close \n None: cancel"""
@@ -114,9 +154,7 @@ class MainView(QMainWindow, Ui_MainWindow):
         message_box.setWindowIcon(icons.question)
         message_box.setDefaultButton(QMessageBox.StandardButton.No)
         reply = message_box.exec()
-        if reply == QMessageBox.StandardButton.Yes:
-            return True
-        return False
+        return reply == QMessageBox.StandardButton.Yes
 
     def set_save_status(self, current_file_path: Path | None, *, unsaved: bool) -> None:
         if unsaved is True:
@@ -168,6 +206,8 @@ class MainView(QMainWindow, Ui_MainWindow):
         about_dialog.exec()
 
     def _initial_setup(self) -> None:
+        QDateTimeEdit.keyPressEvent = overflowing_keyPressEvent
+        QDateTimeEdit.wheelEvent = overflowing_wheelEvent
         icons.setup()
 
         self.setupUi(self)
@@ -239,6 +279,9 @@ class MainView(QMainWindow, Ui_MainWindow):
             self.signal_clear_recent_files.emit
         )
         self.actionNew_File.triggered.connect(self.signal_new_file.emit)
+        self.actionImport_Transactions.triggered.connect(
+            self.signal_import_transactions.emit
+        )
 
         self.actionShow_Hide_Account_Tree.triggered.connect(
             lambda checked: self.signal_show_account_tree.emit(checked)

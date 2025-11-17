@@ -39,6 +39,7 @@ from tests.models.test_record_keeper import (
     get_preloaded_record_keeper_with_security_transactions,
     get_preloaded_record_keeper_with_various_transactions,
 )
+from tests.utilities.constants import IBANS_VALID
 
 
 def test_edit_category() -> None:
@@ -283,9 +284,11 @@ def test_edit_cash_account() -> None:
     record_keeper.add_currency("CZK", 2)
     record_keeper.add_account_group("TEST PARENT", None)
     record_keeper.add_account_group("NEW PARENT", None)
-    record_keeper.add_cash_account("TEST PARENT/TEST NAME", "CZK", 0)
+    record_keeper.add_cash_account(
+        "TEST PARENT/TEST NAME", "CZK", 0, iban=IBANS_VALID[0]
+    )
     record_keeper.edit_cash_account(
-        "TEST PARENT/TEST NAME", "NEW PARENT/NEW NAME", 1000
+        "TEST PARENT/TEST NAME", "NEW PARENT/NEW NAME", 1000, iban=IBANS_VALID[1]
     )
     account = record_keeper.accounts[0]
     assert isinstance(account, CashAccount)
@@ -400,6 +403,7 @@ def test_edit_cash_transactions_account() -> None:
         path="Test Account CZK",
         currency_code="CZK",
         initial_balance_value=Decimal(0),
+        iban=IBANS_VALID[0],
     )
     record_keeper.edit_cash_transactions(uuids, account_path=edit_account)
     for transaction in cash_transactions:

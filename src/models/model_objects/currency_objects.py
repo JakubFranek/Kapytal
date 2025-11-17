@@ -12,7 +12,7 @@ from src.models.mixins.json_serializable_mixin import JSONSerializableMixin
 from src.models.user_settings import user_settings
 from src.presenters.utilities.event import Event
 from src.utilities.formatting import quantizers
-from src.utilities.numbers import get_decimal_exponent
+from src.utilities.number_utils import get_decimal_exponent
 
 # IDEA: add CurrencyManager class to take care of Currency cache resets
 # and offload RecordKeeper methods to CurrencyManager
@@ -52,7 +52,7 @@ class Currency(CopyableMixin, JSONSerializableMixin):
             raise ValueError("Currency.decimals must not be negative.")
         self._decimals = decimals
 
-        self._exchange_rates: dict[Currency, "ExchangeRate"] = {}
+        self._exchange_rates: dict[Currency, ExchangeRate] = {}
         self._factor_cache: dict[str, Decimal] = {}
         self._zero_amount: CashAmount = CashAmount(0, self)
 
@@ -85,7 +85,7 @@ class Currency(CopyableMixin, JSONSerializableMixin):
     def __hash__(self) -> int:
         return hash(self._code)
 
-    def __eq__(self, __o: object) -> bool:
+    def __eq__(self, /, __o: object) -> bool:
         if not isinstance(__o, Currency):
             return NotImplemented
         return self._code == __o._code
@@ -204,17 +204,17 @@ class Currency(CopyableMixin, JSONSerializableMixin):
         return Currency(code=data["code"], decimals=data["decimals"])
 
 
-class ExchangeRate(CopyableMixin, JSONSerializableMixin):
+class ExchangeRate(CopyableMixin):
     __slots__ = (
+        "_earliest_date",
+        "_latest_date",
+        "_latest_rate",
         "_primary_currency",
-        "_secondary_currency",
+        "_rate_decimals",
         "_rate_history",
         "_rate_history_pairs",
-        "_rate_decimals",
-        "_latest_rate",
-        "_latest_date",
-        "_earliest_date",
         "_recalculate_rate_history_pairs",
+        "_secondary_currency",
         "event_reset_currency_caches",
     )
 
@@ -437,18 +437,18 @@ class ExchangeRate(CopyableMixin, JSONSerializableMixin):
 
 
 @total_ordering
-class CashAmount(CopyableMixin, JSONSerializableMixin):
+class CashAmount(CopyableMixin):
     """An immutable object comprising of Decimal value and a Currency."""
 
     ROUNDED_MAX_ZEROES = 4
 
     __slots__ = (
-        "_raw_value",
         "_currency",
-        "_value_rounded",
-        "_value_normalized",
-        "_str_rounded",
+        "_raw_value",
         "_str_normalized",
+        "_str_rounded",
+        "_value_normalized",
+        "_value_rounded",
     )
 
     def __init__(self, value: Decimal | int | str, currency: Currency) -> None:
@@ -518,23 +518,22 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
     def __hash__(self) -> int:
         return hash((self._raw_value, self._currency))
 
-    def __eq__(self, __o: object) -> bool:
+    def __eq__(self, /, __o: object) -> bool:
         if not isinstance(__o, CashAmount):
             return NotImplemented
         if self._currency != __o._currency:
-            if self._raw_value == 0 and __o._raw_value == 0:
-                return True  # If values are zero, amounts are always equal
-            return False
+            # If values are zero, amounts are always equal
+            return self._raw_value == 0 and __o._raw_value == 0
         return self._raw_value == __o._raw_value
 
-    def __lt__(self, __o: object) -> bool:
+    def __lt__(self, /, __o: object) -> bool:
         if not isinstance(__o, CashAmount):
             return NotImplemented
         if self._currency != __o._currency:
             raise CurrencyError("CashAmount.currency of operands must match.")
         return self._raw_value < __o._raw_value
 
-    def __le__(self, __o: object) -> bool:
+    def __le__(self, /, __o: object) -> bool:
         if not isinstance(__o, CashAmount):
             return NotImplemented
         if self._currency != __o._currency:
@@ -553,7 +552,7 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
         obj._currency = self._currency  # noqa: SLF001
         return obj
 
-    def __add__(self, __o: object) -> "CashAmount":
+    def __add__(self, /, __o: object) -> "CashAmount":
         if not isinstance(__o, CashAmount):
             return NotImplemented
         if self._currency != __o._currency:
@@ -563,10 +562,10 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
         obj._currency = self._currency
         return obj
 
-    def __radd__(self, __o: object) -> "CashAmount":
+    def __radd__(self, /, __o: object) -> "CashAmount":
         return self.__add__(__o)
 
-    def __sub__(self, __o: object) -> "CashAmount":
+    def __sub__(self, /, __o: object) -> "CashAmount":
         if not isinstance(__o, CashAmount):
             return NotImplemented
         if self._currency != __o._currency:
@@ -576,7 +575,7 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
         obj._currency = self._currency
         return obj
 
-    def __rsub__(self, __o: object) -> "CashAmount":
+    def __rsub__(self, /, __o: object) -> "CashAmount":
         if not isinstance(__o, CashAmount):
             return NotImplemented
         if self._currency != __o._currency:
@@ -586,7 +585,7 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
         obj._currency = self._currency
         return obj
 
-    def __mul__(self, __o: object) -> "CashAmount":
+    def __mul__(self, /, __o: object) -> "CashAmount":
         if not isinstance(__o, int | Decimal):
             return NotImplemented
         obj = object.__new__(CashAmount)
@@ -594,18 +593,16 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
         obj._currency = self._currency
         return obj
 
-    def __rmul__(self, __o: object) -> "CashAmount":
+    def __rmul__(self, /, __o: object) -> "CashAmount":
         return self.__mul__(__o)
 
     @overload
-    def __truediv__(self, __o: "CashAmount") -> Decimal:
-        ...
+    def __truediv__(self, /, __o: "CashAmount") -> Decimal: ...
 
     @overload
-    def __truediv__(self, __o: int | Decimal) -> "CashAmount":
-        ...
+    def __truediv__(self, /, __o: int | Decimal) -> "CashAmount": ...
 
-    def __truediv__(self, __o: object) -> "Decimal | CashAmount":
+    def __truediv__(self, /, __o: object) -> "Decimal | CashAmount":
         if isinstance(__o, CashAmount):
             if self._currency != __o._currency:
                 raise CurrencyError("CashAmount.currency of operands must match.")
@@ -617,7 +614,7 @@ class CashAmount(CopyableMixin, JSONSerializableMixin):
         obj._currency = self._currency
         return obj
 
-    def __rtruediv__(self, __o: object) -> Decimal:
+    def __rtruediv__(self, /, __o: object) -> Decimal:
         if not isinstance(__o, CashAmount):
             return NotImplemented
         if self._currency != __o._currency:

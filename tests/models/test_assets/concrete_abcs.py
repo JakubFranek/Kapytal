@@ -1,6 +1,6 @@
 from collections.abc import Collection
-from datetime import datetime
-from typing import Any, Self
+from datetime import date, datetime
+from typing import Any
 
 from src.models.base_classes.account import Account
 from src.models.base_classes.transaction import Transaction
@@ -38,12 +38,12 @@ class ConcreteAccount(Account):
     def currency(self) -> Currency | None:
         return super().currency
 
-    def get_balance(self, currency: Currency) -> CashAmount:
-        return super().get_balance(currency)
+    def get_balance(self, currency: Currency, date_: date | None = None) -> CashAmount:
+        return super().get_balance(currency, date_)
 
     def serialize(self) -> dict[str, Any]:
         return super().serialize()
 
     @staticmethod
-    def deserialize(data: dict[str, Any]) -> Self:
+    def deserialize(data: dict[str, Any]) -> "ConcreteAccount":
         return Account().deserialize(data)

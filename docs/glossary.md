@@ -28,6 +28,7 @@ This alphabetically-sorted document contains succint descriptions and explanatio
 + [Exchange Rate](#exchange-rate-)
 + [Expense](#expense-)
 + [Form](#form)
++ [Import Transactions](#import-transactions)
 + [Income](#income-)
 + [Logging](#logging)
 + [Native Currency/Amount](#native-currencyamount)
@@ -223,6 +224,10 @@ To represent Currency exchange, use [Cash Transfers](#cash-transfer-), as the se
 
 Data File is a term for the JSON files created, viewed and edited by Kapytal. An example of such a file is the [demo file](#demo-file).
 
+Data Files can be encrypted by Kapytal, and since v1.2.0, this is the default option. Contents of encrypted Data Files are unreadable without the correct password. The file extension for encrypted data files is `*.json.enc` (`.enc` stands for *encrypted*), saving unencrypted data files with `*.json` extension is also supported. 
+
+When opening or saving a file with the `*.json.enc` extension, a password (minimum 8 characters) is required. Once entered, the password is cached in-memory for the current session, but it is never written to disk and is automatically cleared when the program closes or when the saved/opened file path changes. Encryption uses the AES-256-GCM algorithm with a unique salt and nonce for each encryption to ensure strong protection.
+
 ---
 
 ### Date
@@ -290,6 +295,12 @@ These are some of the Forms in Kapytal:
 + [Tags](#tag-) Form
 + [Transaction Filter](#transaction-filters-) Form
 + [Transaction Table Form](#transaction-table-form)
+
+---
+
+### Import Transactions
+
+This feature is located in `File->Import Transactions` menu and is documented in [its own article here](./import_transactions.md).
 
 ---
 

@@ -36,18 +36,18 @@ class CurrencyTableModel(QAbstractTableModel):
         self._currencies = tuple(currencies)
         self._base_currency = base_currency
 
-    def rowCount(self, index: QModelIndex = ...) -> int:
-        if isinstance(index, QModelIndex) and index.isValid():
+    def rowCount(self, parent: QModelIndex = ...) -> int:
+        if isinstance(parent, QModelIndex) and parent.isValid():
             return 0
         return len(self._currencies)
 
-    def columnCount(self, index: QModelIndex = ...) -> int:  # noqa: ARG002
+    def columnCount(self, parent: QModelIndex = ...) -> int:  # noqa: ARG002
         if not hasattr(self, "_column_count"):
             self._column_count = len(COLUMN_HEADERS)
         return self._column_count
 
     def headerData(
-        self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole = ...
+        self, section: int, orientation: Qt.Orientation, role: int = ...
     ) -> str | int | None:
         if role == Qt.ItemDataRole.DisplayRole:
             if orientation == Qt.Orientation.Horizontal:
@@ -56,7 +56,7 @@ class CurrencyTableModel(QAbstractTableModel):
         return None
 
     def data(  # noqa: PLR0911
-        self, index: QModelIndex, role: Qt.ItemDataRole = ...
+        self, index: QModelIndex, role: int = ...
     ) -> str | QIcon | None:
         if not index.isValid():
             return None

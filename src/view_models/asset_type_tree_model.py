@@ -34,38 +34,38 @@ class AssetTypeTreeModel(QAbstractItemModel):
     def load_data(self, collection: Collection[AssetStats]) -> None:
         self._root_items = tuple(collection)
 
-    def rowCount(self, index: QModelIndex) -> int:
-        if index.isValid():
-            if index.column() != 0:
+    def rowCount(self, parent: QModelIndex = ...) -> int:
+        if parent.isValid():
+            if parent.column() != 0:
                 return 0
-            item: AssetStats = index.internalPointer()
+            item: AssetStats = parent.internalPointer()
             return len(item.children)
         return len(self._root_items)
 
-    def columnCount(self, index: QModelIndex | None = None) -> int:
-        return 3 if not index.isValid() or index.column() == 0 else 0
+    def columnCount(self, parent: QModelIndex | None = None) -> int:
+        return 3 if not parent.isValid() or parent.column() == 0 else 0
 
-    def index(self, row: int, column: int, _parent: QModelIndex) -> QModelIndex:
-        if _parent.isValid() and _parent.column() != 0:
+    def index(self, row: int, column: int, parent: QModelIndex = ...) -> QModelIndex:
+        if parent.isValid() and parent.column() != 0:
             return QModelIndex()
 
-        parent: AssetStats | None
-        if not _parent or not _parent.isValid():
-            parent = None
+        _parent: AssetStats | None
+        if not parent or not parent.isValid():
+            _parent = None
         else:
-            parent = _parent.internalPointer()
+            _parent = parent.internalPointer()
 
-        child = self._root_items[row] if parent is None else parent.children[row]
+        child = self._root_items[row] if _parent is None else _parent.children[row]
         if child:
             return QAbstractItemModel.createIndex(self, row, column, child)
         return QModelIndex()
 
-    def parent(self, index: QModelIndex) -> QModelIndex:
-        if not index.isValid():
+    def parent(self, child: QModelIndex) -> QModelIndex:  # type: ignore[override]
+        if not child.isValid():
             return QModelIndex()
 
-        child: AssetStats = index.internalPointer()
-        parent = child.parent
+        _child: AssetStats = child.internalPointer()
+        parent = _child.parent
         if parent is None:
             return QModelIndex()
         grandparent = parent.parent
@@ -76,7 +76,7 @@ class AssetTypeTreeModel(QAbstractItemModel):
         return QAbstractItemModel.createIndex(self, row, 0, parent)
 
     def headerData(
-        self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole
+        self, section: int, orientation: Qt.Orientation, role: int = ...
     ) -> str | int | None:
         if role == Qt.ItemDataRole.DisplayRole:
             if orientation == Qt.Orientation.Horizontal:
@@ -87,12 +87,14 @@ class AssetTypeTreeModel(QAbstractItemModel):
         return None
 
     def data(
-        self, index: QModelIndex, role: Qt.ItemDataRole
+        self, index: QModelIndex, role: int = ...
     ) -> str | Qt.AlignmentFlag | None | float | QIcon | QBrush:
         if not index.isValid():
             return None
+
         column = index.column()
         item: AssetStats = index.internalPointer()
+
         if role == Qt.ItemDataRole.DisplayRole:
             return self._get_display_role_data(column, item)
         if role == Qt.ItemDataRole.UserRole:  # sort role
@@ -144,13 +146,17 @@ class AssetTypeTreeModel(QAbstractItemModel):
         if item.asset_type == AssetType.CURRENCY:
             return icons.currency
         if item.asset_type == AssetType.SECURITY:
-            if item.parent is None or item.parent.parent is None:
-                return icons.securities
-            return icons.security
+            return (
+                icons.securities
+                if item.parent is None or item.parent.parent is None
+                else icons.security
+            )
         if item.asset_type == AssetType.ACCOUNT:
-            if item.parent.asset_type == AssetType.SECURITY:
-                return icons.security_account
-            return icons.cash_account
+            return (
+                icons.security_account
+                if item.parent.asset_type == AssetType.SECURITY
+                else icons.cash_account
+            )
         return None
 
     def _get_foreground_role_data(self, column: int, item: AssetStats) -> QBrush | None:

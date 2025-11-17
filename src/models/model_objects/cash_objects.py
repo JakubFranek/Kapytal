@@ -1,5 +1,6 @@
 import logging
 import operator
+import re
 from abc import ABC, abstractmethod
 from bisect import bisect_right
 from collections.abc import Collection
@@ -34,6 +35,7 @@ from src.models.model_objects.currency_objects import (
     CurrencyError,
 )
 from src.models.user_settings import user_settings
+from src.utilities.constants import IBAN_LENGTHS
 
 
 class UnrelatedTransactionError(ValueError):
@@ -71,7 +73,7 @@ class CashRelatedTransaction(Transaction, ABC):
         return self._get_amount(account)
 
     @abstractmethod
-    def _get_amount(self, account: "CashAccount | None") -> CashAmount:
+    def _get_amount(self, account: "CashAccount") -> CashAmount:
         raise NotImplementedError
 
     @property
@@ -87,16 +89,17 @@ class CashTransactionType(Enum):
 
 class CashAccount(Account):
     __slots__ = (
-        "_uuid",
-        "_currency",
-        "_initial_balance",
+        "_allow_colon",
+        "_allow_slash",
         "_balance_history",
         "_balances",
-        "_transactions",
+        "_currency",
+        "_iban",
+        "_initial_balance",
         "_name",
         "_parent",
-        "_allow_slash",
-        "_allow_colon",
+        "_transactions",
+        "_uuid",
         "allow_update_balance",
         "event_balance_updated",
     )
@@ -106,6 +109,7 @@ class CashAccount(Account):
         name: str,
         currency: Currency,
         initial_balance: CashAmount,
+        iban: str = "",
         parent: AccountGroup | None = None,
     ) -> None:
         if not isinstance(currency, Currency):
@@ -123,6 +127,8 @@ class CashAccount(Account):
         ] = [(datetime.now(user_settings.settings.time_zone), initial_balance, None)]
         self._transactions: set[CashRelatedTransaction] = set()
 
+        self.iban = iban  # IBAN validation done within the setter
+
         # parent is set last because it triggers chain of balance updates
         self.allow_update_balance = True
         super().__init__(name=name, parent=parent)
@@ -130,6 +136,20 @@ class CashAccount(Account):
     @property
     def currency(self) -> Currency:
         return self._currency
+
+    @property
+    def iban(self) -> str:
+        return self._iban
+
+    @iban.setter
+    def iban(self, iban: str) -> None:
+        if not iban:
+            self._iban = ""
+        else:
+            valid = _validate_iban(iban)
+            if not valid:
+                raise ValueError("CashAccount.iban must be a valid IBAN.")
+            self._iban = iban.replace(" ", "").replace("\t", "").upper()
 
     @property
     def initial_balance(self) -> CashAmount:
@@ -216,6 +236,7 @@ class CashAccount(Account):
             "index": index,
             "currency_code": self._currency.code,
             "initial_balance": str(self._initial_balance.value_rounded),
+            "iban": self._iban,
             "uuid": str(self._uuid),
         }
 
@@ -230,14 +251,15 @@ class CashAccount(Account):
         parent_path, _, name = path.rpartition("/")
         initial_balance_value = data["initial_balance"]
         currency = currencies[data["currency_code"]]
+        iban = data.get("iban", "")
 
         initial_balance = CashAmount(initial_balance_value, currency)
 
-        obj = CashAccount(name, currency, initial_balance)
-        obj._uuid = UUID(data["uuid"])  # noqa: SLF001
+        obj = CashAccount(name, currency, initial_balance, iban)
+        obj._uuid = UUID(data["uuid"])
 
         if parent_path:
-            obj._parent = account_groups[parent_path]  # noqa: SLF001
+            obj._parent = account_groups[parent_path]
             obj._parent._children_dict[index] = obj  # noqa: SLF001
             obj._parent._update_children_tuple()  # noqa: SLF001
             obj.event_balance_updated.append(
@@ -281,8 +303,7 @@ class CashAccount(Account):
     ) -> None:
         if not isinstance(transaction, CashRelatedTransaction):
             raise TypeError(
-                "Parameter 'transaction' must be a subclass of "
-                "CashRelatedTransaction."
+                "Parameter 'transaction' must be a subclass of CashRelatedTransaction."
             )
         if not transaction.is_account_related(self):
             raise UnrelatedAccountError(
@@ -293,26 +314,26 @@ class CashAccount(Account):
 
 class CashTransaction(CashRelatedTransaction):
     __slots__ = (
-        "_uuid",
-        "_refunds",
-        "_refunded_ratio",
-        "_type",
-        "_payee",
-        "_category_amount_pairs",
-        "_categories",
-        "_tag_amount_pairs",
-        "_tags",
         "_account",
-        "_description",
-        "_datetime",
-        "_datetime_created",
-        "_timestamp",
         "_amount",
         "_amount_negative",
         "_are_tags_split",
+        "_categories",
+        "_category_amount_pairs",
+        "_datetime",
+        "_datetime_created",
+        "_description",
+        "_payee",
+        "_refunded_ratio",
+        "_refunds",
+        "_tag_amount_pairs",
+        "_tags",
+        "_timestamp",
+        "_type",
+        "_uuid",
     )
 
-    def __init__(  # noqa: PLR0913
+    def __init__(
         self,
         description: str,
         datetime_: datetime,
@@ -441,7 +462,7 @@ class CashTransaction(CashRelatedTransaction):
         }
 
     @staticmethod
-    def deserialize(  # noqa: PLR0913
+    def deserialize(
         data: dict[str, Any],
         accounts: dict[str, Account],
         payees: dict[str, Attribute],
@@ -481,9 +502,7 @@ class CashTransaction(CashRelatedTransaction):
             tag_amount_pairs=decoded_tag_amount_pairs,
             uuid=UUID(data["uuid"]),
         )
-        obj._datetime_created = datetime.fromisoformat(  # noqa: SLF001
-            data["datetime_created"]
-        )
+        obj._datetime_created = datetime.fromisoformat(data["datetime_created"])
         return obj
 
     def add_refund(self, refund: "RefundTransaction") -> None:
@@ -832,11 +851,11 @@ class CashTransaction(CashRelatedTransaction):
                 self._are_tags_split = True
         self._tags = frozenset(tags)
 
-    def _validate_datetime(self, datetime_: datetime) -> None:
-        super()._validate_datetime(datetime_)
+    def _validate_datetime(self, value: datetime) -> None:
+        super()._validate_datetime(value)
         if self.is_refunded:
             refund_datetimes = [refund.datetime_ for refund in self._refunds]
-            if any(refund_datetime < datetime_ for refund_datetime in refund_datetimes):
+            if any(refund_datetime < value for refund_datetime in refund_datetimes):
                 raise ValueError(
                     "The datetime_ of a refunded CashTransaction must "
                     "precede the datetimes of its refunds."
@@ -1006,20 +1025,20 @@ class CashTransaction(CashRelatedTransaction):
 
 class CashTransfer(CashRelatedTransaction):
     __slots__ = (
-        "_uuid",
-        "_sender",
-        "_recipient",
         "_accounts",
-        "_amount_sent",
         "_amount_received",
-        "_description",
+        "_amount_sent",
         "_datetime",
         "_datetime_created",
-        "_timestamp",
+        "_description",
+        "_recipient",
+        "_sender",
         "_tags",
+        "_timestamp",
+        "_uuid",
     )
 
-    def __init__(  # noqa: PLR0913
+    def __init__(
         self,
         description: str,
         datetime_: datetime,
@@ -1121,9 +1140,7 @@ class CashTransfer(CashRelatedTransaction):
             amount_received=amount_received,
             uuid=UUID(data["uuid"]),
         )
-        obj._datetime_created = datetime.fromisoformat(  # noqa: SLF001
-            data["datetime_created"]
-        )
+        obj._datetime_created = datetime.fromisoformat(data["datetime_created"])
         return obj
 
     def set_attributes(
@@ -1305,25 +1322,25 @@ class RefundTransaction(CashRelatedTransaction):
     """A refund which attaches itself to an expense CashTransaction"""
 
     __slots__ = (
-        "_uuid",
-        "_refunded_transaction",
-        "_refund_ratio",
-        "_type",
-        "_payee",
-        "_category_amount_pairs",
-        "_categories",
-        "_tag_amount_pairs",
-        "_tags",
-        "_are_tags_split",
         "_account",
-        "_description",
+        "_amount",
+        "_are_tags_split",
+        "_categories",
+        "_category_amount_pairs",
         "_datetime",
         "_datetime_created",
+        "_description",
+        "_payee",
+        "_refund_ratio",
+        "_refunded_transaction",
+        "_tag_amount_pairs",
+        "_tags",
         "_timestamp",
-        "_amount",
+        "_type",
+        "_uuid",
     )
 
-    def __init__(  # noqa: PLR0913
+    def __init__(
         self,
         description: str,
         datetime_: datetime,
@@ -1457,7 +1474,7 @@ class RefundTransaction(CashRelatedTransaction):
         }
 
     @staticmethod
-    def deserialize(  # noqa: PLR0913
+    def deserialize(
         data: dict[str, Any],
         accounts: dict[str, Account],
         transactions: dict[UUID, Transaction],
@@ -1499,9 +1516,7 @@ class RefundTransaction(CashRelatedTransaction):
             tag_amount_pairs=decoded_tag_amount_pairs,
             uuid=UUID(data["uuid"]),
         )
-        obj._datetime_created = datetime.fromisoformat(  # noqa: SLF001
-            data["datetime_created"]
-        )
+        obj._datetime_created = datetime.fromisoformat(data["datetime_created"])
         return obj
 
     def add_tags(self, tags: Collection[Attribute]) -> None:  # noqa: ARG002
@@ -1688,10 +1703,10 @@ class RefundTransaction(CashRelatedTransaction):
         self._tags = frozenset(tags)
 
     def _validate_datetime(
-        self, datetime_: datetime, refunded_transaction_datetime: datetime
+        self, value: datetime, refunded_transaction_datetime: datetime
     ) -> None:
-        super()._validate_datetime(datetime_)
-        if datetime_ < refunded_transaction_datetime:
+        super()._validate_datetime(value)
+        if value < refunded_transaction_datetime:
             raise RefundPrecedesTransactionError(
                 "Supplied RefundTransaction.datetime_ precedes this "
                 "CashTransaction.datetime_."
@@ -1869,3 +1884,28 @@ def _get_amount_for_category(
         if total and _category in descendants:
             running_sum = func(running_sum, _amount)
     return running_sum
+
+
+def _validate_iban(iban: str) -> bool:
+    """Returns True if the IBAN is valid, False otherwise.
+    Copied from https://gist.github.com/dkdndes/578c579a86f7a19c646d5db9a4f9a845."""
+
+    # Ensure upper alphanumeric input.
+    iban = iban.replace(" ", "").replace("\t", "")
+    if not re.match(r"^[\dA-Z]+$", iban):
+        return False
+
+    # Validate country code against expected length.
+    if len(iban) != IBAN_LENGTHS[iban[:2]]:
+        return False
+
+    # Checksum validation (ISO 13616 / Mod 97):
+    # Move the first 4 characters to the end of the string.
+    # Replace each letter with its corresponding number (A=10, B=11, … Z=35).
+    # Interpret the result as a decimal integer and check that the remainder
+    # when divided by 97 is 1.
+    iban = iban[4:] + iban[:4]
+    digits = int(
+        "".join(str(int(ch, 36)) for ch in iban)
+    )  # BASE 36: 0..9,A..Z -> 0..35
+    return digits % 97 == 1

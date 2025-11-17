@@ -15,12 +15,12 @@ class SimpleListModel(QAbstractListModel):
     def load_items(self, items: Collection[str]) -> None:
         self._items = tuple(items)
 
-    def rowCount(self, index: QModelIndex | None = None) -> int:
-        if isinstance(index, QModelIndex) and index.isValid():
+    def rowCount(self, parent: QModelIndex | None = None) -> int:
+        if isinstance(parent, QModelIndex) and parent.isValid():
             return 0
         return len(self._items)
 
-    def data(self, index: QModelIndex, role: Qt.ItemDataRole) -> str | None:
+    def data(self, index: QModelIndex, role: int = ...) -> str | None:
         if not index.isValid():
             return None
         item = self._items[index.row()]

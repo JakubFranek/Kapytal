@@ -96,7 +96,7 @@ class QuotesUpdateFormPresenter:
         QApplication.processEvents()
         try:
             self._download_quotes()
-        except:  # noqa: TRY302
+        except:  # noqa: TRY203
             raise
         finally:
             self._busy_dialog.close()
