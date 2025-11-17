@@ -319,7 +319,7 @@ def test_add_cash_transaction(
         st.lists(
             st.tuples(
                 st.sampled_from([cat.path for cat in valid_categories]),
-                valid_decimals(min_value=0.1),
+                valid_decimals(min_value=Decimal("0.1")),
             ),
             min_size=1,
             max_size=5,
@@ -333,7 +333,7 @@ def test_add_cash_transaction(
         st.lists(
             st.tuples(
                 names(),
-                valid_decimals(min_value=0.01, max_value=max_tag_amount),
+                valid_decimals(min_value=Decimal("0.01"), max_value=max_tag_amount),
             ),
             min_size=0,
             max_size=5,
@@ -361,8 +361,8 @@ def test_add_cash_transaction(
         min_value=datetime.now() + timedelta(days=1),  # noqa: DTZ005
         timezones=st.just(user_settings.settings.time_zone),
     ),
-    amount_sent=valid_decimals(min_value=0.01),
-    amount_received=valid_decimals(min_value=0.01),
+    amount_sent=valid_decimals(min_value=Decimal("0.01")),
+    amount_received=valid_decimals(min_value=Decimal("0.01")),
     data=st.data(),
 )
 def test_add_cash_transfer(
@@ -737,7 +737,7 @@ def test_get_security_by_uuid_does_not_exist() -> None:
 @given(
     description=st.text(min_size=1, max_size=256),
     type_=st.sampled_from(SecurityTransactionType),
-    amount_per_share=valid_decimals(min_value=0.0),
+    amount_per_share=valid_decimals(min_value=0),
     datetime_=st.datetimes(timezones=st.just(user_settings.settings.time_zone)),
     data=st.data(),
 )
@@ -750,7 +750,7 @@ def test_add_security_transaction(
 ) -> None:
     record_keeper = get_preloaded_record_keeper()
     security = data.draw(st.sampled_from(record_keeper.securities))
-    shares = data.draw(st.integers(min_value=1, max_value=1e10))
+    shares = data.draw(st.integers(min_value=1, max_value=Decimal("1e10")))
     security_account_path = data.draw(
         st.sampled_from(
             [

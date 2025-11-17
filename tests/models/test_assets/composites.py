@@ -56,11 +56,14 @@ from tests.models.test_assets.constants import MIN_DATETIME
 
 
 def everything_except(excluded_types: type | tuple[type, ...]) -> Any:
-    return (
+    base = (
         st.from_type(type)
         .flatmap(st.from_type)
         .filter(lambda x: not isinstance(x, excluded_types))
     )
+    if isinstance(excluded_types, tuple) and type(None) in excluded_types:
+        return base
+    return st.one_of(base, st.none())
 
 
 @st.composite

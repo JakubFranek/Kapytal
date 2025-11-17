@@ -579,7 +579,7 @@ def test_validate_attributes_same_values() -> None:
 def test_set_attributes_invalid_amount_value(data: st.DataObject) -> None:
     transaction = get_buy()
     amount = data.draw(
-        cash_amounts(max_value=-0.01, currency=transaction.cash_account.currency)
+        cash_amounts(max_value=Decimal("-0.01"), currency=transaction.cash_account.currency)
     )
     with pytest.raises(
         ValueError, match="SecurityTransaction amounts must not be negative."
@@ -590,7 +590,7 @@ def test_set_attributes_invalid_amount_value(data: st.DataObject) -> None:
 @given(data=st.data())
 def test_set_attributes_invalid_amount_currency(data: st.DataObject) -> None:
     transaction = get_buy()
-    amount = data.draw(cash_amounts(min_value=0.01))
+    amount = data.draw(cash_amounts(min_value=Decimal("0.01")))
     assume(amount.currency != transaction.cash_account.currency)
     with pytest.raises(CurrencyError):
         transaction.set_attributes(amount_per_share=amount)

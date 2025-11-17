@@ -58,7 +58,7 @@ def test_creation(
     name=st.just(""),
     symbol=st.text(alphabet=Security.SYMBOL_ALLOWED_CHARS, min_size=1, max_size=8),
     type_=names(min_size=1, max_size=32),
-    shares_unit=valid_decimals(min_value=1e-10, max_value=1),
+    shares_unit=valid_decimals(min_value=Decimal("1e-10"), max_value=1),
     currency=currencies(),
 )
 def test_name_too_short(
@@ -77,7 +77,7 @@ def test_name_too_short(
     symbol=st.text(alphabet=Security.SYMBOL_ALLOWED_CHARS, min_size=1, max_size=8),
     type_=names(min_size=1, max_size=32),
     currency=currencies(),
-    shares_unit=valid_decimals(min_value=1e-10, max_value=1),
+    shares_unit=valid_decimals(min_value=Decimal("1e-10"), max_value=1),
 )
 def test_name_too_long(
     name: str,
@@ -95,7 +95,7 @@ def test_name_too_long(
     symbol=st.text(alphabet=Security.SYMBOL_ALLOWED_CHARS, min_size=1, max_size=8),
     type_=everything_except(str),
     currency=currencies(),
-    shares_unit=valid_decimals(min_value=1e-10, max_value=1),
+    shares_unit=valid_decimals(min_value=Decimal("1e-10"), max_value=1),
 )
 def test_type_invalid_type(
     name: str, symbol: str, type_: Any, currency: Currency, shares_unit: Decimal
@@ -109,7 +109,7 @@ def test_type_invalid_type(
     symbol=st.text(alphabet=Security.SYMBOL_ALLOWED_CHARS, min_size=1, max_size=8),
     type_=st.just(""),
     currency=currencies(),
-    shares_unit=valid_decimals(min_value=1e-10, max_value=1),
+    shares_unit=valid_decimals(min_value=Decimal("1e-10"), max_value=1),
 )
 def test_type_too_short(
     name: str, symbol: str, type_: str, currency: Currency, shares_unit: Decimal
@@ -123,7 +123,7 @@ def test_type_too_short(
     symbol=st.text(alphabet=Security.SYMBOL_ALLOWED_CHARS, min_size=1, max_size=8),
     type_=names(min_size=33, max_size=100),
     currency=currencies(),
-    shares_unit=valid_decimals(min_value=1e-10, max_value=1),
+    shares_unit=valid_decimals(min_value=Decimal("1e-10"), max_value=1),
 )
 def test_type_too_long(
     name: str, symbol: str, type_: str, currency: Currency, shares_unit: Decimal
@@ -137,7 +137,7 @@ def test_type_too_long(
     symbol=everything_except(str),
     type_=names(min_size=1, max_size=32),
     currency=currencies(),
-    shares_unit=valid_decimals(min_value=1e-10, max_value=1),
+    shares_unit=valid_decimals(min_value=Decimal("1e-10"), max_value=1),
 )
 def test_symbol_invalid_type(
     name: str, symbol: str, type_: str, currency: Currency, shares_unit: Decimal
@@ -151,7 +151,7 @@ def test_symbol_invalid_type(
     symbol=st.text(min_size=9),
     type_=names(min_size=1, max_size=32),
     currency=currencies(),
-    shares_unit=valid_decimals(min_value=1e-10, max_value=1),
+    shares_unit=valid_decimals(min_value=Decimal("1e-10"), max_value=1),
 )
 def test_symbol_too_long(
     name: str, symbol: str, type_: str, currency: Currency, shares_unit: Decimal
@@ -165,7 +165,7 @@ def test_symbol_too_long(
     symbol=st.text(min_size=1, max_size=8),
     type_=names(min_size=1, max_size=32),
     currency=currencies(),
-    shares_unit=valid_decimals(min_value=1e-10, max_value=1),
+    shares_unit=valid_decimals(min_value=Decimal("1e-10"), max_value=1),
 )
 def test_symbol_invalid_chars(
     name: str, symbol: str, type_: str, currency: Currency, shares_unit: Decimal
@@ -180,7 +180,7 @@ def test_symbol_invalid_chars(
     symbol=st.text(alphabet=Security.SYMBOL_ALLOWED_CHARS, min_size=1, max_size=8),
     type_=names(min_size=1, max_size=32),
     currency=everything_except(Currency),
-    shares_unit=valid_decimals(min_value=1e-10, max_value=1),
+    shares_unit=valid_decimals(min_value=Decimal("1e-10"), max_value=1),
 )
 def test_currency_invalid_type(
     name: str, symbol: str, type_: str, currency: Any, shares_unit: Decimal
@@ -337,7 +337,7 @@ def test_set_prices(currency: Currency, data: st.DataObject) -> None:
             st.tuples(
                 st.dates(),
                 st.decimals(
-                    min_value=0.01,
+                    min_value=Decimal("0.01"),
                     max_value=1e15,
                     allow_infinity=False,
                     allow_nan=False,
