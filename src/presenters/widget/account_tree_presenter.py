@@ -93,7 +93,9 @@ class AccountTreePresenter:
     def update_geometries(self) -> None:
         self._view.treeView.updateGeometries()
 
-    def update_model_data(self, *, trigger_check_state_changed: bool = True) -> None:
+    def update_model_data(
+        self, *, trigger_check_state_changed: bool = True, model_reset: bool = True
+    ) -> None:
         self._model.load_data(
             self._record_keeper.account_items, self._record_keeper.base_currency
         )
@@ -104,7 +106,8 @@ class AccountTreePresenter:
         self._view.treeView.setColumnHidden(
             AccountTreeColumn.BALANCE_NATIVE, hide_native
         )
-        self._set_native_balance_column_visibility()
+        if not model_reset:
+            self._set_native_balance_column_visibility()
         if trigger_check_state_changed:
             self._check_state_changed()
 
@@ -208,7 +211,7 @@ class AccountTreePresenter:
         )
         self._view.signal_tree_expanded_state_changed.connect(
             self._set_native_balance_column_visibility
-        )
+        )  # signal used for Expand/Collapse All buttons
 
         self._selection_changed()  # called to ensure context menu is OK at start of run
 

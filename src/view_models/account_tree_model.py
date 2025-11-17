@@ -483,10 +483,12 @@ class AccountTreeModel(QAbstractItemModel):
         self._proxy.setDynamicSortFilter(True)
 
     def pre_reset_model(self) -> None:
+        self._tree.setSortingEnabled(False)
         self.beginResetModel()
 
     def post_reset_model(self) -> None:
         self.endResetModel()
+        self._tree.setSortingEnabled(True)
 
     def pre_remove_item(self, item: Account | AccountGroup) -> None:
         index = self.get_index_from_item(item)
