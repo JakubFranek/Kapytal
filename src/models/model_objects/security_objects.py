@@ -813,6 +813,9 @@ class SecurityTransaction(CashRelatedTransaction, SecurityRelatedTransaction):
     ) -> "SecurityTransaction":
         description = data["description"]
         datetime_ = datetime.fromisoformat(data["datetime"])
+        if datetime_.tzinfo is None:
+            datetime_ = datetime_.astimezone(user_settings.settings.time_zone)
+
         type_ = SecurityTransactionType[data["type"]]
         shares = Decimal(data["shares"])
 
@@ -1166,6 +1169,9 @@ class SecurityTransfer(SecurityRelatedTransaction):
     ) -> "SecurityTransfer":
         description = data["description"]
         datetime_ = datetime.fromisoformat(data["datetime"])
+        if datetime_.tzinfo is None:
+            datetime_ = datetime_.astimezone(user_settings.settings.time_zone)
+
         shares = Decimal(data["shares"])
         security = securities[data["security_name"]]
         sender = accounts[data["sender_path"]]
