@@ -44,6 +44,7 @@ class DatetimeFilter(BaseTransactionFilter):
         )
 
     def _keep_in_keep_mode(self, transaction: Transaction) -> bool:
+        # Following line produces TypeError if one of the datetimes is offset-naive
         return self._start <= transaction.datetime_ <= self._end
 
     def _keep_in_discard_mode(self, transaction: Transaction) -> bool:

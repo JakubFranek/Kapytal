@@ -39,12 +39,18 @@ class WelcomeDialog(CustomDialog, Ui_WelcomeDialog):
 
         if colors.color_scheme == Qt.ColorScheme.Dark:
             self.pixmap = QPixmap(
-                str(constants.app_root_path / "resources/images/welcome_dark_mode.png")
-            ).scaledToWidth(512, Qt.TransformationMode.SmoothTransformation)
+                str(
+                    constants.app_root_path
+                    / "resources/images/welcome_dark_mode_highres.png"
+                )
+            )
         else:
             self.pixmap = QPixmap(
-                str(constants.app_root_path / "resources/images/welcome_light_mode.png")
-            ).scaledToWidth(512, Qt.TransformationMode.SmoothTransformation)
+                str(
+                    constants.app_root_path
+                    / "resources/images/welcome_light_mode_highres.png"
+                )
+            )
 
         screen = QApplication.primaryScreen()
         dpr = screen.devicePixelRatio()

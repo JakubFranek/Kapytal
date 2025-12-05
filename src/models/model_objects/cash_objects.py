@@ -472,6 +472,9 @@ class CashTransaction(CashRelatedTransaction):
     ) -> "CashTransaction":
         description = data["description"]
         datetime_ = datetime.fromisoformat(data["datetime"])
+        if datetime_.tzinfo is None:
+            datetime_ = datetime_.astimezone(user_settings.settings.time_zone)
+
         type_ = CashTransactionType[data["type"]]
         cash_account = accounts[data["account_path"]]
         payee = payees[data["payee_name"]]
@@ -1124,6 +1127,8 @@ class CashTransfer(CashRelatedTransaction):
     ) -> "CashTransaction":
         description = data["description"]
         datetime_ = datetime.fromisoformat(data["datetime"])
+        if datetime_.tzinfo is None:
+            datetime_ = datetime_.astimezone(user_settings.settings.time_zone)
 
         sender = accounts[data["sender_path"]]
         recipient = accounts[data["recipient_path"]]
@@ -1485,6 +1490,9 @@ class RefundTransaction(CashRelatedTransaction):
     ) -> "CashTransaction":
         description = data["description"]
         datetime_ = datetime.fromisoformat(data["datetime"])
+        if datetime_.tzinfo is None:
+            datetime_ = datetime_.astimezone(user_settings.settings.time_zone)
+
         cash_account = accounts[data["account_path"]]
         refunded_transaction_uuid = UUID(data["refunded_transaction_uuid"])
         refunded_transaction = transactions[refunded_transaction_uuid]
