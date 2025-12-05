@@ -226,7 +226,7 @@ class NetWorthReportPresenter:
             )
             return
         start = transactions[0].date_
-        end = datetime.now(tz=user_settings.settings.time_zone).date()
+        end = transactions[-1].date_
 
         base_currency = self._record_keeper.base_currency
         if base_currency is None:

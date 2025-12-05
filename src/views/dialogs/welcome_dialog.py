@@ -41,14 +41,14 @@ class WelcomeDialog(CustomDialog, Ui_WelcomeDialog):
             self.pixmap = QPixmap(
                 str(
                     constants.app_root_path
-                    / "resources/images/welcome_dark_mode_highres.png"
+                    / "resources/images/welcome_dark_mode.png"
                 )
             )
         else:
             self.pixmap = QPixmap(
                 str(
                     constants.app_root_path
-                    / "resources/images/welcome_light_mode_highres.png"
+                    / "resources/images/welcome_light_mode.png"
                 )
             )
 
