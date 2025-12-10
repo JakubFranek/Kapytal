@@ -216,9 +216,7 @@ class MainView(QMainWindow, Ui_MainWindow):
         self.horizontalLayout.addWidget(self.account_tree_widget)
         self.horizontalLayout.addWidget(self.transaction_table_widget)
 
-        app_icon = QIcon()
-        app_icon.addFile("icons_custom:coin-k.png", QSize(24, 24))
-        app_icon.addFile("icons_custom:coin-k-small.png", QSize(16, 16))
+        app_icon = QIcon("icons_custom:kapytal.ico")
         self.setWindowIcon(app_icon)
 
         self.actionFilterTransactions = QAction(self)

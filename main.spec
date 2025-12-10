@@ -47,7 +47,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon="resources/icons/icons-custom/coin-k-small.ico",
+    icon="resources/icons/icons-custom/kapytal.ico",
 )
 coll = COLLECT(
     exe,
