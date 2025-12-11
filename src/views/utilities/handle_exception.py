@@ -2,9 +2,9 @@ import logging
 import sys
 from types import TracebackType
 
+from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QApplication, QMessageBox
 from src.utilities.general import get_exception_info
-from src.views import icons
 
 
 def handle_uncaught_exception(
@@ -45,10 +45,14 @@ def display_error_message(
     message_box = QMessageBox()
     if critical is True:
         message_box.setIcon(QMessageBox.Icon.Critical)
-        message_box.setWindowIcon(icons.critical)
+        message_box.setWindowIcon(
+            QIcon(QMessageBox.standardIcon(QMessageBox.Icon.Critical))
+        )
     else:
         message_box.setIcon(QMessageBox.Icon.Warning)
-        message_box.setWindowIcon(icons.warning)
+        message_box.setWindowIcon(
+            QIcon(QMessageBox.standardIcon(QMessageBox.Icon.Warning))
+        )
     message_box.setWindowTitle(title)
     message_box.setText(text)
     if exc_details:

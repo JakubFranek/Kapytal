@@ -118,7 +118,6 @@ def setup() -> None:  # noqa: PLR0915
     global tag, add_tag, edit_tag, remove_tag  # noqa: PLW0603
     global filter_, filter_warning  # noqa: PLW0603
     global expand, expand_below, collapse  # noqa: PLW0603
-    global critical, warning  # noqa: PLW0603
     global add, edit, remove, duplicate  # noqa: PLW0603
     global transfer  # noqa: PLW0603
     global hourglass  # noqa: PLW0603
@@ -201,8 +200,6 @@ def setup() -> None:  # noqa: PLR0915
     expand = QIcon("icons_custom:arrow-out.ico")
     expand_below = QIcon("icons_16:arrow-stop-270.ico")
     collapse = QIcon("icons_16:arrow-in.ico")
-    critical = QIcon("icons_24:cross.ico")
-    warning = QIcon("icons_24:exclamation.ico")
     add = QIcon("icons_16:plus.ico")
     edit = QIcon("icons_16:pencil.ico")
     remove = QIcon("icons_16:minus.ico")
