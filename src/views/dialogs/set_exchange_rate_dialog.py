@@ -31,7 +31,7 @@ class SetExchangeRateDialog(CustomDialog, Ui_SetExchangeRateDialog):
     ) -> None:
         super().__init__(parent)
         self.setupUi(self)
-        self.setWindowIcon(icons.exchange_rate)
+        self.setWindowIcon(icons.set_security_price)
 
         self._edit = edit
         if edit:

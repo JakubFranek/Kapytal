@@ -76,9 +76,7 @@ transfer: QIcon | None = None
 hourglass: QIcon | None = None
 arrow_right: QIcon | None = None
 arrow_left: QIcon | None = None
-arrow_move: QIcon | None = None
 home: QIcon | None = None
-slider: QIcon | None = None
 bar_chart: QIcon | None = None
 pie_chart: QIcon | None = None
 calendar: QIcon | None = None
@@ -119,9 +117,8 @@ def setup() -> None:  # noqa: PLR0915
     global filter_, filter_warning  # noqa: PLW0603
     global expand, expand_below, collapse  # noqa: PLW0603
     global add, edit, remove, duplicate  # noqa: PLW0603
-    global transfer  # noqa: PLW0603
     global hourglass  # noqa: PLW0603
-    global arrow_right, arrow_left, arrow_move, home, slider  # noqa: PLW0603
+    global arrow_right, arrow_left, home  # noqa: PLW0603
     global bar_chart, pie_chart, calendar  # noqa: PLW0603
     global document_smiley, document_clock, document_plus  # noqa: PLW0603
     global book_question, table, percent  # noqa: PLW0603
@@ -129,28 +126,24 @@ def setup() -> None:  # noqa: PLR0915
     global password, document_import  # noqa: PLW0603
 
     QDir.addSearchPath(
-        "icons_24",
-        str(constants.app_root_path / "resources/icons/icons-24"),
-    )
-    QDir.addSearchPath(
-        "icons_16",
-        str(constants.app_root_path / "resources/icons/icons-16"),
+        "icons_32",
+        str(constants.app_root_path / "resources/icons/icons-32"),
     )
     QDir.addSearchPath(
         "icons_custom",
         str(constants.app_root_path / "resources/icons/icons-custom"),
     )
 
-    folder_open = QIcon("icons_16:folder-open.ico")
-    folder_closed = QIcon("icons_16:folder.ico")
-    security_account = QIcon("icons_16:bank.ico")
-    cash_account = QIcon("icons_16:piggy-bank.ico")
-    cash_account_empty = QIcon("icons_16:piggy-bank-empty.ico")
+    folder_open = QIcon("icons_32:folder-open.ico")
+    folder_closed = QIcon("icons_32:folder.ico")
+    security_account = QIcon("icons_32:bank.ico")
+    cash_account = QIcon("icons_32:piggy-bank.ico")
+    cash_account_empty = QIcon("icons_32:piggy-bank-empty.ico")
     select_all = QIcon("icons_custom:ui-check-boxes-checked.ico")
     unselect_all = QIcon("icons_custom:ui-check-boxes-unchecked.ico")
     select_cash_accounts = QIcon("icons_custom:piggy-bank-check.ico")
     select_security_accounts = QIcon("icons_custom:bank-check.ico")
-    select_this = QIcon("icons_16:ui-check-box.ico")
+    select_this = QIcon("icons_32:ui-check-box.ico")
     income = QIcon("icons_custom:coins-plus.ico")
     expense = QIcon("icons_custom:coins-minus.ico")
     refund = QIcon("icons_custom:coins-arrow-back.ico")
@@ -158,24 +151,24 @@ def setup() -> None:  # noqa: PLR0915
     buy = QIcon("icons_custom:certificate-plus.ico")
     sell = QIcon("icons_custom:certificate-minus.ico")
     security_transfer = QIcon("icons_custom:certificate-arrow.ico")
-    payee = QIcon("icons_16:user-business.ico")
-    split_attribute = QIcon("icons_16:arrow-split.ico")
-    base_currency = QIcon("icons_16:star.ico")
-    question = QIcon("icons_16:question.ico")
-    disk = QIcon("icons_16:disk.ico")
-    disk_warning = QIcon("icons_16:disk--exclamation.ico")
-    disks = QIcon("icons_16:disks.ico")
-    open_file = QIcon("icons_16:folder-open-document.ico")
+    payee = QIcon("icons_32:user-business.ico")
+    split_attribute = QIcon("icons_32:arrow-split.ico")
+    base_currency = QIcon("icons_32:star.ico")
+    question = QIcon("icons_32:question.ico")
+    disk = QIcon("icons_32:disk.ico")
+    disk_warning = QIcon("icons_32:disk--exclamation.ico")
+    disks = QIcon("icons_32:disks.ico")
+    open_file = QIcon("icons_32:folder-open-document.ico")
     currency = QIcon("icons_custom:currency.ico")
-    quit_ = QIcon("icons_16:door-open-out.ico")
-    security = QIcon("icons_16:certificate.ico")
+    quit_ = QIcon("icons_32:door-open-out.ico")
+    security = QIcon("icons_32:certificate.ico")
     category = QIcon("icons_custom:category.ico")
-    tag = QIcon("icons_16:tag.ico")
-    settings = QIcon("icons_16:gear.ico")
-    about = QIcon("icons_16:information.ico")
-    account_tree = QIcon("icons_16:folder-tree.ico")
-    add_account_group = QIcon("icons_16:folder--plus.ico")
-    edit_account_group = QIcon("icons_16:folder--pencil.ico")
+    tag = QIcon("icons_32:tag.ico")
+    settings = QIcon("icons_32:gear.ico")
+    about = QIcon("icons_32:information.ico")
+    account_tree = QIcon("icons_32:folder-tree.ico")
+    add_account_group = QIcon("icons_32:folder--plus.ico")
+    edit_account_group = QIcon("icons_32:folder--pencil.ico")
     exchange_rate = QIcon("icons_custom:currency-arrow.ico")
     add_cash_account = QIcon("icons_custom:piggy-bank-plus.ico")
     edit_cash_account = QIcon("icons_custom:piggy-bank-pencil.ico")
@@ -187,47 +180,44 @@ def setup() -> None:  # noqa: PLR0915
     add_payee = QIcon("icons_custom:user-business-plus.ico")
     edit_payee = QIcon("icons_custom:user-business-pencil.ico")
     add_security_account = QIcon("icons_custom:bank-plus.ico")
-    edit_security_account = QIcon("icons_16:bank--pencil.ico")
+    edit_security_account = QIcon("icons_32:bank--pencil.ico")
     add_security = QIcon("icons_custom:certificate-plus.ico")
     edit_security = QIcon("icons_custom:certificate-pencil.ico")
-    set_security_price = QIcon("icons_16:chart-up.ico")
-    magnifier = QIcon("icons_16:magnifier.ico")
-    add_tag = QIcon("icons_16:tag--plus.ico")
+    set_security_price = QIcon("icons_32:chart-up.ico")
+    magnifier = QIcon("icons_32:magnifier.ico")
+    add_tag = QIcon("icons_32:tag--plus.ico")
     edit_tag = QIcon("icons_custom:tag-pencil.ico")
-    remove_tag = QIcon("icons_16:tag--minus.ico")
-    filter_ = QIcon("icons_16:funnel.ico")
-    filter_warning = QIcon("icons_16:funnel--exclamation.ico")
+    remove_tag = QIcon("icons_32:tag--minus.ico")
+    filter_ = QIcon("icons_32:funnel.ico")
+    filter_warning = QIcon("icons_32:funnel--exclamation.ico")
     expand = QIcon("icons_custom:arrow-out.ico")
-    expand_below = QIcon("icons_16:arrow-stop-270.ico")
-    collapse = QIcon("icons_16:arrow-in.ico")
-    add = QIcon("icons_16:plus.ico")
-    edit = QIcon("icons_16:pencil.ico")
-    remove = QIcon("icons_16:minus.ico")
-    duplicate = QIcon("icons_16:document-copy.ico")
-    transfer = QIcon("icons_16:arrow-curve-000-left.ico")
-    hourglass = QIcon("icons_16:hourglass.ico")
-    arrow_right = QIcon("icons_16:arrow.ico")
-    arrow_left = QIcon("icons_16:arrow-180.ico")
-    arrow_move = QIcon("icons_16:arrow-move.ico")
-    home = QIcon("icons_16:home.ico")
-    slider = QIcon("icons_16:ui-slider-050.ico")
-    bar_chart = QIcon("icons_16:chart.ico")
-    pie_chart = QIcon("icons_16:chart-pie.ico")
-    calendar = QIcon("icons_16:calendar.ico")
-    document_smiley = QIcon("icons_16:document-smiley.ico")
-    document_clock = QIcon("icons_16:document-clock.ico")
-    document_plus = QIcon("icons_16:document--plus.ico")
-    book_question = QIcon("icons_16:book-question.ico")
-    table = QIcon("icons_16:table.ico")
+    expand_below = QIcon("icons_32:arrow-stop-270.ico")
+    collapse = QIcon("icons_32:arrow-in.ico")
+    add = QIcon("icons_32:plus.ico")
+    edit = QIcon("icons_32:pencil.ico")
+    remove = QIcon("icons_32:minus.ico")
+    duplicate = QIcon("icons_32:document-copy.ico")
+    hourglass = QIcon("icons_32:hourglass.ico")
+    arrow_right = QIcon("icons_32:arrow.ico")
+    arrow_left = QIcon("icons_32:arrow-180.ico")
+    home = QIcon("icons_32:home.ico")
+    bar_chart = QIcon("icons_32:chart.ico")
+    pie_chart = QIcon("icons_32:chart-pie.ico")
+    calendar = QIcon("icons_32:calendar.ico")
+    document_smiley = QIcon("icons_32:document-smiley.ico")
+    document_clock = QIcon("icons_32:document-clock.ico")
+    document_plus = QIcon("icons_32:document--plus.ico")
+    book_question = QIcon("icons_32:book-question.ico")
+    table = QIcon("icons_32:table.ico")
     percent = (
         QIcon("icons_custom:percent_dark_mode.ico")
         if colors.color_scheme == Qt.ColorScheme.Dark
         else QIcon("icons_custom:percent_light_mode.ico")
     )
-    swap = QIcon("icons_16:arrow-switch.ico")
-    refresh = QIcon("icons_16:arrow-circle-double.ico")
-    clipboard_text = QIcon("icons_16:clipboard-text.ico")
-    globe = QIcon("icons_16:globe-green.ico")
+    swap = QIcon("icons_32:arrow-switch.ico")
+    refresh = QIcon("icons_32:arrow-circle-double.ico")
+    clipboard_text = QIcon("icons_32:clipboard-text.ico")
+    globe = QIcon("icons_32:globe-green.ico")
     sum_ = (
         QIcon("icons_custom:sum_dark_mode.ico")
         if colors.color_scheme == Qt.ColorScheme.Dark
@@ -235,5 +225,5 @@ def setup() -> None:  # noqa: PLR0915
     )
     dividend = QIcon("icons_custom:certificate-coin.ico")
     securities = QIcon("icons_custom:certificates.ico")
-    password = QIcon("icons_16:ui-text-field-password.ico")
-    document_import = QIcon("icons_16:document-import.ico")
+    password = QIcon("icons_32:ui-text-field-password.ico")
+    document_import = QIcon("icons_32:document-import.ico")
