@@ -132,7 +132,9 @@ class MainView(QMainWindow, Ui_MainWindow):
             ),
             self,
         )
-        message_box.setWindowIcon(icons.question)
+        message_box.setWindowIcon(
+            QIcon(QMessageBox.standardIcon(QMessageBox.Icon.Question))
+        )
         message_box.setDefaultButton(QMessageBox.StandardButton.Cancel)
         reply = message_box.exec()
         if reply == QMessageBox.StandardButton.Yes:
@@ -151,7 +153,9 @@ class MainView(QMainWindow, Ui_MainWindow):
             (QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No),
             self,
         )
-        message_box.setWindowIcon(icons.question)
+        message_box.setWindowIcon(
+            QIcon(QMessageBox.standardIcon(QMessageBox.Icon.Question))
+        )
         message_box.setDefaultButton(QMessageBox.StandardButton.No)
         reply = message_box.exec()
         return reply == QMessageBox.StandardButton.Yes
