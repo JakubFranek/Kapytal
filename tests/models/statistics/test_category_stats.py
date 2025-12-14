@@ -31,6 +31,7 @@ def test_calculate_attribute_stats() -> None:
     category_1 = Category("Category1", CategoryType.DUAL_PURPOSE)
     category_2 = Category("Category2", CategoryType.DUAL_PURPOSE)
     category_2a = Category("Category2a", CategoryType.DUAL_PURPOSE, category_2)
+    category_2b = Category("Category2b", CategoryType.DUAL_PURPOSE, category_2)
 
     now = datetime.now(user_settings.settings.time_zone)
 
@@ -80,28 +81,39 @@ def test_calculate_attribute_stats() -> None:
         CashTransactionType.EXPENSE,
         cash_account,
         payee,
-        [(category_2, CashAmount(1, currency)), (category_2a, CashAmount(1, currency))],
+        [
+            (category_2, CashAmount(1, currency)),
+            (category_2a, CashAmount(1, currency)),
+            (category_2b, CashAmount(1, currency)),
+        ],
         [],
     )
 
     category_stats = calculate_category_stats(
-        [t1, t2, t3, t4, t5], currency, [category_1, category_2, category_2a]
+        [t1, t2, t3, t4, t5],
+        currency,
+        [category_1, category_2, category_2a, category_2b],
     )
     assert category_stats[category_1].transactions_total == 2
     assert category_stats[category_2].transactions_total == 3
     assert category_stats[category_2a].transactions_total == 2
+    assert category_stats[category_2b].transactions_total == 1
     assert category_stats[category_1].transactions_self == 2
     assert category_stats[category_2].transactions_self == 2
     assert category_stats[category_2a].transactions_self == 2
+    assert category_stats[category_2b].transactions_self == 1
     assert category_stats[category_1].balance == CashAmount(-1, currency)
-    assert category_stats[category_2].balance == CashAmount(-7, currency)
+    assert category_stats[category_2].balance == CashAmount(-8, currency)
     assert category_stats[category_2a].balance == CashAmount(-4, currency)
+    assert category_stats[category_2b].balance == CashAmount(-1, currency)
     assert category_stats[category_1].transactions == {t1, t3}
     assert category_stats[category_2].transactions == {t2, t4, t5}
     assert category_stats[category_2a].transactions == {t4, t5}
+    assert category_stats[category_2b].transactions == {t5}
     assert category_stats[category_1].category == category_1
     assert category_stats[category_2].category == category_2
     assert category_stats[category_2a].category == category_2a
+    assert category_stats[category_2b].category == category_2b
 
 
 def test_calculate_periodic_category_stats() -> None:
