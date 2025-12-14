@@ -19,6 +19,16 @@ class CategoryStats:
     balance: CashAmount | None
     transactions: set[CashTransaction | RefundTransaction] = field(default_factory=set)
 
+    def update_transaction_counts(self) -> None:
+        """Updates transactions_self and transactions_total based on the current
+        transactions set."""
+        self.transactions_self = sum(
+            1
+            for transaction in self.transactions
+            if self.category in transaction.categories
+        )
+        self.transactions_total = len(self.transactions)
+
 
 # TODO: add all-encompassing class which would store all stats, averages,
 # totals etc. and would cleanly interface with the view model
@@ -147,7 +157,7 @@ def calculate_category_stats(
         already_counted_ancestors = set()
         date_ = transaction.date_
         for category in transaction.categories:
-            _amount = transaction.get_amount_for_category(category, total=False)
+            _amount = transaction.get_amount_for_category(category, total=True)
             if _amount.value_normalized == 0:
                 continue
 
@@ -171,9 +181,5 @@ def calculate_category_stats(
                         ancestor, total=True
                     ).convert(base_currency, date_)
                     already_counted_ancestors.add(ancestor)
-                else:  # prevent double counting if both parent and child are present
-                    ancestor_stats.balance += transaction.get_amount_for_category(
-                        ancestor, total=False
-                    ).convert(base_currency, date_)
 
     return stats_dict
