@@ -89,27 +89,40 @@ def test_calculate_attribute_stats() -> None:
         [],
     )
 
+    t6 = CashTransaction(
+        "test",
+        now,
+        CashTransactionType.EXPENSE,
+        cash_account,
+        payee,
+        [
+            (category_2a, CashAmount(1, currency)),
+            (category_2b, CashAmount(1, currency)),
+        ],
+        [],
+    )
+
     category_stats = calculate_category_stats(
-        [t1, t2, t3, t4, t5],
+        [t1, t2, t3, t4, t5, t6],
         currency,
         [category_1, category_2, category_2a, category_2b],
     )
     assert category_stats[category_1].transactions_total == 2
-    assert category_stats[category_2].transactions_total == 3
-    assert category_stats[category_2a].transactions_total == 2
-    assert category_stats[category_2b].transactions_total == 1
+    assert category_stats[category_2].transactions_total == 4
+    assert category_stats[category_2a].transactions_total == 3
+    assert category_stats[category_2b].transactions_total == 2
     assert category_stats[category_1].transactions_self == 2
     assert category_stats[category_2].transactions_self == 2
-    assert category_stats[category_2a].transactions_self == 2
-    assert category_stats[category_2b].transactions_self == 1
+    assert category_stats[category_2a].transactions_self == 3
+    assert category_stats[category_2b].transactions_self == 2
     assert category_stats[category_1].balance == CashAmount(-1, currency)
-    assert category_stats[category_2].balance == CashAmount(-8, currency)
-    assert category_stats[category_2a].balance == CashAmount(-4, currency)
-    assert category_stats[category_2b].balance == CashAmount(-1, currency)
+    assert category_stats[category_2].balance == CashAmount(-10, currency)
+    assert category_stats[category_2a].balance == CashAmount(-5, currency)
+    assert category_stats[category_2b].balance == CashAmount(-2, currency)
     assert category_stats[category_1].transactions == {t1, t3}
-    assert category_stats[category_2].transactions == {t2, t4, t5}
-    assert category_stats[category_2a].transactions == {t4, t5}
-    assert category_stats[category_2b].transactions == {t5}
+    assert category_stats[category_2].transactions == {t2, t4, t5, t6}
+    assert category_stats[category_2a].transactions == {t4, t5, t6}
+    assert category_stats[category_2b].transactions == {t5, t6}
     assert category_stats[category_1].category == category_1
     assert category_stats[category_2].category == category_2
     assert category_stats[category_2a].category == category_2a
