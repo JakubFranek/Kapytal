@@ -83,8 +83,8 @@ def test_calculate_attribute_stats() -> None:
         payee,
         [
             (category_2, CashAmount(1, currency)),
-            (category_2a, CashAmount(1, currency)),
-            (category_2b, CashAmount(1, currency)),
+            (category_2a, CashAmount(3, currency)),
+            (category_2b, CashAmount(4, currency)),
         ],
         [],
     )
@@ -116,9 +116,9 @@ def test_calculate_attribute_stats() -> None:
     assert category_stats[category_2a].transactions_self == 3
     assert category_stats[category_2b].transactions_self == 2
     assert category_stats[category_1].balance == CashAmount(-1, currency)
-    assert category_stats[category_2].balance == CashAmount(-10, currency)
-    assert category_stats[category_2a].balance == CashAmount(-5, currency)
-    assert category_stats[category_2b].balance == CashAmount(-2, currency)
+    assert category_stats[category_2].balance == CashAmount(-15, currency)
+    assert category_stats[category_2a].balance == CashAmount(-7, currency)
+    assert category_stats[category_2b].balance == CashAmount(-5, currency)
     assert category_stats[category_1].transactions == {t1, t3}
     assert category_stats[category_2].transactions == {t2, t4, t5, t6}
     assert category_stats[category_2a].transactions == {t4, t5, t6}
