@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from decimal import Decimal
 
 from dateutil.relativedelta import relativedelta
 from src.models.model_objects.attributes import (
@@ -294,7 +295,9 @@ def test_calculate_periodic_totals_and_averages() -> None:
 
     assert len(category_averages) == 1
     assert category_averages[category].transactions == {t1a, t1b, t2, t3}
-    assert category_averages[category].balance == CashAmount(1, currency)
+    assert category_averages[category].balance == CashAmount(
+        Decimal(3) / Decimal(25), currency
+    )
 
     assert len(category_totals) == 1
     assert category_totals[category].transactions == {t1a, t1b, t2, t3}
