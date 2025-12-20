@@ -356,11 +356,13 @@ def separate_stats(
         income_stats_item = CategoryStats(
             category, 0, 0, income_data.balance / divisor, income_data.transactions
         )
+        income_stats_item.update_transaction_counts()
         income_stats.append(income_stats_item)
     if len(expense_data) > 0:
         expense_stats_item = CategoryStats(
             category, 0, 0, expense_data.balance / divisor, expense_data.transactions
         )
+        expense_stats_item.update_transaction_counts()
         expense_stats.append(expense_stats_item)
 
 
@@ -381,6 +383,7 @@ def add_missing_parent_category_stats(
                         stats.balance,
                         stats.transactions,
                     )
+                    _stats.update_transaction_counts()
                     stats_to_add.append((period, _stats))
                     categories.add(parent)
                     parent = parent.parent

@@ -262,7 +262,9 @@ def test_calculate_periodic_totals_and_averages() -> None:
 
     assert len(attr_averages) == 1
     assert attr_averages[tag_1].transactions == {t1a, t1b, t2, t3, t4}
-    assert attr_averages[tag_1].balance == CashAmount(1, currency)
+    assert attr_averages[tag_1].balance == CashAmount(
+        Decimal(3) / Decimal(25), currency
+    )
 
     assert len(attr_totals) == 1
     assert attr_totals[tag_1].transactions == {t1a, t1b, t2, t3, t4}
@@ -271,13 +273,13 @@ def test_calculate_periodic_totals_and_averages() -> None:
     assert len(income_attr_averages) == 1
     assert income_attr_averages[tag_1].transactions == {t1a, t1b, t2, t3}
     assert income_attr_averages[tag_1].balance == CashAmount(
-        2 + (Decimal(1) / Decimal(3)), currency
+        Decimal(7) / Decimal(25), currency
     )
 
     assert len(expense_attr_averages) == 1
     assert expense_attr_averages[tag_1].transactions == {t4}
     assert expense_attr_averages[tag_1].balance == CashAmount(
-        -1 - (Decimal(1) / Decimal(3)), currency
+        Decimal(-4) / Decimal(25), currency
     )
 
     assert len(income_attr_totals) == 1

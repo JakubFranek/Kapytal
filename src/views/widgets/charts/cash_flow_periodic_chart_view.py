@@ -199,7 +199,10 @@ class CashFlowPeriodicChartView(QChartView):
         view_pos = self.mapFromGlobal(cursor_pos)
         scene_pos = self.mapToScene(view_pos)
 
-        tooltip_text = f"{label}\n{format_real(value, self._decimals)} {self._unit}"
+        tooltip_text = (
+            f"{self.axis_x.categories()[index]}\n"
+            f"{label}: {format_real(value, self._decimals)} {self._unit}"
+        )
 
         if len(bar_set.extra_text) > index and bar_set.extra_text[index]:
             tooltip_text += bar_set.extra_text[index]

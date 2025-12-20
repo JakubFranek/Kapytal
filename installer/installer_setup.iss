@@ -1,5 +1,5 @@
 #define MyAppName "Kapytal"
-#define MyAppVersion "1.2.0"
+#define MyAppVersion "1.2.1"
 #define MyAppPublisher "Jakub Franek"
 #define MyAppURL "https://github.com/JakubFranek/Kapytal"
 #define MyAppExeName "Kapytal.exe"
@@ -13,9 +13,10 @@ AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}
 AppUpdatesURL={#MyAppURL}/releases
-DefaultDirName={autopf}\{#MyAppName}
-LicenseFile=D:\Coding\Kapytal\LICENCE.md
+DefaultDirName={localappdata}\Kapytal
+PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
+LicenseFile=C:\Users\jfran\Coding\Kapytal\LICENCE.md
 OutputBaseFilename=kapytal_v{#MyAppVersion}_win64
 OutputDir={#SourcePath}
 Compression=lzma
@@ -26,6 +27,8 @@ DirExistsWarning=auto
 DisableDirPage=auto
 DisableProgramGroupPage=auto
 VersionInfoVersion={#MyAppVersion}
+SetupIconFile=..\resources\icons\icons-custom\kapytal.ico
+UninstallDisplayIcon={app}\Kapytal.exe
 
 
 [Languages]
@@ -35,12 +38,12 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-Source: "D:\Coding\Kapytal\dist\main\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
-Source: "D:\Coding\Kapytal\dist\main\_internal\*"; DestDir: "{app}\_internal"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "C:\Users\jfran\Coding\Kapytal\dist\main\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Users\jfran\Coding\Kapytal\dist\main\_internal\*"; DestDir: "{app}\_internal"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
-Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\_internal\resources\icons\icons-custom\coin-k.ico";
-Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\_internal\resources\icons\icons-custom\coin-k-large.ico"; Tasks: desktopicon
+Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\_internal\resources\icons\icons-custom\kapytal.ico";
+Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\_internal\resources\icons\icons-custom\kapytal.ico"; Tasks: desktopicon
 
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent

@@ -10,6 +10,7 @@ from src.models.custom_exceptions import NotFoundError
 from src.models.model_objects.attributes import CategoryType
 from src.models.model_objects.cash_objects import CashAccount, CashTransactionType
 from src.models.model_objects.currency_objects import Currency
+from src.models.user_settings.user_settings import settings
 from src.presenters.dialog.transaction_dialog_presenter import (
     TransactionDialogPresenter,
 )
@@ -82,6 +83,7 @@ class ImportTransactionsDialogPresenter(TransactionDialogPresenter):
                 try:
                     date_str = _parse_field(row, column_dict["date"])
                     datetime_ = _parse_date(date_str, column_dict["date"])
+                    datetime_ = datetime_.astimezone(settings.time_zone)
 
                     description = _parse_field(row, column_dict["description"])
                     amount = _parse_amount(

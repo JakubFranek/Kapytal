@@ -1,6 +1,7 @@
 from collections import defaultdict
 from collections.abc import Collection
 from dataclasses import dataclass, field
+from datetime import timedelta
 
 from src.models.base_classes.transaction import Transaction
 from src.models.model_objects.attributes import Attribute, AttributeType
@@ -163,19 +164,31 @@ def calculate_periodic_attribute_stats(
 ) -> dict[str, tuple[AttributeStats, ...]]:
     transactions = sorted(transactions, key=lambda x: x.timestamp)
 
-    # separate transactions into bins by period
+    start_date = transactions[0].datetime_
+    end_date = transactions[-1].datetime_
+
     transactions_by_period: dict[
         str, list[CashTransaction | RefundTransaction | SecurityTransaction]
     ] = {}
+
+    # Generate all period keys (example: daily periods)
+    current_date = start_date
+    while current_date <= end_date:
+        key = current_date.strftime(period_format)
+        transactions_by_period[key] = []
+        current_date += timedelta(days=1)
+    transactions_by_period[end_date.strftime(period_format)] = []
+
+    # separate transactions into bins by period
     for transaction in transactions:
         key = transaction.datetime_.strftime(period_format)
-        if key not in transactions_by_period:
-            transactions_by_period[key] = []
         transactions_by_period[key].append(transaction)
 
     stats_dict: dict[str, tuple[AttributeStats, ...]] = {}
-    for period, stats in transactions_by_period.items():
-        period_stats = calculate_attribute_stats(stats, base_currency, all_attributes)
+    for period, transactions in transactions_by_period.items():
+        period_stats = calculate_attribute_stats(
+            transactions, base_currency, all_attributes
+        )
         stats_dict[period] = tuple(period_stats.values())
 
     return stats_dict

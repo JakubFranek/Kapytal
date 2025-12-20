@@ -11,7 +11,7 @@ from PyQt6.QtCharts import (
     QValueAxis,
 )
 from PyQt6.QtCore import QMargins, QPointF, Qt, pyqtSignal
-from PyQt6.QtGui import QColor, QCursor, QFont, QMouseEvent, QPainter
+from PyQt6.QtGui import QColor, QCursor, QFont, QMouseEvent, QPainter, QPen
 from PyQt6.QtWidgets import QGraphicsScene, QWidget
 from src.models.model_objects.currency_objects import CashAmount
 from src.utilities.formatting import format_real
@@ -65,11 +65,8 @@ class StackedBarChartView(QChartView):
         bar_sets: list[QBarSet] = []
         for index, series in enumerate(data):
             bar_set = QBarSet(series.name)
-            bar_set.setColor(
-                colors.get_deep_tab10_palette()[index % 10].lighter(
-                    100 + 30 * int(index / 10)
-                )
-            )
+            bar_set.setColor(colors.get_deep_tab10_palette()[index % 10])
+            bar_set.setPen(QPen(Qt.PenStyle.NoPen))
             bar_set.append([float(value.value_normalized) for value in series.values])
             bar_sets.append(bar_set)
 
@@ -121,7 +118,8 @@ class StackedBarChartView(QChartView):
         value = bar_set.at(index)
 
         self._tooltip.set_text(
-            f"{label}\n{format_real(value, self._decimals)} {self._currency_code}"
+            f"{self.axis_x.categories()[index]}\n{label}\n"
+            f"{format_real(value, self._decimals)} {self._currency_code}"
         )
 
         self._update_callout()

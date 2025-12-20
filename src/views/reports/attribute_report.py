@@ -251,7 +251,7 @@ def _convert_attribute_stats_to_bar_data(
     if not period_names:
         return ()
     try:
-        currency = stats[period_names[0]][0].balance.currency
+        currency = stats["Total"][0].balance.currency
     except IndexError:
         return ()
 

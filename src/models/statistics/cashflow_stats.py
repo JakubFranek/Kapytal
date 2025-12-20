@@ -246,13 +246,14 @@ def calculate_periodic_cash_flow(
     periods = get_periods(start_date, end_date, period_type)
     period_format = "%Y" if period_type == PeriodType.YEAR else "%b %Y"
 
-    # separate transactions into bins by period
     transactions_by_period: dict[Period, list[Transaction]] = {}
+    for period in periods.values():
+        transactions_by_period[period] = []
+
+    # separate transactions into bins by period
     for transaction in transactions:
         key = transaction.datetime_.strftime(period_format)
         period = periods[key]
-        if period not in transactions_by_period:
-            transactions_by_period[period] = []
         transactions_by_period[period].append(transaction)
 
     stats_list: list[CashFlowStats] = []

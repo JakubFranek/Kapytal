@@ -18,11 +18,11 @@ class AboutDialog(CustomDialog, Ui_AboutDialog):
         if colors.color_scheme == Qt.ColorScheme.Dark:
             self.pixmap = QPixmap(
                 str(constants.app_root_path / "resources/images/welcome_dark_mode.png")
-            ).scaledToWidth(512, Qt.TransformationMode.SmoothTransformation)
+            )
         else:
             self.pixmap = QPixmap(
                 str(constants.app_root_path / "resources/images/welcome_light_mode.png")
-            ).scaledToWidth(512, Qt.TransformationMode.SmoothTransformation)
+            )
 
         screen = QApplication.primaryScreen()
         dpr = screen.devicePixelRatio()
@@ -49,10 +49,12 @@ class AboutDialog(CustomDialog, Ui_AboutDialog):
             "<br/>"
             "<b>Icons info</b><br/>"
             "<a href=https://p.yusukekamiyamane.com>Fugue Icons set</a> by "
-            "Yusuke Kamiyamane.<br/>"
+            "Yusuke Kamiyamane. Upscaled to 32 px by "
+            "<a href=https://github.com/chrisjbillington/fugue-2x-icons>Chris Billington"
+            "</a>.<br/>"
             "Custom icons located in <tt>Kapytal/resources/icons/icons-custom</tt> "
             "are modifications <br/>"
-            "of existing Fugue Icons.<br/><br/>"
+            "of existing Fugue Icons, or custom icons created by me.<br/><br/>"
             "<em>Dedicated to my wife Soňa</em>"
             "</html>"
         )

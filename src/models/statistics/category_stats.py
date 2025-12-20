@@ -1,5 +1,6 @@
 from collections.abc import Collection, Sequence
 from dataclasses import dataclass, field
+from datetime import timedelta
 
 from src.models.model_objects.attributes import Category
 from src.models.model_objects.cash_objects import (
@@ -18,6 +19,16 @@ class CategoryStats:
     transactions_total: int | float
     balance: CashAmount | None
     transactions: set[CashTransaction | RefundTransaction] = field(default_factory=set)
+
+    def update_transaction_counts(self) -> None:
+        """Updates transactions_self and transactions_total based on the current
+        transactions set."""
+        self.transactions_self = sum(
+            1
+            for transaction in self.transactions
+            if self.category in transaction.categories
+        )
+        self.transactions_total = len(self.transactions)
 
 
 # TODO: add all-encompassing class which would store all stats, averages,
@@ -109,12 +120,22 @@ def calculate_periodic_category_stats(
 ) -> dict[str, tuple[CategoryStats, ...]]:
     transactions = sorted(transactions, key=lambda x: x.timestamp)
 
-    # separate transactions into bins by period
+    start_date = transactions[0].datetime_
+    end_date = transactions[-1].datetime_
+
     transactions_by_period: dict[str, list[CashTransaction | RefundTransaction]] = {}
+
+    # Generate all period keys (example: daily periods)
+    current_date = start_date
+    while current_date <= end_date:
+        key = current_date.strftime(period_format)
+        transactions_by_period[key] = []
+        current_date += timedelta(days=1)
+    transactions_by_period[end_date.strftime(period_format)] = []
+
+    # separate transactions into bins by period
     for transaction in transactions:
         key = transaction.datetime_.strftime(period_format)
-        if key not in transactions_by_period:
-            transactions_by_period[key] = []
         transactions_by_period[key].append(transaction)
 
     stats_dict: dict[str, tuple[CategoryStats, ...]] = {}
@@ -147,7 +168,7 @@ def calculate_category_stats(
         already_counted_ancestors = set()
         date_ = transaction.date_
         for category in transaction.categories:
-            _amount = transaction.get_amount_for_category(category, total=False)
+            _amount = transaction.get_amount_for_category(category, total=True)
             if _amount.value_normalized == 0:
                 continue
 
@@ -171,9 +192,5 @@ def calculate_category_stats(
                         ancestor, total=True
                     ).convert(base_currency, date_)
                     already_counted_ancestors.add(ancestor)
-                else:  # prevent double counting if both parent and child are present
-                    ancestor_stats.balance += transaction.get_amount_for_category(
-                        ancestor, total=False
-                    ).convert(base_currency, date_)
 
     return stats_dict
