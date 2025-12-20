@@ -1,6 +1,5 @@
 import logging
 from collections.abc import Collection, Sequence
-from datetime import datetime
 
 from PyQt6.QtCore import QSortFilterProxyModel, Qt
 from PyQt6.QtWidgets import QApplication
@@ -13,7 +12,6 @@ from src.models.statistics.net_worth_stats import (
     calculate_asset_stats,
     calculate_net_worth_over_time,
 )
-from src.models.user_settings import user_settings
 from src.presenters.widget.transactions_presenter import TransactionsPresenter
 from src.utilities.general import flatten_tree
 from src.view_models.account_tree_model import AccountTreeModel

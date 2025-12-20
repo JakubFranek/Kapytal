@@ -118,7 +118,8 @@ class StackedBarChartView(QChartView):
         value = bar_set.at(index)
 
         self._tooltip.set_text(
-            f"{label}\n{format_real(value, self._decimals)} {self._currency_code}"
+            f"{self.axis_x.categories()[index]}\n{label}\n"
+            f"{format_real(value, self._decimals)} {self._currency_code}"
         )
 
         self._update_callout()

@@ -145,8 +145,8 @@ class DateLineChartView(QChartView):
                 user_settings.settings.general_date_format
             )
             self._callout.set_text(
-                f"X: {x_dt.toString(dt_format_qt)}\n"
-                f"Y: {format_real(point.y(), self._y_decimals)}" + self._y_unit
+                f"{x_dt.toString(dt_format_qt)}\n"
+                f"{format_real(point.y(), self._y_decimals)}" + self._y_unit
             )
             self._callout.setZValue(11)
             self._callout.update_geometry()
