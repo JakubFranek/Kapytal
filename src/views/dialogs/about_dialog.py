@@ -24,8 +24,8 @@ class AboutDialog(CustomDialog, Ui_AboutDialog):
                 str(constants.app_root_path / "resources/images/welcome_light_mode.png")
             )
 
-        screen = QApplication.primaryScreen()
-        dpr = screen.devicePixelRatio()
+        window = parent.windowHandle()
+        dpr = window.devicePixelRatio()
         pixmap = self.pixmap.scaledToWidth(
             int(512 * dpr), Qt.TransformationMode.SmoothTransformation
         )
