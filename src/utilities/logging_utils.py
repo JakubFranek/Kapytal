@@ -54,10 +54,10 @@ class DuplicateFilter(logging.Filter):
 
 
 def setup_logging() -> None:
-    constants.logs_path.mkdir(exist_ok=True, parents=True)
+    constants.logs_directory.mkdir(exist_ok=True, parents=True)
 
     dt_now = datetime.now(user_settings.settings.time_zone)
-    filename_debug = constants.logs_path / (
+    filename_debug = constants.logs_directory / (
         "debug_" + dt_now.strftime(constants.TIMESTAMP_FORMAT) + ".log"
     )
     formatter = MyFormatter(
@@ -91,8 +91,8 @@ def remove_old_logs() -> None:
     while True:
         # Keep deleting logs until size limit is reached or all old logs are deleted
 
-        logs_number = len(_get_log_paths(constants.logs_path))
-        logs_size = _get_directory_size(constants.logs_path)
+        logs_number = len(_get_log_paths(constants.logs_directory))
+        logs_size = _get_directory_size(constants.logs_directory)
 
         if logs_number <= 1 and logs_size >= size_limit:
             logging.warning(
@@ -102,10 +102,12 @@ def remove_old_logs() -> None:
             return
 
         if logs_size <= size_limit:
-            logging.debug(f"Logs size limit satisfied ({logs_size}/{size_limit} bytes)")
+            logging.debug(
+                f"Logs size limit satisfied ({logs_size} / {size_limit} bytes)"
+            )
             return
 
-        _remove_oldest_log(constants.logs_path)
+        _remove_oldest_log(constants.logs_directory)
 
 
 def _remove_oldest_log(directory: Path) -> None:
@@ -121,7 +123,7 @@ def _get_log_paths(directory: Path) -> list[Path]:
         for file_path in directory.iterdir()
         if file_path.is_file()
         and file_path.suffix == ".log"
-        and contains_timestamp(file_path)
+        and contains_timestamp(file_path, suffix=".log")
     ]
 
 

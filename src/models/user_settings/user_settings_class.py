@@ -405,17 +405,17 @@ def _get_number_format_for_locale() -> NumberFormat:
     return format_
 
 
-def get_locale_code_for_number_format(number_format: NumberFormat) -> str:
+def get_locale_codes_for_number_format(number_format: NumberFormat) -> tuple[str]:
     match number_format:
         case NumberFormat.SEP_SPACE_DECIMAL_POINT:
-            return "xh_ZA"
+            return ("xh_ZA", "xh_ZA.utf8")
         case NumberFormat.SEP_SPACE_DECIMAL_COMMA:
-            return "cs_CZ"
+            return ("cs_CZ", "cs_CZ.utf8")
         case NumberFormat.SEP_COMMA_DECIMAL_POINT:
-            return "en_US"
+            return ("en_US", "en_US.utf8")
         case NumberFormat.SEP_POINT_DECIMAL_COMMA:
-            return "nl_NL"
+            return ("nl_NL", "nl_NL.utf8")
         case NumberFormat.SEP_NONE_DECIMAL_POINT:
-            return "C"
+            return ("C",)
         case _:
             raise ValueError(f"Unknown number format: {number_format}")

@@ -116,11 +116,19 @@ def test_convert_decimal_to_string_twelve_decimals() -> None:
 def test_convert_decimal_to_string_czech_locale() -> None:
     import locale
 
-    locale.setlocale(locale.LC_ALL, "cs_CZ")
+    for locale_name in ["cs_CZ.UTF-8", "cs_CZ"]:
+        try:
+            locale.setlocale(locale.LC_ALL, locale_name)
+            break
+        except locale.Error:
+            pass
+    else:
+        pytest.skip("Czech locale not available")
+
     result = convert_decimal_to_string(
         Decimal("1234567.891234"), significant_digits=2, min_decimals=2
     )
-    assert result == "≈1 234 567,89".replace(
+    assert result == "≈1\u202f234\u202f567,89".replace(
         " ",
         "\xa0",  # \xa0 is a non-breaking space
     )

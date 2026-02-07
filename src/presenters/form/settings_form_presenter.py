@@ -159,13 +159,11 @@ class SettingsFormPresenter:
             raise ValueError("Cannot open an unselected path.")
 
         logging.debug(f"Opening backup path in File Explorer: {path}")
-        os.startfile(path)
+        self._view.open_path_in_file_browser(path)
 
     def open_logs_path(self) -> None:
-        logging.debug(
-            f"Opening logs path in File Explorer: {constants.logs_folder_path}"
-        )
-        os.startfile(constants.logs_folder_path)
+        logging.debug(f"Opening logs path in File Explorer: {constants.logs_directory}")
+        self._view.open_path_in_file_browser(constants.logs_directory)
 
     def _backup_path_selection_changed(self) -> None:
         item = self._backup_paths_list_model.get_selected_item()

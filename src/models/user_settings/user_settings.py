@@ -38,6 +38,7 @@ def load() -> None:
 
 
 def save() -> None:
+    constants.settings_path.parent.mkdir(parents=True, exist_ok=True)
     with constants.settings_path.open(mode="w", encoding="UTF-8") as file:
         logging.debug(f"Saving UserSettings: {constants.settings_path}")
         json.dump(settings, file, cls=_json_encoder)

@@ -1,6 +1,19 @@
+import os
+import sys
 from pathlib import Path
 
+
+# Helper function to get XDG directories
+def _get_xdg_dir(env_var: str, default: str) -> Path:
+    """Get XDG directory with fallback to default."""
+    path_str = os.getenv(env_var)
+    if path_str:
+        return Path(path_str)
+    return Path(default).expanduser()
+
+
 # Literal constants
+APP_NAME = "Kapytal"
 VERSION = "1.2.1"
 
 GITHUB_URL = "https://github.com/JakubFranek/Kapytal"
@@ -10,15 +23,22 @@ GITHUB_DOCS_URL = "https://github.com/JakubFranek/Kapytal/blob/master/docs/index
 TIMESTAMP_FORMAT = "%Y_%m_%d_%Hh%Mm%Ss"
 TIMESTAMP_EXAMPLE = "YYYY_mm_DD_HHhMMmSSs"
 
-SETTINGS_SUFFIX = "saved_data/user_settings.json"
-RECENT_FILES_SUFFIX = "saved_data/recent_files.json"
-BACKUPS_FOLDER_SUFFIX = "saved_data/backups"
-LOGS_FOLDER_SUFFIX = "logs"
+WINDOWS_SAVED_DATA_FOLDER_NAME = "saved_data"
 
-DEMO_BASIC_FILE_SUFFIX = "saved_data/demo_basic.json"
-DEMO_MORTGAGE_FILE_SUFFIX = "saved_data/demo_mortgage.json"
-TEMPLATE_CATEGORY_EN_FILE_SUFFIX = "saved_data/template_category_en.json"
-TEMPLATE_CATEGORY_CZ_FILE_SUFFIX = "saved_data/template_category_cz.json"
+# XDG Base Directory paths (Linux)
+LINUX_CONFIG_FOLDER_PATH = _get_xdg_dir("XDG_CONFIG_HOME", "~/.config")
+LINUX_DATA_FOLDER_PATH = _get_xdg_dir("XDG_DATA_HOME", "~/.local/share")
+LINUX_STATE_FOLDER_PATH = _get_xdg_dir("XDG_STATE_HOME", "~/.local/state")
+
+SETTINGS_FILE_NAME = "user_settings.json"
+RECENT_FILES_FILE_NAME = "recent_files.json"
+BACKUPS_FOLDER_NAME = "backups"
+LOGS_FOLDER_NAME = "logs"
+
+DEMO_BASIC_FILE_NAME = "demo_basic.json"
+DEMO_MORTGAGE_FILE_NAME = "demo_mortgage.json"
+TEMPLATE_CATEGORY_EN_FILE_NAME = "template_category_en.json"
+TEMPLATE_CATEGORY_CZ_FILE_NAME = "template_category_cz.json"
 
 PASSWORD_MIN_LENGTH = 8
 
@@ -108,9 +128,8 @@ IBAN_LENGTHS = {  # from https://gist.github.com/dkdndes/578c579a86f7a19c646d5db
 app_root_path: Path
 settings_path: Path
 recent_files_path: Path
-backups_folder_path: Path
-logs_folder_path: Path
-logs_path: Path
+backups_directory: Path
+logs_directory: Path
 demo_basic_file_path: Path
 demo_mortgage_file_path: Path
 template_category_en_file_path: Path
@@ -121,21 +140,36 @@ def set_app_root_path(path: Path) -> None:
     global app_root_path  # noqa: PLW0603
     global settings_path  # noqa: PLW0603
     global recent_files_path  # noqa: PLW0603
-    global backups_folder_path  # noqa: PLW0603
-    global logs_folder_path  # noqa: PLW0603
-    global logs_path  # noqa: PLW0603
+    global backups_directory  # noqa: PLW0603
+    global logs_directory  # noqa: PLW0603
     global demo_basic_file_path  # noqa: PLW0603
     global demo_mortgage_file_path  # noqa: PLW0603
     global template_category_en_file_path  # noqa: PLW0603
     global template_category_cz_file_path  # noqa: PLW0603
 
     app_root_path = path
-    settings_path = app_root_path / SETTINGS_SUFFIX
-    recent_files_path = app_root_path / RECENT_FILES_SUFFIX
-    backups_folder_path = app_root_path / BACKUPS_FOLDER_SUFFIX
-    logs_folder_path = app_root_path / LOGS_FOLDER_SUFFIX
-    logs_path = app_root_path / LOGS_FOLDER_SUFFIX
-    demo_basic_file_path = app_root_path / DEMO_BASIC_FILE_SUFFIX
-    demo_mortgage_file_path = app_root_path / DEMO_MORTGAGE_FILE_SUFFIX
-    template_category_en_file_path = app_root_path / TEMPLATE_CATEGORY_EN_FILE_SUFFIX
-    template_category_cz_file_path = app_root_path / TEMPLATE_CATEGORY_CZ_FILE_SUFFIX
+
+    if sys.platform == "win32":
+        saved_data_dir = app_root_path / WINDOWS_SAVED_DATA_FOLDER_NAME
+
+        backups_directory = saved_data_dir / BACKUPS_FOLDER_NAME
+        logs_directory = app_root_path / LOGS_FOLDER_NAME
+
+        settings_path = saved_data_dir / SETTINGS_FILE_NAME
+        recent_files_path = saved_data_dir / RECENT_FILES_FILE_NAME
+        demo_basic_file_path = saved_data_dir / DEMO_BASIC_FILE_NAME
+        demo_mortgage_file_path = saved_data_dir / DEMO_MORTGAGE_FILE_NAME
+        template_category_en_file_path = saved_data_dir / TEMPLATE_CATEGORY_EN_FILE_NAME
+        template_category_cz_file_path = saved_data_dir / TEMPLATE_CATEGORY_CZ_FILE_NAME
+    else:
+        settings_path = LINUX_CONFIG_FOLDER_PATH / APP_NAME / SETTINGS_FILE_NAME
+        logs_directory = LINUX_STATE_FOLDER_PATH / APP_NAME / LOGS_FOLDER_NAME
+
+        data_dir = LINUX_DATA_FOLDER_PATH / APP_NAME
+
+        backups_directory = data_dir / BACKUPS_FOLDER_NAME
+        recent_files_path = data_dir / RECENT_FILES_FILE_NAME
+        demo_basic_file_path = data_dir / DEMO_BASIC_FILE_NAME
+        demo_mortgage_file_path = data_dir / DEMO_MORTGAGE_FILE_NAME
+        template_category_en_file_path = data_dir / TEMPLATE_CATEGORY_EN_FILE_NAME
+        template_category_cz_file_path = data_dir / TEMPLATE_CATEGORY_CZ_FILE_NAME
