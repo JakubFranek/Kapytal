@@ -1,10 +1,10 @@
 import locale
 import logging
+import re
 from collections.abc import Collection, Sequence
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-import re
 from typing import Any
 from zoneinfo import ZoneInfo
 
@@ -417,30 +417,30 @@ def _validate_strftime_format(fmt: str,timezone: ZoneInfo) -> None:
     """Validate that the format string is valid for strftime."""
     # Valid strftime directives (based on Python documentation)
     valid_directives = {
-        '%a', '%A', '%w', '%d', '%b', '%B', '%m', '%y', '%Y',
-        '%H', '%I', '%p', '%M', '%S', '%f', '%z', '%Z', '%j',
-        '%U', '%W', '%c', '%x', '%X', '%%', '%G', '%u', '%V'
+        "%a", "%A", "%w", "%d", "%b", "%B", "%m", "%y", "%Y",
+        "%H", "%I", "%p", "%M", "%S", "%f", "%z", "%Z", "%j",
+        "%U", "%W", "%c", "%x", "%X", "%%", "%G", "%u", "%V"
     }
-    
+
     # Find all potential format codes (% followed by a character)
-    pattern = r'%(.)'
+    pattern = r"%(.)"
     matches = re.findall(pattern, fmt)
-    
+
     # Check for trailing % without a directive
-    if fmt.endswith('%') and not fmt.endswith('%%'):
+    if fmt.endswith("%") and not fmt.endswith("%%"):
         raise ValueError(
             "UserSettings.transaction_date_format must be a valid format."
         )
-    
+
     # Check each directive
     for match in matches:
-        directive = f'%{match}'
+        directive = f"%{match}"
         if directive not in valid_directives:
             raise ValueError(
                 f"UserSettings.transaction_date_format must be a valid format. "
                 f"Invalid directive: {directive}"
             )
-    
+
     # Also test it actually works (belt and suspenders)
     try:
         datetime.now(tz=timezone).strftime(fmt)

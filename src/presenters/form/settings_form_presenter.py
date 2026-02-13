@@ -1,6 +1,5 @@
 import copy
 import logging
-import os
 from pathlib import Path
 
 from src.models.user_settings import user_settings

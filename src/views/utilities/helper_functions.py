@@ -48,7 +48,7 @@ def overflowing_keyPressEvent(self: QDateTimeEdit, event: QKeyEvent) -> None:
     key = event.key()
     steps = 1 if key == Qt.Key.Key_Up else -1 if key == Qt.Key.Key_Down else 0
     if steps and _overflow_step(self, steps):
-        return
+        return None
     return _qdatetimeedit_original_keyPressEvent(self, event)
 
 
@@ -56,7 +56,7 @@ def overflowing_wheelEvent(self: QDateTimeEdit, event: QWheelEvent) -> None:
     delta = event.angleDelta().y()
     steps = 1 if delta > 0 else -1 if delta < 0 else 0
     if steps and _overflow_step(self, steps):
-        return
+        return None
     return _qdatetimeedit_original_wheelEvent(self, event)
 
 

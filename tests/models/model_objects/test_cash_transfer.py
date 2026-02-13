@@ -4,7 +4,7 @@ from types import NoneType
 from typing import Any
 
 import pytest
-from hypothesis import assume, example, given
+from hypothesis import assume, given
 from hypothesis import strategies as st
 from src.models.model_objects.cash_objects import (
     CashAccount,
@@ -26,7 +26,6 @@ from tests.models.test_assets.composites import (
     everything_except,
 )
 from tests.models.test_assets.constants import MIN_DATETIME
-
 
 
 @given(

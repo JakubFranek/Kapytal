@@ -370,7 +370,7 @@ locale_data_set = {
 def test_get_number_format_for_locale(test_data: tuple[str, NumberFormat]) -> None:
     import locale
     locale_name = test_data[0]
-    
+
     # Try different locale name formats (Windows vs Linux)
     for suffix in ["", ".UTF-8", ".utf8"]:
         try:
@@ -380,7 +380,7 @@ def test_get_number_format_for_locale(test_data: tuple[str, NumberFormat]) -> No
             continue
     else:
         pytest.skip(f"Locale {locale_name} not available on this system")
-    
+
     assert _get_number_format_for_locale() == test_data[1]
 
 

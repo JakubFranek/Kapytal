@@ -2,7 +2,7 @@ import sys
 
 from PyQt6.QtCore import PYQT_VERSION_STR, QT_VERSION_STR, Qt
 from PyQt6.QtGui import QPixmap
-from PyQt6.QtWidgets import QApplication, QWidget
+from PyQt6.QtWidgets import QWidget
 from src.utilities import constants
 from src.views import colors
 from src.views.base_classes.custom_dialog import CustomDialog

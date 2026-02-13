@@ -4,7 +4,6 @@ from pathlib import Path
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QAction, QCloseEvent, QIcon, QPixmap
 from PyQt6.QtWidgets import (
-    QApplication,
     QGridLayout,
     QLabel,
     QMenu,

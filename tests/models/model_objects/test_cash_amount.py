@@ -119,7 +119,7 @@ def test_value_rounded_specific_values() -> None:
     currency_18 = Currency("MNO", 18)
 
     amount_0 = CashAmount(Decimal("1.23456789123456789123456789"), currency_0)
-    assert amount_0.value_rounded == Decimal("1")
+    assert amount_0.value_rounded == Decimal(1)
     amount_2 = CashAmount(Decimal("1.23456789123456789123456789"), currency_2)
     assert amount_2.value_rounded == Decimal("1.23")
     amount_4 = CashAmount(Decimal("1.23456789123456789123456789"), currency_4)
@@ -223,8 +223,8 @@ def test_eq_different_currency_nonzero_value(
     currency_1: Currency, currency_2: Currency
 ) -> None:
     assume(currency_1 != currency_2)
-    amount_1 = CashAmount(Decimal("123"), currency_1)
-    amount_2 = CashAmount(Decimal("456"), currency_2)
+    amount_1 = CashAmount(Decimal(123), currency_1)
+    amount_2 = CashAmount(Decimal(456), currency_2)
     assert not amount_1.__eq__(amount_2)
 
 
@@ -553,18 +553,18 @@ def get_currencies() -> dict[str, Currency]:
     )
 
     exchange_eur_czk = ExchangeRate(eur, czk)
-    exchange_eur_czk.set_rate(today, Decimal("25"))
-    exchange_eur_czk.set_rate(yesterday, Decimal("20"))
+    exchange_eur_czk.set_rate(today, Decimal(25))
+    exchange_eur_czk.set_rate(yesterday, Decimal(20))
     exchange_eur_pln = ExchangeRate(eur, pln)  # noqa: F841
     exchange_pln_rub = ExchangeRate(pln, rub)  # noqa: F841
     exchange_eur_dkk = ExchangeRate(eur, dkk)  # noqa: F841
     exchange_eur_rub = ExchangeRate(eur, rub)  # noqa: F841
     exchange_eur_usd = ExchangeRate(eur, usd)
     exchange_eur_usd.set_rate(today, Decimal("0.9"))
-    exchange_eur_usd.set_rate(yesterday, Decimal("1"))
+    exchange_eur_usd.set_rate(yesterday, Decimal(1))
     exchange_btc_usd = ExchangeRate(btc, usd)
-    exchange_btc_usd.set_rate(today, Decimal("40000"))
-    exchange_btc_usd.set_rate(yesterday, Decimal("50000"))
+    exchange_btc_usd.set_rate(today, Decimal(40000))
+    exchange_btc_usd.set_rate(yesterday, Decimal(50000))
 
     exchange_usd_rub = ExchangeRate(usd, rub)  # noqa: F841
     exchange_rub_byn = ExchangeRate(rub, byn)  # noqa: F841

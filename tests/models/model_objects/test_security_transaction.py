@@ -176,7 +176,7 @@ def test_invalid_type_type(
             type_,
             security,
             shares,
-            Decimal("100"),
+            Decimal(100),
             security_account,
             cash_account,
         )
@@ -204,8 +204,8 @@ def test_invalid_security_type(
             datetime_,
             type_,
             security,
-            Decimal("1"),
-            Decimal("100"),
+            Decimal(1),
+            Decimal(100),
             security_account,
             cash_account,
         )
@@ -236,7 +236,7 @@ def test_invalid_shares_type(
             type_,
             security,
             shares,
-            Decimal("100"),
+            Decimal(100),
             security_account,
             cash_account,
         )
@@ -268,7 +268,7 @@ def test_invalid_shares_str_value(
                 type_,
                 security,
                 shares,
-                Decimal("100"),
+                Decimal(100),
                 security_account,
                 cash_account,
             )
@@ -626,7 +626,7 @@ def get_sell() -> SecurityTransaction:
     datetime_ = datetime.now(user_settings.settings.time_zone)
     type_ = SecurityTransactionType.SELL
     security = buy.security
-    shares = Decimal("10")
+    shares = Decimal(10)
     amount_per_share = CashAmount("105.49", security.currency)
     return SecurityTransaction(
         description,
