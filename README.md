@@ -17,9 +17,11 @@ Kapytal is a PyQt-based Windows tool for managing your personal or household fin
 
 ## Requirements
 
-- Windows 8 or newer
-- around 200 MB of disk space
-- internet connection is useful, but optional
+- **Operating System:**
+  - Windows 8 or newer
+  - Linux with glibc 2.39+ (Ubuntu 24.04+, Debian 13+, Rocky Linux 9+)
+- **Disk Space:** ~200 MB
+- **Internet:** Optional (used for update check and exchange rate/security price updates only)
 
 ## Get started
 
