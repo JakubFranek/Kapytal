@@ -97,7 +97,14 @@ def get_datetime_from_file_path(path: Path) -> datetime:
     """Return datetime from a Path containing a '%Y_%m_%d_%Hh%Mm%Ss' timestamp
     at the end of the stem."""
 
-    stem = path.stem
+    if path.name.endswith(".json.enc"):
+        suffix = ".json.enc"
+    elif path.name.endswith(".json"):
+        suffix = ".json"
+    else:
+        raise ValueError(f"File {path} does not end with .json or .json.enc")
+
+    stem = str(path).removesuffix(suffix)
     timestamp = stem[-len(constants.TIMESTAMP_EXAMPLE) :]
     return datetime.strptime(timestamp, constants.TIMESTAMP_FORMAT).replace(
         tzinfo=user_settings.settings.time_zone
