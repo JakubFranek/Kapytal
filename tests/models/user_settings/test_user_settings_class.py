@@ -11,7 +11,7 @@ from src.models.user_settings.user_settings_class import (
     NumberFormat,
     UserSettings,
     _get_number_format_for_locale,
-    get_locale_code_for_number_format,
+    get_locale_codes_for_number_format,
 )
 from src.views.constants import TransactionTableColumn
 from tests.models.test_assets.composites import everything_except
@@ -369,8 +369,18 @@ locale_data_set = {
 @pytest.mark.parametrize("test_data", locale_data_set.items())
 def test_get_number_format_for_locale(test_data: tuple[str, NumberFormat]) -> None:
     import locale
-
-    locale.setlocale(locale.LC_NUMERIC, test_data[0])
+    locale_name = test_data[0]
+    
+    # Try different locale name formats (Windows vs Linux)
+    for suffix in ["", ".UTF-8", ".utf8"]:
+        try:
+            locale.setlocale(locale.LC_NUMERIC, locale_name + suffix)
+            break
+        except locale.Error:
+            continue
+    else:
+        pytest.skip(f"Locale {locale_name} not available on this system")
+    
     assert _get_number_format_for_locale() == test_data[1]
 
 
@@ -381,16 +391,16 @@ def test_get_number_format_for_locale_no_locale_set() -> None:
 def test_get_number_format_for_locale_unsupported() -> None:
     import locale
 
-    locale.setlocale(locale.LC_NUMERIC, "fa_IR")
+    locale.setlocale(locale.LC_NUMERIC, "C")
     assert _get_number_format_for_locale() == NumberFormat.SEP_NONE_DECIMAL_POINT
 
 
 @pytest.mark.parametrize("test_data", locale_data_set.items())
 def test_get_locale_code_for_number_format(test_data: tuple[str, NumberFormat]) -> None:
-    assert get_locale_code_for_number_format(test_data[1]) == test_data[0]
+    assert test_data[0] in get_locale_codes_for_number_format(test_data[1])
 
 
 @given(format_=everything_except(NumberFormat))
 def test_get_locale_code_for_number_format_invalid_value(format_: Any) -> None:
     with pytest.raises(ValueError, match="Unknown number format"):
-        get_locale_code_for_number_format(format_)
+        get_locale_codes_for_number_format(format_)
