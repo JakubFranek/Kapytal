@@ -14,7 +14,7 @@ def _get_xdg_dir(env_var: str, default: str) -> Path:
 
 # Literal constants
 APP_NAME = "Kapytal"
-VERSION = "1.2.1"
+VERSION = "1.2.2"
 
 GITHUB_URL = "https://github.com/JakubFranek/Kapytal"
 GITHUB_API_URL = "https://api.github.com/repos/JakubFranek/Kapytal"
