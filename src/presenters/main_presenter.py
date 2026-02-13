@@ -4,6 +4,7 @@ from pathlib import Path
 
 from PyQt6.QtWidgets import QApplication
 from src.models.record_keeper import RecordKeeper
+from src.models.transaction_filters.base_transaction_filter import FilterMode
 from src.presenters.file_presenter import FilePresenter
 from src.presenters.form.category_form_presenter import CategoryFormPresenter
 from src.presenters.form.currency_form_presenter import CurrencyFormPresenter
@@ -219,6 +220,10 @@ class MainPresenter:
             )
         )
 
+        self._report_presenter.event_update_filter_end_datetime.append(
+            self._update_report_presenter_filter_end_datetime
+        )
+
     def _connect_view_signals(self) -> None:
         self._view.signal_exit.connect(self._quit)
         self._view.signal_open_currency_form.connect(
@@ -321,3 +326,12 @@ class MainPresenter:
     def _close_welcome_dialog(self) -> None:
         self._view.setDisabled(False)  # re-enable MainView after disabling it in init
         self._welcome_dialog.close()
+
+    def _update_report_presenter_filter_end_datetime(self) -> None:
+        """Update the end datetime of the ReportPresenter for Time Report purposes."""
+
+        datetime_filter = self._transactions_presenter.transaction_filter_form_presenter.transaction_filter.datetime_filter  # noqa: E501
+        end_date = (
+            datetime_filter.end if datetime_filter.mode != FilterMode.OFF else None
+        )
+        self._report_presenter.update_filter_end_datetime(end_date)

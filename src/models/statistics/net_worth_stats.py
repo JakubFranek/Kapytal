@@ -184,7 +184,7 @@ def calculate_net_worth_over_time(
         net_worth = base_currency.zero_amount
         for account in accounts:
             net_worth += account.get_balance(base_currency, current_date)
-        if len(data) == 0 or net_worth != data[-1][1]:
-            data.append((current_date, net_worth))
+        if len(data) == 0 or net_worth != data[-1][1] or current_date == date_end:
+            data.append((current_date, net_worth))  # Always include the end date
         current_date += timedelta(days=1)
     return tuple(data)
