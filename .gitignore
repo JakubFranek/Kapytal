@@ -26,5 +26,5 @@ icons-custom-redundant
 *.psd
 aux_stuff
 .profile_data
-Kapytal.AppDir
 *.AppImage
+**/Kapytal.AppDir/usr/bin
