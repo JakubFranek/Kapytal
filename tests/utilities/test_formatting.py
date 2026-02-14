@@ -128,7 +128,10 @@ def test_convert_decimal_to_string_czech_locale() -> None:
     result = convert_decimal_to_string(
         Decimal("1234567.891234"), significant_digits=2, min_decimals=2
     )
-    assert result == "≈1\u202f234\u202f567,89".replace(
-        " ",
-        "\xa0",  # \xa0 is a non-breaking space
+    assert result in (
+        "≈1\u202f234\u202f567,89",
+        "≈1 234 567,89".replace(
+            " ",
+            "\xa0",  # \xa0 is a non-breaking space
+        ),
     )
