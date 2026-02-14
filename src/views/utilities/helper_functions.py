@@ -18,7 +18,7 @@ def calculate_table_width(table: QTableView) -> int:
 def get_spinbox_value_as_decimal(spinbox: QSpinBox) -> Decimal:
     text = spinbox.cleanText()
     text_delocalized = locale.delocalize(text)
-    text_cleaned = text_delocalized.replace("\xa0", "")
+    text_cleaned = "".join(text_delocalized.split())
     return Decimal(text_cleaned)
 
 
