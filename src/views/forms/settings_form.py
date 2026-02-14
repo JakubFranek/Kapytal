@@ -25,6 +25,7 @@ class SettingsForm(CustomWidget, Ui_SettingsForm):
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent=parent)
         self.setupUi(self)
+        self.resize(self.size().width(), 350)
         self.setWindowFlag(Qt.WindowType.Window)
         self.setWindowIcon(icons.settings)
 

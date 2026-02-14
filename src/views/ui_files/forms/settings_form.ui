@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>500</width>
-    <height>428</height>
+    <height>345</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -211,7 +211,14 @@
         </widget>
        </item>
        <item>
-        <widget class="QListView" name="backupsListView"/>
+        <widget class="QListView" name="backupsListView">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>50</height>
+          </size>
+         </property>
+        </widget>
        </item>
        <item>
         <layout class="QHBoxLayout" name="backupsButtonHorizontalLayout">
