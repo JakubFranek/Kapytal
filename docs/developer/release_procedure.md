@@ -19,8 +19,9 @@
     - do NOT run Kapytal from `dist/` directory!
 1. create Linux AppImage
     1. run `pyinstaller packaging/linux/kapytal.spec`
-    1. copy contents of `dist/Kapytal` to `packaging/linux/Kapytal.MainDir/`
-    1. run `appimagetool Kapytal.MainDir`
+    1. copy contents of `dist/Kapytal` to `packaging/linux/Kapytal.AppDir/` by running `cp -r dist/Kapytal/* packaging/linux/Kapytal.AppDir/usr/bin/`
+    1. run `appimagetool-x86_64.AppImage packaging/linux/Kapytal.AppDir/`
+    1. run `appimagelint-x86_64.AppImage Kapytal-x86_64.AppImage` to check the AppImage is OK
     1. test the AppImage
     - do NOT run Kapytal from `dist/` folder!
 1. prepare release on Git
