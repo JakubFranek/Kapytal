@@ -27,7 +27,7 @@ DirExistsWarning=auto
 DisableDirPage=auto
 DisableProgramGroupPage=auto
 VersionInfoVersion={#MyAppVersion}
-SetupIconFile=..\resources\icons\icons-custom\kapytal.ico
+SetupIconFile=..\..\resources\icons\icons-custom\kapytal.ico
 UninstallDisplayIcon={app}\Kapytal.exe
 
 
@@ -38,8 +38,8 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-Source: "C:\Users\jfran\Coding\Kapytal\dist\main\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\jfran\Coding\Kapytal\dist\main\_internal\*"; DestDir: "{app}\_internal"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "C:\Users\jfran\Coding\Kapytal\dist\Kapytal\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Users\jfran\Coding\Kapytal\dist\Kapytal\_internal\*"; DestDir: "{app}\_internal"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
 Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\_internal\resources\icons\icons-custom\kapytal.ico";
