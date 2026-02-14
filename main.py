@@ -5,8 +5,34 @@ import os
 import sys
 from pathlib import Path
 
-locale.setlocale(locale.LC_ALL, "")  # set locale per LANG env variable ASAP
-locale.setlocale(locale.LC_TIME, "en_GB")  # set English calendar names
+
+def setup_locale() -> None:
+    """Setup application locale with fallbacks."""
+
+    for loc in ["", os.environ.get("LANG", ""), "C.UTF-8", "C"]:
+        if not loc:  # Skip empty strings
+            continue
+        try:
+            locale.setlocale(locale.LC_ALL, loc)
+            break
+        except locale.Error:
+            continue
+
+    english_locales = [
+        "en_GB",
+        "en_GB.UTF-8",
+        "en_US.UTF-8",
+        "C",
+    ]
+    for locale_name in english_locales:
+        try:
+            locale.setlocale(locale.LC_TIME, locale_name)
+            break
+        except locale.Error:
+            continue
+
+
+setup_locale()
 
 from PyQt6.QtCore import QLocale
 from PyQt6.QtWidgets import QApplication, QStyleFactory
@@ -14,7 +40,7 @@ from src.models.json.custom_json_decoder import CustomJSONDecoder
 from src.models.json.custom_json_encoder import CustomJSONEncoder
 from src.models.user_settings import user_settings
 from src.models.user_settings.user_settings_class import (
-    get_locale_code_for_number_format,
+    get_locale_codes_for_number_format,
 )
 from src.presenters.main_presenter import MainPresenter
 from src.utilities import constants
@@ -42,16 +68,32 @@ def main() -> None:
     if constants.settings_path.exists():
         user_settings.load()
     else:
-        Path.mkdir(constants.backups_folder_path, parents=True, exist_ok=True)
-        user_settings.settings.backup_paths = [constants.backups_folder_path]
+        Path.mkdir(constants.backups_directory, parents=True, exist_ok=True)
+        user_settings.settings.backup_paths = [constants.backups_directory]
         user_settings.save()
 
-    locale_code_for_number_format = get_locale_code_for_number_format(
+    locale_codes_for_number_format = get_locale_codes_for_number_format(
         user_settings.settings.number_format
     )
-    logging.info(f"Setting locale.LC_NUMERIC to '{locale_code_for_number_format}'")
-    locale.setlocale(locale.LC_NUMERIC, locale_code_for_number_format)
-    locale_qt = QLocale(locale_code_for_number_format)
+
+    locale_qt = QLocale()
+    for locale_code in locale_codes_for_number_format:
+        try:
+            logging.info(f"Setting locale.LC_NUMERIC to '{locale_code}'")
+            locale.setlocale(locale.LC_NUMERIC, locale_code)
+            locale_qt = QLocale(locale_code)
+            break
+        except locale.Error:
+            logging.warning(
+                f"Failed to set locale.LC_NUMERIC to '{locale_code}'"
+                ", proceeding with next locale code"
+            )
+    else:
+        logging.error(
+            "Failed to set locale.LC_NUMERIC to any of "
+            f"{locale_codes_for_number_format}"
+        )
+        locale.setlocale(locale.LC_NUMERIC, "")
 
     remove_old_logs()  # remove logs once settings are initialized
 

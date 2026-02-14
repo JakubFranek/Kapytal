@@ -4,7 +4,6 @@ from pathlib import Path
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QAction, QCloseEvent, QIcon, QPixmap
 from PyQt6.QtWidgets import (
-    QApplication,
     QGridLayout,
     QLabel,
     QMenu,
@@ -39,22 +38,15 @@ class WelcomeDialog(CustomDialog, Ui_WelcomeDialog):
 
         if colors.color_scheme == Qt.ColorScheme.Dark:
             self.pixmap = QPixmap(
-                str(
-                    constants.app_root_path
-                    / "resources/images/welcome_dark_mode.png"
-                )
+                str(constants.app_root_path / "resources/images/welcome_dark_mode.png")
             )
         else:
             self.pixmap = QPixmap(
-                str(
-                    constants.app_root_path
-                    / "resources/images/welcome_light_mode.png"
-                )
+                str(constants.app_root_path / "resources/images/welcome_light_mode.png")
             )
 
-        screen = QApplication.primaryScreen()
-        dpr = screen.devicePixelRatio()
-
+        window = parent.windowHandle()
+        dpr = window.devicePixelRatio()
         pixmap = self.pixmap.scaledToWidth(
             int(512 * dpr), Qt.TransformationMode.SmoothTransformation
         )

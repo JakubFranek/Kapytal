@@ -16,19 +16,32 @@ def backup_json_file(file_path: Path) -> None:
     dt_now = datetime.now(user_settings.settings.time_zone)
     size_limit = user_settings.settings.backups_max_size_bytes
 
+    if file_path.name.endswith(".json.enc"):
+        file_suffix = ".json.enc"
+    elif file_path.name.endswith(".json"):
+        file_suffix = ".json"
+    else:
+        raise ValueError(f"File {file_path} does not end with .json or .json.enc")
+
+    file_name_stem = file_path.name.removesuffix(file_suffix)
+
     backup_name = (
-        file_path.stem
-        + "_"
-        + dt_now.strftime(constants.TIMESTAMP_FORMAT)
-        + file_path.suffix
+        file_name_stem + "_" + dt_now.strftime(constants.TIMESTAMP_FORMAT) + file_suffix
     )
 
     for backup_directory in user_settings.settings.backup_paths:
         backup_directory.mkdir(exist_ok=True, parents=True)
+
         backup_directory_readme = backup_directory / "README.md"
         if not backup_directory_readme.exists():
-            readme_path = constants.backups_folder_path / "README.md"
-            shutil.copyfile(readme_path, backup_directory_readme)
+            readme_path = constants.app_root_path / "saved_data/backups/README.md"
+            if readme_path.exists():
+                shutil.copyfile(readme_path, backup_directory_readme)
+            else:
+                logging.warning(
+                    f"README.md not found in neither {constants.app_root_path} "
+                    f"nor {backup_directory}"
+                )
 
         backup_path = backup_directory / backup_name
         shutil.copyfile(file_path, backup_path)
@@ -41,8 +54,8 @@ def backup_json_file(file_path: Path) -> None:
                 file_path
                 for file_path in backup_directory.iterdir()
                 if file_path.is_file()
-                and file_path.suffix == ".json"
-                and contains_timestamp(file_path)
+                and "".join(file_path.suffixes) in {".json", ".json.enc"}
+                and contains_timestamp(file_path, file_suffix)
             ]
             total_size = sum(f.stat().st_size for f in old_backup_paths if f.is_file())
 
@@ -66,11 +79,11 @@ def backup_json_file(file_path: Path) -> None:
                 oldest_backup.unlink()
 
 
-def contains_timestamp(path: Path) -> bool:
+def contains_timestamp(path: Path, suffix: str) -> bool:
     """Return True if the Path contains a '%Y_%m_%d_%Hh%Mm%Ss' timestamp
     at the end of its stem."""
 
-    stem = path.stem
+    stem = str(path).removesuffix(suffix)
     timestamp = stem[-len(constants.TIMESTAMP_EXAMPLE) :]
     try:
         datetime.strptime(timestamp, constants.TIMESTAMP_FORMAT)  # noqa: DTZ007
@@ -84,7 +97,14 @@ def get_datetime_from_file_path(path: Path) -> datetime:
     """Return datetime from a Path containing a '%Y_%m_%d_%Hh%Mm%Ss' timestamp
     at the end of the stem."""
 
-    stem = path.stem
+    if path.name.endswith(".json.enc"):
+        suffix = ".json.enc"
+    elif path.name.endswith(".json"):
+        suffix = ".json"
+    else:
+        raise ValueError(f"File {path} does not end with .json or .json.enc")
+
+    stem = str(path).removesuffix(suffix)
     timestamp = stem[-len(constants.TIMESTAMP_EXAMPLE) :]
     return datetime.strptime(timestamp, constants.TIMESTAMP_FORMAT).replace(
         tzinfo=user_settings.settings.time_zone

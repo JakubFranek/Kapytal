@@ -91,7 +91,7 @@ class TransactionFilterForm(CustomWidget, Ui_TransactionFilterForm):
     ) -> None:
         super().__init__(parent=parent)
         self.setupUi(self)
-        self.resize(550, 620)
+        self.resize(575, 620)
 
         self._initialize_window()
         self._initialize_search_boxes()

@@ -32,7 +32,7 @@ class ImportTransactionsDialog(CustomDialog, Ui_ImportTransactionsDialog):
     ) -> None:
         super().__init__(parent=parent)
         self.setupUi(self)
-        self.resize(320, 80)
+        self.resize(320, 300)
         self.setWindowIcon(icons.document_import)
 
         self.cashAccountComboBox = SmartComboBox(parent=self)
@@ -106,7 +106,7 @@ class ImportTransactionsDialog(CustomDialog, Ui_ImportTransactionsDialog):
         logging.debug(f"Closing {self.__class__.__name__}")
         return super().reject()
 
-    def _show_help(self) -> None:  # TODO: create help text
+    def _show_help(self) -> None:
         text = (
             "<html>"
             "Importing Transactions is rather complex. Please read the documentation "

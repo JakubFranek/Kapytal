@@ -1196,7 +1196,7 @@ def get_preloaded_record_keeper() -> RecordKeeper:
     btc_czk = record_keeper.get_exchange_rate("BTC/CZK")
     btc_czk.set_rate(
         datetime.now(user_settings.settings.time_zone).date(),
-        Decimal("600000"),
+        Decimal(600000),
     )
     record_keeper.add_account_group("Bank Accounts")
     record_keeper.add_account_group("Security Accounts")

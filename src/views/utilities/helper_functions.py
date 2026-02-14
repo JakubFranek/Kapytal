@@ -10,6 +10,7 @@ from src.models.user_settings import user_settings
 _qdatetimeedit_original_keyPressEvent = QDateTimeEdit.keyPressEvent
 _qdatetimeedit_original_wheelEvent = QDateTimeEdit.wheelEvent
 
+
 def calculate_table_width(table: QTableView) -> int:
     return table.horizontalHeader().length() + table.verticalHeader().width()
 
@@ -17,7 +18,8 @@ def calculate_table_width(table: QTableView) -> int:
 def get_spinbox_value_as_decimal(spinbox: QSpinBox) -> Decimal:
     text = spinbox.cleanText()
     text_delocalized = locale.delocalize(text)
-    return Decimal(text_delocalized)
+    text_cleaned = "".join(text_delocalized.split())
+    return Decimal(text_cleaned)
 
 
 def convert_datetime_format_to_qt(datetime_format: str) -> str:
@@ -48,7 +50,7 @@ def overflowing_keyPressEvent(self: QDateTimeEdit, event: QKeyEvent) -> None:
     key = event.key()
     steps = 1 if key == Qt.Key.Key_Up else -1 if key == Qt.Key.Key_Down else 0
     if steps and _overflow_step(self, steps):
-        return
+        return None
     return _qdatetimeedit_original_keyPressEvent(self, event)
 
 
@@ -56,7 +58,7 @@ def overflowing_wheelEvent(self: QDateTimeEdit, event: QWheelEvent) -> None:
     delta = event.angleDelta().y()
     steps = 1 if delta > 0 else -1 if delta < 0 else 0
     if steps and _overflow_step(self, steps):
-        return
+        return None
     return _qdatetimeedit_original_wheelEvent(self, event)
 
 

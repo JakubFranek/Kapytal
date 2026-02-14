@@ -2,7 +2,7 @@
 
 ## Tutorial video
 
-![Youtube Icon](../resources/icons/icons-github/film-youtube.png) [Click here to watch Kapytal Quick Start Guide video on YouTube!](https://youtu.be/dCtn-ZUGWMs) ![Youtube Icon](../resources/icons/icons-github/film-youtube.png)
+![Youtube Icon](../../resources/icons/icons-github/film-youtube.png) [Click here to watch Kapytal Quick Start Guide video on YouTube!](https://youtu.be/dCtn-ZUGWMs) ![Youtube Icon](../../resources/icons/icons-github/film-youtube.png)
 
 ## First steps
 

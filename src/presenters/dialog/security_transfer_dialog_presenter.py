@@ -27,7 +27,7 @@ class SecurityTransferDialogPresenter(TransactionDialogPresenter):
         if len(self._record_keeper.security_accounts) < 2:  # noqa: PLR2004
             display_error_message(
                 "Create at least two Security Accounts before creating a "
-                "Security transfer.",
+                "Security Transfer.",
                 title="Warning",
             )
             return
@@ -293,5 +293,5 @@ class SecurityTransferDialogPresenter(TransactionDialogPresenter):
             self._dialog.set_shares_suffix("")
             return
 
-        suffix = f" / {convert_decimal_to_string(shares,18,security.shares_decimals)}"
+        suffix = f" / {convert_decimal_to_string(shares, 18, security.shares_decimals)}"
         self._dialog.set_shares_suffix(suffix)

@@ -1,5 +1,6 @@
 import locale
 import logging
+import re
 from collections.abc import Collection, Sequence
 from datetime import datetime
 from enum import Enum
@@ -156,12 +157,8 @@ class UserSettings(JSONSerializableMixin, CopyableMixin):
         if not isinstance(value, str):
             raise TypeError("UserSettings.transaction_date_format must be a str.")
 
-        try:
-            datetime.now(tz=self._time_zone).strftime(value)
-        except ValueError as exception:
-            raise ValueError(
-                "UserSettings.transaction_date_format must be a valid format."
-            ) from exception
+        # Validate the format string
+        _validate_strftime_format(value,timezone=self._time_zone)
 
         if self._transaction_date_format == value:
             return
@@ -181,12 +178,7 @@ class UserSettings(JSONSerializableMixin, CopyableMixin):
         if not isinstance(value, str):
             raise TypeError("UserSettings.general_date_format must be a str.")
 
-        try:
-            datetime.now(tz=self._time_zone).strftime(value)
-        except ValueError as exception:
-            raise ValueError(
-                "UserSettings.general_date_format must be a valid format."
-            ) from exception
+        _validate_strftime_format(value,timezone=self._time_zone)
 
         if self._general_date_format == value:
             return
@@ -386,7 +378,7 @@ def _get_number_format_for_locale() -> NumberFormat:
     sep = locale.localeconv().get("thousands_sep")
 
     format_ = None
-    if sep in (" ", "\xa0"):
+    if sep in (" ", "\xa0", "\u202f"):
         if point == ".":
             format_ = NumberFormat.SEP_SPACE_DECIMAL_POINT
         if point == ",":
@@ -405,17 +397,54 @@ def _get_number_format_for_locale() -> NumberFormat:
     return format_
 
 
-def get_locale_code_for_number_format(number_format: NumberFormat) -> str:
+def get_locale_codes_for_number_format(number_format: NumberFormat) -> tuple[str]:
     match number_format:
         case NumberFormat.SEP_SPACE_DECIMAL_POINT:
-            return "xh_ZA"
+            return ("xh_ZA", "xh_ZA.utf8")
         case NumberFormat.SEP_SPACE_DECIMAL_COMMA:
-            return "cs_CZ"
+            return ("cs_CZ", "cs_CZ.utf8")
         case NumberFormat.SEP_COMMA_DECIMAL_POINT:
-            return "en_US"
+            return ("en_US", "en_US.utf8")
         case NumberFormat.SEP_POINT_DECIMAL_COMMA:
-            return "nl_NL"
+            return ("nl_NL", "nl_NL.utf8")
         case NumberFormat.SEP_NONE_DECIMAL_POINT:
-            return "C"
+            return ("C",)
         case _:
             raise ValueError(f"Unknown number format: {number_format}")
+
+
+def _validate_strftime_format(fmt: str,timezone: ZoneInfo) -> None:
+    """Validate that the format string is valid for strftime."""
+    # Valid strftime directives (based on Python documentation)
+    valid_directives = {
+        "%a", "%A", "%w", "%d", "%b", "%B", "%m", "%y", "%Y",
+        "%H", "%I", "%p", "%M", "%S", "%f", "%z", "%Z", "%j",
+        "%U", "%W", "%c", "%x", "%X", "%%", "%G", "%u", "%V"
+    }
+
+    # Find all potential format codes (% followed by a character)
+    pattern = r"%(.)"
+    matches = re.findall(pattern, fmt)
+
+    # Check for trailing % without a directive
+    if fmt.endswith("%") and not fmt.endswith("%%"):
+        raise ValueError(
+            "UserSettings.transaction_date_format must be a valid format."
+        )
+
+    # Check each directive
+    for match in matches:
+        directive = f"%{match}"
+        if directive not in valid_directives:
+            raise ValueError(
+                f"UserSettings.transaction_date_format must be a valid format. "
+                f"Invalid directive: {directive}"
+            )
+
+    # Also test it actually works (belt and suspenders)
+    try:
+        datetime.now(tz=timezone).strftime(fmt)
+    except (ValueError, TypeError) as exception:
+        raise ValueError(
+            "UserSettings.transaction_date_format must be a valid format."
+        ) from exception

@@ -2,6 +2,8 @@ import base64
 import json
 import logging
 import os
+import shutil
+import sys
 from collections.abc import Callable
 from datetime import datetime
 from enum import Enum, auto
@@ -181,6 +183,8 @@ class FilePresenter:
         # File path initialization
         self._current_file_path: Path | None = None
         self.update_unsaved_changes(unsaved_changes=False)
+
+        self.create_demo_template_files()
 
     @property
     def recent_file_paths(self) -> tuple[Path, ...]:
@@ -529,3 +533,27 @@ class FilePresenter:
 
         logging.debug("Clearing encryption session")
         self._encryption_session.clear_password_cache()
+
+    def create_demo_template_files(self) -> None:
+        """If on Linux, check the share folder to see if
+        the Demo and Template files exist"""
+
+        if sys.platform == "win32":
+            return
+
+        demo_template_files = (
+            constants.demo_basic_file_path,
+            constants.demo_mortgage_file_path,
+            constants.template_category_en_file_path,
+            constants.template_category_cz_file_path,
+        )
+
+        for file_path in demo_template_files:
+            if not file_path.exists():
+                logging.info(f"Creating Demo Template File: {file_path}")
+                shutil.copyfile(
+                    constants.app_root_path
+                    / constants.SAVED_DATA_FOLDER_NAME
+                    / file_path.name,
+                    file_path,
+                )

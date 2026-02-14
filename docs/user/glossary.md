@@ -65,7 +65,7 @@ In Kapytal, Accounts are disambiguated by their [path](#path). Account hierarchy
 
 ---
 
-### Account Group ![Icon](../resources/icons/icons-github/folder.png)
+### Account Group ![Icon](../../resources/icons/icons-github/folder.png)
 
 Account Groups are folders containing [Accounts](#account) or other Account Groups. There is no limit to the depth of nesting within the [Account Tree](#account-tree-). Account Groups are disambiguated by their [path](#path).
 
@@ -77,7 +77,7 @@ Account Item is an umbrella term for [Accounts](#account) and [Account Groups](#
 
 ---
 
-### Account Tree ![Icon](../resources/icons/icons-github/folder-tree.png)
+### Account Tree ![Icon](../../resources/icons/icons-github/folder-tree.png)
 
 Account Tree is the second largest user interface feature of Kapytal, and it is the used to create, browse, edit, delete or otherwise manipulate [Accounts](#account) and [Account Groups](#account-group-). It is also the place where the balances of all Accounts and Account Groups are visible in both their [native](#native-currencyamount) and [base](#base-currency) [Currencies](#currency-).
 
@@ -85,7 +85,7 @@ Account Tree also offers an intuitive interface shortcut to the Account [Transac
 
 Below the Account Tree there is a text label showing the total balance of currently selected Account Items in base Currency.
 
-Account Tree can be hidden by toggling the ![Icon](../resources/icons/icons-github/folder-tree.png) *Show/Hide Account Tree* action in the toolbar. This is useful when more screen space for Transaction Table is required.
+Account Tree can be hidden by toggling the ![Icon](../../resources/icons/icons-github/folder-tree.png) *Show/Hide Account Tree* action in the toolbar. This is useful when more screen space for Transaction Table is required.
 
 ---
 
@@ -103,7 +103,7 @@ The user can change the base Currency anytime in [Currencies Form](#currencies-f
 
 ---
 
-### Buy ![Icon](../resources/icons/icons-github/certificate-plus.png)
+### Buy ![Icon](../../resources/icons/icons-github/certificate-plus.png)
 
 Buy is a sub-type of [Security Transaction](#security-transaction) that represents the exchange of money from a [Cash Account](#cash-account-) for a gain of shares of a [Security](#security-) in a [Security Account](#security-account-). The keyboard shortcut for adding a Buy is the `B` key.
 
@@ -117,7 +117,7 @@ Related terms are: [Cash Account](#cash-account-), [Cash Transaction](#cash-tran
 
 ---
 
-### Cash Account ![Icon](../resources/icons/icons-github/piggy-bank.png)
+### Cash Account ![Icon](../../resources/icons/icons-github/piggy-bank.png)
 
 Cash Account is a type of [Account](#account) that can contain any amount of money denominated in a certain [Currency](#currency-). When creating a Cash Account, its native [Currency](#currency-) is defined by the user and can never be changed.
 
@@ -131,11 +131,11 @@ Cash Accounts can have a non-zero initial balance. In Kapytal, initial balance i
 
 ---
 
-### Cash Flow Reports ![Icon](../resources/icons/icons-github/chart.png)
+### Cash Flow Reports ![Icon](../../resources/icons/icons-github/chart.png)
 
 Cash Flow Reports are [Reports](#reports) used for analyzing the flow of your money within a given period. Monthly, Annual and Total Cash Flow Reports are available. The data is shown in two tabs: Table and Chart.
 
-In Table tab, double-clicking on any table cell (or selecting a table cell and selecting ![Icon](../resources/icons/icons-github/table.png) *Show Transactions* action) brings up a [Transaction Table Form](#transaction-table-form), allowing the user to investigate the [Transactions](#transaction) used to calculate the selected quantity.
+In Table tab, double-clicking on any table cell (or selecting a table cell and selecting ![Icon](../../resources/icons/icons-github/table.png) *Show Transactions* action) brings up a [Transaction Table Form](#transaction-table-form), allowing the user to investigate the [Transactions](#transaction) used to calculate the selected quantity.
 
 Evaluated quantities are:
 
@@ -172,7 +172,7 @@ Cash Transaction specific attributes are: [Cash Account](#cash-account-), [Payee
 
 ---
 
-### Cash Transfer ![Icon](../resources/icons/icons-github/coins-arrow.png)
+### Cash Transfer ![Icon](../../resources/icons/icons-github/coins-arrow.png)
 
 Cash Transfers are [Transactions](#transaction) that can transfer money from one [Cash Account](#cash-account-) to another. The [Currencies](#currency-) of the Cash Accounts do not have to match, and Cash Transfers can therefore represent Currency exchange operations.
 
@@ -182,7 +182,7 @@ The keyboard shortcut for adding a Cash Transfer is the `Ctrl+T` combination (th
 
 ---
 
-### Category ![Icon](../resources/icons/icons-github/category.png)
+### Category ![Icon](../../resources/icons/icons-github/category.png)
 
 Categories are attributes that can be used in [Cash Transactions](#cash-transaction) and [Refunds](#refund-). The user can create any amount of Categories, and Categories can form a tree-like hierarchy. The user can use Categories to filter [Transactions](#transaction) or create specific Category [Reports](#reports).
 
@@ -206,7 +206,7 @@ Currencies Form is the [Form](#form) for creating, editing, deleting, manipulati
 
 ---
 
-### Currency ![Icon](../resources/icons/icons-github/currency.png)
+### Currency ![Icon](../../resources/icons/icons-github/currency.png)
 
 In Kapytal, Currencies are units of money. The user can create and delete Currencies in [Currencies Form](#currencies-form). Currencies have two attributes: code and number of decimals. These two attributes are specified upon Currency creation and can never be changed.
 
@@ -256,7 +256,7 @@ In Kapytal, Dialogs are "disposable" user interface elements/windows used for si
 
 ---
 
-### Dividend ![Icon](../resources/icons/icons-github/certificate-coin.png)
+### Dividend ![Icon](../../resources/icons/icons-github/certificate-coin.png)
 
 Dividend is a sub-type of [Security Transaction](#security-transaction) that represents the gain of money in a [Cash Account](#cash-account-) which is connected to a [Security](#security-) from a [Security Account](#security-account-), but which does not change the amount of shares held in the Security Account. The keyboard shortcut for adding a Dividend is the `Shift+D` key combination, as `D` is reserved for the *Duplicate Transaction* action (as a mnemonic, the `Shift` stands for Security, just like in the [Security Transfer](#security-transfer-) shortcut).
 
@@ -264,7 +264,7 @@ Dividends are included in the Total and Realized performance shown in the Overvi
 
 ---
 
-### Exchange Rate ![Icon](../resources/icons/icons-github/currency-arrow.png)
+### Exchange Rate ![Icon](../../resources/icons/icons-github/currency-arrow.png)
 
 Exchange Rates relate two [Currencies](#currency-) together through a numerical conversion factor. Exchange Rates can be created within [Currencies Form](#currencies-form).
 
@@ -274,7 +274,7 @@ The number of decimals of Exchange Rate quote dialog spinboxes can be set within
 
 ---
 
-### Expense ![Icon](../resources/icons/icons-github/coins-minus.png)
+### Expense ![Icon](../../resources/icons/icons-github/coins-minus.png)
 
 Expense is a sub-type of [Cash Transaction](#cash-transaction), which represents the transfer of money from a [Cash Account](#cash-account-) to a [Payee](#payee-). Unlike [Income](#income-), Expense can be refunded by a [Refund](#refund-). Once an Expense is refunded, it cannot be edited until the Refunds are deleted. The keyboard shortcut for adding an Expense is the `E` key.
 
@@ -304,7 +304,7 @@ This feature is located in `File->Import Transactions` menu and is documented in
 
 ---
 
-### Income ![Icon](../resources/icons/icons-github/coins-plus.png)
+### Income ![Icon](../../resources/icons/icons-github/coins-plus.png)
 
 Income is a sub-type of [Cash Transaction](#cash-transaction), which represents the transfer of money from a [Payee](#payee-) to a [Cash Account](#cash-account-). Unlike [Expense](#expense-), Income cannot be [refunded](#refund-). The keyboard shortcut for adding an Income is the `I` key.
 
@@ -332,7 +332,7 @@ In the [Securities Form](#securities-form) Overview tab tree, there are several 
 
 ---
 
-### Net Worth Reports ![Icon](../resources/icons/icons-github/chart-pie.png)
+### Net Worth Reports ![Icon](../../resources/icons/icons-github/chart-pie.png)
 
 Net Worth Reports are [Reports](#reports) used for high level overview of total financial assets.
 
@@ -355,7 +355,7 @@ In Kapytal, items in tree-like hierarchies ([Account Items](#account-item) or [C
 
 ---
 
-### Payee ![Icon](../resources/icons/icons-github/user-business.png)
+### Payee ![Icon](../../resources/icons/icons-github/user-business.png)
 
 Payee is an attribute appearing in [Cash Transactions](#cash-transaction) and represents the other party of the Cash Transactions. Payees are identified only by their name, which can contain any symbols excluding colons (:).
 
@@ -365,7 +365,7 @@ Payees can be used to filter Cash Transactions or create specific Payee [Reports
 
 ---
 
-### Refund ![Icon](../resources/icons/icons-github/coins-arrow-back.png)
+### Refund ![Icon](../../resources/icons/icons-github/coins-arrow-back.png)
 
 Refund is a special type of [Transaction](#transaction) that "reverts" the effects of an [Expense](#expense-). The user can create a Refund by right-clicking an Expense in [Transaction Table](#transaction-table-) and selecting *Add Refund*, or by selecting an Expense and pressing the `R` key.
 
@@ -448,7 +448,7 @@ Following performance quantities are available:
   
 ---
 
-### Security ![Icon](../resources/icons/icons-github/certificate.png)
+### Security ![Icon](../../resources/icons/icons-github/certificate.png)
 
 Securities are used to represent assets with a monetary value which fluctuates over time, such as stocks, bonds, ETFs, pension funds or other financial instruments, as well as real estate, [mortgages](./faq.md#how-to-handle-a-mortgage-in-kapytal), loans, cars, art etc.
 
@@ -471,7 +471,7 @@ When creating a Security in Securities Form, following attributes are requested:
 
 ---
 
-### Security Account ![Icon](../resources/icons/icons-github/bank.png)
+### Security Account ![Icon](../../resources/icons/icons-github/bank.png)
 
 Security Account is a type of [Account](#account) that can contain shares of [Securities](#security-). Unlike [Cash Accounts](#cash-account-), which can contain only money of single [Currency](#currency-), Security Accounts can contain shares of any number of various Securities, and the Securities do not even have to be denominated in the same Currency.
 
@@ -495,7 +495,7 @@ Security Transaction specific attributes are: [Cash Account](#cash-account-), [S
 
 ---
 
-### Security Transfer ![Icon](../resources/icons/icons-github/certificate-arrow.png)
+### Security Transfer ![Icon](../../resources/icons/icons-github/certificate-arrow.png)
 
 Security Transfers are [Transaction](#transaction) that can transfer shares of a [Security](#security-) from one [Security Account](#security-account-) to another.
 
@@ -505,7 +505,7 @@ The keyboard shortcut for adding a Security Transfer is the `Shift+T` combinatio
 
 ---
 
-### Sell ![Icon](../resources/icons/icons-github/certificate-minus.png)
+### Sell ![Icon](../../resources/icons/icons-github/certificate-minus.png)
 
 Sell is a sub-type of [Security Transaction](#security-transaction) that represents the exchange of shares of a [Security](#security-) from a [Security Account](#security-account-) for a gain of money in a [Cash Account](#cash-account-). The keyboard shortcut for adding a Sell is the `S` key.
 
@@ -513,7 +513,7 @@ Note Kapytal allows negative shares of a Security within Security Account, i.e. 
 
 ---
 
-### Settings Form ![Icon](../resources/icons/icons-github/gear.png)
+### Settings Form ![Icon](../../resources/icons/icons-github/gear.png)
 
 Settings Form is used to change the following internal Kapytal settings:
 
@@ -548,7 +548,7 @@ Settings Form is used to change the following internal Kapytal settings:
 
 ---
 
-### Tag ![Icon](../resources/icons/icons-github/tag.png)
+### Tag ![Icon](../../resources/icons/icons-github/tag.png)
 
 Tags are attributes that can be used in any [Transaction](#transaction). The user can create any amount of Tags. Tags are identified only by their name, which can contain any symbols excluding colons (:). The user can use Tags to filter Transactions or create specific Tag [Reports](#reports).
 
@@ -572,7 +572,7 @@ All Transaction types contain the following attributes: [Date](#date), [Descript
 
 ---
 
-### Transaction Filters ![Icon](../resources/icons/icons-github/funnel.png)
+### Transaction Filters ![Icon](../../resources/icons/icons-github/funnel.png)
 
 Transaction Filters are used to filter [Transactions](#transaction) based on specific criteria. Transaction Filter Form can be accessed by clicking on the funnel icon next to the [Transaction Table](#transaction-table-) search bar.
 
@@ -603,7 +603,7 @@ Many Transaction Filters have three "modes": `OFF`, `KEEP` and `DISCARD`. Filter
 
 ---
 
-### Transaction Table ![Icon](../resources/icons/icons-github/table.png)
+### Transaction Table ![Icon](../../resources/icons/icons-github/table.png)
 
 Transaction Table is the dominant user interface feature of Kapytal, and it is the interface element used to create, browse, edit, delete or otherwise manipulate [Transactions](#transaction).
 
@@ -611,7 +611,7 @@ Transaction Table contains many columns, some of which are not shown by default.
 
 Below the Transaction Table, there are two text labels. First label shows the amount of currently shown Transactions out of the total amount of Transactions. Transactions can be hidden from Transaction Table via [Transaction Filters](#transaction-filters-). Second label shows the sum of the amounts of currently selected Transactions. Please note only [Income](#income-), [Expense](#expense-), [Refund](#refund-) and [Dividend](#dividend-) amounts are summed.
 
-Transaction Table can be hidden by toggling the ![Icon](../resources/icons/icons-github/table.png) *Show/Hide Transaction Table* action in the toolbar.
+Transaction Table can be hidden by toggling the ![Icon](../../resources/icons/icons-github/table.png) *Show/Hide Transaction Table* action in the toolbar.
 
 ---
 
@@ -631,7 +631,7 @@ Under the hood, all [Account Items](#account-item), [Securities](#security-) and
 
 ---
 
-### Update Quotes Form ![Icon](../resources/icons/icons-github/arrow-circle-double.png)
+### Update Quotes Form ![Icon](../../resources/icons/icons-github/arrow-circle-double.png)
 
 Update Quotes Form is a [Form](#form) used to fetch latest [Security](#security-) price and [Exchange Rate](#exchange-rate-) data from Yahoo Finance. Only Securities with non-empty symbol strings are eligible for price update. The Security symbol must match the symbol used for the given Security on Yahoo Finance.
 

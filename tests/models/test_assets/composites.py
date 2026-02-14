@@ -300,7 +300,7 @@ def datetime_filters(draw: st.DrawFn) -> DatetimeFilter:
 @st.composite
 def decimal_powers_of_10(draw: st.DrawFn) -> Decimal:
     exponent = draw(st.integers(min_value=-10, max_value=10))
-    return Decimal("10") ** exponent
+    return Decimal(10) ** exponent
 
 
 @st.composite

@@ -2,7 +2,7 @@ import logging
 from collections.abc import Collection
 from pathlib import Path
 
-from PyQt6.QtCore import QSize, Qt, pyqtSignal
+from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QAction, QCloseEvent, QIcon, QKeyEvent
 from PyQt6.QtWidgets import QDateTimeEdit, QFileDialog, QMainWindow, QMessageBox
 from src.utilities import constants

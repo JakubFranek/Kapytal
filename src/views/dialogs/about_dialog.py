@@ -2,7 +2,7 @@ import sys
 
 from PyQt6.QtCore import PYQT_VERSION_STR, QT_VERSION_STR, Qt
 from PyQt6.QtGui import QPixmap
-from PyQt6.QtWidgets import QApplication, QWidget
+from PyQt6.QtWidgets import QWidget
 from src.utilities import constants
 from src.views import colors
 from src.views.base_classes.custom_dialog import CustomDialog
@@ -24,8 +24,8 @@ class AboutDialog(CustomDialog, Ui_AboutDialog):
                 str(constants.app_root_path / "resources/images/welcome_light_mode.png")
             )
 
-        screen = QApplication.primaryScreen()
-        dpr = screen.devicePixelRatio()
+        window = parent.windowHandle()
+        dpr = window.devicePixelRatio()
         pixmap = self.pixmap.scaledToWidth(
             int(512 * dpr), Qt.TransformationMode.SmoothTransformation
         )

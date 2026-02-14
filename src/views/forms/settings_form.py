@@ -1,4 +1,7 @@
-from PyQt6.QtCore import Qt, pyqtSignal
+from pathlib import Path
+
+from PyQt6.QtCore import Qt, QUrl, pyqtSignal
+from PyQt6.QtGui import QDesktopServices
 from PyQt6.QtWidgets import QAbstractButton, QDialogButtonBox, QFileDialog, QWidget
 from src.models.user_settings.user_settings_class import NumberFormat
 from src.views import icons
@@ -22,6 +25,7 @@ class SettingsForm(CustomWidget, Ui_SettingsForm):
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent=parent)
         self.setupUi(self)
+        self.resize(self.size().width(), 350)
         self.setWindowFlag(Qt.WindowType.Window)
         self.setWindowIcon(icons.settings)
 
@@ -127,6 +131,9 @@ class SettingsForm(CustomWidget, Ui_SettingsForm):
         self.backupsListView.selectionModel().selectionChanged.connect(
             self.signal_backup_path_selection_changed.emit
         )
+
+    def open_path_in_file_browser(self, path: str | Path) -> None:
+        QDesktopServices.openUrl(QUrl.fromLocalFile(str(path)))
 
     def _handle_button_box_click(self, button: QAbstractButton) -> None:
         role = self.buttonBox.buttonRole(button)

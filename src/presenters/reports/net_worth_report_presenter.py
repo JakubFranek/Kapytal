@@ -1,5 +1,6 @@
 import logging
 from collections.abc import Collection, Sequence
+from datetime import datetime
 
 from PyQt6.QtCore import QSortFilterProxyModel, Qt
 from PyQt6.QtWidgets import QApplication
@@ -12,6 +13,8 @@ from src.models.statistics.net_worth_stats import (
     calculate_asset_stats,
     calculate_net_worth_over_time,
 )
+from src.models.user_settings import user_settings
+from src.presenters.utilities.event import Event
 from src.presenters.widget.transactions_presenter import TransactionsPresenter
 from src.utilities.general import flatten_tree
 from src.view_models.account_tree_model import AccountTreeModel
@@ -27,6 +30,8 @@ from src.views.widgets.charts.sunburst_chart_view import SunburstNode
 
 
 class NetWorthReportPresenter:
+    event_update_filter_end_datetime = Event()
+
     def __init__(
         self,
         main_view: MainView,
@@ -36,10 +41,16 @@ class NetWorthReportPresenter:
         self._main_view = main_view
         self._transactions_presenter = transactions_presenter
         self._record_keeper = record_keeper
+        self._filter_end_datetime: datetime | None = None
         self._connect_to_view_signals()
 
     def load_record_keeper(self, record_keeper: RecordKeeper) -> None:
         self._record_keeper = record_keeper
+
+    def set_filter_end_date(self, end_date: datetime | None) -> None:
+        if not isinstance(end_date, datetime) and end_date is not None:
+            raise TypeError("Parameter 'end_date' must be a datetime or a None.")
+        self._filter_end_datetime = end_date
 
     def _connect_to_view_signals(self) -> None:
         self._main_view.signal_net_worth_accounts_report.connect(
@@ -223,8 +234,19 @@ class NetWorthReportPresenter:
                 title="Warning",
             )
             return
+
+        # Request filter end datetime update
+        self.event_update_filter_end_datetime()
+
+        # If datetime filter is not set, today will be used as last date in chart
+        if self._filter_end_datetime is None:
+            end = datetime.now(tz=user_settings.settings.time_zone).date()
+        else:  # Else, use the filter end datetime
+            end = self._filter_end_datetime.date()
+
+        # Note Time Report does not support "DISCARD" mode in datetime filter
+
         start = transactions[0].date_
-        end = transactions[-1].date_
 
         base_currency = self._record_keeper.base_currency
         if base_currency is None:
