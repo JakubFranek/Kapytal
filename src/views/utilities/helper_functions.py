@@ -10,6 +10,7 @@ from src.models.user_settings import user_settings
 _qdatetimeedit_original_keyPressEvent = QDateTimeEdit.keyPressEvent
 _qdatetimeedit_original_wheelEvent = QDateTimeEdit.wheelEvent
 
+
 def calculate_table_width(table: QTableView) -> int:
     return table.horizontalHeader().length() + table.verticalHeader().width()
 
@@ -17,7 +18,8 @@ def calculate_table_width(table: QTableView) -> int:
 def get_spinbox_value_as_decimal(spinbox: QSpinBox) -> Decimal:
     text = spinbox.cleanText()
     text_delocalized = locale.delocalize(text)
-    return Decimal(text_delocalized)
+    text_cleaned = text_delocalized.replace("\xa0", "")
+    return Decimal(text_cleaned)
 
 
 def convert_datetime_format_to_qt(datetime_format: str) -> str:
