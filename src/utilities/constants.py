@@ -23,7 +23,7 @@ GITHUB_DOCS_URL = "https://github.com/JakubFranek/Kapytal/blob/master/docs/index
 TIMESTAMP_FORMAT = "%Y_%m_%d_%Hh%Mm%Ss"
 TIMESTAMP_EXAMPLE = "YYYY_mm_DD_HHhMMmSSs"
 
-WINDOWS_SAVED_DATA_FOLDER_NAME = "saved_data"
+SAVED_DATA_FOLDER_NAME = "saved_data"
 
 # XDG Base Directory paths (Linux)
 LINUX_CONFIG_FOLDER_PATH = _get_xdg_dir("XDG_CONFIG_HOME", "~/.config")
@@ -150,7 +150,7 @@ def set_app_root_path(path: Path) -> None:
     app_root_path = path
 
     if sys.platform == "win32":
-        saved_data_dir = app_root_path / WINDOWS_SAVED_DATA_FOLDER_NAME
+        saved_data_dir = app_root_path / SAVED_DATA_FOLDER_NAME
 
         backups_directory = saved_data_dir / BACKUPS_FOLDER_NAME
         logs_directory = app_root_path / LOGS_FOLDER_NAME
