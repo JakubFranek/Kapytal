@@ -3,14 +3,14 @@
  <class>SettingsForm</class>
  <widget class="QWidget" name="SettingsForm">
   <property name="windowModality">
-   <enum>Qt::WindowModal</enum>
+   <enum>Qt::WindowModality::WindowModal</enum>
   </property>
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
     <width>500</width>
-    <height>400</height>
+    <height>428</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -26,10 +26,16 @@
       <number>0</number>
      </property>
      <widget class="QWidget" name="generalTab">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
       <attribute name="title">
        <string>General</string>
       </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout_3">
+      <layout class="QVBoxLayout" name="verticalLayout_3" stretch="0,0,0,1">
        <item>
         <layout class="QFormLayout" name="formLayout">
          <item row="3" column="0">
@@ -124,12 +130,18 @@
        <item>
         <widget class="Line" name="line">
          <property name="orientation">
-          <enum>Qt::Horizontal</enum>
+          <enum>Qt::Orientation::Horizontal</enum>
          </property>
         </widget>
        </item>
        <item>
         <widget class="QLabel" name="label">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="text">
           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;For details on valid date format syntax, see &lt;a href=&quot;https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#007af4;&quot;&gt;Python datetime library documentation&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
@@ -144,12 +156,12 @@
        <item>
         <spacer name="verticalSpacer">
          <property name="orientation">
-          <enum>Qt::Vertical</enum>
+          <enum>Qt::Orientation::Vertical</enum>
          </property>
          <property name="sizeHint" stdset="0">
           <size>
            <width>20</width>
-           <height>40</height>
+           <height>0</height>
           </size>
          </property>
         </spacer>
@@ -160,7 +172,7 @@
       <attribute name="title">
        <string>Backups</string>
       </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout_4">
+      <layout class="QVBoxLayout" name="verticalLayout_4" stretch="0,0,1,0,0,0">
        <item>
         <layout class="QFormLayout" name="backupsFormLayout">
          <item row="0" column="0">
@@ -229,17 +241,23 @@
        <item>
         <widget class="Line" name="backupsLine">
          <property name="orientation">
-          <enum>Qt::Horizontal</enum>
+          <enum>Qt::Orientation::Horizontal</enum>
          </property>
         </widget>
        </item>
        <item>
         <widget class="QLabel" name="backupsDisclaimerLabel">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="text">
           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;NOTE: A backup file is created in all backup directories whenever a file is opened or saved. Kapytal automatically deletes the contents of a backup directory, starting from the oldest file, if the size limit is exceeded. To keep any of the backups permanently, copy them elsewhere or set a very large size limit. Do not store any other data in the backup directories.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
          <property name="alignment">
-          <set>Qt::AlignJustify|Qt::AlignVCenter</set>
+          <set>Qt::AlignmentFlag::AlignJustify|Qt::AlignmentFlag::AlignVCenter</set>
          </property>
          <property name="wordWrap">
           <bool>true</bool>
@@ -249,6 +267,12 @@
       </layout>
      </widget>
      <widget class="QWidget" name="logsTab">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
       <attribute name="title">
        <string>Logging</string>
       </attribute>
@@ -290,17 +314,23 @@
        <item>
         <widget class="Line" name="logsLine">
          <property name="orientation">
-          <enum>Qt::Horizontal</enum>
+          <enum>Qt::Orientation::Horizontal</enum>
          </property>
         </widget>
        </item>
        <item>
         <widget class="QLabel" name="logsDisclaimerLabel">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="text">
           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;NOTE: Logs contain records of all operations performed by Kapytal. A new log is created each time the program is launched. Logs contain potentially sensitive data entered into Kapytal by the user. The logs exist only locally and are not uploaded anywhere. The purpose of the logs is to provide debugging information if unexpected behaviour or an error occurs. Upon launch, Kapytal automatically deletes the oldest logs until the size limit is satisfied. Do not store any other data in the logs directories.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
          <property name="alignment">
-          <set>Qt::AlignJustify|Qt::AlignVCenter</set>
+          <set>Qt::AlignmentFlag::AlignJustify|Qt::AlignmentFlag::AlignVCenter</set>
          </property>
          <property name="wordWrap">
           <bool>true</bool>
@@ -310,12 +340,12 @@
        <item>
         <spacer name="logsVerticalSpacer">
          <property name="orientation">
-          <enum>Qt::Vertical</enum>
+          <enum>Qt::Orientation::Vertical</enum>
          </property>
          <property name="sizeHint" stdset="0">
           <size>
            <width>20</width>
-           <height>40</height>
+           <height>0</height>
           </size>
          </property>
         </spacer>
@@ -327,7 +357,7 @@
    <item>
     <widget class="QDialogButtonBox" name="buttonBox">
      <property name="standardButtons">
-      <set>QDialogButtonBox::Apply|QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+      <set>QDialogButtonBox::StandardButton::Apply|QDialogButtonBox::StandardButton::Cancel|QDialogButtonBox::StandardButton::Ok</set>
      </property>
     </widget>
    </item>
