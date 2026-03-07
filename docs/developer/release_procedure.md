@@ -8,10 +8,11 @@
     - run `packaging/scripts/upgrade_all_pip_packages.py`
 1. run tests
 1. freeze pip dependencies
-    - run `pip freeze >requirements.txt`
+    - run `uv pip freeze >requirements.txt`
 1. increment version number
     - in `src/utilities/constants`
     - in `packaging/windows/installer_setup.iss`
+    - in `pyproject.toml`
 1. create Windows installer
     1. run `pyinstaller packaging/windows/kapytal.spec`
     1. compile `packaging/windows/installer_setup.iss` with InnoSetup

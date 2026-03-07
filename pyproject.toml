@@ -1,3 +1,23 @@
+[project]
+name = "Kapytal"
+version = "1.2.2"
+requires-python = ">=3.14"
+dependencies = [
+    "cryptography",
+    "PyQt6",
+    "PyQt6-Charts",
+    "requests",
+    "pyxirr",
+    "tzlocal",
+    "python-dateutil",
+]
+
+[project.optional-dependencies]
+dev = [
+    "hypothesis",
+    "pytest-qt",
+]
+
 [tool.pytest.ini_options]
 pythonpath = "."
 
@@ -12,7 +32,7 @@ reportAssignmentType = false
 reportAbstractUsage = false
 reportCallIssue = false
 reportOptionalMemberAccess = "none"
-exclude = ["src/views", ".venv", "aux_stuff"]
+exclude = ["src/views", ".venv", "aux_stuff","**/node_modules", "**/__pycache__", "**/.*"]
 
 [tool.coverage.report]
 exclude_lines = [
@@ -48,4 +68,4 @@ lint.extend-ignore = [
 "tests/*" = ["S101", "ANN401", "SLF001", "PLR2004", "FBT001"]
 "src/views/*" = ["FBT003", "N802"]
 "src/view_models/*" = ["N802"]
-"main.py" = ["E402"]                                          # imports not at top
+"main.py" = ["E402"] # imports not at top
