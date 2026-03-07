@@ -1,11 +1,8 @@
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
-from typing import TYPE_CHECKING
 
-import yfinance as yf
-
-if TYPE_CHECKING:
-    import pandas as pd
+import requests
+from src.models.user_settings import user_settings
 
 
 class QuoteUpdateError(ValueError):
@@ -13,11 +10,21 @@ class QuoteUpdateError(ValueError):
 
 
 def get_latest_quote(ticker_code: str) -> tuple[date, Decimal]:
-    ticker = yf.Ticker(ticker_code)
-    history = ticker.history(period="1d", rounding=True)
-    if history.empty:
+    url = f"https://query1.finance.yahoo.com/v8/finance/chart/{ticker_code}"
+    params = {"interval": "1d", "range": "1d"}
+    response = requests.get(
+        url, headers={"User-Agent": "Mozilla/5.0"}, params=params, timeout=10
+    )
+    response.raise_for_status()
+
+    data = response.json()
+    result = data["chart"]["result"]
+    if not result:
         raise QuoteUpdateError(f"No data found for ticker '{ticker_code}'.")
-    last_quote = history["Close"].iloc[-1]
-    last_quote_decimal = Decimal(str(last_quote))
-    last_timestamp: pd.Timestamp = history.index[-1]
-    return last_timestamp.date(), last_quote_decimal
+
+    close = result[0]["indicators"]["quote"][0]["close"][-1]
+    timestamp = result[0]["timestamp"][-1]
+
+    return datetime.fromtimestamp(
+        timestamp, tz=user_settings.settings.time_zone
+    ).date(), Decimal(str(round(close, 2)))
