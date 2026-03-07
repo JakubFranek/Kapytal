@@ -72,6 +72,15 @@ def main() -> None:
         user_settings.settings.backup_paths = [constants.backups_directory]
         user_settings.save()
 
+    remove_old_logs()  # remove logs once settings are initialized
+
+    logging.debug("Creating QApplication")
+    app = QApplication(sys.argv)
+    app.setApplicationName("Kapytal")
+    app.setApplicationVersion(constants.VERSION)
+
+    # Setting LC_NUMERIC locale must be done after QApplication is created, otherwise
+    # Qt overwrites it with system locale
     locale_codes_for_number_format = get_locale_codes_for_number_format(
         user_settings.settings.number_format
     )
@@ -94,13 +103,6 @@ def main() -> None:
             f"{locale_codes_for_number_format}"
         )
         locale.setlocale(locale.LC_NUMERIC, "")
-
-    remove_old_logs()  # remove logs once settings are initialized
-
-    logging.debug("Creating QApplication")
-    app = QApplication(sys.argv)
-    app.setApplicationName("Kapytal")
-    app.setApplicationVersion(constants.VERSION)
 
     logging.debug("Setting QApplication font size to 10 pts")
     app.setStyleSheet("QWidget{font-size: 10pt;}")
