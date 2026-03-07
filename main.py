@@ -58,21 +58,12 @@ def main() -> None:
 
     sys.excepthook = handle_uncaught_exception
 
-    app_root_path = Path(__file__).resolve().parent  # get Kapytal root path
-    constants.set_app_root_path(app_root_path)
+    # Save Kapytal root path
+    constants.set_app_root_path(Path(__file__).resolve().parent)
 
     setup_logging()
-
-    user_settings.set_json_decoder(CustomJSONDecoder)
-    user_settings.set_json_encoder(CustomJSONEncoder)
-    if constants.settings_path.exists():
-        user_settings.load()
-    else:
-        Path.mkdir(constants.backups_directory, parents=True, exist_ok=True)
-        user_settings.settings.backup_paths = [constants.backups_directory]
-        user_settings.save()
-
-    remove_old_logs()  # remove logs once settings are initialized
+    initialize_user_settings()
+    remove_old_logs()  # must occur after setting init, as settings include log limits
 
     logging.debug("Creating QApplication")
     app = QApplication(sys.argv)
@@ -81,28 +72,7 @@ def main() -> None:
 
     # Setting LC_NUMERIC locale must be done after QApplication is created, otherwise
     # Qt overwrites it with system locale
-    locale_codes_for_number_format = get_locale_codes_for_number_format(
-        user_settings.settings.number_format
-    )
-
-    locale_qt = QLocale()
-    for locale_code in locale_codes_for_number_format:
-        try:
-            logging.info(f"Setting locale.LC_NUMERIC to '{locale_code}'")
-            locale.setlocale(locale.LC_NUMERIC, locale_code)
-            locale_qt = QLocale(locale_code)
-            break
-        except locale.Error:
-            logging.warning(
-                f"Failed to set locale.LC_NUMERIC to '{locale_code}'"
-                ", proceeding with next locale code"
-            )
-    else:
-        logging.error(
-            "Failed to set locale.LC_NUMERIC to any of "
-            f"{locale_codes_for_number_format}"
-        )
-        locale.setlocale(locale.LC_NUMERIC, "")
+    locale_qt = get_qt_locale()
 
     logging.debug("Setting QApplication font size to 10 pts")
     app.setStyleSheet("QWidget{font-size: 10pt;}")
@@ -140,6 +110,44 @@ def main() -> None:
 
     logging.info("Executing QApplication, awaiting user input")
     app.exec()
+
+
+def initialize_user_settings() -> None:
+    user_settings.set_json_decoder(CustomJSONDecoder)
+    user_settings.set_json_encoder(CustomJSONEncoder)
+    if constants.settings_path.exists():
+        user_settings.load()
+    else:
+        Path.mkdir(constants.backups_directory, parents=True, exist_ok=True)
+        user_settings.settings.backup_paths = [constants.backups_directory]
+        user_settings.save()
+
+
+def get_qt_locale() -> QLocale:
+    locale_codes_for_number_format = get_locale_codes_for_number_format(
+        user_settings.settings.number_format
+    )
+
+    locale_qt = QLocale()
+    for locale_code in locale_codes_for_number_format:
+        try:
+            logging.info(f"Setting locale.LC_NUMERIC to '{locale_code}'")
+            locale.setlocale(locale.LC_NUMERIC, locale_code)
+            locale_qt = QLocale(locale_code)
+            break
+        except locale.Error:
+            logging.warning(
+                f"Failed to set locale.LC_NUMERIC to '{locale_code}'"
+                ", proceeding with next locale code"
+            )
+    else:
+        logging.error(
+            "Failed to set locale.LC_NUMERIC to any of "
+            f"{locale_codes_for_number_format}"
+        )
+        locale.setlocale(locale.LC_NUMERIC, "")
+
+    return locale_qt
 
 
 if __name__ == "__main__":
