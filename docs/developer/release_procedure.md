@@ -5,20 +5,22 @@
     - make sure `PATH` points to the latest Python release
     - run `python -m venv --upgrade .venv`
 1. update pip packages
-    - run `packaging/scripts/upgrade_all_pip_packages.py`
-1. run tests
+    - enter any new dependencies into `pyproject.toml`
+    - run `uv sync --upgrade --all-extras`
 1. freeze pip dependencies
-    - run `pip freeze >requirements.txt`
+    - run `uv pip freeze >requirements.txt`
+1. run tests
 1. increment version number
     - in `src/utilities/constants`
     - in `packaging/windows/installer_setup.iss`
+    - in `pyproject.toml`
 1. create Windows installer
     1. run `pyinstaller packaging/windows/kapytal.spec`
     1. compile `packaging/windows/installer_setup.iss` with InnoSetup
     1. test the installer
     - do NOT run Kapytal from `dist/` directory!
 1. create Linux AppImage
-    1. run `pyinstaller packaging/linux/kapytal.spec`
+    1. run `uv run pyinstaller packaging/linux/kapytal.spec`
     1. copy contents of `dist/Kapytal` to `packaging/linux/Kapytal.AppDir/` by running `cp -r dist/Kapytal/* packaging/linux/Kapytal.AppDir/usr/bin/`
     1. run `appimagetool-x86_64.AppImage packaging/linux/Kapytal.AppDir/`
     1. run `appimagelint-x86_64.AppImage Kapytal-x86_64.AppImage` to check the AppImage is OK
