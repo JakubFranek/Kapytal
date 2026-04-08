@@ -2,14 +2,16 @@ import logging
 import shutil
 import sys
 import traceback
-from collections.abc import Collection
 from datetime import datetime
 from pathlib import Path
-from types import TracebackType
-from typing import Protocol, Self, TypeVar
+from typing import TYPE_CHECKING, Protocol, Self, TypeVar
 
 from src.models.user_settings import user_settings
 from src.utilities import constants
+
+if TYPE_CHECKING:
+    from collections.abc import Collection
+    from types import TracebackType
 
 
 def backup_json_file(file_path: Path) -> None:
@@ -101,8 +103,11 @@ def get_datetime_from_file_path(path: Path) -> datetime:
         suffix = ".json.enc"
     elif path.name.endswith(".json"):
         suffix = ".json"
+    elif path.name.endswith(".log"):
+        suffix = ".log"
     else:
-        raise ValueError(f"File {path} does not end with .json or .json.enc")
+        # BUG: ValueError raised for legitimate log files
+        raise ValueError(f"File {path} does not end with .json, .json.enc or .log")
 
     stem = str(path).removesuffix(suffix)
     timestamp = stem[-len(constants.TIMESTAMP_EXAMPLE) :]
@@ -163,7 +168,9 @@ class TreeItem(Protocol):
 TreeItemType = TypeVar("TreeItemType", bound=TreeItem)
 
 
-def flatten_tree(root_items: Collection[TreeItemType]) -> list[TreeItemType]:
+def flatten_tree[TreeItemType: TreeItem](
+    root_items: Collection[TreeItemType],
+) -> list[TreeItemType]:
     """Flattens any tree, as long as the root items have a children property."""
     flat_stats: list[TreeItemType] = []
     for stats in root_items:
