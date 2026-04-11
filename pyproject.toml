@@ -1,6 +1,6 @@
 [project]
 name = "Kapytal"
-version = "1.2.3"
+version = "1.2.4"
 requires-python = ">=3.14"
 dependencies = [
     "cryptography",
@@ -16,7 +16,8 @@ dependencies = [
 dev = [
     "hypothesis",
     "pytest-qt",
-    "pyinstaller"
+    "pyinstaller",
+    "pytest"
 ]
 
 [tool.pytest.ini_options]
